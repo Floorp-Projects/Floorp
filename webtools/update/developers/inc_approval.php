@@ -15,7 +15,7 @@ if ($action=="approve") {
 
 //Firstly, log the comments and action taken..
 $userid = $_SESSION["uid"];
-$sql = "SELECT TM.ID, `Name`, `vID` from `t_main` TM INNER JOIN `t_version` TV ON TM.ID = TV.ID WHERE TV.URI = '$file' ORDER BY `vID` ASC";
+$sql = "SELECT TM.ID, `Name`, `vID` from `main` TM INNER JOIN `version` TV ON TM.ID = TV.ID WHERE TV.URI = '$file' ORDER BY `vID` ASC";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
       $id = $row["ID"];
@@ -23,7 +23,7 @@ $sql = "SELECT TM.ID, `Name`, `vID` from `t_main` TM INNER JOIN `t_version` TV O
       $name = $row["Name"];
 
 global $installation, $uninstallation, $newchrome, $appworks, $visualerrors, $allelementsthemed, $cleanprofile, $worksasdescribed, $testbuild, $testos, $comments;
-        $sql2 = "INSERT INTO `t_approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `Installation`, `Uninstallation`, `NewChrome`, `AppWorks`, `VisualErrors`, `AllElementsThemed`, `CleanProfile`, `WorksAsDescribed`, `TestBuild`, `TestOS`, `comments`) VALUES ('$id', '$vid', '$userid', '$action_comment', NOW(NULL), '$installation', '$uninstallation', '$newchrome', '$appworks', '$visualerrors', '$allelementsthemed', '$cleanprofile', '$worksasdescribed', '$testbuild', '$testos', '$comments');";
+        $sql2 = "INSERT INTO `approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `Installation`, `Uninstallation`, `NewChrome`, `AppWorks`, `VisualErrors`, `AllElementsThemed`, `CleanProfile`, `WorksAsDescribed`, `TestBuild`, `TestOS`, `comments`) VALUES ('$id', '$vid', '$userid', '$action_comment', NOW(NULL), '$installation', '$uninstallation', '$newchrome', '$appworks', '$visualerrors', '$allelementsthemed', '$cleanprofile', '$worksasdescribed', '$testbuild', '$testos', '$comments');";
           $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
           if ($sql_result2) {} else { $operations_failed=="true";}
     }
@@ -58,7 +58,7 @@ if ($action=="approve") {
 }
 
 //Thirdly, update version record...
-$sql = "UPDATE `t_version` SET `URI`='$uri', `approved`='$approved', `DateUpdated`=NOW(NULL) WHERE `URI`='$file'";
+$sql = "UPDATE `version` SET `URI`='$uri', `approved`='$approved', `DateUpdated`=NOW(NULL) WHERE `URI`='$file'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if ($sql_result) {} else { $operations_failed=="true";}
 

@@ -11,10 +11,10 @@ include"$page_header";
 include"inc_sidebar.php";
 ?>
 <?php
-$id = $_GET["id"];
-$sql = "SELECT  TM.ID, TM.GUID, TM.Name, TM.Homepage, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
+$id = escape_string($_GET["id"]);
+$sql = "SELECT  TM.ID, TM.GUID, TM.Name, TM.Homepage, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TM.ID = '$id' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numresults = mysql_num_rows($sql_result);
@@ -32,8 +32,8 @@ $v++;
     $rating = $row["Rating"];
 
 $i=""; $categories="";
-$sql = "SELECT  TC.CatName FROM  `t_categoryxref`  TCX 
-INNER JOIN t_categories TC ON TCX.CategoryID = TC.CategoryID
+$sql = "SELECT  TC.CatName FROM  `categoryxref`  TCX 
+INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID
 WHERE TCX.ID = '$id'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numresults = mysql_num_rows($sql_result);
@@ -59,8 +59,8 @@ echo"Categories: $categories<br>\n";
 <h3>Listed Versions</h3>
 <?php
 $approved_array = array("?"=>"Pending Approval", "YES"=>"Approved", "NO"=>"Denied", "DISABLED"=>"Disabled");
-$sql = "SELECT vID, TV.Version, URI, OSName, approved FROM `t_version` TV
-INNER JOIN t_os TOS ON TOS.OSID = TV.OSID
+$sql = "SELECT vID, TV.Version, URI, OSName, approved FROM `version` TV
+INNER JOIN os TOS ON TOS.OSID = TV.OSID
 WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version`";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while($row = mysql_fetch_array($sql_result)) {
@@ -76,8 +76,8 @@ echo"<h4><a href=\"listmanager.php?function=editversion&id=$id&vid=$vid\">Versio
 echo"$filename - for $os<br>\n";
 
 
-$sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `t_version` TV
-    INNER JOIN t_applications TA ON TA.AppID = TV.AppID
+$sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
+    INNER JOIN applications TA ON TA.AppID = TV.AppID
     WHERE `ID`='$id' AND `URI`='$uri' ORDER BY TV.Version, TA.AppName";
     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while($row2 = mysql_fetch_array($sql_result2)) {
@@ -106,7 +106,7 @@ $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `t_version` TV
     <BR>
 <?php
 
-$sql = "SELECT CommentID FROM  `t_feedback` WHERE ID = '$id'";
+$sql = "SELECT CommentID FROM  `feedback` WHERE ID = '$id'";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $num_comments = mysql_num_rows($sql_result);
 ?>
@@ -115,16 +115,16 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     <h2>Developer Comments</h2>
 <?php
 if ($_POST["submit"]=="Post Comments") {
-  $id = $_POST["id"];
-  $comments = $_POST["comments"];
+  $id = escape_string($_POST["id"]);
+  $comments = escape_string($_POST["comments"]);
   if (checkFormKey()) {
-    $sql = "UPDATE `t_main` SET `devcomments`='$comments' WHERE `id`='$id'";
+    $sql = "UPDATE `main` SET `devcomments`='$comments' WHERE `id`='$id'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if ($sql_result) { echo"Developer Comments Updated...<br>\n"; }
   }
 }
 
-$sql = "SELECT `devcomments` FROM `t_main` WHERE `id`='$id' LIMIT 1";
+$sql = "SELECT `devcomments` FROM `main` WHERE `id`='$id' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
    $devcomments = $row["devcomments"];
@@ -139,7 +139,7 @@ $sql = "SELECT `devcomments` FROM `t_main` WHERE `id`='$id' LIMIT 1";
 
     <h2><a href="previews.php?id=<?php echo"$id"; ?>">Previews</a></h2>
 <?php
-$sql = "SELECT * FROM `t_previews` TP WHERE `ID`='$id' AND `preview`='YES' ORDER BY `PreviewID` LIMIT 1";
+$sql = "SELECT * FROM `previews` TP WHERE `ID`='$id' AND `preview`='YES' ORDER BY `PreviewID` LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
     $i++;
@@ -160,6 +160,9 @@ $sql = "SELECT * FROM `t_previews` TP WHERE `ID`='$id' AND `preview`='YES' ORDER
 
     </div>
 
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

@@ -37,52 +37,74 @@
 // ***** END LICENSE BLOCK *****
 ?>
 
- <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
- <meta name="keywords" content="web browser mozilla firefox firebird camino thunderbird bugzilla user agent web links cool sites">
-
- <link rel="stylesheet" type="text/css" href="/css/print.css" media="print">
- <link rel="stylesheet" type="text/css" href="/css/base/content.css" media="all">
- <link rel="stylesheet" type="text/css" href="/css/cavendish/content.css" title="Cavendish" media="all">
- <link rel="stylesheet" type="text/css" href="/css/base/template.css" media="screen">
- <link rel="stylesheet" type="text/css" href="/css/cavendish/template.css" title="Cavendish" media="screen">
- <link rel="stylesheet" type="text/css" href="/css/cavendish/home.css" title="Cavendish" media="screen">
- <link rel="stylesheet" type="text/css" href="/core/update.css" media="all">
- <link rel="icon" href="/images/mozilla-16.png" type="image/png">
- <link rel="home" title="Home" href="http://update.mozilla.org/">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="keywords" content="mozilla update, mozilla extensions, mozilla plugins, thunderbird themes, thunderbird extensions, firefox extensions, firefox themes,">
+	
+	<link rel="stylesheet" type="text/css" href="/css/print.css" media="print">
+	
+	<link rel="stylesheet" type="text/css" href="/css/base/content.css" media="all">
+	<link rel="stylesheet" type="text/css" href="/css/cavendish/content.css" title="Cavendish" media="all">
+	
+	<link rel="stylesheet" type="text/css" href="/css/base/template.css" media="screen">
+	<link rel="stylesheet" type="text/css" href="/css/cavendish/template.css" title="Cavendish" media="screen">
+	
+	<link rel="icon" href="/images/favicon.png" type="image/png">
+	
+	<link rel="home" title="Home" href="http://update.mozilla.org/">
 </head>
 
-<body id="update-mozilla-org" class="homepage">
+<body id="update-mozilla-org">
 <div id="container">
 
-<p class="skipLink"><a href="#mainContent" accesskey="2">Skip to main content</a></p>
+<p class="skipLink"><a href="#firefox-feature" accesskey="2">Skip to main content</a></p>
 
+<div id="mozilla-org"><a href="http://www.mozilla.org/">Visit Mozilla.org</a></div>
 <div id="header">
- <h1><a href="/" title="Return to home page" accesskey="1">Mozilla Update</a></h1>
- <ul title="Main Site Sections">
-  <li id="menu_aboutus"><a href="../about/" title="About Mozilla Update">About</a></li>
-  <li id="menu_developers"><a href="../developers/" title="Using Mozilla's products for your own applications">Developers</a></li>
-  <li id="menu_store"><a href="/" title="Available Space">---</a></li>
-  <li id="menu_support"><a href="../themes/" title="Installation, trouble-shooting, and the knowledge base">Themes</a></li>
-  <li id="menu_products"><a href="../extensions/" title="All software Mozilla currently offers">Extensions</a></li>
- </ul>
- <form id="search" method="get" action="http://www.google.com/custom" title="Mozilla.org Search">
- <div>
-  <label for="q" title="Search update.mozilla.org">search update:</label>
-  <input type="hidden" name="cof" value="LW:174;LH:60;L:http://www.mozilla.org/images/mlogosm.gif;GIMP:#cc0000;T:black;ALC:#0000ff;GFNT:grey;LC:#990000;BGC:white;AH:center;VLC:purple;GL:0;GALT:#666633;AWFID:9262c37cefe23a86;">
-  <input type="hidden" name="domains" value="update.mozilla.org">
-  <input type="hidden" name="sitesearch" value="update.mozilla.org">
-  <input type="text" id="q" name="q" accesskey="s" size="30">
-  <input type="submit" id="submit" value="Go">
- </div>
- </form>
+	
+	<div id="key-title">
+	<h1><a href="/" title="Return to home page" accesskey="1">Mozilla Update: Beta</a></h1>
+	<ul>
+		<li><a href="/" title="Learn More About Mozilla Updates">home</a></li>
+		<li><a href="/about/" title="Learn More About Mozilla Updates">about</a></li>
+		<li><a href="/developers/" title="Find Tools and Information for Developers">developers</a></li>
+		<li>
+		<form id="search" method="get" action="http://www.google.com/custom" title="Mozilla.org Search">
+		<div>
+		<label for="q" title="Search mozilla.org&quot;s sites">search:</label>
+		<input type="hidden" name="cof" value="">
+		<input type="hidden" name="domains" value="update.mozilla.org">
+		<input type="hidden" name="sitesearch" value="update.mozilla.org">
+		<input type="text" id="q" name="q" accesskey="s" size="10">
+		<select name="section" id="sectionsearch"><option value="1">Entire Site</option><option value="2">Extensions</option><option value="">Themes</option><!--<option value="3">Plugins</option><option value="4">Search Engines</option>--></select>
+		<input type="submit" id="submit" value="Go">
+		</div>
+		</form>
+		</li>
+	</ul>
+	</div>
+    <?php
+    $uriparams_skip="application";
+    ?>
+	<div id="key-menu">	
+		<dl id="menu-firefox">
+		<dt>Firefox:</dt>
+		<dd><a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Extensions for the Firefox Browser">Extensions</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=firefox" title="Get Themes for the Firefox Browser">Themes</a>, <a href="/plugins/" title="Get Plugins for Firefox">Plugins</a><!--, <a href="/searchengines/" title="Get New Search Engines for the Search Box in Firefox">Search Engines</a>--></dd>
+		</dl>
+		<dl id="menu-thunderbird">
+		<dt>Thunderbird:</dt>
+		<dd><a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Extensions for Thunderbird Email">Extensions</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird" title="Get Themes for Thunderbird Email">Themes</a></dd>
+		</dl>
+		<dl id="menu-mozillasuite">
+		<dt>Mozilla Suite:</dt>
+		<dd><a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Extensions for the Mozilla Suite">Extensions</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla" title="Get Themes for the Mozilla Suite">Themes</a>, <a href="/plugins/" title="Get Plugins for Mozilla Suite">Plugins</a></dd>
+		</dl>
+		<div class="ie-clear-menu">&nbsp;</div>
+	</div>
+    <?php
+    unset($uriparams_skip);
+    ?>
+
 </div>
-<?php
-$uriparams_skip="application";
-?>
-Firefox: <a href="/extensions/?<?php echo"".uriparams()."&"; ?>application=firefox">Extensions</a> <a href="/themes/?<?php echo"".uriparams()."&"; ?>application=firefox">Themes</a> <a href="/searchplugins/">Search Plugins</a> | 
-Thunderbird: <a href="/extensions/?<?php echo"".uriparams()."&"; ?>application=thunderbird">Extensions</a> <a href="/themes/?<?php echo"".uriparams()."&"; ?>application=thunderbird">Themes</a> | 
-Mozilla Suite: <a href="/extensions/?<?php echo"".uriparams()."&"; ?>application=mozilla">Extensions</a> <a href="/themes/?<?php echo"".uriparams()."&"; ?>application=mozilla">Themes</a>
-<?php
-unset($uriparams_skip);
-?>
 <!-- closes #header-->
+
+<hr class="hide">

@@ -41,7 +41,7 @@
 require"../core/config.php";
 
 $app = strtolower($_GET["application"]);  // Firefox, Thunderbird, Mozilla
-$type = $_GET["type"]; //E, T, [P]
+$type = escape_string($_GET["type"]); //E, T, [P]
 $list = ucwords(strtolower($_GET["list"])); // Newest, Updated, [Editors], Popular
 
 $sitetitle = "Mozilla Update";
@@ -59,41 +59,41 @@ header("Content-Type: text/xml");
 // Firefox, extensions, by date added
 
 $select = "SELECT DISTINCT 
-t_main.ID, 
-t_main.Name AS Title, 
-t_main.Description,  
-t_version.Version, 
-t_version.vID,
-t_version.DateUpdated AS DateStamp,
-t_applications.AppName";
+main.ID, 
+main.Name AS Title, 
+main.Description,  
+version.Version, 
+version.vID,
+version.DateUpdated AS DateStamp,
+applications.AppName";
 
-$from = "FROM  t_main 
-INNER  JOIN t_version ON t_main.ID = t_version.ID
-INNER  JOIN t_applications ON t_version.AppID = t_applications.AppID";
+$from = "FROM  main 
+INNER  JOIN version ON main.ID = version.ID
+INNER  JOIN applications ON version.AppID = applications.AppID";
 
 $where = "`approved` = 'YES'"; // Always have a WHERE
 
 if ($app == 'firefox' || $app == 'thunderbird' || $app == 'mozilla') {
-  $where .= " AND t_applications.AppName = '$app'";
+  $where .= " AND applications.AppName = '$app'";
 }
 
 if ($type == 'E' || $type == 'T' || $type == 'P') {
-  $where .= " AND t_main.Type = '$type'";
+  $where .= " AND main.Type = '$type'";
 }
 
 switch ($list) {
    case "Popular":
-     $orderby = "t_main.DownloadCount DESC";
+     $orderby = "main.DownloadCount DESC";
      break;
    case "Updated":
-     $orderby = "t_main.DateUpdated DESC";
+     $orderby = "main.DateUpdated DESC";
      break;
    case "Rated":
-     $orderby = "t_main.Rating DESC";
+     $orderby = "main.Rating DESC";
      break;
    case "Newest":
    default:
-     $orderby = "t_main.DateAdded DESC";
+     $orderby = "main.DateAdded DESC";
      break;
 }
 

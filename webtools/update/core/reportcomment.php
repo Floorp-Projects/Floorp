@@ -41,7 +41,7 @@ require"../core/config.php";
 
 
 //Check and see if the CommentID/ID is valid.
-$sql = "SELECT `ID`, `CommentID` FROM `t_feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
+$sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     if(mysql_num_rows($sql_result)=="0") {
         unset($_GET["id"],$_GET["commentid"],$id,$commentid);
@@ -62,7 +62,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     }
 
 //Set Flag on the Comment Record
-    $sql = "UPDATE `t_feedback` SET `flag`='YES' WHERE `CommentID`='$commentid' LIMIT 1";
+    $sql = "UPDATE `feedback` SET `flag`='YES' WHERE `CommentID`='$commentid' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
@@ -74,8 +74,6 @@ if ($_GET["type"]=="E") {
 }
 
 $return_path="$type/moreinfo.php?id=$id&vid=$vid&".uriparams()."&page=comments&pageid=$_GET[pageid]#$commentid";
-//header("Location: http://$sitehostname/$return_path");
-//exit;
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
 <html lang="EN" dir="ltr">

@@ -11,10 +11,10 @@ include"$page_header";
 include"inc_sidebar.php";
 ?>
 <?php
-$id = $_GET["id"];
-$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
+$id = escape_string($_GET["id"]);
+$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TM.ID = '$id' ORDER  BY  `Type` , `Name` ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numresults = mysql_num_rows($sql_result);
@@ -37,13 +37,13 @@ $v++;
 <?php
 if ($_POST["submit"]=="Update Previews") {
 for ($i = 1; $i <= $_POST["maxid"]; $i++) {
-$previewid = $_POST["previewid_$i"];
-$caption = $_POST["caption_$i"];
-$delete = $_POST["delete_$i"];
+$previewid = escape_string($_POST["previewid_$i"]);
+$caption = escape_string($_POST["caption_$i"]);
+$delete = escape_string($_POST["delete_$i"]);
 
 
 
-$sql = "SELECT `PreviewURI` from `t_previews` WHERE `PreviewID`='$previewid' LIMIT 1";
+$sql = "SELECT `PreviewURI` from `previews` WHERE `PreviewID`='$previewid' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
     $file = $row["PreviewURI"];
@@ -55,9 +55,9 @@ if ($_POST["preview"]==$previewid AND $imagesize[0]<="180" AND $imagesize[1]<="7
 if ($delete==$previewid) {
   if (file_exists($file)) {  unlink($file); }
 
-$sql = "DELETE FROM `t_previews` WHERE `PreviewID`='$previewid'";
+$sql = "DELETE FROM `previews` WHERE `PreviewID`='$previewid'";
 } else {
-$sql = "UPDATE `t_previews` SET `caption`='$caption', `preview`='$preview' WHERE `PreviewID`='$previewid'";
+$sql = "UPDATE `previews` SET `caption`='$caption', `preview`='$preview' WHERE `PreviewID`='$previewid'";
 }
   if (checkFormKey()) {
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -70,7 +70,7 @@ echo"Previews successfully updated. The new values for the preview records shoul
 
 
 unset($i);
-$sql = "SELECT * FROM `t_previews` TP WHERE `ID`='$id' ORDER BY `PreviewID`";
+$sql = "SELECT * FROM `previews` TP WHERE `ID`='$id' ORDER BY `PreviewID`";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $num_results = mysql_num_rows($sql_result);
 
@@ -149,8 +149,8 @@ unset($count,$val,$exploded_filename,$filename,$maxval);
 
 $width = $_POST["width"];
 $height = $_POST["height"];
-$preview = $_POST["preview"];
-$caption = $_POST["caption"];
+$preview = escape_string($_POST["preview"]);
+$caption = escape_string($_POST["caption"]);
 
 $name = str_replace(" ","_",$name);
 $previewpath = strtolower("images/previews/$name-$i.jpg");
@@ -227,7 +227,7 @@ imagedestroy($dst_img);
 if ($status=="1") {
 //Lets attempt to add the record to the DB.
  if (checkFormKey()) {
-  $sql = "INSERT INTO `t_previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
+  $sql = "INSERT INTO `previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
   if ($sql_result=="1") {
@@ -259,6 +259,12 @@ Image Caption: <input name="caption" type="text" size="30"><br>
 
 <input name="submit" type="submit" value="Add Preview"><input name="reset" type="reset" value="Reset">
 </form>
+
+
+
+<!-- close #mBody-->
+</div>
+
 <?php
 include"$page_footer";
 ?>

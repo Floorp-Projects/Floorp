@@ -38,7 +38,7 @@ if (!$function) {
 </tr>
 
 <?php
-  $sql = "SELECT * FROM `t_faq` ORDER BY `index` ASC, `title` ASC";
+  $sql = "SELECT * FROM `faq` ORDER BY `index` ASC, `title` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
 
@@ -75,18 +75,18 @@ if (!$function) {
 
 <?php
 } else if ($function=="edit") {
-  $id = $_GET["id"];
+  $id = escape_string($_GET["id"]);
   //Post Functions
   if ($_POST["submit"] == "Update Entry") {
     echo"<h2>Processing your update, please wait...</h2>\n";
-    $title = $_POST["title"];
-    $index = $_POST["index"];
-    $alias = $_POST["alias"];
-    $text = $_POST["text"];
-    $active = $_POST["active"];
-    $id = $_POST["id"];
+    $title = escape_string($_POST["title"]);
+    $index = escape_string($_POST["index"]);
+    $alias = escape_string($_POST["alias"]);
+    $text = escape_string($_POST["text"]);
+    $active = escape_string($_POST["active"]);
+    $id = escape_string($_POST["id"]);
     if (checkFormKey()) {
-      $sql = "UPDATE `t_faq` SET `title`='$title', `index`='$index', `alias`='$alias', `text`='$text', `active`='$active' WHERE `id`='$id'";
+      $sql = "UPDATE `faq` SET `title`='$title', `index`='$index', `alias`='$alias', `text`='$text', `active`='$active' WHERE `id`='$id'";
       $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
       if ($sql_result) {
           echo"Your update to '$title', has been successful.<br>";
@@ -95,10 +95,10 @@ if (!$function) {
 
   } else if ($_POST["submit"] == "Delete Entry") {
     echo"<h2>Processing, please wait...</h2>\n";
-    $id = $_POST["id"];
-    $title = $_POST["title"];
+    $id = escape_string($_POST["id"]);
+    $title = escape_string($_POST["title"]);
     if (checkFormKey()) {
-      $sql = "DELETE FROM `t_faq` WHERE `id`='$id'";
+      $sql = "DELETE FROM `faq` WHERE `id`='$id'";
       $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
       if ($sql_result) {
           echo"You've successfully deleted the FAQ Entry '$title'.";
@@ -110,7 +110,7 @@ if (!$function) {
 }
 
 // Show Edit Form
-  $sql = "SELECT * FROM `t_faq` WHERE `id` = '$id' LIMIT 1";
+  $sql = "SELECT * FROM `faq` WHERE `id` = '$id' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
 ?>
@@ -125,7 +125,7 @@ if (!$function) {
 
 //List of Entry Index for User Convienience
  echo"Existing Index Reference: <SELECT name=\"titleindex\">\n";
- $sql = "SELECT `id`,`title`, `index` FROM `t_faq` ORDER BY `index` ASC";
+ $sql = "SELECT `id`,`title`, `index` FROM `faq` ORDER BY `index` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row2 = mysql_fetch_array($sql_result)) {
     echo"<OPTION value=\"$row2[index]\"";
@@ -163,14 +163,14 @@ if ($active=="YES") {
   if ($_POST["submit"]=="Add FAQ Entry") {
 
     echo"<h2>Adding Entry, please wait...</h2>\n";
-    $title = $_POST["title"];
-    $index = $_POST["index"];
-    $alias = $_POST["alias"];
-    $text = $_POST["text"];
-    $active = $_POST["active"];
-    $id = $_POST["id"];
+    $title = escape_string($_POST["title"]);
+    $index = escape_string($_POST["index"]);
+    $alias = escape_string($_POST["alias"]);
+    $text = escape_string($_POST["text"]);
+    $active = escape_string($_POST["active"]);
+    $id = escape_string($_POST["id"]);
     if (checkFormKey()) {
-      $sql = "INSERT INTO `t_faq` (`title`,`index`,`alias`, `text`, `active`) VALUES ('$title','$index','$alias', '$text', '$active')";
+      $sql = "INSERT INTO `faq` (`title`,`index`,`alias`, `text`, `active`) VALUES ('$title','$index','$alias', '$text', '$active')";
       $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
       if ($sql_result) {
         echo"The entry '$title' has been successfully added.<br>\n";
@@ -183,14 +183,14 @@ if ($active=="YES") {
 <form name="addfaq" method="post" action="?function=addentry">
 <?writeFormKey();?>
 <?php
-$title = $_POST["title"];
+$title = escape_string($_POST["title"]);
 
   echo"Title: <input name=\"title\" type=\"text\" size=\"40\" maxlength=\"150\" value=\"$title\">&nbsp;\n";
   echo"Alias: <input name=\"alias\" type=\"text\" size=\"8\" maxlength=\"20\" value=\"\"><br>";
 
 //List of Entry Index for User Convienience
  echo"<BR>Existing Index Reference: <SELECT name=\"titleindex\">\n";
- $sql = "SELECT `id`,`title`, `index` FROM `t_faq` ORDER BY `index` ASC";
+ $sql = "SELECT `id`,`title`, `index` FROM `faq` ORDER BY `index` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row2 = mysql_fetch_array($sql_result)) {
     echo"<OPTION value=\"$row2[index]\"";
@@ -216,6 +216,10 @@ $title = $_POST["title"];
 <?php
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

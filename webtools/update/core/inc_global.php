@@ -63,27 +63,19 @@ foreach ($_GET as $key => $val) {
 $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
 }
 
-//Set Debug Mode session Variable
-if ($_GET["debug"]=="true") {$_SESSION["debug"]=$_GET["debug"]; } else if ($_GET["debug"]=="false") {unset($_SESSION["debug"]);}
-
 // Bug 250596 Fixes for incoming $_GET variables.
 if ($_GET["application"]) {
 $_GET["application"] = escape_string(strtolower($_GET["application"]));
-$sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
+$sql = "SELECT AppID FROM  `applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
 }
 
-//if ($_GET["version"]) {
-//$sql = "SELECT AppID FROM  `t_applications` WHERE `Release` = '$_GET[version]' LIMIT 1";
-// $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-//   if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
-//}
 
 if ($_GET["category"] AND $_GET["category"] !=="All"
     AND $_GET["category"] !=="Editors Pick" AND $_GET["category"] !=="Popular"
     AND $_GET["category"] !=="Top Rated" AND $_GET["category"] !=="Newest") {
-$sql = "SELECT CatName FROM  `t_categories` WHERE `CatName` = '".escape_string(ucwords(strtolower($_GET["category"])))."' LIMIT 1";
+$sql = "SELECT CatName FROM  `categories` WHERE `CatName` = '".escape_string(ucwords(strtolower($_GET["category"])))."' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)===0) {unset($_GET["category"]);}
 }
@@ -99,10 +91,9 @@ function page_error($reason, $custom_message) {
     global $page_header, $page_footer;
 
     echo"<TITLE>Mozilla Update :: Error</TITLE>\n";
-    echo"<LINK REL=\"STYLESHEET\" TYPE=\"text/css\" HREF=\"/core/update.css\">\n";
 
     include"$page_header";
-
+    echo"<div id=\"mBody\">";
     echo"<h1>Mozilla Update :: Error</h1>\n";
     echo"<SPAN style=\"font-size: 12pt\">\n";
     echo"Mozilla Update has encountered an error and is unable to fulfill your request. Please try your request again later. If the
@@ -111,7 +102,7 @@ function page_error($reason, $custom_message) {
     Error $reason: $custom_message<BR><BR>
     &nbsp;&nbsp;&nbsp;<A HREF=\"javascript:history.back()\">&#171;&#171; Go Back to Previous Page</A>";
     echo"</SPAN>\n";
-
+    echo"</div>\n";
     include"$page_footer";
     echo"</body>\n</html>\n";
     exit;
@@ -119,7 +110,7 @@ function page_error($reason, $custom_message) {
 
 function writeFormKey()
 {
-	$sql = "SELECT UserPass FROM t_userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
+	$sql = "SELECT UserPass FROM userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
 	$res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 	$row = mysql_fetch_array($res);
 	echo "<input type=\"hidden\" name=\"formkey\" value=\"".md5($row["UserPass"])."\">\n";
@@ -128,7 +119,7 @@ function writeFormKey()
 function checkFormKey()
 {
 	$key = $_POST["formkey"];
-	$sql = "SELECT UserPass FROM t_userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
+	$sql = "SELECT UserPass FROM userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
 	$res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 	$row = mysql_fetch_array($res);
 	if ($key != md5($row["UserPass"]))
@@ -148,12 +139,14 @@ function uriparams() {
     global $app_version, $application, $items_per_page, $category, $OS, $uriparams_skip;
     $uriparams = "";
 
-    if ($application and $uriparams_skip !="application") { $uriparams .="application=$application"; }
-    if ($app_version) { $uriparams .="&version=$app_version"; }
-    if ($OS) { $uriparams .="&os=$OS"; }
-    if ($category and $uriparams_skip !="category") { $uriparams .="&category=$category"; }
-    if ($items_per_page) { $uriparams .="&numpg=$items_per_page"; }
-
+    if ($application and $uriparams_skip !="application") { $uriparams .="application=$application&amp;"; }
+    if ($app_version and $uriparams_skip !="application") { $uriparams .="version=$app_version&amp;"; }
+    if ($OS) { $uriparams .="os=$OS&amp;"; }
+    if ($category and $uriparams_skip !="category") { $uriparams .="category=$category&amp;"; }
+    if ($items_per_page) { $uriparams .="numpg=$items_per_page"; }
+    if (substr($uriparams, -1)==";") {
+        $uriparams = substr($uriparams,0,strlen($uriparams)-5);
+    }
     return $uriparams;
 }
 

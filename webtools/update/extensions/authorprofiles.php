@@ -45,14 +45,14 @@ require"../core/config.php";
 <head>
 <?php
 //Bookmarking-Friendly Page Title
-$sql = "SELECT  UserName FROM `t_userprofiles`  WHERE UserID = '$_GET[id]' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-if (mysql_num_rows($sql_result)===0) {
-$return = page_error("2","Author ID is Invalid or Missing.");
-exit;
-
-}
-  $row = mysql_fetch_array($sql_result);
+$id = escape_string($_GET["id"]);
+$sql = "SELECT  UserName FROM `userprofiles`  WHERE UserID = '$id' LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if (mysql_num_rows($sql_result)===0) {
+        $return = page_error("2","Author ID is Invalid or Missing.");
+        exit;
+    }
+    $row = mysql_fetch_array($sql_result);
 ?>
 
     <TITLE>Mozilla Update :: Extensions - Author Profile: <?php echo"$row[UserName]"; ?></TITLE>
@@ -71,8 +71,8 @@ include"$page_header";
 	<div id="mainContent">
 
 <?php
-$userid = $_GET["id"];
- $sql = "SELECT * FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
+$userid = escape_string($_GET["id"]);
+ $sql = "SELECT * FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
     $userid = $row["UserID"];
@@ -102,9 +102,9 @@ echo"<A HREF=\"mailto:$useremail\">$useremail</A>";
 &nbsp;<BR>
 <h2>All Extensions and Themes by <?php echo"$username"; ?></h2>
 <?php
-$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.DateUpdated, TM.TotalDownloads, TU.UserEmail FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
+$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.DateUpdated, TM.TotalDownloads, TU.UserEmail FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TU.UserID = '$userid' AND TM.Type !='P'
 ORDER  BY  `Type` , `Name` ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -112,7 +112,7 @@ ORDER  BY  `Type` , `Name` ";
   while ($row = mysql_fetch_array($sql_result)) {
 
 
-$sql2 = "SELECT `vID`, `Version` FROM `t_version` WHERE `ID` = '$row[ID]' AND `approved` = 'YES' ORDER BY `Version` ASC LIMIT 1";
+$sql2 = "SELECT `vID`, `Version` FROM `version` WHERE `ID` = '$row[ID]' AND `approved` = 'YES' ORDER BY `Version` ASC LIMIT 1";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
    $vid = $row2["vID"];

@@ -39,33 +39,32 @@
 <?php
 require"../core/config.php";
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<html lang="EN" dir="ltr">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-    <meta http-equiv="Content-Language" content="en">
-<TITLE>Mozilla Update :: Frequently Asked Questions</TITLE>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
 
-<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
-</HEAD>
-<BODY>
+<head>
+    <title>Mozilla Update :: Frequently Asked Questions</title>
+
 <?php
 include"$page_header";
 ?>
-<h2>Frequently Asked Questions</h2>
+
+<div id="mBody">
+
+<h1>Frequently Asked Questions</h1>
 
 <?php
-$sql = "SELECT `title`, `text` FROM  `t_faq` WHERE `active` = 'YES' ORDER  BY  `index` ASC, `title` ASC";
+$sql = "SELECT `title`, `text` FROM  `faq` WHERE `active` = 'YES' ORDER  BY  `index` ASC, `title` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $title = $row["title"];
    $text = nl2br($row["text"]);
 
-echo"<h3>$title</h3>\n";
+echo"<h2>$title</h2>\n";
 echo"$text\n";
 }
 ?>
-
+</div>
 <?php
 include"$page_footer";
 ?>

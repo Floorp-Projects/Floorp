@@ -41,7 +41,7 @@ require"../core/config.php";
 
 
 //Check and see if the ID/vID is valid.
-$sql = "SELECT TM.ID, TV.vID FROM `t_main` TM INNER JOIN `t_version` TV ON TM.ID=TV.ID WHERE TM.ID = '".escape_string($_POST[id])."' AND `vID`='".escape_string($_POST["vid"])."' LIMIT 1";
+$sql = "SELECT TM.ID, TV.vID FROM `main` TM INNER JOIN `version` TV ON TM.ID=TV.ID WHERE TM.ID = '".escape_string($_POST[id])."' AND `vID`='".escape_string($_POST["vid"])."' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     if(mysql_num_rows($sql_result)=="0") {
         unset($_POST["id"],$_POST["vid"],$id,$vid);
@@ -76,9 +76,9 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 
 
 //Compile Info about What Version of the item this comment is about.
-$sql = "SELECT TV.Version, `OSName`, `AppName` FROM `t_version` TV
-        INNER JOIN `t_os` TOS ON TOS.OSID=TV.OSID
-        INNER JOIN `t_applications` TA ON TA.AppID=TV.AppID
+$sql = "SELECT TV.Version, `OSName`, `AppName` FROM `version` TV
+        INNER JOIN `os` TOS ON TOS.OSID=TV.OSID
+        INNER JOIN `applications` TA ON TA.AppID=TV.AppID
         WHERE TV.ID = '$id' AND TV.vID='$vid' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     $row = mysql_fetch_array($sql_result);
@@ -98,18 +98,18 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 //Check the Formkey against the DB, and see if this has already been posted...
 $formkey = escape_string($_POST["formkey"]);
 $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
-$sql = "SELECT `CommentID` FROM  `t_feedback` WHERE `formkey` = '$formkey' AND `CommentDate`>='$date'";
+$sql = "SELECT `CommentID` FROM  `feedback` WHERE `formkey` = '$formkey' AND `CommentDate`>='$date'";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
 if (mysql_num_rows($sql_result)=="0") {
 
 //FormKey doesn't exist, go ahead and add their comment.
-    $sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
+    $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 
     //Get Rating Data and Create $ratingarray
     $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
-    $sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
+    $sql = "SELECT ID, CommentVote FROM  `feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
         $ratingarray[$row[ID]][] = $row["CommentVote"];
@@ -129,7 +129,7 @@ if (mysql_num_rows($sql_result)=="0") {
     }
 
 
-    $sql = "UPDATE `t_main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
+    $sql = "UPDATE `main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 }

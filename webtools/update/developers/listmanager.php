@@ -41,10 +41,11 @@ unset($i);
 </TR>
 
 <?php
-$sql = "SELECT  TM.ID, TM.Name, TM.Description, TM.DateUpdated FROM  `t_main`  TM ";
-if ($_SESSION[level]=="user") { $sql .= "LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID "; }
-$sql .= "WHERE TM.Type = '$_GET[type]'";
+$type = escape_string($_GET["type"]);
+$sql = "SELECT  TM.ID, TM.Name, TM.Description, TM.DateUpdated FROM  `main`  TM ";
+if ($_SESSION[level]=="user") { $sql .= "LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID "; }
+$sql .= "WHERE TM.Type = '$type'";
 if ($_SESSION[level]=="user") {$sql .=" AND TU.UserEmail = '$_SESSION[email]'"; }
 $sql .=" ORDER  BY  `Type` , `Name`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -84,9 +85,9 @@ unset($sql_result);
 if ($_POST["name"] && $_POST["authors"] && $_POST["categories"] && $_POST["description"]) {
 //Everything We *must* have is present... Begin....
 
-//Phase One, update t_main values...
+//Phase One, update main values...
 if (checkFormKey()) {
-  $sql = "UPDATE `t_main` SET `Name`= '$_POST[name]', `Homepage`='$_POST[homepage]', `Description`='$_POST[description]', `DateUpdated`=NOW(NULL) WHERE `ID`='$_POST[id]' LIMIT 1";
+  $sql = "UPDATE `main` SET `Name`= '".escape_string($_POST[name])."', `Homepage`='".escape_string($_POST[homepage])."', `Description`='".escape_string($_POST[description])."', `DateUpdated`=NOW(NULL) WHERE `ID`='".escape_string($_POST[id])."' LIMIT 1";
    //echo"$sql<br>\n"; //Debug
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 if ($sql_result) {
@@ -96,12 +97,12 @@ if ($sql_result) {
 echo"<SPAN style=\"font-size 10pt;\">";
 
 //Phase Two, Author List -- Autocomplete and Verify
-  $authors = $_POST["authors"];
+  $authors = escape_string($_POST["authors"]);
   $authors = explode(", ","$authors");
 foreach ($authors as $author) {
 if (strlen($author)<2) {continue;} //Kills all values that're too short.. 
 $a++;
- $sql = "SELECT `UserID`,`UserEmail` FROM `t_userprofiles` WHERE `UserEmail` LIKE '$author%' ORDER BY `UserMode`, `UserName` ASC";
+ $sql = "SELECT `UserID`,`UserEmail` FROM `userprofiles` WHERE `UserEmail` LIKE '$author%' ORDER BY `UserMode`, `UserName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  $numresults = mysql_num_rows($sql_result);
    while ($row = mysql_fetch_array($sql_result)) {
@@ -126,7 +127,8 @@ unset($a,$r);
 if ($updateauthors != "false") {
  //Remove Current Authors
  if (checkFormKey()) {
-  $sql = "DELETE FROM `t_authorxref` WHERE `ID` = '$_POST[id]'";
+  $id = escape_string($_POST["id"]);
+  $sql = "DELETE FROM `authorxref` WHERE `ID` = '$id'";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  }
 
@@ -134,7 +136,8 @@ if ($updateauthors != "false") {
  sort($authorids);
   foreach ($authorids as $authorid) {
     if (checkFormKey()) {
-      $sql = "INSERT INTO `t_authorxref` (`ID`, `UserID`) VALUES ('$_POST[id]', '$authorid');";
+      $id = escape_string($_POST["id"]);
+      $sql = "INSERT INTO `authorxref` (`ID`, `UserID`) VALUES ('$id', '$authorid');";
       $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     }
   }
@@ -149,13 +152,14 @@ unset($authors); //Clear from Post..
 //print_r($_POST["categories"]);
  //Delete Current Category Linkages...
   if (checkFormKey()) {
-   $sql = "DELETE FROM `t_categoryxref` WHERE `ID` = '$_POST[id]'";
+   $id = escape_string($_POST["id"]);
+   $sql = "DELETE FROM `categoryxref` WHERE `ID` = '$id'";
    //echo"$sql<br>\n"; //Debug
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   
  //Add New Categories from $_POST["categories"]
    foreach ($_POST["categories"] as $categoryid) {
-   	$sql = "INSERT INTO `t_categoryxref` (`ID`, `CategoryID`) VALUES ('$_POST[id]', '$categoryid');";
+   	$sql = "INSERT INTO `categoryxref` (`ID`, `CategoryID`) VALUES ('$id', '$categoryid');";
      //echo"$sql<br>\n"; //Debug
     $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
    }
@@ -178,12 +182,12 @@ echo"</SPAN></DIV>";
 
 
 } else if ($_POST["submit"]=="Delete") {
-$name = $_POST["name"];
-$id = $_POST["id"];
+$name = escape_string($_POST["name"]);
+$id = escape_string($_POST["id"]);
 
 echo"<h1>Deleting $name, please wait...</h1>\n";
-  $sql = "SELECT `Version`, `URI` FROM `t_version` WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version` ASC";
-   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+  $sql = "SELECT `Version`, `URI` FROM `version` WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version` ASC";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
      $version = $row["Version"];
      $uri = $row["URI"];
@@ -221,7 +225,7 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
     }
 
   if (checkFormKey()) {
-   $sql = "DELETE FROM `t_main` WHERE `ID`='$id'";
+   $sql = "DELETE FROM `main` WHERE `ID`='$id'";
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
     echo"$name has been deleted...<br>\n";
@@ -241,11 +245,11 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
 
 
 //Get Parent Item Information
-$id = $_GET["id"];
-if (!$id) {$id = $_POST["id"]; }
-$sql = "SELECT  TM.ID, TM.Type, TM.GUID, TM.Name, TM.Description, TM.DateAdded, TM.DateUpdated, TM.Homepage, TU.UserEmail FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
+$id = escape_string($_GET["id"]);
+if (!$id) {$id = escape_string($_POST["id"]); }
+$sql = "SELECT  TM.ID, TM.Type, TM.GUID, TM.Name, TM.Description, TM.DateAdded, TM.DateUpdated, TM.Homepage, TU.UserEmail FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TM.ID = '$id'
 ORDER  BY  `Type` , `Name`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -283,8 +287,8 @@ unset($v);
 
 <?php
 //Get Currently Set Categories for this Object...
- $sql = "SELECT  TCX.CategoryID, TC.CatName FROM  `t_categoryxref`  TCX 
-INNER JOIN t_categories TC ON TCX.CategoryID = TC.CategoryID
+ $sql = "SELECT  TCX.CategoryID, TC.CatName FROM  `categoryxref`  TCX 
+INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID
 WHERE TCX.ID = '$id'
 ORDER  BY  `CatName`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -296,7 +300,7 @@ ORDER  BY  `CatName`  ASC ";
 unset($n);
 
 //Get the Category Table Data for the Select Box
- $sql = "SELECT  `CategoryID`, `CatName` FROM  `t_categories` WHERE `CatType` = '$type' ORDER  BY  `CatName` ASC";
+ $sql = "SELECT  `CategoryID`, `CatName` FROM  `categories` WHERE `CatType` = '$type' ORDER  BY  `CatName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 //  $sqlnum = mysql_num_rows($sql_result);
 ?>
@@ -374,13 +378,12 @@ unset($sql_result);
 
 echo"<SPAN style=\"font-size 10pt;\">";
 //Phase One-Part 1 -- Version (per-file record update)
-$notes = $_POST["notes"];
-$id = $_POST["id"];
-$uri = $_POST["uri"];
-$osid = $_POST["osid"];
+$notes = escape_string($_POST["notes"]);
+$id = escape_string($_POST["id"]);
+$uri = escape_string($_POST["uri"]);
+$osid = escape_string($_POST["osid"]);
  if (checkFormKey()) {
-  $sql = "UPDATE `t_version` SET `OSID`='$osid', `Notes`='$notes', `DateUpdated`=NOW(NULL) WHERE `ID`='$id' AND `URI`='$uri'";
-  //echo"$sql<br>\n";
+  $sql = "UPDATE `version` SET `OSID`='$osid', `Notes`='$notes', `DateUpdated`=NOW(NULL) WHERE `ID`='$id' AND `URI`='$uri'";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
    echo"Version Notes and OS for $_POST[name] $_POST[version] updated...<br>\n";
  }
@@ -388,7 +391,7 @@ $osid = $_POST["osid"];
 
 //Construct Internal App_Version Arrays
 $i=0;
-$sql = "SELECT `int_version`, `major`, `minor`, `release`, `SubVer` FROM `t_applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `int_version`, `major`, `minor`, `release`, `SubVer` FROM `applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
@@ -404,9 +407,9 @@ $sql = "SELECT `int_version`, `major`, `minor`, `release`, `SubVer` FROM `t_appl
 
 for ($i = 1; $i <= $_POST[maxval]; $i++) {
 unset($minappver_int,$maxappver_int);
-$minappver = $_POST["minappver_$i"];
-$maxappver = $_POST["maxappver_$i"];
-$vid = $_POST["appvid_$i"];
+$minappver = escape_string($_POST["minappver_$i"]);
+$maxappver = escape_string($_POST["maxappver_$i"]);
+$vid = escape_string($_POST["appvid_$i"]);
 if ($app_internal_array["$minappver"]) {$minappver_int = $app_internal_array["$minappver"]; }
 if ($app_internal_array["$maxappver"]) {$maxappver_int = $app_internal_array["$maxappver"]; }
 if (!$minappver_int) {$minappver_int = $minappver;}
@@ -414,7 +417,7 @@ if (!$maxappver_int) {$maxappver_int = $maxappver;}
 
 if ($minappver && $maxappver) {
  if (checkFormKey()) {
-  $sql = "UPDATE `t_version` SET `MinAppVer`='$minappver', `MinAppVer_int`='$minappver_int', `MaxAppVer`='$maxappver', `MaxAppVer_int`='$maxappver_int' WHERE `vID`='$vid'";
+  $sql = "UPDATE `version` SET `MinAppVer`='$minappver', `MinAppVer_int`='$minappver_int', `MaxAppVer`='$maxappver', `MaxAppVer_int`='$maxappver_int' WHERE `vID`='$vid'";
   //echo"$sql<br>\n";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     echo"Updated Target Application Values for Application $i...<br>\n";
@@ -430,18 +433,18 @@ echo"</SPAN></DIV>";
 
 
 } else if ($_POST["submit"]=="Delete") {
-$id = $_POST["id"];
-$uri = $_POST["uri"];
-$version = $_POST["version"];
+$id = escape_string($_POST["id"]);
+$uri = escape_string($_POST["uri"]);
+$version = escape_string($_POST["version"]);
 echo"<h1>Deleting Version... Please wait...</h1>\n";
-$sql = "SELECT `Name` FROM `t_main` WHERE `ID` = '$id'";
+$sql = "SELECT `Name` FROM `main` WHERE `ID` = '$id'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
     $name = $row["Name"];
 
   $sql_result = false;
   if (checkFormKey()) {
-   $sql = "DELETE FROM `t_version` WHERE `ID`='$id' AND `URI`='$uri'";
+   $sql = "DELETE FROM `version` WHERE `ID`='$id' AND `URI`='$uri'";
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
   }
     if ($sql_result) {
@@ -476,9 +479,9 @@ $sql = "SELECT `Name` FROM `t_main` WHERE `ID` = '$id'";
 //----------------------
 
 //Get Parent Item Information
-$id = $_GET["id"];
-if (!$id) {$id = $_POST["id"]; }
-$sql = "SELECT  TM.ID, TM.Name FROM  `t_main` TM WHERE TM.ID = '$id' LIMIT 1";
+$id = escape_string($_GET["id"]);
+if (!$id) {$id = escape_string($_POST["id"]); }
+$sql = "SELECT  TM.ID, TM.Name FROM  `main` TM WHERE TM.ID = '$id' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
     $id = $row["ID"];
@@ -488,11 +491,11 @@ $sql = "SELECT  TM.ID, TM.Name FROM  `t_main` TM WHERE TM.ID = '$id' LIMIT 1";
 //-----------------------
 //  Version Table
 //-----------------------
-$vid = $_GET["vid"];
-if (!$vid) {$vid = $_POST["vid"]; }
+$vid = escape_string($_GET["vid"]);
+if (!$vid) {$vid = escape_string($_POST["vid"]); }
 //Get Data for Form Population
-//INNER JOIN t_main TM ON TV.ID = TM.ID 
- $sql = "SELECT `Version`, TV.OSID, `OSName`,`URI`,`Notes`,`Size`,`DateAdded`, `DateUpdated` FROM `t_version` TV INNER JOIN `t_os` TOS ON TOS.OSID=TV.OSID WHERE `vID` = '$vid' ORDER BY `Version` ASC LIMIT 1";
+//INNER JOIN main TM ON TV.ID = TM.ID 
+ $sql = "SELECT `Version`, TV.OSID, `OSName`,`URI`,`Notes`,`Size`,`DateAdded`, `DateUpdated` FROM `version` TV INNER JOIN `os` TOS ON TOS.OSID=TV.OSID WHERE `vID` = '$vid' ORDER BY `Version` ASC LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
     $v++;
@@ -521,7 +524,7 @@ if (!$vid) {$vid = $_POST["vid"]; }
 
 //Construct App_Versions Arrays
 $i=0;
-$sql = "SELECT `AppName`, `Version`, `major`, `minor`, `release`, `SubVer` FROM `t_applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `AppName`, `Version`, `major`, `minor`, `release`, `SubVer` FROM `applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
@@ -537,7 +540,7 @@ $sql = "SELECT `AppName`, `Version`, `major`, `minor`, `release`, `SubVer` FROM 
   
 $i=0;
 echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></TR>\n";
- $sql = "SELECT vID, TV.AppID,`AppName`,`MinAppVer`,`MaxAppVer` FROM  `t_version` TV INNER JOIN `t_applications` TA ON TA.AppID=TV.AppID WHERE `ID` = '$id' && TV.URI = '$uri' ORDER BY `AppName` ASC";
+ $sql = "SELECT vID, TV.AppID,`AppName`,`MinAppVer`,`MaxAppVer` FROM  `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE `ID` = '$id' && TV.URI = '$uri' ORDER BY `AppName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
     $i++;
@@ -569,7 +572,7 @@ foreach ($app_ver_array[strtolower($appname)] as $app_version) {
     echo"<TR><TD><SPAN class=\"file\">OS*</SPAN></TD><TD>";
     echo"<SELECT name=\"osid\">";
 $os = $osid;
-$sql = "SELECT * FROM `t_os` ORDER BY `OSName` ASC";
+$sql = "SELECT * FROM `os` ORDER BY `OSName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
     $osname = $row["OSName"];
@@ -590,6 +593,10 @@ $sql = "SELECT * FROM `t_os` ORDER BY `OSName` ASC";
 <?php
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

@@ -36,43 +36,17 @@
 //
 // ***** END LICENSE BLOCK *****
 ?>
-<!--Page Footer-->
-  <hr class="hide">
-  <div id="footer">
-   <ul id="bn">
-    <li><a href="/about/policies/">Terms of Use</a></li>
-    <li><a href="/about/contact/">Contact Us</a></li>
-    <li><a href="http://www.mozilla.org/foundation/donate.html">Donate</a></li>
-   </ul>
-    <p><strong>Update-Beta is a technology Preview. For internal use only.</strong><br>
-    Copyright &copy; 2004 The Mozilla Organization</p>
-  </div>
+<hr class="hide">
+	<div id="footer">
+		<ul id="bn">
+		<li><a href="/about/policies/">Terms of Use</a></li>
+		<li><a href="/about/contact/">Contact Us</a></li>
+		<li><a href="http://www.mozilla.org/foundation/donate.html">Donate</a></li>
+		</ul>
+		<p><strong>Update-Beta is a technology Preview of pre-release software.<br>It is not guaranteed to be current or available.</strong><br>
+		Copyright &copy; 2004 The Mozilla Organization</p>
+	</div>
   <!-- closes #footer-->
 
 </div>
 <!-- closes #container -->
-
-<?php
-
-
-//if ($_SESSION["debug"]=="true") {
-//print(session_id());
-//echo"<PRE>";print_r($_SESSION); echo"</PRE><Br>\n";
-//echo"Current application data: $application - $app_version - $OS ";
-//}
-
-
-return;
-
-//Site Timer Counter :: Debug-Mode Item Only
-$time_end = getmicrotime();
-//Returns in format: sss.mmmuuunnnppp ;-) 
-// m = millisec, u=microsec, n=nansec, p=picosec
-$time = round($time_end - $time_start,"6");
-
-echo"<DIV class=\"footer\">&copy; 2004 <A HREF=\"http://www.mozilla.org\">The Mozilla Organization</A>"; if ($_SESSION["debug"]=="true") {echo" | Page Created in $time seconds"; } echo" | Terms of Use | Top</DIV>"; //Debug Time
-
-if ($pos !== false) {
-echo"</div>\n";
-}
-?>

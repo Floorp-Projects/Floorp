@@ -30,18 +30,18 @@ if (!$function) {
   if ($_POST["submit"]=="Add Application" or $_POST["submit"]=="Add Version") {
      echo"<h2>Processing Add Request, please wait...</h2>\n";
 
-     $appname = $_POST["appname"];
-     $guid = $_POST["guid"];
-     $shortname = $_POST["shortname"];
-     $version = $_POST["version"];
-     $major = $_POST["Major"];
-     $minor = $_POST["Minor"];
-     $release = $_POST["Release"];
-     $subver = $_POST["SubVer"];
-     $public_ver = $_POST["public_ver"];
+     $appname = escape_string($_POST["appname"]);
+     $guid = escape_string($_POST["guid"]);
+     $shortname = escape_string($_POST["shortname"]);
+     $version = escape_string($_POST["version"]);
+     $major = escape_string($_POST["Major"]);
+     $minor = escape_string($_POST["Minor"]);
+     $release = escape_string($_POST["Release"]);
+     $subver = escape_string($_POST["SubVer"]);
+     $public_ver = escape_string($_POST["public_ver"]);
 
      if (checkFormKey()) {
-       $sql = "INSERT INTO `t_applications` (`AppName`, `GUID`, `shortname`, `Version`, `major`, `minor`, `release`,`SubVer`,`public_ver`) VALUES ('$appname','$guid','$shortname','$version', '$major','$minor','$release','$subver','$public_ver')";
+       $sql = "INSERT INTO `applications` (`AppName`, `GUID`, `shortname`, `Version`, `major`, `minor`, `release`,`SubVer`,`public_ver`) VALUES ('$appname','$guid','$shortname','$version', '$major','$minor','$release','$subver','$public_ver')";
        $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
        if ($sql_result) {
            echo"The application $appname $version has been successfully added.";
@@ -52,7 +52,7 @@ if (!$function) {
 
 <h1>Manage Application List</h1>
 <SPAN style="font-size:8pt">&nbsp;&nbsp;&nbsp;&nbsp; Show Versions for: <?php $i=0;
-$sql = "SELECT `AppName` from `t_applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
+$sql = "SELECT `AppName` from `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
    $appname = $row["AppName"];
@@ -72,7 +72,7 @@ $sql = "SELECT `AppName` from `t_applications` GROUP BY `AppName` ORDER BY `AppN
 
 <?php
   $i=0;
-  $sql = "SELECT * FROM `t_applications` WHERE `AppName`='$application' ORDER BY `AppName` ASC, `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
+  $sql = "SELECT * FROM `applications` WHERE `AppName`='$application' ORDER BY `AppName` ASC, `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
       
@@ -91,7 +91,7 @@ $sql = "SELECT `AppName` from `t_applications` GROUP BY `AppName` ORDER BY `AppN
 <form name="addapplication" method="post" action="?function=&action=addnewapp">
 <?writeFormKey();?>
 <?php
-  $sql = "SELECT `AppName`, `GUID`, `shortname` FROM `t_applications` WHERE `AppName`='$application' LIMIT 1";
+  $sql = "SELECT `AppName`, `GUID`, `shortname` FROM `applications` WHERE `AppName`='$application' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
   $application = $row["AppName"];
@@ -118,34 +118,34 @@ Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> 
 <?php
 } else if ($function=="editversion") {
 
-  $appid = $_GET["appid"];
+  $appid = escape_string($_GET["appid"]);
   //Post Functions
   if ($_POST["submit"] == "Update") {
 
-     $appname = $_POST["AppName"];
-     $version = $_POST["version"];
-     $major = $_POST["Major"];
-     $minor = $_POST["Minor"];
-     $release = $_POST["Release"];
-     $subver = $_POST["SubVer"];
-     $public_ver = $_POST["public_ver"];
-     $appid=$_POST["appid"];
+     $appname = escape_string($_POST["AppName"]);
+     $version = escape_string($_POST["version"]);
+     $major = escape_string($_POST["Major"]);
+     $minor = escape_string($_POST["Minor"]);
+     $release = escape_string($_POST["Release"]);
+     $subver = escape_string($_POST["SubVer"]);
+     $public_ver = escape_string($_POST["public_ver"]);
+     $appid= escape_string($_POST["appid"]);
 
     if (checkFormKey()) {
       echo"<h2>Processing update request, please wait...</h2>\n";
 
-      $sql = "UPDATE `t_applications` SET `AppName`='$appname', `major`='$major', `minor`='$minor', `release`='$release', `SubVer`='$subver',`Version`='$version', `public_ver`='$public_ver' WHERE `appid`='$appid'";
+      $sql = "UPDATE `applications` SET `AppName`='$appname', `major`='$major', `minor`='$minor', `release`='$release', `SubVer`='$subver',`Version`='$version', `public_ver`='$public_ver' WHERE `appid`='$appid'";
       $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
       if ($sql_result) {
           echo"Your update to $appname $version has been successful.<br>";
       }
     }
   } else if ($_POST["submit"] == "Delete Version") {
-     $appid=$_POST["appid"];
-     $appname = $_POST["AppName"];
-     $version = $_POST["version"];
+     $appid= escape_string($_POST["appid"]);
+     $appname = escape_string($_POST["AppName"]);
+     $version = escape_string($_POST["version"]);
     echo"<h2>Processing delete request, please wait...</h2>\n";
-    $sql = "DELETE FROM `t_applications` WHERE `appid`='$_POST[appid]'";
+    $sql = "DELETE FROM `applications` WHERE `appid`='$appid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
     if ($sql_result) {
         echo"You've successfully deleted the application '$appname $version'<br>";
@@ -155,9 +155,9 @@ Public Version: Yes: <input name="public_ver" type="radio" value="YES" checked> 
     }
 }
 
-if (!$appid) { $appid = $_POST["appid"]; }
+if (!$appid) { $appid = escape_string($_POST["appid"]); }
 // Show Edit Form
-  $sql = "SELECT * FROM `t_applications` WHERE `appid` = '$appid' LIMIT 1";
+  $sql = "SELECT * FROM `applications` WHERE `appid` = '$appid' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
 
   $row = mysql_fetch_array($sql_result);
@@ -222,6 +222,10 @@ SubVer: <input name="SubVer" size="5" maxlength="5" title="SubVersion Value (Ex.
 <?php
 } 
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

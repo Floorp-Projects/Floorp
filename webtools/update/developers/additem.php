@@ -59,8 +59,8 @@ $chmod_result = chmod("$uploadedfile", 0644); //Make the file world readable. pr
 
 //If this was legacy mode, we're coming back from step1b so the file wasn't just submitted and we need to just pick it up again.
 if ($_POST["legacy"]=="TRUE") {
-$filename = $_POST["filename"];
-$filesize = $_POST["filesize"];
+$filename = escape_string($_POST["filename"]);
+$filesize = escape_string($_POST["filesize"]);
 $uploadedfile="$websitepath/files/temp/$filename";
 }
 $zip = zip_open("$uploadedfile");
@@ -149,7 +149,7 @@ $description = $manifestdata[description];
 
 
 //Check GUID for validity/existance, if it exists, check the logged in author for permission
-$sql = "SELECT ID, GUID from `t_main` WHERE `GUID` = '$manifestdata[id]' LIMIT 1";
+$sql = "SELECT ID, GUID from `main` WHERE `GUID` = '".escape_string($manifestdata[id])."' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   if (mysql_num_rows($sql_result)=="1") {
 //    echo"This is a updated extension... Checking author data...<br>\n";
@@ -157,7 +157,7 @@ $sql = "SELECT ID, GUID from `t_main` WHERE `GUID` = '$manifestdata[id]' LIMIT 1
     $row = mysql_fetch_array($sql_result);
     $item_id = $row["ID"];
 if ($_POST["legacy"]=="TRUE") {$item_id = $_POST["existingitems"]; }
-    $sql = "SELECT `UserID` from `t_authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
+    $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$item_id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
       $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       if (mysql_num_rows($sql_result)=="1" or ($_SESSION["level"]="admin" or $_SESSION["level"]="editor")) {
 //        echo"This extension belongs to the author logged in<br>\n";
@@ -177,7 +177,7 @@ foreach ($manifestdata[targetapplication] as $key=>$val) {
 //echo"$key -- $val[minversion] $val[maxversion]<br>\n";
 
 $i=0;
-  $sql = "SELECT `AppName`, `major`, `minor`, `release`, `SubVer` FROM `t_applications` WHERE `GUID`='$key' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+  $sql = "SELECT `AppName`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `GUID`='$key' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
     $i++;
@@ -202,8 +202,6 @@ $i=0;
   }
 }
 
-//echo"<pre>"; print_r($versioncheck); echo"</pre>\n";
-
 if ($versioncheck[errors]=="true") {
   echo"Errors were encountered during install.rdf checking...<br>\n";
   die("Aborting...");
@@ -213,8 +211,7 @@ if ($versioncheck[errors]=="true") {
 
 
 } else {
-//echo"install.rdf is not present, use legacy mode...<br>\n";
-//header("Location: http://$_SERVER[HTTP_HOST]/developers/additem.php?function=step1b&filename=$filename");
+
 echo"<h1>Add Step 1b: Legacy Item Data Entry: ($filename)</h1>\n";
 ?>
 <TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
@@ -226,11 +223,11 @@ echo"<h1>Add Step 1b: Legacy Item Data Entry: ($filename)</h1>\n";
   <INPUT NAME="mode" TYPE="RADIO" VALUE="update"<?php if ($_GET["mode"] == "update") {echo" CHECKED"; } ?>> Update to:
 <SELECT NAME="existingitems">
 <?php
-
-$sql = "SELECT  TM.ID, TM.Name FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
-WHERE TM.Type = '$_POST[type]'";
+$type = escape_string($_POST["type"]);
+$sql = "SELECT  TM.ID, TM.Name FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
+WHERE TM.Type = '$type'";
 if ($_GET["admin"] =="true" AND $_SESSION[level] =="admin") {} else{ $sql .= "AND TU.UserEmail = '$_SESSION[email]'"; }
 $sql .="GROUP BY `name` ORDER  BY  `Name`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -258,11 +255,11 @@ exit;
 
 
 $typearray = array("E"=>"Extension","T"=>"Theme");
-$type = $_POST["type"];
+$type = escape_string($_POST["type"]);
 $typename = $typearray[$type];
 
 if ($mode=="update") {
- $sql = "SELECT  `Name`, `Homepage`, `Description` FROM  `t_main` WHERE `ID` = '$item_id' LIMIT 1";
+ $sql = "SELECT  `Name`, `Homepage`, `Description` FROM  `main` WHERE `ID` = '$item_id' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
     if (!$name) { $name=$row["Name"]; }
@@ -270,7 +267,7 @@ if ($mode=="update") {
     $description = $row["Description"];
 
  $authors = ""; $i="";
- $sql = "SELECT TU.UserEmail FROM  `t_authorxref` TAX INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID WHERE `ID` = '$item_id'";
+ $sql = "SELECT TU.UserEmail FROM  `authorxref` TAX INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID WHERE `ID` = '$item_id'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $numresults = mysql_num_rows($sql_result);
    while ($row = mysql_fetch_array($sql_result)) {
@@ -281,8 +278,8 @@ if ($mode=="update") {
    }
 
 //Get Currently Set Categories for this Object...
- $sql = "SELECT  TCX.CategoryID, TC.CatName FROM  `t_categoryxref`  TCX 
-INNER JOIN t_categories TC ON TCX.CategoryID = TC.CategoryID
+ $sql = "SELECT  TCX.CategoryID, TC.CatName FROM  `categoryxref`  TCX 
+INNER JOIN categories TC ON TCX.CategoryID = TC.CategoryID
 WHERE TCX.ID = '$item_id'
 ORDER  BY  `CatName`  ASC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -310,7 +307,7 @@ if (!$categories) {$categories = array(); }
 
 <?php
 //Get the Category Table Data for the Select Box
- $sql = "SELECT  `CategoryID`, `CatName` FROM  `t_categories` WHERE `CatType` = '$type' ORDER  BY  `CatName` ASC";
+ $sql = "SELECT  `CategoryID`, `CatName` FROM  `categories` WHERE `CatType` = '$type' ORDER  BY  `CatName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 //  $sqlnum = mysql_num_rows($sql_result);
 ?>
@@ -341,7 +338,7 @@ if ($version) {
     echo"<TR><TD><SPAN class=\"file\">Version:*</SPAN></TD><TD><INPUT NAME=\"version\" TYPE=\"TEXT\" VALUE=\"$version\"></TD></TR>\n";
 }
     echo"<TR><TD><SPAN class=\"file\">OS*</SPAN></TD><TD><SELECT NAME=\"osid\">";
- $sql = "SELECT * FROM `t_os` ORDER BY `OSName` ASC";
+ $sql = "SELECT * FROM `os` ORDER BY `OSName` ASC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $osid = $row["OSID"];
@@ -352,7 +349,7 @@ if ($version) {
     echo"<TR><TD><SPAN class=\"file\">Filename:</SPAN></TD><TD>$filename ($filesize"."kb) <INPUT name=\"filename\" type=\"hidden\" value=\"$filename\"><INPUT name=\"filesize\" type=\"hidden\" value=\"$filesize\"></TD></TR>\n";
 
 echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></TR>\n";
- $sql2 = "SELECT `AppName`,`GUID` FROM `t_applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
+ $sql2 = "SELECT `AppName`,`GUID` FROM `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
    $appname = $row2["AppName"];
@@ -377,7 +374,7 @@ if (($mode=="new" or $mode=="update") and (strtolower($appname) !="mozilla" or $
     echo"<br><SPAN style=\"font-size: 8pt; font-weight: bold\">Incompatable with Legacy Extensions (Requires install.rdf)</SPAN>";
     } else {
 
-$sql = "SELECT `version`,`major`,`minor`,`release`,`SubVer` FROM `t_applications` WHERE `AppName` = '$appname' ORDER BY `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
+$sql = "SELECT `version`,`major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName` = '$appname' ORDER BY `major` ASC, `minor` ASC, `release` ASC, `SubVer` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 echo"<SELECT name=\"$appname-minappver\" TITLE=\"Minimum Version* (Required)\">";
 echo"<OPTION value\"\"> - </OPTION>\n";
@@ -425,7 +422,7 @@ echo"</select>\n";
 //exit;
 
 //Verify that there's at least one min/max app value pair...
- $sql = "SELECT `AppName`,`AppID` FROM `t_applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
+ $sql = "SELECT `AppName`,`AppID` FROM `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $appname = $row["AppName"];
@@ -436,12 +433,12 @@ echo"</select>\n";
   }
 
 //Author List -- Autocomplete and Verify, if no valid authors, kill add.. otherwise, autocomplete/prompt
-  $authors = $_POST["authors"];
+  $authors = escape_string($_POST["authors"]);
   $authors = explode(", ","$authors");
 foreach ($authors as $author) {
 if (strlen($author)<2) {continue;} //Kills all values that're too short.. 
 $a++;
- $sql = "SELECT `UserID`,`UserEmail` FROM `t_userprofiles` WHERE `UserEmail` LIKE '$author%' ORDER BY `UserMode`, `UserName` ASC";
+ $sql = "SELECT `UserID`,`UserEmail` FROM `userprofiles` WHERE `UserEmail` LIKE '$author%' ORDER BY `UserMode`, `UserName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  $numresults = mysql_num_rows($sql_result);
    while ($row = mysql_fetch_array($sql_result)) {
@@ -473,22 +470,22 @@ if ($_POST["name"] AND $_POST["type"] AND $_POST["authors"] AND $updateauthors !
  echo"<DIV>\n";
 
 //Phase One, Main Data
-$name = $_POST["name"];
-$homepage = $_POST["homepage"];
-$description = $_POST["description"];
-$item_id = $_POST["item_id"];
-$guid = $_POST["guid"];
-$type = $_POST["type"];
+$name = escape_string($_POST["name"]);
+$homepage = escape_string($_POST["homepage"]);
+$description = escape_string($_POST["description"]);
+$item_id = escape_string($_POST["item_id"]);
+$guid = escape_string($_POST["guid"]);
+$type = escape_string($_POST["type"]);
 
 //Check to ensure tha the name isn't already taken, if it is, throw an error and halt.
-$sql = "SELECT `Name` from `t_main` WHERE `Name`='$name' and `GUID` != '$guid'";
+$sql = "SELECT `Name` from `main` WHERE `Name`='$name' and `GUID` != '$guid'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)=="0") {
 
 if ($_POST["mode"]=="update") { 
-$sql = "UPDATE `t_main` SET `Name`='$name', `Homepage`='$homepage', `Description`='$description', `DateUpdated`=NOW(NULL) WHERE `ID`='$item_id' LIMIT 1";
+$sql = "UPDATE `main` SET `Name`='$name', `Homepage`='$homepage', `Description`='$description', `DateUpdated`=NOW(NULL) WHERE `ID`='$item_id' LIMIT 1";
 } else {
-$sql = "INSERT INTO `t_main` (`GUID`, `Name`, `Type`, `Homepage`,`Description`,`DateAdded`,`DateUpdated`) VALUES ('$guid', '$name', '$type', '$homepage', '$description', NOW(NULL), NOW(NULL));";
+$sql = "INSERT INTO `main` (`GUID`, `Name`, `Type`, `Homepage`,`Description`,`DateAdded`,`DateUpdated`) VALUES ('$guid', '$name', '$type', '$homepage', '$description', NOW(NULL), NOW(NULL));";
 }
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
@@ -516,25 +513,28 @@ if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
 
 //Get ID for inserted row... if we don't know it already
 if (!$_POST[item_id] and $_POST["mode"] !=="update") {
- $sql = "SELECT `ID` FROM `t_main` WHERE `GUID`='$_POST[guid]' AND `Name`='$_POST[name]' LIMIT 1";
+$name = escape_string($_POST["name"]);
+$guid = escape_string($_POST["guid"]);
+
+ $sql = "SELECT `ID` FROM `main` WHERE `GUID`='$guid' AND `Name`='$name' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
    $id = $row["ID"];
   } else {
-   $id = $_POST["item_id"];
+   $id = escape_string($_POST["item_id"]);
   }
 
 
 //Phase 2 -- Commit Updates to AuthorXref tables.. with the ID and UserID.
 if ($updateauthors != "false") {
  //Remove Current Authors
- $sql = "DELETE FROM `t_authorxref` WHERE `ID` = '$id'";
+ $sql = "DELETE FROM `authorxref` WHERE `ID` = '$id'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
  //Add New Authors based on $authorids
  sort($authorids);
   foreach ($authorids as $authorid) {
-   	$sql = "INSERT INTO `t_authorxref` (`ID`, `UserID`) VALUES ('$id', '$authorid');";
+   	$sql = "INSERT INTO `authorxref` (`ID`, `UserID`) VALUES ('$id', '$authorid');";
     $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
   }
    if ($result) { echo"Authors added...<br>\n"; }
@@ -545,11 +545,11 @@ if ($updateauthors != "false") {
 unset($authors); //Clear from Post.. 
 
 
-// Phase 3, t_categoryxref
+// Phase 3, categoryxref
 
 if (!$_POST["categories"]) {
 //No Categories defined, need to grab one to prevent errors...
- $sql = "SELECT `CategoryID` FROM `t_categories` WHERE `CatType`='$type' AND `CatName`='Miscellaneous' LIMIT 1";
+ $sql = "SELECT `CategoryID` FROM `categories` WHERE `CatType`='$type' AND `CatName`='Miscellaneous' LIMIT 1";
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
    $_POST["categories"] = array("$row[CategoryID]");
@@ -558,22 +558,22 @@ if (!$_POST["categories"]) {
 }
 
  //Delete Current Category Linkages...
-   $sql = "DELETE FROM `t_categoryxref` WHERE `ID` = '$id'";
+   $sql = "DELETE FROM `categoryxref` WHERE `ID` = '$id'";
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
  //Add New Categories from $_POST["categories"]
    foreach ($_POST["categories"] as $categoryid) {
-   	$sql = "INSERT INTO `t_categoryxref` (`ID`, `CategoryID`) VALUES ('$id', '$categoryid');";
+   	$sql = "INSERT INTO `categoryxref` (`ID`, `CategoryID`) VALUES ('$id', '$categoryid');";
     $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
   }
    if ($result) {echo"Categories added...<br>\n"; }
 
 
-//Phase 4, t_version rows
+//Phase 4, version rows
 
 //Construct Internal App_Version Arrays
 $i=0;
-$sql = "SELECT `AppName`, `int_version`, `major`, `minor`, `release`, `SubVer`, `shortname` FROM `t_applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `AppName`, `int_version`, `major`, `minor`, `release`, `SubVer`, `shortname` FROM `applications` ORDER BY `AppName`, `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $i++;
@@ -587,7 +587,7 @@ $sql = "SELECT `AppName`, `int_version`, `major`, `minor`, `release`, `SubVer`, 
     $app_shortname[strtolower($appname)] = $row["shortname"];
   }
 
- $sql2 = "SELECT `AppName`,`AppID` FROM `t_applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
+ $sql2 = "SELECT `AppName`,`AppID` FROM `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row2 = mysql_fetch_array($sql_result2)) {
    $appname = $row2["AppName"];
@@ -603,33 +603,33 @@ if (!$minappver_int) {$minappver_int = $minappver;}
 if (!$maxappver_int) {$maxappver_int = $maxappver;}
 
 
-$version = $_POST["version"];
-$osid = $_POST["osid"];
-$filesize = $_POST["filesize"];
+$version = escape_string($_POST["version"]);
+$osid = escape_string($_POST["osid"]);
+$filesize = escape_string($_POST["filesize"]);
 $uri = ""; //we don't have all the parts to set a uri, leave blank and fix when we do.
-$notes = $_POST["notes"];
+$notes = escape_string($_POST["notes"]);
 
 //If a record for this item's exact version, OS, and app already exists, find it and delete it, before inserting
-  $sql3 = "SELECT `vID` from `t_version` TV INNER JOIN `t_applications` TA ON TA.AppID=TV.AppID WHERE `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
+  $sql3 = "SELECT `vID` from `version` TV INNER JOIN `applications` TA ON TA.AppID=TV.AppID WHERE `OSID`='$osid' AND `AppName` = '$appname' AND TV.Version='$version' ORDER BY `vID` ASC";
     $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       while ($row = mysql_fetch_array($sql_result3)) {
-        $sql = "DELETE FROM `t_version` WHERE `vID`='$row[vID]' LIMIT 1";
+        $sql = "DELETE FROM `version` WHERE `vID`='$row[vID]' LIMIT 1";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
           if ($sql_result) { echo"<strong>Warning!</strong> A version Record already exists for this item's Application/OS/Version combination. Deleting.<br>\n"; }
     }
 
-$sql = "INSERT INTO `t_version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MinAppVer_int`, `MaxAppVer`, `MaxAppVer_int`, `Size`, `URI`, `Notes`, `DateAdded`, `DateUpdated`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$minappver_int', '$maxappver', '$maxappver_int', '$filesize', '$uri', '$notes', NOW(NULL), NOW(NULL));";
+$sql = "INSERT INTO `version` (`ID`, `Version`, `OSID`, `AppID`, `MinAppVer`, `MinAppVer_int`, `MaxAppVer`, `MaxAppVer_int`, `Size`, `URI`, `Notes`, `DateAdded`, `DateUpdated`) VALUES ('$id', '$version', '$osid', '$appid', '$minappver', '$minappver_int', '$maxappver', '$maxappver_int', '$filesize', '$uri', '$notes', NOW(NULL), NOW(NULL));";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  if ($sql_result) {echo"Added $name version $version for $appname<br>\n"; $apps_array[]=$app_shortname[strtolower($appname)];}
 
-$sql = "SELECT `vID` from `t_version` WHERE `id` = '$id' ORDER BY `vID` DESC LIMIT 1";
+$sql = "SELECT `vID` from `version` WHERE `id` = '$id' ORDER BY `vID` DESC LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
    $vid_array[] = $row["vID"];
 }
 }
 
-$sql = "SELECT `OSName` FROM `t_os` WHERE `OSID`='$osid' LIMIT 1";
+$sql = "SELECT `OSName` FROM `os` WHERE `OSID`='$osid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
    $osname = $row["OSName"];
@@ -664,13 +664,13 @@ $uri = str_replace("$repositorypath/approval/","http://$sitehostname/developers/
 //echo"$newfilename ($oldpath) ($newpath) ($uri)<br>\n";
 
 foreach ($vid_array as $vid) {
-  $sql = "UPDATE `t_version` SET `URI`='$uri' WHERE `vID`='$vid'";
+  $sql = "UPDATE `version` SET `URI`='$uri' WHERE `vID`='$vid'";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 }
 
 //Approval Queue
   //Check if the item belongs to the user, (special case for where admins are trusted, the trust only applies to their own work.)
-  $sql = "SELECT `UserID` from `t_authorxref` WHERE `ID`='$id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
+  $sql = "SELECT `UserID` from `authorxref` WHERE `ID`='$id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if (mysql_num_rows($sql_result)=="1" AND $_SESSION["trusted"]=="TRUE") {
     //User is trusted and the item they're modifying inheirits that trust.
@@ -691,7 +691,7 @@ $userid = $_SESSION["uid"];
 
 if (!$vid_array) { $vid_array = array(); }
 foreach ($vid_array as $vid) {
-$sql = "INSERT INTO `t_approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `comments`) VALUES ('$id', '$vid', '$userid', '$action', NOW(NULL), '$comments');";
+$sql = "INSERT INTO `approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `comments`) VALUES ('$id', '$vid', '$userid', '$action', NOW(NULL), '$comments');";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 }
 

@@ -36,14 +36,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-
 -- phpMyAdmin SQL Dump
--- version 2.6.0-rc1
+-- version 2.6.0
 -- http://www.phpmyadmin.net
 -- 
 -- Host: localhost
--- Generation Time: Sep 12, 2004 at 05:07 AM
--- Server version: 4.0.18
+-- Generation Time: Dec 07, 2004 at 02:18 AM
+-- Server version: 4.0.21
 -- PHP Version: 4.3.8
 -- 
 -- Database: `mozillaupdate`
@@ -52,51 +51,64 @@
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_applications`
+-- Table structure for table `applications`
 -- 
 
-CREATE TABLE `t_applications` (
+CREATE TABLE `applications` (
   `AppID` int(11) NOT NULL auto_increment,
   `AppName` varchar(30) NOT NULL default '',
-  `Version` varchar(10) NOT NULL default '',
+  `Version` varchar(15) NOT NULL default '',
   `major` int(3) NOT NULL default '0',
   `minor` int(3) NOT NULL default '0',
   `release` int(3) NOT NULL default '0',
   `build` int(14) NOT NULL default '0',
-  `SubVer` enum('a','b','final','','+') NOT NULL default 'final',
+  `SubVer` varchar(5) NOT NULL default 'final',
   `GUID` varchar(50) NOT NULL default '',
+  `int_version` varchar(5) default NULL,
+  `public_ver` enum('YES','NO') NOT NULL default 'YES',
+  `shortname` char(2) NOT NULL default '',
   PRIMARY KEY  (`AppID`),
   KEY `AppName` (`AppName`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=25 ;
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_approvallog`
+-- Table structure for table `approvallog`
 -- 
 
-CREATE TABLE `t_approvallog` (
+CREATE TABLE `approvallog` (
   `LogID` int(5) NOT NULL auto_increment,
   `ID` varchar(11) NOT NULL default '',
   `vID` varchar(11) NOT NULL default '',
   `UserID` varchar(11) NOT NULL default '',
   `action` varchar(255) NOT NULL default '',
   `date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `Installation` enum('','YES','NO') NOT NULL default '',
+  `Uninstallation` enum('','YES','NO') NOT NULL default '',
+  `NewChrome` enum('','YES','NO') NOT NULL default '',
+  `AppWorks` enum('','YES','NO') NOT NULL default '',
+  `VisualErrors` enum('','YES','NO') NOT NULL default '',
+  `AllElementsThemed` enum('','YES','NO') NOT NULL default '',
+  `CleanProfile` enum('','YES','NO') NOT NULL default '',
+  `WorksAsDescribed` enum('','YES','NO') NOT NULL default '',
+  `TestBuild` varchar(255) default NULL,
+  `TestOS` varchar(255) default NULL,
   `comments` text NOT NULL,
   PRIMARY KEY  (`LogID`),
   KEY `ID` (`ID`),
   KEY `vID` (`vID`),
   KEY `UserID` (`UserID`),
   KEY `UserID_2` (`UserID`)
-) TYPE=InnoDB AUTO_INCREMENT=430 ;
+) TYPE=InnoDB;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_authorxref`
+-- Table structure for table `authorxref`
 -- 
 
-CREATE TABLE `t_authorxref` (
+CREATE TABLE `authorxref` (
   `ID` int(11) NOT NULL default '0',
   `UserID` int(11) NOT NULL default '0',
   KEY `ID` (`ID`),
@@ -106,24 +118,25 @@ CREATE TABLE `t_authorxref` (
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_categories`
+-- Table structure for table `categories`
 -- 
 
-CREATE TABLE `t_categories` (
+CREATE TABLE `categories` (
   `CategoryID` int(11) NOT NULL auto_increment,
   `CatName` varchar(30) NOT NULL default '',
   `CatDesc` varchar(100) NOT NULL default '',
   `CatType` enum('E','T','P') NOT NULL default 'E',
+  `CatApp` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`CategoryID`)
-) TYPE=InnoDB AUTO_INCREMENT=28 ;
+) TYPE=InnoDB;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_categoryxref`
+-- Table structure for table `categoryxref`
 -- 
 
-CREATE TABLE `t_categoryxref` (
+CREATE TABLE `categoryxref` (
   `ID` int(11) NOT NULL default '0',
   `CategoryID` int(11) NOT NULL default '0',
   KEY `IDIndex` (`ID`,`CategoryID`),
@@ -133,10 +146,10 @@ CREATE TABLE `t_categoryxref` (
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_downloads`
+-- Table structure for table `downloads`
 -- 
 
-CREATE TABLE `t_downloads` (
+CREATE TABLE `downloads` (
   `dID` int(11) NOT NULL auto_increment,
   `ID` varchar(5) NOT NULL default '',
   `date` varchar(14) default NULL,
@@ -145,33 +158,35 @@ CREATE TABLE `t_downloads` (
   `user_ip` varchar(15) NOT NULL default '',
   `user_agent` text NOT NULL,
   `type` enum('count','download') NOT NULL default 'download',
-  PRIMARY KEY  (`dID`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=3 ;
+  PRIMARY KEY  (`dID`),
+  KEY `type` (`type`),
+  KEY `date` (`date`)
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_faq`
+-- Table structure for table `faq`
 -- 
 
-CREATE TABLE `t_faq` (
+CREATE TABLE `faq` (
   `id` int(3) NOT NULL auto_increment,
   `index` varchar(5) NOT NULL default '1',
-  `alias` varchar(12) NOT NULL default '',
+  `alias` varchar(20) NOT NULL default '',
   `title` varchar(150) NOT NULL default '',
   `text` text NOT NULL,
   `lastupdated` timestamp(14) NOT NULL,
   `active` enum('YES','NO') NOT NULL default 'YES',
   PRIMARY KEY  (`id`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=7 ;
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_feedback`
+-- Table structure for table `feedback`
 -- 
 
-CREATE TABLE `t_feedback` (
+CREATE TABLE `feedback` (
   `CommentID` int(11) NOT NULL auto_increment,
   `ID` int(11) NOT NULL default '0',
   `CommentName` varchar(100) default NULL,
@@ -180,17 +195,25 @@ CREATE TABLE `t_feedback` (
   `CommentNote` text,
   `CommentDate` datetime NOT NULL default '0000-00-00 00:00:00',
   `commentip` varchar(15) NOT NULL default '',
+  `email` varchar(128) NOT NULL default '',
+  `formkey` varchar(160) NOT NULL default '',
+  `helpful-yes` int(6) NOT NULL default '0',
+  `helpful-no` int(6) NOT NULL default '0',
+  `helpful-rating` varchar(4) NOT NULL default '',
+  `VersionTagline` varchar(255) NOT NULL default '',
+  `flag` varchar(8) NOT NULL default '',
   PRIMARY KEY  (`CommentID`),
-  KEY `ID` (`ID`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=15487 ;
+  KEY `ID` (`ID`),
+  KEY `CommentDate` (`CommentDate`)
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_main`
+-- Table structure for table `main`
 -- 
 
-CREATE TABLE `t_main` (
+CREATE TABLE `main` (
   `ID` int(11) NOT NULL auto_increment,
   `GUID` varchar(50) NOT NULL default '',
   `Name` varchar(100) NOT NULL default '',
@@ -198,48 +221,63 @@ CREATE TABLE `t_main` (
   `DateAdded` datetime NOT NULL default '0000-00-00 00:00:00',
   `DateUpdated` datetime NOT NULL default '0000-00-00 00:00:00',
   `Homepage` varchar(200) default NULL,
-  `Description` varchar(255) NOT NULL default '',
+  `Description` text NOT NULL,
   `Rating` varchar(4) NOT NULL default '0',
   `downloadcount` int(15) NOT NULL default '0',
   `TotalDownloads` int(18) NOT NULL default '0',
+  `devcomments` text NOT NULL,
   PRIMARY KEY  (`ID`),
+  UNIQUE KEY `Name` (`Name`),
   KEY `Type` (`Type`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=218 ;
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_os`
+-- Table structure for table `os`
 -- 
 
-CREATE TABLE `t_os` (
+CREATE TABLE `os` (
   `OSID` int(11) NOT NULL auto_increment,
   `OSName` varchar(20) NOT NULL default '',
   PRIMARY KEY  (`OSID`),
   UNIQUE KEY `OSName` (`OSName`)
-) TYPE=InnoDB AUTO_INCREMENT=7 ;
+) TYPE=InnoDB;
+
+-- 
+-- Dumping data for table `os`
+-- 
+
+INSERT INTO `os` (`OSID`, `OSName`) VALUES (1, 'ALL');
+INSERT INTO `os` (`OSID`, `OSName`) VALUES (4, 'BSD');
+INSERT INTO `os` (`OSID`, `OSName`) VALUES (2, 'Linux');
+INSERT INTO `os` (`OSID`, `OSName`) VALUES (3, 'MacOSX');
+INSERT INTO `os` (`OSID`, `OSName`) VALUES (6, 'Solaris');
+INSERT INTO `os` (`OSID`, `OSName`) VALUES (5, 'Windows');
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_previews`
+-- Table structure for table `previews`
 -- 
 
-CREATE TABLE `t_previews` (
+CREATE TABLE `previews` (
   `PreviewID` int(11) NOT NULL auto_increment,
   `PreviewURI` varchar(200) NOT NULL default '',
-  `vID` int(11) NOT NULL default '0',
+  `ID` int(5) NOT NULL default '0',
+  `caption` varchar(255) NOT NULL default '',
+  `preview` enum('YES','NO') NOT NULL default 'NO',
   PRIMARY KEY  (`PreviewID`),
-  KEY `vID` (`vID`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=24 ;
+  KEY `ID` (`ID`)
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_reviews`
+-- Table structure for table `reviews`
 -- 
 
-CREATE TABLE `t_reviews` (
+CREATE TABLE `reviews` (
   `rID` int(11) NOT NULL auto_increment,
   `ID` int(11) NOT NULL default '0',
   `AppID` int(11) NOT NULL default '0',
@@ -253,15 +291,15 @@ CREATE TABLE `t_reviews` (
   KEY `ID` (`ID`),
   KEY `AppID` (`AppID`),
   KEY `AuthorID` (`AuthorID`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=3 ;
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_userprofiles`
+-- Table structure for table `userprofiles`
 -- 
 
-CREATE TABLE `t_userprofiles` (
+CREATE TABLE `userprofiles` (
   `UserID` int(11) NOT NULL auto_increment,
   `UserName` varchar(100) NOT NULL default '',
   `UserEmail` varchar(100) NOT NULL default '',
@@ -270,17 +308,19 @@ CREATE TABLE `t_userprofiles` (
   `UserMode` enum('A','E','U','D') NOT NULL default 'U',
   `UserTrusted` enum('TRUE','FALSE') NOT NULL default 'FALSE',
   `UserEmailHide` tinyint(1) NOT NULL default '1',
+  `UserLastLogin` datetime NOT NULL default '0000-00-00 00:00:00',
+  `ConfirmationCode` varchar(32) default NULL,
   PRIMARY KEY  (`UserID`),
   UNIQUE KEY `UserEmail` (`UserEmail`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=142 ;
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- --------------------------------------------------------
 
 -- 
--- Table structure for table `t_version`
+-- Table structure for table `version`
 -- 
 
-CREATE TABLE `t_version` (
+CREATE TABLE `version` (
   `vID` int(11) NOT NULL auto_increment,
   `ID` int(11) NOT NULL default '0',
   `Version` varchar(30) NOT NULL default '0',
@@ -295,54 +335,54 @@ CREATE TABLE `t_version` (
   `DateUpdated` datetime NOT NULL default '0000-00-00 00:00:00',
   `URI` varchar(255) NOT NULL default '',
   `Notes` text,
-  `approved` enum('YES','NO','?') NOT NULL default '?',
+  `approved` enum('YES','NO','?','DISABLED') NOT NULL default '?',
   PRIMARY KEY  (`vID`),
   KEY `ID` (`ID`),
   KEY `AppID` (`AppID`),
   KEY `OSID` (`OSID`),
   KEY `Version` (`Version`)
-) TYPE=InnoDB PACK_KEYS=0 AUTO_INCREMENT=558 ;
+) TYPE=InnoDB PACK_KEYS=0;
 
 -- 
 -- Constraints for dumped tables
 -- 
 
 -- 
--- Constraints for table `t_authorxref`
+-- Constraints for table `authorxref`
 -- 
-ALTER TABLE `t_authorxref`
-  ADD CONSTRAINT `0_125` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `0_126` FOREIGN KEY (`UserID`) REFERENCES `t_userprofiles` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `authorxref`
+  ADD CONSTRAINT `0_125` FOREIGN KEY (`ID`) REFERENCES `main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_126` FOREIGN KEY (`UserID`) REFERENCES `userprofiles` (`UserID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 
--- Constraints for table `t_categoryxref`
+-- Constraints for table `categoryxref`
 -- 
-ALTER TABLE `t_categoryxref`
-  ADD CONSTRAINT `0_128` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `0_129` FOREIGN KEY (`CategoryID`) REFERENCES `t_categories` (`CategoryID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `categoryxref`
+  ADD CONSTRAINT `0_128` FOREIGN KEY (`ID`) REFERENCES `main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_129` FOREIGN KEY (`CategoryID`) REFERENCES `categories` (`CategoryID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 
--- Constraints for table `t_feedback`
+-- Constraints for table `feedback`
 -- 
-ALTER TABLE `t_feedback`
-  ADD CONSTRAINT `0_131` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `feedback`
+  ADD CONSTRAINT `0_131` FOREIGN KEY (`ID`) REFERENCES `main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 
--- Constraints for table `t_previews`
+-- Constraints for table `previews`
 -- 
-ALTER TABLE `t_previews`
-  ADD CONSTRAINT `0_133` FOREIGN KEY (`vID`) REFERENCES `t_version` (`vID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `previews`
+  ADD CONSTRAINT `previews_ibfk_1` FOREIGN KEY (`ID`) REFERENCES `main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 
--- Constraints for table `t_reviews`
+-- Constraints for table `reviews`
 -- 
-ALTER TABLE `t_reviews`
-  ADD CONSTRAINT `0_135` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `0_136` FOREIGN KEY (`AppID`) REFERENCES `t_applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `0_135` FOREIGN KEY (`ID`) REFERENCES `main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `0_136` FOREIGN KEY (`AppID`) REFERENCES `applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 
--- Constraints for table `t_version`
+-- Constraints for table `version`
 -- 
-ALTER TABLE `t_version`
-  ADD CONSTRAINT `0_139` FOREIGN KEY (`ID`) REFERENCES `t_main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `0_140` FOREIGN KEY (`AppID`) REFERENCES `t_applications` (`AppID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `version`
+  ADD CONSTRAINT `0_139` FOREIGN KEY (`ID`) REFERENCES `main` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `version_ibfk_1` FOREIGN KEY (`AppID`) REFERENCES `applications` (`AppID`) ON UPDATE CASCADE;

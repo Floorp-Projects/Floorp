@@ -3,8 +3,8 @@ require"../core/config.php";
 require"core/sessionconfig.php";
 
 $password = md5($_POST[password]);
-$email = $_POST["email"];
-$sql = "SELECT DISTINCT `UserID`, `UserEmail`,`UserName`,`UserMode`,`UserTrusted` FROM `t_userprofiles` WHERE `UserEmail` = '$email' && `UserPass` = '$password' LIMIT 1";
+$email = escape_string($_POST["email"]);
+$sql = "SELECT DISTINCT `UserID`, `UserEmail`,`UserName`,`UserMode`,`UserTrusted` FROM `userprofiles` WHERE `UserEmail` = '$email' && `UserPass` = '$password' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
   $num = mysql_num_rows($sql_result);
 
@@ -20,7 +20,7 @@ $usertrusted=$row["UserTrusted"];
 $logoncheck="YES";
 
 //Update LastLogin Time to current.
-$sql = "UPDATE `t_userprofiles` SET `UserLastLogin`=NOW(NULL) WHERE `UserID`='$userid' LIMIT 1";
+$sql = "UPDATE `userprofiles` SET `UserLastLogin`=NOW(NULL) WHERE `UserID`='$userid' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 //User Role to Session Level variable...
@@ -37,13 +37,13 @@ $_SESSION["logoncheck"] = "$logoncheck";
 
 $return_path="developers/main.php";
 
-header("Location: http://$_SERVER[HTTP_HOST]/$return_path");
+header("Location: https://$_SERVER[SERVER_NAME]/$return_path");
 exit;
 
 
 } else {
 $return_path ="developers/index.php?login=failed";
-header("Location: http://$_SERVER[HTTP_HOST]/$return_path");
+header("Location: https://$_SERVER[SERVER_NAME]/$return_path");
 exit;
 }
 ?>

@@ -47,13 +47,13 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
 
      if (checkFormKey()) {
         if ($_POST["submit"]=="Delete Selected") {
-            $sql = "DELETE FROM `t_feedback` WHERE `CommentID`='$selected'";
+            $sql = "DELETE FROM `feedback` WHERE `CommentID`='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Comment $selected deleted from database.<br>\n";
             }
         } else if ($_POST["submit"]=="Flag Selected") {
-            $sql = "UPDATE `t_feedback` SET `flag`= 'YES' WHERE `CommentID`='$selected'";
+            $sql = "UPDATE `feedback` SET `flag`= 'YES' WHERE `CommentID`='$selected'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Comment $selected flagged for editor review.<br>\n";
@@ -69,18 +69,18 @@ if ($_POST["submit"]=="Flag Selected" or $_POST["submit"]=="Delete Selected") {
  }
 ?>
 <?php
-if ($_GET["numpg"]) {$items_per_page=$_GET["numpg"]; } else {$items_per_page="50";} //Default Num per Page is 50
-if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = $_GET["pageid"]; } //Default PageID is 1
+if ($_GET["numpg"]) {$items_per_page=escape_string($_GET["numpg"]); } else {$items_per_page="50";} //Default Num per Page is 50
+if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = escape_string($_GET["pageid"]); } //Default PageID is 1
 $startpoint = ($pageid-1)*$items_per_page;
 
 $id = escape_string($_GET["id"]);
 
-$sql = "SELECT `Name` FROM `t_main` WHERE `ID`='$id' LIMIT 1";
+$sql = "SELECT `Name` FROM `main` WHERE `ID`='$id' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
     $name = $row["Name"];
 
-$sql = "SELECT CommentID FROM  `t_feedback` WHERE ID = '$id'";
+$sql = "SELECT CommentID FROM  `feedback` WHERE ID = '$id'";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $num_pages = ceil(mysql_num_rows($sql_result)/$items_per_page);
 ?>
@@ -120,7 +120,7 @@ echo"<BR>\n";
 <?writeFormKey();?>
 <?php
 
- $sql = "SELECT * FROM `t_feedback` WHERE `ID`='$id' ORDER BY `CommentDate`DESC LIMIT $startpoint,$items_per_page";
+ $sql = "SELECT * FROM `feedback` WHERE `ID`='$id' ORDER BY `CommentDate`DESC LIMIT $startpoint,$items_per_page";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
         $commentid = $row["CommentID"];
@@ -250,7 +250,7 @@ echo"<h2>Submitting Comment, please wait...</h2>\n";
     $title = escape_string($_POST["title"]);
     $comments = escape_string($_POST["notes"]);
 
-    $sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$id', '$name', NULL, '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
+    $sql = "INSERT INTO `feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$id', '$name', NULL, '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if ($sql_result) {
       echo"Your comment has been added successfully...<br>\n";
@@ -293,14 +293,14 @@ echo"<h2>Processing Changes to the Flagged Comments List, please wait...</h2>\n"
         if ($action=="skip") {continue;}
 
         if ($action=="delete") {
-            $sql = "DELETE FROM `t_feedback` WHERE `CommentID`='$commentid'";
+            $sql = "DELETE FROM `feedback` WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Comment $commentid deleted from database.<br>\n";
             }
 
         } else if ($action=="clear") {
-            $sql = "UPDATE `t_feedback` SET `flag`= '' WHERE `CommentID`='$commentid'";
+            $sql = "UPDATE `feedback` SET `flag`= '' WHERE `CommentID`='$commentid'";
             $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
             if ($sql_result) {
                 echo"Flag cleared for comment $commentid.<br>\n";
@@ -321,7 +321,7 @@ unset($i);
 <h1>Comments Flagged for Editor Review</h1>
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%">
 <?php
- $sql = "SELECT `CommentID`,`CommentName`,`email`,`CommentTitle`,`CommentNote`,`CommentDate`,`CommentVote`,`commentip`, TM.Name FROM `t_feedback` INNER JOIN `t_main` TM ON t_feedback.ID=TM.ID WHERE `flag`='YES' ORDER BY `CommentDate`DESC";
+ $sql = "SELECT `CommentID`,`CommentName`,`email`,`CommentTitle`,`CommentNote`,`CommentDate`,`CommentVote`,`commentip`, TM.Name FROM `feedback` INNER JOIN `main` TM ON feedback.ID=TM.ID WHERE `flag`='YES' ORDER BY `CommentDate`DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $num_results = mysql_num_rows($sql_result);
     if ($num_results>"0") {
@@ -397,6 +397,10 @@ echo"<TR><TD COLSPAN=4 align=center>No Comments are Currently Flagged for Editor
 <?php
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

@@ -1,349 +1,197 @@
-/* mozilla.org MezzoTan Content Styles
- * Initial Design by Dave Shea
- * Reorganized and Expanded to include Markup Reference classes by fantasai
- */
-/* Suggested order:
- * display
- * list-style
- * position
- * float
- * clear
- * width
- * height
- * margin
- * padding
- * border
- * background
- * color
- * font
- * text-decoration
- * text-align
- * vertical-align
- * white-space
- * other text
- * content
- *
- */
+#mBody h2 {
+	font: 140% arial,helvetica,verdana,sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 0;
+}
 
-/* TOC:
-   Body
-   Random HTML Styles
-     Forms
-   General Structure
-   Navigation
-   Quotations
-   Comments and Other Asides
-   Emphasis
-   Computers - General
-   Code
-   Examples and Figures
-   Q and A (FAQ)
-   Tables
-   Meta
-*/
+#mBody h3 {
+	font: 120% arial,helvetica,verdana,sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 0;
+}
 
-/* Body */
+#mBody h1 {
+	font: 180% arial,helvetica,sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 0;
+}
 
-	body {
-		background: #fff;
-	}
+.key-point:before {
+	line-height: 0.1;
+	font-size: 1px;
+	background: transparent url("../../images/key-point_tr.gif") no-repeat top right;
+	margin: -15px -15px 0 -15px;
+	height: 15px;
+	display: block;
+	border: none;
+	content: url("../../images/key-point_tl.gif");
+}
+.key-point {
+	background: #EFF8CE url("../../images/key-point_back.gif") right repeat-y;
+	padding: 15px;
+	margin-top: 18px;
+}
+.key-point:after {
+	display: block;
+	padding-top: 15px;
+	line-height: 0.1;
+	font-size: 1px;
+	content:  url("../../images/key-point_bl.gif");
+	margin: -15px;
+	height: 8px;
+	background: transparent url("../../images/key-point_br.gif") scroll no-repeat bottom right ;
+}
 
-	#mainContent, #side {
-		background: #fff;
-		line-height: 1.3; /* value other than 'normal' needed for WinIE */
-	}
-	.deepLevel #mainContent {
-		line-height: 1.4;
-	}
+#header form #submit {
+	font-size: 100%;
+	padding: 1px;
+	font-family: tahoma, arial, sans-serif;
+}
 
-/* Random HTML Styles */
+#header form #q {
+	width: 90px;
+	font-size: 100%;
+	font-weight: normal;
+	border:	1px solid #9097A2;
+	padding: 2px;
+	font-family: tahoma, arial, sans-serif;
+}
 
-	hr {
-		height: 1px;
-		background-color: #000;
-		color: #000;
-		margin: 2em 0;
-	}
+#sectionsearch {
+	font-size: 100%;
+	font-weight: normal;
+	font-family: tahoma, arial, sans-serif;
+} 
 
-	input[type="submit"] {
-		font-weight: bold;
-	}
+.popularlist {
+	font-size: 85%;
+}
 
-/* General Structure */
-    body, td, th, input { /* redundant rules for bad browsers  */
-            font-family: verdana, sans-serif;
-            font-size: x-small;
-            voice-family: "\"}\"";
-            voice-family: inherit;
-            font-size: small;
-    }
+.popularlist span {
+	color: #666;
+	white-space: nowrap;
+}
 
-	h1, h2, h3, h4, h5, h6 {
-		margin: 1em 0 0.2em 0;
-		border-bottom: 1px solid #ccc;
-		font-family: arial, verdana, sans-serif;
-	}
+.install a {
+	background: url(../../images/install.png) no-repeat;
+	padding: 3px 0 8px 30px;
+	display: block;
+	text-decoration: none;
+}
 
-	#header h1 { border: 0; }
+.install a strong {
+	text-decoration: underline;
+}
 
-	h1 { font-size: 160%; font-weight: normal; }
-	h2 { font-size: 150%; font-weight: normal; }
-	h3 { font-size: 120%; }
-	h4 { font-size: 100%; }
-	h5 { font-size: 90%; }
-	h6 { font-size: 90%; border: 0; }
-	
-/* Navigation */
+.install-box {
+	width: 18em;
+}
 
-        a:link { color: #039; }
-        a:visited { color: #636; }
-        a:hover { color: #333; }
-        a:active { color: #000; }
+#opinions h4 {
+	margin: 0;
+}
 
-/* Quotations */
+.opinions-date {
+	font-size: 85%;
+	margin: 0 0 0.5em 0;
+}
 
+.opinions-date a {
+	text-decoration: none;
+	color: #666;
+}
 
-/* Comments and other Asides */
+.opinions-date a:hover {
+	text-decoration: underline;
+}
 
-	.note {
-		color: #666;
-		font-style: normal;
-	}
-	
-	.remark {
-		color: #666;
-	}
-	
-	.sidenote {
-		border: #666;
-	}
+.opinions-text {
+	margin: 0;
+}
 
-	.key-point:before {
-		line-height: 0.1;
-		font-size: 1px;
-		background: transparent url("../../images/key-point_tr.gif") no-repeat top right;
-		margin: -15px -15px 0 -15px;
-		height: 15px;
-		display: block;
-		border: none;
-		content: url("../../images/key-point_tl.gif");
-	}
-	.key-point {
-		background: #e4ecec url("../../images/key-point_back.gif") right repeat-y;
-		padding: 15px;
-		margin-bottom: 1em;
-	}
-	.key-point:after {
-		display: block;
-		/* clear: both; */
-		padding-top: 15px;
-		line-height: 0.1;
-		font-size: 1px;
-		content:  url("../../images/key-point_bl.gif");
-		margin: -15px;
-		height: 8px;
-		background: transparent url("../../images/key-point_br.gif") scroll no-repeat bottom right ;
-	}
-	
-	.key-point h2, .key-point h3, .key-point h4, .key-point h5 {
-		border: none;
-		margin-top: 0;
-	}
-	
-	.news dt {
-		font-weight: normal;
-		color: #666;
-	}
-	.news dt a {
-		font-weight: bold;
-	}
-	
-	ul.compact {
-		margin-left: 0;
-		padding-left: 20px;
-	}
-			
-/* Emphasis */
+.opinions-rating img {
+	vertical-align: middle;
+}
 
-/* Computers - General */
+.rating {
+	float: right;
+	font-size: 85%;
+	font-weight: bold;
+}
 
-	kbd {
-		margin: 0.1em;
-		padding: 0.1em;
-		border: 1px #ccc;
-	}
+.rating img {
+	vertical-align: middle;
+}
 
-	kbd.command,
-	code.command {
-		color: #6B5839;
-	}
+.more-links {
+	margin: 0.5em 0 0 0;
+	padding: 0;
+}
 
-/* Code */
+.more-links li {
+	display: inline;
+	margin: 0;
+	padding: 5px;
+}
 
-	pre.code {
-		margin: 0.1em;
-		padding: 0.1em;
-		background: #EEECF6;
-	}
-	
-	code > em,
-	code > strong,
-	pre.code > em,
-	pre.code > strong {
-		font-style: normal;
-	}
+.screenshot {
+	float: right;
+	background: #fff;
+	padding: 0 0 2em 2em;
+}
 
-/* Examples and Figures */
+.screenshot a {
+	text-align: center;
+	display: block;
+}
 
-	div.example {
-		border-color: #554FA0;
-	}
-	div.example::before {
-		color: #666;
-	}
+/* Remaining Original Update Styles */
 
-/* Tables */
+.item {
+	border: #D2D6D6 1px solid;
+    padding-left: 5px;
+    padding-right: 6px;
+    MARGIN-bottom: 10px;
+    -moz-border-radius: 10px;
+}
 
-	table.data {
-		border-style: none hidden;
-	}
-	
-	table.data thead {
-		 background: #EEECF6;
-	}
+.item a {
+	color: #00129c;
+    text-decoration: none;
+}
+.item a:visited {
+	color: #00129c;
+    text-decoration: none;
+}
+.item a:hover {
+	color: #fc5900;
+}
 
-	table.data th,
-	table.data td {
-		border: 1px dotted #D6CCBD;
-	}
-	
-	tr.odd {
-		background: #F5F5F5;
-	}
+.iconbar {
+	padding-right: 15px;
+    float: left;
+    width: auto;
+    height: 34px;
+    text-align: top;
+}
 
-/* Meta */
+.iconbar img {
+    float:left;
+}
 
-	address {
-		color: #666;
-	}
+.iconbar a {
+    text-decoration: none;
+}
 
-/* Product Specific CSS */
-	
-	.productlist h3 {
-		border: none;
-	}
+.selected a, .selected a:visited {
+	 color: #fc5900;
+}
 
-	.key-point h3 {
-		margin: 0;
-	}
-	
-	#product-desc h2 {
-		text-indent: -700em;
-		height: 25px;
-		line-height: 2px;
-		font-size: 2px;
-	}
-	
-	#product-desc p {
-		padding-left: 170px;
-	}
-	
-	#product-side {
-		margin-left: 65%;
-	}
-	
-	#product-side ul {
-		margin-left: 0;
-		padding-left: 20px;
-	}
-	
-	#product-side li {
-		padding-bottom: 0.2em;
-	}
-	
-	#product-desc {
-		padding: 40px 0 25px 0;
-		color: #4C5C5C;
-		width: 60%;
-		float: left;
-		line-height: 140%;
-	}
-	
-	.product-firefox {
-		background: url("../../images/product-firefox-screen.png") no-repeat;
-	}
-	.product-thunderbird {
-		background: url("../../images/product-thunderbird-screen.png") no-repeat;
-	}
-	.product-camino {
-		background: url("../../images/product-camino-screen.png") no-repeat;
-	}
-	.product-mozilla {
-		background: url("../../images/product-mozilla-screen.png") no-repeat;
-	}
-	
-	.download h3 {
-		color: #1D9101;
-		font-weight: bold;
-		margin: 0;
-		font-size: 140%;
-	}
-
-	.download h3 a:link,
-	.download h3 a:visited,
-	.download h3 a:active {
-		color: #1D9101;
-	}
-	
-	.download h3 a:hover {
-		color: #156B01;
-	}
-	
-	.download:before {
-		line-height: 0.1;
-		font-size: 1px;
-		margin: -15px -15px 0 -15px;
-		height: 15px;
-		display: block;
-		border: none;
-		content: url("../../images/download_tl.gif");
-	}
-	.download {
-		background: #C4EFA1 url("../../images/download_back.gif") top right no-repeat;
-		padding: 15px 45px 15px 15px;
-		margin-bottom: 0.5em;
-	}
-	.download:after {
-		display: block;
-		padding-top: 15px;
-		line-height: 0.1;
-		font-size: 1px;
-		content:  url("../../images/download_bl.gif");
-		margin: -10px -45px -15px -15px;
-		height: 8px;
-		background: transparent url("../../images/download_br.gif") scroll no-repeat bottom right ;
-	}
-	
-	.shop:before {
-		line-height: 0.1;
-		font-size: 1px;
-		margin: -15px -15px 0 -15px;
-		height: 15px;
-		display: block;
-		border: none;
-		content: url("../../images/shop_tl.gif");
-	}
-	.shop {
-		background: #C0DCDC url("../../images/shop_back.gif") top right no-repeat;
-		padding: 15px 70px 15px 15px;
-	}
-	.shop:after {
-		display: block;
-		padding-top: 15px;
-		line-height: 0.1;
-		font-size: 1px;
-		content: url("../../images/shop_bl.gif");
-		margin: -10px -70px -15px -15px;
-		height: 8px;
-		background: transparent url("../../images/shop_br.gif") scroll no-repeat bottom right ;
-	}
+.baseline {
+	margin-top: 5px;
+    border-top: #ccc 1px solid;
+    padding: 3px;
+    padding-left: 10px;
+    font-size: 8pt;
+    color: #333;
+}

@@ -36,29 +36,27 @@ echo"<h2>Processing changes to approval queue, please wait...</h2>\n";
 //echo"<pre>"; print_r($_POST); echo"</pre>\n";
 
 for ($i=1; $_POST["maxvid"]>=$i; $i++) {
-$type = $_POST["type_$i"];
-$testos = $_POST["testos_$i"];
-$testbuild = $_POST["testbuild_$i"];
-$comments = $_POST["comments_$i"];
-$approval = $_POST["approval_$i"];
-$file = $_POST["file_$i"];
+$type = escape_string($_POST["type_$i"]);
+$testos = escape_string($_POST["testos_$i"]);
+$testbuild = escape_string($_POST["testbuild_$i"]);
+$comments = escape_string($_POST["comments_$i"]);
+$approval = escape_string($_POST["approval_$i"]);
+$file = escape_string($_POST["file_$i"]);
 
-if ($_POST["installation_$i"]) { $installation = $_POST["installation_$i"]; } else { $installation = "NO";}
-if ($_POST["uninstallation_$i"]) { $uninstallation = $_POST["uninstallation_$i"]; } else { $uninstallation = "NO";}
-if ($_POST["appworks_$i"]) { $appworks = $_POST["appworks_$i"]; } else { $appworks = "NO";}
-if ($_POST["cleanprofile_$i"]) { $cleanprofile = $_POST["cleanprofile_$i"]; } else { $cleanprofile = "NO";}
+if ($_POST["installation_$i"]) { $installation = escape_string($_POST["installation_$i"]); } else { $installation = "NO";}
+if ($_POST["uninstallation_$i"]) { $uninstallation = escape_string($_POST["uninstallation_$i"]); } else { $uninstallation = "NO";}
+if ($_POST["appworks_$i"]) { $appworks = escape_string($_POST["appworks_$i"]); } else { $appworks = "NO";}
+if ($_POST["cleanprofile_$i"]) { $cleanprofile = escape_string($_POST["cleanprofile_$i"]); } else { $cleanprofile = "NO";}
 
 if ($type=="E") {
-if ($_POST["newchrome_$i"]) { $newchrome = $_POST["newchrome_$i"]; } else { $newchrome = "NO";}
-if ($_POST["worksasdescribed_$i"]) { $worksasdescribed = $_POST["worksasdescribed_$i"]; } else { $worksasdescribed = "NO";}
+if ($_POST["newchrome_$i"]) { $newchrome = escape_string($_POST["newchrome_$i"]); } else { $newchrome = "NO";}
+if ($_POST["worksasdescribed_$i"]) { $worksasdescribed = escape_string($_POST["worksasdescribed_$i"]); } else { $worksasdescribed = "NO";}
 } else if ($type=="T") {
-if ($_POST["visualerrors_$i"]) { $visualerrors = $_POST["visualerrors_$i"]; } else { $visualerrors = "NO";}
-if ($_POST["allelementsthemed_$i"]) { $allelementsthemed = $_POST["allelementsthemed_$i"]; } else { $allelementsthemed = "NO";}
+if ($_POST["visualerrors_$i"]) { $visualerrors = escape_string($_POST["visualerrors_$i"]); } else { $visualerrors = "NO";}
+if ($_POST["allelementsthemed_$i"]) { $allelementsthemed = escape_string($_POST["allelementsthemed_$i"]); } else { $allelementsthemed = "NO";}
 }
 
 if ($approval !="noaction") {
-//echo"$i - $file $testos $testbuild $comments $approval<br>\n";
-//echo"$type - $installation $uninstallation $appworks $cleanprofile $newchrome $worksasdescribed $visualerrors $allelementsthemed<br>\n";
 
 if ($type=="T") {
     if ($approval=="YES") {
@@ -85,8 +83,8 @@ if ($type=="T") {
 }
 
 //Approval for this file was successful, print the output message.
-$name = $_POST["name_$i"];
-$version = $_POST["version_$i"];
+$name = escape_string($_POST["name_$i"]);
+$version = escape_string($_POST["version_$i"]);
 if ($approval_result) {
    if ($approval=="YES") {
        echo"$name $version was granted approval<br>\n";
@@ -110,9 +108,9 @@ if ($approval_result) {
 <form name="approvalqueue" method="post" action="?">
 <?php
 $i=0;
-$sql ="SELECT TM.ID, `Type`, `vID`, `Name`, `Description`, TV.Version, `OSName`, `URI` FROM `t_main` TM
-INNER JOIN `t_version` TV ON TM.ID = TV.ID
-INNER JOIN `t_os` TOS ON TV.OSID=TOS.OSID
+$sql ="SELECT TM.ID, `Type`, `vID`, `Name`, `Description`, TV.Version, `OSName`, `URI` FROM `main` TM
+INNER JOIN `version` TV ON TM.ID = TV.ID
+INNER JOIN `os` TOS ON TV.OSID=TOS.OSID
 WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  $num_results = mysql_num_rows($sql_result);
@@ -121,19 +119,19 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
    $type = $row["Type"];
    $uri = $row["URI"];
    $authors = ""; $j="";
-   $sql2 = "SELECT `UserName` from `t_authorxref` TAX INNER JOIN `t_userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
+   $sql2 = "SELECT `UserName` from `authorxref` TAX INNER JOIN `userprofiles` TU ON TAX.UserID = TU.UserID WHERE TAX.ID='$row[ID]' ORDER BY `UserName` ASC";
      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
      while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
       $authors .="$row2[UserName]"; if (mysql_num_rows($sql_result2) > $j) { $authors .=", "; } 
      }
    $categories = ""; $j="";
-   $sql2 = "SELECT `CatName` from `t_categoryxref` TCX INNER JOIN `t_categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' ORDER BY `CatName` ASC";
+   $sql2 = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID = TC.CategoryID WHERE TCX.ID='$row[ID]' ORDER BY `CatName` ASC";
      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
      while ($row2 = mysql_fetch_array($sql_result2)) { $j++;
       $categories .="$row2[CatName]"; if (mysql_num_rows($sql_result2) > $j) { $categories .=", "; } 
      }
 
-   $sql2 = "SELECT `UserName`,`UserEmail`,`date` FROM `t_approvallog` TA INNER JOIN `t_userprofiles` TU ON TA.UserID = TU.UserID WHERE `ID`='$row[ID]' AND `vID`='$row[vID]' and `action`='Approval?' ORDER BY `date` DESC LIMIT 1";
+   $sql2 = "SELECT `UserName`,`UserEmail`,`date` FROM `approvallog` TA INNER JOIN `userprofiles` TU ON TA.UserID = TU.UserID WHERE `ID`='$row[ID]' AND `vID`='$row[vID]' and `action`='Approval?' ORDER BY `date` DESC LIMIT 1";
     $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       $row2 = mysql_fetch_array($sql_result2);
         if ($row2[date]) {$date = $row2[date]; } else { $date = $row[DateUpdated]; } 
@@ -155,7 +153,7 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
   }
   echo"</TR>\n<TR>";
   echo"<TD style=\"font-size: 8pt;\"><strong>Works with: </strong>";
-  $sql3 = "SELECT `shortname`, `MinAppVer`, `MaxAppVer` FROM `t_version` TV INNER JOIN `t_applications` TA ON TV.AppID = TA.AppID WHERE `URI`='$row[URI]' ORDER BY `AppName` ASC";
+  $sql3 = "SELECT `shortname`, `MinAppVer`, `MaxAppVer` FROM `version` TV INNER JOIN `applications` TA ON TV.AppID = TA.AppID WHERE `URI`='$row[URI]' ORDER BY `AppName` ASC";
     $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
      while ($row3 = mysql_fetch_array($sql_result3)) {
   echo"".ucwords($row3[shortname])." $row3[MinAppVer]-$row3[MaxAppVer] \n";
@@ -166,16 +164,16 @@ WHERE `approved` = '?' GROUP BY TV.URI ORDER BY TV.DateUpdated ASC";
  
 //Approval Form for this Extension Item
   echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
-  echo"Install? <input name=\"installation_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Installs OK?\">\n";
-  echo"Uninstall? <input name=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Uninstalls OK?\">\n";
-  echo"App Works? <input name=\"appworks_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"App Works OK? (Loading pages/messages, Tabs, Back/Forward)\">\n";
-  echo"Clean Profile? <input name=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Using a Clean Profile? (I.E. No Major Extensions Installed, like TBE)\">\n";
+  echo"<input name=\"installation_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Installs OK?\">Install?\n";
+  echo"<input name=\"uninstallation_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Uninstalls OK?\">Uninstall?\n";
+  echo"<input name=\"appworks_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"App Works OK? (Loading pages/messages, Tabs, Back/Forward)\">App Works? \n";
+  echo"<input name=\"cleanprofile_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Using a Clean Profile? (I.E. No Major Extensions Installed, like TBE)\">Clean Profile?\n";
 if ($type=="E") {
-  echo"New Chrome? <input name=\"newchrome_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Extension Added Chrome to the UI?\">\n";
-  echo"Works? <input name=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Item Works as AuthorDescribes\">\n";
+  echo"<input name=\"newchrome_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Extension Added Chrome to the UI?\">New Chrome?\n";
+  echo"<input name=\"worksasdescribed_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"Item Works as AuthorDescribes\">Works?\n";
 } else if ($type=="T") {
-  echo"Visual Errors? <input name=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"No Visual Errors / Rendering Problems\">\n";
-  echo"Theme Complete? <input name=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"All Components Themed? (Including No Missing Icons?)\">\n";
+  echo"<input name=\"visualerrors_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"No Visual Errors / Rendering Problems\">Visual Errors?\n";
+  echo"<input name=\"allelementsthemed_$i\" type=\"checkbox\" value=\"YES\" TITLE=\"All Components Themed? (Including No Missing Icons?)\">Theme Complete?\n";
 }
   echo"</TD></TR>\n";
   echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
@@ -234,7 +232,7 @@ TD { font-size: 8pt }
 <td style="font-size: 7pt">Comments:</td>
 </tr>
 <?php
-$sql ="SELECT * FROM `t_approvallog` ORDER BY `date` DESC";
+$sql ="SELECT * FROM `approvallog` ORDER BY `date` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  $num_results = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
@@ -284,6 +282,10 @@ $sql ="SELECT * FROM `t_approvallog` ORDER BY `date` DESC";
 <?php
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

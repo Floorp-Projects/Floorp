@@ -50,207 +50,204 @@ include"$page_header";
 ?>
 
 <?php
-    if ($_GET["application"]) {$application=$_GET["application"]; }
+//Get Current Version for Detected Application
+$sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `AppName` = '$application' AND `public_ver` = 'YES'  ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    $row = mysql_fetch_array($sql_result);
+        $version = $row["Version"];
+        $subver = $row["SubVer"];
+        $release = "$row[major].$row[minor]";
+        if ($row["release"]) {
+            $release = ".$release$row[release]";
+        }
+    $currentver = $release;
+    $currentver_display = $version;
+    unset($version,$subver,$release);
 
-    //XXX Temporary!! Current Version Array Code
-        $currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
-        $currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
-        $currentver = $currentver_array[$application];
-        $currentver_display = $currentver_display_array[$application];
 ?>
+
+<?php
+$securitywarning=false;
+if ($securitywarning=="true") {
+?>
+<!-- Don't display if no urgent security updates -->
+<div class="key-point"><p class="security-update"><strong>Important Firefox Security Update:</strong><br>Lorem ipsum dolor sit amet, <a href="#securitydownload">consectetuer adipiscing</a> elit. Curabitur viverra ultrices ante. Aliquam nec lectus. Praesent vitae risus. Aenean vulputate sapien et leo. Nullam euismod tortor id wisi.</p></div>
+<hr class="hide">
+<!-- close security update -->
+<?php } ?>
 
 <div id="mBody">
-  <div class="frontcolumn">
-    <h2><a href="extensions/?<?php echo"".uriparams().""; ?>">Get Extensions</a></h2>
-    <a href="products/thunderbird"><img src="images/product-front-thunderbird.png" alt="Thunderbird" class="promo" width="60" height="60"></a>
-    <p>Extensions are small add-ons that add new functionality. They can add anything from a toolbar button to a completely new feature.</p>
+	<div id="mainContent" class="right">
+	<h2>What is Mozilla Update?</h2>
+	<p class="first">Mozilla Update is the place to get extras for your <a href="http://www.mozilla.org/">Mozilla</a> products. Learn more <a href="/about/">about us</a>.</p>
 
-<?php
-$sql = "SELECT TM.ID
-FROM  `t_main` TM
-INNER  JOIN t_version TV ON TM.ID = TV.ID
-INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int`<='$currentver' AND `maxAppVer_int` >='$currentver' AND `approved` = 'YES' GROUP BY TM.ID";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $numextensions = mysql_num_rows($sql_result);
-?>
-     <a href="/extensions/?<?php echo"".uriparams().""; ?>">Browse extensions</a><BR>(<?php echo"$numextensions"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)<BR> 
-  </div>
-  <div class="frontcolumn">
-    <h2><a href="themes/?<?php echo"".uriparams().""; ?>">Get Themes</a></h2>
-    <a href="products/mozilla1.x"><img src="images/product-front-mozilla.png" alt="Mozilla" class="promo" width="60" height="60"></a>
-    <p>Themes are skins for Firefox, they allow you to change the look and feel of the browser and personalize it to your tastes.</p>
-<?php
-$sql = "SELECT TM.ID FROM  `t_main` TM
-INNER  JOIN t_version TV ON TM.ID = TV.ID
-INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int`<='$currentver' AND `maxAppVer_int` >='$currentver' AND `approved` = 'YES' GROUP BY TM.ID";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $numthemes = mysql_num_rows($sql_result);
-?>
-     <a href="/themes/?<?php echo"".uriparams().""; ?>">Browse themes</a><BR>(<?php echo"$numthemes"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)
-  </div>
-  <div class="frontcolumnlast">
-    <h2><a href="http://www.MozillaStore.com">Get Plugins</a></h2>
-    <a href="http://www.MozillaStore.com"><img src="images/product-front-firefox.png" alt="Mozilla Store" class="promo" width="60" height="60"></a>
-    <p>Now you can order all <a href="http://store.mozilla.org/products/software/">Mozilla software on CD</a> and purchase <a href="http://store.mozilla.org/products/clothing">Mozilla logo merchandise</a> at the <a href="http://www.MozillaStore.com">Mozilla Store</a>.</p>
-  </div>
+    <?php
+    $uriparams_skip="application";
+    ?>
+	<dl>
+		<dt>Themes</dt>
+		<dd>Themes allow you to change the way your Mozilla program looks. New graphics and colors. Browse themes for: <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=firefox">Firefox</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird">Thunderbird</a>, <a href="/themes/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla">Mozilla&nbsp;Suite</a></dd>
+		<dt>Extensions</dt>
+		<dd>Extensions are small add-ons that add new functionality to your Mozilla program. They can add anything from a toolbar button to a completely new feature. Browse extensions for: <a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=firefox">Firefox</a>, <a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=thunderbird">Thunderbird</a>, <a href="/extensions/?<?php echo"".uriparams()."&amp;"; ?>application=mozilla">Mozilla&nbsp;Suite</a></dd>
+		<dt>Plugins</dt>
+		<dd>Plugins are programs that allow websites to provide content to you and have it appear in your browser. Examples of Plugins are Flash, RealPlayer, and Java. Browse plug-ins for <a href="/plugins/">Mozilla Suite and Firefox</a></dd>
+		<!--<dt>Search Engines</dt>
+		<dd>In Firefox, you can add search engines that will be available in the search in the top of the browser. Browse search engines for <a href="/searchengines/">Firefox</a></dd>-->
+	</dl>
+    <?php
+    unset($uriparams_skip);
+    ?>
+    <?php
+    $feature="false";
+    if ($feature=="true") {
+    ?>
+	<h2>Currently Featuring...</h2>
+	<a href="#charamel"><img src="images/screen-charamel.png" width="200" height="150" alt="Charamel Theme for Firefox" class="imgright"></a>
+	<p class="first">The <a href="">Charamel Theme</a> for Firefox and Thunderbird has been very popular since it was introduced way back in February. It brings forward the interface of the classic Netscape browser to a modern interpretation.</p>
+	<p>Great work on this simple and elegant theme Alex. We give it 3.5 stars out of five.</p>
+    <?php } ?>
+	</div>
+	<div id="side" class="right">
+	<h2>Most Popular <?php echo ucwords($application); ?> Themes</h2>
+	<ol class="popularlist">
 
-  <br style="clear: both;"><br>
+        <?php
+        $i=0;
+        $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
+            FROM  `main` TM
+            INNER  JOIN version TV ON TM.ID = TV.ID
+            INNER  JOIN applications TA ON TV.AppID = TA.AppID
+            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
+            WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+            if (mysql_num_rows($sql_result)=="0") {
+                echo"        <li>No Popular Themes</li>\n";
+            }
+            while ($row = mysql_fetch_array($sql_result)) {
+                $i++;
+                $id = $row["ID"];
+                $vid = $row["vID"];
+                $name = $row["Name"];
+                $version = $row["Version"];
+                $downloadcount = $row["downloadcount"];
+                $totaldownloads = $row["TotalDownloads"];
+                $typename="themes";
+                if ($lastname == $name) {
+                    $i--;
+                    continue;
+                }
 
-  <!-- Start News Columns -->
-  <div class="frontcolumn">
-<a href="http://www.mozilla.org/news.rdf"><img src="images/rss.png" width="28" height="16" class="rss" alt="Mozilla News in RSS"></a><h2 style="margin-top: 0;"><a href="http://www.mozilla.org" title="the mozilla.org website">New Additions</a></h2>
-<ul class="news">
-<li>
-<div class="date">Aug 28</div>
-<a href="http://www.wired.com/wired/archive/12.09/start.html?pg=12">Firefox: Wired</a>
-</li>
-<li>
-<div class="date">Aug 18</div>
-<a href="http://www.mozilla.org/press/mozilla-2004-08-18.html">Mozilla Japan Created</a>
-</li>
-<li>
-<div class="date">Aug 18</div>
-<a href="http://www.mozilla.org/releases/#1.8a3">Mozilla 1.8 Alpha 3</a>
-</li>
-</ul>
+                echo"		<li>";
+                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
+                echo"<span class=\"downloads\"> ($downloadcount downloads)</span>";
+                echo"</li>\n";
+
+                $lastname = $name;
+                if ($i >= "5") {
+                    break;
+                }
+            }
+        ?>
+	</ol>
+	<h2>Most Popular <?php echo ucwords($application); ?> Extensions</h2>
+	<ol class="popularlist">
+
+        <?php
+        $i=0;
+        $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.downloadcount
+            FROM  `main` TM
+            INNER  JOIN version TV ON TM.ID = TV.ID
+            INNER  JOIN applications TA ON TV.AppID = TA.AppID
+            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
+            WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+            if (mysql_num_rows($sql_result)=="0") {
+                echo"        <li>No Popular Extensions</li>\n";
+            }
+            while ($row = mysql_fetch_array($sql_result)) {
+                $i++;
+                $id = $row["ID"];
+                $vid = $row["vID"];
+                $name = $row["Name"];
+                $version = $row["Version"];
+                $downloadcount = $row["downloadcount"];
+                $totaldownloads = $row["TotalDownloads"];
+                $typename="extensions";
+                if ($lastname == $name) {
+                    $i--;
+                    continue;
+                }
+
+                echo"		<li>";
+                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name</a>";
+                echo"<span class=\"downloads\"> ($downloadcount downloads)</span>";
+                echo"</li>\n";
+
+                $lastname = $name;
+                if ($i >= "5") {
+                    break;
+                }
+            }
+        ?>
+	</ol>
+	<a href="/rss/?application=<?php echo"$application"; ?>&amp;list=newest"><img src="images/rss.png" width="16" height="16" class="rss" alt="News Additions in RSS"></a>
+	<h2>New Additions</h2>
+	<ol class="popularlist">
+
+        <?php
+        $i=0;
+        $sql = "SELECT TM.ID, TM.Type, TV.vID, TM.Name, TV.Version, TV.DateAdded
+            FROM  `main` TM
+            INNER  JOIN version TV ON TM.ID = TV.ID
+            INNER  JOIN applications TA ON TV.AppID = TA.AppID
+            INNER  JOIN os TOS ON TV.OSID = TOS.OSID
+            WHERE  `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+            if (mysql_num_rows($sql_result)=="0") {
+                echo"        <li>Nothing Recently Added</li>\n";
+            }
+            while ($row = mysql_fetch_array($sql_result)) {
+                $i++;
+                $id = $row["ID"];
+                $vid = $row["vID"];
+                $type = $row["Type"];
+                $name = $row["Name"];
+                $version = $row["Version"];
+                $dateadded = $row["DateAdded"];
+                $dateadded = gmdate("M d, Y", strtotime("$dateadded")); 
+                //$dateupdated = gmdate("F d, Y g:i:sa T", $timestamp);
+
+                if ($type=="E") {
+                    $typename = "extensions";
+                } else if ($type=="T") {
+                    $typename = "themes";
+                }
+
+                if ($lastname == $name) {
+                    $i--;
+                    continue;
+                }
+
+                echo"		<li>";
+                echo"<a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id\">$name $version</a>";
+                echo"<span class=\"downloads\"> ($dateadded)</span>";
+                echo"</li>\n";
+
+                $lastname = $name;
+                if ($i >= "8") {
+                    break;
+                }
+            }
+        ?>
+	</ol>
+	</div>
 </div>
-<div class="frontcolumn">
-<a href="http://planet.mozilla.org/rss10.xml"><img src="images/rss.png" width="28" height="16" class="rss" alt="Mozilla Weblogs in RSS"></a><h2 style="margin-top: 0;"><a href="http://planet.mozilla.org/" title="Planet Mozilla - http://planet.mozilla.org/">Most Popular</a></h2>
-<ul class="news">
-<li>
-<div class="date">Aug 30</div>
-<a href="http://weblogs.mozillazine.org/josh/archives/2004/08/gmail_invites.html">Josh Aas: gmail invites</a>
-</li>
-<li>
-<div class="date">Aug 30</div>
-<a href="http://weblogs.mozillazine.org/asa/archives/006315.html">Asa Dotzler: gmail invites gone</a>
-</li>
-<li>
-<div class="date">Aug 30</div>
-<a href="http://weblogs.mozillazine.org/asa/archives/006314.html">Asa Dotzler: extension update changes</a>
-</li>
-</ul>
-</div>
-<div class="frontcolumn">
-<a href="http://www.mozillazine.org/atom.xml"><img src="images/rss.png" width="28" height="16" class="rss" alt="MozillaZine News in RSS"></a><h2 style="margin-top: 0;"><a href="http://www.mozillazine.org/" title="Your Source for Daily Mozilla News and Advocacy">This Space For Rent</a></h2>
-<ul class="news">
-<li>
-<div class="date">Aug 25</div>
-<a href="http://www.mozillazine.org/talkback.html?article=5215">Camino 0.8.1 Released</a>
-</li>
-<li>
-<div class="date">Aug 25</div>
-<a href="http://www.mozillazine.org/talkback.html?article=5213">Community Marketing Initiative Week 5</a>
-</li>
-<li>
-<div class="date">Aug 20</div>
-<a href="http://www.mozillazine.org/talkback.html?article=5200">New Beta of mozilla.org Website Available for Testing</a>
-</li>
-</ul>
-</div>
 
-  <!-- End News Columns -->  
-  <br style="clear: both;">
-
-</div>
 <!-- closes #mBody-->
-
-
-
-<?php
-// #################################################
-//   Old Mozilla Update Layout Code
-//    Particularly Editor's Pick Code. 
-// #################################################
-?>
-<?php
-//<A HREF="/faq/">Frequently Asked Questions...</A>
-
-
-if ($_GET["application"]) {$application=$_GET["application"]; }
-?>
-<?php
-//Featured Editor's Pick for Extensions for $application
-
-$sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
-INNER JOIN t_main TM ON TR.ID = TM.ID
-INNER JOIN t_version TV ON TV.ID = TM.ID
-INNER JOIN t_applications TA ON TA.AppID = TV.AppID
-WHERE `Type` = 'E' AND `AppName` = '$application' AND `pick`='YES' ORDER BY `rID` DESC LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-    $id = $row["ID"];
-    $title = $row["Title"];
-    $pick = $row["pick"];
-    $dateadded = $row["DateAdded"];
-    $body = $row["Body"];
-    $bodylength = strlen($body);
-if ($bodylength>"250") {
- $body = substr($body,0,250);
- $body .= " <a href=\"/extensions/moreinfo.php?".uriparams()."&id=$id&page=staffreview\">[More...]</a>";
- 
- }
-
-//Create Customizeable Timestamp
-	$day=substr($dateadded,8,2);  //get the day
-    $month=substr($dateadded,5,2); //get the month
-    $year=substr($dateadded,0,4); //get the year
-    $hour=substr($dateadded,11,2); //get the hour
-    $minute=substr($dateadded,14,2); //get the minute
-    $second=substr($dateadded,17,2); //get the sec
-    $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
-    $date = gmdate("F, Y", $timestamp);
-
-
-echo"$title<br>&nbsp;&nbsp;&nbsp;$date";
-if ($pick=="YES") {echo" Editors Pick";}
-echo"<BR><BR>\n";
-echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
-}
-?>
-
-<?php
-//Featured Editor's Pick for Themes for $application
-$sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
-INNER JOIN t_main TM ON TR.ID = TM.ID
-INNER JOIN t_version TV ON TV.ID = TM.ID
-INNER JOIN t_applications TA ON TA.AppID = TV.AppID
-WHERE `Type` = 'T' AND `AppName` = '$application' AND `pick`='YES' ORDER BY `rID` DESC LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-    $id = $row["ID"];
-    $title = $row["Title"];
-    $pick = $row["pick"];
-    $dateadded = $row["DateAdded"];
-    $body = $row["Body"];
-    $bodylength = strlen($body);
-if ($bodylength>"250") {
- $body = substr($body,0,250);
- $body .= " <a href=\"/moreinfo.php?".uriparams()."&id=$id&page=staffreview\">[More...]</a>";
- 
- }
-
-//Create Customizeable Timestamp
-	$day=substr($dateadded,8,2);  //get the day
-    $month=substr($dateadded,5,2); //get the month
-    $year=substr($dateadded,0,4); //get the year
-    $hour=substr($dateadded,11,2); //get the hour
-    $minute=substr($dateadded,14,2); //get the minute
-    $second=substr($dateadded,17,2); //get the sec
-    $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
-    $date = gmdate("F, Y", $timestamp);
-
-echo"$title - $date";
-if ($pick=="YES") {echo" Editors Pick<BR><BR>\n";}
-echo"$body<BR>\n";
-}
-?>
-
 
 <?php
 include"$page_footer";
 ?>
-</BODY>
-</HTML>
+
+</body>
+</html>

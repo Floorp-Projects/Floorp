@@ -1,7 +1,7 @@
 <?php
 require"../core/config.php";
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <HTML>
 <HEAD>
 <TITLE>Mozilla Update :: Create An Account</TITLE>
@@ -15,7 +15,7 @@ if (!$function or $function=="step1") {
 <div id="mBody">
 <div id="mainContent" class="right">
 
-<h3>Create an Account</h3>
+<h2>Create an Account</h2>
 Joining Mozilla Update is easy just fill out the form below and click the join button.
 
 <form name="createaccount" method="post" action="createaccount.php?function=step2">
@@ -58,7 +58,7 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 
 </div>
 <div id="side" class="right">
-<h3>Already Have an Account?</h3>
+<h2>Already Have an Account?</h2>
 <P>If you already have signed-up for an account, you don't need to sign-up again. Just use your e-mail address and password and <a href="index.php">login</a>.</P>
 <P>If you don't remember the password for your acconut, you can <a href="passwordreset.php">recover a forgotten password</a>.</P>
 </div>
@@ -67,14 +67,14 @@ Joining Mozilla Update is easy just fill out the form below and click the join b
 } else if ($function=="step2") {
 echo"<h1>Processing New Account Request, Please Wait...</h1>\n";
 //Gather and Filter Data from the Submission Form
-if ($_POST["email"]==$_POST["emailconfirm"]) {$email = $_POST["email"];} else { $errors="true"; $emailvalid="no";}
-if ($_POST["password"]==$_POST["passwordconfirm"]) {$password = $_POST["password"];} else { $errors="true"; $passwordvalid="no"; }
-if ($_POST["name"]) { $name = $_POST["name"]; } else { $errors="true"; $namevalid="no"; }
-$website = $_POST["website"];
+if ($_POST["email"]==$_POST["emailconfirm"]) {$email = escape_string($_POST["email"]);} else { $errors="true"; $emailvalid="no";}
+if ($_POST["password"]==$_POST["passwordconfirm"]) {$password = escape_string($_POST["password"]);} else { $errors="true"; $passwordvalid="no"; }
+if ($_POST["name"]) { $name = escape_string($_POST["name"]); } else { $errors="true"; $namevalid="no"; }
+$website = escape_string($_POST["website"]);
 
 //Check e-mail address and see if its already in use.
 if ($emailvalid !="no") {
-$sql = "SELECT `UserEmail` from `t_userprofiles` WHERE `UserEmail`='$email' LIMIT 1";
+$sql = "SELECT `UserEmail` from `userprofiles` WHERE `UserEmail`='$email' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   if (mysql_num_rows($sql_result)>"0") {$errors="true"; $emailvalid="no"; }
 }
@@ -97,7 +97,7 @@ $confirmationcode = md5(mt_rand());
 $password_plain = $password;
 $password = md5($password);
 
-$sql = "INSERT INTO `t_userprofiles` (`UserName`,`UserEmail`,`UserWebsite`,`UserPass`,`UserMode`,`ConfirmationCode`) VALUES ('$name','$email','$website','$password','D','$confirmationcode');";
+$sql = "INSERT INTO `userprofiles` (`UserName`,`UserEmail`,`UserWebsite`,`UserPass`,`UserMode`,`ConfirmationCode`) VALUES ('$name','$email','$website','$password','D','$confirmationcode');";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   if ($sql_result) {
     include"mail_newaccount.php";
@@ -107,19 +107,19 @@ $sql = "INSERT INTO `t_userprofiles` (`UserName`,`UserEmail`,`UserWebsite`,`User
 
 } else if ($function=="confirmaccount") {
 ?>
-<h1>Activate Your Mozilla Update Account</h1>
+<h2>Activate Your Mozilla Update Account</h2>
 <?php
 //Get the two URI variables from the query_string..
-$email = $_GET["email"];
-$confirmationcode = $_GET["confirmationcode"];
+$email = escape_string($_GET["email"]);
+$confirmationcode = escape_string($_GET["confirmationcode"]);
 
 //Check DB to see if those two values match a record.. if it does, activate the account, if not throw error.
-$sql = "SELECT `UserID` from `t_userprofiles` WHERE `UserEmail`='$email' and `ConfirmationCode`='$confirmationcode' LIMIT 1";
+$sql = "SELECT `UserID` from `userprofiles` WHERE `UserEmail`='$email' and `ConfirmationCode`='$confirmationcode' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)=="1") {
      $row = mysql_fetch_array($sql_result);
       $userid = $row["UserID"];
-      $sql = "UPDATE `t_userprofiles` SET `UserMode`='U', `ConfirmationCode`=NULL WHERE `UserID`='$userid' LIMIT 1";
+      $sql = "UPDATE `userprofiles` SET `UserMode`='U', `ConfirmationCode`=NULL WHERE `UserID`='$userid' LIMIT 1";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         if ($sql_result) {
         echo"Thanks! Your account has been activated successfully, you may now login and being using Mozilla Update's Developer Control Panel.";
@@ -137,6 +137,9 @@ $sql = "SELECT `UserID` from `t_userprofiles` WHERE `UserEmail`='$email' and `Co
 <?php
 } else {}
 ?>
+
+
+</div>
 
 <?php
 include"$page_footer";

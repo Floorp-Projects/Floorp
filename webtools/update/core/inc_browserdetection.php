@@ -40,11 +40,7 @@
 //$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Photon; U; QNX x86pc; en-US; rv:1.6a) Gecko/20030122";
 //$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (BeOS; U; BeOS BePC; en-US; rv:1.4a) Gecko/20030305";
 //$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (X11; U; SunOS i86pc; en-US; rv:1.7b) Gecko/20040302";
-//$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040206 Lightninglizard/0.8";
-//$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7b) Gecko/20040322 Nuclearunicorn/0.8.0+ (Firefox/0.8.0+ rebrand)";
-//$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040626 Firefox/0.9";
 //$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Macintosh; U; PPC Mac OS X Mach-O; en-US; rv:1.7) Gecko/20040803 Firefox/0.9.3";
-//$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.2) Gecko/20040818 Firefox/0.9.1+";
 //$_SERVER["HTTP_USER_AGENT"] = "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.3) Gecko/20041001 Firefox/0.10.1";
 
 
@@ -76,9 +72,9 @@ if ($_GET["version"]=="auto-detect") {$_GET["version"]="";}//Clear Version For A
       break;
   }
 
-$application = $_GET["application"];
-$app_version = $_GET["version"];
-$OS = $_GET["os"];
+$application = escape_string($_GET["application"]);
+$app_version = escape_string($_GET["version"]);
+$OS = escape_string($_GET["os"]);
 
 //print("$application, $app_version, $OS<br>\n");
 
@@ -139,7 +135,7 @@ if (!$application) { $application="firefox"; } //Default App is Firefox
 //App_Version
 //Get Max Version for Application Specified
 if (!$app_version) {
-    $sql = "SELECT `major`,`minor`,`release`,`SubVer` FROM `t_applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
+    $sql = "SELECT `major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     $row = mysql_fetch_array($sql_result);
         $release = "$row[major].$row[minor]";
@@ -156,7 +152,7 @@ if (!$app_version) {
 
 
 //Check for Internal Versioning for the $app_version
-  $sql = "SELECT `int_version`,`major`,`minor`,`release`,`SubVer` FROM `t_applications` WHERE `AppName`='$application' AND `int_version` IS NOT NULL ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+  $sql = "SELECT `int_version`,`major`,`minor`,`release`,`SubVer` FROM `applications` WHERE `AppName`='$application' AND `int_version` IS NOT NULL ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
         $release = "$row[major].$row[minor]";

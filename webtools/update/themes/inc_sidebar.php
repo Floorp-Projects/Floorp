@@ -36,54 +36,45 @@
 //
 // ***** END LICENSE BLOCK *****
 ?>
-<div id="side">
-<?php
-$uriparams_skip="category";
+    <div id="side">
+    <?php
+    $type="T";
+    $types = array("E"=>"Extensions","T"=>"Themes");
+    $typename = $types["$type"];
+    $uriparams_skip="category";
 
-echo"<ul id=\"nav\">\n";
+    echo"<ul id=\"nav\">\n";
 
-if (!$category AND $index !="yes") {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?".uriparams()."&category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Themes</strong></A></li>\n";
-if (!$category AND $index !="yes") {echo"</SPAN>"; }
+    echo"        <li"; if (!$category AND $index !="yes") { echo" class=\"selected\""; }  echo"><A HREF=\"showlist.php?".uriparams()."&amp;category=All\" TITLE=\"Show All ".ucwords($typename)." Alphabetically\"><strong>All Themes</strong></A></li>\n";
 
-// Object Categories
-$sql = "SELECT `CatName`,`CatDesc` FROM `t_categories` WHERE `CatType` = '$type' ORDER BY `CatName`";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-  $catname = $row["CatName"];
-  $catdesc = $row["CatDesc"];
-  if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?".uriparams()."&category=$catname\" TITLE=\"$catdesc\"><strong>$catname</strong></A></li>\n";
-  if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
-  }
-?>
-<BR>
-<?php
-$catname = "Editors Pick";
-$catdesc = ucwords($typename)." picked by the Mozilla Update Editors";
-if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?".uriparams()."&category=$catname\" TITLE=\"$catdesc\">Editor's Pick</A></li>\n";
-if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
+    echo"        <li><ul>\n";
 
-$catname = "Popular";
-$catdesc = ucwords($typename)." downloaded the most over the last week.";
-if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?".uriparams()."&category=$catname\" TITLE=\"$catdesc\">$catname</A></li>\n";
-if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
+    // Object Categories
+    $sql = "SELECT `CatName`,`CatDesc` FROM `categories` WHERE `CatType` = '$type' and `CatApp` = '$application' ORDER BY `CatName`";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+        while ($row = mysql_fetch_array($sql_result)) {
+            $catname = $row["CatName"];
+            $catdesc = $row["CatDesc"];
+            echo"        <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\">$catname</a></li>\n";
+        }
 
-$catname = "Top Rated";
-$catdesc = ucwords($typename)." rated the highest by site visitors";
-if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?".uriparams()."&category=$catname\" TITLE=\"$catdesc\">$catname</A></li>\n";
-if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
+    echo"        </ul></li>\n";
 
-$catname = "Newest";
-$catdesc = "Most recent ".ucwords($typename);
-if (strtolower($category) == strtolower($catname)) {echo"<SPAN CLASS=\"selected\">"; }
-  echo"<li><A HREF=\"showlist.php?".uriparams()."&category=$catname\" TITLE=\"$catdesc\">$catname</A></li>\n";
-if (strtolower($category) == strtolower($catname)) {echo"</SPAN>"; }
-?>
-</ul>
-</DIV>
-<hr class="hide">
-<div id="mainContent">
+    $catname = "Editors Pick";
+    $catdesc = ucwords($typename)." picked by the Mozilla Update Editors";
+    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>Editor's Pick</strong></a></li>\n";
+
+    $catname = "Popular";
+    $catdesc = ucwords($typename)." downloaded the most over the last week.";
+    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+
+    $catname = "Top Rated";
+    $catdesc = ucwords($typename)." rated the highest by site visitors";
+    echo"    <li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+
+    $catname = "Newest";
+    $catdesc = "Most recent ".ucwords($typename);
+    echo"<li"; if (strtolower($category) == strtolower($catname)) { echo" class=\"selected\""; }  echo"><a href=\"showlist.php?".uriparams()."&amp;category=$catname\" title=\"$catdesc\"><strong>$catname</strong></a></li>\n";
+    ?>
+    </ul>
+    </div>

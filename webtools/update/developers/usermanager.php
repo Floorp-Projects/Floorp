@@ -24,11 +24,11 @@ include"inc_sidebar.php";
 <?php
 //Security Check for EditUser/ChangePassword function.
 if ($function=="edituser" or $function=="changepassword") {
-$postuid = $_GET["userid"]; 
-$userid = $_SESSION["uid"];
+$postuid = escape_string($_GET["userid"]); 
+$userid = escape_string($_SESSION["uid"]);
   if ($_SESSION["level"] !=="admin" and $postuid != $userid) {
   //This user isn't an admin, verify the id of the record they're working with is ok.
-   $sql = "SELECT `UserID` from `t_userprofiles` WHERE ";
+   $sql = "SELECT `UserID` from `userprofiles` WHERE ";
   if ($_SESSION["level"]=="user") { $sql .="`UserID` = '$userid'";
   } else if ($_SESSION["level"]=="editor") {$sql .="`UserMode`='U' and `UserID`='$postuid'";
   } else { $sql .=" 0"; }
@@ -46,7 +46,7 @@ $userid = $_SESSION["uid"];
     $userid = $row["UserID"];
     }
   } else {
-  $userid = $_GET["userid"];
+  $userid = escape_string($_GET["userid"]);
   }
 }
 ?>
@@ -63,11 +63,11 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
     //Process Post Data, Make Changes to User Table.
     //Begin General Updating
     for ($i=1; $i<=$_POST[maxuserid]; $i++) {
-      $admin = $_POST["admin$i"];
-      $editor = $_POST["editor$i"];
-      $trusted = $_POST["trusted$i"];
-      $disabled = $_POST["disabled$i"];
-      $selected = $_POST["selected$i"];
+      $admin = escape_string($_POST["admin$i"]);
+      $editor = escape_string($_POST["editor$i"]);
+      $trusted = escape_string($_POST["trusted$i"]);
+      $disabled = escape_string($_POST["disabled$i"]);
+      $selected = escape_string($_POST["selected$i"]);
       //echo "$i - $admin - $editor - $trusted - $selected<br>\n";
 
       if ($admin=="TRUE") { $mode="A"; 
@@ -78,32 +78,32 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
       if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
       if (checkFormKey()) {
-        $sql = "UPDATE `t_userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$i'";
+        $sql = "UPDATE `userprofiles` SET `UserMode`= '$mode', `UserTrusted`= '$trusted' WHERE `UserID`='$i'";
         $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
       }
 
       //Do Special Disable, Delete, Enable Account Operations
       if ($_POST["selected$i"] AND $_POST["submit"] !=="Update") {
-	$selecteduser = $_POST["selected$i"];
+	$selecteduser = escape_string($_POST["selected$i"]);
 
 	if ($_POST["submit"]=="Disable Selected") {
           if (checkFormKey()) {
-	    $sql = "UPDATE `t_userprofiles` SET `UserMode`= 'D' WHERE `UserID`='$selecteduser'";
+	    $sql = "UPDATE `userprofiles` SET `UserMode`= 'D' WHERE `UserID`='$selecteduser'";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    if ($sql_result) {
 	      echo"User Account for User Number $selecteduser Disabled<br>\n";
 	    }
 
 	    //Disabling an author, check their extension list and disable any item they're the solo author of.
-	    $sql = "SELECT TM.ID, TM.Name from `t_main` TM INNER JOIN `t_authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
+	    $sql = "SELECT TM.ID, TM.Name from `main` TM INNER JOIN `authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    while ($row = mysql_fetch_array($sql_result)) {
 	      $id = $row["ID"];
 	      $name = $row["Name"];
-	      $sql2 = "SELECT `ID` from `t_authorxref` WHERE `ID` = '$id'";
+	      $sql2 = "SELECT `ID` from `authorxref` WHERE `ID` = '$id'";
 	      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	      if (mysql_num_rows($sql_result2)<="1") {
-	        $sql3 = "UPDATE `t_version` SET `approved`='DISABLED' WHERE `ID`='$id' and `approved` !='NO' ";
+	        $sql3 = "UPDATE `version` SET `approved`='DISABLED' WHERE `ID`='$id' and `approved` !='NO' ";
 	        $sql_result3 = mysql_query($sql3, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	        if ($sql_result3) {
 	  	  echo"$name disabled from public viewing...<br>\n";
@@ -114,7 +114,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 
 	} else if ($_POST["submit"]=="Delete Selected") {
           if (checkFormKey()) {
-	    $sql = "DELETE FROM `t_userprofiles` WHERE `UserID`='$selecteduser' LIMIT 1";
+	    $sql = "DELETE FROM `userprofiles` WHERE `UserID`='$selecteduser' LIMIT 1";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    if ($sql_result) {
 	      echo"User Account for User Number $selecteduser Deleted<br>\n";
@@ -123,21 +123,21 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 
 	} else if ($_POST["submit"]=="Enable Selected") {
           if (checkFormKey()) {
-	    $sql = "UPDATE `t_userprofiles` SET `UserMode`= 'U' WHERE `UserID`='$selecteduser'";
+	    $sql = "UPDATE `userprofiles` SET `UserMode`= 'U' WHERE `UserID`='$selecteduser'";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    if ($sql_result) {
 	      echo"User Account for User Number $selecteduser Enabled, User Mode set to User<br>\n";
 	    }
 	    //Disabling an author, check their extension list and disable any item they're the solo author of.
-	    $sql = "SELECT TM.ID, TM.Name from `t_main` TM INNER JOIN `t_authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
+	    $sql = "SELECT TM.ID, TM.Name from `main` TM INNER JOIN `authorxref` TAX ON TM.ID=TAX.ID WHERE TAX.UserID = '$selecteduser'";
 	    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	    while ($row = mysql_fetch_array($sql_result)) {
 	      $id = $row["ID"];
 	      $name = $row["Name"];
-	      $sql2 = "SELECT `ID` from `t_authorxref` WHERE `ID` = '$id'";
+	      $sql2 = "SELECT `ID` from `authorxref` WHERE `ID` = '$id'";
 	      $sql_result2 = mysql_query($sql2, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	      if (mysql_num_rows($sql_result2)<="1") {
-	        $sql3 = "UPDATE `t_version` SET `approved`='?' WHERE `ID`='$id' and `approved` !='NO'";
+	        $sql3 = "UPDATE `version` SET `approved`='?' WHERE `ID`='$id' and `approved` !='NO'";
 	        $sql_result3 = mysql_query($sql3, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 	        if ($sql_result3) {
 	  	  echo"$name restored to public view pending approval...<br>\n";
@@ -170,7 +170,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 <FORM NAME="updateusers" METHOD="POST" ACTION="?function=&action=update">
 <?writeFormKey();?>
 <?php
- $sql = "SELECT * FROM `t_userprofiles` ORDER BY `UserMode`, `UserName` ASC";
+ $sql = "SELECT * FROM `userprofiles` ORDER BY `UserMode`, `UserName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
     $userid = $row["UserID"];
@@ -227,17 +227,17 @@ echo"<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 
 <?php
 } else if ($function=="edituser") {
-if (!$userid) {$userid = $_GET["userid"];}
+if (!$userid) {$userid = escape_string($_GET["userid"]);}
 
 //Process Submitted Values if this is a return with $_POST data...
 if ($_POST["submit"]=="Update") {
 if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
-  $_POST["username"] = htmlspecialchars($_POST["username"]);
+  $_POST["username"] = escape_string(htmlspecialchars($_POST["username"]));
 
-$admin = $_POST["admin"];
-$editor = $_POST["editor"];
-$trusted = $_POST["trusted"];
-$usermode = $_POST["usermode"];
+$admin = escape_string($_POST["admin"]);
+$editor = escape_string($_POST["editor"]);
+$trusted = escape_string($_POST["trusted"]);
+$usermode = escape_string($_POST["usermode"]);
 
 if ($admin=="TRUE") { $mode="A"; 
 } else if ($editor=="TRUE") { $mode="E"; 
@@ -249,14 +249,14 @@ if ($usermode=="D") {$mode="D"; $trusted="FALSE";}
 
 if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
-$userid = $_POST["userid"];
-$username = $_POST["username"];
-$useremail = $_POST["useremail"];
-$userwebsite = $_POST["userwebsite"];
-$useremailhide = $_POST["useremailhide"];
+$userid = escape_string($_POST["userid"]);
+$username = escape_string($_POST["username"]);
+$useremail = escape_string($_POST["useremail"]);
+$userwebsite = escape_string($_POST["userwebsite"]);
+$useremailhide = escape_string($_POST["useremailhide"]);
 
   if (checkFormKey()) {
-    $sql = "UPDATE `t_userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$mode', `UserTrusted`='$trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
+    $sql = "UPDATE `userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$mode', `UserTrusted`='$trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
     echo"<h1>Updating User Profile...</h1>\n";
@@ -265,10 +265,10 @@ $useremailhide = $_POST["useremailhide"];
   }
 } else if ($_POST["submit"] == "Delete User") {
 if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
-$userid = $_POST["userid"];
-$username = $_POST["username"];
+$userid = escape_string($_POST["userid"]);
+$username = escape_string($_POST["username"]);
   if (checkFormKey()) {
-    $sql = "DELETE FROM `t_userprofiles` WHERE `UserID`='$userid'";
+    $sql = "DELETE FROM `userprofiles` WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
     echo"<h1>Deleting User... Please wait...</h1>\n";
@@ -280,10 +280,10 @@ $username = $_POST["username"];
   }
 }
 
-if (!$userid) {$userid=$_POST["userid"];}
+if (!$userid) {$userid=escape_string($_POST["userid"]);}
 
 //Show Edit Form
- $sql = "SELECT * FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
+ $sql = "SELECT * FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
     $userid = $row["UserID"];
@@ -370,10 +370,10 @@ echo"<h1>Adding User...</h1>\n";
 if ($errors !="true") {
     $_POST["username"] = htmlspecialchars($_POST["username"]);
 
-$admin = $_POST["admin"];
-$editor = $_POST["editor"];
-$trusted = $_POST["trusted"];
-$disabled = $_POST["disabled"];
+$admin = escape_string($_POST["admin"]);
+$editor = escape_string($_POST["editor"]);
+$trusted = escape_string($_POST["trusted"]);
+$disabled = escape_string($_POST["disabled"]);
 //echo"$i - $admin - $editor - $trusted<br>\n";
 
 if ($admin=="TRUE") { $mode="A"; 
@@ -383,13 +383,13 @@ if ($admin=="TRUE") { $mode="A";
 
 if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
-$username = $_POST[username];
-$useremail = $_POST[useremail];
-$userwebsite = $_POST[userwebsite];
-$userpass = $_POST[userpass];
-$useremailhide = $_POST[useremailhide];
+$username = escape_string($_POST[username]);
+$useremail = escape_string($_POST[useremail]);
+$userwebsite = escape_string($_POST[userwebsite]);
+$userpass = escape_string($_POST[userpass]);
+$useremailhide = escape_string($_POST[useremailhide]);
   if (checkFormKey()) {
-    $sql = "INSERT INTO `t_userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$username', '$useremail', '$userwebsite', '$userpass', '$mode', '$trusted', '$useremailhide');";
+    $sql = "INSERT INTO `userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$username', '$useremail', '$userwebsite', '$userpass', '$mode', '$trusted', '$useremailhide');";
     $sql_result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
       include"mail_newaccount.php"; 
@@ -420,13 +420,13 @@ $useremailhide = $_POST[useremailhide];
 
 <?php
 } else if ($function=="changepassword") {
-if (!$userid) {$userid = $_GET["userid"]; }
+if (!$userid) {$userid = escape_string($_GET["userid"]); }
 
 //Set Password Change if this is a POST.
 if ($_POST["submit"]=="Change Password") {
    echo"<h1>Changing Password, please wait...</h1>\n";
- $userid = $_POST["userid"];
- $sql = "SELECT `UserPass`, `UserEmail` FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
+ $userid = escape_string($_POST["userid"]);
+ $sql = "SELECT `UserPass`, `UserEmail` FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    $row = mysql_fetch_array($sql_result);
     $userpass = $row["UserPass"];
@@ -442,7 +442,7 @@ if ($_POST["submit"]=="Change Password") {
 
      $sql_result = false;
      if (checkFormKey()) {
-       $sql = "UPDATE `t_userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$userid'";
+       $sql = "UPDATE `userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$userid'";
        $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
      }
      if ($sql_result) {
@@ -464,15 +464,15 @@ if ($_POST["submit"]=="Change Password") {
    $newpassword = substr(md5(mt_rand()),0,14);
    $password_plain = $newpassword;
    $userpass = md5($newpassword);
-   $userid = $_POST["userid"];
+   $userid = escape_string($_POST["userid"]);
 
-     $sql = "SELECT `UserEmail` FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
+     $sql = "SELECT `UserEmail` FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
        $row = mysql_fetch_array($sql_result);
          $email = $row["UserEmail"];
 
      if (checkFormKey()) {
-       $sql = "UPDATE `t_userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$userid'";
+       $sql = "UPDATE `userprofiles` SET `UserPass`='$userpass' WHERE `UserID`='$userid'";
        $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
        if ($sql_result) {
        include"mail_newpassword.php";
@@ -481,11 +481,11 @@ if ($_POST["submit"]=="Change Password") {
      }
 }
 
-if (!$userid) { $userid = $_POST["userid"]; }
+if (!$userid) { $userid = escape_string($_POST["userid"]); }
 //Get Name of User for Form
- $sql = "SELECT `UserName` FROM `t_userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
+ $sql = "SELECT `UserName` FROM `userprofiles` WHERE `UserID` = '$userid' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-   $row = mysql_fetch_array($sql_result);
+    $row = mysql_fetch_array($sql_result);
     $username = $row["UserName"];
 ?>
 <h1>Change password for <?php echo"$username"; ?></h1>

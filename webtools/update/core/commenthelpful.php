@@ -41,7 +41,7 @@ require"../core/config.php";
 
 
 //Check and see if the CommentID/ID is valid.
-$sql = "SELECT `ID`, `CommentID` FROM `t_feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
+$sql = "SELECT `ID`, `CommentID` FROM `feedback` WHERE `ID` = '".escape_string($_GET[id])."' AND `CommentID`='".escape_string($_GET["commentid"])."' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     if(mysql_num_rows($sql_result)=="0") {
         unset($_GET["id"],$_GET["commentid"],$id,$commentid);
@@ -64,7 +64,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     }
 
 //Get Data for the Comment Record as it stands.
-$sql = "SELECT `helpful-yes`,`helpful-no`,`helpful-rating` FROM  `t_feedback` WHERE `CommentID` = '$commentid' LIMIT 1";
+$sql = "SELECT `helpful-yes`,`helpful-no`,`helpful-rating` FROM  `feedback` WHERE `CommentID` = '$commentid' LIMIT 1";
 $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
     $row = mysql_fetch_array($sql_result);
     $helpful_yes = $row["helpful-yes"];
@@ -88,7 +88,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
             $helpful_rating = ($helpful_no/$total)*-100;
         }
     }
-    $sql = "UPDATE `t_feedback` SET `helpful-yes`='$helpful_yes',`helpful-no`='$helpful_no',`helpful-rating`='$helpful_rating' WHERE `CommentID`='$commentid' LIMIT 1";
+    $sql = "UPDATE `feedback` SET `helpful-yes`='$helpful_yes',`helpful-no`='$helpful_no',`helpful-rating`='$helpful_rating' WHERE `CommentID`='$commentid' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 

@@ -28,19 +28,19 @@ if (!$function) {
 <?php
 if ($_POST["submit"]=="Create Category") {
   if ($_POST[cattype]=="other") $_POST["cattype"]=$_POST["othertype"];
-  $catname = $_POST["catname"];
-  $catdesc = $_POST["catdesc"];
-  $cattype = $_POST["cattype"];
-  $catapp = $_POST["catapp"];
+  $catname = escape_string($_POST["catname"]);
+  $catdesc = escape_string($_POST["catdesc"]);
+  $cattype = escape_string($_POST["cattype"]);
+  $catapp = escape_string($_POST["catapp"]);
   if (checkFormKey()) {
-    $sql = "INSERT INTO `t_categories` (`CatName`, `CatDesc`, `CatType`, `CatApp`) VALUES ('$catname', '$catdesc', '$cattype', '$catapp');";
+    $sql = "INSERT INTO `categories` (`CatName`, `CatDesc`, `CatType`, `CatApp`) VALUES ('$catname', '$catdesc', '$cattype', '$catapp');";
     $result = mysql_query($sql) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   }
 }
 ?>
 <h1>Manage Category List</h1>
 <SPAN style="font-size:8pt">&nbsp;&nbsp;&nbsp;&nbsp; Show Categories for Application: <?php $i=0;
-$sql = "SELECT `AppName` from `t_applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
+$sql = "SELECT `AppName` from `applications` GROUP BY `AppName` ORDER BY `AppName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
  $num_results = mysql_num_rows($sql_result);
    while ($row = mysql_fetch_array($sql_result)) {
@@ -54,7 +54,7 @@ $sql = "SELECT `AppName` from `t_applications` GROUP BY `AppName` ORDER BY `AppN
 <TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1 ALIGN=CENTER STYLE="border: 0px; width: 100%">
 <?php
 $typenames = array("E"=>"Extensions", "T"=>"Themes","P"=>"Plugins");
- $sql1 = "SELECT `CatType`, `CatApp` FROM `t_categories` WHERE `CatApp`='$application' GROUP BY `CatType` ORDER BY `CatType`";
+ $sql1 = "SELECT `CatType`, `CatApp` FROM `categories` WHERE `CatApp`='$application' GROUP BY `CatType` ORDER BY `CatType`";
  $sql_result1 = mysql_query($sql1, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result1)) {
     $type = ucwords($row["CatType"]);
@@ -72,7 +72,7 @@ $typenames = array("E"=>"Extensions", "T"=>"Themes","P"=>"Plugins");
 
 <?php
  $i=0;
- $sql = "SELECT * FROM `t_categories` WHERE `CatType` LIKE '$type' AND `CatApp`='$application' ORDER BY `CatType`,`CatName`";
+ $sql = "SELECT * FROM `categories` WHERE `CatType` LIKE '$type' AND `CatApp`='$application' ORDER BY `CatType`,`CatName`";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
     $categoryid = $row["CategoryID"];
@@ -101,7 +101,7 @@ Description: <input name="catdesc" type="text" value="" size="50" maxlength="100
 
 <SPAN style="margin-left: 20px">Type: <select name="cattype">";
 <?php
- $sql = "SELECT `CatType` FROM `t_categories` GROUP BY `CatType` ORDER BY `CatType`";
+ $sql = "SELECT `CatType` FROM `categories` GROUP BY `CatType` ORDER BY `CatType`";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    while ($row = mysql_fetch_array($sql_result)) {
     $type = ucwords($row["CatType"]);
@@ -118,16 +118,16 @@ If other, Type: <INPUT NAME="othertype" TYPE="TEXT" SIZE=3 MAXLENGTH=1>
 
 <?php
 } else if ($function=="editcategory") {
-$categoryid = $_GET["categoryid"];
+$categoryid = escape_string($_GET["categoryid"]);
 //Post Functions
 if ($_POST["submit"] == "Update") {
   echo"<h2>Processing Update, please wait...</h2>\n";
-  $categoryid = $_POST["categoryid"];
-  $catname = $_POST["catname"];
-  $catdesc = $_POST["catdesc"];
-  $cattype = $_POST["cattype"];
+  $categoryid = escape_string($_POST["categoryid"]);
+  $catname = escape_string($_POST["catname"]);
+  $catdesc = escape_string($_POST["catdesc"]);
+  $cattype = escape_string($_POST["cattype"]);
   if (checkFormKey()) {
-    $sql = "UPDATE `t_categories` SET `CatName`='$catname', `CatDesc`='$catdesc', `CatType`='$cattype' WHERE `CategoryID`='$categoryid'";
+    $sql = "UPDATE `categories` SET `CatName`='$catname', `CatDesc`='$catdesc', `CatType`='$cattype' WHERE `CategoryID`='$categoryid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
 
     echo"Your update to $catname, has been submitted successfully...<br>";
@@ -135,17 +135,17 @@ if ($_POST["submit"] == "Update") {
 
 } else if ($_POST["submit"] == "Delete Category") {
   echo"<h2>Processing Delete Request, please wait...</h2>\n";
-  $categoryid = $_POST["categoryid"];
+  $categoryid = escape_string($_POST["categoryid"]);
   if (checkFormKey()) {
-    $sql = "DELETE FROM `t_categories` WHERE `CategoryID`='$categoryid'";
+    $sql = "DELETE FROM `categories` WHERE `CategoryID`='$categoryid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   }
   echo"You've successfully deleted the category '$catname'...<br>";
 }
 
-if (!$categoryid) { $categoryid = $_POST["categoryid"]; }
+if (!$categoryid) { $categoryid = escape_string($_POST["categoryid"]); }
 // Show Edit Form
-  $sql = "SELECT * FROM `t_categories` WHERE `CategoryID` = '$categoryid' LIMIT 1";
+  $sql = "SELECT * FROM `categories` WHERE `CategoryID` = '$categoryid' LIMIT 1";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<div class=\"error\">MySQL Error ".mysql_errno().": ".mysql_error()."</div>", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
   $categoryid = $row["CategoryID"];
@@ -175,6 +175,10 @@ if (!$categoryid) { $categoryid = $_POST["categoryid"]; }
 
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";

@@ -12,25 +12,27 @@ include"inc_sidebar.php";
 ?>
 <h2>Welcome <?php echo"$_SESSION[name]";?>!</h2>
 
-<P>
+
 <?php
 if ($_SESSION["level"] == "admin" or $_SESSION["level"] == "moderator") {
 
-$sql ="SELECT TM.ID FROM `t_main` TM
-INNER JOIN `t_version` TV ON TM.ID = TV.ID
+$sql ="SELECT TM.ID FROM `main` TM
+INNER JOIN `version` TV ON TM.ID = TV.ID
 WHERE `approved` = '?' GROUP BY `URI` ORDER BY TV.DateUpdated ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $num_result = mysql_num_rows($sql_result);
 ?>
+<P>
 <SPAN STYLE="font-weight:bold">Approval Queue Status: <A HREF="approval.php?function=approvalqueue"><?php echo"$num_result"; ?> Pending Approval</A></SPAN>
-
+</P>
 <?php } ?>
-<h3>My Extensions</h3>
 
+<h3>My Extensions</h3>
+<P>
 <?php
-$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
+$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TU.UserID = '$_SESSION[uid]' AND TM.Type ='E'
 ORDER  BY  `Type` , `Name` ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -63,13 +65,14 @@ echo"</DIV>";
 ?>
 &nbsp;&nbsp;&nbsp;&nbsp;<a href="additem.php?type=E">Add New Extension...</a>
 </P>
-<P>
+
 
 <h3>My Themes</h3>
+<P>
 <?php
-$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.DateAdded, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `t_main`  TM 
-LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
-INNER JOIN t_userprofiles TU ON TAX.UserID = TU.UserID
+$sql = "SELECT  TM.ID, TM.Type, TM.Name, TM.DateAdded, TM.Description, TM.downloadcount, TM.TotalDownloads, TM.Rating, TU.UserEmail FROM  `main`  TM 
+LEFT JOIN authorxref TAX ON TM.ID = TAX.ID
+INNER JOIN userprofiles TU ON TAX.UserID = TU.UserID
 WHERE TU.UserID = '$_SESSION[uid]' AND TM.Type ='T'
 ORDER  BY  `Type` , `Name` ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -103,6 +106,10 @@ echo"</DIV>";
 
 </P>
 </DIV>
+
+<!-- close #mBody-->
+</div>
+
 <?php
 include"$page_footer";
 ?>
