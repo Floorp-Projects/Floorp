@@ -62,18 +62,15 @@
 #include "nsXPIDLString.h"
 #include "nsDOMError.h"
 #include "nsDOMClassInfo.h"
-#include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsCRT.h"
 
 
-static nsresult EscapeNonAsciiInURI(const nsAString& aHref, nsACString& aEscapedHref)
+static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
-  aEscapedHref.Truncate(0);
+  aCharset.Truncate();
 
   nsresult rv;
 
-  // Get a document charset, no escaping in case of failure.
   nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -102,49 +99,7 @@ static nsresult EscapeNonAsciiInURI(const nsAString& aHref, nsACString& aEscaped
   rv = doc->GetDocumentCharacterSet(charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Convert from Unicode to a document charset.
-  nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr <nsIAtom> charsetAtom;
-  rv = ccm2->GetCharsetAtom(charset.get(), getter_AddRefs(charsetAtom));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-  rv = ccm2->GetUnicodeEncoder(charsetAtom, getter_AddRefs(encoder));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const nsAFlatString &tmp = PromiseFlatString(aHref);
-  PRInt32 len = tmp.Length();
-  PRInt32 bufferLen;
-
-  rv = encoder->GetMaxLength(tmp.get(), len, &bufferLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char* buffer = (char *) nsMemory::Alloc(bufferLen);
-  NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = encoder->Convert(tmp.get(), &len, buffer, &bufferLen);
-  if (NS_FAILED(rv)) {
-    nsMemory::Free(buffer);
-    return rv;
-  }
-
-  // Escape any 8 bit data.
-  const char* hexChars = "0123456789ABCDEF";
-  for (PRUint32 i = 0; i < (PRUint32) len; i++) {
-    unsigned char c = (unsigned char) buffer[i];
-    if (c < 128) {
-      aEscapedHref.Append((char) c);
-    }
-    else {
-      aEscapedHref.Append('%');
-      aEscapedHref.Append(hexChars[c >> 4]);     /* high nibble */
-      aEscapedHref.Append(hexChars[c & 0x0f]);   /* low nibble */
-    }
-  }
-
-  nsMemory::Free(buffer);
+  CopyUCS2toASCII(charset, aCharset);
 
   return rv;
 }
@@ -508,18 +463,11 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
   nsresult result;
   nsCOMPtr<nsIURI> newUri;
 
-  // 'aHref' is supposed to be already escaped by the script
-  // but if it contains 8 bit characters without escaped then force to escape it.
-  // This is for comptibility reason, some of the existing pages do not escape hrefs
-  // and they are working on 4.x.
-  nsCAutoString escapedHref;
-  if (!nsCRT::IsAscii(PromiseFlatString(aHref).get()))
-    (void) EscapeNonAsciiInURI(aHref, escapedHref);
-
-  if (escapedHref.IsEmpty())
-    result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, aBase);
+  nsCAutoString docCharset;
+  if (NS_SUCCEEDED(GetDocumentCharacterSetForURI(aHref, docCharset)))
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, docCharset.get(), aBase);
   else
-    result = NS_NewURI(getter_AddRefs(newUri), escapedHref, nsnull, aBase);
+    result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, aBase);
 
   if (newUri && mDocShell) {
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
