@@ -214,7 +214,8 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // "I handled the event, don't do default processing"
       }
-      if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode) 
+      if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
+          || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
       {
         PRUint32 flags=0;
         mEditor->GetFlags(&flags);
