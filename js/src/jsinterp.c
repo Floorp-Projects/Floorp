@@ -681,6 +681,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         jsatomid atomIndex;
         JSAtom *atom;
         JSObject *argsobj;
+        JSArena *a;
 
         if (!fp->script || (flags & JSINVOKE_INTERNAL))
             goto bad;
@@ -706,8 +707,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 
             sp = vp + 4;
             if (argc < 2) {
-                limit = (jsval *) cx->stackPool.current->limit;
-                if (sp > limit) {
+                a = cx->stackPool.current;
+                if ((jsuword)sp > a->limit) {
                     /*
                      * Arguments must be contiguous, and must include argv[-1]
                      * and argv[-2], so allocate more stack, advance sp, and
@@ -722,8 +723,10 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
                     newsp[1] = OBJECT_TO_JSVAL(thisp);
                     sp = newsp + 4;
                 } else {
-                    if (cx->stackPool.current->avail < (jsuword)sp)
-                        cx->stackPool.current->avail = (jsuword)sp;
+                    if (a->avail < (jsuword)sp) {
+                        JS_ArenaCountAllocation(pool, (jsuword)sp - a->avail);
+                        a->avail = (jsuword)sp;
+                    }
                 }
             }
 
