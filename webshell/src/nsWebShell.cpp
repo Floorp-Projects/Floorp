@@ -450,6 +450,11 @@ protected:
                             const PRUint32 aLocalIP,
                             nsISupports * aHistoryState,
                             const PRUnichar * aReferrer);
+
+  nsresult CreateViewer(nsIChannel* aChannel,
+                        const char* aContentType,
+                        const char* aCommand,
+                        nsIStreamListener** aResult);
   float mZoom;
 
   static nsIPluginHost    *mPluginHost;
@@ -1725,13 +1730,110 @@ nsWebShell::DoContent(const char * aContentType,
   // own load group!!! So the request would get canceled out from under us...
   // after retargeting we may be able to safely call DoLoadURL. 
   DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+#if 0
   return mDocLoader->LoadOpenedDocument(aOpenedChannel, 
                                         strCommand,
                                         (nsIWebShell*)this,
                                         nsnull,
                                         nsnull,
                                         aContentHandler);
+#else
+  return CreateViewer(aOpenedChannel, 
+                      aContentType, 
+                      strCommand, 
+                      aContentHandler);
+#endif
 }
+
+static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
+
+nsresult nsWebShell::CreateViewer(nsIChannel* aChannel,
+                                  const char* aContentType,
+                                  const char* aCommand,
+                                  nsIStreamListener** aResult)
+{
+  nsresult rv = NS_OK;
+  nsIContentViewer* viewer = nsnull;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  nsCOMPtr<nsILoadGroup> currentLoadGroup;
+
+  /*
+   * Now that the content type is available, create a document
+   * (and viewer) of the appropriate type...
+   */
+  if (mDocLoader) {
+    mDocLoader->GetLoadGroup(getter_AddRefs(loadGroup));
+
+    // Lookup class-id for the command plus content-type combination
+    nsCID cid;
+    char id[500];
+    PR_snprintf(id, sizeof(id),
+                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+                aCommand ? aCommand : "view",/* XXX bug! shouldn't b needed!*/
+                aContentType);
+    
+    rv = nsComponentManager::ProgIDToCLSID(id, &cid);
+    if (NS_SUCCEEDED(rv)) {
+      // Create an instance of the document-loader-factory object
+      nsIDocumentLoaderFactory* factory;
+      rv = nsComponentManager::CreateInstance(cid, (nsISupports *)nsnull,
+                                            kIDocumentLoaderFactoryIID, 
+                                            (void **)&factory);
+      if (NS_SUCCEEDED(rv)) {
+        // Now create an instance of the content viewer
+        rv = factory->CreateInstance(aCommand, 
+                                     aChannel, 
+                                     loadGroup,
+                                     aContentType,
+                                     (nsIWebShell*)this,
+                                     nsnull,
+                                     aResult,
+                                     &viewer);
+        NS_RELEASE(factory);
+      }
+    }
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+
+  if (NS_FAILED(rv)) {
+    printf("DocLoaderFactory: Unable to create ContentViewer for "
+           "command=%s, content-type=%s\n", 
+           aCommand ? aCommand : "(null)", aContentType);
+    // Give content container a chance to do something with this URL.
+    rv = HandleUnknownContentType(mDocLoader, 
+                                  aChannel, 
+                                  aContentType, 
+                                  aCommand );
+    // Stop the binding.
+    // This crashes on Unix/Mac... Stop();
+    goto done;
+  }
+
+  // let's try resetting the load group if we need to...
+  rv = aChannel->GetLoadGroup(getter_AddRefs(currentLoadGroup));
+  if (NS_SUCCEEDED(rv))
+  {
+    if (currentLoadGroup.get() != loadGroup.get())
+      aChannel->SetLoadGroup(loadGroup);
+  }
+
+  /*
+   * Give the document container the new viewer...
+   */
+  viewer->SetContainer((nsIWebShell*)this);
+
+  rv = Embed(viewer, aCommand, nsnull);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+done:
+  NS_IF_RELEASE(viewer);
+  return rv;
+}
+
 
 nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri, 
                                       const char * aCommand,
