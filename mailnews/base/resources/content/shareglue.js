@@ -33,7 +33,7 @@ function WizardPage() {}
 function CloseMessenger() 
 {
 	dump("\nClose from XUL\nDo something...\n");
-	messenger.Close();
+	window.close();
 }
 
 function CharacterSet(){}
