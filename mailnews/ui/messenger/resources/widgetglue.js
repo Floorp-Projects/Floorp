@@ -48,19 +48,58 @@ function MsgGetMessage()
 function MsgDeleteMessage()
 {
 	dump("\nMsgDeleteMessage from XUL\n");
-	var tree = frames[0].document.getElementById('threadTree')
+	var tree = frames[0].document.getElementById('threadTree');
 	if(tree)
-		dump("tree is valid\n")
+		dump("tree is valid\n");
 	var appCore = new MsgAppCore();
 	if (appCore != null) {
 		appCore.Init("MsgAppCore");
 		appCore.SetWindow(window);
-		dump("\nAppcore isn't null in MsgDeleteMessage\n")
+		dump("\nAppcore isn't null in MsgDeleteMessage\n");
 		var NodeList = tree.getElementsByAttribute("selected", "true");
 		appCore.DeleteMessage(tree, NodeList);
 	}
-
 }
+
+function MsgReplyMessage()
+{
+	dump("\nMsgReplyMessage from XUL\n");
+    var tree = frames[0].document.getElementById('threadTree');
+    if(tree)
+		dump("tree is valid\n")
+    var appCore = new MsgAppCore();
+	if (appCore != null) {
+		appCore.Init("MsgAppCore");
+		appCore.SetWindow(window);
+		dump("\nAppcore isn't null in MsgReplyMessage\n");
+		var NodeList = tree.getElementsByAttribute("selected", "true");
+        var messageHdr = appCore.GetMessageHeader(tree, NodeList);
+		ReplyMessage(messageHdr);
+	}
+}
+
+
+function MsgForwardMessage()
+{
+      dump("\nMsgForwardMessage from XUL\n");
+      var tree = frames[0].document.getElementById('threadTree');
+      if(tree)
+              dump("tree is valid\n")
+      var appCore = new MsgAppCore();
+      if (appCore != null) {
+              appCore.Init("MsgAppCore");
+              appCore.SetWindow(window);
+              dump("\nAppcore isn't null in MsgForwardMessage\n");
+              var NodeList = tree.getElementsByAttribute("selected", "true");
+              var messageHdr = appCore.GetMessageHeader(tree, NodeList);
+			  ForwardMessage(messageHdr);
+      }
+  }
+
+function MsgReplyToAllMessage() {}
+function MsgForwardAsInline() {}
+function MsgForwardAsQuoted() {}
+function MsgForwardAsAttachment() {}
 function MsgNewFolder() {}
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
@@ -134,12 +173,6 @@ function MsgPreviousUnreadMessage() {}
 function MsgPreviousFlaggedMessage() {}
 function MsgGoBack() {}
 function MsgGoForward() {}
-function MsgReplyMessage() {}
-function MsgReplyToAllMessage() {}
-function MsgForwardMessage() {}
-function MsgForwardAsInline() {}
-function MsgForwardAsQuoted() {}
-function MsgForwardAsAttachment() {}
 function MsgEditMessageAsNew() {}
 function MsgMoveMessage() {}
 function MsgCopyMessage() {}
