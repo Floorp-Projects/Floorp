@@ -491,7 +491,4 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
     return rv;
  }
  
-NS_IMPL_ADDREF(nsCommonDialogs);
-NS_IMPL_RELEASE(nsCommonDialogs);
-NS_IMPL_QUERY_INTERFACE(nsCommonDialogs, NS_GET_IID(nsICommonDialogs));
-
+NS_IMPL_ISUPPORTS1(nsCommonDialogs, nsICommonDialogs)
