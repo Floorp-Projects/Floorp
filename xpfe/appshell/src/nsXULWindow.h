@@ -23,13 +23,23 @@
 #ifndef nsXULWindow_h__
 #define nsXULWindow_h__
 
+// Local Includes
+#include "nsChromeTreeOwner.h"
+#include "nsContentTreeOwner.h"
+
+// Helper classes
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
+#include "nsString.h"
+
+// Interfaces needed
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIWidget.h"
-#include "nsChromeTreeOwner.h"
-#include "nsContentTreeOwner.h"
+#include "nsIDocShellTreeItem.h"
+
+// nsXULWindow
 
 class nsXULWindow : public nsIXULWindow, public nsIBaseWindow
 {
@@ -58,6 +68,21 @@ protected:
    nsContentTreeOwner*     mContentTreeOwner;
    nsCOMPtr<nsIWidget>     mWindow;
    nsCOMPtr<nsIDocShell>   mDocShell;
+   nsVoidArray             mContentShells;
+};
+
+// nsContentShellInfo
+
+class nsContentShellInfo
+{
+public:
+   nsContentShellInfo(const nsString& aID, PRBool aPrimary, nsIDocShellTreeItem* aContentShell);
+   ~nsContentShellInfo();
+
+public:
+   nsAutoString                  id;   // The identifier of the content shell
+   PRBool                        primary; // Signals the fact that the shell is primary
+   nsCOMPtr<nsIDocShellTreeItem> child; // content shell
 };
 
 #endif /* nsXULWindow_h__ */
