@@ -70,6 +70,7 @@ public:
     mTotalPlacedFrames = 0;
     mColumn = 0;
     mSkipLeadingWS = PR_TRUE;
+    mBRFrame = nsnull;
 #ifdef NS_DEBUG
     mPlacedFrames.Clear();
 #endif
@@ -90,6 +91,14 @@ public:
   // Get the placed-frame count
   PRInt32 GetPlacedFrames() const {
     return mTotalPlacedFrames;
+  }
+
+  void SetBRFrame(nsIFrame* aFrame) {
+    mBRFrame = aFrame;
+  }
+
+  nsIFrame* GetBRFrame() const {
+    return mBRFrame;
   }
 
   //  --------------------------------------------------
@@ -145,6 +154,8 @@ public:
   PRBool mSkipLeadingWS;
 
 protected:
+  nsIFrame* mBRFrame;
+
   PRInt32 mTotalPlacedFrames;
 #ifdef NS_DEBUG
   nsVoidArray mPlacedFrames;
