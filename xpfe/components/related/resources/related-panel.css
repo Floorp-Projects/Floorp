@@ -56,7 +56,9 @@ treeitem > treerow > treecell > .tree-icon > .twisty{
 }
 
 /* Override rule in xul.css  */
+/* not yet
 treeitem[selected="true"] > treerow {
   color: inherit;
   background-color: inherit;
 }
+*/
