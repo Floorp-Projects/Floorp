@@ -49,9 +49,8 @@
   <html:script language="javascript" src="chrome://global/content/globalOverlay.js"/>  
   <html:script language="javascript" src="chrome://navigator/content/openLocation.js"/>
                    
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
            
-  <!-- spank me -->		
   <box>
     <box orient="vertical">
       <image class="question-icon"/>
@@ -62,8 +61,8 @@
       <html>&enter.label;</html>
 
       <box autostretch="never">
-        <!-- spank me -->		
-        <textfield id="dialog.input" flex="1" onkeyup="doEnabling();"/>
+        <!-- spank me -->
+        <textfield id="dialog.input" flex="1" oninput="doEnabling();"/>
         <button value="&chooseFile.label;" onclick="onChooseFile();"/>
       </box>
       <box autostretch="never" valign="center">

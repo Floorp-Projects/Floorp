@@ -131,4 +131,6 @@ function onChooseFile()
     }
 
   } catch(ex) { }
+  
+  doEnabling();  
 }
