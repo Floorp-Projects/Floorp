@@ -40,8 +40,49 @@
     border: thin silver inset;
 }
 
+.toolbar-primary-icon {
+    width: 0px;
+    height: 0px;
+}
+
 #source-outliner {
     font-family: monospace;
+}
+
+#cont-button {
+    list-style-image: url("chrome://venkman/skin/images/cont.gif");
+}
+
+#cont-button[disabled="true"],
+#cont-button[disabled="true"]:hover,
+#cont-button[disabled="true"]:active {
+    list-style-image: url("chrome://venkman/skin/images/cont-dis.gif");
+}
+
+#cont-button:hover {
+    list-style-image: url("chrome://venkman/skin/images/cont-hov.gif");
+}
+
+#cont-button:active {
+    list-style-image: url("chrome://venkman/skin/images/cont-act.gif");
+}
+
+#step-in-button {
+    list-style-image: url("chrome://venkman/skin/images/step-into.gif");
+}
+
+#step-in-button[disabled="true"],
+#step-in-button[disabled="true"]:hover,
+#step-in-button[disabled="true"]:active {
+    list-style-image: url("chrome://venkman/skin/images/step-into-dis.gif");
+}
+
+#step-in-button:hover {
+    list-style-image: url("chrome://venkman/skin/images/step-into-hov.gif");
+}
+
+#step-in-button:active {
+    list-style-image: url("chrome://venkman/skin/images/step-into-act.gif");
 }
 
 outlinerbody:-moz-outliner-row(current-line) {
