@@ -105,6 +105,8 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_FAILED(err) \
  (NS_IS_MSG_ERROR(err) && NS_FAILED(err))
 
+#define NS_MSG_PASSWORD_PROMPT_CANCELLED NS_MSG_GENERATE_SUCCESS(1)
+
 /* is this where we define our errors? Obviously, there has to be a central
 	place so we don't use the same error codes.
 */

@@ -6564,7 +6564,9 @@ PRBool nsImapProtocol::TryToLogon()
           rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
           if (NS_FAILED(rv)) return rv;
       }
-      m_imapServerSink->PromptForPassword(getter_Copies(password), aMsgWindow);
+      rv = m_imapServerSink->PromptForPassword(getter_Copies(password), aMsgWindow);
+      if (rv == NS_MSG_PASSWORD_PROMPT_CANCELLED)
+        break;
     }
       PRBool imapPasswordIsNew = PR_FALSE;
 

@@ -2218,7 +2218,7 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
     nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
                                      &okayValue, aPassword);
     nsTextFormatter::smprintf_free(passwordText);
-    return rv;
+    return (okayValue) ? rv : NS_MSG_PASSWORD_PROMPT_CANCELLED;
 }
 
 // for the nsIImapServerSink interface
