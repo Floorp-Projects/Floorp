@@ -77,7 +77,7 @@ static const char* GetLinebreakString(nsLinebreakConverter::ELinebreakType aBrea
 	Wee inline method to append a line break. Modifies ioDest.
 ----------------------------------------------------------------------------*/
 template<class T>
-static void AppendLinebreak(T*& ioDest, const char* lineBreakStr)
+void AppendLinebreak(T*& ioDest, const char* lineBreakStr)
 {
   *ioDest++ = *lineBreakStr;
 
@@ -91,7 +91,7 @@ static void AppendLinebreak(T*& ioDest, const char* lineBreakStr)
 	Counts occurrences of breakStr in aSrc
 ----------------------------------------------------------------------------*/
 template<class T>
-static PRInt32 CountLinebreaks(const T* aSrc, PRInt32 inLen, const char* breakStr)
+PRInt32 CountLinebreaks(const T* aSrc, PRInt32 inLen, const char* breakStr)
 {
   const T* src = aSrc;
   const T* srcEnd = aSrc + inLen;
