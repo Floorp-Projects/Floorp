@@ -341,73 +341,86 @@ NS_IMETHODIMP nsHTMLSelectListAccessible::GetRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-
-/**
-  * Gets the first child of the DOM node and creates and returns
-  *  a nsHTMLSelectOptionAccessible.
-  */
-NS_IMETHODIMP nsHTMLSelectListAccessible::GetFirstChild(nsIAccessible **aFirstChild)
+already_AddRefed<nsIAccessible>
+nsHTMLSelectListAccessible::AccessibleForOption(nsIAccessibilityService *aAccService,
+                                                nsIContent *aContent,
+                                                nsIAccessible *aLastGoodAccessible)
 {
-  nsCOMPtr<nsIDOMNode> first;
-  mDOMNode->GetFirstChild(getter_AddRefs(first));
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aContent));
+  NS_ASSERTION(domNode, "DOM node is null");
+  // Accessibility service will initialize & cache any accessibles created
+  nsCOMPtr<nsIAccessible> accessible;
+  aAccService->GetAccessibleInWeakShell(domNode, mWeakShell, getter_AddRefs(accessible));
+  nsCOMPtr<nsPIAccessible> privateAccessible(do_QueryInterface(accessible));
+  if (!privateAccessible) {
+    return nsnull;
+  }
 
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  nsresult rv = accService->GetAccessibleInWeakShell(first, mWeakShell, aFirstChild);
-  mFirstChild = *aFirstChild;
-  return rv;
+  ++ mAccChildCount;
+  privateAccessible->SetParent(this);
+  nsCOMPtr<nsPIAccessible> privatePrevAccessible(do_QueryInterface(aLastGoodAccessible));
+  if (privatePrevAccessible) {
+    privatePrevAccessible->SetNextSibling(accessible);
+  }
+  if (!mFirstChild) {
+    mFirstChild = accessible;
+  }
+  nsIAccessible *returnAccessible = accessible;
+  NS_ADDREF(returnAccessible);
+  return returnAccessible;
+}
+
+already_AddRefed<nsIAccessible>
+nsHTMLSelectListAccessible::CacheOptSiblings(nsIAccessibilityService *aAccService,
+                                             nsIContent *aParentContent,
+                                             nsIAccessible *aLastGoodAccessible)
+{
+  // Recursive helper for CacheChildren()
+
+  PRUint32 numChildren = aParentContent->GetChildCount();
+  nsCOMPtr<nsIAccessible> lastGoodAccessible(aLastGoodAccessible);
+
+  for (PRUint32 count = 0; count < numChildren; count ++) {
+    nsIContent *childContent = aParentContent->GetChildAt(count);
+    if (!childContent->IsContentOfType(nsIContent::eHTML)) {
+      continue;
+    }
+    nsCOMPtr<nsIAtom> tag = childContent->Tag();
+    if (tag == nsAccessibilityAtoms::option || tag == nsAccessibilityAtoms::optgroup) {
+      lastGoodAccessible = AccessibleForOption(aAccService,
+                                               childContent,
+                                               lastGoodAccessible);
+      if (tag == nsAccessibilityAtoms::optgroup) {
+        lastGoodAccessible = CacheOptSiblings(aAccService, childContent,
+                                              lastGoodAccessible);
+      }
+    }
+  }
+  NS_IF_ADDREF(aLastGoodAccessible = lastGoodAccessible);
+  return aLastGoodAccessible;
 }
 
 /**
-  * Gets the last child of the DOM node and creates and returns
-  *  a nsHTMLSelectOptionAccessible.
-  */
-NS_IMETHODIMP nsHTMLSelectListAccessible::GetLastChild(nsIAccessible **aLastChild)
-{
-  nsCOMPtr<nsIDOMNode> last;
-  mDOMNode->GetLastChild(getter_AddRefs(last));
-
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  return accService->GetAccessibleInWeakShell(last, mWeakShell, aLastChild);
-}
-
-/**
-  * Gets the child count of a Select List Accessible. We want to count 
+  * Cache the children and child count of a Select List Accessible. We want to count 
   *  all the <optgroup>s and <option>s as children because we want a 
   *  flat tree under the Select List.
   */
 
-NS_IMETHODIMP nsHTMLSelectListAccessible::GetChildCount(PRInt32 *aAccChildCount) 
+void nsHTMLSelectListAccessible::CacheChildren(PRBool aWalkAnonContent)
 {
-    // Count the number of <Option Group> and <option> elements and return 
-    // this number. This is so the tree can be flattened
-  nsCOMPtr<nsIDOMNode> next, nextInner, nextChild;
-  nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(mDOMNode));
+  // Cache the number of <optgroup> and <option> DOM decendents,
+  // as well as the accessibles for them. Avoid whitespace text nodes.
 
+  nsCOMPtr<nsIContent> selectContent(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  PRInt32 countChild;
+  if (!selectContent || !accService) {
+    mAccChildCount = eChildCountUninitialized;
+    return;
+  }
 
-  countChild = 0;
-  mDOMNode->GetFirstChild(getter_AddRefs(next));
-
-  while (next) {
-    nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroupElement(do_QueryInterface(next));
-    countChild++;
-    if (optGroupElement) {
-      next->GetFirstChild(getter_AddRefs(nextInner));
-      while (nextInner ) {
-        nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(nextInner));
-        if (optionElement) {
-          countChild++;
-        }
-        nextInner->GetNextSibling(getter_AddRefs(nextChild));
-        nextInner = nextChild;
-      } // endWhile nextInner
-    }  // endif optGroupElement
-    next->GetNextSibling(getter_AddRefs(nextInner));
-    next = nextInner;
-  }  // endWhile next
-  *aAccChildCount = countChild;
-  return NS_OK;
+  mAccChildCount = 0;
+  nsCOMPtr<nsIAccessible> lastGoodAccessible =
+    CacheOptSiblings(accService, selectContent, nsnull);
 }
 
 /** ----- nsHTMLSelectOptionAccessible ----- */
@@ -454,69 +467,6 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetParent(nsIAccessible **aParent)
 }
 
 /**
-  * Gets the next accessible sibling of the mDOMNode and creates and returns
-  *  a nsHTMLSelectOptionAccessible or nsHTMLSelectOptGroupAccessible.
-  */
-NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetNextSibling(nsIAccessible **aNextSibling)
-{ 
-  // Get next sibling and if found create and return an accessible for it
-  // When getting the next sibling of an SelectOption we could be working with
-  // either an optgroup or an option. We process this tree as flat.
-
-  *aNextSibling = nsnull;
-  if (mNextSibling) {
-    if (mNextSibling != DEAD_END_ACCESSIBLE) {
-      NS_IF_ADDREF(*aNextSibling = mNextSibling);
-    }
-    return NS_OK;
-  }
-  if (!mParent) {
-    // Don't try the following algorithm without a parent select accessible
-    return NS_OK;
-  }
-  nsCOMPtr<nsIDOMNode> next = mDOMNode, currentNode;
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-
-  while (!*aNextSibling && next) {
-    currentNode = next;
-    next = nsnull;
-  
-    nsCOMPtr<nsIDOMHTMLOptGroupElement> currOptGroupElement(do_QueryInterface(currentNode));
-  
-    if (currOptGroupElement) {
-      currentNode->GetFirstChild(getter_AddRefs(next));
-    }
-    if (!next)  // no child under a <optgroup> or we started with a <option>
-      currentNode->GetNextSibling(getter_AddRefs(next));  // See if there is another <optgroup>
-  
-    if (next) {
-      accService->GetAccessibleInWeakShell(next, mWeakShell, aNextSibling);  
-      continue;
-    }
-    // else No child then or child is not a <option> nor an <optgroup>
-    // go back up to the parent and get next sibling from there,
-    nsCOMPtr<nsIDOMNode> parent, parentNextSib;
-    currentNode->GetParentNode(getter_AddRefs(parent));
- 
-    next = nsnull;
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mParent));
-    NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
-    nsCOMPtr<nsIDOMNode> selectNode;
-    accessNode->GetDOMNode(getter_AddRefs(selectNode));
-    if (parent && parent != selectNode) { // End search for options at subtree's start
-      parent->GetNextSibling(getter_AddRefs(next));
-      if (next) {
-        // We have a parent that is an option or option group
-        // get accessible for either one and return it 
-        accService->GetAccessibleInWeakShell(next, mWeakShell, aNextSibling);
-      }
-    }
-  }
-  SetNextSibling(*aNextSibling);
-  return NS_OK;
-} 
-
-/**
   * Get our Name from our Content's subtree
   */
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
@@ -553,51 +503,6 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetName(nsAString& aName)
   return NS_ERROR_FAILURE;
 }
 
-/**
-  * Gets the previous accessible sibling of the mDOMNode and creates and returns
-  *  a nsHTMLSelectOptionAccessible or nsHTMLSelectOptGroupAccessible.
-  */
-NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetPreviousSibling(nsIAccessible **_retval)
-{ 
-  *_retval = nsnull;
-
-  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
-  nsCOMPtr<nsIAccessible> thisAcc, selectListAcc, nextSiblingAcc;  
-
-  accService->GetAccessibleInWeakShell(mDOMNode, mWeakShell, getter_AddRefs(thisAcc));
-
-  // The accessible parent of an <option> or <optgroup> 
-  // is always the SelectListAcc - see GetAccessibleInShell()
-  thisAcc->GetParent(getter_AddRefs(selectListAcc));
-
-  if (!selectListAcc) {
-    return NS_ERROR_FAILURE;  
-  }
-  nsCOMPtr<nsIDOMNode> siblingDOMNode;
-  selectListAcc->GetFirstChild(_retval);
-
-  // Go thru all the siblings until we find ourselves(mDOMNode) then use the 
-  // sibling right before us.
-  do {  
-    (*_retval)->GetNextSibling(getter_AddRefs(nextSiblingAcc));
-    if (!nextSiblingAcc) {
-      *_retval = nsnull;
-      return NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(nextSiblingAcc));
-    NS_ASSERTION(accessNode, "Unable to QI to nsIAccessNode");
-    accessNode->GetDOMNode(getter_AddRefs(siblingDOMNode));
-    if (siblingDOMNode == mDOMNode) {
-      break;  // we found ourselves!
-    }
-    NS_RELEASE(*_retval);
-    *_retval = nextSiblingAcc;
-    NS_IF_ADDREF(*_retval);
-  } while (nextSiblingAcc);
-  
-  return NS_OK;
-} 
-
 nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
 {
   nsCOMPtr<nsIContent> selectContent(do_QueryInterface(mDOMNode));
@@ -613,7 +518,7 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
     if (NS_SUCCEEDED(accService->GetAccessibleFor(selectNode, 
                                                   getter_AddRefs(selAcc)))) {
       PRUint32 state;
-      selAcc->GetState(&state);
+      selAcc->GetFinalState(&state);
       if (state & STATE_COLLAPSED) {
         nsCOMPtr<nsIPresShell> presShell(GetPresShell());
         if (!presShell) {
@@ -974,7 +879,7 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetValue(nsAString& aValue)
   nsCOMPtr<nsIAccessible> textFieldAccessible;
   nsresult rv = GetFirstChild(getter_AddRefs(textFieldAccessible));
   NS_ENSURE_SUCCESS(rv, rv);
-  return textFieldAccessible->GetValue(aValue);
+  return textFieldAccessible->GetFinalValue(aValue);
 }
 
 /** ----- nsHTMLComboboxTextFieldAccessible ----- */
