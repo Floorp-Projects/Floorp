@@ -9,6 +9,51 @@ query the CVS tree.  For example,
 
 will tell you what has been changed in the last week.
 
+12/2/98 The op_sys and rep_platform fields have been tweaked.  op_sys
+is now an enum, rather than having the legal values all hard-coded in
+perl.  rep_platform now no longer allows a value of "X-Windows".
+
+Here's how I ported to the new world.  This ought to work for you too.
+Actually, it's probably overkill.  I had a lot of illegal values for op_sys
+in my tables, from importing bugs from strange places.  If you haven't done 
+anything funky, then much of the below will be a no-op.
+
+First, send the following commands to MySQL to make sure all your values for
+rep_platform and op_sys are legal in the new world..
+
+	update bugs set rep_platform="Sun" where rep_platform="X-Windows" and op_sys like "Solaris%";
+	update bugs set rep_platform="SGI" where rep_platform="X-Windows" and op_sys = "IRIX";
+	update bugs set rep_platform="SGI" where rep_platform="X-Windows" and op_sys = "HP-UX";
+	update bugs set rep_platform="DEC" where rep_platform="X-Windows" and op_sys = "OSF/1";
+	update bugs set rep_platform="PC" where rep_platform="X-Windows" and op_sys = "Linux";
+	update bugs set rep_platform="other" where rep_platform="X-Windows";
+	update bugs set rep_platform="other" where rep_platform="";
+	update bugs set op_sys="Mac System 7" where op_sys="System 7";
+	update bugs set op_sys="Mac System 7.5" where op_sys="System 7.5";
+	update bugs set op_sys="Mac System 8.0" where op_sys="8.0";
+	update bugs set op_sys="OSF/1" where op_sys="Digital Unix 4.0";
+	update bugs set op_sys="IRIX" where op_sys like "IRIX %";
+	update bugs set op_sys="HP-UX" where op_sys like "HP-UX %";
+	update bugs set op_sys="Windows NT" where op_sys like "NT %";
+	update bugs set op_sys="OSF/1" where op_sys like "OSF/1 %";
+	update bugs set op_sys="Solaris" where op_sys like "Solaris %";
+	update bugs set op_sys="SunOS" where op_sys like "SunOS%";
+	update bugs set op_sys="other" where op_sys = "Motif";
+	update bugs set op_sys="other" where op_sys = "Other";
+
+Next, send the following commands to make sure you now have only legal
+entries in your table.  If either of the queries do not come up empty, then
+you have to do more stuff like the above.
+
+	select bug_id,op_sys,rep_platform from bugs where rep_platform not regexp "^(All|DEC|HP|Macintosh|PC|SGI|Sun|X-Windows|Other)$";
+	select bug_id,op_sys,rep_platform from bugs where op_sys not regexp "^(All|Windows 3.1|Windows 95|Windows 98|Windows NT|Mac System 7|Mac System 7.5|Mac System 7.1.6|Mac System 8.0|AIX|BSDI|HP-UX|IRIX|Linux|OSF/1|Solaris|SunOS|other)$";
+
+Finally, once that's all clear, alter the table to make enforce the new legal
+entries:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.1.6", "Mac System 8.0", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "OSF/1", "Solaris", "SunOS", "other") not null, change column rep_platform rep_platform enum("All", "DEC", "HP", "Macintosh", "PC", "SGI", "Sun", "Other");
+
+
 10/27/98 security check for legal products in place. bug charts are not
 available as an option if collectstats.pl has never been run. all products 
 get daily stats collected now. README updated: Chart::Base is listed as

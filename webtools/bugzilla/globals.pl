@@ -71,10 +71,6 @@ sub FetchOneColumn {
 }
 
     
-@::legal_opsys = ("Windows 3.1", "Windows 95", "Windows NT", "System 7",
-                  "System 7.5", "7.1.6", "AIX", "BSDI", "HP-UX", "IRIX",
-                  "Linux", "OSF/1", "Solaris", "SunOS", "other");
-
 
 @::default_column_list = ("severity", "priority", "platform", "owner",
                           "status", "resolution", "summary");
@@ -255,6 +251,7 @@ sub GenerateVersionTable {
     @::legal_priority = SplitEnumType($cols->{"priority,type"});
     @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
     @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
+    @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
     @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
     @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
     @::legal_resolution_no_dup = @::legal_resolution;
@@ -283,7 +280,7 @@ sub GenerateVersionTable {
     print FID GenerateCode('%::components');
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
     print FID GenerateCode('@::legal_components');
-    foreach my $i('product', 'priority', 'severity', 'platform',
+    foreach my $i('product', 'priority', 'severity', 'platform', 'opsys',
                   'bug_status', 'resolution', 'resolution_no_dup') {
         print FID GenerateCode('@::legal_' . $i);
     }

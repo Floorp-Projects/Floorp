@@ -78,12 +78,17 @@ sub pickplatform {
         return $value;
     }
     for ($ENV{'HTTP_USER_AGENT'}) {
-        /Mozilla.*\(X11/ && do {return "X-Windows";};
         /Mozilla.*\(Windows/ && do {return "PC";};
         /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
         /Mozilla.*\(Win/ && do {return "PC";};
+        /Mozilla.*Linux.*86/ && do {return "PC";};
+        /Mozilla.*Linux.*alpha/ && do {return "DEC";};
+        /Mozilla.*OSF/ && do {return "DEC";};
+        /Mozilla.*HP-UX/ && do {return "HP";};
+        /Mozilla.*IRIX/ && do {return "SGI";};
+        /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
         # default
-        return "PC";
+        return "Other";
     }
 }
 
