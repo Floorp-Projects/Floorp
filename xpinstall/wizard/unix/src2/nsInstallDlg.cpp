@@ -939,6 +939,7 @@ nsInstallDlg::ShowProxySettings(GtkWidget *aWidget, gpointer aData)
     char resName[16], *text = nsnull;
 
     psDlg = gtk_dialog_new();
+    gtk_window_set_modal(GTK_WINDOW(psDlg), TRUE);
     gtk_window_set_title(GTK_WINDOW(psDlg), gCtx->opt->mTitle);
     gtk_window_set_position(GTK_WINDOW(psDlg), GTK_WIN_POS_CENTER);
 
@@ -1173,6 +1174,7 @@ nsInstallDlg::ShowCRCDlg()
        // throw up dialog informing user to press resume
        // or to cancel out
        crcDlg = gtk_dialog_new();
+       gtk_window_set_modal(GTK_WINDOW(crcDlg), TRUE);
        label = gtk_label_new(gCtx->Res("CRC_CHECK"));
        okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
        packer = gtk_packer_new();
@@ -1251,6 +1253,7 @@ nsInstallDlg::ShowCxnDroppedDlg()
     }
     
     cxnDroppedDlg = gtk_dialog_new();
+    gtk_window_set_modal(GTK_WINDOW(cxnDroppedDlg), TRUE);
     label = gtk_label_new(gCtx->Res("CXN_DROPPED"));
     okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
     packer = gtk_packer_new();

@@ -453,6 +453,7 @@ ErrorHandler(int aErr, const char* aErrMsg)
         return aErr;
     }
     sErrDlg = gtk_dialog_new();
+    gtk_window_set_modal(GTK_WINDOW(sErrDlg), TRUE);
     gtk_window_set_title(GTK_WINDOW(sErrDlg), gCtx->Res("ERROR_TITLE"));
     okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
     label = gtk_label_new(msg);
