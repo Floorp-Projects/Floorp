@@ -111,7 +111,7 @@
   
   <key id="key_selectAll" key="A" modifiers="control" observes="select_all_command"/>
   <key id="key_cut" key="X" modifiers="control" observes="cut_command"/>
-  <key id="key_copy" key="C" modifiers="control" observes="copyt_command"/>
+  <key id="key_copy" key="C" modifiers="control" observes="copy_command"/>
   <key id="key_paste" key="V" modifiers="control" observes="paste_command"/>
   
   <key id="view_day_key"   keycode="VK_F1" observes="day_view_command"/>
