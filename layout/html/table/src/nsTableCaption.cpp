@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsTableCaption.h"
-#include "nsTableCaptionFrame.h"
 #include "nsBodyFrame.h"
 #include "nsTablePart.h"
 #include "nsHTMLParts.h"
@@ -133,7 +132,7 @@ nsTableCaption::CreateFrame(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
 
   nsIFrame* frame;
-  nsresult rv = nsTableCaptionFrame::NewFrame(&frame, this, aParentFrame);
+  nsresult rv = nsBodyFrame::NewFrame(&frame, this, aParentFrame);
   if (NS_OK != rv) {
     return rv;
   }
