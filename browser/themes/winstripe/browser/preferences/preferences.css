@@ -207,29 +207,37 @@ filefield[disabled="true"] .fileFieldIcon {
   color: GrayText;
   font-weight: bold;
 }
-#ChangeActionDialog {  padding: 0px;
+#ChangeActionDialog {
+  padding: 0px;
 }
-#ChangeActionDialog .dialog-button-box {
+
+#ChangeActionDialog .dialog-button-box {
   padding-top: 8px;
   padding-bottom: 10px;
   -moz-padding-start: 8px;
-  -moz-padding-end: 10px;  }
-#changeActionHeader {
+  -moz-padding-end: 10px;  
+}
+
+#changeActionHeader {
   border-bottom: 2px groove ThreeDFace;
   margin: 0px;
   padding: 10px;
   background-color: -moz-Field;
   color: -moz-FieldText;  
 }
-#changeActionContent {
+
+#changeActionContent {
   padding-top: 8px;
   padding-bottom: 10px
   -moz-padding-start: 9px;
   -moz-padding-end: 10px;
 }
-#defaultAppIcon {
-  width: 16px;  height: 16px;
-  -moz-margin-start: 2px;}
+
+#defaultAppIcon {
+  width: 16px;
+  height: 16px;
+  -moz-margin-start: 2px;
+}
 
 #defaultAppName {
   -moz-margin-start: 6px !important; 

@@ -91,7 +91,6 @@ toolbarbutton[disabled="true"][open="true"] {
 
 toolbarbutton[checked="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-  padding: 4px 2px 2px 4px !important;
   padding-top: 4px !important;
   padding-bottom: 2px !important;
   -moz-padding-start: 4px !important;

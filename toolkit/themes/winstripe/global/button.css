@@ -106,7 +106,6 @@ button[checked="true"] {
 button:hover:active > .button-box,
 button[open="true"] > .button-box,
 button[checked="true"] > .button-box {
-  padding: 2px 3px 1px 4px;
   padding-top: 2px;
   padding-bottom: 1px;
   -moz-padding-start: 4px;
