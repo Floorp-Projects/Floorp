@@ -1055,7 +1055,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
 
   // Get base URL
   nsCOMPtr<nsIURI> docURL;
-  mDocument->GetBaseURL(*getter_AddRefs(docURL));
+  GetBaseURL(*getter_AddRefs(docURL));
   NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
   if (!docURL) {
     return NS_OK; // No base URL -> exit early, see Bug 30721
