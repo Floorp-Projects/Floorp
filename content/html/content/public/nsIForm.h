@@ -155,6 +155,29 @@ public:
    * @param aEnum the enumeration [OUT]
    */
   NS_IMETHOD GetControlEnumerator(nsISimpleEnumerator** aEnum) = 0;
+
+  /**
+   * Flag the form to know that a button or image triggered scripted form
+   * submission. In that case the form will defer the submission until the
+   * script handler returns and the return value is known.
+   */ 
+  NS_IMETHOD OnSubmitClickBegin() = 0;
+  NS_IMETHOD OnSubmitClickEnd() = 0;
+
+  /**
+   * Flush a possible pending submission. If there was a scripted submission
+   * triggered by a button or image, the submission was defered. This method
+   * forces the pending submission to be submitted. (happens when the handler
+   * returns false or there is an action/target change in the script)
+   */
+  NS_IMETHOD FlushPendingSubmission() = 0;
+  /**
+   * Forget a possible pending submission. Same as above but this time we
+   * get rid of the pending submission cause the handler returned true
+   * so we will rebuild the submission with the name/value of the triggering
+   * element
+   */
+  NS_IMETHOD ForgetPendingSubmission() = 0;
 };
 
 #endif /* nsIForm_h___ */

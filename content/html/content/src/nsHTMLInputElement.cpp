@@ -1400,6 +1400,16 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }
         break;
 
+      case NS_FORM_INPUT_SUBMIT:
+      case NS_FORM_INPUT_IMAGE:
+        if(mForm) {
+          // tell the form that we are about to enter a click handler.
+          // that means that if there are scripted submissions, the
+          // latest one will be deferred until after the exit point of the handler. 
+          mForm->OnSubmitClickBegin();
+        }
+        break;
+
       default:
         break;
     } //switch
@@ -1421,6 +1431,22 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                     aDOMEvent,
                                                     aFlags,
                                                     aEventStatus);
+
+  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
+      aEvent->message == NS_MOUSE_LEFT_CLICK) {
+    switch(type) {
+      case NS_FORM_INPUT_SUBMIT:
+      case NS_FORM_INPUT_IMAGE:
+        if(mForm) {
+          // tell the form that we are about to exit a click handler
+          // so the form knows not to defer subsequent submissions
+          // the pending ones that were created during the handler
+          // will be flushed or forgoten.
+          mForm->OnSubmitClickEnd();
+        }
+        break;
+    } //switch
+  }
 
   // Reset the flag for other content besides this text field
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
@@ -1464,237 +1490,257 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // Bugscape 2369: type might have changed during event handler
   GetType(&type);
 
-  if ((NS_OK == rv) && (nsEventStatus_eIgnore == *aEventStatus) &&
+  if (NS_SUCCEEDED(rv) && 
       !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
       !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
-    switch (aEvent->message) {
+    if (nsEventStatus_eIgnore == *aEventStatus) {
+      switch (aEvent->message) {
 
-      case NS_FOCUS_CONTENT:
-      {
-        if (formControlFrame) {
-          // If this is a file control, check to see if focus has bubbled
-          // up from it's child textfield or child button.  If that's the case, 
-          // don't focus this parent file control -- leave focus on the child.
-          if (type != NS_FORM_INPUT_FILE || !(aFlags & NS_EVENT_FLAG_BUBBLE)) {
-            SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
-            formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-            SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
+        case NS_FOCUS_CONTENT:
+        {
+          if (formControlFrame) {
+            // If this is a file control, check to see if focus has bubbled
+            // up from it's child textfield or child button.  If that's the case, 
+            // don't focus this parent file control -- leave focus on the child.
+            if (type != NS_FORM_INPUT_FILE || !(aFlags & NS_EVENT_FLAG_BUBBLE)) {
+              SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_TRUE);
+              formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+              SET_BOOLBIT(mBitField, BF_SKIP_FOCUS_EVENT, PR_FALSE);
+            }
+            return NS_OK;
           }
-          return NS_OK;
-        }
-      }                                                                         
-      break; // NS_FOCUS_CONTENT
+        }                                                                         
+        break; // NS_FOCUS_CONTENT
 
-      case NS_KEY_PRESS:
-      case NS_KEY_UP:
-      {
-        // For backwards compat, trigger checks/radios/buttons with
-        // space or enter (bug 25300)
-        nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+        case NS_KEY_PRESS:
+        case NS_KEY_UP:
+        {
+          // For backwards compat, trigger checks/radios/buttons with
+          // space or enter (bug 25300)
+          nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
 
-        if ((aEvent->message == NS_KEY_PRESS &&
-             keyEvent->keyCode == NS_VK_RETURN) ||
-            (aEvent->message == NS_KEY_UP &&
-             keyEvent->keyCode == NS_VK_SPACE)) {
-          switch(type) {
-            case NS_FORM_INPUT_CHECKBOX:
-            case NS_FORM_INPUT_RADIO:
-            {
-              // Checkbox and Radio try to submit on Enter press
-              if (keyEvent->keyCode != NS_VK_SPACE) {
-                // Generate a submit event targeted at the form content
-                nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+          if ((aEvent->message == NS_KEY_PRESS &&
+               keyEvent->keyCode == NS_VK_RETURN) ||
+              (aEvent->message == NS_KEY_UP &&
+               keyEvent->keyCode == NS_VK_SPACE)) {
+            switch(type) {
+              case NS_FORM_INPUT_CHECKBOX:
+              case NS_FORM_INPUT_RADIO:
+              {
+                // Checkbox and Radio try to submit on Enter press
+                if (keyEvent->keyCode != NS_VK_SPACE) {
+                  // Generate a submit event targeted at the form content
+                  nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
 
-                if (form) {
-                  nsCOMPtr<nsIPresShell> shell;
-                  aPresContext->GetShell(getter_AddRefs(shell));
-                  if (shell) {
-                    nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
+                  if (form) {
+                    nsCOMPtr<nsIPresShell> shell;
+                    aPresContext->GetShell(getter_AddRefs(shell));
+                    if (shell) {
+                      nsCOMPtr<nsIContent> formControl = this; // kungFuDeathGrip
 
-                    nsFormEvent event;
-                    event.eventStructType = NS_FORM_EVENT;
-                    event.message         = NS_FORM_SUBMIT;
-                    event.originator      = formControl;
-                    nsEventStatus status  = nsEventStatus_eIgnore;
-                    shell->HandleDOMEventWithTarget(form, &event, &status);
+                      nsFormEvent event;
+                      event.eventStructType = NS_FORM_EVENT;
+                      event.message         = NS_FORM_SUBMIT;
+                      event.originator      = formControl;
+                      nsEventStatus status  = nsEventStatus_eIgnore;
+                      shell->HandleDOMEventWithTarget(form, &event, &status);
+                    }
                   }
+                  break;  // If we are submitting, do not send click event
                 }
-                break;  // If we are submitting, do not send click event
+                // else fall through and treat Space like click...
               }
-              // else fall through and treat Space like click...
-            }
-            case NS_FORM_INPUT_BUTTON:
-            case NS_FORM_INPUT_RESET:
-            case NS_FORM_INPUT_SUBMIT:
-            case NS_FORM_INPUT_IMAGE: // Bug 34418
-            {
-              nsEventStatus status = nsEventStatus_eIgnore;
-              nsMouseEvent event;
-              event.eventStructType = NS_MOUSE_EVENT;
-              event.message = NS_MOUSE_LEFT_CLICK;
-              event.isShift = PR_FALSE;
-              event.isControl = PR_FALSE;
-              event.isAlt = PR_FALSE;
-              event.isMeta = PR_FALSE;
-              event.clickCount = 0;
-              event.widget = nsnull;
-              rv = HandleDOMEvent(aPresContext, &event, nsnull,
-                                  NS_EVENT_FLAG_INIT, &status);
-            } // case
-          } // switch
-        }
-
-        /*
-         * If this is input type=text, and the user hit enter, fire onChange and
-         * submit the form (if we are in one)
-         *
-         * Bug 99920, bug 109463 and bug 147850:
-         * (a) if there is a submit control in the form, click the first submit
-         *     control in the form.
-         * (b) if there is just one text control in the form, submit by sending
-         *     a submit event directly to the form
-         * (c) if there is more than one text input and no submit buttons, do
-         *     not submit, period.
-         */
-
-        if (aEvent->message == NS_KEY_PRESS &&
-            (keyEvent->keyCode == NS_VK_RETURN ||
-             keyEvent->keyCode == NS_VK_ENTER) &&
-            (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD)) {
-
-          if (mForm) {
-            nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
-            if (primaryFrame) {
-              nsITextControlFrame* textFrame = nsnull;
-              CallQueryInterface(primaryFrame, &textFrame);
-
-              // Fire onChange (if necessary)
-              if (textFrame) {
-                textFrame->CheckFireOnChange();
-              }
-            }
-
-            // Find the first submit control in elements[]
-            // and also check how many text controls we have in the form
-            nsCOMPtr<nsIContent> submitControl;
-            PRInt32 numTextControlsFound = 0;
-
-            nsCOMPtr<nsISimpleEnumerator> formControls;
-            mForm->GetControlEnumerator(getter_AddRefs(formControls));
-
-            nsCOMPtr<nsISupports> currentControlSupports;
-            nsCOMPtr<nsIFormControl> currentControl;
-            PRBool hasMoreElements;
-            while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
-                   hasMoreElements) {
-              formControls->GetNext(getter_AddRefs(currentControlSupports));
-              currentControl = do_QueryInterface(currentControlSupports);
-              if (currentControl) {
-                PRInt32 type;
-                currentControl->GetType(&type);
-                if (!submitControl &&
-                    (type == NS_FORM_INPUT_SUBMIT ||
-                     type == NS_FORM_BUTTON_SUBMIT ||
-                     type == NS_FORM_INPUT_IMAGE)) {
-                  submitControl = do_QueryInterface(currentControl);
-                  // We know as soon as we find a submit control that it no
-                  // longer matters how many text controls there are--we are
-                  // going to fire the onClick handler.
-                  break;
-                } else if (type == NS_FORM_INPUT_TEXT ||
-                           type == NS_FORM_INPUT_PASSWORD) {
-                  numTextControlsFound++;
-                }
-              }
-            }
-            
-            nsCOMPtr<nsIPresShell> shell;
-            aPresContext->GetShell(getter_AddRefs(shell));
-            if (shell) {
-              if (submitControl) {
-               // Fire the button's onclick handler and let the button handle
-               // submitting the form.
-                nsGUIEvent event;
+              case NS_FORM_INPUT_BUTTON:
+              case NS_FORM_INPUT_RESET:
+              case NS_FORM_INPUT_SUBMIT:
+              case NS_FORM_INPUT_IMAGE: // Bug 34418
+              {
+                nsEventStatus status = nsEventStatus_eIgnore;
+                nsMouseEvent event;
                 event.eventStructType = NS_MOUSE_EVENT;
                 event.message = NS_MOUSE_LEFT_CLICK;
+                event.isShift = PR_FALSE;
+                event.isControl = PR_FALSE;
+                event.isAlt = PR_FALSE;
+                event.isMeta = PR_FALSE;
+                event.clickCount = 0;
                 event.widget = nsnull;
-                nsEventStatus status = nsEventStatus_eIgnore;
-                shell->HandleDOMEventWithTarget(submitControl, &event, &status);
-              } else if (numTextControlsFound == 1) {
-                // If there's only one text control, just submit the form
-                nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
-                nsFormEvent event;
-                event.eventStructType = NS_FORM_EVENT;
-                event.message         = NS_FORM_SUBMIT;
-                event.originator      = nsnull;
-                nsEventStatus status  = nsEventStatus_eIgnore;
-                shell->HandleDOMEventWithTarget(form, &event, &status);
+                rv = HandleDOMEvent(aPresContext, &event, nsnull,
+                                    NS_EVENT_FLAG_INIT, &status);
+              } // case
+            } // switch
+          }
+
+          /*
+           * If this is input type=text, and the user hit enter, fire onChange and
+           * submit the form (if we are in one)
+           *
+           * Bug 99920, bug 109463 and bug 147850:
+           * (a) if there is a submit control in the form, click the first submit
+           *     control in the form.
+           * (b) if there is just one text control in the form, submit by sending
+           *     a submit event directly to the form
+           * (c) if there is more than one text input and no submit buttons, do
+           *     not submit, period.
+           */
+
+          if (aEvent->message == NS_KEY_PRESS &&
+              (keyEvent->keyCode == NS_VK_RETURN ||
+               keyEvent->keyCode == NS_VK_ENTER) &&
+              (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD)) {
+
+            if (mForm) {
+              nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
+              if (primaryFrame) {
+                nsITextControlFrame* textFrame = nsnull;
+                CallQueryInterface(primaryFrame, &textFrame);
+
+                // Fire onChange (if necessary)
+                if (textFrame) {
+                  textFrame->CheckFireOnChange();
+                }
               }
-            }
-          }
-        }
 
-      } break; // NS_KEY_PRESS || NS_KEY_UP
+              // Find the first submit control in elements[]
+              // and also check how many text controls we have in the form
+              nsCOMPtr<nsIContent> submitControl;
+              PRInt32 numTextControlsFound = 0;
 
-      // cancel all of these events for buttons
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      case NS_MOUSE_RIGHT_DOUBLECLICK:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-      {
-        if (type == NS_FORM_INPUT_BUTTON || 
-            type == NS_FORM_INPUT_RESET || 
-            type == NS_FORM_INPUT_SUBMIT ) {
-          nsCOMPtr<nsIDOMNSEvent> nsevent;
+              nsCOMPtr<nsISimpleEnumerator> formControls;
+              mForm->GetControlEnumerator(getter_AddRefs(formControls));
 
-          if (aDOMEvent) {
-            nsevent = do_QueryInterface(*aDOMEvent);
-          }
-
-          if (nsevent) {
-            nsevent->PreventBubble();
-          } else {
-            rv = NS_ERROR_FAILURE;
-          }
-        }
-
-        break;
-      }
-      case NS_MOUSE_LEFT_CLICK:
-      {
-        switch(type) {
-          case NS_FORM_INPUT_RESET:
-          case NS_FORM_INPUT_SUBMIT:
-          case NS_FORM_INPUT_IMAGE:
-            {
-              if (mForm) {
-                nsFormEvent event;
-                event.eventStructType = NS_FORM_EVENT;
-                event.message         = (type == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
-                event.originator      = this;
-                nsEventStatus status  = nsEventStatus_eIgnore;
-
-                nsCOMPtr<nsIPresShell> presShell;
-                aPresContext->GetShell(getter_AddRefs(presShell));
-                // If |nsIPresShell::Destroy| has been called due to
-                // handling the event (base class HandleDOMEvent, above),
-                // the pres context will return a null pres shell.  See
-                // bug 125624.
-                if (presShell) {
-                  nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-                  presShell->HandleDOMEventWithTarget(form, &event, &status);
+              nsCOMPtr<nsISupports> currentControlSupports;
+              nsCOMPtr<nsIFormControl> currentControl;
+              PRBool hasMoreElements;
+              while (NS_SUCCEEDED(formControls->HasMoreElements(&hasMoreElements)) &&
+                     hasMoreElements) {
+                formControls->GetNext(getter_AddRefs(currentControlSupports));
+                currentControl = do_QueryInterface(currentControlSupports);
+                if (currentControl) {
+                  PRInt32 type;
+                  currentControl->GetType(&type);
+                  if (!submitControl &&
+                      (type == NS_FORM_INPUT_SUBMIT ||
+                       type == NS_FORM_BUTTON_SUBMIT ||
+                       type == NS_FORM_INPUT_IMAGE)) {
+                    submitControl = do_QueryInterface(currentControl);
+                    // We know as soon as we find a submit control that it no
+                    // longer matters how many text controls there are--we are
+                    // going to fire the onClick handler.
+                    break;
+                  } else if (type == NS_FORM_INPUT_TEXT ||
+                             type == NS_FORM_INPUT_PASSWORD) {
+                    numTextControlsFound++;
+                  }
+                }
+              }
+            
+              nsCOMPtr<nsIPresShell> shell;
+              aPresContext->GetShell(getter_AddRefs(shell));
+              if (shell) {
+                if (submitControl) {
+                 // Fire the button's onclick handler and let the button handle
+                 // submitting the form.
+                  nsGUIEvent event;
+                  event.eventStructType = NS_MOUSE_EVENT;
+                  event.message = NS_MOUSE_LEFT_CLICK;
+                  event.widget = nsnull;
+                  nsEventStatus status = nsEventStatus_eIgnore;
+                  shell->HandleDOMEventWithTarget(submitControl, &event, &status);
+                } else if (numTextControlsFound == 1) {
+                  // If there's only one text control, just submit the form
+                  nsCOMPtr<nsIContent> form = do_QueryInterface(mForm);
+                  nsFormEvent event;
+                  event.eventStructType = NS_FORM_EVENT;
+                  event.message         = NS_FORM_SUBMIT;
+                  event.originator      = nsnull;
+                  nsEventStatus status  = nsEventStatus_eIgnore;
+                  shell->HandleDOMEventWithTarget(form, &event, &status);
                 }
               }
             }
-            break;
+          }
 
-          default:
-            break;
-        } //switch 
-      } break;// NS_MOUSE_LEFT_BUTTON_DOWN
-    } //switch 
+        } break; // NS_KEY_PRESS || NS_KEY_UP
+
+        // cancel all of these events for buttons
+        case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+        case NS_MOUSE_MIDDLE_BUTTON_UP:
+        case NS_MOUSE_MIDDLE_DOUBLECLICK:
+        case NS_MOUSE_RIGHT_DOUBLECLICK:
+        case NS_MOUSE_RIGHT_BUTTON_DOWN:
+        case NS_MOUSE_RIGHT_BUTTON_UP:
+        {
+          if (type == NS_FORM_INPUT_BUTTON || 
+              type == NS_FORM_INPUT_RESET || 
+              type == NS_FORM_INPUT_SUBMIT ) {
+            nsCOMPtr<nsIDOMNSEvent> nsevent;
+
+            if (aDOMEvent) {
+              nsevent = do_QueryInterface(*aDOMEvent);
+            }
+
+            if (nsevent) {
+              nsevent->PreventBubble();
+            } else {
+              rv = NS_ERROR_FAILURE;
+            }
+          }
+
+          break;
+        }
+        case NS_MOUSE_LEFT_CLICK:
+        {
+          switch(type) {
+            case NS_FORM_INPUT_RESET:
+            case NS_FORM_INPUT_SUBMIT:
+            case NS_FORM_INPUT_IMAGE:
+              {
+                if (mForm) {
+                  if (mType == NS_FORM_INPUT_SUBMIT ||
+                      mType == NS_FORM_INPUT_IMAGE) {
+                    // tell the form to forget a possible pending submission.
+                    // the reason is that the script returned true (the event was
+                    // ignored) so if there is a stored submission, it will miss
+                    // the name/value of the submitting element, thus we need
+                    // to forget it and the form element will build a new one
+                    mForm->ForgetPendingSubmission();
+                  }
+                  nsFormEvent event;
+                  event.eventStructType = NS_FORM_EVENT;
+                  event.message         = (type == NS_FORM_INPUT_RESET) ? NS_FORM_RESET : NS_FORM_SUBMIT;
+                  event.originator      = this;
+                  nsEventStatus status  = nsEventStatus_eIgnore;
+
+                  nsCOMPtr<nsIPresShell> presShell;
+                  aPresContext->GetShell(getter_AddRefs(presShell));
+                  // If |nsIPresShell::Destroy| has been called due to
+                  // handling the event (base class HandleDOMEvent, above),
+                  // the pres context will return a null pres shell.  See
+                  // bug 125624.
+                  if (presShell) {
+                    nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+                    presShell->HandleDOMEventWithTarget(form, &event, &status);
+                  }
+                }
+              }
+              break;
+
+            default:
+              break;
+          } //switch 
+        } break;// NS_MOUSE_LEFT_CLICK
+      } //switch
+    } else {
+      if (aEvent->message == NS_MOUSE_LEFT_CLICK &&
+          (type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_INPUT_IMAGE) && mForm) {
+        // tell the form to flush a possible pending submission.
+        // the reason is that the script returned false (the event was
+        // not ignored) so if there is a stored submission, it needs to
+        // be submitted immediatelly.
+        mForm->FlushPendingSubmission();
+      }
+    } //if
   } // if
 
   return rv;
