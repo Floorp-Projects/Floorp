@@ -364,20 +364,50 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 			case eWindowType_dialog:
 #if !TARGET_CARBON
-				if (aInitData &&
-					aInitData->mBorderStyle != eBorderStyle_all &&
-					aInitData->mBorderStyle != eBorderStyle_default &&
-					(aInitData->mBorderStyle == eBorderStyle_none ||
-					 !(aInitData->mBorderStyle & eBorderStyle_title)))
-				{
+        if (aInitData)
+        {
+          switch (aInitData->mBorderStyle)
+          {
+            case eBorderStyle_none:
+					    wDefProcID = kWindowModalDialogProc;
+              break;
+              
+            case eBorderStyle_all:
+              wDefProcID = kWindowMovableModalGrowProc;   // should we add a close box (kWindowGrowDocumentProc) ?
+              break;
+              
+            case eBorderStyle_default:
+					    wDefProcID = kWindowModalDialogProc;
+              break;
+            
+            default:
+              // we ignore the clase flag here, since mac dialogs should never have a close box.
+              switch(aInitData->mBorderStyle & (eBorderStyle_resizeh | eBorderStyle_title))
+              {
+                // combinations of individual options.
+                case eBorderStyle_title:
+                  wDefProcID = kWindowMovableModalDialogProc;
+                  break;
+                                    
+                case eBorderStyle_resizeh:
+                case (eBorderStyle_title | eBorderStyle_resizeh):
+                  wDefProcID = kWindowMovableModalGrowProc;   // this is the only kind of resizable dialog.
+                  break;
+                                  
+                default:
+                  NS_WARNING("Unhandled combination of window flags");
+                  break;
+              }
+          }
+        }
+        else
+        {
 					wDefProcID = kWindowModalDialogProc;
-					goAwayFlag = false;
-				} else {
-					wDefProcID = kWindowMovableModalDialogProc;
 					goAwayFlag = true; // revisit this below
-				}
-				hOffset = kDialogMarginWidth;
-				vOffset = kDialogTitleBarHeight;
+        }
+        
+        hOffset = kDialogMarginWidth;
+        vOffset = kDialogTitleBarHeight;
 				break;
 #endif
 
