@@ -576,7 +576,7 @@ function insertRheet (matchText, containerTag)
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
     anchor.setAttribute ("href",
-                         "ftp://ftp.mozilla.org/pub/mozilla/libraries/bonus-tracks/rheet.wav");
+                         "http://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/bonus-tracks/rheet.wav");
     anchor.setAttribute ("class", "chatzilla-rheet chatzilla-link");
     //anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
