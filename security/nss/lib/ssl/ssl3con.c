@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.9 2000/09/14 20:25:26 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.10 2000/11/10 01:36:26 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -6969,6 +6969,7 @@ const ssl3BulkCipherDef *cipher_def;
     isTLS = (PRBool)(crSpec->version > SSL_LIBRARY_VERSION_3_0);
 
     if (isTLS && cText->buf->len > (MAX_FRAGMENT_LENGTH + 2048)) {
+	ssl_ReleaseSpecReadLock(ss);
 	SSL3_SendAlert(ss, alert_fatal, record_overflow);
 	PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
 	return SECFailure;
