@@ -1059,9 +1059,7 @@ nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
     entry->DetachDescriptors();
     gService->DeactivateEntry(entry);
     
-    ((nsCacheEntryHashTableEntry *)hdr)->keyHash    = 1; // mark removed
-    ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry = nsnull;
-    return PL_DHASH_NEXT;
+    return PL_DHASH_REMOVE; // and continue enumerating
 }
 
 
