@@ -1,3 +1,21 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 #include "stdafx.h"
 
 #include "WebShellContainer.h"
@@ -86,6 +104,7 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
 	ATLTRACE(_T("CWebShellContainer::BeginLoadURL()\n"));
 
+	//Fire a BeforeNavigate event
 	USES_CONVERSION;
 	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
@@ -96,12 +115,18 @@ CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 	long lFlags = 0;
 
 	m_pEvents1->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, pvPostData, bstrHeaders, &bCancel);
-	// TODO m_pEvents2->Fire_BeforeNavigate2(...)
+
+	//Fire a BeforeNavigate2 event
+	CComVariant vURL(bstrURL);
+	CComVariant vFlags(lFlags);
+	CComVariant vTargetFrameName(bstrTargetFrameName);
+	CComVariant vHeaders(bstrHeaders);
+
+	m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURL, &vFlags, &vTargetFrameName, pvPostData, &vHeaders, &bCancel);
 
 	SysFreeString(bstrURL);
 	SysFreeString(bstrTargetFrameName);
 	SysFreeString(bstrHeaders);
-
 
 	if (bCancel == VARIANT_TRUE)
 	{
@@ -132,11 +157,17 @@ NS_IMETHODIMP
 CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus)
 {
 	ATLTRACE(_T("CWebShellContainer::EndLoadURL()\n"));
+
+	//Fire a NavigateComplete event
 	USES_CONVERSION;
 	OLECHAR *pszURL = W2OLE((WCHAR *) aURL);
 	BSTR bstrURL = SysAllocString(pszURL);
 	m_pEvents1->Fire_NavigateComplete(bstrURL);
-// TODO m_pEvents2->Fire_NavigateComplete2(...)
+
+	//Fire a NavigateComplete2 event
+	CComVariant vURL(bstrURL);
+	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
+
 	m_pOwner->m_bBusy = FALSE;
 	SysFreeString(bstrURL);
 
