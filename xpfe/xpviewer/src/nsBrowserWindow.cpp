@@ -1565,7 +1565,9 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     mBookmarks->SetImageHorizontalAlignment(eButtonHorizontalAligment_Left);
     mBookmarks->SetTextVerticalAlignment(eButtonVerticalAligment_Center);
     mBookmarks->SetTextHorizontalAlignment(eButtonHorizontalAligment_Right);
+#ifdef XP_WIN
     mBookmarks->AddMenuItem("Add Bookmark", 3000);
+#endif
   }
 
   // Create location icon
