@@ -443,20 +443,6 @@ protected:
                                 PRBool aUpdateMaximumWidth,
                                 PRBool aDamageDirtyArea);
 
-  nsresult DoReflowInlineFramesAuto(nsBlockReflowState& aState,
-                                    line_iterator aLine,
-                                    PRBool* aKeepReflowGoing,
-                                    PRUint8* aLineReflowStatus,
-                                    PRBool aUpdateMaximumWidth,
-                                    PRBool aDamageDirtyArea);
-
-  nsresult DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
-                                      line_iterator aLine,
-                                      PRBool* aKeepReflowGoing,
-                                      PRUint8* aLineReflowStatus,
-                                      PRBool aUpdateMaximumWidth,
-                                      PRBool aDamageDirtyArea);
-
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
                              nsLineLayout& aLineLayout,
                              line_iterator aLine,

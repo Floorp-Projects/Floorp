@@ -51,13 +51,11 @@
 #include "nsDeque.h"
 #include "nsLineBox.h"
 #include "nsBlockReflowState.h"
+#include "plarena.h"
 
 class nsSpaceManager;
 class nsPlaceholderFrame;
 struct nsStyleText;
-
-#define NS_LINELAYOUT_NUM_FRAMES        5
-#define NS_LINELAYOUT_NUM_SPANS         5
 
 class nsLineLayout {
 public:
@@ -66,6 +64,14 @@ public:
                const nsHTMLReflowState* aOuterReflowState,
                PRBool aComputeMaxElementWidth);
   ~nsLineLayout();
+
+  class ArenaDeque : public nsDeque
+  {
+  public:
+    ArenaDeque() : nsDeque(nsnull) {}
+    void *operator new(size_t, PLArenaPool &pool);
+    void  operator delete(void *) {} // Dont do anything.  Its Arena memory
+  };
 
   void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
             PRInt32 aLineNumber) {
@@ -201,17 +207,20 @@ public:
   }
 
   void RecordWordFrame(nsIFrame* aWordFrame) {
-    mWordFrames.Push(aWordFrame);
+    if(mWordFrames || AllocateDeque())
+      mWordFrames->Push(aWordFrame);
   }
 
   PRBool InWord() const {
-    return 0 != mWordFrames.GetSize();
+    return mWordFrames && 0 != mWordFrames->GetSize();
   }
 
   void ForgetWordFrame(nsIFrame* aFrame);
 
   void ForgetWordFrames() {
-    mWordFrames.Empty();
+    if(mWordFrames) {
+      mWordFrames->Empty();
+    }
   }
 
   nsIFrame* FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame);
@@ -311,7 +320,8 @@ protected:
   nsLineBox* mLineBox;
 
   PRInt32 mTotalPlacedFrames;
-  nsDeque mWordFrames;
+  ArenaDeque *mWordFrames;
+  PRBool  AllocateDeque();
 
   nscoord mTopEdge;
   nscoord mBottomEdge;
@@ -403,9 +413,7 @@ protected:
       return pfd;
     }
   };
-  PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
   PerFrameData* mFrameFreeList;
-  PRInt32 mInitialFramesFreed;
 
   struct PerSpanData {
     union {
@@ -442,9 +450,7 @@ protected:
       mLastFrame = pfd;
     }
   };
-  PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];
   PerSpanData* mSpanFreeList;
-  PRInt32 mInitialSpansFreed;
   PerSpanData* mRootSpan;
   PerSpanData* mCurrentSpan;
   PRInt32 mSpanDepth;
@@ -452,6 +458,7 @@ protected:
   PRInt32 mSpansAllocated, mSpansFreed;
   PRInt32 mFramesAllocated, mFramesFreed;
 #endif
+  PLArenaPool mArena; // Per span and per frame data
 
   nsresult NewPerFrameData(PerFrameData** aResult);
 
