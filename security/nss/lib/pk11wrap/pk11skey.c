@@ -170,6 +170,8 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
     PK11_USE_THREADS(PR_Unlock(slot->freeListLock);)
     if (symKey) {
 	symKey->next = NULL;
+	if (!symKey->sessionOwner)
+    	    symKey->session = pk11_GetNewSession(slot,&symKey->sessionOwner);
 	return symKey;
     }
 
