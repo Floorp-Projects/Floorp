@@ -486,14 +486,14 @@ struct nsCharSourceTraits
     PRUint32
     readable_distance( const InputIterator& first, const InputIterator& last )
       {
-        return PRUint32(SameFragment(first, last) ? last.operator->()-first.operator->() : first.size_forward());
+        return PRUint32(SameFragment(first, last) ? last.get()-first.get() : first.size_forward());
       }
 
     static
     const typename InputIterator::value_type*
     read( const InputIterator& iter )
       {
-        return iter.operator->();
+        return iter.get();
       }
   };
 
