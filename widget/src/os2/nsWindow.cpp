@@ -116,6 +116,7 @@ nsIWidget         * gRollupWidget             = nsnull;
 PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 ////////////////////////////////////////////////////
 
+PRBool gJustGotActivate = PR_FALSE;
 
 ////////////////////////////////////////////////////
 // Mouse Clicks - static variable defintions 
@@ -875,7 +876,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    // call the event callback to notify about creation
 
-   DispatchStandardEvent(NS_CREATE);
+   DispatchStandardEvent( NS_CREATE );
    SubclassWindow(TRUE);
    PostCreateWidget();
 }
@@ -1845,7 +1846,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         }
 
         case WMU_HIDE_TOOLTIP:
-          result = DispatchStandardEvent( NS_HIDE_TOOLTIP);
+          result = DispatchStandardEvent( NS_HIDE_TOOLTIP );
           break;
 #endif
         case WM_CONTROL: // remember this is resent to the orginator...
@@ -1853,7 +1854,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_CLOSE:  // close request
-          DispatchStandardEvent(NS_XUL_CLOSE);
+          DispatchStandardEvent( NS_XUL_CLOSE );
           result = PR_TRUE; // abort window closure
           break;
 
@@ -1927,8 +1928,20 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
 
         case WM_FOCUSCHANGED:
-          result = DispatchStandardEvent( SHORT1FROMMP( mp2) ? NS_GOTFOCUS
-                                                             : NS_LOSTFOCUS);
+          if( SHORT1FROMMP( mp2 ) || mWnd == WinQueryFocus(HWND_DESKTOP) )
+          {
+            result = DispatchStandardEvent( NS_GOTFOCUS );
+            if( !gJustGotActivate )
+            {
+              gJustGotActivate = PR_TRUE;
+              result = DispatchStandardEvent( NS_ACTIVATE );
+              gJustGotActivate = PR_FALSE;
+            }
+          }
+          else
+          {
+            result = DispatchStandardEvent( NS_LOSTFOCUS );
+          }
           break;
     
         case WM_WINDOWPOSCHANGED: 
@@ -2079,7 +2092,7 @@ void nsWindow::OnDestroy()
    if( nsWindowState_eDoingDelete != mWindowState)
    {
       AddRef();
-      DispatchStandardEvent( NS_DESTROY);
+      DispatchStandardEvent( NS_DESTROY );
       Release();
    }
 
