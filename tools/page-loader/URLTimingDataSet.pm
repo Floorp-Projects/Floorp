@@ -100,7 +100,7 @@ sub _select {
     my $sql = qq{
         SELECT INDEX, S_INTVL, C_INTVL, C_PART, CONTENT, ID 
              FROM $self->{table}
-                  WHERE ID = "$self->{id}"
+                  WHERE ID = '$self->{id}'
                 };
  
     my $sth = $dbh->prepare($sql);
@@ -129,7 +129,7 @@ sub _get_summary {
 
     # how many cycles (should I get this from test parameters instead?)
     $self->{count} = int(_avg( map($_->[2],  @{$self->{results}}) ));
-    warn $self->{count};
+    #warn $self->{count};
 
     # calculate overall average, average median, maximum, minimum, (RMS Error?)
     for (@{$self->{results}}) {
