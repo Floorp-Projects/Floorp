@@ -38,6 +38,10 @@ public:
    */
   NS_IMETHOD LoadFrameRegressionData(nsIURL* aURL,
                                      nsIXMLContent** aResult) = 0;
+
+  // XXX temporary until sync i/o works again
+  NS_IMETHOD ReadFrameRegressionData(FILE* aInput,
+                                     nsIXMLContent** aResult) = 0;
 };
 
 #endif /* nsIFrameUtil_h___ */
