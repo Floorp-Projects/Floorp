@@ -3080,7 +3080,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       else {
         nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          textEditor->InsertText(currentValue);
+          textEditor->InsertText(currentValue.GetUnicode());
       }
       mEditor->SetFlags(savedFlags);
       if (selPriv)
