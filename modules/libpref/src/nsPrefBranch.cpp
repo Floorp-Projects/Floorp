@@ -623,7 +623,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
     return rv;
 
   nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle(propertyFileURL,
+  rv = bundleService->CreateBundle(propertyFileURL, nsnull,
                                    getter_AddRefs(bundle));
   if (NS_FAILED(rv))
     return rv;

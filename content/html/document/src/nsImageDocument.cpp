@@ -468,7 +468,8 @@ nsresult nsImageDocument::UpdateTitle( void )
   // Create a bundle for the localization
   NS_WITH_SERVICE(nsIStringBundleService, stringService, kStringBundleServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && stringService) {
-    rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, getter_AddRefs(bundle));
+    nsCOMPtr<nsILocale> locale = nsnull;
+    rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, locale, getter_AddRefs(bundle));
   }
   if (NS_SUCCEEDED(rv) && bundle) {
     nsAutoString key;

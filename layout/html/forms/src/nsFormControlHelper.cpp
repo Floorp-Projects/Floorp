@@ -895,7 +895,8 @@ nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const char* 
         nsXPIDLCString spec;
         rv = uri->GetSpec(getter_Copies(spec));
         if (NS_SUCCEEDED(rv) && spec) {
-          rv = stringService->CreateBundle(spec, getter_AddRefs(bundle));
+          nsCOMPtr<nsILocale> locale = nsnull;
+          rv = stringService->CreateBundle(spec, locale, getter_AddRefs(bundle));
         }
       }
     }

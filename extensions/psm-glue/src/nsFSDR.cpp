@@ -105,6 +105,7 @@ Wallet_Localize(char* genericString) {
     NS_RELEASE(url);
     return v.ToNewUnicode();
   }
+  nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
   char* spec = nsnull;
   ret = url->GetSpec(&spec);
@@ -115,7 +116,7 @@ Wallet_Localize(char* genericString) {
     nsCRT::free(spec);
     return v.ToNewUnicode();
   }
-  ret = pStringService->CreateBundle(spec, &bundle);
+  ret = pStringService->CreateBundle(spec, locale, &bundle);
   nsCRT::free(spec);
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");

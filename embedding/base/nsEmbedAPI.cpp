@@ -141,7 +141,8 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     {
         nsCOMPtr<nsIStringBundle> stringBundle;
         char*  propertyURL = "chrome://necko/locale/necko.properties";
-        rv = sBundleService->CreateBundle(propertyURL,
+        nsILocale *locale = nsnull;
+        rv = sBundleService->CreateBundle(propertyURL, locale,
                                           getter_AddRefs(stringBundle));
     }
 #endif
