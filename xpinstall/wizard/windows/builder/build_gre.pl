@@ -62,23 +62,23 @@ $cwdDist       = GetCwd("dist",     $DEPTH, $cwdBuilder);
 $cwdDistWin    = GetCwd("distwin",  $DEPTH, $cwdBuilder);
 $cwdInstall    = GetCwd("install",  $DEPTH, $cwdBuilder);
 $cwdPackager   = GetCwd("packager", $DEPTH, $cwdBuilder);
-$verPartial    = "1.0.0.";
+$verPartial    = "1.2.0.";
 $ver           = $verPartial . GetVersion($DEPTH);
 
 if(-d "$cwdDist\\stage")
 {
-  system("perl $cwdPackager\\win_mre\\rdir.pl $cwdDist\\stage");
+  system("perl $cwdPackager\\win_gre\\rdir.pl $cwdDist\\stage");
 }
 
 print "stage:  $cwdDist\\stage";
 print "cwdDistWin: $cwdDistWin";
 
 mkdir("$cwdDist\\stage", 775);
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\pkgs-mre-win -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\pkgs-gre-win -o dos -v");
 
 
-chdir("$cwdPackager\\win_mre");
-if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\inst_mre -aurl $inXpiURL -rurl $inRedirIniURL"))
+chdir("$cwdPackager\\win_gre");
+if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\inst_gre -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
   print "\n Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install $inXpiURL $inRedirIniURL\n";
   exit(1);
@@ -106,7 +106,7 @@ if(system("copy $cwdInstall\\xpi\\*.* $cwdInstall"))
 #print "*\n";
 #print "*  A self-extracting installer has been built and delivered:\n";
 #print "*\n";
-#print "*      $cwdDistWin\\install\\mre-win32-install.exe\n";
+#print "*      $cwdDistWin\\install\\gre-win32-install.exe\n";
 #print "*\n";
 #print "**\n";
 #print "\n";
@@ -195,15 +195,15 @@ sub GetCwd
   elsif($whichPath eq "install")
   {
     # verify the existance of path
-    if(!(-e "$depthPath\\dist\\inst_mre"))
+    if(!(-e "$depthPath\\dist\\inst_gre"))
     {
-      mkdir("$depthPath\\dist\\inst_mre", 775);
+      mkdir("$depthPath\\dist\\inst_gre", 775);
 
-#      print "path not found: $depthPath\\dist\\inst_mre\n";
+#      print "path not found: $depthPath\\dist\\inst_gre\n";
 #      exit(1);
     }
 
-    $distPath = "$depthPath\\dist\\inst_mre";
+    $distPath = "$depthPath\\dist\\inst_gre";
   }
   elsif($whichPath eq "packager")
   {
