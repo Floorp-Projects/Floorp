@@ -953,7 +953,7 @@ function QualifySearchTerm()
   // If the text in the URL bar is the same as the currently loaded
   // page's URL then treat this as an empty search term.  This way
   // the user is taken to the search page where s/he can enter a term.
-  if (window.XULBrowserWindow.userTyped.value)
+  if (gBrowser.userTypedValue !== null)
     return document.getElementById("urlbar").value;
   return "";
 }
@@ -1301,6 +1301,7 @@ function BrowserLoadURL(aTriggeringEvent)
       shiftPressed = aTriggeringEvent.shiftKey;
     }
 
+    var browser = getBrowser();
     url = getShortcutOrURI(url);
     // Accept both Control and Meta (=Command) as New-Window-Modifiers
     if (aTriggeringEvent &&
@@ -1313,24 +1314,27 @@ function BrowserLoadURL(aTriggeringEvent)
       }
       catch (ex) {}
 
-      if (openTab && getBrowser().localName == "tabbrowser") {
+      if (openTab) {
         // Open link in new tab
-        var t = getBrowser().addTab(url);
+        var t = browser.addTab(url);
+
         // Focus new tab unless shift is pressed
-        if (!shiftPressed)
-          getBrowser().selectedTab = t;
-      }
-      else {
+        if (!shiftPressed) {
+          browser.userTypedValue = null;
+          browser.selectedTab = t;
+        }
+      } else {
         // Open a new window with the URL
         var newWin = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url);
         // Reset url in the urlbar, copied from handleURLBarRevert()
-        var oldURL = getWebNavigation().currentURI.spec;
+        var oldURL = browser.currentURI.spec;
         if (oldURL != "about:blank") {
           gURLBar.value = oldURL;
           SetPageProxyState("valid", null);
-        }
-        else
+        } else
           gURLBar.value = "";
+
+        browser.userTypedValue = null;
 
         // Focus old window if shift was pressed, as there's no
         // way to open a new window in the background
@@ -1340,8 +1344,7 @@ function BrowserLoadURL(aTriggeringEvent)
           content.focus();
         }
       }
-    }
-    else if (saveModifier) {
+    } else if (saveModifier) {
       try {
         // Firstly, fixup the url so that (e.g.) "www.foo.com" works
         const nsIURIFixup = Components.interfaces.nsIURIFixup;
@@ -1356,8 +1359,7 @@ function BrowserLoadURL(aTriggeringEvent)
         // XXX Do nothing for now.
         // Do we want to put up an alert in the future?  Mmm, l10n...
       }
-    }
-    else {
+    } else {
       // No modifier was pressed, load the URL normally and
       // focus the content area
       loadURI(url);
@@ -1921,13 +1923,15 @@ function handleURLBarRevert()
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
   if (!throbberElement.hasAttribute("busy") && !isScrolling) {
-    if (url != "about:blank") { 
+    if (url != "about:blank") {
       gURLBar.value = url;
       gURLBar.select();
       SetPageProxyState("valid", null); // XXX Build a URI and pass it in here.
     } else { //if about:blank, urlbar becomes ""
       gURLBar.value = "";
     }
+
+    gBrowser.userTypedValue = null;
   }
 
   // tell widget to revert to last typed text only if the user
