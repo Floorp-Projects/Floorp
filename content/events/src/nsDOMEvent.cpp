@@ -196,6 +196,21 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
   mTarget = nsnull;
   mCurrentTarget = nsnull;
   mOriginalTarget = nsnull;
+  // Get the explicit original target (if it's anonymous make it null)
+  {
+    GetTargetFromFrame(&mExplicitOriginalTarget);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mExplicitOriginalTarget);
+    if (content) {
+      if (content->IsNativeAnonymous()) {
+        mExplicitOriginalTarget = nsnull;
+      }
+      nsCOMPtr<nsIContent> bindingParent;
+      content->GetBindingParent(getter_AddRefs(bindingParent));
+      if (bindingParent) {
+        mExplicitOriginalTarget = nsnull;
+      }
+    }
+  }
   mText = nsnull;
   mTextRange = nsnull;
   mButton = -1;
@@ -260,6 +275,7 @@ nsDOMEvent::~nsDOMEvent()
   nsCOMPtr<nsIPresShell> shell;
   if (mPresContext)
   { // we were arena-allocated, prepare to recycle myself    
+    // XXX this does not appear to be needed anymore
     mPresContext->GetShell(getter_AddRefs(shell));
   }
   NS_IF_RELEASE(mPresContext);
@@ -362,6 +378,45 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
   *aCurrentTarget = mCurrentTarget;
   NS_IF_ADDREF(*aCurrentTarget);
   return NS_OK;
+}
+
+//
+// Get the actual event target node (may have been retargeted for mouse events)
+//
+void
+nsDOMEvent::GetTargetFromFrame(nsIDOMEventTarget** aTarget)
+{
+  *aTarget = nsnull;
+
+  if (!mPresContext) { return; }
+
+  // Get the target frame (have to get the ESM first)
+  nsCOMPtr<nsIEventStateManager> esm;
+  mPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+  nsIFrame* targetFrame = nsnull;
+  esm->GetEventTarget(&targetFrame);
+  if (!targetFrame) { return; }
+
+  // get the real content
+  nsCOMPtr<nsIContent> realEventContent;
+  targetFrame->GetContentForEvent(mPresContext, mEvent, getter_AddRefs(realEventContent));
+  if (!realEventContent) { return; }
+
+  // Finally, we have the real content.  QI it and return.
+  CallQueryInterface(realEventContent, aTarget);
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
+{
+  if (mExplicitOriginalTarget) {
+    *aRealEventTarget = mExplicitOriginalTarget;
+    NS_ADDREF(*aRealEventTarget);
+    return NS_OK;
+  }
+
+  return GetTarget(aRealEventTarget);
 }
 
 NS_IMETHODIMP
