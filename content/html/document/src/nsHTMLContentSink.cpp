@@ -4425,8 +4425,7 @@ NS_IMETHODIMP
 HTMLContentSink::NotifyError(const nsParserError* aError)
 {
   // Errors in HTML? Who would have thought!
-  // Why are you telling us, parser. Deal with it yourself.
-  PR_ASSERT(0);
+  // Why are you telling us, parser. Deal with it yourself.  
   return NS_OK;
 }
 
