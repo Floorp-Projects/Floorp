@@ -660,3 +660,4 @@ nsWebScriptsAccess::ReportError(const PRUnichar* aMessageID,
   
   return consoleService->LogStringMessage(message.get());
 }
+
