@@ -38,6 +38,7 @@
 
 #include "nsXMLContentSerializer.h"
 
+#include "nsHTMLAtoms.h"
 #include "nsIDOMText.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
@@ -509,6 +510,18 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     if (!nameStr.IsEmpty() && nameStr.First() == '-')
       continue;
 
+    if (namespaceID == kNameSpaceID_None) {
+      PRInt32 elementNsID;
+      content->GetNameSpaceID(elementNsID);
+      if (elementNsID == kNameSpaceID_XHTML) {
+        nsCOMPtr<nsIAtom> elementName;
+        content->GetTag(*getter_AddRefs(elementName));
+        if (IsShorthandAttr(attrName, elementName) &&
+            valueStr.IsEmpty()) {
+          valueStr = nameStr;
+        }
+      }
+    }
     SerializeAttr(prefixStr, nameStr, valueStr, aStr, PR_TRUE);
     
     if (addNSAttr) {
@@ -649,4 +662,95 @@ nsXMLContentSerializer::AppendToString(const nsAString& aStr,
   }
   
   aOutputStr.Append(aStr);
+}
+
+PRBool
+nsXMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
+                                        const nsIAtom* aElementName)
+{
+  // checked
+  if ((aAttrName == nsHTMLAtoms::checked) &&
+      (aElementName == nsHTMLAtoms::input)) {
+    return PR_TRUE;
+  }
+
+  // compact
+  if ((aAttrName == nsHTMLAtoms::compact) &&
+      (aElementName == nsHTMLAtoms::dir || 
+       aElementName == nsHTMLAtoms::dl ||
+       aElementName == nsHTMLAtoms::menu ||
+       aElementName == nsHTMLAtoms::ol ||
+       aElementName == nsHTMLAtoms::ul)) {
+    return PR_TRUE;
+  }
+
+  // declare
+  if ((aAttrName == nsHTMLAtoms::declare) &&
+      (aElementName == nsHTMLAtoms::object)) {
+    return PR_TRUE;
+  }
+
+  // defer
+  if ((aAttrName == nsHTMLAtoms::defer) &&
+      (aElementName == nsHTMLAtoms::script)) {
+    return PR_TRUE;
+  }
+
+  // disabled
+  if ((aAttrName == nsHTMLAtoms::disabled) &&
+      (aElementName == nsHTMLAtoms::button ||
+       aElementName == nsHTMLAtoms::input ||
+       aElementName == nsHTMLAtoms::optgroup ||
+       aElementName == nsHTMLAtoms::option ||
+       aElementName == nsHTMLAtoms::select ||
+       aElementName == nsHTMLAtoms::textarea)) {
+    return PR_TRUE;
+  }
+
+  // ismap
+  if ((aAttrName == nsHTMLAtoms::ismap) &&
+      (aElementName == nsHTMLAtoms::img ||
+       aElementName == nsHTMLAtoms::input)) {
+    return PR_TRUE;
+  }
+
+  // multiple
+  if ((aAttrName == nsHTMLAtoms::multiple) &&
+      (aElementName == nsHTMLAtoms::select)) {
+    return PR_TRUE;
+  }
+
+  // noresize
+  if ((aAttrName == nsHTMLAtoms::noresize) &&
+      (aElementName == nsHTMLAtoms::frame)) {
+    return PR_TRUE;
+  }
+
+  // noshade
+  if ((aAttrName == nsHTMLAtoms::noshade) &&
+      (aElementName == nsHTMLAtoms::hr)) {
+    return PR_TRUE;
+  }
+
+  // nowrap
+  if ((aAttrName == nsHTMLAtoms::nowrap) &&
+      (aElementName == nsHTMLAtoms::td ||
+       aElementName == nsHTMLAtoms::th)) {
+    return PR_TRUE;
+  }
+
+  // readonly
+  if ((aAttrName == nsHTMLAtoms::readonly) &&
+      (aElementName == nsHTMLAtoms::input ||
+       aElementName == nsHTMLAtoms::textarea)) {
+    return PR_TRUE;
+  }
+
+  // selected
+  if ((aAttrName == nsHTMLAtoms::selected) &&
+      (aElementName == nsHTMLAtoms::option)) {
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }

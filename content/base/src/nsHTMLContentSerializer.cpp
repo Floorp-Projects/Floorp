@@ -55,6 +55,7 @@
 #include "nsEscape.h"
 #include "nsITextToSubURI.h"
 #include "nsCRT.h"
+#include "nsIHTMLContent.h"
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
@@ -395,7 +396,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       if (!isJS && NS_FAILED(EscapeURI(tempURI, valueStr)))
         valueStr = tempURI;
     }
-  
+
     attrName->ToString(nameStr);
     
     /*If we already crossed the MaxColumn limit or 
@@ -408,6 +409,10 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         mColPos = 0;
     }
 
+    // Expand shorthand attribute.
+    if (IsShorthandAttr(attrName, aTagName) && valueStr.IsEmpty()) {
+      valueStr = nameStr;
+    }
     SerializeAttr(nsAutoString(), nameStr, valueStr, aStr, !isJS);
   }
 }
