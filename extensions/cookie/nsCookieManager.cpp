@@ -36,79 +36,77 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "plstr.h"
-#include "prmem.h"
-#include "nsIServiceManager.h"
 #include "nsCookieManager.h"
-#include "nsCRT.h"
 #include "nsCookies.h"
-#include "nsCookie.h"
 #include "nsIGenericFactory.h"
-#include "nsXPIDLString.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsReadableUtils.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+// used in logging via ::Add(), to indicate origin of cookie
+#ifdef PR_LOGGING
+#define kCookieHeader "(added via cookiemanager interface)"
+#else
+#define kCookieHeader ""
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsCookieEnumerator : public nsISimpleEnumerator
 {
-    public:
+  public:
 
-        NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-        // note: mCookieCount is initialized just once in the ctor. While it might
-        // appear that the cookie list can change while the cookiemanager is running,
-        // the cookieservice is actually on the same thread, so it can't. Note that
-        // a new nsCookieEnumerator is created each time the cookiemanager is loaded.
-        // So we only need to get the count once. If we ever change the cookieservice to
-        // run on a different thread, then something to the effect of a lock will be
-        // required. see bug 191682 for details.
-        // note also that COOKIE_Count() removes expired cookies from the list before
-        // returning the count, so that they're not displayed in the cookiemanager.
-        nsCookieEnumerator() : mCookieIndex(0),
-                               mCookieCount(COOKIE_Count())
-        {
-        }
+    // note: mCookieCount is initialized just once in the ctor. While it might
+    // appear that the cookie list can change while the cookiemanager is running,
+    // the cookieservice is actually on the same thread, so it can't. Note that
+    // a new nsCookieEnumerator is created each time the cookiemanager is loaded.
+    // So we only need to get the count once. If we ever change the cookieservice to
+    // run on a different thread, then something to the effect of a lock will be
+    // required. see bug 191682 for details.
+    nsCookieEnumerator() :
+      mCookieIndex(0)
+    {
+      PRInt32 temp;
+      COOKIE_RemoveExpiredCookies(nsTime() / PR_USEC_PER_SEC, temp);
+      mCookieCount = sCookieList->Count();
+    }
 
-        NS_IMETHOD HasMoreElements(PRBool *result) 
-        {
-            *result = mCookieCount > mCookieIndex;
-            return NS_OK;
-        }
+    NS_IMETHOD HasMoreElements(PRBool *result) 
+    {
+      *result = mCookieIndex < mCookieCount;
+      return NS_OK;
+    }
 
-        NS_IMETHOD GetNext(nsISupports **result) 
-        {
-          nsCAutoString name;
-          nsCAutoString value;
-          PRBool isDomain;
-          nsCAutoString host;
-          nsCAutoString path;
-          PRBool isSecure;
-          PRUint64 expires;
-          nsCookieStatus status;
-          nsCookiePolicy policy;
-          nsresult rv = COOKIE_Enumerate
-            (mCookieIndex++, name, value, isDomain, host, path, isSecure, expires,
-              status, policy);
-          if (NS_SUCCEEDED(rv)) {
-            nsICookie *cookie =
-              new nsCookie(name, value, isDomain, host, path, isSecure, expires,
-                           status, policy);
-            *result = cookie;
-            NS_ADDREF(*result);
-          } else {
-            *result = nsnull;
-          }
-          return rv;
-        }
+    NS_IMETHOD GetNext(nsISupports **result) 
+    {
+      if (mCookieIndex >= mCookieCount) {
+        *result = nsnull;
+        NS_ERROR("bad cookie index");
+        return NS_ERROR_UNEXPECTED;
+      }
 
-        virtual ~nsCookieEnumerator() 
-        {
-        }
+      cookie_CookieStruct *cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(mCookieIndex++));
+      NS_ASSERTION(cookieInList, "corrupt cookie list");
 
-    protected:
-        PRInt32 mCookieIndex;
-        PRInt32 mCookieCount;
+      // create a new nsICookie and copy the cookie data
+      if (!(*result = COOKIE_ChangeFormat(cookieInList).get())) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      return NS_OK;
+    }
+
+    virtual ~nsCookieEnumerator() 
+    {
+    }
+
+  protected:
+
+    PRInt32 mCookieIndex;
+    PRInt32 mCookieCount;
+
 };
 
 NS_IMPL_ISUPPORTS1(nsCookieEnumerator, nsISimpleEnumerator);
@@ -123,7 +121,7 @@ nsCookieManager::nsCookieManager()
 {
 }
 
-nsCookieManager::~nsCookieManager(void)
+nsCookieManager::~nsCookieManager()
 {
 }
 
@@ -133,45 +131,64 @@ nsresult nsCookieManager::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieManager::RemoveAll(void) {
+NS_IMETHODIMP nsCookieManager::RemoveAll()
+{
   ::COOKIE_RemoveAll();
   ::COOKIE_Write();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieManager::GetEnumerator(nsISimpleEnumerator * *entries)
+NS_IMETHODIMP nsCookieManager::GetEnumerator(nsISimpleEnumerator **entries)
 {
-    *entries = nsnull;
+  *entries = nsnull;
 
-    nsCookieEnumerator* cookieEnum = new nsCookieEnumerator();
-    if (cookieEnum == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(cookieEnum);
-    *entries = cookieEnum;
-    return NS_OK;
+  nsCookieEnumerator* cookieEnum = new nsCookieEnumerator();
+  if (!cookieEnum) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(cookieEnum);
+  *entries = cookieEnum;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsCookieManager::Add(const nsACString &aDomain,
                                    const nsACString &aPath,
                                    const nsACString &aName,
                                    const nsACString &aValue,
-                                   PRBool aSecure,
-                                   PRInt32 aExpires)
+                                   PRBool           aIsSecure,
+                                   PRInt32          aExpires)
 {
-  // nice COOKIE method doesn't require caller to hand off ownership of strings.
-  /* nulls aren't allowed (cookie code is full of checks as if they were
-     but see COOKIE_Write) */
+  cookie_CookieStruct *cookie = new cookie_CookieStruct;
+  if (!cookie) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  return ::COOKIE_AddCookie(aDomain, aPath, aName, aValue,
-                            aSecure, PR_TRUE, aExpires,
-                            nsICookie::STATUS_UNKNOWN, nsICookie::POLICY_UNKNOWN);
+  nsInt64 currentTime = nsTime() / PR_USEC_PER_SEC;
+  cookie->host = aDomain;
+  cookie->path = aPath;
+  cookie->name = aName;
+  cookie->cookie = aValue;
+  cookie->expires = nsInt64(aExpires);
+  cookie->lastAccessed = currentTime;
+  cookie->isSession = PR_FALSE;
+  cookie->isSecure = aIsSecure;
+  cookie->isDomain = PR_TRUE;
+  cookie->status = nsICookie::STATUS_UNKNOWN;
+  cookie->policy = nsICookie::POLICY_UNKNOWN;
+
+  nsresult rv = COOKIE_Add(cookie, currentTime, nsnull, kCookieHeader);
+  if (NS_FAILED(rv)) {
+    delete cookie;
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsCookieManager::Remove
-  (const nsACString& host, const nsACString& name, const nsACString& path, PRBool blocked) {
-//  (const nsAUTF8String& host, const nsACString& name, const nsAUTF8String& path, PRBool blocked) {
-// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
-
+NS_IMETHODIMP nsCookieManager::Remove(const nsACString& host,
+                                      const nsACString& name,
+                                      const nsACString& path,
+                                      PRBool            blocked)
+{
   ::COOKIE_Remove(host, name, path, blocked);
   return NS_OK;
 }

@@ -54,7 +54,7 @@ void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* 
     NS_ASSERTION(uri, "malformed uri");   
     
     printf("setting cookie for \"%s\" : ", aSpec);
-    nsresult rv = cookieService->SetCookieString(uri, nsnull, (char *)aCookieString,0);
+    nsresult rv = cookieService->SetCookieStringFromHttp(uri, uri, nsnull, (char *)aCookieString, nsnull, nsnull);
     if (NS_FAILED(rv)) {
         printf("NOT-SET\n");
     } else {
@@ -70,7 +70,7 @@ void GetACookie(nsICookieService *cookieService, const char* aSpec, char* *aCook
 
     char * cookieString;
     printf("retrieving cookie(s) for \"%s\" : ", aSpec);
-    nsresult rv = cookieService->GetCookieString(uri, &cookieString);
+    nsresult rv = cookieService->GetCookieStringFromHttp(uri, uri, &cookieString);
     if (NS_FAILED(rv)) printf("XXX GetCookieString() failed!\n");
 
     if (!cookieString) {
