@@ -35,7 +35,7 @@ function onLoad()
 {
   pw1 = document.getElementById("pw1");
 
-  if (window.arguments) {
+  if ("arguments" in window) {
     params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
     tokenName = params.GetString(1);
   } else {
