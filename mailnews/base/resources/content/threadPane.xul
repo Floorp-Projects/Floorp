@@ -48,10 +48,8 @@ Rights Reserved.
     <splitter class="tree-splitter"/>
     <treecol id="sizeCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1"  label="&sizeColumn.label;"/>
     <splitter class="tree-splitter"/>
-<!-- not ready yet
     <treecol id="junkStatusCol" fixed="true" persist="hidden ordinal width" class="treecol-image junkStatusHeader" display="&junkStatusColumn.label;" cycler="true"/>
     <splitter class="tree-splitter"/>
--->
     <treecol id="flaggedCol" fixed="true" persist="hidden ordinal" class="treecol-image flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
     <splitter class="tree-splitter"/>
     <treecol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>

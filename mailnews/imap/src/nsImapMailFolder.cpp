@@ -4937,13 +4937,8 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
       aProtocol->NotifyBodysToDownload(nsnull, 0/*keysToFetch.GetSize() */);
   }
 
-#ifdef DEBUG_bienvenu
-#define DO_FILTER_PLUGIN
-#endif
-
-#ifdef DO_FILTER_PLUGIN
   CallFilterPlugins();
-#endif
+
   if (m_filterList)
     (void)m_filterList->FlushLogIfNecessary();
  

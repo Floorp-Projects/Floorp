@@ -277,7 +277,7 @@ pref("mailnews.remember_selected_message", true);
 
 pref("mail.toolbars.showbutton.file", true);
 pref("mail.toolbars.showbutton.next", true);
-/* not ready yet: pref("mail.toolbars.showbutton.junk", false); */
+pref("mail.toolbars.showbutton.junk", true);
 pref("mail.toolbars.showbutton.print", true);
 pref("mail.toolbars.showbutton.stop", true);
 

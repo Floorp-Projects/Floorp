@@ -40,8 +40,8 @@ Contributor(s):
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
                        "fileButton", "nextButton",
-                       "printButton", "stopButton"];
-                       //"mailRememberLastMsg","junkMailButton" - to be added when implemented
+                       "printButton", "stopButton", "junkMailButton"];
+                       //"mailRememberLastMsg"
   ]]>
   </script>
   
@@ -93,9 +93,9 @@ Contributor(s):
   </groupbox>
 
   <!-- toolbar buttons customization -->
-  <groupbox flex="1" id="showButtons" orient="horizontal">
+  <groupbox flex="1" orient="horizontal">
     <caption label="&toolbarIntro.label;"/>
-    <vbox id="showButtonsBox1">
+    <vbox>
       <checkbox id="fileButton"
                 label="&fileButton.label;"
                 prefstring="mail.toolbars.showbutton.file"/>
@@ -106,15 +106,13 @@ Contributor(s):
                 label="&printButton.label;"
                 prefstring="mail.toolbars.showbutton.print"/>
     </vbox>
-    <vbox id="showButtonsBox2">
+    <vbox>
       <checkbox id="stopButton"
                 label="&stopButton.label;"
                 prefstring="mail.toolbars.showbutton.stop"/>
-<!-- not ready yet
       <checkbox id="junkMailButton"
                 label="&junkMailButton.label;"
                 prefstring="mail.toolbars.showbutton.junk"/>
--->
     </vbox>
   </groupbox>
  

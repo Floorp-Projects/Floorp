@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= mdn mailviews
+DIRS	= mdn mailviews bayesian-spam-filter
 
 ifdef MOZ_PSM
 BUILD_SMIME=1

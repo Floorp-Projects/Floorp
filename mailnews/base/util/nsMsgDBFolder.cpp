@@ -65,10 +65,6 @@
 #include "nsIMsgFilterPlugin.h"
 #include "nsIMsgMailSession.h"
 #include "nsIRDFService.h"
-#ifdef DEBUG_bienvenu
-#define DO_FILTER_PLUGIN
-#endif
-
 
 #include <time.h>
 

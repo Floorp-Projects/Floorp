@@ -144,7 +144,11 @@ function conditionallyEnableUI(id)
   }
 
   document.getElementById("useWhiteList").disabled = false;
-  document.getElementById("moveOnSpam").disabled = false;
+
+  // document.getElementById("moveOnSpam").disabled = false;
+  // temporarily disabling until we get a few more bugs fixed
+  //
+  document.getElementById("moveOnSpam").disabled = true;
 
   var enabled;
   if (!id || id == "moveOnSpam") {

@@ -171,6 +171,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
   return err;
 }
 
+#define READY_TO_FORK_AND_SPAM_IS_ENABLED 1
 
 nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
 {
