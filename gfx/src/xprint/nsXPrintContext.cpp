@@ -111,7 +111,6 @@ nsXPrintContext::nsXPrintContext() :
   mPrintResolution(0L),
   mContext(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::nsXPrintContext()\n"));
 }
 

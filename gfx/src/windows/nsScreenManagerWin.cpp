@@ -81,8 +81,6 @@ nsScreenManagerWin :: nsScreenManagerWin ( )
 : mHasMultiMonitorAPIs(PR_FALSE), mGetMonitorInfoProc(nsnull), mMonitorFromRectProc(nsnull),
     mEnumDisplayMonitorsProc(nsnull), mNumberOfScreens(0)
 {
-  NS_INIT_ISUPPORTS();
-
   // figure out if we can call the multiple monitor APIs that are only
   // available on Win98/2000.
   HMODULE lib = GetModuleHandle("user32.dll");

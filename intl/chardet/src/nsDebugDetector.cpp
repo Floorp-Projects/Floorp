@@ -52,7 +52,6 @@ nsDebugDetector::nsDebugDetector( nsDebugDetectorSel aSel)
   mBlks = 0;
   mObserver = nsnull;
   mStop = PR_FALSE;
-  NS_INIT_ISUPPORTS();
 }
 //--------------------------------------------------------------------
 nsDebugDetector::~nsDebugDetector()

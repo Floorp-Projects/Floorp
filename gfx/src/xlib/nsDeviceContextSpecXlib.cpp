@@ -216,7 +216,6 @@ int            GlobalPrinters::mGlobalNumPrinters = 0;
 nsDeviceContextSpecXlib::nsDeviceContextSpecXlib()
 {
   DO_PR_DEBUG_LOG(("nsDeviceContextSpecXlib::nsDeviceContextSpecXlib()\n"));
-  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecXlib::~nsDeviceContextSpecXlib()
@@ -546,7 +545,6 @@ nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *
 //  Printer Enumerator
 nsPrinterEnumeratorXlib::nsPrinterEnumeratorXlib()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorXlib, nsIPrinterEnumerator)

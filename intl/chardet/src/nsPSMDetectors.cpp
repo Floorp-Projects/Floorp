@@ -491,7 +491,6 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
 nsXPCOMDetector::nsXPCOMDetector(PRUint8 aItems, nsVerifier **aVer, nsEUCStatistics** aStatisticsSet)
    : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
-  NS_INIT_ISUPPORTS();
   mObserver = nsnull;
 }
 //----------------------------------------------------------
@@ -538,7 +537,6 @@ void nsXPCOMDetector::Report(const char* charset)
 nsXPCOMStringDetector::nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer, nsEUCStatistics** aStatisticsSet)
    : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
-  NS_INIT_ISUPPORTS();
 }
 //----------------------------------------------------------
 nsXPCOMStringDetector::~nsXPCOMStringDetector()

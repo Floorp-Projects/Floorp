@@ -129,8 +129,6 @@ NS_IMPL_ISUPPORTS1(nsFT2FontCatalog, nsIFontCatalogService)
 
 nsFT2FontCatalog::nsFT2FontCatalog()
 {
-  NS_INIT_ISUPPORTS();
-  
 #if (defined(MOZ_ENABLE_FREETYPE2))
   nsresult rv;
   mAvailableFontCatalogService = PR_FALSE;

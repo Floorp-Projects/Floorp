@@ -190,8 +190,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mExpectedCRC32(0)
 #endif
 {
-  NS_INIT_ISUPPORTS(); 
-
   mBodyContext=new nsDTDContext();
 
 #ifdef  RICKG_DEBUG

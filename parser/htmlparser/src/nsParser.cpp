@@ -300,8 +300,6 @@ static PRBool gDumpContent=PR_FALSE;
  *  @return   
  */
 nsParser::nsParser(nsITokenObserver* anObserver) {
-  NS_INIT_ISUPPORTS();
-
 #ifdef NS_DEBUG
   if(!gDumpContent) {
     gDumpContent=(PR_GetEnv("PARSER_DUMP_CONTENT"))? PR_TRUE:PR_FALSE;

@@ -52,7 +52,6 @@
  * Start of nsULE Public Functions
  */
 nsULE::nsULE() {
-  NS_INIT_ISUPPORTS(); // For Reference Counting
 }
 
 nsULE::~nsULE() {

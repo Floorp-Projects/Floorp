@@ -51,7 +51,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocumentCharsetInfo, nsIDocumentCharsetInfo);
 
 nsDocumentCharsetInfo::nsDocumentCharsetInfo() 
 {
-  NS_INIT_ISUPPORTS();
   mParentCharsetSource = 0;
 }
 

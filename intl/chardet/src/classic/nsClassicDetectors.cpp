@@ -218,7 +218,6 @@ NS_IMPL_ISUPPORTS1(nsClassicDetector, nsICharsetDetector)
 //----------------------------------------------------------
 nsClassicDetector::nsClassicDetector(const char* language)
 {
-  NS_INIT_ISUPPORTS();
   mObserver = nsnull;
   PL_strcpy(mLanguage, language);
 }
@@ -273,7 +272,6 @@ NS_IMPL_ISUPPORTS1(nsClassicStringDetector, nsIStringCharsetDetector)
 //----------------------------------------------------------
 nsClassicStringDetector::nsClassicStringDetector(const char* language)
 {
-  NS_INIT_ISUPPORTS();
   PL_strcpy(mLanguage, language);
 }
 //----------------------------------------------------------

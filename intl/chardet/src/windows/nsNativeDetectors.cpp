@@ -129,7 +129,6 @@ NS_IMPL_ISUPPORTS1(nsNativeDetector, nsICharsetDetector)
 nsNativeDetector::nsNativeDetector(PRUint32 aCodePage)
 {
   HRESULT hr = CoInitialize(NULL);
-  NS_INIT_ISUPPORTS();
   mObserver = nsnull;
   mCodePage = aCodePage;
   mMultiLanguage = NULL;
@@ -220,7 +219,6 @@ NS_IMPL_ISUPPORTS1(nsNativeStringDetector, nsIStringCharsetDetector)
 nsNativeStringDetector::nsNativeStringDetector(PRUint32 aCodePage)
 {
   HRESULT hr = CoInitialize(NULL);
-  NS_INIT_ISUPPORTS();
   mCodePage = aCodePage;
   mMultiLanguage = NULL;
 }
@@ -275,7 +273,6 @@ class nsNativeDetectorFactory : public nsIFactory {
 
 public:
    nsNativeDetectorFactory(PRUint32 aCodePage, PRBool stringBase) {
-     NS_INIT_ISUPPORTS();
      mCodePage = aCodePage;
      mStringBase = stringBase;
    }

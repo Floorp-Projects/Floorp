@@ -68,7 +68,6 @@ Display       *nsImageXlib::mDisplay       = nsnull;
 nsImageXlib::nsImageXlib()
 {
   PR_LOG(ImageXlibLM, PR_LOG_DEBUG, ("nsImageXlib::nsImageXlib()\n"));
-  NS_INIT_ISUPPORTS();
   mImageBits = nsnull;
   mAlphaBits = nsnull;
   mWidth = 0;

@@ -62,7 +62,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 class RobotSinkObserver : public nsIRobotSinkObserver {
 public:
   RobotSinkObserver() {
-    NS_INIT_ISUPPORTS();
   }
 
   virtual ~RobotSinkObserver() {
@@ -148,8 +147,6 @@ class CStreamListener:  public nsIWebProgressListener,
 {
 public:
   CStreamListener() {
-    NS_INIT_ISUPPORTS();
-
   }
 
   virtual ~CStreamListener() {

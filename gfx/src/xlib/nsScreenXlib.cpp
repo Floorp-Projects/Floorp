@@ -44,8 +44,6 @@
 
 nsScreenXlib :: nsScreenXlib (  )
 {
-  NS_INIT_ISUPPORTS();
-
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
   // has changed.

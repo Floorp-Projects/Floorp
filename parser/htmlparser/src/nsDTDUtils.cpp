@@ -1577,7 +1577,6 @@ NS_IMPL_ISUPPORTS1(nsObserverEntry, nsIObserverEntry)
 
 nsObserverEntry::nsObserverEntry(const nsAString& aTopic) : mTopic(aTopic) 
 {
-  NS_INIT_ISUPPORTS();
   memset(mObservers, 0, sizeof(mObservers));
 }
 

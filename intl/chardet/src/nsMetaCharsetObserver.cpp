@@ -67,7 +67,6 @@ static eHTMLTags gWatchTags[] =
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::nsMetaCharsetObserver()
 {
-  NS_INIT_ISUPPORTS();
   bMetaCharsetObserverStarted = PR_FALSE;
   nsresult res;
   mAlias = nsnull;

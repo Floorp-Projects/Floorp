@@ -109,7 +109,6 @@ nsCyrXPCOMDetector:: nsCyrXPCOMDetector(PRUint8 aItems,
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
-    NS_INIT_ISUPPORTS();
     mObserver = nsnull;
 }
 
@@ -165,7 +164,6 @@ nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(PRUint8 aItems,
                       const char **aCharsets)
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 //---------------------------------------------------------------------
