@@ -77,6 +77,7 @@ TOOLKIT_CPPSRCS_gtk	:= nsGTKMain.cpp nsGTKMenu.cpp
 TOOLKIT_CPPSRCS_motif	:= nsMotifMenu.cpp nsMotifMain.cpp
 TOOLKIT_CPPSRCS_photon	:= nsPhMain.cpp nsPhMenu.cpp
 TOOLKIT_CPPSRCS_xlib	:= nsXlibMain.cpp
+TOOLKIT_CPPSRCS_qt		:= nsQTMain.cpp nsQTMenu.cpp moc_nsQTMenu.cpp
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE	= $(srcdir)/viewer-beos.rsrc
