@@ -109,14 +109,13 @@
        </hbox>
        <separator class="thin"/>
        <vbox flex="1">
+          <data id="cookieBehavior" prefstring="network.cookie.cookieBehavior" preftype="int"/>
           <checkbox id="enableCookies"
-                    oncommand="updateBroadcaster(!this.checked);"
-                    label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
-                    prefstring="network.cookie.enable"/>
+                    oncommand="updateCookieBehavior();updateCookieBroadcaster();"
+                    label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"/>
           <checkbox id="enableCookiesForOriginatingSiteOnly" observes="cookieBroadcaster"
                     label="&forOriginatingSiteOnly.label;" accesskey="&forOriginatingSiteOnly.accesskey;"
-                    prefstring="network.cookie.enableForOriginatingWebsiteOnly"
-                    style="margin-left: 23px;"/>
+                    style="margin-left: 23px;" oncommand="updateCookieBehavior();"/>
           <checkbox id="enableCookiesForCurrentSessionOnly" observes="cookieBroadcaster"
                     label="&forCurrentSessionOnly.label;" accesskey="&forCurrentSessionOnly.accesskey;"
                     prefstring="network.cookie.enableForCurrentSessionOnly"
@@ -136,7 +135,7 @@
       <hbox align="center">
         <label value="&diskCache.label;" accesskey="&diskCache.accesskey;" control="browserCacheDiskCache"/>
         <textbox id="browserCacheDiskCache" size="8" preftype="int"
-                  prefstring="browser.cache.disk.capacity" prefattribute="value"/>
+                  prefstring="browser.cache.disk.capacity"/>
         <label value="&kbytes;"/>
       </hbox>    
     </expander>

@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 # 
 # The contents of this file are subject to the Mozilla Public License Version
@@ -20,6 +20,8 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@netscape.com> (Original Author)
+#   Dan Dwitte <dwitte@stanford.edu>
+#   Pierre Chanial <p_ch@verizon.net>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,32 +39,26 @@
 
 #define DL_RETAIN_WINDOW 0
 
-var _elementIDs = ["histDay", "browserCacheDiskCache", "enableCookies",
-                    "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
-                    "enableCookiesButAskFirst", "enableFormFill", "enablePasswords"];
+var _elementIDs = ["histDay", "browserCacheDiskCache", "cookieBehavior", "enableCookies",
+                   "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
+                   "enableCookiesButAskFirst", "enableFormFill", "enablePasswords"];
 
 function Startup() {
-  var cookiesEnabled = document.getElementById("enableCookies").checked;
-  updateBroadcaster(!cookiesEnabled);
 
+  // Initially disable the clear buttons when needed
   var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
   document.getElementById("history").setAttribute("cleardisabled", globalHistory.count == 0);
   
-  // Initially disable the cookies clear button if there are no saved cookies
   var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"].getService();
   cookieMgr = cookieMgr.QueryInterface(Components.interfaces.nsICookieManager);
-
   var e = cookieMgr.enumerator;
   document.getElementById("cookies").setAttribute("cleardisabled", !e.hasMoreElements());
 
-  // Initially disable the password clear button if there are no saved passwords
   var passwdMgr = Components.classes["@mozilla.org/passwordmanager;1"].getService();
   passwdMgr = passwdMgr.QueryInterface(Components.interfaces.nsIPasswordManager);
-
   e = passwdMgr.enumerator;
   document.getElementById("passwords").setAttribute("cleardisabled", !e.hasMoreElements());
 
-  // Initially disable the downloads clear button if there the downloads list is empty
   try {
     e = PrivacyPanel.getDownloads();
     var hasDownloads = e.hasMoreElements();
@@ -72,11 +68,40 @@ function Startup() {
   }
   document.getElementById("downloads").setAttribute("cleardisabled", !hasDownloads);
   
-  // Initially disable the form history clear button if the history is empty
   var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
                               .getService(Components.interfaces.nsIFormHistory);
   document.getElementById("formfill").setAttribute("cleardisabled", formHistory.rowCount == 0);
   
+  // set up the pref checkboxes according to the network.cookie.cookieBehavior pref
+  // 0: enabled
+  // 1: enabled for originating website only
+  // 2: disabled
+  var cookieBehavior = document.getElementById("cookieBehavior").getAttribute("value");
+
+  // migrate and delete old firebird cookie prefs, if they exist.
+  // to be removed after the 0.9 release
+  var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  try {
+    pref.clearUserPref("network.cookie.enable");
+    // No error: it means this pref was not the default one, cookie were disabled.
+    cookieBehavior = 2;
+    document.getElementById("cookieBehavior").setAttribute("value", 2)
+  } catch (e) {
+    try {
+      pref.clearUserPref("network.cookie.enableForOriginatingWebsiteOnly");
+      // No error: it means that enableForOriginatingWebsiteOnly was true.
+      cookieBehavior = 1;
+      document.getElementById("cookieBehavior").setAttribute("value", 1)
+    } catch (e) {
+    // here, either we already have migrated the cookie pref
+    // or the new and old behavior are the same (0). In any case: nothing to do.
+    }
+  }
+  
+  document.getElementById("enableCookies").checked = cookieBehavior != 2;
+  document.getElementById("enableCookiesForOriginatingSiteOnly").checked = cookieBehavior == 1;
+  updateCookieBroadcaster();
+
   var categories = document.getElementById("privacyCategories");
   categories.addEventListener("clear", PrivacyPanel.clear, false);
 
@@ -284,9 +309,8 @@ var PrivacyPanel = {
       }
       return false;
     }
-  }
-  
-};
+  }  
+}
 
 function viewCookies() 
 {
@@ -306,17 +330,22 @@ function viewSignons()
                       "chrome,resizable=yes", "8");
 }
 
-function updateBroadcaster(aDisable)
+function updateCookieBehavior()
+{
+  var cookiesEnabled = document.getElementById("enableCookies").checked;
+  var cookiesOriginating = document.getElementById("enableCookiesForOriginatingSiteOnly").checked;
+  document.getElementById("cookieBehavior").setAttribute("value", cookiesEnabled ? (cookiesOriginating ? 1 : 0) : 2);
+}
+
+function updateCookieBroadcaster()
 {
   var broadcaster = document.getElementById("cookieBroadcaster");
-  var checkbox1 = document.getElementById("enableCookiesForOriginatingSiteOnly");
-  var checkbox2 = document.getElementById("enableCookiesForCurrentSessionOnly");
-  var checkbox3 = document.getElementById("enableCookiesButAskFirst");
-  if (aDisable) {
+  var checkbox    = document.getElementById("enableCookies");
+  if (!checkbox.checked) {
     broadcaster.setAttribute("disabled", "true");
-    checkbox1.checked = false;
-    checkbox2.checked = false;
-    checkbox3.checked = false;
+    document.getElementById("enableCookiesForOriginatingSiteOnly").checked = false;
+    document.getElementById("enableCookiesForCurrentSessionOnly").checked = false;
+    document.getElementById("enableCookiesButAskFirst").checked = false;
   }
   else
     broadcaster.removeAttribute("disabled");
