@@ -613,8 +613,8 @@ static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
   for (;;) {
     uniChar = aWin->mIMECompositionUniString;
     uniCharSize = aWin->mIMECompositionUniStringSize - 1;
-    aDecoder->Convert(uniChar, 0, &uniCharSize, (char*)aEvent->string,
-                      0, &srcLen);
+    aDecoder->Convert((char*)aEvent->string, uniChar, &uniCharSize,
+                      &srcLen);
     if (srcLen == aEvent->length &&
         uniCharSize < aWin->mIMECompositionUniStringSize - 1) {
       break;
