@@ -600,21 +600,20 @@ function FolderPaneOnClick(event)
 {
 	debug("in FolderPaneClick()\n");
 
-    var targetclass = event.target.getAttribute('class');
-    debug('targetclass = ' + targetclass + '\n');
+  var t = event.originalTarget;
 
-    if (targetclass == 'tree-cell-twisty') {
+    if (t.getAttribute('twisty') == 'true') {
         // The twisty is nested three below the treeitem:
         // <treeitem>
         //   <treerow>
         //     <treecell>
         //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
-        var treeitem = event.target.parentNode.parentNode.parentNode;
+        var treeitem = t.parentNode.parentNode.parentNode;
 		var open = treeitem.getAttribute('open');
 		if(open == "true") {
 			//dump("twisty open\n");
 
-			var item = event.target.parentNode.parentNode.parentNode;
+			var item = t.parentNode.parentNode.parentNode;
 			if (item.localName == "treeitem") {
 				var isServer = (treeitem.getAttribute('IsServer') == "true");
 				if (isServer) {
@@ -642,7 +641,7 @@ function FolderPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-		var item = event.target.parentNode.parentNode;
+		var item = t.parentNode.parentNode;
 		if (item.localName == "treeitem")
 			FolderPaneDoubleClick(item);
 	}

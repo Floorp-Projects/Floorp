@@ -95,7 +95,7 @@ Rights Reserved.
                 <treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
                   <treerow>
                     <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#LeafName"/>
-                    <treecell class="treecell-image subscribedcol" allowevents="true" onclick="return top.ReverseStateFromNode(event.target.parentNode.parentNode.parentNode)" value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
+                    <treecell class="treecell-image subscribedcol" allowevents="true" onclick="return top.ReverseStateFromNode(event.originalTarget.parentNode.parentNode.parentNode)" value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
                     <treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
                   </treerow>
                 </treeitem>

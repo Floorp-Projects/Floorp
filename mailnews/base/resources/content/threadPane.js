@@ -21,33 +21,35 @@
 var gOldNumSelected = 0;
 function ThreadPaneOnClick(event)
 {
-    if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem" &&
-        event.target.localName != "image")
+  var t = event.originalTarget;
+
+    if (t.localName != "treecell" &&
+        t.localName != "treeitem" &&
+        t.localName != "image")
         return;
 
-    var targetclass = event.target.getAttribute('class');
-    
-    if (event.target.localName == "image" && targetclass != 'tree-cell-twisty')
-      targetclass = event.target.parentNode.getAttribute('class');
+  var targetclass = "";
+
+    if (t.localName == "image" && (t.getAttribute('twisty') != 'true'))
+      targetclass = t.parentNode.getAttribute('class');
 
     //dump('targetclass = ' + targetclass + '\n');
 
 	if(targetclass.indexOf('unreadcol') != -1)
 	{
-		ToggleMessageRead(event.target.parentNode.parentNode.parentNode);
+		ToggleMessageRead(t.parentNode.parentNode.parentNode);
 	}
 	if(targetclass.indexOf('flagcol') != -1)
 	{
-		ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode);
+		ToggleMessageFlagged(t.parentNode.parentNode.parentNode);
 	}
-    else if (targetclass == 'tree-cell-twisty') {
+    else if (t.getAttribute('twisty') == 'true') {
         // The twisty is nested three below the treeitem:
         // <treeitem>
         //   <treerow>
         //     <treecell>
         //         <titledbutton class="tree-cell-twisty"> <!-- anonymous -->
-        var treeitem = event.target.parentNode.parentNode.parentNode;
+        var treeitem = t.parentNode.parentNode.parentNode;
 		var open = treeitem.getAttribute('open');
 		if(open == "true")
 		{
@@ -57,7 +59,7 @@ function ThreadPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
+		ThreadPaneDoubleClick(t.parentNode.parentNode);
 	}
 }
 

@@ -326,13 +326,14 @@ function ReverseState(uri)
 
 function SubscribeOnClick(event)
 {
+  var t = event.originalTarget;
+
 	if (event.detail == 2) {
-		ReverseStateFromNode(event.target.parentNode.parentNode);
+		ReverseStateFromNode(t.parentNode.parentNode);
 	}
 	else {
- 		var targetclass = event.target.getAttribute('class');
-		if (targetclass == 'tree-cell-twisty') {
-        	var treeitem = event.target.parentNode.parentNode.parentNode;
+ 		if (t.getAttribute('twisty') == 'true') {
+        	var treeitem = t.parentNode.parentNode.parentNode;
 			var open = treeitem.getAttribute('open');
 			if(open == "true") {
 				var uri = treeitem.getAttribute("id");	
@@ -347,7 +348,7 @@ function SubscribeOnClick(event)
 			}
 		}
 		else {
-			var name = event.target.parentNode.parentNode.getAttribute('name');
+			var name = t.parentNode.parentNode.getAttribute('name');
 			if (name && (name.length > 0)) {
 				gNameField.setAttribute('value',name);
 			}
