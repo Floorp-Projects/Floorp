@@ -421,7 +421,7 @@ PRInt32 nsRangeList::GetAnchorOffset()
 
 void nsRangeList::setAnchor(nsIDOMNode* node, PRInt32 offset)
 {
-  mAnchorNode = node;
+  mAnchorNode = dont_QueryInterface(node);
   mAnchorOffset = offset;
 }
 
@@ -437,7 +437,7 @@ PRInt32 nsRangeList::GetFocusOffset()
 
 void nsRangeList::setFocus(nsIDOMNode* node, PRInt32 offset)
 {
-  mFocusNode = node;
+  mFocusNode = dont_QueryInterface(node);
   mFocusOffset = offset;
 }
 
@@ -713,8 +713,8 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
       return NS_ERROR_FAILURE;
     if (NS_FAILED(parent->GetParentNode(getter_AddRefs(parent2))) || !parent2)
       return NS_ERROR_FAILURE;
-    parent = nsnull;//just force a release now even though we dont have to.
-    parent2 = nsnull;
+    parent = nsCOMPtr<nsIDOMNode>();//just force a release now even though we dont have to.
+    parent2 = nsCOMPtr<nsIDOMNode>();
 
     nsIFrame *frame;
     nsIFrame *anchor;
@@ -912,14 +912,14 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   nsCOMPtr<nsIContent> anchorContent;
   nsCOMPtr<nsIContent> frameContent;
   if (GetAnchorNode() && GetFocusNode()){
-    anchorContent =  GetAnchorNode();
-    frameContent = GetFocusNode();
+    anchorContent =  do_QueryInterface(GetAnchorNode());
+    frameContent = do_QueryInterface(GetFocusNode());
   }
   for (PRInt32 i =0; i<mRangeArray->Count(); i++){
     //end content and start content do NOT necessarily mean anchor and focus frame respectively
     PRInt32 anchorOffset = -1; //the frames themselves can talk to the presentation manager.  we will tell them
     PRInt32 frameOffset = -1;  // where we would "like" to have the anchor pt.  actually we count on it.
-    range = (nsISupports *)mRangeArray->ElementAt(i);
+    range = do_QueryInterface((nsISupports *)mRangeArray->ElementAt(i));
     DEBUG_OUT_RANGE(range);
     range->GetStartParent(getter_AddRefs(startNode));
     range->GetStartOffset(&startOffset);
@@ -1000,7 +1000,7 @@ nsresult nsRangeList::NotifySelectionListeners()
 
   for (PRInt32 i = 0; i < mSelectionListeners->Count();i++)
   {
-  	nsCOMPtr<nsISupports>	thisEntry(mSelectionListeners->ElementAt(i));
+  	nsCOMPtr<nsISupports>	thisEntry(dont_QueryInterface(mSelectionListeners->ElementAt(i)));
     nsCOMPtr<nsIDOMSelectionListener> thisListener(do_QueryInterface(thisEntry));
     if (thisListener)
     	thisListener->NotifySelectionChanged();
@@ -1099,7 +1099,7 @@ nsRangeList::IsCollapsed(PRBool* aIsCollapsed)
     *aIsCollapsed = PR_FALSE;
     return NS_OK;
   }
-  nsCOMPtr<nsISupports> nsisup (mRangeArray->ElementAt(0));
+  nsCOMPtr<nsISupports> nsisup (dont_QueryInterface(mRangeArray->ElementAt(0)));
   nsCOMPtr<nsIDOMRange> range;
   if (!NS_SUCCEEDED(nsisup->QueryInterface(kIDOMRangeIID,
                                            getter_AddRefs(range))))
@@ -1149,7 +1149,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   PRInt32 i;
   for (i = 0; i < mRangeArray->Count(); i++)
   {
-    nsCOMPtr<nsIDOMRange> range (mRangeArray->ElementAt(i));
+    nsCOMPtr<nsIDOMRange> range (do_QueryInterface(mRangeArray->ElementAt(i)));
 
     nsCOMPtr<nsIDOMNode> endNode;
     PRInt32 endOffset;

@@ -208,7 +208,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   if (!outEndOffset)
     return false;
     
-  nsCOMPtr<nsIDOMNode> theDOMNode(aNode);
+  nsCOMPtr<nsIDOMNode> theDOMNode( do_QueryInterface(aNode) );
   PRInt32 indx;
   theDOMNode->GetParentNode(getter_AddRefs(*outParent));
   
@@ -217,7 +217,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
     // can't make a parent/offset pair to represent start or 
     // end of the root node, becasue it has no parent.
     // so instead represent it by (node,0) and (node,numChildren)
-    *outParent = aNode;
+    *outParent = do_QueryInterface(aNode);
     nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
     if (!cN)
       return false;
@@ -880,7 +880,7 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
   
-  nsCOMPtr<nsIDOMNode>theParent(aParent);
+  nsCOMPtr<nsIDOMNode>theParent( dont_QueryInterface(aParent) );
     
   // must be in same document as endpoint, else 
   // endpoint is collapsed to new start.
@@ -901,7 +901,7 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling(aSibling);
+  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -910,7 +910,7 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling(aSibling);
+  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -923,7 +923,7 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   
   if (!aParent) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMNode>theParent(aParent);
+  nsCOMPtr<nsIDOMNode>theParent( dont_QueryInterface(aParent) );
   
   // must be in same document as startpoint, else 
   // endpoint is collapsed to new end.
@@ -944,7 +944,7 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling(aSibling);
+  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling);
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -953,7 +953,7 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
-  nsCOMPtr<nsIDOMNode>theSibling(aSibling);
+  nsCOMPtr<nsIDOMNode>theSibling( dont_QueryInterface(aSibling) );
   PRInt32 indx = IndexOf(theSibling) + 1;
   nsIDOMNode *nParent;
   theSibling->GetParentNode(&nParent);
@@ -984,7 +984,7 @@ nsresult nsRange::Unposition()
 nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
   nsCOMPtr<nsIDOMNode> parent;
-  nsCOMPtr<nsIDOMNode> theNode(aN);
+  nsCOMPtr<nsIDOMNode> theNode( dont_QueryInterface(aN) );
   
   nsresult res = aN->GetParentNode(getter_AddRefs(parent));
   if (!NS_SUCCEEDED(res))
@@ -996,7 +996,7 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
-  nsCOMPtr<nsIDOMNode> theNode(aN);
+  nsCOMPtr<nsIDOMNode> theNode( dont_QueryInterface(aN) );
   nsCOMPtr<nsIDOMNodeList> aChildNodes;
   
   nsresult res = aN->GetChildNodes(getter_AddRefs(aChildNodes));
@@ -1120,7 +1120,7 @@ nsresult nsRange::DeleteContents()
   // remove the nodes on the delete list
   while (deleteList.Count())
   {
-    cN = NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(0));
+    cN = do_QueryInterface(NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(0)));
     res = cN->GetParent(*getter_AddRefs(cParent));
     res = cParent->IndexOf(cN,indx);
     res = cParent->RemoveChildAt(indx, PR_TRUE);
@@ -1502,7 +1502,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   // sanity check - null nodes shouldn't have enclosed ranges
   if (!aParentNode) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> parent(aParentNode);
+  nsCOMPtr<nsIContent> parent( dont_QueryInterface(aParentNode) );
   // quick return if no range list
   nsVoidArray *theRangeList;
   parent->GetRangeList(theRangeList);
@@ -1517,7 +1517,7 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   if (NS_SUCCEEDED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
+  while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1547,8 +1547,8 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   // sanity check - null nodes shouldn't have enclosed ranges
   if (!aParentNode) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> parent(aParentNode);
-  nsCOMPtr<nsIContent> removed(aRemovedNode);
+  nsCOMPtr<nsIContent> parent( dont_QueryInterface(aParentNode) );
+  nsCOMPtr<nsIContent> removed( dont_QueryInterface(aRemovedNode) );
   // quick return if no range list
   nsVoidArray *theRangeList;
   parent->GetRangeList(theRangeList);
@@ -1564,7 +1564,7 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   // any ranges that are in the parentNode may need to have offsets updated
-  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
+  while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1605,8 +1605,8 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   // but we do need to pop out any range endpoints inside the subtree
   // rooted by aReplacedNode.
   
-  nsCOMPtr<nsIContent> parent(aParentNode);
-  nsCOMPtr<nsIContent> replaced(aReplacedNode);
+  nsCOMPtr<nsIContent> parent( dont_QueryInterface(aParentNode) );
+  nsCOMPtr<nsIContent> replaced( dont_QueryInterface(aReplacedNode) );
   nsCOMPtr<nsIDOMNode> parentDomNode; 
   nsresult res;
   
@@ -1625,7 +1625,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   // sanity check - null nodes shouldn't have enclosed ranges
   if (!aTextNode) return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIContent> textNode(aTextNode);
+  nsCOMPtr<nsIContent> textNode( dont_QueryInterface(aTextNode) );
   nsVoidArray *theRangeList;
   aTextNode->GetRangeList(theRangeList);
   // the caller already checked to see if there was a range list
@@ -1640,7 +1640,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   // any ranges that are in the textNode may need to have offsets updated
-  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))
+  while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))))
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);

@@ -142,9 +142,7 @@ nsresult nsContentIterator::QueryInterface(const nsIID& aIID,
  ******************************************************/
 
 nsContentIterator::nsContentIterator() :
-  mCurNode(nsnull),
-  mFirst(nsnull),
-  mLast(nsnull),
+  // don't need to explicitly initialize |nsCOMPtr|s, they will automatically be NULL
   mIsDone(PR_FALSE)
 {
   NS_INIT_REFCNT();
@@ -166,9 +164,9 @@ nsresult nsContentIterator::Init(nsIContent* aRoot)
   if (!aRoot) 
     return NS_ERROR_NULL_POINTER; 
 
-  nsCOMPtr<nsIContent> root(aRoot);
+  nsCOMPtr<nsIContent> root( dont_QueryInterface(aRoot) );
   mFirst = GetDeepFirstChild(root); 
-  mLast = aRoot;
+  mLast = root;
   mCurNode = mFirst;
   return NS_OK;
 }

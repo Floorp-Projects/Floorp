@@ -707,7 +707,7 @@ nsProgressMeterFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                            PR_FALSE,
                                            &newStyleContext);
   if (newStyleContext != aCurrentStyle->get())
-    *aCurrentStyle = newStyleContext;
+    *aCurrentStyle = dont_QueryInterface(newStyleContext);
     
 } // RefreshStyleContext
 
@@ -720,7 +720,7 @@ nsProgressMeterFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsProgressMeterFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
 {
-  nsCOMPtr<nsIStyleContext> old ( mStyleContext );
+  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
   
   // this re-resolves |mStyleContext|, so it may change
   nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 

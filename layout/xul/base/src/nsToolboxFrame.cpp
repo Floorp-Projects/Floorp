@@ -119,7 +119,7 @@ nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
                                            PR_FALSE,
                                            &newStyleContext);
   if (newStyleContext != aCurrentStyle->get())
-    *aCurrentStyle = newStyleContext;
+    *aCurrentStyle = dont_QueryInterface(newStyleContext);
     
 } // RefreshStyleContext
 
@@ -132,7 +132,7 @@ nsToolboxFrame :: RefreshStyleContext(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsToolboxFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
 {
-  nsCOMPtr<nsIStyleContext> old ( mStyleContext );
+  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
   
   // this re-resolves |mStyleContext|, so it may change
   nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
