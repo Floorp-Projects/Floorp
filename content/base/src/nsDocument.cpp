@@ -601,6 +601,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3Document)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
@@ -3377,13 +3378,12 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  // XXX Not completely correct, since you can still have unnormalized
-  // text nodes as immediate children of the document.
-  if (mRootContent) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mRootContent));
+  PRInt32 count = mChildren.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren[i]));
 
     if (node) {
-      return node->Normalize();
+      node->Normalize();
     }
   }
 
@@ -3576,6 +3576,144 @@ nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocument::GetActualEncoding(nsAString& aActualEncoding)
+{
+  return GetCharacterSet(aActualEncoding);
+}
+
+NS_IMETHODIMP
+nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
+{
+  if (mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
+      mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
+    // XXX We don't store the encoding given in the xml declaration.
+    // For now, just output the actualEncoding which we do store.
+    GetActualEncoding(aXmlEncoding);
+  } else {
+    SetDOMStringToNull(aXmlEncoding);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetXmlEncoding(const nsAString& aXmlEncoding)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetXmlStandalone(PRBool *aXmlStandalone)
+{
+  *aXmlStandalone = 
+    mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
+    mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS &&
+    mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetXmlStandalone(PRBool aXmlStandalone)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetXmlVersion(nsAString& aXmlVersion)
+{
+  // If there is no declaration, the value is "1.0".
+
+  // XXX We only support "1.0", so always output "1.0" until that changes.
+  aXmlVersion.Assign(NS_LITERAL_STRING("1.0"));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
+{
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+}
+
+NS_IMETHODIMP
+nsDocument::GetStrictErrorChecking(PRBool *aStrictErrorChecking)
+{
+  // This attribute is true by default, and we don't really support it being false.
+  *aStrictErrorChecking = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetStrictErrorChecking(PRBool aStrictErrorChecking)
+{
+  // We don't really support non-strict error checking, so just no-op for now.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetDocumentURI(nsAString& aDocumentURI)
+{
+  if (mDocumentURL) {
+    nsCAutoString uri;
+    mDocumentURL->GetSpec(uri);
+    CopyUTF8toUTF16(uri, aDocumentURI);
+  } else {
+    SetDOMStringToNull(aDocumentURI);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetDocumentURI(const nsAString& aDocumentURI)
+{
+  // Not allowing this yet, need to think about security ramifications first.
+  // We use mDocumentURL to get principals for this document.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::AdoptNode(nsIDOMNode *source, nsIDOMNode **aReturn)
+{
+  // Not allowing this yet, need to think about the security ramifications
+  // of giving a node a brand new node info.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::GetConfig(nsIDOMDOMConfiguration **aConfig)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::NormalizeDocument()
+{
+  // We don't support DOMConfigurations yet, so this just
+  // does a straight shot of normalization.
+  return Normalize();
+}
+
+NS_IMETHODIMP
+nsDocument::RenameNode(nsIDOMNode *aNode,
+                       const nsAString& namespaceURI,
+                       const nsAString& qualifiedName,
+                       nsIDOMNode **aReturn)
+{
+  PRUint16 nodeType;
+  aNode->GetNodeType(&nodeType);
+  if (nodeType == nsIDOMNode::ELEMENT_NODE ||
+      nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
+    // XXXcaa Write me - Coming soon to a document near you!
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+}
+
 
 NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)

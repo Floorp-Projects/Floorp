@@ -46,6 +46,7 @@
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"
 #include "nsIDOMXMLDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNSDocument.h"
@@ -230,7 +231,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentRange,
                    public nsIDOMDocumentTraversal,
                    public nsIDOMDocumentXBL,
-                   public nsIDOM3Node,
+                   public nsIDOM3Document,
                    public nsSupportsWeakReference,
                    public nsIDOMEventReceiver,
                    public nsIDOM3EventTarget,
@@ -525,6 +526,9 @@ public:
 
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
+
+  // nsIDOM3Document
+  NS_DECL_NSIDOM3DOCUMENT
 
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT

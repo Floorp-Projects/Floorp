@@ -62,6 +62,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOM3Document.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMEvent.h"
@@ -1219,9 +1220,7 @@ nsDOMClassInfo::RegisterExternalClasses()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = gNameSpaceManager->RegisterExternalInterfaces(PR_TRUE);
-
-  return rv;
+  return gNameSpaceManager->RegisterExternalInterfaces(PR_TRUE);
 }
 
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
@@ -1378,6 +1377,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
@@ -1483,6 +1483,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END_WITH_XPATH
 
@@ -1922,6 +1923,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
 
@@ -2006,6 +2008,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNode)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Document)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
@@ -4424,7 +4427,7 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsCOMPtr<nsIDocument> doc;
 
-  if  (node) {
+  if (node) {
     nsCOMPtr<nsIDOMDocument> domdoc;
     node->GetOwnerDocument(getter_AddRefs(domdoc));
     doc = do_QueryInterface(domdoc);
@@ -4760,8 +4763,6 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       rv = WrapNative(cx, ::JS_GetGlobalObject(cx), item,
                       NS_GET_IID(nsISupports), vp);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      return NS_OK;
     }
 
     return NS_OK; // Don't fall through to nsArraySH::GetProperty() here
