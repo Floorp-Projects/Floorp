@@ -316,23 +316,31 @@ NS_IMETHODIMP MyFactory::CreateInstance(
 
   *aResult = NULL;
 
-  nsISupports *inst = nsnull;
+  nsCyrXPCOMDetector *inst1 = nsnull;
+  nsCyrXPCOMStringDetector *inst2 = nsnull;
  
   if (mCID.Equals(kRUProbDetectorCID)) {
-      inst = new nsCyrXPCOMDetector(5, gCyrillicCls, gRussian);
+      inst1 = new nsCyrXPCOMDetector(5, gCyrillicCls, gRussian);
   } else if (mCID.Equals(kRUStringProbDetectorCID)) {
-      inst = new nsCyrXPCOMStringDetector(5, gCyrillicCls, gRussian);
+      inst2 = new nsCyrXPCOMStringDetector(5, gCyrillicCls, gRussian);
   } else if (mCID.Equals(kUKProbDetectorCID)) {
-      inst = new nsCyrXPCOMDetector(5, gCyrillicCls, gUkrainian);
+      inst1 = new nsCyrXPCOMDetector(5, gCyrillicCls, gUkrainian);
   } else if (mCID.Equals(kUKStringProbDetectorCID)) {
-      inst = new nsCyrXPCOMStringDetector(5, gCyrillicCls, gUkrainian);
+      inst2 = new nsCyrXPCOMStringDetector(5, gCyrillicCls, gUkrainian);
   }
-  if(NULL == inst) {
+  if((NULL == inst1) && (NULL == inst2)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult res =inst->QueryInterface(aIID, aResult);
+  nsresult res = NS_OK;
+  if(inst1)
+      res =inst1->QueryInterface(aIID, aResult);
+  else
+      res =inst2->QueryInterface(aIID, aResult);
   if(NS_FAILED(res)) {
-     delete inst;
+     if(inst1)
+       delete inst1;
+     if(inst2)
+       delete inst2;
   }
 
   return res;
