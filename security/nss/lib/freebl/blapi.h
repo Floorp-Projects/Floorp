@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.2 2000/05/27 01:29:35 nelsonb%netscape.com Exp $
+ * $Id: blapi.h,v 1.3 2000/07/19 23:54:43 mcgreer%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -643,10 +643,13 @@ extern SHA1Context * SHA1_Resurrect(unsigned char *space, void *arg);
 */
 
 /*
-** Reset the random number generator to its initial state. The seed data
-** is not reset. This causes the random number generator to output the
-** exact same sequence of random numbers as it originally output.
-**	"cx" the context
+** Initialize the global RNG context and give it some seed input taken
+** from the system.  This function is thread-safe and will only allow
+** the global context to be initialized once.  The seed input is likely
+** small, so it is imperative that RNG_RandomUpdate() be called with
+** additional seed data before the generator is used.  A good way to
+** provide the generator with additional entropy is to call
+** RNG_SystemInfoForRNG().  Note that NSS_Init() does exactly that.
 */
 extern SECStatus RNG_RNGInit(void);
 
@@ -662,7 +665,10 @@ extern SECStatus RNG_RandomUpdate(void *data, size_t bytes);
 */
 extern SECStatus RNG_GenerateGlobalRandomBytes(void *dest, size_t len);
 
-
+/* Destroy the global RNG context.  After a call to RNG_RNGShutdown()
+** a call to RNG_RNGInit() is required in order to use the generator again,
+** along with seed data (see the comment above RNG_RNGInit()).
+*/
 extern void  RNG_RNGShutdown(void);
 
 
