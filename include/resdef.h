@@ -98,6 +98,7 @@
 /* END NEW_STRING_LIB */
 
 #elif defined(XP_UNIX)
+
 #ifdef RESOURCE_STR_X
 #define RES_START
 #define BEGIN_STR(arg) static char *(arg)(void) {
@@ -109,6 +110,14 @@
 #define ResDef(name,id,msg)	case (id)+RES_OFFSET: return (msg);
 #define END_STR(arg) } return NULL; }
 #endif /* RESOURCE_STR_X */
+
+#elif defined(XP_BEOS)
+
+#define RES_START
+#define BEGIN_STR(arg) static char *(arg)(int32 i) { switch (i) {
+#define ResDef(name,id,msg)	case (id)+RES_OFFSET: return (msg);
+#define END_STR(arg) } return NULL; }
+
 #endif   /*  XP_WIN  */
 #endif /* RESOURCE_STR   */
 
