@@ -138,7 +138,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	void propagateDelete(in nsIMsgFolder folder, in boolean deleteStorage);
 	void recursiveDelete(in boolean deleteStorage);
 
-	void createSubfolder(in wstring folderName);
+	void createSubfolder(in wstring folderName, in nsIMsgWindow msgWindow);
   [noscript] nsIMsgFolder addSubfolder(in nsAutoString folderName);
 	/* this method ensures the storage for the folder exists.
 		For local folders, it creates the berkeley mailbox if missing.
@@ -155,7 +155,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    *
    * @param name the new name of the folder
    */
-	void rename(in wstring name);
+	void rename(in wstring name, in nsIMsgWindow msgWindow);
 	void adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
   /**
