@@ -333,9 +333,12 @@ function StyleRuleView(aObject)
     this.mSheetRules = aObject.cssRules;
   } else {
     this.mRules = this.mDOMUtils.getCSSStyleRules(aObject);
-    if (aObject.hasAttribute("style"))
-      this.mStyleAttribute =
-        new XPCNativeWrapper(aObject, "style").style;
+    if (aObject.hasAttribute("style")) {
+      try {
+        this.mStyleAttribute =
+          new XPCNativeWrapper(aObject, "style").style;
+      } catch (ex) {}
+    }
   }
 }
 
