@@ -1632,7 +1632,7 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
   nsCOMPtr<nsIDOMEvent> domEvent;
   rv = listenerManager->CreateEvent(aPresContext,
                                     nsnull, 
-                                    NS_LITERAL_STRING("MutationEvent"),
+                                    NS_LITERAL_STRING("MutationEvents"),
                                     getter_AddRefs(domEvent) );
   if ( !domEvent )
     return NS_ERROR_FAILURE;
