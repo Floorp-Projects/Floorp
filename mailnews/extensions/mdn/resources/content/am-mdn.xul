@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+
+<!--
+
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-2001 Netscape Communications Corporation. All
+Rights Reserved.
+
+-->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-mdn.dtd">
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="parent.onPanelLoaded('am-mdn.xul');">
+
+  <stringbundle id="bundle_smime" src="chrome://messenger/locale/am-mdn.properties"/> 
+  <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-mdn.js"/>
+  
+  <dialogheader title="&pane.title;"/>
+
+  <groupbox>
+
+    <caption label="&pane.title;"/>
+
+    <hbox id="prefChoices" align="center">
+      <radiogroup id="identity.use_custom_prefs" wsm_persist="true" genericattr="true" 
+                  preftype="int" prefstring="mail.identity.%identitykey%.use_custom_prefs" 
+                  oncommand="EnableDisableCustomSettings();">
+        <radio value="0" label="&useGlobalPrefs.label;"/>
+        <radio value="1" label="&useCustomPrefs.label;"/> 
+      </radiogroup>
+    </hbox>
+
+    <vbox id="returnReceiptSettings" class="indent">
+      <checkbox id="identity.request_return_receipt_on" label="&requestReceipt.label;"
+                wsm_persist="true" genericattr="true" iscontrolcontainer="true"
+                preftype="bool" prefstring="mail.identity.%identitykey%.request_return_receipt_on"/>
+
+      <vbox id="receiptArrive">
+        <description id="receiptArriveLabel">&receiptArrive.label;</description>
+        <radiogroup id="server.incorporate_return_receipt" wsm_persist="true" genericattr="true" 
+                    preftype="int" prefstring="mail.server.%identitykey%.incorporate_return_receipt">
+          <radio id="leave_in_inbox" value="0" label="&leaveIt.label;"/>
+          <radio id="move_to_sent" value="1" label="&moveToSent.label;"/> 
+        </radiogroup>
+      </vbox>
+
+      <vbox id="receiptRequest">
+        <description id="receiptRequestLabel">&requestMDN.label;</description>
+        <radiogroup id="identity.return_some_receipts" wsm_persist="true" genericattr="true" 
+                    preftype="int" prefstring="mail.identity.%identitykey%.return_some_receipts" 
+                    oncommand="EnableDisableAllowedReceipts();">
+          <radio id="never_return" value="0" label="&never.label;"/>
+          <radio id="return_some" value="1" label="&returnSome.label;"/> 
+        </radiogroup>
+
+        <hbox id="receiptSendIf" class="indent">
+          <grid>
+            <columns><column/><column/></columns>
+            <rows>
+              <row align="center">
+                <label id="notInToCcLabel">&notInToCc.label;</label>
+                <menulist id="server.mdn_not_in_to_cc" wsm_persist="true" genericattr="true" 
+                          preftype="int" prefstring="mail.server.%identitykey%.mdn_not_in_to_cc">
+                  <menupopup>
+                    <menuitem value="0" label="&neverSend.label;"/>
+                    <menuitem value="1" label="&alwaysSend.label;"/>
+                    <menuitem value="2" label="&askMe.label;"/>
+                  </menupopup>
+                </menulist>
+              </row>
+              <row align="center">
+                <label id="outsideDomainLabel">&outsideDomain.label;</label>
+                <menulist id="server.mdn_outside_domain" wsm_persist="true" genericattr="true" 
+                          preftype="int" prefstring="mail.server.%identitykey%.mdn_outside_domain">
+                  <menupopup>
+                    <menuitem value="0" label="&neverSend.label;"/>
+                    <menuitem value="1" label="&alwaysSend.label;"/>
+                    <menuitem value="2" label="&askMe.label;"/>
+                  </menupopup>
+                </menulist>
+              </row>
+              <row align="center">
+                <label id="otherCasesLabel">&otherCases.label;</label>
+                <menulist id="server.mdn_other" wsm_persist="true" genericattr="true" 
+                          preftype="int" prefstring="mail.server.%identitykey%.mdn_other">
+                  <menupopup>
+                    <menuitem value="0" label="&neverSend.label;"/>
+                    <menuitem value="1" label="&alwaysSend.label;"/>
+                    <menuitem value="2" label="&askMe.label;"/>
+                  </menupopup>
+                </menulist>
+              </row>
+            </rows>
+          </grid>
+        </hbox>
+
+      </vbox>
+
+    </vbox>
+
+  </groupbox>
+
+</page>

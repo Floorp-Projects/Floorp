@@ -1,0 +1,21 @@
+<!ENTITY pane.title                   "Return Receipts">
+<!ENTITY useGlobalPrefs.label         "Use my global return receipt preferences for this account">
+<!ENTITY useCustomPrefs.label         "Customize return receipts for this account">
+<!ENTITY requestReceipt.label         "When sending messages, always request a return receipt">
+<!ENTITY receiptArrive.label          "When a receipt arrives:">
+<!ENTITY leaveIt.label                "Leave it in my Inbox">
+<!ENTITY leaveIt.accesskey            "i">
+<!-- LOCALIZATION NOTE moveToSent.label Translate: 'Sent Mail' according to Netscape glossary -->
+<!ENTITY moveToSent.label             "Move it to my Sent Mail folder">
+<!ENTITY moveToSent.accesskey         "m">
+<!ENTITY requestMDN.label             "When I receive a request for a return receipt:">
+<!ENTITY returnSome.label             "Allow return receipts for some messages">
+<!ENTITY returnSome.accesskey         "r">
+<!ENTITY never.label                  "Never send a return receipt">
+<!ENTITY never.accesskey              "n">
+<!ENTITY notInToCc.label              "If I'm not in the To or Cc of the message:">
+<!ENTITY outsideDomain.label          "If the sender is outside my domain:">
+<!ENTITY otherCases.label             "In all other cases:">
+<!ENTITY askMe.label                  "Ask me">
+<!ENTITY alwaysSend.label             "Always send">
+<!ENTITY neverSend.label              "Never send">
