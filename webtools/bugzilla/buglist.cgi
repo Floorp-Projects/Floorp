@@ -242,8 +242,8 @@ sub GenerateSQL {
             push(@supptables, "longdescs $table");
             push(@wherepart, "$table.bug_id = bugs.bug_id");
             my $ptable = "longdescnames_";
-            push(@supptables,
-                 "INNER JOIN profiles $ptable ON $table.who = $ptable.userid");
+            push(@supptables, "profiles $ptable");
+            push(@wherepart, "$table.who = $ptable.userid");
             push(@clist, "$ptable.login_name", $type, $email);
         }
         if (@clist) {
