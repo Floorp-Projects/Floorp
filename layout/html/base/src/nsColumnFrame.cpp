@@ -127,10 +127,14 @@ nscoord ColumnFrame::GetTopMarginFor(nsIPresContext*    aCX,
     nscoord margin;
     nscoord maxNegTopMargin = 0;
     nscoord maxPosTopMargin = 0;
-    if ((margin = aKidMol->margin.top) < 0) {
-      maxNegTopMargin = -margin;
-    } else {
-      maxPosTopMargin = margin;
+
+    // XXX Style system should be zero'ing out margins for pseudo frames...
+    if (!ChildIsPseudoFrame(aKidFrame)) {
+      if ((margin = aKidMol->margin.top) < 0) {
+        maxNegTopMargin = -margin;
+      } else {
+        maxPosTopMargin = margin;
+      }
     }
   
     nscoord maxPos = PR_MAX(aState.prevMaxPosBottomMargin, maxPosTopMargin);
@@ -241,7 +245,8 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
+    // XXX Style system should do this...
+    nscoord bottomMargin = ChildIsPseudoFrame(kidFrame) ? 0 : kidMol->margin.bottom;
     NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
@@ -440,7 +445,8 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
     kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
+    // XXX Style system should do this...
+    nscoord bottomMargin = ChildIsPseudoFrame(kidFrame) ? 0 : kidMol->margin.bottom;
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -709,7 +715,8 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
 
     // Get the child's margins
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidFrame, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
+    // XXX Style system should do this...
+    nscoord bottomMargin = ChildIsPseudoFrame(kidFrame) ? 0 : kidMol->margin.bottom;
 
     // Link the child frame into the list of children and update the
     // child count
@@ -1030,7 +1037,8 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       prevKidFrame->GetStyleContext(aPresContext, kidSC);
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-      nscoord bottomMargin = kidMol->margin.bottom;
+      // XXX Style system should do this...
+      nscoord bottomMargin = ChildIsPseudoFrame(prevKidFrame) ? 0 : kidMol->margin.bottom;
       NS_RELEASE(kidSC);
 
       state.y = startKidRect.YMost();
@@ -1097,7 +1105,8 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       kidRect.y += state.y;
       PlaceChild(aPresContext, state, kidFrame, kidRect, kidMol, nsnull,
                  kidMaxElementSize);
-      nscoord bottomMargin = kidMol->margin.bottom;
+      // XXX Style system should do this...
+      nscoord bottomMargin = ChildIsPseudoFrame(kidFrame) ? 0 : kidMol->margin.bottom;
       if (bottomMargin < 0) {
         state.prevMaxNegBottomMargin = -bottomMargin;
       } else {
