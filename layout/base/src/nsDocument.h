@@ -140,6 +140,11 @@ public:
   virtual nsIScriptContextOwner *GetScriptContextOwner();
   virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
 
+  /** 
+   * Get the name space manager for this document
+   */
+  NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
+
   /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
@@ -315,6 +320,7 @@ protected:
   PRBool mDisplaySelection;
   PRBool mInDestructor;
   nsDOMStyleSheetCollection *mDOMStyleSheets;
+  nsINameSpaceManager* mNameSpaceManager;
 };
 
 #endif /* nsDocument_h___ */

@@ -53,6 +53,8 @@
 #include "nsIDOMText.h"
 #include "nsDocumentFragment.h"
 
+#include "nsINameSpaceManager.h"
+
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsICollection.h"
@@ -413,6 +415,7 @@ nsDocument::nsDocument()
     printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
   }
   mDOMStyleSheets = nsnull;
+  mNameSpaceManager = nsnull;
 
   Init();/* XXX */
 }
@@ -462,6 +465,7 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mScriptContextOwner);
   NS_IF_RELEASE(mListenerManager);
   NS_IF_RELEASE(mDOMStyleSheets);
+  NS_IF_RELEASE(mNameSpaceManager);
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -531,7 +535,9 @@ nsresult nsDocument::Init()
   if (NS_OK != rv) {
     return rv;
   }
-  return NS_OK;
+
+  rv = NS_NewNameSpaceManager(&mNameSpaceManager);
+  return rv;
 }
 
 nsIArena* nsDocument::GetArena()
@@ -811,6 +817,15 @@ void nsDocument::SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwne
     NS_ADDREF(mScriptContextOwner);
   }
 }
+
+NS_IMETHODIMP
+nsDocument::GetNameSpaceManager(nsINameSpaceManager*& aManager)
+{
+  aManager = mNameSpaceManager;
+  NS_IF_ADDREF(aManager);
+  return NS_OK;
+}
+
 
 // Note: We don't hold a reference to the document observer; we assume
 // that it has a live reference to the document.

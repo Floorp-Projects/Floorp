@@ -49,6 +49,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsINameSpaceManager.h"
 #include "prprf.h"
 #include "prmem.h"
 
@@ -931,6 +932,13 @@ nsresult
 nsGenericElement::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetNameSpaceID(PRInt32& aResult) const
+{
+  aResult = kNameSpaceID_None;
   return NS_OK;
 }
 
