@@ -666,7 +666,19 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_jss_util_Password_readPasswordFromCon
         pwChars[i] = pw[i];
     }
 
-    (*env)->ReleaseCharArrayElements(env, pwCharArray, pwChars, 0);
+    if( pwIsCopy ) {
+        /* copy back the changes */
+        (*env)->ReleaseCharArrayElements(env, pwCharArray, pwChars, JNI_COMMIT);
+        /* clear the copy */
+        memset(pwChars, 0, pwlen);
+        /* release the copy */
+        (*env)->ReleaseCharArrayElements(env, pwCharArray, pwChars, JNI_ABORT);
+    } else {
+        /* pwChars is not a copy, so this should be a no-op, but we include
+         * it anyway */
+        (*env)->ReleaseCharArrayElements(env, pwCharArray, pwChars, 0);
+    }
+    pwChars = NULL;
 
     /***************************************************
      * Construct a new Password from the char array
@@ -681,13 +693,6 @@ finish:
     if(pw != NULL) {
         memset(pw, 0, strlen(pw));
         PR_Free(pw);
-    }
-    if(pwChars != NULL) {
-        PR_ASSERT(pwCharArray != NULL);
-        if(pwIsCopy || password==NULL) {
-            /* clear if it's a copy, or if we are going to clear the array */
-            memset(pwChars, 0, pwlen);
-        }
     }
     return password;
 }
