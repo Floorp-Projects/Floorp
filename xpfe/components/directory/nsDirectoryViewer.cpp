@@ -808,7 +808,7 @@ nsHTTPIndexParser::ParseData(nsString* values, const char *baseStr, const char *
 nsresult
 nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
-    nsresult                  rv;
+    nsresult                  rv = NS_OK;
     nsCOMPtr<nsIRDFLiteral>   result;
 
     if (arc == kHTTPIndex_Filename)
@@ -1277,7 +1277,7 @@ nsHTTPIndex::AddElement(nsIRDFResource *parent, nsIRDFResource *prop, nsIRDFNode
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
 		if (NS_FAILED(rv))  return(rv);
 
-		mTimer->Init(nsHTTPIndex::FireTimer, this, 100,
+		mTimer->Init(nsHTTPIndex::FireTimer, this, 10,
 		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
 		// Note: don't addref "this" as we'll cancel the
 		// timer in the httpIndex destructor
@@ -1408,21 +1408,23 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
         }
     }
 
+	// be sure to cancel the timer, as it holds a
+	// weak reference back to nsHTTPIndex
+	httpIndex->mTimer->Cancel();
+	httpIndex->mTimer = nsnull;
+
     // after firing off any/all of the connections be sure
     // to cancel the timer if we don't need to refire it
 	if (refireTimer == PR_TRUE)
 	{
-		httpIndex->mTimer->Init(nsHTTPIndex::FireTimer, httpIndex, 100,
-		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
-		// Note: don't addref "this" as we'll cancel the
-		// timer in the httpIndex destructor
-	}
-	else
-	{
-		// be sure to cancel the timer, as it holds a
-		// weak reference back to nsHTTPIndex
-		httpIndex->mTimer->Cancel();
-		httpIndex->mTimer = nsnull;
+		httpIndex->mTimer = do_CreateInstance("component://netscape/timer");
+        if (httpIndex->mTimer)
+		{
+    		httpIndex->mTimer->Init(nsHTTPIndex::FireTimer, aClosure, 10,
+    		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+    		// Note: don't addref "this" as we'll cancel the
+    		// timer in the httpIndex destructor
+        }
 	}
 }
 
