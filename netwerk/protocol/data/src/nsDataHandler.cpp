@@ -41,7 +41,7 @@ nsDataHandler::nsDataHandler() {
 nsDataHandler::~nsDataHandler() {
 }
 
-NS_IMPL_ISUPPORTS(nsDataHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsDataHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {

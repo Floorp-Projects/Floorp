@@ -24,7 +24,7 @@
 #include "prprf.h"
 #include "prnetdb.h" // IPv6 support
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsAuthURLParser, NS_GET_IID(nsIURLParser))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAuthURLParser, nsIURLParser)
 
 nsAuthURLParser::~nsAuthURLParser()
 {

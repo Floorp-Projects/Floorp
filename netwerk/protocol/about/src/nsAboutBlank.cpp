@@ -28,7 +28,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsAboutBlank, NS_GET_IID(nsIAboutModule));
+NS_IMPL_ISUPPORTS1(nsAboutBlank, nsIAboutModule);
 
 static const char kBlankPage[] = "";
 

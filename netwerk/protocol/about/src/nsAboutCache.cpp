@@ -36,7 +36,7 @@
 #include "nsINetDataCacheRecord.h"
 
 
-NS_IMPL_ISUPPORTS(nsAboutCache, NS_GET_IID(nsIAboutModule));
+NS_IMPL_ISUPPORTS1(nsAboutCache, nsIAboutModule)
 
 NS_IMETHODIMP
 nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)

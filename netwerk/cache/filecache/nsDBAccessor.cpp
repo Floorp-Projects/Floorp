@@ -62,7 +62,7 @@ nsDBAccessor::~nsDBAccessor()
 //
 // Implement nsISupports methods
 //
-NS_IMPL_THREADSAFE_ISUPPORTS(nsDBAccessor, NS_GET_IID(nsIDBAccessor))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDBAccessor, nsIDBAccessor)
 
 
 ///////////////////////////////////////////////////////////

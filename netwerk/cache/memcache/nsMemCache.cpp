@@ -66,7 +66,7 @@ nsMemCache::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsMemCache, NS_GET_IID(nsINetDataCache))
+NS_IMPL_ISUPPORTS1(nsMemCache, nsINetDataCache)
 
 NS_IMETHODIMP
 nsMemCache::GetDescription(PRUnichar * *aDescription)

@@ -819,7 +819,7 @@ mozTXTToHTMLConv::~mozTXTToHTMLConv()
   MOZ_TIMER_PRINT(mGlyphHitTimer);
 }
 
-NS_IMPL_ISUPPORTS(mozTXTToHTMLConv, NS_GET_IID(mozTXTToHTMLConv));
+NS_IMPL_ISUPPORTS1(mozTXTToHTMLConv, mozTXTToHTMLConv)
 
 PRInt32
 mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,

@@ -50,7 +50,7 @@ nsAboutProtocolHandler::~nsAboutProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsAboutProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsAboutProtocolHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsAboutProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

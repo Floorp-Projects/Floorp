@@ -450,7 +450,7 @@ private:
     nsCOMPtr<nsINetDataCache> mCache;
 };
 
-NS_IMPL_ISUPPORTS(CacheEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(CacheEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
 nsCacheManager::NewCacheModuleIterator(nsISimpleEnumerator* *aResult)

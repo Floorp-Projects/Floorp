@@ -59,7 +59,7 @@ nsKeywordProtocolHandler::Init() {
 nsKeywordProtocolHandler::~nsKeywordProtocolHandler() {
 }
 
-NS_IMPL_ISUPPORTS(nsKeywordProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsKeywordProtocolHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsKeywordProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {

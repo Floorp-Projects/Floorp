@@ -34,7 +34,7 @@ nsNetModuleMgr* nsNetModuleMgr::gManager;
 //// nsISupports
 ///////////////////////////////////
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsNetModuleMgr, NS_GET_IID(nsINetModuleMgr));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNetModuleMgr, nsINetModuleMgr);
 
 
 ///////////////////////////////////

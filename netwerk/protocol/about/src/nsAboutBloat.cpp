@@ -40,7 +40,7 @@ static void GC_gcollect() {}
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsAboutBloat, NS_GET_IID(nsIAboutModule));
+NS_IMPL_ISUPPORTS1(nsAboutBloat, nsIAboutModule)
 
 NS_IMETHODIMP
 nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)

@@ -119,7 +119,7 @@ TestConverterFactory::~TestConverterFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(TestConverterFactory, NS_GET_IID(nsIFactory));
+NS_IMPL_ISUPPORTS1(TestConverterFactory, nsIFactory)
 
 NS_IMETHODIMP
 TestConverterFactory::CreateInstance(nsISupports *aOuter,
