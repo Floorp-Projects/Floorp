@@ -84,7 +84,7 @@ nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentTy
 
   if (!fileExtension.IsEmpty())
   {
-    GetFromExtension(fileExtension, aMIMEInfo);
+    GetFromExtension(fileExtension.get(), aMIMEInfo);
      // this is the ONLY code path which leads to success where we should set our return variables...
      *aFileExtension = ToNewCString(fileExtension);
   } // if we got an entry out of the registry...
@@ -131,7 +131,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
 // this information in 4.x (it's stored in the windows regsitry). 
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension)
 {
-   nsCAutoString command ("Software\\Netscape\\Netscape Navigator\\Suffixes");
+   static const char command[] = "Software\\Netscape\\Netscape Navigator\\Suffixes";
    nsresult rv = NS_OK;
 #ifndef XP_OS2 /* GET EXTENSION FROM NSCP.INI!!! */
    HKEY hKey;
@@ -301,7 +301,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMI
   GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
 
   if (!fileExtension.IsEmpty())
-    return GetFromExtension(fileExtension, _retval);
+    return GetFromExtension(fileExtension.get(), _retval);
   else
    rv = NS_ERROR_FAILURE;
 
