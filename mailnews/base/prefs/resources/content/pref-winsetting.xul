@@ -35,8 +35,7 @@
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mailnews.reuse_message_window" id="mailnews.reuse_message_window" type="checkbox"/>
 			<html:label for="mailnews.reuse_message_window">&reuseMessage.label;</html:label>
-		</html:div>
-		
-		&reuseExp.label;
+		</html:div>		
+		<html:div class="vertical-gap">&reuseExp.label;</html:div>		
 	</titledbox>
 </window>
