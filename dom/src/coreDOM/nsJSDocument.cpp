@@ -27,15 +27,17 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMAttr.h"
+#include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMCDATASection.h"
+#include "nsIDOMStyleSheetCollection.h"
 #include "nsIDOMText.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMEntityReference.h"
-#include "nsIDOMDocumentFragment.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMComment.h"
+#include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMNodeList.h"
 
@@ -45,29 +47,33 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
 static NS_DEFINE_IID(kIAttrIID, NS_IDOMATTR_IID);
+static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
 static NS_DEFINE_IID(kICDATASectionIID, NS_IDOMCDATASECTION_IID);
+static NS_DEFINE_IID(kIStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_IID);
 static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
 static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 static NS_DEFINE_IID(kIEntityReferenceIID, NS_IDOMENTITYREFERENCE_IID);
-static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
+static NS_DEFINE_IID(kINSDocumentIID, NS_IDOMNSDOCUMENT_IID);
 static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
+static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMDocument);
-NS_DEF_PTR(nsIDOMProcessingInstruction);
 NS_DEF_PTR(nsIDOMAttr);
+NS_DEF_PTR(nsIDOMProcessingInstruction);
 NS_DEF_PTR(nsIDOMCDATASection);
+NS_DEF_PTR(nsIDOMStyleSheetCollection);
 NS_DEF_PTR(nsIDOMText);
 NS_DEF_PTR(nsIDOMDOMImplementation);
 NS_DEF_PTR(nsIDOMDocumentType);
 NS_DEF_PTR(nsIDOMEntityReference);
-NS_DEF_PTR(nsIDOMDocumentFragment);
+NS_DEF_PTR(nsIDOMNSDocument);
 NS_DEF_PTR(nsIDOMComment);
+NS_DEF_PTR(nsIDOMDocumentFragment);
 NS_DEF_PTR(nsIDOMEventCapturer);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -77,7 +83,8 @@ NS_DEF_PTR(nsIDOMNodeList);
 enum Document_slots {
   DOCUMENT_DOCTYPE = -1,
   DOCUMENT_IMPLEMENTATION = -2,
-  DOCUMENT_DOCUMENTELEMENT = -3
+  DOCUMENT_DOCUMENTELEMENT = -3,
+  NSDOCUMENT_STYLESHEETS = -4
 };
 
 /***********************************************************************/
@@ -173,6 +180,42 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
         }
         else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSDOCUMENT_STYLESHEETS:
+      {
+        nsIDOMStyleSheetCollection* prop;
+        nsIDOMNSDocument* b;
+        if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+          if(NS_OK == b->GetStyleSheets(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSDocument");
           return JS_FALSE;
         }
         break;
@@ -950,6 +993,7 @@ static JSPropertySpec DocumentProperties[] =
   {"doctype",    DOCUMENT_DOCTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"implementation",    DOCUMENT_IMPLEMENTATION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"styleSheets",    NSDOCUMENT_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

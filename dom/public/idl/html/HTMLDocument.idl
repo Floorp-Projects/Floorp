@@ -30,7 +30,6 @@
      attribute wstring vlinkColor;
      attribute wstring bgColor;
      attribute wstring fgColor;
-     readonly attribute StyleSheetCollection styleSheets;
      readonly attribute wstring lastModified;
 
      readonly attribute HTMLCollection embeds;

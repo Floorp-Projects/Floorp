@@ -38,6 +38,7 @@ EXPORTS =               \
 	nsIDOMText.h \
 	nsIDOMStyleSheet.h \
 	nsIDOMStyleSheetCollection.h \
+	nsIDOMNSDocument.h \
         $(NULL)
 
 MODULE = dom
