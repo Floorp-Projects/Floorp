@@ -2196,7 +2196,8 @@ static const char* RGBToCSSString(nscolor aColor)
 }
 
 
-void ValueToString(const nsCSSValue& aValue, PRInt32 aPropID, nsString& aBuffer)
+static void
+ValueToString(const nsCSSValue& aValue, PRInt32 aPropID, nsString& aBuffer)
 {
   nsCSSUnit unit = aValue.GetUnit();
 
@@ -2236,7 +2237,7 @@ void ValueToString(const nsCSSValue& aValue, PRInt32 aPropID, nsString& aBuffer)
     }
   }
   else if (eCSSUnit_Percent == unit) {
-    aBuffer.Append(aValue.GetFloatValue() * 100.0f);
+    aBuffer.Append(aValue.GetPercentValue() * 100.0f);
   }
   else if (eCSSUnit_Percent < unit) {  // length unit
     aBuffer.Append(aValue.GetFloatValue());
