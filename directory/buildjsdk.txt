@@ -1,7 +1,7 @@
 ======================================================================
                     NETSCAPE DIRECTORY SDK FOR JAVA: 
                          BUILD INSTRUCTIONS
-                     Last updated: July 29, 1998
+                     Last updated: June 4, 1999
 ======================================================================
 For information on the Netscape Directory SDK source release,
 see http://www.mozilla.org/directory/
@@ -60,6 +60,24 @@ Instructions:
        mozilla/directory/java-sdk/dist/classes - class files and manifest file
        mozilla/directory/java-sdk/dist/packages - ldapjdk.jar JAR file 
          (if you've specified "basepackage" as the target)
+
+4. Build the JNDI LDAP Service Provider classes by entering the following commands:
+
+     gmake -f ldapsp.mk
+
+   If you also want the classes packaged in a JAR file,
+   specify "basepackage" as the target:
+
+     gmake -f ldapsp.mk basepackage
+
+   The SDK will be built and copied into the following directories:
+       mozilla/directory/java-sdk/dist/classes - class files
+       mozilla/directory/java-sdk/dist/packages - ldapsp.jar JAR file 
+         (if you've specified "basepackage" as the target)
+
+   The JNDI LDAP Service Provider depends on the LDAP Java classes, so you 
+   always must build the LDAP Java first. For more information on JNDI see
+   ldapsp/Readme.html and http://java.sun.com/products/jndi/index.html
 
 
 Windows Build Instructions
@@ -131,7 +149,25 @@ Instructions:
        mozilla\directory\java-sdk\dist\packages - ldapjdk.jar JAR file 
          (if you've specified "basepackage" as the target)
 
+3. Build the JNDI LDAP Service Provider classes by entering the following commands:
+
+     gmake -f ldapsp.mk
+
+   If you also want the classes packaged in a JAR file,
+   specify "basepackage" as the target:
+
+     gmake -f ldapsp.mk basepackage
+
+   The SDK will be built and copied into the following directories:
+       mozilla/directory/java-sdk/dist/classes - class files
+       mozilla/directory/java-sdk/dist/packages - ldapsp.jar JAR file 
+         (if you've specified "basepackage" as the target)
+
+   The JNDI LDAP Service Provider depends on the LDAP Java classes, so you 
+   always must build the LDAP Java first. For more information on JNDI see
+   ldapsp/Readme.html and http://java.sun.com/products/jndi/index.html
+
 --------------------------------------------------------
-Copyright (c) 1998 Netscape Communications Corporation.
+Copyright (c) 1999 Netscape Communications Corporation.
 (http://home.netscape.com/misc/contact_info.html)
 
