@@ -953,18 +953,29 @@ function updateMenuPlural( lengthFieldId, menuId )
 
 function updateUntilItemEnabled()
 {
-   var repeatUntilRadio = document.getElementById( "repeat-until-radio" );
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
+   var numberRadio = document.getElementById("repeat-numberoftimes-radio");
+   var numberTextBox = document.getElementById("repeat-numberoftimes-textbox");
    
-   var repeatEndText = document.getElementById( "repeat-end-date-picker" );
-   
-   if( repeatCheckBox.checked && repeatUntilRadio.selected  )
+   if( repeatCheckBox.checked && numberRadio.selected  )
    {
-      repeatEndText.removeAttribute( "disabled"  );
+      numberTextBox.removeAttribute( "disabled"  );
    }
    else
    {
-      repeatEndText.setAttribute( "disabled", "true" );
+      numberTextBox.setAttribute( "disabled", "true" );
+   }
+
+   var untilRadio = document.getElementById( "repeat-until-radio" );
+   var untilPicker = document.getElementById( "repeat-end-date-picker" );
+   
+   if( repeatCheckBox.checked && untilRadio.selected  )
+   {
+      untilPicker.removeAttribute( "disabled"  );
+   }
+   else
+   {
+      untilPicker.setAttribute( "disabled", "true" );
    }
 }
 
