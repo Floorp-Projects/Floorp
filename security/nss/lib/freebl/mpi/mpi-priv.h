@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.12 2000/10/24 21:32:50 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.13 2000/12/20 05:54:18 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -212,7 +212,7 @@ mp_err   s_mp_sqr(mp_int *a);                  /* magnitude square        */
 #else
 #define  s_mp_sqr(a) s_mp_mul(a, a)
 #endif
-mp_err   s_mp_div(mp_int *a, mp_int *b);       /* magnitude divide        */
+mp_err   s_mp_div(mp_int *rem, mp_int *div, mp_int *quot); /* magnitude div */
 mp_err   s_mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
 mp_err   s_mp_2expt(mp_int *a, mp_digit k);    /* a = 2^k                 */
 int      s_mp_cmp(const mp_int *a, const mp_int *b); /* magnitude comparison */
