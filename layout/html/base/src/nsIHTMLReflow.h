@@ -36,6 +36,15 @@ struct nsStyleSpacing;
 
 //----------------------------------------------------------------------
 
+// For HTML reflow we rename with the different paint layers are
+// actually used for.
+#define NS_FRAME_PAINT_LAYER_BACKGROUND eFramePaintLayer_Underlay
+#define NS_FRAME_PAINT_LAYER_FLOATERS   eFramePaintLayer_Content
+#define NS_FRAME_PAINT_LAYER_FOREGROUND eFramePaintLayer_Overlay
+#define NS_FRAME_PAINT_LAYER_DEBUG      eFramePaintLayer_Overlay
+
+//----------------------------------------------------------------------
+
 /**
  * HTML/CSS specific reflow metrics
  */
