@@ -240,7 +240,8 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 							/* don't cache image animations... */
 							format_out = CLEAR_CACHE_BIT(obj->format_out);
 						  }
-			
+
+#if !defined(MODULAR_NETLIB)			
 						/* libimg and libplugin use the fe_data to store 
 						 * urls data, so clear it only if its not them */
 						if( (CLEAR_CACHE_BIT(obj->format_out) != FO_INTERNAL_IMAGE) 
@@ -250,7 +251,7 @@ PRIVATE int net_MultipleDocumentWrite (NET_StreamClass *stream, CONST char* s, i
 						  {
 							obj->URL_s->fe_data = NULL;
 						  }
-
+#endif /* !MODULAR_NETLIB */
 					    /* build a stream
 					     */
 					    obj->next_stream = NET_StreamBuilder(format_out, 
