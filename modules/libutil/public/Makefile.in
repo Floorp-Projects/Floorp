@@ -31,8 +31,7 @@ XPIDL_MODULE	= util
 
 EXPORTS		= $(srcdir)/xp_obs.h \
               $(srcdir)/stopwatch.h \
-			  $(srcdir)/nsTimer.h \
-			  $(srcdir)/nsStackBasedTimer.h
+			  $(srcdir)/nsTimer.h
 
 XPIDLSRCS	= nsITimeRecorder.idl
 

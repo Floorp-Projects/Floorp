@@ -26,7 +26,23 @@
 #ifdef MOZ_PERF_METRICS
 
 #include "stopwatch.h"
-#include "nsStackBasedTimer.h"
+
+class nsStackBasedTimer 
+{
+public:
+  nsStackBasedTimer(Stopwatch* aStopwatch) { sw = aStopwatch; }
+  ~nsStackBasedTimer() { if (sw) sw->Stop(); }
+
+  void Start(PRBool aReset) { if (sw) sw->Start(aReset); }
+  void Stop(void) { if (sw) sw->Stop(); }
+  void Reset(void) { if (sw) sw->Reset(); }
+  void SaveState(void) { if (sw) sw->SaveState(); }
+  void RestoreState(void) { if (sw) sw->RestoreState(); }
+  void Print(void) { if (sw) sw->Print(); }
+  
+private:
+  Stopwatch* sw;
+};
 
 // This should be set from preferences at runtime.  For now, make it a compile time flag.
 #define ENABLE_DEBUG_OUTPUT PR_FALSE
