@@ -985,8 +985,9 @@ PRBool nsView::PointIsInside(nsView& aView, nscoord x, nscoord y) const
 
 NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const
 {
-  // Keep track of the view's offset
-  // from its ancestor.
+  // Keep track of the view's offset from its ancestor.
+  // This is the origin of this view's parent view in the
+  // coordinate space of 'parentView' below.
   nscoord ancestorX = 0;
   nscoord ancestorY = 0;
 
@@ -994,13 +995,39 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   aIsClipped = PR_FALSE;
   
   GetBounds(aClippedRect);
-  const nsView* parentView = GetParent();
   PRBool lastViewIsFloating = GetFloating();
 
   // Walk all of the way up the views to see if any
   // ancestor sets the NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN.
   // don't consider non-floating ancestors of a floating view.
-  while (parentView) {
+  const nsView* view = this;
+  while (PR_TRUE) {
+    const nsView* zParent = view->GetZParent();
+    const nsView* parentView = view->GetParent();
+    if (zParent) {
+      // This view was reparented. We need to move back down the view tree
+      // to where it should be to collect whatever might be clipping it there.
+
+      // parentView is an ancestor of zParent ... this is guaranteed by the way these
+      // reparented views are set up; a reparented view is always reparented to one of its
+      // own ancestors
+
+      // we need to get ancestorX and ancestorY into the right coordinate system.
+      // They are the offset of this view within parentView
+      const nsView* zParentChain;
+      for (zParentChain = zParent; zParentChain != parentView;
+           zParentChain = zParentChain->GetParent()) {
+        NS_ASSERTION(zParentChain != nsnull, "Error in view reparenting logic");
+        zParentChain->ConvertFromParentCoords(&ancestorX, &ancestorY);
+      }
+      parentView = zParent;
+      // Now start again at zParent to collect all its clip information
+    }
+    
+    if (!parentView) {
+      break;
+    }
+
     PRBool parentIsFloating = parentView->GetFloating();
     if (lastViewIsFloating && !parentIsFloating) {
       break;
@@ -1012,8 +1039,8 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
       nsRect clipRect;
       parentView->GetChildClip(clipRect);
       //Offset the cliprect by the amount the child offsets from the parent
-      clipRect.x += ancestorX;
-      clipRect.y += ancestorY;
+      clipRect.x -= ancestorX;
+      clipRect.y -= ancestorY;
       PRBool overlap = aClippedRect.IntersectRect(clipRect, aClippedRect);
       if (!overlap) {
         aEmpty = PR_TRUE; // Does not intersect so the rect is empty.
@@ -1021,13 +1048,12 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
       }
     }
 
-    parentView->ConvertFromParentCoords(&ancestorX, &ancestorY);
+    parentView->ConvertToParentCoords(&ancestorX, &ancestorY);
 
     lastViewIsFloating = parentIsFloating;
-    parentView = parentView->GetParent();
+    view = parentView;
   }
  
   return NS_OK;
 }
-
 

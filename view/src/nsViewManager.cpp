@@ -1075,13 +1075,9 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
 {
   BuildDisplayList(aRootView, aRect, PR_FALSE, PR_FALSE);
 
-  nsRect fakeClipRect;
-  PRInt32 index = 0;
   PRBool anyRendered;
   nsRect finalTransparentRect;
 
-  ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
-    
   nsRegion opaqueRgn;
   AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext, aRootView);
   OptimizeDisplayList(aRect, finalTransparentRect, opaqueRgn);
@@ -1103,7 +1099,8 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   mTranslucentViewCount = 0;
   mTranslucentArea.SetRect(0, 0, 0, 0);
     
-  index = 0;
+  PRInt32 index = 0;
+  nsRect fakeClipRect;
   OptimizeDisplayListClipping(PR_FALSE, fakeClipRect, index, anyRendered);
     
   // We keep a list of all the rendering contexts whose clip rects
@@ -2625,9 +2622,6 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   }
 
   nsRect r;
-  nsRect fakeClipRect;
-  PRInt32 index = 0;
-
   // Only check the area that intersects the view's non clipped rectangle
   PRBool isClipped;
   PRBool isEmpty;
@@ -2638,7 +2632,6 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   aView->ConvertFromParentCoords(&r.x, &r.y);
 
   BuildDisplayList(aView, r, PR_FALSE, PR_FALSE);
-  ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
 
   PRInt32 i;
   for (i = 0; i < mDisplayListCount; i++) {
@@ -3566,6 +3559,7 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent
 // They might not be because of the Z-reparenting mess: a fixed-position view might have
 // created a display element with bounds that do not reflect the clipping instructions that now
 // surround the element. This would cause problems in the optimizer.
+// XXX No longer used. REMOVE IN THE GREAT VIEW MANAGER PURGE
 void nsViewManager::ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex)
 {   
   while (aIndex < mDisplayListCount) {
@@ -3731,14 +3725,15 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     view->GetPosition(&vx, &vy);
     nsView* parent = view->GetParent();
     PRInt32 zindex = view->GetZIndex();
+    nsView* zParent = view->GetZParent();
 
     nest[nestcnt << 1] = 0;
 
-    printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p,m=%p z=%d} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
+    printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p,m=%p z=%d,zp=%p} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
            nest, (void*)view,
            dim.x, dim.y, dim.width, dim.height,
            vx, vy,
-           (void*)parent, (void*)view->GetViewManager(), zindex,
+           (void*)parent, (void*)view->GetViewManager(), zindex, (void*)zParent,
            rect.x, rect.y, rect.width, rect.height,
            element->mAbsX, element->mAbsY);
 
