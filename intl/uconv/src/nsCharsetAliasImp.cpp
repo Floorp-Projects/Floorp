@@ -79,23 +79,23 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsString& aAlias, nsString& oR
    nsAutoString aKey;
    aAlias.ToLowerCase(aKey);
    oResult.SetLength(0);
-   if(nsnull ==  mDelegate) {
-      if(aKey.EqualsWithConversion("utf-8")) {
-        oResult.AssignWithConversion("UTF-8");
-        return NS_OK;
-      } 
-      if(aKey.EqualsWithConversion("iso-8859-1")) {
-        oResult.AssignWithConversion("ISO-8859-1");
-        return NS_OK;
-      } 
-	  nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/charsetalias.properties");
-
-	  // we may need to protect the following section with a lock so we won't call the 
-	  // 'new nsURLProperties' from two different threads
-      mDelegate = new nsURLProperties( propertyURL );
-	  NS_ASSERTION(mDelegate, "cannot create nsURLProperties");
-	  if(nsnull == mDelegate)
-		  return NS_ERROR_OUT_OF_MEMORY;
+   if(!mDelegate) {
+     if(aKey.EqualsWithConversion("utf-8")) {
+       oResult.AssignWithConversion("UTF-8");
+       return NS_OK;
+     } 
+     if(aKey.EqualsWithConversion("iso-8859-1")) {
+       oResult.AssignWithConversion("ISO-8859-1");
+       return NS_OK;
+     } 
+     nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/charsetalias.properties");
+     
+     // we may need to protect the following section with a lock so we won't call the 
+     // 'new nsURLProperties' from two different threads
+     mDelegate = new nsURLProperties( propertyURL );
+     NS_ASSERTION(mDelegate, "cannot create nsURLProperties");
+     if(nsnull == mDelegate)
+       return NS_ERROR_OUT_OF_MEMORY;
    }
    return mDelegate->Get(aKey, oResult);
 }

@@ -23,6 +23,7 @@
 
 #define NS_IMPL_IDS
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsICharsetAlias.h"
 #include "nsIRegistry.h"
@@ -301,7 +302,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 }
 
 nsresult nsCharsetConverterManager::GetRegistryEnumeration(
-                                    char * aRegistryKey, 
+                                    char * aRegistryKey,
                                     char * aAddPrefix,
                                     nsISupportsArray ** aArray)
 {
@@ -330,38 +331,32 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration(
   if (NS_FAILED(res)) return res;
 
   // enumerate subtrees
-  nsCOMPtr<nsIEnumerator> components;
-  res = registry->EnumerateSubtrees(key, getter_AddRefs(components));
+  nsCOMPtr<nsIEnumerator> enumerator;
+  res = registry->EnumerateSubtrees(key, getter_AddRefs(enumerator));
   if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIRegistryEnumerator> components = do_QueryInterface(enumerator, &res);
+  if (NS_FAILED(res)) return res;
+
   res = components->First();
   if (NS_FAILED(res)) return res;
 
   while (NS_OK != components->IsDone()) {
-    nsCOMPtr<nsISupports> base;
-    nsCOMPtr<nsIRegistryNode> node;
-    char * name = NULL;
+    const char *name;
     nsAutoString fullName; fullName.AssignWithConversion(aAddPrefix);
     nsCOMPtr<nsIAtom> atom;
 
-    res = components->CurrentItem(getter_AddRefs(base));
-    if (NS_FAILED(res)) goto done1;
-
-    node = do_QueryInterface(base, &res);
-    if (NS_FAILED(res)) goto done1;
-
-    res = node->GetNameUTF8(&name);
-    if (NS_FAILED(res)) goto done1;
+    res = components->CurrentItemInPlaceUTF8(&key, &name);
+    if (NS_FAILED(res)) goto next;
 
     fullName.AppendWithConversion(name);
     res = GetCharsetAtom(fullName.GetUnicode(), getter_AddRefs(atom));
-    if (NS_FAILED(res)) goto done1;
+    if (NS_FAILED(res)) goto next;
 
     res = array->AppendElement(atom);
-    if (NS_FAILED(res)) goto done1;
+    if (NS_FAILED(res)) goto next;
 
-done1:
-    if (name != NULL) nsCRT::free(name);
-
+next:
     res = components->Next();
     if (NS_FAILED(res)) break; // this is NOT supposed to fail!
   }
@@ -408,27 +403,24 @@ nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
   if (NS_FAILED(res)) return res;
 
   // enumerate subtrees
-  nsCOMPtr<nsIEnumerator> components;
-  res = registry->EnumerateSubtrees(key, getter_AddRefs(components));
+  nsCOMPtr<nsIEnumerator> enumerator;
+  res = registry->EnumerateSubtrees(key, getter_AddRefs(enumerator));
   if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIRegistryEnumerator> components = do_QueryInterface(enumerator, &res);
+  if (NS_FAILED(res)) return res;
+
   res = components->First();
   if (NS_FAILED(res)) return res;
 
   while (NS_OK != components->IsDone()) {
-    nsCOMPtr<nsISupports> base;
-    nsCOMPtr<nsIRegistryNode> node;
-    char * src = NULL;
-    char * dest = NULL;
+    const char *name;
+    char *src;
+    char *dest;
     nsAutoString fullName;
     nsCOMPtr<nsIAtom> atom;
 
-    res = components->CurrentItem(getter_AddRefs(base));
-    if (NS_FAILED(res)) goto done1;
-
-    node = do_QueryInterface(base, &res);
-    if (NS_FAILED(res)) goto done1;
-
-    res = node->GetKey(&key);
+    res = components->CurrentItemInPlaceUTF8(&key, &name);
     if (NS_FAILED(res)) goto done1;
 
     res = registry->GetStringUTF8(key, "source", &src);
@@ -524,6 +516,8 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   if (aCharset == NULL) return NS_ERROR_NULL_POINTER;
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
+
+  nsAutoString prop; prop.AssignWithConversion(".LangGroup");
 
   nsCOMPtr<nsIAtom> atom;
   nsresult res = GetCharsetAtom(aCharset->GetUnicode(), getter_AddRefs(atom));
