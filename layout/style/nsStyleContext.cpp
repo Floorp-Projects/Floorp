@@ -567,6 +567,7 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   mBorderColor[3] = NS_RGB(0, 0, 0); 
 
   mBorderRadius.Reset();
+  mOutlineRadius.Reset();
 
   mOutlineWidth = medium;
   mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
@@ -762,7 +763,8 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
     }
     if ((mOutlineWidth != aOther.mOutlineWidth) ||
         (mOutlineStyle != aOther.mOutlineStyle) ||
-        (mOutlineColor != aOther.mOutlineColor)) {
+        (mOutlineColor != aOther.mOutlineColor) ||
+        (mOutlineRadius != aOther.mOutlineRadius)) {
       return NS_STYLE_HINT_REFLOW;	// XXX: should be VISUAL: see bugs 9809 and 9816
     }
     return NS_STYLE_HINT_NONE;

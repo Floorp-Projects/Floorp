@@ -374,13 +374,13 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSMargin::nsCSSMargin(void)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull)
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull)
 {
 }
 
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   : mMargin(nsnull), mPadding(nsnull), 
-    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull),
+    mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
@@ -392,6 +392,7 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   CSS_IF_COPY(mBorderColor, nsCSSRect);
   CSS_IF_COPY(mBorderStyle, nsCSSRect);
   CSS_IF_COPY(mBorderRadius, nsCSSRect);
+  CSS_IF_COPY(mOutlineRadius, nsCSSRect);
 }
 
 nsCSSMargin::~nsCSSMargin(void)
@@ -402,6 +403,7 @@ nsCSSMargin::~nsCSSMargin(void)
   CSS_IF_DELETE(mBorderColor);
   CSS_IF_DELETE(mBorderStyle);
   CSS_IF_DELETE(mBorderRadius);
+  CSS_IF_DELETE(mOutlineRadius);
 }
 
 const nsID& nsCSSMargin::GetID(void)
@@ -460,6 +462,15 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
   mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
   mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
+  if (nsnull != mOutlineRadius) {
+    static const nsCSSProperty trbl[] = {
+      eCSSProperty__moz_outline_radius_topLeft,
+      eCSSProperty__moz_outline_radius_topRight,
+      eCSSProperty__moz_outline_radius_bottomRight,
+      eCSSProperty__moz_outline_radius_bottomLeft
+    };
+    mOutlineRadius->List(out, aIndent, trbl);
+  }
   mFloatEdge.AppendToString(buffer, eCSSProperty_float_edge);
   fputs(buffer, out);
 }
@@ -1390,6 +1401,23 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
       }
       break;
 
+    case eCSSProperty__moz_outline_radius_topLeft:
+    case eCSSProperty__moz_outline_radius_topRight:
+    case eCSSProperty__moz_outline_radius_bottomRight:
+    case eCSSProperty__moz_outline_radius_bottomLeft:
+      CSS_ENSURE(Margin) {
+        CSS_ENSURE_RECT(mMargin->mOutlineRadius) {
+          switch (aProperty) {
+            case eCSSProperty__moz_outline_radius_topLeft:			mMargin->mOutlineRadius->mTop = aValue;    break;
+            case eCSSProperty__moz_outline_radius_topRight:			mMargin->mOutlineRadius->mRight = aValue;  break;
+            case eCSSProperty__moz_outline_radius_bottomRight:	mMargin->mOutlineRadius->mBottom = aValue; break;
+            case eCSSProperty__moz_outline_radius_bottomLeft:		mMargin->mOutlineRadius->mLeft = aValue;   break;
+            CSS_BOGUS_DEFAULT; // make compiler happy
+          }
+        }
+      }
+      break;
+
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
@@ -2057,6 +2085,27 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
                   CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_topRight,		mMargin->mBorderRadius->mRight);
                   CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_bottomRight,	mMargin->mBorderRadius->mBottom);
                   CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius_bottomLeft,	mMargin->mBorderRadius->mLeft);
+                  CSS_BOGUS_DEFAULT; // make compiler happy
+                }
+              }
+            }
+          }
+        }
+        break;
+
+      case eCSSProperty__moz_outline_radius_topLeft:
+      case eCSSProperty__moz_outline_radius_topRight:
+      case eCSSProperty__moz_outline_radius_bottomRight:
+      case eCSSProperty__moz_outline_radius_bottomLeft:
+        if (nsnull != mMargin) {
+          if (nsnull != mMargin->mOutlineRadius) {
+            CSS_ENSURE_IMPORTANT(Margin) {
+              CSS_ENSURE_RECT(mImportant->mMargin->mOutlineRadius) {
+                switch (aProperty) {
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_radius_topLeft,			mMargin->mOutlineRadius->mTop);
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_radius_topRight,			mMargin->mOutlineRadius->mRight);
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_radius_bottomRight,	mMargin->mOutlineRadius->mBottom);
+                  CSS_CASE_IMPORTANT(eCSSProperty__moz_outline_radius_bottomLeft,		mMargin->mOutlineRadius->mLeft);
                   CSS_BOGUS_DEFAULT; // make compiler happy
                 }
               }
@@ -2765,6 +2814,24 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       }
       break;
 
+    case eCSSProperty__moz_outline_radius_topLeft:
+    case eCSSProperty__moz_outline_radius_topRight:
+    case eCSSProperty__moz_outline_radius_bottomRight:
+    case eCSSProperty__moz_outline_radius_bottomLeft:
+      if ((nsnull != mMargin) && (nsnull != mMargin->mOutlineRadius)) {
+        switch (aProperty) {
+          case eCSSProperty__moz_outline_radius_topLeft:			aValue = mMargin->mOutlineRadius->mTop;    break;
+          case eCSSProperty__moz_outline_radius_topRight:			aValue = mMargin->mOutlineRadius->mRight;  break;
+          case eCSSProperty__moz_outline_radius_bottomRight:	aValue = mMargin->mOutlineRadius->mBottom; break;
+          case eCSSProperty__moz_outline_radius_bottomLeft:		aValue = mMargin->mOutlineRadius->mLeft;   break;
+          CSS_BOGUS_DEFAULT; // make compiler happy
+        }
+      }
+      else {
+        aValue.Reset();
+      }
+      break;
+
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
@@ -3426,6 +3493,14 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         AppendValueToString(eCSSProperty__moz_border_radius_topRight, aValue);   aValue.Append(' ');
         AppendValueToString(eCSSProperty__moz_border_radius_bottomRight, aValue);  aValue.Append(' ');
         AppendValueToString(eCSSProperty__moz_border_radius_bottomLeft, aValue);
+      }
+    	break;
+    case eCSSProperty__moz_outline_radius:
+      if (HAS_RECT(mMargin,mOutlineRadius)) {
+        AppendValueToString(eCSSProperty__moz_outline_radius_topLeft, aValue);     aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_outline_radius_topRight, aValue);   aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_outline_radius_bottomRight, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_outline_radius_bottomLeft, aValue);
       }
     	break;
     case eCSSProperty_border_width:
