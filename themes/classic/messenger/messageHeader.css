@@ -151,7 +151,7 @@
 }
 
 .collapsedHeaderDisplayName { 
-  margin: 0 .5em 0 .8em;
+  margin: 0 .5em 0 .55em;
   min-height: 16px;
   font-weight: bold;
 }
