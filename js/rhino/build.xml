@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
+-->
+<project name="Rhino" default="package" basedir=".">
+
+  <target name="properties">
+    <property name="name" value="rhino"/>
+    <property name="Name" value="Rhino"/>
+    <property name="rhino.jar" value="js.jar"/>
+  
+    <property name="build.compiler" value="classic"/>
+    <property name="debug" value="off"/>
+  
+    <property name="src.dir" value="."/>
+    <property name="src.examples" value="${src.dir}/examples"/>
+  
+    <property name="build.dir" value="./build"/>
+    <property name="build.dest" value="${build.dir}/classes"/>
+  
+    <property name="dist.name" value="rhino15R2pre"/>
+    <property name="dist.dir" value="${build.dir}/${dist.name}"/>
+    <property name="dist.src" value="${dist.dir}/src"/>
+    <property name="dist.examples" value="${dist.dir}/examples"/>
+    <property name="dist.docs" value="${dist.dir}/docs"/>
+    <property name="dist.apidocs" value="${dist.docs}/apidocs"/>
+    <property name="dist.file" value="rhinoTip.zip"/>
+
+    <property file="apiClasses.properties"/>
+    <property name="cvs.javasrc.dir" value="${src.dir}"/>
+    <property name="cvs.docsrc.dir" value="../../../mozilla-org/html/rhino/"/>
+    <property name="dist.javasrc.dir" value="${src.dir}/src"/>
+    <property name="dist.docsrc.dir" value="${src.dir}/docs"/>
+    <available file="${cvs.javasrc.dir}/org" property="in-cvs-tree"/>
+  </target>
+
+  <target name="init" depends="properties">
+  </target>
+  
+  <target name="prepare" depends="init">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${build.dest}"/>
+    <mkdir dir="${dist.dir}"/>
+    <mkdir dir="${dist.src}"/>
+    <mkdir dir="${dist.examples}"/>
+    <mkdir dir="${dist.docs}"/>
+    <mkdir dir="${dist.apidocs}"/>
+    <tstamp/>
+    <exec command="echo"
+          dir="${dist.dir}"
+          output="${dist.dir}/built-${DSTAMP}"/>
+  </target>
+
+  <target name="compile-from-cvs" if="in-cvs-tree" depends="prepare">
+    <javac srcdir="${cvs.javasrc.dir}" 
+           destdir="${build.dest}" 
+           includes="org/**/*.java"
+           deprecation="on"
+           debug="${debug}" />
+  </target>
+
+  <target name="compile-from-dist" unless="in-cvs-tree" depends="prepare">
+    <javac srcdir="${dist.javasrc.dir}" 
+           destdir="${build.dest}" 
+           includes="org/**/*.java"
+           deprecation="on"
+           debug="${debug}" />
+  </target>
+
+  <target name="compile" depends="compile-from-dist,compile-from-cvs"/>
+
+  <target name="copy-properties" depends="prepare">
+    <copydir src="${src.dir}" 
+           dest="${build.dest}" 
+           includes="org/**/*.properties" />
+  </target>
+
+  <target name="jar" depends="compile,copy-properties">
+    <jar jarfile="${dist.dir}/${rhino.jar}" 
+         basedir="${build.dest}"
+         manifest="${src.dir}/manifest" />
+  </target>
+  
+  <target name="copy-source" depends="prepare">
+    <copydir src="${src.dir}" 
+           dest="${dist.src}" 
+           includes="org/**/*.java,org/**/*.properties" />
+  </target>
+
+  <target name="copy-examples" depends="prepare">
+    <copydir src="${src.examples}" 
+             dest="${dist.examples}" 
+             includes="*.java,*.js,*.html" />
+  </target>
+
+  <target name="copy-misc" depends="prepare">
+    <copyfile src="${src.dir}/build.xml" 
+              dest="${dist.dir}/build.xml" />
+    <copyfile src="${src.dir}/apiClasses.properties" 
+              dest="${dist.dir}/apiClasses.properties" />
+    <copyfile src="${src.dir}/manifest" 
+              dest="${dist.dir}/manifest" />
+  </target>
+
+  <target name="copy-all" depends="copy-source,copy-examples,copy-misc">
+  </target>
+
+  <target name="copy-docs-cvs" if="in-cvs-tree" depends="prepare"> 
+    <echo message="copy from ${cvs.docsrc.dir}"/>
+    <copydir src="${cvs.docsrc.dir}" 
+           dest="${dist.docs}" 
+           includes="**/*.html,**/*.jpg,**/*.gif" />
+  </target>
+
+  <target name="copy-docs-dist" unless="in-cvs-tree" depends="prepare"> 
+    <echo message="Docs and source not copied on build from dist."/>
+  </target>
+
+  <target name="copy-docs" depends="copy-docs-dist,copy-docs-cvs"/> 
+
+  <target name="javadoc" if="in-cvs-tree" depends="copy-source,copy-docs">
+    <javadoc sourcefiles="${apiClasses}"
+             sourcepath="${dist.src}"
+             destdir="${dist.apidocs}"
+             overview="${dist.docs}/api.html"
+             version="true"
+             author="true"
+             public="true"
+             windowtitle="${Name}" />
+  </target>
+
+  <target name="package" depends="jar,copy-all,javadoc">
+    <delete file="{src.dir}/${dist.file}" />
+    <zip zipfile="${src.dir}/${dist.file}"
+         basedir="${build.dir}" 
+         includes="**"
+         excludes="classes/**" />
+  </target>
+
+</project>
