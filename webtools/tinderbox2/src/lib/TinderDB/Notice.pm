@@ -78,7 +78,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.18 $ )[1];
+$VERSION = ( qw $Revision: 1.19 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -372,13 +372,18 @@ sub status_table_row {
     @outrow =  (
                 "\t<td>".
                 HTMLPopUp::Link(
-                                "linktxt" => $NOTICE_AVAILABLE,
+
+                                # if notice available is an image then
+                                # we need the spaces to make the popup
+                                # on mouse over work.
+
+                                "linktxt" => " $NOTICE_AVAILABLE ",
                                 "href" => $href,
                                 "windowtxt" => $rendered_notice,
                                 "windowtitle" => "Notice Board",
                                 "windowheight" => (175 * $num_notices)+100,
                                ).
-                "</td>");
+                "</td>\n");
   } else {
     @outrow = ("\t<!-- skipping: Notice: tree: $tree -->".
                "<td>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
