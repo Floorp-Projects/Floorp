@@ -313,6 +313,9 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
 {
    // The mFormFrame is set in the initial reflow within nsHTMLButtonControlFrame
   nsresult rv = NS_OK;
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+  }
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
