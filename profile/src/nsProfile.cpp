@@ -173,7 +173,7 @@ public:
 	// Profile Core supporters
     NS_IMETHOD CreateNewProfile(char* data);
 	NS_IMETHOD RenameProfile(const char* aOldName, const char* aNewName);  
-	NS_IMETHOD DeleteProfile(const char* aProfileName);  
+	NS_IMETHOD DeleteProfile(const char* aProfileName, const char *canDeleteFiles);  
 	NS_IMETHOD GetProfileList(nsString& profileList);
 	NS_IMETHOD StartCommunicator(const char* aProfileName);
 	NS_IMETHOD GetCurrProfile(nsString& currProfile);
@@ -187,6 +187,10 @@ public:
 
 	// Get the count of 4x (unmigrated) profiles
 	NS_IMETHOD Get4xProfileCount(int *numProfiles);
+	NS_IMETHOD MigrateAllProfiles();
+
+	// Clone a profile with current profile info
+	NS_IMETHOD CloneProfile(const char* aProfileName);
 };
 
 nsProfile* nsProfile::mInstance = nsnull;
@@ -1231,7 +1235,8 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 	CopyRegKey(oldName, newName);
 
 	// Delete old profile entry
-	DeleteProfile(oldName);
+		DeleteProfile(oldName, "false");
+
 
 	// If we renamed current profile, the new profile will be the current profile
 	if (renameCurrProfile)
@@ -1344,7 +1349,7 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 // Delete a profile from the registry
 // Not deleting the directories on the harddisk yet.
 // 4.x kind of confirmation need to be implemented yet
-NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName)
+NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canDeleteFiles)
 {
 
     nsresult rv = NS_OK;
@@ -1353,6 +1358,9 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName)
     printf("ProfileManager : DeleteProfile\n");
 #endif
     
+	nsFileSpec profileDirSpec;
+	GetProfileDir(profileName, &profileDirSpec);
+
 	// To be more uniform need to change the arragement
 	// of the following with NS_SUCCEEDED()
 	// Check result.
@@ -1431,6 +1439,13 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName)
 		}
         m_reg->Close();
     }
+
+	// If user asks for it, delete profile directory
+	if (PL_strcmp(canDeleteFiles, "true") == 0)
+	{
+		DeleteUserDirectories(profileDirSpec);
+	}
+
 
     return rv;
 }
@@ -2461,6 +2476,73 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 
 	return rv;
 }
+
+
+// Migrates all unmigrated profiles
+NS_IMETHODIMP nsProfile::MigrateAllProfiles()
+{
+
+    nsresult rv = NS_OK;
+
+#ifdef XP_PC
+	for (int i=0; i < g_numOldProfiles; i++)
+	{
+		rv = MigrateProfile(gOldProfiles[i]);
+	}
+#endif
+
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsProfile::CloneProfile(const char* newProfile)
+{
+    nsresult rv = NS_OK;
+
+#if defined(DEBUG_profile)
+    printf("ProfileManager : CloneProfile\n");
+#endif
+
+	nsFileSpec currProfileDir;
+	nsFileSpec newProfileDir;
+
+	GetCurrentProfileDir(&currProfileDir);
+
+	if (currProfileDir)
+	{
+		nsIFileLocator* locator = nsnull;
+		
+		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+
+		if (NS_FAILED(rv) || !locator)
+			return NS_ERROR_FAILURE;
+
+	    nsIFileSpec* dirSpec;
+        rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, &dirSpec);
+        
+		if (NS_FAILED(rv) || !dirSpec)
+			return NS_ERROR_FAILURE;
+
+		//Append profile name to form a directory name
+	    dirSpec->GetFileSpec(&newProfileDir);
+		NS_RELEASE(dirSpec);
+
+		newProfileDir += newProfile;
+
+		currProfileDir.RecursiveCopy(newProfileDir);
+		
+		rv = SetProfileDir(newProfile, newProfileDir);
+	}
+
+
+#if defined(DEBUG_profile)
+	if (NS_SUCCEEDED(rv))
+		printf("ProfileManager : Cloned CurrentProfile to new Profile ->%s<-\n", newProfile);
+#endif
+
+	return rv;
+}
+
 
 /***************************************************************************************/
 /***********                           PROFILE FACTORY                      ************/

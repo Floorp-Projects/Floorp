@@ -73,7 +73,7 @@ public:
     // Creators
     NS_IMETHOD CreateNewProfile(char* data) = 0;
 	NS_IMETHOD RenameProfile(const char* aOldName, const char* aNewName) = 0;  
-	NS_IMETHOD DeleteProfile(const char* aProfileName) = 0; 
+	NS_IMETHOD DeleteProfile(const char* aProfileName, const char *canDeleteFiles) = 0; 
 	NS_IMETHOD GetProfileList(nsString& aProfileList) = 0;
 	NS_IMETHOD StartCommunicator(const char* aProfileName) = 0;
 	NS_IMETHOD GetCurrProfile(nsString& currProfile) = 0;
@@ -86,6 +86,10 @@ public:
 	NS_IMETHOD ProcessPREGInfo(char* data) = 0;
 
 	NS_IMETHOD Get4xProfileCount(int *numProfiles) = 0;
+	NS_IMETHOD MigrateAllProfiles() = 0;
+
+	// Clone a profile
+	NS_IMETHOD CloneProfile(const char* aProfileName) = 0;
 };
 
 #endif /* nsIProfile_h__ */

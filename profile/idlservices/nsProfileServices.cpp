@@ -47,12 +47,14 @@ public:
     // nsIProfile interface
 	NS_IMETHOD CreateNewProfile(const char* aValue);
 	NS_IMETHOD RenameProfile(const char *oldName, const char *newName);
-	NS_IMETHOD DeleteProfile(const char *profileName);
+	NS_IMETHOD DeleteProfile(const char *profileName, const char *canDeleteFiles);
 	NS_IMETHOD GetProfileList(char **_retval);
 	NS_IMETHOD StartCommunicator(const char *profileName);
 	NS_IMETHOD GetCurrentProfile(char **_retval);
 	NS_IMETHOD MigrateProfile(const char *profileName);
 	NS_IMETHOD ProcessPREGInfo(const char *data);
+	NS_IMETHOD CloneProfile(const char *aProfileName);
+
 
 private:
 	nsIProfile *mProfile;
@@ -118,13 +120,13 @@ ProfileServicesImpl::RenameProfile(const char* oldName, const char* newName)
 }
 
 NS_IMETHODIMP
-ProfileServicesImpl::DeleteProfile(const char* profileName)
+ProfileServicesImpl::DeleteProfile(const char* profileName, const char *canDeleteFiles)
 {
     NS_PRECONDITION(profileName != nsnull, "null ptr");
     if (! profileName)
         return NS_ERROR_NULL_POINTER;
 
-	mProfile->DeleteProfile(profileName);
+	mProfile->DeleteProfile(profileName, canDeleteFiles);
     return NS_OK;
 }
 
@@ -176,3 +178,18 @@ ProfileServicesImpl::ProcessPREGInfo(const char* data)
  	mProfile->ProcessPREGInfo((char *)data);
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+ProfileServicesImpl::CloneProfile(const char* aProfileName)
+{
+    NS_PRECONDITION(aProfileName != nsnull, "null ptr");
+
+	if (! aProfileName)
+		return NS_ERROR_NULL_POINTER;
+
+	mProfile->CloneProfile(aProfileName);
+
+	return NS_OK;
+}
+
