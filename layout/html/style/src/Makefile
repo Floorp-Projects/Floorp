@@ -36,6 +36,7 @@ CPPSRCS =				\
 	nsCSSStyleSheet.cpp		\
 	nsHTMLAttributes.cpp		\
 	nsHTMLStyleSheet.cpp		\
+	nsHTMLCSSStyleSheet.cpp		\
 	nsHTMLValue.cpp			\
 	$(NULL)
 
