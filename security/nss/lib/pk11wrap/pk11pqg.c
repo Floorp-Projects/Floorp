@@ -51,7 +51,7 @@ PK11_PQG_ParamGen(unsigned int j, PQGParams **pParams, PQGVerify **pVfy) {
  * seedBbytes must be in the range [20..255] or an error will result.
  */
 extern SECStatus
-PK11_QG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
+PK11_PQG_ParamGenSeedLen( unsigned int j, unsigned int seedBytes,
 				 PQGParams **pParams, PQGVerify **pVfy) {
     return PQG_ParamGenSeedLen(j, seedBytes, pParams, pVfy);
 }

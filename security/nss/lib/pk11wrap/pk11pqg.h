@@ -52,7 +52,7 @@ extern SECStatus PK11_PQG_ParamGen(unsigned int j, PQGParams **pParams,
  * Length of SEED in bytes specified in seedBytes.
  * seedBbytes must be in the range [20..255] or an error will result.
  */
-extern SECStatus PK11_QG_ParamGenSeedLen( unsigned int j, 
+extern SECStatus PK11_PQG_ParamGenSeedLen( unsigned int j, 
 	unsigned int seedBytes, PQGParams **pParams, PQGVerify **pVfy);
 
 /*  Test PQGParams for validity as DSS PQG values.
