@@ -1359,19 +1359,37 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     sv = GetNearestScrollingView(focusView);
   }
 
+  PRBool passToParent = PR_FALSE;
+
   if (sv) {
     if (targetContent)
       targetContent->HandleDOMEvent(aPresContext, &mouseOutEvent, nsnull,
                                     NS_EVENT_FLAG_INIT, &mouseoutStatus);
+
+    // Check the scroll position before and after calling ScrollBy[Page|Line]s.
+    // This allows us to detect whether the view is not scrollable
+    // (for whatever reason) and bubble up the scroll to the parent document.
+
+    nscoord xPos, yPos;
+    sv->GetScrollPosition(xPos, yPos);
 
     if (scrollPage)
       sv->ScrollByPages((numLines > 0) ? 1 : -1);
     else
       sv->ScrollByLines(0, numLines);
 
-    if (focusView)
-      ForceViewUpdate(focusView);
-  } else {
+    nscoord newXPos, newYPos;
+    sv->GetScrollPosition(newXPos, newYPos);
+
+    if (newYPos != yPos) {
+      if (focusView)
+        ForceViewUpdate(focusView);
+    } else
+      passToParent = PR_TRUE;
+  } else
+    passToParent = PR_TRUE;
+
+  if (passToParent) {
     nsresult rv;
     nsIFrame* newFrame = nsnull;
     nsCOMPtr<nsIPresContext> newPresContext;
@@ -1404,42 +1422,45 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(shell);
   if (!treeItem) return NS_ERROR_FAILURE;
 
+  /* get our docshell's parent */
   nsCOMPtr<nsIDocShellTreeItem> parent;
   treeItem->GetParent(getter_AddRefs(parent));
   if (!parent) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDocShell> pDocShell = do_QueryInterface(parent);
   if (!pDocShell) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIPresShell> presShell;
-  pDocShell->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell) return NS_ERROR_FAILURE;
-  
-  nsIFrame* rootFrame = nsnull;
-  presShell->GetRootFrame(&rootFrame);   
-  if (!rootFrame) return NS_ERROR_FAILURE;
-  
-  presShell->GetPresContext(&presCtxOuter); //addrefs
 
-  nsPoint eventPoint;
-  rootFrame->GetOrigin(eventPoint);
-  eventPoint += aEvent->point;
+  nsCOMPtr<nsIPresShell> pPresShell;
+  pDocShell->GetPresShell(getter_AddRefs(pPresShell));
+  if (!pPresShell) return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  rv = rootFrame->GetFrameForPoint(presCtxOuter, eventPoint,
-                                   NS_FRAME_PAINT_LAYER_FOREGROUND,
-                                   &targetOuterFrame);
-  if (rv != NS_OK) {
-    rv = rootFrame->GetFrameForPoint(presCtxOuter, eventPoint,
-                                     NS_FRAME_PAINT_LAYER_FLOATERS,
-                                     &targetOuterFrame);
-    if (rv != NS_OK) {
-      rv = rootFrame->GetFrameForPoint(presCtxOuter, eventPoint,
-                                       NS_FRAME_PAINT_LAYER_BACKGROUND,
-                                       &targetOuterFrame);
-      if (rv != NS_OK) return NS_ERROR_FAILURE;
-    }
-  }
+  nsCOMPtr<nsIDocument> parentDoc;
+  pPresShell->GetDocument(getter_AddRefs(parentDoc));
+
+  nsCOMPtr<nsIContent> rootContent;
+  parentDoc->GetRootContent(getter_AddRefs(rootContent));
+
+  nsCOMPtr<nsIDocShell> ourDS = do_QueryInterface(shell);
+
+  /* now find the content node in our parent docshell's document that corresponds
+     to our docshell */
+  nsCOMPtr<nsIContent> frameContent = getter_AddRefs(FindContentForDocShell(pPresShell, 
+                                                                            rootContent,
+                                                                            ourDS));
+  if (!frameContent) return NS_ERROR_FAILURE;
+
+  /*
+    get this content node's frame, and use it as the new event target,
+    so the event can be processed in the parent docshell.
+    Note that we don't actually need to translate the event coordinates
+    because they are not used by DoWheelScroll().
+  */
+  nsIFrame* frameFrame = nsnull;
+  pPresShell->GetPrimaryFrameFor(frameContent, &frameFrame);
+  if (!frameFrame) return NS_ERROR_FAILURE;
+
+  pPresShell->GetPresContext(&presCtxOuter); //addrefs
+  targetOuterFrame = frameFrame;
 
   return NS_OK;
 }
