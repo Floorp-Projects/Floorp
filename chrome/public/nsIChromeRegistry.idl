@@ -28,7 +28,33 @@
 [scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
 interface nsIChromeRegistry : nsISupports
 {
+  /**
+   * Convert a chrome URL into a canonical representation; specifically,
+   *
+   *   chrome://package/provider/file
+   *
+   * Chrome URLs are allowed to be specified in "shorthand", leaving the
+   * "file" porition off. In that case, the URL is expanded to:
+   *
+   *   chrome://package/provider/package.ext
+   *
+   * where "ext" is:
+   *
+   *   "xul" for a "content" package,
+   *   "css" for a "skin" package, and
+   *   "dtd" for a "locale" package.
+   *
+   * @param aChromeURL the URL that is to be canonified.
+   */
+  void canonify(in nsIURI aChromeURL);
+
+  /**
+   * Convert a chrome URL to a "real" using the information in the registry.
+   *
+   * @param aChromeURL the URL that is to be converted.
+   */
 	void convertChromeURL(in nsIURI aChromeURL);
+
 	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
 		
 	void reloadChrome();
