@@ -84,6 +84,8 @@ viewer:Components:history.xpt
 viewer:Components:htmlparser.shlb 
 viewer:Components:http.shlb 
 viewer:Components:http.xpt 
+viewer:Components:keyword.shlb
+viewer:Components:datetime.shlb
 viewer:Components:jar.shlb
 viewer:Components:jar.xpt
 viewer:Components:jpgdecoder.shlb 

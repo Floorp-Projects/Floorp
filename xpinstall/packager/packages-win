@@ -94,6 +94,8 @@ bin\components\nkfile.dll
 bin\components\nkftp.dll
 bin\components\nkhttp.dll
 bin\components\nkres.dll
+bin\components\nkkyword.dll
+bin\components\nkdatetm.dll
 bin\components\nsgif.dll
 bin\components\nsjpg.dll
 bin\components\nslocale.dll
