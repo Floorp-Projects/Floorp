@@ -100,6 +100,6 @@ include $(topsrcdir)/config/rules.mk
 
 # Silly case-insensitive fs
 export:: IENUMFE.CPP
-	cp $< L_Ienumfe.cpp
+	cp -a $< L_Ienumfe.cpp
 
 

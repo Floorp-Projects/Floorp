@@ -39,7 +39,7 @@ CPPSRCS		= \
 		nsProxyObjectManager.cpp \
 		$(NULL)
 
-DEFINES		+=  -D_IMPL_NS_COM -DEXPORT_XPTC_API
+DEFINES		+=  -D_IMPL_NS_COM -DEXPORT_XPTC_API -DEXPORT_XPTI_API
 
 # No shared lib; Force creation of static lib
 FORCE_STATIC_LIB = 1

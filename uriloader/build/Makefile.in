@@ -65,8 +65,8 @@ endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
