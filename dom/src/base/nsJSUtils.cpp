@@ -268,6 +268,10 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
     nsIID classID;
     nsISupports* native;
 
+    if (NS_COMFALSE == scriptContext->IsContextInitialized()) {
+      return JS_TRUE;
+    }
+
     result =  scriptContext->GetNameSpaceManager(&manager);
     if (NS_OK == result) {
       result = manager->LookupName(name, PR_FALSE, classID);
