@@ -280,7 +280,6 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Abbr, abbr)
-NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, Align, align, "left")
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Axis, axis)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, BgColor, bgcolor)
 NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, Ch, _char, ".")
@@ -293,6 +292,32 @@ NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, RowSpan, rowspan, 1)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Scope, scope)
 NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, VAlign, valign, "middle")
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Width, width)
+
+
+NS_IMETHODIMP
+nsHTMLTableCellElement::GetAlign(nsAString& aValue)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, aValue);
+
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    // There's no align attribute, ask the row for the alignment.
+
+    nsCOMPtr<nsIDOMHTMLTableRowElement> row;
+    GetRow(getter_AddRefs(row));
+
+    if (row) {
+      return row->GetAlign(aValue);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, nsHTMLAtoms::align, aValue, PR_TRUE);
+}
 
 
 static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
