@@ -35,7 +35,6 @@
 #include "nsIParser.h"
 #include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
-#include "nsISaveAsCharset.h"
 #include "nsIEntityConverter.h"
 #include "nsCRT.h"
 #include "nsIDocumentEncoder.h"   // for output flags

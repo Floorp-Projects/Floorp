@@ -43,6 +43,7 @@
 #include "nsParserCIID.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLTokens.h"  // for eHTMLTags
+#include "nsISaveAsCharset.h" // Some compilers can't do nsCOMPtr on a forward type
 
 #define NS_IHTMLCONTENTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
@@ -53,7 +54,6 @@ class ostream;
 #endif
 
 class nsIParserNode;
-class nsISaveAsCharset;
 class nsIOutputStream;
 
 class nsIHTMLContentSinkStream : public nsIHTMLContentSink {
