@@ -160,7 +160,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
   
 #ifdef NOISY_VERTICAL_MARGINS
   nsFrame::ListTag(stdout, aRS.frame);
-  printf(": => %d\n", aMargin.get());
+  printf(": => %d\n", aMargin->get());
 #endif
 
   return dirtiedLine;
@@ -668,9 +668,10 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // Check whether the block's bottom margin collapses with its top
   // margin. See CSS 2.1 section 8.3.1; those rules seem to match
   // nsBlockFrame::IsEmpty(). Any such block must have zero height so
-  // check that first.
-  if (0 == mMetrics.height && !aLine->HasClearance() &&
-      aLine->CachedIsEmpty())
+  // check that first. Note that a block can have clearance and still
+  // have adjoining top/bottom margins, because the clearance goes
+  // above the top margin.
+  if (0 == mMetrics.height && aLine->CachedIsEmpty())
   {
     // Collapse the bottom margin with the top margin that was already
     // applied.
@@ -683,12 +684,18 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
     printf(" -- collapsing top & bottom margin together; y=%d spaceY=%d\n",
            y, mSpace.y);
 #endif
-
-    // Empty blocks are placed at the top of the collapsed margin
-    y = mSpace.y;
    
     // Empty blocks always fit
     fits = PR_TRUE;
+
+    // Section 8.3.1 of CSS 2.1 says that blocks with adjoining
+    // top/bottom margins whose top margin collapses with their
+    // parent's top margin should have their top border-edge at the
+    // top border-edge of their parent. We actually don't have to do
+    // anything special to make this happen. In that situation,
+    // nsBlockFrame::ShouldApplyTopMargin will have returned PR_FALSE,
+    // and mTopMargin and aClearance will have been zero in
+    // ReflowBlock.
   }
   else {
     // See if the frame fit. If it's the first frame then it always

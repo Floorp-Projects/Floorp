@@ -3145,9 +3145,9 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
 
   // Determine if this line is "essentially" the first line
   for (line_iterator line = begin_lines(); line != aLine; ++line) {
-    if (!line->CachedIsEmpty()) {
-      // A line which preceeds aLine is non-empty, so therefore the
-      // top margin applies.
+    if (!line->CachedIsEmpty() || line->HasClearance()) {
+      // A line which preceeds aLine is non-empty, or has clearance,
+      // so therefore the top margin applies.
       aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
       return PR_TRUE;
     }
