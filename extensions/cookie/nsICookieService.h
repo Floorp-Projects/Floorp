@@ -38,6 +38,8 @@
 #define NS_ICOOKIESERVICE_IID \
 { 0xab397772, 0x12d3, 0x11d3, { 0x8a, 0xd1, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
+class nsIPrompt;
+
 class nsICookieService : public nsISupports {
 public:
   
@@ -76,11 +78,13 @@ public:
    *
    * @param aURL The URL for which to set the cookie string
    * @param aFirstURL The URL which the user typed in or clicked on
+   * @param aPrompter The nsIPrompt implementation to use. If null, a default
+   *                  will be used.
    * @param aCookie The char * string to set
    * @param aExpires The expiry information of the cookie
    * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
    */
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, const char *aCookie, const char *aExpires)=0;
+  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires)=0;
 
   /* 
    * Blows away all permissions currently in the cookie permissions list,
