@@ -31,7 +31,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
 {
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  // XXX Do something sensible in page mode...
   if (eReflowReason_Incremental == aReflowState.reason) {
     // We don't expect the target of the reflow command to be page frame
 #ifdef NS_DEUG
@@ -53,6 +52,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
                                      maxSize);
   
+    kidReflowState.isTopOfPage = PR_TRUE;
     ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
   
     // Place and size the child. Make sure the child is at least as
@@ -85,8 +85,9 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
     if (nsnull != mFirstChild) {
       nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
                                        aReflowState.maxSize);
-      nsIHTMLReflow*    htmlReflow;
+      kidReflowState.isTopOfPage = PR_TRUE;
 
+      nsIHTMLReflow*    htmlReflow;
       if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         // Get the child's desired size
         ReflowChild(mFirstChild, aPresContext, aDesiredSize, kidReflowState, aStatus);
