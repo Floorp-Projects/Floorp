@@ -519,3 +519,7 @@ Rights Reserved.
 
 <!ENTITY runJunkControls.label "Run Junk Mail Controls on Selected Messages...">
 <!ENTITY runJunkControls.accesskey "u">
+
+<!ENTITY markSelectedAsJunk.label "Mark Selected Messages As Junk">
+<!ENTITY markSelectedAsNotJunk.label "Mark Selected Messages As Not Junk">
+

@@ -1438,8 +1438,10 @@ Rights Reserved.
               accesskey="&junkMailCmd.accesskey;" 
               oncommand="MsgJunkMail()"/>
     <menuseparator/>
-    <menuitem label="Mark Selected Messages As Junk" oncommand="JunkSelectedMessages(true);"/>
-    <menuitem label="Mark Selected Messages As Not Junk" oncommand="JunkSelectedMessages(false);"/>
+    <menuitem label="&markSelectedAsJunk.label;" 
+              oncommand="JunkSelectedMessages(true);"/>
+    <menuitem label="&markSelectedAsNotJunk.label;" 
+              oncommand="JunkSelectedMessages(false);"/>
     <menuitem label="&runJunkControls.label;"
 	      accesskey="&runJunkControls.accesskey;"
 	      oncommand="analyzeMessages();"/>
