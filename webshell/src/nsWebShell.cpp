@@ -1944,6 +1944,8 @@ nsWebShell::LoadDocument(const char* aURL,
                          const char* aCharset, 
                          nsCharsetSource aSource)
 {
+  nsAutoString url(aURL);
+  LoadURL(url.GetUnicode());
   return NS_OK;
 }
 
