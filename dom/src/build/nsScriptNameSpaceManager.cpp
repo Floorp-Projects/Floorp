@@ -522,7 +522,8 @@ nsScriptNameSpaceManager::InitForContext(nsIScriptContext *aContext)
 
 nsresult
 nsScriptNameSpaceManager::LookupName(const nsAString& aName,
-                                     const nsGlobalNameStruct **aNameStruct)
+                                     const nsGlobalNameStruct **aNameStruct,
+                                     const PRUnichar **aClassName)
 {
   GlobalNameMapEntry *entry =
     NS_STATIC_CAST(GlobalNameMapEntry *,
@@ -531,8 +532,14 @@ nsScriptNameSpaceManager::LookupName(const nsAString& aName,
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     *aNameStruct = &entry->mGlobalName;
+    if (aClassName) {
+      *aClassName = entry->mKey.get();
+    }
   } else {
     *aNameStruct = nsnull;
+    if (aClassName) {
+      *aClassName = nsnull;
+    }
   }
 
   return NS_OK;

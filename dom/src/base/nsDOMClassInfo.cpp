@@ -517,7 +517,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLFormElement, nsHTMLFormElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_GETPROPERTY | 
+                           nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(HTMLFrameElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -701,16 +701,15 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGPathElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
 
-    
   // other SVG classes
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLength, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedPoints, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPointList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGPoint, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedTransformList, nsDOMGenericSH,
@@ -762,9 +761,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGPathSegCurvetoQuadraticSmoothRel, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedRect, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
   // DOM Traversal classes
@@ -1020,7 +1019,7 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
 
   jsval jv;
-  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception, 
+  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception,
                   NS_GET_IID(nsIException), &jv);
   NS_ENSURE_SUCCESS(rv, rv);
   JS_SetPendingException(cx, jv);
@@ -1247,9 +1246,7 @@ nsDOMClassInfo::Init()
   extern nsScriptNameSpaceManager *gNameSpaceManager;
   NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  nsresult rv = nsServiceManager::GetService(nsIXPConnect::GetCID(),
-                                             nsIXPConnect::GetIID(),
-                                             (nsISupports **)&sXPConnect);
+  nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXPCFunctionThisTranslator> old;
@@ -2839,7 +2836,7 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
       NS_ERROR("Huh, global not a nsIScriptGlobalObject?");
 
       return PR_TRUE;
-    } 
+    }
 
     nsCOMPtr<nsIScriptContext> otherScriptContext;
     sgo->GetContext(getter_AddRefs(otherScriptContext));
@@ -2860,7 +2857,7 @@ needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 
   do {
     fp = ::JS_FrameIterator(cx, &fp);
-    
+
     if(!fp) {
       break;
     }
@@ -3230,67 +3227,6 @@ BaseStubConstructor(const nsGlobalNameStruct *name_struct, JSContext *cx,
   return NS_SUCCEEDED(rv) ? JS_TRUE : JS_FALSE;
 }
 
-
-static JSObject *
-GetInterfaceObject(JSContext *cx, JSObject *obj, const char *aName)
-{
-  jsval components_val;
-
-  if (!::JS_GetProperty(cx, obj, "Components", &components_val)) {
-    return nsnull;
-  }
-
-  if (JSVAL_IS_PRIMITIVE(components_val)) {
-    return nsnull;
-  }
-
-  jsval if_val = JSVAL_VOID;
-
-  if (!::JS_GetProperty(cx, JSVAL_TO_OBJECT(components_val), "interfaces",
-                        &if_val)) {
-    return nsnull;
-  }
-
-  if (JSVAL_IS_PRIMITIVE(if_val)) {
-    return nsnull;
-  }
-
-  jsval val;
-
-  if (!::JS_GetProperty(cx, JSVAL_TO_OBJECT(if_val), aName, &val)) {
-    return nsnull;
-  }
-
-  if (JSVAL_IS_PRIMITIVE(val)) {
-    return nsnull;
-  }
-
-  return JSVAL_TO_OBJECT(val);
-}
-
-// static
-nsresult
-nsWindowSH::DefineInterfaceProperty(JSContext *cx, JSObject *obj,
-                                    JSString *str)
-{
-  nsCAutoString name("nsIDOM");
-  name.Append(::JS_GetStringBytes(str));
-
-  JSObject *if_object = GetInterfaceObject(cx, obj, name.get());
-
-  if (!if_object) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                             ::JS_GetStringLength(str),
-                             OBJECT_TO_JSVAL(if_object), nsnull, nsnull, 0)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 static nsresult
 DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
 {
@@ -3327,21 +3263,39 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
 
     PRUint16 type = c->GetType().TagPart();
 
-    if (type == nsXPTType::T_I8 || type == nsXPTType::T_I16 ||
-        type == nsXPTType::T_I32 || type == nsXPTType::T_U8 ||
-        type == nsXPTType::T_U16 || type == nsXPTType::T_U32) {
-      jsval v = INT_TO_JSVAL(c->GetValue()->val.u16);
-
-      if (!::JS_DefineProperty(cx, obj, c->GetName(), v, nsnull, nsnull,
-                               JSPROP_ENUMERATE)) {
-        return NS_ERROR_UNEXPECTED;
+    jsval v;
+    switch (type) {
+      case nsXPTType::T_I8:
+      case nsXPTType::T_U8:
+      {
+        v = INT_TO_JSVAL(c->GetValue()->val.u8);
+        break;
+      }
+      case nsXPTType::T_I16:
+      case nsXPTType::T_U16:
+      {
+        v = INT_TO_JSVAL(c->GetValue()->val.u16);
+        break;
+      }
+      case nsXPTType::T_I32:
+      case nsXPTType::T_U32:
+      {
+        v = INT_TO_JSVAL(c->GetValue()->val.u32);
+        break;
+      }
+      default:
+      {
+#ifdef NS_DEBUG
+        NS_ERROR("Non-numeric constant found in interface.");
+#endif
+        continue;
       }
     }
-#ifdef NS_DEBUG
-    else {
-      NS_ERROR("Non-numeric constant found in interface.");
+
+    if (!::JS_DefineProperty(cx, obj, c->GetName(), v, nsnull, nsnull,
+                             JSPROP_ENUMERATE)) {
+      return NS_ERROR_UNEXPECTED;
     }
-#endif
   }
 
   return NS_OK;
@@ -3360,8 +3314,8 @@ DOMJSClass_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   const PRUnichar* class_name =
-      NS_CONST_CAST(const PRUnichar*,
-                    NS_STATIC_CAST(PRUnichar*, 
+      NS_CONST_CAST(const PRUnichar *,
+                    NS_STATIC_CAST(PRUnichar *,
                                    ::JS_GetPrivate(cx, class_obj)));
 
   extern nsScriptNameSpaceManager *gNameSpaceManager;
@@ -3395,18 +3349,8 @@ DOMJSClass_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return BaseStubConstructor(name_struct, cx, obj, argc, argv, rval);
 }
 
-JS_STATIC_DLL_CALLBACK(void)
-DOMJSClass_Finalize(JSContext *cx, JSObject *obj)
-{
-  void* class_name = ::JS_GetPrivate(cx, obj);
-  if (class_name) {
-    nsMemory::Free(class_name);
-  }
-}
-
 JS_STATIC_DLL_CALLBACK(JSBool)
-DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v,
-                       JSBool *bp)
+DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
   JSObject *dom_obj;
   if (!::JS_ValueToObject(cx, v, &dom_obj)) {
@@ -3420,16 +3364,12 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v,
     return JS_TRUE;
   }
 
-  JSClass* dom_class = JS_GET_CLASS(cx, dom_obj);
+  JSClass *dom_class = JS_GET_CLASS(cx, dom_obj);
   if (!dom_class) {
     NS_ERROR("DOMJSClass_HasInstance can't get class.");
     nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
 
     return JS_FALSE;
-  }
-
-  if (dom_class != &nsDOMClassInfo::sDOMJSClass) {
-    return JS_TRUE;
   }
 
   const nsGlobalNameStruct *name_struct = nsnull;
@@ -3457,8 +3397,8 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v,
                "The constructor was set up with a struct of the wrong type.");
 
   const PRUnichar* class_name =
-      NS_CONST_CAST(const PRUnichar*,
-                    NS_STATIC_CAST(PRUnichar*, 
+      NS_CONST_CAST(const PRUnichar *,
+                    NS_STATIC_CAST(PRUnichar *,
                                    ::JS_GetPrivate(cx, obj)));
   if (!class_name) {
     NS_ERROR("DOMJSClass_HasInstance can't get name.");
@@ -3548,8 +3488,8 @@ DOMJSClass_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     jsval *rval)
 {
   const PRUnichar* class_name =
-      NS_CONST_CAST(const PRUnichar*,
-                    NS_STATIC_CAST(PRUnichar*, 
+      NS_CONST_CAST(const PRUnichar *,
+                    NS_STATIC_CAST(PRUnichar *,
                                    ::JS_GetPrivate(cx, obj)));
   if (!class_name) {
     NS_ERROR("DOMJSClass_HasInstance can't get name.");
@@ -3576,7 +3516,7 @@ DOMJSClass_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JSClass nsDOMClassInfo::sDOMJSClass = {
   "DOM Class", JSCLASS_HAS_PRIVATE,
   JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, DOMJSClass_Finalize,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   nsnull, nsnull, nsnull, DOMJSClass_Construct,
   nsnull, DOMJSClass_HasInstance
 };
@@ -3617,12 +3557,15 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
                          ::JS_GetStringLength(str));
 
   const nsGlobalNameStruct *name_struct = nsnull;
+  const PRUnichar *class_name = nsnull;
 
-  gNameSpaceManager->LookupName(name, &name_struct);
+  gNameSpaceManager->LookupName(name, &name_struct, &class_name);
 
   if (!name_struct) {
     return NS_OK;
   }
+
+  NS_ENSURE_TRUE(class_name, NS_ERROR_UNEXPECTED);
 
   nsresult rv = NS_OK;
 
@@ -3646,7 +3589,26 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeInterface) {
-    rv = DefineInterfaceProperty(cx, obj, str);
+    // We're resolving a name of a DOM interface for which there is no
+    // direct DOM class, create a constructor object...
+
+    JSObject* class_obj = ::JS_DefineObject(cx, obj, ::JS_GetStringBytes(str),
+                                            &sDOMJSClass, 0, 0);
+    if (!class_obj) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    if (!::JS_SetPrivate(cx, class_obj,
+                         NS_CONST_CAST(void *,
+                                       NS_STATIC_CAST(const void *,
+                                                      class_name)))) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // ... and define the constants from the DOM interface on that
+    // constructor object.
+
+    rv = DefineInterfaceConstants(cx, class_obj, &name_struct->mIID);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *did_resolve = PR_TRUE;
@@ -3683,12 +3645,10 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
       return NS_ERROR_UNEXPECTED;
     }
 
-    PRUnichar* class_name = ToNewUnicode(name);
-    NS_ENSURE_TRUE(class_name, NS_ERROR_OUT_OF_MEMORY);
-
-    if (!::JS_SetPrivate(cx, class_obj, class_name)) {
-      nsMemory::Free(class_name);
-
+    if (!::JS_SetPrivate(cx, class_obj,
+                         NS_CONST_CAST(void *,
+                                       NS_STATIC_CAST(const void *,
+                                                      class_name)))) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -4804,7 +4764,7 @@ nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                            NS_GET_IID(nsISupports), &v);
 
   *parentObj = JSVAL_TO_OBJECT(v);
-    
+
   return rv;
 }
 
