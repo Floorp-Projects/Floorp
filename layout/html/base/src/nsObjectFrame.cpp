@@ -2864,42 +2864,47 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 #ifdef XP_MAC
 
 #if TARGET_CARBON
-inline Boolean OSEventAvail(EventMask mask, EventRecord* event) { return EventAvail(mask, event); }
+static void InitializeEventRecord(EventRecord* event)
+{
+    memset(event, 0, sizeof(EventRecord));
+    GetGlobalMouse(&event->where);
+    event->when = TickCount();
+    event->modifiers = GetCurrentKeyModifiers();
+}
+#else
+inline void InitializeEventRecord(EventRecord* event) { ::OSEventAvail(0, event); }
 #endif
 
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 {
-	::OSEventAvail(0, &aMacEvent);
-	
-	switch (anEvent.message) {
-  case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
-		aMacEvent.what = nsPluginEventType_GetFocusEvent;
-		if (mOwner && mOwner->mPresContext)
-		{
-		  nsCOMPtr<nsIContent> content;
-      mOwner->GetContent(getter_AddRefs(content));
-      if (content)
-        content->SetFocus(mOwner->mPresContext);
+    InitializeEventRecord(&aMacEvent);
+    switch (anEvent.message) {
+    case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
+        aMacEvent.what = nsPluginEventType_GetFocusEvent;
+        if (mOwner && mOwner->mPresContext) {
+            nsCOMPtr<nsIContent> content;
+            mOwner->GetContent(getter_AddRefs(content));
+            if (content)
+                content->SetFocus(mOwner->mPresContext);
+        }
+        break;
+    case NS_BLUR_CONTENT:
+        aMacEvent.what = nsPluginEventType_LoseFocusEvent;
+        if (mOwner && mOwner->mPresContext) {
+            nsCOMPtr<nsIContent> content;
+            mOwner->GetContent(getter_AddRefs(content));
+            if (content)
+                content->RemoveFocus(mOwner->mPresContext);
+        }
+        break;
+    case NS_MOUSE_MOVE:
+    case NS_MOUSE_ENTER:
+        aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
+        break;
+    default:
+        aMacEvent.what = nullEvent;
+        break;
     }
-		break;
-	case NS_BLUR_CONTENT:
-		aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-		if (mOwner && mOwner->mPresContext)
-		{
-		  nsCOMPtr<nsIContent> content;
-      mOwner->GetContent(getter_AddRefs(content));
-      if (content)
-        content->RemoveFocus(mOwner->mPresContext);
-    }
-		break;
-	case NS_MOUSE_MOVE:
-	case NS_MOUSE_ENTER:
-		aMacEvent.what = nsPluginEventType_AdjustCursorEvent;
-		break;
-	default:
-		aMacEvent.what = nullEvent;
-		break;
-	}
 }
 
 #endif
@@ -2909,7 +2914,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
 #ifdef XP_MAC
     if (mInstance != NULL) {
         EventRecord scrollEvent;
-        ::OSEventAvail(0, &scrollEvent);
+        InitializeEventRecord(&scrollEvent);
         scrollEvent.what = nsPluginEventType_ScrollingBeginsEvent;
         
         nsPluginPort* pluginPort = GetPluginPort();
@@ -2927,7 +2932,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScro
 #ifdef XP_MAC
     if (mInstance != NULL) {
         EventRecord scrollEvent;
-        ::OSEventAvail(0, &scrollEvent);
+        InitializeEventRecord(&scrollEvent);
         scrollEvent.what = nsPluginEventType_ScrollingEndsEvent;
 
         nsPluginPort* pluginPort = GetPluginPort();
@@ -3355,7 +3360,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   FixUpPluginWindow();
 
   EventRecord updateEvent;
-  ::OSEventAvail(0, &updateEvent);
+  InitializeEventRecord(&updateEvent);
   updateEvent.what = updateEvt;
   updateEvent.message = UInt32(pluginPort->port);
 
@@ -3399,7 +3404,7 @@ NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
     FixUpPluginWindow();
     if (mInstance != NULL) {
         EventRecord idleEvent;
-        ::OSEventAvail(0, &idleEvent);
+        InitializeEventRecord(&idleEvent);
         idleEvent.what = nullEvent;
         
         nsPluginPort* pluginPort = GetPluginPort();
