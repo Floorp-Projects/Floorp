@@ -43,7 +43,6 @@ function onLoad()
         firstItem = menuitems[1].id;
     }
     
-    dump("selecting item " + firstItem + "\n");
     selectServer(firstItem);
 }
 
