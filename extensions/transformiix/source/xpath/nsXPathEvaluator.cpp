@@ -44,7 +44,6 @@
 #include "nsXPathExpression.h"
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
-#include "ProcessorState.h"
 #include "nsContentCID.h"
 #include "ExprParser.h"
 #include "nsDOMError.h"

@@ -39,6 +39,7 @@
 #include "XMLParser.h"
 #include "txURIUtils.h"
 #ifndef TX_EXE
+#include "nsIDocument.h"
 #include "nsSyncLoader.h"
 #include "nsNetUtil.h"
 #else

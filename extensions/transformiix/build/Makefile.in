@@ -35,7 +35,6 @@ endif
 REQUIRES	= xpcom \
 		  string \
 		  dom \
-		  layout \
 		  content \
 		  widget \
 		  necko \
@@ -142,7 +141,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xslt/functions/SystemPropertyFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/txFormatNumberFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
-  ../source/xslt/util/NodeStack.$(OBJ_SUFFIX) \
   ../source/xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
   ../source/xslt/util/txXPathResultComparator.$(OBJ_SUFFIX) \
   $(NULL)
@@ -150,7 +148,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
 EXTRA_DSO_LDOPTS += \
   $(MOZ_UNICHARUTIL_LIBS) \
   $(MOZ_COMPONENT_LIBS) \
-  $(MOZ_UNICHARUTIL_LIBS) \
   $(MOZ_JS_LIBS) \
   $(NULL)
 

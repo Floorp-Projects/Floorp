@@ -35,7 +35,6 @@ REQUIRES	= string \
 		  content \
 		  widget \
 		  js \
-		  appshell \
 		  xpconnect \
 		  caps \
 		  unicharutil \

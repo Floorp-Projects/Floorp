@@ -28,7 +28,8 @@
 */
 
 #include "mozilladom.h"
-#include "nsLayoutCID.h"
+#include "nsContentCID.h"
+#include "nsIDocument.h"
 #include "nsIURL.h"
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
