@@ -1571,9 +1571,18 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAReadableString & aQuotedText,
         {
           preElement->SetAttribute(NS_LITERAL_STRING("_moz_quote"),
                                    NS_LITERAL_STRING("true"));
-          // set style to not have unwanted vertical margins
-          preElement->SetAttribute(NS_LITERAL_STRING("style"),
-                                   NS_LITERAL_STRING("margin: 0 0 0 0px;"));
+          if (quotesInPre)
+          {
+            // set style to not have unwanted vertical margins
+            preElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                     NS_LITERAL_STRING("margin: 0 0 0 0px;"));
+          }
+          else
+          {
+            // turn off wrapping on spans
+            preElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                     NS_LITERAL_STRING("white-space: pre;"));
+          }
         }
 
         // and set the selection inside it:

@@ -1312,7 +1312,8 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
     if (citeNode)
     {
       nsCOMPtr<nsIDOMNode> brNode;
-      res = mHTMLEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset);
+      res = mHTMLEditor->SplitNodeDeep(citeNode, selNode, selOffset, 
+                  &newOffset, PR_TRUE);
       if (NS_FAILED(res)) return res;
       res = citeNode->GetParentNode(getter_AddRefs(selNode));
       if (NS_FAILED(res)) return res;
@@ -1322,6 +1323,12 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
       selPriv->SetInterlinePosition(PR_TRUE);
       res = aSelection->Collapse(selNode, newOffset);
       if (NS_FAILED(res)) return res;
+      // if citeNode wasn't a block, we also want another break before it
+      if (IsInlineNode(citeNode))
+      {
+        res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
+        if (NS_FAILED(res)) return res;
+      }
       *aHandled = PR_TRUE;
       return NS_OK;
     }
@@ -3087,160 +3094,196 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_TRUE;
-  
-  nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
   nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> rememberedLeftBQ, rememberedRightBQ;
   
-  // convert the selection ranges into "promoted" selection ranges:
-  // this basically just expands the range to include the immediate
-  // block parent, and then further expands to include any ancestors
-  // whose children are all in the range
-  nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesFromSelection(aSelection, kOutdent, address_of(arrayOfNodes));
-  if (NS_FAILED(res)) return res;
-
-  // Ok, now go through all the nodes and remove a level of blockquoting, 
-  // or whatever is appropriate.  Wohoo!
-
-  nsCOMPtr<nsIDOMNode> curBlockQuote, firstBQChild, lastBQChild;
-  PRUint32 listCount;
-  PRInt32 i;
-  arrayOfNodes->Count(&listCount);
-  nsCOMPtr<nsIDOMNode> curParent;
-  for (i=0; i<(PRInt32)listCount; i++)
+  // some scoping for selection resetting - we may need to tweak it
   {
-    // here's where we actually figure out what to do
-    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
-    PRInt32 offset;
-    res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
+    nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
+    
+    // convert the selection ranges into "promoted" selection ranges:
+    // this basically just expands the range to include the immediate
+    // block parent, and then further expands to include any ancestors
+    // whose children are all in the range
+    nsCOMPtr<nsISupportsArray> arrayOfNodes;
+    res = GetNodesFromSelection(aSelection, kOutdent, address_of(arrayOfNodes));
     if (NS_FAILED(res)) return res;
-    
-    // is it a blockquote?
-    if (nsHTMLEditUtils::IsBlockquote(curNode)) 
-    {
-      // if it is a blockquote, remove it.
-      // So we need to finish up dealng with any curBlockQuote first.
-      if (curBlockQuote)
-      {
-        res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
-        if (NS_FAILED(res)) return res;
-        curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
-      }
-      res = mHTMLEditor->RemoveBlockContainer(curNode);
-      if (NS_FAILED(res)) return res;
-      continue;
-    }
-    // is it a list item?
-    if (nsHTMLEditUtils::IsListItem(curNode)) 
-    {
-      // if it is a list item, that means we are not outdenting whole list.
-      // So we need to finish up dealng with any curBlockQuote, and then
-      // pop this list item.
-      if (curBlockQuote)
-      {
-        res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
-        if (NS_FAILED(res)) return res;
-        curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
-      }
-      PRBool bOutOfList;
-      res = PopListItem(curNode, &bOutOfList);
-      if (NS_FAILED(res)) return res;
-      continue;
-    }
-    // do we have a blockquote that we are already committed to removing?
-    if (curBlockQuote)
-    {
-      // if so, is this node a descendant?
-      if (nsHTMLEditUtils::IsDescendantOf(curNode, curBlockQuote))
-      {
-        lastBQChild = curNode;
-        continue;  // then we dont need to do anything different for this node
-      }
-      else
-      {
-        // otherwise, we have progressed beyond end of curBlockQuote,
-        // so lets handle it now.  We need to remove the portion of 
-        // curBlockQuote that contains [firstBQChild - lastBQChild].
-        res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
-        if (NS_FAILED(res)) return res;
-        curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
-        // fall out and handle curNode
-      }
-    }
-    
-    // are we inside a blockquote?
-    nsCOMPtr<nsIDOMNode> n = curNode;
-    nsCOMPtr<nsIDOMNode> tmp;
-    while (!nsTextEditUtils::IsBody(n))
-    {
-      n->GetParentNode(getter_AddRefs(tmp));
-      n = tmp;
-      if (nsHTMLEditUtils::IsBlockquote(n))
-      {
-        // if so, remember it, and remember first node we are taking out of it.
-        curBlockQuote = n;
-        firstBQChild  = curNode;
-        lastBQChild   = curNode;
-        break;
-      }
-    }
 
-    if (!curBlockQuote)
+    // Ok, now go through all the nodes and remove a level of blockquoting, 
+    // or whatever is appropriate.  Wohoo!
+
+    nsCOMPtr<nsIDOMNode> curBlockQuote, firstBQChild, lastBQChild;
+    PRUint32 listCount;
+    PRInt32 i;
+    arrayOfNodes->Count(&listCount);
+    nsCOMPtr<nsIDOMNode> curParent;
+    for (i=0; i<(PRInt32)listCount; i++)
     {
-      // could not find an enclosing blockquote for this node.  handle list cases.
-      if (nsHTMLEditUtils::IsList(curParent))  // move node out of list
+      // here's where we actually figure out what to do
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
+      nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
+      PRInt32 offset;
+      res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
+      if (NS_FAILED(res)) return res;
+      
+      // is it a blockquote?
+      if (nsHTMLEditUtils::IsBlockquote(curNode)) 
       {
-        if (nsHTMLEditUtils::IsList(curNode))  // just unwrap this sublist
+        // if it is a blockquote, remove it.
+        // So we need to finish up dealng with any curBlockQuote first.
+        if (curBlockQuote)
         {
+          res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild, 
+                                  address_of(rememberedLeftBQ), address_of(rememberedRightBQ));
+          if (NS_FAILED(res)) return res;
+          curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
+        }
+        res = mHTMLEditor->RemoveBlockContainer(curNode);
+        if (NS_FAILED(res)) return res;
+        continue;
+      }
+      // is it a list item?
+      if (nsHTMLEditUtils::IsListItem(curNode)) 
+      {
+        // if it is a list item, that means we are not outdenting whole list.
+        // So we need to finish up dealng with any curBlockQuote, and then
+        // pop this list item.
+        if (curBlockQuote)
+        {
+          res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild,
+                                  address_of(rememberedLeftBQ), address_of(rememberedRightBQ));
+          if (NS_FAILED(res)) return res;
+          curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
+        }
+        PRBool bOutOfList;
+        res = PopListItem(curNode, &bOutOfList);
+        if (NS_FAILED(res)) return res;
+        continue;
+      }
+      // do we have a blockquote that we are already committed to removing?
+      if (curBlockQuote)
+      {
+        // if so, is this node a descendant?
+        if (nsHTMLEditUtils::IsDescendantOf(curNode, curBlockQuote))
+        {
+          lastBQChild = curNode;
+          continue;  // then we dont need to do anything different for this node
+        }
+        else
+        {
+          // otherwise, we have progressed beyond end of curBlockQuote,
+          // so lets handle it now.  We need to remove the portion of 
+          // curBlockQuote that contains [firstBQChild - lastBQChild].
+          res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild,
+                                  address_of(rememberedLeftBQ), address_of(rememberedRightBQ));
+          if (NS_FAILED(res)) return res;
+          curBlockQuote = 0;  firstBQChild = 0;  lastBQChild = 0;
+          // fall out and handle curNode
+        }
+      }
+      
+      // are we inside a blockquote?
+      nsCOMPtr<nsIDOMNode> n = curNode;
+      nsCOMPtr<nsIDOMNode> tmp;
+      while (!nsTextEditUtils::IsBody(n))
+      {
+        n->GetParentNode(getter_AddRefs(tmp));
+        n = tmp;
+        if (nsHTMLEditUtils::IsBlockquote(n))
+        {
+          // if so, remember it, and remember first node we are taking out of it.
+          curBlockQuote = n;
+          firstBQChild  = curNode;
+          lastBQChild   = curNode;
+          break;
+        }
+      }
+
+      if (!curBlockQuote)
+      {
+        // could not find an enclosing blockquote for this node.  handle list cases.
+        if (nsHTMLEditUtils::IsList(curParent))  // move node out of list
+        {
+          if (nsHTMLEditUtils::IsList(curNode))  // just unwrap this sublist
+          {
+            res = mHTMLEditor->RemoveBlockContainer(curNode);
+            if (NS_FAILED(res)) return res;
+          }
+          // handled list item case above
+        }
+        else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, but parent is non-list: move list items out
+        {
+          nsCOMPtr<nsIDOMNode> child;
+          curNode->GetLastChild(getter_AddRefs(child));
+          while (child)
+          {
+            if (nsHTMLEditUtils::IsListItem(child))
+            {
+              PRBool bOutOfList;
+              res = PopListItem(child, &bOutOfList);
+              if (NS_FAILED(res)) return res;
+            }
+            else if (nsHTMLEditUtils::IsList(child))
+            {
+              // We have an embedded list, so move it out from under the
+              // parent list. Be sure to put it after the parent list
+              // because this loop iterates backwards through the parent's
+              // list of children.
+
+              res = mHTMLEditor->MoveNode(child, curParent, offset + 1);
+              if (NS_FAILED(res)) return res;
+            }
+            else
+            {
+              // delete any non- list items for now
+              res = mHTMLEditor->DeleteNode(child);
+              if (NS_FAILED(res)) return res;
+            }
+            curNode->GetLastChild(getter_AddRefs(child));
+          }
+          // delete the now-empty list
           res = mHTMLEditor->RemoveBlockContainer(curNode);
           if (NS_FAILED(res)) return res;
         }
-        // handled list item case above
       }
-      else if (nsHTMLEditUtils::IsList(curNode)) // node is a list, but parent is non-list: move list items out
+    }
+    if (curBlockQuote)
+    {
+      // we have a blockquote we haven't finished handling
+      res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild, 
+                              address_of(rememberedLeftBQ), address_of(rememberedRightBQ));
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  // make sure selection didn't stick to last piece of content in old bq
+  // (only a roblem for collapsed selections)
+  if (rememberedLeftBQ || rememberedRightBQ)
+  {
+    PRBool bCollapsed;
+    res = aSelection->GetIsCollapsed(&bCollapsed);
+    if (bCollapsed)
+    {
+      // push selection past end of rememberedLeftBQ
+      nsCOMPtr<nsIDOMNode> sNode;
+      PRInt32 sOffset;
+      mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(sNode), &sOffset);
+      if ((sNode == rememberedLeftBQ) || nsHTMLEditUtils::IsDescendantOf(sNode, rememberedLeftBQ))
       {
-        nsCOMPtr<nsIDOMNode> child;
-        curNode->GetLastChild(getter_AddRefs(child));
-        while (child)
-        {
-          if (nsHTMLEditUtils::IsListItem(child))
-          {
-            PRBool bOutOfList;
-            res = PopListItem(child, &bOutOfList);
-            if (NS_FAILED(res)) return res;
-          }
-          else if (nsHTMLEditUtils::IsList(child))
-          {
-            // We have an embedded list, so move it out from under the
-            // parent list. Be sure to put it after the parent list
-            // because this loop iterates backwards through the parent's
-            // list of children.
-
-            res = mHTMLEditor->MoveNode(child, curParent, offset + 1);
-            if (NS_FAILED(res)) return res;
-          }
-          else
-          {
-            // delete any non- list items for now
-            res = mHTMLEditor->DeleteNode(child);
-            if (NS_FAILED(res)) return res;
-          }
-          curNode->GetLastChild(getter_AddRefs(child));
-        }
-        // delete the now-empty list
-        res = mHTMLEditor->RemoveBlockContainer(curNode);
-        if (NS_FAILED(res)) return res;
+        // selection is inside rememberedLeftBQ - push it past it.
+        nsEditor::GetNodeLocation(rememberedLeftBQ, address_of(sNode), &sOffset);
+        sOffset++;
+        aSelection->Collapse(sNode, sOffset);
+      }
+      // and pull selection before beginning of rememberedRightBQ
+      mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(sNode), &sOffset);
+      if ((sNode == rememberedRightBQ) || nsHTMLEditUtils::IsDescendantOf(sNode, rememberedRightBQ))
+      {
+        // selection is inside rememberedRightBQ - push it before it.
+        nsEditor::GetNodeLocation(rememberedRightBQ, address_of(sNode), &sOffset);
+        aSelection->Collapse(sNode, sOffset);
       }
     }
   }
-  if (curBlockQuote)
-  {
-    // we have a blockquote we haven't finished handling
-    res = RemovePartOfBlock(curBlockQuote, firstBQChild, lastBQChild);
-    if (NS_FAILED(res)) return res;
-  }
-
   return res;
 }
 
@@ -3252,7 +3295,9 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
 nsresult 
 nsHTMLEditRules::RemovePartOfBlock(nsIDOMNode *aBlock, 
                                    nsIDOMNode *aStartChild, 
-                                   nsIDOMNode *aEndChild)
+                                   nsIDOMNode *aEndChild,
+                                   nsCOMPtr<nsIDOMNode> *aLeftNode,
+                                   nsCOMPtr<nsIDOMNode> *aRightNode)
 {
   if (!aBlock || !aStartChild || !aEndChild)
     return NS_ERROR_NULL_POINTER;
@@ -3271,6 +3316,10 @@ nsHTMLEditRules::RemovePartOfBlock(nsIDOMNode *aBlock,
   if (NS_FAILED(res)) return res;
   if (rightNode)  aBlock = rightNode;
 
+  // remember left portion of block if caller requested
+  if (aLeftNode) 
+    *aLeftNode = leftNode;
+
   // get split point location
   res = nsEditor::GetNodeLocation(aEndChild, address_of(endParent), &endOffset);
   if (NS_FAILED(res)) return res;
@@ -3282,8 +3331,13 @@ nsHTMLEditRules::RemovePartOfBlock(nsIDOMNode *aBlock,
   if (NS_FAILED(res)) return res;
   if (leftNode)  aBlock = leftNode;
   
+  // remember right portion of block if caller requested
+  if (aRightNode) 
+    *aRightNode = rightNode;
+
   // get rid of part of blockquote we are outdenting
   res = mHTMLEditor->RemoveBlockContainer(aBlock);
+  
   return res;
 }
 
@@ -5972,7 +6026,7 @@ nsHTMLEditRules::GetTopEnclosingMailCite(nsIDOMNode *aNode,
   while (node)
   {
     if ( (aPlainText && nsHTMLEditUtils::IsPre(node)) ||
-         (!aPlainText && nsHTMLEditUtils::IsMailCite(node)) )
+         nsHTMLEditUtils::IsMailCite(node) )
       *aOutCiteNode = node;
     if (nsTextEditUtils::IsBody(node)) break;
     

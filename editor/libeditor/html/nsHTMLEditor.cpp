@@ -4706,8 +4706,9 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   // Also, if it's an anchor then dont treat it as empty - even though
   // anchors are containers, named anchors are "empty" but we don't
   // want to treat them as such.  Also, don't call ListItems or table
-  // cells empty if caller desires.
+  // cells empty if caller desires.  Form Widgets not empty.
   if (!IsContainer(aNode) || nsHTMLEditUtils::IsNamedAnchor(aNode) ||
+        nsHTMLEditUtils::IsFormWidget(aNode)                       ||
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsListItem(aNode)) ||
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsTableCell(aNode)) ) 
   {
@@ -4804,6 +4805,13 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
               break;
             }
           }
+          // is it a form widget?
+          else if (nsHTMLEditUtils::IsFormWidget(aNode))
+          {
+            *outIsEmptyNode = PR_FALSE;
+            break;
+          }
+          
           PRBool isEmptyNode;
           res = IsEmptyNode(node, &isEmptyNode, aSingleBRDoesntCount, aListOrCellNotEmpty);
           if (NS_FAILED(res)) return res;

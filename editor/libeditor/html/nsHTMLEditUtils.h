@@ -78,6 +78,7 @@ public:
   static PRBool IsMailCite(nsIDOMNode *aNode);
   static PRBool IsTextarea(nsIDOMNode *aNode);
   static PRBool IsMap(nsIDOMNode *aNode);
+  static PRBool IsFormWidget(nsIDOMNode *aNode);
   static PRBool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset = 0);
   
   static PRBool IsLeafNode(nsIDOMNode *aNode);
