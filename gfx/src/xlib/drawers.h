@@ -33,7 +33,6 @@ DrawScaledImageXIE(Display *display,
                    Drawable aDest,
                    GC aGC,
                    Drawable aSrc,
-                   Drawable aSrcMask,
                    PRInt32 aSrcWidth,
                    PRInt32 aSrcHeight,
                    PRInt32 aSX,
@@ -45,40 +44,5 @@ DrawScaledImageXIE(Display *display,
                    PRInt32 aDWidth,
                    PRInt32 aDHeight);
 #endif
-
-PRBool
-DrawScaledImageNN(Display *display,
-                  Drawable aDest,
-                  GC aGC,
-                  Drawable aSrc,
-                  Drawable aSrcMask,
-                  PRInt32 aSrcWidth,
-                  PRInt32 aSrcHeight,
-                  PRInt32 aSX,
-                  PRInt32 aSY,
-                  PRInt32 aSWidth,
-                  PRInt32 aSHeight,
-                  PRInt32 aDX,
-                  PRInt32 aDY,
-                  PRInt32 aDWidth,
-                  PRInt32 aDHeight);
-
-PRBool
-DrawScaledImageBitsNN(Display *display,
-                      Drawable aDest,
-                      GC aGC,
-                      const PRUint8 *aSrc,
-                      PRInt32 aBytesPerRow,
-                      const PRUint8 *aSrcMask,
-                      PRInt32 aSrcWidth,
-                      PRInt32 aSrcHeight,
-                      PRInt32 aSX,
-                      PRInt32 aSY,
-                      PRInt32 aSWidth,
-                      PRInt32 aSHeight,
-                      PRInt32 aDX,
-                      PRInt32 aDY,
-                      PRInt32 aDWidth,
-                      PRInt32 aDHeight);
 
 PR_END_EXTERN_C

@@ -97,12 +97,14 @@ DoFlo(Display *display,
   XieFloExportDrawable(&photoElement[idx], idx, aDest, aGC,
                        (aDX - aSX),
                        (aDY - aSY));
+#ifdef DEBUG_XIE
+  printf("export to %d, %d (%dx%d)\n", (aDX - aSX), (aDY - aSY),
+      aDWidth, aDHeight);
+#endif
   ++idx;
-
 
   /* do the scale thing baby */
   XieExecuteImmediate(display, gPhotospace, 1, PR_FALSE, photoElement, idx);
-
 
   /*
     XieFreePhotofloGraph(photoElement, 3);
@@ -114,7 +116,6 @@ DrawScaledImageXIE(Display *display,
                    Drawable aDest,
                    GC aGC,
                    Drawable aSrc,
-                   Drawable aSrcMask,
                    PRInt32 aSrcWidth,
                    PRInt32 aSrcHeight,
                    PRInt32 aSX,
@@ -126,9 +127,6 @@ DrawScaledImageXIE(Display *display,
                    PRInt32 aDWidth,
                    PRInt32 aDHeight)
 {
-  Pixmap alphaMask = 0;
-  GC gc = 0;
-
 #ifdef DEBUG_XIE
   printf("DrawScaledImageXIE\n");
 #endif
@@ -171,55 +169,11 @@ DrawScaledImageXIE(Display *display,
     */
   }
 
-  if (aSrcMask) {
-    GC tmpgc;
-#ifdef DEBUG_XIE
-    fprintf(stderr, "DrawScaledImageXIE with alpha mask\n");
-#endif
-    alphaMask = XCreatePixmap(display,
-                              DefaultRootWindow(xlib_rgb_get_display()),
-                              aDWidth, aDHeight, 1);
-    
-    /* we need to make a worthless depth 1 GC to do the flow
-     * because GC's can only be used with the same depth drawables */
-    tmpgc = XCreateGC(display, alphaMask, 0, NULL);
-
-    /* run the flo on the alpha mask to get a scaled alpha mask */
-    DoFlo(display, alphaMask, tmpgc, aSrcMask,
-          aSrcWidth, aSrcHeight,
-          aSX, aSY, aSWidth, aSHeight,
-          aDX, aDY, aDWidth, aDHeight);
-
-    /* get rid of the worthless depth 1 gc */
-    XFreeGC(display, tmpgc);
-
-    /* the real GC needs to be created on aDest since that's the depth
-     * we are targeting */
-    gc = XCreateGC(display, aDest, 0, NULL);
-    XCopyGC(display, aGC, GCFunction, gc);
-
-    /* there is a bug here. The image won't display unless it's at the
-     * very top of the page. Something to do with clip mask offset, though
-     * I can't really figure it out. If this is a bug, it should be present
-     * in the GTK version as well. */
-
-    /* set clip mask + clip origin */
-    XSetClipMask(display, gc, alphaMask);
-    XSetClipOrigin(display, gc, aDX + aSX, aDY + aSY);
-  }
-  
-  /* run the flo on the image to get a the scaled image
-   * we can't destroy the GC from gc cache, so we do the ? thing,
-   * gc = our copied GC, aGC = given GC */
-  DoFlo(display, aDest, gc ? gc : aGC, aSrc,
+  /* run the flo on the image to get a the scaled image */
+  DoFlo(display, aDest, aGC, aSrc,
         aSrcWidth, aSrcHeight,
         aSX, aSY, aSWidth, aSHeight,
         aDX, aDY, aDWidth, aDHeight);
-
-  if (gc)
-    XFreeGC(display, gc);
-  if (alphaMask)
-    XFreePixmap(display, alphaMask);
 
   return PR_TRUE;
 }
