@@ -200,14 +200,14 @@ nsViewerApp::Initialize(int argc, char** argv)
                                     kIEventQueueServiceIID,
                                     (nsISupports **)&mEventQService);
   if (NS_OK != rv) {
-     NS_ASSERTION("Could not obtain the event queue service", PR_FALSE);
+     NS_ASSERTION(PR_FALSE, "Could not obtain the event queue service");
      return rv;
   }
 
   printf("Going to create the event queue\n");
   rv = mEventQService->CreateThreadEventQueue();
   if (NS_OK != rv) {
-     NS_ASSERTION("Could not create the event queue for the the thread", PR_FALSE);
+     NS_ASSERTION(PR_FALSE, "Could not create the event queue for the the thread");
      return rv;
   }
 
