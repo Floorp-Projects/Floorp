@@ -77,7 +77,7 @@
 // define home directory
 // For Windows platform, We are choosing Appdata folder as HOME
 #ifdef XP_OS2
-#define HOME_DIR NS_OS2_DIR
+#define HOME_DIR NS_OS2_HOME_DIR
 #elif defined (XP_PC)
 #define HOME_DIR NS_WIN_APPDATA_DIR
 #elif defined (XP_MAC)
@@ -907,9 +907,8 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     }
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        /* for now, set the "Home" directory to point to be the */
-        /*  current process directory */
-        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_HomeDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {
