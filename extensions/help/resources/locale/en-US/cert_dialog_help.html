@@ -178,23 +178,27 @@
 
 <p>&nbsp;</p>
 <a NAME="No_Acceptable_Identification"></a>
-<h2>No_Acceptable_Identification</h2>
+<h2>No Acceptable Identification</h2>
 
-<p><b>text to come</b></P>
+<p>The web site you are attempting to visit requires that your browser present an appropriate certificate for identification purposes. Your browser does not have a certificat available that this web site will accept.
 
 
 <p>&nbsp;</p>
 <a NAME="New_Certificate_Authority"></a>
 <h2>New Certificate Authority</h2>
 
-<p>The certificates the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify a <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
+<p>The certificates the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
 
-<p><b>[what follows needs updating for new UI]</b>
+<p>Before accepting a new CA certificate, Certificate Manager displays a window that allows you to specify how you want to trust the certificate, if at all. You can click View to see the CA certificate, or Policy to see information about the CA's policies. The 
 
-<p>Certificate Manager displays two windows that allow you to specify that you trust a new CA:</P>
+<p>Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures and are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides. 
+
+<p>You also need to decide what kinds of certificates issued by this CA you want to trust. You can select any of the following options:
+
 <ul>
-	<LI><B>New Certificate Authority: Step 1.</B> Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures and are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides.</LI></A><P><A NAME="1039965"><LI><B>New Certificate Authority: Step 2.</B> At this stage, you need to decide what kinds of certificates issued by this CA you want to trust. You can select any of the following options:</LI></A><ul>
-<P><A NAME="1040097"><LI><B>Trust this CA to identify web sites. </B>As noted above, web site certificates for some sites, such as those that handle financial transactions, can be extremely important, and inappropriate or false identification can have negative consequences.</LI></A><P><A NAME="1040098"><LI><B>Trust this CA to identify email users. </B>If you intend to send email users confidential information in encrypted form, or if accurate identification of email users is important to you for any other reason, you should consider carefully the CA's procedures for identifying prospective certificate owners and whether they are appropriate for your purposes before selecting this option.</LI></A><P><A NAME="1052784"><LI><B>Trust this CA to identify software developers.</B> Selecting this option means that you trust the CA to issue certificates that identify the origin of Java applets and JavaScript scripts requesting special access to your computer, such as the ability to change files. Since such access privileges can be misused, for example to destroy data stored on your hard disk, be very careful about selecting this option unless you are certain that you trust the CA for this purpose.</LI></A></ul>
+	<LI><B>Trust this CA to identify web sites. </B>Web site certificates for some sites, such as those that handle financial transactions, can be extremely important, and inappropriate or false identification can have negative consequences.</LI>
+	<LI><B>Trust this CA to identify email users. </B>If you intend to send email users confidential information in encrypted form, or if accurate identification of email users is important to you for any other reason, you should consider carefully the CA's procedures for identifying prospective certificate owners and whether they are appropriate for your purposes before selecting this option.</LI>
+	<LI><B>Trust this CA to identify software developers.</B> Selecting this option means that you trust the CA to issue certificates that identify the origin of Java applets and JavaScript scripts requesting special access to your computer, such as the ability to change files. Since such access privileges can be misused, for example to destroy data stored on your hard disk, be very careful about selecting this option unless you are certain that you trust the CA for this purpose.
 </ul>
 
 <p>&nbsp;</p>
@@ -219,12 +223,14 @@
 <h3>New Web Site Certificate</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays the following windows:</P>
+<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays a window that allows you to examine the new web site certificate and decide how to accept it. You can perform the following actions:</P>
 
-<p><b>[following needs updating for new UI</b>
-
-<ul><P><A NAME="1040184"><LI><B>New Web Site Certificate: Step 1.</B> To examine the certificate, click View. If you believe that this web site is the site the certificate says it is, click Next. If you suspect that the web site is not what it claims to be, you can either click Cancel (in which case you will not connect to the web site) or click Next to go to Step 2.</LI></A><P><A NAME="1040198"><LI><B>New Web Site Certificate: Step 2.</B> If you clicked Next in Step 1, you now have to decide how long you are willing to trust this certificate, if at all:</LI></A><ul>
-<P><A NAME="1040219"><LI><B>Accept this certificate permanently</B> means that Certificate Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI></A><P><A NAME="1040237"><LI><B>Accept this certificate temporarily for this session</B> means that Certificate Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Certificate Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI></A><P><A NAME="1040288"><LI><B>Do not accept this certificate and do not connect to the web site</B> means that Certificate Manager will not accept this certificate. If you select this option, Certificate Manager will not connect with this web site this time and will display the New Web Site Certificate window again the next time you visit the web site.</LI></A></ul>
+<p>To examine the certificate, click View Certificate. If you suspect that the web site is not what it claims to be, you can close the Certificate Details window and click Cancel (in which case you will not connect to the web site).
+	<p><If you decide not to cancel, you need to decide how long you are willing to trust this certificate, if at all:</A>
+	<ul>
+	<LI><B>Accept this certificate permanently</B> means that Certificate Manager will recognize this certificate as legitimate identification until it expires. You should not select this option unless you are absolutely sure that you trust the web site identified by the certificate.</LI></A><P><A NAME="1040237">
+	<LI><B>Accept this certificate temporarily for this session</B> means that Certificate Manager will recognize this certificate as legitimate identification for this session only. If you select this option, Certificate Manager will connect with the web site this time, but will display the New Web Site Certificate window again the next time you visit the web site.</LI></A>
+	<LI><B>Do not accept this certificate and do not connect to the web site</B> means that Certificate Manager will not accept this certificate. If you select this option, Certificate Manager will not connect with this web site this time and will display the same window again the next time you visit the web site.</LI></A>
 </ul>
 
 <p>&nbsp;</p>
@@ -276,7 +282,7 @@
 
 
 <hr>
-<p><i>6/15/2001</i></p>
+<p><i>6/19/2001</i></p>
 <p>Copyright &copy; 1994-2001 Netscape Communications Corporation.</p>
 
 </body>
