@@ -34,6 +34,8 @@
 
 #JDK = /tools/ns
 JDK = /share/builds/components/jdk/1.2beta/AIX
+JAVAC = $(JDK)/sh/javac 
+JAR = $(JDK)/sh/jar 
 
 INCLUDES   += -I$(JDK)/include
 
