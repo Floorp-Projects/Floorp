@@ -40,12 +40,24 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+/**
+ * The nsIDOMHTMLOptionElement interface is the interface to a [X]HTML
+ * option element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf9092-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLOptionElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
+  // Modified in DOM Level 2:
            attribute boolean               defaultSelected;
-           attribute DOMString             text;
+  readonly attribute DOMString             text;
+  // Modified in DOM Level 2:
   readonly attribute long                  index;
            attribute boolean               disabled;
            attribute DOMString             label;

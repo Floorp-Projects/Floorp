@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMNSHTMLOptionElement.h"
 #include "nsIOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -75,6 +76,7 @@
  */
 class nsHTMLOptionElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLOptionElement,
+                            public nsIDOMNSHTMLOptionElement,
                             public nsIJSNativeInitializer,
                             public nsIOptionElement
 {
@@ -97,6 +99,9 @@ public:
   // nsIDOMHTMLOptionElement
   NS_DECL_NSIDOMHTMLOPTIONELEMENT
 
+  // nsIDOMNSHTMLOptionElement
+  NS_IMETHOD SetText(const nsAString & aText); 
+
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
                         PRUint32 argc, jsval *argv);
@@ -104,7 +109,8 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32 aModType,
                                       nsChangeHint& aHint) const;
 
   // nsIOptionElement
@@ -215,6 +221,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement);
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptionElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptionElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLOptionElement)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_INTERFACE_MAP_ENTRY(nsIOptionElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionElement)
@@ -441,14 +448,12 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
 
   if (selectElement) {
     // Get the options from the select object.
-    nsCOMPtr<nsIDOMHTMLCollection> options;
-
+    nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
     selectElement->GetOptions(getter_AddRefs(options));
 
     if (options) {
       // Walk the options to find out where we are in the list (ick, O(n))
       PRUint32 length = 0;
-
       options->GetLength(&length);
 
       nsCOMPtr<nsIDOMNode> thisOption;

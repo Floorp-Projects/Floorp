@@ -39,6 +39,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMHTMLElement.idl"
+#include "nsIDOMHTMLOptionsCollection.idl"
+
+/**
+ * The nsIDOMHTMLSelectElement interface is the interface to a [X]HTML
+ * select element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
 
 [scriptable, uuid(a6cf9090-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
@@ -46,18 +57,22 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
   readonly attribute DOMString             type;
            attribute long                  selectedIndex;
            attribute DOMString             value;
+  // Modified in DOM Level 2:
            attribute unsigned long         length;
+                                             // raises(DOMException) on setting
+
   readonly attribute nsIDOMHTMLFormElement form;
-  readonly attribute nsIDOMHTMLCollection  options;
+  // Modified in DOM Level 2:
+  readonly attribute nsIDOMHTMLOptionsCollection options;
            attribute boolean               disabled;
            attribute boolean               multiple;
            attribute DOMString             name;
            attribute long                  size;
            attribute long                  tabIndex;
   void                      add(in nsIDOMHTMLElement element, 
-                                in nsIDOMHTMLElement before);
+                                in nsIDOMHTMLElement before)
+                                                     raises(DOMException);
   void                      remove(in long index);
   void                      blur();
   void                      focus();
 };
-

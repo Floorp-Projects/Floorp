@@ -1873,7 +1873,7 @@ wallet_GetSelectIndex(
 {
   PRUint32 length;
   selectElement->GetLength(&length);
-  nsCOMPtr<nsIDOMHTMLCollection> options;
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
   selectElement->GetOptions(getter_AddRefs(options));
   if (options) {
     PRUint32 numOptions;
@@ -3699,7 +3699,7 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
       PRUint32 length;
       selectElement->GetLength(&length);
 
-      nsCOMPtr<nsIDOMHTMLCollection> options;
+      nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
       selectElement->GetOptions(getter_AddRefs(options));
 
       if (options) {

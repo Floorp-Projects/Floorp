@@ -809,7 +809,8 @@ public:
 class nsHTMLPluginObjElementSH : public nsHTMLAppletElementSH
 {
 protected:
-  nsHTMLPluginObjElementSH(nsDOMClassInfoData* aData) : nsHTMLAppletElementSH(aData)
+  nsHTMLPluginObjElementSH(nsDOMClassInfoData* aData)
+    : nsHTMLAppletElementSH(aData)
   {
   }
 
@@ -834,16 +835,17 @@ public:
 };
 
 
-// HTMLOptionCollection helper
+// HTMLOptionsCollection helper
 
-class nsHTMLOptionCollectionSH : public nsHTMLCollectionSH
+class nsHTMLOptionsCollectionSH : public nsHTMLCollectionSH
 {
 protected:
-  nsHTMLOptionCollectionSH(nsDOMClassInfoData* aData) : nsHTMLCollectionSH(aData)
+  nsHTMLOptionsCollectionSH(nsDOMClassInfoData* aData)
+    : nsHTMLCollectionSH(aData)
   {
   }
 
-  virtual ~nsHTMLOptionCollectionSH()
+  virtual ~nsHTMLOptionsCollectionSH()
   {
   }
 
@@ -853,7 +855,7 @@ public:
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLOptionCollectionSH(aData);
+    return new nsHTMLOptionsCollectionSH(aData);
   }
 };
 

@@ -59,6 +59,7 @@
 #include "nsGenericDOMHTMLCollection.h"
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
+#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsGUIEvent.h"
 #include "nsIBoxObject.h"
@@ -90,7 +91,8 @@ class nsHTMLSelectElement;
  * The collection of options in the select (what you get back when you do
  * select.options in DOM)
  */
-class nsHTMLOptionCollection: public nsIDOMNSHTMLOptionCollection,
+class nsHTMLOptionCollection: public nsIDOMHTMLOptionsCollection,
+                              public nsIDOMNSHTMLOptionCollection,
                               public nsGenericDOMHTMLCollection
 {
 public:
@@ -99,17 +101,19 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsIDOMHTMLOptionsCollection interface
+  NS_DECL_NSIDOMHTMLOPTIONSCOLLECTION
+
   // nsIDOMNSHTMLOptionCollection interface, can't use the macro
   // NS_DECL_NSIDOMNSHTMLOPTIONCOLLECTION here since GetLength() is
   // defined in more than one interface
-  NS_IMETHOD SetLength(PRUint32 aLength);
   NS_IMETHOD GetSelectedIndex(PRInt32* aSelectedIndex);
   NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex);
   NS_IMETHOD SetOption(PRInt32 aIndex, nsIDOMHTMLOptionElement* aOption);
   NS_IMETHOD Add(nsIDOMHTMLOptionElement* aOption);
 
-  // nsIDOMHTMLCollection interface
-  NS_DECL_NSIDOMHTMLCOLLECTION
+  // nsIDOMHTMLCollection interface, all its methods are defined in
+  // nsIDOMHTMLOptionsCollection
 
   // Helpers for nsHTMLSelectElement
   /**
@@ -1082,7 +1086,7 @@ nsHTMLSelectElement::Remove(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::GetOptions(nsIDOMHTMLCollection** aValue)
+nsHTMLSelectElement::GetOptions(nsIDOMHTMLOptionsCollection** aValue)
 {
   *aValue = mOptions;
   NS_IF_ADDREF(*aValue);
@@ -2230,10 +2234,11 @@ nsHTMLOptionCollection::DropReference()
 
 // QueryInterface implementation for nsHTMLOptionCollection
 NS_INTERFACE_MAP_BEGIN(nsHTMLOptionCollection)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptionsCollection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNSHTMLOptionCollection)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionCollection)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionsCollection)
 NS_INTERFACE_MAP_END
 
 
