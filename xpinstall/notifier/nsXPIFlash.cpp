@@ -28,6 +28,8 @@
 #include "nsRDFCID.h"
 
 #include "VerReg.h"
+#include "nsIPref.h"
+#include "nsISoftwareUpdate.h"
 
 #define NC_XPIFLASH_SOURCES     "NC:SoftwareUpdateDataSources"
 #define NC_XPIFLASH_PACKAGES    "NC:SoftwarePackages"
@@ -63,13 +65,15 @@ private:
     nsXPINotifierImpl();
     virtual ~nsXPINotifierImpl();
 
+    nsresult NotificationEnabled(PRBool* aReturn);
     nsresult Init();
     nsresult SynchronouslyOpenRemoteDataSource(const char* aURL, nsIRDFDataSource** aResult);
-    nsresult AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor);
+    nsresult AddDistributor(nsIRDFResource *inDistributor);
     PRBool IsNewerOrUninstalled(const char* regKey, const char* versionString);
     PRInt32 CompareVersions(VERSION *oldversion, VERSION *newVersion);
     void   StringToVersionNumbers(const nsString& version, int32 *aMajor, int32 *aMinor, int32 *aRelease, int32 *aBuild);
     
+
     nsCOMPtr<nsISupports> mInner;
     nsIRDFService* mRDF;
 
@@ -149,9 +153,48 @@ nsXPINotifierImpl::~nsXPINotifierImpl()
 }
 
 
+static NS_DEFINE_IID(kPrefsIID, NS_IPREF_IID);
+static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
+
+nsresult
+nsXPINotifierImpl::NotificationEnabled(PRBool* aReturn)
+{
+    nsIPref * prefs;
+    
+    nsresult rv = nsServiceManager::GetService(kPrefsCID, 
+                                               kPrefsIID,
+                                               (nsISupports**) &prefs);
+
+
+    if ( NS_SUCCEEDED(rv) )
+    {
+        rv = prefs->GetBoolPref( (const char*) XPINSTALL_ENABLE_NOTIFICATIONS, aReturn);
+
+        if (NS_FAILED(rv))
+        {
+            *aReturn = PR_FALSE;
+        }
+
+        NS_RELEASE(prefs);
+    }
+    else
+    {
+        *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
+    }
+
+    return NS_OK;
+}
+
 nsresult
 nsXPINotifierImpl::Init()
 {
+    PRBool enabled;
+
+    NotificationEnabled(&enabled);
+
+    if (!enabled)
+        return NS_OK;
+    
     static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
     nsresult rv;
@@ -222,7 +265,7 @@ nsXPINotifierImpl::Init()
                     nsCOMPtr<nsIRDFResource> aDistributor(do_QueryInterface(i, &rv));
                     if (NS_FAILED(rv)) break;
 
-                    rv = AddNewSoftwareFromDistributor(aDistributor);
+                    rv = AddDistributor(aDistributor);
                     if (NS_FAILED(rv)) break;
                     
                     distributorEnumerator->HasMoreElements(&moreElements);
@@ -234,7 +277,7 @@ nsXPINotifierImpl::Init()
 }
 
 nsresult 
-nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
+nsXPINotifierImpl::AddDistributor(nsIRDFResource *inDistributor)
 {
     char* uri;
     inDistributor->GetValue(&uri);
@@ -329,6 +372,7 @@ nsXPINotifierImpl::AddNewSoftwareFromDistributor(nsIRDFResource *inDistributor)
                         if (NS_FAILED(rv)) break;
 
                         nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
+
                         ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
                         ds->Assert(aPackage, kNC_Source, title, PR_TRUE);
                         ds->Assert(aPackage, kNC_URL, url, PR_TRUE);

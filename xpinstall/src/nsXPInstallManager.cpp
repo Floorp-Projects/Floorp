@@ -30,13 +30,9 @@
 #include "nsIServiceManager.h"
 
 #include "nsIURL.h"
-#ifdef NECKO
+
 #include "nsNeckoUtil.h"
 #include "nsIBufferInputStream.h"
-#else
-#include "nsINetlibURL.h"
-#include "nsINetService.h"
-#endif
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 
@@ -52,7 +48,6 @@
 
 #include "nsIAppShellComponentImpl.h"
 #include "nsIPrompt.h"
-
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
@@ -92,6 +87,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*,this);
   else if (aIID.Equals(nsIXULWindowCallbacks::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIXULWindowCallbacks*,this);
+  else if (aIID.Equals(nsIProgressEventSink::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIProgressEventSink*,this);
   else if (aIID.Equals(kISupportsIID))
     *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
   else
@@ -224,19 +221,13 @@ nsresult nsXPInstallManager::DownloadNext()
             {
                 // --- start the download
                 nsIURI  *pURL;
-#ifdef NECKO
                 rv = NS_NewURI(&pURL, mItem->mURL);
-#else
-                rv = NS_NewURL(&pURL, mItem->mURL);
-#endif
-                if (NS_SUCCEEDED(rv)) {
-#ifdef NECKO
+                
+                if (NS_SUCCEEDED(rv)) 
+                {
                     // XXX: Should there be a LoadGroup?
                     rv = NS_OpenURI( this, nsnull, pURL, nsnull );
                     NS_RELEASE(pURL);
-#else
-                    rv = NS_OpenURL( pURL, this );
-#endif
                 }
             }
 
@@ -300,60 +291,21 @@ void nsXPInstallManager::Shutdown()
         mDlg->Close();
 
     mDlg = 0;
+
     NS_RELEASE_THIS();
 }
 
 
-
-
-// IStreamListener methods
-#ifndef NECKO
 NS_IMETHODIMP
-nsXPInstallManager::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnProgress( nsIURI* aURL,
-                          PRUint32 Progress,
-                          PRUint32 ProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::OnStatus(nsIURI* aURL, 
-                       const PRUnichar* aMsg)
-{ 
-    if (mDlg)
-        return mDlg->SetActionText( aMsg );
-    else
-        return NS_ERROR_NULL_POINTER;
-}
-#endif
-
-NS_IMETHODIMP
-#ifdef NECKO
 nsXPInstallManager::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-nsXPInstallManager::OnStartRequest(nsIURI* aURL, 
-                             const char *aContentType)
-#endif
 {
     mItem->mFile->OpenStreamForWriting();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsXPInstallManager::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                                   nsresult status, const PRUnichar *errorMsg)
-#else
-nsXPInstallManager::OnStopRequest(nsIURI* aURL,
-                                        nsresult status,
-                                        const PRUnichar* aMsg)
-#endif
 {
     nsresult rv;
     switch( status ) 
@@ -380,16 +332,10 @@ nsXPInstallManager::OnStopRequest(nsIURI* aURL,
     return rv;
 }
 NS_IMETHODIMP
-#ifdef NECKO
 nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
                                     nsIInputStream *pIStream,
                                     PRUint32 sourceOffset, 
                                     PRUint32 length)
-#else
-nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
-                                    nsIInputStream *pIStream,
-                                    PRUint32 length)
-#endif
 {
     PRUint32 amt;
     PRInt32  result;
@@ -417,7 +363,17 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+     return mProxy->SetProgress(aProgress, aProgressMax);
+}
 
+NS_IMETHODIMP 
+nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUnichar *aMsg)
+{
+    return mProxy->SetActionText(aMsg);
+}
 
 
 // IXPINotifier methods

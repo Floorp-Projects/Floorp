@@ -36,6 +36,11 @@
 #define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
 
+#define XPINSTALL_ENABLE_PREF            "xpinstall.enabled"
+#define XPINSTALL_ENABLE_NOTIFICATIONS   "xpinstall.notifications_enabled"  //TODO: this needs to be fixed at some point.
+#define XPINSTALL_MANUAL_CONFIRM         "xpinstall.manual_confirm"
+
+
 #define XPI_NO_NEW_THREAD   0x1000
 
 #define NS_ISOFTWAREUPDATE_IID                   \

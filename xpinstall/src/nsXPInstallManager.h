@@ -32,10 +32,6 @@
 #include "nsString.h"
 
 #include "nsIURL.h"
-#ifndef NECKO
-#include "nsINetlibURL.h"
-#include "nsINetService.h"
-#endif
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIXPINotifier.h"
@@ -49,11 +45,12 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIXULWindowCallbacks.h"    
-
+#include "nsIProgressEventSink.h"
 
 
 class nsXPInstallManager : public nsIXPINotifier, 
                            public nsIStreamListener,
+                           public nsIProgressEventSink,
                            public nsIXULWindowCallbacks
 {
     public:
@@ -64,24 +61,17 @@ class nsXPInstallManager : public nsIXPINotifier,
 
         NS_IMETHOD InitManager( nsXPITriggerInfo* aTrigger );
 
-#ifdef NECKO
         // nsIStreamObserver
         NS_DECL_NSISTREAMOBSERVER
 
         // nsIStreamListener
         NS_DECL_NSISTREAMLISTENER
-#else
-        // IStreamListener methods
-        NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* info);
-        NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
-        NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-        NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-        NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length);
-        NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
-#endif
         
         // IXPINotifier methods
         NS_DECL_NSIXPINOTIFIER
+
+        // nsIProgressEventSink
+        NS_DECL_NSIPROGRESSEVENTSINK
 
         // IXULWindowCallbacks methods
         NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
