@@ -20,7 +20,7 @@
  * 
  */
 /**
-    File Name:          15.9.5.4.js
+    File Name:    15.9.5.4.js
     ECMA Section: 15.9.5.4 Date.prototype.toTimeString()
     Description:
     This function returns a string value. The contents of the string are
@@ -32,13 +32,13 @@
     and also at the end of toString(), so we must take that into account... 
 
     The toTimeString function is not generic; it generates a runtime error
-    if its 'this' value is not a Date object. Therefore it cannot be transferred
+    if its 'this' value is not a Date object. Thus it cannot be transferred
     to other kinds of objects for use as a method.
 
     Author:  pschwartau@netscape.com                             
-    Date:      14 november 2000
+    Date:    14 november 2000
 */
-
+//-----------------------------------------------------------------------------
    var SECTION = "15.9.5.4";
    var VERSION = "ECMA_3";  
    var TITLE   = "Date.prototype.toTimeString()"; 
@@ -51,6 +51,9 @@
    var regexp = '';
    var reducedDateString = '';
    var hopeThisIsTimeString = '';
+   var cnEmptyString = '';
+   var cnERR ='OOPS! FATAL ERROR: no regexp match in extractTimeString()';
+
 
 
    startTest();
@@ -62,7 +65,7 @@
 //-----------------------------------------------------------------------------------------------------
 
 
-   // first, a couple generic tests -
+   // first, a couple of generic tests -
 
    status = "typeof (now.toTimeString())";  
    actual =   typeof (now.toTimeString());
@@ -132,35 +135,53 @@ function addDateTestCase(date_given_in_milliseconds)
 }
 
 
-function extractTimeString(date) 
+/*
+ * As of 2002-01-07, the format for dates in SpiderMonkey changed.
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=118266.
+ *
+ * WAS: Mon Jan 07 13:40:34 GMT-0800 (Pacific Standard Time) 2002
+ * NOW: Mon Jan 07 2002 13:40:34 GMT-0800 (Pacific Standard Time)
+ *
+ * Thus, use a regexp of the form /date.toDateString()(.*)$/
+ * to capture the timestring into the first backreference -
+ */
+function extractTimeString(date)
 {
-  year = date.getFullYear(); 
+  regexp = new RegExp(date.toDateString() + '(.*)' + '$');
 
-  // strip the year off date.toDateString(). 
-  // the pattern for regexp:   /(.*)year$/
-  regexp = new RegExp('(.*)' +   year  +  '$'); 
-  reducedDateString = (date.toDateString()).match(regexp)[1];
+  try
+  {
+    hopeThisIsTimeString = date.toString().match(regexp)[1];
+  }
+  catch(e)
+  {
+    return cnERR;
+  }
 
-  // now extract the middle of date.toString()
-  // the pattern for regexp:  /reducedDateString(.*)year$/ 
-  regexp=new RegExp( reducedDateString  +  '(.*)'  +  year  +  '$');
-  hopeThisIsTimeString = (date.toString()).match(regexp)[1];
-
-  // trim any trailing spaces -
-  return trimR(hopeThisIsTimeString);
+  // trim any leading or trailing spaces -
+  return trimL(trimR(hopeThisIsTimeString));
  }
+
+
+function trimL(s)
+{
+  if (!s) {return cnEmptyString;};
+  for (var i = 0; i!=s.length; i++) {if (s[i] != ' ') {break;}}
+  return s.substring(i);
+}
 
 
 function trimR(s)
 {
+  if (!s) {return cnEmptyString;};
   for (var i = (s.length - 1); i!=-1; i--) {if (s[i] != ' ') {break;}}
-  return s.substring(0, i+1);  
+  return s.substring(0, i+1);
 }
 
 
-function test() 
+function test()
 {
-  for ( tc=0; tc < testcases.length; tc++ ) 
+  for ( tc=0; tc < testcases.length; tc++ )
   {
     testcases[tc].passed = writeTestCaseResult(
                                                testcases[tc].expect,
