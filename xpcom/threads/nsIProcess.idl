@@ -11,7 +11,12 @@ interface nsIProcess : nsISupports
 	void kill();
 
     /** XXX what charset? **/
-	void run(in boolean blocking, [array, size_is(count)] in string args, in unsigned long count, out unsigned long pid);
+        /** Executes the file this object was initialized with
+         * @param blocking Whether to wait until the process terminates before returning or not
+         * @param args An array of arguments to pass to the process
+         * @param count The length of the args array
+         * @return the PID of the newly spawned process */
+        unsigned long run(in boolean blocking, [array, size_is(count)] in string args, in unsigned long count);
 
 	readonly attribute nsIFile location;
 	readonly attribute unsigned long pid;

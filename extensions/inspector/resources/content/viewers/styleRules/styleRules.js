@@ -195,8 +195,7 @@ StyleRulesViewer.prototype =
           var proc = C.classes['@mozilla.org/process/util;1'].createInstance
                        (C.interfaces.nsIProcess);
           proc.init(exe);
-          var pid = {};
-          proc.run(false, [url], 1, pid);
+          proc.run(false, [url], 1);
         } catch (ex) {
           alert("Unable to open editor.");
         }
