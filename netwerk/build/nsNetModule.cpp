@@ -54,7 +54,6 @@
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
 #include "nsMIMEInputStream.h"
-#include "nsProtocolProxyService.h"
 #include "nsSOCKSSocketProvider.h"
 #include "nsSOCKS4SocketProvider.h"
 #include "nsCacheService.h"
@@ -73,6 +72,9 @@
 
 #include "nsIOService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIOService, Init)
+  
+#include "nsProtocolProxyService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
 
 #include "nsStreamTransportService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStreamTransportService, Init)
@@ -656,10 +658,10 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_MIMEINPUTSTREAM_CID,
       NS_MIMEINPUTSTREAM_CONTRACTID,
       nsMIMEInputStreamConstructor },
-    { "Protocol Proxy Service",
+    { NS_PROTOCOLPROXYSERVICE_CLASSNAME,
       NS_PROTOCOLPROXYSERVICE_CID,
-      "@mozilla.org/network/protocol-proxy-service;1",
-      nsProtocolProxyService::Create },
+      NS_PROTOCOLPROXYSERVICE_CONTRACTID,
+      nsProtocolProxyServiceConstructor },
 
     // from netwerk/streamconv:
 

@@ -40,13 +40,7 @@
 
 interface nsIProxyInfo;
 
-%{C++
-#define NS_PROTOCOLPROXYSERVICE_CID                             \
-{ /* E9B301C0-E0E4-11d3-A1A8-0050041CAF44 */                    \
-0xe9b301c0, 0xe0e4, 0x11d3, { 0xa1, 0xa8, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } }
-%}
-
-[scriptable, uuid(495CC980-E0D4-11d3-A1A8-0050041CAF44)]
+[scriptable, uuid(91c4fe40-76c2-433f-9324-ffdae12df4b4)]
 interface nsIProtocolProxyService : nsISupports
 {
     readonly attribute PRBool proxyEnabled;
@@ -57,12 +51,5 @@ interface nsIProtocolProxyService : nsISupports
     /** Return a proxyInfo with the given data */
     nsIProxyInfo newProxyInfo(in string type, in string host, in long port);
 
-    /**
-    * Add additional items in the "No proxy for" list. This is above
-    * the list specified the user-pref. 
-    */
-    void addNoProxyFor(in string host, in long port);
-    void removeNoProxyFor(in string host, in long port);
     void configureFromPAC(in string url);
 };
-

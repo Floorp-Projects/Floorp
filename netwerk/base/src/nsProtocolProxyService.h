@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-#ifndef __nsprotocolproxyservice___h___
-#define __nsprotocolproxyservice___h___
+#ifndef nsProtocolProxyService_h__
+#define nsProtocolProxyService_h__
 
 #include "plevent.h"
 #include "nsString.h"
@@ -48,6 +48,7 @@
 #include "nsIProxyInfo.h"
 #include "nsIIOService.h"
 #include "prmem.h"
+#include "prio.h"
 
 class nsProtocolProxyService : public nsIProtocolProxyService
 {
@@ -58,10 +59,7 @@ public:
     nsProtocolProxyService();
     virtual ~nsProtocolProxyService();
 
-    NS_IMETHOD Init();
-
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    nsresult Init();
 
     void PrefsChanged(const char* pref);
 
@@ -89,30 +87,50 @@ public:
         nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
         }
 
-        const char* mType;
-        char* mHost;
-        PRInt32 mPort;
+        const char *mType;
+        char       *mHost;
+        PRInt32     mPort;
     };
 
 protected:
 
-    nsresult       GetProtocolFlags(const char *scheme, PRUint32 *flags);
-    nsresult       NewProxyInfo_Internal(const char *type, char *host, PRInt32 port, nsIProxyInfo **);
-    void           LoadStringPref(const char *pref, nsCString &result);
-    void           LoadIntPref(const char *pref, PRInt32 &result);
-    void           LoadFilters(const char* filters);
-    static PRBool  CleanupFilterArray(void* aElement, void* aData);
+    nsresult GetProtocolInfo(const char *scheme, PRUint32 &flags, PRInt32 &defaultPort);
+    nsresult NewProxyInfo_Internal(const char *type, char *host, PRInt32 port, nsIProxyInfo **);
+    void     GetStringPref(const char *pref, nsCString &result);
+    void     GetIntPref(const char *pref, PRInt32 &result);
+    void     LoadFilters(const char *filters);
+    PRBool   CanUseProxy(nsIURI *aURI, PRInt32 defaultPort);
+
+    static PRBool PR_CALLBACK CleanupFilterArray(void *aElement, void *aData);
+    static void*  PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
+    static void   PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
 
     // simplified array of filters defined by this struct
-    struct host_port {
-        nsCString*  host;
-        PRInt32     port;
+    struct HostInfo {
+        PRBool  is_ipaddr;
+        PRInt32 port;
+        union {
+            struct {
+                PRUint16   family;
+                PRUint16   mask_len;
+                PRIPv6Addr addr; // possibly IPv4-mapped address
+            } ip;
+            struct {
+                char    *host;
+                PRUint32 host_len;
+            } name;
+        };
+
+        HostInfo()
+            : is_ipaddr(PR_FALSE)
+            { /* other members intentionally uninitialized */ }
+       ~HostInfo() {
+            if (!is_ipaddr && name.host)
+                nsMemory::Free(name.host);
+        }
     };
 
-    PRLock                  *mArrayLock;
     nsVoidArray             mFiltersArray;
-
-    PRBool CanUseProxy(nsIURI* aURI);
 
     nsCOMPtr<nsIIOService>  mIOService;
 
@@ -137,10 +155,7 @@ protected:
 
     nsCOMPtr<nsIProxyAutoConfig> mPAC;
     nsCString                    mPACURL;
-
-    static void PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
-    static void PR_CALLBACK DestroyPACLoadEvent(PLEvent* aEvent);
 };
 
-#endif // __nsprotocolproxyservice___h___
+#endif // !nsProtocolProxyService_h__
 

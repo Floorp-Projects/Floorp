@@ -57,6 +57,19 @@
     {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+// service implementing nsIProtocolProxyService.
+#define NS_PROTOCOLPROXYSERVICE_CLASSNAME \
+    "nsProtocolProxyService"
+#define NS_PROTOCOLPROXYSERVICE_CONTRACTID \
+    "@mozilla.org/network/protocol-proxy-service;1"
+#define NS_PROTOCOLPROXYSERVICE_CID                  \
+{ /* E9B301C0-E0E4-11d3-A1A8-0050041CAF44 */         \
+    0xe9b301c0,                                      \
+    0xe0e4,                                          \
+    0x11d3,                                          \
+    {0xa1, 0xa8, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44}   \
+}
+
 // component implementing nsILoadGroup.
 #define NS_LOADGROUP_CLASSNAME \
     "nsLoadGroup"
