@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3gthr.c,v 1.1 2000/03/31 19:33:12 relyea%netscape.com Exp $
+ * $Id: ssl3gthr.c,v 1.2 2000/10/07 02:22:22 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -95,6 +95,14 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	} else /* if (nb < 0) */ {
 	    SSL_DBG(("%d: SSL3[%d]: recv error %d", SSL_GETPID(), ss->fd,
 		     PR_GetError()));
+	    rv = SECFailure;
+	    break;
+	}
+
+	PORT_Assert( nb <= gs->remainder );
+	if (nb > gs->remainder) {
+	    /* ssl_DefRecv is misbehaving!  this error is fatal to SSL. */
+	    gs->state = GS_INIT;         /* so we don't crash next time */
 	    rv = SECFailure;
 	    break;
 	}
