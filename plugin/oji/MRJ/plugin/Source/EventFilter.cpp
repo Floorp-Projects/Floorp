@@ -125,7 +125,7 @@ OSStatus RemoveEventFilters()
 static pascal Boolean NewWaitNextEvent(EventMask eventMask, EventRecord* event, UInt32 sleep, RgnHandle mouseRgn)
 {
 	Boolean gotEvent = CALL_FOUR_PARAMETER_UPP(WaitNextEventPatch.original, uppWaitNextEventProcInfo, eventMask, event, sleep, mouseRgn);
-	if (gotEvent) {
+	if (true) {
 		// prevent recursive calls to the filter.
 		static Boolean inFilter = false;
 		if (! inFilter) {
