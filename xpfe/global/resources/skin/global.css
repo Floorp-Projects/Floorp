@@ -968,7 +968,6 @@ titledbutton.dialog[default] {
 	
 	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
 	padding-right: 2em;
-	max-width: 5em;
 }
 
 titledbutton.popup {
