@@ -400,8 +400,12 @@ NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **folder)
 		return NS_ERROR_NULL_POINTER;
 	*folder = mFolder;
 	if(mFolder)
+	{
 		NS_ADDREF(mFolder);
-	return NS_OK;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 
@@ -428,7 +432,11 @@ NS_IMETHODIMP nsMessage::GetMsgDBHdr(nsIMsgDBHdr **hdr)
 {
 	*hdr = mMsgHdr;
 	if(mMsgHdr)
+	{
 		NS_ADDREF(mMsgHdr);
-	return NS_OK;
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
