@@ -679,6 +679,9 @@ nsScriptSecurityManager::CanExecuteFunction(void *jsFuncObj,
     JSContext *cx = GetCurrentContext();
     if (!cx) {
         cx = GetSafeContext();
+        if (!cx) {
+            return NS_ERROR_UNEXPECTED;
+        }
     }
     nsCOMPtr<nsIPrincipal> principal;
     nsresult rv = GetFunctionObjectPrincipal(cx, (JSObject *) jsFuncObj, 
