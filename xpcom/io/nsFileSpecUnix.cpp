@@ -25,9 +25,42 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "nsError.h"
 
-//----------------------------------------------------------------------------------------
+#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
+#include <sys/statvfs.h> /* for statvfs() */
+#define STATFS statvfs
+#elif defined(SCO_SV)
+#define _SVID3/* for statvfs.h */
+#include <sys/statvfs.h>  /* for statvfs() */
+#define STATFS statvfs
+#elif defined(HPUX) 
+#include <sys/vfs.h>      /* for statfs() */
+#define STATFS statfs
+#elif defined(LINUX)
+#include <sys/vfs.h>      /* for statfs() */
+#define STATFS statfs
+#elif defined(SUNOS4)
+#include <sys/vfs.h>      /* for statfs() */
+extern "C" int statfs(char *, struct statfs *);
+#define STATFS statfs
+#else
+#if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY) || defined(FREEBSD)
+#include <sys/mount.h>/* for statfs() */
+#define STATFS statfs
+#else
+#include <sys/statfs.h>  /* for statfs() */
+#define STATFS statfs
+extern "C" int statfs(char *, struct statfs *);
+#endif
+#endif
+
+#if defined(OSF1)
+extern "C" int statvfs(const char *, struct statvfs *);
+#endif
+ 
+ //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::Canonify(char*& ioPath, PRBool inMakeDirs)
 // Canonify, make absolute, and check whether directories exist
 //----------------------------------------------------------------------------------------
@@ -271,12 +304,14 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
     if (inParentDirectory.IsDirectory() && (! IsDirectory() ) )
     {
         char *leafname = GetLeafName();
-        char* destPath = nsFileSpecHelpers::StringDup(inParentDirectory,  ( strlen(inParentDirectory) + 1 + strlen(leafname) ) );
+        char* destPath = nsFileSpecHelpers::StringDup(
+            inParentDirectory.GetCString(),
+            strlen(inParentDirectory.GetCString()) + 1 + strlen(leafname));
         strcat(destPath, "/");
         strcat(destPath, leafname);
         delete [] leafname;
 
-        result = NS_FILE_RESULT(CrudeFileCopy(*this, destPath));
+        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), destPath));
         
         delete [] destPath;
     }
@@ -295,13 +330,13 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory) const
         char *leafname = GetLeafName();
         char* destPath
             = nsFileSpecHelpers::StringDup(
-                inNewParentDirectory,
-                strlen(inNewParentDirectory) + 1 + strlen(leafname));
+                inNewParentDirectory.GetCString(),
+                strlen(inNewParentDirectory.GetCString()) + 1 + strlen(leafname));
         strcat(destPath, "/");
         strcat(destPath, leafname);
         delete [] leafname;
 
-        result = NS_FILE_RESULT(CrudeFileCopy(*this, destPath));
+        result = NS_FILE_RESULT(CrudeFileCopy(GetCString(), destPath));
         if (result == NS_OK)
 	{
     // cast to fix const-ness
@@ -332,6 +367,31 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
     return result;
 
 } // nsFileSpec::Execute
+
+//----------------------------------------------------------------------------------------
+PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
+//----------------------------------------------------------------------------------------
+{
+    char curdir [MAXPATHLEN];
+    if (!mPath || !*mPath)
+    {
+        (void) getcwd(curdir, MAXPATHLEN);
+        if (!curdir)
+            return ULONG_MAX;  /* hope for the best as we did in cheddar */
+    }
+    else
+        sprintf(curdir, "%.200s", mPath);
+ 
+    struct STATFS fs_buf;
+    if (STATFS(curdir, &fs_buf) < 0)
+        return ULONG_MAX; /* hope for the best as we did in cheddar */
+ 
+#ifdef DEBUG_DISK_SPACE
+    printf("DiskSpaceAvailable: %d bytes\n", 
+       fs_buf.f_bsize * (fs_buf.f_bavail - 1));
+#endif
+    return fs_buf.f_bsize * (fs_buf.f_bavail - 1);
+} // nsFileSpec::GetDiskSpace()
 
 //========================================================================================
 //                                nsDirectoryIterator

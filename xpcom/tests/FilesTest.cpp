@@ -744,6 +744,19 @@ int FilesTest::SpecialSystemDirectories()
         return Failed();
     }
 
+    systemDir = nsSpecialSystemDirectory::Mac_DocumentsDirectory;
+    mConsole << "Mac_DocumentsDirectory yields \t";
+
+    if (systemDir.Valid())
+    {
+        mConsole << systemDir << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        return Failed();
+    }
+
 #elif XP_PC
     systemDir = nsSpecialSystemDirectory::Win_SystemDirectory;
     mConsole << "Win_SystemDirectory yields \t";
@@ -865,7 +878,7 @@ int FilesTest::RunAllTests()
 	if (IterateDirectoryChildren(parent) != 0)
 		return -1;
     
-    Banner("Equals operator of nsFileSpec");
+    Banner("nsFileSpec equality");
     if (FileSpecEquality("mumble/a", "mumble/b") != 0)
         return -1;
 

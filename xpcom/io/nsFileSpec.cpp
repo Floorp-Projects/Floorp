@@ -341,25 +341,23 @@ nsFileURL::nsFileURL(const nsFileURL& inOther)
 {
 } // nsFileURL::nsFileURL
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 :    mURL(nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)inOther))
-#ifdef XP_MAC
-,    mFileSpec(inOther.GetFileSpec())
-#endif
 {
 } // nsFileURL::nsFileURL
+#endif
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileSpec& inOther)
 :    mURL(nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)nsFilePath(inOther)))
-#ifdef XP_MAC
-,    mFileSpec(inOther)
-#endif
 //----------------------------------------------------------------------------------------
 {
 } // nsFileURL::nsFileURL
+#endif
 
 //----------------------------------------------------------------------------------------
 nsFileURL::~nsFileURL()
@@ -368,16 +366,15 @@ nsFileURL::~nsFileURL()
     delete [] mURL;
 }
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
     nsFileSpecHelpers::StringAssign(mURL, inString);
     NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
-#ifdef XP_MAC
-    mFileSpec = inString + kFileURLPrefixLength;
-#endif
 } // nsFileURL::operator =
+#endif
 
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFileURL& inOther)
@@ -389,28 +386,25 @@ void nsFileURL::operator = (const nsFileURL& inOther)
 #endif
 } // nsFileURL::operator =
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
     delete [] mURL;
     mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)inOther);
-#ifdef XP_MAC
-    mFileSpec  = inOther.GetFileSpec();
-#endif
 } // nsFileURL::operator =
+#endif
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
     delete [] mURL;
     mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, (const char*)nsFilePath(inOther));
-#ifdef XP_MAC
-    mFileSpec  = inOther;
-#endif
 } // nsFileURL::operator =
-
+#endif
 
 //----------------------------------------------------------------------------------------
 nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& url)
@@ -471,15 +465,14 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 }
 #endif
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 :    mPath(nsFileSpecHelpers::StringDup(inOther.mURL + kFileURLPrefixLength))
-#ifdef XP_MAC
-,    mFileSpec(inOther.GetFileSpec())
-#endif
 {
 }
+#endif
 
 #ifdef XP_UNIX
 //----------------------------------------------------------------------------------------
@@ -527,15 +520,14 @@ void nsFilePath::operator = (const char* inString)
 #endif // XP_MAC
 }
 
+#ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
     nsFileSpecHelpers::StringAssign(mPath, (const char*)nsFilePath(inOther));
-#ifdef XP_MAC
-    mFileSpec = inOther.GetFileSpec();
-#endif
 }
+#endif
 
 //----------------------------------------------------------------------------------------
 void nsFilePath::operator = (const nsFilePath& inOther)
@@ -564,9 +556,7 @@ nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
-#ifndef XP_MAC
 :    mPath(nsnull)
-#endif
 {
 	*this = inDescriptor;
 }
@@ -574,9 +564,7 @@ nsFileSpec::nsFileSpec(const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileURL& inURL)
 //----------------------------------------------------------------------------------------
-#ifndef XP_MAC
 :    mPath(nsnull)
-#endif
 {
     *this = nsFilePath(inURL); // convert to unix path first
 }
@@ -653,6 +641,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 	Boolean changed;
 	mError = NS_FILE_RESULT(::ResolveAlias(nsnull, aliasH, &mSpec, &changed));
 	DisposeHandle((Handle) aliasH);
+	delete [] mPath;
 #else
     nsFileSpecHelpers::StringAssign(mPath, (char*)data);
     mError = NS_OK;
@@ -721,9 +710,7 @@ nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
 nsFileSpec::~nsFileSpec()
 //----------------------------------------------------------------------------------------
 {
-#ifndef XP_MAC
     delete [] mPath;
-#endif
 }
 
 #if defined(XP_UNIX) || defined(XP_PC)
@@ -754,7 +741,15 @@ void nsFileSpec::operator = (const char* inString)
 nsOutputStream& operator << (nsOutputStream& s, const nsFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
-    return (s << (const char*)spec.mPath);
+#ifdef NS_DEBUG
+    static PRBool warnedOnce = PR_FALSE;
+    if (!warnedOnce)
+    {
+        NS_WARNING("This is for debugging only.  Do not call this in shipped version!");
+        warnedOnce = PR_TRUE;
+    }
+#endif // NS_DEBUG
+    return (s << spec.GetCString());
 }
 #endif // DEBUG ONLY!
 
@@ -773,15 +768,17 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
 {
 
 #ifdef XP_MAC
-   if ( inOther.mSpec.vRefNum == mSpec.vRefNum &&
+    if ( inOther.mSpec.vRefNum == mSpec.vRefNum &&
         inOther.mSpec.parID   == mSpec.parID &&
-        EqualString(inOther.mSpec.name, mSpec.name, false, false))
+        EqualString(inOther.mSpec.name, mSpec.name, false, true))
         return PR_TRUE;
 #else
-   if (!mPath)
-       return inOther.mPath == nsnull;
-   if (!inOther.mPath)
-       return PR_FALSE;
+    PRBool amEmpty = !mPath || !*mPath;
+    PRBool heEmpty = !inOther.mPath || !*inOther.mPath;
+    if (amEmpty) // we're the same if he's empty...
+        return heEmpty;
+    if (heEmpty) // ('cuz I'm not...)
+        return PR_FALSE;
 	#if defined(XP_PC)
 	   // windows does not care about case.
 	   if (_stricmp(mPath, inOther.mPath ) == 0)
@@ -800,6 +797,21 @@ PRBool nsFileSpec::operator != (const nsFileSpec& inOther) const
 {
     return (! (*this == inOther) );
 }
+
+#ifndef XP_MAC
+//----------------------------------------------------------------------------------------
+const char* nsFileSpec::GetCString() const
+// This is the only automatic conversion to const char*
+// that is provided, and it allows the
+// path to be "passed" to NSPR file routines.  This practice
+// is VERY EVIL and should only be used to support legacy
+// code.  Using it guarantees bugs on Macintosh. The path is NOT allocated, so do
+// not even think of deleting (or freeing) it.
+//----------------------------------------------------------------------------------------
+{
+    return mPath;
+}
+#endif
 
 //========================================================================================
 //	class nsPersistentFileDescriptor
@@ -835,13 +847,9 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
     if (inSpec.Error())
     	return;
 	AliasHandle	aliasH;
-/*
-        This is killing the tree.  mcmullen will need to look at this.
-
-	OSErr err = NewAlias(nil, inSpec.operator const FSSpec* const (), &aliasH);
+	OSErr err = NewAlias(nil, inSpec.GetFSSpecPtr(), &aliasH);
 	if (err != noErr)
 		return;
-*/
 
 	PRUint32 bytes = GetHandleSize((Handle) aliasH);
 	HLock((Handle) aliasH);
@@ -851,7 +859,7 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
     nsFileSpecHelpers::StringAssign(mDescriptorString, buf);
     PR_Free(buf);
 #else
-    nsFileSpecHelpers::StringAssign(mDescriptorString, inSpec);
+    nsFileSpecHelpers::StringAssign(mDescriptorString, inSpec.GetCString());
 #endif // XP_MAC
 } // nsPersistentFileDescriptor::operator =
 
@@ -914,7 +922,7 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 	if (bytesRead != 8)
 		return s;
 	bigBuffer[8] = '\0';
-	sscanf(bigBuffer, "%lx", &bytesRead);
+	sscanf(bigBuffer, "%lx", (PRUint32*)&bytesRead);
 	if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
 		return s; // preposterous.
 	// Now we know how many bytes to read, do it.

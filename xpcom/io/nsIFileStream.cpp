@@ -123,7 +123,7 @@ class FileImpl
 								            if (mFailed)
 								               return NS_ERROR_FAILURE;
 								            PRInt32 bytesWrit = PR_Write(mFileDesc, aBuf, aCount);
-								            if (bytesWrit != aCount)
+								            if (bytesWrit != (PRInt32)aCount)
 								            {
 								                mFailed = PR_TRUE;
 								                *aWriteCount = 0;
