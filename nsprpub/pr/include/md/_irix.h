@@ -78,6 +78,11 @@
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 #define _PR_ACCEPT_INHERIT_NONBLOCK
 
+#ifdef _PR_INET6
+#define _PR_HAVE_GETIPNODEBYNAME
+#define _PR_HAVE_GETIPNODEBYADDR
+#endif
+
 /* Initialization entry points */
 NSPR_API(void) _MD_EarlyInit(void);
 #define _MD_EARLY_INIT _MD_EarlyInit
