@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsGenericDOMDataNode.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDocument.h"
 #include "nsXIFConverter.h"
@@ -27,6 +28,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsISizeOfHandler.h"
 #include "nsDOMEvent.h"
+#include "nsIDOMScriptObjectFactory.h"
 
 // XXX share all id's in this dir
 
@@ -399,15 +401,19 @@ nsGenericDOMDataNode::GetScriptObject(nsIScriptContext* aContext,
                                       void** aScriptObject)
 {
   nsresult res = NS_OK;
-#if XXX
   if (nsnull == mScriptObject) {
-    nsIDOMElement* ele = nsnull;
-    mContent->QueryInterface(kIDOMElementIID, (void**) &ele);
-    res = NS_NewScriptElement(aContext, ele, mParent, (void**)&mScriptObject);
-    NS_RELEASE(ele);
+    nsIDOMScriptObjectFactory *factory;
+    
+    res = nsGenericHTMLElement::GetScriptObjectFactory(&factory);
+    if (NS_OK != res) {
+      return res;
+    }
+    
+    res = factory->NewScriptData(nsIDOMNode::TEXT, aContext, mContent,
+                                 mParent, (void**)&mScriptObject);
+    NS_RELEASE(factory);
   }
   *aScriptObject = mScriptObject;
-#endif
   return res;
 }
 
