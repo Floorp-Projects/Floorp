@@ -2,7 +2,8 @@
 
 <bindings id="generalBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
   
   <binding id="basetext">
     <implementation>
@@ -168,9 +169,9 @@
   <binding id="buttonleft-ile" extends="chrome://global/content/bindings/general.xml#inline-edit-base">
     <content>
       <xul:hbox class="button-internal-box" align="center" flex="1">
-        <xul:image class="button-icon" inherits="src"/>
+        <xul:image class="button-icon" xbl:inherits="src"/>
         <xul:hbox class="button-text-container" flex="1" ileattr="text-container">
-          <xul:label class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button" flex="1"/>
+          <xul:label class="button-text" xbl:inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button" flex="1"/>
         </xul:hbox>
       </xul:hbox>
       <children includes="menupopup"/>
@@ -223,7 +224,7 @@
   <binding id="statusbarpanel" display="xul:button">
     <content>
       <children>
-        <xul:label class="statusbarpanel-text" inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop" crop="right" flex="1"/>
       </children>
     </content>
 
@@ -260,7 +261,7 @@
   <binding id="statusbarpanel-iconic" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
-      <xul:image class="statusbarpanel-icon" inherits="src"/>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
     </content>
   </binding>
 

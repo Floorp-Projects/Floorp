@@ -2,7 +2,8 @@
 
 <bindings id="groupboxBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="groupbox-base">
     <resources>
@@ -15,7 +16,7 @@
       <xul:hbox class="groupbox-title" align="center" pack="start">
         <children includes="caption"/>
       </xul:hbox>
-      <xul:box flex="1" class="groupbox-body" inherits="orient,align,pack">
+      <xul:box flex="1" class="groupbox-body" xbl:inherits="orient,align,pack">
         <children/>
       </xul:box>
     </content>
@@ -39,9 +40,9 @@
     
     <content>
       <children>
-        <xul:image class="caption-icon" inherits="src=image"/>
+        <xul:image class="caption-icon" xbl:inherits="src=image"/>
         <xul:label class="caption-text" flex="1"
-                   inherits="default,value=label,crop,accesskey"/>
+                   xbl:inherits="default,value=label,crop,accesskey"/>
       </children>
     </content>
   </binding>

@@ -2,7 +2,8 @@
 
 <bindings   id="mailBindings"
             xmlns="http://www.mozilla.org/xbl"
-            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+            xmlns:xbl="http://www.mozilla.org/xbl">
 
   <!-- dummy widget to force this file to load -->
   <binding id="dummy" extends="xul:box"/>
@@ -15,9 +16,9 @@
   <binding id="mail-toggle-headerfield">
     <content>
       <xul:hbox class="headerNameBox" align="start">
-          <xul:image class="expandHeaderViewButton" inherits="onclick=ontwistyclick"/>
+          <xul:image class="expandHeaderViewButton" xbl:inherits="onclick=ontwistyclick"/>
           <xul:spacer flex="1"/>
-        <xul:label class="headerName" inherits="value=label"/>  
+        <xul:label class="headerName" xbl:inherits="value=label"/>  
       </xul:hbox>
       <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
     </content>
@@ -33,7 +34,7 @@
   <binding id="mail-headerfield">
     <content>
       <xul:hbox class="headerNameBox" align="start">
-        <xul:label class="headerName" inherits="value=label" flex="1"/>
+        <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
       </xul:hbox>
       <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
     </content>
@@ -46,7 +47,7 @@
   <binding id="mail-emailheaderfield">
     <content>
       <xul:hbox class="headerNameBox" align="start">
-        <xul:label class="headerName" inherits="value=label" flex="1"/>
+        <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
         </xul:hbox>
         <xul:mail-emailaddress anonid="emailAddressNode"/>
     </content>
@@ -63,7 +64,7 @@
       <xul:hbox class="headerNameBox" align="start" pack="end">
         <xul:image class="addresstwisty" anonid="toggleIcon"
                    onclick="toggleAddressView();"/>
-        <xul:label class="headerName" inherits="value=label"/>
+        <xul:label class="headerName" xbl:inherits="value=label"/>
         </xul:hbox>
 
         <xul:label class="headerValue" anonid="emailAddresses" flex="1"/>
@@ -298,9 +299,9 @@
   <binding id="mail-emailaddress">
     <content popup="emailAddressPopup" context="emailAddressPopup">
       <xul:label anonid="emailValue" class="emailDisplayButton plain"                 
-                 inherits="value=label,crop"/>
+                 xbl:inherits="value=label,crop"/>
       <xul:image class="emailDisplayImage" anonid="emailImage"
-                 context="emailAddressPopup" inherits="src=image"/>
+                 context="emailAddressPopup" xbl:inherits="src=image"/>
     </content>
     
     <implementation>  
@@ -349,7 +350,7 @@
 
   <binding id="search-menulist-abstract" name="searchMenulistAbstract" extends="xul:box">
     <content>
-      <xul:menulist class="search-menulist" inherits="flex" oncommand="this.parentNode.onSelect(event)">
+      <xul:menulist class="search-menulist" xbl:inherits="flex" oncommand="this.parentNode.onSelect(event)">
         <xul:menupopup class="search-menulist-popup"/>
       </xul:menulist>
     </content>

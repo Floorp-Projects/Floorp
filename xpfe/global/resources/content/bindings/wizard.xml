@@ -2,7 +2,8 @@
 
 <bindings id="wizardBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="wizard-base">
     <resources>
@@ -19,7 +20,7 @@
       </xul:deck>
       <children/>
       
-      <xul:hbox class="wizard-buttons" anonid="Buttons" inherits="pagestep,firstpage,lastpage"/>
+      <xul:hbox class="wizard-buttons" anonid="Buttons" xbl:inherits="pagestep,firstpage,lastpage"/>
     </content>
     
     <implementation>
@@ -404,10 +405,10 @@
     <content>
       <xul:hbox class="wizard-header-box-1" flex="1">
         <xul:vbox class="wizard-header-box-text" flex="1">
-          <xul:label class="wizard-header-label" inherits="value=label"/>
-          <xul:label class="wizard-header-description" inherits="value=description"/>
+          <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
+          <xul:label class="wizard-header-description" xbl:inherits="value=description"/>
         </xul:vbox>
-        <xul:image class="wizard-header-icon" inherits="src=iconsrc"/>
+        <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
       </xul:hbox>
     </content>
   </binding>
@@ -455,13 +456,13 @@
         <xul:vbox class="wizard-header-box-1">
           <xul:vbox class="wizard-header-box-2">
             <xul:vbox class="wizard-header-box-text">
-              <xul:label class="wizard-header-label" inherits="value=label"/>
+              <xul:label class="wizard-header-label" xbl:inherits="value=label"/>
             </xul:vbox>
           </xul:vbox>
         </xul:vbox>
         <xul:hbox class="wizard-header-box-icon">
           <xul:spacer flex="1"/>
-          <xul:image class="wizard-header-icon" inherits="src=iconsrc"/>
+          <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
         </xul:hbox>
       </xul:stack>
     </content>
@@ -470,7 +471,7 @@
   <binding id="wizard-buttons-mac" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content>
       <xul:vbox flex="1">
-        <xul:hbox class="wizard-buttons-top" inherits="hidden=hidetoprow">
+        <xul:hbox class="wizard-buttons-top" xbl:inherits="hidden=hidetoprow">
           <xul:spacer flex="1"/>
           <xul:button class="wizard-button" dlgtype="cancel"/> 
           <xul:button class="wizard-button" dlgtype="finish" default="true"/> 
@@ -480,9 +481,9 @@
           <xul:spacer flex="1"/>
           <xul:button class="wizard-button wizard-nav-button" dlgtype="back"/>
           <xul:hbox class="wizard-label-box" align="center">
-            <xul:label class="wizard-page-label" inherits="value=pagestep"/>
+            <xul:label class="wizard-page-label" xbl:inherits="value=pagestep"/>
           </xul:hbox>
-          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" inherits="disabled=lastpage"/> 
+          <xul:button class="wizard-button wizard-nav-button" dlgtype="next" default="true" xbl:inherits="disabled=lastpage"/> 
         </xul:hbox>
       </xul:vbox>
     </content>

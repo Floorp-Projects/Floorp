@@ -4,13 +4,14 @@
 
 <bindings id="consoleBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="console-box" extends="xul:box">
     <content>  
       <xul:stringbundle src="chrome://global/locale/console.properties" role="string-bundle"/>
       <xul:vbox class="console-box-internal">
-        <xul:vbox class="console-rows" role="console-rows" inherits="dir=sortOrder"/>
+        <xul:vbox class="console-rows" role="console-rows" xbl:inherits="dir=sortOrder"/>
       </xul:vbox>
     </content>
   
@@ -321,26 +322,26 @@
   <binding id="error" extends="xul:box">
     <content>
       <xul:box class="console-row-internal-box" flex="1">
-        <xul:box class="console-row-icon" align="center" inherits="selected">
-          <xul:image class="console-icon" inherits="src,type"/>
+        <xul:box class="console-row-icon" align="center" xbl:inherits="selected">
+          <xul:image class="console-icon" xbl:inherits="src,type"/>
         </xul:box>
-        <xul:vbox class="console-row-content" inherits="selected" flex="1">
+        <xul:vbox class="console-row-content" xbl:inherits="selected" flex="1">
           <xul:box class="console-row-msg" align="start">
-            <xul:label class="label" inherits="value=typetext"/>
-            <xul:description class="console-error-msg" inherits="value=msg" flex="1"/>
+            <xul:label class="label" xbl:inherits="value=typetext"/>
+            <xul:description class="console-error-msg" xbl:inherits="value=msg" flex="1"/>
           </xul:box>
-          <xul:box class="console-row-file" inherits="hidden=hideSource">
+          <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>
-            <xul:box class="console-error-source" inherits="url"/>
+            <xul:box class="console-error-source" xbl:inherits="url"/>
             <spacer flex="1"/>
             <xul:label class="label" value="&errLine.label;"/>
-            <xul:label class="label" inherits="value=line" flex="1"/>
+            <xul:label class="label" xbl:inherits="value=line" flex="1"/>
           </xul:box>
-          <xul:vbox class="console-row-code" inherits="selected,hidden=hideCode">
-            <xul:label class="monospace console-code" inherits="value=code"/>
-            <xul:box inherits="hidden=hideCaret">
-              <xul:label class="monospace console-dots" inherits="value=errorDots"/>
-              <xul:label class="monospace console-caret" inherits="value=errorCaret"/>
+          <xul:vbox class="console-row-code" xbl:inherits="selected,hidden=hideCode">
+            <xul:label class="monospace console-code" xbl:inherits="value=code"/>
+            <xul:box xbl:inherits="hidden=hideCaret">
+              <xul:label class="monospace console-dots" xbl:inherits="value=errorDots"/>
+              <xul:label class="monospace console-caret" xbl:inherits="value=errorCaret"/>
               <xul:spacer flex="1"/>
             </xul:box>
           </xul:vbox>
@@ -381,11 +382,11 @@
     <content>
       <xul:box class="console-internal-box" flex="1">
         <xul:box class="console-row-icon" align="center">
-          <xul:image class="console-icon" inherits="src,type"/>
+          <xul:image class="console-icon" xbl:inherits="src,type"/>
         </xul:box>
-        <xul:vbox class="console-row-content" inherits="selected" flex="1">
+        <xul:vbox class="console-row-content" xbl:inherits="selected" flex="1">
           <xul:vbox class="console-row-msg" flex="1">
-            <xul:description class="console-msg-text" inherits="value=msg" flex="1"/>
+            <xul:description class="console-msg-text" xbl:inherits="value=msg" flex="1"/>
           </xul:vbox>
         </xul:vbox>
       </xul:box>
@@ -402,7 +403,7 @@
 
   <binding id="console-error-source" extends="xul:box">
     <content>
-      <xul:label class="text-link" inherits="value=url" crop="right"/>
+      <xul:label class="text-link" xbl:inherits="value=url" crop="right"/>
     </content>
 
     <handlers>

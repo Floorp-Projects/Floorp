@@ -4,7 +4,8 @@
 
 <bindings id="navigatorWidgetBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="urlbar" extends="xul:box">
     <content flex="1">  
@@ -14,7 +15,7 @@
         </xul:box>
         <xul:menulist editable="true" class="location-field" flex="1"
                       autocomplete="true" timeout="300" searchSessionType="urlbar"
-                      inherits="label=content"
+                      xbl:inherits="label=content"
                       tooltiptext="" ubattr="field"/>
         <xul:button class="button-toolbar-3 go-button" label="Go" 
                     ubattr="go-button" tooltiptext="Go"/> 
@@ -46,9 +47,9 @@
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
       <xul:box align="center" flex="1" class="menulist-container">
-        <xul:image class="menulist-icon" inherits="src" emattr="icon"/>
+        <xul:image class="menulist-icon" xbl:inherits="src" emattr="icon"/>
         <xul:textbox class="menulist-editable-textbox plain" flex="1" emattr="field"
-                       inherits="autocomplete,searchSessionType,timeout,tooltiptext=fieldtooltiptext,value"/>
+                     xbl:inherits="autocomplete,searchSessionType,timeout,tooltiptext=fieldtooltiptext,value"/>
         <xul:menubutton class="menulist-editable-menubutton menubutton-icon" emattr="menubutton">
           <xul:menupopup class="menulist-editable-menupopup" emattr="menupopup"
                          popupalign="topright" popupanchor="bottomright">

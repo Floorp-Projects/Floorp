@@ -41,7 +41,8 @@
 
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
  
   <binding id="tabbrowser">
     <resources>
@@ -98,7 +99,7 @@
           </xul:tabs>
         </xul:hbox>
         <xul:tabpanels flex="1" class="plain">
-          <xul:browser type="content-primary" inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
+          <xul:browser type="content-primary" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
         </xul:tabpanels>
       </xul:tabbox>
       <children/>

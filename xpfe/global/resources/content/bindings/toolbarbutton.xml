@@ -2,7 +2,8 @@
 
 <bindings id="toolbarbuttonBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="toolbarbutton" display="xul:button"
            extends="chrome://global/content/bindings/button.xml#button-base">
@@ -12,9 +13,9 @@
     
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
-      <xul:image class="toolbarbutton-icon" inherits="validate,src=image"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 inherits="value=label,accesskey,crop"/>
+                 xbl:inherits="value=label,accesskey,crop"/>
     </content>
   </binding>
 
@@ -22,10 +23,10 @@
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
-      <xul:image class="toolbarbutton-icon" inherits="validate,src=image"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 inherits="value=label,accesskey,crop,dragover-top"/>
-      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" inherits="disabled"/>
+                 xbl:inherits="value=label,accesskey,crop,dragover-top"/>
+      <xul:dropmarker type="menu" class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled"/>
     </content>
   </binding>
   
@@ -39,10 +40,10 @@
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:toolbarbutton class="box-inherit toolbarbutton-menubutton-button"
                          anonid="button" flex="1" allowevents="true"
-                         inherits="disabled,crop,image,label,accessKey,command,
-                                   align,dir,pack,orient"/>
+                         xbl:inherits="disabled,crop,image,label,accessKey,command,
+                                       align,dir,pack,orient"/>
       <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
-                      inherits="align,dir,pack,orient,disabled"/>
+                      xbl:inherits="align,dir,pack,orient,disabled"/>
     </content>
   </binding>
   
@@ -50,7 +51,7 @@
   <binding id="toolbarbutton-image"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
-      <xul:image class="toolbarbutton-icon" inherits="src=image"/>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="src=image"/>
     </content>
   </binding>
   

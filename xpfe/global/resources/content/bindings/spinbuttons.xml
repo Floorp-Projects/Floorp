@@ -22,7 +22,8 @@
 
 <bindings id="spinbuttonsBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="spinbuttons"
      extends="chrome://global/content/bindings/spinbuttons.xml#spinbuttons-baseline">
@@ -34,8 +35,8 @@
   <binding id="spinbuttons-baseline">
     <content>
       <xul:vbox flex="1" align="center">
-        <xul:image inherits="onclick=onup" id="upButton" class="up"/>
-        <xul:image inherits="onclick=ondown" id="downButton" class="down"/>
+        <xul:image xbl:inherits="onclick=onup" id="upButton" class="up"/>
+        <xul:image xbl:inherits="onclick=ondown" id="downButton" class="down"/>
       </xul:vbox>
     </content>
   </binding>

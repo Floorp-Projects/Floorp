@@ -2,7 +2,8 @@
 
 <bindings id="urlbarBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="urlbar" extends="chrome://global/content/autocomplete.xml#autocomplete">
     <implementation>
@@ -438,8 +439,8 @@
 
   <binding id="autocomplete-search-engine">
     <content>
-      <xul:image class="autocomplete-search-engine-img" inherits="src=icon"/>
-      <xul:label class="autocomplete-search-engine-text" inherits="value=label" crop="right" flex="1"/>
+      <xul:image class="autocomplete-search-engine-img" xbl:inherits="src=icon"/>
+      <xul:label class="autocomplete-search-engine-text" xbl:inherits="value=label" crop="right" flex="1"/>
     </content>
     
     <handlers>

@@ -2,7 +2,8 @@
 
 <bindings id="progressmeterBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="progressmeter">
     <resources>
@@ -10,8 +11,8 @@
     </resources>
 
     <content>
-      <xul:spacer class="progress-bar" inherits="mode"/>
-      <xul:spacer class="progress-remainder" inherits="mode"/>
+      <xul:spacer class="progress-bar" xbl:inherits="mode"/>
+      <xul:spacer class="progress-remainder" xbl:inherits="mode"/>
     </content>
     
     <implementation implements="nsIAccessibleProvider">     

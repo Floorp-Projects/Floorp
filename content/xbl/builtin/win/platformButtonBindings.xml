@@ -2,7 +2,8 @@
 
 <bindings id="formWidgets"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
           
   <binding id="button" extends="xul:button">
     <content>
@@ -21,7 +22,7 @@
       <xul:box class="button-box-1" flex="1">
         <xul:box class="button-box-2" align="center" flex="1">
           <xul:box class="button-box-text" flex="1" align="center">
-            <xul:label inherits="value" value="Submit Query"/>
+            <xul:label xbl:inherits="value" value="Submit Query"/>
           </xul:box>
         </xul:box>
       </xul:box>

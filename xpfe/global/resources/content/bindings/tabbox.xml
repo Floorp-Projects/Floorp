@@ -2,7 +2,8 @@
 
 <bindings id="tabBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="tab-base">
     <resources>
@@ -343,7 +344,7 @@
       <xul:stack flex="1">
         <xul:spacer class="tabs-right"/>
         <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
-          <xul:toolbarbutton class="tabs-closebutton close-button" inherits="disabled=disableclose,oncommand=onclosetab"/>
+          <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
         </xul:hbox>
       </xul:stack>
     </content>
@@ -406,8 +407,8 @@
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
-      <xul:image class="tab-icon" inherits="validate,src=image"/>
-      <xul:label class="tab-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
+      <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
+      <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
     </content>
     
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">

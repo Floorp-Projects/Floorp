@@ -2,7 +2,8 @@
 
 <bindings id="treeBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
   
   <binding id="tree-base">
     <resources>
@@ -910,8 +911,8 @@
 
   <binding id="treecol" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
-      <xul:label class="treecol-text" inherits="crop,value=label" flex="1" crop="right"/>
-      <xul:image class="treecol-sortdirection" inherits="sortDirection"/>
+      <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
+      <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection"/>
     </content>
 
     <handlers>
@@ -921,7 +922,7 @@
 
   <binding id="treecol-image" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
-      <xul:image class="treecol-icon" inherits="src"/>
+      <xul:image class="treecol-icon" xbl:inherits="src"/>
     </content>
     <handlers>
       <handler event="click" button="0" action="this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this)"/>

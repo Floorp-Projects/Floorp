@@ -2,7 +2,8 @@
 
 <bindings id="toolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="toolbar-base">
     <resources>
@@ -125,11 +126,11 @@
 
   <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <content>
-      <xul:toolbargrippy inherits="last-toolbar,hidden=grippyhidden"
+      <xul:toolbargrippy xbl:inherits="last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
       <xul:hbox flex="1" class="toolbar-holder" align="center"
-               inherits="collapsed,last-toolbar,orient=tborient,align=tbalign,pack=tbpack">
+                xbl:inherits="collapsed,last-toolbar,orient=tborient,align=tbalign,pack=tbpack">
         <children/>
       </xul:hbox>
     </content>
@@ -170,9 +171,9 @@
     </resources>
 
     <content>
-      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,last-toolbar,hidden=grippyhidden"
+      <xul:toolbargrippy xbl:inherits="tooltiptext=grippytooltiptext,last-toolbar,hidden=grippyhidden"
                          tbattr="toolbar-grippy" class="toolbar-grippy"/>
-      <xul:hbox flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" align="center">
+      <xul:hbox flex="1" class="toolbar-holder" xbl:inherits="collapsed,last-toolbar" align="center">
         <children/>
       </xul:hbox>
     </content>

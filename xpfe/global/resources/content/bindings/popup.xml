@@ -2,7 +2,8 @@
 
 <bindings id="popupBindings"
    xmlns="http://www.mozilla.org/xbl"
-   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="popup-base">
     <resources>
@@ -142,7 +143,7 @@
   <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <children>
-        <xul:label class="tooltip-label" inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:label class="tooltip-label" xbl:inherits="value=label,crop" crop="right" flex="1"/>
       </children>
     </content>
     
@@ -413,7 +414,7 @@
     <content>
       <xul:hbox class="titlebar-box" flex="1">
         <xul:hbox class="titlebar-title-box" flex="1" tooltiptext="Click and drag to float">
-          <xul:label class="titlebar-title" inherits="value=title" flex="1" crop="right"/>
+          <xul:label class="titlebar-title" xbl:inherits="value=title" flex="1" crop="right"/>
         </xul:hbox>
         <xul:button class="popupClose" tooltiptext="Close"/>
       </xul:hbox>
@@ -606,7 +607,7 @@
     <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
       <vbox class="floater-box" flex="1">
         <box class="floater-box-top">
-          <titlebar flex="1" inherits="title" style="border: 1px outset grey; background-color: grey;"/>
+          <titlebar flex="1" xbl:inherits="title" style="border: 1px outset grey; background-color: grey;"/>
         </box>
         <box class="floater-box-center" flex="1">
           <box class="floater-children" flex="1"> 
@@ -625,7 +626,7 @@
     <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" >
       <vbox class="floater-box" flex="1">
         <box class="floater-box-top">
-          <titlebar flex="1" inherits="title"/>
+          <titlebar flex="1" xbl:inherits="title"/>
         </box>
         <box class="floater-box-center" flex="1">
           <box class="floater-children" flex="1"> 

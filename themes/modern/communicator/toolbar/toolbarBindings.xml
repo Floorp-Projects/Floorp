@@ -2,14 +2,15 @@
 
 <bindings id="toolbarBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="toolbar-primary"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <content>
-      <xul:toolbargrippy inherits="last-toolbar"
+      <xul:toolbargrippy xbl:inherits="last-toolbar"
           tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
-      <xul:hbox class="toolbar-holder toolbar-primary-holder" flex="1" inherits="orient=tborient">
+      <xul:hbox class="toolbar-holder toolbar-primary-holder" flex="1" xbl:inherits="orient=tborient">
         <xul:image class="toolbar-primary-icon"/>
         <xul:hbox class="toolbar-button-box" flex="1">
           <children/>
