@@ -121,7 +121,6 @@ XUL_ATOM(commands, "commands")
 XUL_ATOM(commandset, "commandset")
 
 XUL_ATOM(progressbar, "progressbar")
-XUL_ATOM(progresstext, "progresstext")
 XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")
