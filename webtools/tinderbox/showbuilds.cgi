@@ -494,7 +494,8 @@ sub who_menu {
   my $treeflag;
   # this variable isn't doing anything, so i'm going to use it shamelessly
   $treeflag = $td->{cvs_branch};
-  $treeflag = $treeflag . '&branchtype=regexp'
+  # trick who.cgi into using regexps, escaping & and =
+  $treeflag = $treeflag . '%26branchtype%3Dregexp';
     if $treeflag =~ /\+|\?|\*/;
 
   my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
