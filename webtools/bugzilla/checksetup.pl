@@ -2609,7 +2609,7 @@ AddField("bugs", "cclist_accessible", "tinyint not null default 1");
 # using the attachment manager can record changes to attachments.
 AddField("bugs_activity", "attach_id", "mediumint null");
 
-# 2001-01-17 bbaetz@student.usyd.edu.au bug 95732
+# 2002-02-04 bbaetz@student.usyd.edu.au bug 95732
 # Remove logincookies.cryptpassword, and delete entries which become
 # invalid
 if (GetFieldDef("logincookies", "cryptpassword")) {
