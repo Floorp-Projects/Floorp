@@ -554,8 +554,12 @@ public:
 
   PRBool NeedSpecialReflow() const;
   void   SetNeedSpecialReflow(PRBool aValue);
+
   PRBool NeedToInitiateSpecialReflow() const;
   void   SetNeedToInitiateSpecialReflow(PRBool aValue);
+
+  PRBool InitiatedSpecialReflow() const;
+  void   SetInitiatedSpecialReflow(PRBool aValue);
 
 protected:
 
@@ -955,8 +959,9 @@ protected:
     unsigned mRowInserted:1;
     unsigned mNeedSpecialReflow:1;
     unsigned mNeedToInitiateSpecialReflow:1;
+    unsigned mInitiatedSpecialReflow:1;
     unsigned mNeedToCalcBCBorders:1;
-    unsigned : 18;                     // unused
+    unsigned : 17;                     // unused
   } mBits;
 
   nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
@@ -1079,6 +1084,17 @@ inline void nsTableFrame::SetNeedToInitiateSpecialReflow(PRBool aValue)
 {
   mBits.mNeedToInitiateSpecialReflow = (unsigned)aValue;
 }
+
+inline PRBool nsTableFrame::InitiatedSpecialReflow() const
+{
+  return (PRBool)mBits.mInitiatedSpecialReflow;
+}
+
+inline void nsTableFrame::SetInitiatedSpecialReflow(PRBool aValue)
+{
+  mBits.mInitiatedSpecialReflow = (unsigned)aValue;
+}
+
 inline PRBool nsTableFrame::IsRowInserted() const
 {
   return (PRBool)mBits.mRowInserted;

@@ -50,6 +50,7 @@
 #include "nsImageFrame.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsIPercentHeightObserver.h"
 
 #define IS_TABLE_CELL(frameType)\
 ((nsLayoutAtoms::tableCellFrame == frameType) || (nsLayoutAtoms::bcTableCellFrame == frameType))
@@ -163,7 +164,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
-  mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
+  mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
+                            aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
+                           ? aParentReflowState.mPercentHeightObserver : nsnull;
   mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   if (aInit) {
@@ -195,7 +198,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
-  mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
+  mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
+                            aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
+                           ? aParentReflowState.mPercentHeightObserver : nsnull;
   mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   Init(aPresContext);
@@ -226,7 +231,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
   mSpaceManager = aParentReflowState.mSpaceManager;
   mLineLayout = aParentReflowState.mLineLayout;
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
-  mPercentHeightObserver = aParentReflowState.mPercentHeightObserver;
+  mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
+                            aParentReflowState.mPercentHeightObserver->NeedsToObserve(*this)) 
+                           ? aParentReflowState.mPercentHeightObserver : nsnull;
   mPercentHeightReflowInitiator = aParentReflowState.mPercentHeightReflowInitiator;
 
   Init(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
@@ -1367,7 +1374,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
   nscoord result = 0;
 
   const nsHTMLReflowState* rs = &aReflowState;
-  for (; rs; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
+  for (; rs && rs->frame; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
     nsCOMPtr<nsIAtom> frameType;
     rs->frame->GetFrameType(getter_AddRefs(frameType));
     // if the ancestor is auto height then skip it and continue up if it 
@@ -1405,18 +1412,28 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
         rs = scrollState;
       }
     }
+    else if (nsLayoutAtoms::pageContentFrame == frameType.get()) {
+      nsIFrame* prevInFlow;
+      rs->frame->GetPrevInFlow(&prevInFlow);
+      // only use the page content frame for a height basis if it is the first in flow
+      if (prevInFlow) 
+        break;
+    }
     else {
       break;
     }
 
-    // if the ancestor has a computed height, it is the percent base
-    result = rs->mComputedHeight;
+    // if the ancestor is the page content frame then the percent base is 
+    // the avail height, otherwise it is the computed height
+    result = (nsLayoutAtoms::pageContentFrame == frameType.get())
+             ? rs->availableHeight : rs->mComputedHeight;
     // if unconstrained - don't sutract borders - would result in huge height
     if (NS_AUTOHEIGHT == result) return result;
 
-    // if we got to the canvas frame, then subtract out 
+    // if we got to the canvas or page content frame, then subtract out 
     // margin/border/padding for the BODY and HTML elements
-    if (nsLayoutAtoms::canvasFrame == frameType.get()) {
+    if ((nsLayoutAtoms::canvasFrame == frameType.get()) || 
+        (nsLayoutAtoms::pageContentFrame == frameType.get())) {
 
       result -= GetVerticalMarginBorderPadding(firstBlockRS); 
       result -= GetVerticalMarginBorderPadding(firstAreaRS); 
