@@ -51,6 +51,9 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
+// XXX This should probably be based off the height of a row in pixels
+#define SCROLL_FACTOR 16 
+
 // I added the following function to improve keeping the frame 
 // chains in synch with the table. repackage as appropriate - karnaze
 void GetRowStartAndCount(nsIFrame* aFrame,
@@ -689,17 +692,21 @@ nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
+  PRInt32 oldIndex, newIndex;
+  oldIndex = aOldIndex / SCROLL_FACTOR;
+  newIndex = aNewIndex / SCROLL_FACTOR;
+
 #ifdef DEBUG_tree
     printf("PositionChanged from %d to %d (mCurrentIndex is %d)\n",
-           aOldIndex, aNewIndex, mCurrentIndex);
+           oldIndex, newIndex, mCurrentIndex);
 #endif
-  if (aNewIndex < 0)
+  if (newIndex < 0)
     return NS_OK;
 
-  if (aOldIndex == aNewIndex)
+  if (oldIndex == newIndex)
     return NS_OK;
 
-  mCurrentIndex = aNewIndex;
+  mCurrentIndex = newIndex;
 
   // Get our row count.
   PRInt32 rowCount;
@@ -710,7 +717,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
   nsTableFrame::GetTableFrame(this, tableFrame);
 
   // Figure out how many rows we need to lose (if we moved down) or gain (if we moved up).
-  PRInt32 delta = aNewIndex > aOldIndex ? aNewIndex - aOldIndex : aOldIndex - aNewIndex;
+  PRInt32 delta = newIndex > oldIndex ? newIndex - oldIndex : oldIndex - newIndex;
   
 #ifdef DEBUG_tree
   printf("Scrolling, the delta is: %d\n", delta);
@@ -732,7 +739,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
     PRInt32 loseRows = delta;
 
     // scrolling down
-    if (aNewIndex > aOldIndex) {
+    if (newIndex > oldIndex) {
       // Figure out how many rows we have to lose off the top.
       DestroyRows(tableFrame, aPresContext, loseRows);
     }
@@ -775,7 +782,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
     }
 
     nsCOMPtr<nsIContent> topRowContent;
-    FindRowContentAtIndex(aNewIndex, mContent, getter_AddRefs(topRowContent));
+    FindRowContentAtIndex(newIndex, mContent, getter_AddRefs(topRowContent));
 
     if (topRowContent)
       ConstructContentChain(topRowContent);
@@ -801,6 +808,7 @@ nsTreeRowGroupFrame::PagedUpDown()
     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
 
     rowGroupCount--;
+    rowGroupCount *= SCROLL_FACTOR;
     char ch[100];
     sprintf(ch,"%d", rowGroupCount);
     
@@ -825,8 +833,11 @@ nsTreeRowGroupFrame::SetScrollbarFrame(nsIPresContext* aPresContext, nsIFrame* a
   nsCOMPtr<nsIContent> scrollbarContent;
   aFrame->GetContent(getter_AddRefs(scrollbarContent));
   
+  nsAutoString scrollFactor;
+  scrollFactor.Append(SCROLL_FACTOR);
+
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, "0", PR_FALSE);
-  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::increment, "1", PR_FALSE);
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::increment, scrollFactor, PR_FALSE);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, "1", PR_FALSE);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, "5000", PR_FALSE);
 
@@ -1492,7 +1503,8 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
       if (mScrollbar) {
         mCurrentIndex--;
         nsAutoString indexStr;
-        indexStr.Append(mCurrentIndex);
+        PRInt32 pixelIndex = mCurrentIndex * SCROLL_FACTOR;
+        indexStr.Append(pixelIndex);
         
         nsCOMPtr<nsIContent> scrollbarContent;
         mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
@@ -1619,6 +1631,7 @@ nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
 
     rowCount -= (pageRowCount-2);
 
+    rowCount *= SCROLL_FACTOR;
     char ch[100];
     sprintf(ch,"%d", rowCount);
     maxpos = ch;
@@ -1831,6 +1844,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   value="";
 #endif
   
+  scrollTo *= SCROLL_FACTOR;
   value.Append(scrollTo);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
                                  value, PR_TRUE);
@@ -1887,6 +1901,8 @@ void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
     scrollTo = totalRows - visRows + 1;
   nsAutoString value;
   value.Append(scrollTo);
+
+  scrollTo *= SCROLL_FACTOR;
 
   nsCOMPtr<nsIContent> scrollbarContent;
   mScrollbar->GetContent(getter_AddRefs(scrollbarContent));

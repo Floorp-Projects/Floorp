@@ -2033,6 +2033,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 #ifdef INCLUDE_XUL
   if (  (nsXULAtoms::button          == tag.get())  ||
 	    (nsXULAtoms::titledbutton      == tag.get())  ||
+      (nsXULAtoms::image == tag.get()) ||
         (nsXULAtoms::grippy          == tag.get())  ||
         (nsXULAtoms::splitter        == tag.get())  ||
         (nsXULAtoms::slider == tag.get())  ||
@@ -2042,7 +2043,6 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::thumb == tag.get())  ||
         (nsXULAtoms::colorpicker == tag.get())  ||
         (nsXULAtoms::fontpicker == tag.get())  ||
-        (nsXULAtoms::radio           == tag.get())  ||
         (nsXULAtoms::text            == tag.get())  ||
         (nsXULAtoms::widget          == tag.get())  ||
         (nsXULAtoms::tree            == tag.get())  ||
@@ -4293,7 +4293,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
     } // End of BOX CONSTRUCTION logic
 
     // TITLED BUTTON CONSTRUCTION
-    else if (aTag == nsXULAtoms::titledbutton) {
+    else if (aTag == nsXULAtoms::titledbutton ||
+             aTag == nsXULAtoms::image ||
+             aTag == nsXULAtoms::text) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
