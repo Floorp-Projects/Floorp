@@ -33,6 +33,7 @@ REQUIRES=util img xpcom raptor netlib ps
 DEFINES += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS)
+EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
 
 CPPSRCS = nsFontMetricsXlib.cpp \
 	nsDeviceContextXlib.cpp \
