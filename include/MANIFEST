@@ -6,7 +6,6 @@ abcom.h
 abdefn.h
 addrbook.h
 allxpstr.h
-cdefs.h
 cgi.h
 client.h
 csid.h
@@ -35,7 +34,6 @@ libmocha.h
 libnet.h
 libstyle.h
 lo_ele.h
-mcom_db.h
 mcom_ndbm.h
 merrors.h
 mime.h
