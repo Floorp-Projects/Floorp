@@ -1,714 +1,146 @@
-
-/*
-** This is a generated file, do not edit it. This file is created by
-** genhash.pl
-*/
-
-#include "plstr.h"
-#include "nsColorNames.h"
-#define TOTAL_KEYWORDS 147
-#define MIN_WORD_LENGTH 3
-#define MAX_WORD_LENGTH 20
-#define MIN_HASH_VALUE 3
-#define MAX_HASH_VALUE 1260
-/* maximum key range = 1258, duplicates = 0 */
-
-
-struct StaticNameTable {
-  char* tag;
-  PRInt32 id;
-};
-
-static const unsigned char kLowerLookup[256] = {
-  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
-  16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
-  32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,
-  48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,
-  64,
-    97,98,99,100,101,102,103,104,105,106,107,108,109,
-    110,111,112,113,114,115,116,117,118,119,120,121,122,
-
-   91, 92, 93, 94, 95, 96, 97, 98, 99,100,101,102,103,104,105,106,107,108,109,110,111,
-  112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,
-
-  128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
-  144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
-  160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
-  176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
-  192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
-  208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
-  224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
-  240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
-};
-
-#define MYLOWER(x) kLowerLookup[((x) & 0x7f)]
-
-/**
- * Map a name to an ID or -1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
-PRInt32 nsColorNames::LookupName(const char* str)
+
+#include "nsColorNames.h"
+#include "nsString.h"
+#include "nsAVLTree.h"
+
+
+// define an array of all color names
+#define GFX_COLOR(_name, _value) #_name,
+const char* kColorNames[] = {
+#include "nsColorNameList.h"
+};
+#undef GFX_COLOR
+
+// define an array of all color name values
+#define GFX_COLOR(_name, _value) _value,
+const nscolor nsColorNames::kColors[] = {
+#include "nsColorNameList.h"
+};
+#undef GFX_COLOR
+
+struct ColorNode {
+  ColorNode(void)
+    : mStr(),
+      mEnum(eColorName_UNKNOWN)
+  {}
+
+  ColorNode(const nsStr& aStringValue, nsColorName aEnumValue)
+    : mStr(),
+      mEnum(aEnumValue)
+  { // point to the incomming buffer
+    // note that the incomming buffer may really be 2 byte
+    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
+                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
+  }
+
+  nsCAutoString mStr;
+  nsColorName   mEnum;
+};
+
+class ColorComparitor: public nsAVLNodeComparitor {
+public:
+  virtual ~ColorComparitor(void) {}
+  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
+    ColorNode* one = (ColorNode*)anItem1;
+    ColorNode* two = (ColorNode*)anItem2;
+    return one->mStr.Compare(two->mStr, PR_TRUE);
+  }
+}; 
+
+
+static PRInt32      gTableRefCount;
+static ColorNode*   gColorArray;
+static nsAVLTree*   gColorTree;
+static ColorComparitor* gComparitor;
+
+void
+nsColorNames::AddRefTable(void) 
 {
-  static unsigned short asso_values[] =
-    {
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261, 1261,
-      1261, 1261, 1261, 1261, 1261, 1261, 1261,   70,   15,  233,
-         0,    0,   25,    5,  130,    0,    0,    0,    0,   60,
-        25,    0,  245,   30,    0,  100,   40,    0,   75,  165,
-      1261,   80,    0, 1261, 1261, 1261, 1261, 1261
-    };
-  static unsigned char lengthtable[] =
-    {
-       0,  0,  0,  3,  0,  5,  0,  0,  0,  4,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  4,  5,  0,  0,  0,  0, 10,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  6,  0,  0,  9,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  5,  0,  0,  0,  4,  0,  0,  0,  0,  9,
-       5,  0,  0,  0,  0,  5,  0,  7,  0,  0,  5,  6,  0,  0,
-       9, 10,  0,  0, 13,  4,  5,  0,  0,  8,  9,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  9,  0,  6,  0,  0,  9,  0,  0,
-       0,  0,  4,  0,  0,  0,  0,  0,  0,  6,  0,  0,  9,  0,
-       0,  0,  0,  9,  0,  0,  0,  0,  9,  0,  0,  0,  0,  0,
-      10,  0,  0,  0,  0, 10,  6,  0,  0,  9,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  4,  0,  6,  0,  3,  9,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  4, 15,  0,  0,  8,  0, 10,  0,
-       0,  0, 14,  0,  6,  7,  0,  0,  0,  0,  0,  0,  9, 10,
-       0,  0,  0,  9,  0,  0,  7,  0,  0,  5, 11,  0,  0,  0,
-       0,  0,  0,  0, 14,  0,  0,  7,  0,  9,  0,  0,  0,  0,
-       0,  0,  6,  7,  8,  0,  0, 11,  0,  0,  0,  0,  0,  0,
-       5,  6,  5,  0,  0,  8,  0,  0, 11,  0,  0,  4, 15,  6,
-      12, 13,  4,  0,  0,  0,  0,  0, 20,  0, 12,  0,  0, 10,
-       0,  0,  0,  9,  0,  6,  0,  0,  4,  0,  0,  0,  8,  9,
-       0,  0,  9, 13,  0,  0,  0,  0,  0,  9,  0,  0,  0, 13,
-       4,  0,  0,  7,  0,  9,  5,  0,  0,  0,  0,  0,  0, 12,
-       8,  4,  7, 11,  0,  8,  0,  0,  0,  0,  0,  0, 15,  0,
-       0,  0,  9,  0,  0,  0,  0, 14,  0,  0,  0, 13,  0, 10,
-      11,  0,  0,  9,  0,  8,  0,  0,  9,  0,  0,  7,  0,  9,
-       0,  0,  0,  0, 14,  0,  0,  0, 10,  0,  0,  0,  0,  0,
-       0, 12, 16,  9,  0,  0,  0,  0,  0,  0,  0,  0,  0, 12,
-       0,  9,  5, 11,  0,  0,  0,  0,  0,  0,  0,  0,  7,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0, 11,  0, 13,  0,  0,
-       0,  0,  0,  0,  0,  0,  4,  0,  9,  0,  6,  0,  0,  0,
-       0,  0,  0,  0, 14,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0, 10,  0,  0,  0,  0,  0, 11,  0, 10,  0,  0,  0,  0,
-       0,  0,  0, 11, 14, 13,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0, 10, 11,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      11,  0,  0,  0,  0,  0,  9,  0,  0,  0,  0,  9,  0,  0,
-      10,  0,  0,  0,  0,  0,  0,  0, 13,  0,  0,  0,  0,  0,
-       0,  7,  0,  0,  0,  0,  0,  8, 12,  0,  0,  0,  0,  9,
-       0,  0, 10,  8,  0, 13,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0, 12,  0,  0,  0,  0,  0,  0, 17,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 13,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,
-       0,  0,  0,  0,  0,  0,  0,  0,  0, 10,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0, 14,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  9,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-       0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      10
-    };
-  static struct StaticNameTable wordlist[] =
-    {
-      {""}, {""}, {""},
-      {"red", 119},
-      {""},
-      {"olive", 103},
-      {""}, {""}, {""},
-      {"gold", 51},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"blue", 9},
-      {"beige", 5},
-      {""}, {""}, {""}, {""},
-      {"dodgerblue", 44},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-      {"indigo", 60},
-      {""}, {""},
-      {"goldenrod", 52},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-      {"green", 55},
-      {""}, {""}, {""},
-      {"lime", 82},
-      {""}, {""}, {""}, {""},
-      {"lightblue", 67},
-      {"brown", 11},
-      {""}, {""}, {""}, {""},
-      {"azure", 4},
-      {""},
-      {"darkred", 32},
-      {""}, {""},
-      {"linen", 84},
-      {"orange", 105},
-      {""}, {""},
-      {"orangered", 106},
-      {"lightgreen", 72},
-      {""}, {""},
-      {"darkgoldenrod", 23},
-      {"grey", 54},
-      {"black", 7},
-      {""}, {""},
-      {"darkblue", 21},
-      {"aliceblue", 0},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"royalblue", 121},
-      {""},
-      {"silver", 128},
-      {""}, {""},
-      {"olivedrab", 104},
-      {""}, {""}, {""}, {""},
-      {"teal", 137},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"bisque", 6},
-      {""}, {""},
-      {"limegreen", 83},
-      {""}, {""}, {""}, {""},
-      {"indianred", 59},
-      {""}, {""}, {""}, {""},
-      {"darkgreen", 25},
-      {""}, {""}, {""}, {""}, {""},
-      {"blueviolet", 10},
-      {""}, {""}, {""}, {""},
-      {"mediumblue", 88},
-      {"tomato", 139},
-      {""}, {""},
-      {"turquoise", 140},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"gray", 53},
-      {""},
-      {"violet", 141},
-      {""},
-      {"tan", 136},
-      {"steelblue", 135},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"aqua", 2},
-      {"mediumturquoise", 94},
-      {""}, {""},
-      {"lavender", 63},
-      {""},
-      {"darkorange", 30},
-      {""}, {""}, {""},
-      {"darkolivegreen", 29},
-      {""},
-      {"maroon", 86},
-      {"skyblue", 129},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"slateblue", 130},
-      {"darkviolet", 39},
-      {""}, {""}, {""},
-      {"gainsboro", 49},
-      {""}, {""},
-      {"hotpink", 58},
-      {""}, {""},
-      {"khaki", 62},
-      {"deepskyblue", 41},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"lightsteelblue", 80},
-      {""}, {""},
-      {"thistle", 138},
-      {""},
-      {"lightgrey", 73},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"salmon", 123},
-      {"dimgrey", 43},
-      {"seagreen", 125},
-      {""}, {""},
-      {"forestgreen", 47},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"coral", 16},
-      {"orchid", 107},
-      {"ivory", 61},
-      {""}, {""},
-      {"darkgrey", 26},
-      {""}, {""},
-      {"saddlebrown", 122},
-      {""}, {""},
-      {"peru", 114},
-      {"mediumvioletred", 95},
-      {"purple", 118},
-      {"lightskyblue", 77},
-      {"darkturquoise", 38},
-      {"navy", 101},
-      {""}, {""}, {""}, {""}, {""},
-      {"lightgoldenrodyellow", 70},
-      {""},
-      {"midnightblue", 96},
-      {""}, {""},
-      {"aquamarine", 3},
-      {""}, {""}, {""},
-      {"burlywood", 12},
-      {""},
-      {"sienna", 127},
-      {""}, {""},
-      {"pink", 115},
-      {""}, {""}, {""},
-      {"deeppink", 40},
-      {"darkkhaki", 27},
-      {""}, {""},
-      {"firebrick", 45},
-      {"lightseagreen", 76},
-      {""}, {""}, {""}, {""}, {""},
-      {"lightgray", 71},
-      {""}, {""}, {""},
-      {"darkslateblue", 35},
-      {"snow", 133},
-      {""}, {""},
-      {"dimgray", 42},
-      {""},
-      {"lawngreen", 65},
-      {"white", 143},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"darkseagreen", 34},
-      {"seashell", 126},
-      {"plum", 116},
-      {"oldlace", 102},
-      {"yellowgreen", 146},
-      {""},
-      {"darkgray", 24},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"mediumslateblue", 92},
-      {""}, {""}, {""},
-      {"lightpink", 74},
-      {""}, {""}, {""}, {""},
-      {"mediumseagreen", 91},
-      {""}, {""}, {""},
-      {"palegoldenrod", 108},
-      {""},
-      {"darksalmon", 33},
-      {"lightsalmon", 75},
-      {""}, {""},
-      {"rosybrown", 120},
-      {""},
-      {"cornsilk", 18},
-      {""}, {""},
-      {"slategrey", 132},
-      {""}, {""},
-      {"magenta", 85},
-      {""},
-      {"mistyrose", 98},
-      {""}, {""}, {""}, {""},
-      {"lightslategrey", 79},
-      {""}, {""}, {""},
-      {"lightcoral", 68},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"mediumorchid", 89},
-      {"mediumaquamarine", 87},
-      {"cadetblue", 13},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"mediumpurple", 90},
-      {""},
-      {"palegreen", 109},
-      {"wheat", 142},
-      {"darkmagenta", 28},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"crimson", 19},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-      {"floralwhite", 46},
-      {""},
-      {"palevioletred", 111},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"cyan", 20},
-      {""},
-      {"slategray", 131},
-      {""},
-      {"yellow", 145},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"lightslategray", 78},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""},
-      {"powderblue", 117},
-      {""}, {""}, {""}, {""}, {""},
-      {"springgreen", 134},
-      {""},
-      {"darkorchid", 31},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"greenyellow", 56},
-      {"cornflowerblue", 17},
-      {"darkslategrey", 37},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-      {"whitesmoke", 144},
-      {"lightyellow", 81},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"navajowhite", 100},
-      {""}, {""}, {""}, {""}, {""},
-      {"chocolate", 15},
-      {""}, {""}, {""}, {""},
-      {"lightcyan", 69},
-      {""}, {""},
-      {"sandybrown", 124},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"paleturquoise", 110},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"fuchsia", 48},
-      {""}, {""}, {""}, {""}, {""},
-      {"darkcyan", 22},
-      {"antiquewhite", 1},
-      {""}, {""}, {""}, {""},
-      {"mintcream", 97},
-      {""}, {""},
-      {"ghostwhite", 50},
-      {"moccasin", 99},
-      {""},
-      {"darkslategray", 36},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-      {"lemonchiffon", 66},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"mediumspringgreen", 93},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"lavenderblush", 64},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""},
-      {"honeydew", 57},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"chartreuse", 14},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""},
-      {"blanchedalmond", 8},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""},
-      {"peachpuff", 113},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {"papayawhip", 112}
-    };
-
-  if (str != NULL) {
-    int len = PL_strlen(str);
-    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH) {
-  register int hval = len;
-
-  switch (hval)
-    {
-      default:
-      case 13:
-        hval += asso_values[MYLOWER(str[12])];
-      case 12:
-        hval += asso_values[MYLOWER(str[11])];
-      case 11:
-        hval += asso_values[MYLOWER(str[10])];
-      case 10:
-      case 9:
-        hval += asso_values[MYLOWER(str[8])];
-      case 8:
-        hval += asso_values[MYLOWER(str[7])];
-      case 7:
-        hval += asso_values[MYLOWER(str[6])];
-      case 6:
-        hval += asso_values[MYLOWER(str[5])];
-      case 5:
-        hval += asso_values[MYLOWER(str[4])];
-      case 4:
-      case 3:
-        hval += asso_values[MYLOWER(str[2])];
-      case 2:
-        hval += asso_values[MYLOWER(str[1])];
-      case 1:
-        hval += asso_values[MYLOWER(str[0])];
-        break;
-    }
-  hval += asso_values[MYLOWER(str[len - 1])];
-      if (hval <= MAX_HASH_VALUE && hval >= MIN_HASH_VALUE) {
-        if (len == lengthtable[hval]) {
-          register const char *tag = wordlist[hval].tag;
-
-          /*
-          ** While not at the end of the string, if they ever differ
-          ** they are not equal.  We know "tag" is already lower case.
-          */
-          while ((*tag != '\0')&&(*str != '\0')) {
-            if (*tag != (char) MYLOWER(*str)) {
-              return -1;
-            }
-            tag++;
-            str++;
-          }
-
-          /*
-          ** One of the strings has ended, if they are both ended, then they
-          ** are equal, otherwise not.
-          */
-          if ((*tag == '\0')&&(*str == '\0')) {
-            return wordlist[hval].id;
-          }
+  if (0 == gTableRefCount++) {
+    if (! gColorArray) {
+      gColorArray = new ColorNode[eColorName_COUNT];
+      gComparitor = new ColorComparitor();
+      if (gComparitor) {
+        gColorTree = new nsAVLTree(*gComparitor, nsnull);
+      }
+      if (gColorArray && gColorTree) {
+        PRInt32 index = -1;
+        while (++index < PRInt32(eColorName_COUNT)) {
+          gColorArray[index].mStr = kColorNames[index];
+          gColorArray[index].mEnum = nsColorName(index);
+          gColorTree->AddItem(&(gColorArray[index]));
         }
       }
     }
   }
-  return -1;
 }
 
-const nsColorNames::NameTableEntry nsColorNames::kNameTable[] = {
-  { "aliceblue", 0 }, 
-  { "antiquewhite", 1 }, 
-  { "aqua", 2 }, 
-  { "aquamarine", 3 }, 
-  { "azure", 4 }, 
-  { "beige", 5 }, 
-  { "bisque", 6 }, 
-  { "black", 7 }, 
-  { "blanchedalmond", 8 }, 
-  { "blue", 9 }, 
-  { "blueviolet", 10 }, 
-  { "brown", 11 }, 
-  { "burlywood", 12 }, 
-  { "cadetblue", 13 }, 
-  { "chartreuse", 14 }, 
-  { "chocolate", 15 }, 
-  { "coral", 16 }, 
-  { "cornflowerblue", 17 }, 
-  { "cornsilk", 18 }, 
-  { "crimson", 19 }, 
-  { "cyan", 20 }, 
-  { "darkblue", 21 }, 
-  { "darkcyan", 22 }, 
-  { "darkgoldenrod", 23 }, 
-  { "darkgray", 24 }, 
-  { "darkgreen", 25 }, 
-  { "darkgrey", 26 }, 
-  { "darkkhaki", 27 }, 
-  { "darkmagenta", 28 }, 
-  { "darkolivegreen", 29 }, 
-  { "darkorange", 30 }, 
-  { "darkorchid", 31 }, 
-  { "darkred", 32 }, 
-  { "darksalmon", 33 }, 
-  { "darkseagreen", 34 }, 
-  { "darkslateblue", 35 }, 
-  { "darkslategray", 36 }, 
-  { "darkslategrey", 37 }, 
-  { "darkturquoise", 38 }, 
-  { "darkviolet", 39 }, 
-  { "deeppink", 40 }, 
-  { "deepskyblue", 41 }, 
-  { "dimgray", 42 }, 
-  { "dimgrey", 43 }, 
-  { "dodgerblue", 44 }, 
-  { "firebrick", 45 }, 
-  { "floralwhite", 46 }, 
-  { "forestgreen", 47 }, 
-  { "fuchsia", 48 }, 
-  { "gainsboro", 49 }, 
-  { "ghostwhite", 50 }, 
-  { "gold", 51 }, 
-  { "goldenrod", 52 }, 
-  { "gray", 53 }, 
-  { "grey", 54 }, 
-  { "green", 55 }, 
-  { "greenyellow", 56 }, 
-  { "honeydew", 57 }, 
-  { "hotpink", 58 }, 
-  { "indianred", 59 }, 
-  { "indigo", 60 }, 
-  { "ivory", 61 }, 
-  { "khaki", 62 }, 
-  { "lavender", 63 }, 
-  { "lavenderblush", 64 }, 
-  { "lawngreen", 65 }, 
-  { "lemonchiffon", 66 }, 
-  { "lightblue", 67 }, 
-  { "lightcoral", 68 }, 
-  { "lightcyan", 69 }, 
-  { "lightgoldenrodyellow", 70 }, 
-  { "lightgray", 71 }, 
-  { "lightgreen", 72 }, 
-  { "lightgrey", 73 }, 
-  { "lightpink", 74 }, 
-  { "lightsalmon", 75 }, 
-  { "lightseagreen", 76 }, 
-  { "lightskyblue", 77 }, 
-  { "lightslategray", 78 }, 
-  { "lightslategrey", 79 }, 
-  { "lightsteelblue", 80 }, 
-  { "lightyellow", 81 }, 
-  { "lime", 82 }, 
-  { "limegreen", 83 }, 
-  { "linen", 84 }, 
-  { "magenta", 85 }, 
-  { "maroon", 86 }, 
-  { "mediumaquamarine", 87 }, 
-  { "mediumblue", 88 }, 
-  { "mediumorchid", 89 }, 
-  { "mediumpurple", 90 }, 
-  { "mediumseagreen", 91 }, 
-  { "mediumslateblue", 92 }, 
-  { "mediumspringgreen", 93 }, 
-  { "mediumturquoise", 94 }, 
-  { "mediumvioletred", 95 }, 
-  { "midnightblue", 96 }, 
-  { "mintcream", 97 }, 
-  { "mistyrose", 98 }, 
-  { "moccasin", 99 }, 
-  { "navajowhite", 100 }, 
-  { "navy", 101 }, 
-  { "oldlace", 102 }, 
-  { "olive", 103 }, 
-  { "olivedrab", 104 }, 
-  { "orange", 105 }, 
-  { "orangered", 106 }, 
-  { "orchid", 107 }, 
-  { "palegoldenrod", 108 }, 
-  { "palegreen", 109 }, 
-  { "paleturquoise", 110 }, 
-  { "palevioletred", 111 }, 
-  { "papayawhip", 112 }, 
-  { "peachpuff", 113 }, 
-  { "peru", 114 }, 
-  { "pink", 115 }, 
-  { "plum", 116 }, 
-  { "powderblue", 117 }, 
-  { "purple", 118 }, 
-  { "red", 119 }, 
-  { "rosybrown", 120 }, 
-  { "royalblue", 121 }, 
-  { "saddlebrown", 122 }, 
-  { "salmon", 123 }, 
-  { "sandybrown", 124 }, 
-  { "seagreen", 125 }, 
-  { "seashell", 126 }, 
-  { "sienna", 127 }, 
-  { "silver", 128 }, 
-  { "skyblue", 129 }, 
-  { "slateblue", 130 }, 
-  { "slategray", 131 }, 
-  { "slategrey", 132 }, 
-  { "snow", 133 }, 
-  { "springgreen", 134 }, 
-  { "steelblue", 135 }, 
-  { "tan", 136 }, 
-  { "teal", 137 }, 
-  { "thistle", 138 }, 
-  { "tomato", 139 }, 
-  { "turquoise", 140 }, 
-  { "violet", 141 }, 
-  { "wheat", 142 }, 
-  { "white", 143 }, 
-  { "whitesmoke", 144 }, 
-  { "yellow", 145 }, 
-  { "yellowgreen", 146 }, 
-};
+void
+nsColorNames::ReleaseTable(void) 
+{
+  if (0 == --gTableRefCount) {
+    if (gColorArray) {
+      delete [] gColorArray;
+      gColorArray = nsnull;
+    }
+    if (gColorTree) {
+      delete gColorTree;
+      gColorTree = nsnull;
+    }
+    if (gComparitor) {
+      delete gComparitor;
+      gComparitor = nsnull;
+    }
+  }
+}
+
+
+nsColorName 
+nsColorNames::LookupName(const nsStr& aColorName)
+{
+  NS_ASSERTION(gColorTree, "no lookup table, needs addref");
+  if (gColorTree) {
+    ColorNode node(aColorName, eColorName_UNKNOWN);
+    ColorNode*  found = (ColorNode*)gColorTree->FindItem(&node);
+    if (found) {
+      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aColorName), "bad tree");
+      return found->mEnum;
+    }
+  }
+  return eColorName_UNKNOWN;
+}
+
+
+const nsCString& 
+nsColorNames::GetStringValue(nsColorName aColorName)
+{
+  nsCAutoString* value = nsnull;
+
+  NS_ASSERTION(gColorArray, "no lookup table, needs addref");
+  if ((eColorName_UNKNOWN < aColorName) && 
+      (aColorName < eColorName_COUNT) && gColorArray) {
+    return gColorArray[aColorName].mStr;
+  }
+  else {
+    static const nsCString  kNullStr;
+    return kNullStr;
+  }
+}
+
