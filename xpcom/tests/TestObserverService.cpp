@@ -92,32 +92,32 @@ int main(int argc, char *argv[])
         bObserver->AddRef();
             
         cout << "Adding Observer-A as observer of topic-A..." << endl;
-        rv = anObserverService->AddObserver(aObserver, topicA);
+        rv = anObserverService->AddObserver(aObserver, topicA.GetUnicode());
         testResult(rv);
  
         cout << "Adding Observer-B as observer of topic-A..." << endl;
-        rv = anObserverService->AddObserver(bObserver, topicA);
+        rv = anObserverService->AddObserver(bObserver, topicA.GetUnicode());
         testResult(rv);
  
         cout << "Adding Observer-B as observer of topic-B..." << endl;
-        rv = anObserverService->AddObserver(bObserver, topicB);
+        rv = anObserverService->AddObserver(bObserver, topicB.GetUnicode());
         testResult(rv);
 
         cout << "Testing Notify(observer-A, topic-A)..." << endl;
         rv = anObserverService->Notify( aObserver,
-                                   topicA,
-                                   nsString("Testing Notify(observer-A, topic-A)") );
+                                   topicA.GetUnicode(),
+                                   nsString("Testing Notify(observer-A, topic-A)").GetUnicode() );
         testResult(rv);
 
         cout << "Testing Notify(observer-B, topic-B)..." << endl;
         rv = anObserverService->Notify( bObserver,
-                                   topicB,
-                                   nsString("Testing Notify(observer-B, topic-B)") );
+                                   topicB.GetUnicode(),
+                                   nsString("Testing Notify(observer-B, topic-B)").GetUnicode() );
         testResult(rv);
  
         cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
         nsIEnumerator* e;
-        rv = anObserverService->EnumerateObserverList(topicA, &e);
+        rv = anObserverService->EnumerateObserverList(topicA.GetUnicode(), &e);
         testResult(rv);
 
         cout << "Enumerating observers of topic-A..." << endl;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
                   rv = inst->QueryInterface(nsIObserver::GetIID(),(void**)&anObserver);
                   cout << "Calling observe on enumerated observer "
                         << ((TestObserver*)inst)->mName << "..." << endl;
-                  rv = anObserver->Observe( inst, topicA, nsString("during enumeration") );
+                  rv = anObserver->Observe( inst, topicA.GetUnicode(), nsString("during enumeration").GetUnicode() );
                   testResult(rv);
                 }
             }
@@ -138,15 +138,15 @@ int main(int argc, char *argv[])
         cout << "...done enumerating observers of topic-A" << endl;
 
         cout << "Removing Observer-A..." << endl;
-        rv = anObserverService->RemoveObserver(aObserver, topicA);
+        rv = anObserverService->RemoveObserver(aObserver, topicA.GetUnicode());
         testResult(rv);
 
 
         cout << "Removing Observer-B (topic-A)..." << endl;
-        rv = anObserverService->RemoveObserver(bObserver, topicB);
+        rv = anObserverService->RemoveObserver(bObserver, topicB.GetUnicode());
         testResult(rv);
         cout << "Removing Observer-B (topic-B)..." << endl;
-        rv = anObserverService->RemoveObserver(bObserver, topicA);
+        rv = anObserverService->RemoveObserver(bObserver, topicA.GetUnicode());
         testResult(rv);
        
     }
