@@ -25,38 +25,44 @@
 #   On submit, the cgi prints out a shell script that the user can
 #   save to configure their build.
 
-# Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
+# Send comments, improvements, bugs to Benjamin Smedberg <benjamin@smedbergs.us>
 use CGI;
+use CGI::Carp qw(fatalsToBrowser);
 
 $query = new CGI;
 $field_separator = '<<fs>>';
 $configure_in    = 'configure-mirror/mozilla/configure.in';
-$chrome_color    = '#F0A000';
 $CVSROOT         = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 $ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin:/usr/local/bin"; # for cvs & m4
 
 %default = (
-  'MOZ_CO_MODULE',  'SeaMonkeyAll',
-  'MOZ_CO_BRANCH',  'HEAD',
-  'MOZ_OBJDIR',     '@TOPSRCDIR@',
-  'MOZ_CVS_FLAGS',  '-q -z 3',
-  'MOZ_CO_FLAGS',   '-P',
+  'MOZ_CO_MODULE',  '',
+  'MOZ_CVS_FLAGS',  '',
+  'MOZ_CO_FLAGS',   '',
+  'MOZ_OBJDIR', '@TOPSRCDIR@/obj-@CONFIG_GUESS@'
 );
 
 # Set up pull by date
-#
+
 use POSIX qw(strftime);
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $default{MOZ_CO_DATE} = strftime("%d %b %Y %H:%M %Z",
                                  $sec,$min,$hour,$mday,$mon,$year);
 
 %fillin = %default;
-$default_objdir_fillin='@TOPSRCDIR@/obj-@CONFIG_GUESS@';
-$fillin{MOZ_OBJDIR} = $default_objdir_fillin;
 $fillin{MOZ_MAKE_FLAGS}='-j4';
+
 
 if ($query->param()) {
   &parse_params;
+  if ($query->param("MOZ_CO_PROJECT").$query->param("MOZ_CO_MODULE") eq "") {
+      show_error("You must specify at least one of MOZ_CO_PROJECT or MOZ_CO_MODULE.");
+      exit 0;
+  }
+  if ($query->param("--enable-application") eq "") {
+      show_error("You must specify an application for --enable-application");
+      exit 0;
+  }
   if ($query->param(preview) eq "1") {
     print "Content-type: text/html\n\n";
     &print_script_preview;
@@ -105,26 +111,20 @@ sub print_script_preview {
     <HTML>
     <HEAD>
       <TITLE>Configurator Script Preview</TITLE>
+      <link rel="home" title="Home" href="http://www.mozilla.org/">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/print.css"  media="print">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/content.css"  media="all">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/content.css" title="Cavendish" media="screen">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/template.css"  media="screen">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/template.css" title="Cavendish" media="screen">
+      <link rel="icon" href="http://www.mozilla.org/images/mozilla-16.png" type="image/png">
     </HEAD>
-    <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">);
+    <body>
 
+    <h1>Configurator Script Preview</h1>
 
-  print qq(
-    <TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-    <TR><TD>
-      <A HREF="http://www.mozilla.org/">
-      <IMG SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT="" BORDER=0 WIDTH=600 HEIGHT=58>
-      </A>
-    </TD></TR></TABLE>
-
-    <table cellspacing=2 cellpading=0 border=0 width=600><tr><td>
-
-    <font size='+1' face='Helvetica,Arial'><b>
-    Configurator Script Preview</b></font>
-    </td></tr><tr></tr><tr><td>
-    Check the script to make sure the options are correct.
-    Then, save this script as <code><b>$HOME/.mozconfig</b></code>.
-    </td></tr></table>
+    <p>Check the script to make sure the options are correct.
+    Then, save this script as <code class="filename">$<var>HOME</var>/.mozconfig</code>.
 
     <form action='.mozconfig' method='get'>
     <input type='hidden' name='saveas' value='1'>
@@ -134,8 +134,7 @@ sub print_script_preview {
         my $value = $query->param($param);
         $value =~ s/\s+$//;
         $value =~ s/^\s+//;
-        next if $param =~ /^--/   and $value eq '';
-        next if $param =~ /^MOZ_/ and $value eq $default{$param};
+        next if $value eq '';
 
         print "<input type='hidden' name=$param value='"
           .$query->param($param)."'>\n";
@@ -144,88 +143,53 @@ sub print_script_preview {
 
   my $script = &print_script;
 
-  if ($script eq '') {
-    print "<font size='+1'><b>";
-    print "No script needed. Only default values were selected.<p>\n";
-    print "</b></font>";
-  } else {
       print qq(
-      <!--
-      <table cellpadding=0 cellspacing=1><tr><td>
-  	<input type='submit' value='Save the script'>
-  	</td></tr></table>
-      -->
+      <pre class="code">$script</pre>
   
-      <table cellspacing=2 cellpading=0 border=0>
-        <tr><td>
-  	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0>
-          <tr valign=middle><td align=center>
-  	  <table bgcolor="$chrome_color" cellspacing=0 cellpadding=2 border=0>
-            <tr valign=middle><td align=center>
-            <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="600" border=0>
-              <tr><td>
-                <pre>$script</pre>
-  	      </td></tr></table>
-  	    </td></tr></table>
-  	  </td></tr></table>
-        </td></tr></table>
-  
-      <table cellpadding=0 cellspacing=1><tr><td>
-  	<input type='submit' value='Save the script'>
-  	</td></tr></table>
-    );
-  }
-
-  print qq(
-<table cellspacing=0 cellpadding=0 border=0>
-<tr><td colspan=3>
-Save the script, then build the tree as follows,
-</td></tr><tr><td>&nbsp;</td><td>
-  1. </td><td>  <code>cvs co mozilla/client.mk</code>
-</td></tr><tr><td></td><td>
-  2. </td><td>  <code>cd mozilla</code>
-</td></tr><tr><td></td><td>
-  3. </td><td>  <code>gmake -f client.mk</code><br>
-</td></tr><tr><td></td><td>
-</td><td>      (default targets: <code>checkout depend build</code>)
-</td></tr>
-</td></tr><tr><td colspan=3>&nbsp;</td></tr><tr><td colspan=3>
-</td></tr></table>
-If you do not want to use <code><b>client.mk</b></code>, 
-then use your favorite build steps, and
-<code><b>configure</b></code> will
-pick up the options in your <code><b>.mozconfig</b></code> script.
-<p>
-       Questions? See the 
-       <a href="http://www.mozilla.org/build/configurator-faq.html">
-       Configurator FAQ</a>.<br>
-       <a href="http://www.mozilla.org/build/unix.html">
-       Back to the Unix Build Instructions</a>
-       <p>
-<hr align=left width=600>
-           Send questions or comments to 
-           &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
+      <p><input type='submit' value='Save the script'>
 	</form>
 
+   <p>Save the script, then build the tree as follows,
+   <ol>
+     <li><code class="command">cvs co mozilla/client.mk</code>
+     <li><code class="command">cd mozilla</code>
+     <li><code class="command">gmake -f client.mk checkout</code>
+     <li><code class="command">gmake -f client.mk build</code>
+   </ol>
+
+   <p>
+       Questions? See the 
+       <a href="http://www.mozilla.org/build/configurator-faq.html">
+       Configurator FAQ</a> and the 
+       <a href="http://www.mozilla.org/build/">the build instructions</a>.
+
+       <address>Maintained by
+           <a href="mailto:bsmedberg&#x40;covad&#x2e;net?subject=Build Configurator">Benjamin Smedberg &lt;bsmedberg&#x40;covad&#x2e;net&gt;</a></address>
 	  );
 }
 
 sub print_script {
   my $out = '';
 
-  $out =  "# sh\n";
   $out .= "# Build configuration script\n";
-  $out .= "#\n";
-  $out .= "# See http://www.mozilla.org/build/unix.html for build instructions.\n";
+  $out = "#\n";
+  $out .= "# See http://www.mozilla.org/build/ for build instructions.\n";
   $out .= "#\n";
   $out .= "\n";
 
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
-      my $value = $query->param($param);
+      my @values = $query->param($param);
+      my $value;
+      if (scalar(@values) > 1) {
+        $value = join(",", @values);
+      }
+      else {
+        $value = $values[0];
+      }
       $value =~ s/\s+$//;
       $value =~ s/^\s+//;
-      next if $value eq $default{$param};
+      next if $value eq '';
       $value = "\"$value\"" if $value =~ /\s/;
       $out .= "# Options for client.mk.\n" unless $have_client_mk_options;
       $out .= "mk_add_options $param=".$value."\n";
@@ -261,118 +225,80 @@ sub print_configure_form {
   print qq(
     <HTML>
     <HEAD>
-      <TITLE>Mozilla Unix Build Configurator</TITLE>
+      <TITLE>Mozilla Build Configurator</TITLE>
+      <link rel="home" title="Home" href="http://www.mozilla.org/">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/print.css"  media="print">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/content.css"  media="all">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/content.css" title="Cavendish" media="screen">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/template.css"  media="screen">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/template.css" title="Cavendish" media="screen">
+      <link rel="icon" href="http://www.mozilla.org/images/mozilla-16.png" type="image/png">
     </HEAD>
-    <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+    <body>
  
     <FORM action='config.cgi' method='POST' name='ff'>
     <INPUT Type='hidden' name='preview' value='1'>
 
-    <TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-    <TR><TD>
-      <A HREF="http://www.mozilla.org/">
-      <IMG SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT="" BORDER=0 WIDTH=600 HEIGHT=58>
-      </A>
-    </TD></TR></TABLE>
+    <h1>Unix Build Configurator</h1>
 
-    <table cellpadding=0 cellspacing=4 border=0 width="500"><tr><td>
-    <font size='+1' face='Helvetica,Arial'><b>
-    Unix Build Configurator
-    </b></font>
-    </td></tr><tr><td>
-    The mozilla Unix Build System is designed to work free of any user set
-    options. However, should you need to tweak an option, the
-    Configurator is here to help.<p>
-    This form produces a script that you can use to configure your build. 
-    The script saves you the trouble of setting environment 
-    variables for <code><b>client.mk</b></code>
-    or typing command-line options for <code><b>configure</b></code>.
-    </td></tr></table>
+    <p>The mozilla Unix Build System has a few required build parameters, and
+    additional optional parameters. This build configurator may help you to
+    tweak the build options. You should read
+    <a href="http://www.mozilla.org/build/configure-build.html">the build configuration overview</a>
+    before using this tool.
 
-    <table cellpadding=0 cellspacing=0 border=0><tr><td>
-	<input type="Submit" value="Preview Build Script">
-    </td></tr></table>
+    <p><input type="Submit" value="Preview Build Script">
 
-    <font size=+1 face="Helvetica,Arial"><b>
-    Options for "<code>client.mk</code>":
-    </b></font><br>
+    <h2>Options for <code class="filename">client.mk</code></h2>
 
-    <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0 border=0><tr><td>
-    <table bgcolor="#FFFFFF" cellspacing=2 cellpadding=0 border=0><tr><td>
-    <table cellspacing=0 cellpadding=4 border=0>
+    <div class="section">
+    <h3>Check out options:</h3>
 
-    <!-- Check out options -->
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>Check out options:</b></font><br>
-    </td></tr><tr><td>
-    <table cellpadding=0 cellspacing=0 width="100%"><tr><td>
-    Check out module
-    </td><td>
+    <p>MOZ_CO_PROJECT: (select one or more)<br>
+
+    <select name="MOZ_CO_PROJECT" multiple="true">
+      <option value="suite">suite (Mozilla Seamonkey)
+      <option value="browser">browser (Firefox)
+      <option value="mail">mail (Thunderbird)
+      <option value="composer">composer (standalone composer)
+      <option value="calendar">calendar (standalone calendar == Sunbird)
+      <option value="xulrunner">xulrunner
+      <option value="macbrowser">macbrowser (Camino)
+    </select>
+
+    <p>MOZ_CO_MODULE: (extra modules)<br>
     <input type="text" name="MOZ_CO_MODULE" value="$fillin{MOZ_CO_MODULE}">
-    </td></tr><tr><td>
-    CVS flags
-    </td><td>
-    <code>cvs</code>&nbsp;
-    <input type="text" name="MOZ_CVS_FLAGS" value="$fillin{MOZ_CVS_FLAGS}"
-     size="16">
-    &nbsp;<code>co</code>&nbsp;
-    <input type="text" name="MOZ_CO_FLAGS" value="$fillin{MOZ_CO_FLAGS}"
-     size="16">
-    </td></tr><tr><td>
-    <input type="checkbox" name="pull_by_date");
+
+    <p>CVS flags:<br>
+    <code>cvs</code>&nbsp;<input type="text" name="MOZ_CVS_FLAGS"
+     value="$fillin{MOZ_CVS_FLAGS}" size="16">&nbsp;<code>co</code>&nbsp;<input
+     type="text" name="MOZ_CO_FLAGS" value="$fillin{MOZ_CO_FLAGS}" size="16">
+
+    <p><input type="checkbox" name="pull_by_date");
   #print 'checked' if $fillin{MOZ_CO_DATE} ne $default{MOZ_CO_DATE};
   print qq(>&nbsp;
-    Pull by date
-    </td><td>
-    <input type='text' name='pull_date' value='$fillin{MOZ_CO_DATE}' size='25'>
-    </td></tr></table>
-    </td></tr>
+    Pull by date&nbsp;<input type='text' name='pull_date' value='$fillin{MOZ_CO_DATE}' size='25'>
+    </div>
 
+    <div class="section">
     <!-- Object Directory -->
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>
-    Object Directory:</b></font><br>
-    </td></tr><tr><td><table><tr><td>
-    <input type="radio" name="MOZ_OBJDIR" value="$default{MOZ_OBJDIR}");
-  print 'checked' if $fillin{MOZ_OBJDIR} eq $default_objdir_fillin;
-  print qq(>&nbsp;
-    <code>mozilla</code></td><td> Build in the source tree. (default)<br></td></tr><tr><td>
-    <input type="radio" name="MOZ_OBJDIR" value="fillin");
-  print 'checked' if $fillin{MOZ_OBJDIR} ne $default_objdir_fillin;
-  print qq(>&nbsp;
-    <input type="text" name="objdir_fillin" value="$fillin{MOZ_OBJDIR}" size='30'>
-    </td><td>);
-  print '(e.g. <code>mozilla/obj-i686-pc-linux-gnu)</code>'
-    if $fillin{MOZ_OBJDIR} eq $default{MOZ_OBJDIR};
-  print qq(
-    </td></tr></table>
-    </td></tr>
+    <h3>Object Directory:</h2>
 
-    <!-- Make Options -->
-    <tr bgcolor="$chrome_color"><td>
-    <font face="Helvetica,Arial"><b>
-    Make options:</b></font><br>
-    </td></tr><tr><td><table><tr><td>
-    <input type="checkbox" name="parallel_build");
-  #print 'checked' if $fillin{MOZ_MAKE_FLAGS} ne $default{MOZ_MAKE_FLAGS};
-  print qq(>&nbsp;
-    Parallel build using
+    <p><input type="radio" name="MOZ_OBJDIR" value="fillin" checked>&nbsp;<input
+        type="text" name="objdir_fillin" value="$fillin{MOZ_OBJDIR}" size='50'> (e.g. <code class="filename">mozilla/obj-i686-pc-linux-gnu</code>)<br>
+
+       <input type="radio" name="MOZ_OBJDIR" value="">&nbsp;<code>mozilla</code>&nbsp;Build in the source tree.
+    </div>
+
+    <div class="section">
+    <h3>Make options:</h2>
+
+    <input type="checkbox" name="parallel_build">&nbsp;Parallel build using
     <input type='text' name='gmake_flags' value='$fillin{MOZ_MAKE_FLAGS}' 
       size='10'>
-    </td></tr></table>
-    </td></tr>
+    </div>
 
-    </table>
-    </td></tr></table>
-    </td></tr></table>
-
-    <br>
-    <font size=+1 face="Helvetica,Arial"><b>
-    Options for "<code>configure</code>" script</b> (updated on the fly)<b>:</b></font><br>
-
-    <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0 border=0><tr><td>
-    <table bgcolor="#FFFFFF" cellspacing=2 cellpadding=0 border=0><tr><td>
-    <table cellspacing=0 cellpadding=4 border=0>
+    <h2>Options for <code class="filename">configure</code> script</h2>
   );
 
   my @unhandled_options = ();
@@ -399,6 +325,8 @@ sub print_configure_form {
     }
     push @options, $oldline;
 
+    print "<table>";
+
     foreach $line (@options) {
         ($type, $prename, $name, $comment) = split /$field_separator/, $line;
         ($dummy,$dummy2,$help) = split /\s+/, $comment, 3;
@@ -417,29 +345,22 @@ sub print_configure_form {
   foreach $comment (@unhandled_options) {
     $comment =~ s/\\\$/\$/g;
     my ($dummy,$option,$help) = split /\s+/, $comment, 3;
-    print "<tr><td>&nbsp;$option</td><td>&nbsp;&nbsp;&nbsp;$help</td></tr>\n";
+    print "<tr><td>&nbsp;$option  <td>&nbsp;&nbsp;&nbsp;$help\n";
   }
 
-  print "</td></tr></table></td></tr>\n";
+  print "</table>\n";
 
   print qq(
-	   </table>
-	   </td></tr></table>
-	   </td></tr></table>
-       <table><tr><td>
-	   <input type="Submit" value="Preview Build Script">
-       </td></tr></table>
+	   <p><input type="Submit" value="Preview Build Script">
 	   </form>
 
-       Questions? See the 
+     <p>Questions? See the 
        <a href="http://www.mozilla.org/build/configurator-faq.html">
        Configurator FAQ</a>.<br>
-       <a href="http://www.mozilla.org/build/unix.html">
-       Back to the Unix Build Instructions</a>
-       <p>
-       <hr align=left width=600>
-           Send questions or comments to 
-           &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
+       <a href="http://www.mozilla.org/build/">Back to the Build Instructions</a>
+
+       <address>Maintained by
+           <a href="mailto:bsmedberg&#x40;covad&#x2e;net?subject=Build Configurator">Benjamin Smedberg &lt;bsmedberg&#x40;covad&#x2e;net&gt;</a></address>
 	  );
 
   print "\n</body>\n</html>\n";
@@ -453,7 +374,7 @@ sub bool_option {
   print " CHECKED" if $query->param($name) eq 'yes';
   print ">";
   print "$name";
-  print "</td><td>&nbsp;&nbsp;&nbsp;$help</td></tr>";
+  print "<td>&nbsp;&nbsp;&nbsp;$help";
 }
 
 sub string_option {
@@ -463,7 +384,7 @@ sub string_option {
   print "<INPUT type='text' name='$name'";
   print " value='".$query->param($name)."'" if defined $query->param($name);
   print ">";
-  print " $help</td></tr>\n";
+  print " $help\n";
 }
 
 sub bool_or_string_option {
@@ -471,21 +392,46 @@ sub bool_or_string_option {
 
   print "<tr><td align=right>";
   print "<INPUT type='checkbox' name='$name'>";
-  print "</td><td>$name";
-  print "</td><td>$help</td></tr>\n";
-  print "<tr><td align=right>$name=</td><td align=left>";
+  print "<td>$name";
+  print "<td>$help\n";
+  print "<tr><td align=right>$name=<td align=left>";
   print "<INPUT type='text' name='$name'>";
-  print "</td><td>$help</td></tr>\n";
+  print "<td>$help\n";
 }
 
 sub header_option {
   my ($header) = @_;
-  print "</td></tr></table></td></tr>\n" if $inTable == 1;
-  print qq(<tr bgcolor=$chrome_color><td colspan=3>
-           <b><font face="Arial,Helvetica">
-           $header
-	   </font></b></td></tr>
+
+  print "</table></div>" if $inTable;
+
+  print qq(
+  <div class="section">
+  <h3>$header</h3>
+  <table>
 	  );
-  print "<tr><td><table cellspacing=0 cellpadding=0 border=0><tr><td>\n";
   $inTable = 1;
+}
+
+sub show_error {
+  my ($msg) = @_;
+
+  print "Content-type: text/html\n\n";
+  print qq(
+    <HTML>
+    <HEAD>
+      <TITLE>Mozilla Build Configurator - Error</TITLE>
+      <link rel="home" title="Home" href="http://www.mozilla.org/">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/print.css"  media="print">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/content.css"  media="all">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/content.css" title="Cavendish" media="screen">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/template.css"  media="screen">
+      <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/template.css" title="Cavendish" media="screen">
+      <link rel="icon" href="http://www.mozilla.org/images/mozilla-16.png" type="image/png">
+    </HEAD>
+    <body>
+    <h1>Configuration Error</h1>
+    <p class="important">$msg
+
+    <p><a href="javascript:history.go(-1)">Go back</a>
+  );
 }
