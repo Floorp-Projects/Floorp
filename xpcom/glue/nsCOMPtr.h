@@ -632,7 +632,7 @@ class nsCOMPtr<nsISupports>
           // ...and finally, anything else we might need to construct from
           //  can exploit the |nsCOMPtr_helper| facility
         {
-          assign_from_helper(helper, NS_GET_IID(T));
+          assign_from_helper(helper, NS_GET_IID(nsISupports));
         }
 
 
@@ -670,7 +670,7 @@ class nsCOMPtr<nsISupports>
           // ...and finally, anything else we might need to assign from
           //  can exploit the |nsCOMPtr_helper| facility.
         {
-          assign_from_helper(rhs, NS_GET_IID(T));
+          assign_from_helper(rhs, NS_GET_IID(nsISupports));
           return *this;
         }
 
