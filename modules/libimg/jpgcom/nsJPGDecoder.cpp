@@ -176,7 +176,7 @@ private:
 
 /*-----------------------------------------*/
 
-nsJPGDecFactory* gFactory = NULL;
+static nsJPGDecFactory* gFactory = NULL;
 
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 NS_IMPL_ISUPPORTS(nsJPGDecFactory, kIFactoryIID);
