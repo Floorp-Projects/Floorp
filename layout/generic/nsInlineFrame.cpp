@@ -29,6 +29,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsAbsoluteFrame.h"
 #include "nsLeafFrame.h"
+#include "nsIPtr.h"
 
 // XXX To Do:
 // 2. horizontal child margins
@@ -48,6 +49,10 @@ static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
+NS_DEF_PTR(nsIContentDelegate);
 
 class nsInlineState
 {
@@ -192,18 +197,22 @@ void nsInlineFrame::PlaceChild(nsIFrame*              aChild,
  *
  * @param   aPresContext presentation context to use
  * @param   aState current inline state
+ * @param   aChildFrame the first child frame to reflow
+ * @param   aChildIndex the first child frame's index in the frame list
  * @return  true if we successfully reflowed all the mapped children and false
  *            otherwise, e.g. we pushed children to the next in flow
  */
-PRBool nsInlineFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
-                                           nsInlineState&  aState)
+PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
+                                               nsInlineState&  aState,
+                                               nsIFrame*       aChildFrame,
+                                               PRInt32         aChildIndex)
 {
 #ifdef NS_DEBUG
   VerifyLastIsComplete();
 #endif
-  NS_PRECONDITION(nsnull != mFirstChild, "no children");
+  NS_PRECONDITION(nsnull != aChildFrame, "no children");
 
-  PRInt32   childCount = 0;
+  PRInt32   childCount = aChildIndex;
   nsIFrame* prevKidFrame = nsnull;
 
   // Remember our original mLastContentIsComplete so that if we end up
@@ -215,7 +224,7 @@ PRBool nsInlineFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
   nsSize*   pKidMaxElementSize = (nsnull != aState.maxElementSize) ? &kidMaxElementSize : nsnull;
   PRBool    result = PR_TRUE;
 
-  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
+  for (nsIFrame* kidFrame = aChildFrame; nsnull != kidFrame; ) {
     nsReflowMetrics kidSize;
     ReflowStatus    status;
 
@@ -259,11 +268,10 @@ PRBool nsInlineFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
         // frame. This hooks the child into the flow
         nsIFrame* continuingFrame;
          
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(aPresContext, kidSC);
+        nsIStyleContextPtr kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
                                         continuingFrame);
-        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to the sibling list
@@ -447,11 +455,10 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
         // prepares it for reflow.
         nsIFrame* continuingFrame;
 
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(aPresContext, kidSC);
+        nsIStyleContextPtr kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
         kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
                                         continuingFrame);
-        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -554,7 +561,7 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
   LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
-    nsIContent* kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid = mContent->ChildAt(kidIndex);
     if (nsnull == kid) {
       result = frComplete;
       break;
@@ -563,13 +570,11 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     // Make sure we still have room left
     if (aState.availSize.width <= 0) {
       // Note: return status was set to frNotComplete above...
-      NS_RELEASE(kid);
       break;
     }
 
     // Resolve style for the child
-    nsIStyleContext* kidStyleContext =
-      aPresContext->ResolveStyleContextFor(kid, this);
+    nsIStyleContextPtr kidStyleContext = aPresContext->ResolveStyleContextFor(kid, this);
 
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
@@ -591,15 +596,13 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
         kidFrame->SetStyleContext(aPresContext, kidStyleContext);
       }
     } else if (nsnull == kidPrevInFlow) {
-      nsIContentDelegate* kidDel;
+      nsIContentDelegatePtr kidDel;
       switch (kidDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
         if (kidIndex != mFirstContentOffset) {
           // We don't allow block elements to be placed in us anywhere
           // other than at our left margin.
-          NS_RELEASE(kidStyleContext);
-          NS_RELEASE(kid);
           goto done;
         }
         // FALLTHROUGH
@@ -608,7 +611,6 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
         kidDel = kid->GetDelegate(aPresContext);
         rv = kidDel->CreateFrame(aPresContext, kid, this,
                                  kidStyleContext, kidFrame);
-        NS_RELEASE(kidDel);
         break;
 
       default:
@@ -623,8 +625,6 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
       rv = kidPrevInFlow->CreateContinuingFrame(aPresContext, this,
                                                 kidStyleContext, kidFrame);
     }
-    NS_RELEASE(kid);
-    NS_RELEASE(kidStyleContext);
 
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
@@ -732,7 +732,7 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
   // Reflow any existing frames
   if (nsnull != mFirstChild) {
-    reflowMappedOK = ReflowMappedChildren(aPresContext, state);
+    reflowMappedOK = ReflowMappedChildrenFrom(aPresContext, state, mFirstChild, 0);
 
     if (PR_FALSE == reflowMappedOK) {
       aStatus = frNotComplete;
@@ -854,14 +854,14 @@ NS_METHOD nsInlineFrame::GetReflowMetrics(nsIPresContext* aPresContext,
  * of aSkipChild in our list of children.
  * If aSkipChild is nsnull then resets the state for appended content.
  */
-PRIntn nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
-                                   nsInlineState& aState,
-                                   nsIFrame* aSkipChild)
+PRInt32 nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
+                                    nsInlineState& aState,
+                                    nsIFrame* aSkipChild)
 {
   // Get ascent & descent info for all the children up to but not
   // including aSkipChild. Also compute the x coordinate for where
   // aSkipChild will be place after it is reflowed.
-  PRIntn i = 0;
+  PRInt32 i = 0;
   nsIFrame* kid = mFirstChild;
   nscoord x = aState.x;
   nscoord maxAscent = 0;
@@ -885,6 +885,78 @@ PRIntn nsInlineFrame::RecoverState(nsIPresContext* aPresContext,
   return i;
 }
 
+// XXX We need to return information about whether our next-in-flow is
+// dirty...
+nsIFrame::ReflowStatus
+nsInlineFrame::IncrementalReflowFrom(nsIPresContext* aPresContext,
+                                     nsInlineState&  aState,
+                                     nsIFrame*       aChildFrame,
+                                     PRInt32         aChildIndex)
+{
+  ReflowStatus  status = frComplete;
+
+  // Just reflow all the mapped children starting with childFrame.
+  // XXX This isn't the optimal thing to do...
+  if (ReflowMappedChildrenFrom(aPresContext, aState, aChildFrame, aChildIndex)) {
+    if (NextChildOffset() < mContent->ChildCount()) {
+      // Any space left?
+      if (aState.availSize.width <= 0) {
+        // No space left. Don't try to pull-up children
+        status = frNotComplete;
+      } else {
+        // Try and pull-up some children from a next-in-flow
+        if (!PullUpChildren(aPresContext, aState)) {
+          // We were not able to pull-up all the child frames from our
+          // next-in-flow
+          status = frNotComplete;
+        }
+      }
+    }
+  } else {
+    // We were unable to reflow all our mapped frames
+    status = frNotComplete;
+  }
+
+  return status;
+}
+
+nsIFrame::ReflowStatus
+nsInlineFrame::IncrementalReflowAfter(nsIPresContext* aPresContext,
+                                      nsInlineState&  aState,
+                                      nsIFrame*       aChildFrame,
+                                      PRInt32         aChildIndex)
+{
+  ReflowStatus  status = frComplete;
+  nsIFrame*     nextFrame;
+
+  aChildFrame->GetNextSibling(nextFrame);
+
+  // Just reflow all the remaining mapped children
+  // XXX This isn't the optimal thing to do...
+  if ((nsnull == nextFrame) || 
+      ReflowMappedChildrenFrom(aPresContext, aState, nextFrame, aChildIndex + 1)) {
+    if (NextChildOffset() < mContent->ChildCount()) {
+      // Any space left?
+      if (aState.availSize.width <= 0) {
+        // No space left. Don't try to pull-up children
+        status = frNotComplete;
+      } else {
+        // Try and pull-up some children from a next-in-flow
+        if (!PullUpChildren(aPresContext, aState)) {
+          // We were not able to pull-up all the child frames from our
+          // next-in-flow
+          status = frNotComplete;
+        }
+      }
+    }
+  } else {
+    // We were unable to reflow all our mapped frames
+    status = frNotComplete;
+  }
+
+  return status;
+}
+
 NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                            nsReflowMetrics& aDesiredSize,
                                            const nsSize&    aMaxSize,
@@ -899,7 +971,9 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   nsStyleSpacing* styleSpacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
 
-  nscoord lineHeight;
+  nscoord   lineHeight;
+  nsIFrame* kidFrame;
+  PRInt32   kidIndex;
 
   nsInlineState state(styleFont, styleSpacing, aMaxSize, nsnull);
   InitializeState(aPresContext, state);
@@ -913,22 +987,112 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       aStatus = ReflowUnmappedChildren(aPresContext, state);
 
       // Vertically align the children
-      lineHeight =
-        nsCSSLayout::VerticallyAlignChildren(aPresContext, this, styleFont,
-                                             styleSpacing->mBorderPadding.top,
-                                             mFirstChild, mChildCount,
-                                             state.ascents, state.maxAscent);
+      lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this,
+                     styleFont, styleSpacing->mBorderPadding.top, mFirstChild,
+                     mChildCount, state.ascents, state.maxAscent);
     
       ComputeFinalSize(aPresContext, state, aDesiredSize);
       break;
     
+#if 0
+    case nsReflowCommand::ContentChanged:
+      // Recover our state
+      kidFrame = aReflowCommand.GetChildFrame();
+      kidIndex = RecoverState(aPresContext, state, kidFrame);
+      aStatus = IncrementalReflowFrom(aPresContext, state, kidFrame, kidIndex);
+
+      // Vertically align the children
+      lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this,
+                     styleFont, styleSpacing->mBorderPadding.top, mFirstChild,
+                     mChildCount, state.ascents, state.maxAscent);
+    
+      ComputeFinalSize(aPresContext, state, aDesiredSize);
+      break;
+#endif
+
     default:
       NS_NOTYETIMPLEMENTED("unexpected reflow command");
       break;
     }
 
   } else {
-    NS_NOTYETIMPLEMENTED("unexpected reflow command");
+    // The command is passing through us. Get the next frame in the reflow chain
+    nsIFrame*       kidFrame = aReflowCommand.GetNext();
+    nsReflowMetrics kidSize;
+
+    // Restore our state as if nextFrame is the next frame to reflow
+    kidIndex = RecoverState(aPresContext, state, kidFrame);
+
+    // Reflow the child into the available space
+    aStatus = aReflowCommand.Next(kidSize, state.availSize, kidFrame);
+
+    // Did the child fit?
+    if ((kidSize.width > state.availSize.width) && (kidFrame != mFirstChild)) {
+      nsIFrame* prevFrame;
+
+      // The child is too wide to fit in the available space, and it's not our
+      // first child
+      PrevChild(kidFrame, prevFrame);
+      PushChildren(kidFrame, prevFrame, mLastContentIsComplete);
+      SetLastContentOffset(prevFrame);
+      mChildCount = kidIndex - 1;
+      aStatus = frNotComplete;
+
+    } else {
+      // Place and size the child
+      PlaceChild(kidFrame, kidIndex, state, kidSize, nsnull);
+
+      nsIFrame* kidNextInFlow;
+      kidFrame->GetNextInFlow(kidNextInFlow);
+
+      // Is the child complete?
+      if (frComplete == aStatus) {
+        // Check whether the frame has next-in-flow(s) that are no longer needed
+        if (nsnull != kidNextInFlow) {
+          // Remove the next-in-flow(s)
+          DeleteChildsNextInFlow(kidFrame);
+        }
+
+        // Adjust the frames that follow
+        aStatus = IncrementalReflowAfter(aPresContext, state, kidFrame, kidIndex);
+
+      } else {
+        nsIFrame* nextSibling;
+
+        // No, the child isn't complete
+        if (nsnull == kidNextInFlow) {
+          // The child doesn't have a next-in-flow so create a continuing
+          // frame. 
+          nsIFrame* continuingFrame;
+
+          nsIStyleContextPtr kidSC;
+          kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
+          kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+
+          // Link the child into the sibling list
+          kidFrame->GetNextSibling(nextSibling);
+          continuingFrame->SetNextSibling(nextSibling);
+          kidFrame->SetNextSibling(continuingFrame);
+        }
+
+        // We've used up all of our available space, so push the remaining
+        // children to the next-in-flow
+        kidFrame->GetNextSibling(nextSibling);
+        if (nsnull != nextSibling) {
+          PushChildren(nextSibling, kidFrame, mLastContentIsComplete);
+        }
+
+        SetLastContentOffset(kidFrame);
+        mChildCount = kidIndex;
+      }
+    }
+
+    // Vertically align the children
+    lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this,
+                   styleFont, styleSpacing->mBorderPadding.top, mFirstChild,
+                   mChildCount, state.ascents, state.maxAscent);
+  
+    ComputeFinalSize(aPresContext, state, aDesiredSize);
   }
   return NS_OK;
 }

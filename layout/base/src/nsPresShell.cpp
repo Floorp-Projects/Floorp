@@ -525,16 +525,12 @@ PresShell::ContentChanged(nsIContent* aContent,
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
-#if XXX_enable_once_content_changed_is_limping
   // Notify the first frame that maps the content. It will generate a reflow
   // command
   nsIFrame* frame = FindFrameWithContent(aContent);
   NS_PRECONDITION(nsnull != frame, "null frame");
   frame->ContentChanged(this, mPresContext, aContent, aSubContent);
   ProcessReflowCommands();
-#else
-  mResizeReflows++;
-#endif
 }
 
 void

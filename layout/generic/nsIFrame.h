@@ -319,8 +319,7 @@ public:
   /**
    * This call is invoked when content is changed in the content tree.
    * The first frame that maps that content is asked to deal with the
-   * change by generating an incremental reflow command which will be
-   * to reflow the frame tree.
+   * change by generating an incremental reflow command.
    *
    * @param aIndexInParent the index in the content container where
    *          the new content was deleted.

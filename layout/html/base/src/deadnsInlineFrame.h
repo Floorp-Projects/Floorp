@@ -59,8 +59,10 @@ protected:
                         nsInlineState&   aState,
                         nsReflowMetrics& aSize);
 
-  PRBool ReflowMappedChildren(nsIPresContext* aPresContext,
-                              nsInlineState&  aState);
+  PRBool ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
+                                  nsInlineState&  aState,
+                                  nsIFrame*       aChildFrame,
+                                  PRInt32         aChildIndex);
 
   PRBool PullUpChildren(nsIPresContext* aPresContext,
                         nsInlineState&  aState);
@@ -74,8 +76,19 @@ protected:
                   const nsReflowMetrics& aChildSize,
                   const nsSize*          aChildMaxElementSize);
 
-  PRIntn RecoverState(nsIPresContext* aCX, nsInlineState& aState,
-                      nsIFrame* aSkipChild);
+  PRInt32 RecoverState(nsIPresContext* aCX,
+                       nsInlineState& aState,
+                       nsIFrame* aSkipChild);
+
+  ReflowStatus IncrementalReflowFrom(nsIPresContext* aPresContext,
+                                     nsInlineState&  aState,
+                                     nsIFrame*       aChildFrame,
+                                     PRInt32         aChildIndex);
+
+  ReflowStatus IncrementalReflowAfter(nsIPresContext* aPresContext,
+                                      nsInlineState&  aState,
+                                      nsIFrame*       aChildFrame,
+                                      PRInt32         aChildIndex);
 
   ReflowStatus AdjustChildren(nsIPresContext* aPresContext,
                               nsReflowMetrics& aDesiredSize,
