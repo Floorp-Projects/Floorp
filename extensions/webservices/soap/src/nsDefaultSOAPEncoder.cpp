@@ -50,6 +50,7 @@
 NS_NAMED_LITERAL_STRING(kEmpty, "");
 
 NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute, "arrayType");
+NS_NAMED_LITERAL_STRING(kSOAPArrayPositionAttribute, "position");
 
 NS_NAMED_LITERAL_STRING(kAnyTypeSchemaType, "anyType");
 NS_NAMED_LITERAL_STRING(kAnySimpleTypeSchemaType, "anySimpleType");
@@ -602,7 +603,7 @@ NS_IMETHODIMP
   if (NS_FAILED(rc))
     return rc;
   switch (type) {
-#define DO_SIMPLE_ARRAY(XPType, SOAPType, Format, Source) \
+#define ENCODE_SIMPLE_ARRAY(XPType, SOAPType, Format, Source) \
       {\
         nsAutoString value;\
         rc = nsSOAPUtils::MakeNamespacePrefix(*aReturnValue, *nsSOAPUtils::kXSURI[mSchemaVersion], value);\
@@ -634,45 +635,47 @@ NS_IMETHODIMP
 	return rc;\
       }
   case nsIDataType::VTYPE_INT8:
-    DO_SIMPLE_ARRAY(PRUint8, Byte, "%hd",
+    ENCODE_SIMPLE_ARRAY(PRUint8, Byte, "%hd",
 		    (PRInt16) (signed char) values[i]);
   case nsIDataType::VTYPE_INT16:
-    DO_SIMPLE_ARRAY(PRInt16, Short, "%hd", values[i]);
+    ENCODE_SIMPLE_ARRAY(PRInt16, Short, "%hd", values[i]);
   case nsIDataType::VTYPE_INT32:
-    DO_SIMPLE_ARRAY(PRInt32, Int, "%ld", values[i]);
+    ENCODE_SIMPLE_ARRAY(PRInt32, Int, "%ld", values[i]);
   case nsIDataType::VTYPE_INT64:
-    DO_SIMPLE_ARRAY(PRInt64, Long, "%lld", values[i]);
+    ENCODE_SIMPLE_ARRAY(PRInt64, Long, "%lld", values[i]);
   case nsIDataType::VTYPE_UINT8:
-    DO_SIMPLE_ARRAY(PRUint8, UnsignedByte, "%hu", (PRUint16) values[i]);
+    ENCODE_SIMPLE_ARRAY(PRUint8, UnsignedByte, "%hu", (PRUint16) values[i]);
   case nsIDataType::VTYPE_UINT16:
-    DO_SIMPLE_ARRAY(PRUint16, UnsignedShort, "%hu", values[i]);
+    ENCODE_SIMPLE_ARRAY(PRUint16, UnsignedShort, "%hu", values[i]);
   case nsIDataType::VTYPE_UINT32:
-    DO_SIMPLE_ARRAY(PRUint32, UnsignedInt, "%lu", values[i]);
+    ENCODE_SIMPLE_ARRAY(PRUint32, UnsignedInt, "%lu", values[i]);
   case nsIDataType::VTYPE_UINT64:
-    DO_SIMPLE_ARRAY(PRUint64, UnsignedLong, "%llu", values[i]);
+    ENCODE_SIMPLE_ARRAY(PRUint64, UnsignedLong, "%llu", values[i]);
   case nsIDataType::VTYPE_FLOAT:
-    DO_SIMPLE_ARRAY(float, Float, "%f", values[i]);
+    ENCODE_SIMPLE_ARRAY(float, Float, "%f", values[i]);
   case nsIDataType::VTYPE_DOUBLE:
-    DO_SIMPLE_ARRAY(double, Double, "%lf", values[i]);
+    ENCODE_SIMPLE_ARRAY(double, Double, "%lf", values[i]);
   case nsIDataType::VTYPE_BOOL:
-    DO_SIMPLE_ARRAY(PRBool, Boolean, "%hu", (PRUint16) values[i]);
+    ENCODE_SIMPLE_ARRAY(PRBool, Boolean, "%hu", (PRUint16) values[i]);
   case nsIDataType::VTYPE_CHAR_STR:
-    DO_SIMPLE_ARRAY(char *, String, "%s", values[i])
-    case nsIDataType::VTYPE_WCHAR_STR:DO_SIMPLE_ARRAY(PRUnichar *,
-						      String, "%s",
-						      NS_ConvertUCS2toUTF8
-						      (values[i]).
-						      get()) case
-     nsIDataType::VTYPE_CHAR:DO_SIMPLE_ARRAY(char, String, "%c",
-					     values[i]) case nsIDataType::
-	VTYPE_ASTRING:DO_SIMPLE_ARRAY(nsAString, String, "%s",
-				      NS_ConvertUCS2toUTF8(values[i]).
-				      get())
+    ENCODE_SIMPLE_ARRAY(char *, String, "%s", values[i]);
+  case nsIDataType::VTYPE_WCHAR_STR:
+    ENCODE_SIMPLE_ARRAY(PRUnichar *, String, "%s", NS_ConvertUCS2toUTF8
+      (values[i]).get());
+  case nsIDataType::VTYPE_CHAR:
+    ENCODE_SIMPLE_ARRAY(char, String, "%c", values[i]);
+  case nsIDataType::VTYPE_ASTRING:
+    ENCODE_SIMPLE_ARRAY(nsAString, String, "%s",
+      NS_ConvertUCS2toUTF8(values[i]).get())
 //  Don't support these array types just now (needs more work).
-    case nsIDataType::VTYPE_WCHAR:case nsIDataType::
-	VTYPE_ID:case nsIDataType::VTYPE_ARRAY:case nsIDataType::
-	VTYPE_VOID:case nsIDataType::VTYPE_EMPTY:case nsIDataType::
-	VTYPE_INTERFACE_IS:case nsIDataType::VTYPE_INTERFACE:break;
+  case nsIDataType::VTYPE_WCHAR:
+  case nsIDataType::VTYPE_ID:
+  case nsIDataType::VTYPE_ARRAY:
+  case nsIDataType::VTYPE_VOID:
+  case nsIDataType::VTYPE_EMPTY:
+  case nsIDataType::VTYPE_INTERFACE_IS:
+  case nsIDataType::VTYPE_INTERFACE:
+    break;
   }
   return NS_ERROR_ILLEGAL_VALUE;
 }
@@ -1350,7 +1353,14 @@ NS_IMETHODIMP
   nsresult rc =
       aSource->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
 			      kSOAPArrayTypeAttribute, value);
+  if (NS_FAILED(rc))
+    return rc;
+  int size = -1;
   if (!value.IsEmpty()) {	//  Need to truncate []
+    nsAutoString dst;
+    size = nsSOAPUtils::GetArrayIndex(value, dst);
+    value.Assign(dst);
+
     nsCOMPtr < nsISchemaCollection > collection;
     rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     nsCOMPtr < nsISchemaElement > element;
@@ -1360,37 +1370,155 @@ NS_IMETHODIMP
     rc = nsSOAPUtils::GetLocalName(value, name);
     if (NS_FAILED(rc))
       return rc;
-    rc = collection->GetElement(name, ns, getter_AddRefs(element));
-//    if (NS_FAILED(rc)) return rc;
-    if (element) {
-      rc = element->GetType(getter_AddRefs(subtype));
+    rc = collection->GetType(name, ns, getter_AddRefs(subtype));
+//      if (NS_FAILED(rc)) return rc;
+  }
+  rc =
+      aSource->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+			      kSOAPArrayPositionAttribute, value);
+  if (NS_FAILED(rc))
+    return rc;
+  PRInt32 first;
+  if (!value.IsEmpty()) {  //  See if the array has an initial position.
+    nsAutoString leftover;
+    first = nsSOAPUtils::GetArrayIndex(value, leftover);
+    if (first == -1        //  We have to understand this or report an error
+        || !leftover.IsEmpty())
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+  else {
+    first = 0;
+  }
+  if (size == -1) {  //  If no known size, we have to go through and pre-count.
+    nsCOMPtr<nsIDOMElement> child;
+    nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
+    size = 0;
+    PRUint32 next = first;
+    while (child) {
+      nsAutoString pos;
+      nsresult rc =
+        child->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
+			      kSOAPArrayPositionAttribute, pos);
       if (NS_FAILED(rc))
-	return rc;
+        return rc;
+      PRInt32 p;
+      if (!pos.IsEmpty()) {  //  See if the item in the array has a position
+        nsAutoString leftover;
+        PRInt32 p = nsSOAPUtils::GetArrayIndex(value, leftover);
+        if (p == -1        //  We have to understand this or report an error
+            || !leftover.IsEmpty())
+          return NS_ERROR_ILLEGAL_VALUE;
+      }
+      else {
+	p = next++;        //  Just use the next one if no position
+      }
+      if (p >= size) {
+	size = p + 1;
+      }
+
+      nsCOMPtr<nsIDOMElement> next;
+      nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(next));
+      child = next;
     }
   }
+
+//  After considerable work, we may have a schema type and a size.
+  
+  nsCOMPtr<nsIWritableVariant> result = do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
+
+#define DECODE_SIMPLE_ARRAY(XPType, VType, VTYPE, Test, Ref) \
+      XPType* a = new XPType[size];\
+      nsCOMPtr<nsIDOMElement> child;\
+      nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));\
+      PRUint32 next = first;\
+      while (child) {\
+        nsAutoString pos;\
+        rc =\
+          child->GetAttributeNS(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion],\
+			        kSOAPArrayPositionAttribute, pos);\
+        if (NS_FAILED(rc))\
+          break;\
+        PRInt32 p;\
+        if (!pos.IsEmpty()) {\
+          nsAutoString leftover;\
+          PRInt32 p = nsSOAPUtils::GetArrayIndex(value, leftover);\
+          if (p == -1\
+              || !leftover.IsEmpty()) {\
+            rc = NS_ERROR_ILLEGAL_VALUE;\
+	    break;\
+	  }\
+        }\
+        else {\
+	  p = next++;\
+        }\
+	if (p >= size\
+	   || Test) {\
+          rc = NS_ERROR_ILLEGAL_VALUE;\
+	  break;\
+	}\
+	nsCOMPtr<nsIVariant> v;\
+ \
+        rc = aEncoding->Decode(child, subtype, aAttachments, getter_AddRefs(v));\
+        if (NS_FAILED(rc))\
+          break;\
+\
+	rc = v->GetAs##VType(Ref(a + p));\
+        if (NS_FAILED(rc))\
+          break;\
+	\
+        nsCOMPtr<nsIDOMElement> next;\
+        nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(next));\
+        child = next;\
+      }\
+      if (!NS_FAILED(rc)) {\
+        rc = result->SetAsArray(nsIDataType::VTYPE_##VTYPE,nsnull,size,a);\
+      }\
+      delete[] a;\
+      if (NS_FAILED(rc))\
+	return rc;
+
+  if (NS_FAILED(rc))
+    return rc;
   if (ns.Equals(*nsSOAPUtils::kXSURI[mSchemaVersion])) {
     if (name.Equals(kStringSchemaType)) {
+      DECODE_SIMPLE_ARRAY(nsString,AString,ASTRING,!a[p].IsEmpty(),*);
     } else if (name.Equals(kBooleanSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRBool,Bool,BOOL,a[p],);
     } else if (name.Equals(kFloatSchemaType)) {
+      DECODE_SIMPLE_ARRAY(float,Float,FLOAT,a[p],);
     } else if (name.Equals(kDoubleSchemaType)) {
+      DECODE_SIMPLE_ARRAY(double,Double,DOUBLE,a[p],);
     } else if (name.Equals(kLongSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRInt64,Int64,INT64,a[p],);
     } else if (name.Equals(kIntSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRInt32,Int32,INT32,a[p],);
     } else if (name.Equals(kShortSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRInt16,Int16,INT16,a[p],);
     } else if (name.Equals(kByteSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRUint8,Int8,INT8,a[p],);
     } else if (name.Equals(kUnsignedLongSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRUint64,Uint64,UINT64,a[p],);
     } else if (name.Equals(kUnsignedIntSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRUint32,Uint32,UINT32,a[p],);
     } else if (name.Equals(kUnsignedShortSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRUint16,Uint16,UINT16,a[p],);
     } else if (name.Equals(kUnsignedByteSchemaType)) {
+      DECODE_SIMPLE_ARRAY(PRUint8,Uint8,UINT8,a[p],);
     } else
       return NS_ERROR_ILLEGAL_VALUE;
   } else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {
     if (name.Equals(kArraySOAPType)) {
       return NS_ERROR_ILLEGAL_VALUE;	//  Fix nested arrays later
+    } else if (name.Equals(kArraySOAPType)) {
+      return NS_ERROR_ILLEGAL_VALUE;	//  Fix nested structs later
     } else
       return NS_ERROR_ILLEGAL_VALUE;
   } else
     return NS_ERROR_ILLEGAL_VALUE;
-  return NS_ERROR_ILLEGAL_VALUE;
+
+  *_retval = result;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
