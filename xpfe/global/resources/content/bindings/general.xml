@@ -263,6 +263,18 @@
     <content>
       <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULButtonAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
+
   </binding>
 
   <binding id="statusbarpanel-menu-iconic" display="xul:menu"

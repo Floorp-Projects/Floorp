@@ -706,18 +706,18 @@ getNameCB(AtkObject *aAtkObj)
 {
     NS_ENSURE_SUCCESS(CheckMaiAtkObject(aAtkObj), nsnull);
 
-    if (!aAtkObj->name) {
-        gint len;
-        nsAutoString uniName;
+    nsAutoString uniName;
 
-        nsAccessibleWrap *accWrap =
-            NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
+    nsAccessibleWrap *accWrap =
+        NS_REINTERPRET_CAST(MaiAtkObject*, aAtkObj)->accWrap;
 
-        /* nsIAccessible is responsible for the non-NULL name */
-        nsresult rv = accWrap->GetName(uniName);
-        NS_ENSURE_SUCCESS(rv, nsnull);
-        len = uniName.Length();
-        if (len > 0) {
+    /* nsIAccessible is responsible for the non-NULL name */
+    nsresult rv = accWrap->GetName(uniName);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    if (uniName.Length() > 0) {
+        NS_ConvertUTF8toUCS2 objName(aAtkObj->name);
+        if (!uniName.Equals(objName)) {
             atk_object_set_name(aAtkObj,
                                 NS_ConvertUCS2toUTF8(uniName).get());
         }
