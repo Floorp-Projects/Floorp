@@ -676,7 +676,7 @@ have_fun:
         /* If native, use caller varobj and scopeChain for eval. */
         frame.varobj = fp->varobj;
         frame.scopeChain = fp->scopeChain;
-        ok = native(cx, thisp, argc, frame.argv, &frame.rval);
+        ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
     } else if (script) {
         if (fun->flags & JSFUN_HEAVYWEIGHT) {
 #if JS_HAS_CALL_OBJECT

@@ -203,6 +203,7 @@ extern char   js_setter_str[];
 extern char   js_set_str[];
 extern char   js_toSource_str[];
 extern char   js_toString_str[];
+extern char   js_toLocaleString_str[];
 extern char   js_valueOf_str[];
 
 /*

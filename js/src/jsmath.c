@@ -125,8 +125,8 @@ math_asin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!js_ValueToNumber(cx, argv[0], &x))
     return JS_FALSE;
 #ifdef XP_MAC
-	if (x == 0)
-		return js_NewNumberValue(cx, x, rval);
+    if (x == 0)
+        return js_NewNumberValue(cx, x, rval);
 #endif    
     z = fd_asin(x);
     return js_NewNumberValue(cx, z, rval);
@@ -140,8 +140,8 @@ math_atan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!js_ValueToNumber(cx, argv[0], &x))
     return JS_FALSE;
 #ifdef XP_MAC
-	if (x == 0)
-		return js_NewNumberValue(cx, x, rval);
+    if (x == 0)
+        return js_NewNumberValue(cx, x, rval);
 #endif    
     z = fd_atan(x);
     return js_NewNumberValue(cx, z, rval);
@@ -189,6 +189,18 @@ math_exp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!js_ValueToNumber(cx, argv[0], &x))
     return JS_FALSE;
+#ifdef _WIN32
+    if (!JSDOUBLE_IS_NaN(x)) {
+        if (x == *cx->runtime->jsPositiveInfinity) {
+            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
+            return JS_TRUE;
+        }
+        if (x == *cx->runtime->jsNegativeInfinity) {
+            *rval = JSVAL_ZERO;
+            return JS_TRUE;
+        }
+    }
+#endif
     z = fd_exp(x);
     return js_NewNumberValue(cx, z, rval);
 }
@@ -273,7 +285,7 @@ math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!js_ValueToNumber(cx, argv[0], &x))
 	return JS_FALSE;
     if (!js_ValueToNumber(cx, argv[1], &y))
-    return JS_FALSE;
+        return JS_FALSE;
     z = fd_pow(x, y);
     return js_NewNumberValue(cx, z, rval);
 }

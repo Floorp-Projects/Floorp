@@ -253,6 +253,19 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
+num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
+                   jsval *argv, jsval *rval)
+{
+/*
+ *  For now, forcibly ignore the first (or any) argument and return toString().
+ *  ECMA allows this, although it doesn't 'encourage it'.
+ *  [The first argument is being reserved by ECMA and we don't want it confused
+ *  with a radix]
+ */
+    return num_toString(cx, obj, 0, argv, rval);
+}
+
+static JSBool
 num_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     if (!JS_InstanceOf(cx, obj, &number_class, argv))
@@ -334,14 +347,15 @@ num_toPrecision(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   num_toSource,      0,0,0},
+    {js_toSource_str,       num_toSource,       0,0,0},
 #endif
-    {js_toString_str,	num_toString,	   0,0,0},
-    {js_valueOf_str,	num_valueOf,	   0,0,0},
+    {js_toString_str,	    num_toString,       0,0,0},
+    {js_toLocaleString_str, num_toLocaleString, 0,0,0},
+    {js_valueOf_str,	    num_valueOf,        0,0,0},
 #if JS_HAS_NUMBER_FORMATS
-    {"toFixed",         num_toFixed,       1,0,0},
-    {"toExponential",   num_toExponential, 1,0,0},
-    {"toPrecision",     num_toPrecision,   1,0,0},
+    {"toFixed",             num_toFixed,        1,0,0},
+    {"toExponential",       num_toExponential,  1,0,0},
+    {"toPrecision",         num_toPrecision,    1,0,0},
 #endif
     {0,0,0,0,0}
 };
