@@ -892,12 +892,7 @@ void nsWebBrowser::UpdateListeners()
 nsresult nsWebBrowser::CreateDocShell(const PRUnichar* contentType)
 {
    if(mDocShell)
-      {
-      PRBool fCanHandle = PR_FALSE;
-      mDocShell->CanHandleContentType(contentType, &fCanHandle);
-      if(fCanHandle)
-         return NS_OK;
-      }
+      return NS_OK;
 
    // XXX
    // Should walk category list looking for a component that can 
