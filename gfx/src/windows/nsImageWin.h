@@ -34,6 +34,7 @@ public:
   */
   virtual PRInt32     GetBytesPix()       { return mNumBytesPixel; }
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
+  virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
@@ -114,6 +115,7 @@ private:
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
+  PRBool              mIsTopToBottom;     // rows in image are top to bottom 
   PRInt16             mNumPaletteColors;  // either 8 or 0
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
