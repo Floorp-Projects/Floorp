@@ -621,9 +621,9 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 					 nodeType,
 					 bookmarkNode);
 		}
-		delete [] cShortcutURL;
+		nsCRT::free(cShortcutURL);
 	}
-	delete [] cURL;
+	nsCRT::free(cURL);
 
 	return rv;
 }
@@ -1543,7 +1543,7 @@ nsBookmarksService::getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource 
 		return(NS_ERROR_NULL_POINTER);
 	}
 	rv = gRDF->GetResource(newURLCStr, res);
-	delete [] newURLCStr;
+	nsCRT::free(newURLCStr);
 	return(rv);
 }
 
@@ -2433,7 +2433,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 				if (nsnull != name)
 				{
-					delete []name;
+					nsCRT::free(name);
 					name = nsnull;
 				}
 					
@@ -2444,7 +2444,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 			strm << "</DL><p>\n";
 		}
 	}
-	delete [] indentation;
+	nsCRT::free(indentation);
 	return(rv);
 }
 
@@ -2541,7 +2541,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 							strm << escapedAttrib;
 							strm << "\n";
 
-							delete []escapedAttrib;
+							nsCRT::free(escapedAttrib);
 							escapedAttrib = nsnull;
 						}
 					}
@@ -2552,7 +2552,7 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds, nsOutputFileSt
 					strm << attribute;
 					strm << "\"";
 				}
-				delete [] attribute;
+				nsCRT::free(attribute);
 				attribute = nsnull;
 			}
 		}
