@@ -43,9 +43,9 @@ BEGIN
         BEGIN
             VALUE "CompanyName",     "Netscape Communications Corporation\0"
             VALUE "FileDescription", "Netscape Navigator Unicode Table File\0"
-            VALUE "FileVersion",     "5.0\0"
+            VALUE "FileVersion",     "3.0b6\0"
             VALUE "InternalName",    "NETSCAPE\0"
-            VALUE "LegalCopyright",  "Copyright Netscape Communications. 1998, 1999\0"
+            VALUE "LegalCopyright",  "Copyright Netscape Communications. 1996, 1997\0"
             VALUE "LegalTrademarks", "Netscape, Mozilla\0"
 #ifdef XP_WIN32
             VALUE "OriginalFilename","UNI3200.DLL\0"
@@ -53,7 +53,7 @@ BEGIN
             VALUE "OriginalFilename","UNI1600.DLL\0"
 #endif
             VALUE "ProductName",     "NETSCAPE\0"
-            VALUE "ProductVersion",  "5.0\0"
+            VALUE "ProductVersion",  "3.0b6\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -124,35 +124,35 @@ BEGIN
 END
 sjis.uf RCDATA
 BEGIN
-#include "ufrmtbl\\cp932.uf"
+#include "ufrmtbl\\sjis.uf"
 END
 sjis.ut RCDATA
 BEGIN
-#include "utotbl\\cp932.ut"
+#include "utotbl\\sjis.ut"
 END
 u20ksc.uf RCDATA
 BEGIN
-#include "ufrmtbl\\cp949.uf"
+#include "ufrmtbl\\u20ksc.uf"
 END
 u20ksc.ut RCDATA
 BEGIN
-#include "utotbl\\cp949.ut"
+#include "utotbl\\u20ksc.ut"
 END
 big5.uf RCDATA
 BEGIN
-#include "ufrmtbl\\cp950.uf"
+#include "ufrmtbl\\big5.uf"
 END
 big5.ut RCDATA
 BEGIN
-#include "utotbl\\cp950.ut"
+#include "utotbl\\big5.ut"
 END
 gb2312.uf RCDATA
 BEGIN
-#include "ufrmtbl\\cp936.uf"
+#include "ufrmtbl\\gb2312.uf"
 END
 gb2312.ut RCDATA
 BEGIN
-#include "utotbl\\cp936.ut"
+#include "utotbl\\gb2312.ut"
 END
 
 armscii.uf RCDATA
