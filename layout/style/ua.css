@@ -533,6 +533,7 @@ NOFRAMES {
 }
 
 :ROOT {
+  display: block;
   background-color: inherit;
 }
 

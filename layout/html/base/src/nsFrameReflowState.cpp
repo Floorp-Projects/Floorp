@@ -175,12 +175,15 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   nsresult result = frame->GetStyleData(eStyleStruct_Position,
                                         (const nsStyleStruct*&)pos);
 
-  // Initialize the computed values to default values
-  // XXX Use specified values as defaults
-  computedWidth = 0;
-  computedLeftMargin = computedRightMargin = 0;
-  computedHeight = 0;
-  computedTopMargin = computedBottomMargin = 0;
+  // Compute margins from the specified margin style information
+  nsMargin  margin;
+  ComputeMarginFor(frame, parentReflowState, margin);
+
+  // These become the default computed values, and may be adjusted below
+  computedLeftMargin = margin.left;
+  computedRightMargin = margin.right;
+  computedTopMargin = margin.top;
+  computedBottomMargin = margin.bottom;
 
   mLineHeight = CalcLineHeight(aPresContext, frame);
 
@@ -200,89 +203,117 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     break;
   }
 
-  // Look for stylistic constraints on the width/height
-  if (NS_OK == result) {
-    nscoord containingBlockWidth, containingBlockHeight;
-    nscoord width = -1, height = -1;
-    PRIntn widthUnit = pos->mWidth.GetUnit();
-    PRIntn heightUnit = pos->mHeight.GetUnit();
+  // If this is the root frame then set the computed width and
+  // height equal to the available space
+  if (nsnull == parentReflowState) {
+    computedWidth = maxSize.width;
+    computedHeight = maxSize.height;
 
-    // When a percentage is specified we need to find the containing
-    // block to use as the basis for the percentage computation.
-    if ((eStyleUnit_Percent == widthUnit) ||
-        (eStyleUnit_Percent == heightUnit)) {
-      const nsHTMLReflowState* cbrs =
-        GetContainingBlockReflowState(parentReflowState);
+  } else {
+    // Get the containing block reflow state, because we'll need its
+    // computed width
+    const nsHTMLReflowState* cbrs =
+      GetContainingBlockReflowState(parentReflowState);
+    NS_ASSERTION(nsnull != cbrs, "no containing block");
 
-      // If there is no containing block then pretend the width or
-      // height units are auto.
-      if (nsnull == cbrs) {
-        if (eStyleUnit_Percent == widthUnit) {
-          widthUnit = eStyleUnit_Auto;
-        }
-        if (eStyleUnit_Percent == heightUnit) {
-          heightUnit = eStyleUnit_Auto;
-        }
-      }
-      else {
-        if (eStyleUnit_Percent == widthUnit) {
-          containingBlockWidth = cbrs->computedWidth;
-        }
-        if (eStyleUnit_Percent == heightUnit) {
-          if (NS_UNCONSTRAINEDSIZE == cbrs->maxSize.height) {
-            // CSS2 spec, 10.5: if the height of the containing block
-            // is not specified explicitly then the value is
-            // interpreted like auto.
-            heightUnit = eStyleUnit_Auto;
-          }
-          else {
-            containingBlockHeight = cbrs->maxSize.height;
-          }
-        }
+    // Get the containing block width and height. We'll need them when
+    // calculating the computed width and height
+    nscoord containingBlockWidth = cbrs->computedWidth;
+    nscoord containingBlockHeight = cbrs->computedHeight;
+    PRIntn  widthUnit = pos->mWidth.GetUnit();
+    PRIntn  heightUnit = pos->mHeight.GetUnit();
+
+    // Check for a percentage based height
+    if (eStyleUnit_Percent == heightUnit) {
+      // If the height of the containing block depends on the content height,
+      // the height is interpreted like 'auto'
+      if (NS_AUTOHEIGHT == cbrs->computedHeight) {
+        heightUnit = eStyleUnit_Auto;
       }
     }
 
-    switch (widthUnit) {
-    case eStyleUnit_Coord:
-      width = pos->mWidth.GetCoordValue();
-      break;
-    case eStyleUnit_Percent:
-      width = nscoord(pos->mWidth.GetPercentValue() * containingBlockWidth);
-      break;
-    case eStyleUnit_Auto:
-      {
-        // XXX See section 10.3 of the css2 spec and then write this code!
-        nsMargin  margin;
-        nsMargin  borderPadding;
-        ComputeMarginFor(frame, parentReflowState, margin);
-        ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
-        width = maxSize.width - margin.left - margin.right - borderPadding.left -
-          borderPadding.right;
-        break;
+    // Compute border and padding
+    nsMargin borderPadding;
+    ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
+
+    // Get the spacing style information
+    const nsStyleSpacing* spacing;
+    frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    
+    // Compute the content width
+    PRBool  isAutoLeftMargin = eStyleUnit_Auto == spacing->mMargin.GetLeftUnit();
+    PRBool  isAutoRightMargin = eStyleUnit_Auto == spacing->mMargin.GetRightUnit();
+
+    if (eStyleUnit_Auto == widthUnit) {
+      // 'auto' values for left or right margins become 0
+      if (isAutoLeftMargin) {
+        computedLeftMargin = 0;
+      }
+      if (isAutoRightMargin) {
+        computedRightMargin = 0;
+      }
+
+      computedWidth = containingBlockWidth - computedLeftMargin -
+        computedRightMargin - borderPadding.left - borderPadding.right;
+
+    } else {
+      if (eStyleUnit_Coord == widthUnit) {
+        computedWidth = pos->mWidth.GetCoordValue();
+      } else if (eStyleUnit_Percent == widthUnit) {
+        computedWidth = nscoord(pos->mWidth.GetPercentValue() * containingBlockWidth);
+      } else {
+        NS_ASSERTION(PR_FALSE, "unexpected width constraint");
+      }
+
+      // Calculate the computed left and right margin
+      nscoord extra = containingBlockWidth - computedWidth - borderPadding.left -
+                      borderPadding.right;
+
+      // See whether we're over constrained
+      if (!isAutoLeftMargin && !isAutoRightMargin) {
+        // Neither margin is 'auto' so we're over constrained. Use the
+        // 'direction' property to tell which margin to ignore
+        const nsStyleDisplay* display;
+        frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+        if (NS_STYLE_DIRECTION_LTR == display->mDirection) {
+          isAutoRightMargin = PR_TRUE;
+        } else {
+          isAutoLeftMargin = PR_TRUE;
+        }
+      }
+
+      if (isAutoLeftMargin) {
+        if (isAutoRightMargin) {
+          // Both margins are 'auto' so their computed values are equal
+          if (extra <= 0) {
+            computedLeftMargin = computedRightMargin = 0;
+          } else {
+            computedLeftMargin = (extra + 1) / 2;
+            computedRightMargin = extra - computedLeftMargin;
+          }
+        } else {
+          computedLeftMargin = PR_MAX(0, extra - computedRightMargin);
+        }
+
+      } else if (isAutoRightMargin) {
+        computedRightMargin = PR_MAX(0, extra - computedLeftMargin);
       }
     }
+
+    // Compute the content height
     switch (heightUnit) {
     case eStyleUnit_Coord:
-      height = pos->mHeight.GetCoordValue();
+      computedHeight = pos->mHeight.GetCoordValue();
       break;
     case eStyleUnit_Percent:
-      height = nscoord(pos->mHeight.GetPercentValue() * containingBlockHeight);
+      computedHeight = nscoord(pos->mHeight.GetPercentValue() * containingBlockHeight);
       break;
     case eStyleUnit_Auto:
-      // XXX See section 10.6 of the css2 spec and then write this code!
+      computedHeight = NS_AUTOHEIGHT;
       break;
     }
-
-    if (width > 0) {
-      computedWidth = width;
-    }
-    if (height > 0) {
-      computedHeight = height;
-    }
   }
-
-  // XXX this is probably a good place to calculate auto margins too
-  // (section 10.3/10.6 of the spec)
 }
 
 nscoord
