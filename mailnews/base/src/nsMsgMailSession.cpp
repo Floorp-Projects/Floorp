@@ -23,7 +23,7 @@
 #include "nsMsgMailSession.h"
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
-//#include "nsIPref.h"
+#include "nsCOMPtr.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsIMsgMailSession::GetIID());
 
@@ -34,6 +34,7 @@ static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
     
 
 nsMsgMailSession::nsMsgMailSession():
+  mRefCnt(0),
   m_accountManager(0)
 {
 	NS_INIT_REFCNT();
@@ -51,7 +52,7 @@ nsMsgMailSession::nsMsgMailSession():
 
 nsMsgMailSession::~nsMsgMailSession()
 {
-	NS_IF_RELEASE(m_accountManager);
+  NS_IF_RELEASE(m_accountManager);
 }
 
 
@@ -59,31 +60,27 @@ nsMsgMailSession::~nsMsgMailSession()
 nsresult nsMsgMailSession::GetCurrentIdentity(nsIMsgIdentity ** aIdentity)
 {
   nsresult rv=NS_ERROR_UNEXPECTED;
-  nsIMsgAccount *defaultAccount;
+  nsCOMPtr<nsIMsgAccount> defaultAccount;
 
   if (m_accountManager)
-    rv = m_accountManager->GetDefaultAccount(&defaultAccount);
+    rv = m_accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
   if (NS_FAILED(rv)) return rv;
   
   rv = defaultAccount->GetDefaultIdentity(aIdentity);
   
-  NS_IF_RELEASE(defaultAccount);
-
   return rv;
 }
 
 nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
 {
   nsresult rv=NS_ERROR_UNEXPECTED;
-  nsIMsgAccount *defaultAccount;
+  nsCOMPtr<nsIMsgAccount> defaultAccount;
   if (m_accountManager)
-    rv = m_accountManager->GetDefaultAccount(&defaultAccount);
+    rv = m_accountManager->GetDefaultAccount(getter_AddRefs(defaultAccount));
 
   if (NS_FAILED(rv)) return rv;
 
   rv = defaultAccount->GetIncomingServer(aServer);
-
-  NS_IF_RELEASE(defaultAccount);
 
   return rv;
 }
@@ -93,6 +90,5 @@ nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
   if (!aAM) return NS_ERROR_NULL_POINTER;
   
   *aAM = m_accountManager;
-  NS_ADDREF(m_accountManager);
   return NS_OK;
 }
