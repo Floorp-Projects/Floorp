@@ -1771,7 +1771,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs)
+AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs usleep)
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
