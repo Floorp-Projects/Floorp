@@ -773,6 +773,8 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
     if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
       blockRS->mBlock->SplitPlaceholder(*blockRS, aFrame);
+      // Allow the parent to continue reflowing
+      aStatus = NS_FRAME_COMPLETE;
     }
     else {
       nsIFrame* newFrame;

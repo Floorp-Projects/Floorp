@@ -337,9 +337,10 @@ nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
       }
       NS_ASSERTION(f, "Can't find a frame anywhere!");
     }
-    if (f && CompareTreePosition(aFrame->GetContent(),
-                                 f->GetContent(), parentViewContent) > 0) {
-      // aFrame's content is after f's content, so put our view before f's view
+    if (!f || !aFrame->GetContent() || !f->GetContent() ||
+        CompareTreePosition(aFrame->GetContent(), f->GetContent(), parentViewContent) > 0) {
+      // aFrame's content is after f's content (or we just don't know),
+      // so put our view before f's view
       return insertBefore;
     }
   }
