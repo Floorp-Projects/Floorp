@@ -159,7 +159,7 @@
 }
   
 #bookmarks-button:hover:active {
-  -moz-image-region: rect(63px 161px 84px 161px) !important;
+  -moz-image-region: rect(63px 184px 84px 161px) !important;
 }
 
 /* ::::: small primary toolbar buttons ::::: */
