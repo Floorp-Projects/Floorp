@@ -1973,16 +1973,6 @@ nsBrowserWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNo
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
   PRInt32 i, n = gBrowsers.Count();

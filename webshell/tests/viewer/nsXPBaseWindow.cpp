@@ -559,16 +559,6 @@ nsXPBaseWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNod
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
-{
-  return NS_OK;
-}
-
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::GetPresShell(nsIPresShell*& aPresShell)
