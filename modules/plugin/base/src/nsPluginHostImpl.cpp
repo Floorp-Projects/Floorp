@@ -1266,7 +1266,10 @@ public:
   MakeByteRangeString(nsByteRange* aRangeList, nsACString &string, PRInt32 *numRequests);
 
   PRBool
-  UseExistingPluginCacheFile(nsPluginStreamInfo* psi, nsIFile* file);
+  UseExistingPluginCacheFile(nsPluginStreamInfo* psi);
+
+  void
+  SetStreamComplete(const PRBool complete);
 
 private:
 
@@ -1278,6 +1281,7 @@ private:
   nsIPluginInstance * mPluginInstance;
   nsPluginStreamListenerPeer * mPluginStreamListenerPeer;
   PRInt32 mStreamOffset;
+  PRBool mStreamComplete;
 };
 
 
@@ -1327,7 +1331,6 @@ private:
   nsIPluginInstance       *mInstance;
   nsIPluginStreamListener *mPStreamListener;
   nsPluginStreamInfo      *mPluginStreamInfo;
-  PRPackedBool             mSetUpListener;
 
   // Set to PR_TRUE if we request failed (like with a HTTP response of 404)
   PRPackedBool            mRequestFailed;
@@ -1394,6 +1397,7 @@ nsPluginStreamInfo::nsPluginStreamInfo()
   mLength = 0;
   mModified = 0;
   mStreamOffset = 0;
+  mStreamComplete = PR_FALSE;
 }
 
 
@@ -1764,7 +1768,6 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mInstance = nsnull;
   mPStreamListener = nsnull;
   mPluginStreamInfo = nsnull;
-  mSetUpListener = PR_FALSE;
   mHost = nsnull;
   mStreamType = nsPluginStreamType_Normal;
   mStartBinding = PR_FALSE;
@@ -1990,7 +1993,7 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
         if (lp->mLocalCachedFile &&
             lp->mPluginStreamInfo &&
             (useExistingCacheFile = 
-             lp->mPluginStreamInfo->UseExistingPluginCacheFile(mPluginStreamInfo,lp->mLocalCachedFile)))
+             lp->mPluginStreamInfo->UseExistingPluginCacheFile(mPluginStreamInfo)))
         {
             NS_ADDREF(mLocalCachedFile = lp->mLocalCachedFile);
         }
@@ -2198,7 +2201,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
 
   // it's possible for the server to not send a Content-Length.  We should
   // still work in this case.
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv) || length == -1) {
     mPluginStreamInfo->SetLength(PRUint32(0));
   }
   else {
@@ -2463,6 +2466,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
   }
 
+  if (NS_SUCCEEDED(aStatus))
+    mPluginStreamInfo->SetStreamComplete(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -2497,6 +2503,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   if(mPStreamListener == nsnull)
     return NS_ERROR_NULL_POINTER;
   
+  PRBool useLocalCache = PR_FALSE;
 
   // get httpChannel to retrieve some info we need for nsIPluginStreamInfo setup
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2507,44 +2514,52 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
    * By the time nsPluginStreamListenerPeer::OnDataAvailable() gets
    * called, all the headers have been read.
    */
-  if (httpChannel) 
+  if (httpChannel) {
     httpChannel->VisitResponseHeaders(this);
-  
-  mSetUpListener = PR_TRUE;
-  
-  // set seekability (seekable if the stream has a known length and if the
-  // http server accepts byte ranges).
-  PRBool bSeekable = PR_FALSE;
-  PRUint32 length = PRUint32(-1);
-  mPluginStreamInfo->GetLength(&length);
-  if ((length != PRUint32(-1)) && httpChannel)
-  {
-    nsCAutoString range;
-    if(NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("accept-ranges"), range)))
-    {
-      if (range.Equals(NS_LITERAL_CSTRING("bytes"), nsCaseInsensitiveCStringComparator()))
-        bSeekable = PR_TRUE;
+    
+    // set seekability (seekable if the stream has a known length and if the
+    // http server accepts byte ranges).
+    PRBool bSeekable = PR_FALSE;
+    PRUint32 length;
+    mPluginStreamInfo->GetLength(&length);
+    if (length) {
+      // first we look for a content-encoding header. If we find one,
+      // we tell the plugin that stream is not seekable,
+      // because range request on compressed content is irrelevant,
+      // so we force the plugin to use nsPluginStreamType_AsFile stream type
+      // and we have to save decompressed file into local plugin cache,
+      // because necko cache contains original compressed file.
+      nsCAutoString contentEncoding;
+      if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+        contentEncoding))) {
+        useLocalCache = PR_TRUE;
+      } else {
+        nsCAutoString range;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("accept-ranges"), range)) &&
+          range.Equals(NS_LITERAL_CSTRING("bytes"), nsCaseInsensitiveCStringComparator())) {
+          bSeekable = PR_TRUE;
+          // nsPluginStreamInfo.mSeekable intitialized by PR_FALSE in ctor of nsPluginStreamInfo
+          // so we reset it only here.
+          mPluginStreamInfo->SetSeekable(bSeekable);
+        }
+      }
+
+      // we require a content len
+      // get Last-Modified header for plugin info
+      nsCAutoString lastModified;
+      if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"), lastModified)) &&
+        !lastModified.IsEmpty())
+      {
+        PRTime time64;
+        PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to interger time
+        
+        // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+        double fpTime;
+        LL_L2D(fpTime, time64);
+        mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
+      }
     }
   }
-  mPluginStreamInfo->SetSeekable(bSeekable);
-
-  // we require a content len
-  // get Last-Modified header for plugin info
-  if (httpChannel) 
-  {
-    nsCAutoString lastModified;
-    if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"), lastModified)) &&
-        !lastModified.IsEmpty())
-    {
-      PRTime time64;
-      PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to interger time
- 
-      // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-      double fpTime;
-      LL_L2D(fpTime, time64);
-      mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
-    }
-  } 
 
   rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
 
@@ -2554,37 +2569,21 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     return rv;
   
   mPStreamListener->GetStreamType(&mStreamType);
-  
-  // now lets figure out if we have to save the file into plugin local cache
-  PRBool useLocalCache = PR_FALSE;
-  if (httpChannel) {
-    // Now we look for a content-encoding header. If we find one,
-    // we have to use the local cache, it'll have decoded copy of file
-    nsCAutoString contentEncoding;
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
-      contentEncoding);
-    if (NS_SUCCEEDED(rv) &&
-      !contentEncoding.Equals("identity",nsCaseInsensitiveCStringComparator())) {
-      useLocalCache = PR_TRUE;
-    } else if (mStreamType >= nsPluginStreamType_AsFile) {
-      // if plugin requests stream type StreamType_AsFile or StreamType_AsFileOnly
-      // check out if browser's cache is avalable
-      nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(httpChannel);
-      if (cacheChannel && NS_FAILED(cacheChannel->SetCacheAsFile(PR_TRUE))) {
-        useLocalCache = PR_TRUE; // we'll use local cache
+
+  if (!useLocalCache && mStreamType >= nsPluginStreamType_AsFile) {
+    // check it out if this is not a file channel.
+    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
+    if (!fileChannel) {
+      // and browser cache is not available
+      nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
+      if (!(cacheChannel && (NS_SUCCEEDED(cacheChannel->SetCacheAsFile(PR_TRUE))))) {
+        useLocalCache = PR_TRUE;
       }
-#if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
-      // until bug 90558 got fixed
-      // and necko cache starts to support file extension
-      // we'll force to copy the file+ext into local plugin cache
-      // becase several plugins (e.g. acrobat, quick time) do not work w/o file extension
-      useLocalCache = PR_TRUE;
-#endif 
     }
-    
-    if (useLocalCache) {
-      SetupPluginCacheFile(httpChannel);
-    }
+  }
+
+  if (useLocalCache) {
+    SetupPluginCacheFile(channel);
   }
 
   return NS_OK;
@@ -6501,18 +6500,18 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   mPluginStreamInfo->SetSeekable(0);
   mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
   mPluginStreamInfo->SetStreamOffset(0);
+  
+  // force the plugin use stream as file
   mStreamType = nsPluginStreamType_AsFile;
 
-#if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
-  // close & tear down existing cached stream
-  mFileCacheOutputStream = nsnull;
-  
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
-  if (httpChannel) {
-    SetupPluginCacheFile(channel);
+  // then check it out if browser cache is not available
+  nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(request);
+  if (!(cacheChannel && (NS_SUCCEEDED(cacheChannel->SetCacheAsFile(PR_TRUE))))) {
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+      if (channel) {
+        SetupPluginCacheFile(channel);
+      }
   }
-#endif
 
   // unset mPendingRequests 
   mPendingRequests = 0;
@@ -6627,27 +6626,23 @@ nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupport
 }
 
 PRBool
-nsPluginStreamInfo::UseExistingPluginCacheFile(nsPluginStreamInfo* psi, nsIFile* file) 
+nsPluginStreamInfo::UseExistingPluginCacheFile(nsPluginStreamInfo* psi) 
 {
   
   NS_ENSURE_ARG_POINTER(psi);
 
  if ( psi->mLength == mLength &&
       psi->mModified == mModified &&
+      mStreamComplete &&
       !PL_strcmp(psi->mURL, mURL))
   {
-    if (psi->mLength != (PRUint32) mStreamOffset) { //lets check a file size
-      PRInt64 size;
-      if (NS_FAILED(file->GetFileSize(&size)))
-        return PR_FALSE;
-      
-      PRUint32 fs = nsInt64(size);
-      if (psi->mLength != fs) {
-        return PR_FALSE;
-      }
-    }
     return PR_TRUE;
   } 
   return PR_FALSE;
 }
 
+void
+nsPluginStreamInfo::SetStreamComplete(PRBool complete)
+{
+  mStreamComplete = complete;
+}
