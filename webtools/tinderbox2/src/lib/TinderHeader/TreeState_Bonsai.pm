@@ -6,8 +6,8 @@
 # the current tree state using the bonsai conventions when we have
 # implemented it.  
 
-# $Revision: 1.5 $ 
-# $Date: 2001/07/20 19:05:19 $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/08/13 19:49:36 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,7 @@ use BonsaiData;
 
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
@@ -80,12 +80,11 @@ sub gettree_header {
 }
 
 sub savetree_header {
+  my ($self, $tree, $value) = @_;
 
-  # NULL implementation.
+  BonsaiData::save_tree_state($tree, $value);
 
-  #  The tree state must be changed via the bonsai tool. Yhere is no
-  #  programatic way to change the state.
-
+  return ;
 }
 
 1;
