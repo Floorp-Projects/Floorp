@@ -355,6 +355,26 @@ sub BuildCommonProjects()
 }
 
 
+sub BuildResourceAliases
+{
+	my($src_dir, $dest_dir) = @_;
+	
+	# get a list of all the resource files
+	opendir(SRCDIR, $src_dir) || die("can't open $src_dir");
+	my(@resource_files) = readdir(SRCDIR);
+	closedir(SRCDIR);
+	
+	# make aliases for each one into the dest directory
+	for ( @resource_files ) {
+		next if $_ eq "CVS";
+		
+		my($file_name) = $src_dir . $_;	
+		print("Placing alias to file $file_name in $dest_dir\n");
+		MakeAlias($file_name, $dest_dir);
+	}
+}
+
+
 #//--------------------------------------------------------------------------------------------------
 #// Build NGLayout
 #//--------------------------------------------------------------------------------------------------
@@ -374,43 +394,21 @@ sub BuildLayoutProjects()
 	my($resource_dir) = "$dist_dir" . "res:";
 	MakeAlias(":mozilla:layout:html:document:src:ua.css",				"$resource_dir");
 
-	my($html_dir) = "$dist_dir" . "res:html:";
+	my($html_dir) = "$resource_dir" . "html:";
 	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",			"$html_dir");
 
-	my($throbber_dir) = "$dist_dir" . "res:throbber:";
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims00.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims01.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims02.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims03.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims04.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims05.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims06.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims07.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims08.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims09.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims10.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims11.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims12.gif",	"$throbber_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims13.gif",	"$throbber_dir");
+	my($throbber_dir) = "$resource_dir" . "throbber:";
+	BuildResourceAliases(":mozilla:webshell:tests:viewer:throbber:", "$throbber_dir");
+	
+	my($samples_dir) = "$resource_dir" . "samples:";
+	BuildResourceAliases(":mozilla:webshell:tests:viewer:samples:", "$samples_dir");
 
-	my($samples_dir) = "$dist_dir" . "res:samples:";
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test0.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test1.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test2.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test3.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test4.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test5.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test6.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test7.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test8.html",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:test9.html",		"$samples_dir");
-
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:Anieyes.gif",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:bg.jpg",			"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:gear1.gif",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:raptor.jpg",		"$samples_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:samples:rock_gra.gif",	"$samples_dir");
-
+	my($chrome_dir) = "$resource_dir" . "chrome:";
+	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:chrome:", "$chrome_dir");
+	
+	my($toolbar_dir) = "$resource_dir" . "toolbar:";
+	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:", "$toolbar_dir");
+	
 	#//
 	#// Build Layout projects
 	#//
