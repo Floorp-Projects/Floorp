@@ -886,6 +886,32 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 
 			}
+			else if (strcmp(pcmd, "IsNonAscii") == 0)
+			{
+				// check if user agent string contains non-ascii characters
+				char *message = strchr(parms, ',');
+				if (message)
+				{
+					*message = '\0';
+					message++;
+				}
+				else
+					AfxMessageBox("A message belongs here", MB_OK);
+
+				CString value = replaceVars(parms, NULL);
+				char *userAgent = (char *)(LPCTSTR)value;
+				while (*userAgent != '\0')
+				{
+					if ((__isascii(*userAgent)) == 0)
+					{
+						CWnd myWnd;
+						myWnd.MessageBox(message, "Error", MB_OK|MB_SYSTEMMODAL);
+						return FALSE;
+					}
+					else
+						userAgent++;
+				}
+			}
       else if (strcmp(pcmd, "ValidateRemoteAdmin") == 0)
       {
         // if checkbox is set, then there must be a URL.
