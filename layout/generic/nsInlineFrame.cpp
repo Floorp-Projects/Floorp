@@ -610,7 +610,8 @@ nsInlineFrame::Reflow(nsIPresContext& aPresContext,
       aStatus = ChildIncrementalReflow(state, inlineReflow);
     }
   }
-  else if (eReflowReason_Resize == state.reason) {
+  else if ((eReflowReason_Resize == state.reason) ||
+           (eReflowReason_StyleChange == state.reason)) {
     DrainOverflowLists(aPresContext);
     aStatus = ResizeReflow(state, inlineReflow);
   }

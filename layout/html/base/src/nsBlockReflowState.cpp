@@ -1756,7 +1756,8 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
       rv = ChildIncrementalReflow(state);
     }
   }
-  else if (eReflowReason_Resize == state.reason) {
+  else if ((eReflowReason_Resize == state.reason) ||
+           (eReflowReason_StyleChange == state.reason)) {
     DrainOverflowLines();
     rv = ResizeReflow(state);
   }
