@@ -37,9 +37,9 @@ endif
 EXTRA_DSO_LIBS	= gkgfx
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS	+= xpfelocation_s
+EXTRA_DSO_LIBS	+= xpfelocation_s mpfilelocprovider_s
 else
-SHARED_LIBRARY_LIBS = -lxpfelocation_s
+SHARED_LIBRARY_LIBS = -lxpfelocation_s -lmpfilelocprovider_s
 endif
 
 CPPSRCS		= \
