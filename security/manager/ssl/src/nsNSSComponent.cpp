@@ -923,6 +923,115 @@ nsNSSComponent::InitializeCRLUpdateTimer()
   return NS_OK;
 }
 
+#ifdef XP_MACOSX
+void
+nsNSSComponent::TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath)
+{
+  // We will modify the parameters.
+  //
+  // If neither cert7.db, cert8.db, key3.db, are available, 
+  // copy from filenames that were used in the old days
+  // test for key3.db first, since a new profile might only contain cert8.db, 
+  // but not cert7.db - this optimizes number of tests
+
+  NS_NAMED_LITERAL_CSTRING(cstr_key3db, "key3.db");
+  NS_NAMED_LITERAL_CSTRING(cstr_cert7db, "cert7.db");
+  NS_NAMED_LITERAL_CSTRING(cstr_cert8db, "cert8.db");
+  NS_NAMED_LITERAL_CSTRING(cstr_keydatabase3, "Key Database3");
+  NS_NAMED_LITERAL_CSTRING(cstr_certificate7, "Certificates7");
+  NS_NAMED_LITERAL_CSTRING(cstr_certificate8, "Certificates8");
+
+  PRBool bExists;
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> macho_key3db;
+  rv = machoPath->Clone(getter_AddRefs(macho_key3db));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  macho_key3db->AppendNative(cstr_key3db);
+  rv = macho_key3db->Exists(&bExists);
+  if (NS_FAILED(rv) || bExists) {
+    return;
+  }
+
+  nsCOMPtr<nsIFile> macho_cert7db;
+  rv = machoPath->Clone(getter_AddRefs(macho_cert7db));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  macho_cert7db->AppendNative(cstr_cert7db);
+  rv = macho_cert7db->Exists(&bExists);
+  if (NS_FAILED(rv) || bExists) {
+    return;
+  }
+
+  nsCOMPtr<nsIFile> macho_cert8db;
+  rv = machoPath->Clone(getter_AddRefs(macho_cert8db));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  macho_cert8db->AppendNative(cstr_cert8db);
+  rv = macho_cert7db->Exists(&bExists);
+  if (NS_FAILED(rv) || bExists) {
+    return;
+  }
+
+  // None of the new files exist. Try to copy any available old files.
+
+  nsCOMPtr<nsIFile> cfm_key3;
+  rv = cfmPath->Clone(getter_AddRefs(cfm_key3));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  cfm_key3->AppendNative(cstr_keydatabase3);
+  rv = cfm_key3->Exists(&bExists);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (bExists) {
+    cfm_key3->CopyToFollowingLinksNative(machoPath, cstr_key3db);
+  }
+
+  nsCOMPtr<nsIFile> cfm_cert7;
+  rv = cfmPath->Clone(getter_AddRefs(cfm_cert7));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  cfm_cert7->AppendNative(cstr_certificate7);
+  rv = cfm_cert7->Exists(&bExists);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (bExists) {
+    cfm_cert7->CopyToFollowingLinksNative(machoPath, cstr_cert7db);
+  }
+
+  nsCOMPtr<nsIFile> cfm_cert8;
+  rv = cfmPath->Clone(getter_AddRefs(cfm_cert8));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  cfm_cert8->AppendNative(cstr_certificate8);
+  rv = cfm_cert8->Exists(&bExists);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (bExists) {
+    cfm_cert8->CopyToFollowingLinksNative(machoPath, cstr_cert8db);
+  }
+}
+#endif
+
 nsresult
 nsNSSComponent::InitializeNSS()
 {
@@ -962,17 +1071,43 @@ nsNSSComponent::InitializeNSS()
       return rv;
     }
 
-  #ifdef XP_MAC
-    // On the Mac we place all NSS DBs in the Security
+  // XP_MAC == CFM
+  // XP_MACOSX == MachO
+
+  #if defined(XP_MAC) && defined(XP_MACOSX)
+  #error "This code assumes XP_MAC and XP_MACOSX will never be defined at the same time"
+  #endif
+
+  #if defined(XP_MAC) || defined(XP_MACOSX)
+    // On Mac CFM we place all NSS DBs in the Security
     // Folder in the profile directory.
-    profilePath->AppendNative(NS_LITERAL_CSTRING("Security"));
+    nsCOMPtr<nsIFile> cfmSecurityPath;
+    cfmSecurityPath = profilePath; // alias for easier code reading
+    cfmSecurityPath->AppendNative(NS_LITERAL_CSTRING("Security"));
+  #endif
+
+  #if defined(XP_MAC)
+    // on CFM, cfmSecurityPath and profilePath point to the same oject
     profilePath->Create(nsIFile::DIRECTORY_TYPE, 0); //This is for Mac, don't worry about
                                                      //permissions.
-  #endif 
+  #elif defined(XP_MACOSX)
+    // On MachO, we need to access both directories,
+    // and therefore need separate nsIFile instances.
+    // Keep cfmSecurityPath instance, obtain new instance for MachO profilePath.
+    rv = cfmSecurityPath->GetParent(getter_AddRefs(profilePath));
+    if (NS_FAILED(rv))
+      return rv;
+  #endif
 
     rv = profilePath->GetNativePath(profileStr);
     if (NS_FAILED(rv)) 
       return rv;
+
+  #if defined(XP_MACOSX)
+    // function may modify the parameters
+    // ignore return code from conversion, we continue anyway
+    TryCFM2MachOMigration(cfmSecurityPath, profilePath);
+  #endif
 
     PRBool supress_warning_preference = PR_FALSE;
     rv = mPref->GetBoolPref("security.suppress_nss_rw_impossible_warning", &supress_warning_preference);
