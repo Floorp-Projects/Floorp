@@ -29,6 +29,8 @@
 #include "nsIUrlListener.h"
 #include "nsIImapIncomingServer.h" // we need this for its IID
 #include "nsIMsgParseMailMsgState.h"
+#include "nsITransactionManager.h"
+#include "nsMsgTxn.h"
 #ifdef DEBUG_bienvenu
 //#define DOING_FILTERS
 #endif
@@ -199,6 +201,9 @@ public:
                                          nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo);
+    NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
+                                  nsMsgKeyArray* keyArray,
+                                  const char* msgIdString);
     
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -296,6 +301,10 @@ protected:
 	// converter interface...
 	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 	nsFileSpec m_tempMessageFile;
+
+    // *** jt - undo move/copy trasaction support
+    nsCOMPtr<nsITransactionManager> m_transactionManager;
+    nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
 };
 
 #endif

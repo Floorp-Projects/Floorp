@@ -260,6 +260,10 @@ public:
     void HandleMemoryFailure();
 	void HandleCurrentUrlError();
 
+    // UIDPLUS extension
+    void SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
+                            const char* msgIdString);
+
 private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url

@@ -46,7 +46,7 @@ nsImapEvent::~nsImapEvent()
 void
 nsImapEvent::SetNotifyCompletion(PRBool notifyCompletion)
 {
-    m_notifyCompletion = PR_TRUE;
+    m_notifyCompletion = notifyCompletion;
 }
 
 void
@@ -1102,6 +1102,35 @@ nsImapExtensionSinkProxy::SetFolderAdminURL(nsIImapProtocol* aProtocol,
     else
     {
         res = m_realImapExtensionSink->SetFolderAdminURL(aProtocol, aInfo);
+    }
+    return res;
+}
+
+NS_IMETHODIMP
+nsImapExtensionSinkProxy::SetCopyResponseUid(nsIImapProtocol* aProtocol,
+                                             nsMsgKeyArray* aKeyArray,
+                                             const char* msgIdString)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (aKeyArray, "Oops... null aKeyArray");
+    if(!aKeyArray)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        SetCopyResponseUidProxyEvent *ev =
+            new SetCopyResponseUidProxyEvent(this, aKeyArray, msgIdString);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapExtensionSink->SetCopyResponseUid(aProtocol,
+                                                          aKeyArray,
+                                                          msgIdString);
     }
     return res;
 }
@@ -2819,6 +2848,32 @@ SetFolderAdminURLProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapExtensionSink->SetFolderAdminURL(
         m_proxy->m_protocol, &m_folderQueryInfo); 
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+SetCopyResponseUidProxyEvent::SetCopyResponseUidProxyEvent(
+    nsImapExtensionSinkProxy* aProxy, nsMsgKeyArray* aKeyArray,
+    const char* msgIdString) :
+    nsImapExtensionSinkProxyEvent(aProxy), m_msgIdString(msgIdString, eOneByte)
+{
+    NS_ASSERTION (aKeyArray, "Oops... a null key array");
+    if (aKeyArray)
+    {
+        m_copyKeyArray.CopyArray(aKeyArray);
+    }
+}
+
+SetCopyResponseUidProxyEvent::~SetCopyResponseUidProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+SetCopyResponseUidProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapExtensionSink->SetCopyResponseUid(
+        m_proxy->m_protocol, &m_copyKeyArray, m_msgIdString.GetBuffer()); 
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

@@ -23,6 +23,7 @@
 #include "nsIMAPHostSessionList.h"
 #include "nsImapSearchResults.h"
 #include "nsString.h"
+#include "nsMsgKeyArray.h"
 
 class nsIMAPNamespace;
 class nsIMAPNamespaceList;
@@ -76,6 +77,8 @@ public:
     PRInt32       FolderUID();
     PRUint32      CurrentResponseUID();
     PRUint32      HighestRecordedUID();
+    void          CopyResponseUID(nsMsgKeyArray& keyArray);
+    void          ClearCopyResponseUID();
 	PRBool		IsNumericString(const char *string);
    PRInt32       SizeOfMostRecentMessage();
 	void		SetTotalDownloadSize(PRInt32 newSize) { fTotalDownloadSize = newSize; }
@@ -244,6 +247,7 @@ private:
     nsImapProtocol &fServerConnection;
 
 	nsIImapHostSessionList *fHostSessionList;
+    nsMsgKeyArray fCopyResponseKeyArray;
 };
 
 #endif

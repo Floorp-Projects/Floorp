@@ -178,6 +178,9 @@ public:
                                          nsIMAPACLRightsInfo* aclRights);
     NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo);
+    NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
+                                  nsMsgKeyArray* aKeyArray,
+                                  const char* msgIdString);
     
     nsIImapExtensionSink* m_realImapExtensionSink;
 };
@@ -568,6 +571,17 @@ struct SetFolderAdminURLProxyEvent : nsImapExtensionSinkProxyEvent
     virtual ~SetFolderAdminURLProxyEvent();
     NS_IMETHOD HandleEvent();
     FolderQueryInfo m_folderQueryInfo;
+};
+
+struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
+{
+    SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
+                                 nsMsgKeyArray* aKeyArray, 
+                                 const char* msgIdString);
+    virtual ~SetCopyResponseUidProxyEvent();
+    NS_IMETHOD HandleEvent();
+    nsMsgKeyArray m_copyKeyArray;
+    nsString2 m_msgIdString;
 };
 
 struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent

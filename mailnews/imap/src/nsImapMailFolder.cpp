@@ -38,6 +38,7 @@
 #include "nsIWebShell.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
+#include "nsImapUndoTxn.h"
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
@@ -867,6 +868,12 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     uri.Append(hostName);
     PR_FREEIF(hostName);
 
+    if (!m_transactionManager || m_transactionManager != txnMgr)
+    {
+        m_transactionManager = null_nsCOMPtr();
+        m_transactionManager = do_QueryInterface(txnMgr, &rv);
+    }
+
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if(NS_FAILED(rv)) return rv;
 
@@ -909,6 +916,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         rv = messages->Count(&count);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
         nsString2 messageIds("", eOneByte);
+        nsMsgKeyArray srcKeyArray;
         PRUint32 i;
         for (i = 0; i < count; i++)
         {
@@ -924,6 +932,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                     if (messageIds.Length() > 0)
                         messageIds.Append(',');
                     messageIds.Append((PRInt32)key);
+                    srcKeyArray.Add(key);
                 }
             }
         }
@@ -935,6 +944,24 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                 this, nsnull);
         if (NS_SUCCEEDED(rv))
         {
+            m_pendingUndoTxn = null_nsCOMPtr();
+            m_pendingUndoTxn = do_QueryInterface(new nsImapMoveCopyMsgTxn(
+                this, &srcKeyArray, messageIds.GetBuffer(), trashFolder,
+                PR_TRUE, PR_TRUE, m_eventQueue, this), &rv);
+            if (m_pendingUndoTxn)
+            {
+                nsString undoString = count > 1 ? "Undo Delete Messages" :
+                    "Undo Delete Message";
+                nsString redoString = count > 1 ? "Redo Delete Messages" :
+                    "Redo Delete Message";
+                nsCOMPtr<nsImapMoveCopyMsgTxn>
+                    msgTxn(do_QueryInterface(m_pendingUndoTxn, &rv));
+                if (NS_SUCCEEDED(rv))
+                {
+                    rv = msgTxn->SetUndoString(&undoString);
+                    rv = msgTxn->SetRedoString(&redoString);
+                }
+            }
             if (mDatabase) // *** jt - do we really need to do this?
                            // especially if using imap delete model
             {
@@ -960,6 +987,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                         }
                     }
                 }
+				mDatabase->Commit(kLargeCommit);
             }
         }
     }
@@ -2177,6 +2205,26 @@ nsImapMailFolder::OnStopRunningUrl(nsIURL *aUrl, nsresult aExitCode)
 	m_urlRunning = PR_FALSE;
 	if (aUrl)
 	{
+        nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
+        if (imapUrl)
+        {
+            nsIImapUrl::nsImapAction imapAction = nsIImapUrl::nsImapTest;
+            imapUrl->GetImapAction(&imapAction);
+            switch(imapAction)
+            {
+            case nsIImapUrl::nsImapDeleteMsg:
+            case nsIImapUrl::nsImapOnlineMove:
+            case nsIImapUrl::nsImapOnlineCopy:
+#ifdef NOT_YET
+                if (m_transactionManager)
+                    m_transactionManager->Do(m_pendingUndoTxn);
+#endif
+                m_pendingUndoTxn = null_nsCOMPtr();
+                break;
+            default:
+                m_pendingUndoTxn = null_nsCOMPtr();
+            }
+        }
 		// query it for a mailnews interface for now....
 		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
 		if (mailUrl)
@@ -2186,6 +2234,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURL *aUrl, nsresult aExitCode)
 }
 
     // nsIImapExtensionSink methods
+
 NS_IMETHODIMP
 nsImapMailFolder::SetUserAuthenticated(nsIImapProtocol* aProtocol,
                                        PRBool aBool)
@@ -2242,7 +2291,21 @@ nsImapMailFolder::SetFolderAdminURL(nsIImapProtocol* aProtocol,
     return NS_ERROR_FAILURE;
 }
 
-    
+NS_IMETHODIMP
+nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
+                                     nsMsgKeyArray* aKeyArray,
+                                     const char* msgIdString)
+{
+    if (m_pendingUndoTxn)
+    {
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn =
+            do_QueryInterface(m_pendingUndoTxn, &rv);
+        if (msgTxn)
+            msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
+    }
+    return NS_OK;
+}    
     // nsIImapMiscellaneousSink methods
 NS_IMETHODIMP
 nsImapMailFolder::AddSearchResult(nsIImapProtocol* aProtocol, 

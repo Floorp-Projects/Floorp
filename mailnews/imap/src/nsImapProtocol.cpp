@@ -3290,6 +3290,12 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 		HandleMemoryFailure();
 }
 
+void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
+                                        const char *msgIdString)
+{
+    if (m_imapExtensionSink)
+        m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString);
+}
 
 void nsImapProtocol::CommitNamespacesForHostEvent()
 {
@@ -5068,7 +5074,7 @@ void nsImapProtocol::ProcessStoreFlags(nsString2 &messageIdsString,
         flagString .Append("$MDNSent ");	// if supported
 
     // replace the final space with ')'
-    flagString.SetCharAt(flagString.Length() - 1, ')');;
+    flagString.SetCharAt(')',flagString.Length() - 1);;
     
     Store(messageIdsString, flagString.GetBuffer(), idsAreUids);
 }

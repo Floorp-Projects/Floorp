@@ -959,6 +959,13 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
 			ParseListofMessageIds();
 		}
+		else if (!PL_strcasecmp(m_urlidSubString, "uidexpunge"))
+		{
+			m_imapAction   					 = nsImapUidExpunge;
+			ParseUidChoice();
+			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+			ParseListofMessageIds();
+		}
 		else if (!PL_strcasecmp(m_urlidSubString, "deleteallmsgs"))
 		{
 			m_imapAction   					 = nsImapDeleteAllMsgs;

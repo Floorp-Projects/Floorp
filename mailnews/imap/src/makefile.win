@@ -59,6 +59,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapMailFolder.obj			\
 			.\$(OBJDIR)\nsImapMessage.obj				\
 			.\$(OBJDIR)\nsImapUtils.obj					\
+			.\$(OBJDIR)\nsImapUndoTxn.obj					\
 			$(NULL)
 
 

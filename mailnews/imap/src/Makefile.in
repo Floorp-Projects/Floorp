@@ -60,6 +60,7 @@ CPPSRCS		= \
 		nsImapService.cpp \
 		nsImapUrl.cpp \
 		nsImapFlagAndUidState.cpp \
+		nsImapUndoTxn.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
