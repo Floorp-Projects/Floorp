@@ -126,6 +126,9 @@ protected:
     nsresult Init();
 
     // Implementation methods
+    PRBool
+    IsElementInBuilder(nsIContent *aElement);
+
     nsresult
     OpenContainer(nsIContent* aElement);
 
@@ -191,9 +194,6 @@ protected:
     PRBool
     IsOpen(nsIContent* aElement);
 
-    PRBool
-    IsElementInWidget(nsIContent* aElement);
-   
     nsresult
     RemoveGeneratedContent(nsIContent* aElement);
 
@@ -1424,12 +1424,6 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
 }
 
 
-PRBool
-nsXULContentBuilder::IsElementInWidget(nsIContent* aElement)
-{
-    return IsElementContainedBy(aElement, mRoot);
-}
-
 nsresult
 nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
 {
@@ -1665,10 +1659,6 @@ nsXULContentBuilder::Rebuild(nsIContent* aElement)
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-    // First, make sure that the element is in the right widget -- ours.
-    if (! IsElementInWidget(aElement))
-        return NS_OK;
-
     nsresult rv;
 
     // Next, see if it's a XUL element whose contents have never even
@@ -1758,7 +1748,7 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(IsElementInWidget(aElement), "element not managed by this template builder");
+    NS_ASSERTION(IsElementContainedBy(aElement, mRoot), "element not managed by this template builder");
 
     return CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
 }
@@ -1984,13 +1974,45 @@ nsXULContentBuilder::SynchronizeMatch(nsTemplateMatch* match, const VariableSet&
 // Implementation methods
 //
 
+PRBool
+nsXULContentBuilder::IsElementInBuilder(nsIContent *aContent)
+{
+    // Make sure that the element is contained within the heirarchy
+    // that we're supposed to be processing.
+    nsCOMPtr<nsIDocument> doc;
+    aContent->GetDocument(*getter_AddRefs(doc));
+
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+    if (! xuldoc)
+        return PR_FALSE;
+
+    nsCOMPtr<nsIContent> content = dont_QueryInterface(aContent);
+    do {
+        nsCOMPtr<nsIXULTemplateBuilder> builder;
+        xuldoc->GetTemplateBuilderFor(aContent, getter_AddRefs(builder));
+        if (builder) {
+            if (builder == NS_STATIC_CAST(nsIXULTemplateBuilder *, this))
+                return PR_TRUE; // We're the builder for this element.
+
+            // We found a builder, but it's not us.
+            break;
+        }
+
+        nsCOMPtr<nsIContent> parent;
+        content->GetParent(*getter_AddRefs(parent));
+        content = parent;
+    } while (content);
+
+    return PR_FALSE;
+}
+
 nsresult
 nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 {
     nsresult rv;
 
-    // First, make sure that the element is in the right widget -- ours.
-    if (! IsElementInWidget(aElement))
+    // See if we're responsible for this element
+    if (! IsElementInBuilder(aElement))
         return NS_OK;
 
     nsCOMPtr<nsIRDFResource> resource;
@@ -2031,19 +2053,14 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 nsresult
 nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 {
-    NS_PRECONDITION(aElement != nsnull, "null ptr");
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    // First, make sure that the element is in the right widget -- ours.
-    if (! IsElementInWidget(aElement))
-        return NS_OK;
-
     nsresult rv;
 
+    // See if we're responsible for this element
+    if (! IsElementInBuilder(aElement))
+        return NS_OK;
+
     nsCOMPtr<nsIAtom> tag;
-    rv = aElement->GetTag(*getter_AddRefs(tag));
-    if (NS_FAILED(rv)) return rv;
+    aElement->GetTag(*getter_AddRefs(tag));
 
     if (tag.get() == nsXULAtoms::treeitem) {
         // Find the tag that contains the children so that we can
