@@ -234,6 +234,9 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                 else
                     dumpBytecode(fWrap->bCon);
             }
+            else {
+                // dumping a class would be interesting...
+            }
         }
     }
     return JS2VAL_UNDEFINED;
