@@ -405,18 +405,21 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
         if (nsnull != parentContext) {
           nsMargin  parentSide;
           switch (aSpacing) {
-            case NS_SPACING_MARGIN:
+            case NS_SPACING_MARGIN: {
               const nsStyleMargin* parentMargin = (const nsStyleMargin*)parentContext->GetStyleData(eStyleStruct_Margin);
               parentMargin->CalcMarginFor(parentFrame, parentSide);  
               break;
-            case NS_SPACING_PADDING:
+            }
+            case NS_SPACING_PADDING: {
               const nsStylePadding* parentPadding = (const nsStylePadding*)parentContext->GetStyleData(eStyleStruct_Padding);
               parentPadding->CalcPaddingFor(parentFrame, parentSide);  
               break;
-            case NS_SPACING_BORDER:
+             }
+            case NS_SPACING_BORDER: {
               const nsStyleBorder* parentBorder = (const nsStyleBorder*)parentContext->GetStyleData(eStyleStruct_Border);
               parentBorder->CalcBorderFor(parentFrame, parentSide);  
               break;
+            }
           }
           switch (aSide) {
             case NS_SIDE_LEFT:    result = parentSide.left;   break;
@@ -3545,7 +3548,7 @@ StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
     case eStyleStruct_Outline:
       GETSCDATA(Outline).CopyTo((nsStyleOutline&)aStruct);
     	break;
-    case eStyleStruct_BorderPaddingShortcut:
+    case eStyleStruct_BorderPaddingShortcut: {
       nsMargin border, padding;
       if (GETSCDATA(Border).GetBorder(border)) {
 	      if (GETSCDATA(Padding).GetPadding(padding)) {
@@ -3554,6 +3557,7 @@ StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
 	      }
       }
       break;
+    }
     default:
       NS_ERROR("Invalid style struct id");
       result = NS_ERROR_INVALID_ARG;
