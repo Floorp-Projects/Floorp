@@ -780,8 +780,10 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
             }
             parent->GetParent(&parent);
        }
+#ifdef LAMER
        if (mInner->mIsRoot) 
            printf("-------- BOX IS ROOT --------\n");
+#endif
     }
     
     if ( aReflowState.reason == eReflowReason_Incremental ) {
