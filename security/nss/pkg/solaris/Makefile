@@ -1,8 +1,8 @@
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.4 2002/11/17 17:26:51 kirk.erickson%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.5 2004/11/29 16:31:47 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -12,26 +12,42 @@ CORE_DEPTH = ../../..
 	cp $< $@
 	chmod +x $@
 
+HEADER_DIR = public/nss
 
-ifeq ($(USE_64), 1)
 DIRS = \
-    SUNWtlsx
-else
-DIRS = \
-    SUNWtls
-endif
+	SUNWtls \
+	SUNWtlsu \
+	SUNWtlsd
+
+include Makefile.com
 
 PROTO = \
 	$(ROOT) \
-	$(ROOT)/usr \
-	$(ROOT)/usr/lib \
-	$(ROOT)/usr/lib/mps
+	$(ROOT)/usr/lib/mps \
+	$(ROOT)/usr/include/mps \
+	$(ROOT)/usr/sfw/bin
 
-ifdef USE_64
-PROTO += $(ROOT)/usr/lib/mps/sparcv9
+ifeq ($(MACH), sparc)
+	PROTO += $(ROOT)/usr/lib/mps/sparcv9 \
+	$(ROOT)/usr/sfw/bin/sparcv9
 endif
 
-include Makefile.com
+ifeq ($(USE_64), 1)
+ifeq ($(MACH), sparc)
+# Sparc
+	PROTO += $(ROOT)/usr/lib/mps/sparcv9 \
+	$(ROOT)/usr/sfw/bin/sparcv9
+else
+# AMD64
+	PROTO += $(ROOT)/usr/lib/mps/amd64 \
+	$(ROOT)/usr/sfw/bin/amd64
+endif
+	DIST64 = $(DIST)
+	DIST32 = $(shell echo $(DIST) | sed -e "s|_64_OPT|_OPT|g" -e "s|_64_DBG|_DBG|g")
+else
+	DIST32 = $(DIST)
+	DIST64 = $(shell echo $(DIST) | sed -e "s|_OPT|_64_OPT|g" -e "s|_DBG|_64_DBG|g")
+endif
 
 awk_pkginfo: bld_awk_pkginfo
 	./bld_awk_pkginfo -m $(MACH) -p "$(PRODUCT_VERSION)" -o $@ -v $(PRODUCT_VERSION)
@@ -44,13 +60,30 @@ clean clobber::
 	$(RM) awk_pkginfo bld_awk_pkginfo
 	$(RM) -r $(ROOT)
 
-$(ROOT) $(ROOT)/%:
+$(ROOT):
 	mkdir -p $@
 
-ifdef USE_64
-$(ROOT)/usr/lib/mps/sparcv9: $(ROOT)/usr/lib
-	$(LN) -sf ../../../../$(DIST)/lib $@
-else
-$(ROOT)/usr/lib/mps: $(ROOT)/usr/lib
-	$(LN) -sf ../../../$(DIST)/lib $@
-endif
+$(ROOT)/usr/lib/mps:
+	mkdir -p $@
+	$(CP) -r $(DIST32)/lib/*.so $@
+	$(CP) -r $(DIST32)/lib/*.chk $@
+$(ROOT)/usr/sfw/bin:
+	mkdir -p $@
+	-$(CP) -r $(DIST32)/bin/* $@
+$(ROOT)/usr/include/mps:
+	mkdir -p $@
+	$(CP) -r $(SOURCE_PREFIX)/$(HEADER_DIR)/*.h $@
+$(ROOT)/usr/lib/mps/sparcv9:
+	mkdir -p $@
+	$(CP) -r $(DIST64)/lib/*.so $@
+	$(CP) -r $(DIST64)/lib/*.chk $@
+$(ROOT)/usr/sfw/bin/sparcv9:
+	mkdir -p $@
+	$(CP) -r $(DIST64)/bin/* $@
+$(ROOT)/usr/lib/mps/amd64:
+	mkdir -p $@
+	$(CP) -r $(DIST64)/lib/*.so $@
+	$(CP) -r $(DIST64)/lib/*.chk $@
+$(ROOT)/usr/sfw/bin/amd64:
+	mkdir -p $@
+	$(CP) -r $(DIST64)/bin/* $@

@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.targ,v 1.6 2004/11/29 16:31:47 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile-tlsu.targ,v 1.2 2004/11/29 16:31:47 christophe.ravel.bugs%sun.com Exp $"
 #
 
 include ../proto64.mk
