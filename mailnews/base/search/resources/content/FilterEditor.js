@@ -109,7 +109,9 @@ function filterEditorOnLoad()
 
             // the default action for news filters is Delete
             // for everything else, it's MoveToFolder
-            gFilter.action = (getScopeFromFilterList(gFilterList) == Components.interfaces.nsMsgSearchScope.newsFilter) ? nsMsgFilterAction.Delete : nsMsgFilterAction.MoveToFolder;
+            var filterAction = gFilter.createAction();
+            filterAction.type = (getScopeFromFilterList(gFilterList) == Components.interfaces.nsMsgSearchScope.newsFilter) ? nsMsgFilterAction.Delete : nsMsgFilterAction.MoveToFolder;
+            gFilter.appendAction(filterAction);
             initializeDialog(gFilter);
           }
           else{
@@ -287,9 +289,6 @@ function initializeDialog(filter)
     {
       var filterAction = actionList.QueryElementAt(actionIndex, Components.interfaces.nsIMsgRuleAction);
 
-      // set up action picker
-      SetUpFilterActionList(getScope(filter));
-
       if (filterAction.type == nsMsgFilterAction.MoveToFolder) {
         // preselect target folder
         gMoveToFolderCheckbox.checked = true;
@@ -330,6 +329,8 @@ function initializeDialog(filter)
         gWatchCheckbox.checked = true;
       else if (filterAction.type == nsMsgFilterAction.Ignore)
         gIgnoreCheckbox.checked = true;
+
+      SetUpFilterActionList(getScope(filter));
     }
 
     var scope = getScope(filter);
@@ -537,6 +538,17 @@ function SetUpFilterActionList(aScope)
       element.removeAttribute("disabled");
     else
       element.setAttribute("disabled", "true");
+  }
+
+  elements = gFilterActionList.getElementsByTagName("checkbox");
+  for (i=0;i<elements.length;i++)
+  {
+    element = elements[i];
+    if (element.checked) 
+    {
+      // ensure row item visible
+      // break;
+    }
   }
 }
 
