@@ -89,7 +89,7 @@ class TimerPeriodical	: public LPeriodical
 {
 		static TimerPeriodical * gPeriodical;
 		
-		LArray * mTimers;	// List of TimerImpl *
+		LArray mTimers;	// List of TimerImpl *
 	
 	public:
 		// Returns the singleton instance
@@ -193,7 +193,8 @@ void TimerImpl::Fire()
 void TimerImpl::SetDelaySelf( PRUint32 aDelay )
 {
 	mDelay = aDelay;
-	mFireTime = TickCount() + mDelay / 100 * 6;	// We need mFireTime in ticks, 1/60th of a second
+	mFireTime = TickCount() + (mDelay * 3) / 50;	// We need mFireTime in ticks (1/60th)
+													//  but aDelay is in 1000th (60/1000 = 3/50)
 }
 
 TimerPeriodical * TimerPeriodical::gPeriodical = NULL;
@@ -207,15 +208,13 @@ TimerPeriodical * TimerPeriodical::GetPeriodical()
 
 TimerPeriodical::TimerPeriodical()
 {
-	mTimers = new LArray( sizeof(TimerImpl*));
-	mTimers->SetComparator( new TimerImplComparator());
-	mTimers->SetKeepSorted( true );
+	mTimers.SetComparator( new TimerImplComparator());
+	mTimers.SetKeepSorted( true );
 }
 
 TimerPeriodical::~TimerPeriodical()
 {
-	PR_ASSERT(mTimers->GetCount() == 0);
-	delete mTimers;
+	PR_ASSERT(mTimers.GetCount() == 0);
 }
 
 nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
@@ -223,7 +222,7 @@ nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
 	try
 	{
 		NS_ADDREF(aTimer);
-		mTimers->AddItem( &aTimer );
+		mTimers.AddItem( &aTimer );
 		StartRepeating();
 	}
 	catch(...)
@@ -235,9 +234,9 @@ nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
 
 nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 {
-	mTimers->Remove( aTimer );
+	mTimers.Remove( aTimer );
 	NS_RELEASE( aTimer );
-	if ( mTimers->GetCount() == 0 )
+	if ( mTimers.GetCount() == 0 )
 		StopRepeating();
 	return NS_OK;
 }
@@ -247,11 +246,11 @@ nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 // fires off the available ones
 void	TimerPeriodical::SpendTime( const EventRecord &inMacEvent)
 {
-	LArrayIterator iter( *mTimers, LArrayIterator::from_Start);
+	LArrayIterator iter(mTimers);
 	TimerImpl * timer;
-	while (iter.Next(timer))
+	while (iter.Next(&timer))
 	{
-		if ( timer->GetFireTime() <= inMacEvent.when )
+		if (timer->GetFireTime() <= inMacEvent.when)
 		//if (  1  )
 		{
 			NS_ADDREF(timer);
