@@ -118,6 +118,7 @@ public:
 
     size_t pondSize;
     uint8 *pondBase;
+    uint8 *pondBottom;
     uint8 *pondTop;
 
     PondScum *freeHeader;

@@ -3422,10 +3422,12 @@ deleteClassProperty:
     void *JS2Object::alloc(size_t s)
     {
         s += sizeof(PondScum);
-        // make sure that the thing is 8-byte aligned
-        if (s & 0x7) s += 8 - (s & 0x7);
+        // make sure that the thing is 16-byte aligned
+        if (s & 0xF) s += 16 - (s & 0xF);
         ASSERT(s <= 0x7FFFFFFF);
-        return pond.allocFromPond((int32)s);
+        void *p = pond.allocFromPond((int32)s);
+        ASSERT(((ptrdiff_t)p & 0xF) == 0);
+        return p;
     }
 
     // Release a chunk back to it's pond
@@ -3443,8 +3445,23 @@ deleteClassProperty:
  *
  ************************************************************************************/
 
-    Pond::Pond(size_t sz, Pond *next) : sanity(POND_SANITY), pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondTop(pondBase), freeHeader(NULL), nextPond(next) 
-    { 
+    Pond::Pond(size_t sz, Pond *next) : sanity(POND_SANITY), pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondBottom(pondBase), pondTop(pondBase), freeHeader(NULL), nextPond(next) 
+    {
+        /*
+         * Make sure the allocation base is at (n mod 16) == 8.
+         * That way, each allocated chunk will have it's returned pointer
+         * at (n mod 16) == 0 after allowing for the PondScum header at the
+         * beginning.
+         */
+        int32 offset = ((ptrdiff_t)pondBottom % 16);
+        if (offset != 8) {
+            if (offset > 8)
+                pondBottom += 8 + (16 - offset);
+            else
+                pondBottom += 8 - offset;
+        }
+        pondTop = pondBottom;
+        pondSize -= (pondTop - pondBase);
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
@@ -3472,7 +3489,7 @@ deleteClassProperty:
         }
 
         // See if there's room left...
-        if (sz > (pondSize - (pondTop - pondBase))) {
+        if (sz > pondSize) {
             if (nextPond == NULL)
                 nextPond = new Pond(sz, nextPond);
             return nextPond->allocFromPond(sz);
@@ -3481,6 +3498,7 @@ deleteClassProperty:
         p->owner = this;
         p->setSize(sz);
         pondTop += sz;
+        pondSize -= sz;
 #ifdef DEBUG
         memset((p + 1), 0xB7, sz - sizeof(PondScum));
 #endif
@@ -3501,7 +3519,7 @@ deleteClassProperty:
     // Clear the mark bit from all PondScums
     void Pond::resetMarks()
     {
-        uint8 *t = pondBase;
+        uint8 *t = pondBottom;
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
             p->resetMark();
@@ -3514,7 +3532,7 @@ deleteClassProperty:
     // Anything left unmarked is now moved to the free list
     void Pond::moveUnmarkedToFreeList()
     {
-        uint8 *t = pondBase;
+        uint8 *t = pondBottom;
         while (t != pondTop) {
             PondScum *p = (PondScum *)t;
             if (!p->isMarked() && (p->owner == this))   // (owner != this) ==> already on free list

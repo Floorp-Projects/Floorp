@@ -200,8 +200,28 @@ namespace MetaData {
             return stringToDouble(str->data(), str->data() + str->length(), numEnd);
         }
         return toNumber(toPrimitive(x));
-
     }
+
+    float64 JS2Engine::toNumber(js2val x)
+    { 
+        if (JS2VAL_IS_INT(x)) 
+            return JS2VAL_TO_INT(x); 
+        else 
+        if (JS2VAL_IS_DOUBLE(x)) 
+            return *JS2VAL_TO_DOUBLE(x); 
+        else
+        if (JS2VAL_IS_LONG(x))
+            return *JS2VAL_TO_LONG(x);
+        else
+        if (JS2VAL_IS_ULONG(x))
+            return *JS2VAL_TO_ULONG(x);
+        else
+        if (JS2VAL_IS_FLOAT(x))
+            return *JS2VAL_TO_FLOAT(x);
+        else 
+            return convertValueToDouble(x); 
+    }
+
 
     // x is not a bool
     bool JS2Engine::convertValueToBoolean(js2val x)

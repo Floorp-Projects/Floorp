@@ -157,7 +157,7 @@ public:
 
     String *toString(js2val x)      { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
-    float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
+    float64 toNumber(js2val x);
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     int32 toInteger(js2val x)       { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
 

@@ -43,8 +43,11 @@
 #define JS2VAL_OBJECT            0x0     /* untagged reference to object */
 #define JS2VAL_INT               0x1     /* tagged 31-bit integer value */
 #define JS2VAL_DOUBLE            0x2     /* tagged reference to double */
-#define JS2VAL_STRING            0x4     /* tagged reference to string */
-#define JS2VAL_BOOLEAN           0x6     /* tagged boolean value */
+#define JS2VAL_LONG              0x4     /* tagged reference to long */
+#define JS2VAL_ULONG             0x6     /* tagged reference to unsigned long */
+#define JS2VAL_FLOAT             0x8     /* tagged reference to float */
+#define JS2VAL_STRING            0xA     /* tagged reference to string */
+#define JS2VAL_BOOLEAN           0xC     /* tagged boolean value */
 
 #define JS2VAL_UNINITIALIZED     0x80    /* reserve this object reference value as an indication
                                             that a variable has yet to be initialized  */
@@ -63,7 +66,8 @@
 #define JS2VAL_IS_SPECIALREF(v)     ( (v & ~0xF0) == 0 )
 
 /* Type tag bitfield length and derived macros. */
-#define JS2VAL_TAGBITS           3
+#define JS2VAL_TAGBITS           4
+#define JS2VAL_UNNUMBER_MASK     JS2_BIT(3)
 #define JS2VAL_TAGMASK           JS2_BITMASK(JS2VAL_TAGBITS)
 #define JS2VAL_TAG(v)            ((v) & JS2VAL_TAGMASK)
 #define JS2VAL_SETTAG(v,t)       ((v) | (t))
@@ -83,7 +87,7 @@
 
 /* Predicates for type testing. */
 #define JS2VAL_IS_OBJECT(v)      ((JS2VAL_TAG(v) == JS2VAL_OBJECT) && !JS2VAL_IS_SPECIALREF(v))
-#define JS2VAL_IS_NUMBER(v)      (JS2VAL_IS_INT(v) || JS2VAL_IS_DOUBLE(v))
+#define JS2VAL_IS_NUMBER(v)      ((JS2VAL_TAG(v) != JS2VAL_OBJECT) && !(JS2VAL_TAG(v) & JS2VAL_UNNUMBER_MASK))
 #define JS2VAL_IS_INT(v)         (((v) & JS2VAL_INT) && (v) != JS2VAL_VOID)
 #define JS2VAL_IS_DOUBLE(v)      (JS2VAL_TAG(v) == JS2VAL_DOUBLE)
 #define JS2VAL_IS_STRING(v)      (JS2VAL_TAG(v) == JS2VAL_STRING)
@@ -91,6 +95,9 @@
 #define JS2VAL_IS_NULL(v)        ((v) == JS2VAL_NULL)
 #define JS2VAL_IS_VOID(v)        ((v) == JS2VAL_VOID)
 #define JS2VAL_IS_PRIMITIVE(v)   (!JS2VAL_IS_OBJECT(v) || JS2VAL_IS_NULL(v))
+#define JS2VAL_IS_LONG(v)        (JS2VAL_TAG(v) == JS2VAL_LONG)
+#define JS2VAL_IS_ULONG(v)       (JS2VAL_TAG(v) == JS2VAL_ULONG)
+#define JS2VAL_IS_FLOAT(v)       (JS2VAL_TAG(v) == JS2VAL_FLOAT)
 
 /* Objects, strings, and doubles are GC'ed. */
 #define JS2VAL_IS_GCTHING(v)     (!((v) & JS2VAL_INT) && !JS2VAL_IS_BOOLEAN(v))
@@ -98,9 +105,15 @@
 #define JS2VAL_TO_OBJECT(v)      ((JS2Object *)JS2VAL_TO_GCTHING(v))
 #define JS2VAL_TO_DOUBLE(v)      ((float64 *)JS2VAL_TO_GCTHING(v))
 #define JS2VAL_TO_STRING(v)      ((String *)JS2VAL_TO_GCTHING(v))
+#define JS2VAL_TO_LONG(v)        ((int64 *)JS2VAL_TO_GCTHING(v))
+#define JS2VAL_TO_ULONG(v)       ((uint64 *)JS2VAL_TO_GCTHING(v))
+#define JS2VAL_TO_FLOAT(v)       ((float32 *)JS2VAL_TO_GCTHING(v))
 #define OBJECT_TO_JS2VAL(obj)    ((js2val)(obj))
 #define DOUBLE_TO_JS2VAL(dp)     JS2VAL_SETTAG((js2val)(dp), JS2VAL_DOUBLE)
 #define STRING_TO_JS2VAL(str)    JS2VAL_SETTAG((js2val)(str), JS2VAL_STRING)
+#define LONG_TO_JS2VAL(dp)       JS2VAL_SETTAG((js2val)(dp), JS2VAL_LONG)
+#define ULONG_TO_JS2VAL(dp)      JS2VAL_SETTAG((js2val)(dp), JS2VAL_ULONG)
+#define FLOAT_TO_JS2VAL(dp)      JS2VAL_SETTAG((js2val)(dp), JS2VAL_FLOAT)
 
 /* Convert between boolean and js2val. */
 #define JS2VAL_TO_BOOLEAN(v)     (((v) >> JS2VAL_TAGBITS) != 0)
