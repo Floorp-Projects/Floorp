@@ -24,6 +24,7 @@
 
 struct nsPresentationData;
 struct nsEmbellishData;
+struct nsHTMLReflowMetrics;
 
 // IID for the nsIMathMLFrame interface (the IID was taken from IIDS.h) 
 /* a6cf9113-15b3-11d2-932e-00805f8add32 */
