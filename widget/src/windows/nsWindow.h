@@ -115,6 +115,8 @@ public:
     virtual void            BeginResizingChildren(void);
     virtual void            EndResizingChildren(void);
 
+    virtual void            SetUpForPaint(HDC aHDC);
+
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);
 
@@ -136,7 +138,7 @@ protected:
     virtual DWORD           WindowStyle();
     virtual DWORD           WindowExStyle();
 
-            void            SubclassWindow(BOOL bState);
+    virtual void            SubclassWindow(BOOL bState);
 
     virtual void            OnDestroy();
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
