@@ -74,6 +74,8 @@ mailnews/extensions/smoketest/resources/content/Makefile
 mailnews/extensions/mdn/Makefile
 mailnews/extensions/mdn/src/Makefile
 mailnews/extensions/bayesian-spam-filter/Makefile
+mailnews/extensions/bayesian-spam-filter/src/Makefile
+mailnews/extensions/bayesian-spam-filter/build/Makefile
 mailnews/mapi/Makefile
 mailnews/mapi/resources/content/Makefile
 mailnews/mapi/resources/locale/en-US/Makefile
