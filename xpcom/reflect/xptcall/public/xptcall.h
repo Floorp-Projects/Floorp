@@ -90,7 +90,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     // inherits 'val' here
     void*     ptr;
     nsXPTType type;
-    uint8     flags;
+    PRUint8   flags;
 
     enum
     {
