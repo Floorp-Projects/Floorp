@@ -197,6 +197,7 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
       nsIWidget* window;
       target->GetWindow(window);
       window->SetCursor(c);
+      NS_RELEASE(window);
     }
     break;
   }
