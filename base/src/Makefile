@@ -21,38 +21,40 @@ DEFINES =-D_IMPL_NS_BASE
 
 LIBRARY_NAME = raptorbase
 
-CPPSRCS =				\
-	nsArena.cpp			\
-	nsAtomTable.cpp			\
-  nsBTree.cpp \
-	nsByteBuffer.cpp		\
-	nsCRT.cpp			\
-	nsDeque.cpp		\
-  nsRBTree.cpp \
-	nsString.cpp			\
-	nsUnicharBuffer.cpp		\
-	nsUnicharInputStream.cpp	\
-	nsVoidArray.cpp			\
-	$(NULL)
+CPPSRCS =                       \
+    nsArena.cpp                 \
+    nsAtomTable.cpp             \
+    nsBTree.cpp                 \
+    nsByteBuffer.cpp            \
+    nsCRT.cpp                   \
+    nsDeque.cpp                 \
+    nsRBTree.cpp                \
+    nsString.cpp                \
+    nsUnicharBuffer.cpp         \
+    nsUnicharInputStream.cpp    \
+    nsVoidArray.cpp             \
+    $(NULL)
 
-EXPORTS =				\
-	nscore.h			\
-  nsBTree.h \
-	nsCRT.h				\
-  nsDeque.h \
-	nsIArena.h			\
-	nsIAtom.h			\
-	nsIByteBuffer.h			\
-	nsIInputStream.h		\
-	nsITimer.h			\
-	nsITimerCallback.h		\
-	nsIUnicharBuffer.h		\
-	nsIUnicharInputStream.h		\
-  nsRBTree.h \
-	nsString.h			\
-	nsVoidArray.h			\
-	nsUnitConversion.h		\
-	$(NULL)
+EXPORTS =                       \
+    nscore.h                    \
+    nsBTree.h                   \
+    nsCRT.h                     \
+    nsDeque.h                   \
+    nsIArena.h                  \
+    nsIAtom.h                   \
+    nsIByteBuffer.h             \
+    nsIBaseStream.h             \
+    nsIInputStream.h            \
+    nsIOutputStream.h           \
+    nsITimer.h                  \
+    nsITimerCallback.h          \
+    nsIUnicharBuffer.h          \
+    nsIUnicharInputStream.h     \
+    nsRBTree.h                  \
+    nsString.h                  \
+    nsVoidArray.h               \
+    nsUnitConversion.h          \
+    $(NULL)
 
 MODULE = raptor
 
