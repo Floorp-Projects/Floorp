@@ -23,11 +23,9 @@ DEPTH=..\..\..
 
 
 LIBRARY_NAME=xpcomproxy_s
+MODULE=xpcom
 REQUIRES	= string
 
-LINCS =                        \
-    -I$(PUBLIC)\xpcom	       \
-    $(NULL)
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API
 

@@ -23,7 +23,7 @@ DEPTH=..\..
 MODULE=rdf
 LIBRARY_NAME=rdf
 MODULE_NAME=nsRDFModule
-REQUIRES	= xpcom string layout htmlparser necko raptor
+REQUIRES	= xpcom string layout htmlparser necko content
 include <$(DEPTH)/config/config.mak>
 
 EXPORTS=\

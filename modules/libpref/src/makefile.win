@@ -42,16 +42,6 @@ LIBRARY_NAME	= xppref$(MOZ_BITS)
 MODULE_NAME	= nsPrefModule
 REQUIRES	= xpcom string js xpconnect caps intl timer necko embedcomponents profile
 
-LINCS = -I$(PUBLIC)/js \
-	-I$(PUBLIC)/pref \
-	-I$(PUBLIC)/java \
-	-I$(PUBLIC)/ldap \
-	-I$(PUBLIC)/dbm \
-	-I$(PUBLIC)/security \
-	-I$(PUBLIC)/xpcom \
-	-I$(PUBLIC)/raptor	\
-	-I$(PUBLIC)/profile	\
-        -I$(DEPTH)\include \
 
 LCFLAGS = -DMOZILLA_CLIENT
 

@@ -24,7 +24,7 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=layoutxulbase_s 
 MODULE=layout_xul
 DIRS=outliner
-REQUIRES	= xpcom string dom locale widget view timer docshell necko editor htmlparser webshell pref intl gfx2 imglib2 unicharutil gfx layout content raptor
+REQUIRES	= xpcom string dom locale widget view timer docshell necko editor htmlparser webshell pref intl gfx2 imglib2 unicharutil gfx content layout
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

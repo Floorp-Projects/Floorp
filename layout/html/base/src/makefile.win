@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\..
 MODULE=layout
-REQUIRES	= xpcom string dom widget locale view necko js caps pref htmlparser webshell plugin gkplugin timer docshell mimetype webBrowser_core oji util unicharutil lwbrk gfx2 gfx imglib2 accessibility xpconnect java exthandler content raptor
+REQUIRES	= xpcom string dom widget locale view necko js caps pref htmlparser webshell plugin gkplugin timer docshell mimetype webBrowser_core oji util unicharutil lwbrk gfx2 gfx imglib2 accessibility xpconnect java exthandler content
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=layouthtmlbase_s 

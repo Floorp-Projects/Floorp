@@ -43,13 +43,6 @@ LLIBS=$(LLIBS)				\
 		$(DIST)\lib\nunet.lib  \
 		$(DIST)\lib\netlib.lib
 
-LINCS=$(LINCS)  -I. \
-		-I$(PUBLIC)\raptor   \
-		-I$(PUBLIC)\netlib   \
-		-I$(PUBLIC)\nunet   \
-		-I$(PUBLIC)\pref     \
-		-I$(PUBLIC)\xpcom
-
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen
 

@@ -24,7 +24,7 @@ DEPTH=..\..\..\..
 EXPORTS =				\
 	$(NULL)
 
-MODULE=raptor 
+MODULE=content
 
 include <$(DEPTH)\config\rules.mak>
 

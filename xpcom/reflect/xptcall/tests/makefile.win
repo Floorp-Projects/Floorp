@@ -21,15 +21,13 @@
 
 DEPTH=..\..\..\..
 
-
+REQUIRES=xpcom
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestXPTCInvoke.exe
 PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN
-
-LINCS=-I$(PUBLIC)\xpcom
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\

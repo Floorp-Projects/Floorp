@@ -57,8 +57,6 @@ XPIDLSRCS =               \
 LIBRARY_NAME=xpcomcomp_s
 
 LINCS =                    \
-	-I$(PUBLIC)\xpcom  \
-	-I$(PUBLIC)\libreg \
         -I..\base          \
         -I..\threads       \
         -I..\io       \

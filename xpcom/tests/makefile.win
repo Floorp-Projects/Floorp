@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..
-REQUIRES=string necko
+REQUIRES=xpcom string necko
 include <$(DEPTH)/config/config.mak>
 
 
@@ -78,7 +78,7 @@ LCFLAGS=-DUSE_NSREG -GX
 
 LINCS=                     \
         -Iservices         \
-        -I$(PUBLIC)\xpcom
+		$(NULL)
 
 LLIBS=                         \
         $(DIST)\lib\xpcom.lib  \

@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 
-MODULE=xultmpl
+MODULE=content_xul
 
 DEPTH=..\..\..\..
 

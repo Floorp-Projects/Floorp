@@ -26,7 +26,7 @@ PROG0 = .\$(OBJDIR)\BitTest.exe
 RESFILE = image.res
 PROGRAMS = $(PROG0)
 
-LINCS=-I$(XPDIST)\public\raptor -I$(XPDIST)\public\xpcom -I..\src
+LINCS=-I..\src
 
 LLIBS=				\
  $(DIST)\lib\gkgfx.lib		\

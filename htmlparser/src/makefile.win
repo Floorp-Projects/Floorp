@@ -81,10 +81,6 @@ CPP_OBJS =                          \
 !endif
 	$(NULL)
 
-LINCS=  -I$(PUBLIC)\xpcom  \
-        -I$(PUBLIC)\raptor \
-        -I$(PUBLIC)\uconv  \
-        -I$(PUBLIC)\expat
 
 LCFLAGS = \
         $(LCFLAGS) \

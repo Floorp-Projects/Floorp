@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 MODULE=transformiix
-REQUIRES	= xpcom string dom layout widget xsl_doc necko content
+REQUIRES	= xpcom string dom layout widget content_xsl necko content
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=transformiix

@@ -82,11 +82,6 @@ XPIDLSRCS =               \
 
 LIBRARY_NAME=xpcombase_s
 
-LINCS =                   \
-	-I$(PUBLIC)\xpcom \
-	-I$(PUBLIC)\xpcom\components \
-	$(NULL)
-
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 

@@ -21,7 +21,7 @@
 
 DEPTH=..\..
 MODULE = xpcom 
-REQUIRES	= uconv string necko
+REQUIRES	= uconv string necko chrome
 
 ################################################################################
 ## exports
@@ -76,14 +76,6 @@ XPIDLSRCS =                             \
 ## library
 
 LIBRARY_NAME=xpcomio_s
-
-LINCS =                         \
-        -I$(PUBLIC)\xpcom       \
-        -I$(PUBLIC)\uconv       \
-        -I$(PUBLIC)\unicharutil \
-        $(NULL)
-
-LINCS = $(LINCS) -I$(PUBLIC)\raptor     # until we sort out the filespec/widgets dependency
 
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 

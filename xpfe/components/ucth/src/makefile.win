@@ -40,14 +40,6 @@ MODULE=		mozucth
 LIBRARY_NAME	= mozucth
 MODULE_NAME	= nsUnknownContentTypeHandler
 
-LINCS = \
-	-I$(PUBLIC)/xpcom \
-	-I$(PUBLIC)/xpfe/components \
-	-I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/rdf \
-	-I$(PUBLIC)/dom \
-	$(NULL)
-
 LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \

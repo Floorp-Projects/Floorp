@@ -53,8 +53,6 @@ LIBRARY_NAME=lwbrk
 MODULE_NAME=nsLWBrkModule
 REQUIRES=xpcom string
 
-INCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\lwbrk -I$(PUBLIC)\raptor
-
 LLIBS= \
 	$(DIST)\lib\xpcom.lib	\
 	$(LIBNSPR)	

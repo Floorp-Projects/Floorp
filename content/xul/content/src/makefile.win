@@ -22,8 +22,8 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=contentxulcontent_s 
-MODULE=content
-REQUIRES	= xpcom string widget htmlparser necko dom js caps rdf xpconnect locale timer lwbrk pref xul xuldoc xultmpl webshell layout layout_xul raptor gfx
+MODULE=content_xul
+REQUIRES	= xpcom string widget htmlparser necko dom js caps rdf xpconnect locale timer lwbrk pref webshell layout layout_xul gfx content
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

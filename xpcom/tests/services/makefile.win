@@ -20,15 +20,15 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE = xpcom
 include <$(DEPTH)/config/config.mak>
-
 
 
 MAKE_OBJ_TYPE = DLL
 
 DLL = $(OBJDIR)\MyService.dll
 
-LINCS = -I.. -I$(PUBLIC)\xpcom
+LINCS = -I..
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib		\
@@ -42,7 +42,6 @@ CPP_OBJS = \
 	.\$(OBJDIR)\MyService.obj	\
 	$(NULL)
 
-MODULE = xpcom
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 
-REQUIRES=xpcom string raptor htmlparser
+REQUIRES=xpcom string webshell htmlparser
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\htmlrobot.exe
 
@@ -42,7 +42,7 @@ CPPSRCS=			\
 CPP_OBJS=			\
  .\$(OBJDIR)\RobotMain.obj
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\netlib -I.. 
+LINCS=-I.. 
 
 include <$(DEPTH)\config\rules.mak>
 

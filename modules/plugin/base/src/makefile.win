@@ -44,24 +44,6 @@ OBJS =                                       \
     .\$(OBJDIR)\nsPluginsDirWin.obj          \
     $(NULL)
 
-LINCS = \
-        -I$(PUBLIC)\raptor \
-        -I$(PUBLIC)\dom \
-        -I$(PUBLIC)\xpcom \
-        -I$(PUBLIC)\plugin \
-        -I$(PUBLIC)\java \
-!ifdef NECKO
-        -I$(PUBLIC)\necko \
-!else
-        -I$(PUBLIC)\netlib \
-!endif
-        -I$(PUBLIC)\oji \
-	-I$(PUBLIC)\cache \
-	-I$(PUBLIC)\pref	\
-	-I$(PUBLIC)\js   	\
-        $(NULL)
-
-
 LCFLAGS = \
         $(LCFLAGS) \
         -D_IMPL_NS_PLUGIN \

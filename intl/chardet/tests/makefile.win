@@ -20,17 +20,14 @@
 # Contributor(s): 
 DEPTH = ..\..\..
 
-
+REQUIRES=xpcom chardet
 
 
 MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\DetectCharset.exe
 PROGRAMS = $(PROG1)
-REQUIRES=chardet
 LCFLAGS=-DUSE_NSREG
 
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\unicharutil -I$(PUBLIC)\raptor
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib \

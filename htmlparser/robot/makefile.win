@@ -51,7 +51,7 @@ CPP_OBJS=			\
 
 MODULE = DebugRobot
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\netlib -I..\src
+LINCS=-I..\src
 
 include <$(DEPTH)\config\rules.mak>
 

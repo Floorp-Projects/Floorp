@@ -40,12 +40,6 @@ LLIBS=\
         $(LIBPLC) \
         $(NULL)
 
-LINCS=\
-        -I$(PUBLIC)\sample \
-        -I$(PUBLIC)\raptor \
-        -I$(PUBLIC)\xpcom \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)

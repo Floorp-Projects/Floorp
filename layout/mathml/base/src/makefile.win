@@ -23,7 +23,7 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=layoutmathmlbase_s 
-MODULE=raptor 
+MODULE=layout 
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
 
@@ -84,13 +84,12 @@ CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
 EXPORTS =					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
+LINCS= \
   -I..\..\..\html\style\src \
   -I..\..\..\html\base\src \
   -I..\..\..\html\table\src \
-  -I$(PUBLIC)\dom \
   -I..\..\content\src \
-  -I$(PUBLIC)\netlib -I$(PUBLIC)\pref
+	$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -20,18 +20,10 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-
+REQUIRES=xpcom string intl necko locale
 MAKE_OBJ_TYPE	= EXE
 PROG0 = .\$(OBJDIR)\StringBundleTest.exe
 PROGRAMS = $(PROG0)
-
-LINCS=\
-    -I$(PUBLIC)\intl \
-    -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\raptor \
-    -I$(PUBLIC)\xpcom \
-    -I$(PUBLIC)\locale \
-    $(NULL)
 
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\

@@ -22,7 +22,7 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=layoutsvgbase_s 
-MODULE=raptor 
+MODULE=layout 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -43,14 +43,14 @@ CPP_OBJS=					\
 EXPORTS =					\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
+LINCS= \
+  -I..\..\..\html\style\src -I..\..\..\html\base\src \
    -I..\..\..\html\document\src \
    -I..\..\..\html\content\src \
    -I..\..\..\html\table\src \
    -I..\..\content\src \
    -I..\..\..\html\forms\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
+   -I..\..\..\base\src \
   -I..\..\..\xml\content\src \
   -I..\..\..\base\public
 

@@ -40,10 +40,6 @@ CPP_OBJS =	\
 	.\$(OBJDIR)\xptiZipLoader.obj	\
 	$(NULL)
 
-LINCS = 	\
-	-I$(PUBLIC)\xpcom \
-	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)

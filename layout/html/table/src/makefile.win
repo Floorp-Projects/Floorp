@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layouthtmltable_s 
 MODULE=layout
-REQUIRES	= xpcom string dom widget locale webshell view accessibility gfx content raptor
+REQUIRES	= xpcom string dom widget locale webshell view accessibility gfx content
 
 
 DEFINES		=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN -DoffDEBUG_TABLE_REFLOW \
@@ -54,10 +54,8 @@ CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
 	.\$(OBJDIR)\FixedTableLayoutStrategy.obj \
 	.\$(OBJDIR)\nsTableBorderCollapser.obj
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
-  -I..\..\base\src -I..\..\style\src -I..\..\content\src \
-  -I..\..\..\base\src \
-  -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
+LINCS=-I..\..\base\src -I..\..\style\src -I..\..\content\src \
+  -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -72,7 +72,6 @@ DEFFILE=nsgif.def
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor
 CPPSRCS= nsGIFModule.cpp nsGIFDecoder.cpp gif.cpp 
 CPP_OBJS=   .\$(OBJDIR)\nsGIFModule.obj .\$(OBJDIR)\nsGIFDecoder.obj \
            .\$(OBJDIR)\gif.obj

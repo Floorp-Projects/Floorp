@@ -51,10 +51,6 @@ EXPORTS= nsIRenderingContextWin.h \
 
 LINCS= \
         -I..\
-        -I$(PUBLIC)\raptor \
-        -I$(PUBLIC)\xpcom \
-        -I$(PUBLIC)\dom \
-        -I$(PUBLIC)\js \
 !if defined(NGLAYOUT_DDRAW)
 !if "$(MOZ_VCVER)" == "50"
         -I$(NGLAYOUT_DDRAW)\include \

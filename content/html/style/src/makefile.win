@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=contenthtmlstyle_s 
 MODULE=content
-REQUIRES	= xpcom string dom widget caps locale js necko webshell xul htmlparser docshell uconv xuldoc xpconnect pref layout raptor gfx
+REQUIRES	= xpcom string dom widget caps locale js necko webshell htmlparser docshell uconv xpconnect pref layout gfx content_xul
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

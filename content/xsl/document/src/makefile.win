@@ -22,8 +22,8 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=contentxsldoc_s 
-MODULE=xsl_doc
-REQUIRES = xpcom string htmlparser view widget dom necko layout raptor gfx content
+MODULE=content_xsl
+REQUIRES = xpcom string htmlparser view widget dom necko layout gfx content
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -44,12 +44,10 @@ EXPORTS = 					\
 	nsITransformMediator.h			\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
+LINCS=  -I..\..\..\html\style\src -I..\..\..\html\base\src \
   -I..\..\..\html\content\src -I..\..\..\html\document\src \
   -I..\..\..\xul\content\src -I..\..\..\xml\document\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
-  -I$(PUBLIC)\expat
+  -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

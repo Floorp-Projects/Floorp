@@ -34,7 +34,7 @@ EXPORTS=nsContentCID.h
 MODULE=content
 LIBRARY_NAME=gkcontent
 MODULE_NAME=nsContentModule
-REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk js pref xul xuldoc xultmpl timer raptor layout gfx layout_xul
+REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk js pref timer layout gfx layout_xul content_xul
 
 LCFLAGS = \
         $(LCFLAGS) \

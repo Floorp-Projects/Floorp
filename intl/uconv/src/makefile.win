@@ -20,12 +20,12 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE=uconv
 REQUIRES	= xpcom string intl locale chardet necko rdf pref
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 
-MODULE=uconv
 LIBRARY_NAME=uconv
 MODULE_NAME=nsUConvModule
 
@@ -49,7 +49,7 @@ CPPSRCS =				\
 	nsUnicodeToMacRoman.cpp     \
 	nsUnicodeToUTF8.cpp     \
 	nsUCvMinSupport.cpp		\
- 	nsScriptableUConv.cpp	\
+	nsScriptableUConv.cpp	\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -72,7 +72,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToMacRoman.obj			\
 	.\$(OBJDIR)\nsUnicodeToUTF8.obj			\
 	.\$(OBJDIR)\nsUCvMinSupport.obj			\
- 	.\$(OBJDIR)\nsScriptableUConv.obj	\
+	.\$(OBJDIR)\nsScriptableUConv.obj	\
 	$(NULL)
 
 CSRCS =		\
@@ -90,19 +90,7 @@ OBJS = 				\
 EXPORTS=				\
 	$(NULL)
 
-#LINCS=					\
-#	-I$(PUBLIC)\raptor		\
-#	-I$(PUBLIC)\xpcom 		\
-#	-I$(PUBLIC)\uconv		\
-#	-I..\ucvja	  		\
-#	-I..\ucvlatin			\
-#	$(NULL)
 
-LINCS=					\
-	-I$(PUBLIC)\raptor		\
-	-I$(PUBLIC)\xpcom 		\
-	-I$(PUBLIC)\uconv		\
-	$(NULL)
 
 LLIBS=					\
  $(DIST)\lib\xpcom.lib		\

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 MODULE=widget 
-REQUIRES=xpcom string dom content accessibility layout gfx xuldoc raptor necko pref plugin timer uconv intl
+REQUIRES=xpcom string dom content accessibility layout gfx necko pref plugin timer uconv intl content_xul
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME = raptorwidget_s

@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..\..\.. 
 
 LIBRARY_NAME=raptorxuloutliner_s 
-MODULE=raptor 
-REQUIRES	= xpcom string dom widget timer locale view xultmpl rdf necko gfx2 imglib2 gfx layout layout_xul content
+MODULE=layout_xul
+REQUIRES	= xpcom string dom widget timer locale view rdf necko gfx2 imglib2 gfx content content_xul
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

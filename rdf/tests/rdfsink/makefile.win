@@ -33,14 +33,6 @@ PROGRAM=        .\$(OBJDIR)\$(EXENAME).exe
 
 OBJS=           .\$(OBJDIR)\rdfsink.obj
 
-LINCS=          -I$(PUBLIC)\rdf         \
-                -I$(PUBLIC)\dom         \
-                -I$(LIBNSPR)            \
-                -I$(PUBLIC)\xpcom       \
-                -I$(PUBLIC)\netlib      \
-                -I$(PUBLIC)\raptor      \
-                $(NULL)
-
 LLIBS=				\
  $(DIST)\lib\rdf.lib            \
  $(DIST)\lib\xpcom.lib	\

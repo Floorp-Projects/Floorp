@@ -83,12 +83,6 @@ XPIDLSRCS =                            \
 
 LIBRARY_NAME=xpcomds_s
 
-LINCS =                         \
-	-I$(PUBLIC)\xpcom       \
-	-I$(PUBLIC)\uconv       \
-	-I$(PUBLIC)\unicharutil \
-	$(NULL)
-
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                        \

@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 DEPTH = ..\..\..
-REQUIRES = uconv string
+REQUIRES = xpcom uconv string locale
 MAKE_OBJ_TYPE = EXE
 
 PROG1 = .\$(OBJDIR)\convperf.exe
@@ -32,8 +32,6 @@ PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)  $(PROG5)
 
 LCFLAGS = -DUSE_NSREG
 
-
-LINCS = -I$(PUBLIC)\xpcom
 
 LLIBS =				\
 	$(DIST)\lib\xpcom.lib	\

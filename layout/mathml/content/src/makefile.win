@@ -24,7 +24,7 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=layoutmathmlcontent_s 
-MODULE=raptor 
+MODULE=layout 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -38,9 +38,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsMathMLOperators.obj	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I$(PUBLIC)\dom \
-  -I$(PUBLIC)\netlib -I$(PUBLIC)\pref
 
 LCFLAGS = \
         $(LCFLAGS) \

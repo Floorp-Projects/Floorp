@@ -20,7 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-REQUIRES		= xpcom string webshell widget layout dom webBrowser_core docshell util uriloader locale necko htmlparser view timer pref intl editor cookie xpconnect gfx content
+MODULE=viewer
+REQUIRES		= xpcom string webshell widget layout dom webBrowser_core docshell util uriloader locale necko htmlparser view timer pref intl editor cookie xpconnect gfx content wallet js
 
 include <$(DEPTH)/config/config.mak>
 
@@ -57,36 +58,6 @@ OBJS =                                      \
 	.\$(OBJDIR)\JSConsole.obj           \
 	.\$(OBJDIR)\nsWidgetSupport.obj           \
 	$(NULL)
-
-LINCS=  \
-  -I$(PUBLIC)\raptor \
-  -I$(PUBLIC)\xpcom \
-  -I$(PUBLIC)\dom \
-  -I$(PUBLIC)\js \
-!ifdef NECKO
-  -I$(PUBLIC)\necko \
-!else
-  -I$(PUBLIC)\netlib \
-!endif
-  -I$(PUBLIC)\java \
-  -I$(PUBLIC)\plugin \
-  -I$(PUBLIC)\pref \
-  -I$(PUBLIC)\editor \
-  -I$(PUBLIC)\uconv \
-  -I$(PUBLIC)\strres \
-  -I$(PUBLIC)\locale \
-  -I$(PUBLIC)\lwbrk \
-  -I$(PUBLIC)\unicharutil \
-  -I$(PUBLIC)\intl \
-  -I$(PUBLIC)\rdf \
-  -I$(PUBLIC)\wallet \
-  -I$(PUBLIC)\profile \
-!if defined(NGPREFS)
-  -I$(PUBLIC)\ngprefs \
-!endif
-  -I$(PUBLIC)\oji \
-  -I$(PUBLIC)\caps \
-  $(NULL)
 
 LLIBS=                         \
  $(DIST)\lib\gkgfx.lib   \

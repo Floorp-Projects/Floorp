@@ -24,7 +24,7 @@ DEPTH=..\..\..\..
 EXPORTS=nsIFormControl.h nsIForm.h nsILink.h  \
 	nsISelectElement.h nsIScriptElement.h nsIBodySuper.h
 
-MODULE=raptor 
+MODULE=content 
 
 include <$(DEPTH)\config\rules.mak>
 

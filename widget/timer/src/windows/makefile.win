@@ -43,7 +43,6 @@ CPP_OBJS=						\
 
 LINCS= \
 		-I..\
-        -I$(PUBLIC)\xpcom \
         $(NULL)
 
 LCFLAGS = \

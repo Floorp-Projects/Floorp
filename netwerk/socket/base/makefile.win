@@ -26,10 +26,6 @@ DEPTH=..\..\..
 
 include <$(DEPTH)/config/config.mak>
 
-LINCS = \
-	-I$(PUBLIC) \
-	$(NULL)
-
 LLIBS	= \
 	$(LIBNSPR) \
 	$(MOZ_DIST)\lib\xpcom.lib \

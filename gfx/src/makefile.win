@@ -47,14 +47,6 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
 	.\$(OBJDIR)\nsScriptableRegion.obj\
   .\$(OBJDIR)\nsPrintOptionsImpl.obj
 
-LINCS=-I$(PUBLIC)\util \
-    -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-!ifdef NECKO
-    -I$(PUBLIC)\necko \
-!else
-    -I$(PUBLIC)\netlib \
-!endif
-	$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \

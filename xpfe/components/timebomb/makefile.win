@@ -39,10 +39,6 @@ XPIDLSRCS = \
             $(NULL)
 
 
-LINCS =     \
-	        -I$(PUBLIC)/xpcom \
-	        $(NULL)
-
 OBJS =							\
 	.\$(OBJDIR)\nsTimeBomb.obj	\
 	$(NULL)

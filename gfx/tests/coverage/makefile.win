@@ -30,8 +30,6 @@ OBJS =  \
 	.\$(OBJDIR)\nsCoverage.obj   \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\xpcom -I\ns\raptor\ui\src\windows
 
 LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \

@@ -34,10 +34,6 @@ LCFLAGS=-DSTANDALONE
 
 LINCS=                        \
     -I..                      \
-    -I$(XPDIST)\public\nspr   \
-    -I$(XPDIST)\public\raptor \
-    -I$(XPDIST)\public\xpcom  \
-    -I$(XPDIST)\public\zlib   \
     $(NULL)
 
 LLIBS=                        \

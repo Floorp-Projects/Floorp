@@ -31,9 +31,6 @@ PROGRAMS = $(PROG1) \
 
 LCFLAGS=
 
-LINCS=                     \
-        -I$(PUBLIC)\xpcom
-
 LLIBS=                         \
         $(DIST)\lib\xpcom.lib  \
         $(LIBNSPR)

@@ -20,12 +20,12 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-
+REQUIRES=xpcom layout gfx
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestSpaceManager.exe
 PROGRAMS = $(PROG1)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\src
+LINCS=-I..\src
 LLIBS=				\
  $(DIST)\lib\layoutbase_s.lib	\
  $(DIST)\lib\gkgfx.lib	\
