@@ -1092,7 +1092,7 @@ if ($action eq 'update') {
                          milestones READ");
 
     if ($disallownew ne $disallownewold) {
-        $disallownew ||= 0;
+        $disallownew = $disallownew ? 1 : 0;
         SendSQL("UPDATE products
                  SET disallownew=$disallownew
                  WHERE id=$product_id");
