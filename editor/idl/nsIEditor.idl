@@ -451,9 +451,8 @@ interface nsIEditor  : nsISupports
    * Output methods:
    * aFormatType is a mime type, like text/plain.
    */
-  void outputToString(out AString outputString,
-                      in AString formatType,
-                      in unsigned long flags);
+  AString outputToString(in AString formatType,
+                         in unsigned long flags);
   void outputToStream(in nsIOutputStream aStream,
                       in AString formatType,
                       in AString charsetOverride,

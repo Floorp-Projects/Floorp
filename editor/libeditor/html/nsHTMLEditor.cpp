@@ -1967,7 +1967,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
       printf(" Offset: %d\n\nHTML:\n", offsetInParent+1);
       nsAutoString Format("text/html");
       nsAutoString ContentsAs;
-      OutputToString(ContentsAs, Format, 2);
+      OutputToString(Format, 2, ContentsAs);
       wprintf(ContentsAs.get());
       }
 #endif
@@ -3654,8 +3654,9 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsAString& aOutputString)
   res = SetSelectionAroundHeadChildren(selection, mDocWeak);
   if (NS_FAILED(res)) return res;
 
-  res = OutputToString(aOutputString, NS_LITERAL_STRING("text/html"),
-                       nsIDocumentEncoder::OutputSelectionOnly);
+  res = OutputToString(NS_LITERAL_STRING("text/html"),
+                       nsIDocumentEncoder::OutputSelectionOnly,
+                       aOutputString);
   if (NS_SUCCEEDED(res))
   {
     // Selection always includes <body></body>,

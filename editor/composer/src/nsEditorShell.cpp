@@ -2493,7 +2493,7 @@ nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor)
-    err = editor->OutputToString(contentsAs, aFormat, flags);
+    err = editor->OutputToString(aFormat, flags, contentsAs);
 
   *aContentsAs = ToNewUnicode(contentsAs);
   

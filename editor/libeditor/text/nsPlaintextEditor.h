@@ -142,9 +142,9 @@ public:
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
-  NS_IMETHOD OutputToString(nsAString& aOutputString,
-                            const nsAString& aFormatType,
-                            PRUint32 aFlags);
+  NS_IMETHOD OutputToString(const nsAString& aFormatType,
+                            PRUint32 aFlags,
+                            nsAString& aOutputString);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
                             const nsAString& aFormatType,
