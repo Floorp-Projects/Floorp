@@ -36,8 +36,8 @@ MKSHLIB :=
 
 include $(topsrcdir)/config/config.mk
 
-# Memory mapped files are not supported under QNX, Neutrino and BeOS
-ifeq (,$(filter BeOS QNX,$(OS_ARCH)))
+# Memory mapped files are not supported under QNX, Neutrino, HP-UX and BeOS
+ifeq (,$(filter BeOS HP-UX QNX,$(OS_ARCH)))
 DEFINES += -DUSE_MMAP_REGISTRY_IO
 CSRCS += mmapio.c
 endif
