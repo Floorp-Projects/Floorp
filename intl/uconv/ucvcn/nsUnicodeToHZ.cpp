@@ -280,16 +280,6 @@ NS_IMETHODIMP nsUnicodeToHZ::FillInfo(PRUint32 *aInfo)
     return NS_OK;
 }
 
-nsresult nsUnicodeToHZ::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToHZ();
-  if(p) {
-    *aResult = p;
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

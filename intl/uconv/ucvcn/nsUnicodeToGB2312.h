@@ -43,11 +43,6 @@ public:
    */
   nsUnicodeToGB2312();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------

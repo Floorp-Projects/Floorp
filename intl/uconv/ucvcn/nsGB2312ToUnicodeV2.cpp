@@ -45,12 +45,6 @@
 //----------------------------------------------------------------------
 // Class nsGB2312ToUnicodeV2 [implementation]
 
-nsresult nsGB2312ToUnicodeV2::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsGB2312ToUnicodeV2();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 

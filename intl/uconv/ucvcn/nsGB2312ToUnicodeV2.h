@@ -42,12 +42,6 @@ public:
    * Class constructor.
    */
   nsGB2312ToUnicodeV2(){};
-  virtual ~nsGB2312ToUnicodeV2(){};
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
 

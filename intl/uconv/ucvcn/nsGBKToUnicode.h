@@ -19,8 +19,8 @@
  *
  * Contributor(s): 
  */
-#ifndef nsGBKToUnicode_h___
-#define nsGBKToUnicode_h___
+#ifndef nsGBK2312ToUnicode_h___
+#define nsGBK2312ToUnicode_h___
 
 #include "nsUCvCnSupport.h"
 
@@ -42,12 +42,6 @@ public:
    * Class constructor.
    */
   nsGBKToUnicode(){};
-  virtual ~nsGBKToUnicode(){};
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 
 protected:
 
@@ -73,5 +67,5 @@ private:
 
 };
 
-#endif /* nsGBKToUnicode_h___ */
+#endif /* nsGBK2312ToUnicode_h___ */
 

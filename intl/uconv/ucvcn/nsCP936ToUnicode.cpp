@@ -19,3 +19,11 @@
  *
  * Contributor(s): 
  */
+/**
+ * A character set converter from CP936 to Unicode.
+ * 
+ *
+ * @created         07/Sept/1999
+ * @author  Yueheng Xu, Yueheng.Xu@intel.com
+ */
+

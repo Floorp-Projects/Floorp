@@ -55,12 +55,6 @@
 //----------------------------------------------------------------------
 // Class nsHZToUnicode [implementation]
 
-nsresult nsHZToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsHZToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 

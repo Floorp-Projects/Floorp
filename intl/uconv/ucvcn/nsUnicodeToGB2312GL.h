@@ -43,9 +43,6 @@ class nsUnicodeToGB2312GL : public nsEncoderSupport
 public:
 
   nsUnicodeToGB2312GL();
-  virtual ~nsUnicodeToGB2312GL(){};
-
-  static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
 

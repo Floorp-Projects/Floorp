@@ -34,12 +34,6 @@
 //----------------------------------------------------------------------
 // Class nsGBKToUnicode [implementation]
 
-nsresult nsGBKToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsGBKToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 

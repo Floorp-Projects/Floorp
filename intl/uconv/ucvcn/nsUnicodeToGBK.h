@@ -44,13 +44,6 @@ public:
    * Class constructor.
    */
   nsUnicodeToGBK();
-  virtual ~nsUnicodeToGBK(){};
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 
 protected:
 
