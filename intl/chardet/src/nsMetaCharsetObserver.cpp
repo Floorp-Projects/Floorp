@@ -179,12 +179,16 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       PRInt32 i;
       const PRUnichar *httpEquivValue=nsnull;
       const PRUnichar *contentValue=nsnull;
+      const PRUnichar *charsetValue=nsnull;
+
       for(i=0;i<(numOfAttributes-3);i++)
       {
         if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "HTTP-EQUIV"))
               httpEquivValue=((values->StringAt(i))->get());
         else if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "content"))
               contentValue=(values->StringAt(i))->get();
+        else if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "charset"))
+              charsetValue=(values->StringAt(i))->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
       NS_NAMED_LITERAL_STRING(texthtml, "text/html");
@@ -213,18 +217,31 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
           ))
         )
       {
-         nsAutoString contentPart1(contentValue+10); // after "text/html;"
-         PRInt32 start = contentPart1.RFind("charset=", PR_TRUE ) ;
-         if(kNotFound != start) 
-         {	
-             start += 8; // 8 = "charset=".length 
-             PRInt32 end = contentPart1.FindCharInSet("\'\";", start  );
-             if(kNotFound == end ) 
-                end = contentPart1.Length();
-             nsAutoString newCharset;
-             NS_ASSERTION(end>=start, "wrong index");
-             contentPart1.Mid(newCharset, start, end - start);
+
+         nsAutoString newCharset;
+
+         if (nsnull == charsetValue) 
+         {
+			 nsAutoString contentPart1(contentValue+10); // after "text/html;"
+			 PRInt32 start = contentPart1.RFind("charset=", PR_TRUE ) ;
+			 if(kNotFound != start) 
+	         {	
+				 start += 8; // 8 = "charset=".length 
+				 PRInt32 end = contentPart1.FindCharInSet("\'\";", start  );
+				 if(kNotFound == end ) 
+					 end = contentPart1.Length();
+				 NS_ASSERTION(end>=start, "wrong index");
+				 contentPart1.Mid(newCharset, start, end - start);
+              } 
+         }
+         else   
+         {
+             newCharset = charsetValue;
+         } 
+       
              
+         if (!newCharset.IsEmpty())
+         {    
              nsAutoString charsetString(charset);
              if(! newCharset.EqualsIgnoreCase(charsetString)) 
              {
@@ -248,7 +265,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      } // if(NS_SUCCEEDED(res)
                  }
              } // if EqualIgnoreCase 
-         } // if (kNotFound != start)	
+         } // if !newCharset.IsEmpty()
       } // if
     }
     else
