@@ -446,6 +446,7 @@ form {
 
 /* button */
 input[type=button]:-moz-buttonlabel {
+  box-sizing: border-box;
   content:"   ";
   font-family: sans-serif;
   font-size: small;
@@ -534,11 +535,13 @@ input[type=image]:focus {
 
 /*------- End Focus ------*/
 
-input[type=image]:focus {
+input[type=image] {
+  box-sizing: border-box;
   border: 2px solid blue;
 }
 
 input[type=file] {
+  box-sizing: border-box;
   white-space: nowrap;
   border:none;
 }
@@ -555,6 +558,7 @@ input[type=file] input[type=button]:-moz-buttonlabel {
 
 
 input[type=radio] {
+  box-sizing: border-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   margin-left:   3px;   
   margin-right:  5px;  
@@ -597,6 +601,7 @@ input[type=radio]:hover {
 
 
 input[type=checkbox] {
+  box-sizing: border-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   margin-left:   3px;   
   margin-right:  5px;  
@@ -633,6 +638,7 @@ input[type=checkbox][disabled]:hover {
 }
 
 input[type="submit"] { 
+  box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
@@ -685,6 +691,7 @@ input[type="submit"]:focus:-moz-focus-inner {
 }
 
 input[type="reset"] { 
+  box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
@@ -736,6 +743,7 @@ input[type="reset"]:focus:-moz-focus-inner {
 }
 
 input[type="button"] { 
+  box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
