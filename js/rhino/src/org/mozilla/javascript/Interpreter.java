@@ -665,7 +665,7 @@ public class Interpreter
                 itsStackDepth--;
                 break;
 
-            case Token.TYPEOF : {
+            case Token.TYPEOFNAME : {
                 String name = node.getString();
                 int index = -1;
                 // use typeofname if an activation frame exists

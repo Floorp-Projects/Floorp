@@ -1232,8 +1232,8 @@ public class Codegen extends Interpreter {
                 visitUnary(node, child);
                 break;
 
-              case Token.TYPEOF:
-                visitTypeof(node, child);
+              case Token.TYPEOFNAME:
+                visitTypeofname(node);
                 break;
 
               case Token.INC:
@@ -2318,7 +2318,10 @@ public class Codegen extends Interpreter {
         switch (op) {
 
           case Token.TYPEOF:
-            visitTypeof(node, child);
+            generateCodeFromNode(child, node);
+            addScriptRuntimeInvoke("typeof",
+                                   "(Ljava/lang/Object;"
+                                   +")Ljava/lang/String;");
             break;
 
           case Token.VOID:
@@ -2332,15 +2335,8 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void visitTypeof(Node node, Node child)
+    private void visitTypeofname(Node node)
     {
-        if (node.getType() == Token.UNARYOP) {
-            generateCodeFromNode(child, node);
-            addScriptRuntimeInvoke("typeof",
-                                   "(Ljava/lang/Object;"
-                                   +")Ljava/lang/String;");
-            return;
-        }
         String name = node.getString();
         if (hasVarsInRegs) {
             OptLocalVariable lVar = fnCurrent.getVar(name);

@@ -218,8 +218,9 @@ public class Token
         NEWLOCAL    = 119,
         USELOCAL    = 120,
         SCRIPT      = 121,   // top-level node for entire script
+        TYPEOFNAME  = 122,  // for typeof(simple-name)
 
-        LAST_TOKEN  = 121;
+        LAST_TOKEN  = 122;
 
     public static String name(int token)
     {

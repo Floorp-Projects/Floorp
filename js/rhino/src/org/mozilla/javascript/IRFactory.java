@@ -732,7 +732,7 @@ public class IRFactory {
         if (nodeOp == Token.TYPEOF &&
             childType == Token.NAME)
         {
-            childNode.setType(Token.TYPEOF);
+            childNode.setType(Token.TYPEOFNAME);
             return childNode;
         }
 
