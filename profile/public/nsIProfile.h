@@ -23,9 +23,7 @@
     { 0x9f, 0x5a, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9 } \
   }
 
-#if defined(XP_PC) || defined(XP_MAC)
 #define NS_USING_PROFILES 1
-#endif
 
 /*
  * Return values
