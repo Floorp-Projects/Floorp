@@ -395,9 +395,6 @@ nsWindow::Destroy(void)
 
 #ifdef ACCESSIBILITY
     if (mRootAccessible) {
-        nsCOMPtr<nsPIAccessNode> accNode(do_QueryInterface(mRootAccessible));
-        if (accNode)
-            accNode->Shutdown();
         mRootAccessible = nsnull;
     }
 #endif
