@@ -387,7 +387,7 @@ PRVCY_SiteInfo(MWContext *context) {
 	XP_DIALOG_OK_BUTTON,
 	prvcy_SiteInfoDialogDone,
 	400,
-	200
+	280
     };
 
     XPDialogStrings* strings;
