@@ -164,15 +164,25 @@ var gComposeRecyclingListener = {
   onClose: function() {
 	  awResetAllRows();
 	  RemoveAllAttachments();
+
 	  //We need to clear the identity popup menu in case the user will change them. It will be rebuilded later in ComposeStartup
     ClearIdentityListPopup(document.getElementById("msgIdentityPopup"));
+ 
+    //Clear the subject
+    var element = document.getElementById("msgSubject");
+    if (element)
+      element.value = "";
+
     SetContentAndBodyAsUnmodified();
+    disableEditableFields()
     ReleaseGlobalVariables();
 	},
 
 	onReopen: function(params) {
 	  dump("This is a recycled compose window!\n");
     InitializeGlobalVariables();
+    enableEditableFields();
+    window.editorShell.contentWindow.focus();
     ComposeStartup(true, params);
 	}
 };
