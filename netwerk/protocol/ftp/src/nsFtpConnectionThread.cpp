@@ -808,8 +808,10 @@ nsFtpState::Process()
 // LIST
           case FTP_S_LIST:
             rv = S_list();
-            
-            if (NS_FAILED(rv))
+
+            if (rv == NS_ERROR_NOT_RESUMABLE)
+                mInternalError = rv;
+            else if (NS_FAILED(rv))
                 mInternalError = NS_ERROR_FTP_CWD;
             
             MoveToNextState(FTP_R_LIST);
