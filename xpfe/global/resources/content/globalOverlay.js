@@ -102,11 +102,37 @@ function goToggleToolbar( id, elementID )
 	}
 }
 
+//No longer needed.  Rip this out since we are using openTopWin
 function goHelpMenu( url )
 {
   /* note that this chrome url should probably change to not have all of the navigator controls */
   /* also, do we want to limit the number of help windows that can be spawned? */
   window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+}
+
+
+function openTopWin( url )
+{
+  /* note that this chrome url should probably change to not have all of the navigator controls */
+  /* also, do we want to limit the number of help windows that can be spawned? */
+
+         dump("SetPrefToCurrentPage("+ url +") \n ");
+         if ((url == null) || (url == "")) return;
+          
+         var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+         var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+ 
+         var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
+         if ( topWindowOfType )
+         {
+                  dump("setting page: " + topWindowOfType.content.location.href + "\n");
+                         topWindowOfType.content.location.href = url;
+         }
+         else
+         {
+                 dump(" No browser window. Should be disabling this button \n");
+				 window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
+         }
 }
 
 function goAboutDialog()

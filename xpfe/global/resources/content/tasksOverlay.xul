@@ -60,7 +60,7 @@
      
      <menuseparator/>
 		<menu value="&toolsMenu.label;">
-		  <menupopup>
+		  <menupopup id="toolsPopup">
 			<menuitem value="&historyCmd.label;" oncommand="toHistory()"/>
 			<menuitem value="&messageCenterCmd.label;" oncommand="toMessengerCenter()"/>
 			<menuitem value="&importUtilCmd.label;" oncommand="toImport()"/>
