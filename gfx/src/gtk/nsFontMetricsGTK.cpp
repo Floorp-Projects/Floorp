@@ -3744,7 +3744,11 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
     char name[256]; /* X11 font names are never larger than 255 chars */
     strcpy(name, list[i]);
  
-    if ((!name) || (name[0] != '-')) {
+    /* Check if we can handle the font name ('*' and '?' are only valid in
+     * input patterns passed as argument to |XListFont()|&co. but _not_ in
+     * font names returned by these functions (see bug 136743 ("xlib complains
+     * a lot about fonts with '*' in the XLFD string"))) */
+    if ((!name) || (name[0] != '-') || (PL_strpbrk(name, "*?") != nsnull)) {
       continue;
     }
     
