@@ -138,11 +138,11 @@ fi
 if [ $OSTYPE == "Darwin" ]; then
   USE_READELF=
 else
-READELF_PROG=`which eu-readelf 2>/dev/null`
+READELF_PROG=`which eu-readelf 2>/dev/null | grep /eu-readelf$`
 if test "$READELF_PROG"; then
   USE_READELF=1
 else
-  READELF_PROG=`which readelf 2>/dev/null`
+  READELF_PROG=`which readelf 2>/dev/null | grep /readelf$`
   if test "$READELF_PROG"; then
     # Check whether we need -W
     if readelf --help | grep "\--wide" >&/dev/null; then
