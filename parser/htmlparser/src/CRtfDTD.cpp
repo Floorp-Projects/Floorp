@@ -995,10 +995,10 @@ nsresult nsRTFTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }                                                                      
 
   if(aIID.Equals(kISupportsIID))    {  //do IUnknown...
-    *aInstancePtr = (nsIDTD*)(this);                                        
+    *aInstancePtr = (nsISupports*)(this);                                        
   }
   else if(aIID.Equals(kITokenizerIID)) {  //do IParser base class...
-    *aInstancePtr = (nsIDTD*)(this);                                        
+    *aInstancePtr = (nsITokenizer*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
     *aInstancePtr = (nsRTFTokenizer*)(this);                                        

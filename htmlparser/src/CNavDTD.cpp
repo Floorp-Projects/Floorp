@@ -336,15 +336,7 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
   }     
   else {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
-      switch(aParserContext.mDTDMode) {
-        case eDTDMode_strict:
-        case eDTDMode_transitional:
-          result=eValidDetect;
-          break;
-        default:
-          result=ePrimaryDetect;
-          break;
-      }
+      result=ePrimaryDetect;
     }
     else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
       result=ePrimaryDetect;
@@ -896,6 +888,19 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
     default:
       break;
   }//switch 
+
+    //handle <empty/> tags by generating a close tag...
+    //added this to fix bug 48351, which contains XHTML and uses empty tags.
+  if(nsHTMLElement::IsContainer(aChildTag)) {
+    CStartToken *theToken=NS_STATIC_CAST(CStartToken*,aNode.mToken);
+    if(theToken->IsEmpty()){
+
+      CToken *theEndToken=mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag); 
+      if(theEndToken) {
+        result=HandleEndToken(theEndToken);
+      }
+    }
+  }
 
   return result;
 } 
@@ -2256,9 +2261,6 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
           }
         }
       else theNextToken->AppendSource(*aNode.mSkippedContent);
-    }
-    else {
-      theNextToken->AppendSource(*aNode.mSkippedContent);
     }
     IF_FREE(theNextToken);
   }

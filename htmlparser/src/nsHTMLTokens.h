@@ -157,7 +157,7 @@ class CStartToken: public CHTMLToken {
 
             PRBool            mEmpty;      
             eContainerInfo    mContainerInfo;
-            nsCOMPtr<nsIAtom>      mIDAttributeAtom;
+            nsCOMPtr<nsIAtom> mIDAttributeAtom;
 };
 
 

@@ -949,7 +949,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPreformatted, (kSelf|kFlowEntity), kNone,	//I'm allowing WAY too much in here. Spec says inline.
+      /*parent,incl,exclgroups*/          kInlineEntity|kPreformatted, (kSelf|kFlowEntity), kNone,	//I'm allowing WAY too much in here. Spec says inline.
       /*special props, prop-range*/       0, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown);
 
@@ -1238,8 +1238,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kPreformatted, kNone, kNone,	
-      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+      /*parent,incl,exclgroups*/          kInlineEntity|kPreformatted, kNone, kNone,	
+      /*special props, prop-range*/       kNone,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_xmp);
 
     Initialize( 

@@ -639,7 +639,8 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         theTermStrPos=kNotFound;
         tempOffset=theBuffer.FindChar(kGreaterThan,PR_TRUE,tempOffset);
         if(tempOffset>-1) {
-          theTermStrPos=theBuffer.RFind(aTerminalString,PR_TRUE,tempOffset,termStrLen+2);
+          //theTermStrPos=theBuffer.RFind(aTerminalString,PR_TRUE,tempOffset,termStrLen+2);
+          theTermStrPos=theBuffer.RFind(aTerminalString,PR_TRUE,tempOffset,tempOffset-(theCurrOffset-2));  //bug43513...
           if(theTermStrPos>-1) break;
           tempOffset++;
         }
