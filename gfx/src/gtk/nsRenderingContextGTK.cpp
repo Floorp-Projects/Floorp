@@ -45,6 +45,7 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mFontMetrics = nsnull;
   mContext = nsnull;
   mSurface = nsnull;
+  mOffscreenSurface = nsnull;
   mCurrentColor = 0;
   mCurrentLineStyle = nsLineStyle_kSolid;
   mCurrentFont = nsnull;
@@ -77,6 +78,7 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
   if (mTMatrix)
     delete mTMatrix;
   NS_IF_RELEASE(mClipRegion);
+  NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
 
@@ -123,6 +125,8 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 #endif
     GdkGC *gc = (GdkGC *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
     mSurface->Init(win,gc);
+
+    mOffscreenSurface = mSurface;
 
     NS_ADDREF(mSurface);
   }
@@ -197,30 +201,12 @@ NS_IMETHODIMP nsRenderingContextGTK::UnlockDrawingSurface(void)
 
 NS_IMETHODIMP nsRenderingContextGTK::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-  nsresult  rv = NS_ERROR_FAILURE;
-
-  if (aSurface != mSurface)
-  {
-    NS_ASSERTION(nsnull != aSurface, "Setting up a nsnull drawing surface for the rendering context");
-
-    if (nsnull != aSurface)
-    {
-      NS_IF_RELEASE(mSurface);
-
-      mSurface = (nsDrawingSurfaceGTK *)aSurface;
-
-      rv = NS_OK;
-    }
-    
-    NS_ADDREF(mSurface);
-  }
+  if (nsnull == aSurface)
+    mSurface = mOffscreenSurface;
   else
-  {
-    // Setting surface to the existing surface so do nothing.
-    rv = NS_OK;
-  }
+    mSurface = (nsDrawingSurfaceGTK *)aSurface;
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetDrawingSurface(nsDrawingSurface *aSurface)
@@ -630,20 +616,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
   if (surf)
   {
     NS_ADDREF(surf);
-
-    PRUint32  width = 0;
-    PRUint32  height = 0;
-
-    if (nsnull != aBounds)
-    {
-      width = aBounds->width;
-      height = aBounds->height;
-    }
-
-    surf->Init(mSurface->GetGC(), 
-               width,
-               height,
-               aSurfFlags);
+    surf->Init(mSurface->GetGC(), aBounds->width, aBounds->height, aSurfFlags);
   }
 
   aSurface = (nsDrawingSurface)surf;
@@ -655,25 +628,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   nsDrawingSurfaceGTK *surf = (nsDrawingSurfaceGTK *) aDS;
 
-  NS_ASSERTION(nsnull != surf, "Trying to destroy a null surface");
+  g_return_val_if_fail ((surf != NULL), NS_ERROR_FAILURE);
 
-  if (nsnull == surf)
-    return NS_ERROR_NULL_POINTER;
-
-  // Are we using the surface that we want to kill?
-  if (surf == mSurface)
-  {
-    // Remove our local ref to the surface
-    NS_IF_RELEASE(mSurface);
-
-    // Stop using the drawing surface. 
-    mSurface = nsnull;
-  }
-  else 
-  {
-    // Release a drawing surface we are currently not using.
-    NS_IF_RELEASE(surf);
-  }
+  NS_IF_RELEASE(surf);
 
   return NS_OK;
 }
@@ -1478,29 +1435,19 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface  aSrcSurf,
-                                         PRInt32           aSrcX, 
-                                         PRInt32           aSrcY,
-                                         const nsRect &    aDestBounds,
-                                         PRUint32          aCopyFlags)
+nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+                                         PRInt32 aSrcX, PRInt32 aSrcY,
+                                         const nsRect &aDestBounds,
+                                         PRUint32 aCopyFlags)
 {
   PRInt32               srcX = aSrcX;
   PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
   nsDrawingSurfaceGTK  *destsurf;
 
-  NS_ASSERTION(nsnull != aSrcSurf, "Trying to blit from a null surface");
-  NS_ASSERTION(nsnull != mSurface, "Trying to blit to a null surface");
-  NS_ASSERTION(nsnull != mTMatrix, "null transformation matrix");
-
-  if (nsnull == aSrcSurf)
-    return NS_ERROR_NULL_POINTER;
-
-  if (nsnull == mSurface)
-    return NS_ERROR_NULL_POINTER;
-
-  if (nsnull == mTMatrix)
-    return NS_ERROR_NULL_POINTER;
+  g_return_val_if_fail(aSrcSurf != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
 #if 0
   printf("nsRenderingContextGTK::CopyOffScreenBits()\nflags=\n");
@@ -1514,10 +1461,19 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface  aSrcSurf,
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
     printf("NS_COPYBITS_XFORM_DEST_VALUES\n");
 
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+    printf("NS_COPYBITS_TO_BACK_BUFFER\n");
+
   printf("\n");
 #endif
 
-  destsurf = mSurface;
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+  {
+    NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
+    destsurf = mSurface;
+  }
+  else
+    destsurf = mOffscreenSurface;
 
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
     mTMatrix->TransformCoord(&srcX, &srcY);
@@ -1532,14 +1488,12 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface  aSrcSurf,
   // copy_area sounds better
   ::gdk_window_copy_area(destsurf->GetDrawable(),
                          ((nsDrawingSurfaceGTK *)aSrcSurf)->GetGC(),
-                         drect.x, 
-                         drect.y,
+                         drect.x, drect.y,
                          ((nsDrawingSurfaceGTK *)aSrcSurf)->GetDrawable(),
-                         srcX, 
-                         srcY,
-                         drect.width, 
-                         drect.height);
+                         srcX, srcY,
+                         drect.width, drect.height);
                      
+
   return NS_OK;
 }
 
