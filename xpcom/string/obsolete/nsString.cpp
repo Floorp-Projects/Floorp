@@ -464,19 +464,24 @@ nsCString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminateTrailin
  * @return  float rep of string value
  */
 float nsCString::ToFloat(PRInt32* aErrorCode) const {
-  char buf[100];
-  if (mLength > PRInt32(sizeof(buf)-1)) {
-    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
-    return 0.0f;
+  float res = 0.0f;
+  if (mLength > 0) {
+    char *conv_stopped;
+    const char *str = get();
+    res = (float)strtod(str, &conv_stopped);
+    if (conv_stopped == str+mLength) {
+      *aErrorCode = (PRInt32) NS_OK;
+    }
+    else {
+      /* Not all the string was scanned */
+      *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
+    }
   }
-  char *cp = strncpy(buf, get(), sizeof(buf) - 1);
-  buf[sizeof(buf)-1] = '\0';
-  float f = (float) PR_strtod(cp, &cp);
-  if (*cp != 0) {
+  else {
+    /* The string was too short (0 characters) */
     *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
   }
-  *aErrorCode = (PRInt32) NS_OK;
-  return f;
+  return res;
 }
 
 /**

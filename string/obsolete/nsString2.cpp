@@ -536,18 +536,25 @@ char* nsString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) con
  * @return  float rep of string value
  */
 float nsString::ToFloat(PRInt32* aErrorCode) const {
+  float res = 0.0f;
   char buf[100];
-  if (mLength > PRInt32(sizeof(buf)-1)) {
-    *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
-    return 0.0f;
+  if (mLength > 0 && mLength < sizeof(buf)) {
+    char *conv_stopped;
+    const char *str = ToCString(buf, sizeof(buf));
+    res = (float)strtod(str, &conv_stopped);
+    if (*conv_stopped == '\0') {
+      *aErrorCode = (PRInt32) NS_OK;
+    }
+    else {
+      /* Not all the string was scanned */
+      *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
+    }
   }
-  char* cp = ToCString(buf, sizeof(buf));
-  float f = (float) PR_strtod(cp, &cp);
-  if (*cp != 0) {
+  else {
+    /* The string was too short (0 characters) or too long (sizeof(buf)) */
     *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
   }
-  *aErrorCode = (PRInt32) NS_OK;
-  return f;
+  return res;
 }
 
 
