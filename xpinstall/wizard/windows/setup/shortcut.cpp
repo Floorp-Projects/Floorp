@@ -22,8 +22,9 @@
  *     Sean Su <ssu@netscape.com>
  */
 
-/* This is a hack for vc5.0.  It needs to be set *before*
- * any shell include files.
+/* This is a hack for vc5.0.  It needs to be set *before* any shell
+ * include files. The INITGUID definition turns off the inclusion
+ * of shlguid.h in shlobj.h so it has to be done explicitly.
  */
 #if (_MSC_VER == 1100)
 #define INITGUID
@@ -32,6 +33,7 @@ DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 #endif
 
 #include <shlobj.h>
+#include <shlguid.h>
 #include "shortcut.h"
 
 HRESULT CreateALink(LPSTR lpszPathObj, LPSTR lpszPathLink, LPSTR lpszDesc, LPSTR lpszWorkingPath, LPSTR lpszArgs, LPSTR lpszIconFullPath, int iIcon)
