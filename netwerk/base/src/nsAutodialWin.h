@@ -55,6 +55,9 @@ typedef struct tagRASAUTODIALENTRYA {
     CHAR szEntry[RAS_MaxEntryName + 1];
 } RASAUTODIALENTRYA, *LPRASAUTODIALENTRYA;
 typedef RASAUTODIALENTRYA RASAUTODIALENTRY, *LPRASAUTODIALENTRY;
+
+#define RASADP_LoginSessionDisable              1
+
 #endif  // WINVER
 
 // Loading the RAS DLL dynamically. 
@@ -64,7 +67,8 @@ typedef DWORD (WINAPI* tRASENUMCONNECTIONS)(LPRASCONN,LPDWORD,LPDWORD);
 typedef DWORD (WINAPI* tRASENUMENTRIES)(LPTSTR,LPTSTR,LPRASENTRYNAME,LPDWORD,LPDWORD);
 typedef DWORD (WINAPI* tRASSETAUTODIALADDRESS)(LPCTSTR,DWORD,LPRASAUTODIALENTRY,DWORD,DWORD);
 typedef DWORD (WINAPI* tRASGETAUTODIALADDRESS)(LPCTSTR,LPDWORD,LPRASAUTODIALENTRY,LPDWORD,LPDWORD);
-
+typedef DWORD (WINAPI* tRASGETAUTODIALENABLE)(DWORD,LPBOOL);
+typedef DWORD (WINAPI* tRASGETAUTODIALPARAM)(DWORD,LPVOID,LPDWORD);
 // For Windows NT 4, 2000, and XP, we sometimes want to open the RAS dialup 
 // window ourselves, since those versions aren't very nice about it. 
 // See bug 93002. If the RAS autodial service is running, (Remote Access 
@@ -117,12 +121,20 @@ private:
     // Add the specified address to the autodial directory.
     PRBool AddAddressToAutodialDirectory(const char* hostName);
 
+    // Get the  current TAPI dialing location.
+    int GetCurrentLocation();
+
+    // See if autodial is enabled for specified location.
+    PRBool IsAutodialServiceEnabled(int location);
+
     //
     // Autodial behavior. This comes from the Windows registry, set in the ctor. 
     // Object won't pick up changes to the registry automatically, but can be 
     // refreshed at anytime by calling Init(). So if the user changed the 
     // autodial settings, they wouldn't be noticed unless Init() is called.
     int mAutodialBehavior;
+
+    int mAutodialServiceDialingLocation;
 
     enum { AUTODIAL_NEVER = 1 };            // Never autodial.
     enum { AUTODIAL_ALWAYS = 2 };           // Always autodial as set in Internet Options.
@@ -152,6 +164,12 @@ private:
     static tRASDIALDLG mpRasDialDlg;
     static tRASSETAUTODIALADDRESS mpRasSetAutodialAddress;
     static tRASGETAUTODIALADDRESS mpRasGetAutodialAddress;
+    static tRASGETAUTODIALENABLE mpRasGetAutodialEnable;
+    static tRASGETAUTODIALPARAM mpRasGetAutodialParam;
+
+    PRBool nsRASAutodial::LoadRASapi32DLL();
+    PRBool nsRASAutodial::LoadRASdlgDLL();
+
 
 public:
   
