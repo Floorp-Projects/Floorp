@@ -1315,10 +1315,12 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aContainer);
 
   // Make root part
-  nsresult rv = NS_NewRootPart(&mRoot, mDocument);
+  nsresult rv = NS_NewHTMLHtmlElement(&mRoot, nsHTMLAtoms::html);
   if (NS_OK != rv) {
     return rv;
   }
+  mRoot->SetDocument(mDocument);
+  mDocument->SetRootContent(mRoot);
 
   // Make head part
   nsIAtom* atom = NS_NewAtom("HEAD");
