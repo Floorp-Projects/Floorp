@@ -316,14 +316,14 @@ nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
 	if(NS_FAILED(rv))
 		return rv;
 
-	if(count > 0)
-	{
-	  nsCOMPtr<nsISupports> windowSupports = mWindows->ElementAt(count - 1);
-	  if(windowSupports)
-		  rv = windowSupports->QueryInterface(NS_GET_IID(nsIMsgWindow), (void**)aMsgWindow);
-	  if(NS_FAILED(rv))
-		  return rv;
-	}
+    if(count > 0)
+    {
+      nsCOMPtr<nsISupports> windowSupports = getter_AddRefs(mWindows->ElementAt(count - 1));
+      nsCOMPtr<nsIMsgWindow> msgWindow = do_QueryInterface(windowSupports, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      *aMsgWindow = msgWindow;
+      NS_IF_ADDREF(*aMsgWindow);
+    }
   }
 
   return NS_OK;

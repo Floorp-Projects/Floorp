@@ -1140,7 +1140,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
             aSupportsArray->Count(&cnt);
             for (PRInt32 i = cnt-1; i >= 0; i--)
             {
-                aSupport = aSupportsArray->ElementAt(i);
+                aSupport = getter_AddRefs(aSupportsArray->ElementAt(i));
                 aSupportsArray->RemoveElementAt(i);
                 aFolder = do_QueryInterface(aSupport);
                 if (aFolder)
@@ -1148,7 +1148,7 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
             }
         }
     }
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::Delete ()
