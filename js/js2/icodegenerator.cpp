@@ -441,6 +441,17 @@ TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source1,
     return dest;
 } 
     
+TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1, 
+                            TypedRegister source2)
+{
+    ASSERT(source1.first != NotARegister);    
+    ASSERT(source2.first != NotARegister);    
+    TypedRegister dest(getTempRegister(), &Any_Type);
+    GenericBinaryOP *instr = new GenericBinaryOP(dest, BinaryOperator::mapICodeOp(op), source1, source2);
+    iCode->push_back(instr);
+    return dest;
+} 
+    
 TypedRegister ICodeGenerator::call(TypedRegister target, const StringAtom &name, RegisterList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
@@ -1227,7 +1238,12 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+
+            if ((r1.second == &Integer_Type) && (r2.second == &Integer_Type)) {
+                op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            }
+
+            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
         }
         break;
     case ExprNode::assignment:

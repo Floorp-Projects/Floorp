@@ -51,6 +51,7 @@ namespace Interpreter {
 #define src1(i) op2(i)
 #define src2(i) op3(i)
 #define ofs(i)  (i->getOffset())
+#define val2(i)  op2(i)
 #define val3(i)  op3(i)
 #define val4(i)  op4(i)
 
@@ -376,92 +377,7 @@ static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
 }
 
 
-class BinaryOperator {
-public:
-
-    // Wah, here's a third enumeration of opcodes - ExprNode, ICodeOp and now here, this can't be right??
-    typedef enum { 
-        Add, Subtract, Multiply, Divide,
-        Remainder, LeftShift, RightShift, LogicalRightShift,
-        BitwiseOr, BitwiseXor, BitwiseAnd, Less, LessOrEqual,
-        Equal, Identical
-    } BinaryOp;
-
-    BinaryOperator(const JSType *t1, const JSType *t2, JSBinaryOperator *function) :
-        t1(t1), t2(t2), function(function) { }
-
-    BinaryOperator(const JSType *t1, const JSType *t2, JSFunction *function) :
-        t1(t1), t2(t2), function(function) { }
-
-    static BinaryOp mapICodeOp(ICodeOp op);
-
-    const JSType *t1;
-    const JSType *t2;
-    JSFunction *function;
-
-};
-
-BinaryOperator::BinaryOp BinaryOperator::mapICodeOp(ICodeOp op) {
-    // a table later... or maybe we need a grand opcode re-unification 
-    switch (op) {
-    case ADD        : return Add;
-    case SUBTRACT   : return Subtract;
-    case MULTIPLY   : return Multiply;
-    case DIVIDE     : return Divide;
-    case REMAINDER  : return Remainder;
-    case SHIFTLEFT  : return LeftShift;
-    case SHIFTRIGHT : return RightShift;
-    case USHIFTRIGHT: return LogicalRightShift;
-
-    case AND        : return BitwiseAnd;
-    case OR         : return BitwiseOr;
-    case XOR        : return BitwiseXor;
-    
-    case COMPARE_LT : return Less;
-    case COMPARE_LE : return LessOrEqual;
-    case COMPARE_EQ : return Equal;
-    case STRICT_EQ  : return Identical;
-    default :
-        NOT_REACHED("Unsupported binary op");
-        return (BinaryOp)-1;
-    }
-}
-
-
-
-typedef std::vector<BinaryOperator *> BinaryOperatorList;
-BinaryOperatorList binaryOperators[15];
-
-        
-JSBinaryOperator::JSBinaryCode defaultFunction[] = {
-    add_Default,
-    subtract_Default,
-    multiply_Default,
-    divide_Default,
-    remainder_Default,
-    shiftLeft_Default,
-    shiftRight_Default,
-    UshiftRight_Default,
-    or_Default,
-    xor_Default,
-    and_Default,
-    less_Default,
-    lessOrEqual_Default,
-    equal_Default,
-    identical_Default
-};
-
-class InitBinaryOperators {
-
-public:
-    InitBinaryOperators() {
-
-        for (int i = BinaryOperator::Add; i <= BinaryOperator::Identical; i++)            
-            binaryOperators[i].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(defaultFunction[i])));
-  }
-} initializer = InitBinaryOperators();
-
-static JSValue defineAdd(const JSValues& argv)
+static JSValue defineAdd(Context *cx, const JSValues& argv)
 {
     // should be three args, first two are types, third is a function.
     ASSERT(argv[0].isType());
@@ -470,19 +386,18 @@ static JSValue defineAdd(const JSValues& argv)
 
 // XXX need to prove that argv[2].function takes T1 and T2 as args and returns Boolean for the relational operators ?
 
-//    stdOut << *argv[2].function->getICode();
-    binaryOperators[BinaryOperator::Add].push_back(new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));
+    cx->addBinaryOperator(BinaryOperator::Add, new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));
 
     return kUndefinedValue;
 }
 
 #define DEFINE_OBO(NAME)                                                            \
-    static JSValue define##NAME(const JSValues& argv)                               \
+    static JSValue define##NAME(Context *cx, const JSValues& argv)                  \
     {                                                                               \
         ASSERT(argv[0].isType());                                                   \
         ASSERT(argv[1].isType());                                                   \
         ASSERT(argv[2].isFunction());                                               \
-        binaryOperators[BinaryOperator::##NAME].push_back(                          \
+        cx->addBinaryOperator(BinaryOperator::##NAME,                               \
             new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));      \
         return kUndefinedValue;                                                     \
     }                                                                               \
@@ -501,6 +416,39 @@ DEFINE_OBO(Less)
 DEFINE_OBO(LessOrEqual)
 DEFINE_OBO(Equal)
 DEFINE_OBO(Identical)
+
+void Context::initOperatorsPackage()
+{
+// hack - the following should be available only after importing the 'Operators' package
+// (hmm, how will that work - the import needs to connect the functions into this mechanism
+//   do we watch for the specific package name???)
+
+    struct OBO {
+        char *name;
+        JSNativeFunction::JSCode fun;
+    } OBOs[] = {
+        { "defineAdd",              defineAdd },
+        { "defineSubtract",         defineSubtract },
+        { "defineMultiply",         defineMultiply },
+        { "defineDivide",           defineDivide },
+        { "defineRemainder",        defineRemainder },
+        { "defineLeftShift",        defineLeftShift },
+        { "defineRightShift",       defineRightShift },
+        { "defineLogicalRightShift",defineLogicalRightShift },
+        { "defineBitwiseOr",        defineBitwiseOr },
+        { "defineBitwiseXor",       defineBitwiseXor },
+        { "defineBitwiseAnd",       defineBitwiseAnd },
+        { "defineLess",             defineLess },
+        { "defineLessOrEqual",      defineLessOrEqual },
+        { "defineEqual",            defineEqual },
+        { "defineIdentical",        defineIdentical },
+    };
+
+    for (int i = 0; i < sizeof(OBOs) / sizeof(struct OBO); i++)
+        mGlobal->defineNativeFunction(mWorld.identifiers[widenCString(OBOs[i].name)], OBOs[i].fun);
+
+    mHasOperatorsPackageLoaded = true;
+}
 
 void Context::initContext()
 {
@@ -530,44 +478,39 @@ void Context::initContext()
     for (int i = 0; i < sizeof(PDTs) / sizeof(struct PDT); i++)
         mGlobal->defineVariable(widenCString(PDTs[i].name), &Type_Type, JSValue(PDTs[i].type));
 
-
-// hack - the following should be available only after importing the 'Operators' package
-// (hmm, how will that work - the import needs to connect the functions into this mechanism
-//   do we watch for the specific package name???)
-
-    struct OBO {
-        char *name;
-        JSValue (*fun)(const JSValues& argv);
-    } OBOs[] = {
-        { "defineAdd",              defineAdd },
-        { "defineSubtract",         defineSubtract },
-        { "defineMultiply",         defineMultiply },
-        { "defineDivide",           defineDivide },
-        { "defineRemainder",        defineRemainder },
-        { "defineLeftShift",        defineLeftShift },
-        { "defineRightShift",       defineRightShift },
-        { "defineLogicalRightShift",defineLogicalRightShift },
-        { "defineBitwiseOr",        defineBitwiseOr },
-        { "defineBitwiseXor",       defineBitwiseXor },
-        { "defineBitwiseAnd",       defineBitwiseAnd },
-        { "defineLess",             defineLess },
-        { "defineLessOrEqual",      defineLessOrEqual },
-        { "defineEqual",            defineEqual },
-        { "defineIdentical",        defineIdentical },
+    JSBinaryOperator::JSBinaryCode defaultFunction[] = {
+        add_Default,
+        subtract_Default,
+        multiply_Default,
+        divide_Default,
+        remainder_Default,
+        shiftLeft_Default,
+        shiftRight_Default,
+        UshiftRight_Default,
+        or_Default,
+        xor_Default,
+        and_Default,
+        less_Default,
+        lessOrEqual_Default,
+        equal_Default,
+        identical_Default
     };
 
-    for (i = 0; i < sizeof(OBOs) / sizeof(struct OBO); i++)
-        mGlobal->defineNativeFunction(mWorld.identifiers[widenCString(OBOs[i].name)], OBOs[i].fun);
+    for (BinaryOperator::BinaryOp b = BinaryOperator::BinaryOperatorFirst; 
+         b < BinaryOperator::BinaryOperatorCount; 
+         b = (BinaryOperator::BinaryOp)(b + 1) )            
+        addBinaryOperator(b, new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(defaultFunction[b])));
+
 }
 
-static const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
+const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
 {
     int32 bestDist1 = JSType::NoRelation;
     int32 bestDist2 = JSType::NoRelation;
     BinaryOperatorList::iterator candidate = NULL;
 
-    for (BinaryOperatorList::iterator i = binaryOperators[op].begin();
-            i != binaryOperators[op].end(); i++) 
+    for (BinaryOperatorList::iterator i = mBinaryOperators[op].begin();
+            i != mBinaryOperators[op].end(); i++) 
     {
         int32 dist1 = operand1.getType()->distance((*i)->t1);
         int32 dist2 = operand2.getType()->distance((*i)->t2);
@@ -650,7 +593,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
                         if (op1(call).first != NotARegister)
                             (*registers)[op1(call).first] = result;
                         break;
@@ -685,7 +628,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
                         if (op1(call).first != NotARegister)
                             (*registers)[op1(call).first] = result;
                         break;
@@ -719,7 +662,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        /*JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);*/
+                        /*JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);*/
                         break;
                     }
                     else {
@@ -755,7 +698,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
                         if (op1(call).first != NotARegister)
                             (*registers)[op1(call).first] = result;
                         break;
@@ -1025,6 +968,32 @@ using JSString throughout.
                     }
                 }
                 break;
+            case GENERIC_BINARY_OP: 
+                {
+                    GenericBinaryOP* gbo = static_cast<GenericBinaryOP*>(instruction);
+                    JSValue& dest = (*registers)[dst(gbo).first];
+                    JSValue& r1 = (*registers)[val3(gbo).first];
+                    JSValue& r2 = (*registers)[val4(gbo).first];
+                    const JSValue ovr = findBinaryOverride(r1, r2, val2(gbo));
+                    JSFunction *target = ovr.function;
+                    if (target->isNative()) {
+                        JSValues argv(2);
+                        argv[0] = r1;
+                        argv[1] = r2;
+                        dest = static_cast<JSBinaryOperator*>(target)->mCode(r1, r2);
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, mGlobal, dst(gbo));
+                        mActivation = new Activation(target->getICode(), r1, r2);
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
+                        continue;
+                    }
+                }
+                break;
             case SHIFTLEFT:
             case SHIFTRIGHT:
             case USHIFTRIGHT:
@@ -1046,10 +1015,10 @@ using JSString throughout.
                     //  overridden, so we should use a different dispatch and execute the default
                     //  behaviour inline instead,
                     //
-                    Arithmetic* mul = static_cast<Arithmetic*>(instruction);
-                    JSValue& dest = (*registers)[dst(mul).first];
-                    JSValue& r1 = (*registers)[src1(mul).first];
-                    JSValue& r2 = (*registers)[src2(mul).first];
+                    Arithmetic* a = static_cast<Arithmetic*>(instruction);
+                    JSValue& dest = (*registers)[dst(a).first];
+                    JSValue& r1 = (*registers)[src1(a).first];
+                    JSValue& r2 = (*registers)[src2(a).first];
                     const JSValue ovr = findBinaryOverride(r1, r2, BinaryOperator::mapICodeOp(instruction->op()));
                     JSFunction *target = ovr.function;
                     if (target->isNative()) {
@@ -1061,7 +1030,7 @@ using JSString throughout.
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, dst(mul));
+                                               mActivation, mGlobal, dst(a));
                         mActivation = new Activation(target->getICode(), r1, r2);
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();

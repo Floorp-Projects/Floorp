@@ -115,7 +115,7 @@ JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
                                 JavaScript::stdOut, &ResolveFile);
 #endif
 
-static JSValue print(const JSValues &argv)
+static JSValue print(Context *cx, const JSValues &argv)
 {
     size_t n = argv.size();
     if (n > 1) {                // the 'this' parameter is un-interesting
@@ -127,7 +127,7 @@ static JSValue print(const JSValues &argv)
     return kUndefinedValue;
 }
 
-static JSValue dump(const JSValues &argv)
+static JSValue dump(Context *cx, const JSValues &argv)
 {
     size_t n = argv.size();
     if (n > 1) {                // the 'this' parameter is un-interesting
@@ -148,25 +148,21 @@ static JSValue dump(const JSValues &argv)
 
 inline char narrow(char16 ch) { return char(ch); }
 
-static JSValue load(const JSValues &argv)
+static JSValue load(Context *cx, const JSValues &argv)
 {
 
     JSValue result;
     size_t n = argv.size();
     if (n > 1) {
-        ASSERT(argv[0].isObject());
-        JSScope *scope = dynamic_cast<JSScope *>(argv[0].object);
-        ASSERT(scope);
         for (size_t i = 1; i < n; ++i) {
             JSValue val = argv[i].toString();
             if (val.isString()) {
-                Context cx(world, scope);
                 String fileName(*val.string);
                 std::string str(fileName.length(), char());
                 std::transform(fileName.begin(), fileName.end(), str.begin(), narrow);
                 FILE* f = fopen(str.c_str(), "r");
                 if (f) {
-                    result = cx.readEvalFile(f, fileName);
+                    result = cx->readEvalFile(f, fileName);
                     fclose(f);
                 }
             }
