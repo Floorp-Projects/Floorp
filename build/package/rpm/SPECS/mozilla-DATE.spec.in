@@ -24,6 +24,7 @@ Patch7:      mozilla-redhat-home-page.patch
 Patch8:      mozilla-redhat-mail-home-page.patch
 Patch10:     mozilla-redhat-home-page-6.2.patch
 Patch11:     mozilla-taskbar-nomozilla.patch
+Patch12:     mozilla-psfonts-7.2.patch
 Buildroot:   /var/tmp/mozilla-root
 Prefix:      /usr
 Group:       Applications/Internet
@@ -97,6 +98,9 @@ fi
 
 %patch11 -p1
 %patch11 -p1 -R
+
+# Can't hurt to leave this in since the defaults are empty.
+%patch12 -p1
 
 %build
 
@@ -373,7 +377,6 @@ fi
 %{prefix}/share/pixmaps/mozilla-compose-icon.gif
 
 %verify (not md5 mtime size) %{prefix}/lib/mozilla/component.reg
-%verify (not md5 mtime size) %{prefix}/lib/mozilla/components/xptitemp.dat
 %verify (not md5 mtime size) %{prefix}/lib/mozilla/components/xpti.dat
 
 %dir %{prefix}/lib/mozilla/defaults/pref
