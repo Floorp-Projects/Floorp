@@ -86,15 +86,15 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mSizeMode(nsSizeMode_Normal),
    mIntrinsicallySized(PR_FALSE), mCenterAfterLoad(PR_FALSE),
-   mZlevel(nsIXULWindow::normalZ)
+   mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
    
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsXULWindow::~nsXULWindow()
 {
-   Destroy();
+  Destroy();
 }
 
 //*****************************************************************************
@@ -213,6 +213,19 @@ NS_IMETHODIMP nsXULWindow::GetContentShellById(const PRUnichar* aID,
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsXULWindow::AddChildWindow(nsIXULWindow *aChild)
+{
+  // we don't keep a list; we just need to know if there ever was one
+  mHadChildWindow = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::RemoveChildWindow(nsIXULWindow *aChild)
+{
+  // we're not really keeping track of this right now
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULWindow::ShowModal()
 {
    nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
@@ -286,6 +299,10 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    if(!mWindow)
       return NS_OK;
 
+   nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
+   if (parentWindow)
+     parentWindow->RemoveChildWindow(this);
+
 #ifdef XP_PC
    ActivateParent();
 #endif
@@ -296,7 +313,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
   // this is needed for menus
    nsCOMPtr<nsIContentViewer> cv;
    if(mDocShell)
- 	   mDocShell->GetContentViewer(getter_AddRefs(cv));
+      mDocShell->GetContentViewer(getter_AddRefs(cv));
    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
    if(docv)
       {
@@ -1303,6 +1320,13 @@ void nsXULWindow::EnableParent(PRBool aEnable)
    22658). This method is expected to be called during window teardown.
 */
 void nsXULWindow::ActivateParent() {
+
+  // this is only a problem for stacks of at least three windows, and
+  // the unexpected focus we cause to happen in this method is screwing up
+  // focus. so limit the circumstances in which we do this by only activating
+  // the parent if we were part of a stack.
+  if (!mHadChildWindow)
+    return;
 
   // do we have an owner/parent window?
   nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));

@@ -63,6 +63,12 @@ interface nsIXULWindow : nsISupports
 	nsIDocShellTreeItem getContentShellById(in wstring ID);
 
         /*
+        Tell this window that it has picked up or lost a child XUL window
+        */
+        void AddChildWindow(in nsIXULWindow aChild);
+        void RemoveChildWindow(in nsIXULWindow aChild);
+
+        /*
         Move the window to a centered position.
         @param aRelative the window relative to which the window is moved.
                          See screen parameter for details. if null, the
