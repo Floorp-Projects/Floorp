@@ -336,8 +336,9 @@ if (exists $::FORM{'rebuildkeywordcache'}) {
 }
 
 SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
-        "FROM keywords, keyworddefs " .
+        "FROM keywords, keyworddefs, bugs " .
         "WHERE keyworddefs.id = keywords.keywordid " .
+        "  AND keywords.bug_id = bugs.bug_id " .
         "ORDER BY keywords.bug_id, keyworddefs.name");
 
 my $lastb;
