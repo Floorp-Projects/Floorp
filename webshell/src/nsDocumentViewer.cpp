@@ -493,11 +493,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 
     // Create a child window of the parent that is our "root view/window"
     // Create a view
-#if 0
-    rv = nsRepository::CreateInstance(kScrollingViewCID, 
-#else
     rv = nsRepository::CreateInstance(kViewCID, 
-#endif
                                       nsnull, 
                                       kIViewIID, 
                                       (void **)&mView);
@@ -510,18 +506,6 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
                                                aNativeParent))) {
         return rv;
     }
-
-#if 0
-    nsIScrollableView* scrollView;
-    rv = mView->QueryInterface(kScrollViewIID, (void**)&scrollView);
-    if (NS_OK == rv) {
-        scrollView->SetScrollPreference(aScrolling);
-    }
-    else {
-        NS_ASSERTION(0, "invalid scrolling view");
-        return rv;
-    }
-#endif
 
     // Setup hierarchical relationship in view manager
     mViewManager->SetRootView(mView);
