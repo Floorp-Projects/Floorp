@@ -531,6 +531,12 @@ nsJSContext::CallFunctionObject(void *aObj, void *aFunObj, PRUint32 argc,
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext)))
     return NS_ERROR_FAILURE;
 
+  // this context can be deleted unexpectedly if the JS closes
+  // the owning window. we ran into this problem specifically
+  // when going through the "close window" key event handler
+  // (that is, hitting ^W on Windows). the addref just below
+  // prevents our untimely destruction.
+  nsCOMPtr<nsJSContext> kungFuDeathGrip(this);
   mRef = nsnull;
   mTerminationFunc = nsnull;
 
