@@ -142,6 +142,13 @@ tier_2_dirs	= \
 		xpcom/obsolete \
 		$(NULL)
 
+ifdef MOZ_ENABLE_LIBXUL
+tier_2_dirs += \
+		toolkit/library \
+		xpcom/stub \
+		$(NULL)
+endif
+
 ifdef NS_TRACE_MALLOC
 tier_2_dirs	+= tools/trace-malloc/lib tools/trace-malloc
 endif
@@ -291,6 +298,21 @@ ifdef MOZ_XPINSTALL
 tier_50_dirs     +=  xpinstall
 endif
 
+# Many standalone tools/test can't be built until after libxul is available.
+ifdef MOZ_ENABLE_LIBXUL
+tier_50_dirs += xpcom/tools
+ifdef ENABLE_TESTS
+tier_50_dirs += \
+	xpcom/tests \
+	xpcom/sample \
+	xpcom/typelib/xpt/tests \
+	xpcom/reflect/xptinfo/tests \
+	xpcom/reflect/xptcall/tests \
+	xpcom/proxy/tests \
+	$(NULL)
+endif
+endif
+
 #
 # tier 9x - application features
 #
@@ -314,14 +336,6 @@ endif
 #
 # tier 99 - application binaries
 #
-
-ifdef MOZ_COMPONENTLIB
-tier_99_dirs   += embedding/componentlib
-else
-ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
-tier_99_dirs   += modules/staticmod
-endif
-endif # MOZ_COMPONENTLIB
 
 # axcontrol
 ifeq ($(OS_ARCH),WINNT)

@@ -38,13 +38,18 @@
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
-#include "nsFileSpec.h"
-#include "NSReg.h"
+#define ZLIB_INTERNAL
+#include "zlib.h"
 
-void XXXNeverCalled_obsolete()
+void xxxNeverCalledZLib()
 {
-    nsFileURL(NULL);
-    nsFileSpec s;
-
-    NR_RegSetBufferSize(NULL, 0);
+    deflate(0, 0);
+    deflateInit(0, 0);
+	deflateInit2(0, 0, 0, 0, 0, 0);
+    deflateEnd(0);
+    inflate(0, 0);
+    inflateInit(0);
+    inflateInit2(0, 0);
+    inflateEnd(0);
+    inflateReset(0);
 }

@@ -592,7 +592,8 @@ MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
 
 MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
-XPCOM_LIBS='-L$(DIST)/bin -lxpcom -lxpcom_core'
+DYNAMIC_XPCOM_LIBS='-L$(DIST)/bin -lxpcom -lxpcom_core'
+LIBXUL_LIBS='-L$(DIST)/bin -lxpcom -lxul'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
@@ -1161,7 +1162,8 @@ case "$target" in
         MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
         MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
         MOZ_JS_LIBS='-L$(DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
-        XPCOM_LIBS='-L$(DIST)/lib -lxpcom -lxpcom_core'
+        DYNAMIC_XPCOM_LIBS='-L$(DIST)/lib -lxpcom -lxpcom_core'
+        LIBXUL_LIBS='-L$(DIST)/lib -lxpcom -lxul'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
@@ -1197,7 +1199,8 @@ case "$target" in
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
         MOZ_PNG_LIBS='$(DIST)/lib/png.lib'
         MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
-        XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
+        DYNAMIC_XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
+        LIBXUL_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xul.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
     fi
@@ -1441,7 +1444,8 @@ case "$target" in
         MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwdgt$(MOZ_WIDGET_TOOLKIT)'
         MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_GFX_TOOLKIT)'
         MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
-        XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
+        DYNAMIC_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
+        LIBXUL_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib $(DIST)/lib/xul.lib'
 
         # GCC for OS/2 currently predefines these, but we don't want them
         _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
@@ -1484,7 +1488,8 @@ case "$target" in
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcomct.lib'
-        XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
+        DYNAMIC_XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
+        LIBXUL_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xul.lib'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
         MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
@@ -2441,7 +2446,8 @@ AC_CACHE_CHECK(
     )
 if test "$ac_cv_func_iconv" = "yes"; then
     AC_DEFINE(HAVE_ICONV)
-    XPCOM_LIBS="$XPCOM_LIBS $_ICONV_LIBS"
+    DYNAMIC_XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS $_ICONV_LIBS"
+    LIBXUL_LIBS="$LIBXUL_LIBS $_ICONV_LIBS"
     LIBICONV="$_ICONV_LIBS"
     AC_CACHE_CHECK(
         [for iconv() with const input],
@@ -3436,6 +3442,7 @@ MOZ_SINGLE_PROFILE=
 MOZ_PROFILESHARING=1
 MOZ_IPCD=
 MOZ_PROFILELOCKING=1
+MOZ_ENABLE_LIBXUL=
 
 MOZ_ARG_ENABLE_STRING(application,
 [  --enable-application=APP
@@ -3512,7 +3519,8 @@ xulrunner)
   MOZ_APP_NAME=xulrunner
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_XUL_APP=1
-  MOZ_XULRUNNER=1 
+  MOZ_XULRUNNER=1
+  MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=`cat $topsrcdir/xulrunner/config/version.txt`
   MOZ_EXTENSIONS_DEFAULT=" xml-rpc xmlextras pref transformiix universalchardet webservices gnomevfs negotiateauth"
   AC_DEFINE(MOZ_XULRUNNER)
@@ -5433,6 +5441,27 @@ if (test -z "$BUILD_SHARED_LIBS" && test -z "$BUILD_STATIC_LIBS") ||
     AC_MSG_ERROR([Only one of --enable-shared or --enable-static must be specified.])
 fi
 
+MOZ_ARG_ENABLE_BOOL(libxul,
+[  --enable-libxul         Enable building of libxul],
+    MOZ_ENABLE_LIBXUL=1,
+    MOZ_ENABLE_LIBXUL=)
+
+if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
+	AC_MSG_ERROR([--enable-libxul is not compatible with --enable-static])
+fi
+
+if test -n "$MOZ_ENABLE_LIBXUL" -a -z "$MOZ_XUL_APP"; then
+	AC_MSG_ERROR([--enable-libxul is only compatible with toolkit XUL applications.])
+fi
+
+if test -n "$MOZ_ENABLE_LIBXUL"; then
+    XPCOM_LIBS="$LIBXUL_LIBS"
+    AC_DEFINE(MOZ_ENABLE_LIBXUL)
+    MOZ_ZLIB_LIBS=
+else
+    XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS"
+fi
+
 dnl ========================================================
 dnl static component loader
 dnl ========================================================
@@ -5444,40 +5473,6 @@ MOZ_ARG_DISABLE_BOOL(static-component-loader,
 
 if test -n "$MOZ_STATIC_COMPONENT_LOADER"; then
     AC_DEFINE(ENABLE_STATIC_COMPONENT_LOADER)
-fi
-
-dnl ========================================================
-dnl Generate static component from list of modules
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(meta-component-modules,
-[  --enable-meta-component-modules=mod1[,mod2]
-                          Build single meta-component from specified modules],
-[ MOZ_STATIC_COMPONENTS=`echo $enableval | sed 's/,/ /g'` ] )
-
-dnl ========================================================
-dnl Enable the use of predefined meta components
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(meta-components,
-[  --enable-meta-components
-                          Build predefined meta-components],
-  [ MOZ_META_COMPONENTS=`echo $enableval | sed 's/,/ /g'` ] )
-
-if test -n "$MOZ_STATIC_COMPONENTS" && test -n "$MOZ_META_COMPONENTS"; then
-    AC_MSG_ERROR([Simultaneous use of meta-module-components & meta-components is not supported.])
-fi
-
-MOZ_COMPONENTLIB=
-MOZ_ARG_ENABLE_BOOL(componentlib,
-[  --enable-componentlib  Build a shared library containing all of the components],
-   MOZ_COMPONENTLIB=1,
-   MOZ_COMPONENTLIB= )
-
-AC_SUBST(MOZ_COMPONENTLIB)
-if test "$MOZ_COMPONENTLIB"; then
-   BUILD_SHARED_LIBS=
-   BUILD_STATIC_LIBS=1
-   MOZ_STATIC_COMPONENT_LIBS=1
-   MOZ_META_COMPONENTS=mozcomps
 fi
 
 dnl ========================================================
@@ -5910,8 +5905,7 @@ AC_SUBST(BUILD_SHARED_LIBS)
 AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_STATIC_COMPONENT_LOADER)
 AC_SUBST(MOZ_STATIC_COMPONENT_LIBS)
-AC_SUBST(MOZ_STATIC_COMPONENTS)
-AC_SUBST(MOZ_META_COMPONENTS)
+AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(SUNCTL)

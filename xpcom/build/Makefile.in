@@ -49,6 +49,7 @@ LIBRARY_NAME	= xpcom_core
 ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= xpcomcor
 endif
+LIBXUL_LIBRARY = 1
 
 PACKAGE_FILE = xpcom.pkg
 PACKAGE_VARS += USE_SHORT_LIBNAME
@@ -75,7 +76,7 @@ CPPSRCS		= \
 		nsStringAPI.cpp \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
 CPPSRCS		+= dlldeps.cpp
 endif
 
@@ -129,7 +130,9 @@ endif
 # Force use of PIC
 FORCE_USE_PIC	= 1 
 
+ifndef MOZ_ENABLE_LIBXUL
 FORCE_SHARED_LIB = 1
+endif
 
 # UNIX98 iconv support
 OS_LIBS += $(LIBICONV)

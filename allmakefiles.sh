@@ -941,6 +941,7 @@ chrome/src/Makefile
 chrome/tools/Makefile
 chrome/tools/chromereg/Makefile
 toolkit/Makefile
+toolkit/library/Makefile
 toolkit/content/Makefile
 toolkit/content/buildconfig.html
 toolkit/obsolete/Makefile

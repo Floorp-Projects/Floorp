@@ -37,10 +37,8 @@
 #ifndef MOZZCONF_H
 #define MOZZCONF_H
 
-#ifdef XP_WIN
-#ifdef ZLIB_DLL
+#if defined(XP_WIN) && defined(ZLIB_DLL) && !defined(MOZ_ENABLE_LIBXUL)
 #undef ZLIB_DLL
-#endif
 #endif
 
 /* Symbols from zlib.def */

@@ -42,9 +42,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpcom
+MODULE		= xpcom_tests
 XPIDL_MODULE	= proxytest
-REQUIRES	= $(NULL)
+REQUIRES	= xpcom
 
 CPPSRCS		= proxytests.cpp
 XPIDLSRCS	= nsITestProxy.idl
@@ -57,4 +57,3 @@ LIBS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
