@@ -50,6 +50,7 @@ nsXIContext::nsXIContext()
     backID = 0;
     nextID = 0;
     bMoving = FALSE;
+    bDone = FALSE;
 
     threadTurn = nsXIContext::UI_THREAD;
 }
@@ -69,6 +70,7 @@ nsXIContext::~nsXIContext()
     XI_IF_FREE(window);
     XI_IF_FREE(back);
     XI_IF_FREE(next);
+    XI_IF_FREE(cancel);
     XI_IF_FREE(nextLabel);
     XI_IF_FREE(backLabel);
     XI_IF_FREE(acceptLabel);

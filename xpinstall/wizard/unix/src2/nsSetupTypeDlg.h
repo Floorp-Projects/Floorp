@@ -49,6 +49,8 @@ public:
     static void         SelectFolder(GtkWidget *aWidget, gpointer aData);
     static void         SelectFolderOK(GtkWidget *aWidget, 
                                        GtkFileSelection *aFileSel);
+    static void         SelectFolderCancel(GtkWidget *aWidget, 
+                                       GtkFileSelection *aFileSel);
     static void         RadBtnToggled(GtkWidget *aWidget, gpointer aData);
     static int          VerifyDestination();
     static void         CreateDestYes(GtkWidget *aWidget, gpointer aData);
