@@ -360,9 +360,6 @@ struct nsPseudoFrames {
 
   // the frame type of the most descendant pseudo frame, no AddRef
   nsIAtom*          mLowestType;
-  // col groups are handled specially so if there is both a pseudo
-  // row group and col group, content order needs to be preserved
-  PRBool            mColGroupBeforeRowGroup;
 
   nsPseudoFrames();
   nsPseudoFrames& operator=(const nsPseudoFrames& aOther);
@@ -389,8 +386,7 @@ nsPseudoFrameData::Reset()
 
 nsPseudoFrames::nsPseudoFrames() 
 : mTableOuter(), mTableInner(), mRowGroup(), mColGroup(), 
-  mRow(), mCellOuter(), mCellInner(), mLowestType(nsnull),
-  mColGroupBeforeRowGroup(PR_FALSE)
+  mRow(), mCellOuter(), mCellInner(), mLowestType(nsnull)
 {}
 
 nsPseudoFrames& nsPseudoFrames::operator=(const nsPseudoFrames& aOther)
@@ -403,7 +399,6 @@ nsPseudoFrames& nsPseudoFrames::operator=(const nsPseudoFrames& aOther)
   mCellOuter  = aOther.mCellOuter;
   mCellInner  = aOther.mCellInner;
   mLowestType = aOther.mLowestType;
-  mColGroupBeforeRowGroup = aOther.mColGroupBeforeRowGroup;
 
   return *this;
 }
@@ -422,7 +417,6 @@ nsPseudoFrames::Reset(nsPseudoFrames* aSave)
   mCellOuter.Reset();
   mCellInner.Reset();
   mLowestType = nsnull;
-  mColGroupBeforeRowGroup = PR_FALSE;
 }
 
 // -----------------------------------------------------------
@@ -699,15 +693,24 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 // -----------------------------------------------------------
 
 // return the child list that aFrame belongs on. does not ADDREF
-nsIAtom* GetChildListFor(const nsIFrame* aFrame)
+PRBool GetCaptionAdjustedParent(nsIFrame*        aParentFrame,
+                                const nsIFrame*  aChildFrame,
+                                nsIFrame**       aAdjParentFrame)
 {
-  nsIAtom* childList = nsnull;
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (nsLayoutAtoms::tableCaptionFrame == frameType.get()) { 
-    childList = nsLayoutAtoms::captionList;
+  *aAdjParentFrame = aParentFrame;
+  PRBool haveCaption = PR_FALSE;
+  nsCOMPtr<nsIAtom> childFrameType;
+  aChildFrame->GetFrameType(getter_AddRefs(childFrameType));
+
+  if (nsLayoutAtoms::tableCaptionFrame == childFrameType.get()) { 
+    haveCaption = PR_TRUE;
+    nsCOMPtr<nsIAtom> parentFrameType;
+    aParentFrame->GetFrameType(getter_AddRefs(parentFrameType));
+    if (nsLayoutAtoms::tableFrame == parentFrameType.get()) {
+      aParentFrame->GetParent(aAdjParentFrame);
+    }
   }
-  return childList;
+  return haveCaption;
 }
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(void)
@@ -1803,7 +1806,8 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(nsIPresShell*            aPresShel
   parentFrame->GetStyleContext(getter_AddRefs(parentStyle)); 
   parentFrame->GetContent(getter_AddRefs(parentContent));   
 
-  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tableOuterPseudo, 
+  // create the SC for the inner table which will be the parent of the outer table's SC
+  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tablePseudo, 
                                              parentStyle, PR_FALSE, 
                                              getter_AddRefs(childStyle));
 
@@ -1910,15 +1914,13 @@ nsCSSFrameConstructor::CreatePseudoColGroupFrame(nsIPresShell*            aPresS
                                    parentFrame, childStyle.get(), aTableCreator,
                                    PR_TRUE, items, pseudo.mFrame, pseudoParent);
   if (NS_FAILED(rv)) return rv;
+  ((nsTableColGroupFrame*)pseudo.mFrame)->SetType(eColGroupAnonymousCol);
 
   // set pseudo data for the parent
   if (aState.mPseudoFrames.mTableInner.mFrame) {
     aState.mPseudoFrames.mTableInner.mChildList.AddChild(pseudo.mFrame);
   }
 
-  if (!aState.mPseudoFrames.mRowGroup.mFrame) {
-    aState.mPseudoFrames.mColGroupBeforeRowGroup = PR_TRUE;
-  }
   return rv;
 }
 
@@ -2322,6 +2324,17 @@ nsCSSFrameConstructor::GetParentFrame(nsIPresShell*            aPresShell,
 }
 
 
+void
+FixUpOuterTableFloat(nsIStyleContext* aOuterSC,
+                     nsIStyleContext* aInnerSC)
+{
+  nsStyleDisplay* outerStyleDisplay = (nsStyleDisplay*)aOuterSC->GetMutableStyleData(eStyleStruct_Display);
+  nsStyleDisplay* innerStyleDisplay = (nsStyleDisplay*)aInnerSC->GetStyleData(eStyleStruct_Display);
+  if (outerStyleDisplay->mFloats != innerStyleDisplay->mFloats) {
+    outerStyleDisplay->mFloats = innerStyleDisplay->mFloats;
+  }
+}
+
 // Construct the outer, inner table frames and the children frames for the table. 
 nsresult
 nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
@@ -2357,12 +2370,19 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
     }
   }
 
+  // create the pseudo SC for the outer table as a child of the inner SC
+  nsCOMPtr<nsIStyleContext> outerStyleContext;
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo,
+                                             aStyleContext, PR_FALSE,
+                                             getter_AddRefs(outerStyleContext));
+  FixUpOuterTableFloat(outerStyleContext, aStyleContext);
+
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned  
   InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      parentFrame, aStyleContext, nsnull, aNewOuterFrame);  
+                      parentFrame, outerStyleContext, nsnull, aNewOuterFrame);  
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewOuterFrame,
-                                           aStyleContext, PR_FALSE);
+                                           outerStyleContext, PR_FALSE);
 
   // Create the inner table frame
   aTableCreator.CreateTableFrame(&aNewInnerFrame);
@@ -2787,34 +2807,22 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext* aPresContext,
     return !IsOnlyWhiteSpace(aContent);
   }
 
-  if ( (nsHTMLAtoms::img      == aTag) ||
-       (nsHTMLAtoms::hr       == aTag) ||
-       (nsHTMLAtoms::br       == aTag) ||
-       (nsHTMLAtoms::wbr      == aTag) ||
-       (nsHTMLAtoms::input    == aTag) ||
-       (nsHTMLAtoms::textarea == aTag) ||
-       (nsHTMLAtoms::select   == aTag) ||
-       (nsHTMLAtoms::applet   == aTag) ||
-       (nsHTMLAtoms::embed    == aTag) ||
-       (nsHTMLAtoms::fieldset == aTag) ||
-       (nsHTMLAtoms::legend   == aTag) ||
-       (nsHTMLAtoms::object   == aTag) ||
-       (nsHTMLAtoms::iframe   == aTag) ||
-       (nsHTMLAtoms::spacer   == aTag) ||
-       (nsHTMLAtoms::button   == aTag) ||
-       (nsHTMLAtoms::label    == aTag) ) {
-    return PR_TRUE;
+  // exclude tags
+  if ( (nsLayoutAtoms::commentTagName == aTag) ||
+       (nsHTMLAtoms::form             == aTag) ) {
+    return PR_FALSE;
   }
 
-// MathML Mod - DJF
+// XXX DJF - when should pseudo frames be constructed for MathML?
 #ifdef MOZ_MATHML
-// XXX should pseudo frames be created in this case?
-  if (  (nsMathMLAtoms::math         == aTag) ) {
+  if ( (nsMathMLAtoms::math == aTag) ) {
     return PR_TRUE;
   }
+  else {
+    return PR_FALSE;
+  }
 #endif
-  
-  // we should check for display type as well - later
+
   return PR_FALSE;
 }
 
@@ -4570,16 +4578,15 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   const nsStyleDisplay* styleDisplay;
   newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
 
-  nsIFrame * areaFrame;
-  //NS_NewBlockFrame(shell, &areaFrame, flags);
-  NS_NewAreaFrame(shell, &areaFrame, flags | NS_BLOCK_SHRINK_WRAP);// | NS_BLOCK_MARGIN_ROOT);
+  nsIFrame * blkFrame;
+  NS_NewBlockFrame(shell, &blkFrame, flags);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::fieldsetContentPseudo,
                                              aStyleContext, PR_FALSE, &styleContext);
   InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      newFrame, styleContext, nsnull, areaFrame);
+                      newFrame, styleContext, nsnull, blkFrame);
 
   NS_RELEASE(styleContext);          
   
@@ -4589,7 +4596,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
                           &haveFirstLetterStyle, &haveFirstLineStyle);
     nsFrameConstructorSaveState floaterSaveState;
-    aState.PushFloaterContainingBlock(areaFrame, floaterSaveState,
+    aState.PushFloaterContainingBlock(blkFrame, floaterSaveState,
                                       haveFirstLetterStyle,
                                       haveFirstLineStyle);
 
@@ -4602,10 +4609,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
-      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+      aState.PushAbsoluteContainingBlock(blkFrame, absoluteSaveState);
     }
      
-    ProcessChildren(aPresShell, aPresContext, aState, aContent, areaFrame, PR_FALSE,
+    ProcessChildren(aPresShell, aPresContext, aState, aContent, blkFrame, PR_FALSE,
                     childItems, PR_TRUE);
 
     static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
@@ -4619,7 +4626,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           nsIFrame * nxt;
           legendFrame->GetNextSibling(&nxt);
           previous->SetNextSibling(nxt);
-          areaFrame->SetNextSibling(legendFrame);
+          blkFrame->SetNextSibling(legendFrame);
           legendFrame->SetParent(newFrame);
           legendFrame->SetNextSibling(nsnull);
           break;
@@ -4627,7 +4634,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
           nsIFrame * nxt;
           legendFrame->GetNextSibling(&nxt);
           childItems.childList = nxt;
-          areaFrame->SetNextSibling(legendFrame);
+          blkFrame->SetNextSibling(legendFrame);
           legendFrame->SetParent(newFrame);
           legendFrame->SetNextSibling(nsnull);
           break;
@@ -4638,21 +4645,21 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     }
 
     // Set the scrolled frame's initial child lists
-    areaFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    blkFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
     if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
-      areaFrame->SetInitialChildList(aPresContext,
+      blkFrame->SetInitialChildList(aPresContext,
                                          nsLayoutAtoms::absoluteList,
                                          aState.mAbsoluteItems.childList);
     }
 
     if (aState.mFloatedItems.childList) {
-      areaFrame->SetInitialChildList(aPresContext,
+      blkFrame->SetInitialChildList(aPresContext,
                                          nsLayoutAtoms::floaterList,
                                          aState.mFloatedItems.childList);
     }
 
   // Set the scroll frame's initial child list
-  newFrame->SetInitialChildList(aPresContext, nsnull, areaFrame);
+  newFrame->SetInitialChildList(aPresContext, nsnull, blkFrame);
 
   // our new frame retured is the top frame which is the list frame. 
   aNewFrame = newFrame; 
@@ -5154,11 +5161,11 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
                                              nsFrameConstructorState& aState,
                                              nsIContent*              aParent,
                                              nsIDocument*             aDocument,
-                                             nsIFrame*                aParentFrame,
+                                             nsIFrame*                aNewFrame,
                                              nsFrameItems&            aChildItems)
 {
 
-  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aParentFrame));
+  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aNewFrame));
   
   if (!creator)
      return NS_OK;
@@ -5182,14 +5189,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
     content->SetParent(aParent);
     content->SetDocument(aDocument, PR_TRUE);
 
-    nsIFrame * newFrame = nsnull;
-    nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
-    if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
-      aChildItems.AddChild(newFrame);
-    } else {
-      // create the frame and attach it to our frame
-      ConstructFrame(aPresShell, aPresContext, aState, content, aParentFrame, aChildItems);
-    }
+    // create the frame and attach it to our frame
+    ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
   }
 
   return NS_OK;
@@ -7515,8 +7516,16 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
   }
   else {
     // Append the frames to the end of the parent's child list
-    rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
-                                     GetChildListFor(aFrameList), aFrameList);
+    // check for a table caption which goes on an additional child list with a different parent
+    nsIFrame* outerTableFrame; 
+    if (GetCaptionAdjustedParent(aParentFrame, aFrameList, &outerTableFrame)) {
+      rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, outerTableFrame,
+                                             nsLayoutAtoms::captionList, aFrameList);
+    }
+    else {
+      rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
+                                       nsnull, aFrameList);
+    }
   }
   NS_IF_RELEASE(parentType);
 
@@ -8296,11 +8305,15 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
             }
           }
           // check for a table caption which goes on an additional child list
-          nsIAtom* childList = GetChildListFor(newFrame);
-          rv = state.mFrameManager->InsertFrames(aPresContext, *shell,
-                                                 parentFrame,
-                                                 childList, prevSibling,
-                                                 newFrame);
+          nsIFrame* outerTableFrame; 
+          if (GetCaptionAdjustedParent(parentFrame, newFrame, &outerTableFrame)) {
+            rv = state.mFrameManager->AppendFrames(aPresContext, *shell, outerTableFrame,
+                                                   nsLayoutAtoms::captionList, newFrame);
+          }
+          else {
+            rv = state.mFrameManager->InsertFrames(aPresContext, *shell, parentFrame,
+                                                   nsnull, prevSibling, newFrame);
+          }
         }
         
         // If there are new absolutely positioned child frames, then notify
@@ -8791,9 +8804,16 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
       } else {
         // Notify the parent frame that it should delete the frame
-        nsIAtom* childList = GetChildListFor(childFrame);
-        rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
-                                       childList, childFrame);
+        // check for a table caption which goes on an additional child list with a different parent
+        nsIFrame* outerTableFrame; 
+        if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
+          rv = frameManager->RemoveFrame(aPresContext, *shell, outerTableFrame,
+                                         nsLayoutAtoms::captionList, childFrame);
+        }
+        else {
+          rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
+                                         nsnull, childFrame);
+        }
       }
     }
 

@@ -421,7 +421,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.top)) {
     if (-1 == aContainingBlockWidth) {
       // Get the containing block width/height
-      kidReflowState.ComputeContainingBlockRectangle(&aReflowState,
+      kidReflowState.ComputeContainingBlockRectangle(aPresContext,
+                                                     &aReflowState,
                                                      aContainingBlockWidth,
                                                      aContainingBlockHeight);
     }
