@@ -537,7 +537,7 @@ function DisplayNameChanged()
 
 function SetCardDialogTitle(displayName)
 {
-   document.title = displayName
-     ? gAddressBookBundle.getFormattedString(gEditCard.titleProperty + "WithDisplayName", [displayName])
-     : gAddressBookBundle.getString(gEditCard.titleProperty);
+  document.title = displayName
+    ? gAddressBookBundle.getFormattedString(gEditCard.titleProperty + "WithDisplayName", [displayName])
+    : gAddressBookBundle.getString(gEditCard.titleProperty);
 }
