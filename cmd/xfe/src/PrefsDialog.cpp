@@ -31,9 +31,13 @@
 #include "xpassert.h"
 #include "xfe.h"
 #include "PrefsDialog.h"
+
+#ifdef MOZ_MAIL_NEWS
 #include "PrefsPageMessages.h"
 #include "PrefsPageNServer.h"
 #include "PrefsPageAddress.h"
+#endif
+
 #include "prefapi.h"
 
 #include <Xm/Label.h>
