@@ -570,21 +570,21 @@ nsresult nsRenderingContextUnix :: SetLineStyle(nsLineStyle aLineStyle)
 	                  &values);
         break;
 
-      case nsLineStyle_kDashed:
+      case nsLineStyle_kDashed: {
         static char dashed[2] = {4,4};
 
         ::XSetDashes(mRenderingSurface->display,
                      mRenderingSurface->gc,
                      0, dashed, 2);
-        break;
+        } break;
 
-      case nsLineStyle_kDotted:
+      case nsLineStyle_kDotted: {
         static char dotted[2] = {3,1};
 
         ::XSetDashes(mRenderingSurface->display,
                      mRenderingSurface->gc,
                      0, dotted, 2);
-        break;
+         }break;
 
       default:
         break;
