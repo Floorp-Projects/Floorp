@@ -1455,16 +1455,40 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *         it will occur only once in this list.
      * @since 1.5R2
      */
-    public static Object[] getPropertyIds(Scriptable obj) {
-        ObjToIntMap map = new ObjToIntMap();
-        while (obj != null) {
-            Object[] ids = obj.getIds();
-            for (int i=0; i < ids.length; i++) {
-                map.put(ids[i], 0);
-            }
-            obj = (Scriptable)obj.getPrototype();
+    public static Object[] getPropertyIds(Scriptable obj)
+    {
+        if (obj == null) {
+            return ScriptRuntime.emptyArgs;
         }
-        return map.getKeys();
+        Object[] result = obj.getIds();
+        ObjToIntMap map = null;
+        for (;;) {
+            obj = obj.getPrototype();
+            if (obj == null) {
+                break;
+            }
+            Object[] ids = obj.getIds();
+            if (ids.length == 0) {
+                continue;
+            }
+            if (result.length == 0) {
+                result = ids;
+                continue;
+            }
+            if (map == null) {
+                for (int i = 0; i != result.length; ++i) {
+                    map.intern(result[i]);
+                }
+                result = null;
+            }
+            for (int i = 0; i != ids.length; ++i) {
+                map.intern(ids[i]);
+            }
+        }
+        if (map != null) {
+            result = map.getKeys();
+        }
+        return result;
     }
 
     /**
