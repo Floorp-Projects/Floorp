@@ -3261,7 +3261,7 @@ nsGfxTextControlFrame2::InternalContentChanged()
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresContext> context;
   if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
-    return mContent->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+      return presShell->HandleEventWithTarget(&event, nsnull, mContent, NS_EVENT_FLAG_INIT, &status); 
   return NS_ERROR_FAILURE;
 }
 
@@ -3291,7 +3291,7 @@ nsGfxTextControlFrame2::CallOnChange()
       return NS_ERROR_FAILURE;
     nsCOMPtr<nsIPresContext> context;
     if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
-      return mContent->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+      return presShell->HandleEventWithTarget(&event, nsnull, mContent, NS_EVENT_FLAG_INIT, &status); 
   }
   return NS_OK;
 }
