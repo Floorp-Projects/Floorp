@@ -960,7 +960,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
   return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURL, mInstanceOwner);
 }
 
-//~~~This is called when the page containing plugin is resized, and plugin has its dimensions
+// This is called when the page containing plugin is resized, and plugin has its dimensions
 // specified in percentage, so it needs to follow the page on the fly.
 nsresult
 nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
@@ -984,11 +984,12 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMet
   mInstanceOwner->GetWindow(window);
 
   GetOffsetFromView(&aPresContext, origin, &parentWithView);
+
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
   window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
   window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
-  
+
   window->clipRect.top = 0;
   window->clipRect.left = 0;
   window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
@@ -1202,6 +1203,12 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if ((disp != nsnull) && !disp->mVisible) 
+  {
+    return NS_OK;
+  }
+
   nsIFrame * child = mFrames.FirstChild();
   if(child != NULL) //This is an image
   {
@@ -2058,20 +2065,43 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(PRUint32 *result)
   {
     if (*result != 0)
     {
+      *result = 0;
+
       PRUint32 attr = (PRUint32)atol(width);
 
       if(nsnull == strchr(width, '%'))
         *result = attr;
       else
       {
+        if(mContext == nsnull)
+          return NS_ERROR_FAILURE;
+        
         attr = (attr > 100) ? 100 : attr;
         attr = (attr < 0) ? 0 : attr;
 
         float t2p;
+
         mContext->GetTwipsToPixels(&t2p);
+
         nsRect rect;
         mContext->GetVisibleArea(rect);
-        *result = NSTwipsToIntPixels(attr*rect.width/100, t2p);
+
+        nscoord w = rect.width;
+
+        if(mOwner == nsnull)
+        {
+          *result = NSTwipsToIntPixels(attr*w/100, t2p);
+          return NS_OK;
+        }
+
+        // now make it nicely fit counting margins
+        nsIFrame *parent;
+        mOwner->GetParent(&parent);
+        parent->GetRect(rect);
+
+        w -= 2*rect.x;
+
+        *result = NSTwipsToIntPixels(attr*w/100, t2p);
       }
     }
     else
@@ -2094,20 +2124,43 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(PRUint32 *result)
   {
     if (*result != 0)
     {
+      *result = 0;
+
       PRUint32 attr = (PRUint32)atol(height);
 
       if(nsnull == strchr(height, '%'))
         *result = attr;
       else
       {
+        if(mContext == nsnull)
+          return NS_ERROR_FAILURE;
+        
         attr = (attr > 100) ? 100 : attr;
         attr = (attr < 0) ? 0 : attr;
 
         float t2p;
+
         mContext->GetTwipsToPixels(&t2p);
+
         nsRect rect;
         mContext->GetVisibleArea(rect);
-        *result = NSTwipsToIntPixels(attr*rect.height/100, t2p);
+
+        nscoord h = rect.height;
+
+        if(mOwner == nsnull)
+        {
+          *result = NSTwipsToIntPixels(attr*h/100, t2p);
+          return NS_OK;
+        }
+
+        // now make it nicely fit counting margins
+        nsIFrame *parent;
+        mOwner->GetParent(&parent);
+        parent->GetRect(rect);
+
+        h -= 2*rect.y;
+
+        *result = NSTwipsToIntPixels(attr*h/100, t2p);
       }
     }
     else
