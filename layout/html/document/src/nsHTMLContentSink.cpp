@@ -215,6 +215,7 @@ public:
   nsVoidArray mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
+  PRInt32 mNumOpenIFRAMES;
 
   nsString* mRef;
   nsScrollPreference mOriginalScrollPreference;
@@ -1055,6 +1056,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   case eHTMLTag_map:
     mSink->ProcessMAPTag(aNode, content);
     break;
+  case eHTMLTag_iframe:
+    mSink->mNumOpenIFRAMES++;
+    break;
   default:
     break;
   }
@@ -1103,6 +1107,11 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
         result = CloseContainer(aNode);
       }
     }
+
+  case eHTMLTag_iframe:
+    mSink->mNumOpenIFRAMES--;
+    break;
+
   default:
     break;
   }
@@ -1474,6 +1483,9 @@ SinkContext::FlushTags()
     
     parent->AppendChildTo(content, PR_FALSE);
     mStack[stackPos].mFlags |= APPENDED;
+    if (eHTMLTag_iframe == mStack[mStackPos].mType) {
+      mSink->mNumOpenIFRAMES--;
+    }
     stackPos--;
   }
 
@@ -3321,8 +3333,9 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // that is measuring content creation time
   NS_STOP_STOPWATCH(mWatch)
 
-  // Don't process scripts that aren't JavaScript
-  if (isJavaScript) {
+  // Don't process scripts that aren't JavaScript and don't process
+  // scripts that are inside iframes
+  if (isJavaScript && !mNumOpenIFRAMES) {
     // If there is a SRC attribute...
     if (src.Length() > 0) {
       // Use the SRC attribute value to load the URL
