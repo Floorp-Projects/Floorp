@@ -6253,12 +6253,14 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
   res = mHTMLEditor->GetPriorHTMLSibling(selNode, selOffset, address_of(nearNode));
   if (NS_FAILED(res)) return res;
   if (nearNode && (nsTextEditUtils::IsBreak(nearNode)
-                   || nsHTMLEditUtils::IsImage(nearNode)))
+                   || nsHTMLEditUtils::IsImage(nearNode)
+                   || nsHTMLEditUtils::IsHR(nearNode)))
     return NS_OK; // this is a good place for the caret to be
   res = mHTMLEditor->GetNextHTMLSibling(selNode, selOffset, address_of(nearNode));
   if (NS_FAILED(res)) return res;
   if (nearNode && (nsTextEditUtils::IsBreak(nearNode)
-                   || nsHTMLEditUtils::IsImage(nearNode)))
+                   || nsHTMLEditUtils::IsImage(nearNode)
+                   || nsHTMLEditUtils::IsHR(nearNode)))
     return NS_OK; // this is a good place for the caret to be
 
   // look for a nearby text node.
