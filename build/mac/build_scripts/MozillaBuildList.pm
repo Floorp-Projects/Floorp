@@ -473,6 +473,10 @@ sub BuildClientDist()
     #LIBREG
     InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",                "$distdirectory:libreg:");
 
+    #STRING
+    InstallFromManifest(":mozilla:string:public:MANIFEST",                         "$distdirectory:string:");
+    InstallFromManifest(":mozilla:string:obsolete:MANIFEST",                       "$distdirectory:string:");
+
     #XPCOM
     InstallFromManifest(":mozilla:xpcom:base:MANIFEST_IDL",                        "$distdirectory:idl:");
     InstallFromManifest(":mozilla:xpcom:io:MANIFEST_IDL",                          "$distdirectory:idl:");
@@ -1084,6 +1088,9 @@ sub BuildCommonProjects()
     my($D) = $main::DEBUG ? "Debug" : "";
 
     StartBuildModule("common");
+
+    BuildOneProject(":mozilla:string:macbuild:string.mcp",                      "string$D.o", 0, 0, 0);
+    MakeAlias(":mozilla:string:macbuild:string$D.o", ":mozilla:dist:string:");
 
     #//
     #// Shared libraries
