@@ -283,6 +283,12 @@ void nsUnicodeFontMappingMac::InitDefaultScriptFonts()
 	   if(BAD_FONT_NUM == mScriptFallbackFontIDs[i])
    			mScriptFallbackFontIDs[i] = gUtil->ScriptFont(i);
     }
+ 	for(PRInt32 k = kUnicodeBlockFixedScriptMax ; k < kUnicodeBlockSize; k++)
+	{
+		// copy from global mapping
+	    if(BAD_SCRIPT == mPrivBlockToScript[k - kUnicodeBlockFixedScriptMax])
+	   		mPrivBlockToScript[k - kUnicodeBlockFixedScriptMax] = gUtil->BlockToScript((nsUnicodeBlock) k);
+    }
 }
 //--------------------------------------------------------------------------
 
