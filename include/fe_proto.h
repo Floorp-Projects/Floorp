@@ -526,7 +526,7 @@ BOOL   FE_FileType(char * path,
 			(*context->funcs->TranslateISOText)(context, charset, ISO_Text)
 #define FE_GetTextInfo(context, text, text_info) \
 			(*context->funcs->GetTextInfo)(context, text, text_info)
-#ifdef LAYERS
+#if 0
 #define FE_GetTextFrame(context, element, start, end, frame) \
 			(*context->funcs->GetTextFrame)(context, element, start, end, frame)
 #endif
@@ -627,7 +627,7 @@ BOOL   FE_FileType(char * path,
             (*context->funcs->DisplayBorder)(context, iLocation, x, y, width, height, bw, color, style)
 #define FE_DisplayFeedback(context, iLocation, element) \
 			(*context->funcs->DisplayFeedback)(context, iLocation, element)
-#ifdef LAYERS
+#if 0
 #define FE_EraseBackground(context, iLocation, x, y, width, height, bg) \
             (*context->funcs->EraseBackground)(context, iLocation, x, y, width, height, bg)
 #define FE_SetDrawable(context, drawable) \
