@@ -45,6 +45,7 @@
 #include "nsBlender.h"
 #include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
+#include "nsDeviceContextGTK.h"
 // aka    nsDeviceContextSpecGTK.h
 #include "nsDeviceContextSpecG.h"
 // aka    nsDeviceContextSpecFactoryGTK.h
@@ -186,6 +187,7 @@ PR_STATIC_CALLBACK(void)
 nsGfxGTKModuleDtor(nsIModule *self)
 {
   nsRenderingContextGTK::Shutdown();
+  nsDeviceContextGTK::Shutdown();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxGTKModule, components, nsGfxGTKModuleDtor)
