@@ -46,6 +46,13 @@ my $last_changed;
 
 my @excludedAddresses = ();
 
+my $sitespec = '@'.Param('urlbase');
+$sitespec =~ s/:\/\//\./; # Make the protocol look like part of the domain
+$sitespec =~ s/^([^:\/]+):(\d+)/$1/; # Remove a port number, to relocate
+if ($2) {
+    $sitespec = "-$2$sitespec"; # Put the port number back in, before the '@'
+}
+
 # disable email flag for offline debugging work
 my $enableSendMail = 1;
 
@@ -854,6 +861,11 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     $substs{"reasonsheader"} = join(" ", @reasons);
     $substs{"reasonsbody"} = $reasonsbody;
     $substs{"space"} = " ";
+    if ($isnew) {
+        $substs{'threadingmarker'} = "Message-ID: <bug-$id-$userid$sitespec>";
+    } else {
+        $substs{'threadingmarker'} = "In-Reply-To: <bug-$id-$userid$sitespec>";
+    }
     
     my $template = Param("newchangedmail");
     

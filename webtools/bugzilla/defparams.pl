@@ -719,13 +719,18 @@ To use the wonders of Bugzilla, you can use the following:
            'getting the email, suitable for use in an email header (such ' .
            'as X-Bugzilla-Reason). %reasonsbody% is replaced by text that ' .
            'explains why the user is getting the email in more user ' .
-           'friendly text than %reasonsheader%. %<i>anythingelse</i>% gets ' .
+           'friendly text than %reasonsheader%. ' .
+           '%threadingmarker% will become either a Message-ID line (for ' .
+           'new-bug messages) or a In-Reply-To line (for bug-change ' .
+           'messages). ' .
+           '%<i>anythingelse</i>% gets ' .
            'replaced by the definition of that parameter (as defined on ' .
            'this page).',
    type => 'l',
    default => 'From: bugzilla-daemon
 To: %to%
 Subject: [Bug %bugid%] %neworchanged%%summary%
+%threadingmarker%
 X-Bugzilla-Reason: %reasonsheader%
 
 %urlbase%show_bug.cgi?id=%bugid%
