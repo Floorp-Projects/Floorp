@@ -141,7 +141,7 @@ PR_IMPLEMENT(PRStatus)
     cvar->nw += 1;
     if( atomic_add( &cvar->signalBenCount, -1 ) > 1 ) 
     {
-        release_sem(cvar->signalSem);
+        release_sem_etc(cvar->signalSem, 1, B_DO_NOT_RESCHEDULE);
     }
 
     PR_Unlock( cvar->lock );
@@ -161,13 +161,13 @@ PR_IMPLEMENT(PRStatus)
 
     if (cvar->ns > 0)
     {
-        release_sem(cvar->handshakeSem);
+        release_sem_etc(cvar->handshakeSem, 1, B_DO_NOT_RESCHEDULE);
         cvar->ns -= 1;
     }
     cvar->nw -= 1;
     if( atomic_add( &cvar->signalBenCount, -1 ) > 1 ) 
     {
-        release_sem(cvar->signalSem);
+        release_sem_etc(cvar->signalSem, 1, B_DO_NOT_RESCHEDULE);
     }
 
     PR_Lock( cvar->lock );
@@ -206,10 +206,10 @@ PR_IMPLEMENT(PRStatus)
     if (cvar->nw > cvar->ns)
     {
         cvar->ns += 1;
-        release_sem(cvar->sem);
+        release_sem_etc(cvar->sem, 1, B_DO_NOT_RESCHEDULE);
         if( atomic_add( &cvar->signalBenCount, -1 ) > 1 ) 
         {
-            release_sem(cvar->signalSem);
+            release_sem_etc(cvar->signalSem, 1, B_DO_NOT_RESCHEDULE);
         }
 
         while (acquire_sem(cvar->handshakeSem) == B_INTERRUPTED) 
@@ -221,7 +221,7 @@ PR_IMPLEMENT(PRStatus)
     {
         if( atomic_add( &cvar->signalBenCount, -1 ) > 1 )
         {
-            release_sem(cvar->signalSem);
+            release_sem_etc(cvar->signalSem, 1, B_DO_NOT_RESCHEDULE);
         }
     }
     return PR_SUCCESS; 
@@ -254,10 +254,10 @@ PR_IMPLEMENT(PRStatus)
     {
         handshakes = cvar->nw - cvar->ns;
         cvar->ns = cvar->nw;				
-        release_sem_etc(cvar->sem, handshakes, 0);	
+        release_sem_etc(cvar->sem, handshakes, B_DO_NOT_RESCHEDULE);	
         if( atomic_add( &cvar->signalBenCount, -1 ) > 1 ) 
         {
-            release_sem(cvar->signalSem);
+            release_sem_etc(cvar->signalSem, 1, B_DO_NOT_RESCHEDULE);
         }
 
         while (acquire_sem_etc(cvar->handshakeSem, handshakes, 0, 0) == B_INTERRUPTED) 
@@ -269,7 +269,7 @@ PR_IMPLEMENT(PRStatus)
     {
         if( atomic_add( &cvar->signalBenCount, -1 ) > 1 ) 
         {
-            release_sem(cvar->signalSem);
+            release_sem_etc(cvar->signalSem, 1, B_DO_NOT_RESCHEDULE);
         }
     }
     return PR_SUCCESS;

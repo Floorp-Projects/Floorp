@@ -109,7 +109,7 @@ PR_IMPLEMENT(void)
 	status_t result;
 
 	PR_ASSERT(sem != NULL);
-	result = release_sem(sem->sem);
+	result = release_sem_etc(sem->sem, 1, B_DO_NOT_RESCHEDULE);
 	PR_ASSERT(result == B_NO_ERROR);
 }
 

@@ -109,7 +109,7 @@ PR_IMPLEMENT(PRStatus)
     lock->owner = NULL;
     if( atomic_add( &lock->benaphoreCount, -1 ) > 1 ) {
 
-	release_sem( lock->semaphoreID );
+	release_sem_etc( lock->semaphoreID, 1, B_DO_NOT_RESCHEDULE );
     }
 
     return PR_SUCCESS;
