@@ -129,8 +129,8 @@ NS_IMETHODIMP nsRssService::GetCanDuplicate(PRBool *aCanDuplicate)
 
 NS_IMETHODIMP nsRssService::GetDefaultServerPort(PRBool isSecure, PRInt32 *_retval)
 {
-    NS_ASSERTION(0,"foo");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = -1;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsRssService::GetCanGetMessages(PRBool *aCanGetMessages)
