@@ -765,31 +765,68 @@ int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength,
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
   else {
-    // convert to unicode
-    rv = decoder->Convert(stringToUse, &srcLen, unichars, &unicharLength);
-    if (NS_SUCCEEDED(rv)) {
-      rv = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-      // allocale an output buffer
-      dstPtr = (char *) PR_Malloc(dstLength + 1);
-      if (dstPtr == nsnull) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-      else {
-        PRInt32 buffLength = dstLength;
-        // convert from unicode
-        rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+    // convert to unicode, replacing failed chars with 0xFFFD as in
+    // the methode used in nsXMLHttpRequest::ConvertBodyToText and nsScanner::Append
+    // 
+    // We will need several pass to convert the whole string if it has invalid characters
+    // 'totalChars' is where the sum of the number of converted characters will be done
+    // 'dataLen' is the number of character left to convert
+    // 'outLen' is the number of characters still available in the output buffer as input of decoder->Convert
+    // and the number of characters written in it as output.
+    PRInt32 totalChars = 0,
+            inBufferIndex = 0,
+            outBufferIndex = 0;
+    PRInt32 dataLen = srcLen,
+            outLen = unicharLength;
+
+    do {
+      PRInt32 inBufferLength = dataLen;
+      rv = decoder->Convert(&stringToUse[inBufferIndex],
+                           &inBufferLength,
+                           &unichars[outBufferIndex],
+                           &outLen);
+      totalChars += outLen;
+      // Done if conversion successful
+      if (NS_SUCCEEDED(rv))
+          break;
+
+      // We consume one byte, replace it with U+FFFD
+      // and try the conversion again.
+      outBufferIndex += outLen;
+      unichars[outBufferIndex++] = PRUnichar(0xFFFD);
+      // totalChars is updated here
+      outLen = unicharLength - (++totalChars);
+
+      inBufferIndex += inBufferLength + 1;
+      dataLen -= inBufferLength + 1;
+
+      decoder->Reset();
+
+      // If there is not at least one byte available after the one we
+      // consumed, we're done
+    } while ( dataLen > 0 );
+
+    rv = encoder->GetMaxLength(unichars, totalChars, &dstLength);
+    // allocale an output buffer
+    dstPtr = (char *) PR_Malloc(dstLength + 1);
+    if (dstPtr == nsnull) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+      PRInt32 buffLength = dstLength;
+      // convert from unicode
+      rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+      if (NS_SUCCEEDED(rv)) {
+        rv = encoder->Convert(unichars, &totalChars, dstPtr, &dstLength);
         if (NS_SUCCEEDED(rv)) {
-          rv = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+          PRInt32 finLen = buffLength - dstLength;
+          rv = encoder->Finish((char *)(dstPtr+dstLength), &finLen);
           if (NS_SUCCEEDED(rv)) {
-            PRInt32 finLen = buffLength - dstLength;
-            rv = encoder->Finish((char *)(dstPtr+dstLength), &finLen);
-            if (NS_SUCCEEDED(rv)) {
-              dstLength += finLen;
-            }
-            dstPtr[dstLength] = '\0';
-            *pConvertedString = dstPtr;       // set the result string
-            *outLength = dstLength;
+            dstLength += finLen;
           }
+          dstPtr[dstLength] = '\0';
+          *pConvertedString = dstPtr;       // set the result string
+          *outLength = dstLength;
         }
       }
     }

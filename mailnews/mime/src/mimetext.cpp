@@ -390,6 +390,10 @@ MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *ob
   //initiate decoder if not yet
   if (text->inputDecoder == nsnull)
     MIME_get_unicode_decoder(text->charset, getter_AddRefs(text->inputDecoder));
+  // If no decoder found, use ""UTF-8"", that will map most non-US-ASCII chars as invalid
+  // A pure-ASCII only decoder would be better, but there is none
+  if (text->inputDecoder == nsnull)
+    MIME_get_unicode_decoder("UTF-8", getter_AddRefs(text->inputDecoder));
   if (text->utf8Encoder == nsnull)
     MIME_get_unicode_encoder("UTF-8", getter_AddRefs(text->utf8Encoder));
 
