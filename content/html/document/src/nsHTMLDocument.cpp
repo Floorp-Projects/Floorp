@@ -121,9 +121,7 @@
 #include "nsICharsetResolver.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
-#include "nsIXMLContent.h" //for createelementNS
 #include "nsIJSContextStack.h"
-#include "nsContentUtils.h"
 #include "nsIDocumentViewer.h"
 #include "nsIWyciwygChannel.h"
 
@@ -1382,21 +1380,6 @@ nsHTMLDocument::IsCaseSensitive()
   return IsXHTML();
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
-                                const nsAString& aQualifiedName,
-                                nsIDOMElement** aReturn)
-{
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName,
-                                              aNamespaceURI,
-                                              getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return nsDocument::CreateElement(nodeInfo, aReturn);
-}
-
-
 //
 // nsIDOMDocument interface implementation
 //
@@ -1404,27 +1387,15 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateElement(const nsAString& aTagName,
                               nsIDOMElement** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
+  return nsDocument::CreateElement(aTagName, aReturn);
+}
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-
-  NS_ConvertUTF16toUTF8 tmp(aTagName);
-
-  if (!IsXHTML()) {
-    ToLowerCase(tmp);
-  }
-
-  nsresult rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, mDefaultNamespaceID,
-                                              getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHTMLContent> content;
-  rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, IsXHTML());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  content->SetContentID(mNextContentID++);
-  return CallQueryInterface(content, aReturn);
+NS_IMETHODIMP
+nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
+                                const nsAString& aQualifiedName,
+                                nsIDOMElement** aReturn)
+{
+  return nsDocument::CreateElementNS(aNamespaceURI, aQualifiedName, aReturn);
 }
 
 NS_IMETHODIMP
@@ -1507,165 +1478,6 @@ nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
   nsAutoString tmp(aTagname);
   ToLowerCase(tmp); // HTML elements are lower case internally.
   return nsDocument::GetElementsByTagName(tmp, aReturn);
-}
-
-//
-// nsIDOMNode interface implementation
-//
-NS_IMETHODIMP
-nsHTMLDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  return nsDocument::GetChildNodes(aChildNodes);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetFirstChild(nsIDOMNode** aFirstChild)
-{
-  return nsDocument::GetFirstChild(aFirstChild);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetLastChild(nsIDOMNode** aLastChild)
-{
-  return nsDocument::GetLastChild(aLastChild);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::InsertBefore(nsIDOMNode* aNewChild,
-                             nsIDOMNode* aRefChild,
-                             nsIDOMNode** aReturn)
-{
-  return nsDocument::InsertBefore(aNewChild, aRefChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::ReplaceChild(nsIDOMNode* aNewChild,
-                             nsIDOMNode* aOldChild,
-                             nsIDOMNode** aReturn)
-{
-  return nsDocument::ReplaceChild(aNewChild, aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-{
-  return nsDocument::RemoveChild(aOldChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-{
-  return nsDocument::AppendChild(aNewChild, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::HasChildNodes(PRBool* aReturn)
-{
-  return nsDocument::HasChildNodes(aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::HasAttributes(PRBool* aReturn)
-{
-  return nsDocument::HasAttributes(aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetNodeName(nsAString& aNodeName)
-{
-  return nsDocument::GetNodeName(aNodeName);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetNodeValue(nsAString& aNodeValue)
-{
-  return nsDocument::GetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetNodeValue(const nsAString& aNodeValue)
-{
-  return nsDocument::SetNodeValue(aNodeValue);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetNodeType(PRUint16* aNodeType)
-{
-  return nsDocument::GetNodeType(aNodeType);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetNamespaceURI(nsAString& aNamespaceURI)
-{
-  return nsDocument::GetNamespaceURI(aNamespaceURI);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetPrefix(nsAString& aPrefix)
-{
-  return nsDocument::GetPrefix(aPrefix);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetPrefix(const nsAString& aPrefix)
-{
-  return nsDocument::SetPrefix(aPrefix);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetLocalName(nsAString& aLocalName)
-{
-  return nsDocument::GetLocalName(aLocalName);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetParentNode(nsIDOMNode** aParentNode)
-{
-  return nsDocument::GetParentNode(aParentNode);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-{
-  return nsDocument::GetPreviousSibling(aPreviousSibling);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetNextSibling(nsIDOMNode** aNextSibling)
-{
-  return nsDocument::GetNextSibling(aNextSibling);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-{
-  return nsDocument::GetAttributes(aAttributes);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
-{
-  return nsDocument::GetOwnerDocument(aOwnerDocument);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  return nsDocument::CloneNode(aDeep, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::Normalize()
-{
-  return nsDocument::Normalize();
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::IsSupported(const nsAString& aFeature,
-                            const nsAString& aVersion,
-                            PRBool* aReturn)
-{
-  return nsDocument::IsSupported(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP

@@ -338,7 +338,10 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
                                         const nsAString& aSystemId,
                                         nsIDOMDocumentType** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsresult rv = nsContentUtils::CheckQName(aQualifiedName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAtom> name = do_GetAtom(aQualifiedName);
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
@@ -353,9 +356,13 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
                                     nsIDOMDocumentType* aDoctype,
                                     nsIDOMDocument** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-
   *aReturn = nsnull;
+
+  nsresult rv;
+  if (!aQualifiedName.IsEmpty()) {
+    rv = nsContentUtils::CheckQName(aQualifiedName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (aDoctype) {
     nsCOMPtr<nsIDOMDocument> owner;
@@ -365,8 +372,8 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     }
   }
 
-  nsresult rv = NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName,
-                                  aDoctype, mBaseURI);
+  rv = NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype,
+                         mBaseURI);
 
   nsIDocShell *docShell = nsContentUtils::GetDocShellFromCaller();
   if (docShell) {
@@ -2097,17 +2104,40 @@ NS_IMETHODIMP
 nsDocument::CreateElement(const nsAString& aTagName,
                           nsIDOMElement** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = nsnull;
+
+  nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ConvertUTF16toUTF8 tmp(aTagName);
+  if (!IsCaseSensitive()) {
+    ToLowerCase(tmp);
+  }
+  nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(name, nsnull, GetDefaultNamespaceID(),
+                                     getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CreateElement(nodeInfo, aReturn);
 }
 
 NS_IMETHODIMP
-nsDocument::CreateElementNS(const nsAString & namespaceURI,
-                            const nsAString & qualifiedName,
-                            nsIDOMElement **_retval)
+nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
+                            const nsAString& aQualifiedName,
+                            nsIDOMElement** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = nsnull;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
+                                                     aQualifiedName,
+                                                     mNodeInfoManager,
+                                                     getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CreateElement(nodeInfo, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2169,15 +2199,18 @@ NS_IMETHODIMP
 nsDocument::CreateAttribute(const nsAString& aName,
                             nsIDOMAttr** aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+
+  nsresult rv = nsContentUtils::CheckQName(aName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;
   nsDOMAttribute* attribute;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
-                                              getter_AddRefs(nodeInfo));
+  rv = mNodeInfoManager->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
+                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   attribute = new nsDOMAttribute(nsnull, nodeInfo, value);
@@ -2195,8 +2228,10 @@ nsDocument::CreateAttributeNS(const nsAString & aNamespaceURI,
   *aResult = nsnull;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
-                                              getter_AddRefs(nodeInfo));
+  nsresult rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
+                                                     aQualifiedName,
+                                                     mNodeInfoManager,
+                                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString value;

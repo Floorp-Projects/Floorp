@@ -63,9 +63,9 @@ public:
   virtual nsresult GetNodeInfo(const nsAString& aQualifiedName,
                                const nsAString& aNamespaceURI,
                                nsINodeInfo** aNodeInfo);
-
-  virtual nsresult GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo);
+  virtual nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+                               const nsAString& aNamespaceURI,
+                               nsINodeInfo** aNodeInfo);
 
   virtual nsresult GetDocumentPrincipal(nsIPrincipal** aPrincipal);
   virtual nsresult SetDocumentPrincipal(nsIPrincipal* aPrincipal);

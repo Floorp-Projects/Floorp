@@ -82,7 +82,6 @@ public:
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMDocument interface
-  NS_IMETHOD GetDoctype(nsIDOMDocumentType** aDocumentType);
   NS_IMETHOD CreateCDATASection(const nsAString& aData,
                                 nsIDOMCDATASection** aReturn);
   NS_IMETHOD CreateEntityReference(const nsAString& aName,
@@ -90,15 +89,6 @@ public:
   NS_IMETHOD CreateProcessingInstruction(const nsAString& aTarget,
                                          const nsAString& aData,
                                          nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD CreateElement(const nsAString& aTagName, nsIDOMElement** aReturn);
-  NS_IMETHOD ImportNode(nsIDOMNode* aImportedNode, PRBool aDeep,
-                        nsIDOMNode** aReturn);
-  NS_IMETHOD CreateElementNS(const nsAString& aNamespaceURI,
-                             const nsAString& aQualifiedName,
-                             nsIDOMElement** aReturn);
-  NS_IMETHOD CreateAttributeNS(const nsAString& aNamespaceURI,
-                               const nsAString& aQualifiedName,
-                               nsIDOMAttr** aReturn);
   NS_IMETHOD GetElementById(const nsAString& aElementId,
                             nsIDOMElement** aReturn);
 

@@ -1588,6 +1588,54 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
   return PR_FALSE;
 }
 
+// static
+nsresult
+nsContentUtils::CheckQName(const nsAString& aQualifiedName,
+                           PRBool aNamespaceAware)
+{
+  nsIParserService *parserService = GetParserServiceWeakRef();
+  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
+
+  const PRUnichar *colon;
+  return parserService->IsValidQName(PromiseFlatString(aQualifiedName),
+                                     aNamespaceAware, &colon) ?
+         NS_OK : NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+}
+
+// static
+nsresult
+nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
+                                     const nsAString& aQualifiedName,
+                                     nsINodeInfoManager* aNodeInfoManager,
+                                     nsINodeInfo** aNodeInfo)
+{
+  nsIParserService* parserService = GetParserServiceWeakRef();
+  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
+
+  const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
+  const PRUnichar* colon;
+  if (!parserService->IsValidQName(qName, PR_TRUE, &colon)) {
+    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
+
+  nsresult rv;
+  if (colon) {
+    const PRUnichar* end;
+    qName.EndReading(end);
+
+    nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(colon + 1, end));
+
+    rv = aNodeInfoManager->GetNodeInfo(Substring(qName.get(), colon), prefix,
+                                       aNamespaceURI, aNodeInfo);
+  }
+  else {
+    rv = aNodeInfoManager->GetNodeInfo(aQualifiedName, nsnull, aNamespaceURI,
+                                       aNodeInfo);
+  }
+
+  return rv;
+}
+
 void
 nsCxPusher::Push(nsISupports *aCurrentTarget)
 {

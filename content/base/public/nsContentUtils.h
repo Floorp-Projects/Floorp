@@ -52,6 +52,8 @@ class nsIContent;
 class nsIDocument;
 class nsIDocShell;
 class nsINameSpaceManager;
+class nsINodeInfo;
+class nsINodeInfoManager;
 class nsIScriptSecurityManager;
 class nsIThreadJSContextStack;
 class nsIParserService;
@@ -276,6 +278,14 @@ public:
   static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
                               nsIContent *aContent);
   
+  static nsresult CheckQName(const nsAString& aQualifiedName,
+                             PRBool aNamespaceAware = PR_TRUE);
+
+  static nsresult GetNodeInfoFromQName(const nsAString& aNamespaceURI,
+                                       const nsAString& aQualifiedName,
+                                       nsINodeInfoManager* aNodeInfoManager,
+                                       nsINodeInfo** aNodeInfo);
+
 private:
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
                                           nsIDocument** aDocument,

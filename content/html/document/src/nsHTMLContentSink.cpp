@@ -882,7 +882,8 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     NS_ConvertUTF16toUTF8 tmp(aNode.GetText());
     ToLowerCase(tmp);
 
-    rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
+    nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+    rv = mNodeInfoManager->GetNodeInfo(name, nsnull, kNameSpaceID_None,
                                        getter_AddRefs(nodeInfo));
   } else {
     nsCOMPtr<nsIDTD> dtd;

@@ -98,7 +98,6 @@
 
 #include "jsapi.h"
 
-// baseURI
 #include "nsIDOMXPathEvaluator.h"
 
 #ifdef DEBUG_waterson
@@ -1262,6 +1261,9 @@ nsGenericElement::SetAttribute(const nsAString& aName,
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
   if (!name) {
+    nsresult rv = nsContentUtils::CheckQName(aName, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
     NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1405,9 +1407,10 @@ nsGenericElement::SetAttributeNS(const nsAString& aNamespaceURI,
                                  const nsAString& aValue)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  nsresult rv = mNodeInfo->NodeInfoManager()->GetNodeInfo(aQualifiedName,
-                                                          aNamespaceURI,
-                                                          getter_AddRefs(ni));
+  nsresult rv =
+    nsContentUtils::GetNodeInfoFromQName(aNamespaceURI, aQualifiedName,
+                                         mNodeInfo->NodeInfoManager(),
+                                         getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SetAttr(ni->NamespaceID(), ni->NameAtom(), ni->GetPrefixAtom(),

@@ -156,7 +156,7 @@ public:
   NS_IMETHOD SetXmlVersion(const nsAString& aXmlVersion);
 
   // nsIDOMNode interface
-  NS_DECL_NSIDOMNODE
+  NS_FORWARD_NSIDOMNODE(nsDocument::)
 
   // nsIDOM3Node interface
   NS_IMETHOD GetBaseURI(nsAString& aBaseURI);
@@ -252,6 +252,11 @@ protected:
 
   nsresult CreateAndAddWyciwygChannel(void);
   nsresult RemoveWyciwygChannel(void);
+
+  PRInt32 GetDefaultNamespaceID() const
+  {
+    return mDefaultNamespaceID;
+  };
 
   nsCOMPtr<nsIChannel>     mChannel;
 

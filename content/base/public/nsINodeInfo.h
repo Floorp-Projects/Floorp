@@ -119,9 +119,8 @@ public:
   virtual nsresult GetNodeInfo(const nsAString& aQualifiedName,
                                const nsAString& aNamespaceURI,
                                nsINodeInfo** aNodeInfo) = 0;
-
-  virtual nsresult GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
-                               PRInt32 aNamespaceID,
+  virtual nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+                               const nsAString& aNamespaceURI,
                                nsINodeInfo** aNodeInfo) = 0;
 
   /*

@@ -160,8 +160,6 @@ public:
     NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval);
 
     // nsIDOMDocument interface overrides
-    NS_IMETHOD CreateElement(const nsAString & tagName,
-                             nsIDOMElement **_retval);
     NS_IMETHOD GetElementById(const nsAString & elementId,
                               nsIDOMElement **_retval); 
 
@@ -229,6 +227,11 @@ protected:
                                  nsIAtom* aAttr);
 
     void GetFocusController(nsIFocusController** aFocusController);
+
+    PRInt32 GetDefaultNamespaceID() const
+    {
+        return kNameSpaceID_XUL;
+    };
 
 protected:
     // pseudo constants

@@ -1401,34 +1401,6 @@ nsXULDocument::SetCurrentPrototype(nsIXULPrototypeDocument* aDocument)
 //
 
 NS_IMETHODIMP
-nsXULDocument::CreateElement(const nsAString& aTagName,
-                             nsIDOMElement** aReturn)
-{
-    NS_PRECONDITION(aReturn != nsnull, "null ptr");
-    if (! aReturn)
-        return NS_ERROR_NULL_POINTER;
-
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-      char* tagCStr = ToNewCString(aTagName);
-
-      PR_LOG(gXULLog, PR_LOG_DEBUG,
-             ("xul[CreateElement] %s", tagCStr));
-
-      nsCRT::free(tagCStr);
-    }
-#endif
-
-    // CreateElement in the XUL document defaults to the XUL namespace.
-    nsCOMPtr<nsINodeInfo> ni;
-    mNodeInfoManager->GetNodeInfo(aTagName, nsnull, kNameSpaceID_XUL,
-                                  getter_AddRefs(ni));
-
-    return nsDocument::CreateElement(ni, aReturn);
-}
-
-
-NS_IMETHODIMP
 nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                       const nsAString& aValue,
                                       nsIDOMNodeList** aReturn)
