@@ -78,6 +78,7 @@ if (!$product_id || !CanEnterProduct($product)) {
     }
 
     $product = (keys %products)[0];
+    $product_id = get_product_id($product);
 }
 
 ######################################################################
