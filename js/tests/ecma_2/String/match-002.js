@@ -46,12 +46,12 @@
                           "/([\d]{5})([-\ ]?[\d]{4})?$/",
                           "Boston, Mass. 02134",
                           14,
-                          ["02134", "02134"]);
+                          ["02134", "02134", undefined]);
 
     AddGlobalRegExpCases( /([\d]{5})([-\ ]?[\d]{4})?$/g,
                           "/([\d]{5})([-\ ]?[\d]{4})?$/g",
                           "Boston, Mass. 02134",
-                          ["02134", ]);
+                          ["02134"]);
 
     // set the value of lastIndex
     re = /([\d]{5})([-\ ]?[\d]{4})?$/;
@@ -63,7 +63,7 @@
                      "re = /([\d]{5})([-\ ]?[\d]{4})?$/; re.lastIndex =0",
                      s,
                      s.lastIndexOf("0"),
-                     ["02134", "02134"]);
+                     ["02134", "02134", undefined]);
 
 
     re.lastIndex = s.length;
@@ -73,7 +73,7 @@
                     s.length,
                     s,
                     s.lastIndexOf("0"),
-                    ["02134", "02134"] );
+                    ["02134", "02134", undefined] );
 
     re.lastIndex = s.lastIndexOf("0");
 
@@ -82,7 +82,7 @@
                     s.lastIndexOf("0"),
                     s,
                     s.lastIndexOf("0"),
-                    ["02134", "02134"]);
+                    ["02134", "02134", undefined]);
 
     re.lastIndex = s.lastIndexOf("0") + 1;
 
@@ -91,7 +91,7 @@
                     s.lastIndexOf("0") +1,
                     s,
                     s.lastIndexOf("0"),
-                    ["02134", "02134"]);
+                    ["02134", "02134", undefined]);
 
     test();
 
