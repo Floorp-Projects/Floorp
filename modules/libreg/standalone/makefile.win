@@ -93,12 +93,14 @@ export:: docopy $(DLL) $(LIBRARY)
     $(MAKE_INSTALL) $(DLL)                    $(DIST)\bin
     $(MAKE_INSTALL) $(LIBRARY)                $(DIST)\lib
     $(MAKE_INSTALL) $(OBJDIR)\$(LIBNAME).lib  $(DIST)\lib
-    $(RM) *.[hc]
      
 
-clobber::
+clobber_all::
     
     $(RM) $(DIST)\bin\$(LIBNAME).dll
     $(RM) $(DIST)\lib\$(LIBNAME).lib
     $(RM) $(DIST)\lib\$(LIBNAME)_s.lib
+    $(RM) *.[hc]
+
+clobber::
     $(RM) *.[hc]

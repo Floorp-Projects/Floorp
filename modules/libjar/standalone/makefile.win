@@ -49,17 +49,17 @@ LLIBS=                        \
 
 include <$(DEPTH)/config/rules.mak>
 
-docopy:
+export::
     $(MAKE_INSTALL) ..\nsZip*.*  .
     $(MAKE_INSTALL) ..\zip*.*    .
 
-export:: docopy
-
-install:: $(LIBRARY)
+libs:: $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\jar_s.lib $(DIST)\lib
-    $(RM) *.h *.cpp
 
 clobber::
-  $(RM) $(OBJS)
+  $(RM) *.h *.cpp
+
+clobber_all::
+  $(RM) *.h *.cpp
   $(RM) $(DIST)\lib\jar_s.lib
 
