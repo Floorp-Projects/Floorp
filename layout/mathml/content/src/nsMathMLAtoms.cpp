@@ -24,7 +24,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsMathMLAtoms.h"
 
-static const char kMathMLNameSpace[] = "http://www.w3.org/Math/MathML";
+static const char kMathMLNameSpace[] = "http://www.w3.org/1998/Math/MathML";
 
 PRInt32  nsMathMLAtoms::nameSpaceID;
 

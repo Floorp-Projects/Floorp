@@ -78,6 +78,19 @@ struct OperatorNode {
   float           mRightSpace;  // unit is em
 };
 
+/*
+  The MathML REC says: 
+  "If the operator does not occur in the dictionary with the specified form,
+  the renderer should use one of the forms which is available there, in the 
+  order of preference: infix, postfix, prefix."
+  
+  The following variable will be used to keep track of all possible forms
+  encountered in the Operator Dictionary. 
+*/
+#ifndef NS_MATHML_STRICT_LOOKUP
+static OperatorNode* gOperatorFound[4];
+#endif
+
 // index comparitor: based on the string of the operator and its form bits
 class OperatorComparitor: public nsAVLNodeComparitor {
 public:
@@ -88,18 +101,27 @@ public:
 
     PRInt32 rv;
     rv = one->mStr.Compare(two->mStr, PR_FALSE);
-    if (rv == 0) {
+    if (0 == rv) {
       nsOperatorFlags form1 = NS_MATHML_OPERATOR_GET_FORM(one->mFlags);
       nsOperatorFlags form2 = NS_MATHML_OPERATOR_GET_FORM(two->mFlags);
-      if (form1 < form2)      rv = -1;
-      else if (form1 > form2) rv =  1;
+      if (form1 == form2) return 0;
+      else {
+        rv = (form1 < form2) ? -1 : 1;
+
+#ifndef NS_MATHML_STRICT_LOOKUP
+        // Record that the operator was found in a different form.
+        // We don't know which is the input, we grab both of them and check later
+        gOperatorFound[form1] = one;
+        gOperatorFound[form2] = two;
+#endif
+      }
     }
     return rv;
   }
 };
 
 
-static PRInt32             gTableRefCount;
+static PRInt32             gTableRefCount = 0;
 static OperatorNode*       gOperatorArray;
 static nsAVLTree*          gOperatorTree;
 static OperatorComparitor* gComparitor;
@@ -162,8 +184,27 @@ nsMathMLOperators::LookupOperator(const nsStr&          aOperator,
 {
   NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
   if (gOperatorTree) {
+
+#ifndef NS_MATHML_STRICT_LOOKUP
+    gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX] = nsnull;
+    gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX] = nsnull;
+    gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX] = nsnull;
+#endif
+
     OperatorNode node(aOperator, aForm);
     OperatorNode* found = (OperatorNode*)gOperatorTree->FindItem(&node);
+
+#ifndef NS_MATHML_STRICT_LOOKUP
+    // Check if the operator was perhaps found in a different form
+    // Here we check that we are not referring to the input itself
+    if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
+    if (found == &node) found = nsnull;
+    if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
+    if (found == &node) found = nsnull;
+    if (!found) found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX]; 
+    if (found == &node) found = nsnull;
+#endif
+
     if (found) {
       NS_ASSERTION(found->mStr.Equals(aOperator), "bad tree");
       *aFlags = found->mFlags;
