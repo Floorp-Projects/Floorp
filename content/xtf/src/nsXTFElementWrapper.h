@@ -99,6 +99,7 @@ public:
   PRUint32 GetAttrCount() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
 
+  virtual void BeginAddingChildren();
   virtual void DoneAddingChildren();
   
   // nsIDOMElement specializations:

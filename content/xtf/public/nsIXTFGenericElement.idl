@@ -40,7 +40,7 @@
 
 interface nsIXTFGenericElementWrapper;
 
-[scriptable, uuid(39e595c6-c566-40ad-bc4c-92fc4352cffd)]
+[scriptable, uuid(e339eb1d-3ea8-4c85-87ce-644eb7a19034)]
 interface nsIXTFGenericElement : nsIXTFElement
 {
   // onCreated: Will be called before any notifications are sent to

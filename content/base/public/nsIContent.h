@@ -60,8 +60,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x658d21a4, 0xc446, 0x11d8, \
-  { 0x84, 0xe1, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
+{ 0xdd5c7dd9, 0x4c9b, 0x46ac, \
+  { 0x87, 0x5c, 0xcb, 0xba, 0xe5, 0x41, 0x84, 0xb5 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -580,6 +580,16 @@ public:
    * DoneCreatingElement() has already been called and is out of the picture).
    */
   virtual void DoneCreatingElement()
+  {
+  }
+
+  /**
+   * This method is called when the parser begins creating the element's 
+   * children, if any are present.
+   *
+   * This is only called for XTF elements currently.
+   */
+  virtual void BeginAddingChildren()
   {
   }
 

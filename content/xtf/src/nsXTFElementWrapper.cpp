@@ -338,6 +338,13 @@ nsXTFElementWrapper::GetAttrCount() const
 }
 
 void
+nsXTFElementWrapper::BeginAddingChildren()
+{
+  if (mNotificationMask & nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN)
+    GetXTFElement()->BeginAddingChildren();
+}
+
+void
 nsXTFElementWrapper::DoneAddingChildren()
 {
   if (mNotificationMask & nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN)

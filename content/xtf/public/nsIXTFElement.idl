@@ -43,7 +43,7 @@ interface nsIDOMElement;
 interface nsIDOMNode;
 interface nsIDOMEvent;
 
-[scriptable, uuid(f0617ed1-db6a-4704-ac4b-67bf15a77788)]
+[scriptable, uuid(e29224e9-429e-4bcc-98de-ee7fc10e5866)]
 interface nsIXTFElement : nsISupports
 {
   // called when the wrapper object is being destroyed.
@@ -113,9 +113,10 @@ interface nsIXTFElement : nsISupports
   const unsigned long NOTIFY_WILL_REMOVE_ATTRIBUTE = 0x00001000;
   const unsigned long NOTIFY_ATTRIBUTE_REMOVED     = 0x00002000;
   
-  const unsigned long NOTIFY_DONE_ADDING_CHILDREN  = 0x00004000;
+  const unsigned long NOTIFY_BEGIN_ADDING_CHILDREN = 0x00004000;
+  const unsigned long NOTIFY_DONE_ADDING_CHILDREN  = 0x00008000;
   
-  const unsigned long NOTIFY_HANDLE_DEFAULT        = 0x00008000;
+  const unsigned long NOTIFY_HANDLE_DEFAULT        = 0x00010000;
   
   // Event notifications:
 
@@ -140,6 +141,8 @@ interface nsIXTFElement : nsISupports
   void willRemoveAttribute(in nsIAtom name);
   void attributeRemoved(in nsIAtom name);
 
+  // These are for batching of child insertions during document load
+  void beginAddingChildren();
   void doneAddingChildren();
 
   // The default handler for DOM Events.
