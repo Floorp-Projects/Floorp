@@ -228,10 +228,11 @@ typedef FILE FILESTREAM;
 #define MAXPROMPT 256          /* Maximum length of prompt regexp+1 */
 #define MAXRAWINCOMPLETE 5     /* Maximum incomplete raw buffer size */
 #define MAXSTREAMTERM 11       /* Maximum stream terminator buffer size */
-#define MAXSHELLINITSTR 256    /* Maximum length of shell init string+1 */
 #define MAXCOOKIESTR 64        /* Maximum length of cookie string+1 */
 #define MAXESCAPEPARAMS 16     /* Maximum no. of numeric ESCAPE parameters */
 #define MAXSTRINGPARAM  512    /* Maximum length of string ESCAPE parameters */
+#define MAXSHELLINITCMD   2    /* Maximum no. of shell init commands */
+#define MAXSHELLINITSTR 256    /* Maximum length of shell init string+1 */
 
 #define MAXPTYIN 128           /* 1/2 POSIX minimum MAX_INPUT for PTY */
 
@@ -506,9 +507,9 @@ struct lterms {
                                       JUST A LIST OF DELIMITERS AT PRESENT */
 
   char cookie[MAXCOOKIESTR];       /* cookie string */
-  char shellInitStr[MAXSHELLINITSTR];
-                                   /* shell initialization string */
-  int shellInitFlag;               /* shell initialization flag */
+  char shellInitStr[MAXSHELLINITCMD][MAXSHELLINITSTR];
+                                   /* shell initialization strings */
+  int shellInitCommands;           /* shell init command count */
 
   struct ptys pty;                 /* pseudo-tty (PTY) stream info for LTERM */
   struct LtermProcess ltermProcess; /* LTERM process structure */

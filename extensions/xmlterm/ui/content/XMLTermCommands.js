@@ -34,6 +34,9 @@ DefineTip('Beginner level setting displays keyboard shortcuts at the top of the 
 DefineTip('Icons setting controls whether directory listings use icons',
           'icons');
 
+DefineTip('Windows setting controls whether double-clicking creates new windows',
+          'windows');
+
 DefineTip('Single click an explicit (underlined) hyperlink; double click implicit (usually blue) hyperlinks',
          'clicking');
 
@@ -209,7 +212,6 @@ function NewXMLTerm(firstcommand) {
   newwin = window.openDialog( "chrome://xmlterm/content/xmlterm.xul",
                               "xmlterm", "chrome,dialog=no,resizable",
                               firstcommand);
-  //newwin = window.xmlterm.NewXMLTermWindow(firstcommand);
   dump("NewXMLTerm: "+newwin+"\n")
   return (false);
 }
@@ -244,7 +246,7 @@ function UpdateSettings() {
   var oldShowIcons = window.showIcons;
   window.showIcons = document.xmltform1.icons.options[document.xmltform1.icons.selectedIndex].value;
 
-  //window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
+  window.windowsMode = document.xmltform1.windows.options[document.xmltform1.windows.selectedIndex].value;
 
   dump("UpdateSettings: userLevel="+window.userLevel+"\n");
   dump("UpdateSettings: windowsMode="+window.windowsMode+"\n");
@@ -475,9 +477,12 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
          var isCurrentCommand = (Math.abs(entryNumber)+1 ==
                                  window.xmlterm.currentEntryNumber);
 
-         if (!isCurrentCommand && (arg2 != null)) {
+         if ( (arg2 != null) && 
+              (!isCurrentCommand || (window.windowsMode === "on")) ) {
+           // Full pathname
            filename = arg2+arg1;
          } else {
+           // Short pathname
            filename = arg1;
            if (targetType === "exec")
              filename = "./"+filename;

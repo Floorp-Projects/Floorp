@@ -33,6 +33,9 @@ function StartupXMLTerm() {
    window.xmlterm = xmltshell;
    xmltwin.xmlterm = xmltshell;
 
+  if (window.arguments != null)
+     window.title = "xmlterm: "+window.arguments;
+
    // Initialize XMLTerm shell in content window with argvals
    window.xmlterm.Init(xmltwin, "", window.arguments);
 }
