@@ -4,7 +4,7 @@
 # auto generate the version number based on the output of the date
 # command.
 
-%define _version %(eval "date '+%Y%m%e'")
+%define _version %(eval "date '+%Y%m%d'")
 
 Summary: Development Monitoring Tool
 Name: tinderbox2
