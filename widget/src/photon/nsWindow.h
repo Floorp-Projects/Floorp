@@ -87,6 +87,7 @@ public:
   PRBool                OnKey(nsKeyEvent &aEvent);
   PRBool                DispatchFocus(nsGUIEvent &aEvent);
   virtual PRBool        OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+  NS_IMETHOD            GetFrameSize(int *FrameLeft, int *FrameRight, int *FrameTop, int *FrameBottom) const;
   
 protected:
 
@@ -135,7 +136,9 @@ protected:
 class ChildWindow : public nsWindow {
   public:
     ChildWindow();
-    virtual PRBool IsChild() { return(PR_TRUE); };
+    ~ChildWindow();
+	virtual PRBool IsChild() const;
+    NS_IMETHOD Destroy(void);
 };
 
 
