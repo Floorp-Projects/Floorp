@@ -186,6 +186,7 @@ public:
   }
 
   // nsITextControlElement
+  NS_IMETHOD SetValueGuaranteed(const nsAReadableString& aValue);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
 protected:
@@ -416,6 +417,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 {
   PRInt32 type;
   GetType(&type);
+
   if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD ||
       type == NS_FORM_INPUT_FILE) {
     nsIFormControlFrame* formControlFrame = nsnull;
@@ -425,15 +427,19 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
     // have) even if we force it to be created
     GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
-    nsIGfxTextControlFrame2* textControlFrame = nsnull;
+    PRBool frameOwnsValue = PR_FALSE;
     if (formControlFrame) {
+      nsIGfxTextControlFrame2* textControlFrame = nsnull;
       CallQueryInterface(formControlFrame, &textControlFrame);
+
+      if (textControlFrame) {
+        textControlFrame->OwnsValue(&frameOwnsValue);
+      } else {
+        // We assume if it's not a text control frame that it owns the value
+        frameOwnsValue = PR_TRUE;
+      }
     }
 
-    PRBool frameOwnsValue = PR_FALSE;
-    if (textControlFrame) {
-      textControlFrame->OwnsValue(&frameOwnsValue);
-    }
     if (frameOwnsValue) {
       formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
     } else {
@@ -443,7 +449,7 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
         aValue = NS_ConvertUTF8toUCS2(mValue);
       }
     }
- 
+
     return NS_OK;
   }
 
@@ -467,6 +473,12 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
 {
   return SetValueSecure(aValue, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueGuaranteed(const nsAReadableString& aValue)
+{
+  return SetValueSecure(aValue, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -1849,6 +1861,7 @@ nsHTMLInputElement::GetMaxNumValues(PRInt32 *_retval)
   PRInt32 type;
   GetType(&type);
   *_retval = type == NS_FORM_INPUT_IMAGE ? 2 : 1;
+
   return NS_OK;
 }
 

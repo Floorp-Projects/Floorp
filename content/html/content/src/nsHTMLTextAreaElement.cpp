@@ -113,6 +113,7 @@ public:
   NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // nsITextControlElement
+  NS_IMETHOD SetValueGuaranteed(const nsAReadableString& aValue);
   NS_IMETHOD SetValueChanged(PRBool aValueChanged);
 
   // nsIContent
@@ -421,6 +422,12 @@ nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
   }
 }
 
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetValueGuaranteed(const nsAReadableString& aValue)
+{
+  return SetValue(aValue);
+}
 
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
