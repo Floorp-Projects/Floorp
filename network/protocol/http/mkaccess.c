@@ -416,7 +416,7 @@ net_http_password_data_interp(
 }
 
 PRIVATE void
-net_initialize_http_access()
+net_initialize_http_access(void)
 {
 	/* register PW cache interp function */
 	
@@ -885,7 +885,7 @@ static PRThread  * cookie_lock_owner = NULL;
 static int cookie_lock_count = 0;
 
 PRIVATE void
-net_lock_cookie_list()
+net_lock_cookie_list(void)
 {
     if(!cookie_lock_monitor)
 	cookie_lock_monitor = PR_NewNamedMonitor("cookie-lock");
@@ -911,7 +911,7 @@ net_lock_cookie_list()
 }
 
 PRIVATE void
-net_unlock_cookie_list()
+net_unlock_cookie_list(void)
 {
    PR_EnterMonitor(cookie_lock_monitor);
 
