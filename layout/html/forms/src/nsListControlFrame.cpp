@@ -108,6 +108,15 @@ nsListControlFrame::nsListControlFrame()
 //---------------------------------------------------------
 nsListControlFrame::~nsListControlFrame()
 {
+  // if list is dropped down 
+  // make sure it gets rolled up
+  if (IsInDropDownMode()) {
+    PRBool isDown;
+    mComboboxFrame->IsDroppedDown(&isDown);
+    if (isDown) {
+      mComboboxFrame->ShowDropDown(PR_FALSE);
+    }
+  }
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
 
