@@ -46,7 +46,6 @@ class nsHTMLIFrameAccessible : public nsHTMLBlockAccessible,
     NS_IMETHOD GetAccName(nsAWritableString& aAccName);
     NS_IMETHOD GetAccValue(nsAWritableString& AccValue);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-    NS_IMETHOD GetAccState(PRUint32 *aAccState);
 
   protected:
     nsCOMPtr<nsIAccessible> mRootAccessible;

@@ -40,8 +40,6 @@ class nsDocAccessibleMixin
 
     NS_DECL_NSIACCESSIBLEDOCUMENT
 
-    NS_IMETHOD GetAccState(PRUint32 *aAccState);
-
   protected:
     nsCOMPtr<nsIDocument> mDocument;
 };
@@ -65,7 +63,6 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD GetAccValue(nsAWritableString& aAccValue);
     NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-    NS_IMETHOD GetAccState(PRUint32 *aAccState);
 
     // ----- nsIAccessibleEventReceiver -------------------
 
