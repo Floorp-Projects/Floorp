@@ -1,4 +1,5 @@
 nsIBinarySearchIterator.h
+nsIBreakState.h
 nsILineBreaker.h
 nsILineBreakerFactory.h
 nsILinearIterator.h
