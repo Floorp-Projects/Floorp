@@ -366,8 +366,6 @@ static nsModuleComponentInfo components[] = {
     nsStreamTransferConstructor}
 };
 
-// Generate base nsIAppShellComponent implementation.
-//NS_IMPL_IAPPSHELLCOMPONENT( nsStreamTransfer,
-//                            nsIStreamTransfer,
-//                            NS_ISTREAMTRANSFER_CONTRACTID,
-//                            0 )
+
+NS_IMPL_NSGETMODULE("Stream Transfer", components);
+
