@@ -1993,6 +1993,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     nsISupports *sessionState = sessionStateGrip;
     rv = auth->ChallengeReceived(this,
                                  challenge.get(),
+                                 proxyAuth,
                                  &sessionState,
                                  &mAuthContinuationState,
                                  &identityInvalid);
@@ -2038,6 +2039,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
     nsXPIDLCString result;
     sessionState = sessionStateGrip;
     rv = auth->GenerateCredentials(this, challenge.get(),
+                                   proxyAuth,
                                    ident->Domain(),
                                    ident->User(),
                                    ident->Password(),
@@ -2290,6 +2292,7 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
             if (NS_SUCCEEDED(rv)) {
                 nsISupports *sessionState = entry->mMetaData;
                 rv = auth->GenerateCredentials(this, challenge,
+                                               header == nsHttp::Proxy_Authorization,
                                                entry->Domain(),
                                                entry->User(),
                                                entry->Pass(),
@@ -2297,15 +2300,16 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
                                                &mAuthContinuationState,
                                                getter_Copies(temp));
                 entry->mMetaData.swap(sessionState);
-                if (NS_SUCCEEDED(rv)) {
+                if (NS_SUCCEEDED(rv))
                     creds = temp.get();
-                    ident.Set(entry->Identity());
-                }
             }
         }
         if (creds[0]) {
             LOG(("   adding \"%s\" request header\n", header.get()));
             mRequestHead.SetHeader(header, nsDependentCString(creds));
+            // remember the identity that we've tried, so we can know not to try
+            // it again if the server challenges us.
+            ident.Set(entry->Identity());
         }
     }
 }

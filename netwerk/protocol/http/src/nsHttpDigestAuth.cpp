@@ -33,6 +33,7 @@
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsEscape.h"
 #include "plbase64.h"
 #include "plstr.h"
 #include "prprf.h"
@@ -74,21 +75,72 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsresult rv;
-  HASHContextStr *hid;
-  unsigned char cbuf[DIGEST_LENGTH], *chash = cbuf;
-  PRUint32 clen;
 
+  HASHContextStr *hid;
   rv = mVerifier->HashBegin(nsISignatureVerifier::MD5, &hid);
   if (NS_FAILED(rv)) return rv;
 
-  rv = mVerifier->HashUpdate(hid, buf, len);
-  if (NS_FAILED(rv)) return rv;
+  // must call HashEnd to destroy |hid|
+  unsigned char cbuf[DIGEST_LENGTH], *chash = cbuf;
+  PRUint32 clen;
 
-  rv = mVerifier->HashEnd(hid, &chash, &clen, DIGEST_LENGTH);
-  if (NS_FAILED(rv)) return rv;
+  rv  = mVerifier->HashUpdate(hid, buf, len);
+  rv |= mVerifier->HashEnd(hid, &chash, &clen, DIGEST_LENGTH);
+  if (NS_SUCCEEDED(rv))
+    memcpy(mHashBuf, chash, DIGEST_LENGTH);
+  return rv;
+}
 
-  memcpy(mHashBuf, chash, DIGEST_LENGTH);
-  return NS_OK;
+nsresult
+nsHttpDigestAuth::GetMethodAndPath(nsIHttpChannel *httpChannel,
+                                   PRBool          isProxyAuth,
+                                   nsCString      &httpMethod,
+                                   nsCString      &path)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = httpChannel->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv)) {
+    PRBool isSecure;
+    rv = uri->SchemeIs("https", &isSecure);
+    if (NS_SUCCEEDED(rv)) {
+      //
+      // if we are being called in response to a 407, and if the protocol
+      // is HTTPS, then we are really using a CONNECT method.
+      //
+      if (isSecure && isProxyAuth) {
+        httpMethod = NS_LITERAL_CSTRING("CONNECT");
+        //
+        // generate hostname:port string. (unfortunately uri->GetHostPort
+        // leaves out the port if it matches the default value, so we can't
+        // just call it.)
+        //
+        PRInt32 port;
+        rv  = uri->GetAsciiHost(path);
+        rv |= uri->GetPort(&port);
+        if (NS_SUCCEEDED(rv)) {
+          path.Append(':');
+          path.AppendInt(port < 0 ? NS_HTTPS_DEFAULT_PORT : port);
+        }
+      }
+      else { 
+        rv  = httpChannel->GetRequestMethod(httpMethod);
+        rv |= uri->GetPath(path);
+        if (NS_SUCCEEDED(rv)) {
+          //
+          // make sure we escape any UTF-8 characters in the URI path.  the
+          // digest auth uri attribute needs to match the request-URI.
+          //
+          // XXX we should really ask the HTTP channel for this string
+          // instead of regenerating it here.
+          //
+          nsCAutoString buf;
+          path = NS_EscapeURL(path, esc_OnlyNonASCII, buf);
+        }
+      }
+    }
+  }
+  return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -98,6 +150,7 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
 NS_IMETHODIMP
 nsHttpDigestAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
                                     const char *challenge,
+                                    PRBool isProxyAuth,
                                     nsISupports **sessionState,
                                     nsISupports **continuationState,
                                     PRBool *result)
@@ -123,6 +176,7 @@ nsHttpDigestAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
 NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                       const char *challenge,
+                                      PRBool isProxyAuth,
                                       const PRUnichar *userdomain,
                                       const PRUnichar *username,
                                       const PRUnichar *password,
@@ -140,26 +194,18 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 
   // IIS implementation requires extra quotes
   PRBool requireExtraQuotes = PR_FALSE;
-  nsCAutoString serverVal;
-  httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), serverVal);
-  if (!serverVal.IsEmpty()) {
-    requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
+  {
+    nsCAutoString serverVal;
+    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), serverVal);
+    if (!serverVal.IsEmpty()) {
+      requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
+    }
   }
 
-  NS_ConvertUCS2toUTF8 cUser(username), cPass(password);
-
   nsresult rv;
-  nsCOMPtr<nsIURI> uri;
-  nsCAutoString path;
   nsCAutoString httpMethod;
-
-  rv = httpChannel->GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = uri->GetPath(path);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = httpChannel->GetRequestMethod(httpMethod);
+  nsCAutoString path;
+  rv = GetMethodAndPath(httpChannel, isProxyAuth, httpMethod, path);
   if (NS_FAILED(rv)) return rv;
 
   nsCAutoString realm, domain, nonce, opaque;
@@ -236,8 +282,10 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   else {
     nsCOMPtr<nsISupportsPRUint32> v(
             do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv));
-    v->SetData(1);
-    NS_ADDREF(*sessionState = v);
+    if (v) {        
+      v->SetData(1);
+      NS_ADDREF(*sessionState = v);
+    }
   }
   LOG(("   nonce_count=%s\n", nonce_count));
 
@@ -256,6 +304,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   // calculate credentials
   //
 
+  NS_ConvertUCS2toUTF8 cUser(username), cPass(password);
   rv = CalculateHA1(cUser, cPass, realm, algorithm, nonce, cnonce, ha1_digest);
   if (NS_FAILED(rv)) return rv;
 
@@ -365,9 +414,9 @@ nsHttpDigestAuth::CalculateResponse(const char * ha1_digest,
   contents.Append(ha2_digest, EXPANDED_DIGEST_LENGTH);
 
   nsresult rv = MD5Hash(contents.get(), contents.Length());
-  if (NS_FAILED(rv)) return rv;
-
-  return ExpandToHex(mHashBuf, result);
+  if (NS_SUCCEEDED(rv))
+    rv = ExpandToHex(mHashBuf, result);
+  return rv;
 }
 
 nsresult
@@ -469,9 +518,9 @@ nsHttpDigestAuth::CalculateHA2(const nsAFlatCString & method,
   }
 
   nsresult rv = MD5Hash(contents.get(), contents.Length());
-  if (NS_FAILED(rv)) return rv;
-
-  return ExpandToHex(mHashBuf, result);
+  if (NS_SUCCEEDED(rv))
+    rv = ExpandToHex(mHashBuf, result);
+  return rv;
 }
 
 nsresult
