@@ -23,7 +23,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsEditorController.h"
-#include "nsIGfxTextControlFrame.h"
 #include "nsIEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIFormControlFrame.h"
