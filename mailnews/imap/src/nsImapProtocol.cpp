@@ -603,6 +603,25 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
           rv = m_channel->OpenOutputStream(getter_AddRefs(m_outputStream));
       }
     } // if m_runningUrl
+
+    if (m_channel && m_mockChannel)
+    {
+      // set the security info for the mock channel to be the security status for our underlying transport.
+      nsCOMPtr<nsISupports> securityInfo;
+      m_channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+      m_mockChannel->SetSecurityInfo(securityInfo);
+
+      // and if we have a cache entry that we are saving the message to, set the security info on it too.
+      // since imap only uses the memory cache, passing this on is the right thing to do.
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+      if (mailnewsUrl)
+      {
+        nsCOMPtr<nsICachedNetData> cacheEntry;
+        mailnewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
+        if (cacheEntry)
+          cacheEntry->SetSecurityInfo(securityInfo);
+      }
+    }
   } // if aUR
     
   return rv;
@@ -6725,11 +6744,16 @@ nsImapMockChannel::~nsImapMockChannel()
     NS_RELEASE(m_url);
 }
 
-
 NS_IMETHODIMP nsImapMockChannel::Close()
 {
     m_channelListener = null_nsCOMPtr();
     return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetSecurityInfo(nsISupports * aSecurityInfo)
+{
+  mSecurityInfo = aSecurityInfo;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetProgressEventSink(nsIProgressEventSink ** aProgressEventSink)
@@ -6911,6 +6935,11 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
           // if the msg is unread, we should mark it read on the server. This lets
           // the code running this url we're loading from the cache, if it cares.
           imapUrl->SetMsgLoadingFromCache(PR_TRUE);
+          // be sure to set the cache entry's security info status as our security info status...
+          nsCOMPtr<nsISupports> securityInfo;
+          cacheEntry->GetSecurityInfo(getter_AddRefs(securityInfo));
+          SetSecurityInfo(securityInfo);
+
           return rv;
         }
       }    
@@ -7190,6 +7219,7 @@ nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
 NS_IMETHODIMP 
 nsImapMockChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-    *aSecurityInfo = nsnull;
+    *aSecurityInfo = mSecurityInfo;
+    NS_IF_ADDREF(*aSecurityInfo);
     return NS_OK;
 }

@@ -610,6 +610,7 @@ protected:
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsISupports> mSecurityInfo;
   nsCString m_ContentType;
 };
 
