@@ -521,7 +521,7 @@ static void DumpArbitraryHelp()
 
         nsCAutoString entryString;
         rv = catEntry->GetData(entryString);
-        if (NS_FAILED(rv) || !entryString.IsEmpty()) break;
+        if (NS_FAILED(rv) || entryString.IsEmpty()) break;
 
         nsXPIDLCString contractidString;
         rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,
