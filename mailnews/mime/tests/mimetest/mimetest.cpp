@@ -442,7 +442,7 @@ DoRFC822toHTMLConversion(char *filename)
   }
 
   // Assuming this is an RFC822 message...
-  mimeParser->OnStartBinding(aURL, (const char *) MESSAGE_RFC822);
+  mimeParser->OnStartRequest(aURL, (const char *) MESSAGE_RFC822);
 
   // Just pump all of the data from the file into libmime...
   while (NS_SUCCEEDED(in->PumpFileStream()))
@@ -452,7 +452,7 @@ DoRFC822toHTMLConversion(char *filename)
     mimeParser->OnDataAvailable(aURL, in, len);
   }
 
-  mimeParser->OnStopBinding(aURL, NS_OK, nsnull);
+  mimeParser->OnStopRequest(aURL, NS_OK, nsnull);
   NS_RELEASE(aURL);
   return NS_OK;
 }
