@@ -679,63 +679,65 @@ nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
     return NS_OK;    
 }
 
-PRInt32    
+PRInt32
 nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsString** aFolder)
 {
-    long err;
-    char* dir;
-    char* componentCString;
-
-// FIX: aSubdirectory is not processed at all in this function.
+    long        err;
+    char*       componentCString;
+    char        dir[MAXREGPATHLEN];
+    nsFileSpec  nsfsDir;
 
     *aFolder = nsnull;
-    
+
     nsString tempString;
-    
-    if ( GetQualifiedPackageName(aComponentName, tempString) == SUCCESS )
+
+    if ( GetQualifiedPackageName(aComponentName, tempString) != SUCCESS )
     {
         return NS_OK;
     }
 
     componentCString = tempString.ToNewCString();
-     
-    dir = (char*)PR_Malloc(MAXREGPATHLEN);
-    err = VR_GetDefaultDirectory( componentCString, MAXREGPATHLEN, dir );
-    if (err != REGERR_OK)
-    {
-        PR_FREEIF(dir);
-    }
 
-
-    if ( dir == NULL ) 
+    if((err = VR_GetDefaultDirectory( componentCString, MAXREGPATHLEN, dir )) != REGERR_OK)
     {
-        dir = (char*)PR_Malloc(MAXREGPATHLEN);
-        err = VR_GetPath( componentCString, MAXREGPATHLEN, dir );
-        if (err != REGERR_OK)
-        {
-            PR_FREEIF(dir);
-        }
-    
-        if ( dir != nsnull ) 
+        if((err = VR_GetPath( componentCString, MAXREGPATHLEN, dir )) == REGERR_OK)
         {
             int i;
 
             nsString dirStr(dir);
             if (  (i = dirStr.RFind(FILESEP)) > 0 ) 
             {
-                PR_FREEIF(dir);  
-                dir = (char*)PR_Malloc(i);
-                dir = dirStr.ToCString(dir, i);
+                // i is the index in the string, not the total number of
+                // characters in the string.  ToCString() requires the
+                // total number of characters in the string to copy,
+                // therefore add 1 to it.
+                dirStr.ToCString(dir, i + 1);
             }
         }
+        else
+        {
+            *dir = '\0';
+        }
     }
-
-    if ( dir != NULL ) 
+    else
     {
-        *aFolder = new nsString(dir);
+        *dir = '\0';
     }
 
-    PR_FREEIF(dir);
+    if(*dir != '\0') 
+    {
+        nsfsDir = dir;
+        if(aSubdirectory != "")
+        {
+          nsfsDir += aSubdirectory;
+          if(!nsfsDir.Exists())
+          {
+              nsfsDir.CreateDirectory();
+          }
+        }
+        *aFolder  = new nsString(nsfsDir.GetNativePathCString());
+    }
+
     delete [] componentCString;
     return NS_OK;
 }
