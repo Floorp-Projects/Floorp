@@ -51,7 +51,7 @@ public:
 	NS_IMETHOD			SetFlags(PRInt32 flags);
 	NS_IMETHOD			OrFlags(PRInt32 flags, PRInt32 *result);
 	NS_IMETHOD			AndFlags(PRInt32 flags, PRInt32 *result);
-	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force = FALSE) ;
+	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force) ;
 	NS_IMETHOD			GetHighWater(nsMsgKey *result) ;
 	NS_IMETHOD			SetExpiredMark(nsMsgKey expiredKey);
 	NS_IMETHOD			ChangeNumNewMessages(PRInt32 delta);
@@ -64,13 +64,13 @@ public:
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
 	NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) ;
 	NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) ;
-	NS_IMETHOD			GetCharacterSet(nsString &result) ;
-	NS_IMETHOD			SetCharacterSet(nsString &charSet) ;
-	NS_IMETHOD			GetLocale(nsString &result) ;
-	NS_IMETHOD			SetLocale(nsString &locale) ;
+	NS_IMETHOD			GetCharacterSet(nsString *result) ;
+	NS_IMETHOD			SetCharacterSet(nsString *charSet) ;
+	NS_IMETHOD			GetLocale(nsString *result) ;
+	NS_IMETHOD			SetLocale(nsString *locale) ;
 
-	NS_IMETHOD			SetMailboxName(nsString &newBoxName);
-	NS_IMETHOD			GetMailboxName(nsString &boxName);
+	NS_IMETHOD			SetMailboxName(nsString *newBoxName);
+	NS_IMETHOD			GetMailboxName(nsString *boxName);
 
 	NS_IMETHOD			SetVersion(PRUint32 version) ;
 	NS_IMETHOD			GetVersion(PRUint32 *result);
@@ -87,13 +87,13 @@ public:
 
     NS_IMETHOD			ChangeExpungedBytes(PRInt32 delta);
   
-	NS_IMETHOD			GetProperty(const char *propertyName, nsString &resultProperty);
-	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr);
+	NS_IMETHOD			GetProperty(const char *propertyName, nsString *resultProperty);
+	NS_IMETHOD			SetProperty(const char *propertyName, nsString *propertyStr);
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
 
-	NS_IMETHOD		    SetKnownArtsSet(nsString &newsArtSet);
-	NS_IMETHOD		    GetKnownArtsSet(nsString &newsArtSet);
+	NS_IMETHOD		    SetKnownArtsSet(nsString *newsArtSet);
+	NS_IMETHOD		    GetKnownArtsSet(nsString *newsArtSet);
 
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
@@ -117,10 +117,10 @@ public:
 	
 	nsresult			InitFromExistingDB();
 	// get and set arbitrary property, aka row cell value.
-	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr);
+	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr);
 	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
 	nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
-	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString &resultProperty);
+	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty);
 	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue);
 	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue);
 

@@ -507,7 +507,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 			if(NS_SUCCEEDED(rv))
 			{
-				folderInfo->SetMailboxName(folderNameStr);
+				folderInfo->SetMailboxName(&folderNameStr);
 			}
 
 			//Now let's create the actual new folder

@@ -38,7 +38,7 @@ public:
     NS_IMETHOD			SetFlags(PRInt32 flags) = 0;
     NS_IMETHOD			OrFlags(PRInt32 flags, PRInt32 *result) = 0;
     NS_IMETHOD			AndFlags(PRInt32 flags, PRInt32 *result) = 0;
-	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force = FALSE) = 0;
+	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force) = 0;
 	NS_IMETHOD			GetHighWater(nsMsgKey *result) = 0;
 	NS_IMETHOD			SetExpiredMark(nsMsgKey expiredKey) = 0;
 	NS_IMETHOD			ChangeNumNewMessages(PRInt32 delta) = 0;
@@ -51,13 +51,13 @@ public:
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity)  = 0;
     NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) = 0;
     NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) = 0;
-	NS_IMETHOD			GetCharacterSet(nsString &result) = 0;
-	NS_IMETHOD			SetCharacterSet(nsString &result) = 0;
-	NS_IMETHOD			GetLocale(nsString &result) = 0;
-	NS_IMETHOD			SetLocale(nsString &locale) = 0;
+	NS_IMETHOD			GetCharacterSet(nsString *result) = 0;
+	NS_IMETHOD			SetCharacterSet(nsString *result) = 0;
+	NS_IMETHOD			GetLocale(nsString *result) = 0;
+	NS_IMETHOD			SetLocale(nsString *locale) = 0;
     
-	NS_IMETHOD			SetMailboxName(nsString &newBoxName) = 0;
-	NS_IMETHOD			GetMailboxName(nsString &boxName) = 0;
+	NS_IMETHOD			SetMailboxName(nsString *newBoxName) = 0;
+	NS_IMETHOD			GetMailboxName(nsString *boxName) = 0;
 
 	NS_IMETHOD			SetVersion(PRUint32 version)  = 0;
 	NS_IMETHOD			GetVersion(PRUint32 *result) = 0;
@@ -74,12 +74,12 @@ public:
 
     NS_IMETHOD          ChangeExpungedBytes(PRInt32 delta) = 0;
 
-	NS_IMETHOD			GetProperty(const char *propertyName, nsString &resultProperty) = 0;
-	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr) = 0;
+	NS_IMETHOD			GetProperty(const char *propertyName, nsString *resultProperty) = 0;
+	NS_IMETHOD			SetProperty(const char *propertyName, nsString *propertyStr) = 0;
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue) = 0;
 	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue) = 0;
-	NS_IMETHOD		    SetKnownArtsSet(nsString &newsArtSet) = 0;
-	NS_IMETHOD		    GetKnownArtsSet(nsString &newsArtSet) =0;
+	NS_IMETHOD		    SetKnownArtsSet(nsString *newsArtSet) = 0;
+	NS_IMETHOD		    GetKnownArtsSet(nsString *newsArtSet) =0;
 };
 
 #endif // nsIDBFolderInfo_h__

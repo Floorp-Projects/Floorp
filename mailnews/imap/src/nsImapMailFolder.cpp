@@ -515,7 +515,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			if(NS_SUCCEEDED(rv))
 			{
 				// ### DMB used to be leafNameFromUser?
-				folderInfo->SetMailboxName(folderNameStr);
+				folderInfo->SetMailboxName(&folderNameStr);
 			}
 
 			//Now let's create the actual new folder

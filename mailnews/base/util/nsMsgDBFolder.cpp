@@ -158,7 +158,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(PRUnichar * aCharset)
 	if(NS_SUCCEEDED(rv))
 	{
 		nsString charset(aCharset);
-		rv = folderInfo->SetCharacterSet(charset);
+		rv = folderInfo->SetCharacterSet(&charset);
 	}
 	return rv;
 }
@@ -192,7 +192,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
 				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
 
-				folderInfo->GetCharacterSet(mCharset);
+				folderInfo->GetCharacterSet(&mCharset);
         
 				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
 					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);

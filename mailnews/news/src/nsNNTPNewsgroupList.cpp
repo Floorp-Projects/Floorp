@@ -230,7 +230,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 			{
 				nsAutoString knownArtsString (eOneByte);
                 nsMsgKey mark;
-				newsGroupInfo->GetKnownArtsSet(knownArtsString);
+				newsGroupInfo->GetKnownArtsSet(&knownArtsString);
                 
                 rv = newsGroupInfo->GetHighWater(&mark);
                 if (NS_FAILED(rv)) {
@@ -437,7 +437,7 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 			char *output = m_knownArts.set->Output();
 			if (output) {
 				nsString str(output);
-				newsGroupInfo->SetKnownArtsSet(str);
+				newsGroupInfo->SetKnownArtsSet(&str);
 			}
 			delete[] output;
 		}

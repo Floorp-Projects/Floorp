@@ -268,7 +268,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetVersion(PRUint32 *version)
 }
 
 
-NS_IMETHODIMP nsDBFolderInfo::SetHighWater(nsMsgKey highWater, PRBool force /* = FALSE */)
+NS_IMETHODIMP nsDBFolderInfo::SetHighWater(nsMsgKey highWater, PRBool force)
 {
 	if (force || m_highWaterMessageKey < highWater)
 		m_highWaterMessageKey = highWater;
@@ -350,12 +350,12 @@ void nsDBFolderInfo::RemoveLateredAt(PRInt32 laterIndex)
 {
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetMailboxName(nsString &newBoxName)
+NS_IMETHODIMP nsDBFolderInfo::SetMailboxName(nsString *newBoxName)
 {
 	return SetPropertyWithToken(m_mailboxNameColumnToken, newBoxName);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString &boxName)
+NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString *boxName)
 {
 	return GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
 }
@@ -499,25 +499,25 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetCharacterSet(nsString &result) 
+nsDBFolderInfo::GetCharacterSet(nsString *result) 
 {
 	GetProperty(kCharacterSetColumnName, result);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString &charSet) 
+NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString *charSet) 
 {
 	return SetProperty(kCharacterSetColumnName, charSet);
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetLocale(nsString &result) 
+nsDBFolderInfo::GetLocale(nsString *result) 
 {
 	GetProperty(kLocaleColumnName, result);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetLocale(nsString &locale) 
+NS_IMETHODIMP nsDBFolderInfo::SetLocale(nsString *locale) 
 {
 	return SetProperty(kLocaleColumnName, locale);
 }
@@ -562,26 +562,26 @@ void nsDBFolderInfo::ChangeImapUnreadPendingMessages(PRInt32 delta)
 }
 
 
-NS_IMETHODIMP nsDBFolderInfo::SetKnownArtsSet(nsString &newsArtSet)
+NS_IMETHODIMP nsDBFolderInfo::SetKnownArtsSet(nsString *newsArtSet)
 {
 	return SetProperty(kKnownArtsSetColumnName, newsArtSet);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(nsString &newsArtSet)
+NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(nsString *newsArtSet)
 {
 	return GetProperty(kKnownArtsSetColumnName, newsArtSet);
 }
 
 	// get arbitrary property, aka row cell value.
 
-NS_IMETHODIMP	nsDBFolderInfo::GetProperty(const char *propertyName, nsString &resultProperty)
+NS_IMETHODIMP	nsDBFolderInfo::GetProperty(const char *propertyName, nsString *resultProperty)
 {
 	nsresult err = NS_OK;
 	mdb_token	property_token;
 
 	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
 	if (err == NS_OK)
-		err = m_mdb->RowCellColumnTonsString(m_mdbRow, property_token, resultProperty);
+		err = m_mdb->RowCellColumnTonsString(m_mdbRow, property_token, *resultProperty);
 
 	return err;
 }
@@ -605,7 +605,7 @@ NS_IMETHODIMP	nsDBFolderInfo::SetUint32Property(const char *propertyName, PRUint
 	return err;
 }
 
-NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, nsString &propertyStr)
+NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, nsString *propertyStr)
 {
 	nsresult err = NS_OK;
 	mdb_token	property_token;
@@ -617,12 +617,12 @@ NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, nsString &pr
 	return err;
 }
 
-nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr)
+nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr)
 {
 	struct mdbYarn yarn;
 
 	yarn.mYarn_Grow = NULL;
-	nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, &propertyStr));
+	nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, propertyStr));
 	delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
 	return err;
 }
@@ -646,12 +646,12 @@ nsresult	nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 
 {
 	nsString propertyStr;
 	propertyStr.Append(propertyValue, 10);
-	return SetPropertyWithToken(aProperty, propertyStr);
+	return SetPropertyWithToken(aProperty, &propertyStr);
 }
 
-nsresult nsDBFolderInfo::GetPropertyWithToken(mdb_token aProperty, nsString &resultProperty)
+nsresult nsDBFolderInfo::GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty)
 {
-	return m_mdb->RowCellColumnTonsString(m_mdbRow, aProperty, resultProperty);
+	return m_mdb->RowCellColumnTonsString(m_mdbRow, aProperty, *resultProperty);
 }
 
 nsresult nsDBFolderInfo::GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue)
