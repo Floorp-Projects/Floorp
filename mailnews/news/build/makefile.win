@@ -40,6 +40,7 @@ OBJS=											\
 LLIBS=											\
 			$(MSGLIBS)							\
 			$(DIST)\lib\xpcom.lib				\
+			$(DIST)\lib\js32$(VERSION_NUMBER).lib   \
 			$(DIST)\lib\msgbsutl.lib			\
 			$(DIST)\lib\msgnews_s.lib			\
 			$(LIBNSPR)							\
