@@ -132,6 +132,11 @@
 #define NS_STYLE_FONT_SIZE_LARGER               7
 #define NS_STYLE_FONT_SIZE_SMALLER              8
 
+// See nsStyleFont mFlags
+#define NS_STYLE_FONT_DEFAULT                   0x00
+#define NS_STYLE_FONT_SIZE_EXPLICIT             0x01
+#define NS_STYLE_FONT_FACE_EXPLICIT             0x02
+
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_NORMAL                0
 #define NS_STYLE_POSITION_RELATIVE              1
