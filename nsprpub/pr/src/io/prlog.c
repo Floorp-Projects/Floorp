@@ -244,7 +244,6 @@ void _PR_LogCleanup(void)
 #endif
 }
 
-
 static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
 {
     char *ev;
@@ -432,9 +431,9 @@ PR_IMPLEMENT(void) PR_Abort(void)
     abort();
 }
 
+#ifdef DEBUG
 PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 {
-#ifdef DEBUG
     PR_LogPrint("Assertion failure: %s, at %s:%d\n", s, file, ln);
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
@@ -448,8 +447,8 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 #ifndef XP_MAC
     abort();
 #endif
-#endif /* DEBUG */
 }
+#endif /* DEBUG */
 
 #ifdef XP_MAC
 PR_IMPLEMENT(void) PR_Init_Log(void)
