@@ -78,7 +78,7 @@ void DemangleSymbol(const char * aSymbol,
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
 
-#elif
+#else
 void DemangleSymbol(const char * aSymbol, 
                     char * aBuffer,
                     int aBufLen)
