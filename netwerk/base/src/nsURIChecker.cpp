@@ -118,8 +118,21 @@ nsURIChecker::AsyncCheckURI(const nsACString &aURI,
 
     // See if it's an http channel, which needs special treatment:
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
-    if (httpChannel)
-        httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
+    if (httpChannel) {
+        // We can have an HTTP channel that has a non-HTTP URL if
+        // we're doing FTP via an HTTP proxy, for example.  See for
+        // example bug 148813
+        nsCOMPtr<nsIURI> channelURI;
+        mChannel->GetURI(getter_AddRefs(channelURI));
+        if (channelURI) {
+            PRBool isReallyHTTP = PR_FALSE;
+            channelURI->SchemeIs("http", &isReallyHTTP);
+            if (!isReallyHTTP)
+                channelURI->SchemeIs("https", &isReallyHTTP);
+            if (isReallyHTTP)
+                httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
+        }
+    }
 
     // Hook us up to listen to redirects and the like
     mChannel->SetNotificationCallbacks(this);
