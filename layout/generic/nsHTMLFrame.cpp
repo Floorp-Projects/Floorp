@@ -71,8 +71,14 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  // XXX Temporary hack...
+  NS_IMETHOD SetRect(const nsRect& aRect);
+
 protected:
   virtual PRIntn GetSkipSides() const;
+
+private:
+  nscoord mNaturalHeight;
 };
 
 //----------------------------------------------------------------------
@@ -95,6 +101,27 @@ RootFrame::SetInitialChildList(nsIPresContext& aPresContext,
 {
   mFrames.SetFrames(aChildList);
   return NS_OK;
+}
+
+// XXX Temporary hack until we support the CSS2 'min-width', 'max-width',
+// 'min-height', and 'max-height' properties. Then we can do this in a top-down
+// fashion
+NS_IMETHODIMP
+RootFrame::SetRect(const nsRect& aRect)
+{
+  nsresult  rv = nsHTMLContainerFrame::SetRect(aRect);
+
+  // Make sure our child's frame is adjusted as well
+  nsIFrame* kidFrame = mFrames.FirstChild();
+  if (nsnull != kidFrame) {
+    nscoord   yDelta = aRect.height - mNaturalHeight;
+    nsSize    kidSize;
+
+    kidFrame->GetSize(kidSize);
+    kidFrame->SizeTo(kidSize.width, kidSize.height + yDelta);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -162,23 +189,23 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Reflow our one and only child frame
+  nsHTMLReflowMetrics kidDesiredSize(nsnull);
   if (mFrames.NotEmpty()) {
-    nsIFrame* myOnlyChild = mFrames.FirstChild();
+    nsIFrame* kidFrame = mFrames.FirstChild();
 
-    // Note: the root frame does not have border or padding...
-    nsHTMLReflowMetrics desiredSize(nsnull);
     // We must pass in that the available height is unconstrained, because
     // constrained is only for when we're paginated...
-    nsHTMLReflowState kidReflowState(aPresContext, myOnlyChild,
-                                     aReflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
                                      nsSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE));
     if (isChildInitialReflow) {
       kidReflowState.reason = eReflowReason_Initial;
       kidReflowState.reflowCommand = nsnull;
     }
 
+    // XXX TROY
+#if 0
     // For a height that's 'auto', make the frame as big as the available space
-    // minus and top and bottom margins
+    // minus any top and bottom margins
     if (NS_AUTOHEIGHT == kidReflowState.computedHeight) {
       kidReflowState.computedHeight = aReflowState.availableHeight -
         kidReflowState.computedMargin.top - kidReflowState.computedMargin.bottom;
@@ -189,20 +216,28 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       kidReflowState.ComputeBorderPaddingFor(myOnlyChild, &aReflowState, borderPadding);
       kidReflowState.computedHeight -= borderPadding.top + borderPadding.bottom;
     }
+#endif
 
     // Reflow the frame
     nsIHTMLReflow* htmlReflow;
-    if (NS_OK == myOnlyChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      ReflowChild(myOnlyChild, aPresContext, desiredSize, kidReflowState,
+    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      // XXX Temporary hack until the block/inline code changes. It expects
+      // the available width to be the space minus any margins...
+      kidReflowState.availableWidth -= kidReflowState.computedMargin.left +
+        kidReflowState.computedMargin.right;
+      ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                   aStatus);
     
       nsRect  rect(kidReflowState.computedMargin.left, kidReflowState.computedMargin.top,
-                   desiredSize.width, desiredSize.height);
-      myOnlyChild->SetRect(rect);
+                   kidDesiredSize.width, kidDesiredSize.height);
+      kidFrame->SetRect(rect);
 
+      // XXX TROY
+#if 0
       // XXX We should resolve the details of who/when DidReflow()
       // notifications are sent...
       htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+#endif
     }
 
     // If this is a resize reflow then do a repaint
@@ -210,13 +245,18 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       nsRect  damageRect(0, 0, aReflowState.availableWidth, aReflowState.availableHeight);
       Invalidate(damageRect, PR_FALSE);
     }
-  }
 
-  // Return the max size as our desired size
-  aDesiredSize.width = aReflowState.availableWidth;
-  aDesiredSize.height = aReflowState.availableHeight;
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+    // Return our desired size
+    aDesiredSize.width = kidDesiredSize.width + kidReflowState.computedMargin.left +
+      kidReflowState.computedMargin.right;
+    aDesiredSize.height = kidDesiredSize.height + kidReflowState.computedMargin.top +
+      kidReflowState.computedMargin.bottom;
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+
+    // XXX Temporary hack. Remember this for later when our parent resizes us
+    mNaturalHeight = aDesiredSize.height;
+  }
 
   NS_FRAME_TRACE_REFLOW_OUT("RootFrame::Reflow", aStatus);
   return NS_OK;

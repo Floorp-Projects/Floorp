@@ -1170,18 +1170,23 @@ PresShell::ReconstructFrames(void)
 {
   nsresult rv = NS_OK;
   if (nsnull != mRootFrame) {
-    nsIFrame* childFrame;
-    rv = mRootFrame->FirstChild(nsnull, childFrame);
-    
     if (nsnull != mDocument) {
-      nsIContent* root = mDocument->GetRootContent();
-      if (nsnull != root) {
+      nsIContent* rootContent = mDocument->GetRootContent();
+      if (nsnull != rootContent) {
+        nsIFrame*   docElementFrame;
+        nsIFrame*   parentFrame;
         
-        EnterReflowLock();
-        rv = mStyleSet->ReconstructFrames(mPresContext, root,
-                                          mRootFrame, childFrame);
-        ExitReflowLock();
-        NS_RELEASE(root);
+        // Get the frame that corresponds to the document element
+        GetPrimaryFrameFor(rootContent, docElementFrame);
+        if (nsnull != docElementFrame) {
+          docElementFrame->GetParent(parentFrame);
+          
+          EnterReflowLock();
+          rv = mStyleSet->ReconstructFrames(mPresContext, rootContent,
+                                            parentFrame, docElementFrame);
+          ExitReflowLock();
+          NS_RELEASE(rootContent);
+        }
       }
     }
   }

@@ -60,6 +60,7 @@ CPPSRCS=				\
 	nsSplittableFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsTextTransformer.cpp		\
+	nsViewportFrame.cpp		\
 	nsWBRFrame.cpp			\
 	$(NULL)
 
@@ -98,6 +99,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsSplittableFrame.obj	\
 	.\$(OBJDIR)\nsTextFrame.obj		\
 	.\$(OBJDIR)\nsTextTransformer.obj	\
+	.\$(OBJDIR)\nsViewportFrame.obj	\
 	.\$(OBJDIR)\nsWBRFrame.obj		\
 	$(NULL)
 

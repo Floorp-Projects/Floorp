@@ -254,6 +254,7 @@ extern nsresult NS_NewHTMLFrameOuterFrame(nsIFrame*& aNewFrame);
 // <frameset>
 extern nsresult NS_NewHTMLFramesetFrame(nsIFrame*& aNewFrame);
 
+extern nsresult NS_NewViewportFrame(nsIFrame*& aNewFrame);
 extern nsresult NS_NewRootFrame(nsIFrame*& aNewFrame);
 extern nsresult NS_NewImageFrame(nsIFrame*& aFrameResult);
 extern nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame);

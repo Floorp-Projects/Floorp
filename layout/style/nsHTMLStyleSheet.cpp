@@ -1575,34 +1575,15 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
   
     // Unless the 'overflow' policy forbids scrolling, wrap the frame in a
     // scroll frame.
-    nsIFrame*             scrollFrame = nsnull;
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      styleContext->GetMutableStyleData(eStyleStruct_Display);
- 
-    // XXX This needs to go away... Yes, but where.
-    // Check the webshell and see if scrolling is enabled there. 
-    nsISupports* container;
-    if (nsnull != aPresContext) {
-      aPresContext->GetContainer(&container);
-      if (nsnull != container) {
-        nsIWebShell* webShell = nsnull;
-        container->QueryInterface(kIWebShellIID, (void**) &webShell);
-        if (nsnull != webShell) {
-          PRInt32 scrolling = -1;
-          webShell->GetScrolling(scrolling);
-          if (-1 != scrolling) {
-            display->mOverflow = scrolling;
-          }
-          NS_RELEASE(webShell);
-        }
-        NS_RELEASE(container);
-      }
-    }
+    nsIFrame* scrollFrame = nsnull;
 
-    if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      styleContext->GetStyleData(eStyleStruct_Display);
+
+    if (IsScrollable(aPresContext, display)) {
       NS_NewScrollFrame(scrollFrame);
       scrollFrame->Init(*aPresContext, aDocElement, aRootFrame, styleContext);
-  
+    
       // The scrolled frame gets a pseudo element style context
       nsIStyleContext*  scrolledPseudoStyle =
         aPresContext->ResolvePseudoStyleContextFor(nsnull,
@@ -1656,50 +1637,105 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
                                        nsIFrame*&      aNewFrame)
 {
 #ifdef NS_DEBUG
-    nsIDocument*  doc;
-    nsIContent*   rootContent;
+  nsIDocument*  doc;
+  nsIContent*   rootContent;
 
-    // Verify that the content object is really the root content object
-    aDocElement->GetDocument(doc);
-    rootContent = doc->GetRootContent();
-    NS_RELEASE(doc);
-    NS_ASSERTION(rootContent == aDocElement, "unexpected content");
-    NS_RELEASE(rootContent);
+  // Verify that the content object is really the root content object
+  aDocElement->GetDocument(doc);
+  rootContent = doc->GetRootContent();
+  NS_RELEASE(doc);
+  NS_ASSERTION(rootContent == aDocElement, "unexpected content");
+  NS_RELEASE(rootContent);
 #endif
 
-  nsIFrame*         rootFrame;
+  nsIFrame*         viewportFrame;
   nsIStyleContext*  rootPseudoStyle;
 
-  // Create the root frame
-  NS_NewRootFrame(rootFrame);
-  
+  // Create the viewport frame
+  NS_NewViewportFrame(viewportFrame);
+
   // Create a pseudo element style context
+  // XXX Use a different pseudo style context...
   rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
                       nsHTMLAtoms::rootPseudo, nsnull);
 
-  // Initialize the root frame. It has a NULL content object
-  rootFrame->Init(*aPresContext, nsnull, nsnull, rootPseudoStyle);
+  // Initialize the viewport frame. It has a NULL content object
+  viewportFrame->Init(*aPresContext, nsnull, nsnull, rootPseudoStyle);
 
-  // Bind the root frame to the root view
+  // Bind the viewport frame to the root view
   nsIPresShell*   presShell = aPresContext->GetShell();
   nsIViewManager* viewManager = presShell->GetViewManager();
   nsIView*        rootView;
-  
+
   NS_RELEASE(presShell);
   viewManager->GetRootView(rootView);
-  rootFrame->SetView(rootView);
+  viewportFrame->SetView(rootView);
   NS_RELEASE(viewManager);
-  
+
+  // As long as the webshell doesn't prohibit it, create a scroll frame
+  // that will act as the scolling mechanism for the viewport
+  // XXX We should only do this when presenting to the screen, i.e., for galley
+  // mode and print-preview, but not when printing
+  PRBool       isScrollable = PR_TRUE;
+  nsISupports* container;
+  if (nsnull != aPresContext) {
+    aPresContext->GetContainer(&container);
+    if (nsnull != container) {
+      nsIWebShell* webShell = nsnull;
+      container->QueryInterface(kIWebShellIID, (void**) &webShell);
+      if (nsnull != webShell) {
+        PRInt32 scrolling = -1;
+        webShell->GetScrolling(scrolling);
+        if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
+          isScrollable = PR_FALSE;
+        }
+        NS_RELEASE(webShell);
+      }
+      NS_RELEASE(container);
+    }
+  }
+
+  // If the viewport should offer a scrolling mechanism, then create a
+  // scroll frame
+  nsIFrame* scrollFrame;
+  if (isScrollable) {
+    NS_NewScrollFrame(scrollFrame);
+    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, rootPseudoStyle);
+  }
+
+  // Create the root frame. The document element's frame is a child of the
+  // root frame.
+  //
+  // Note: the major reason we need the root frame is to implement margins for
+  // the document element's frame. If we didn't need to support margins on the
+  // document element's frame, then we could eliminate the root frame and make
+  // the document element frame a child of the viewport (or its scroll frame)
+  nsIFrame* rootFrame;
+  NS_NewRootFrame(rootFrame);
+
+  rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
+                  viewportFrame, rootPseudoStyle);
+  if (isScrollable) {
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
+                                             rootPseudoStyle, PR_TRUE);
+  }
+
   // Create frames for the document element and its child elements
   nsIFrame* docElementFrame;
   ConstructDocElementFrame(aPresContext, aDocElement, rootFrame,
                            rootPseudoStyle, docElementFrame);
   NS_RELEASE(rootPseudoStyle);
 
-  // Set the root frame's initial child list
+  // Set the initial child lists
   rootFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
+  if (isScrollable) {
+    scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+    viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+  } else {
+    viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+  }
 
-  aNewFrame = rootFrame;
+  aNewFrame = viewportFrame;
   return NS_OK;  
 }
 
@@ -2977,40 +3013,35 @@ HTMLStyleSheetImpl::ReconstructFrames(nsIPresContext* aPresContext,
     return rv;
   }
   
-  // XXX Currently we only know how to do this for XML documents
   if (nsnull != document) {
     nsIPresShell* shell = aPresContext->GetShell();
-//    nsIXMLDocument* xmlDocument;
-//    rv = document->QueryInterface(kIXMLDocumentIID, (void **)&xmlDocument);
-
     if (NS_SUCCEEDED(rv)) {
+      // XXX This API needs changing, because it appears to be designed for
+      // an arbitrary content element, but yet it always constructs the document
+      // element's frame. Plus it has the problem noted above in the previous XXX
       rv = aParentFrame->RemoveFrame(*aPresContext, *shell,
                                      nsnull, aFrameSubTree);
+
       if (NS_SUCCEEDED(rv)) {
-        nsIFrame *newChild;
-        // XXX See ConstructXMLContents for an explanation of why
-        // we create this pseudostyle
+        nsIFrame*         newChild;
         nsIStyleContext*  rootPseudoStyle;
-        rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
-                      nsHTMLAtoms::rootPseudo, nsnull);
-        
+
+        aParentFrame->GetStyleContext(rootPseudoStyle);
         rv = ConstructDocElementFrame(aPresContext, aContent,
                                       aParentFrame, rootPseudoStyle, newChild);
+        NS_RELEASE(rootPseudoStyle);
 
         if (NS_SUCCEEDED(rv)) {
           rv = aParentFrame->InsertFrames(*aPresContext, *shell,
                                           nsnull, nsnull, newChild);
         }
-        NS_IF_RELEASE(rootPseudoStyle);
       }
-//      NS_RELEASE(xmlDocument);
     }  
     NS_RELEASE(document);
     NS_RELEASE(shell);
   }
 
   return rv;
-
 }
 
 nsIFrame*
