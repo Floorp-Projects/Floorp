@@ -435,9 +435,10 @@ void
 nsWebCrawler::Start()
 {
   // Enable observing each URL load...
-//  nsIWebShell* shell = nsnull;
-//  mBrowser->GetWebShell(shell);
-//  shell->SetObserver(this);
+  nsIWebShell* shell = nsnull;
+  mBrowser->GetWebShell(shell);
+  shell->SetDocLoaderObserver(this);
+  NS_RELEASE(shell);
   LoadNextURL();
 }
 
@@ -767,7 +768,7 @@ nsWebCrawler::LoadNextURL()
   if (mPostExit) {
     mViewer->Exit();
   }
-}
+} 
 
 nsIPresShell*
 nsWebCrawler::GetPresShell()
