@@ -607,6 +607,17 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {	
+
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* targetFrame;
+  
+    // See if it's targeted at us
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+    }
+  }
+
   if (mUndetermined)
      gStripeAnimator->AddFrame(this);
   else 

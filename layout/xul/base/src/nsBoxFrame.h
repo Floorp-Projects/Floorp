@@ -114,7 +114,7 @@ protected:
     nsBoxFrame(PRUint32 aFlags = 0);
 
     virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize);
-    virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
+    virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual nsresult FlowChildren(nsIPresContext&   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
