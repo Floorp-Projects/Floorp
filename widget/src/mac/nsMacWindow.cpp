@@ -644,8 +644,9 @@ nsMacWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
   if ( err1 == noErr && err2 == noErr && err3 == noErr ) {
     nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
     if ( self ) {
-      // convert mouse to local coordinates since that's how gecko wants them
+      // convert mouse to local coordinates since that's how the event handler wants them
       StPortSetter portSetter(self->mWindowPtr);
+      StOriginSetter originSetter(self->mWindowPtr);
       ::GlobalToLocal(&mouseLoc);
       self->mMacEventHandler->Scroll ( axis, delta, mouseLoc );
     }

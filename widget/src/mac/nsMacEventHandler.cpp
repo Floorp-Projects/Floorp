@@ -148,6 +148,12 @@ HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta
   if ( !inByLine )
     scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
   
+  // convert window-relative (local) mouse coordinates to widget-relative
+  // coords for Gecko.
+  nsPoint widgetOrigin(0, 0);
+  inWidget->ConvertToDeviceCoordinates(widgetOrigin.x, widgetOrigin.y);
+  nsPoint mouseLocRelativeToWidget(inMouseLoc.h - widgetOrigin.x, inMouseLoc.v - widgetOrigin.y);
+		
   scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   scrollEvent.isShift = PR_FALSE;
   scrollEvent.isControl = PR_FALSE;
@@ -155,8 +161,8 @@ HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta
   scrollEvent.isAlt = PR_FALSE;
 	scrollEvent.message = NS_MOUSE_SCROLL;
   scrollEvent.delta = inDelta;
-	scrollEvent.point.x = inMouseLoc.h;
-	scrollEvent.point.y = inMouseLoc.v;
+	scrollEvent.point.x = mouseLocRelativeToWidget.x;
+	scrollEvent.point.y = mouseLocRelativeToWidget.y;
 	scrollEvent.time = PR_IntervalNow();
 	scrollEvent.widget = inWidget;
 	scrollEvent.nativeMsg = nsnull;
