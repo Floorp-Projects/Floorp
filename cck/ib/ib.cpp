@@ -95,7 +95,7 @@ int ReplaceXPIFiles()
 int ReplaceINIFile()
 {
 	CString command;
-	CString exeName("Seamonkey32e.exe");
+	CString exeName("NetscapeSetup.exe");
 	char	olddir[1024];
 
 	GetCurrentDirectory(sizeof(olddir), olddir);
@@ -741,7 +741,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		if (!infout)
 			exit( 3 );
 
-		fprintf(infout,"[autorun]\nopen = .\\Core\\Seamonkey32e.exe");
+		fprintf(infout,"[autorun]\nopen = .\\Core\\NetscapeSetup.exe");
 	}
 	CString component;
 	CString configiniPath = cdPath +"\\config.ini";
