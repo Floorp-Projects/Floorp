@@ -157,16 +157,6 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
   if (NS_FAILED(rv))
     platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-  else {
-    // also get a keyboard charset and use it as a fallback
-    nsAutoString keyboardCharset;
-    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_KeyboardInput, keyboardCharset);
-    if (NS_SUCCEEDED(rv) &&
-        !keyboardCharset.Equals(platformCharset)) {
-      platformCharset.Append((PRUnichar)',');
-      platformCharset.Append(keyboardCharset);
-    }
-  }
   
 
   // use transliterate to convert things like smart quotes to normal quotes for plain text
@@ -176,8 +166,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
   rv = converter->Init(cPlatformCharset.get(),
                   nsISaveAsCharset::attr_EntityAfterCharsetConv +
-                  nsISaveAsCharset::attr_FallbackQuestionMark +
-                  nsISaveAsCharset::attr_CharsetFallback,
+                  nsISaveAsCharset::attr_FallbackQuestionMark,
                   nsIEntityConverter::transliterate);
   NS_ENSURE_SUCCESS(rv, rv);
 
