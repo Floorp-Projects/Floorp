@@ -30,6 +30,11 @@ public:
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);

@@ -264,7 +264,7 @@ nsTextControlFrame::GetText(nsString* aText)
     nsIDOMHTMLInputElement* textElem = nsnull;
     result = mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem);
     if ((NS_OK == result) && textElem) {
-      result = textElem->GetValue(*aText);
+      result = textElem->GetDefaultValue(*aText);
       NS_RELEASE(textElem);
     }
   } else {
@@ -275,6 +275,41 @@ nsTextControlFrame::GetText(nsString* aText)
       NS_RELEASE(textArea);
     }
   }
+  return result;
+}
+
+NS_IMETHODIMP
+nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                       nsIContent*     aChild,
+                                       nsIAtom*        aAttribute,
+                                       PRInt32         aHint)
+{
+  nsresult result = NS_OK;
+  PRInt32 type;
+  GetType(&type);
+  if (mWidget) {
+    nsITextWidget* text = nsnull;
+    result = mWidget->QueryInterface(kITextWidgetIID, (void**)&text);
+    if ((NS_SUCCEEDED(result)) && (nsnull != text)) {
+      if (nsHTMLAtoms::value == aAttribute) {
+          nsString value;
+          nsresult result = GetText(&value);
+          PRUint32 ignore;
+          text->SetText(value, ignore);
+          nsFormFrame::StyleChangeReflow(aPresContext, this);
+        }
+      } else if (nsHTMLAtoms::size == aAttribute) {
+        nsFormFrame::StyleChangeReflow(aPresContext, this);
+      } else if (nsHTMLAtoms::maxlength == aAttribute) {
+        PRInt32 maxLength;
+        nsresult result = GetMaxLength(&maxLength);
+        if (NS_CONTENT_ATTR_NOT_THERE != result) {
+          text->SetMaxTextLength(maxLength);
+        }
+      }
+      NS_RELEASE(text);
+  }
+
   return result;
 }
 
@@ -298,19 +333,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   PRUint32 ignore;
   
   nsAutoString value;
-  // XXX Workaround for "text" input elements not initializing their widget
-  // to the initial value. See http://www.cnet.com
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    // Use the default value, because the widget has just been created and
-    // we're setting its initial value
-    nsIDOMHTMLInputElement* textElem = nsnull;
-    if (NS_SUCCEEDED(mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&textElem))) {
-      textElem->GetDefaultValue(value);
-      NS_RELEASE(textElem);
-    }
-  } else {
-    GetText(&value);
-  }
+  GetText(&value);
 
   nsITextAreaWidget* textArea = nsnull;
   nsITextWidget* text = nsnull;

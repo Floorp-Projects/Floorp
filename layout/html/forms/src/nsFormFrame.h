@@ -97,7 +97,7 @@ public:
 
   // other methods 
 
-  void OnRadioChecked(nsRadioControlFrame& aRadio); 
+  void OnRadioChecked(nsRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
     
   void AddFormControlFrame(nsIFormControlFrame& aFrame);
   static void AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame);
@@ -122,6 +122,10 @@ public:
   
   static PRBool GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent = 0);
   static PRBool GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent = 0);
+  static nsresult GetName(nsIFrame* aChildFrame, nsString& aName, nsIContent* aContent = 0);
+  static nsresult GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aContent = 0);
+  static void StyleChangeReflow(nsIPresContext* aPresContext,
+                                nsIFrame* aFrame);
 
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

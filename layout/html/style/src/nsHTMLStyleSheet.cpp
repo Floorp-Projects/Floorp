@@ -41,13 +41,14 @@
 #include "nsIViewManager.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
+#include "nsIWebShell.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
-
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 class HTMLAnchorRule : public nsIStyleRule {
 public:
@@ -331,9 +332,10 @@ protected:
                             nsIFrame*   aParentFrame,
                             nsIFrame*&  aFrame);
 
-  PRBool IsScrollable(const nsStyleDisplay* aDisplay);
+  PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
-  nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent);
+  nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
+                        nsIContent* aContent);
 
   PRBool AttributeRequiresRepaint(nsIAtom* aAttribute);
   PRBool AttributeRequiresReflow (nsIAtom* aAttribute);
@@ -903,7 +905,7 @@ HTMLStyleSheetImpl::CreateInputFrame(nsIContent* aContent,
       rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("image")) {
-      rv = NS_NewButtonControlFrame(aContent, aParentFrame, aFrame);
+      rv = NS_NewImageControlFrame(aContent, aParentFrame, aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
       rv = NS_NewTextControlFrame(aContent, aParentFrame, aFrame);
@@ -1383,12 +1385,30 @@ HTMLStyleSheetImpl::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
 }
 
 PRBool
-HTMLStyleSheetImpl::IsScrollable(const nsStyleDisplay* aDisplay)
+HTMLStyleSheetImpl::IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay)
 {
   // For the time being it's scrollable if the overflow property is auto or
   // scroll, regardless of whether the width  or height is fixed in size
-  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
-      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
+  PRInt32 scrolling    = -1;
+  nsISupports* container;
+  if (nsnull != aPresContext) {
+    aPresContext->GetContainer(&container);
+    if (nsnull != container) {
+      nsIWebShell* webShell = nsnull;
+      container->QueryInterface(kIWebShellIID, (void**) &webShell);
+      if (nsnull != webShell) {
+        webShell->GetScrolling(scrolling);
+        NS_RELEASE(webShell);
+      }
+      NS_RELEASE(container);
+    }
+  }
+
+  if (-1 == scrolling) {
+    scrolling = aDisplay->mOverflow;
+  }
+  if ((NS_STYLE_OVERFLOW_SCROLL == scrolling) ||
+      (NS_STYLE_OVERFLOW_AUTO == scrolling)) {
     return PR_TRUE;
   }
 
@@ -1457,7 +1477,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // If we're paginated then don't ever make the BODY scrollable
         // XXX Use a special BODY rule for paged media
         if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
-          if (display->IsBlockLevel() && IsScrollable(display)) {
+          if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
             // Create a scroll frame which will wrap the frame that needs to
             // be scrolled
             if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
@@ -1504,7 +1524,8 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 }
 
 nsIFrame*
-HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent)
+HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
+                                nsIContent* aContent)
 {
   nsIFrame* frame = aPresShell->FindFrameWithContent(aContent);
 
@@ -1514,7 +1535,7 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIContent* aContent)
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
-    if (display->IsBlockLevel() && IsScrollable(display)) {
+    if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
       frame->FirstChild(nsnull, frame);
     }
   }
@@ -1528,7 +1549,7 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
                                     PRInt32         aNewIndexInContainer)
 {
   nsIPresShell* shell = aPresContext->GetShell();
-  nsIFrame*     parentFrame = GetFrameFor(shell, aContainer);
+  nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, aContainer);
 
 #ifdef NS_DEBUG
   if (nsnull == parentFrame) {

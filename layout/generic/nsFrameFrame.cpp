@@ -164,7 +164,7 @@ public:
   NS_IMETHOD GetParentContent(nsIContent*& aContent);
   PRBool GetURL(nsIContent* aContent, nsString& aResult);
   PRBool GetName(nsIContent* aContent, nsString& aResult);
-  nsScrollPreference GetScrolling(nsIContent* aContent, PRBool aStandardMode);
+  PRInt32 GetScrolling(nsIContent* aContent, PRBool aStandardMode);
   nsFrameborder GetFrameBorder(PRBool aStandardMode);
   PRInt32 GetMarginWidth(nsIPresContext* aPresContext, nsIContent* aContent);
   PRInt32 GetMarginHeight(nsIPresContext* aPresContext, nsIContent* aContent);
@@ -457,7 +457,7 @@ PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
   return result;
 }
 
-nsScrollPreference nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStandardMode)
+PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStandardMode)
 {
   nsIHTMLContent* content = nsnull;
   aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
@@ -465,30 +465,30 @@ nsScrollPreference nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRB
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::scrolling, value))) {
       if (eHTMLUnit_Enumerated == value.GetUnit()) {
+        PRInt32 returnValue;
         PRInt32 intValue;
         intValue = value.GetIntValue();
         if (!aStandardMode) {
           if ((NS_STYLE_FRAME_ON == intValue) || (NS_STYLE_FRAME_SCROLL == intValue)) {
             intValue = NS_STYLE_FRAME_YES;
-          } 
-          else if ((NS_STYLE_FRAME_OFF == intValue) || (NS_STYLE_FRAME_NOSCROLL == intValue)) {
+          } else if ((NS_STYLE_FRAME_OFF == intValue) || (NS_STYLE_FRAME_NOSCROLL == intValue)) {
             intValue = NS_STYLE_FRAME_NO;
           }
         }
         if (NS_STYLE_FRAME_YES == intValue) {
-          NS_RELEASE(content);
-          return nsScrollPreference_kAlwaysScroll;
-        } 
-        else if (NS_STYLE_FRAME_NO == intValue) {
-          NS_RELEASE(content);
-          return nsScrollPreference_kNeverScroll;
+          returnValue = NS_STYLE_OVERFLOW_SCROLL;
+        } else if (NS_STYLE_FRAME_NO == intValue) {
+          returnValue = NS_STYLE_OVERFLOW_HIDDEN;
+        } else if (NS_STYLE_FRAME_AUTO == intValue) {
+          returnValue = NS_STYLE_OVERFLOW_AUTO;
         }
+        NS_RELEASE(content);
+        return returnValue;
       }      
     }
     NS_RELEASE(content);
   }
-  // XXX if we get here, check for nsIDOMFRAMEElement, nsIDOMIFRAMEElement interfaces
-  return nsScrollPreference_kAuto;
+  return -1;
 }
 
 nsFrameborder nsHTMLFrameInnerFrame::GetFrameBorder(PRBool aStandardMode)
@@ -633,9 +633,12 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     return rv;
   }
 
-  // pass along marginwidth, marginheight so sub document can use it
+  // pass along marginwidth, marginheight, scrolling so sub document can use it
   mWebShell->SetMarginWidth(GetMarginWidth(&aPresContext, content));
   mWebShell->SetMarginHeight(GetMarginHeight(&aPresContext, content));
+  nsCompatibility mode;
+  aPresContext.GetCompatibilityMode(mode);
+  mWebShell->SetScrolling(GetScrolling(content, mode));
 
   nsString frameName;
   if (GetName(content, frameName)) {
@@ -704,8 +707,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
                   webBounds.x, webBounds.y,
-                  webBounds.width, webBounds.height,
-                  GetScrolling(content, PR_FALSE));
+                  webBounds.width, webBounds.height);
+                  //GetScrolling(content, PR_FALSE));
   NS_RELEASE(content);
   NS_RELEASE(widget);
 

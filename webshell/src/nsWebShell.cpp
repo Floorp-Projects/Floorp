@@ -163,6 +163,8 @@ public:
   NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth);
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
+  NS_IMETHOD GetScrolling(PRInt32& aScrolling);
+  NS_IMETHOD SetScrolling(PRInt32 aScrolling);
   
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
@@ -295,6 +297,7 @@ protected:
   nsScrollPreference mScrollPref;
   PRInt32 mMarginWidth;
   PRInt32 mMarginHeight;
+  PRInt32 mScrolling;
   nsVoidArray mRefreshments;
 
   void ReleaseChildren();
@@ -400,6 +403,7 @@ nsWebShell::nsWebShell()
   mScriptContext = nsnull;
   mMarginWidth  = -1;  
   mMarginHeight = -1;
+  mScrolling = -1;
 }
 
 nsWebShell::~nsWebShell()
@@ -609,7 +613,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 
   CreatePluginHost(aAllowPlugins);
 
-  mScrollPref = aScrolling;
+  //mScrollPref = aScrolling;
 
   WEB_TRACE(WEB_TRACE_CALLS,
             ("nsWebShell::Init: this=%p", this));
@@ -1042,6 +1046,19 @@ nsWebShell::SetMarginHeight(PRInt32 aHeight)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::GetScrolling(PRInt32& aScrolling)
+{
+  aScrolling = mScrolling;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetScrolling(PRInt32 aScrolling)
+{
+  mScrolling = aScrolling;
+  return NS_OK;
+}
 /**
  * Document Load methods
  */

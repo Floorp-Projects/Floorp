@@ -47,6 +47,8 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsLeafFrame.h"
+#include "nsHTMLParts.h"
+#include "nsIReflowCommand.h"
 
 #include "net.h"
 #include "xp_file.h"
@@ -333,7 +335,7 @@ void nsFormFrame::AddFormControlFrame(nsIFormControlFrame& aFrame)
 }
   
 void
-nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl)
+nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl, PRBool aChecked)
 {
   nsString radioName;
   aControl.GetName(&radioName);
@@ -348,11 +350,17 @@ nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl)
     nsString groupName;
     group->GetName(groupName);
     nsRadioControlFrame* checkedRadio = group->GetCheckedRadio();
-    if (groupName.Equals(radioName) && (&aControl != checkedRadio)) {
-      if (checkedRadio) {
+    if (groupName.Equals(radioName)) {
+      if (aChecked) {
+        if (&aControl != checkedRadio) {
+          if (checkedRadio) {
+            checkedRadio->SetChecked(PR_FALSE, PR_FALSE);
+          }
+          group->SetCheckedRadio(&aControl);
+        }
+      } else if (&aControl == checkedRadio) {
         checkedRadio->SetChecked(PR_FALSE, PR_FALSE);
       }
-      group->SetCheckedRadio(&aControl);
     }
   }
 }
@@ -1068,3 +1076,80 @@ nsFormFrame::GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent)
   }
   return result;
 }
+
+nsresult
+nsFormFrame::GetName(nsIFrame* aChildFrame, nsString& aName, nsIContent* aContent) 
+{
+  nsresult result = NS_FORM_NOTOK;
+
+  nsIContent* content = aContent;
+  if (nsnull == content) {
+    aChildFrame->GetContent(content);
+  }
+  if (nsnull != content) {
+    nsIHTMLContent* htmlContent = nsnull;
+    result = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+    if (NS_SUCCEEDED(result) && (nsnull != htmlContent)) {
+      nsHTMLValue value;
+      result = htmlContent->GetAttribute(nsHTMLAtoms::name, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(aName);
+        }
+      }
+      NS_RELEASE(htmlContent);
+    }
+    if (nsnull == aContent) {
+      NS_RELEASE(content);
+    }
+  }
+  return result;
+}
+
+nsresult
+nsFormFrame::GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aContent) 
+{
+  nsresult result = NS_FORM_NOTOK;
+
+  nsIContent* content = aContent;
+  if (nsnull == content) {
+    aChildFrame->GetContent(content);
+  }
+  if (nsnull != content) {
+    nsIHTMLContent* htmlContent = nsnull;
+    result = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+    if (NS_SUCCEEDED(result) && (nsnull != htmlContent)) {
+      nsHTMLValue value;
+      result = htmlContent->GetAttribute(nsHTMLAtoms::value, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(aValue);
+        }
+      }
+      NS_RELEASE(htmlContent);
+    }
+    if (nsnull == aContent) {
+      NS_RELEASE(content);
+    }
+  }
+  return result;
+}
+
+void
+nsFormFrame::StyleChangeReflow(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame)
+{
+  nsIPresShell* shell;
+  shell = aPresContext->GetShell();
+    
+  nsIReflowCommand* reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                        nsIReflowCommand::StyleChanged);
+  if (NS_SUCCEEDED(rv)) {
+    shell->AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  NS_RELEASE(shell);
+}
+

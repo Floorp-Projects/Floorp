@@ -312,6 +312,15 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFormControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                     nsIContent*     aChild,
+                                     nsIAtom*        aAttribute,
+                                     PRInt32         aHint)
+{
+  return NS_OK;
+}
+
 nsWidgetInitData* 
 nsFormControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
 {

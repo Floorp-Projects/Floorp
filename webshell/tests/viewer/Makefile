@@ -199,6 +199,7 @@ install:: $(TARGETS)
 	$(INSTALL) samples/test8siz.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test8sca.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test8tab.html $(DIST)/bin/res/samples
+	$(INSTALL) samples/test8dom.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test9.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test9a.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test9b.html $(DIST)/bin/res/samples
@@ -237,6 +238,7 @@ clobber::
 	rm -f $(DIST)/bin/res/samples/test8siz.html
 	rm -f $(DIST)/bin/res/samples/test8sca.html
 	rm -f $(DIST)/bin/res/samples/test8tab.html
+	rm -f $(DIST)/bin/res/samples/test8dom.html
 	rm -f $(DIST)/bin/res/samples/test9.html
 	rm -f $(DIST)/bin/res/samples/test9a.html
 	rm -f $(DIST)/bin/res/samples/test9b.html

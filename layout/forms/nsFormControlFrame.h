@@ -125,6 +125,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
   // new behavior
 
   /**

@@ -57,15 +57,10 @@ NS_NewRadioControlFrame(nsIContent* aContent,
 nsRadioControlFrame::nsRadioControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFormControlFrame(aContent, aParentFrame)
 {
-  mInitialChecked = nsnull;
-  mForcedChecked = PR_FALSE;
 }
 
 nsRadioControlFrame::~nsRadioControlFrame()
 {
-  if (mInitialChecked) {
-    delete mInitialChecked;
-  }
 }
 
 const nsIID&
@@ -101,7 +96,7 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
 {
   nsIRadioButton* radio = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&radio))) {
-		radio->SetState(mForcedChecked);
+		radio->SetState(GetChecked(PR_TRUE));
 
 	  const nsStyleColor* color = 
 	    nsStyleUtil::FindNonTransparentBackground(mStyleContext);
@@ -116,6 +111,31 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
   }
 }
 
+
+NS_IMETHODIMP
+nsRadioControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                      nsIContent*     aChild,
+                                      nsIAtom*        aAttribute,
+                                      PRInt32         aHint)
+{
+  nsresult result = NS_OK;
+  if (mWidget) {
+    if (nsHTMLAtoms::checked == aAttribute) {
+      nsIRadioButton* button = nsnull;
+      result = mWidget->QueryInterface(kIRadioIID, (void**)&button);
+      if ((NS_SUCCEEDED(result)) && (nsnull != button)) {
+        PRBool checkedAttr  = GetChecked(PR_TRUE);
+        PRBool checkedPrevState = GetChecked(PR_FALSE);
+        if (checkedAttr != checkedPrevState) {
+          button->SetState(checkedAttr);
+          mFormFrame->OnRadioChecked(*this, checkedAttr);
+        }
+        NS_RELEASE(button);
+      }
+    }   
+  }
+  return result;
+}
 
 void 
 nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext) 
@@ -134,21 +154,19 @@ PRBool
 nsRadioControlFrame::GetChecked(PRBool aGetInitialValue) 
 {
   if (aGetInitialValue) {
-    if (!mInitialChecked && mContent) {
-      mInitialChecked = new PRBool(PR_FALSE);
+    if (mContent) {
       nsIHTMLContent* iContent = nsnull;
       nsresult result = mContent->QueryInterface(kIHTMLContentIID, (void**)&iContent);
       if ((NS_OK == result) && iContent) {
         nsHTMLValue value;
         result = iContent->GetAttribute(nsHTMLAtoms::checked, value);
         if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-          *mInitialChecked = PR_TRUE;
-          mForcedChecked  = PR_TRUE;
+          return PR_TRUE;
         }
         NS_RELEASE(iContent);
       }
     }
-    return *mInitialChecked;
+    return PR_FALSE;
   }
 
   PRBool result = PR_FALSE;
@@ -157,7 +175,7 @@ nsRadioControlFrame::GetChecked(PRBool aGetInitialValue)
     radio->GetState(result);
     NS_RELEASE(radio);
   } else {
-    result = mForcedChecked;
+    result = GetChecked(PR_TRUE);
   }
   return result;
 }
@@ -165,12 +183,12 @@ nsRadioControlFrame::GetChecked(PRBool aGetInitialValue)
 void
 nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
 {
-  mForcedChecked = aValue;
   if (aSetInitialValue) {
-    if (!mInitialChecked) {
-      mInitialChecked = new PRBool(aValue);
+    if (aValue) {
+      mContent->SetAttribute("checked", "1", PR_FALSE);
+    } else {
+      mContent->SetAttribute("checked", "0", PR_FALSE);
     }
-    *mInitialChecked = aValue;
   }
   nsIRadioButton* radio = nsnull;
   if (mWidget && (NS_OK ==  mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
@@ -220,8 +238,7 @@ nsRadioControlFrame::Reset()
 {
   nsIRadioButton* radio = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
-    PRBool state = (nsnull == mInitialChecked) ? PR_FALSE : *mInitialChecked;
-    radio->SetState(state);
+    radio->SetState(GetChecked(PR_TRUE));
     NS_RELEASE(radio);
   }
 }  

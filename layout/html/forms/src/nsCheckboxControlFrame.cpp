@@ -44,6 +44,11 @@ public:
                                 nscoord& aWidth,
                                 nscoord& aHeight);
 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+
   virtual const nsIID& GetCID();
 
   virtual const nsIID& GetIID();
@@ -163,6 +168,32 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& 
     }
     NS_RELEASE(checkbox);
   }
+}
+
+NS_IMETHODIMP
+nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                         nsIContent*     aChild,
+                                         nsIAtom*        aAttribute,
+                                         PRInt32         aHint)
+{
+  nsresult result = NS_OK;
+  if (mWidget) {
+    if (nsHTMLAtoms::checked == aAttribute) {
+      nsICheckButton* button = nsnull;
+      result = mWidget->QueryInterface(GetIID(), (void**)&button);
+      if ((NS_SUCCEEDED(result)) && (nsnull != button)) {
+        PRBool checkedAttr;
+        GetChecked(&checkedAttr);
+        PRBool checkedPrevState;
+        button->GetState(checkedPrevState);
+        if (checkedAttr != checkedPrevState) {
+          button->SetState(checkedAttr);
+        }
+        NS_RELEASE(button);
+      }
+    }   
+  }
+  return result;
 }
 
 void 
