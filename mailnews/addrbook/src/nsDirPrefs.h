@@ -143,12 +143,12 @@ typedef struct _DIR_ReplicationInfo
 	char *description;           /* Human readable description of replica                */
 	char *fileName;              /* File name of replication database                    */
 	char *filter;                /* LDAP filter string which constrains the repl search  */
-	int32 lastChangeNumber;      /* Last change we saw -- start replicating here         */
+	PRInt32 lastChangeNumber;      /* Last change we saw -- start replicating here         */
 	char *syncURL;               /* Points to the server to use for replication          */
 	char *dataVersion;           /* LDAP server's scoping of the lastChangeNumber        */
 	                             /* Changes when the server's DB gets reloaded from LDIF */
 	char **excludedAttributes;   /* List of attributes we shouldn't replicate            */
-	int excludedAttributesCount; /* Number of attributes we shouldn't replicat           */
+	PRInt32 excludedAttributesCount; /* Number of attributes we shouldn't replicat           */
 } DIR_ReplicationInfo;
 
 #define DIR_Server_typedef 1     /* this quiets a redeclare warning in libaddr */
@@ -157,24 +157,24 @@ typedef struct DIR_Server
 {
 	/* Housekeeping fields */
 	char   *prefName;			/* preference name, this server's subtree */
-	int32   position;			/* relative position in server list       */
-	uint32  refCount;           /* Use count for server                   */
+	PRInt32   position;			/* relative position in server list       */
+	PRUint32  refCount;           /* Use count for server                   */
 
 	/* General purpose fields */
 	char   *description;		/* human readable name                    */
 	char   *serverName;		    /* network host name                      */
 	char   *searchBase;		    /* DN suffix to search at                 */
 	char   *fileName;			/* XP path name of local DB               */
-	int     port;				/* network port number                    */
-	int     maxHits;			/* maximum number of hits to return       */
+	PRInt32 port;				/* network port number                    */
+	PRInt32 maxHits;			/* maximum number of hits to return       */
 	char   *lastSearchString;	/* required if saving results             */
 	DirectoryType dirType;	
-	int16   csid;				/* LDAP entries' codeset (normally UTF-8) */
+	PRInt16   csid;				/* LDAP entries' codeset (normally UTF-8) */
 	char    *locale;			/* the locale associated with the address book or directory */
 
 	/* Flags */
 	/* TBD: All the PRBool fields should eventually merge into "flags" */
-	uint32 flags;               
+	PRUint32 flags;               
 	PRBool stopFiltersOnHit;
 	PRBool isOffline;
 	PRBool isSecure;           /* use SSL?                               */
@@ -194,19 +194,19 @@ typedef struct DIR_Server
 
 	/* site-configurable list of attributes whose values are DNs */
 	char **dnAttributes;
-    int dnAttributesCount;
+    PRInt32 dnAttributesCount;
 
 	/* site-configurable list of attributes we shouldn't display in HTML */
 	char **suppressedAttributes;
-	int suppressedAttributesCount;
+	PRInt32 suppressedAttributesCount;
 
 	/* site-configurable list of attributes that contain URLs */
 	char **uriAttributes;
-	int uriAttributesCount;
+	PRInt32 uriAttributesCount;
 
 	/* site-configurable list of attributes for the Basic Search dialog */
 	DIR_AttributeId *basicSearchAttributes;
-	int basicSearchAttributesCount;
+	PRInt32 basicSearchAttributesCount;
 
 	/* site-configurable URL to open LDAP results */
 	char *customDisplayUrl;
@@ -245,9 +245,9 @@ nsVoidArray * FE_GetDirServers(void);
 
 nsresult DIR_InitServerWithType(DIR_Server * server, DirectoryType dirType);
 nsresult DIR_InitServer (DIR_Server *);
-int	DIR_CopyServer (DIR_Server *in, DIR_Server **out);
+nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out);
 PRBool	DIR_AreServersSame (DIR_Server *first, DIR_Server *second);
-DIR_Server *DIR_LookupServer(char *serverName, int port, char *searchBase);
+DIR_Server *DIR_LookupServer(char *serverName, PRInt32 port, char *searchBase);
 
 nsresult DIR_DeleteServer (DIR_Server *);
 nsresult DIR_DeleteServerList(nsVoidArray *wholeList);
@@ -255,12 +255,12 @@ nsresult DIR_DeleteServerList(nsVoidArray *wholeList);
 #define DIR_POS_APPEND                     0x80000000
 #define DIR_POS_DELETE                     0x80000001
 PRBool	DIR_SortServersByPosition(nsVoidArray *wholeList);
-PRBool	DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, int position);
+PRBool	DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position);
 
 /* These two routines should be called to initialize and save 
  * directory preferences from the XP Java Script preferences
  */
-int		DIR_GetServerPreferences(nsVoidArray** list);
+nsresult DIR_GetServerPreferences(nsVoidArray** list);
 nsresult DIR_SaveServerPreferences(nsVoidArray *wholeList);
 void    DIR_GetPrefsForOneServer(DIR_Server *server, PRBool reinitialize, PRBool oldstyle);
 void    DIR_SavePrefsForOneServer(DIR_Server *server);
@@ -275,8 +275,8 @@ void    DIR_ClearPrefBranch(const char *branch);
 
 /* Returns an allocated list of a subset of the unified list of DIR servers.
  */
-int	DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, uint32 flags);
-int	DIR_GetDirServerSubsetCount(nsVoidArray *wholeList, uint32 flags);
+nsresult DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, PRUint32 flags);
+PRInt32  DIR_GetDirServerSubsetCount(nsVoidArray *wholeList, PRUint32 flags);
 
 /* We need to validate directory descriptions to make sure they are unique. They can use this API for that */
 DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DIR_Server * serverToValidate);
@@ -298,17 +298,17 @@ const char  *DIR_GetReplicationFilter (DIR_Server *server);
 const char  *DIR_GetTokenSeparators (DIR_Server *server);
 PRBool	     DIR_RepeatFilterForTokens (DIR_Server *server, const char *filter);
 PRBool	     DIR_SubstStarsForSpaces (DIR_Server *server, const char *filter);
-PRBool      DIR_UseCustomAttribute (DIR_Server *server, DIR_AttributeId id);
+PRBool       DIR_UseCustomAttribute (DIR_Server *server, DIR_AttributeId id);
 
 PRBool      DIR_IsDnAttribute (DIR_Server *s, const char *attr);
 PRBool      DIR_IsAttributeExcludedFromHtml (DIR_Server *s, const char *attr);
 PRBool      DIR_IsUriAttribute (DIR_Server *s, const char *attrib);
 
-int DIR_AttributeNameToId (DIR_Server *server, const char *attrName, DIR_AttributeId *id);
+nsresult DIR_AttributeNameToId (DIR_Server *server, const char *attrName, DIR_AttributeId *id);
 
+PRInt32 DIR_GetNumAttributeIDsForColumns(DIR_Server * server);
 /* caller must free returned list of ids */
-int DIR_GetNumAttributeIDsForColumns(DIR_Server * server);
-int DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids /* caller must free */, int * numIds);
+nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids , PRInt32 * numIds);
 
 /* APIs for authentication */
 void		DIR_SetAuthDN (DIR_Server *s, const char *dn);
@@ -331,15 +331,15 @@ void DIR_SetAutoCompleteEnabled (nsVoidArray *list, DIR_Server *server, PRBool e
 #define DIR_NOTIFY_SCRAMBLE                0x00000008 
 #define DIR_NOTIFY_ALL                     0x0000000F 
 
-typedef int (*DIR_NOTIFICATION_FN)(DIR_Server *server, uint32 flag, DIR_PrefId id, void *inst_data);
+typedef PRInt32 (*DIR_NOTIFICATION_FN)(DIR_Server *server, PRUint32 flag, DIR_PrefId id, void *inst_data);
 
-PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, uint32 flags, void *inst_data);
+PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, PRUint32 flags, void *inst_data);
 PRBool DIR_DeregisterNotificationCallback(DIR_NOTIFICATION_FN fn, void *inst_data);
-PRBool DIR_SendNotification(DIR_Server *server, uint32 flag, DIR_PrefId id);
+PRBool DIR_SendNotification(DIR_Server *server, PRUint32 flag, DIR_PrefId id);
 
 DIR_PrefId  DIR_AtomizePrefName(const char *prefname);
-char       *DIR_CopyServerStringPref(DIR_Server *server, DIR_PrefId prefid, int16 csid);
-PRBool     DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *pref, int16 csid);
+char       *DIR_CopyServerStringPref(DIR_Server *server, DIR_PrefId prefid, PRInt16 csid);
+PRBool     DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *pref, PRInt16 csid);
 
 /* Flags manipulation
  */
@@ -385,13 +385,13 @@ PRBool     DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *
 #define DIR_SUBSET_PAB_ALL                 0x00000010
 
 
-PRBool DIR_TestFlag  (DIR_Server *server, uint32 flag);
-void    DIR_SetFlag   (DIR_Server *server, uint32 flag);
-void    DIR_ClearFlag (DIR_Server *server, uint32 flag);
-void    DIR_ForceFlag (DIR_Server *server, uint32 flag, PRBool forceOnOrOff);
+PRBool DIR_TestFlag  (DIR_Server *server, PRUint32 flag);
+void    DIR_SetFlag   (DIR_Server *server, PRUint32 flag);
+void    DIR_ClearFlag (DIR_Server *server, PRUint32 flag);
+void    DIR_ForceFlag (DIR_Server *server, PRUint32 flag, PRBool forceOnOrOff);
 
-char *DIR_ConvertToServerCharSet   (DIR_Server *s, char *src, int16 srcCsid);
-char *DIR_ConvertFromServerCharSet (DIR_Server *s, char *src, int16 dstCsid);
-char *DIR_ConvertString(int16 srcCSID, int16 dstCSID, const char *string);
+char *DIR_ConvertToServerCharSet   (DIR_Server *s, char *src, PRInt16 srcCsid);
+char *DIR_ConvertFromServerCharSet (DIR_Server *s, char *src, PRInt16 dstCsid);
+char *DIR_ConvertString(PRInt16 srcCSID, PRInt16 dstCSID, const char *string);
 
 #endif /* dirprefs.h */

@@ -173,8 +173,8 @@ nsABCardDataSource::~nsABCardDataSource (void)
 
   PL_strfree(mURI);
   if (mObservers) {
-	  PRInt32 i;
 
+	  PRInt32 i;
       for (i = mObservers->Count() - 1; i >= 0; --i) {
           nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
           NS_RELEASE(obs);

@@ -68,8 +68,8 @@ nsABCard::~nsABCard(void)
 		PRUint32 count;
 		nsresult rv = mSubDirectories->Count(&count);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-
-		for (int i = count - 1; i >= 0; i--)
+		PRInt32 i;
+		for (i = count - 1; i >= 0; i--)
 			mSubDirectories->RemoveElementAt(i);
 	}
 
@@ -96,10 +96,9 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
   nsCOMPtr<nsISupportsArray> f;
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(f));
   if (NS_FAILED(rv)) return rv;
-  PRUint32 count;
+  PRUint32 i, count;
   rv = array->Count(&count);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  PRUint32 i;
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsISupports> element = getter_AddRefs(array->ElementAt(i));
     if (filter(element, data)) {
@@ -141,7 +140,7 @@ nsABCard::GetChildNodes(nsIEnumerator* *result)
         !PL_strcmp(mURI, "abcard://Pab3/Card1") ||
         !PL_strcmp(mURI, "abcard://Pab3/Card2"))
 	{	
-		int i;
+		PRInt32 i;
 		for (i= 0; i < 6; i++)
 		{
 			nsCOMPtr<nsIAbCard> card;

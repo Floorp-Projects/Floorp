@@ -73,7 +73,7 @@ nsABDirectory::~nsABDirectory(void)
 		PRUint32 count;
 		nsresult rv = mSubDirectories->Count(&count);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-		int i;
+		PRInt32 i;
 		for (i = count - 1; i >= 0; i--)
 			mSubDirectories->RemoveElementAt(i);
 	}
@@ -83,8 +83,7 @@ nsABDirectory::~nsABDirectory(void)
 		PRUint32 count;
 		nsresult rv = mSubCards->Count(&count);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-
-		int i;
+		PRInt32 i;
 		for (i = count - 1; i >= 0; i--)
 			mSubCards->RemoveElementAt(i);
 	}
@@ -117,7 +116,7 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
   PRUint32 count;
   rv = array->Count(&count);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  PRUint32 i;
+  PRInt32 i;
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsISupports> element = getter_AddRefs(array->ElementAt(i));
     if (filter(element, data)) {
@@ -156,8 +155,8 @@ nsABDirectory::GetChildNodes(nsIEnumerator* *result)
   {
     if (!PL_strcmp(mURI, "abdirectory:/") && GetDirList())
 	{
-		int count = GetDirList()->Count();
-		int i;
+		PRInt32 count = GetDirList()->Count();
+		PRInt32 i;
 		for (i = 0; i < count; i++)
 		{
 			DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);
@@ -218,7 +217,7 @@ NS_IMETHODIMP nsABDirectory::GetChildCards(nsIEnumerator* *result)
 			!PL_strcmp(mURI, "abdirectory://Pab2") ||
 			!PL_strcmp(mURI, "abdirectory://Pab3"))
 		{
-			int j;
+			PRInt32 j;
 			for (j = 0; j < 2; j++)
 			{   
 				nsAutoString currentCardStr;
@@ -332,8 +331,8 @@ NS_IMETHODIMP nsABDirectory::GetName(char **name)
 		SetName("Person6");
 	else if (GetDirList())
 	{
-		int count = GetDirList()->Count();
-		int i;
+		PRInt32 count = GetDirList()->Count();
+		PRInt32 i;
 		for (i = 0; i < count; i++)
 		{
 			DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);

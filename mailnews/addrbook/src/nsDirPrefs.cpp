@@ -39,41 +39,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #define XP_ABFileName_kCurrentSuffix ".na2" /* final v2 address book format */
 
 #if !defined(MOZADDRSTANDALONE)
-/*
-extern int NS_ERROR_OUT_OF_MEMORY;
-extern int MK_ADDR_PAB;
-
-extern int MK_LDAP_COMMON_NAME;
-extern int MK_LDAP_GIVEN_NAME;
-extern int MK_LDAP_SURNAME;
-extern int MK_LDAP_EMAIL_ADDRESS; 
-extern int MK_LDAP_PHONE_NUMBER;
-extern int MK_LDAP_ORGANIZATION; 
-extern int MK_LDAP_ORG_UNIT; 
-extern int MK_LDAP_LOCALITY;
-extern int MK_LDAP_STREET;
-extern int MK_LDAP_CUSTOM1; 
-extern int MK_LDAP_CUSTOM2;
-extern int MK_LDAP_CUSTOM3; 
-extern int MK_LDAP_CUSTOM4;
-extern int MK_LDAP_CUSTOM5;
-extern int MK_LDAP_DESCRIPTION;   
-extern int MK_LDAP_EMPLOYEE_TYPE; 
-extern int MK_LDAP_FAX_NUMBER;    
-extern int MK_LDAP_MANAGER;       
-extern int MK_LDAP_OBJECT_CLASS;       
-extern int MK_LDAP_POSTAL_ADDRESS;
-extern int MK_LDAP_POSTAL_CODE;   
-extern int MK_LDAP_SECRETARY;
-extern int MK_LDAP_TITLE; 
-extern int MK_LDAP_CAR_LICENSE;
-extern int MK_LDAP_BUSINESS_CAT;
-extern int MK_LDAP_DEPT_NUMBER;
-extern int MK_LDAP_REPL_QUERY_RESYNC;
-extern int MK_LDAP_NICK_NAME;
-extern int MK_LDAP_HOMEPHONE;
-extern int MK_LDAP_MOBILEPHONE;
-extern int MK_LDAP_PAGER;*/
 
 typedef enum
 {
@@ -138,11 +103,11 @@ XP_FILE_URL_PATH	XP_PlatformFileToURL (const XP_FILE_NATIVE_PATH ) {return NULL;
  * If *stringp is NULL, strtoken returns NULL.
  */
 static 
-char *strtoken_r(char ** stringp, const char *delim, int skip)
+char *strtoken_r(char ** stringp, const char *delim, PRInt32 skip)
 {
 	char *s;
 	const char *spanp;
-	int c, sc;
+	PRInt32 c, sc;
 	char *tok;
 
 	if ((s = *stringp) == NULL)
@@ -215,7 +180,7 @@ typedef struct DIR_Attribute
 typedef struct DIR_DefaultAttribute
 {
 	DIR_AttributeId id;
-	int resourceId;
+	PRInt32 resourceId;
 	char *name;
 } DIR_DefaultAttribute;
 
@@ -227,14 +192,14 @@ typedef struct DIR_DefaultAttribute
 typedef struct DIR_Filter
 {
 	char *string;
-	uint32 flags;
+	PRUint32 flags;
 } DIR_Filter;
 
 /* Callback list structure */
 typedef struct DIR_Callback
 {
 	DIR_NOTIFICATION_FN  fn;
-	uint32               flags;
+	PRUint32               flags;
 	void                *data;
 	struct DIR_Callback *next;
 } DIR_Callback;
@@ -275,12 +240,12 @@ typedef struct DIR_Callback
 static PRBool dir_IsServerDeleted(DIR_Server * server);
 static DIR_DefaultAttribute *DIR_GetDefaultAttribute (DIR_AttributeId id);
 static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char *scratch, const char *defaultValue);
-static int32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, int32 defaultValue);
+static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 defaultValue);
 static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRBool defaultValue);
 static char * dir_ConvertDescriptionToPrefName(DIR_Server * server);
 void DIR_SetFileName(char** filename, const char* leafName);
 
-static int PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
+static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data);
 
 
 /*****************************************************************************
@@ -288,7 +253,7 @@ static int PR_CALLBACK dir_ServerPrefCallback(const char *pref, void *inst_data)
  */
 
 static PRBool       dir_ServerPrefCallbackRegistered = PR_FALSE;
-static int32        dir_UserId = 0;
+static PRInt32      dir_UserId = 0;
 static DIR_Callback *dir_CallbackList = nsnull;
 
 nsVoidArray  *dir_ServerList = nsnull;
@@ -308,24 +273,25 @@ nsresult DIR_GetDirServers()
 	if (!dir_ServerList)
 	{
 		/* we need to build the DIR_Server list */ 
-		DIR_GetServerPreferences(&dir_ServerList);
+		rv = DIR_GetServerPreferences(&dir_ServerList);
 
 		/* Register the preference call back if necessary. */
-		if (!dir_ServerPrefCallbackRegistered)
+		if (NS_SUCCEEDED(rv) && (!dir_ServerPrefCallbackRegistered))
 		{
 			dir_ServerPrefCallbackRegistered = PR_TRUE;
         	pPref->RegisterCallback(PREF_LDAP_SERVER_TREE_NAME, dir_ServerPrefCallback, nsnull);
 		}
 	}
-	return NS_OK;
+	return rv;
 }
 
 nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 {
 	if (dir_ServerList)
 	{
-		int count = dir_ServerList->Count();
-		for (int i = 0; i < count; i++)
+		PRInt32 count = dir_ServerList->Count();
+		PRInt32 i;
+		for (i = 0; i < count; i++)
 		{
 			DIR_DeleteServer((DIR_Server *)(dir_ServerList->ElementAt(i)));
 		}
@@ -406,8 +372,9 @@ DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DI
 	/* right now the only invalid description is a duplicate...so check for duplicates */
 	if (wholeList && serverToValidate && serverToValidate->description)
 	{
-		int numItems = wholeList->Count();
-		for (int i = 0; i < numItems; i++)
+		PRInt32 numItems = wholeList->Count();
+		PRInt32 i;
+		for (i = 0; i < numItems; i++)
 		{
 			DIR_Server *s = (DIR_Server *)(dir_ServerList->ElementAt(i));
 			/* don't check the description if it is the same directory as the one we are comparing against */
@@ -430,7 +397,7 @@ static DIR_Attribute *DIR_CopyAttribute (DIR_Attribute *inAttribute)
 	DIR_Attribute *outAttribute = (DIR_Attribute*) PR_Malloc(sizeof(DIR_Attribute));
 	if (outAttribute)
 	{
-		int count = 0;
+		PRInt32 count = 0;
 		outAttribute->id = inAttribute->id;
 		outAttribute->prettyName = PL_strdup(inAttribute->prettyName);
 		while (inAttribute->attrNames[count])
@@ -438,7 +405,7 @@ static DIR_Attribute *DIR_CopyAttribute (DIR_Attribute *inAttribute)
 		outAttribute->attrNames = (char**) PR_Malloc((count + 1) * sizeof(char*));
 		if (outAttribute->attrNames)
 		{
-			int i;
+			PRInt32 i;
 			for (i = 0; i < count; i++)
 				outAttribute->attrNames[i] = PL_strdup(inAttribute->attrNames[i]);
 			outAttribute->attrNames[i] = nsnull;
@@ -460,15 +427,15 @@ static DIR_Filter *DIR_CopyFilter (DIR_Filter *inFilter)
 }
 
 
-static int dir_CopyTokenList (char **inList, int inCount, char ***outList, int *outCount)
+static nsresult dir_CopyTokenList (char **inList, PRInt32 inCount, char ***outList, PRInt32 *outCount)
 {
-	int status = 0;
+	nsresult status = NS_OK;
 	if (0 != inCount && nsnull != inList)
 	{
 		*outList = (char**) PR_Malloc(inCount * sizeof(char*));
 		if (*outList)
 		{
-			int i;
+			PRInt32 i;
 			for (i = 0; i < inCount; i++)
 				(*outList)[i] = PL_strdup (inList[i]);
 			*outCount = inCount;
@@ -502,9 +469,9 @@ static DIR_ReplicationInfo *dir_CopyReplicationInfo (DIR_ReplicationInfo *inInfo
 	return outInfo;
 }
 
-int DIR_CopyServer (DIR_Server *in, DIR_Server **out)
+nsresult DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 {
-	int err = 0;
+	nsresult err = NS_OK;
 	if (in) {
 		*out = (DIR_Server*)PR_Malloc(sizeof(DIR_Server));
 		if (*out)
@@ -594,8 +561,9 @@ int DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 				{
 					nsVoidArray *list = in->customAttributes;
 					DIR_Attribute *attribute = nsnull;
-					int count = list->Count();
-					for (int i = 0; i < count; i++)
+					PRInt32 count = list->Count();
+					PRInt32 i;
+					for (i = 0; i < count; i++)
 					{
 						attribute = (DIR_Attribute *)list->ElementAt(i);
 						if (attribute)
@@ -620,8 +588,9 @@ int DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 					nsVoidArray *list = in->customFilters;
 					DIR_Filter *filter = nsnull;
 
-					int count = list->Count();
-					for (int i = 0; i < count; i++)
+					PRInt32 count = list->Count();
+					PRInt32 i;
+					for (i = 0; i < count; i++)
 					{
 						filter = (DIR_Filter *)list->ElementAt(i);
 						if (filter)
@@ -650,7 +619,7 @@ int DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 
 			if (in->basicSearchAttributesCount > 0)
 			{
-				int bsaLength = in->basicSearchAttributesCount * sizeof(DIR_AttributeId);
+				PRInt32 bsaLength = in->basicSearchAttributesCount * sizeof(DIR_AttributeId);
 				(*out)->basicSearchAttributes = (DIR_AttributeId*) PR_Malloc(bsaLength);
 				if ((*out)->basicSearchAttributes)
 				{
@@ -680,7 +649,7 @@ int DIR_CopyServer (DIR_Server *in, DIR_Server **out)
 	}
 	else {
 		PR_ASSERT (0);
-		err = -1;
+		err = NS_ERROR_FAILURE;
 		(*out) = nsnull;
 	}
 
@@ -696,9 +665,9 @@ int DIR_CopyServer (DIR_Server *in, DIR_Server **out)
  * Uses a simple bubble sort to perform the operation (the server list
  * shouldn't be too long, right?)
  */
-static void dir_SortServersByPosition(DIR_Server **serverList, int count)
+static void dir_SortServersByPosition(DIR_Server **serverList, PRInt32 count)
 {
-	int i, j;
+	PRInt32 i, j;
 	DIR_Server *server;
 
 	for (i = 0; i < count - 1; i++)
@@ -732,8 +701,8 @@ static void dir_SortServersByPosition(DIR_Server **serverList, int count)
  */
 PRBool DIR_SortServersByPosition(nsVoidArray *wholeList)
 {
-	int          i, count, pos;
-	int			 in_order;
+	PRInt32		i, count, pos;
+	PRInt32		in_order;
 	nsVoidArray  *walkList;
 	DIR_Server  *server;
 	DIR_Server **serverList;
@@ -785,7 +754,7 @@ PRBool DIR_SortServersByPosition(nsVoidArray *wholeList)
 	 */
 	if (in_order == 0)
 	{
-		int first_unlocked, j;
+		PRInt32 first_unlocked, j;
 
 		/* Separate the array into two sections:  locked and unlocked.
 		 */
@@ -887,14 +856,14 @@ PRBool DIR_SortServersByPosition(nsVoidArray *wholeList)
  *
  * Returns PR_TRUE if the server list was re-sorted.
  */
-PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, int position)
+PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32 position)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
     if (NS_FAILED(rv) || pPref == nsnull) 
 		return PR_FALSE;
 
-	int        i, count, num;
+	PRInt32    i, count, num;
 	PRBool     resort = PR_FALSE;
 	DIR_Server *s;
 
@@ -1074,8 +1043,8 @@ static DIR_Server *dir_MatchServerPrefToServer(nsVoidArray *wholeList, const cha
 {
 	DIR_Server *server;
 
-	int count = wholeList->Count();
-	int i;
+	PRInt32 count = wholeList->Count();
+	PRInt32 i;
 	for (i = 0; i < count; i++)
 	{
 		if ((server = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
@@ -1107,7 +1076,7 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 		char *prefname = (char *)PR_Malloc(endname - fullprefname + 1);
 		if (prefname)
 		{
-			int32 dirType;
+			PRInt32 dirType;
 			char *t1 = nsnull, *t2 = nsnull;
 			char tempstring[256];
 
@@ -1142,12 +1111,12 @@ static PRBool dir_ValidateAndAddNewServer(nsVoidArray *wholeList, const char *fu
 	return rc;
 }
 
-static int PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *inst_data)
+static PRInt32 PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *inst_data)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
     if (NS_FAILED(rv) || pPref == nsnull) 
-		return PREF_ERROR;
+		return NS_ERROR_FAILURE;
 
 	DIR_PrefId id = DIR_AtomizePrefName(prefname);
 
@@ -1160,7 +1129,7 @@ static int PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *inst_d
 		 * change.  The DIR_Server structure is not really changing.
 		 */
 		if (DIR_TestFlag(server, DIR_SAVING_SERVER))
-		    return PREF_NOERROR;
+		    return NS_OK;
 
 		/* Reparse the root DSE if one of the following attributes changed.
 		 */
@@ -1173,13 +1142,13 @@ static int PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *inst_d
 		 */
 		if (id == idPosition)
 		{
-			int32 position;
+			PRInt32 position;
 
 			/* We must not do anything if the new position is the same as the
 			 * position in the DIR_Server.  This avoids recursion in cases
 			 * where we are deleting the server.
 			 */
-			pPref->GetIntPref(prefname, (int*)&position);
+			pPref->GetIntPref(prefname, &position);
 			if (position != server->position)
 			{
 				server->position = position;
@@ -1209,10 +1178,10 @@ static int PR_CALLBACK dir_ServerPrefCallback(const char *prefname, void *inst_d
 			dir_ValidateAndAddNewServer(dir_ServerList, prefname);
 	}
 
-    return PREF_NOERROR;
+    return NS_OK;
 }
 
-PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, uint32 flags, void *inst_data)
+PRBool DIR_RegisterNotificationCallback(DIR_NOTIFICATION_FN fn, PRUint32 flags, void *inst_data)
 {
 	DIR_Callback *cb;
 
@@ -1257,7 +1226,7 @@ PRBool DIR_DeregisterNotificationCallback(DIR_NOTIFICATION_FN fn, void *inst_dat
 	return PR_TRUE;
 }
 
-PRBool DIR_SendNotification(DIR_Server *server, uint32 flag, DIR_PrefId id)
+PRBool DIR_SendNotification(DIR_Server *server, PRUint32 flag, DIR_PrefId id)
 {
 	PRBool sent = PR_FALSE;
 	DIR_Callback *cb, *cbNext;
@@ -1306,7 +1275,7 @@ char *DIR_CopyServerStringPref(DIR_Server *server, DIR_PrefId prefid, int16 csid
 	return pref;
 }
 
-PRBool DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *pref, int16 csid)
+PRBool DIR_SetServerStringPref(DIR_Server *server, DIR_PrefId prefid, char *pref, PRInt16 csid)
 {
 	PRBool rc = PR_TRUE;
 
@@ -1641,9 +1610,9 @@ PRBool	DIR_AreServersSame (DIR_Server *first, DIR_Server *second)
 	return dir_AreServersSame(first, second, PR_TRUE);
 }
 
-DIR_Server *DIR_LookupServer(char *serverName, int port, char *searchBase)
+DIR_Server *DIR_LookupServer(char *serverName, PRInt32 port, char *searchBase)
 {
-	int i;
+	PRInt32 i;
 	DIR_Server *server;
 
 	if (!serverName || !searchBase || !dir_ServerList)
@@ -1677,9 +1646,9 @@ static PRBool dir_IsServerDeleted(DIR_Server * server)
 		return PR_FALSE;
 }
 
-static void dir_DeleteTokenList (char **tokenList, int tokenListCount)
+static void dir_DeleteTokenList (char **tokenList, PRInt32 tokenListCount)
 {
-	int tokenIdx;
+	PRInt32 tokenIdx;
 	for (tokenIdx = 0; tokenIdx < tokenListCount; tokenIdx++)
 		PR_Free(tokenList[tokenIdx]);
 	PR_Free(tokenList);
@@ -1697,7 +1666,7 @@ static nsresult DIR_DeleteFilter (DIR_Filter *filter)
 
 static nsresult DIR_DeleteAttribute (DIR_Attribute *attribute)
 {
-	int i = 0;
+	PRInt32 i = 0;
 	if (attribute->prettyName)
 		PR_Free(attribute->prettyName);
 	if (attribute->attrNames)
@@ -1733,7 +1702,7 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 {
 	if (server)
 	{
-		int i;
+		PRInt32 i;
 
 		/* when destroying the server check its clear flag to see if things need cleared */
 #ifdef XP_FileRemove
@@ -1760,7 +1729,7 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 
 		if (server->customFilters)
 		{
-			int count = server->customFilters->Count();
+			PRInt32 count = server->customFilters->Count();
 			for (i = 0; i < count; i++)
 				DIR_DeleteFilter ((DIR_Filter*) server->customFilters->ElementAt(i));
 			delete server->customFilters;
@@ -1772,7 +1741,7 @@ static nsresult dir_DeleteServerContents (DIR_Server *server)
 		{
 			nsVoidArray *list = server->customAttributes;
 			DIR_Attribute *walkAttrStruct = nsnull;
-			int count = list->Count();
+			PRInt32 count = list->Count();
 			for (i = 0; i < count; i++)
 			{
 				walkAttrStruct = (DIR_Attribute *)list->ElementAt(i);
@@ -1814,8 +1783,8 @@ nsresult DIR_DeleteServerList(nsVoidArray *wholeList)
 	DIR_Server *server = nsnull;
 	
 	/* TBD: Send notifications? */
-	int count = wholeList->Count();
-	int i;
+	PRInt32 count = wholeList->Count();
+	PRInt32 i;
 	for (i = count - 1; i >=0; i--)
 	{
 		server = (DIR_Server *)wholeList->ElementAt(i);
@@ -1850,12 +1819,12 @@ nsresult DIR_CleanUpServerPreferences(nsVoidArray *deletedList)
 		 && !DIR_TestFlag(s, DIR_REPLICATE_NEVER))                                        \
     )
 
-int DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, uint32 flags)
+nsresult DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, PRUint32 flags)
 {
 	if (wholeList && subList && flags)
 	{
-		int i;
-		int numItems = wholeList->Count();
+		PRInt32 i;
+		PRInt32 numItems = wholeList->Count();
 
 		for (i = 0; i < numItems; i++)
 		{
@@ -1867,17 +1836,17 @@ int DIR_GetDirServerSubset(nsVoidArray *wholeList, nsVoidArray *subList, uint32 
 		}
 		return NS_OK;
 	}
-	return -1;
+	return NS_ERROR_FAILURE;
 }
 
-int DIR_GetDirServerSubsetCount(nsVoidArray * wholeList, uint32 flags)
+PRInt32 DIR_GetDirServerSubsetCount(nsVoidArray * wholeList, PRUint32 flags)
 {
-	int count = 0;
+	PRInt32 count = 0;
 
 	if (wholeList && flags)
 	{
-		int i;
-		int numItems = wholeList->Count();
+		PRInt32 i;
+		PRInt32 numItems = wholeList->Count();
 
 		for (i = 0; i < numItems; i++)
 		{
@@ -1909,10 +1878,10 @@ nsresult DIR_GetLdapServers (nsVoidArray *wholeList, nsVoidArray *subList)
 
 nsresult DIR_GetPersonalAddressBook(nsVoidArray *wholeList, DIR_Server **pab)
 {
-	int i;
 	if (wholeList && pab)
 	{
-		int count = wholeList->Count();
+		PRInt32 count = wholeList->Count();
+		PRInt32 i;
 
 		*pab = nsnull;
 		for (i = 0; i < count; i++)
@@ -1973,19 +1942,19 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 }
 
 
-static int32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, int32 defaultValue)
+static PRInt32 DIR_GetIntPref(const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 defaultValue)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
     if (NS_FAILED(rv) || pPref == nsnull) 
 		return defaultValue;
 
-	int32 value;
+	PRInt32 value;
 	PL_strcpy(scratch, prefRoot);
 	PL_strcat(scratch, ".");
 	PL_strcat(scratch, prefLeaf);
 
-	if (PREF_NOERROR != pPref->GetIntPref(scratch, (int*)&value))
+	if (PREF_NOERROR != pPref->GetIntPref(scratch, &value))
 		value = defaultValue;
 
 	return value;
@@ -2010,9 +1979,9 @@ static PRBool DIR_GetBoolPref(const char *prefRoot, const char *prefLeaf, char *
 }
 
 
-int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_AttributeId *id)
+nsresult DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_AttributeId *id)
 {
-	int status = 0;
+	nsresult status = NS_OK;
 
 	/* Look for a default attribute with a matching name.
 	 */
@@ -2022,13 +1991,13 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 		if (!PL_strcasecmp(attrName, "auth"))
 			*id = auth;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'b':
 		if (!PL_strcasecmp(attrName, "businesscategory"))
 			*id = businesscategory;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'c' :
 		if (!PL_strcasecmp(attrName, "cn"))
@@ -2044,11 +2013,11 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 			case '3': *id = custom3; break;
 			case '4': *id = custom4; break;
 			case '5': *id = custom5; break;
-			default: status = -1; 
+			default: status = NS_ERROR_FAILURE; 
 			}
 		}
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'd':
 		if (!PL_strcasecmp(attrName, "departmentnumber"))
@@ -2057,37 +2026,37 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 			if (!PL_strcasecmp(attrName, "description"))
 				*id = description;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'e':
 		if (!PL_strcasecmp(attrName, "employeetype"))
 			*id = employeetype;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'f':
 		if (!PL_strcasecmp(attrName, "facsimiletelephonenumber"))
 			*id = facsimiletelephonenumber;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'g':
 		if (!PL_strcasecmp(attrName, "givenname"))
 			*id = givenname; 
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'h':
 		if (!PL_strcasecmp(attrName, "homephone"))
 			*id = homephone;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'l':
 		if (!PL_strcasecmp(attrName, "l"))
 			*id = l;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'm':
 		if (!PL_strcasecmp(attrName, "mail"))
@@ -2097,13 +2066,13 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 		else if (!PL_strcasecmp(attrName, "mobiletelephonenumber"))
 			*id = mobiletelephonenumber;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'n':
 		if (!PL_strcasecmp(attrName, "nickname"))
 			*id = nickname;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'o':
 		if (!PL_strcasecmp(attrName, "o"))
@@ -2113,7 +2082,7 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 		else if (!PL_strcasecmp(attrName, "objectclass"))
 			*id = objectclass;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 'p':
 		if (!PL_strcasecmp(attrName, "pager"))
@@ -2123,7 +2092,7 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 		else if (!PL_strcasecmp(attrName, "postaladdress"))
 			*id = postaladdress;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 's': 
 		if (!PL_strcasecmp(attrName, "street"))
@@ -2133,7 +2102,7 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 		else if (!PL_strcasecmp(attrName, "secretary"))
 			*id = secretary;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	case 't':
 		if (!PL_strcasecmp(attrName, "telephonenumber"))
@@ -2141,18 +2110,18 @@ int DIR_AttributeNameToId(DIR_Server *server, const char *attrName, DIR_Attribut
 		else if (!PL_strcasecmp(attrName, "title"))
 			*id = title;
 		else
-			status = -1;
+			status = NS_ERROR_FAILURE;
 		break;
 	default:
-		status = -1;
+		status = NS_ERROR_FAILURE;
 	}
 
 	return status;
 }
 
-static int DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char *jsAttr)
+static nsresult DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char *jsAttr)
 {
-	int status = 0;
+	nsresult status = NS_OK;
 	char *jsCompleteAttr = nsnull;
 	char *jsAttrForTokenizing = jsAttr;
 
@@ -2163,7 +2132,7 @@ static int DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char
 	 * attributes without a pretty name. So find the default pretty name, and generate
 	 * a "complete" string to use for tokenizing.
 	 */
-	if (status == 0 && !XP_STRCHR(jsAttr, ':'))
+	if (NS_SUCCEEDED(status) && !XP_STRCHR(jsAttr, ':'))
 	{
 		const char *defaultPrettyName = DIR_GetAttributeName (server, id);
 		if (defaultPrettyName)
@@ -2176,7 +2145,7 @@ static int DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char
 		}
 	}
 
-	if (status == 0)
+	if (NS_SUCCEEDED(status))
 	{
 		char *scratchAttr = PL_strdup(jsAttrForTokenizing);
 		DIR_Attribute *attrStruct = (DIR_Attribute*) PR_Malloc(sizeof(DIR_Attribute));
@@ -2186,7 +2155,7 @@ static int DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char
 		if (attrStruct && server->customAttributes && scratchAttr)
 		{
 			char *attrToken = nsnull;
-			int attrCount = 0;
+			PRUint32 attrCount = 0;
 
 			XP_BZERO(attrStruct, sizeof(DIR_Attribute));
 
@@ -2204,13 +2173,13 @@ static int DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char
 			attrStruct->attrNames = (char**) PR_Malloc((attrCount + 1) * sizeof(char*));
 			if (attrStruct->attrNames)
 			{
-				int i = 0;
+				PRInt32 i = 0;
 				while ((attrToken = XP_STRTOK(nsnull, ", ")) != nsnull)
 					attrStruct->attrNames[i++] = PL_strdup(attrToken);
 				attrStruct->attrNames[i] = nsnull; /* null-terminate the array */
 			}
 
-			if (status == 0)
+			if (NS_SUCCEEDED(status)) /* status is always NS_OK! */
 				server->customAttributes->AppendElement(attrStruct);
 			else
 				DIR_DeleteAttribute (attrStruct);
@@ -2227,9 +2196,9 @@ static int DIR_AddCustomAttribute(DIR_Server *server, const char *attrName, char
 	return status;
 }
 
-int DIR_GetNumAttributeIDsForColumns(DIR_Server * server)
+PRInt32 DIR_GetNumAttributeIDsForColumns(DIR_Server * server)
 {
-	int count = 0;
+	PRInt32 count = 0;
 	char * buffer = nsnull;
 	char * marker = nsnull;
 	if (server && server->columnAttributes)
@@ -2247,13 +2216,14 @@ int DIR_GetNumAttributeIDsForColumns(DIR_Server * server)
 	return count;
 }
 
-int DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids /* caller must free */, int * numIds)
+/* caller must free returned list of ids */
+nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids, PRInt32 * numIds)
 {
 	DIR_AttributeId * idArray = nsnull;
-	int status = 0; 
-	int numAdded = 0;  /* number of ids we actually added to the array...*/
-	int indx = 0;
-	int numItems = 0; 
+	nsresult status = NS_OK; 
+	PRInt32 numAdded = 0;  /* number of ids we actually added to the array...*/
+	PRInt32 indx = 0;
+	PRInt32 numItems = 0; 
 	char * idName = nsnull;
 	char * marker = nsnull;
 	char * columnIDs = nsnull;
@@ -2300,14 +2270,13 @@ int DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids /* 
 	return status;
 }
 
-static int dir_CreateTokenListFromWholePref(const char *pref, char ***outList, int *outCount)
+static nsresult dir_CreateTokenListFromWholePref(const char *pref, char ***outList, PRInt32 *outCount)
 {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    nsresult result = NS_OK;
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &result); 
+    if (NS_FAILED(result) || pPref == nsnull) 
 		return -1;
 
-	int result = 0;
 	char *commaSeparatedList = nsnull;
 
 	if (PREF_NOERROR == pPref->CopyCharPref(pref, &commaSeparatedList) && commaSeparatedList)
@@ -2321,7 +2290,7 @@ static int dir_CreateTokenListFromWholePref(const char *pref, char ***outList, i
 		*outList = (char**) PR_Malloc(*outCount * sizeof(char*));
 		if (*outList)
 		{
-			int i;
+			PRInt32 i;
 			char *token = XP_STRTOK(commaSeparatedList, ", ");
 			for (i = 0; i < *outCount; i++)
 			{
@@ -2335,12 +2304,13 @@ static int dir_CreateTokenListFromWholePref(const char *pref, char ***outList, i
 		PR_Free (commaSeparatedList);
 	}
 	else
-		result = -1;
+		result = NS_ERROR_FAILURE;
 	return result;
 }
 
 
-static int dir_CreateTokenListFromPref(const char *prefBase, const char *prefLeaf, char *scratch, char ***outList, int *outCount)
+static nsresult dir_CreateTokenListFromPref
+(const char *prefBase, const char *prefLeaf, char *scratch, char ***outList, PRInt32 *outCount)
 {
 	PL_strcpy (scratch, prefBase);
 	PL_strcat (scratch, ".");
@@ -2350,12 +2320,13 @@ static int dir_CreateTokenListFromPref(const char *prefBase, const char *prefLea
 }
 
 
-static int dir_ConvertTokenListToIdList(DIR_Server *server, char **tokenList, int tokenCount, DIR_AttributeId **outList)
+static nsresult dir_ConvertTokenListToIdList
+(DIR_Server *server, char **tokenList, PRInt32 tokenCount, DIR_AttributeId **outList)
 {
 	*outList = (DIR_AttributeId*) PR_Malloc(sizeof(DIR_AttributeId) * tokenCount);
 	if (*outList)
 	{
-		int i;
+		PRInt32 i;
 		for (i = 0; i < tokenCount; i++)
 			DIR_AttributeNameToId(server, tokenList[i], &(*outList)[i]);
 	}
@@ -2472,20 +2443,19 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
  */
 static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *server, char *scratch)
 {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    nsresult status = NS_OK;
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &status); 
+    if (NS_FAILED(status) || pPref == nsnull) 
 		return NS_ERROR_FAILURE;
 
-	int status = 0;
 	PRBool keepGoing = PR_TRUE;
-	int filterNum = 1;
+	PRInt32 filterNum = 1;
 	char *localScratch = (char*)PR_Malloc(128);
 	if (!localScratch)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	server->tokenSeps = DIR_GetStringPref (prefstring, "wordSeparators", localScratch, kDefaultTokenSeps);
-	while (keepGoing && !status)
+	while (keepGoing && NS_SUCCEEDED(status))
 	{
 		char *childList = nsnull;
 
@@ -2590,9 +2560,9 @@ char * dir_ConvertDescriptionToPrefName(DIR_Server * server)
 #define MAX_PREF_NAME_SIZE 25
 	char * fileName = nsnull;
 	char fileNameBuf[MAX_PREF_NAME_SIZE];
-	int srcIndex = 0;
-	int destIndex = 0;
-	int numSrcBytes = 0;
+	PRInt32 srcIndex = 0;
+	PRInt32 destIndex = 0;
+	PRInt32 numSrcBytes = 0;
 	const char * description = nsnull;
 	if (server && server->description)
 	{
@@ -2623,7 +2593,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 {
 	char * tempName = nsnull; 
 	const char * prefName = nsnull;
-	uint32 numHeaderBytes = 0; 
+	PRUint32 numHeaderBytes = 0; 
 
 	if (server && (!server->fileName || !(*server->fileName)) )
 	{
@@ -2722,7 +2692,7 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 		leafName = dir_ConvertDescriptionToPrefName (server);
 	if (leafName)
 	{
-		int uniqueIDCnt = 0;
+		PRInt32 uniqueIDCnt = 0;
 		char * children = nsnull;
 		char * child = nsnull;
 		/* we need to verify that this pref string name is unique */
@@ -2776,7 +2746,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 		/* If we're reinitializing, we need to save off the runtime volatile
 		 * data which isn't stored in persistent JS prefs and restore it
 		 */
-		uint32 oldRefCount = server->refCount;
+		PRUint32 oldRefCount = server->refCount;
 		server->prefName = nsnull;
 		dir_DeleteServerContents(server);
 		DIR_InitServer(server);
@@ -2800,7 +2770,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	server->serverName = DIR_GetStringPref (prefstring, "serverName", tempstring, "");
 	server->searchBase = DIR_GetStringPref (prefstring, "searchBase", tempstring, "");
 	server->isOffline = DIR_GetBoolPref (prefstring, "isOffline", tempstring, kDefaultIsOffline);
-	server->dirType = (DirectoryType)DIR_GetIntPref (prefstring, "dirType", tempstring, (int) LDAPDirectory);
+	server->dirType = (DirectoryType)DIR_GetIntPref (prefstring, "dirType", tempstring, LDAPDirectory);
 	if (server->dirType == PABDirectory)
 	{
 		/* make sure there is a PR_TRUE PAB */
@@ -2864,9 +2834,9 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	{ 
 		/* try to read it in from the old integer style char set preference */
 		if (server->dirType == PABDirectory)
-			server->csid = (int16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultPABCSID);
+			server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultPABCSID);
 		else
-			server->csid = (int16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultLDAPCSID);	
+			server->csid = (PRInt16) DIR_GetIntPref (prefstring, "charset", tempstring, kDefaultLDAPCSID);	
 
 		forcePrefSave = PR_TRUE; /* since we read from the old pref we want to force the new pref to be written out */
 	}
@@ -2887,24 +2857,24 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 		DIR_SavePrefsForOneServer(server); 
 }
 
-static int dir_GetPrefsFrom40Branch(nsVoidArray **list)
+/* return total number of directories */
+static PRInt32 dir_GetPrefsFrom40Branch(nsVoidArray **list)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
     if (NS_FAILED(rv) || pPref == nsnull) 
 		return -1;
 
-	int result = -1;
-
+	PRInt32 result = -1;
 	(*list) = new nsVoidArray();
 
 	/* get the preference for how many directories */
 	if (*list)
 	{
-		int i = 0;
-		int32 numDirectories = 0;
+		PRInt32 i = 0;
+		PRInt32 numDirectories = 0;
  
-		pPref->GetIntPref("ldap_1.number_of_directories", (int*)&numDirectories);	
+		pPref->GetIntPref("ldap_1.number_of_directories", &numDirectories);	
 		/* ldap_1.directory start from 1 */
 		for (i = 1; i <= numDirectories; i++)
 		{
@@ -2937,30 +2907,34 @@ static int dir_GetPrefsFrom40Branch(nsVoidArray **list)
 	return result;
 }
 
-static int dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsoleteList)
+static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsoleteList)
 {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
-		return -1;
+    nsresult result = NS_OK;
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &result); 
+    if (NS_FAILED(result) || pPref == nsnull) 
+		return NS_ERROR_FAILURE;
 
-	int result = -1;
  	char *children;
 
 	(*list) = new nsVoidArray();
+	if (!(*list))
+		return NS_ERROR_OUT_OF_MEMORY;
+
 	if (obsoleteList)
 		(*obsoleteList) = new nsVoidArray();
+	if (!(*obsoleteList))
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	if (pPref->CreateChildList(PREF_LDAP_SERVER_TREE_NAME, &children) == PREF_NOERROR)
 	{	
-		PRInt16 i = 0;
-		char *child;
-
 		/* TBD: Temporary code to read broken "ldap" preferences tree.
 		 *      Remove line with if statement after M10.
 		 */
 		if (dir_UserId == 0)
-			pPref->GetIntPref(PREF_LDAP_GLOBAL_TREE_NAME".user_id", (int*)&dir_UserId);
+			pPref->GetIntPref(PREF_LDAP_GLOBAL_TREE_NAME".user_id", &dir_UserId);
+
+		PRInt16 i = 0;
+		char *child;
 
 		while ((pPref->NextChild(children, &i, &child)) == NS_OK)
 		{
@@ -2991,33 +2965,32 @@ static int dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsoleteLi
 		}
 
 		PR_Free(children);
-		result = 0;
 	}
 
 	return result;
 }
 
 
-int DIR_GetServerPreferences(nsVoidArray** list)
+nsresult DIR_GetServerPreferences(nsVoidArray** list)
 {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || pPref == nsnull) 
+    nsresult err = NS_OK;
+    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &err); 
+    if (NS_FAILED(err) || pPref == nsnull) 
 		return NS_ERROR_FAILURE;
 
-	int err = 0;
-	int position = 1;
-	int32 version = -1;
+	PRInt32 position = 1;
+	PRInt32 version = -1;
 	char *oldChildren = nsnull;
 	PRBool savePrefs = PR_FALSE;
 	PRBool migrating = PR_FALSE;
 	nsVoidArray *oldList = nsnull;
 	nsVoidArray *obsoleteList = nsnull;
 	nsVoidArray *newList = nsnull;
-	int i, j;
+	PRInt32 i, j, count;
+
 
 	/* Update the ldap list version and see if there are old prefs to migrate. */
-	if (pPref->GetIntPref(PREF_LDAP_VERSION_NAME, (int*)&version) == PREF_NOERROR)
+	if (pPref->GetIntPref(PREF_LDAP_VERSION_NAME, &version) == PREF_NOERROR)
 	{
 		if (version < kCurrentListVersion)
 		{
@@ -3040,16 +3013,15 @@ int DIR_GetServerPreferences(nsVoidArray** list)
 	err = dir_GetPrefsFrom45Branch(&newList, migrating ? &obsoleteList : nsnull);
 
 	/* Merge the new tree onto the old tree, old on top, new at bottom */
-	if (err == 0 && oldList && newList)
+	if (NS_SUCCEEDED(err) && oldList && newList)
 	{
-		int count;
 		DIR_Server *newServer;
 
 		/* Walk through the new list looking for servers that are duplicates of
 		 * ones in the old list.  Mark any duplicates for non-inclusion in the
 		 * final list.
 		 */
-		int newCount = newList->Count();
+		PRInt32 newCount = newList->Count();
 		for (i = 0; i < newCount; i++)
 		{
 			newServer = (DIR_Server *)newList->ElementAt(i);
@@ -3057,7 +3029,7 @@ int DIR_GetServerPreferences(nsVoidArray** list)
 			{
 				DIR_Server *oldServer;
 
-				int oldCount = oldList->Count();
+				PRInt32 oldCount = oldList->Count();
 				for (j = 0; j < oldCount; j++)
 				{
 					oldServer = (DIR_Server *)oldList->ElementAt(j);
@@ -3136,23 +3108,24 @@ int DIR_GetServerPreferences(nsVoidArray** list)
 	 * don't do it otherwise because that would keep users from manually
 	 * re-adding these servers (which they should be allowed to do).
 	 */
-	if (err == 0 && obsoleteList)
+	if (NS_SUCCEEDED(err) && obsoleteList)
 	{
 		DIR_Server *obsoleteServer;
 		nsVoidArray *walkObsoleteList = obsoleteList;
 		
-		int count = walkObsoleteList->Count();
-		for (i = 0; i < count;i ++)
+		count = walkObsoleteList->Count();
+		for (i = 0; i < count;i++)
 		{
 			if (nsnull != (obsoleteServer = (DIR_Server *)walkObsoleteList->ElementAt(i)))
 			{
 				DIR_Server *existingServer;
 				nsVoidArray *walkExistingList = *list;
 
-				int existCount = walkExistingList->Count();
-				for (j = 0; j < existCount;j ++)
+				PRInt32 existCount = walkExistingList->Count();
+				for (j = 0; j < existCount;j++)
 				{
-					while (nsnull != (existingServer = (DIR_Server *)walkExistingList->ElementAt(j)))
+					existingServer = (DIR_Server *)walkExistingList->ElementAt(j);
+					if (nsnull != existingServer)
 					{
 						if (dir_AreServersSame(existingServer, obsoleteServer, PR_FALSE))
 						{
@@ -3211,8 +3184,8 @@ static void DIR_ClearIntPref (const char *pref)
     if (NS_FAILED(rv) || pPref == nsnull) 
 		return;
 
-	int32 oldDefault;
-	int prefErr = pPref->GetDefaultIntPref (pref, (int*)&oldDefault);
+	PRInt32 oldDefault;
+	PRInt32 prefErr = pPref->GetDefaultIntPref (pref, &oldDefault);
 	DIR_ClearPrefBranch (pref);
 	if (prefErr >= 0)
 		pPref->SetDefaultIntPref (pref, oldDefault);
@@ -3227,7 +3200,7 @@ static void DIR_ClearStringPref (const char *pref)
 		return;
 
 	char *oldDefault = nsnull;
-	int prefErr = pPref->CopyDefaultCharPref (pref, &oldDefault);
+	PRInt32 prefErr = pPref->CopyDefaultCharPref (pref, &oldDefault);
 	DIR_ClearPrefBranch (pref);
 	if (prefErr >= 0)
 		pPref->SetDefaultCharPref (pref, oldDefault);
@@ -3243,7 +3216,7 @@ static void DIR_ClearBoolPref (const char *pref)
 		return;
 
 	PRBool oldDefault;
-	int prefErr = pPref->GetDefaultBoolPref (pref, &oldDefault);
+	PRInt32 prefErr = pPref->GetDefaultBoolPref (pref, &oldDefault);
 	DIR_ClearPrefBranch (pref);
 	if (prefErr >= 0)
 		pPref->SetDefaultBoolPref (pref, oldDefault);
@@ -3258,7 +3231,7 @@ static void DIR_SetStringPref (const char *prefRoot, const char *prefLeaf, char 
 		return;
 
 	char *defaultPref = nsnull;
-	int prefErr = PREF_NOERROR;
+	PRInt32 prefErr = PREF_NOERROR;
 
 	PL_strcpy(scratch, prefRoot);
 	PL_strcat(scratch, ".");
@@ -3302,29 +3275,29 @@ static void DIR_SetStringPref (const char *prefRoot, const char *prefLeaf, char 
 }
 
 
-static void DIR_SetIntPref (const char *prefRoot, const char *prefLeaf, char *scratch, int32 value, int32 defaultValue)
+static void DIR_SetIntPref (const char *prefRoot, const char *prefLeaf, char *scratch, PRInt32 value, PRInt32 defaultValue)
 {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
     if (NS_FAILED(rv) || pPref == nsnull) 
 		return;
 
-	int32 defaultPref;
-	int prefErr = 0;
+	PRInt32 defaultPref;
+	PRInt32 prefErr = PREF_NOERROR;
 
 	PL_strcpy(scratch, prefRoot);
 	PL_strcat(scratch, ".");
 	PL_strcat(scratch, prefLeaf);
 
-	if (PREF_NOERROR == pPref->GetDefaultIntPref (scratch, (int*)&defaultPref))
+	if (PREF_NOERROR == pPref->GetDefaultIntPref (scratch, &defaultPref))
 	{
 		/* solve the problem where reordering user prefs must override default prefs */
 		pPref->SetIntPref (scratch, value);
 	}
 	else
 	{
-		int32 userPref;
-		if (PREF_NOERROR == pPref->GetIntPref (scratch, (int*)&userPref))
+		PRInt32 userPref;
+		if (PREF_NOERROR == pPref->GetIntPref (scratch, &userPref))
 		{
 			if (value != defaultValue)
 				prefErr = pPref->SetIntPref(scratch, value);
@@ -3350,7 +3323,7 @@ static void DIR_SetBoolPref (const char *prefRoot, const char *prefLeaf, char *s
 		return;
 
 	PRBool defaultPref;
-	int prefErr = PREF_NOERROR;
+	PRInt32 prefErr = PREF_NOERROR;
 
 	PL_strcpy(scratch, prefRoot);
 	PL_strcat(scratch, ".");
@@ -3383,13 +3356,13 @@ static void DIR_SetBoolPref (const char *prefRoot, const char *prefLeaf, char *s
 }
 
 
-static int DIR_ConvertAttributeToPrefsString (DIR_Attribute *attrib, char **ppPrefsString)
+static nsresult DIR_ConvertAttributeToPrefsString (DIR_Attribute *attrib, char **ppPrefsString)
 {
-	int err = 0;
+	nsresult err = NS_OK;
 
 	/* Compute size in bytes req'd for prefs string */
-	int length = PL_strlen(attrib->prettyName);
-	int i = 0;
+	PRUint32 length = PL_strlen(attrib->prettyName);
+	PRInt32 i = 0;
 	while (attrib->attrNames[i])
 	{
 		length += PL_strlen(attrib->attrNames[i]) + 1; /* +1 for comma separator */
@@ -3403,7 +3376,7 @@ static int DIR_ConvertAttributeToPrefsString (DIR_Attribute *attrib, char **ppPr
 	/* Unravel attrib struct back out into prefs */
 	if (*ppPrefsString)
 	{
-		int j = 0;
+		PRInt32 j = 0;
 		PL_strcpy (*ppPrefsString, attrib->prettyName);
 		PL_strcat (*ppPrefsString, ":");
 		while (attrib->attrNames[j])
@@ -3421,17 +3394,17 @@ static int DIR_ConvertAttributeToPrefsString (DIR_Attribute *attrib, char **ppPr
 }
 
 
-static int DIR_SaveOneCustomAttribute (const char *prefRoot, char *scratch, DIR_Server *server, DIR_AttributeId id)
+static nsresult DIR_SaveOneCustomAttribute (const char *prefRoot, char *scratch, DIR_Server *server, DIR_AttributeId id)
 {
 	const char *name = DIR_GetDefaultAttribute (id)->name;
-	int err = 0;
+	nsresult err = NS_OK;
 
 	if (server->customAttributes)
 	{
 		DIR_Attribute *attrib = nsnull;
 		nsVoidArray *walkList = server->customAttributes;
-		int count = walkList->Count();
-		int i;
+		PRInt32  count = walkList->Count();
+		PRInt32  i;
 		for (i = 0; i < count; i++)
 		{
 			if ((attrib = (DIR_Attribute *)walkList->ElementAt(i)) != nsnull)
@@ -3439,7 +3412,8 @@ static int DIR_SaveOneCustomAttribute (const char *prefRoot, char *scratch, DIR_
 				if (attrib->id == id)
 				{
 					char *jsString = nsnull;
-					if (0 == DIR_ConvertAttributeToPrefsString(attrib, &jsString))
+					nsresult res = DIR_ConvertAttributeToPrefsString(attrib, &jsString);
+					if (NS_SUCCEEDED(res))
 					{
 						DIR_SetStringPref (prefRoot, name, scratch, jsString, "");
 						PR_Free(jsString);
@@ -3460,9 +3434,9 @@ static int DIR_SaveOneCustomAttribute (const char *prefRoot, char *scratch, DIR_
 }
 
 
-static int DIR_SaveCustomAttributes (const char *prefRoot, char *scratch, DIR_Server *server)
+static nsresult DIR_SaveCustomAttributes (const char *prefRoot, char *scratch, DIR_Server *server)
 {
-	int err = 0;
+	nsresult err = NS_OK;
 	char *localScratch = (char*) PR_Malloc(256);
 
 	if (localScratch)
@@ -3494,10 +3468,10 @@ static int DIR_SaveCustomAttributes (const char *prefRoot, char *scratch, DIR_Se
 }
 
 
-static int DIR_SaveCustomFilters (const char *prefRoot, char *scratch, DIR_Server *server)
+static nsresult DIR_SaveCustomFilters (const char *prefRoot, char *scratch, DIR_Server *server)
 {
 	char *localScratch = (char*) PR_Malloc(256);
-	int err = 0;
+	nsresult err = NS_OK;
 
 	if (!localScratch)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -3509,8 +3483,8 @@ static int DIR_SaveCustomFilters (const char *prefRoot, char *scratch, DIR_Serve
 		/* Save the custom filters into the JS prefs */
 		DIR_Filter *filter = nsnull;
 		nsVoidArray *walkList = server->customFilters;
-		int count = walkList->Count();
-		int i;
+		PRInt32 count = walkList->Count();
+		PRInt32 i;
 		for (i = 0; i < count; i++)
 		{
 			if ((filter = (DIR_Filter *)walkList->ElementAt(i)) != nsnull)
@@ -3536,9 +3510,9 @@ static int DIR_SaveCustomFilters (const char *prefRoot, char *scratch, DIR_Serve
 }
 
 
-static int dir_SaveReplicationInfo (const char *prefRoot, char *scratch, DIR_Server *server)
+static nsresult dir_SaveReplicationInfo (const char *prefRoot, char *scratch, DIR_Server *server)
 {
-	int err = 0;
+	nsresult err = NS_OK;
 	char *localScratch = (char*) PR_Malloc(256);
 	if (!localScratch)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -3552,8 +3526,8 @@ static int dir_SaveReplicationInfo (const char *prefRoot, char *scratch, DIR_Ser
 	if (server->replInfo)
 	{
 		char *excludedList = nsnull;
-		int i;
-		int excludedLength = 0;
+		PRInt32 i;
+		PRInt32 excludedLength = 0;
 		for (i = 0; i < server->replInfo->excludedAttributesCount; i++)
 			excludedLength += PL_strlen (server->replInfo->excludedAttributes[i]) + 2; /* +2 for ", " */
 		if (excludedLength)
@@ -3614,7 +3588,7 @@ void DIR_SavePrefsForOneServer(DIR_Server *server)
 	DIR_SetBoolPref (prefstring, "saveResults", tempstring, server->saveResults, PR_TRUE);
 	DIR_SetBoolPref (prefstring, "efficientWildcards", tempstring, server->efficientWildcards, PR_TRUE);
 	DIR_SetStringPref (prefstring, "searchString", tempstring, server->lastSearchString, "");
-	DIR_SetIntPref (prefstring, "dirType", tempstring, server->dirType, (int) LDAPDirectory);
+	DIR_SetIntPref (prefstring, "dirType", tempstring, server->dirType, LDAPDirectory);
 	DIR_SetBoolPref (prefstring, "isOffline", tempstring, server->isOffline, kDefaultIsOffline);
 
 	/* save the column attributes */
@@ -3684,8 +3658,8 @@ nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
 		if (NS_FAILED(rv) || pPref == nsnull) 
 			return NS_ERROR_FAILURE;
 
-		int i;
-		int count = wholeList->Count();
+		PRInt32  i;
+		PRInt32  count = wholeList->Count();
 		DIR_Server *server;
 
 		for (i = 0; i < count; i++)
@@ -3707,7 +3681,7 @@ nsresult DIR_SaveServerPreferences (nsVoidArray *wholeList)
 
 static DIR_DefaultAttribute *DIR_GetDefaultAttribute (DIR_AttributeId id)
 {
-	int i = 0;
+	PRInt32 i = 0;
 
 	static DIR_DefaultAttribute defaults[32];
 
@@ -3860,8 +3834,8 @@ const char *DIR_GetAttributeName (DIR_Server *server, DIR_AttributeId id)
 	nsVoidArray *list = server->customAttributes;
 	DIR_Attribute *walkList = nsnull;
 
-	int count = list->Count();
-	int i;
+	PRInt32  count = list->Count();
+	PRInt32  i;
 	for (i = 0; i < count; i++)
 	{
 		if ((walkList = (DIR_Attribute *)list->ElementAt(i)) != nsnull)
@@ -3892,9 +3866,9 @@ const char **DIR_GetAttributeStrings (DIR_Server *server, DIR_AttributeId id)
 		/* First look in the custom attributes in case the attribute is overridden */
 		nsVoidArray *list = server->customAttributes;
 		DIR_Attribute *walkList = nsnull;
-		int count = list->Count();
-		int i;
-		for (i = 0; i < count; i ++)
+		PRInt32  count = list->Count();
+		PRInt32  i;
+		for (i = 0; i < count; i++)
 		{
 			while ((walkList = (DIR_Attribute *)list->ElementAt(i)) != nsnull)
 			{
@@ -3950,8 +3924,8 @@ static DIR_Filter *DIR_LookupFilter (DIR_Server *server, const char *filter)
 	nsVoidArray *list = server->customFilters;
 	DIR_Filter *walkFilter = nsnull;
 
-	int count = list->Count();
-	int i;
+	PRInt32  count = list->Count();
+	PRInt32  i;
 	for (i = 0; i < count; i++)
 	{
 		if ((walkFilter = (DIR_Filter *)list->ElementAt(i)) != nsnull)
@@ -3998,8 +3972,8 @@ PRBool DIR_UseCustomAttribute (DIR_Server *server, DIR_AttributeId id)
 	nsVoidArray *list = server->customAttributes;
 	DIR_Attribute *walkList = nsnull;
 
-	int count = list->Count();
-	int i;
+	PRInt32  count = list->Count();
+	PRInt32  i;
 	for (i = 0; i < count; i++)
 	{
 		if ((walkList = (DIR_Attribute *)list->ElementAt(i)) != nsnull)
@@ -4017,7 +3991,7 @@ PRBool DIR_IsDnAttribute (DIR_Server *s, const char *attrib)
 		/* Look in the server object to see if there are prefs to tell
 		 * us which attributes contain DNs
 		 */
-		int i;
+		PRInt32 i;
 		for (i = 0; i < s->dnAttributesCount; i++)
 		{
 			if (!PL_strcasecmp(attrib, s->dnAttributes[i]))
@@ -4057,7 +4031,7 @@ PRBool DIR_IsAttributeExcludedFromHtml (DIR_Server *s, const char *attrib)
 		/* Look in the server object to see if there are prefs to tell
 		 * us which attributes shouldn't be shown in HTML
 		 */
-		int i;
+		PRInt32 i;
 		for (i = 0; i < s->suppressedAttributesCount; i++)
 		{
 			if (!PL_strcasecmp(attrib, s->suppressedAttributes[i]))
@@ -4076,7 +4050,7 @@ PRBool DIR_IsUriAttribute (DIR_Server *s, const char *attrib)
 		/* Look in the server object to see if there are prefs to tell
 		 * us which attributes are URLs
 		 */
-		int i;
+		PRInt32 i;
 		for (i = 0; i < s->uriAttributesCount; i++)
 		{
 			if (!PL_strcasecmp(attrib, s->uriAttributes[i]))
@@ -4210,10 +4184,10 @@ char *DIR_Unescape (const char *src, PRBool makeHtml)
 	((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
 
 	char *dest = nsnull;
-	int destLength = 0;
+	PRUint32 destLength = 0;
 
-	int dollarCount = 0;
-	int convertedLengthOfDollar = makeHtml ? 4 : 1;
+	PRUint32 dollarCount = 0;
+	PRUint32 convertedLengthOfDollar = makeHtml ? 4 : 1;
 
 	const char *tmpSrc = src;
 
@@ -4282,21 +4256,21 @@ char *DIR_Unescape (const char *src, PRBool makeHtml)
 
 #endif /* #if !defined(MOZADDRSTANDALONE) */
 
-PRBool DIR_TestFlag (DIR_Server *server, uint32 flag)
+PRBool DIR_TestFlag (DIR_Server *server, PRUint32 flag)
 {
 	if (server)
 		return NS_OK != (server->flags & flag);
 	return PR_FALSE;
 }
 
-void DIR_SetFlag (DIR_Server *server, uint32 flag)
+void DIR_SetFlag (DIR_Server *server, PRUint32 flag)
 {
 	PR_ASSERT(server);
 	if (server)
 		server->flags |= flag;
 }
 
-void DIR_ClearFlag (DIR_Server *server, uint32 flag)
+void DIR_ClearFlag (DIR_Server *server, PRUint32 flag)
 {
 	PR_ASSERT(server);
 	if (server)
@@ -4304,7 +4278,7 @@ void DIR_ClearFlag (DIR_Server *server, uint32 flag)
 }
 
 
-void DIR_ForceFlag (DIR_Server *server, uint32 flag, PRBool setIt)
+void DIR_ForceFlag (DIR_Server *server, PRUint32 flag, PRBool setIt)
 {
 	PR_ASSERT(server);
 	if (server)
@@ -4322,22 +4296,22 @@ void DIR_ForceFlag (DIR_Server *server, uint32 flag, PRBool setIt)
  * thing, we can use these bottlenecks.
  */
 
-char *DIR_ConvertToServerCharSet(DIR_Server *server, char *src, int16 srcCSID)
+char *DIR_ConvertToServerCharSet(DIR_Server *server, char *src, PRInt16 srcCSID)
 {
-	return DIR_ConvertString(srcCSID, (int16)(server ? server->csid : CS_DEFAULT), src);
+	return DIR_ConvertString(srcCSID, (PRInt16)(server ? server->csid : CS_DEFAULT), src);
 }
 
-char *DIR_ConvertFromServerCharSet(DIR_Server *server, char *src, int16 dstCSID)
+char *DIR_ConvertFromServerCharSet(DIR_Server *server, char *src, PRInt16 dstCSID)
 {
-	return DIR_ConvertString((int16)(server ? server->csid : CS_DEFAULT), dstCSID, src);
+	return DIR_ConvertString((PRInt16)(server ? server->csid : CS_DEFAULT), dstCSID, src);
 }
 
-char *DIR_ConvertString(int16 srcCSID, int16 dstCSID, const char *string)
+char *DIR_ConvertString(PRInt16 srcCSID, PRInt16 dstCSID, const char *string)
 {
 	if (srcCSID == CS_DEFAULT || dstCSID == CS_DEFAULT)
 	{
-		int16 defaultCSID = CS_UTF8;
-//		int16 defaultCSID = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
+		PRInt16 defaultCSID = CS_UTF8;
+//		PRInt16 defaultCSID = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
 
 		if (srcCSID == CS_DEFAULT)
 			srcCSID = defaultCSID;
