@@ -3855,7 +3855,7 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
 
     nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = InitCopyState(aSupport, messages, isMove, PR_TRUE, listener);
+    rv = InitCopyState(aSupport, messages, isMove, PR_FALSE, listener);
     if(NS_FAILED(rv)) return rv;
 
     m_copyState->m_streamCopy = PR_TRUE;

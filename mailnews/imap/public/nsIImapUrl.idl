@@ -133,6 +133,8 @@ interface nsIImapUrl : nsISupports
   const long nsImapFolderStatus	= 0x00000016;
   const long nsImapRefreshFolderUrls = 0x00000017;
   const long nsImapEnsureExistsFolder = 0x00000018;
+  const long nsImapOfflineToOnlineCopy = 0x00000019;
+  const long nsImapOfflineToOnlineMove = 0x0000001A;
   // it's okay to add more imap actions that require us to 
   // be in the authenticated state here without renumbering
   // the imap selected state url actions. just make sure you don't
@@ -155,8 +157,6 @@ interface nsIImapUrl : nsISupports
   const long nsImapOnlineMove	= 0x10000021;
   const long nsImapOnlineToOfflineCopy = 0x10000022;
   const long nsImapOnlineToOfflineMove = 0x10000023;
-  const long nsImapOfflineToOnlineCopy = 0x10000024;
-  const long nsImapOfflineToOnlineMove = 0x10000025;
   const long nsImapBiff	= 0x10000026;
   const long nsImapSelectNoopFolder	= 0x10000027;
   const long nsImapAppendDraftFromFile = 0x10000028;
