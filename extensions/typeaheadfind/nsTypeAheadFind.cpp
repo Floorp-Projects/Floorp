@@ -1161,6 +1161,7 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
 
 void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
 {
+#ifdef TYPEAHEADFIND_CHANGE_SELECTION_LOOK
   if (!aPresShell || !mFocusedDocSelCon)
     return;
   // Paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
@@ -1192,6 +1193,7 @@ void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled)
     caret->SetCaretVisible(isCaretVisibleDuringSelection != 0);
     mFocusedDocSelCon->SetCaretEnabled(isCaretVisibleDuringSelection != 0);
   }
+#endif
 }
 
 
