@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.12 2000/08/16 01:20:39 pnunn%netscape.com Exp $
+ * $Id: if_struct.h,v 1.13 2000/08/16 03:16:45 waterson%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -178,8 +178,6 @@ struct il_container_struct {
     
     enum icstate state;
     int sized;
-
-    int moz_type;               /* TYPE_CHROME, etc. */
 
     int is_alone;               /* only image on a page */
     int is_in_use;              /* Used by some context */
