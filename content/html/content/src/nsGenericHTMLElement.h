@@ -192,12 +192,6 @@ public:
   virtual void RemoveFocus(nsIPresContext *aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
-  nsresult HandleDOMEvent(nsIPresContext* aPresContext,
-                          nsEvent* aEvent,
-                          nsIDOMEvent** aDOMEvent,
-                          PRUint32 aFlags,
-                          nsEventStatus* aEventStatus);
-
   /**
    * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
    * are the same as HandleDOMEvent)

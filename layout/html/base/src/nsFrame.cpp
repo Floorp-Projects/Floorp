@@ -4618,40 +4618,14 @@ nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
   return mStyleContext->GetStyleData(aSID);
 }
 
-nsIFrame*
-nsIFrame::FocusableAncestor(nsIFrame *aFrame)
-{
-  // This method helps prevent a situation where a link or other element
-  // with -moz-user-focus is focused twice, because the parent link
-  // would get focused, and all of the children also get focus.
-  // Scroll frames are the only focusable containers that 
-  // can have focusable children.
-
-  nsIFrame *ancestorFrame = aFrame;
-  while ((ancestorFrame = ancestorFrame->GetParent()) != nsnull &&
-         ancestorFrame->GetType() != nsLayoutAtoms::scrollFrame) {
-    // Any other parent that's focusable can't have focusable children
-    const nsStyleUserInterface *ui = ancestorFrame->GetStyleUserInterface();
-    if (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE &&
-        ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) {
-      // Inside a focusable parent -- let parent get focus
-      // instead of child (to avoid links within links etc.)
-      return ancestorFrame;   
-    }
-  }
-  return nsnull;
-}
-
-
 PRBool
 nsIFrame::IsFocusable(PRInt32 *aTabIndex)
 {
   PRInt32 tabIndex = -1;
   PRBool isFocusable = PR_FALSE;
 
-  if (AreAncestorViewsVisible() && mContent &&
-      mContent->IsContentOfType(nsIContent::eELEMENT) &&
-      !FocusableAncestor(this)) {
+  if (mContent && mContent->IsContentOfType(nsIContent::eELEMENT) &&
+      AreAncestorViewsVisible()) {
     const nsStyleVisibility* vis = GetStyleVisibility();
     if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
         vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) {
