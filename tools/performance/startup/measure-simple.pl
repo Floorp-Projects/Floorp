@@ -50,6 +50,7 @@ END_USAGE
   print "$ntimes times\n";
   
   # Setup run environment
+  $ENV{"NS_TIMELINE_ENABLE"} = 1;
   $ENV{"NS_TIMELINE_LOG_FILE"} = $timelinelog;
   $ENV{"XPCOM_DEBUG_BREAK"} = "warn";
   unlink $timelinelog;
