@@ -287,15 +287,15 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
   ::ForeColor(blackColor);
   ::BackColor(whiteColor);
 
-  if (!mMaskGWorld)
+  if (RenderingToPrinter(aContext))
   {
-    ::CopyBits(::GetPortBitMapForCopyBits(mImageGWorld),
-               ::GetPortBitMapForCopyBits(destPort),
-               &srcRect, &dstRect, srcCopy, nsnull);
-  }
-  else
-  {
-    if (RenderingToPrinter(aContext))
+    if (!mMaskGWorld)
+    {
+      ::CopyBits(::GetPortBitMapForCopyBits(mImageGWorld),
+                 ::GetPortBitMapForCopyBits(destPort),
+                 &srcRect, &dstRect, srcCopy, nsnull);
+    }
+    else
     {
       // If we are printing, then we need to render everything into a temp
       // GWorld, and then blit that out to the destination.  We do this
@@ -339,86 +339,86 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
         ::DisposeGWorld(tempGWorld);  // do this after dtor of tempPixLocker!
       }
     }
-    else
+  }
+  else
+  {
+    // not printing...
+    if (mAlphaDepth == 1 && ((aSWidth != aDWidth) || (aSHeight != aDHeight)))
     {
-      // not printing...
-      if (mAlphaDepth == 1 && ((aSWidth != aDWidth) || (aSHeight != aDHeight)))
+      // If scaling an image that has a 1-bit mask...
+
+      // Bug 195022 - Seems there is a bug in the Copy{Deep}Mask functions
+      // where scaling an image that has a 1-bit mask can cause some ugly
+      // artifacts to appear on screen.  To work around this issue, we use the
+      // functions in imgScaler.cpp to do the actual scaling of the source
+      // image and mask.
+
+      GWorldPtr tempSrcGWorld = nsnull, tempMaskGWorld = nsnull;
+
+      // create temporary source GWorld
+      char* scaledSrcBits;
+      PRInt32 tmpSrcRowBytes;
+      PRInt16 pixelDepthSrc = ::GetPixDepth(::GetGWorldPixMap(mImageGWorld));
+      OSErr err = CreateGWorld(aDWidth, aDHeight, pixelDepthSrc,
+                               &tempSrcGWorld, &scaledSrcBits, &tmpSrcRowBytes);
+
+      if (err != noErr)  return NS_ERROR_FAILURE;
+
+      // create temporary mask GWorld
+      char* scaledMaskBits;
+      PRInt32 tmpMaskRowBytes;
+      err = CreateGWorld(aDWidth, aDHeight, mAlphaDepth, &tempMaskGWorld,
+                         &scaledMaskBits, &tmpMaskRowBytes);
+
+      if (err == noErr)
       {
-        // If scaling an image that has a 1-bit mask...
-
-        // Bug 195022 - Seems there is a bug in the Copy{Deep}Mask functions
-        // where scaling an image that has a 1-bit mask can cause some ugly
-        // artifacts to appear on screen.  To work around this issue, we use the
-        // functions in imgScaler.cpp to do the actual scaling of the source
-        // image and mask.
-
-        GWorldPtr tempSrcGWorld = nsnull, tempMaskGWorld = nsnull;
-
-        // create temporary source GWorld
-        char* scaledSrcBits;
-        PRInt32 tmpSrcRowBytes;
-        PRInt16 pixelDepthSrc = ::GetPixDepth(::GetGWorldPixMap(mImageGWorld));
-        OSErr err = CreateGWorld(aDWidth, aDHeight, pixelDepthSrc,
-                                 &tempSrcGWorld, &scaledSrcBits, &tmpSrcRowBytes);
-
-        if (err != noErr)  return NS_ERROR_FAILURE;
-
-        // create temporary mask GWorld
-        char* scaledMaskBits;
-        PRInt32 tmpMaskRowBytes;
-        err = CreateGWorld(aDWidth, aDHeight, mAlphaDepth, &tempMaskGWorld,
-                           &scaledMaskBits, &tmpMaskRowBytes);
-
-        if (err == noErr)
+        PixMapHandle srcPixMap = ::GetGWorldPixMap(mImageGWorld);
+        PixMapHandle maskPixMap = ::GetGWorldPixMap(mMaskGWorld);
+        if (srcPixMap && maskPixMap)
         {
-          PixMapHandle srcPixMap = ::GetGWorldPixMap(mImageGWorld);
-          PixMapHandle maskPixMap = ::GetGWorldPixMap(mMaskGWorld);
-          if (srcPixMap && maskPixMap)
-          {
-            StPixelLocker srcPixLocker(srcPixMap);      // locks the pixels
-            StPixelLocker maskPixLocker(maskPixMap);
+          StPixelLocker srcPixLocker(srcPixMap);      // locks the pixels
+          StPixelLocker maskPixLocker(maskPixMap);
 
-            // scale the source
-            RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
-                        0, 0, aDWidth - 1, aDHeight - 1,
-                        mImageBits, mRowBytes, scaledSrcBits, tmpSrcRowBytes,
-                        pixelDepthSrc);
+          // scale the source
+          RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
+                      0, 0, aDWidth - 1, aDHeight - 1,
+                      mImageBits, mRowBytes, scaledSrcBits, tmpSrcRowBytes,
+                      pixelDepthSrc);
 
-            // scale the mask
-            RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
-                        0, 0, aDWidth - 1, aDHeight - 1,
-                        mMaskBits, mAlphaRowBytes, scaledMaskBits,
-                        tmpMaskRowBytes, mAlphaDepth);
+          // scale the mask
+          RectStretch(aSWidth, aSHeight, aDWidth, aDHeight,
+                      0, 0, aDWidth - 1, aDHeight - 1,
+                      mMaskBits, mAlphaRowBytes, scaledMaskBits,
+                      tmpMaskRowBytes, mAlphaDepth);
 
-            Rect tmpRect;
-            ::SetRect(&tmpRect, 0, 0, aDWidth, aDHeight);
+          Rect tmpRect;
+          ::SetRect(&tmpRect, 0, 0, aDWidth, aDHeight);
 
-            // copy to screen
-            CopyBitsWithMask(::GetPortBitMapForCopyBits(tempSrcGWorld),
-                             ::GetPortBitMapForCopyBits(tempMaskGWorld),
-                             mAlphaDepth, ::GetPortBitMapForCopyBits(destPort),
-                             tmpRect, tmpRect, dstRect, PR_TRUE);
-          }
-
-          ::DisposeGWorld(tempMaskGWorld);
-          free(scaledMaskBits);
-        }
-        else
-        {
-          rv = NS_ERROR_FAILURE;
+          // copy to screen
+          CopyBitsWithMask(::GetPortBitMapForCopyBits(tempSrcGWorld),
+                           ::GetPortBitMapForCopyBits(tempMaskGWorld),
+                           mAlphaDepth, ::GetPortBitMapForCopyBits(destPort),
+                           tmpRect, tmpRect, dstRect, PR_TRUE);
         }
 
-        ::DisposeGWorld(tempSrcGWorld);
-        free(scaledSrcBits);
+        ::DisposeGWorld(tempMaskGWorld);
+        free(scaledMaskBits);
       }
       else
       {
-        // not scaling...
-        CopyBitsWithMask(::GetPortBitMapForCopyBits(mImageGWorld),
-                         ::GetPortBitMapForCopyBits(mMaskGWorld),
-                         mAlphaDepth, ::GetPortBitMapForCopyBits(destPort),
-                         srcRect, maskRect, dstRect, PR_TRUE);
+        rv = NS_ERROR_FAILURE;
       }
+
+      ::DisposeGWorld(tempSrcGWorld);
+      free(scaledSrcBits);
+    }
+    else
+    {
+      // not scaling...
+      CopyBitsWithMask(::GetPortBitMapForCopyBits(mImageGWorld),
+                       mMaskGWorld ? ::GetPortBitMapForCopyBits(mMaskGWorld) : nsnull,
+                       mAlphaDepth, ::GetPortBitMapForCopyBits(destPort),
+                       srcRect, maskRect, dstRect, PR_TRUE);
     }
   }
 
@@ -764,11 +764,8 @@ void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits,
       ::SetClip(newClip);
     }
 
-    if (maskDepth > 1)
-      ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect,
-                     &destRect, ditherCopy, nsnull);
-    else
-      ::CopyMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect);
+    ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect,
+                   &destRect, ditherCopy, nsnull);
 
     if (inDrawingToPort)
     {
