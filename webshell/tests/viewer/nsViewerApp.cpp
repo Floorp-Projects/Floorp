@@ -989,10 +989,11 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 
 //----------------------------------------
 static nsBrowserWindow* gWinData;
-static int gTop100Pointer = 0;
+static int gTop100Pointer = 80;
 static char * gTop100List[] = {
    "http://www.yahoo.com",
    "http://www.netscape.com",
+   "http://www.mozilla.org",
    "http://www.microsoft.com",
    "http://www.excite.com",
    "http://www.mckinley.com",
@@ -1010,7 +1011,7 @@ static char * gTop100List[] = {
    "http://www.hotwired.com",
    "http://www.hotbot.com",
    "http://www.lycos.com",
-   "http://www.pointcom.com",
+   "http://www.pointcast.com",
    "http://www.cnet.com",
    "http://www.search.com",
    "http://www.news.com",
@@ -1063,7 +1064,6 @@ static char * gTop100List[] = {
    "http://www.100hot.com",
    "http://www.messagemates.com",
    "http://www.onelist.com",
-   "http://www.bluemountain.com",
    "http://www.ea.com",
    "http://www.bullfrog.co.uk",
    "http://www.travelocity.com",
@@ -1119,6 +1119,7 @@ static char * gTop100List[] = {
    "http://www.talkcity.com",
    "http://www.developer.com",
    "http://www.mapquest.com",
+   "http://www.bluemountain.com",
    0
    };
 
