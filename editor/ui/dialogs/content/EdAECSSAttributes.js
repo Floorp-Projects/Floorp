@@ -2,33 +2,35 @@
 // build attribute list in tree form from element attributes
 function BuildCSSAttributeTable()
 {
-  dump("populating CSS Attributes tree\n");
-  dump("elStyle: " + element.getAttribute("style") + "\n");
-  var style = element.getAttribute("style");
-  if(style == undefined || style == "")
+  // dump("populating CSS Attributes tree\n");
+  // dump("  style=\"" + element.getAttribute("style") + "\"\n");
+
+  // get the CSS declaration from DOM 2 ElementCSSInlineStyle
+  var style = element.style;
+
+  if(style == undefined)
   {
-    dump("no style attributes to add\n");
+    dump("Inline styles undefined\n");
     return;
   }
-  if(style.indexOf(";") == -1) {
-    if(style.indexOf(":") != -1) {
-      name = TrimString(style.split(":")[0]);
-      value = TrimString(style.split(":")[1]);
-      if ( !AddTreeItem( name, value, "CSSAList", CSSAttrs ) )
-        dump("Failed to add CSS attribute: " + i + "\n");
-    } else
-      return;
-  }
-  nvpairs = style.split(";");
-  for(i = 0; i < nvpairs.length; i++)
+
+  var l = style.length;
+  if(l == undefined || l == 0)
   {
-    if(nvpairs[i].indexOf(":") != -1) {
-      name = TrimString(nvpairs[i].split(":")[0]);
-      value = TrimString(nvpairs[i].split(":")[1]);
-      if( !AddTreeItem( name, value, "CSSAList", CSSAttrs ) )
-        dump("Failed to add CSS attribute: " + i + "\n");
+    if (l == undefined) {
+      dump("Failed to query the number of inline style declarations\n");
     }
+    return;
   }
+
+  for (i = 0; i < l; i++) {
+    name = style.item(i);
+    value = style.getPropertyValue(name);
+    // dump("  adding property '" + name + "' with value '" + value +"'\n");
+    if ( !AddTreeItem( name, value, "CSSAList", CSSAttrs ) )
+      dump("Failed to add CSS attribute: " + i + "\n");
+  }
+  return;
 }
 
 // add an attribute to the tree widget
