@@ -187,12 +187,6 @@ NS_IMETHODIMP nsXULCommand::SetDOMElement(nsIDOMElement * aDOMElement)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript)
-{
-  return NS_OK; // XXX Kill this method. It's worthless.
-}
-
 /////////////////////////////////////////////////////////////////////////
 // nsIMenuListener Method(s)
 /////////////////////////////////////////////////////////////////////////
