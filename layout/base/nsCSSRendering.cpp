@@ -2614,7 +2614,10 @@ FindCanvasBackground(nsIPresContext* aPresContext,
       while(firstChild){
         for (nsIFrame* kidFrame = firstChild; nsnull != kidFrame; ) {
           kidFrame->GetStyleContext(getter_AddRefs(parentContext));
-          ::GetStyleData(parentContext, &result);
+          // Need to .get() because some compilers will not do the
+          // implicit .get() to match the template.
+          // See also rev 3.188 of this file.
+          ::GetStyleData(parentContext.get(), &result);
           if (!result->IsTransparent()) {
             GetStyleData(kidFrame, aBackground);
             return PR_TRUE;
