@@ -457,7 +457,7 @@ nsCStringKey::Clone() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsStringKey::nsStringKey(const nsAReadableString& str)
-    : mStr(NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar *, nsPromiseFlatString(str)))), mStrLen(str.Length()),  mOwnership(OWN_CLONE)
+    : mStr(NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar *, nsPromiseFlatString(str).get()))), mStrLen(str.Length()),  mOwnership(OWN_CLONE)
 {
     NS_ASSERTION(mStr, "null string key");
 #ifdef DEBUG
