@@ -94,6 +94,8 @@ mailnews/compose/build/Makefile
 mailnews/compose/resources/Makefile
 mailnews/compose/resources/content/Makefile
 mailnews/compose/resources/skin/Makefile
+mailnews/compose/resources/locale/Makefile
+mailnews/compose/resources/locale/en-US/Makefile
 mailnews/compose/prefs/Makefile
 mailnews/compose/prefs/resources/Makefile
 mailnews/compose/prefs/resources/content/Makefile
