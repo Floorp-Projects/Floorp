@@ -159,6 +159,8 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
+  void GetContextMenu(nsIMenuParent** aContextMenu);
+
   NS_IMETHOD KillCloseTimer();
 
 #ifdef DEBUG

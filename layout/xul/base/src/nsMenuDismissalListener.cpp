@@ -73,6 +73,13 @@ nsMenuDismissalListener::MouseDown(nsIDOMEvent* aMouseEvent)
 }
 
 void
+nsMenuDismissalListener::GetCurrentMenuParent(nsIMenuParent** aMenuParent)
+{
+  *aMenuParent = mMenuParent;
+  NS_IF_ADDREF(*aMenuParent);
+}
+
+void
 nsMenuDismissalListener::SetCurrentMenuParent(nsIMenuParent* aMenuParent)
 {
   if (aMenuParent == mMenuParent)

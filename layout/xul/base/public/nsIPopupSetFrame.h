@@ -58,7 +58,7 @@ public:
                        const nsString& aPopupType, const nsString& anAnchorAlignment,
                        const nsString& aPopupAlignment) = 0;
   NS_IMETHOD HidePopup(nsIFrame* aPopup) = 0;
-  NS_IMETHOD DestroyPopup(nsIFrame* aPopup) = 0;
+  NS_IMETHOD DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain) = 0;
 
   NS_IMETHOD AddPopupFrame(nsIFrame* aPopup) = 0;
   NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup) = 0;

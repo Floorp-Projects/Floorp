@@ -408,11 +408,30 @@ nsPopupSetFrame::HidePopup(nsIFrame* aPopup)
   nsPopupFrameList* entry = mPopupList->GetEntryByFrame(aPopup);
   if (entry && entry->mCreateHandlerSucceeded)
     ActivatePopup(entry, PR_FALSE);
+
+  if (entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
+    // If we are a context menu, and if we are attached to a menupopup, then hiding us
+    // should also hide the parent menu popup.
+    nsCOMPtr<nsIAtom> tag;
+    entry->mElementContent->GetTag(*getter_AddRefs(tag));
+    if (tag && tag.get() == nsXULAtoms::menupopup) {
+      nsIFrame* popupFrame = nsnull;
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
+      presShell->GetPrimaryFrameFor(entry->mElementContent, &popupFrame);
+      if (popupFrame) {
+        nsCOMPtr<nsIMenuParent> menuParent(do_QueryInterface(popupFrame));
+        if (menuParent)
+          menuParent->HideChain();
+      }
+    }
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup)
+nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup, PRBool aDestroyEntireChain)
 {
   if (!mPopupList)
     return NS_OK; // No active popups
@@ -423,6 +442,24 @@ nsPopupSetFrame::DestroyPopup(nsIFrame* aPopup)
     OpenPopup(entry, PR_FALSE);
     entry->mPopupType.SetLength(0);
   
+    if (aDestroyEntireChain && entry->mElementContent && entry->mPopupType == NS_LITERAL_STRING("context")) {
+      // If we are a context menu, and if we are attached to a menupopup, then destroying us
+      // should also dismiss the parent menu popup.
+      nsCOMPtr<nsIAtom> tag;
+      entry->mElementContent->GetTag(*getter_AddRefs(tag));
+      if (tag && tag.get() == nsXULAtoms::menupopup) {
+        nsIFrame* popupFrame = nsnull;
+        nsCOMPtr<nsIPresShell> presShell;
+        mPresContext->GetShell(getter_AddRefs(presShell));
+        presShell->GetPrimaryFrameFor(entry->mElementContent, &popupFrame);
+        if (popupFrame) {
+          nsCOMPtr<nsIMenuParent> menuParent(do_QueryInterface(popupFrame));
+          if (menuParent)
+            menuParent->DismissChain();
+        }
+      }
+    }
+
     // clear things out for next time
     entry->mCreateHandlerSucceeded = PR_FALSE;
     entry->mElementContent = nsnull;

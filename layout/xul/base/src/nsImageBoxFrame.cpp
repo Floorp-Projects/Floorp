@@ -521,7 +521,7 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (imgCon) {
-    PRBool hasSubRect = mSubRect.width > 0 || mSubRect.height > 0;
+    PRBool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
     PRBool sizeMatch = hasSubRect ? 
                        mSubRect.width == rect.width && mSubRect.height == rect.height :
                        mImageSize.width == rect.width && mImageSize.height == rect.height;
@@ -642,7 +642,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
      CacheImageSize(aState);
   }
 
-  if (mSubRect.width > 0 || mSubRect.height > 0)
+  if (!mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0))
     aSize = nsSize(mSubRect.width, mSubRect.height);
   else
     aSize = mImageSize;

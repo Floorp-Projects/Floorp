@@ -129,7 +129,7 @@ nsPopupBoxObject::HidePopup()
     return NS_OK;
 
   popupSet->HidePopup(ourFrame);
-  popupSet->DestroyPopup(ourFrame);
+  popupSet->DestroyPopup(ourFrame, PR_TRUE);
 
   return NS_OK;
 }
