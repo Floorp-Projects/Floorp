@@ -35,6 +35,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsIDOMEventTarget.h"
 
 
 NS_IMPL_ADDREF(nsToolbarDragListener)
@@ -323,15 +324,20 @@ nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
   if ( !mouseEvent )
     return NS_OK;
  
+  nsCOMPtr<nsIDOMEventTarget> relatedTarget;
+  mouseEvent->GetRelatedTarget ( getter_AddRefs(relatedTarget) );
   nsCOMPtr<nsIDOMNode> relatedNode;
-  mouseEvent->GetRelatedNode ( getter_AddRefs(relatedNode) );
-  nsCOMPtr<nsIDOMNode> target;
+  if (relatedTarget) relatedNode = do_QueryInterface(relatedTarget);
+
+  nsCOMPtr<nsIDOMEventTarget> target;
   aDragEvent->GetTarget ( getter_AddRefs(target) );
+  nsCOMPtr<nsIDOMNode> targetNode = nsnull;
+  if (target) targetNode = do_QueryInterface(target);
 
   // we only care about the case where the toolbar or one of its children
   // is the target of this dragExit event. Recall we get all exit events because
   // they will bubble up to us.
-  if ( !IsNodeAChild(target) )
+  if ( !IsNodeAChild(targetNode) )
     return NS_OK;
 
   if ( ! IsNodeAChild(relatedNode) ) {

@@ -94,6 +94,11 @@ void IdlVariable::GetTypeAsString(char *aString, size_t aStringSize)
         strcpy(aString, "long");
       }
       break;
+    case TYPE_LONG_LONG:
+      if (aStringSize > 9) {
+        strcpy(aString, "long long");
+      }
+      break;
     case TYPE_SHORT:
       if (aStringSize > 5) {
         strcpy(aString, "short");
@@ -102,6 +107,11 @@ void IdlVariable::GetTypeAsString(char *aString, size_t aStringSize)
     case TYPE_ULONG:
       if (aStringSize > 13) {
         strcpy(aString, "unsigned long");
+      }
+      break;
+    case TYPE_ULONG_LONG:
+      if (aStringSize > 18) {
+        strcpy(aString, "unsigned long long");
       }
       break;
     case TYPE_USHORT:

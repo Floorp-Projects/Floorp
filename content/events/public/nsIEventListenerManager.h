@@ -30,6 +30,7 @@
 class nsIPresContext;
 class nsIDOMEventListener;
 class nsIScriptObjectOwner;
+class nsIDOMEventTarget;
 
 /*
  * Event listener manager interface.
@@ -104,6 +105,7 @@ public:
   virtual nsresult HandleEvent(nsIPresContext* aPresContext,
                                nsEvent* aEvent,
                                nsIDOMEvent** aDOMEvent,
+                               nsIDOMEventTarget* aCurrentTarget,
                                PRUint32 aFlags,
                                nsEventStatus* aEventStatus) = 0;
 
@@ -114,6 +116,7 @@ public:
   */
   virtual nsresult CreateEvent(nsIPresContext* aPresContext,
                                nsEvent* aEvent,
+                               const nsString& aEventType,
                                nsIDOMEvent** aDOMEvent) = 0;
 
   /**
@@ -133,6 +136,12 @@ public:
   * manager.
   */
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly) = 0;
+
+  /**
+  * Removes all event listeners registered by this instance of the listener
+  * manager.
+  */
+  virtual nsresult SetListenerTarget(nsISupports* aTarget) = 0;
 };
 
 extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);

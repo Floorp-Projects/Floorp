@@ -899,7 +899,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
             {
               if (sv) {
                 if (action == MOUSE_SCROLL_N_LINES)
-                  sv->ScrollByLines(numLines);
+                  sv->ScrollByLines(0, numLines);
                 else
                   sv->ScrollByPages((numLines > 0) ? 1 : -1);
                 ForceViewUpdate(focusView);
@@ -996,7 +996,27 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               nsIScrollableView* sv = GetNearestScrollingView(aView);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByLines((keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+                sv->ScrollByLines(0, (keyEvent->keyCode == NS_VK_DOWN) ? 1 : -1);
+              
+                // force the update to happen now, otherwise multiple scrolls can
+                // occur before the update is processed. (bug #7354)
+                nsIViewManager* vm = nsnull;
+             	  if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+             	    // I'd use Composite here, but it doesn't always work.
+                  // vm->Composite();
+                  vm->ForceUpdate();
+                  NS_RELEASE(vm);
+                }
+              }
+            }
+            break;
+          case NS_VK_LEFT: 
+          case NS_VK_RIGHT:
+            if (!mCurrentFocus) {
+              nsIScrollableView* sv = GetNearestScrollingView(aView);
+              if (sv) {
+                nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+                sv->ScrollByLines((keyEvent->keyCode == NS_VK_RIGHT) ? 1 : -1, 0);
               
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
@@ -2577,6 +2597,12 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
     vm->ForceUpdate();
     NS_RELEASE(vm);
   }
+}
+
+NS_IMETHODIMP
+nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
+{
+  return NS_OK;
 }
 
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)

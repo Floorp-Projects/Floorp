@@ -37,7 +37,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMAbstractView.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMEventTarget.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -46,7 +46,7 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIMouseEventIID, NS_IDOMMOUSEEVENT_IID);
 static NS_DEFINE_IID(kIKeyEventIID, NS_IDOMKEYEVENT_IID);
 static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 
 //
 // KeyEvent property ids
@@ -63,8 +63,7 @@ enum KeyEvent_slots {
   MOUSEEVENT_CLIENTX = -9,
   MOUSEEVENT_CLIENTY = -10,
   MOUSEEVENT_BUTTON = -11,
-  MOUSEEVENT_CLICKCOUNT = -12,
-  MOUSEEVENT_RELATEDNODE = -13
+  MOUSEEVENT_RELATEDTARGET = -12
 };
 
 /***********************************************************************/
@@ -254,33 +253,14 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case MOUSEEVENT_CLICKCOUNT:
+      case MOUSEEVENT_RELATEDTARGET:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_CLICKCOUNT, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_RELATEDTARGET, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          PRUint16 prop;
+          nsIDOMEventTarget* prop;
           nsIDOMMouseEvent* b;
           if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-            rv = b->GetClickCount(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case MOUSEEVENT_RELATEDNODE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_MOUSEEVENT_RELATEDNODE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMNode* prop;
-          nsIDOMMouseEvent* b;
-          if (NS_OK == a->QueryInterface(kIMouseEventIID, (void **)&b)) {
-            rv = b->GetRelatedNode(&prop);
+            rv = b->GetRelatedTarget(&prop);
             if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -574,8 +554,7 @@ static JSPropertySpec KeyEventProperties[] =
   {"clientX",    MOUSEEVENT_CLIENTX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"clientY",    MOUSEEVENT_CLIENTY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"button",    MOUSEEVENT_BUTTON,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"clickCount",    MOUSEEVENT_CLICKCOUNT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"relatedNode",    MOUSEEVENT_RELATEDNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"relatedTarget",    MOUSEEVENT_RELATEDTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

@@ -64,6 +64,14 @@ interface DocumentCSS : DocumentStyle {
                                        in DOMString pseudoElt);
 };
 
+// Introduced in DOM Level 2:
+interface DocumentEvent {
+/* IID: { 0x46b91d66, 0x28e2, 0x11d4, \
+  { 0xab, 0x1e, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } */
+
+  Event createEvent(in DOMString eventType);
+};
+
 interface NSDocument {
 /* IID: { 0xa6cf90cd, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} } */

@@ -42,6 +42,7 @@
 #include "nsIPrincipal.h"
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
+#include "nsIDOMDocumentEvent.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -113,6 +114,7 @@ protected:
 class nsDocument : public nsIDocument, 
                    public nsIDOMDocument, 
                    public nsIDOMNSDocument,
+                   public nsIDOMDocumentEvent,
                    public nsIDOMDocumentStyle,
                    public nsIDOMDocumentView,
                    public nsIDiskDocument,
@@ -371,6 +373,9 @@ public:
   // nsIDOMDocumentView
   NS_DECL_IDOMDOCUMENTVIEW
 
+  // nsIDOMDocumentEvent
+  NS_DECL_IDOMDOCUMENTEVENT
+
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -397,6 +402,7 @@ public:
                               PRBool aUseCapture);
   NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 

@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMEventListener;
+class nsIDOMEvent;
 
 #define NS_IDOMEVENTTARGET_IID \
  { 0x1c773b30, 0xd1cf, 0x11d2, \
@@ -41,18 +42,22 @@ public:
   NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
 
   NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)=0;
+
+  NS_IMETHOD    DispatchEvent(nsIDOMEvent* aEvt)=0;
 };
 
 
 #define NS_DECL_IDOMEVENTTARGET   \
   NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
   NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture);  \
+  NS_IMETHOD    DispatchEvent(nsIDOMEvent* aEvt);  \
 
 
 
 #define NS_FORWARD_IDOMEVENTTARGET(_to)  \
   NS_IMETHOD    AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to AddEventListener(aType, aListener, aUseCapture); }  \
   NS_IMETHOD    RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture) { return _to RemoveEventListener(aType, aListener, aUseCapture); }  \
+  NS_IMETHOD    DispatchEvent(nsIDOMEvent* aEvt) { return _to DispatchEvent(aEvt); }  \
 
 
 #endif // nsIDOMEventTarget_h__

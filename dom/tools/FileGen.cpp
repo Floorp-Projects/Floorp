@@ -125,11 +125,17 @@ FileGen::GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_LONG:
         strcpy(aBuffer, "PRInt32");
         break;
+      case TYPE_LONG_LONG:
+        strcpy(aBuffer, "PRInt64");
+        break;
       case TYPE_SHORT:
         strcpy(aBuffer, "PRInt32");
         break;
       case TYPE_ULONG:
         strcpy(aBuffer, "PRUint32");
+        break;
+      case TYPE_ULONG_LONG:
+        strcpy(aBuffer, "PRUint64");
         break;
       case TYPE_USHORT:
         strcpy(aBuffer, "PRUint32");
@@ -177,11 +183,17 @@ FileGen::GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_LONG:
         strcpy(aBuffer, "PRInt32");
         break;
+      case TYPE_LONG_LONG:
+        strcpy(aBuffer, "PRInt64");
+        break;
       case TYPE_SHORT:
         strcpy(aBuffer, "PRInt16");
         break;
       case TYPE_ULONG:
         strcpy(aBuffer, "PRUint32");
+        break;
+      case TYPE_ULONG_LONG:
+        strcpy(aBuffer, "PRUint64");
         break;
       case TYPE_USHORT:
         strcpy(aBuffer, "PRUint16");
@@ -229,11 +241,17 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
       case TYPE_LONG:
         strcpy(aBuffer, "PRInt32");
         break;
+      case TYPE_LONG_LONG:
+        strcpy(aBuffer, "PRInt64");
+        break;
       case TYPE_SHORT:
         strcpy(aBuffer, "PRInt16");
         break;
       case TYPE_ULONG:
         strcpy(aBuffer, "PRUint32");
+        break;
+      case TYPE_ULONG_LONG:
+        strcpy(aBuffer, "PRUint64");
         break;
       case TYPE_USHORT:
         strcpy(aBuffer, "PRUint16");

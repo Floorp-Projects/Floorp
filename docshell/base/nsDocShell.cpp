@@ -1926,7 +1926,7 @@ NS_IMETHODIMP nsDocShell::ScrollByLines(PRInt32 numLines)
    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
       NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(scrollView->ScrollByLines(numLines), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(scrollView->ScrollByLines(0, numLines), NS_ERROR_FAILURE);
 
    return NS_OK;
 }

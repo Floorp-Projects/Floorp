@@ -83,6 +83,8 @@ public:
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor) = 0;
 
+  //Method for centralized distribution of new DOM events
+  NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent) = 0;
 };
 
 #define NS_EVENT_STATE_UNSPECIFIED  0x0000

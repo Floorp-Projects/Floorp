@@ -31,6 +31,7 @@ EXPORTS = \
 	nsIDOMDOMImplementation.h		\
 	nsIDOMDocument.h			\
 	nsIDOMDocumentCSS.h			\
+	nsIDOMDocumentEvent.h			\
 	nsIDOMDocumentFragment.h		\
 	nsIDOMDocumentStyle.h			\
 	nsIDOMDocumentType.h			\

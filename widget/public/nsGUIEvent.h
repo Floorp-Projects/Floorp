@@ -563,6 +563,8 @@ enum nsDragDropEventStatus {
 #define NS_EVENT_FLAG_CAPTURE       0x0004
 #define NS_EVENT_FLAG_STOP_DISPATCH 0x0008
 #define NS_EVENT_FLAG_NO_DEFAULT    0x0010
+#define NS_EVENT_FLAG_CANT_CANCEL   0x0020
+#define NS_EVENT_FLAG_CANT_BUBBLE   0x0040
 
 // IME Constants  -- keep in synch with nsIDOMTextRange.h
 #define NS_TEXTRANGE_CARETPOSITION				0x01

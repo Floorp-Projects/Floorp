@@ -36,7 +36,7 @@ class nsIPresContext;
 0x80a98c80, 0x2036, 0x11d2, \
 {0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
 
-class nsIDOMNode;
+class nsIDOMEventTarget;
 class nsIDOMEvent;
 
 class nsIPrivateDOMEvent : public nsISupports {
@@ -45,11 +45,15 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATEDOMEVENT_IID; return iid; }
 
   NS_IMETHOD DuplicatePrivateData() = 0;
-  NS_IMETHOD SetTarget(nsIDOMNode* aNode) = 0;
+  NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) = 0;
+  NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget* aTarget) = 0;
   NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented) = 0;
 };
 
 extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
-extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
+extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
+                                 nsIPresContext* aPresContext,
+                                 const nsString& aEventType,
+                                 nsEvent *aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

@@ -268,7 +268,7 @@ function HandleKeyEvent( aEvent )
 
 function HandleClickEvent( aEvent )
 {
-  if( aEvent.clickCount == 2 && aEvent.which == 1 ) {
+  if( aEvent.detail == 2 && aEvent.which == 1 ) {
     if( aEvent.target.nodeName.toLowerCase() == "treecell" && 
         aEvent.target.parentNode.parentNode.nodeName.toLowerCase() != "treehead" )
       return onStart(); 

@@ -468,11 +468,17 @@ IdlVariable* IdlParser::ParseConst(IdlSpecification &aSpecification)
     case LONG_TOKEN:
       constObj->SetType(TYPE_LONG);
       break;
+    case LONG_LONG_TOKEN:
+      constObj->SetType(TYPE_LONG_LONG);
+      break;
     case SHORT_TOKEN:
       constObj->SetType(TYPE_SHORT);
       break;
     case ULONG_TOKEN:
       constObj->SetType(TYPE_ULONG);
+      break;
+    case ULONG_LONG_TOKEN:
+      constObj->SetType(TYPE_ULONG_LONG);
       break;
     case USHORT_TOKEN:
       constObj->SetType(TYPE_USHORT);
@@ -625,11 +631,17 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
     case LONG_TOKEN:
       attrObj->SetType(TYPE_LONG);
       break;
+    case LONG_LONG_TOKEN:
+      attrObj->SetType(TYPE_LONG_LONG);
+      break;
     case SHORT_TOKEN:
       attrObj->SetType(TYPE_SHORT);
       break;
     case ULONG_TOKEN:
       attrObj->SetType(TYPE_ULONG);
+      break;
+    case ULONG_LONG_TOKEN:
+      attrObj->SetType(TYPE_ULONG_LONG);
       break;
     case USHORT_TOKEN:
       attrObj->SetType(TYPE_USHORT);
@@ -717,11 +729,17 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token *a
     case LONG_TOKEN:
       funcObj->SetReturnValue(TYPE_LONG);
       break;
+    case LONG_LONG_TOKEN:
+      funcObj->SetReturnValue(TYPE_LONG_LONG);
+      break;
     case SHORT_TOKEN:
       funcObj->SetReturnValue(TYPE_SHORT);
       break;
     case ULONG_TOKEN:
       funcObj->SetReturnValue(TYPE_ULONG);
+      break;
+    case ULONG_LONG_TOKEN:
+      funcObj->SetReturnValue(TYPE_ULONG_LONG);
       break;
     case USHORT_TOKEN:
       funcObj->SetReturnValue(TYPE_USHORT);
@@ -969,11 +987,17 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
     case LONG_TOKEN:
       argObj->SetType(TYPE_LONG);
       break;
+    case LONG_LONG_TOKEN:
+      argObj->SetType(TYPE_LONG_LONG);
+      break;
     case SHORT_TOKEN:
       argObj->SetType(TYPE_SHORT);
       break;
     case ULONG_TOKEN:
       argObj->SetType(TYPE_ULONG);
+      break;
+    case ULONG_LONG_TOKEN:
+      argObj->SetType(TYPE_ULONG_LONG);
       break;
     case USHORT_TOKEN:
       argObj->SetType(TYPE_USHORT);

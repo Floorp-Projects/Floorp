@@ -196,7 +196,7 @@ public:
    * @param aNumLines number of lines to scroll the view by
    * @return error status
    */
-  NS_IMETHOD ScrollByLines(PRInt32 aNumLines) = 0;
+  NS_IMETHOD ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinexY) = 0;
 
   /**
    * Scroll the view up or down by aNumPages pages. a page

@@ -34,6 +34,12 @@
 #include "nsIViewManager.h"
 #include "nsIPrivateCompositionEvent.h"
 #include "nsIScrollableView.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMAbstractView.h"
+#include "prmem.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -46,16 +52,39 @@ static char* mEventNames[] = {
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture"
 }; 
 
-nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
+nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType) {
   mPresContext = aPresContext;
   if (mPresContext)
     NS_ADDREF(mPresContext);
-  mEvent = aEvent;
+  if (aEvent) {
+    mEventIsInternal = PR_FALSE;
+    mEvent = aEvent;
+  }
+  else {
+    //Allocate internal event
+    if (aEventType.EqualsIgnoreCase("MouseEvent")) {
+      mEvent = PR_NEWZAP(nsMouseEvent);
+      mEvent->eventStructType = NS_MOUSE_EVENT;
+    }
+    else if (aEventType.EqualsIgnoreCase("KeyEvent")) {
+      mEvent = PR_NEWZAP(nsKeyEvent);
+      mEvent->eventStructType = NS_KEY_EVENT;
+    }
+    else if (aEventType.EqualsIgnoreCase("HTMLEvent")) {
+      mEvent = PR_NEWZAP(nsEvent);
+      mEvent->eventStructType = NS_EVENT;
+    }
+    else {
+      mEvent = PR_NEWZAP(nsEvent);
+      mEvent->eventStructType = NS_EVENT;
+    }
+  }
   mTarget = nsnull;
+  mCurrentTarget = nsnull;
   mText = nsnull;
   mTextRange = nsnull;
 
-  if (aEvent->eventStructType ==NS_TEXT_EVENT) {
+  if (aEvent->eventStructType == NS_TEXT_EVENT) {
 	  //
 	  // extract the IME composition string
 	  //
@@ -87,7 +116,12 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
 nsDOMEvent::~nsDOMEvent() {
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mTarget);
+  NS_IF_RELEASE(mCurrentTarget);
   NS_IF_RELEASE(mTextRange);
+
+  if (mEventIsInternal) {
+    PR_DELETE(mEvent);
+  }
 
   if (mText!=nsnull)
 	delete mText;
@@ -121,7 +155,7 @@ NS_METHOD nsDOMEvent::GetType(nsString& aType)
   return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
+NS_METHOD nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
 {
   if (nsnull != mTarget) {
     *aTarget = mTarget;
@@ -138,7 +172,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
   }
   
   if (targetContent) {    
-    if (NS_OK == targetContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&mTarget)) {
+    if (NS_OK == targetContent->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget)) {
       *aTarget = mTarget;
       NS_ADDREF(mTarget);
     }
@@ -154,7 +188,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
     }
 
     if (doc) {
-      if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&mTarget)) {
+      if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)&mTarget)) {
         *aTarget = mTarget;
         NS_ADDREF(mTarget);
       }      
@@ -166,9 +200,9 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetCurrentNode(nsIDOMNode** aCurrentNode)
+nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
-  *aCurrentNode = nsnull;
+  *aCurrentTarget = nsnull;
   return NS_OK;
 }
 
@@ -194,13 +228,29 @@ nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 NS_IMETHODIMP
 nsDOMEvent::GetBubbles(PRBool* aBubbles)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aBubbles = mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCancelable(PRBool* aCancelable)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aCancelable = mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetTimeStamp(PRUint64* aTimeStamp)
+{
+  *aTimeStamp = mEvent->time;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::StopPropagation()
+{
+  mEvent->flags |= NS_EVENT_FLAG_STOP_DISPATCH;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -224,20 +274,64 @@ nsDOMEvent::PreventCapture()
 NS_IMETHODIMP
 nsDOMEvent::PreventDefault()
 {
-  mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  if (!(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL)) {
+    mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetView(nsIDOMAbstractView** aView)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aView);
+  *aView = nsnull;
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsISupports> container;
+  rv = mPresContext->GetContainer(getter_AddRefs(container));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
+
+  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
+  NS_ENSURE_TRUE(ifrq, NS_OK);
+
+  nsCOMPtr<nsIDOMWindow> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  NS_ENSURE_TRUE(window, NS_OK);
+
+  window->QueryInterface(NS_GET_IID(nsIDOMAbstractView), (void **)aView);
+
+  return rv;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetDetail(PRInt32* aDetail)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  //detail is valid for more than just mouseevents but we don't
+  //use it for anything else right now
+  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
+    *aDetail = 0;
+    return NS_OK;
+  }
+
+  switch (mEvent->message) {
+  case NS_MOUSE_LEFT_BUTTON_UP:
+  case NS_MOUSE_LEFT_BUTTON_DOWN:
+  case NS_MOUSE_LEFT_CLICK:
+  case NS_MOUSE_LEFT_DOUBLECLICK:
+  case NS_MOUSE_MIDDLE_BUTTON_UP:
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+  case NS_MOUSE_MIDDLE_CLICK:
+  case NS_MOUSE_MIDDLE_DOUBLECLICK:
+  case NS_MOUSE_RIGHT_BUTTON_UP:
+  case NS_MOUSE_RIGHT_BUTTON_DOWN:
+  case NS_MOUSE_RIGHT_CLICK:
+  case NS_MOUSE_RIGHT_DOUBLECLICK:
+    *aDetail = ((nsMouseEvent*)mEvent)->clickCount;
+    break;
+  default:
+    break;
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetText(nsString& aText)
@@ -515,35 +609,7 @@ NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::GetClickCount(PRUint16* aClickCount) 
-{
-  if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
-    *aClickCount = 0;
-    return NS_OK;
-  }
-
-  switch (mEvent->message) {
-  case NS_MOUSE_LEFT_BUTTON_UP:
-  case NS_MOUSE_LEFT_BUTTON_DOWN:
-  case NS_MOUSE_LEFT_CLICK:
-  case NS_MOUSE_LEFT_DOUBLECLICK:
-  case NS_MOUSE_MIDDLE_BUTTON_UP:
-  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-  case NS_MOUSE_MIDDLE_CLICK:
-  case NS_MOUSE_MIDDLE_DOUBLECLICK:
-  case NS_MOUSE_RIGHT_BUTTON_UP:
-  case NS_MOUSE_RIGHT_BUTTON_DOWN:
-  case NS_MOUSE_RIGHT_CLICK:
-  case NS_MOUSE_RIGHT_DOUBLECLICK:
-    *aClickCount = ((nsMouseEvent*)mEvent)->clickCount;
-    break;
-  default:
-    break;
-  }
-  return NS_OK;
-}
-
-NS_METHOD nsDOMEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
+NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 {
   nsIEventStateManager *manager;
   nsIContent *relatedContent = nsnull;
@@ -555,11 +621,11 @@ NS_METHOD nsDOMEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
   }
   
   if (relatedContent) {    
-    ret = relatedContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aRelatedNode);
+    ret = relatedContent->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)aRelatedTarget);
     NS_RELEASE(relatedContent);
   }
   else {
-    *aRelatedNode = nsnull;
+    *aRelatedTarget = nsnull;
   }
 
   return ret;
@@ -793,30 +859,109 @@ NS_METHOD nsDOMEvent::GetPreventDefault(PRBool* aReturn)
   return NS_OK;
 }
 
-//XXX The following four methods are for custom event dispatch inside the DOM.
-//They will be implemented post-beta
+nsresult
+nsDOMEvent::SetEventType(const nsString& aEventTypeArg)
+{
+  nsAutoString str; str.AssignWithConversion("on");
+  nsIAtom* atom;
+
+  str.Append(aEventTypeArg);
+  atom = NS_NewAtom(str);
+
+  if (atom == nsLayoutAtoms::onmousedown && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_LEFT_BUTTON_DOWN;
+  }
+  else if (atom == nsLayoutAtoms::onmouseup && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_LEFT_BUTTON_UP;
+  }
+  else if (atom == nsLayoutAtoms::onclick && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_LEFT_CLICK;
+  }
+  else if (atom == nsLayoutAtoms::onmouseover && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_ENTER_SYNTH;
+  }
+  else if (atom == nsLayoutAtoms::onmouseout && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_EXIT_SYNTH;
+  }
+  else if (atom == nsLayoutAtoms::onmousemove && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_MOUSE_MOVE;
+  }
+  else if (atom == nsLayoutAtoms::onkeydown && mEvent->eventStructType == NS_KEY_EVENT) {
+    mEvent->message = NS_KEY_DOWN;
+  }
+  else if (atom == nsLayoutAtoms::onkeyup && mEvent->eventStructType == NS_KEY_EVENT) {
+    mEvent->message = NS_KEY_UP;
+  }
+  else if (atom == nsLayoutAtoms::onkeypress && mEvent->eventStructType == NS_KEY_EVENT) {
+    mEvent->message = NS_KEY_PRESS;
+  }
+  else if (atom == nsLayoutAtoms::onfocus && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_FOCUS_CONTENT;
+  }
+  else if (atom == nsLayoutAtoms::onblur && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_BLUR_CONTENT;
+  }
+  else if (atom == nsLayoutAtoms::onsubmit && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_FORM_SUBMIT;
+  }
+  else if (atom == nsLayoutAtoms::onreset && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_FORM_RESET;
+  }
+  else if (atom == nsLayoutAtoms::onchange && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_FORM_CHANGE;
+  }
+  else if (atom == nsLayoutAtoms::onselect && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_FORM_SELECTED;
+  }
+  else if (atom == nsLayoutAtoms::onload && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_PAGE_LOAD;
+  }
+  else if (atom == nsLayoutAtoms::onunload && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_PAGE_UNLOAD;
+  }
+  else if (atom == nsLayoutAtoms::onabort && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_IMAGE_ABORT;
+  }
+  else if (atom == nsLayoutAtoms::onerror && mEvent->eventStructType == NS_EVENT) {
+    mEvent->message = NS_IMAGE_ERROR;
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDOMEvent::InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_SUCCESS(SetEventType(aEventTypeArg), NS_ERROR_FAILURE);
+  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
+  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
+  //mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
+  //mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
+  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
+  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  return NS_OK;
 }
 
 
@@ -828,12 +973,22 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
+NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 {
   if (mTarget != aTarget) {
     NS_IF_RELEASE(mTarget);
     NS_IF_ADDREF(aTarget);
     mTarget = aTarget;
+  }
+  return NS_OK;
+}
+
+NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
+{
+  if (mCurrentTarget != aCurrentTarget) {
+    NS_IF_RELEASE(mCurrentTarget);
+    NS_IF_ADDREF(aCurrentTarget);
+    mCurrentTarget = aCurrentTarget;
   }
   return NS_OK;
 }
@@ -936,9 +1091,12 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   return nsnull;
 }
 
-nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent) 
+nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
+                          nsIPresContext* aPresContext,
+                          const nsString& aEventType,
+                          nsEvent *aEvent) 
 {
-  nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent);
+  nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent, aEventType);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

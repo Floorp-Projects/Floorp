@@ -460,11 +460,12 @@ NS_IMETHODIMP nsScrollPortView::GetLineHeight(nscoord *aHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollPortView::ScrollByLines(PRInt32 aNumLines)
+NS_IMETHODIMP nsScrollPortView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY)
 {
-    nscoord dy = mLineHeight*aNumLines;
+    nscoord dx = mLineHeight*aNumLinesX;
+    nscoord dy = mLineHeight*aNumLinesY;
 
-    ScrollTo(mOffsetX, mOffsetY + dy, 0);
+    ScrollTo(mOffsetX + dx, mOffsetY + dy, 0);
 
 	return NS_OK;
 }

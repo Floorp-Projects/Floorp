@@ -56,9 +56,11 @@ ostream& operator<<(ostream &s, IdlInterface &aInterface)
     Type constType = constObj->GetType();
     if (constType == TYPE_INT ||
         constType == TYPE_LONG ||
+        constType == TYPE_LONG_LONG ||
         constType == TYPE_SHORT ||
         constType == TYPE_UINT ||
         constType == TYPE_ULONG ||
+        constType == TYPE_ULONG_LONG ||
         constType == TYPE_USHORT) {
       s << constObj->GetLongValue() << ";\n";
     }

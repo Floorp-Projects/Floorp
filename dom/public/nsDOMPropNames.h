@@ -247,6 +247,7 @@
     "document.implementation", \
     "document.importnode", \
     "documentcss.getoverridestyle", \
+    "documentevent.createevent", \
     "documentstyle.stylesheets", \
     "documenttype.entities", \
     "documenttype.internalsubset", \
@@ -284,15 +285,18 @@
     "entity.systemid", \
     "event.bubbles", \
     "event.cancelable", \
-    "event.currentnode", \
+    "event.currenttarget", \
     "event.eventphase", \
     "event.initevent", \
     "event.preventbubble", \
     "event.preventcapture", \
     "event.preventdefault", \
+    "event.stoppropagation", \
     "event.target", \
+    "event.timestamp", \
     "event.type", \
     "eventtarget.addeventlistener", \
+    "eventtarget.dispatchevent", \
     "eventtarget.removeeventlistener", \
     "history.back", \
     "history.current", \
@@ -684,11 +688,10 @@
     "mimetypearray.length", \
     "mimetypearray.nameditem", \
     "mouseevent.button", \
-    "mouseevent.clickcount", \
     "mouseevent.clientx", \
     "mouseevent.clienty", \
     "mouseevent.initmouseevent", \
-    "mouseevent.relatednode", \
+    "mouseevent.relatedtarget", \
     "mouseevent.screenx", \
     "mouseevent.screeny", \
     "namednodemap.getnameditem", \

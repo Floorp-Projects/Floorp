@@ -198,7 +198,7 @@ function addPoint(event, pointX, pointY, start){
     pointX = event.clientX;
     pointY = event.clientY;
     event.preventBubble();
-    if (event.clickCount == 2){
+    if (event.detail == 2){
       polyFinish();
       return;
     }
@@ -636,7 +636,7 @@ function clickMouse(event){
     startX = event.clientX;
     startY = event.clientY;
     if (currentTool == "poly"){
-      //dump(event.clickCount+"\n");
+      //dump(event.detail+"\n");
       if (event.target != currentPoly){
       //else if (event.target.getAttribute("class").indexOf("point") == -1)
         Poly();

@@ -22,7 +22,6 @@
 
 #include "nsISupports.h"
 #include "nsGUIEvent.h"
-#include "nsIPresContext.h"
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMEventListener.h"
@@ -54,6 +53,8 @@
 #include "nsDOMPropEnums.h"
 #include "nsDOMError.h"
 #include "nsIJSContextStack.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -75,6 +76,7 @@ nsEventListenerManager::nsEventListenerManager()
   mCompositionListeners = nsnull;
   mMenuListeners = nsnull;
   mDestroyed = PR_FALSE;
+  mTarget = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -616,6 +618,7 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
 nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEvent* aDOMEvent,
+                                           nsIDOMEventTarget* aCurrentTarget,
                                            PRUint32 aSubType,
                                            PRUint32 aPhaseFlags)
 {
@@ -700,7 +703,10 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   }
 
   if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIPrivateDOMEvent> aPrivDOMEvent(do_QueryInterface(aDOMEvent));
+    aPrivDOMEvent->SetCurrentTarget(aCurrentTarget);
     result = aListenerStruct->mListener->HandleEvent(aDOMEvent);
+    aPrivDOMEvent->SetCurrentTarget(nsnull);
   }
 
   return result;
@@ -714,6 +720,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                                              nsEvent* aEvent,
                                              nsIDOMEvent** aDOMEvent,
+                                             nsIDOMEventTarget* aCurrentTarget,
                                              PRUint32 aFlags,
                                              nsEventStatus* aEventStatus)
 {
@@ -727,6 +734,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
      keys which cause window deletion, can destroy this object
      before we're ready. */
   nsCOMPtr<nsIEventListenerManager> kungFuDeathGrip(this);
+  nsAutoString empty;
 
   switch(aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -745,7 +753,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_EXIT_SYNTH:
       if (nsnull != mMouseListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mMouseListeners && i<mMouseListeners->Count(); i++) {
@@ -840,7 +848,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -852,7 +860,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_MOVE:
       if (nsnull != mMouseMotionListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mMouseMotionListeners && i<mMouseMotionListeners->Count(); i++) {
@@ -886,7 +894,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -903,7 +911,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 #endif
       if (nsnull != mCompositionListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,empty,aEvent);
         }
         if (NS_OK == ret) {
           for(int i=0; mTextListeners && i<mTextListeners->Count();i++) {
@@ -951,7 +959,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   break;
               }
               if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
               }
             }
           }
@@ -965,7 +973,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 #endif
       if (nsnull != mTextListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent,aPresContext,empty,aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mTextListeners && i<mTextListeners->Count(); i++) {
@@ -986,7 +994,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   correctSubType = PR_TRUE;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1000,7 +1008,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_KEY_PRESS:
       if (nsnull != mKeyListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mKeyListeners && i<mKeyListeners->Count(); i++) {
@@ -1052,7 +1060,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1065,7 +1073,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_BLUR_CONTENT:
       if (nsnull != mFocusListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mFocusListeners && i<mFocusListeners->Count(); i++) {
@@ -1108,7 +1116,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1124,7 +1132,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_FORM_INPUT:
       if (nsnull != mFormListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mFormListeners && i<mFormListeners->Count(); i++) {
@@ -1194,7 +1202,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1211,7 +1219,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 
       if (nsnull != mLoadListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mLoadListeners && i<mLoadListeners->Count(); i++) {
@@ -1266,7 +1274,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1278,7 +1286,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_PAINT:
       if (nsnull != mPaintListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mPaintListeners && i<mPaintListeners->Count(); i++) {
@@ -1300,7 +1308,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   correctSubType = PR_TRUE;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1316,7 +1324,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_DRAGDROP_GESTURE:
       if (nsnull != mDragListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
 
         if (NS_OK == ret) {
@@ -1379,7 +1387,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || dragStruct->mSubType == NS_EVENT_BITS_DRAG_NONE)
-                  ret = HandleEventSubType(dragStruct, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(dragStruct, *aDOMEvent, aCurrentTarget, subType, aFlags);
               }
             }
           }
@@ -1395,7 +1403,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_XUL_COMMAND_UPDATE:
       if (nsnull != mMenuListeners) {
         if (nsnull == *aDOMEvent) {
-          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+          ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
         }
         if (NS_OK == ret) {
           for (int i=0; mMenuListeners && i<mMenuListeners->Count(); i++) {
@@ -1474,7 +1482,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = HandleEventSubType(ls, *aDOMEvent, subType, aFlags);
+                  ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
                 }
               }
             }
@@ -1505,9 +1513,15 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 
 nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
                                              nsEvent* aEvent,
+                                             const nsString& aEventType,
                                              nsIDOMEvent** aDOMEvent)
 {
-    return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
+  if (!aEvent && !aEventType.EqualsIgnoreCase("MouseEvent") && !aEventType.EqualsIgnoreCase("KeyEvent") &&
+      !aEventType.EqualsIgnoreCase("HTMLEvent")) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEventType, aEvent);
 }
 
 /**
@@ -1753,6 +1767,13 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   return NS_OK;
 }
 
+nsresult nsEventListenerManager::SetListenerTarget(nsISupports* aTarget)
+{
+  //WEAK reference, must be set back to nsnull when done
+  mTarget = aTarget;
+  return NS_OK;
+}
+
 // nsIDOMEventTarget interface
 NS_IMETHODIMP 
 nsEventListenerManager::AddEventListener(const nsString& aType, 
@@ -1772,6 +1793,38 @@ nsEventListenerManager::RemoveEventListener(const nsString& aType,
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
   
   return RemoveEventListenerByType(aListener, aType, flags);
+}
+
+NS_IMETHODIMP
+nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent)
+{
+  //If we don't have a target set this doesn't work.
+  if (mTarget) {
+    nsCOMPtr<nsIContent> targetContent(do_QueryInterface(mTarget));
+    if (targetContent) {
+      nsCOMPtr<nsIDocument> document;
+      targetContent->GetDocument(*getter_AddRefs(document));
+
+      if (document) {
+        // Obtain a presentation context
+        PRInt32 count = document->GetNumberOfShells();
+        if (count == 0)
+          return NS_OK;
+
+        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(0));
+
+        // Retrieve the context
+        nsCOMPtr<nsIPresContext> aPresContext;
+        shell->GetPresContext(getter_AddRefs(aPresContext));
+
+        nsCOMPtr<nsIEventStateManager> esm;
+        if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
+          return esm->DispatchNewEvent(mTarget, aEvent);
+        }
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // nsIDOMEventReceiver interface
@@ -1806,7 +1859,7 @@ nsEventListenerManager::GetNewListenerManager(nsIEventListenerManager **aInstanc
 NS_IMETHODIMP 
 nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return NS_ERROR_FAILURE;
+  return DispatchEvent(aEvent);
 }
 
 NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult) 

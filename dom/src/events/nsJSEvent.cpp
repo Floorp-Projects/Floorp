@@ -34,15 +34,15 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
+static NS_DEFINE_IID(kIEventTargetIID, NS_IDOMEVENTTARGET_IID);
 
 //
 // Event property ids
@@ -50,10 +50,11 @@ static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 enum Event_slots {
   EVENT_TYPE = -1,
   EVENT_TARGET = -2,
-  EVENT_CURRENTNODE = -3,
+  EVENT_CURRENTTARGET = -3,
   EVENT_EVENTPHASE = -4,
   EVENT_BUBBLES = -5,
-  EVENT_CANCELABLE = -6
+  EVENT_CANCELABLE = -6,
+  EVENT_TIMESTAMP = -7
 };
 
 /***********************************************************************/
@@ -92,7 +93,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_TARGET, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMNode* prop;
+          nsIDOMEventTarget* prop;
           rv = a->GetTarget(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
@@ -101,12 +102,12 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case EVENT_CURRENTNODE:
+      case EVENT_CURRENTTARGET:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_CURRENTNODE, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_CURRENTTARGET, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
-          nsIDOMNode* prop;
-          rv = a->GetCurrentNode(&prop);
+          nsIDOMEventTarget* prop;
+          rv = a->GetCurrentTarget(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -146,6 +147,18 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetCancelable(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = BOOLEAN_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
+      case EVENT_TIMESTAMP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_TIMESTAMP, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint64 prop;
+          rv = a->GetTimeStamp(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
           }
         }
         break;
@@ -225,6 +238,41 @@ PR_STATIC_CALLBACK(JSBool)
 ResolveEvent(JSContext *cx, JSObject *obj, jsval id)
 {
   return nsJSUtils::nsGenericResolve(cx, obj, id);
+}
+
+
+//
+// Native method StopPropagation
+//
+PR_STATIC_CALLBACK(JSBool)
+EventStopPropagation(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEvent *nativeThis = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_STOPPROPAGATION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->StopPropagation();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
 }
 
 
@@ -409,10 +457,11 @@ static JSPropertySpec EventProperties[] =
 {
   {"type",    EVENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"target",    EVENT_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"currentNode",    EVENT_CURRENTNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"currentTarget",    EVENT_CURRENTTARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"eventPhase",    EVENT_EVENTPHASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"bubbles",    EVENT_BUBBLES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cancelable",    EVENT_CANCELABLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"timeStamp",    EVENT_TIMESTAMP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -422,6 +471,7 @@ static JSPropertySpec EventProperties[] =
 //
 static JSFunctionSpec EventMethods[] = 
 {
+  {"stopPropagation",          EventStopPropagation,     0},
   {"preventBubble",          EventPreventBubble,     0},
   {"preventCapture",          EventPreventCapture,     0},
   {"preventDefault",          EventPreventDefault,     0},

@@ -47,6 +47,7 @@
 #include "nsRDFCID.h"
 #include "nsXULCommandDispatcher.h"
 #include "prlog.h"
+#include "nsIDOMEventTarget.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -350,7 +351,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
   if (mSuppressFocus)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> t;
+  nsCOMPtr<nsIDOMEventTarget> t;
   aEvent->GetTarget(getter_AddRefs(t));
   
 #ifdef DEBUG_hyatt
@@ -419,7 +420,7 @@ nsXULCommandDispatcher::Blur(nsIDOMEvent* aEvent)
   if (mSuppressFocus)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMNode> t;
+  nsCOMPtr<nsIDOMEventTarget> t;
   aEvent->GetTarget(getter_AddRefs(t));
 
 #ifdef DEBUG_hyatt

@@ -28,7 +28,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNode;
+class nsIDOMEventTarget;
 
 #define NS_IDOMEVENT_IID \
  { 0xa66b7b80, 0xff46, 0xbd97, \
@@ -80,15 +80,19 @@ public:
 
   NS_IMETHOD    GetType(nsString& aType)=0;
 
-  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget)=0;
+  NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget)=0;
 
-  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode)=0;
+  NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)=0;
 
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase)=0;
 
   NS_IMETHOD    GetBubbles(PRBool* aBubbles)=0;
 
   NS_IMETHOD    GetCancelable(PRBool* aCancelable)=0;
+
+  NS_IMETHOD    GetTimeStamp(PRUint64* aTimeStamp)=0;
+
+  NS_IMETHOD    StopPropagation()=0;
 
   NS_IMETHOD    PreventBubble()=0;
 
@@ -102,11 +106,13 @@ public:
 
 #define NS_DECL_IDOMEVENT   \
   NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);  \
-  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode);  \
+  NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);  \
+  NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);  \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);  \
   NS_IMETHOD    GetBubbles(PRBool* aBubbles);  \
   NS_IMETHOD    GetCancelable(PRBool* aCancelable);  \
+  NS_IMETHOD    GetTimeStamp(PRUint64* aTimeStamp);  \
+  NS_IMETHOD    StopPropagation();  \
   NS_IMETHOD    PreventBubble();  \
   NS_IMETHOD    PreventCapture();  \
   NS_IMETHOD    PreventDefault();  \
@@ -116,11 +122,13 @@ public:
 
 #define NS_FORWARD_IDOMEVENT(_to)  \
   NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode) { return _to GetCurrentNode(aCurrentNode); } \
+  NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget) { return _to GetCurrentTarget(aCurrentTarget); } \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase) { return _to GetEventPhase(aEventPhase); } \
   NS_IMETHOD    GetBubbles(PRBool* aBubbles) { return _to GetBubbles(aBubbles); } \
   NS_IMETHOD    GetCancelable(PRBool* aCancelable) { return _to GetCancelable(aCancelable); } \
+  NS_IMETHOD    GetTimeStamp(PRUint64* aTimeStamp) { return _to GetTimeStamp(aTimeStamp); } \
+  NS_IMETHOD    StopPropagation() { return _to StopPropagation(); }  \
   NS_IMETHOD    PreventBubble() { return _to PreventBubble(); }  \
   NS_IMETHOD    PreventCapture() { return _to PreventCapture(); }  \
   NS_IMETHOD    PreventDefault() { return _to PreventDefault(); }  \

@@ -1557,36 +1557,62 @@ NS_IMETHODIMP nsScrollingView::GetLineHeight(nscoord *aHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLines)
+NS_IMETHODIMP nsScrollingView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY)
 {
 	nsIWidget* widget = nsnull;
-	if (mVScrollBarView->GetWidget(widget) == NS_OK) {
-		nsIScrollbar* scrollv = nsnull;
-		if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv) == NS_OK) {
-			PRUint32  oldPos  = 0;
-			PRUint32  lineInc;
-			nscoord   newPos = 0;
-			nsSize    clipSize;
+  PRUint32 newPosX = 0, newPosY = 0;
 
-			scrollv->GetPosition(oldPos);
-			scrollv->GetLineIncrement(lineInc);
-			NS_RELEASE(scrollv);
-			
-			mClipView->GetDimensions(&clipSize.width, &clipSize.height);
+  if (aNumLinesX != 0) {
+	  if (mHScrollBarView->GetWidget(widget) == NS_OK) {
+		  nsIScrollbar* scrollh = nsnull;
+		  if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollh) == NS_OK) {
+			  PRUint32  oldPos  = 0;
+			  PRUint32  lineInc;
 
-			newPos = oldPos + lineInc * aNumLines;
+			  scrollh->GetPosition(oldPos);
+			  scrollh->GetLineIncrement(lineInc);
+			  NS_RELEASE(scrollh);
+			  
+			  newPosX = oldPos + lineInc * aNumLinesX;
+		  }
+		  NS_RELEASE(widget);
+	  }
+  }
+  if (aNumLinesY != 0) {
+	  if (mVScrollBarView->GetWidget(widget) == NS_OK) {
+		  nsIScrollbar* scrollv = nsnull;
+		  if (widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void **)&scrollv) == NS_OK) {
+			  PRUint32  oldPos  = 0;
+			  PRUint32  lineInc;
 
-			if (newPos > (mSizeY - clipSize.height))
-				newPos = mSizeY - clipSize.height;
+			  scrollv->GetPosition(oldPos);
+			  scrollv->GetLineIncrement(lineInc);
+			  NS_RELEASE(scrollv);
+			  
+			  newPosY = oldPos + lineInc * aNumLinesY;
+		  }
+		  NS_RELEASE(widget);
+	  }
+  }
 
-			if (newPos < 0)
-				newPos = 0;
-
-			ScrollTo(0, newPos, 0);
-		}
-		NS_RELEASE(widget);
-	}
+	nsSize    clipSize;
+	mClipView->GetDimensions(&clipSize.width, &clipSize.height);
 	
+  //sanity check values
+	if (newPosX > (mSizeX - clipSize.height))
+		newPosX = mSizeX - clipSize.height;
+	if (newPosX < 0)
+		newPosX = 0;
+
+  if (newPosY > (mSizeY - clipSize.height))
+		newPosY = mSizeY - clipSize.height;
+	if (newPosY < 0)
+		newPosY = 0;
+
+  if (newPosX || newPosY) {
+	  ScrollTo(newPosX, newPosY, 0);
+  }
+
 	return NS_OK;
 }
 

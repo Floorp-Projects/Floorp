@@ -688,6 +688,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocumentEvent))) {
+    nsIDOMDocumentEvent* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(NS_GET_IID(nsIDOMDocumentStyle))) {
     nsIDOMDocumentStyle* tmp = this;
     *aInstancePtr = (void*) tmp;
@@ -2628,7 +2634,7 @@ nsresult nsDocument::GetNewListenerManager(nsIEventListenerManager **aInstancePt
 
 nsresult nsDocument::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return NS_ERROR_FAILURE;
+  return DispatchEvent(aEvent);
 } 
 
 nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext, 
@@ -2640,9 +2646,10 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult mRet = NS_OK;
   nsIDOMEvent* mDOMEvent = nsnull;
 
-  if (NS_EVENT_FLAG_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT & aFlags) {
     aDOMEvent = &mDOMEvent;
-    aEvent->flags = NS_EVENT_FLAG_NONE;
+    aEvent->flags = aFlags;
+    aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
   }
   
   //Capturing stage
@@ -2651,9 +2658,10 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
   }
   
   //Local handling stage
-  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)) {
     aEvent->flags |= aFlags;
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
   }
 
@@ -2662,7 +2670,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
     mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
-  if (NS_EVENT_FLAG_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
       nsrefcnt rc;
@@ -2728,6 +2736,52 @@ nsresult nsDocument::RemoveEventListener(const nsString& aType, nsIDOMEventListe
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
     return NS_OK;
   }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocument::DispatchEvent(nsIDOMEvent* aEvent)
+{
+  // Obtain a presentation context
+  PRInt32 count = GetNumberOfShells();
+  if (count == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(0));
+  
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
+    return esm->DispatchNewEvent((nsISupports *)(nsIDOMDocument *)this, aEvent);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocument::CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn)
+{
+  // Obtain a presentation context
+  PRInt32 count = GetNumberOfShells();
+  if (count == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(0));
+  
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+
+  if (presContext) {
+    nsCOMPtr<nsIEventListenerManager> lm;
+    if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(lm)))) {
+      return lm->CreateEvent(presContext, nsnull, aEventType, aReturn);
+    }
+  }
+
   return NS_ERROR_FAILURE;
 }
 

@@ -67,6 +67,7 @@
 #include "nsIStreamLoader.h"
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
+#include "nsIDOMDocumentEvent.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -93,6 +94,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIXULDocument,
                       public nsIStreamLoadableDocument,
                       public nsIDOMXULDocument,
+                      public nsIDOMDocumentEvent,
                       public nsIDOMDocumentView,
                       public nsIDOMNSDocument,
                       public nsIDOMEventCapturer,
@@ -335,9 +337,13 @@ public:
                                 PRBool aUseCapture);
     NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener,
                                    PRBool aUseCapture);
+    NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
     // nsIDOMDocument interface
     NS_DECL_IDOMDOCUMENT
+
+    // nsIDOMDocumentEvent interface
+    NS_DECL_IDOMDOCUMENTEVENT
 
     // nsIDOMDocumentView interface
     NS_DECL_IDOMDOCUMENTVIEW

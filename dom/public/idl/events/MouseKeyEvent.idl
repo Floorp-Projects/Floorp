@@ -159,9 +159,8 @@
 		  noscript readonly    attribute   boolean	    shiftKey;
 		  noscript readonly    attribute   boolean	    metaKey;
 
-		  readonly	  attribute   unsigned short  button;
-      readonly    attribute   unsigned short  clickCount;
-      readonly    attribute   Node            relatedNode;
+		  readonly	  attribute   unsigned short        button;
+      readonly    attribute   EventTarget           relatedTarget;
 
       void               initMouseEvent(in DOMString typeArg, 
                                         in boolean ctrlKeyArg, 
