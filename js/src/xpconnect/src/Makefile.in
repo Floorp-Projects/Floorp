@@ -49,5 +49,7 @@ CPPSRCS=		\
 	xpcwrappednativeclass.cpp	\
 	$(NULL)
 
+export:: libs
+
 include $(topsrcdir)/config/rules.mk
 
