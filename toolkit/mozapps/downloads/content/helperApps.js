@@ -205,7 +205,7 @@ HelperApps.prototype = {
       // talks to OS Specific hooks that on some platforms (MacOS X) are required to get a 
       // fully populated MIME Info object. Thus it is this object that we return. 
       mimeSvc = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
-      return mimeSvc.GetFromTypeAndExtension(types[0], null);
+      return mimeSvc.getFromTypeAndExtension(types[0], null);
     }
     
     return null;
