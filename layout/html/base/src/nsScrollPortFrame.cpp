@@ -232,7 +232,7 @@ nsScrollPortFrame::CreateScrollingView(nsIPresContext* aPresContext)
     }
 
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView, nsnull, display->IsVisibleOrCollapsed() ?
+    view->Init(viewManager, mRect, parentView, display->IsVisibleOrCollapsed() ?
                nsViewVisibility_kShow : nsViewVisibility_kHide);
 
     // Insert the view into the view hierarchy

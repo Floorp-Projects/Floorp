@@ -27,6 +27,7 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"
+#include "nsRect.h"
 #include "nsFont.h"
 #include "nsVoidArray.h"
 #include "nsStyleCoord.h"
@@ -163,6 +164,9 @@ struct nsStylePosition : public nsStyleStruct {
 
   PRBool IsAbsolutelyPositioned() const {return (NS_STYLE_POSITION_ABSOLUTE == mPosition) ||
                                                 (NS_STYLE_POSITION_FIXED == mPosition);}
+
+  PRBool IsPositioned() const {return IsAbsolutelyPositioned() ||
+                                      (NS_STYLE_POSITION_RELATIVE == mPosition);}
 };
 
 struct nsStyleText : public nsStyleStruct {
@@ -197,7 +201,14 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRUint8   mOverflow;          // [reset] see nsStyleConsts.h
 
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
+#if 0
+  // XXX This is how it is defined in the CSS2 spec, but the errata
+  // changed it to be consistent with the positioning draft and how
+  // Nav and IE implement it
   nsMargin  mClip;              // [reset] offsets from respective edge
+#else
+  nsRect    mClip;              // [reset] offsets from upper-left border edge
+#endif
 
   PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
                                       (NS_STYLE_DISPLAY_LIST_ITEM == mDisplay) ||

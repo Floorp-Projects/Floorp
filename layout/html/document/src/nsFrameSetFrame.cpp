@@ -275,7 +275,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   GetParentWithView(aPresContext, &parWithView);
   parWithView->GetView(aPresContext, &parView);
   nsRect boundBox(0, 0, 0, 0); 
-  result = view->Init(viewMan, boundBox, parView, nsnull);
+  result = view->Init(viewMan, boundBox, parView);
   viewMan->InsertChild(parView, view, 0);
   SetView(aPresContext, view);
 

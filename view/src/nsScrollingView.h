@@ -45,7 +45,6 @@ public:
   NS_IMETHOD  Init(nsIViewManager* aManager,
       						 const nsRect &aBounds,
                    const nsIView *aParent,
-      						 const nsViewClip *aClip = nsnull,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  SetPosition(nscoord aX, nscoord aY);

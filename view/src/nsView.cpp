@@ -210,7 +210,6 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
 NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
                              const nsRect &aBounds,
                              const nsIView *aParent,
-                             const nsViewClip *aClip,
                              nsViewVisibility aVisibilityFlag)
 {
   //printf(" \n callback=%d data=%d", aWidgetCreateCallback, aCallbackData);
@@ -224,15 +223,10 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
   // we don't hold a reference to the view manager
   mViewManager = aManager;
 
-  if (aClip != nsnull)
-    mClip = *aClip;
-  else
-  {
-    mClip.mLeft = 0;
-    mClip.mRight = 0;
-    mClip.mTop = 0;
-    mClip.mBottom = 0;
-  }
+  mChildClip.mLeft = 0;
+  mChildClip.mRight = 0;
+  mChildClip.mTop = 0;
+  mChildClip.mBottom = 0;
 
   SetBounds(aBounds);
 
@@ -273,18 +267,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 		if (nsnull != mClientData) {
 			nsCOMPtr<nsIViewObserver> observer;
 			if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
-				if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom)) {
-					nsRect  crect;
-					crect.x = mClip.mLeft;
-					crect.y = mClip.mTop;
-					crect.width = mClip.mRight - mClip.mLeft;
-					crect.height = mClip.mBottom - mClip.mTop;
-					rc.SetClipRect(crect, nsClipCombine_kIntersect, aResult);
-					if (!aResult)
-						observer->Paint((nsIView *)this, rc, rect);
-				} else {
-					observer->Paint((nsIView *)this, rc, rect);
-				}
+ 			  observer->Paint((nsIView *)this, rc, rect);
 			}
 		}
 	} else {
@@ -308,11 +291,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 			{
 				nsRect brect;
 				GetBounds(brect);
-
-				// what does this test mean?
-				if ((mClip.mLeft == mClip.mRight) || (mClip.mTop == mClip.mBottom) && (this != pRoot)) {
-					rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
-				}
+  			rc.SetClipRect(brect, nsClipCombine_kIntersect, clipres);
 			}
 		}
 
@@ -580,12 +559,6 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 					if (nsnull != mClientData) {
 						nsCOMPtr<nsIViewObserver> observer;
 						if (NS_OK == mViewManager->GetViewObserver(*getter_AddRefs(observer))) {
-							if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom)) {
-								nsRect  crect(mClip.mLeft, mClip.mTop,
-								              mClip.mRight - mClip.mLeft,
-								              mClip.mBottom - mClip.mTop);
-								localcx->SetClipRect(crect, nsClipCombine_kIntersect, clipres);
-							}
 							observer->Paint((nsIView *)this, *localcx, rect);
 						}
 					}
@@ -696,17 +669,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 			nsRect  brect;
 			GetBounds(brect);
 
-			if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
-			{
-				nsRect  crect;
-
-				crect.x = mClip.mLeft + brect.x;
-				crect.y = mClip.mTop + brect.y;
-				crect.width = mClip.mRight - mClip.mLeft;
-				crect.height = mClip.mBottom - mClip.mTop;
-
-				rc.SetClipRect(crect, nsClipCombine_kSubtract, clipres);
-			} else if (this != pRoot)
+			if (this != pRoot)
 				rc.SetClipRect(brect, nsClipCombine_kSubtract, clipres);
 		}
 
@@ -1049,20 +1012,20 @@ NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
 NS_IMETHODIMP nsView :: SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
 {
   NS_PRECONDITION(aLeft <= aRight && aTop <= aBottom, "bad clip values");
-  mClip.mLeft = aLeft;
-  mClip.mTop = aTop;
-  mClip.mRight = aRight;
-  mClip.mBottom = aBottom;
+  mChildClip.mLeft = aLeft;
+  mChildClip.mTop = aTop;
+  mChildClip.mRight = aRight;
+  mChildClip.mBottom = aBottom;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const
 {
-  *aLeft = mClip.mLeft;
-  *aTop = mClip.mTop;
-  *aRight = mClip.mRight;
-  *aBottom = mClip.mBottom; 
+  *aLeft = mChildClip.mLeft;
+  *aTop = mChildClip.mTop;
+  *aRight = mChildClip.mRight;
+  *aBottom = mChildClip.mBottom; 
   return NS_OK;
 }
 
