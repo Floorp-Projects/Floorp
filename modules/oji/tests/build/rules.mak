@@ -55,6 +55,11 @@ compile: objdir del_cmd $(OBJS)
 link:
 	@link /NOLOGO /DEBUG $(LD_FLAGS) $(LIBS) $(OBJS) /DLL /OUT:$(OBJ_DIR)\$(DLL).dll
 	@cp obj/$(DLL).dll $(TOP_DIR)/build/bin
+!if defined(MOZ_DEBUG)
+	@cp obj/$(DLL).dll $(TOP_DIR)/../../../dist/win32_d.obj/bin/components
+!else
+	@cp obj/$(DLL).dll $(TOP_DIR)/../../../dist/win32_o.obj/bin/components
+!endif
 
 make_depends: Makefile.win
 !if !exist(depend.mak)
