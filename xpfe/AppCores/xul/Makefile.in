@@ -100,6 +100,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/TB_PersonalIcon.gif \
 	$(srcdir)/resources/TB_Places.gif \
 	$(srcdir)/resources/TB_Places_mo.gif \
+	$(srcdir)/resources/TB_popup.gif \
 	$(srcdir)/resources/TB_Print.gif \
 	$(srcdir)/resources/TB_Print_mo.gif \
 	$(srcdir)/resources/TB_Reload.gif \
