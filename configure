@@ -901,7 +901,7 @@ test "$host_alias" != "$target_alias" &&
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
 TARGET_OS="${target_os}"
-MOZILLA_VERSION='1.1a+'
+MOZILLA_VERSION='1.1b'
 
 
 CFLAGS="${CFLAGS=}"
