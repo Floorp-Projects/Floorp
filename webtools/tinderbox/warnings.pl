@@ -37,7 +37,7 @@ $lxr_data_root = '/export2/lxr-data';
   'declaration of \`ws\' shadows global', # from istream
   'declaration of \`y0\' shadows global', # from mathcalls.h
   'declaration of \`y1\' shadows global', # from mathcalls.h
-  'by \`nsHTMLAnchor::SetAttribute', # kipp says this is bogus
+  'by \`nsHTML(?:Anchor|[^:]*Element)::SetAttribute', # kipp says this is bogus
 );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
