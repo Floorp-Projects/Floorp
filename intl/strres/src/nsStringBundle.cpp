@@ -113,7 +113,7 @@ nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
   nsAutoString name;
-  name.AppendWithConversion(aID, 10);
+  name.AppendInt(aID, 10);
   nsresult ret = mProps->GetStringProperty(name, aResult);
 
 #ifdef DEBUG_tao
