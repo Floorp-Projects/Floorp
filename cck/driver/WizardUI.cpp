@@ -31,6 +31,8 @@
 #include "NewConfigDialog.h"
 #include "ProgDlgThread.h"
 #include <direct.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 // The following is included to make 
 // the browse for a dir code compile
@@ -107,7 +109,9 @@ END_MESSAGE_MAP()
 BOOL CWizardUI::OnSetActive() 
 {
 
-		if (!(CurrentNode->isWidgetsSorted)) {
+	(AfxGetMainWnd( ))->SetWindowText(CurrentNode->localVars->title);
+
+	if (!(CurrentNode->isWidgetsSorted)) {
 		SortWidgetsForTabOrder();
 	}
 
@@ -379,6 +383,9 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 											}
 											strcat(commandList[commandListLength]," ");
 											commandBuilt = TRUE;
+
+											if (k+1 == numArgs)
+												commandListLength++;
 										}
 										else
 										{
@@ -479,7 +486,20 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 						newEntry = FALSE;
 						for (int listNum =0; listNum < commandListLength; listNum++)
 						{
-							system(commandList[listNum]);
+							//system(commandList[listNum]);
+							STARTUPINFO	startupInfo; 
+							PROCESS_INFORMATION	processInfo; 
+
+							memset(&startupInfo, '\0', sizeof(startupInfo));
+							memset(&processInfo, '\0', sizeof(processInfo));
+
+							startupInfo.cb = sizeof(STARTUPINFO);
+							startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+							startupInfo.wShowWindow = SW_SHOW;
+
+							BOOL executionSuccessful = CreateProcess(NULL, commandList[listNum], NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startupInfo, &processInfo); 
+							DWORD error = GetLastError();
+							WaitForSingleObject(processInfo.hProcess, INFINITE);
 						}
 
 						theApp.GenerateList(tmpFunction, tmpWidget, tmpParams);
