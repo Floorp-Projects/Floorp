@@ -305,7 +305,9 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
 #else
         NS_New_Expat_DTD(&theDTD);
 #endif
-        mParser->RegisterDTD(theDTD);
+        /* Commenting out the call to RegisterDTD() as per rickg's instructions.
+           XML and HTML DTD's are going to be pre-registered withing nsParser. */
+        // mParser->RegisterDTD(theDTD);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink);
         mParser->Parse(aUrl);
