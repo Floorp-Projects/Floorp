@@ -84,7 +84,7 @@ public:
         rv = inStr->Read(buffer, len, &read);
         buffer[len] = '\0';
         if (NS_SUCCEEDED(rv)) {
-            printf("CONTEXT %x: Received %d bytes and the following data: \n %s\n\n", ctxt, read, buffer);
+            printf("CONTEXT %x: Received %u bytes and the following data: \n %s\n\n", ctxt, read, buffer);
         }
         nsAllocator::Free(buffer);
 
