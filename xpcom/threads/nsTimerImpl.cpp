@@ -388,7 +388,8 @@ void* handleTimerEvent(TimerEventType* event)
   if (gFireOnIdle) {
     if (NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->IsIdle()) {
       NS_ASSERTION(gManager, "Global Thread Manager is null!");
-      gManager->AddIdleTimer(NS_STATIC_CAST(nsTimerImpl*, event->e.owner));
+      if (gManager)
+        gManager->AddIdleTimer(NS_STATIC_CAST(nsTimerImpl*, event->e.owner));
       return nsnull;
     }
   }
