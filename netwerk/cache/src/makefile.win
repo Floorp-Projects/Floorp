@@ -22,8 +22,8 @@
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
-MODULE = nkcacheservice
-DLLNAME=nkcacheservice
+MODULE = nkcache
+DLLNAME=nkcache
 
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
