@@ -116,6 +116,12 @@ public:
 	NS_IMETHOD AddLastName(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_LastNameColumnToken, value); }
 
+	NS_IMETHOD AddPhoneticFirstName(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_PhoneticFirstNameColumnToken, value); }
+
+	NS_IMETHOD AddPhoneticLastName(nsIMdbRow * row, const char * value)
+	{ return AddCharStringColumn(row, m_PhoneticLastNameColumnToken, value); }
+
 	NS_IMETHOD AddDisplayName(nsIMdbRow * row, const char * value)
 	{ return AddCharStringColumn(row, m_DisplayNameColumnToken, value); }
 
@@ -407,6 +413,8 @@ protected:
 
 	mdb_token			m_FirstNameColumnToken;
 	mdb_token			m_LastNameColumnToken;
+	mdb_token			m_PhoneticFirstNameColumnToken;
+	mdb_token			m_PhoneticLastNameColumnToken;
 	mdb_token			m_DisplayNameColumnToken;
 	mdb_token			m_NickNameColumnToken;
 	mdb_token			m_PriEmailColumnToken;

@@ -413,6 +413,12 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
         case 'i':
           rv = GetPrimaryEmail(value);
           break;
+        case 'o':
+          if (attrname[8] == 'L')
+            rv = GetPhoneticLastName(value);
+          else if (attrname[8] == 'F')
+            rv = GetPhoneticFirstName(value);
+          break;
         default:
           rv = NS_ERROR_UNEXPECTED;
           break;
@@ -671,6 +677,12 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
         case 'i':
           rv = SetPrimaryEmail(value);
           break;
+        case 'o':
+          if (attrname[8] == 'L')
+            rv = SetPhoneticLastName(value);
+          else if (attrname[8] == 'F')
+            rv = SetPhoneticFirstName(value);
+          break;
         default:
           rv = NS_ERROR_UNEXPECTED;
           break;
@@ -737,6 +749,14 @@ nsAbCardProperty::GetFirstName(PRUnichar * *aFirstName)
 NS_IMETHODIMP
 nsAbCardProperty::GetLastName(PRUnichar * *aLastName)
 { return GetAttributeName(aLastName, m_LastName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetPhoneticFirstName(PRUnichar * *aPhoneticFirstName)
+{ return GetAttributeName(aPhoneticFirstName, m_PhoneticFirstName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::GetPhoneticLastName(PRUnichar * *aPhoneticLastName)
+{ return GetAttributeName(aPhoneticLastName, m_PhoneticLastName); }
 
 NS_IMETHODIMP
 nsAbCardProperty::GetDisplayName(PRUnichar * *aDisplayName)
@@ -947,6 +967,14 @@ nsAbCardProperty::SetLastName(const PRUnichar * aLastName)
 { return SetAttributeName(aLastName, m_LastName); }
 
 NS_IMETHODIMP
+nsAbCardProperty::SetPhoneticLastName(const PRUnichar * aPhoneticLastName)
+{ return SetAttributeName(aPhoneticLastName, m_PhoneticLastName); }
+
+NS_IMETHODIMP
+nsAbCardProperty::SetPhoneticFirstName(const PRUnichar * aPhoneticFirstName)
+{ return SetAttributeName(aPhoneticFirstName, m_PhoneticFirstName); }
+
+NS_IMETHODIMP
 nsAbCardProperty::SetDisplayName(const PRUnichar * aDisplayName)
 { return SetAttributeName(aDisplayName, m_DisplayName); }
 
@@ -1154,6 +1182,10 @@ NS_IMETHODIMP nsAbCardProperty::Copy(nsIAbCard* srcCard)
 
 	srcCard->GetLastName(getter_Copies(str));
 	SetLastName(str);
+	srcCard->GetPhoneticFirstName(getter_Copies(str));
+	SetPhoneticFirstName(str);
+	srcCard->GetPhoneticLastName(getter_Copies(str));
+	SetPhoneticLastName(str);
 	srcCard->GetDisplayName(getter_Copies(str));
 	SetDisplayName(str);
 	srcCard->GetNickName(getter_Copies(str));

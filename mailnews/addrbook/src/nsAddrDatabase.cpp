@@ -112,6 +112,8 @@ nsAddrDatabase::nsAddrDatabase()
       m_CardRowScopeToken(0),
       m_FirstNameColumnToken(0),
       m_LastNameColumnToken(0),
+      m_PhoneticFirstNameColumnToken(0),
+      m_PhoneticLastNameColumnToken(0),
       m_DisplayNameColumnToken(0),
       m_NickNameColumnToken(0),
       m_PriEmailColumnToken(0),
@@ -1157,6 +1159,8 @@ nsresult nsAddrDatabase::InitMDBInfo()
         { 
             GetStore()->StringToToken(GetEnv(),  kFirstNameColumn, &m_FirstNameColumnToken);
             GetStore()->StringToToken(GetEnv(),  kLastNameColumn, &m_LastNameColumnToken);
+            GetStore()->StringToToken(GetEnv(),  kPhoneticFirstNameColumn, &m_PhoneticFirstNameColumnToken);
+            GetStore()->StringToToken(GetEnv(),  kPhoneticLastNameColumn, &m_PhoneticLastNameColumnToken);
             GetStore()->StringToToken(GetEnv(),  kDisplayNameColumn, &m_DisplayNameColumnToken);
             GetStore()->StringToToken(GetEnv(),  kNicknameColumn, &m_NickNameColumnToken);
             GetStore()->StringToToken(GetEnv(),  kPriEmailColumn, &m_PriEmailColumnToken);
@@ -1269,6 +1273,12 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
     
     card->GetLastName(getter_Copies(unicodeStr));
     AddLastName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    
+    card->GetPhoneticFirstName(getter_Copies(unicodeStr));
+    AddPhoneticFirstName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
+    
+    card->GetPhoneticLastName(getter_Copies(unicodeStr));
+    AddPhoneticLastName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
     
     card->GetDisplayName(getter_Copies(unicodeStr));
     AddDisplayName(cardRow, NS_ConvertUCS2toUTF8(unicodeStr).get());
@@ -2592,6 +2602,18 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
     if (NS_SUCCEEDED(err) && tempString.Length())
     {
         newCard->SetLastName(tempString.get());
+    }
+
+    err = GetStringColumn(cardRow, m_PhoneticFirstNameColumnToken, tempString);
+    if (NS_SUCCEEDED(err) && tempString.Length())
+    {
+        newCard->SetPhoneticFirstName(tempString.get());
+    }
+
+    err = GetStringColumn(cardRow, m_PhoneticLastNameColumnToken, tempString);
+    if (NS_SUCCEEDED(err) && tempString.Length())
+    {
+        newCard->SetPhoneticLastName(tempString.get());
     }
 
     err = GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);

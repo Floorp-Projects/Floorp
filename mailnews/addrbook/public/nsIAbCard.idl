@@ -64,6 +64,8 @@ interface nsIAbCard : nsISupports {
 	// Card properties
 	attribute wstring firstName;
 	attribute wstring lastName;
+	attribute wstring phoneticFirstName;
+	attribute wstring phoneticLastName;
 	attribute wstring displayName;
 	attribute wstring nickName;
 	attribute wstring primaryEmail;

@@ -53,7 +53,7 @@ Rights Reserved.
 		
 					<vbox style="width:100%">
             <!-- LOCALIZATION NOTE: 
-             NameField1, NameField2,
+             NameField1, NameField2, PhoneticField1, PhoneticField2
              those fields are either LN or FN depends on the target country.
              They are configurable in the .dtd file. 
              -->
@@ -62,6 +62,14 @@ Rights Reserved.
                                                         <label control="&NameField1.id;" value="&NameField1.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 							<textbox id="&NameField1.id;" flex="1" oninput="GenerateDisplayName()" disableforreadonly="true"/>
+
+							<!-- LOCALIZATION NOTE:
+							 Fields for phonetic are disabled as default and can be enabled by 
+							 editing "mail.addr_book.show_phonetic_fields"    
+							 -->
+							<spacer id="PhoneticSpacer1" flex="1" hidden="true"/>
+							<label id="PhoneticLabel1" control="&PhoneticField1.id;" value="&PhoneticField1.label;" class="CardEditLabel" hidden="true"/>
+							<textbox id="&PhoneticField1.id;" flex="1" disableforreadonly="true" hidden="true"/>
 							</hbox>
 						</hbox>
 						<hbox>
@@ -69,6 +77,14 @@ Rights Reserved.
                                                         <label control="&NameField2.id;" value="&NameField2.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 							<textbox id="&NameField2.id;" flex="1" oninput="GenerateDisplayName()" disableforreadonly="true"/>
+
+							<!-- LOCALIZATION NOTE:
+							 Fields for phonetic are disabled as default and can be enabled by 
+							 editing "mail.addr_book.show_phonetic_fields"    
+							 -->
+							<spacer id="PhoneticSpacer2" flex="1" hidden="true"/>
+							<label id="PhoneticLabel2" control="&PhoneticField2.id;" value="&PhoneticField2.label;" class="CardEditLabel" hidden="true"/>
+							<textbox id="&PhoneticField2.id;" flex="1" disableforreadonly="true" hidden="true"/>
 							</hbox>
 						</hbox>
 						<hbox>

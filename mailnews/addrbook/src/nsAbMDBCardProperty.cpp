@@ -139,6 +139,10 @@ NS_IMETHODIMP nsAbMDBCardProperty::CopyCard(nsIAbMDBCard* srcCardDB)
 
 	srcCard->GetLastName(getter_Copies(str));
 	SetLastName(str);
+	srcCard->GetPhoneticFirstName(getter_Copies(str));
+	SetPhoneticFirstName(str);
+	srcCard->GetPhoneticLastName(getter_Copies(str));
+	SetPhoneticLastName(str);
 	srcCard->GetDisplayName(getter_Copies(str));
 	SetDisplayName(str);
 	srcCard->GetNickName(getter_Copies(str));

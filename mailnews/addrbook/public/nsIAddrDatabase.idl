@@ -57,6 +57,8 @@ interface nsIMdbRow;
 // Get / Set CardValue in nsAbCardProperty.cpp
 #define kFirstNameColumn          "FirstName"
 #define kLastNameColumn           "LastName"
+#define kPhoneticFirstNameColumn  "PhoneticFirstName"
+#define kPhoneticLastNameColumn   "PhoneticLastName"
 #define kDisplayNameColumn        "DisplayName"
 #define kNicknameColumn           "NickName"
 #define kPriEmailColumn           "PrimaryEmail"
@@ -173,6 +175,8 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	[noscript] void addLdifListMember(in nsIMdbRow row, in string value);
 	[noscript] void addFirstName(in nsIMdbRow row, in string value);
 	[noscript] void addLastName(in nsIMdbRow row, in string value);
+	[noscript] void addPhoneticFirstName(in nsIMdbRow row, in string value);
+	[noscript] void addPhoneticLastName(in nsIMdbRow row, in string value);
 	[noscript] void addDisplayName(in nsIMdbRow row, in string value);
 	[noscript] void addNickName(in nsIMdbRow row, in string value);
 	[noscript] void addPrimaryEmail(in nsIMdbRow row, in string value);
