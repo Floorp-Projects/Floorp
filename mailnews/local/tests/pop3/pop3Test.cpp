@@ -62,7 +62,8 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL   "libpref.so"  
-#define APPCORES_DLL  "libappcores.so"
+#define APPCORES_DLL "libappcores.so"
+#define APPSHELL_DLL "libnsappshell.so"
 #endif
 #endif
 
@@ -91,7 +92,7 @@ static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 class nsPop3TestDriver : public nsIUrlListener
 {
 public:
-	nsPop3TestDriver(nsINetService * pService);
+	nsPop3TestDriver(nsINetService * pService, PLEventQueue *queue);
 	virtual ~nsPop3TestDriver();
 	NS_DECL_ISUPPORTS
 
@@ -121,6 +122,7 @@ public:
 	nsresult OnIdentityCheck();
 
 protected:
+    PLEventQueue *m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
@@ -131,14 +133,16 @@ protected:
 
 NS_IMPL_ISUPPORTS(nsPop3TestDriver, nsIUrlListener::GetIID())
 
-nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService)
+nsPop3TestDriver::nsPop3TestDriver(nsINetService * pNetService,
+                                   PLEventQueue *queue)
 {
 	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_runningURL = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
-	
+	m_eventQueue = queue;
+
 	InitializeTestDriver(); // prompts user for initialization information...
 }
 
@@ -186,6 +190,10 @@ nsresult nsPop3TestDriver::RunDriver()
 		{
 			status = ReadAndDispatchCommand();	
 		}  // if running url
+#ifdef XP_UNIX
+        printf(".");
+        PL_ProcessPendingEvents(m_eventQueue);
+#endif
 #ifdef XP_PC	
 		MSG msg;
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
@@ -194,7 +202,6 @@ nsresult nsPop3TestDriver::RunDriver()
 			DispatchMessage(&msg);
 		}
 #endif
-
 	} // until the user has stopped running the url (which is really the test session.....
 
 	return status;
@@ -460,9 +467,9 @@ nsresult nsPop3TestDriver::OnGet()
 
 int main()
 {
+    PLEventQueue *queue;
 	nsINetService * pNetService;
     nsresult result;
-    nsIURL * pURL = NULL;
 
 	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
@@ -470,8 +477,14 @@ int main()
 	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 	// make sure prefs get initialized and loaded..
+	// mscott - this is just a bad bad bad hack right now until prefs
+	// has the ability to take nsnull as a parameter. Once that happens,
+	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
-
+    if (NS_FAILED(result) || prefs == nsnull) {
+        exit(result);
+    }
+    
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -490,8 +503,14 @@ int main()
 		return 1;
 	}
 
+    result = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+    if (NS_FAILED(result) || !queue) {
+        printf("unable to get event queue.\n");
+        return 1;
+    }
+
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsPop3TestDriver * driver = new nsPop3TestDriver(pNetService);
+	nsPop3TestDriver * driver = new nsPop3TestDriver(pNetService, queue);
 	if (driver)
 	{
 		driver->RunDriver();
