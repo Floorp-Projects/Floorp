@@ -58,7 +58,7 @@ NS_IMETHODIMP nsFileWidget::Create(nsIWidget        *aParent,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP   nsFileWidget:: Create(nsIWidget  *aParent,
                              nsString&   aTitle,
-                             nsMode      aMode,
+                             nsFileDlgMode    aMode,
                              nsIDeviceContext *aContext,
                              nsIAppShell *aAppShell,
                              nsIToolkit *aToolkit,
