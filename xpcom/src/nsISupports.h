@@ -20,6 +20,7 @@
 #define nsISupports_h___
 
 #include "nsDebug.h"
+#include "nsTraceRefcnt.h"
 #include "nsID.h"
 #include "nsError.h"
 
@@ -69,7 +70,6 @@ typedef PRUint32 nsrefcnt;
  * and a reference counted memory model (AddRef/Release). This is
  * modelled after the win32 IUnknown API.
  */
-
 class nsISupports {
 public:
   /**
@@ -145,34 +145,142 @@ nsrefcnt _class::AddRef(void)                                \
 }
 
 /**
+ * Macro for instantiating a new object that implements nsISupports.
+ * Use this in your factory methods to allow for refcnt tracing.
+ * Note that you can only use this if you adhere to the no arguments
+ * constructor com policy (which you really should!).
+ * @param _result Where the new instance pointer is stored
+ * @param _type The type of object to call "new" with.
+ */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_NEWXPCOM(_result,_type) \
+  _result = new _type(); \
+  nsTraceRefcnt::Create(_result, #_type, __FILE__, __LINE__)
+#else
+#define NS_NEWXPCOM(_result,_type) \
+  _result = new _type()
+#endif
+
+/**
+ * Macro for deleting an object that implements nsISupports.
+ * Use this in your Release methods to allow for refcnt tracing.
+ * @param _ptr The object to delete.
+ */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_DELETEXPCOM(_ptr)                        \
+  nsTraceRefcnt::Destroy(_ptr, __FILE__, __LINE__); \
+  delete _ptr
+#else
+#define NS_DELETEXPCOM(_ptr)    \
+  delete _ptr
+#endif
+
+/**
  * Macro for adding a reference to an interface.
  * @param _ptr The interface pointer.
  */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_ADDREF(_ptr)                                       \
+  ((nsrefcnt) nsTraceRefcnt::AddRef((_ptr), (_ptr)->AddRef(), \
+                                    __FILE__, __LINE__))
+#else
 #define NS_ADDREF(_ptr) \
- (_ptr)->AddRef()
+  (_ptr)->AddRef()
+#endif
+
+/**
+ * Macro for adding a reference to this. This macro should be used
+ * because NS_ADDREF (when tracing) may require an ambiguous cast
+ * from the pointers primary type to nsISupports. This macro sidesteps
+ * that entire problem.
+ */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_ADDREF_THIS() \
+  ((nsrefcnt) nsTraceRefcnt::AddRef(this, AddRef(), __FILE__, __LINE__))
+#else
+#define NS_ADDREF_THIS() \
+  AddRef()
+#endif
 
 /**
  * Macro for adding a reference to an interface that checks for NULL.
  * @param _ptr The interface pointer.
  */
-#define NS_IF_ADDREF(_ptr)  \
-((0 != (_ptr)) ? (_ptr)->AddRef() : 0);
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_IF_ADDREF(_ptr)                                                 \
+  ((0 != (_ptr))                                                           \
+   ? ((nsrefcnt) nsTraceRefcnt::AddRef((_ptr), (_ptr)->AddRef(), __FILE__, \
+                                       __LINE__))                          \
+   : 0)
+#else
+#define NS_IF_ADDREF(_ptr) \
+  ((0 != (_ptr)) ? (_ptr)->AddRef() : 0)
+#endif
 
 /**
  * Macro for releasing a reference to an interface.
+ *
+ * Note that when MOZ_TRACE_XPCOM_REFCNT is defined that the release will
+ * be done before the trace message is logged. If the reference count
+ * goes to zero and implementation of Release logs a message, the two
+ * messages will be logged out of order.
+ *
  * @param _ptr The interface pointer.
  */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_RELEASE(_ptr)                                                \
+ nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), __FILE__, __LINE__); \
+ (_ptr) = NULL
+#else
 #define NS_RELEASE(_ptr) \
  (_ptr)->Release();      \
  (_ptr) = NULL
+#endif
+
+/**
+ * Macro for releasing a reference to an interface, except that this
+ * macro preserves the return value from the underlying Release call.
+ *
+ * Note that when MOZ_TRACE_XPCOM_REFCNT is defined that the release will
+ * be done before the trace message is logged. If the reference count
+ * goes to zero and implementation of Release logs a message, the two
+ * messages will be logged out of order.
+ *
+ * @param _ptr The interface pointer.
+ */
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_RELEASE2(_ptr, _result)                                       \
+ _result = ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
+                                              __FILE__, __LINE__));      \
+ (_ptr) = NULL
+#else
+#define NS_RELEASE2(_ptr, _result) \
+ _result = (_ptr)->Release();      \
+ (_ptr) = NULL
+#endif
 
 /**
  * Macro for releasing a reference to an interface that checks for NULL;
+ *
+ * Note that when MOZ_TRACE_XPCOM_REFCNT is defined that the release will
+ * be done before the trace message is logged. If the reference count
+ * goes to zero and implementation of Release logs a message, the two
+ * messages will be logged out of order.
+ *
  * @param _ptr The interface pointer.
  */
-#define NS_IF_RELEASE(_ptr)             \
- ((0 != (_ptr)) ? (_ptr)->Release() : 0); \
- (_ptr) = NULL
+#ifdef MOZ_TRACE_XPCOM_REFCNT
+#define NS_IF_RELEASE(_ptr)                                        \
+  ((0 != (_ptr))                                                   \
+   ? ((nsrefcnt) nsTraceRefcnt::Release((_ptr), (_ptr)->Release(), \
+                                        __FILE__, __LINE__))       \
+   : 0);                                                           \
+  (_ptr) = NULL
+#else
+#define NS_IF_RELEASE(_ptr)                \
+  ((0 != (_ptr)) ? (_ptr)->Release() : 0); \
+  (_ptr) = NULL
+#endif
 
 /**
  * Use this macro to implement the Release method for a given <i>_class</i>
@@ -183,7 +291,7 @@ nsrefcnt _class::Release(void)                         \
 {                                                      \
   NS_PRECONDITION(0 != mRefCnt, "dup release");        \
   if (--mRefCnt == 0) {                                \
-    delete this;                                       \
+    NS_DELETEXPCOM(this);                              \
     return 0;                                          \
   }                                                    \
   return mRefCnt;                                      \
@@ -219,12 +327,12 @@ nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
   if (aIID.Equals(kClassIID)) {                                          \
     *aInstancePtr = (void*) this;                                        \
-    AddRef();                                                            \
+    NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
   if (aIID.Equals(kISupportsIID)) {                                      \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
-    AddRef();                                                            \
+    NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
   return NS_NOINTERFACE;                                                 \
