@@ -323,30 +323,10 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mWebShell = aWebShell;
   NS_IF_ADDREF(mWebShell);
 
-  // Make root part
-  NS_IF_RELEASE(mRoot);
-  nsresult rv = NS_NewRootPart(&mRoot, aDoc);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Make head container
-  NS_IF_RELEASE(mHead);
-  nsIAtom* atom = NS_NewAtom("HEAD");
-  if (nsnull == atom) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = NS_NewHTMLHead(&mHead, atom);
-  NS_RELEASE(atom);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mRoot->AppendChild(mHead, PR_FALSE);
-
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, aDocURL->GetSpec()));
-  return rv;
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(HTMLContentSink,kIHTMLContentSinkIID)
@@ -962,22 +942,29 @@ NS_ASSERTION(container != mBody, "whoops");
 NS_IMETHODIMP
 HTMLContentSink::WillBuildModel(void)
 {
-  mDocument->BeginLoad();
-#if XXX
-  // XXX temporary
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (nsnull != shell) {
-      shell->BeginObservingDocument();
-      NS_RELEASE(shell);
-    }
+  // Make root part
+  NS_IF_RELEASE(mRoot);
+  nsresult rv = NS_NewRootPart(&mRoot, mDocument);
+  if (NS_OK != rv) {
+    return rv;
   }
 
-  SINK_TRACE(SINK_TRACE_REFLOW,
-             ("HTMLContentSink::WillBuildModel: start layout"));
-  StartLayout();
-#endif
+  // Make head container
+  NS_IF_RELEASE(mHead);
+  nsIAtom* atom = NS_NewAtom("HEAD");
+  if (nsnull == atom) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  rv = NS_NewHTMLHead(&mHead, atom);
+  NS_RELEASE(atom);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  mRoot->AppendChild(mHead, PR_FALSE);
+
+  // Notify document that the load is beginning
+  mDocument->BeginLoad();
+
   return NS_OK;
 }
 
@@ -1065,6 +1052,14 @@ HTMLContentSink::StartLayout()
         cx->GetVisibleArea(r);
         shell->ResizeReflow(r.width, r.height);
         NS_RELEASE(cx);
+
+        // Now trigger a refresh
+        nsIViewManager* vm = shell->GetViewManager();
+        if (nsnull != vm) {
+          vm->EnableRefresh();
+          NS_RELEASE(vm);
+        }
+
         NS_RELEASE(shell);
       }
     }
