@@ -227,13 +227,32 @@ public:
 
   /**
    * Return the parent document of this document. Will return null
-   * unless this document is within a compound document and has a parent.
+   * unless this document is within a compound document and has a
+   * parent. Note that this parent chain may cross chrome boundaries.
    */
   NS_IMETHOD GetParentDocument(nsIDocument** aParent) = 0;
+
+  /**
+   * Set the parent document of this document.
+   */
   NS_IMETHOD SetParentDocument(nsIDocument* aParent) = 0;
-  NS_IMETHOD AddSubDocument(nsIDocument* aSubDoc) = 0;
-  NS_IMETHOD GetNumberOfSubDocuments(PRInt32* aCount) = 0;
-  NS_IMETHOD GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc) = 0;
+
+  /**
+   * Set the sub document for aContent to aSubDoc.
+   */
+  NS_IMETHOD SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc) = 0;
+
+  /**
+   * Get the sub document for aContent
+   */
+  NS_IMETHOD GetSubDocumentFor(nsIContent *aContent,
+                               nsIDocument** aSubDoc) = 0;
+
+  /**
+   * Find the content node for which aDocument is a sub document.
+   */
+  NS_IMETHOD FindContentForSubDocument(nsIDocument *aDocument,
+                                       nsIContent **aContent) = 0;
 
   /**
    * Return the root content object for this document.
@@ -373,6 +392,16 @@ public:
 
   NS_IMETHOD AddReference(void *aKey, nsISupports *aReference) = 0;
   NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference) = 0;
+
+  /**
+   * Set the container (docshell) for this document.
+   */
+  NS_IMETHOD SetContainer(nsISupports *aContainer) = 0;
+
+  /**
+   * Get the container (docshell) for this document.
+   */
+  NS_IMETHOD GetContainer(nsISupports **aContainer) = 0;
 };
 
 

@@ -465,8 +465,6 @@ public:
 protected:
   nsresult SetElementFocus(PRBool aDoFocus);
 
-  nsresult HandleFrameOnloadEvent(nsIDOMEvent* aEvent);
-
   PRBool IsEventName(nsIAtom* aName);
 };
 

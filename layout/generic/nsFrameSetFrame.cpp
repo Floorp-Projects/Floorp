@@ -63,7 +63,6 @@
 #define ALL_VIS    0x000F
 #define NONE_VIS   0x0000
 
-static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 /*******************************************************************************
@@ -231,19 +230,29 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
 {
-  if (mRowSizes) delete [] mRowSizes;
-  if (mRowSpecs) delete [] mRowSpecs;
-  if (mColSizes) delete [] mColSizes;
-  if (mColSpecs) delete [] mColSpecs;
-  if (mVerBorders) delete[] mVerBorders;
-  if (mHorBorders) delete[] mHorBorders;
+  delete [] mRowSizes;
+  delete [] mRowSpecs;
+  delete [] mColSizes;
+  delete [] mColSpecs;
+  delete[] mVerBorders;
+  delete[] mHorBorders;
+
   mRowSizes = mColSizes = nsnull;
   mRowSpecs = mColSpecs = nsnull;
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch(do_QueryReferent(mPrefBranchWeakRef));
+
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+    do_QueryReferent(mPrefBranchWeakRef);
+
   if (prefBranch) {
-    nsresult rv = prefBranch->RemoveObserver(kFrameResizePref, this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't remove frameset as pref branch observer");
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    prefBranch->RemoveObserver(kFrameResizePref, this);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+		 "Can't remove frameset as pref branch observer");
   }
+
   mPrefBranchWeakRef = nsnull;
 }
 
@@ -252,7 +261,7 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(kIFramesetFrameIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsHTMLFramesetFrame))) {
     *aInstancePtr = (void*)this;
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
@@ -327,7 +336,8 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   mTopLevelFrameset = (nsHTMLFramesetFrame*)this;
   while (parentFrame) {
     nsHTMLFramesetFrame* frameset;
-    rv = parentFrame->QueryInterface(kIFramesetFrameIID, (void**)&frameset);
+    rv = parentFrame->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame),
+				     (void**)&frameset);
     if (NS_SUCCEEDED(rv)) {
       mTopLevelFrameset = frameset;
       parentFrame->GetParent((nsIFrame**)&parentFrame);
@@ -1404,7 +1414,7 @@ PRBool
 nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild) 
 {
   nsIFrame* childFrame = nsnull;
-  aChild->QueryInterface(kIFramesetFrameIID, (void**)&childFrame);
+  aChild->QueryInterface(NS_GET_IID(nsHTMLFramesetFrame), (void**)&childFrame);
   if (childFrame) {
     return PR_TRUE;
   }

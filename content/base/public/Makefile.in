@@ -57,6 +57,7 @@ nsIContentSerializer.h \
 nsIHTMLToTextSink.h \
 mozISanitizingSerializer.h \
 nsIContentList.h \
+nsIFrameLoader.h \
 $(NULL)
 
 XPIDLSRCS	= \

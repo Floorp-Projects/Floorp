@@ -56,6 +56,9 @@ public:
   NS_DECL_ISUPPORTS
   
   nsPrintPreviewListener(nsIDOMEventReceiver* aEVRec);
+  virtual ~nsPrintPreviewListener()
+  {
+  }
 
   // nsIDOMContextMenuListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)        {	return NS_OK; }

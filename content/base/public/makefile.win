@@ -49,6 +49,7 @@ EXPORTS =				\
 	nsIHTMLToTextSink.h		\
 	mozISanitizingSerializer.h	\
 	nsIContentList.h		\
+	nsIFrameLoader.h		\
 	$(NULL)
 
 MODULE=content

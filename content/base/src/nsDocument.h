@@ -70,6 +70,8 @@
 #include "nsICSSLoader.h"
 #include "nsIDOMXPathEvaluator.h"
 
+#include "pldhash.h"
+
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
 class nsIOutputStream;
@@ -213,6 +215,29 @@ protected:
   nsIDocument*  mDocument;
   void*         mScriptObject;
 };
+
+
+// Helper structs for the content->subdoc map
+
+class SubDocMapEntry : public PLDHashEntryHdr
+{
+public:
+  // Both of these are strong references
+  nsIContent *mKey; // must be first, to look like PLDHashEntryStub
+  nsIDocument *mSubDocument;
+};
+
+struct FindContentData
+{
+  FindContentData(nsIDocument *aSubDoc)
+    : mSubDocument(aSubDoc), mResult(nsnull)
+  {
+  }
+
+  nsISupports *mSubDocument;
+  nsIContent *mResult;
+};
+
 
 // Base class for our document implementations.
 //
@@ -369,9 +394,11 @@ public:
    */
   NS_IMETHOD GetParentDocument(nsIDocument** aParent);
   NS_IMETHOD SetParentDocument(nsIDocument* aParent);
-  NS_IMETHOD AddSubDocument(nsIDocument* aSubDoc);
-  NS_IMETHOD GetNumberOfSubDocuments(PRInt32* aCount);
-  NS_IMETHOD GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc);
+
+  NS_IMETHOD SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc);
+  NS_IMETHOD GetSubDocumentFor(nsIContent *aContent, nsIDocument** aSubDoc);
+  NS_IMETHOD FindContentForSubDocument(nsIDocument *aDocument,
+                                       nsIContent **aContent);
 
   /**
    * Return the root content object for this document.
@@ -494,6 +521,8 @@ public:
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
   NS_IMETHOD AddReference(void *aKey, nsISupports *aReference);
   NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference);
+  NS_IMETHOD SetContainer(nsISupports *aContainer);
+  NS_IMETHOD GetContainer(nsISupports **aContainer);
 
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
@@ -575,13 +604,16 @@ protected:
   nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsIPrincipal* mPrincipal;
   nsWeakPtr mDocumentLoadGroup;
-  
+  nsWeakPtr mDocumentContainer;
+
   nsString mCharacterSet;
   PRInt32 mCharacterSetSource;
   
   nsVoidArray mCharSetObservers;
   nsIDocument* mParentDocument;
-  nsVoidArray mSubDocuments;
+
+  PLDHashTable *mSubDocuments;
+
   nsVoidArray mPresShells;
   nsCOMPtr<nsISupportsArray> mChildren; // contains owning references
   nsIContent* mRootContent; // a weak reference to the only element in

@@ -1237,22 +1237,19 @@ PRBool
 nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 {
   PRBool status = PR_FALSE;
-  if (aDoc) {
-    nsCompatibility mode;
-    // multiple shells on the same doc are out of luck
-    nsCOMPtr<nsIPresShell> shell;
-    aDoc->GetShellAt(0, getter_AddRefs(shell));
-    if (shell) {
-      nsCOMPtr<nsIPresContext> presContext;
-      shell->GetPresContext(getter_AddRefs(presContext));
-      if (presContext) {
-        presContext->GetCompatibilityMode(&mode);
-        if (eCompatibility_NavQuirks == mode) {
-          status = PR_TRUE;
-        }
-      }
+
+  nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(aDoc));
+
+  if (doc) {
+    nsDTDMode mode;
+
+    doc->GetDTDMode(mode);
+
+    if (mode == eDTDMode_quirks) {
+      status = PR_TRUE;
     }
   }
+
   return status;
 }
 
@@ -2314,12 +2311,12 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
     baseHref.Trim(" \t\n\r");
 
     nsIURI* url = nsnull;
-    {
-      result = NS_NewURI(&url, baseHref, nsnull, docBaseURL);
-    }
+    result = NS_NewURI(&url, baseHref, nsnull, docBaseURL);
+
     NS_IF_RELEASE(docBaseURL);
     *aBaseURL = url;
   }
+
   return result;
 }
 
@@ -3704,17 +3701,20 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
                                                getter_AddRefs(docURL));
               rv = NS_MakeAbsoluteURI(absURLSpec, spec, docURL);
               if (NS_SUCCEEDED(rv))
-                aData->mColorData->mBackImage.SetStringValue(absURLSpec, eCSSUnit_URL);
+                aData->mColorData->mBackImage.SetStringValue(absURLSpec,
+                                                             eCSSUnit_URL);
             }
           }
         }
       } else if (aData->mPresContext) {
-        // in NavQuirks mode, allow the empty string to set the background to empty
+        // in NavQuirks mode, allow the empty string to set the
+        // background to empty
         nsCompatibility mode;
         aData->mPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode &&
             eHTMLUnit_Empty == value.GetUnit())
-          aData->mColorData->mBackImage.SetStringValue(NS_LITERAL_STRING(""), eCSSUnit_URL);
+          aData->mColorData->mBackImage.SetStringValue(NS_LITERAL_STRING(""),
+                                                       eCSSUnit_URL);
       }
     }
   }
@@ -4552,32 +4552,6 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
   }
 
   return RemoveFocus(presContext);
-}
-
-nsresult
-nsGenericHTMLElement::HandleFrameOnloadEvent(nsIDOMEvent* aEvent)
-{
-  NS_ENSURE_TRUE(aEvent, NS_OK);
-
-  nsAutoString type;
-  aEvent->GetType(type);
-
-  if (!type.EqualsIgnoreCase("load")) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIPresContext> ctx;
-
-  GetPresContext(this, getter_AddRefs(ctx));
-  NS_ENSURE_TRUE(ctx, NS_OK);
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
-
-  event.eventStructType = NS_EVENT;
-  event.message = NS_PAGE_LOAD;
-
-  return HandleDOMEvent(ctx, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 }
 
 // static
