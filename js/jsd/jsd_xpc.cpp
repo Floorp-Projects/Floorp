@@ -96,7 +96,7 @@
 }
 
 #define JSDS_MAJOR_VERSION 1
-#define JSDS_MINOR_VERSION 1
+#define JSDS_MINOR_VERSION 2
 
 #define NS_CATMAN_CTRID   "@mozilla.org/categorymanager;1"
 #define NS_JSRT_CTRID     "@mozilla.org/js/xpc/RuntimeService;1"
@@ -3235,9 +3235,7 @@ class jsdASObserver : public nsIObserver
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    jsdASObserver ()
-    {
-    }    
+    jsdASObserver () {}    
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdASObserver, nsIObserver); 
@@ -3267,15 +3265,17 @@ jsdASObserver::Observe (nsISupports *aSubject, const char *aTopic,
         return rv;
 
     rv = jsds->OnForRuntime(rt);
+    if (NS_FAILED(rv))
+        return rv;
     
-    return rv;
+    return jsds->SetFlags(JSD_DISABLE_OBJECT_TRACE);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(jsdASObserver);
 
 static const nsModuleComponentInfo components[] = {
-    {"JSDService", JSDSERVICE_CID,     jsdServiceCtrID, jsdServiceConstructor},
-    {"JSDASObserver",  JSDASO_CID,  jsdASObserverCtrID, jsdASObserverConstructor}
+    {"JSDService", JSDSERVICE_CID,    jsdServiceCtrID, jsdServiceConstructor},
+    {"JSDASObserver",  JSDASO_CID, jsdASObserverCtrID, jsdASObserverConstructor}
 };
 
 NS_IMPL_NSGETMODULE(JavaScript_Debugger, components);

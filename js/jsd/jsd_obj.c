@@ -122,15 +122,18 @@ _createJSDObject(JSDContext* jsdc, JSContext *cx, JSObject *obj)
     JS_ASSERT(JSD_OBJECTS_LOCKED(jsdc));
 
     jsdobj = (JSDObject*) calloc(1, sizeof(JSDObject));
-    if( jsdobj )
+    if (jsdobj)
     {
         JS_INIT_CLIST(&jsdobj->links);
         JS_APPEND_LINK(&jsdobj->links, &jsdc->objectsList);
         jsdobj->obj = obj;
         JS_HashTableAdd(jsdc->objectsTable, obj, jsdobj);
 
+        if (jsdc->flags & JSD_DISABLE_OBJECT_TRACE)
+            return jsdobj;
+        
         /* walk the stack to find js frame (if any) causing creation */
-        while( NULL != (fp = JS_FrameIterator(cx, &iter)) )
+        while (NULL != (fp = JS_FrameIterator(cx, &iter)))
         {
             if( !JS_IsNativeFrame(cx, fp) )
             {

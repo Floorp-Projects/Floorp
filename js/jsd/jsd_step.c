@@ -118,6 +118,16 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
     
     if (!jsdc || !jsdc->inited)
         return JS_FALSE;
+
+    if (!hook && !(jsdc->flags & JSD_COLLECT_PROFILE_DATA) &&
+        jsdc->flags & JSD_DISABLE_OBJECT_TRACE)
+    {
+        /* no hook to call, no profile data needs to be collected, and
+         * the client has object tracing disabled, so there is nothing
+         * to do here.
+         */
+        return hookresult;
+    }
     
     if (before && JS_IsConstructorFrame(cx, fp))
         jsd_Constructing(jsdc, cx, JS_GetFrameThis(cx, fp), fp);
