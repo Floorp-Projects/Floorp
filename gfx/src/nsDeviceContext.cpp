@@ -585,8 +585,8 @@ nsFontCache :: Init(nsIDeviceContext* aContext)
 NS_IMETHODIMP 
 nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
 {
-  NS_IF_ADDREF(mContext);
   aContext = mContext;
+  NS_IF_ADDREF(aContext);
   return NS_OK;
 }
 
