@@ -1637,6 +1637,11 @@ MOZ_ARG_ENABLE_BOOL(brprof,
   MOZ_BRPROF=1
   AC_DEFINE(MOZ_BRPROF))
 
+dnl Toolkit exorcism - a temporary hack.
+MOZ_ARG_ENABLE_BOOL(toolkit-exorcism,
+[  --enable-toolkit-exorcism  Exorcise toolkit specific link time dependencies.],
+  AC_DEFINE(TOOLKIT_EXORCISM))
+
 dnl ========================================================
 dnl =
 dnl = --diable-pic-dso-cflags
@@ -2032,6 +2037,7 @@ AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(NECKO)
 AC_SUBST(TOOLBAR_DD)
+AC_SUBST(TOOLKIT_EXORCISM)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
