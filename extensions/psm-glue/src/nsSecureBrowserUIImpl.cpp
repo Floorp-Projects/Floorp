@@ -414,14 +414,14 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
     // A URL is starting to load...
     if ((aProgressStateFlags & flag_start) &&
-        (aProgressStateFlags & flag_is_request))
+        (aProgressStateFlags & flag_is_network))
     {   // check to see if we are going to mix content.
         return CheckMixedContext(loadingURI);
     }
 
     // A URL has finished loading...    
     if ((aProgressStateFlags & flag_stop) &&
-        (aProgressStateFlags & flag_is_request))
+        (aProgressStateFlags & flag_is_network))
     {
         if (1)  // FIX status from the flag...
         {
