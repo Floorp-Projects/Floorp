@@ -14,7 +14,7 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -23,7 +23,7 @@
  *   Bill Law       law@netscape.com
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -855,9 +855,6 @@ struct MessageWindow {
              break;
          case TURBO_DISABLE:
              nsresult rv;
-             nsCOMPtr<nsIWindowsHooks> winHooksService ( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID, &rv ) );
-             if ( NS_SUCCEEDED( rv ) )
-                 winHooksService->StartupTurboDisable();
              nsCOMPtr<nsIStringBundleService> stringBundleService( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
              nsCOMPtr<nsIStringBundle> turboMenuBundle;
              nsCOMPtr<nsIStringBundle> brandBundle;
@@ -873,16 +870,28 @@ struct MessageWindow {
                  brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
                                                  getter_Copies( brandName ) );
                  const PRUnichar *formatStrings[] = { brandName.get() };
-                 turboMenuBundle->GetStringFromName( NS_LITERAL_STRING( "DisableDlgMsg" ).get(),
-                                                     getter_Copies( dialogMsg ) );
+                 turboMenuBundle->FormatStringFromName( NS_LITERAL_STRING( "DisableDlgMsg" ).get(), formatStrings,
+                                                        1, getter_Copies( dialogMsg ) );
                  turboMenuBundle->FormatStringFromName( NS_LITERAL_STRING( "DisableDlgTitle" ).get(), formatStrings,
                                                         1, getter_Copies( dialogTitle ) );
+
              }
              if ( dialogMsg.get() && dialogTitle.get() && brandName.get() ) {
                  nsCOMPtr<nsIPromptService> dialog( do_GetService( "@mozilla.org/embedcomp/prompt-service;1" ) );
-                 if ( dialog )
-                     dialog->Alert( nsnull, dialogTitle.get(), dialogMsg.get() );
+                 if ( dialog ) {
+                     PRBool reallyDisable;
+                     nsNativeAppSupportWin::mLastWindowIsConfirmation = PR_TRUE;
+                     dialog->Confirm( nsnull, dialogTitle.get(), dialogMsg.get(), &reallyDisable );
+                     if ( !reallyDisable ) {
+                          break;
+                     }
+                 }
+
              }
+             nsCOMPtr<nsIWindowsHooks> winHooksService ( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID, &rv ) );
+             if ( NS_SUCCEEDED( rv ) )
+                 winHooksService->StartupTurboDisable();
+
              nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
              if ( NS_SUCCEEDED( rv ) ) {
                  nsCOMPtr<nsINativeAppSupport> native;
@@ -2035,12 +2044,12 @@ nsNativeAppSupportWin::StartServerMode() {
         "chrome,dialog=no,toolbar=no",
         argArray,
         getter_AddRefs( newWindow ) );
-    
+
     if ( !newWindow ) {
         return NS_OK;
     }
     mInitialWindow = newWindow;
-    
+
     // Hide this window by re-parenting it (to ensure it doesn't appear).
     ReParent( newWindow, (HWND)MessageWindow() );
 
@@ -2074,6 +2083,15 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         mInitialWindow = nsnull;
         return NS_OK;
     }
+
+    // If the last window closed is our confirmation dialog,
+    // don't do anything.
+    if ( mLastWindowIsConfirmation ) {
+        mLastWindowIsConfirmation = PR_FALSE;
+        return NS_OK;
+    }
+
+
     nsresult rv;
     if ( !mShownTurboDialog ) {
         PRBool showDialog = PR_TRUE;
