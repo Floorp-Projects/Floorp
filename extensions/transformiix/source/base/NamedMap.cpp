@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.8 2001/06/20 06:00:31 margaret.chan%sun.com Exp $
+ * $Id: NamedMap.cpp,v 1.9 2001/06/26 14:08:54 peterv%netscape.com Exp $
  */
 
 /**
  * A Named Map for TxObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/06/20 06:00:31 $
+ * @version $Revision: 1.9 $ $Date: 2001/06/26 14:08:54 $
 **/
 
 #include "NamedMap.h"
@@ -63,7 +63,7 @@ NamedMap::NamedMap(int size) {
 /**
  * Helper method for Constructors
 **/
-void NamedMap::initialize(Int32 size) {
+void NamedMap::initialize(PRInt32 size) {
 
     //-- by default the NamedMap will not delete it's
     //-- object references
@@ -73,7 +73,7 @@ void NamedMap::initialize(Int32 size) {
     elements = new BucketItem*[size];
 
     //-- initialize all elements to 0;
-    for ( Int32 i = 0; i < size; i++ ) elements[i] = 0;
+    for ( PRInt32 i = 0; i < size; i++ ) elements[i] = 0;
 
     numberOfBuckets = size;
     numberOfElements = 0;
@@ -350,13 +350,13 @@ NamedMap::BucketItem* NamedMap::getBucketItem(const String& key) {
 **/
 unsigned long NamedMap::hashKey(const String& key) {
 
-    Int32 len = key.length();
+    PRInt32 len = key.length();
     UNICODE_CHAR* chars = new UNICODE_CHAR[len];
     key.toUnicode(chars);
 
     unsigned long hashCode = 0;
-    for (Int32 i = 0; i < len; i++) {
-        hashCode +=  ((Int32)chars[i]) << 3;
+    for (PRInt32 i = 0; i < len; i++) {
+        hashCode +=  ((PRInt32)chars[i]) << 3;
     }
     delete [] chars;
     return hashCode;

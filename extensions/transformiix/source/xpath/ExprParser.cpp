@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: ExprParser.cpp,v 1.12 2001/06/20 06:00:32 margaret.chan%sun.com Exp $
+ * $Id: ExprParser.cpp,v 1.13 2001/06/26 14:07:58 peterv%netscape.com Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.12 $ $Date: 2001/06/20 06:00:32 $
+ * @version $Revision: 1.13 $ $Date: 2001/06/26 14:07:58 $
 **/
 
 #include "ExprParser.h"
@@ -66,7 +66,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
 {
 
     AttributeValueTemplate* avt = new AttributeValueTemplate();
-    Int32 size = attValue.length();
+    PRInt32 size = attValue.length();
     int cc = 0;
     String buffer;
     MBool inExpr    = MB_FALSE;

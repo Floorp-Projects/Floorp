@@ -53,7 +53,7 @@ NodeList::~NodeList()
  *
  * @return the child at the given index or NULL if there is none
  */
-Node* NodeList::item(UInt32 aIndex)
+Node* NodeList::item(PRUint32 aIndex)
 {
     NSI_FROM_TX_NULL_CHECK(NodeList)
     nsCOMPtr<nsIDOMNode> node;
@@ -69,10 +69,10 @@ Node* NodeList::item(UInt32 aIndex)
  *
  * @return the number of nodes
  */
-UInt32 NodeList::getLength()
+PRUint32 NodeList::getLength()
 {
     NSI_FROM_TX(NodeList)
-    UInt32 length = 0;
+    PRUint32 length = 0;
 
     if (nsNodeList)
         nsNodeList->GetLength(&length);

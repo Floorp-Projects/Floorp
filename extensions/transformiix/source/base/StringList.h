@@ -23,13 +23,13 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: StringList.h,v 1.9 2001/04/08 14:34:37 peterv%netscape.com Exp $
+ * $Id: StringList.h,v 1.10 2001/06/26 14:09:31 peterv%netscape.com Exp $
  */
 
 /**
  * A class for keeping an ordered list of Strings
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2001/04/08 14:34:37 $
+ * @version $Revision: 1.10 $ $Date: 2001/06/26 14:09:31 $
 **/
 
 #ifndef TRANSFRMX_STRINGLIST_H
@@ -58,7 +58,7 @@ class StringList {
       /**
        * Returns the number of Strings in this List
       **/
-      Int32 getLength();
+      PRInt32 getLength();
 
       /**
        * Returns a StringListIterator for this StringList
@@ -92,7 +92,7 @@ private:
 
       StringListItem* firstItem;
       StringListItem* lastItem;
-      Int32 itemCount;
+      PRInt32 itemCount;
 
       void insertAfter(String* strptr, StringListItem* sItem);
       void insertBefore(String* strptr, StringListItem* sItem);

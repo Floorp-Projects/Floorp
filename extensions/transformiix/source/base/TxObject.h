@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: TxObject.h,v 1.4 2001/04/08 14:38:44 peterv%netscape.com Exp $
+ * $Id: TxObject.h,v 1.5 2001/06/26 14:09:57 peterv%netscape.com Exp $
  */
 
 
@@ -45,8 +45,8 @@ class TxObject {
     /**
      * Returns the Hashcode for this TxObject
     **/
-    virtual Int32 hashCode() {
-        return (Int32)this;
+    virtual PRInt32 hashCode() {
+        return (PRInt32)this;
     } //-- hashCode
 
     /**

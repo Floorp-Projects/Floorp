@@ -61,6 +61,8 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIConsoleService.h"
 //#include "nslog.h"
+#include <MacTypes.h>
+#include "ProfilerUtils.h"
 #else
 #include "printers.h"
 #include "TxLog.h"
@@ -73,7 +75,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.59 $ $Date: 2001/06/26 11:58:52 $
+ * @version $Revision: 1.60 $ $Date: 2001/06/26 14:10:28 $
 **/
 
 /**
@@ -254,7 +256,7 @@ void XSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href)
 **/
 void XSLTProcessor::parseStylesheetPI(String& data, String& type, String& href) {
 
-    Int32 size = data.length();
+    PRInt32 size = data.length();
     NamedMap bufferMap;
     bufferMap.put("type", &type);
     bufferMap.put("href", &href);
@@ -1420,7 +1422,7 @@ void XSLTProcessor::processAction
                     String xsltNameSpace = ps->getXSLNamespace();
                     NodeSet nonXSLAtts(atts->getLength());
                     //-- process special XSL attributes first
-                    for ( UInt32 i = 0; i < atts->getLength(); i++ ) {
+                    for ( PRUint32 i = 0; i < atts->getLength(); i++ ) {
                         Attr* attr = (Attr*) atts->item(i);
                         //-- filter attributes in the XSLT namespace
                         String attrNameSpace;

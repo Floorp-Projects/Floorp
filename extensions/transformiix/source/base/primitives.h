@@ -28,7 +28,7 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: primitives.h,v 1.6 2001/04/08 14:37:07 peterv%netscape.com Exp $
+ * $Id: primitives.h,v 1.7 2001/06/26 14:09:14 peterv%netscape.com Exp $
  */
 
 
@@ -143,7 +143,7 @@ public:
     /**
      * Creates a new Integer initialized to the given int value.
     **/
-    Integer(Int32 integer);
+    Integer(PRInt32 integer);
 
     /**
      * Creates a new Integer based on the value of the given String
@@ -167,7 +167,7 @@ public:
 
 private:
 
-    Int32 value;
+    PRInt32 value;
 
     /**
      * converts the given String to an int

@@ -52,7 +52,7 @@ Text::~Text()
  *
  * @return the resulting Text object
  */
-Text* Text::splitText(Int32 aOffset)
+Text* Text::splitText(PRInt32 aOffset)
 {
     NSI_FROM_TX_NULL_CHECK(Text)
     nsCOMPtr<nsIDOMText> split;

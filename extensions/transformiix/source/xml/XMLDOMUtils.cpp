@@ -26,7 +26,7 @@
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.16 $ $Date: 2001/06/10 16:42:18 $
+ * @version $Revision: 1.17 $ $Date: 2001/06/26 14:10:15 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -45,7 +45,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
     //-- document nodes
     if (nodeType != Node::DOCUMENT_NODE && !owner) return 0;
     Node* newNode = 0;
-    UInt32 i = 0;
+    PRUint32 i = 0;
     switch ( nodeType ) {
 
         case Node::ATTRIBUTE_NODE :

@@ -44,7 +44,7 @@ String::String()
 //
 //Create an empty String of a specific size
 //
-String::String(Int32 initSize)
+String::String(PRInt32 initSize)
 {
   strBuffer = new UNICODE_CHAR[initSize];
   bufferLength = initSize;
@@ -59,7 +59,7 @@ String::String(Int32 initSize)
 //
 String::String(const String& source)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   //Allocate space for the source string
   strLength = source.length();
@@ -81,7 +81,7 @@ String::String(const String& source)
 //
 String::String(const char* source)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   if (source)
     {
@@ -95,7 +95,7 @@ String::String(const char* source)
       //Also make sure to pick up the null terminator at the end of the char
       //array.
       for (copyLoop=0; copyLoop<strLength; copyLoop++)
-        strBuffer[copyLoop] = (Int32)source[copyLoop];
+        strBuffer[copyLoop] = (PRInt32)source[copyLoop];
     }
   else
     {
@@ -111,7 +111,7 @@ String::String(const char* source)
 //
 String::String(const UNICODE_CHAR* source)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   if (source)
     {
@@ -139,9 +139,9 @@ String::String(const UNICODE_CHAR* source)
 //
 //Create a String from a UNICODE_CHAR buffer and a supplied string length
 //
-String::String(const UNICODE_CHAR* source, Int32 length)
+String::String(const UNICODE_CHAR* source, PRInt32 length)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   if (source)
     {
@@ -182,7 +182,7 @@ String::~String()
 //
 ostream& operator<<(ostream& output, const String& source)
 {
-  Int32 outputLoop;
+  PRInt32 outputLoop;
 
   for (outputLoop=0;outputLoop<source.length();outputLoop++)
     output << (char)source.charAt(outputLoop);
@@ -200,7 +200,7 @@ ostream& operator<<(ostream& output, const String& source)
 //
 String& String::operator=(const String& source)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
   //Make sure string is not being copied onto itself
   if (&source != this) {
     //Check to see if this string is already big enough for source
@@ -222,8 +222,8 @@ String& String::operator=(const String& source)
 //
 String& String::operator=(const char* source)
 {
-  Int32 copyLoop;
-  Int32 sourceLength;
+  PRInt32 copyLoop;
+  PRInt32 sourceLength;
 
   if (source)
     {
@@ -247,8 +247,8 @@ String& String::operator=(const char* source)
 //
 String& String::operator=(const UNICODE_CHAR* source)
 {
-  Int32 copyLoop;
-  Int32 sourceLength;
+  PRInt32 copyLoop;
+  PRInt32 sourceLength;
 
   if (source)
     {
@@ -269,7 +269,7 @@ String& String::operator=(const UNICODE_CHAR* source)
 //
 //Overloaded '=' operator to assign an integer to this string.
 //
-String& String::operator=(Int32 source)
+String& String::operator=(PRInt32 source)
 {
   ConvertInt(source, *this);
   return *this; //-- added, LF
@@ -302,7 +302,7 @@ void String::append(char source)
 //
 void String::append(const String& source)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   //Enlarge buffer to fit string if necessary
   ensureCapacity(source.length());
@@ -320,8 +320,8 @@ void String::append(const String& source)
 //
 void String::append(const char* source)
 {
-  Int32 copyLoop;
-  Int32 initLength = strlen(source);
+  PRInt32 copyLoop;
+  PRInt32 initLength = strlen(source);
 
   //Enlarge buffer to fit new string if necessary
   ensureCapacity(initLength);
@@ -346,9 +346,9 @@ void String::append(const UNICODE_CHAR* source)
 //
 //Append a string of DOM Characters whose length is also defined
 //
-void String::append(const UNICODE_CHAR* source, Int32 length)
+void String::append(const UNICODE_CHAR* source, PRInt32 length)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   //Enlarge buffer to fit new string if necessary
   ensureCapacity(length);
@@ -365,7 +365,7 @@ void String::append(const UNICODE_CHAR* source, Int32 length)
 //Convert source from an integer to a string, and append it to the current
 //string
 //
-void String::append(Int32 source)
+void String::append(PRInt32 source)
 {
   String convertString;
 
@@ -375,10 +375,10 @@ void String::append(Int32 source)
 //
 //Insert a single UNICODE_CHAR into the string starting at offset
 //
-void String::insert(Int32 offset, const UNICODE_CHAR source)
+void String::insert(PRInt32 offset, const UNICODE_CHAR source)
 {
-  Int32 moveLoop;
-  Int32 moveIndex;
+  PRInt32 moveLoop;
+  PRInt32 moveIndex;
 
   offset = offset < 0 ? 0 : offset;
 
@@ -404,7 +404,7 @@ void String::insert(Int32 offset, const UNICODE_CHAR source)
 //
 //Insert a single C type character into the string starting at offset
 //
-void String::insert(Int32 offset, const char source)
+void String::insert(PRInt32 offset, const char source)
 {
   insert(offset, (UNICODE_CHAR)source);
 }
@@ -414,11 +414,11 @@ void String::insert(Int32 offset, const char source)
 //TK 12/09/1999 - Modified to use the "source" String's public interface only,
 //                to ensure compatibility with subclasses of String
 //
-void String::insert(Int32 offset, const String& source)
+void String::insert(PRInt32 offset, const String& source)
 {
-  Int32 moveLoop;
-  Int32 moveIndex;
-  Int32 copyLoop;
+  PRInt32 moveLoop;
+  PRInt32 moveIndex;
+  PRInt32 copyLoop;
 
   offset = offset < 0 ? 0 : offset;
 
@@ -447,12 +447,12 @@ void String::insert(Int32 offset, const String& source)
 //
 //Insert the source "C" type string into this string starting at offset
 //
-void String::insert(Int32 offset, const char* source)
+void String::insert(PRInt32 offset, const char* source)
 {
-  Int32 moveLoop;
-  Int32 moveIndex;
-  Int32 copyLoop;
-  Int32 sourceLength;
+  PRInt32 moveLoop;
+  PRInt32 moveIndex;
+  PRInt32 copyLoop;
+  PRInt32 sourceLength;
 
   offset = offset < 0 ? 0 : offset;
 
@@ -483,17 +483,17 @@ void String::insert(Int32 offset, const char* source)
 //Insert the source UNICODE_CHAR type string into this string starting at
 //offset.  Note that the source is Null Terminated.
 //
-void String::insert(Int32 offset, const UNICODE_CHAR* source)
+void String::insert(PRInt32 offset, const UNICODE_CHAR* source)
 {
   insert(offset, source, UnicodeLength(source));
 }
 
-void String::insert(Int32 offset, const UNICODE_CHAR* source,
-                    Int32 sourceLength)
+void String::insert(PRInt32 offset, const UNICODE_CHAR* source,
+                    PRInt32 sourceLength)
 {
-  Int32 moveLoop;
-  Int32 moveIndex;
-  Int32 copyLoop;
+  PRInt32 moveLoop;
+  PRInt32 moveIndex;
+  PRInt32 copyLoop;
 
   offset = offset < 0 ? 0 : offset;
 
@@ -522,7 +522,7 @@ void String::insert(Int32 offset, const UNICODE_CHAR* source,
 //
 //Convert source from an integer to a string, and then insert.
 //
-void String::insert(Int32 offset, Int32 source)
+void String::insert(PRInt32 offset, PRInt32 source)
 {
   String convertString;
 
@@ -532,7 +532,7 @@ void String::insert(Int32 offset, Int32 source)
 //
 //Replace the character specified by offset with the UNICODE_CHAR source
 //
-void String::replace(Int32 offset, const UNICODE_CHAR source)
+void String::replace(PRInt32 offset, const UNICODE_CHAR source)
 {
   offset = offset < 0 ? 0 : offset;
 
@@ -547,7 +547,7 @@ void String::replace(Int32 offset, const UNICODE_CHAR source)
 //
 //Replace the character specified by offset with the C style character source
 //
-void String::replace(Int32 offset, const char source)
+void String::replace(PRInt32 offset, const char source)
 {
   replace(offset, (UNICODE_CHAR)source);
 }
@@ -559,10 +559,10 @@ void String::replace(Int32 offset, const char source)
 //TK 12/09/1999 - Modified to use the "source" String's public interface only,
 //                to ensure compatibility with classes derived from String
 //
-void String::replace(Int32 offset, const String& source)
+void String::replace(PRInt32 offset, const String& source)
 {
-  Int32 totalOffset = 0;
-  Int32 replaceLoop;
+  PRInt32 totalOffset = 0;
+  PRInt32 replaceLoop;
 
   if (offset < strLength)
     {
@@ -587,11 +587,11 @@ void String::replace(Int32 offset, const String& source)
 //enlarge the string buffer if source will require more characters than
 //currently available.
 //
-void String::replace(Int32 offset, const char* source)
+void String::replace(PRInt32 offset, const char* source)
 {
-  Int32 totalOffset = 0;
-  Int32 replaceLoop;
-  Int32 sourceLength;
+  PRInt32 totalOffset = 0;
+  PRInt32 replaceLoop;
+  PRInt32 sourceLength;
 
   if (offset < strLength)
     {
@@ -619,7 +619,7 @@ void String::replace(Int32 offset, const char* source)
 //TK 12/21/1999 - Simply deffer functionality to the replace function
 //                below (accepting a length for the Unicode buffer).
 //
-void String::replace(Int32 offset, const UNICODE_CHAR* source)
+void String::replace(PRInt32 offset, const UNICODE_CHAR* source)
 {
   replace(offset, source, UnicodeLength(source));
 }
@@ -629,10 +629,10 @@ void String::replace(Int32 offset, const UNICODE_CHAR* source)
 //enlarge the string buffer if source will require more characters than
 //currently available.
 //
-void String::replace(Int32 offset, const UNICODE_CHAR* source, Int32 srcLength)
+void String::replace(PRInt32 offset, const UNICODE_CHAR* source, PRInt32 srcLength)
 {
-  Int32 totalOffset = 0;
-  Int32 replaceLoop;
+  PRInt32 totalOffset = 0;
+  PRInt32 replaceLoop;
 
   if (offset < strLength)
     {
@@ -656,7 +656,7 @@ void String::replace(Int32 offset, const UNICODE_CHAR* source, Int32 srcLength)
 //
 //Convert source from an integer to a String, and perform a replacement.
 //
-void String::replace(Int32 offset, Int32 source)
+void String::replace(PRInt32 offset, PRInt32 source)
 {
   String convertString;
 
@@ -669,7 +669,7 @@ void String::replace(Int32 offset, Int32 source)
  * and padded with '\0' null characters. Otherwise the String
  * will be truncated
 **/
-void String::setLength(Int32 length) {
+void String::setLength(PRInt32 length) {
     setLength(length, '\0');
 } //-- setLength
 
@@ -679,12 +679,12 @@ void String::setLength(Int32 length) {
  * and padded with given pad character. Otherwise the String
  * will be truncated
 **/
-void String::setLength(Int32 length, UNICODE_CHAR padChar) {
+void String::setLength(PRInt32 length, UNICODE_CHAR padChar) {
     if ( length < 0 ) strLength = 0;
     else if ( length > strLength ) {
-        Int32 diff = length-strLength;
+        PRInt32 diff = length-strLength;
         ensureCapacity(diff);
-        for ( Int32 i = strLength; i < length; i++ )
+        for ( PRInt32 i = strLength; i < length; i++ )
             strBuffer[i] = padChar;
         strLength = length;
     }
@@ -695,10 +695,10 @@ void String::setLength(Int32 length, UNICODE_CHAR padChar) {
 //Delete the "substring" starting at "offset" and proceeding for "count" number
 //of characters (or until the end of the string, whichever comes first).
 //
-void String::deleteChars(Int32 offset, Int32 count)
+void String::deleteChars(PRInt32 offset, PRInt32 count)
 {
-  Int32 deleteLoop;
-  Int32 offsetCount;
+  PRInt32 deleteLoop;
+  PRInt32 offsetCount;
 
   offset = offset < 0 ? 0 : offset;
   offsetCount = offset +  count;
@@ -719,7 +719,7 @@ void String::deleteChars(Int32 offset, Int32 count)
  * Returns the character at index.
  * If the index is out of bounds, -1 will be returned.
 **/
-UNICODE_CHAR String::charAt(Int32 index) const
+UNICODE_CHAR String::charAt(PRInt32 index) const
 {
   if ((index < strLength) && (index >= 0))
     return strBuffer[index];
@@ -739,12 +739,12 @@ void String::clear()
 //
 //Make sure the buffer has room for 'capacity' UNICODE_CHARS.
 //
-void String::ensureCapacity(Int32 capacity)
+void String::ensureCapacity(PRInt32 capacity)
 {
     UNICODE_CHAR* tempStrBuffer = NULL;
 
     //Check for the desired capacity
-    Int32 freeSpace = bufferLength - strLength; //(added by kvisco)
+    PRInt32 freeSpace = bufferLength - strLength; //(added by kvisco)
 
     if (freeSpace < capacity) {
 
@@ -767,9 +767,9 @@ void String::ensureCapacity(Int32 capacity)
 /**
  * Performs a CASE SENSITIVE search of the string for the first occurence
  * of 'data'.  If found return the index, else return NOT_FOUND.
- * -- changed by kvisco to call indexOf(UNICODE_CHAR, Int32)
+ * -- changed by kvisco to call indexOf(UNICODE_CHAR, PRInt32)
 **/
-Int32 String::indexOf(UNICODE_CHAR data) const
+PRInt32 String::indexOf(UNICODE_CHAR data) const
 {
     return indexOf(data, 0);
 } //-- indexOf
@@ -779,9 +779,9 @@ Int32 String::indexOf(UNICODE_CHAR data) const
 //for the first occurence of 'data'.  If found return the index, else return
 //NOT_FOUND.  If the offset is less than zero, then start at zero.
 //
-Int32 String::indexOf(UNICODE_CHAR data, Int32 offset) const
+PRInt32 String::indexOf(UNICODE_CHAR data, PRInt32 offset) const
 {
-  Int32 searchIndex = offset < 0 ? searchIndex = 0 : searchIndex = offset;
+  PRInt32 searchIndex = offset < 0 ? searchIndex = 0 : searchIndex = offset;
 
   while (1)
     {
@@ -796,9 +796,9 @@ Int32 String::indexOf(UNICODE_CHAR data, Int32 offset) const
 
 //
 //Returns the index of the first occurence of data
-//TK 12/09/1999 - Modified to simply use indexOf(const String&, Int32).
+//TK 12/09/1999 - Modified to simply use indexOf(const String&, PRInt32).
 //
-Int32 String::indexOf(const String& data) const
+PRInt32 String::indexOf(const String& data) const
 {
   return indexOf(data, 0);
 }
@@ -809,9 +809,9 @@ Int32 String::indexOf(const String& data) const
 //                retreive the Unicode Char buffer when calling isEqual.
 //                This ensures compatibility with classes derrived from String.
 //
-Int32 String::indexOf(const String& data, Int32 offset) const
+PRInt32 String::indexOf(const String& data, PRInt32 offset) const
 {
-  Int32 searchIndex = offset < 0 ? 0 : offset;
+  PRInt32 searchIndex = offset < 0 ? 0 : offset;
 
   while (1)
   {
@@ -848,7 +848,7 @@ MBool String::isEqual(const String& data) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 String::lastIndexOf(UNICODE_CHAR data) const
+PRInt32 String::lastIndexOf(UNICODE_CHAR data) const
 {
     return lastIndexOf(data, strLength-1);
 } //-- lastIndexOf
@@ -858,11 +858,11 @@ Int32 String::lastIndexOf(UNICODE_CHAR data) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 String::lastIndexOf(UNICODE_CHAR data, Int32 offset) const
+PRInt32 String::lastIndexOf(UNICODE_CHAR data, PRInt32 offset) const
 {
     if ((offset < 0) || (offset >= strLength)) return NOT_FOUND;
 
-    Int32 searchIndex = offset;
+    PRInt32 searchIndex = offset;
     while (searchIndex >= 0) {
         if (strBuffer[searchIndex] == data) return searchIndex;
         --searchIndex;
@@ -876,7 +876,7 @@ Int32 String::lastIndexOf(UNICODE_CHAR data, Int32 offset) const
  * <BR />
  * Added implementation 19990729 (kvisco)
 **/
-Int32 String::lastIndexOf(const String& data) const
+PRInt32 String::lastIndexOf(const String& data) const
 {
     return lastIndexOf(data, strLength-1);
 } //-- lastIndexOf
@@ -887,9 +887,9 @@ Int32 String::lastIndexOf(const String& data) const
  * Added implementation 19990729 (kvisco)
  * TK 12/09/1999 - Completed implementation...
 **/
-Int32 String::lastIndexOf(const String& data, Int32 offset) const
+PRInt32 String::lastIndexOf(const String& data, PRInt32 offset) const
 {
-  Int32 searchIndex;
+  PRInt32 searchIndex;
   const UNICODE_CHAR* dataStrBuffer = NULL;
 
   if ((offset < 0) || (offset >= strLength))
@@ -917,16 +917,16 @@ Int32 String::lastIndexOf(const String& data, Int32 offset) const
 //
 //Returns the length of the String
 //
-Int32 String::length() const
+PRInt32 String::length() const
 {
   return strLength;
 }
 
 //
 //Returns a subString starting at start
-//TK 12/09/1999 - Modified to simply use subString(Int32, Int32, String&)
+//TK 12/09/1999 - Modified to simply use subString(PRInt32, PRInt32, String&)
 //
-String& String::subString(Int32 start, String& dest) const
+String& String::subString(PRInt32 start, String& dest) const
 {
   return subString(start, strLength, dest);
 }
@@ -937,10 +937,10 @@ String& String::subString(Int32 start, String& dest) const
  * TK 12/09/1999 - Modified to use the "dest" String's public interface to
  *                 ensure compatibility wtih derrived classes.
 **/
-String& String::subString(Int32 start, Int32 end, String& dest) const
+String& String::subString(PRInt32 start, PRInt32 end, String& dest) const
 {
-  Int32 srcLoop;
-  Int32 destLoop = 0;
+  PRInt32 srcLoop;
+  PRInt32 destLoop = 0;
 
   start = start < 0? 0 : start;
   end = end > strLength? strLength : end;
@@ -975,7 +975,7 @@ char* String::toCharArray() const
 **/
 char* String::toCharArray(char* dest) const
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   for (copyLoop=0;copyLoop<strLength;copyLoop++)
    dest[copyLoop] = strBuffer[copyLoop];
@@ -993,7 +993,7 @@ char* String::toCharArray(char* dest) const
 **/
 UNICODE_CHAR* String::toUnicode(UNICODE_CHAR* dest) const
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   for (copyLoop=0;copyLoop<strLength;copyLoop++)
     dest[copyLoop] = strBuffer[copyLoop];
@@ -1017,7 +1017,7 @@ const UNICODE_CHAR* String::toUnicode() const
 //
 void String::toLowerCase()
 {
-  Int32 conversionLoop;
+  PRInt32 conversionLoop;
 
   for (conversionLoop=0;conversionLoop<strLength;conversionLoop++)
     {
@@ -1032,7 +1032,7 @@ void String::toLowerCase()
 //
 void String::toUpperCase()
 {
-  Int32 conversionLoop;
+  PRInt32 conversionLoop;
 
   for (conversionLoop=0;conversionLoop<strLength;conversionLoop++)
     {
@@ -1047,8 +1047,8 @@ void String::toUpperCase()
 //
 void String::trim()
 {
-  Int32 trimLoop = strLength - 1;
-  Int32 cutLoop;
+  PRInt32 trimLoop = strLength - 1;
+  PRInt32 cutLoop;
   MBool done = MB_FALSE;
 
   //As long as we are not working on an emtpy string, trim from the right
@@ -1113,7 +1113,7 @@ void String::trim()
 //
 void String::reverse()
 {
-  Int32 reverseLoop;
+  PRInt32 reverseLoop;
   UNICODE_CHAR tempChar;
 
   for (reverseLoop=0;reverseLoop<(strLength/2); reverseLoop++)
@@ -1129,7 +1129,7 @@ void String::reverse()
 //
 void String::copyString(UNICODE_CHAR* dest)
 {
-  Int32 copyLoop;
+  PRInt32 copyLoop;
 
   for (copyLoop=0;copyLoop<strLength;copyLoop++)
    dest[copyLoop] = strBuffer[copyLoop];
@@ -1139,9 +1139,9 @@ void String::copyString(UNICODE_CHAR* dest)
 //Compare the two string representations for equality
 //
 MBool String::isEqual(const UNICODE_CHAR* data, const UNICODE_CHAR* search,
-                      Int32 length) const
+                      PRInt32 length) const
 {
-  Int32 compLoop = 0;
+  PRInt32 compLoop = 0;
 
   while (compLoop < length)
     {
@@ -1155,9 +1155,9 @@ MBool String::isEqual(const UNICODE_CHAR* data, const UNICODE_CHAR* search,
 }
 
 //
-//Convert an Int32 into a String by storing it in target
+//Convert an PRInt32 into a String by storing it in target
 //
-String& String::ConvertInt(Int32 value, String& target)
+String& String::ConvertInt(PRInt32 value, String& target)
 {
   UNICODE_CHAR charDigit;
 
@@ -1178,9 +1178,9 @@ String& String::ConvertInt(Int32 value, String& target)
 //
 //Calculate the length of a null terminated UNICODE_CHAR string
 //
-Int32 String::UnicodeLength(const UNICODE_CHAR* data)
+PRInt32 String::UnicodeLength(const UNICODE_CHAR* data)
 {
-  Int32 index = 0;
+  PRInt32 index = 0;
 
   //Count UNICODE_CHARs Until a Unicode "NULL" is found.
   while (data[index] != 0x0000)

@@ -52,7 +52,7 @@ Text::Text(NodeType type, const String& name, const String& value,
 //Split the text node at Offset into two siblings.  Return a pointer to the new
 //sibling.
 //
-Text* Text::splitText(Int32 offset)
+Text* Text::splitText(PRInt32 offset)
 {
   Text* newTextSibling = NULL;
   String newData;

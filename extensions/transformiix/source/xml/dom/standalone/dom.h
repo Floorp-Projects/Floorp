@@ -139,10 +139,10 @@ class Node : public TxObject
 class NodeList
 {
   public:
-    virtual Node* item(UInt32 index) = 0;
-    virtual UInt32 getLength() = 0;
+    virtual Node* item(PRUint32 index) = 0;
+    virtual PRUint32 getLength() = 0;
   protected:
-    UInt32 length;
+    PRUint32 length;
 };
 
 //
@@ -163,8 +163,8 @@ class NodeListDefinition : public NodeList
     void append(Node* newNode);
 
     //Inherited from NodeList
-    Node* item(UInt32 index);
-    UInt32 getLength();
+    Node* item(PRUint32 index);
+    PRUint32 getLength();
 
   protected:
     struct ListItem {
@@ -238,8 +238,8 @@ class NodeDefinition : public Node, public NodeList
     virtual String getBaseURI();
 
     //Inherrited from NodeList
-    Node* item(UInt32 index);
-    UInt32 getLength();
+    Node* item(PRUint32 index);
+    PRUint32 getLength();
 
   protected:
     //Name, value, and attributes for this node.  Available to derrived
@@ -391,13 +391,13 @@ class CharacterData : public NodeDefinition
   public:
     const String& getData() const;
     void setData(const String& source);
-    Int32 getLength() const;
+    PRInt32 getLength() const;
 
-    String& substringData(Int32 offset, Int32 count, String& dest);
+    String& substringData(PRInt32 offset, PRInt32 count, String& dest);
     void appendData(const String& arg);
-    void insertData(Int32 offset, const String& arg);
-    void deleteData(Int32 offset, Int32 count);
-    void replaceData(Int32 offset, Int32 count, const String& arg);
+    void insertData(PRInt32 offset, const String& arg);
+    void deleteData(PRInt32 offset, PRInt32 count);
+    void replaceData(PRInt32 offset, PRInt32 count, const String& arg);
 
   protected:
     CharacterData(NodeType type, const String& name,
@@ -413,7 +413,7 @@ class Text : public CharacterData
   public:
     Text(const String& theData, Document* owner);
 
-    Text* splitText(Int32 offset);
+    Text* splitText(PRInt32 offset);
 
     //Override "child manipulation" function since Text Nodes can not have
     //any children.

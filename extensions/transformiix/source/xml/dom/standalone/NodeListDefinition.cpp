@@ -94,9 +94,9 @@ void NodeListDefinition::append(Node& newNode)
 //
 // Return the Node contained in the item specified
 //
-Node* NodeListDefinition::item(UInt32 index)
+Node* NodeListDefinition::item(PRUint32 index)
 {
-  UInt32 selectLoop;
+  PRUint32 selectLoop;
   ListItem* pListItem = firstItem;
 
   if (index < length)
@@ -113,7 +113,7 @@ Node* NodeListDefinition::item(UInt32 index)
 //
 // Return the number of items in the list
 //
-UInt32 NodeListDefinition::getLength()
+PRUint32 NodeListDefinition::getLength()
 {
   return length;
 }

@@ -20,12 +20,12 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.h,v 1.2 2001/06/26 11:58:47 sicking%bigfoot.com Exp $
+ * $Id: Map.h,v 1.3 2001/06/26 14:08:27 peterv%netscape.com Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.2 $ $Date: 2001/06/26 11:58:47 $
+ * @version $Revision: 1.3 $ $Date: 2001/06/26 14:08:27 $
  */
 
 #ifndef TRANSFRMX_MAP_H
@@ -142,8 +142,8 @@ private:
     // map table
     BucketItem** elements;
 
-    Int32 numberOfBuckets;
-    Int32 numberOfElements;
+    PRInt32 numberOfBuckets;
+    PRInt32 numberOfElements;
 
     /**
      * The ownership flag. Used to decide which objects are
