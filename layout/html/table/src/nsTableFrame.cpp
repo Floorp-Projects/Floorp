@@ -414,6 +414,12 @@ NS_IMETHODIMP nsTableFrame::DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFra
         return rv;
       }
     }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay) {
+      rv = DidAppendRowGroup((nsTableRowGroupFrame*)nextRow);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
   }
 
   return rv;
@@ -961,6 +967,29 @@ void nsTableFrame::AddCellToTable (nsTableRowFrame *aRowFrame,
 #endif
 }
 
+static nsresult BuildCellMapForRowGroup(nsIFrame* rowGroupFrame)
+{
+  nsresult rv = NS_OK;
+  nsIFrame *rowFrame;
+  rowGroupFrame->FirstChild(nsnull, &rowFrame);
+  for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
+  {
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
+    if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
+    {
+      rv = ((nsTableRowFrame *)rowFrame)->InitChildren();
+      if (NS_FAILED(rv))
+        return rv;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay)
+    {
+      BuildCellMapForRowGroup(rowFrame);
+    }
+  }
+  return rv;
+}
+
 NS_METHOD nsTableFrame::ReBuildCellMap()
 {
   if (PR_TRUE==gsDebugIR) printf("TIF: ReBuildCellMap.\n");
@@ -972,19 +1001,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
     rowGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowGroupDisplay);
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
-      nsIFrame *rowFrame;
-      rowGroupFrame->FirstChild(nsnull, &rowFrame);
-      for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(&rowFrame))
-      {
-        const nsStyleDisplay *rowDisplay;
-        rowFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
-        if (NS_STYLE_DISPLAY_TABLE_ROW==rowDisplay->mDisplay)
-        {
-          rv = ((nsTableRowFrame *)rowFrame)->InitChildren();
-          if (NS_FAILED(rv))
-            return rv;
-        }
-      }
+      BuildCellMapForRowGroup(rowGroupFrame);
     }
   }
   mCellMapValid=PR_TRUE;
@@ -2917,32 +2934,122 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
 
 // collapsing row groups, rows, col groups and cols are accounted for after both passes of
 // reflow so that it has no effect on the calculations of reflow.
+NS_METHOD nsTableFrame::AdjustForCollapsingRowGroup(nsIFrame* aRowGroupFrame, 
+                                                    PRInt32& aRowX)
+{
+  const nsStyleDisplay* groupDisplay;
+  aRowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
+  PRBool groupIsCollapsed = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
+
+  nsTableRowFrame* rowFrame = nsnull;
+  aRowGroupFrame->FirstChild(nsnull, (nsIFrame**)&rowFrame);
+  while (nsnull != rowFrame) { 
+    const nsStyleDisplay *rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
+      if (groupIsCollapsed || (NS_STYLE_VISIBILITY_COLLAPSE == rowDisplay->mVisible)) {
+        mCellMap->SetRowCollapsedAt(aRowX, PR_TRUE);
+      }
+      aRowX++;
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
+      AdjustForCollapsingRowGroup(rowFrame, aRowX);
+    }
+    
+    rowFrame->GetNextSibling((nsIFrame**)&rowFrame);
+  }
+
+  return NS_OK;
+}
+
+NS_METHOD nsTableFrame::CollapseRowGroup(nsIFrame* aRowGroupFrame,
+                                         const nscoord& aYTotalOffset,
+                                         nscoord& aYGroupOffset, PRInt32& aRowX)
+{
+  const nsStyleDisplay* groupDisplay;
+  aRowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
+  
+  PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
+  nsIFrame* rowFrame;
+  aRowGroupFrame->FirstChild(nsnull, &rowFrame);
+
+  while (nsnull != rowFrame) {
+    const nsStyleDisplay* rowDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == rowDisplay->mDisplay) {
+      CollapseRowGroup(rowFrame, aYTotalOffset, aYGroupOffset, aRowX);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
+      nsRect rowRect;
+      rowFrame->GetRect(rowRect);
+      if (collapseGroup || (NS_STYLE_VISIBILITY_COLLAPSE == rowDisplay->mVisible)) {
+        aYGroupOffset += rowRect.height;
+        rowRect.height = 0;
+        rowFrame->SetRect(rowRect);
+        nsIFrame* cellFrame;
+        rowFrame->FirstChild(nsnull, &cellFrame);
+        while (nsnull != cellFrame) {
+          const nsStyleDisplay* cellDisplay;
+          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
+          if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
+            nsTableCellFrame* cFrame = (nsTableCellFrame*)cellFrame;
+            nsRect cRect;
+            cFrame->GetRect(cRect);
+            cRect.height -= rowRect.height;
+            cFrame->SetCollapseOffsetY(-aYGroupOffset);
+            cFrame->SetRect(cRect);
+          }
+          cellFrame->GetNextSibling(&cellFrame);
+        }
+        // check if a cell above spans into here
+         //if (!collapseGroup) {
+          PRInt32 numCols = mCellMap->GetColCount();
+          nsTableCellFrame* lastCell = nsnull;
+          for (int colX = 0; colX < numCols; colX++) {
+            CellData* cellData = mCellMap->GetCellAt(aRowX, colX);
+            if (cellData && !cellData->mCell) { // a cell above is spanning into here
+              // adjust the real cell's rect only once
+              nsTableCellFrame* realCell = cellData->mRealCell->mCell;
+              if (realCell != lastCell) {
+                nsRect realRect;
+                realCell->GetRect(realRect);
+                realRect.height -= rowRect.height;
+                realCell->SetRect(realRect);
+              }
+              lastCell = realCell;
+            }
+          }
+        //}
+      } else { // row is not collapsed but needs to be adjusted by those that are
+        rowRect.y -= aYGroupOffset;
+        rowFrame->SetRect(rowRect);
+      }
+      aRowX++;
+    }
+    rowFrame->GetNextSibling(&rowFrame);
+  } // end row frame while
+
+  nsRect groupRect;
+  aRowGroupFrame->GetRect(groupRect);
+  groupRect.height -= aYGroupOffset;
+  groupRect.y -= aYTotalOffset;
+  aRowGroupFrame->SetRect(groupRect);
+
+  return NS_OK;
+}
+
 NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext& aPresContext, 
                                                 nscoord&        aHeight)
 {
   // determine which row groups and rows are collapsed
+  PRInt32 rowX = 0;
   nsIFrame* childFrame;
   FirstChild(nsnull, &childFrame);
   while (nsnull != childFrame) { 
     const nsStyleDisplay* groupDisplay;
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
     if (IsRowGroup(groupDisplay->mDisplay)) {
-      PRBool groupIsCollapsed = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
-
-      nsTableRowFrame* rowFrame = nsnull;
-      childFrame->FirstChild(nsnull, (nsIFrame**)&rowFrame);
-      PRInt32 rowX = 0;
-      while (nsnull != rowFrame) { 
-        const nsStyleDisplay *rowDisplay;
-        rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
-          if (groupIsCollapsed || (NS_STYLE_VISIBILITY_COLLAPSE == rowDisplay->mVisible)) {
-            mCellMap->SetRowCollapsedAt(rowX, PR_TRUE);
-          }
-        }
-        rowFrame->GetNextSibling((nsIFrame**)&rowFrame);
-        rowX++;
-      }
+      AdjustForCollapsingRowGroup(childFrame, rowX);
     }
     childFrame->GetNextSibling(&childFrame);
   }
@@ -2955,76 +3062,14 @@ NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext& aPresContext,
   nsIFrame* groupFrame = mFrames.FirstChild(); 
   nscoord yGroupOffset = 0; // total offset among rows within a single row group
   nscoord yTotalOffset = 0; // total offset among all rows in all row groups
-  PRInt32 rowX = 0;
-  PRBool collapseGroup;
-
+  rowX = 0;
+  
   while (nsnull != groupFrame) {
     const nsStyleDisplay* groupDisplay;
     groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
-    if (IsRowGroup(groupDisplay->mDisplay)) { 
-      collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
-      nsIFrame* rowFrame;
-      groupFrame->FirstChild(nsnull, &rowFrame);
-
-      while (nsnull != rowFrame) {
-        const nsStyleDisplay* rowDisplay;
-        rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
-          nsRect rowRect;
-          rowFrame->GetRect(rowRect);
-          if (collapseGroup || (NS_STYLE_VISIBILITY_COLLAPSE == rowDisplay->mVisible)) {
-            yGroupOffset += rowRect.height;
-            rowRect.height = 0;
-            rowFrame->SetRect(rowRect);
-            nsIFrame* cellFrame;
-            rowFrame->FirstChild(nsnull, &cellFrame);
-            while (nsnull != cellFrame) {
-              const nsStyleDisplay* cellDisplay;
-              cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
-              if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
-                nsTableCellFrame* cFrame = (nsTableCellFrame*)cellFrame;
-                nsRect cRect;
-                cFrame->GetRect(cRect);
-                cRect.height -= rowRect.height;
-                cFrame->SetCollapseOffsetY(-yGroupOffset);
-                cFrame->SetRect(cRect);
-              }
-              cellFrame->GetNextSibling(&cellFrame);
-            }
-            // check if a cell above spans into here
-             //if (!collapseGroup) {
-              PRInt32 numCols = mCellMap->GetColCount();
-              nsTableCellFrame* lastCell = nsnull;
-              for (int colX = 0; colX < numCols; colX++) {
-                CellData* cellData = mCellMap->GetCellAt(rowX, colX);
-                if (cellData && !cellData->mCell) { // a cell above is spanning into here
-                  // adjust the real cell's rect only once
-                  nsTableCellFrame* realCell = cellData->mRealCell->mCell;
-                  if (realCell != lastCell) {
-                    nsRect realRect;
-                    realCell->GetRect(realRect);
-                    realRect.height -= rowRect.height;
-                    realCell->SetRect(realRect);
-                  }
-                  lastCell = realCell;
-                }
-              }
-            //}
-          } else { // row is not collapsed but needs to be adjusted by those that are
-            rowRect.y -= yGroupOffset;
-            rowFrame->SetRect(rowRect);
-          }
-          rowX++;
-        }
-        rowFrame->GetNextSibling(&rowFrame);
-      } // end row frame while
+    if (IsRowGroup(groupDisplay->mDisplay)) {
+      CollapseRowGroup(groupFrame, yTotalOffset, yGroupOffset, rowX);
     }
-    nsRect groupRect;
-    groupFrame->GetRect(groupRect);
-    groupRect.height -= yGroupOffset;
-    groupRect.y -= yTotalOffset;
-    groupFrame->SetRect(groupRect);
-
     yTotalOffset += yGroupOffset;
     yGroupOffset = 0;
     groupFrame->GetNextSibling(&groupFrame);

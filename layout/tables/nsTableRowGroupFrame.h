@@ -102,7 +102,7 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /** set aCount to the number of child rows (not necessarily == number of child frames) */
-  NS_METHOD GetRowCount(PRInt32 &aCount);
+  NS_METHOD GetRowCount(PRInt32 &aCount, PRBool aDeepCount = PR_TRUE);
 
   /** return the table-relative row index of the first row in this rowgroup.
     * if there are no rows, -1 is returned.
