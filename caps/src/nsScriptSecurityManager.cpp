@@ -511,9 +511,15 @@ nsScriptSecurityManager::CheckSameOrigin(JSContext* cx,
         return NS_OK;
     }
 
-    // Get a URI from the source principal
-    nsCOMPtr<nsICodebasePrincipal> sourceCodebase(
-        do_QueryInterface(sourcePrincipal, &rv));
+    // Get the original URI from the source principal.
+    // This has the effect of ignoring any change to document.domain
+    // which must be done to avoid DNS spoofing (bug 154930)
+    nsCOMPtr<nsIAggregatePrincipal> sourceAgg(do_QueryInterface(sourcePrincipal, &rv));
+    NS_ENSURE_SUCCESS(rv, rv); // If it's not a system principal, it must be an aggregate
+    nsCOMPtr<nsIPrincipal> sourceOriginal;
+    rv = sourceAgg->GetOriginalCodebase(getter_AddRefs(sourceOriginal));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsICodebasePrincipal> sourceCodebase(do_QueryInterface(sourcePrincipal, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIURI> sourceURI;
     rv = sourceCodebase->GetURI(getter_AddRefs(sourceURI));
@@ -804,7 +810,26 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (isSameOrigin)
-        return NS_OK;
+    {   // If either the subject or the object has changed its principal by
+        // explicitly setting document.domain then the other must also have
+        // done so in order to be considered the same origin. This prevents
+        // DNS spoofing based on document.domain (154930)
+        nsCOMPtr<nsIAggregatePrincipal> subjectAgg(do_QueryInterface(aSubject, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        PRBool subjectSetDomain = PR_FALSE;
+        subjectAgg->WasCodebaseChanged(&subjectSetDomain);
+
+        nsCOMPtr<nsIAggregatePrincipal> objectAgg(do_QueryInterface(aObject, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+        PRBool objectSetDomain = PR_FALSE;
+        objectAgg->WasCodebaseChanged(&objectSetDomain);
+
+        // If both or neither explicitly set their domain, allow the access
+        if (!(subjectSetDomain || objectSetDomain) ||
+            (subjectSetDomain && objectSetDomain))
+            return NS_OK;
+    }
+
 
     // Allow access to about:blank
     nsCOMPtr<nsICodebasePrincipal> objectCodebase(do_QueryInterface(aObject));
