@@ -29,6 +29,7 @@
     </menu>
 
     <menu id="tasksMenu"/>
+    <menu id="windowMenu"/>
     <menu id="menu_Help"/>
 
   </menubar>
