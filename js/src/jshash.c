@@ -112,22 +112,16 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
 
     if (!allocOps) allocOps = &defaultHashAllocOps;
 
-    ht = (JSHashTable*) (*allocOps->allocTable)(allocPriv, sizeof *ht);
+    ht = (JSHashTable*) allocOps->allocTable(allocPriv, sizeof *ht);
     if (!ht)
 	return NULL;
     memset(ht, 0, sizeof *ht);
     ht->shift = JS_HASH_BITS - n;
     n = JS_BIT(n);
-#if defined _MSC_VER && _MSC_VER <= 800
-    if (n > 16000) {
-        (*allocOps->freeTable)(allocPriv, ht);
-        return NULL;
-    }
-#endif  /* WIN16 */
     nb = n * sizeof(JSHashEntry *);
-    ht->buckets = (JSHashEntry**) (*allocOps->allocTable)(allocPriv, nb);
+    ht->buckets = (JSHashEntry**) allocOps->allocTable(allocPriv, nb);
     if (!ht->buckets) {
-        (*allocOps->freeTable)(allocPriv, ht);
+        allocOps->freeTable(allocPriv, ht);
         return NULL;
     }
     memset(ht->buckets, 0, nb);
@@ -153,17 +147,17 @@ JS_HashTableDestroy(JSHashTable *ht)
         hep = &ht->buckets[i];
         while ((he = *hep) != NULL) {
             *hep = he->next;
-            (*allocOps->freeEntry)(allocPriv, he, HT_FREE_ENTRY);
+            allocOps->freeEntry(allocPriv, he, HT_FREE_ENTRY);
         }
     }
 #ifdef DEBUG
     memset(ht->buckets, 0xDB, n * sizeof ht->buckets[0]);
 #endif
-    (*allocOps->freeTable)(allocPriv, ht->buckets);
+    allocOps->freeTable(allocPriv, ht->buckets);
 #ifdef DEBUG
     memset(ht, 0xDB, sizeof *ht);
 #endif
-    (*allocOps->freeTable)(allocPriv, ht);
+    allocOps->freeTable(allocPriv, ht);
 }
 
 /*
@@ -182,7 +176,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
     h >>= ht->shift;
     hep = hep0 = &ht->buckets[h];
     while ((he = *hep) != NULL) {
-        if (he->keyHash == keyHash && (*ht->keyCompare)(key, he->key)) {
+        if (he->keyHash == keyHash && ht->keyCompare(key, he->key)) {
             /* Move to front of chain if not already there */
             if (hep != hep0) {
                 *hep = he->next;
@@ -211,12 +205,9 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
     n = NBUCKETS(ht);
     if (ht->nentries >= OVERLOADED(n)) {
         oldbuckets = ht->buckets;
-#if defined _MSC_VER && _MSC_VER <= 800
-        if (2 * n > 16000)
-            return NULL;
-#endif  /* WIN16 */
         nb = 2 * n * sizeof(JSHashEntry *);
-        ht->buckets = (JSHashEntry**) (*ht->allocOps->allocTable)(ht->allocPriv, nb);
+        ht->buckets = (JSHashEntry**)
+            ht->allocOps->allocTable(ht->allocPriv, nb);
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
             return NULL;
@@ -239,12 +230,12 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
 #ifdef DEBUG
         memset(oldbuckets, 0xDB, n * sizeof oldbuckets[0]);
 #endif
-        (*ht->allocOps->freeTable)(ht->allocPriv, oldbuckets);
+        ht->allocOps->freeTable(ht->allocPriv, oldbuckets);
         hep = JS_HashTableRawLookup(ht, keyHash, key);
     }
 
     /* Make a new key value entry */
-    he = (*ht->allocOps->allocEntry)(ht->allocPriv, key);
+    he = ht->allocOps->allocEntry(ht->allocPriv, key);
     if (!he)
 	return NULL;
     he->keyHash = keyHash;
@@ -262,16 +253,16 @@ JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
     JSHashNumber keyHash;
     JSHashEntry *he, **hep;
 
-    keyHash = (*ht->keyHash)(key);
+    keyHash = ht->keyHash(key);
     hep = JS_HashTableRawLookup(ht, keyHash, key);
     if ((he = *hep) != NULL) {
         /* Hit; see if values match */
-        if ((*ht->valueCompare)(he->value, value)) {
+        if (ht->valueCompare(he->value, value)) {
             /* key,value pair is already present in table */
             return he;
         }
         if (he->value)
-            (*ht->allocOps->freeEntry)(ht->allocPriv, he, HT_FREE_VALUE);
+            ht->allocOps->freeEntry(ht->allocPriv, he, HT_FREE_VALUE);
         he->value = value;
         return he;
     }
@@ -286,14 +277,15 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
     size_t nb;
 
     *hep = he->next;
-    (*ht->allocOps->freeEntry)(ht->allocPriv, he, HT_FREE_ENTRY);
+    ht->allocOps->freeEntry(ht->allocPriv, he, HT_FREE_ENTRY);
 
     /* Shrink table if it's underloaded */
     n = NBUCKETS(ht);
     if (--ht->nentries < UNDERLOADED(n)) {
         oldbuckets = ht->buckets;
         nb = n * sizeof(JSHashEntry*) / 2;
-        ht->buckets = (JSHashEntry**) (*ht->allocOps->allocTable)(ht->allocPriv, nb);
+        ht->buckets = (JSHashEntry**)
+            ht->allocOps->allocTable(ht->allocPriv, nb);
         if (!ht->buckets) {
             ht->buckets = oldbuckets;
             return;
@@ -316,7 +308,7 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
 #ifdef DEBUG
         memset(oldbuckets, 0xDB, n * sizeof oldbuckets[0]);
 #endif
-        (*ht->allocOps->freeTable)(ht->allocPriv, oldbuckets);
+        ht->allocOps->freeTable(ht->allocPriv, oldbuckets);
     }
 }
 
@@ -326,7 +318,7 @@ JS_HashTableRemove(JSHashTable *ht, const void *key)
     JSHashNumber keyHash;
     JSHashEntry *he, **hep;
 
-    keyHash = (*ht->keyHash)(key);
+    keyHash = ht->keyHash(key);
     hep = JS_HashTableRawLookup(ht, keyHash, key);
     if ((he = *hep) == NULL)
         return JS_FALSE;
@@ -342,7 +334,7 @@ JS_HashTableLookup(JSHashTable *ht, const void *key)
     JSHashNumber keyHash;
     JSHashEntry *he, **hep;
 
-    keyHash = (*ht->keyHash)(key);
+    keyHash = ht->keyHash(key);
     hep = JS_HashTableRawLookup(ht, keyHash, key);
     if ((he = *hep) != NULL) {
         return he->value;
@@ -367,7 +359,7 @@ JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
     for (i = 0; i < nbuckets; i++) {
         hep = &ht->buckets[i];
         while ((he = *hep) != NULL) {
-            rv = (*f)(he, n, arg);
+            rv = f(he, n, arg);
             n++;
             if (rv & (HT_ENUMERATE_REMOVE | HT_ENUMERATE_UNHASH)) {
                 *hep = he->next;
@@ -443,7 +435,7 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
     fprintf(fp, "        max hash chain: [%u]\n", maxChain);
 
     for (he = ht->buckets[maxChain], i = 0; he; he = he->next, i++)
-        if ((*dump)(he, i, fp) != HT_ENUMERATE_NEXT)
+        if (dump(he, i, fp) != HT_ENUMERATE_NEXT)
             break;
 }
 #endif /* HASHMETER */

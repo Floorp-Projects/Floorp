@@ -304,6 +304,9 @@ struct JSScopeProperty {
 #define SPROP_HAS_VALID_SLOT(sprop, scope)                                    \
     ((sprop)->slot < (scope)->map.freeslot)
 
+#define SPROP_HAS_STUB_GETTER(sprop)    (!(sprop)->getter)
+#define SPROP_HAS_STUB_SETTER(sprop)    (!(sprop)->setter)
+
 #define SPROP_CALL_GETTER(cx,sprop,getter,obj,obj2,vp)                        \
     (!(getter) ||                                                             \
      (getter)(cx, OBJ_THIS_OBJECT(cx,obj), SPROP_USERID(sprop), vp))

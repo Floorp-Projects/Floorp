@@ -247,6 +247,15 @@ js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 extern JSBool
 js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
+#ifdef DUMP_CALL_TABLE
+# define JSOPTION_LOGCALL_TOSOURCE JS_BIT(15)
+
+extern JSHashTable  *js_CallTable;
+extern size_t       js_LogCallToSourceLimit;
+
+extern void         js_DumpCallTable(JSContext *cx);
+#endif
+
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
  * is non-null).
@@ -285,7 +294,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
 extern JSBool
 js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
-                      JSBool *foundp);
+                      JSObject **objp, JSProperty **propp);
 
 extern JSBool
 js_Interpret(JSContext *cx, jsval *result);

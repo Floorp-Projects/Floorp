@@ -174,7 +174,8 @@ JS_BEGIN_EXTERN_C
  * TOK_USESHARP nullary     pn_num: jsint value of n in #n#
  * TOK_RP       unary       pn_kid: parenthesized expression
  * TOK_NAME,    name        pn_atom: name, string, or object atom
- * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT
+ * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
+ *                                 JSOP_REGEXP
  * TOK_OBJECT               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
  *                          with pn_slot >= 0 and pn_attrs telling const-ness
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal

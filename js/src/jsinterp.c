@@ -626,6 +626,337 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
     return JS_TRUE;
 }
 
+#ifdef DUMP_CALL_TABLE
+
+#include "jsclist.h"
+#include "jshash.h"
+#include "jsdtoa.h"
+
+typedef struct CallKey {
+    jsval               callee;                 /* callee value */
+    const char          *filename;              /* function filename or null */
+    uintN               lineno;                 /* function lineno or 0 */
+} CallKey;
+
+/* Compensate for typeof null == "object" brain damage. */
+#define JSTYPE_NULL     JSTYPE_LIMIT
+#define TYPEOF(cx,v)    (JSVAL_IS_NULL(v) ? JSTYPE_NULL : JS_TypeOfValue(cx,v))
+#define TYPENAME(t)     (((t) == JSTYPE_NULL) ? js_null_str : js_type_str[t])
+#define NTYPEHIST       (JSTYPE_LIMIT + 1)
+
+typedef struct CallValue {
+    uint32              total;                  /* total call count */
+    uint32              recycled;               /* LRU-recycled calls lost */
+    uint16              minargc;                /* minimum argument count */
+    uint16              maxargc;                /* maximum argument count */
+    struct ArgInfo {
+        uint32          typeHist[NTYPEHIST];    /* histogram by type */
+        JSCList         lruList;                /* top 10 values LRU list */
+        struct ArgValCount {
+            JSCList     lruLink;                /* LRU list linkage */
+            jsval       value;                  /* recently passed value */
+            uint32      count;                  /* number of times passed */
+            char        strbuf[112];            /* string conversion buffer */
+        } topValCounts[10];                     /* top 10 value storage */
+    } argInfo[8];
+} CallValue;
+
+typedef struct CallEntry {
+    JSHashEntry         entry;
+    CallKey             key;
+    CallValue           value;
+    char                name[32];               /* function name copy */
+} CallEntry;
+
+static void *
+AllocCallTable(void *pool, size_t size)
+{
+    return malloc(size);
+}
+
+static void
+FreeCallTable(void *pool, void *item)
+{
+    free(item);
+}
+
+static JSHashEntry *
+AllocCallEntry(void *pool, const void *key)
+{
+    return (JSHashEntry*) calloc(1, sizeof(CallEntry));
+}
+
+static void
+FreeCallEntry(void *pool, JSHashEntry *he, uintN flag)
+{
+    JS_ASSERT(flag == HT_FREE_ENTRY);
+    free(he);
+}
+
+static JSHashAllocOps callTableAllocOps = {
+    AllocCallTable, FreeCallTable,
+    AllocCallEntry, FreeCallEntry
+};
+
+JS_STATIC_DLL_CALLBACK(JSHashNumber)
+js_hash_call_key(const void *key)
+{
+    CallKey *ck = (CallKey *) key;
+    JSHashNumber hash = (jsuword)ck->callee >> 3;
+
+    if (ck->filename) {
+        hash = (hash << 4) ^ JS_HashString(ck->filename);
+        hash = (hash << 4) ^ ck->lineno;
+    }
+    return hash;
+}
+
+JS_STATIC_DLL_CALLBACK(intN)
+js_compare_call_keys(const void *k1, const void *k2)
+{
+    CallKey *ck1 = (CallKey *)k1, *ck2 = (CallKey *)k2;
+
+    return ck1->callee == ck2->callee &&
+           ((ck1->filename && ck2->filename)
+            ? strcmp(ck1->filename, ck2->filename) == 0
+            : ck1->filename == ck2->filename) &&
+           ck1->lineno == ck2->lineno;
+}
+
+JSHashTable *js_CallTable;
+size_t      js_LogCallToSourceLimit;
+
+JS_STATIC_DLL_CALLBACK(intN)
+CallTableDumper(JSHashEntry *he, intN k, void *arg)
+{
+    CallEntry *ce = (CallEntry *)he;
+    FILE *fp = (FILE *)arg;
+    uintN argc, i, n;
+    struct ArgInfo *ai;
+    JSType save, type;
+    JSCList *cl;
+    struct ArgValCount *avc;
+    jsval argval;
+
+    if (ce->key.filename) {
+        /* We're called at the end of the mark phase, so mark our filenames. */
+        js_MarkScriptFilename(ce->key.filename);
+        fprintf(fp, "%s:%u ", ce->key.filename, ce->key.lineno);
+    } else {
+        fprintf(fp, "@%p ", (void *) ce->key.callee);
+    }
+
+    if (ce->name[0])
+        fprintf(fp, "name %s ", ce->name);
+    fprintf(fp, "calls %lu (%lu) argc %u/%u\n",
+            (unsigned long) ce->value.total,
+            (unsigned long) ce->value.recycled,
+            ce->value.minargc, ce->value.maxargc);
+
+    argc = JS_MIN(ce->value.maxargc, 8);
+    for (i = 0; i < argc; i++) {
+        ai = &ce->value.argInfo[i];
+
+        n = 0;
+        save = -1;
+        for (type = JSTYPE_VOID; type <= JSTYPE_LIMIT; type++) {
+            if (ai->typeHist[type]) {
+                save = type;
+                ++n;
+            }
+        }
+        if (n == 1) {
+            fprintf(fp, "  arg %u type %s: %lu\n",
+                    i, TYPENAME(save), (unsigned long) ai->typeHist[save]);
+        } else {
+            fprintf(fp, "  arg %u type histogram:\n", i);
+            for (type = JSTYPE_VOID; type <= JSTYPE_LIMIT; type++) {
+                fprintf(fp, "  %9s: %8lu ",
+                       TYPENAME(type), (unsigned long) ai->typeHist[type]);
+                for (n = (uintN) JS_HOWMANY(ai->typeHist[type], 10); n > 0; --n)
+                    fputc('*', fp);
+                fputc('\n', fp);
+            }
+        }
+
+        fprintf(fp, "  arg %u top 10 values:\n", i);
+        n = 1;
+        for (cl = ai->lruList.prev; cl != &ai->lruList; cl = cl->prev) {
+            avc = (struct ArgValCount *)cl;
+            if (!avc->count)
+                break;
+            argval = avc->value;
+            fprintf(fp, "  %9u: %8lu %.*s (%#lx)\n",
+                    n, (unsigned long) avc->count,
+                    sizeof avc->strbuf, avc->strbuf, argval);
+            ++n;
+        }
+    }
+
+    return HT_ENUMERATE_NEXT;
+}
+
+void
+js_DumpCallTable(JSContext *cx)
+{
+    char name[24];
+    FILE *fp;
+    static uintN dumpCount;
+
+    if (!js_CallTable)
+        return;
+
+    JS_snprintf(name, sizeof name, "/tmp/calltable.dump.%u", dumpCount & 7);
+    dumpCount++;
+    fp = fopen(name, "w");
+    if (!fp)
+        return;
+
+    JS_HashTableEnumerateEntries(js_CallTable, CallTableDumper, fp);
+    fclose(fp);
+}
+
+static void
+LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
+{
+    CallKey key;
+    const char *name, *cstr;
+    JSFunction *fun;
+    JSHashNumber keyHash;
+    JSHashEntry **hep, *he;
+    CallEntry *ce;
+    uintN i, j;
+    jsval argval;
+    JSType type;
+    struct ArgInfo *ai;
+    struct ArgValCount *avc;
+    JSString *str;
+
+    if (!js_CallTable) {
+        js_CallTable = JS_NewHashTable(1024, js_hash_call_key,
+                                       js_compare_call_keys, NULL,
+                                       &callTableAllocOps, NULL);
+        if (!js_CallTable)
+            return;
+    }
+
+    key.callee = callee;
+    key.filename = NULL;
+    key.lineno = 0;
+    name = "";
+    if (JSVAL_IS_FUNCTION(cx, callee)) {
+        fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(callee));
+        if (fun->atom)
+            name = js_AtomToPrintableString(cx, fun->atom);
+        if (fun->interpreted) {
+            key.filename = fun->u.script->filename;
+            key.lineno = fun->u.script->lineno;
+        }
+    }
+    keyHash = js_hash_call_key(&key);
+
+    hep = JS_HashTableRawLookup(js_CallTable, keyHash, &key);
+    he = *hep;
+    if (he) {
+        ce = (CallEntry *) he;
+        JS_ASSERT(strncmp(ce->name, name, sizeof ce->name) == 0);
+    } else {
+        he = JS_HashTableRawAdd(js_CallTable, hep, keyHash, &key, NULL);
+        if (!he)
+            return;
+        ce = (CallEntry *) he;
+        ce->entry.key = &ce->key;
+        ce->entry.value = &ce->value;
+        ce->key = key;
+        for (i = 0; i < 8; i++) {
+            ai = &ce->value.argInfo[i];
+            JS_INIT_CLIST(&ai->lruList);
+            for (j = 0; j < 10; j++)
+                JS_APPEND_LINK(&ai->topValCounts[j].lruLink, &ai->lruList);
+        }
+        strncpy(ce->name, name, sizeof ce->name);
+    }
+
+    ++ce->value.total;
+    if (ce->value.minargc < argc)
+        ce->value.minargc = argc;
+    if (ce->value.maxargc < argc)
+        ce->value.maxargc = argc;
+    if (argc > 8)
+        argc = 8;
+    for (i = 0; i < argc; i++) {
+        ai = &ce->value.argInfo[i];
+        argval = argv[i];
+        type = TYPEOF(cx, argval);
+        ++ai->typeHist[type];
+
+        for (j = 0; ; j++) {
+            if (j == 10) {
+                avc = (struct ArgValCount *) ai->lruList.next;
+                ce->value.recycled += avc->count;
+                avc->value = argval;
+                avc->count = 1;
+                break;
+            }
+            avc = &ai->topValCounts[j];
+            if (avc->value == argval) {
+                ++avc->count;
+                break;
+            }
+        }
+
+        /* Move avc to the back of the LRU list. */
+        JS_REMOVE_LINK(&avc->lruLink);
+        JS_APPEND_LINK(&avc->lruLink, &ai->lruList);
+
+        str = NULL;
+        cstr = "";
+        switch (TYPEOF(cx, argval)) {
+          case JSTYPE_VOID:
+            cstr = js_type_str[JSTYPE_VOID];
+            break;
+          case JSTYPE_NULL:
+            cstr = js_null_str;
+            break;
+          case JSTYPE_BOOLEAN:
+            cstr = js_boolean_str[JSVAL_TO_BOOLEAN(argval)];
+            break;
+          case JSTYPE_NUMBER:
+            if (JSVAL_IS_INT(argval)) {
+                JS_snprintf(avc->strbuf, sizeof avc->strbuf, "%ld",
+                            JSVAL_TO_INT(argval));
+            } else {
+                JS_dtostr(avc->strbuf, sizeof avc->strbuf, DTOSTR_STANDARD, 0,
+                          *JSVAL_TO_DOUBLE(argval));
+            }
+            continue;
+          case JSTYPE_STRING:
+            str = js_QuoteString(cx, JSVAL_TO_STRING(argval), (jschar)'"');
+            break;
+          case JSTYPE_FUNCTION:
+            if (JSVAL_IS_FUNCTION(cx, argval)) {
+                fun = (JSFunction *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argval));
+                if (fun && fun->atom) {
+                    str = ATOM_TO_STRING(fun->atom);
+                    break;
+                }
+            }
+            /* FALL THROUGH */
+          case JSTYPE_OBJECT:
+            js_LogCallToSourceLimit = sizeof avc->strbuf;
+            cx->options |= JSOPTION_LOGCALL_TOSOURCE;
+            str = js_ValueToSource(cx, argval);
+            cx->options &= ~JSOPTION_LOGCALL_TOSOURCE;
+            break;
+        }
+        if (str)
+            cstr = JS_GetStringBytes(str);
+        strncpy(avc->strbuf, cstr, sizeof avc->strbuf);
+    }
+}
+
+#endif /* DUMP_CALL_TABLE */
+
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -753,7 +1084,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
                      * the small number of words not already allocated as part
                      * of the caller's operand stack.
                      */
-                    JS_ArenaCountAllocation(pool, (jsuword)sp - a->avail);
+                    JS_ArenaCountAllocation(&cx->stackPool,
+                                            (jsuword)sp - a->avail);
                     a->avail = (jsuword)sp;
                 }
             }
@@ -782,7 +1114,10 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         ops = funobj->map->ops;
 
         /*
-         * XXX
+         * XXX this makes no sense -- why convert to function if clasp->call?
+         * XXX better to call that hook without converting
+         * XXX the only thing that needs fixing is liveconnect
+         *
          * Try converting to function, for closure and API compatibility.
          * We attempt the conversion under all circumstances for 1.2, but
          * only if there is a call op defined otherwise.
@@ -813,8 +1148,13 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
 have_fun:
         /* Get private data and set derived locals from it. */
         fun = (JSFunction *) JS_GetPrivate(cx, funobj);
-        native = fun->native;
-        script = fun->script;
+        if (fun->interpreted) {
+            native = NULL;
+            script = fun->u.script;
+        } else {
+            native = fun->u.native;
+            script = NULL;
+        }
         minargs = fun->nargs + fun->extra;
         nvars = fun->nvars;
 
@@ -941,6 +1281,9 @@ have_fun:
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
     } else if (script) {
+#ifdef DUMP_CALL_TABLE
+        LogCall(cx, *vp, argc, frame.argv);
+#endif
         /* Use parent scope so js_GetCallObject can find the right "Call". */
         frame.scopeChain = parent;
         if (fun->flags & JSFUN_HEAVYWEIGHT) {
@@ -1069,7 +1412,7 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
     JS_ASSERT(mode == JSACC_READ || mode == JSACC_WRITE);
     if (cx->runtime->checkObjectAccess &&
         JSVAL_IS_FUNCTION(cx, fval) &&
-        ((JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval)))->script &&
+        ((JSFunction *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval)))->interpreted &&
         !cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode,
                                         &fval)) {
         return JS_FALSE;
@@ -1080,16 +1423,16 @@ js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
 
 JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
-           JSStackFrame *down, uintN special, jsval *result)
+           JSStackFrame *down, uintN flags, jsval *result)
 {
+    JSInterpreterHook hook;
+    void *hookData, *mark;
     JSStackFrame *oldfp, frame;
     JSObject *obj, *tmp;
     JSBool ok;
-    JSInterpreterHook hook;
-    void *hookData;
 
     hook = cx->runtime->executeHook;
-    hookData = NULL;
+    hookData = mark = NULL;
     oldfp = cx->fp;
     frame.callobj = frame.argsobj = NULL;
     frame.script = script;
@@ -1113,8 +1456,17 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.varobj = obj;
         frame.fun = NULL;
         frame.thisp = chain;
-        frame.argc = frame.nvars = 0;
-        frame.argv = frame.vars = NULL;
+        frame.argc = 0;
+        frame.argv = NULL;
+        frame.nvars = script->numGlobalVars;
+        if (frame.nvars) {
+            frame.vars = js_AllocRawStack(cx, frame.nvars, &mark);
+            if (!frame.vars)
+                return JS_FALSE;
+            memset(frame.vars, 0, frame.nvars * sizeof(jsval));
+        } else {
+            frame.vars = NULL;
+        }
         frame.annotation = NULL;
         frame.sharpArray = NULL;
     }
@@ -1125,7 +1477,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.sp = oldfp ? oldfp->sp : NULL;
     frame.spbase = NULL;
     frame.sharpDepth = 0;
-    frame.flags = special;
+    frame.flags = flags;
     frame.dormantNext = NULL;
     frame.objAtomMap = NULL;
 
@@ -1159,6 +1511,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
+    if (mark)
+        js_FreeRawStack(cx, mark);
     cx->fp = oldfp;
 
     if (oldfp && oldfp != down) {
@@ -1282,11 +1636,10 @@ out:
 
 JSBool
 js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
-                      JSBool *foundp)
+                      JSObject **objp, JSProperty **propp)
 {
     JSObject *obj2;
     JSProperty *prop;
-    JSBool ok;
     uintN oldAttrs, report;
     JSBool isFunction;
     jsval value;
@@ -1294,13 +1647,16 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
 
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
-    *foundp = (prop != NULL);
+    if (propp) {
+        *objp = obj2;
+        *propp = prop;
+    }
     if (!prop)
         return JS_TRUE;
-    ok = OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs);
-    OBJ_DROP_PROPERTY(cx, obj2, prop);
-    if (!ok)
-        return JS_FALSE;
+
+    /* From here, return true, or goto bad on failure to drop prop. */
+    if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs))
+        goto bad;
 
     /* If either property is readonly, we have an error. */
     report = ((oldAttrs | attrs) & JSPROP_READONLY)
@@ -1326,7 +1682,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
     if (!isFunction) {
         if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
-            return JS_FALSE;
+            goto bad;
         isFunction = JSVAL_IS_FUNCTION(cx, value);
     }
     type = (oldAttrs & attrs & JSPROP_GETTER)
@@ -1340,18 +1696,24 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : js_var_str;
     name = js_AtomToPrintableString(cx, (JSAtom *)id);
     if (!name)
-        return JS_FALSE;
+        goto bad;
     return JS_ReportErrorFlagsAndNumber(cx, report,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_REDECLARED_VAR,
                                         type, name);
+
+bad:
+    if (propp) {
+        *objp = NULL;
+        *propp = NULL;
+    }
+    OBJ_DROP_PROPERTY(cx, obj2, prop);
+    return JS_FALSE;
 }
 
 #ifndef MAX_INTERP_LEVEL
 #if defined(XP_OS2)
 #define MAX_INTERP_LEVEL 250
-#elif defined _MSC_VER && _MSC_VER <= 800
-#define MAX_INTERP_LEVEL 30
 #else
 #define MAX_INTERP_LEVEL 1000
 #endif
@@ -2710,7 +3072,7 @@ js_Interpret(JSContext *cx, jsval *result)
  * yet converted.  As above, the expression result goes in rtmp, the updated
  * value goes in rval.
  */
-#define NONINT_INCREMENT_OP()                                                 \
+#define NONINT_INCREMENT_OP_MIDDLE()                                          \
     JS_BEGIN_MACRO                                                            \
         VALUE_TO_NUMBER(cx, rval, d);                                         \
         if (cs->format & JOF_POST) {                                          \
@@ -2731,7 +3093,7 @@ js_Interpret(JSContext *cx, jsval *result)
             goto out;                                                         \
     JS_END_MACRO
 
-                NONINT_INCREMENT_OP();
+                NONINT_INCREMENT_OP_MIDDLE();
             }
 
             CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
@@ -2746,7 +3108,7 @@ js_Interpret(JSContext *cx, jsval *result)
  * loop created by the JS_BEGIN/END_MACRO brackets.
  */
 #define FAST_INCREMENT_OP(SLOT,COUNT,BASE,PRE,OP,MINMAX)                      \
-    slot = (uintN)SLOT;                                                       \
+    slot = SLOT;                                                              \
     JS_ASSERT(slot < fp->fun->COUNT);                                         \
     vp = fp->BASE + slot;                                                     \
     rval = *vp;                                                               \
@@ -2781,8 +3143,46 @@ js_Interpret(JSContext *cx, jsval *result)
 #undef FAST_INCREMENT_OP
 
           do_nonint_fast_incop:
-            NONINT_INCREMENT_OP();
+            NONINT_INCREMENT_OP_MIDDLE();
             *vp = rval;
+            PUSH_OPND(rtmp);
+            break;
+
+#define FAST_GLOBAL_INCREMENT_OP(SLOWOP,PRE,OP,MINMAX)                        \
+    slot = GET_VARNO(pc);                                                     \
+    JS_ASSERT(slot < fp->nvars);                                              \
+    lval = fp->vars[slot];                                                    \
+    if (JSVAL_IS_NULL(lval)) {                                                \
+        op = SLOWOP;                                                          \
+        goto do_op;                                                           \
+    }                                                                         \
+    slot = JSVAL_TO_INT(lval);                                                \
+    obj = fp->varobj;                                                         \
+    rval = OBJ_GET_SLOT(cx, obj, slot);                                       \
+    if (JSVAL_IS_INT(rval) &&                                                 \
+        rval != INT_TO_JSVAL(JSVAL_INT_##MINMAX)) {                           \
+        PRE = rval;                                                           \
+        rval OP 2;                                                            \
+        OBJ_SET_SLOT(cx, obj, slot, rval);                                    \
+        PUSH_OPND(PRE);                                                       \
+        break;                                                                \
+    }                                                                         \
+    goto do_nonint_fast_global_incop;
+
+          case JSOP_INCGVAR:
+            FAST_GLOBAL_INCREMENT_OP(JSOP_INCNAME, rval, +=, MAX);
+          case JSOP_DECGVAR:
+            FAST_GLOBAL_INCREMENT_OP(JSOP_DECNAME, rval, -=, MIN);
+          case JSOP_GVARINC:
+            FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEINC, rtmp, +=, MAX);
+          case JSOP_GVARDEC:
+            FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEDEC, rtmp, -=, MIN);
+
+#undef FAST_GLOBAL_INCREMENT_OP
+
+          do_nonint_fast_global_incop:
+            NONINT_INCREMENT_OP_MIDDLE();
+            OBJ_SET_SLOT(cx, obj, slot, rval);
             PUSH_OPND(rtmp);
             break;
 
@@ -2860,7 +3260,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (JSVAL_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
-                 !fun->native &&
+                 fun->interpreted &&
                  !(fun->flags & (JSFUN_HEAVYWEIGHT | JSFUN_BOUND_METHOD)) &&
                  argc >= (uintN)(fun->nargs + fun->extra)))
           /* inline_call: */
@@ -2889,7 +3289,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 nframeslots = (sizeof(JSInlineFrame) + sizeof(jsval) - 1)
                               / sizeof(jsval);
                 nvars = fun->nvars;
-                script = fun->script;
+                script = fun->u.script;
                 depth = (jsint) script->depth;
 
                 /* Allocate the frame and space for vars and operands. */
@@ -2921,6 +3321,9 @@ js_Interpret(JSContext *cx, jsval *result)
                     js_FreeRawStack(cx, newmark);
                     goto bad_inline_call;
                 }
+#ifdef DUMP_CALL_TABLE
+                LogCall(cx, *vp, argc, vp + 2);
+#endif
 
                 /* Push void to initialize local variables. */
                 sp = newsp;
@@ -3073,48 +3476,75 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_NUMBER:
           case JSOP_STRING:
+          case JSOP_OBJECT:
             atom = GET_ATOM(cx, script, pc);
             PUSH_OPND(ATOM_KEY(atom));
             obj = NULL;
             break;
 
-          case JSOP_OBJECT:
+          case JSOP_REGEXP:
           {
-#if 0
-            jsatomid atomIndex;
-            JSAtomMap *atomMap;
+            JSRegExp *re;
+            JSObject *funobj;
 
             /*
-             * Get a suitable object from an atom mapped by the bytecode at pc.
+             * Push a regexp object for the atom mapped by the bytecode at pc,
+             * cloning the literal's regexp object if necessary, to simulate in
+             * the pre-compile/execute-later case what ECMA specifies for the
+             * compile-and-go case: that scanning each regexp literal creates
+             * a single corresponding RegExp object.
              *
-             * We must handle the case where a regexp object literal is used in
-             * a different global at execution time from the global with which
-             * it was scanned at compile time, in order to rewrap the JSRegExp
-             * struct with a new object having the right prototype and parent.
+             * To support pre-compilation transparently, we must handle the
+             * case where a regexp object literal is used in a different global
+             * at execution time from the global with which it was scanned at
+             * compile time.  We do this by re-wrapping the JSRegExp private
+             * data struct with a cloned object having the right prototype and
+             * parent, and having its own lastIndex property value storage.
              *
-             * Unlike JSOP_DEFFUN and other prolog bytecodes, we don't want to
-             * pay a script prolog execution price for all regexp literals in a
-             * script (many may not be used by a particular execution of that
-             * script, depending on control flow), so we do all fp->objAtomMap
-             * initialization lazily, here under JSOP_OBJECT.
+             * Unlike JSOP_DEFFUN and other prolog bytecodes that may clone
+             * literal objects, we don't want to pay a script prolog execution
+             * price for all regexp literals in a script (many may not be used
+             * by a particular execution of that script, depending on control
+             * flow), so we initialize lazily here.
              *
              * XXX This code is specific to regular expression objects.  If we
-             * need JSOP_OBJECT for other kinds of object literals, we should
-             * push cloning down under JSObjectOps.  Also, fp->objAtomMap is
-             * used only for object atoms, so it's sparse (wasting some stack
-             * space) and as its name implies, you can't get non-object atoms
-             * from it.
+             * need a similar op for other kinds of object literals, we should
+             * push cloning down under JSObjectOps and reuse code here.
              */
-            atomIndex = GET_ATOM_INDEX(pc);
-            atomMap = fp->objAtomMap;
-            atom = atomMap ? atomMap->vector[atomIndex] : NULL;
-            if (!atom) {
-                /* Let atom and obj denote the regexp (object) mapped by pc. */
-                atom = js_GetAtom(cx, &script->atomMap, atomIndex);
-                JS_ASSERT(ATOM_IS_OBJECT(atom));
-                obj = ATOM_TO_OBJECT(atom);
-                JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+            atom = GET_ATOM(cx, script, pc);
+            JS_ASSERT(ATOM_IS_OBJECT(atom));
+            obj = ATOM_TO_OBJECT(atom);
+            JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
 
+            re = (JSRegExp *) JS_GetPrivate(cx, obj);
+            slot = re->cloneIndex;
+            if (fp->fun) {
+                /*
+                 * We're in function code, not global or eval code (in eval
+                 * code, JSOP_REGEXP is never emitted).  The code generator
+                 * recorded in fp->fun->nregexps the number of re->cloneIndex
+                 * slots that it reserved in the cloned funobj.
+                 */
+                funobj = JSVAL_TO_OBJECT(fp->argv[-2]);
+                slot += JSCLASS_RESERVED_SLOTS(&js_FunctionClass);
+                if (!JS_GetReservedSlot(cx, funobj, slot, &rval))
+                    return JS_FALSE;
+                if (JSVAL_IS_VOID(rval))
+                    rval = JSVAL_NULL;
+            } else {
+                /*
+                 * We're in global code.  The code generator already arranged
+                 * via script->numGlobalVars to reserve a global variable slot
+                 * at cloneIndex.  All global variable slots are initialized
+                 * to null, not void, for faster testing in JSOP_*GVAR cases.
+                 */
+                rval = fp->vars[slot];
+#ifdef __GNUC__
+                funobj = NULL;  /* suppress bogus gcc warnings */
+#endif
+            }
+
+            if (JSVAL_IS_NULL(rval)) {
                 /* Compute the current global object in obj2. */
                 obj2 = fp->scopeChain;
                 while ((parent = OBJ_GET_PARENT(cx, obj2)) != NULL)
@@ -3138,8 +3568,11 @@ js_Interpret(JSContext *cx, jsval *result)
                  * and you get what you deserve).
                  *
                  * This same coupling between instance parent and constructor
-                 * parent turns up elsewhere (see jsobj.c's FindConstructor,
-                 * js_ConstructObject, and js_NewObject).  It's fundamental.
+                 * parent turns up everywhere (see jsobj.c's FindConstructor,
+                 * js_ConstructObject, and js_NewObject).  It's fundamental to
+                 * the design of the language when you consider multiple global
+                 * objects and separate compilation and execution, even though
+                 * it is not specified fully in ECMA.
                  */
                 if (OBJ_GET_PARENT(cx, obj) != obj2) {
                     obj = js_CloneRegExpObject(cx, obj, obj2);
@@ -3147,46 +3580,18 @@ js_Interpret(JSContext *cx, jsval *result)
                         ok = JS_FALSE;
                         goto out;
                     }
-
-                    atom = js_AtomizeObject(cx, obj, 0);
-                    if (!atom) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
                 }
+                rval = OBJECT_TO_JSVAL(obj);
 
-                /*
-                 * If fp->objAtomMap is null, initialize it now so we can map
-                 * atom (whether atom is newly created for a cloned object, or
-                 * the original atom mapped by script) for faster performance
-                 * next time through JSOP_OBJECT.
-                 */
-                if (!atomMap) {
-                    jsatomid mapLength = script->atomMap.length;
-                    size_t vectorBytes = mapLength * sizeof(JSAtom *);
-
-                    /* Allocate an override atom map from cx->stackPool. */
-                    JS_ARENA_ALLOCATE_CAST(atomMap, JSAtomMap *,
-                                           &cx->stackPool,
-                                           sizeof(JSAtomMap) + vectorBytes);
-                    if (!atomMap) {
-                        JS_ReportOutOfMemory(cx);
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-
-                    atomMap->length = mapLength;
-                    atomMap->vector = (JSAtom **)(atomMap + 1);
-                    memset(atomMap->vector, 0, vectorBytes);
-                    fp->objAtomMap = atomMap;
+                /* Store the regexp object value in its cloneIndex slot. */
+                if (fp->fun) {
+                    if (!JS_SetReservedSlot(cx, funobj, slot, rval))
+                        return JS_FALSE;
+                } else {
+                    fp->vars[slot] = rval;
                 }
-                atomMap->vector[atomIndex] = atom;
             }
-#else
-            atom = GET_ATOM(cx, script, pc);
-            JS_ASSERT(ATOM_IS_OBJECT(atom));
-#endif
-            rval = ATOM_KEY(atom);
+
             PUSH_OPND(rval);
             obj = NULL;
             break;
@@ -3560,12 +3965,53 @@ js_Interpret(JSContext *cx, jsval *result)
             obj = NULL;
             break;
 
+          case JSOP_GETGVAR:
+            slot = GET_VARNO(pc);
+            JS_ASSERT(slot < fp->nvars);
+            lval = fp->vars[slot];
+            if (JSVAL_IS_NULL(lval)) {
+                op = JSOP_NAME;
+                goto do_op;
+            }
+            slot = JSVAL_TO_INT(lval);
+            obj = fp->varobj;
+            rval = OBJ_GET_SLOT(cx, obj, slot);
+            PUSH_OPND(rval);
+            break;
+
+          case JSOP_SETGVAR:
+            slot = GET_VARNO(pc);
+            JS_ASSERT(slot < fp->nvars);
+            rval = FETCH_OPND(-1);
+            lval = fp->vars[slot];
+            obj = fp->varobj;
+            if (JSVAL_IS_NULL(lval)) {
+                /*
+                 * Inline-clone and specialize JSOP_SETNAME code here because
+                 * JSOP_SETGVAR has arity 1: [rval], not arity 2: [obj, rval]
+                 * as JSOP_SETNAME does, where [obj] is due to JSOP_BINDNAME.
+                 */
+                atom = GET_ATOM(cx, script, pc);
+                id = (jsid)atom;
+                SAVE_SP(fp);
+                CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+                if (!ok)
+                    goto out;
+            } else {
+                slot = JSVAL_TO_INT(lval);
+                GC_POKE(cx, obj->slots[slot]);
+                OBJ_SET_SLOT(cx, obj, slot, rval);
+            }
+            STORE_OPND(-1, rval);
+            break;
+
           case JSOP_DEFCONST:
           case JSOP_DEFVAR:
           {
-            JSBool defined;
+            jsatomid atomIndex;
 
-            atom = GET_ATOM(cx, script, pc);
+            atomIndex = GET_ATOM_INDEX(pc);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = fp->varobj;
             attrs = JSPROP_ENUMERATE;
             if (!(fp->flags & JSFRAME_EVAL))
@@ -3575,25 +4021,55 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Lookup id in order to check for redeclaration problems. */
             id = (jsid)atom;
-            ok = js_CheckRedeclaration(cx, obj, id, attrs, &defined);
+            ok = js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop);
             if (!ok)
                 goto out;
 
             /* Bind a variable only if it's not yet defined. */
-            if (!defined) {
+            if (!prop) {
                 ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
-                                         attrs, NULL);
+                                         attrs, &prop);
                 if (!ok)
                     goto out;
+                JS_ASSERT(prop);
+                obj2 = obj;
             }
+
+            /*
+             * Try to optimize a property we either just created, or found
+             * directly in the global object, that is permanent, has a slot,
+             * and has stub getter and setter, into a "fast global" accessed
+             * by the JSOP_*GVAR opcodes.
+             */
+            if (script->numGlobalVars &&
+                (attrs & JSPROP_PERMANENT) &&
+                obj2 == obj &&
+                OBJ_IS_NATIVE(obj)) {
+                sprop = (JSScopeProperty *) prop;
+                if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
+                    SPROP_HAS_STUB_GETTER(sprop) &&
+                    SPROP_HAS_STUB_SETTER(sprop)) {
+                    /*
+                     * Fast globals use fp->vars to map the global name's
+                     * atomIndex to the permanent fp->varobj slot number,
+                     * tagged as a jsval.  The atomIndex for the global's
+                     * name literal is identical to its fp->vars index.
+                     */
+                    fp->vars[atomIndex] = INT_TO_JSVAL(sprop->slot);
+                }
+            }
+
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
             break;
           }
 
           case JSOP_DEFFUN:
           {
+            jsatomid atomIndex;
             uintN flags;
 
-            atom = GET_ATOM(cx, script, pc);
+            atomIndex = GET_ATOM_INDEX(pc);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = ATOM_TO_OBJECT(atom);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             id = (jsid) fun->atom;
@@ -3662,7 +4138,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * as well as multiple HTML script tags.
              */
             parent = fp->varobj;
-            ok = js_CheckRedeclaration(cx, parent, id, attrs, &cond);
+            ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
             if (!ok)
                 goto out;
 
@@ -3675,9 +4151,20 @@ js_Interpret(JSContext *cx, jsval *result)
                                      ? (JSPropertyOp) obj
                                      : NULL,
                                      attrs,
-                                     NULL);
+                                     &prop);
             if (!ok)
                 goto out;
+            if (attrs == (JSPROP_ENUMERATE | JSPROP_PERMANENT) &&
+                script->numGlobalVars) {
+                /*
+                 * As with JSOP_DEFVAR and JSOP_DEFCONST (above), fast globals
+                 * use fp->vars to map the global function name's atomIndex to
+                 * its permanent fp->varobj slot number, tagged as a jsval.
+                 */
+                sprop = (JSScopeProperty *) prop;
+                fp->vars[atomIndex] = INT_TO_JSVAL(sprop->slot);
+            }
+            OBJ_DROP_PROPERTY(cx, parent, prop);
             break;
           }
 
@@ -3793,6 +4280,9 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_CLOSURE:
+          {
+            jsatomid atomIndex;
+
             /*
              * ECMA ed. 3 extension: a named function expression in a compound
              * statement (not at the top statement level of global code, or at
@@ -3801,7 +4291,8 @@ js_Interpret(JSContext *cx, jsval *result)
              * Get immediate operand atom, which is a function object literal.
              * From it, get the function to close.
              */
-            atom = GET_ATOM(cx, script, pc);
+            atomIndex = GET_ATOM_INDEX(pc);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
             obj = ATOM_TO_OBJECT(atom);
 
@@ -3830,7 +4321,8 @@ js_Interpret(JSContext *cx, jsval *result)
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
             if (attrs)
                 attrs |= JSPROP_SHARED;
-            ok = OBJ_DEFINE_PROPERTY(cx, fp->varobj, (jsid)fun->atom,
+            parent = fp->varobj;
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
                                      (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
@@ -3838,13 +4330,25 @@ js_Interpret(JSContext *cx, jsval *result)
                                      (attrs & JSFUN_SETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     attrs | JSPROP_ENUMERATE,
-                                     NULL);
+                                     attrs | JSPROP_ENUMERATE
+                                           | JSPROP_PERMANENT,
+                                     &prop);
             if (!ok) {
                 cx->newborn[GCX_OBJECT] = NULL;
                 goto out;
             }
+            if (attrs == 0 && script->numGlobalVars) {
+                /*
+                 * As with JSOP_DEFVAR and JSOP_DEFCONST (above), fast globals
+                 * use fp->vars to map the global function name's atomIndex to
+                 * its permanent fp->varobj slot number, tagged as a jsval.
+                 */
+                sprop = (JSScopeProperty *) prop;
+                fp->vars[atomIndex] = INT_TO_JSVAL(sprop->slot);
+            }
+            OBJ_DROP_PROPERTY(cx, parent, prop);
             break;
+          }
 #endif /* JS_HAS_LEXICAL_CLOSURE */
 
 #if JS_HAS_GETTER_SETTER
@@ -3927,7 +4431,7 @@ js_Interpret(JSContext *cx, jsval *result)
             attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
 
             /* Check for a readonly or permanent property of the same name. */
-            ok = js_CheckRedeclaration(cx, obj, id, attrs, &cond);
+            ok = js_CheckRedeclaration(cx, obj, id, attrs, NULL, NULL);
             if (!ok)
                 goto out;
 

@@ -623,6 +623,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
         frame.fun = fun;
         frame.varobj = frame.scopeChain = funobj;
         frame.down = fp;
+        frame.flags = (fp->flags & JSFRAME_COMPILE_N_GO);
         cx->fp = &frame;
     }
 
@@ -691,10 +692,11 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
          * No need to emit code here -- Statements (via FunctionBody) already
          * has.  See similar comment in js_CompileTokenStream, and bug 108257.
          */
-        fun->script = js_NewScriptFromCG(cx, &funcg, fun);
-        if (!fun->script) {
+        fun->u.script = js_NewScriptFromCG(cx, &funcg, fun);
+        if (!fun->u.script) {
             ok = JS_FALSE;
         } else {
+            fun->interpreted = JS_TRUE;
             if (funcg.treeContext.flags & TCF_FUN_HEAVYWEIGHT)
                 fun->flags |= JSFUN_HEAVYWEIGHT;
             ok = JS_TRUE;
@@ -2796,7 +2798,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
   again:
     /*
      * Control flows here after #n= is scanned.  If the following primary is
-     * not valid after such a "sharp variable" definition, the token type case
+     * not valid after such a "sharp variable" definition, the tt switch case
      * should set notsharp.
      */
 #endif
@@ -3057,6 +3059,26 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (pn->pn_atom == cx->runtime->atomState.parentAtom ||
                 pn->pn_atom == cx->runtime->atomState.protoAtom) {
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
+            } else {
+                JSAtomListElement *ale;
+                JSStackFrame *fp;
+                JSStmtInfo *stmt;
+
+                /* Measure optimizable global variable uses. */
+                ATOM_LIST_SEARCH(ale, &tc->decls, pn->pn_atom);
+                if (ale &&
+                    !(fp = cx->fp)->fun &&
+                    fp->scopeChain == fp->varobj &&
+                    !js_InWithStatement(tc) &&
+                    !js_InCatchBlock(tc, pn->pn_atom)) {
+                    tc->globalUses++;
+                    for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
+                        if (STMT_IS_LOOP(stmt)) {
+                            tc->loopyGlobalUses++;
+                            break;
+                        }
+                    }
+                }
             }
         }
         break;

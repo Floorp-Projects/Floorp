@@ -64,6 +64,7 @@
 #include "jslock.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -161,7 +162,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
         return 0;
     }
     cs = &js_CodeSpec[op];
-    len = (intN)cs->length;
+    len = (ptrdiff_t) cs->length;
     fprintf(fp, "%05u:", loc);
     if (lines)
         fprintf(fp, "%4u", JS_PCToLineNumber(cx, script, pc));
@@ -173,7 +174,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
             op = JS_GetTrapOpcode(cx, script, pc);
             if (op == JSOP_LIMIT)
                 return 0;
-            len = (intN)js_CodeSpec[op].length;
+            len = (ptrdiff_t) js_CodeSpec[op].length;
         }
         break;
 
@@ -229,14 +230,14 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
       case JOF_LOOKUPSWITCHX:
       {
         jsbytecode *pc2;
-        jsint npairs;
+        jsatomid npairs;
 
         jmplen = (type == JOF_LOOKUPSWITCH) ? JUMP_OFFSET_LEN
                                             : JUMPX_OFFSET_LEN;
         pc2 = pc;
         off = GetJumpOffset(pc, pc2);
         pc2 += jmplen;
-        npairs = (jsint) GET_ATOM_INDEX(pc2);
+        npairs = GET_ATOM_INDEX(pc2);
         pc2 += ATOM_INDEX_LEN;
         fprintf(fp, " offset %d npairs %u", off, (uintN) npairs);
         while (npairs) {
@@ -476,8 +477,6 @@ JSPrinter *
 js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
 {
     JSPrinter *jp;
-    JSStackFrame *fp;
-    JSObjectMap *map;
 
     jp = (JSPrinter *) JS_malloc(cx, sizeof(JSPrinter));
     if (!jp)
@@ -488,12 +487,6 @@ js_NewPrinter(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     jp->pretty = pretty;
     jp->script = NULL;
     jp->scope = NULL;
-    fp = cx->fp;
-    if (fp && fp->fun && fp->fun->object) {
-        map = fp->fun->object->map;
-        if (MAP_IS_NATIVE(map))
-            jp->scope = (JSScope *)map;
-    }
     return jp;
 }
 
@@ -837,7 +830,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     JSContext *cx;
     JSPrinter *jp, *jp2;
     jsbytecode *endpc, *done, *forelem_tail, *forelem_done;
-    ptrdiff_t len, todo, oplen, cond, next, tail;
+    ptrdiff_t tail, todo, len, oplen, cond, next;
     JSOp op, lastop, saveop;
     const JSCodeSpec *cs, *topcs;
     jssrcnote *sn, *sn2;
@@ -889,8 +882,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     jp = ss->printer;
     endpc = pc + nb;
     forelem_tail = forelem_done = NULL;
-    todo = -2;			/* NB: different from Sprint() error return. */
     tail = -1;
+    todo = -2;			/* NB: different from Sprint() error return. */
     op = JSOP_NOP;
     sn = NULL;
     rval = NULL;
@@ -1579,6 +1572,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_SETCONST:
               case JSOP_SETNAME:
+              case JSOP_SETGVAR:
                 atom = GET_ATOM(cx, jp->script, pc);
               do_setname:
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -1712,6 +1706,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_INCNAME:
               case JSOP_DECNAME:
+              case JSOP_INCGVAR:
+              case JSOP_DECGVAR:
                 atom = GET_ATOM(cx, jp->script, pc);
               do_incatom:
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -1754,6 +1750,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               case JSOP_NAMEINC:
               case JSOP_NAMEDEC:
+              case JSOP_GVARINC:
+              case JSOP_GVARDEC:
                 atom = GET_ATOM(cx, jp->script, pc);
               do_atominc:
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
@@ -1860,6 +1858,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 goto do_name;
 
               case JSOP_NAME:
+              case JSOP_GETGVAR:
                 atom = GET_ATOM(cx, jp->script, pc);
               do_name:
                 sn = js_GetSrcNote(jp->script, pc);
@@ -1903,21 +1902,23 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 break;
 
               case JSOP_OBJECT:
+              case JSOP_REGEXP:
               case JSOP_ANONFUNOBJ:
               case JSOP_NAMEDFUNOBJ:
                 atom = GET_ATOM(cx, jp->script, pc);
-                if (op == JSOP_OBJECT) {
-                    str = js_ValueToSource(cx, ATOM_KEY(atom));
-                    if (!str)
+                if (op == JSOP_OBJECT || op == JSOP_REGEXP) {
+                    if (!js_regexp_toString(cx, ATOM_TO_OBJECT(atom), 0, NULL,
+                                            &val)) {
                         return JS_FALSE;
+                    }
                 } else {
                     if (!js_fun_toString(cx, ATOM_TO_OBJECT(atom),
                                          JS_DONT_PRETTY_PRINT, 0, NULL,
                                          &val)) {
                         return JS_FALSE;
                     }
-                    str = JSVAL_TO_STRING(val);
                 }
+                str = JSVAL_TO_STRING(val);
                 todo = SprintPut(&ss->sprinter, JS_GetStringBytes(str),
                                  JSSTRING_LENGTH(str));
                 break;
@@ -1990,7 +1991,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               {
                 jsbytecode *pc2;
                 ptrdiff_t jmplen, off, off2;
-                jsint npairs;
+                jsatomid npairs, k;
                 TableEntry *table;
 
                 sn = js_GetSrcNote(jp->script, pc);
@@ -2001,29 +2002,29 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 pc2 = pc;
                 off = GetJumpOffset(pc, pc2);
                 pc2 += jmplen;
-                npairs = (jsint) GET_ATOM_INDEX(pc2);
+                npairs = GET_ATOM_INDEX(pc2);
                 pc2 += ATOM_INDEX_LEN;
 
                 table = (TableEntry *)
                     JS_malloc(cx, (size_t)npairs * sizeof *table);
                 if (!table)
                     return JS_FALSE;
-                for (i = 0; i < npairs; i++) {
+                for (k = 0; k < npairs; k++) {
                     sn = js_GetSrcNote(jp->script, pc2);
                     if (sn) {
                         JS_ASSERT(SN_TYPE(sn) == SRC_LABEL);
-                        table[i].label =
+                        table[k].label =
                             js_GetAtom(cx, &jp->script->atomMap, (jsatomid)
                                        js_GetSrcNoteOffset(sn, 0));
                     } else {
-                        table[i].label = NULL;
+                        table[k].label = NULL;
                     }
                     atom = GET_ATOM(cx, jp->script, pc2);
                     pc2 += ATOM_INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[i].key = ATOM_KEY(atom);
-                    table[i].offset = off2;
+                    table[k].key = ATOM_KEY(atom);
+                    table[k].offset = off2;
                 }
 
                 ok = DecompileSwitch(ss, table, (uintN)npairs, pc, len, off,
@@ -2396,11 +2397,11 @@ js_DecompileFunctionBody(JSPrinter *jp, JSFunction *fun)
     JSScope *scope, *save;
     JSBool ok;
 
-    script = fun->script;
-    if (!script) {
+    if (!fun->interpreted) {
         js_printf(jp, native_code_str);
         return JS_TRUE;
     }
+    script = fun->u.script;
     scope = fun->object ? OBJ_SCOPE(fun->object) : NULL;
     save = jp->scope;
     jp->scope = scope;
@@ -2442,7 +2443,7 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
         return JS_FALSE;
     js_puts(jp, "(");
 
-    if (fun->script && fun->object) {
+    if (fun->interpreted && fun->object) {
         /*
          * Print the parameters.
          *
@@ -2487,10 +2488,10 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
     js_printf(jp, ") {\n");
     indent = jp->indent;
     jp->indent += 4;
-    if (fun->script && fun->object) {
+    if (fun->interpreted && fun->object) {
         oldscope = jp->scope;
         jp->scope = scope;
-        ok = js_DecompileScript(jp, fun->script);
+        ok = js_DecompileScript(jp, fun->u.script);
         jp->scope = oldscope;
         if (!ok) {
             jp->indent = indent;
@@ -2541,7 +2542,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * in which a decompilable bytecode string that generated the
              * value as an actual argument might exist.
              */
-            JS_ASSERT(!fp->script && (!fp->fun || fp->fun->native));
+            JS_ASSERT(!fp->script && !(fp->fun && fp->fun->interpreted));
             down = fp->down;
             if (!down)
                 goto do_fallback;
@@ -2693,11 +2694,16 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
         tmp = NULL;
     }
 
+    name = NULL;
     jp = js_NewPrinter(cx, "js_DecompileValueGenerator", 0, JS_FALSE);
-    if (jp && js_DecompileCode(jp, script, begin, len))
-        name = js_GetPrinterOutput(jp);
-    else
-        name = NULL;
+    if (jp) {
+       if (fp->fun && fp->fun->object) {
+           JS_ASSERT(OBJ_IS_NATIVE(fp->fun->object));
+           jp->scope = OBJ_SCOPE(fp->fun->object);
+        }
+        if (js_DecompileCode(jp, script, begin, len))
+            name = js_GetPrinterOutput(jp);
+    }
     js_DestroyPrinter(jp);
     if (tmp)
         JS_free(cx, tmp);
