@@ -1037,11 +1037,7 @@ static void exit_spellchecker( PRLibrary *lib, ISpellChecker *pSpellChecker, CMa
 	{
 #ifdef USE_DYNAMIC_SC_LIB
 		sc_destroy_func sc_destroyProc;
-#ifndef NSPR20
-		sc_destroyProc = (sc_destroy_func)PR_FindSymbol( "SC_Destroy", lib );
-#else
 		sc_destroyProc = (sc_destroy_func)PR_FindSymbol( lib, "SC_Destroy" );
-#endif
 		if ( sc_destroyProc != NULL )
 			sc_destroyProc( pSpellChecker );
 #else
