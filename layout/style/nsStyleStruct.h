@@ -934,20 +934,7 @@ struct nsStyleContent: public nsStyleStruct {
     return mContents[aIndex];
   }
 
-  nsresult  AllocateContents(PRUint32 aCount) {
-    if (aCount != mContentCount) {
-      DELETE_ARRAY_IF(mContents);
-      if (aCount) {
-        mContents = new nsStyleContentData[aCount];
-        if (! mContents) {
-          mContentCount = 0;
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      mContentCount = aCount;
-    }
-    return NS_OK;
-  }
+  nsresult AllocateContents(PRUint32 aCount);
 
   PRUint32  CounterIncrementCount(void) const { return mIncrementCount; }  // [reset]
   nsresult  GetCounterIncrementAt(PRUint32 aIndex, nsString& aCounter, PRInt32& aIncrement) const {
