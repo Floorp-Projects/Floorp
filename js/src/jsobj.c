@@ -1704,7 +1704,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 #endif
 {
     JSHashNumber hash;
-    JSScope *prevscope, *scope;
+    JSScope *scope;
     JSSymbol *sym;
     JSClass *clasp;
     JSResolveOp resolve;
@@ -1722,14 +1722,16 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
     /* Search scopes starting with obj and following the prototype link. */
     hash = js_HashValue(id);
-    prevscope = NULL;
     for (;;) {
 	JS_LOCK_OBJ(cx, obj);
 	_SET_OBJ_INFO(obj, file, line);
 	scope = OBJ_SCOPE(obj);
-	if (scope == prevscope)
-	    goto skip;
-	sym = scope->ops->lookup(cx, scope, id, hash);
+        if (scope->object == obj) {
+            sym = scope->ops->lookup(cx, scope, id, hash);
+        } else {
+            /* Shared prototype scope: try resolve before lookup. */
+            sym = NULL;
+        }
 	if (!sym) {
 	    clasp = LOCKED_OBJ_GET_CLASS(obj);
 	    resolve = clasp->resolve;
@@ -1776,8 +1778,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 	    *propp = (JSProperty *) sprop;
 	    return JS_TRUE;
 	}
-	prevscope = scope;
-      skip:
 	proto = LOCKED_OBJ_GET_PROTO(obj);
 	JS_UNLOCK_OBJ(cx, obj);
 	if (!proto)

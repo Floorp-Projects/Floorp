@@ -733,7 +733,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         jsval pval;
 
         proto = NULL;
-        if (fun->object != obj) {
+        if (fun->object != obj && fun->object) {
             /*
              * Clone of a function: make its prototype property value have the
              * same class as the clone-parent's prototype.
