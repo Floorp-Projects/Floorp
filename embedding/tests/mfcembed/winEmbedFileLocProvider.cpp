@@ -163,11 +163,11 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
     // Please see http://www.mozilla.org/projects/embedding/MRE.html
     // for more info. on GRE
     //---------------------------------------------------------------
-    else if (nsCRT::strcmp(prop, NS_GRE_DIR) == 0)
+    else if (strcmp(prop, NS_GRE_DIR) == 0)
     {
         rv = GetGreDirectory(getter_AddRefs(localFile));
     }    
-    else if (nsCRT::strcmp(prop, NS_GRE_COMPONENT_DIR) == 0)
+    else if (strcmp(prop, NS_GRE_COMPONENT_DIR) == 0)
     {
         rv = GetGreDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
