@@ -326,9 +326,8 @@ protected:
 	READYSTATE				m_nBrowserReadyState;
 	// List of registered browser helper objects
 	ObjectList				m_cBrowserHelperList;
-
-	// Pointer to the bin directory
-	nsFileSpec			   *m_pBinDirPath;
+	// Post data from last navigate operation
+	CComVariant             m_vLastPostData;
 
 	virtual HRESULT CreateWebShell();
 	virtual HRESULT InitWebShell();

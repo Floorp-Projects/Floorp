@@ -30,6 +30,9 @@
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
+
+#include "nsFileSpec.h"
+#include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
@@ -105,9 +108,6 @@ CMozillaBrowser::CMozillaBrowser()
 	// Open registry keys
 	m_SystemKey.Create(HKEY_LOCAL_MACHINE, MOZ_CONTROL_REG_KEY);
 	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
-
-	// Component path and file
-	m_pBinDirPath = NULL;
 
 	// Initialise the web shell
 	InitWebShell();
@@ -306,10 +306,10 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	{
 		nsIContentViewer *pContentViewer = nsnull;
 		res = m_pIWebShell->GetContentViewer(&pContentViewer);
-		if ( NS_SUCCEEDED(res) )
+		if (NS_SUCCEEDED(res))
 		{
-            nsCOMPtr<nsIContentViewerFile> ContentViewerFile = do_QueryInterface(pContentViewer);
-			ContentViewerFile->Print();
+            nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
+			spContentViewerFile->Print(PR_TRUE, nsnull);
 			NS_RELEASE(pContentViewer);
 		}
 	}
@@ -578,10 +578,10 @@ HRESULT CMozillaBrowser::InitWebShell()
 	if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
 	{
 		USES_CONVERSION;
-		
-		m_pBinDirPath = new nsFileSpec(T2A(szBinDirPath));
-
-		NS_InitXPCOM(&m_pIServiceManager, m_pBinDirPath);
+		nsILocalFile *pBinDirPath = nsnull;
+		nsresult res = NS_NewLocalFile(T2A(szBinDirPath), &pBinDirPath);
+		NS_InitXPCOM(&m_pIServiceManager, pBinDirPath);
+		NS_RELEASE(pBinDirPath);
 	}
 	else
 	{
@@ -622,12 +622,6 @@ HRESULT CMozillaBrowser::TermWebShell()
 	NS_ShutdownXPCOM(m_pIServiceManager);
 	m_pIServiceManager = nsnull;
 
-	if (m_pBinDirPath)
-	{
-		delete m_pBinDirPath;
-		m_pBinDirPath = NULL;
-	}
-
 	return S_OK;
 }
 
@@ -663,10 +657,9 @@ HRESULT CMozillaBrowser::CreateWebShell()
 		m_sErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
-	else {
-		rv = m_pIPref->StartUp();		//Initialize the preference service
-		rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
-	}
+
+	rv = m_pIPref->StartUp();		//Initialize the preference service
+	rv = m_pIPref->ReadUserPrefs();	//Reads from default_prefs.js
 	
 	// Create the web shell object
 	rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
@@ -1364,6 +1357,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Extract the post data parameter
+	m_vLastPostData.Clear();
+	if (PostData)
+	{
+		m_vLastPostData.Copy(PostData);
+	}
+
 	nsIPostData *pIPostData = nsnull;
 	if (PostData && PostData->vt == VT_BSTR)
 	{
