@@ -41,6 +41,11 @@ MODULE=xpcsample
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
+REQUIRES = XPCOM \
+	XPCONNECT \
+	JS \
+	$(NULL)
+
 XPIDLSRCS = \
 	.\xpcsample1.idl \
 	$(NULL)
