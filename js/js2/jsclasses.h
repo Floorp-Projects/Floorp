@@ -40,6 +40,7 @@ namespace JavaScript {
 namespace JSClasses {
 
     using JSTypes::JSValue;
+    using JSTypes::JSObject;
     using JSTypes::JSType;
     using JSTypes::JSScope;
     
@@ -62,6 +63,8 @@ namespace JSClasses {
     typedef gc_allocator<JSSlot> gc_slot_allocator;
 #endif
 
+     typedef std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> JSSlots;
+
     /**
      * Represents a class in the JavaScript 2 (ECMA 4) language.
      * Since a class defines a scope, and is defined in a scope,
@@ -73,7 +76,7 @@ namespace JSClasses {
         JSClass* mSuperClass;
         JSScope* mScope;        
         uint32 mSlotCount;
-        std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> mSlots;
+        JSSlots mSlots;
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             : JSType(name, superClass), mSuperClass(superClass), mSlotCount(0)
@@ -90,13 +93,52 @@ namespace JSClasses {
             JSSlot& slot = mSlots[name];
             ASSERT(slot.mType == 0);
             slot.mType = type;
-            slot.mIndex = mSlotCount++;
+            slot.mIndex = ++mSlotCount;
             return slot;
         }
         
         JSSlot& getSlot(const String& name)
         {
             return mSlots[name];
+        }
+        
+        bool hasSlot(const String& name)
+        {
+            return (mSlots.count(name) != 0);
+        }
+        
+        uint32 getSlotCount()
+        {
+            return mSlotCount;
+        }
+    };
+    
+    /**
+     * Represents an instance of a JSClass.
+     */
+    class JSInstance : public JSObject {
+    protected:
+        JSValue mSlots[1];
+    public:
+        void* operator new(size_t n, JSClass* thisClass)
+        {
+            return gc_base::operator new(thisClass->getSlotCount() * sizeof(JSValue) + n);
+        }
+        
+        JSInstance(JSClass* thisClass)
+        {
+            mSlots[0] = thisClass;
+            std::uninitialized_fill(&mSlots[1], &mSlots[1] + thisClass->getSlotCount(), JSValue());
+        }
+        
+        JSClass* getClass()
+        {
+            return static_cast<JSClass*>(mSlots[0].object);
+        }
+        
+        JSValue& operator[] (uint32 index)
+        {
+            return mSlots[index];
         }
     };
     
