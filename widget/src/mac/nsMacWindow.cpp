@@ -817,6 +817,8 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
         WindowPtr top = GetWindowTop(parentWindowRef);
         ::ShowSheetWindow(mWindowPtr, top);
         UpdateWindowMenubar(parentWindowRef, PR_FALSE);
+        gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
+        gEventDispatchHandler.DispatchGuiEvent(this, NS_ACTIVATE);
     }
     else
 #endif
@@ -847,6 +849,8 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
     // Mac OS X sheet support
     if (mIsSheet) {
         ::HideSheetWindow(mWindowPtr);
+
+        gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
 
         // if we had several sheets open, when the last one goes away
         // we need to ensure that the top app window is active

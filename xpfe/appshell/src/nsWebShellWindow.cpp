@@ -491,9 +491,6 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
-// Sucky platform specific code to get around event dispatch ordering
-#if defined(WIN32) || defined(XP_OS2) || defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_XLIB)
-
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
         eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
         /*
@@ -516,7 +513,6 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           if(privateDOMWindow)
             privateDOMWindow->Activate();
         }
-#endif /* defined(WIN32) || defined(XP_OS2) || defined (MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_XLIB) */
         break;
 
       }
