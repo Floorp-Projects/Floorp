@@ -248,6 +248,7 @@ void SaveWindowPosition(HWND aDlg)
 LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   char szBuf[MAX_BUF];
+  LPNMHDR notifyMessage;
 
   switch(msg)
   {
@@ -259,8 +260,7 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SetDlgItemText(hDlg, IDC_STATIC0, szBuf);
       SetDlgItemText(hDlg, IDC_STATIC1, diWelcome.szMessage1);
       SetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+      SetDlgItemText(hDlg, IDC_STATIC3, diWelcome.szMessage3);
 
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
@@ -269,6 +269,22 @@ LRESULT CALLBACK DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
       SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      break;
+
+    case WM_NOTIFY:
+      notifyMessage = (LPNMHDR)lParam;
+      switch (notifyMessage->code) 
+      {
+        case PSN_SETACTIVE:
+          PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT);
+          break;
+        case PSN_WIZNEXT:
+          break;
+        case PSN_RESET:
+          break;
+        default:
+          break;
+      }
       break;
 
     case WM_COMMAND:
@@ -301,6 +317,7 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
   DWORD           dwBytesRead;
   HANDLE          hFLicense;
   FILE            *fLicense;
+  LPNMHDR         notifyMessage;
 
   switch(msg)
   {
@@ -342,6 +359,22 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      break;
+
+    case WM_NOTIFY:
+      notifyMessage = (LPNMHDR)lParam;
+      switch (notifyMessage->code) 
+      {
+        case PSN_SETACTIVE:
+          PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
+          break;
+        case PSN_WIZNEXT:
+          break;
+        case PSN_RESET:
+          break;
+        default:
+          break;
+      }
       break;
 
     case WM_COMMAND:
@@ -652,12 +685,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   HWND          hStaticSt0;
   HWND          hRadioSt1;
   HWND          hStaticSt1;
-  HWND          hRadioSt2;
-  HWND          hStaticSt2;
-  HWND          hRadioSt3;
-  HWND          hStaticSt3;
   HWND          hReadme;
-  HWND          hDestinationPath;
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
 
@@ -665,10 +693,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   hStaticSt0  = GetDlgItem(hDlg, IDC_STATIC_ST0_DESCRIPTION);
   hRadioSt1   = GetDlgItem(hDlg, IDC_RADIO_ST1);
   hStaticSt1  = GetDlgItem(hDlg, IDC_STATIC_ST1_DESCRIPTION);
-  hRadioSt2   = GetDlgItem(hDlg, IDC_RADIO_ST2);
-  hStaticSt2  = GetDlgItem(hDlg, IDC_STATIC_ST2_DESCRIPTION);
-  hRadioSt3   = GetDlgItem(hDlg, IDC_RADIO_ST3);
-  hStaticSt3  = GetDlgItem(hDlg, IDC_STATIC_ST3_DESCRIPTION);
   hReadme     = GetDlgItem(hDlg, IDC_README);
 
   switch(msg)
@@ -676,9 +700,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     case WM_INITDIALOG:
       DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diSetupType.szTitle);
-
-      hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
-      TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
 
       SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
       SetDlgItemText(hDlg, IDC_STATIC_MSG0, diSetupType.szMessage0);
@@ -709,32 +730,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
         ShowWindow(hStaticSt1, SW_HIDE);
       }
 
-      if(diSetupType.stSetupType2.bVisible)
-      {
-        SetDlgItemText(hDlg, IDC_RADIO_ST2, diSetupType.stSetupType2.szDescriptionShort);
-        SetDlgItemText(hDlg, IDC_STATIC_ST2_DESCRIPTION, diSetupType.stSetupType2.szDescriptionLong);
-        ShowWindow(hRadioSt2, SW_SHOW);
-        ShowWindow(hStaticSt2, SW_SHOW);
-      }
-      else
-      {
-        ShowWindow(hRadioSt2, SW_HIDE);
-        ShowWindow(hStaticSt2, SW_HIDE);
-      }
-
-      if(diSetupType.stSetupType3.bVisible)
-      {
-        SetDlgItemText(hDlg, IDC_RADIO_ST3, diSetupType.stSetupType3.szDescriptionShort);
-        SetDlgItemText(hDlg, IDC_STATIC_ST3_DESCRIPTION, diSetupType.stSetupType3.szDescriptionLong);
-        ShowWindow(hRadioSt3, SW_SHOW);
-        ShowWindow(hStaticSt3, SW_SHOW);
-      }
-      else
-      {
-        ShowWindow(hRadioSt3, SW_HIDE);
-        ShowWindow(hStaticSt3, SW_HIDE);
-      }
-
       /* enable the appropriate radio button */
       switch(dwTempSetupType)
       {
@@ -747,40 +742,18 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           CheckDlgButton(hDlg, IDC_RADIO_ST1, BST_CHECKED);
           SetFocus(hRadioSt1);
           break;
-
-        case ST_RADIO2:
-          CheckDlgButton(hDlg, IDC_RADIO_ST2, BST_CHECKED);
-          SetFocus(hRadioSt2);
-          break;
-
-        case ST_RADIO3:
-          CheckDlgButton(hDlg, IDC_RADIO_ST3, BST_CHECKED);
-          SetFocus(hRadioSt3);
-          break;
       }
 
       RepositionWindow(hDlg, NO_BANNER_IMAGE);
 
-      if((*diSetupType.szReadmeFilename == '\0') || (FileExists(diSetupType.szReadmeFilename) == FALSE))
-        ShowWindow(hReadme, SW_HIDE);
-      else
-        ShowWindow(hReadme, SW_SHOW);
-
-      SetDlgItemText(hDlg, IDC_DESTINATION, sgInstallGui.szDestinationDirectory);
-      SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SetDlgItemText(hDlg, IDC_README, sgInstallGui.szReadme_);
       SendDlgItemMessage (hDlg, IDC_STATIC_MSG0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_RADIO_ST0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_RADIO_ST1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_ST2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_ST3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_STATIC_ST0_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_STATIC_ST1_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_ST2_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_ST3_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
       SendDlgItemMessage (hDlg, IDC_EDIT_DESTINATION, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
       SendDlgItemMessage (hDlg, IDC_BUTTON_BROWSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
@@ -799,31 +772,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case IDC_BUTTON_BROWSE:
-          SaveWindowPosition(hDlg);
-          if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
-            dwTempSetupType = ST_RADIO0;
-          else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
-            dwTempSetupType = ST_RADIO1;
-          else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
-            dwTempSetupType = ST_RADIO2;
-          else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
-            dwTempSetupType = ST_RADIO3;
-
-          BrowseForDirectory(hDlg, szTempSetupPath);
-
-          hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
-          TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
-          SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
-          break;
-
-        case IDC_README:
-          if(*diSetupType.szReadmeApp == '\0')
-            WinSpawn(diSetupType.szReadmeFilename, NULL, szSetupDir, SW_SHOWNORMAL, FALSE);
-          else
-            WinSpawn(diSetupType.szReadmeApp, diSetupType.szReadmeFilename, szSetupDir, SW_SHOWNORMAL, FALSE);
-          break;
-
         case IDWIZNEXT:
           SaveWindowPosition(hDlg);
           lstrcpy(sgProduct.szPath, szTempSetupPath);
@@ -890,10 +838,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             dwSetupType     = ST_RADIO0;
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
             dwSetupType     = ST_RADIO1;
-          else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
-            dwSetupType     = ST_RADIO2;
-          else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
-            dwSetupType     = ST_RADIO3;
 
           dwTempSetupType = dwSetupType;
           SiCNodeSetItemsSelected(dwSetupType);
@@ -1402,6 +1346,47 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
   return(bReturn);
 }
+
+LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  BOOL                bReturn = FALSE;
+  HWND                hDestinationPath;
+  char                szBuf[MAX_BUF];
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
+      SetWindowText(hDlg, diSelectInstallPath.szTitle);
+      SetDlgItemText(hDlg, IDC_STATIC_MSG0, diSelectInstallPath.szMessage0);
+
+      hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+      TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+      
+      SetDlgItemText(hDlg, IDC_DESTINATION, sgInstallGui.szDestinationDirectory);
+      SetDlgItemText(hDlg, IDC_BUTTON_BROWSE, sgInstallGui.szBrowse_);
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDC_BUTTON_BROWSE:
+          BrowseForDirectory(hDlg, szTempSetupPath);
+
+          hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+          TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
+          SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+
+  return(bReturn);
+}
+
 
 LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
@@ -2082,14 +2067,6 @@ LPSTR GetStartInstallMessage()
 
   switch(dwSetupType)
   {
-    case ST_RADIO3:
-      dwBufSize += lstrlen(diSetupType.stSetupType3.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
-      break;
-
-    case ST_RADIO2:
-      dwBufSize += lstrlen(diSetupType.stSetupType2.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
-      break;
-
     case ST_RADIO1:
       dwBufSize += lstrlen(diSetupType.stSetupType1.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
       break;
@@ -2194,14 +2171,6 @@ LPSTR GetStartInstallMessage()
       
     switch(dwSetupType)
     {
-      case ST_RADIO3:
-        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType3.szDescriptionShort);
-        break;
-
-      case ST_RADIO2:
-        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType2.szDescriptionShort);
-        break;
-
       case ST_RADIO1:
         AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType1.szDescriptionShort);
         break;
@@ -2407,7 +2376,9 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diStartInstall.szTitle);
 
-      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
+      SetDlgItemText(hDlg, IDC_MESSAGE1, diStartInstall.szMessage0);
+      SetDlgItemText(hDlg, IDC_MESSAGE2, sgInstallGui.szProxyMessage);
+      SetDlgItemText(hDlg, IDC_CONNECTION_SETTINGS, sgInstallGui.szProxyButton);
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szInstall_);
       SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
@@ -2709,6 +2680,99 @@ void SetTurboArgs(void)
   }
 }
 
+void InitSequence(HINSTANCE hInstance)
+{
+  PROPSHEETPAGE psp;
+  HPROPSHEETPAGE pages[11] = {0};
+  PROPSHEETHEADER psh;
+  int count = 0;
+
+  psp.dwSize            = sizeof(psp);
+  psp.hInstance         = hSetupRscInst;
+  psp.lParam            = NULL;
+
+  // Welcome Page
+  if (diWelcome.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_HIDEHEADER;
+    psp.pfnDlgProc        = DlgProcWelcome;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WELCOME);
+    
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  // License Page
+  if (diLicense.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diLicense.szTitle;
+    psp.pszHeaderSubTitle = diLicense.szSubTitle;
+    psp.pfnDlgProc        = DlgProcLicense;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_LICENSE);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  // License Page
+  if (diSetupType.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diSetupType.szTitle;
+    psp.pszHeaderSubTitle = diSetupType.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSetupType;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SETUP_TYPE);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diSelectInstallPath.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diSelectInstallPath.szTitle;
+    psp.pszHeaderSubTitle = diSelectInstallPath.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSelectInstallPath;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SELECT_INSTALL_PATH);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diSelectComponents.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diSelectComponents.szTitle;
+    psp.pszHeaderSubTitle = diSelectComponents.szSubTitle;
+    psp.pfnDlgProc        = DlgProcSelectComponents;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_SELECT_COMPONENTS);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diStartInstall.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diStartInstall.szTitle;
+    psp.pszHeaderSubTitle = diStartInstall.szSubTitle;
+    psp.pfnDlgProc        = DlgProcStartInstall;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_START_INSTALL);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  // Property Sheet
+  psh.dwSize            = sizeof(psh);
+  psh.hInstance         = hSetupRscInst;
+  psh.hwndParent        = NULL;
+  psh.phpage            = pages;
+  psh.dwFlags           = PSH_WIZARD97|PSH_WATERMARK|PSH_HEADER;
+  psh.pszbmWatermark    = MAKEINTRESOURCE(IDB_WATERMARK);
+  psh.pszbmHeader       = MAKEINTRESOURCE(IDB_HEADER);
+  psh.nStartPage        = 0;
+  psh.nPages            = count;
+
+  // Start the Wizard.
+  PropertySheet(&psh);
+}
+
+void DlgSequence(int iDirection)
+{
+  return;
+}
+
+#if 0
 void DlgSequence(int iDirection)
 {
   HRESULT hrValue;
@@ -2738,34 +2802,27 @@ void DlgSequence(int iDirection)
           dwWizardState = DLG_SELECT_COMPONENTS;
           break;
         case DLG_SELECT_COMPONENTS:
-          dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
+          dwWizardState = DLG_PRE_INSTALL_SUMMARY;
           break;
-        case DLG_SELECT_ADDITIONAL_COMPONENTS:
+        case DLG_PRE_INSTALL_SUMMARY:
+          dwWizardState = DLG_DOWNLOADING;
+          break;
+        case DLG_DOWNLOADING:
+          dwWizardState = DLG_INSTALLING;
+          break;
+        case DLG_INSTALLING:
           dwWizardState = DLG_WINDOWS_INTEGRATION;
           break;
         case DLG_WINDOWS_INTEGRATION:
-          dwWizardState = DLG_PROGRAM_FOLDER;
+          dwWizardState = DLG_POST_INSTALL_SUMMARY;
           break;
-        case DLG_PROGRAM_FOLDER:
-          dwWizardState = DLG_QUICK_LAUNCH;
+        case DLG_POST_INSTALL_SUMMARY:
+          // XXXben Goat. 
           break;
-        case DLG_QUICK_LAUNCH:
-          dwWizardState = DLG_ADDITIONAL_OPTIONS;
-          break;
-        case DLG_ADDITIONAL_OPTIONS:
-          dwWizardState = DLG_START_INSTALL;
-          break;
-        case DLG_START_INSTALL:
-          dwWizardState = DLG_COMMIT_INSTALL;
-          break;
-
-        case DLG_ADVANCED_SETTINGS:
-          dwWizardState = DLG_ADDITIONAL_OPTIONS;
-          break;
-
         default:
           dwWizardState = DLG_WELCOME;
-          break;      }
+          break;      
+      }
     }
     else if(iDirection == PREV_DLG)
     {
@@ -2783,31 +2840,11 @@ void DlgSequence(int iDirection)
         case DLG_SELECT_COMPONENTS:
           dwWizardState = DLG_SETUP_TYPE;
           break;
-        case DLG_SELECT_ADDITIONAL_COMPONENTS:
+        case DLG_PRE_INSTALL_SUMAMRY:
           dwWizardState = DLG_SELECT_COMPONENTS;
           break;
-        case DLG_WINDOWS_INTEGRATION:
-          dwWizardState = DLG_SELECT_ADDITIONAL_COMPONENTS;
-          break;
-        case DLG_PROGRAM_FOLDER:
+        case DLG_POST_INSTALL_SUMMARY: 
           dwWizardState = DLG_WINDOWS_INTEGRATION;
-          break;
-        case DLG_QUICK_LAUNCH:
-          dwWizardState = DLG_PROGRAM_FOLDER;
-          break;
-        case DLG_ADDITIONAL_OPTIONS:
-          dwWizardState = DLG_QUICK_LAUNCH;
-          break;
-        case DLG_START_INSTALL:
-          dwWizardState = DLG_ADDITIONAL_OPTIONS;
-          break;
-
-        case DLG_ADVANCED_SETTINGS:
-          dwWizardState = DLG_ADDITIONAL_OPTIONS;
-          break;
-
-        default:
-          dwWizardState = DLG_WELCOME;
           break;
       }
     }
@@ -2986,6 +3023,7 @@ void DlgSequence(int iDirection)
     }
   } while(!bDone);
 }
+#endif
 
 void CommitInstall(void)
 {

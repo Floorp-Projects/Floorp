@@ -323,15 +323,19 @@ typedef struct dlgWelcome
   LPSTR szMessage0;
   LPSTR szMessage1;
   LPSTR szMessage2;
+  LPSTR szMessage3;
 } diW;
 
 typedef struct dlgLicense
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
+  LPSTR szSubTitle;
   LPSTR szLicenseFilename;
   LPSTR szMessage0;
   LPSTR szMessage1;
+  LPSTR szMessage2;
+  LPSTR szMessage3;
 } diL;
 
 typedef struct dlgQuickLaunch
@@ -359,13 +363,10 @@ typedef struct dlgSetupType
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
+  LPSTR szSubTitle;
   LPSTR szMessage0;
-  LPSTR szReadmeFilename;
-  LPSTR szReadmeApp;
   st    stSetupType0;
   st    stSetupType1;
-  st    stSetupType2;
-  st    stSetupType3;
 } diST;
 
 typedef struct dlgSelectComponents
@@ -373,8 +374,17 @@ typedef struct dlgSelectComponents
   BOOL  bShowDialog;
   DWORD bShowDialogSM;
   LPSTR szTitle;
+  LPSTR szSubTitle;
   LPSTR szMessage0;
 } diSC;
+
+typedef struct dlgSelectInstallPath
+{
+  BOOL bShowDialog;
+  LPSTR szTitle;
+  LPSTR szSubTitle;
+  LPSTR szMessage0;
+} diSIP;
 
 typedef struct wiCBstruct
 {
@@ -432,8 +442,10 @@ typedef struct dlgStartInstall
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
+  LPSTR szSubTitle;
   LPSTR szMessageInstall;
   LPSTR szMessageDownload;
+  LPSTR szMessage0;
 } diSI;
 
 typedef struct dlgDownload
@@ -568,6 +580,8 @@ typedef struct dlgInstall
     char szNext_[MAX_BUF];
     char szBack_[MAX_BUF];
     char szIgnore_[MAX_BUF];
+    char szProxyMessage[MAX_BUF];
+    char szProxyButton[MAX_BUF];
     char szProxySettings_[MAX_BUF];
     char szProxySettings[MAX_BUF];
     char szServer[MAX_BUF];
