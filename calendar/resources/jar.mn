@@ -75,6 +75,8 @@ calendar.jar:
     skin/modern/calendar/selectedwatch7.png (skin/modern/selectedwatch7.png)
     skin/modern/calendar/selectedwatch8.png (skin/modern/selectedwatch8.png)
     skin/modern/calendar/selectedwatch9.png (skin/modern/selectedwatch9.png)
+    skin/modern/calendar/taskbar-cal.gif (skin/modern/taskbar-cal.gif)
+    skin/modern/calendar/taskbar-cal-act.gif (skin/modern/taskbar-cal-act.gif)
     skin/modern/calendar/today_disabled.gif (skin/modern/today_disabled.gif)
     skin/modern/calendar/today_down.gif (skin/modern/today_down.gif)
     skin/modern/calendar/today_hover.gif (skin/modern/today_hover.gif)
