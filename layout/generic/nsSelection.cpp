@@ -1388,19 +1388,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     {
       if (NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
       {
-  /* Some parts of pos which might come in handy:
-   *  @param mDirection enum defined in this file to be eForward or eBackward
-   *  @param mStartOffset start offset to start the peek. 0 == beginning -1 = end
-   *  @param mResultContent content that actually is the next/previous
-   *  @param mResultOffset offset for result content
-   *  @param mEatingWS boolean to tell us the state of our search for Next/Prev
-   *  @param mPreferLeft true = prev line end, false = next line begin
-   */
-        if (pos.mAmount == eWord)
-        {
-          // Word selection: layout treats punctuation as part of
-          // the word; we may not want to do that.
-        }
         mHint = (HINT)pos.mPreferLeft;
         result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
       }
