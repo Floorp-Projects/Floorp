@@ -16,12 +16,34 @@
         return attr;
     }
 
+    // the location of the flash registry.
+    var localSoftwareUpdateRegistry = 'resource://res/rdf/SoftwareUpdates.rdf'; 
+
     function Init()
     {
         // this is the main rdf file.
-        
-        var mainRegistry = RDF.GetDataSource('resource://res/rdf/SoftwareUpdates.rdf');
-        
+
+        var mainRegistry;
+        try 
+        {
+            // First try to construct a new one and load it
+            // synchronously. nsIRDFService::GetDataSource() loads RDF/XML
+            // asynchronously by default.
+            mainRegistry = Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
+            mainRegistry = mainRegistry.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
+            mainRegistry.Init(localSoftwareUpdateRegistry); // this will throw if it's already been opened and registered.
+
+            // read it in synchronously.
+            mainRegistry.Open(true);
+        }
+        catch (ex) 
+        {
+            // if we get here, then the RDF/XML has been opened and read
+            // once. We just need to grab the datasource.
+            mainRegistry = RDF.GetDataSource(localSoftwareUpdateRegistry);
+        }
+
+
         var mainContainer = Components.classes['component://netscape/rdf/container'].createInstance();
         mainContainer = mainContainer.QueryInterface(Components.interfaces.nsIRDFContainer);
 
@@ -33,7 +55,7 @@
         {
             var aDistributor = mainEnumerator.GetNext();
             aDistributor = aDistributor.QueryInterface(Components.interfaces.nsIRDFResource);
-
+            
             var distributorContainer = Components.classes['component://netscape/rdf/container'].createInstance();
             distributorContainer = distributorContainer.QueryInterface(Components.interfaces.nsIRDFContainer);
             
@@ -62,7 +84,7 @@
 
             // Add it to the tree control's composite datasource.
             tree.database.AddDataSource(distributorRegistry);
-
+                        
         }
         
         // Install all of the stylesheets in the softwareupdate Registry into the
