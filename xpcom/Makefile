@@ -15,6 +15,6 @@
 # Reserved.
 
 DEPTH	= ..
-DIRS	= src tests
+DIRS	= public src tests
 
 include $(DEPTH)/config/rules.mk
