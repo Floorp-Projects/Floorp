@@ -132,6 +132,7 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
  */
 nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
   NS_INIT_REFCNT();
+  mBytesParsed = 0;
   mExpatParser = XML_ParserCreate(NULL);
   gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
   if (mExpatParser) {
@@ -157,11 +158,11 @@ nsExpatTokenizer::~nsExpatTokenizer(){
  *******************************************************************/
 
 
-static void SetErrorContextInfo(nsParserError* aError, PRUint32 aByteIndex, 
+void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByteIndex, 
                                 const char* aSourceBuffer, PRUint32 aLength)
 {
   /* Figure out the substring inside aSourceBuffer that contains the line on which the error
-     occurred.  Copy the line into error->sourceLine */
+     occurred.  Copy the line into aError->sourceLine */
   PR_ASSERT(aByteIndex > 0 && aByteIndex < aLength);
   char* start = (char* ) &aSourceBuffer[aByteIndex];  /* Will try to find the start of the line */
   char* end = (char* ) &aSourceBuffer[aByteIndex];    /* Will try to find the end of the line */
@@ -213,13 +214,14 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
 {
   CErrorToken* token= (CErrorToken *) gTokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
   nsParserError *error = new nsParserError;
+  PRUint32 byteIndexRelativeToFile = 0;
   
   error->code = XML_GetErrorCode(mExpatParser);
   error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
   error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
-  error->description = XML_ErrorString(error->code);  
-  SetErrorContextInfo(error, (PRUint32) XML_GetCurrentByteIndex(mExpatParser), aBuffer, aLength);  
-
+  error->description = XML_ErrorString(error->code);
+  byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);  
+  SetErrorContextInfo(error, (byteIndexRelativeToFile - mBytesParsed), aBuffer, aLength);  
   token->SetError(error);
 
   CToken* theToken = (CToken* )token;
@@ -230,9 +232,10 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char *aBuffer, PRUint32 aLength)
   nsresult result=NS_OK;
   if (mExpatParser) {
     PR_ASSERT(aLength == strlen(aBuffer));
-    if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {      
+    if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
       PushXMLErrorToken(aBuffer, aLength);      
-    }
+    }    
+	  mBytesParsed += aLength;    
   }
   else {
     result = NS_ERROR_FAILURE;
