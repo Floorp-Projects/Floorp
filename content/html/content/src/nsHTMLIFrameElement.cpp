@@ -99,6 +99,19 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAString& aValue, PRBool aNotify) {
+    nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
+                                                         aValue, aNotify);
+
+    if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
+        aName == nsHTMLAtoms::src) {
+      return LoadSrc();
+    }
+
+    return rv;
+  }
+
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
@@ -219,8 +232,7 @@ NS_IMETHODIMP
 nsHTMLIFrameElement::SetSrc(const nsAString& aSrc)
 {
   SetAttribute(NS_LITERAL_STRING("src"), aSrc);
-
-  return LoadSrc();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
