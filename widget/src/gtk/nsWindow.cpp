@@ -701,6 +701,32 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// grab mouse events for this widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
+{
+  if (mIsToplevel && mShell)
+  {
+    if (aCapture)
+      gtk_grab_add(mShell);
+    else
+      gtk_grab_remove(mShell);
+  }
+  else
+  { 
+    if (aCapture)
+      gtk_grab_add(mWidget);
+    else
+      gtk_grab_remove(mWidget);
+  }
+
+  return NS_OK;
+}
+
+
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   // not implimented for toplevel windows
