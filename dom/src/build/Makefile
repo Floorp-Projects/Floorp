@@ -30,7 +30,7 @@ REQUIRES=xpcom raptor
 CPPSRCS=dlldeps.cpp 
 
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base -I$(PUBLIC)\jsurl
+	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base -I$(PUBLIC)/jsurl
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
