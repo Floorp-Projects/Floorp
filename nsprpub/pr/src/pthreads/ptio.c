@@ -4300,7 +4300,11 @@ PR_IMPLEMENT(PRDirEntry*) PR_ReadDir(PRDir *dir, PRDirFlags flags)
     for (;;)
     {
         dp = readdir(dir->md.d);
-        if (NULL == dp) return NULL;
+        if (NULL == dp)
+        {
+            pt_MapError(_PR_MD_MAP_READDIR_ERROR, errno);
+            return NULL;
+        }
         if ((flags & PR_SKIP_DOT)
             && ('.' == dp->d_name[0])
             && (0 == dp->d_name[1])) continue;
@@ -4347,8 +4351,8 @@ PR_IMPLEMENT(PRStatus) PR_NewTCPSocketPair(PRFileDesc *fds[2])
     if (pt_TestAbort()) return PR_FAILURE;
 
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, osfd) == -1) {
-    pt_MapError(_PR_MD_MAP_SOCKETPAIR_ERROR, errno);
-    return PR_FAILURE;
+        pt_MapError(_PR_MD_MAP_SOCKETPAIR_ERROR, errno);
+        return PR_FAILURE;
     }
 
     fds[0] = pt_SetMethods(osfd[0], PR_DESC_SOCKET_TCP, PR_FALSE, PR_FALSE);
