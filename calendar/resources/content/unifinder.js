@@ -54,49 +54,7 @@ function calendarUnifinderInit( )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         //dump( "\nCALENDAR unifinder.js->on selection changed" );
-         var SearchTree = document.getElementById( UnifinderTreeName );
-            
-         /* The following is a brutal hack, caused by 
-         http://lxr.mozilla.org/mozilla1.0/source/layout/xul/base/src/tree/src/nsTreeSelection.cpp#555
-         and described in bug 168211
-         http://bugzilla.mozilla.org/show_bug.cgi?id=168211
-         Do NOT remove anything in the next 3 lines, or the selection in the tree will not work.
-         */
-
-         SearchTree.treeBoxObject.selection.selectEventsSuppressed = true;
-         SearchTree.onselect = null;
-         SearchTree.removeEventListener( "select", unifinderOnSelect, true );
-         
-         if( EventSelectionArray.length > 1 )
-         {
-            /* selecting all events is taken care of in the selectAllEvents in calendar.js 
-            ** Other than that, there's no other way to get in here. */
-            if( gSelectAll === true )
-            {
-               SearchTree.treeBoxObject.selection.selectAll( );
-               
-               gSelectAll = false;
-            }
-         }
-         else if( EventSelectionArray.length == 1 )
-         {
-            var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[0] );
-               
-            if( RowToScrollTo != "null" )
-            {
-               SearchTree.treeBoxObject.selection.clearSelection( );
-         
-               SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
-
-               SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
-            }
-         }
-         else
-            SearchTree.treeBoxObject.selection.clearSelection( );
-         
-         /* This needs to be in a setTimeout */
-         setTimeout( "resetAllowSelection()", 1 );
+         selectSelectedEventsInTree( EventSelectionArray );
       }
    }
       
@@ -114,6 +72,57 @@ function resetAllowSelection()
    SearchTree.treeBoxObject.selection.selectEventsSuppressed = false;
    
    SearchTree.addEventListener( "select", unifinderOnSelect, true );
+}
+
+
+function selectSelectedEventsInTree( EventsToSelect )
+{
+   if( EventsToSelect === false )
+      EventsToSelect = gCalendarWindow.EventSelection.selectedEvents;
+
+   //dump( "\nCALENDAR unifinder.js->on selection changed" );
+   var SearchTree = document.getElementById( UnifinderTreeName );
+      
+   /* The following is a brutal hack, caused by 
+   http://lxr.mozilla.org/mozilla1.0/source/layout/xul/base/src/tree/src/nsTreeSelection.cpp#555
+   and described in bug 168211
+   http://bugzilla.mozilla.org/show_bug.cgi?id=168211
+   Do NOT remove anything in the next 3 lines, or the selection in the tree will not work.
+   */
+
+   SearchTree.treeBoxObject.selection.selectEventsSuppressed = true;
+   SearchTree.onselect = null;
+   SearchTree.removeEventListener( "select", unifinderOnSelect, true );
+   
+   if( EventsToSelect.length > 1 )
+   {
+      /* selecting all events is taken care of in the selectAllEvents in calendar.js 
+      ** Other than that, there's no other way to get in here. */
+      if( gSelectAll === true )
+      {
+         SearchTree.treeBoxObject.selection.selectAll( );
+         
+         gSelectAll = false;
+      }
+   }
+   else if( EventsToSelect.length == 1 )
+   {
+      var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventsToSelect[0] );
+         
+      if( RowToScrollTo != "null" )
+      {
+         SearchTree.treeBoxObject.selection.clearSelection( );
+   
+         SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
+
+         SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
+      }
+   }
+   else
+      SearchTree.treeBoxObject.selection.clearSelection( );
+   
+   /* This needs to be in a setTimeout */
+   setTimeout( "resetAllowSelection()", 1 );
 }
 
 /**
@@ -719,6 +728,9 @@ function refreshEventTree( eventArray )
    document.getElementById(UnifinderTreeName).view = new treeView( eventArray );
 
    document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
+
+   //select selected events in the tree.
+   selectSelectedEventsInTree( false );
 }
 
 function focusFirstItemIfNoSelection()
