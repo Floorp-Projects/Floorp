@@ -33,7 +33,7 @@
     var _elementIDs = ["nglayoutDebugWindow", "nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
                        "debugXULBoxes", "browserDOMWindowDumpEnabled", 
                        "javascriptOptionsStrict", "nglayoutDebugUseXBLForms", 
-                       "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
+                       "nglayoutDebugEnableXPCOMRefcntLog", 
                        "acceleratorKeyValue", "menuAccessKeyValue"];
   ]]>
   </script>
