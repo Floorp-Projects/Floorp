@@ -222,7 +222,7 @@ nsRDFDOMDataSource::createDOMNodeTarget(nsIDOMNode *node,
   else if (aProperty == kNC_Type) {
     PRUint16 type;
     node->GetNodeType(&type);
-    str.Append(PRInt32(type));
+    str.AppendInt(PRInt32(type));
   }
   return createLiteral(str, aResult);
 }
@@ -382,7 +382,7 @@ nsRDFDOMDataSource::createContentMiscArcs(nsIContent *content,
 
   PRInt32 namespaceID;
   content->GetNameSpaceID(namespaceID);
-  value.Append(namespaceID);
+  value.AppendInt(namespaceID);
 
   appendLeafObject(name, value, arcs);
 
