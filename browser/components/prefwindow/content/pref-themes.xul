@@ -85,7 +85,7 @@
 
     <separator class="thin"/>
 
-    <vbox class="inset extensionInfoArea" style="overflow: auto;">
+    <vbox class="extensionInfoArea listBox" style="overflow: auto;">
       <label class="header" id="displayName" value=""/>
       <hbox pack="start">
         <label id="author" onclick="parent.visitLink(event);" tooltip="&author.tooltip;"/>
