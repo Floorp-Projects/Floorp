@@ -367,6 +367,18 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextXlib::GetRect(nsRect &aRect)
+{
+  PRInt32 width, height;
+  nsresult rv;
+  rv = GetDeviceSurfaceDimensions(width, height);
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = width;
+  aRect.height = height;
+  return rv;
+}
+
 NS_IMETHODIMP nsDeviceContextXlib::GetClientRect(nsRect &aRect)
 {
   PRInt32 width, height;

@@ -24,6 +24,7 @@
 #define nsDeviceContextXlib_h__
 
 #include "nsDeviceContext.h"
+#include "nsIRenderingContext.h"
 
 #include <X11/Xlib.h>
 
@@ -50,6 +51,7 @@ public:
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
   NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD GetRect(nsRect &aRect);
   NS_IMETHOD GetClientRect(nsRect &aRect);
 
   NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
@@ -60,9 +62,6 @@ public:
 
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
-
-  // unimplemented
-  NS_IMETHOD GetRect(nsRect&);
 
   Display * GetDisplay() { return mDisplay; }
   Screen * GetScreen() { return mScreen; }
