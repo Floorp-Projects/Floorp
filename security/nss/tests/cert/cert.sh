@@ -25,21 +25,19 @@
 ########################################################################
 
 if [ -z "${INIT_SOURCED}" ] ; then
-    . ../common/init.sh
+    cd ../common
+    . init.sh
+fi
+SCRIPTNAME="cert.sh"
+if [ -z "${CLEANUP}" ] ; then
+    CLEANUP="${SCRIPTNAME}" 
 fi
 
-TEMPFILES="${PWFILE} ${CERTSCRIPT} ${NOISE_FILE}"
-
-trap "rm -f ${TEMPFILES}; Exit $0 Signal_caught" 2 3
 
 certlog() ######################    write the cert_status file
 {
+    echo "$SCRIPTNAME $*"
     echo $* >>${CERT_LOG_FILE}
-}
-
-html() #########################    write the results.html file
-{
-    echo $* >>${RESULTS}
 }
 
 ################################ noise ##################################
@@ -76,10 +74,10 @@ certu()
     RET=$?
     if [ "$RET" -ne 0 ]; then
 	CERTFAILED=$RET
-        html "<TR><TD>${CU_ACTION} ($RET) $CU_FAILED"
+        html_failed "<TR><TD>${CU_ACTION} ($RET) " 
         certlog "ERROR: ${CU_ACTION} failed $RET"
     else
-        html "<TR><TD>${CU_ACTION}$CU_PASSED"
+        html_passed "<TR><TD>${CU_ACTION}"
     fi
     return $RET
 }
@@ -153,7 +151,7 @@ create_cert()
 
 ################## main #################################################
 
-certlog "started"
+certlog "********************** running $SCRIPTNAME **********************"
 html "<TABLE BORDER=1><TR><TH COLSPAN=3>Certutil Tests</TH></TR>"
 html "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>"
 
@@ -280,11 +278,13 @@ if [ "$CERTFAILED" != 0 ] ; then
 else
     certlog "SUCCESS: SSL passed"
 fi
-certlog "finished"
 
-echo "</TABLE><BR>" >> ${RESULTS}
+certlog "********************** finished $SCRIPTNAME **********************"
+html "</TABLE><BR>" 
 
-rm -f ${TEMPFILES}
+cd ${CURDIR}
+. ../common/cleanup.sh
+
 
 # we will probably need mor for the tools 
 # tools.sh: generates an alice cert in a "Cert" directory
