@@ -28,6 +28,7 @@
 #include "nsString.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -35,9 +36,11 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
+static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMXULDocument);
+NS_DEF_PTR(nsIDOMNodeList);
 
 
 /***********************************************************************/
@@ -164,6 +167,46 @@ XULDocumentGetElementByID(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 
+//
+// Native method GetElementsByAttribute
+//
+PR_STATIC_CALLBACK(JSBool)
+XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNodeList* nativeRet;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->GetElementsByAttribute(b0, b1, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function getElementsByAttribute requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for XULDocument
@@ -197,6 +240,7 @@ static JSPropertySpec XULDocumentProperties[] =
 static JSFunctionSpec XULDocumentMethods[] = 
 {
   {"getElementByID",          XULDocumentGetElementByID,     1},
+  {"getElementsByAttribute",          XULDocumentGetElementsByAttribute,     2},
   {0}
 };
 
