@@ -55,18 +55,18 @@ typedef enum _FTP_STATE {
 ///////////////////////
 //// Command channel connection setup states
 ///////////////////////
-    FTP_S_USER,		// send username
+    FTP_S_USER,        // send username
     FTP_R_USER,
-    FTP_S_PASS,		// send password
+    FTP_S_PASS,        // send password
     FTP_R_PASS,
-	FTP_S_SYST,		// send system (interrogates server)
-	FTP_R_SYST,
-    FTP_S_ACCT,		// send account
+    FTP_S_SYST,        // send system (interrogates server)
+    FTP_R_SYST,
+    FTP_S_ACCT,        // send account
     FTP_R_ACCT,
-	FTP_S_MACB,
-	FTP_R_MACB,
-	FTP_S_PWD ,		// send parent working directory (pwd)
-	FTP_R_PWD ,
+    FTP_S_MACB,
+    FTP_R_MACB,
+    FTP_S_PWD ,        // send parent working directory (pwd)
+    FTP_R_PWD ,
     FTP_S_DEL_FILE, // send delete file
     FTP_R_DEL_FILE,
     FTP_S_DEL_DIR , // send delete directory
@@ -100,10 +100,10 @@ typedef enum _FTP_STATE {
 
 // higher level ftp actions
 typedef enum _FTP_ACTION {
-	GET,
-	PUT,
-	MKDIR,
-	DEL
+    GET,
+    PUT,
+    MKDIR,
+    DEL
 } FTP_ACTION;
 
 class nsFtpConnectionThread : public nsIRunnable {
@@ -112,7 +112,7 @@ public:
 
     nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener);
     virtual ~nsFtpConnectionThread();
-	
+    
     // nsIRunnable method
     NS_IMETHOD Run();
 #if 0
@@ -137,10 +137,10 @@ private:
 
     // Private members
 
-    nsIEventQueue*		mEventQueue;        // used to communicate outside this thread
+    nsIEventQueue*      mEventQueue;        // used to communicate outside this thread
     nsIURI*             mUrl;
 
-    FTP_STATE			mState;             // the current state
+    FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
     FTP_ACTION          mAction;            // the higher level action
 
@@ -152,7 +152,7 @@ private:
     nsIOutputStream*    mDOutStream;        // data channel output
 
     PRInt32             mResponseCode;      // the last command response code.
-    nsString2			mResponseMsg;       // the last command response text
+    nsString2           mResponseMsg;       // the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
     nsString2           mFilename;          // url filename (if any)
@@ -162,11 +162,11 @@ private:
 // these members should be hung off of a specific transport connection
     PRInt32             mServerType;
     PRBool              mPasv;
-    PRBool				mList;              // use LIST instead of NLST
+    PRBool              mList;              // use LIST instead of NLST
 // end "these ...."
 
     PRBool              mConnected;
-    PRBool			    mUseDefaultPath;    // use PWD to figure out path
+    PRBool              mUseDefaultPath;    // use PWD to figure out path
     PRBool              mUsePasv;           // use a passive data connection.
     PRBool              mAscii;             // transfer mode (ascii or binary)
     PRBool              mDirectory;         // this url is a directory
