@@ -1961,7 +1961,7 @@ void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aVie
 
   BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured);
 
-  ShowDisplayList(mDisplayListCount);
+  // ShowDisplayList(mDisplayListCount);
 
   // The display list is in order from back to front. We return the target list in order from
   // front to back.
