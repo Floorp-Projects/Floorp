@@ -4164,8 +4164,7 @@ NS_IMETHODIMP nsWebShell::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
-  NS_ENSURE_SUCCESS(doc->QueryInterface(NS_GET_IID(nsIDOMDocument), 
-   (void**)aDocument), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(CallQueryInterface(doc.get(), aDocument), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
