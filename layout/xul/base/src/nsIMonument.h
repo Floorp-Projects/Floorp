@@ -28,6 +28,7 @@
 
 #include "nsISupports.h"
 #include "nsIFrame.h"
+#include "nsIBox.h"
 
 class nsIBox;
 class nsBoxLayoutState;
