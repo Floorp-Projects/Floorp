@@ -157,7 +157,7 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
 /* ::::: Download Icons ::::: */
 
 treechildren::-moz-tree-image(syncCol) {
-  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+  list-style-image: url("chrome://messenger/skin/icons/notchecked.gif");
 }
 
 treechildren::-moz-tree-image(syncCol, synchronize-true) {

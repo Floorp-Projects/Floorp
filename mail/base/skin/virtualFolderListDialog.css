@@ -8,7 +8,7 @@
 
 treechildren::-moz-tree-image(selectedColumn) {
   margin-right: 2px;
-  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+  list-style-image: url("chrome://messenger/skin/icons/notchecked.gif");
 }
 
 treechildren::-moz-tree-image(selectedColumn, inVFEditSearchScope-true) {
