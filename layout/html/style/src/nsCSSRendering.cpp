@@ -1810,6 +1810,11 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
                     outerRect, innerRect, aSkipSides, aGap);
   }
 
+  // dont clip the borders for composite borders, they use the inner and 
+  // outer rect to compute the diagonale to cross the border radius
+  nsRect compositeInnerRect(innerRect);
+  nsRect compositeOuterRect(outerRect);
+
   // Draw all the other sides
   if (!aDirtyRect.Contains(outerRect)) {
     // Border leaks out of the dirty rectangle - lets clip it but with care
@@ -1852,8 +1857,8 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
     if (0 == (aSkipSides & (1<<side))) {
       if (GetBorderColor(ourColor, aBorderStyle, side, sideColor, &compositeColors)) {
         if (compositeColors)
-          DrawCompositeSide(aRenderingContext, side, compositeColors, outerRect, innerRect, borderRadii,
-                            twipsPerPixel, aGap);
+          DrawCompositeSide(aRenderingContext, side, compositeColors, compositeOuterRect, 
+                            compositeInnerRect, borderRadii, twipsPerPixel, aGap);
         else
           DrawSide(aRenderingContext, side,
                    aBorderStyle.GetBorderStyle(side),
