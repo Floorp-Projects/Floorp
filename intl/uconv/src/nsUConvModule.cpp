@@ -37,14 +37,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsIRegistry.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
+#include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsICharsetAlias.h"
 #include "nsITextToSubURI.h"
@@ -73,14 +76,10 @@
 #include "nsScriptableUConv.h"
 
 NS_CONVERTER_REGISTRY_START
-NS_UCONV_REG_UNREG("ISO-8859-1", "Unicode", NS_ISO88591TOUNICODE_CID)
-NS_UCONV_REG_UNREG("windows-1252", "Unicode", NS_CP1252TOUNICODE_CID)
-NS_UCONV_REG_UNREG("x-mac-roman", "Unicode", NS_MACROMANTOUNICODE_CID)
-NS_UCONV_REG_UNREG("UTF-8", "Unicode", NS_UTF8TOUNICODE_CID)
-NS_UCONV_REG_UNREG("Unicode", "ISO-8859-1", NS_UNICODETOISO88591_CID)
-NS_UCONV_REG_UNREG("Unicode", "windows-1252",  NS_UNICODETOCP1252_CID)
-NS_UCONV_REG_UNREG("Unicode", "x-mac-roman", NS_UNICODETOMACROMAN_CID)
-NS_UCONV_REG_UNREG("Unicode", "UTF-8",  NS_UNICODETOUTF8_CID)
+NS_UCONV_REG_UNREG("ISO-8859-1", NS_ISO88591TOUNICODE_CID, NS_UNICODETOISO88591_CID)
+NS_UCONV_REG_UNREG("windows-1252", NS_CP1252TOUNICODE_CID, NS_UNICODETOCP1252_CID)
+NS_UCONV_REG_UNREG("x-mac-roman", NS_MACROMANTOUNICODE_CID, NS_UNICODETOMACROMAN_CID)
+NS_UCONV_REG_UNREG("UTF-8", NS_UTF8TOUNICODE_CID, NS_UNICODETOUTF8_CID)
 NS_CONVERTER_REGISTRY_END
 
 NS_IMPL_NSUCONVERTERREGSELF

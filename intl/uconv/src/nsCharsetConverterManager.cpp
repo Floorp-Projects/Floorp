@@ -44,6 +44,7 @@
 #include "nsICharsetAlias.h"
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
+#include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsIStringBundle.h"
@@ -52,13 +53,15 @@
 #include "prmem.h"
 #include "nsCRT.h"
 
+#include "nsISupportsPrimitives.h"
+
 // just for CIDs
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsCharsetConverterManager.h"
 
 static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
-static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID); 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID); 
@@ -84,6 +87,7 @@ nsCharsetConverterManager::~nsCharsetConverterManager()
   NS_IF_RELEASE(mDataBundle);
   NS_IF_RELEASE(mTitleBundle);
 }
+
 
 nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 {
@@ -113,12 +117,11 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
   nsresult res;
   nsRegistryKey key;
 
-  nsAutoString str; str.AssignWithConversion(aRegistryPath);
-  str.Append(NS_LITERAL_STRING("defaultFile"));
+  nsCAutoString str(aRegistryPath);
+  str.Append(NS_LITERAL_CSTRING("defaultFile"));
 
-  char * p = ToNewCString(str);
-  res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
-  nsMemory::Free(p);
+  res = aRegistry->AddSubtree(nsIRegistry::Common, str.get(), &key);
+  
   if (NS_FAILED(res)) return res;
   res = aRegistry->SetStringUTF8(key, "name", "chrome://global/locale/charsetTitles.properties");
   if (NS_FAILED(res)) return res;
@@ -133,12 +136,11 @@ nsresult nsCharsetConverterManager::RegisterConverterData(
   nsresult res;
   nsRegistryKey key;
 
-  nsAutoString str; str.AssignWithConversion(aRegistryPath);
-  str.Append(NS_LITERAL_STRING("defaultFile"));
+  nsCAutoString str(aRegistryPath);
+  str.Append(NS_LITERAL_CSTRING("defaultFile"));
 
-  char * p = ToNewCString(str);
-  res = aRegistry->AddSubtree(nsIRegistry::Common, p, &key);
-  nsMemory::Free(p);
+  res = aRegistry->AddSubtree(nsIRegistry::Common, str.get(), &key);
+
   if (NS_FAILED(res)) return res;
   res = aRegistry->SetStringUTF8(key, "name", "resource:/res/charsetData.properties");
   if (NS_FAILED(res)) return res;
@@ -264,101 +266,6 @@ next:
   return res;
 }
 
-// XXX deprecate this method and switch to GetRegistryEnumeration() when 
-// changing the registration style for converters.
-// The idea is to have two trees:
-// .../uconv/decoder/name
-// .../uconv/encoder/name
-nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
-                                    const char * aRegistryKey, 
-                                    PRBool aDecoder,
-                                    nsISupportsArray ** aArray)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsISupportsArray> array = NULL;
-  nsRegistryKey key;
-
-  res = nsComponentManager::CreateInstance(kSupportsArrayCID, NULL, 
-      NS_GET_IID(nsISupportsArray), getter_AddRefs(array));
-  if (NS_FAILED(res)) return res;
-
-  // get the registry
-  nsCOMPtr<nsIRegistry> registry(do_GetService(kRegistryCID, &res));
-  if (NS_FAILED(res)) return res;
-
-  // open registry if necessary
-  PRBool regOpen = PR_FALSE;
-  registry->IsOpen(&regOpen);
-  if (!regOpen) {
-    res = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-    if (NS_FAILED(res)) return res;
-  }
-
-  // get subtree
-  res = registry->GetSubtree(nsIRegistry::Common, aRegistryKey, &key);
-  if (NS_FAILED(res)) return res;
-
-  // enumerate subtrees
-  nsCOMPtr<nsIEnumerator> enumerator;
-  res = registry->EnumerateSubtrees(key, getter_AddRefs(enumerator));
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIRegistryEnumerator> components = do_QueryInterface(enumerator, &res);
-  if (NS_FAILED(res)) return res;
-
-  res = components->First();
-  if (NS_FAILED(res)) return res;
-
-  while (NS_OK != components->IsDone()) {
-    const char *name;
-    char *src;
-    char *dest;
-    nsAutoString fullName;
-    nsCOMPtr<nsIAtom> atom;
-
-    res = components->CurrentItemInPlaceUTF8(&key, &name);
-    if (NS_FAILED(res)) goto done1;
-
-    res = registry->GetStringUTF8(key, "source", &src);
-    if (NS_FAILED(res)) goto done1;
-
-    res = registry->GetStringUTF8(key, "destination", &dest);
-    if (NS_FAILED(res)) goto done1;
-
-    if (aDecoder) {
-      if (!strcmp(dest, "Unicode")) {
-        fullName.AssignWithConversion(src);
-        res = GetCharsetAtom(fullName.get(), getter_AddRefs(atom));
-        if (NS_FAILED(res)) goto done1;
-
-        res = array->AppendElement(atom);
-        if (NS_FAILED(res)) goto done1;
-      }
-    } else {
-      if (!strcmp(src, "Unicode")) {
-        fullName.AssignWithConversion(dest);
-        res = GetCharsetAtom(fullName.get(), getter_AddRefs(atom));
-        if (NS_FAILED(res)) goto done1;
-
-        res = array->AppendElement(atom);
-        if (NS_FAILED(res)) goto done1;
-      }
-    }
-
-done1:
-    if (src != NULL) nsCRT::free(src);
-    if (dest != NULL) nsCRT::free(dest);
-
-    res = components->Next();
-    if (NS_FAILED(res)) break; // this is NOT supposed to fail!
-  }
-
-  // everything was fine, set the result
-  *aArray = array;
-  NS_ADDREF(*aArray);
-
-  return res;
-}
 
 //----------------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
@@ -467,27 +374,61 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
   return GetUnicodeEncoder(&name, aResult);
 }
 
-// XXX move this macro into the UnicodeDecoder/Encoder interface
-#define NS_CHARSET_CONVERTER_REG_BASE   "software/netscape/intl/uconv"
-
-NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(
-                                         nsISupportsArray ** aResult)
+nsresult 
+nsCharsetConverterManager::GetList(PRBool aEncoder, nsISupportsArray** aResult)
 {
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  if (aResult == NULL) 
+    return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
 
-  return GetRegistryEnumeration2(NS_CHARSET_CONVERTER_REG_BASE, PR_TRUE, 
-    aResult);
+  nsresult rv;
+  nsCOMPtr<nsIAtom> atom;
+ 
+  nsCOMPtr<nsISupportsArray> array = do_CreateInstance(kSupportsArrayCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  catman->EnumerateCategory(aEncoder ? NS_UNICODEENCODER_NAME : NS_UNICODEDECODER_NAME, 
+                            getter_AddRefs(enumerator));
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> supports;
+    if (NS_FAILED(enumerator->GetNext(getter_AddRefs(supports))))
+      continue;
+    
+    nsCOMPtr<nsISupportsString> supStr = do_QueryInterface(supports);
+    if (!supStr)
+      continue;
+    
+    nsXPIDLCString fullName;
+    if (NS_FAILED(supStr->GetData(getter_Copies(fullName))))
+      continue;
+
+    rv = GetCharsetAtom2(fullName.get(), getter_AddRefs(atom));
+    if (NS_FAILED(rv)) 
+      continue;
+    
+    rv = array->AppendElement(atom);
+  }
+    
+  NS_ADDREF(*aResult = array);
+  return NS_OK;
+}
+
+// we should change the interface so that we can just pass back a enumerator!
+NS_IMETHODIMP nsCharsetConverterManager::GetDecoderList(nsISupportsArray ** aResult)
+{
+  return GetList(PR_FALSE, aResult);
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetEncoderList(
                                          nsISupportsArray ** aResult)
 {
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  *aResult = NULL;
-
-  return GetRegistryEnumeration2(NS_CHARSET_CONVERTER_REG_BASE, PR_FALSE, 
-    aResult);
+  return GetList(PR_TRUE, aResult);
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetCharsetDetectorList(

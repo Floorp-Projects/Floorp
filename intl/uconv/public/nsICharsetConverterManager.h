@@ -46,6 +46,7 @@
 #include "nsIAtom.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsICategoryManager.h"
 
 #define NS_ICHARSETCONVERTERMANAGER_IID \
   {0x3c1c0161, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
@@ -57,8 +58,6 @@
 // XXX change to NS_CHARSETCONVERTERMANAGER_PID
 #define NS_CHARSETCONVERTERMANAGER_CONTRACTID "@mozilla.org/charset-converter-manager;1"
 
-#define NS_REGISTRY_UCONV_BASE          "software/netscape/intl/uconv/"
-// XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
 #define NS_DATA_BUNDLE_REGISTRY_KEY     "software/netscape/intl/xuconv/data/"
 #define NS_TITLE_BUNDLE_REGISTRY_KEY    "software/netscape/intl/xuconv/titles/"
 
@@ -76,9 +75,12 @@
 #define REGSELF_PRINTF(x,y)
 #endif
 
+#define NS_UNICODEDECODER_NAME "Charset Decoders"
+#define NS_UNICODEENCODER_NAME "Charset Encoders"
+
 struct nsConverterRegistryInfo {
-  const char *fromCharset;
-  const char *toCharset;
+  PRBool isEncoder;             // PR_TRUE = encoder, PR_FALSE = decoder
+  const char *charset;
   nsCID cid;
 };
 
@@ -97,62 +99,95 @@ nsUConverterRegSelf(nsIComponentManager *aCompMgr,                      \
                     const char* componentType,                          \
                     const nsModuleComponentInfo *info)                  \
 {                                                                       \
-  nsresult res = NS_OK;                                                 \
-  nsRegistryKey key;                                                    \
-  char buff[1024];                                                      \
-  PRBool isOpen = PR_FALSE;                                             \
-  nsCOMPtr<nsIRegistry> registry =                                      \
-           do_GetService(NS_REGISTRY_CONTRACTID, &res);                 \
-  if (NS_FAILED(res))                                                   \
-    return res;                                                         \
-  res = registry->IsOpen(&isOpen);                                      \
-  if (NS_FAILED(res))                                                   \
-    return res;                                                         \
-  if(! isOpen) {                                                        \
-    res = registry->OpenWellKnownRegistry(                              \
-        nsIRegistry::ApplicationComponentRegistry);                     \
-    if (NS_FAILED(res))                                                 \
-      return res;                                                       \
-  }                                                                     \
-  int i;                                                                \
+  nsresult rv;                                                          \
+  nsCOMPtr<nsICategoryManager> catman =                                 \
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);                  \
+  if (NS_FAILED(rv)) return rv;                                         \
+                                                                        \
+  nsXPIDLCString previous;                                              \
+  PRUint32 i;                                                           \
   for (i=0; i<sizeof(gConverterRegistryInfo)/sizeof(gConverterRegistryInfo[0]); i++) { \
-      char * cid_string;                                                    \
-      cid_string = gConverterRegistryInfo[i].cid.ToString();                \
-      sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);   \
-      nsCRT::free(cid_string);                                              \
-      res = registry->AddSubtree(nsIRegistry::Common, buff, &key);        \
-      if (NS_FAILED(res))                                                   \
-        continue;                                                           \
-      res = registry->SetStringUTF8(key, "source",                        \
-                                    gConverterRegistryInfo[i].fromCharset);\
-      if (NS_FAILED(res))                                                   \
-        continue;                                                           \
-      res = registry->SetStringUTF8(key, "destination",                   \
-                                    gConverterRegistryInfo[i].toCharset); \
-      if (NS_FAILED(res))                                                   \
-        continue;                                                           \
-      REGSELF_PRINTF(gConverterRegistryInfo[i].fromCharset,                 \
-                     gConverterRegistryInfo[i].toCharset);                  \
-  }                                                                         \
-  return res;                                                               \
+    const nsConverterRegistryInfo* entry = &gConverterRegistryInfo[i];         \
+    const char *category;                                               \
+    const char *key;                                                    \
+                                                                        \
+    if (entry->isEncoder) {                                             \
+      category = NS_UNICODEENCODER_NAME;                                \
+    } else {                                                            \
+      category = NS_UNICODEDECODER_NAME;                                \
+    }                                                                   \
+    key = entry->charset;                                               \
+                                                                        \
+    rv = catman->AddCategoryEntry(category, key, "",                    \
+                                  PR_TRUE,                              \
+                                  PR_TRUE,                              \
+                                  getter_Copies(previous));             \
+  }                                                                     \
+  return rv;                                                            \
 } \
-\
 static NS_IMETHODIMP \
 nsUConverterUnregSelf(nsIComponentManager *aCompMgr,                        \
                       nsIFile *aPath,                                       \
                       const char*,                                          \
                       const nsModuleComponentInfo *info)                    \
 { \
-  return NS_OK; \
+  nsresult rv;                                                          \
+  nsCOMPtr<nsICategoryManager> catman =                                 \
+  do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);                    \
+  if (NS_FAILED(rv)) return rv;                                         \
+                                                                        \
+  nsXPIDLCString previous;                                              \
+  PRUint32 i;                                                           \
+  for (i=0; i<sizeof(gConverterRegistryInfo)/sizeof(gConverterRegistryInfo[0]); i++) { \
+    const nsConverterRegistryInfo* entry = &gConverterRegistryInfo[i];         \
+    const char *category;                                               \
+    const char *key;                                                    \
+                                                                        \
+    if (entry->isEncoder) {                                             \
+      category = NS_UNICODEDECODER_NAME;                                \
+    } else {                                                            \
+      category = NS_UNICODEENCODER_NAME;                                \
+    }                                                                   \
+    key = entry->charset;                                               \
+                                                                        \
+    char * value = entry->cid.ToString();                               \
+                                                                        \
+    rv = catman->DeleteCategoryEntry(category, key, PR_TRUE);           \
+    CRTFREEIF(value);                                                   \
+  }                                                                     \
+  return rv;                                                            \
 }
 
 
-#define NS_UCONV_REG_UNREG(_From, _To, _CID )               \
-  {                                                                         \
-    _From,                                                                  \
-    _To,                                                                    \
-    _CID,                                                                   \
+#define NS_UCONV_REG_UNREG_DECODER(_Charset, _CID)          \
+  {                                                         \
+    PR_FALSE,                                                \
+    _Charset,                                               \
+    _CID,                                                   \
   },
+  
+#define NS_UCONV_REG_UNREG_ENCODER(_Charset, _CID)          \
+  {                                                         \
+    PR_TRUE,                                               \
+    _Charset,                                               \
+    _CID,                                                   \
+  }, 
+
+  // this needs to be written out per some odd cpp behavior that
+  // I could not work around - the behavior is document in the cpp
+  // info page however, so I'm not the only one to hit this!
+#define NS_UCONV_REG_UNREG(_Charset, _DecoderCID, _EncoderCID) \
+  {                                                         \
+    PR_FALSE,                                               \
+    _Charset,                                               \
+    _DecoderCID,                                            \
+  },                                                        \
+  {                                                         \
+    PR_TRUE,                                                \
+    _Charset,                                               \
+    _EncoderCID,                                            \
+  }, 
+
   
 /**
  * Interface for a Manager of Charset Converters.
