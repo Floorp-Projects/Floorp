@@ -556,29 +556,29 @@ nsResChannel::SetTransferCount(PRInt32 aTransferCount)
 NS_IMETHODIMP
 nsResChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
 {
-    NS_NOTREACHED("nsResChannel::GetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsResChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
 {
-    NS_NOTREACHED("nsResChannel::SetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsResChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
 {
-    NS_NOTREACHED("nsResChannel::GetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsResChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
 {
-    NS_NOTREACHED("nsResChannel::SetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
