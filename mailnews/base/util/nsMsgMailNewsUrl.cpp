@@ -546,6 +546,11 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetQuery(char * *aQuery)
 	return m_baseURL->GetQuery(aQuery);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetEscapedQuery(char * *aQuery)
+{
+	return m_baseURL->GetEscapedQuery(aQuery);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::SetQuery(const char *aQuery)
 {
 	return m_baseURL->SetQuery(aQuery);

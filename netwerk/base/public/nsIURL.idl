@@ -112,6 +112,13 @@ interface nsIURL : nsIURI
      * If a file extension does not exist, the empty string is returned.
      */
     attribute string fileExtension;
+
+    /**
+     * Returns the query portion (the part after the "?") of the URL
+     * without unescaping the string.
+     * If there isn't one, an empty string is returned.
+     */
+    readonly attribute string escapedQuery;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -169,6 +169,12 @@ nsStdURL::GetQuery(char* *o_Query)
 }
 
 inline NS_METHOD
+nsStdURL::GetEscapedQuery(char* *o_Query)
+{
+    return GetString(o_Query, mQuery, ESCAPED);
+}
+
+inline NS_METHOD
 nsStdURL::GetRef(char* *o_Ref)
 {
     return GetString(o_Ref, mRef, UNESCAPED);
