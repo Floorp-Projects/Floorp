@@ -22,6 +22,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
    -                 Colin Phillips <colinp@oeone.com>
+   -                 Chris Charabaruk <coldacid@meldstar.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,6 +83,7 @@
 <!-- Javascript DTD To Variable -->
 <script type="application/x-javascript">
   var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
+  var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
 </script>
 
 <!-- Javascript includes -->

@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Chris Charabaruk <coldacid@meldstar.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -318,8 +319,17 @@ function unifinderRemoveCommand()
          
             if( calendarEvent != null )
             {
-               if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
-                  gICalLib.deleteEvent( calendarEvent.id );
+               if ( calendarEvent.title != "" )
+               {
+                  if ( confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
+                     gICalLib.deleteEvent( calendarEvent.id );
+                  }
+               }
+               else
+               {
+                  if ( confirm( confirmDeleteUntitledEvent ) ) {
+                     gICalLib.deleteEvent( calendarEvent.id );
+                  }
                }
             }
          }
