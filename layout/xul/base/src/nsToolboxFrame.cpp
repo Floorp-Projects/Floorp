@@ -188,7 +188,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 
   // let our toolbox be as wide as our parent says we can be and as tall
   // as our child toolbars
-  aDesiredSize.width = aReflowState.availableWidth - 200;
+  aDesiredSize.width = aReflowState.availableWidth - 50;
   aDesiredSize.height = offset.y;
 
   aStatus = NS_FRAME_COMPLETE;
