@@ -67,6 +67,7 @@
 #include "nsNetUtil.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIConsoleService.h"
+#include "nsDOMError.h"
 #else
 #include "txHTMLOutput.h"
 #include "txTextOutput.h"
@@ -2329,9 +2330,14 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                                  nsIDOMDocument* aOutputDoc,
                                  nsITransformObserver* aObserver)
 {
-    // We need source and result documents but no stylesheet.
     NS_ENSURE_ARG(aSourceDOM);
+    NS_ENSURE_ARG(aStyleDOM);
     NS_ENSURE_ARG(aOutputDoc);
+    
+    if (!URIUtils::CanCallerAccess(aSourceDOM) ||
+        !URIUtils::CanCallerAccess(aStyleDOM) ||
+        !URIUtils::CanCallerAccess(aOutputDoc))
+        return NS_ERROR_DOM_SECURITY_ERR;
 
     // Create wrapper for the source document.
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;

@@ -1937,6 +1937,11 @@ nsXULDocument::AddBroadcastListenerFor(nsIDOMElement* aBroadcaster,
                                        nsIDOMElement* aListener,
                                        const nsAString& aAttr)
 {
+    if (!nsContentUtils::CanCallerAccess(aBroadcaster) ||
+        !nsContentUtils::CanCallerAccess(aListener)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     static PLDHashTableOps gOps = {
         PL_DHashAllocTable,
         PL_DHashFreeTable,
@@ -3375,6 +3380,11 @@ NS_IMETHODIMP
 nsXULDocument::AddBinding(nsIDOMElement* aContent,
                           const nsAString& aURL)
 {
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, aContent);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   nsCOMPtr<nsIBindingManager> bm;
   GetBindingManager(getter_AddRefs(bm));
   nsCOMPtr<nsIContent> content(do_QueryInterface(aContent));

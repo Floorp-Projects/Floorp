@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  webshell \
 		  docshell \
+		  caps \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

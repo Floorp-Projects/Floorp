@@ -987,7 +987,9 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
 
     // aRefChild may be null; that means "append".
 
-    nsresult rv;
+    nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIContent> newcontent = do_QueryInterface(aNewChild);
     NS_ASSERTION(newcontent != nsnull, "not an nsIContent");
@@ -1065,7 +1067,9 @@ nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
     if (! aOldChild)
         return NS_ERROR_NULL_POINTER;
 
-    nsresult rv;
+    nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIContent> oldelement = do_QueryInterface(aOldChild);
     NS_ASSERTION(oldelement != nsnull, "not an nsIContent");

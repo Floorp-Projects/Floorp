@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,6 +68,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
+#include "nsDOMError.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -215,6 +216,10 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
   NS_PRECONDITION(aElement != nsnull, "null ptr");
   if (! aElement)
     return NS_ERROR_NULL_POINTER;
+
+  if (!nsContentUtils::CanCallerAccess(aElement)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
 
   Updater* updater = mUpdaters;
   Updater** link = &mUpdaters;

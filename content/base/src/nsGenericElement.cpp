@@ -2334,6 +2334,12 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  nsCOMPtr<nsIDocument> old_doc;
+  newContent->GetDocument(*getter_AddRefs(old_doc));
+  if (old_doc != mDocument && !nsContentUtils::CanCallerAccess(aNewChild)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   /*
    * Make sure the new child is not "this" node or one of this nodes
    * ancestors. Doing this check here should be safe even if newContent
@@ -2409,10 +2415,6 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
     if (NS_FAILED(res)) {
       return res;
     }
-
-    nsCOMPtr<nsIDocument> old_doc;
-
-    newContent->GetDocument(*getter_AddRefs(old_doc));
 
     /*
      * Remove the element from the old parent if one exists, since oldParent
@@ -2548,6 +2550,12 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  nsCOMPtr<nsIDocument> old_doc;
+  newContent->GetDocument(*getter_AddRefs(old_doc));
+  if (old_doc != mDocument && !nsContentUtils::CanCallerAccess(aNewChild)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   nsCOMPtr<nsIDocument> document;
 
   GetDocument(*getter_AddRefs(document));
@@ -2609,10 +2617,6 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     if (NS_FAILED(res)) {
       return res;
     }
-
-    nsCOMPtr<nsIDocument> old_doc;
-
-    newContent->GetDocument(*getter_AddRefs(old_doc));
 
     /*
      * Remove the element from the old parent if one exists, since oldParent

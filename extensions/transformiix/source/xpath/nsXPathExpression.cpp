@@ -43,6 +43,9 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMXPathNamespace.h"
 #include "nsXPathResult.h"
+#include "nsDOMError.h"
+#include "txURIUtils.h"
+
 
 NS_IMPL_ADDREF(nsXPathExpression)
 NS_IMPL_RELEASE(nsXPathExpression)
@@ -69,6 +72,9 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
                             nsIDOMXPathResult **aResult)
 {
     NS_ENSURE_ARG(aContextNode);
+
+    if (!URIUtils::CanCallerAccess(aContextNode))
+        return NS_ERROR_DOM_SECURITY_ERR;
 
     nsresult rv;
     PRUint16 nodeType;

@@ -28,6 +28,9 @@ REQUIRES	= string \
 		  content \
 		  widget \
 		  necko \
+		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>

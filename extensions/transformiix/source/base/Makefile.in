@@ -35,6 +35,9 @@ REQUIRES	= string \
 		  content \
 		  widget \
 		  necko \
+		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 endif
 
