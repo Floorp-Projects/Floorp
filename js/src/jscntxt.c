@@ -146,21 +146,6 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     return cx;
 }
 
-#if DEBUG
-JS_STATIC_DLL_CALLBACK(intN)
-js_root_printer(JSHashEntry *he, intN i, void *arg)
-{
-    uint32 *leakedroots = (uint32 *)arg;
-
-    *leakedroots += 1;
-    fprintf(stderr,
-            "JS engine warning: leaking GC root \'%s\' at location %p\n",
-            he->value ? (char *)he->value : "", he->key);
-
-    return HT_ENUMERATE_NEXT;
-}
-#endif
-
 void
 js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 {
@@ -214,36 +199,12 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 #endif
 
     if (last) {
-#if DEBUG
-        uint32 leakedroots = 0;
-#endif
-        
         /* Always force, so we wait for any racing GC to finish. */
         js_ForceGC(cx);
 
         /* Iterate until no finalizer removes a GC root or lock. */
         while (rt->gcPoke)
             js_GC(cx, GC_LAST_CONTEXT);
-
-#if DEBUG        
-        /* Warn (but don't assert) debug builds of any remaining roots. */
-        JS_HashTableEnumerateEntries(rt->gcRootsHash, js_root_printer,
-                                     &leakedroots);
-        if (leakedroots > 0) {
-            if (leakedroots == 1) {
-                fprintf(stderr,
-"JS engine warning: 1 GC root remains after destroying the last JSContext.\n"
-"                   This root may point to freed memory, and objects reachable\n"
-"                   through it have not been finalized.\n");
-            } else {
-                fprintf(stderr,
-"JS engine warning: %lu GC roots remain after destroying the last JSContext.\n"
-"                   These roots may point to freed memory, and objects reachable\n"
-"                   through them have not been finalized.\n",
-                        (unsigned long) leakedroots);
-            }
-        }
-#endif
 
         /* Free atom state last, now that no scripts survive. */
         js_FreeAtomState(cx, &rt->atomState);
