@@ -186,7 +186,7 @@ Rights Reserved.
 	        <menuitem value="&selectFlaggedCmd.label;" oncommand="MsgSelectFlaggedMsg();"/>
       		 <menuseparator/>
 			<menuitem value="&spamFiltersCmd.label;"/>
-			<menuitem value="&filtersCmd.label;" oncommand="MsgFilters();"/>
+			<menuitem value="&filtersCmd.label;" disabled="true" oncommand="MsgFilters();"/>
 			<menuitem value="&folderPropsCmd.label;" oncommand="MsgFolderProperties();"/>
 			 <menuseparator/>
 			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
@@ -345,17 +345,19 @@ Rights Reserved.
 		<menuitem value="&findCmd.label;" oncommand="MsgFind();"/>
         <menuitem value="&findAgainCmd.label;" oncommand="MsgFindAgain();"/>
         <menuseparator/>
-        <menuitem value="&searchCurrentCmd.label;" oncommand="MsgSearchCurrent();"/>
-        <menuitem value="&searchParentCmd.label;" oncommand="MsgSearchParent();"/>
-        <menuitem value="&searchParentParentCmd.label;" oncommand="MsgSearchParentParent();"/>
+<!--
+        <menuitem value="&searchCurrentCmd.label;" disabled="true" oncommand="MsgSearchCurrent();"/>
+        <menuitem value="&searchParentCmd.label;" disabled="true" oncommand="MsgSearchParent();"/>
+        <menuitem value="&searchParentParentCmd.label;" disabled="true" oncommand="MsgSearchParentParent();"/>
 
         <menuseparator/>
-        <menuitem value="&searchInternetCmd.label;" oncommand="MsgSearchInternet();"/>
-        <menuitem value="&searchMailCmd.label;" oncommand="MsgSearchMessages();"/>
-        <menuitem value="&searchBookmarksCmd.label;" oncommand="MsgSearchBookmarks();"/>
-        <menuitem value="&searchPeopleCmd.label;" oncommand="MsgSearchPeople();"/>
+-->
+        <menuitem value="&searchInternetCmd.label;" disabled="true" oncommand="MsgSearchInternet();"/>
+        <menuitem value="&searchMailCmd.label;" disabled="true" oncommand="MsgSearchMessages();"/>
+        <menuitem value="&searchBookmarksCmd.label;" disabled="true" oncommand="MsgSearchBookmarks();"/>
+        <menuitem value="&searchPeopleCmd.label;" disabled="true" oncommand="MsgSearchPeople();"/>
         <menuseparator/>
-        <menuitem value="&searchLocalCmd.label;" oncommand="MsgSearchLocal();"/>
+        <menuitem value="&searchLocalCmd.label;" disabled="true" oncommand="MsgSearchLocal();"/>
 		</menupopup>
     </menu>
     <menu value="&goMenu.label;">
