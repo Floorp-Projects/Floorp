@@ -77,7 +77,7 @@ main(int argc, char **argv)
     exit(1);
   }
 
-  xid = strtol (argv[1], NULL, 0);
+  xid = strtol (argv[1], (char **)NULL, 0);
 
   if (xid == 0) {
     fprintf(stderr, "Invalid window id '%s'\n", argv[1]);
