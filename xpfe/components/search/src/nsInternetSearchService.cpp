@@ -60,6 +60,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsILoadGroup.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
 #include "nsIInputStream.h"
@@ -240,9 +241,9 @@ class InternetSearchDataSource : public nsIInternetSearchService,
 				 public nsIRDFDataSource, public nsIStreamListener
 {
 private:
-	static PRInt32			gRefCnt;
-	PRBool				mEngineListBuilt;
-	nsCOMPtr<nsISupportsArray>	mConnections;
+static PRInt32				gRefCnt;
+static	PRBool				mEngineListBuilt;
+static	nsCOMPtr<nsILoadGroup>		mLoadGroup;
 
     // pseudo-constants
 	static nsIRDFResource		*kNC_SearchEngineRoot;
@@ -266,6 +267,7 @@ private:
 	static nsIRDFResource		*kNC_Site;
 	static nsIRDFResource		*kNC_Relevance;
 	static nsIRDFResource		*kNC_RelevanceSort;
+	static nsIRDFResource		*kNC_PageRank;
 	static nsIRDFResource		*kNC_Engine;
 	static nsIRDFResource		*kNC_Price;
 	static nsIRDFResource		*kNC_PriceSort;
@@ -327,6 +329,8 @@ static	nsIRDFService		*gRDFService = nsnull;
 PRInt32				InternetSearchDataSource::gRefCnt;
 nsIRDFDataSource		*InternetSearchDataSource::mInner = nsnull;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
+PRBool				InternetSearchDataSource::mEngineListBuilt;
+nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
 
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchEngineRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_LastSearchRoot;
@@ -349,6 +353,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_Banner;
 nsIRDFResource			*InternetSearchDataSource::kNC_Site;
 nsIRDFResource			*InternetSearchDataSource::kNC_Relevance;
 nsIRDFResource			*InternetSearchDataSource::kNC_RelevanceSort;
+nsIRDFResource			*InternetSearchDataSource::kNC_PageRank;
 nsIRDFResource			*InternetSearchDataSource::kNC_Engine;
 nsIRDFResource			*InternetSearchDataSource::kNC_Price;
 nsIRDFResource			*InternetSearchDataSource::kNC_PriceSort;
@@ -368,10 +373,10 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 	{
 		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
 			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService);
-
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		rv = NS_NewISupportsArray(getter_AddRefs(mConnections));
+		rv = NS_NewLoadGroup(this, getter_AddRefs(mLoadGroup));
+		PR_ASSERT(NS_SUCCEEDED(rv));
 
 		gRDFService->GetResource(kURINC_SearchEngineRoot,                &kNC_SearchEngineRoot);
 		gRDFService->GetResource(kURINC_LastSearchRoot,                  &kNC_LastSearchRoot);
@@ -394,6 +399,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Site",                &kNC_Site);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance",           &kNC_Relevance);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance?sort=true", &kNC_RelevanceSort);
+		gRDFService->GetResource(NC_NAMESPACE_URI "PageRank",            &kNC_PageRank);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Engine",              &kNC_Engine);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price",               &kNC_Price);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Price?sort=true",     &kNC_PriceSort);
@@ -428,6 +434,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Site);
 		NS_IF_RELEASE(kNC_Relevance);
 		NS_IF_RELEASE(kNC_RelevanceSort);
+		NS_IF_RELEASE(kNC_PageRank);
 		NS_IF_RELEASE(kNC_Engine);
 		NS_IF_RELEASE(kNC_Price);
 		NS_IF_RELEASE(kNC_PriceSort);
@@ -1466,22 +1473,9 @@ NS_IMETHODIMP
 InternetSearchDataSource::Stop()
 {
 	// cancel any outstanding connections
-	if (mConnections)
+	if (mLoadGroup)
 	{
-		PRUint32	count=0, loop;
-		mConnections->Count(&count);
-		for (loop=0; loop < count; loop++)
-		{
-			nsCOMPtr<nsISupports>	iSupports = mConnections->ElementAt(loop);
-			if (!iSupports)	continue;
-			nsCOMPtr<nsIChannel>	channel = do_QueryInterface(iSupports);
-			if (channel)
-			{
-				channel->Cancel();
-			}
-		}
-
-		mConnections->Clear();
+		mLoadGroup->Cancel();
 	}
 
 	// remove any loading icons
@@ -1648,6 +1642,8 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		mInner->Assert(source, kNC_loading, trueLiteral, PR_TRUE);
 	}
 
+	PRBool	requestInitiated = PR_FALSE;
+
 	// loop over specified search engines
 	while (engineArray->Count() > 0)
 	{
@@ -1686,22 +1682,16 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		if (doNetworkRequest == PR_TRUE)
 		{
 			DoSearch(source, engine, nsAutoString(""), text);
+			requestInitiated = PR_TRUE;
 		}
 	}
 	
 	delete engineArray;
 	engineArray = nsnull;
 
-	// if we weren't able to establish any connections, remove the loading attribute
-	// here; otherwise, it will be done when the last connection completes
-	if (mConnections)
+	if (requestInitiated == PR_FALSE)
 	{
-		PRUint32	count=0;
-		mConnections->Count(&count);
-		if (count < 1)
-		{
-			mInner->Unassert(source, kNC_loading, trueLiteral);
-		}
+		Stop();
 	}
 
 	return(rv);
@@ -1913,8 +1903,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), action)))
 	{
 		nsCOMPtr<nsIChannel>	channel;
-		// XXX: Null LoadGroup ?
-		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull)))
+		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, mLoadGroup)))
 		{
 
 			// send a "MultiSearch" header
@@ -1952,10 +1941,6 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 			if (NS_SUCCEEDED(rv = channel->AsyncRead(0, -1, context, this)))
 			{
-				if (mConnections)
-				{
-					mConnections->AppendElement(channel);
-				}
 			}
 		}
 	}
@@ -2566,11 +2551,6 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 {
 	if (!mInner)	return(NS_OK);
 
-	if (mConnections)
-	{
-		mConnections->RemoveElement(channel);
-	}
-
 	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
 	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
 
@@ -2641,15 +2621,15 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	{
 		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
 
-		if (mConnections)
+		if (mLoadGroup)
 		{
-			PRUint32	count=0;
-			mConnections->Count(&count);
-			if (count < 1)
+			PRUint32	count = 0;
+			if (NS_SUCCEEDED(rv = mLoadGroup->GetActiveCount(&count)))
 			{
-				if (mParent)
+				// is this the last connection in the loadgroup?
+				if (count <= 1)
 				{
-					mInner->Unassert(mParent, kNC_loading, trueLiteral);
+					Stop();
 				}
 			}
 		}
@@ -2852,6 +2832,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	}
 
 	PRBool	hasPriceFlag = PR_FALSE, hasAvailabilityFlag = PR_FALSE, hasRelevanceFlag = PR_FALSE;
+	PRInt32	pageRank = 1;
 
 	while(PR_TRUE)
 	{
@@ -3316,6 +3297,13 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		if (engineIconNode)
 		{
 			rv = mInner->Assert(res, kNC_Icon, engineIconNode, PR_TRUE);
+		}
+
+		// set result page rank
+		nsCOMPtr<nsIRDFInt>	pageRankLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetIntLiteral(pageRank++, getter_AddRefs(pageRankLiteral))))
+		{
+			rv = mInner->Assert(res, kNC_PageRank, pageRankLiteral, PR_TRUE);
 		}
 
 #ifdef	OLDWAY
