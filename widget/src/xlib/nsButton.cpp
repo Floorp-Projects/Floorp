@@ -24,6 +24,7 @@ NS_IMPL_RELEASE(nsButton)
 nsButton::nsButton() : nsWidget() , nsIButton()
 {
   NS_INIT_REFCNT();
+  name = "nsButton";
 }
 
 nsButton::~nsButton()

@@ -46,7 +46,7 @@ public:
                     nsIToolkit *aToolkit = nsnull,
                     nsWidgetInitData *aInitData = nsnull);
 
-  virtual nsresult StandardWindowCreate(nsIWidget *aParent,
+  virtual nsresult StandardWidgetCreate(nsIWidget *aParent,
                                         const nsRect &aRect,
                                         EVENT_CALLBACK aHandleEventFunction,
                                         nsIDeviceContext *aContext,
@@ -95,12 +95,17 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
 protected:
-  PRUint32 mPreferredWidth;
-  PRUint32 mPreferredHeight;
-  Window mWindow;
+  virtual void CreateNative(Window aParent, nsRect aRect);
+  PRUint32   mPreferredWidth;
+  PRUint32   mPreferredHeight;
+  nsIWidget *parentWidget;
+
+  // All widgets have at least these items.
+  Window mBaseWindow;
   PRUint32      bg_rgb;
   unsigned long bg_pixel;
   GC            mGC; // until we get gc pooling working...
+  const char   *name;  // name of the type of widget
 };
 
 extern Display         *gDisplay;
@@ -126,6 +131,12 @@ extern PRUint8   gRedShift;        //number to shift value into red position
 extern PRUint8   gGreenShift;      //number to shift value into green position
 extern PRUint8   gBlueShift;       //number to shift value into blue position
 extern PRUint8   gAlphaShift;      //number to shift value into alpha position
+
+// this is from the xlibrgb code.
+
+extern "C"
+unsigned long
+xlib_rgb_xpixel_from_rgb (unsigned int rgb);
 
 #endif
 
