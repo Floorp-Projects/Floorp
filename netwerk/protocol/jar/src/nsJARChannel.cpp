@@ -119,11 +119,8 @@ nsJARInputThunk::EnsureJarStream()
                                     getter_AddRefs(mJarStream));
     if (NS_FAILED(rv)) return rv;
 
-    // ask the zip entry for the content length
-    nsCOMPtr<nsIZipEntry> entry;
-    mJarReader->GetEntry(mJarEntry.get(), getter_AddRefs(entry));
-    if (entry)
-        entry->GetRealSize((PRUint32 *) &mContentLength);
+    // ask the JarStream for the content length
+    mJarStream->Available((PRUint32 *) &mContentLength);
 
     return NS_OK;
 }
