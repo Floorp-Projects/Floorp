@@ -120,7 +120,6 @@ protected:
   };
 
   nsInlineFrame();
-  ~nsInlineFrame();
 
   virtual PRIntn GetSkipSides() const;
 
@@ -265,10 +264,6 @@ NS_NewInlineFrame(nsIFrame*& aNewFrame)
 }
 
 nsInlineFrame::nsInlineFrame()
-{
-}
-
-nsInlineFrame::~nsInlineFrame()
 {
 }
 
@@ -1220,6 +1215,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
       if (nsnull != aMetrics.maxElementSize) {
         aMetrics.maxElementSize->SizeTo(0, 0);
       }
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
       return NS_OK;
     }
   }
@@ -1409,7 +1405,7 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext& aPresContext,
     aMetrics.height += aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
 
-#if defined(DEBUG) && defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_PC)
     static PRBool useComputedHeight = PR_FALSE;
     static PRBool firstTime = 1;
     if (firstTime) {
@@ -1612,6 +1608,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
   nsIFrame* blockFrame = mFrames.FirstChild();
 
   // Compute available area
+#if XXX_what_to_do
   nscoord x = aReflowState.mComputedBorderPadding.left;
   nscoord availableWidth = aReflowState.availableWidth;
   if (NS_UNCONSTRAINEDSIZE != availableWidth) {
@@ -1630,6 +1627,12 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
     availableHeight -= aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.right;
   }
+#else
+  nscoord x = 0;
+  nscoord availableWidth = aReflowState.availableWidth;
+  nscoord y = 0;
+  nscoord availableHeight = aReflowState.availableHeight;
+#endif
 
   // Reflow the block frame
   nsBlockReflowContext bc(aPresContext, aReflowState,
@@ -1666,6 +1669,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
       aStatus = NS_INLINE_LINE_BREAK_BEFORE();
     }
     else {
+      nsReflowStatus complete = NS_FRAME_COMPLETE;
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // When the block isn't complete create a continuation for it
         nsIFrame* newFrame;
@@ -1673,6 +1677,7 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
         if (NS_FAILED(rv)) {
           return rv;
         }
+        complete = NS_FRAME_NOT_COMPLETE;
       }
 
       // It's possible that the block frame is followed by one or more
@@ -1700,10 +1705,16 @@ nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
         }
       }
 
-      // XXX factor in border/padding
-      aMetrics.width = bounds.width;
-      aMetrics.height = bounds.height;
-      aMetrics.ascent = bounds.height;
+      // Map reflow status so that nothing ends up on the same line as
+      // this frame.
+      aStatus = NS_INLINE_LINE_BREAK_AFTER(complete);
+
+      // What we do here is to fudge the size. <b>This</b> frame will
+      // be 0,0 but will contain a single child (the anonymous block)
+      // that is properly sized.
+      aMetrics.width = 0;
+      aMetrics.height = 0;
+      aMetrics.ascent = 0;
       aMetrics.descent = 0;
       aMetrics.mCarriedOutTopMargin = bc.GetCollapsedTopMargin();
       aMetrics.mCarriedOutBottomMargin = bc.GetCarriedOutBottomMargin();
