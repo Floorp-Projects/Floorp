@@ -1056,19 +1056,6 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     }
 }
 
-PRBool
-nsXULElement::IsNativeAnonymous() const
-{
-    // XXX Workaround to prevent code from discovering scrollbars - bug 251197
-    return mNodeInfo->Equals(nsXULAtoms::scrollbar);
-}
-
-void
-nsXULElement::SetNativeAnonymous(PRBool aAnonymous)
-{
-    // XXX Need to make this actually do something - bug 165110
-}
-
 PRUint32
 nsXULElement::GetChildCount() const
 {
