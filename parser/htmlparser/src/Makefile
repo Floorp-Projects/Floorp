@@ -55,7 +55,7 @@ EXPORTS =     \
   COtherDTD.h \
   nsWellFormedDTD.h \
   nsValidDTD.h \
-  CRTFDTD.h \
+  CRtfDTD.h \
   $(NULL)
 
 EXTRA_EXPORTS =					\
