@@ -433,7 +433,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
     
     NS_ConvertUCS2toUTF8 utf8str(dirName);
     server->description = ToNewCString(utf8str);
-    server->position = count + 1;
+    server->position = kDefaultPosition; // don't set position so alphabetic sort will happen.
     
     if (fileName)
       server->fileName = nsCRT::strdup(fileName);
