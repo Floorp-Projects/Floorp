@@ -109,7 +109,7 @@ char *fe_GetConfigDir(void)
     home = pw ? pw->pw_dir : "/";
   }
 
-  result = PR_smprintf("%s/.netscape", home);
+  result = PR_smprintf("%s/%s", home, MOZ_USER_DIR);
   return result;
 }
 
