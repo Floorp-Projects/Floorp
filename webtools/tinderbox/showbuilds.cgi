@@ -52,6 +52,24 @@ else {
   testfailed => 'FFAA00'
 );
 
+%titlemap = (
+  success    => 'success',
+  busted     => 'busted',
+  building   => 'building',
+  testfailed => 'testfailed',
+  flames     => 'burning',
+  star       => ''
+);
+
+%textmap = (
+  success    => 'L',
+  busted     => 'L!',
+  building   => 'L/',
+  testfailed => 'L-',
+  flames     => '%',
+  star       => '*'
+);
+
 %images = (
   flames    => '1afi003r.gif',
   star      => 'star.gif'
@@ -218,7 +236,7 @@ sub print_page_head {
               </tr>
               <tr>
                 <td align=center>
-                  <img src="$images{star}"></td>
+                  <img src="$images{star}" title="$titlemap{star}" alt="$textmap{star}"></td>
                 <td>= Show Log comments</td>
               </tr>
               <tr>
@@ -330,9 +348,11 @@ BEGIN {
       my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
       
       if ($br->{hasnote}) {
-        print "<a href='$logurl' onclick=\"return ",
-          "note(event,$br->{noteid},'$logfile');\">",
-          "<img src='$images{star}' border=0></a>\n";
+        print qq|
+<a href="$logurl"
+ onclick="return note(event,$br->{noteid},'$logfile');">
+<img src="$images{star}" title="$titlemap{star}" alt="$textmap{star}" border=0></a>
+|;
       }
         
       # Build Log
@@ -340,9 +360,12 @@ BEGIN {
       # Uncomment this line to print logfile names in build rectangle.
       # print "$logfile<br>";
       
-      print "<A HREF='$logurl'"
-           ." onclick=\"return log(event,$build_index,'$logfile');\">"
-           ."L</a>";
+      print qq|
+<A HREF="$logurl"
+ onclick="return log(event,$build_index,'$logfile');"
+ title="$titlemap{$br->{buildstatus}}">
+$textmap{$br->{buildstatus}}</a>
+|;
  
       # What Changed
       #
@@ -411,10 +434,10 @@ sub print_table_header {
     my $last_status = tb_last_status($ii);
     if ($last_status eq 'busted') {
       if ($form{noflames}) {
-        print "<td rowspan=2 bgcolor=$colormap{busted}>$bn</td>";
+        print "<td rowspan=2 bgcolor=$colormap{busted}><a title='$titlemap{flames}'>$bn $textmap{flames}</a></td>";
       } else {
         print "<td rowspan=2 bgcolor=000000 background='$images{flames}'>";
-        print "<font color=white>$bn</font></td>";
+        print "<font color=white><a title='$titlemap{flames}'>$bn $textmap{flames}</a></font></td>";
       }
     }
     else {
