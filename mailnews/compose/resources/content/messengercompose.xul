@@ -56,6 +56,7 @@ Rights Reserved.
 
 <menubar>
 	<menu id="fileMenu" value="&fileMenu.label;">
+	    <menupopup>
 		<menuitem value="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
 		<menuitem value="&saveAsCmd.label;" onaction="SaveAsDraft()"/>
@@ -72,8 +73,10 @@ Rights Reserved.
 		<menuitem value="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
 		<menuseparator/>
 		<menuitem value="&closeCmd.label;" onaction="CloseWindow();"/>
+		</menupopup>
 	</menu>
     <menu value="&editMenu.label;">
+		<menupopup>
 		<menuitem value="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
 		<menuitem value="&cutCmd.label;" cmd="nsCmd:ComposeNYI"/>
@@ -90,8 +93,10 @@ Rights Reserved.
 		<menuitem value="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
 		<menuitem value="&prefsCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		</menupopup>
     </menu>
     <menu value="&viewMenu.label;">
+		<menupopup>
 		<menuitem value="&showCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
 		<menuitem value="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
@@ -100,6 +105,7 @@ Rights Reserved.
 		<menuitem value="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
       		<menu value="&dcharMenu.label;">
+			<menupopup>
 			<menuitem value="&dcharIso1Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-1');"/>
 			<menuitem value="&dcharIso2Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-2');"/>
 			<menuitem value="&dcharIso3Cmd.label;" onaction="SetDocumentCharacterSet('ISO-8859-3');"/>
@@ -128,40 +134,53 @@ Rights Reserved.
 			<menuitem value="&dcharThaiCmd.label;" onaction="SetDocumentCharacterSet('TIS-620');"/>
 			 <menuseparator />
 			<menuitem value="&dcharArmCmd.label;" onaction="SetDocumentCharacterSet('ARMSCII-8');"/>
+			</menupopup>
 	   </menu>
+	   </menupopup>
     </menu>
     <menu value="&insertMenu.label;">
     </menu>
     <menu value="&formatMenu.label;">
     </menu>
     <menu value="&messageMenu.label;">
-	   	<menu value="&priorityMenu.label;" onaction="PriorityMenuSelect(event.target);">
-    		<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
+	   	<menupopup>
+		<menu value="&priorityMenu.label;" onaction="PriorityMenuSelect(event.target);">
+    		<menupopup>
+			<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
     		<menuitem value="&lowPriorityCmd.label;" id="low"/>
     		<menuitem value="&normalPriorityCmd.label;" id="normal"/>
     		<menuitem value="&highPriorityCmd.label;" id="high"/>
     		<menuitem value="&highestPriorityCmd.label;" id="highest"/>
+			</menupopup>
 	   	</menu>
     	<menuitem value="&returnReceiptCmd.label;" onaction="ReturnReceiptMenuSelect();"/>
 	   	<menuitem value="&uuEncodeCmd.label;" onaction="UUEncodeMenuSelect();"/>
 	   	<menu value="&outputFormatMenu.label;" onaction="OutputFormatMenuSelect(event.target);">
-    		<menuitem value="&askmeFormatCmd.label;" id="1"/>
+    		<menupopup>
+			<menuitem value="&askmeFormatCmd.label;" id="1"/>
     		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
     		<menuitem value="&htmlFormatCmd.label;" id="3"/>
     		<menuitem value="&bothFormatCmd.label;" id="4"/>
+			</menupopup>
 	   	</menu>
     	<menuseparator/>
 		<menu value="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
 			onaction="MessageFcc(event.target)">
+			<menupopup/>
                   <template>
                     <rule iscontainer="true" isempty="false">
-                      <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                      <menupopup>
+					  <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+					  </menupopup>
                     </rule>
                     <rule>
-                      <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" onaction="MsgCopyMessage(event.target)" />
+                      <menupopup>
+					  <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" onaction="MsgCopyMessage(event.target)" />
+					  </menupopup>
                     </rule>
                   </template>
 		</menu>
+	  </menupopup>
     </menu>
 	<menu id="tasksMenu"/>
 	<menu id="helpMenu"/>
@@ -296,17 +315,17 @@ Rights Reserved.
 	      <titledbutton id="ItalicButton" src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
 	      <titledbutton id="UnderlineButton" src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
 -->
-	      <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="bottom" onclick="EditorInsertList('ul')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="bottom" onclick="EditorInsertList('ol')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentWindow" popupanchor="bottomleft"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="top" onclick="EditorInsertList('ul')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="top" onclick="EditorInsertList('ol')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="top" onclick="EditorIndent('outdent')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="top" onclick="EditorIndent('indent')"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="top" class="popup" popup="AlignmentWindow" popupanchor="bottomleft"/>
 
-	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" value="Link" onclick="EditorInsertLink()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" value="Image" onclick="EditorInsertImage()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Target.gif" align="bottom" value="Anchor" onclick="EditorInsertNamedAnchor()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" value="H.Line" onclick="EditorInsertHLine()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" value="Spell" class="popup" onclick="CheckSpelling()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="top" value="Link" onclick="EditorInsertLink()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="top" value="Image" onclick="EditorInsertImage()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Target.gif" align="top" value="Anchor" onclick="EditorInsertNamedAnchor()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="top" value="H.Line" onclick="EditorInsertHLine()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="top" value="Spell" class="popup" onclick="CheckSpelling()"/>
 		  <spring flex="100%"/>
 	  </toolbar>
 </toolbox>
