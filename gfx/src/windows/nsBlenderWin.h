@@ -29,6 +29,8 @@
 // Blender interface
 class nsBlenderWin : public nsIBlender
 {
+
+
 public:
 
     NS_DECL_ISUPPORTS
@@ -36,17 +38,14 @@ public:
       nsBlenderWin();
       ~nsBlenderWin();
 
-  /**
-   * Initialize the Blender
-   * @result The result of the initialization, NS_OK if no errors
-   */
-  virtual nsresult Init();
-
+  virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst);
+  virtual void CleanUp();
   virtual void Blend(nsDrawingSurface aSrc,
                      PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                      nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity);
 
-  PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
+ private:
+ PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
                               BITMAP  *aMapInfo,nsPoint *aMaskUL,
                               PRInt32 *aNumlines,
                               PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
@@ -54,7 +53,6 @@ public:
 
   PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
-private:
   /**
    * Create a DIB header and bits for a bitmap
    * @param aBHead  information header for the DIB
@@ -132,6 +130,13 @@ private:
    */
   void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                 PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality);
+
+
+  private:
+  LPBITMAPINFOHEADER  mDstbinfo,mSrcbinfo;
+  PRUint8             *mSrcBytes,*mDstBytes;
+  BITMAP              mSrcInfo,mDstInfo;
+  HBITMAP             mTempB1,mTempB2;
 
 };
 

@@ -42,10 +42,53 @@ NS_IMPL_ISUPPORTS(nsBlenderWin, kIBlenderIID);
 //------------------------------------------------------------
 
 nsresult
-nsBlenderWin::Init()
+nsBlenderWin::Init(nsDrawingSurface aSrc,nsDrawingSurface aDst)
+{
+PRInt32             numbytes;
+HDC                 srcdc,dstdc;
+HBITMAP             srcbits,dstbits;
+
+  // lets build some DIB's for the source and destination from the HDC's
+  srcdc = (HDC)aSrc;
+  dstdc = (HDC)aDst;
+
+  // source
+  mTempB1 = CreateCompatibleBitmap(srcdc,3,3);
+  srcbits = ::SelectObject(srcdc, mTempB1);
+  numbytes = ::GetObject(srcbits,sizeof(BITMAP),&mSrcInfo);
+  BuildDIB(&mSrcbinfo,&mSrcBytes,mSrcInfo.bmWidth,mSrcInfo.bmHeight,mSrcInfo.bmBitsPixel);
+  numbytes = ::GetDIBits(srcdc,srcbits,0,mSrcInfo.bmHeight,mSrcBytes,(LPBITMAPINFO)mSrcbinfo,DIB_RGB_COLORS);
+
+  if(numbytes > 0)
+    {
+    // destination
+    mTempB2 = CreateCompatibleBitmap(dstdc,3,3);
+    dstbits = ::SelectObject(dstdc, mTempB2);
+    ::GetObject(dstbits,sizeof(BITMAP),&mDstInfo);
+    BuildDIB(&mDstbinfo,&mDstBytes,mDstInfo.bmWidth,mDstInfo.bmHeight,mDstInfo.bmBitsPixel);
+    numbytes = ::GetDIBits(dstdc,dstbits,0,mDstInfo.bmHeight,mDstBytes,(LPBITMAPINFO)mDstbinfo,DIB_RGB_COLORS);
+    
+    // put the old stuff back
+    ::SelectObject(srcdc,srcbits);
+    ::SelectObject(dstdc,dstbits);
+    }
+
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+
+void
+nsBlenderWin::CleanUp()
 {
 
-   return NS_OK;
+  ::DeleteObject(mTempB1);
+  ::DeleteObject(mTempB2);
+
+
+  // get rid of the DIB's
+  DeleteDIB(&mSrcbinfo,&mSrcBytes);
+  DeleteDIB(&mDstbinfo,&mDstBytes);
 }
 
 //------------------------------------------------------------
@@ -54,52 +97,24 @@ void
 nsBlenderWin::Blend(nsDrawingSurface aSrc,PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                      nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity)
 {
-HDC                 srcdc,dstdc;
-HBITMAP             srcbits,dstbits,tb1,tb2;
-BITMAP              srcinfo,dstinfo;
+HDC                 dstdc,tb1;
+HBITMAP             dstbits;
 nsPoint             srcloc,maskloc;
 PRInt32             dlinespan,slinespan,mlinespan,numbytes,numlines,level;
-PRUint8             *s1,*d1,*m1,*srcbytes,*dstbytes;
-LPBITMAPINFOHEADER  srcbinfo,dstbinfo;
-PRUint8             *mask=NULL;
+PRUint8             *s1,*d1,*m1,*mask=NULL;
 nsColorMap          *colormap;
 
-  // we have to extract the bitmaps from the nsDrawingSurface, which in this case is a hdc
-  srcdc = (HDC)aSrc;
-  dstdc = (HDC)aDst;
-
-  // we use this bitmap to select into the HDC's while we work on the ones they give us
-  tb1 = CreateCompatibleBitmap(aSrc,3,3);
-
-  // get the HBITMAP, and then grab the information about the source bitmap and bits
-  srcbits = ::SelectObject(srcdc, tb1);
-  numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
-  // put into a DIB
-  BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
-
-  if(srcinfo.bmBitsPixel != 24)
-    numbytes = ::GetDIBits(srcdc,srcbits,1,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_PAL_COLORS);
-  else
-    numbytes = ::GetDIBits(srcdc,srcbits,1,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
-
-  // get the HBITMAP, and then grab the information about the destination bitmap
-  tb2 = CreateCompatibleBitmap(aSrc,3,3);
-  dstbits = ::SelectObject(dstdc, tb2);
-  ::GetObject(dstbits,sizeof(BITMAP),&dstinfo);
-  // put into a DIB
-  BuildDIB(&dstbinfo,&dstbytes,dstinfo.bmWidth,dstinfo.bmHeight,dstinfo.bmBitsPixel);
-  numbytes = ::GetDIBits(dstdc,dstbits,1,dstinfo.bmHeight,dstbytes,(LPBITMAPINFO)dstbinfo,DIB_RGB_COLORS);
 
   // calculate the metrics, no mask right now
   srcloc.x = aSX;
   srcloc.y = aSY;
-  srcinfo.bmBits = srcbytes;
-  dstinfo.bmBits = dstbytes;
-  if(CalcAlphaMetrics(&srcinfo,&dstinfo,&srcloc,NULL,&maskloc,&numlines,&numbytes,
+  mSrcInfo.bmBits = mSrcBytes;
+  mDstInfo.bmBits = mDstBytes;
+  if(CalcAlphaMetrics(&mSrcInfo,&mDstInfo,&srcloc,NULL,&maskloc,&numlines,&numbytes,
                 &s1,&d1,&m1,&slinespan,&dlinespan,&mlinespan))
     {
     // now do the blend
-    if ((srcinfo.bmBitsPixel==24) && (dstinfo.bmBitsPixel==24))
+    if ((mSrcInfo.bmBitsPixel==24) && (mDstInfo.bmBitsPixel==24))
       {
       if(mask)
         {
@@ -113,7 +128,7 @@ nsColorMap          *colormap;
         }
       }
     else
-      if ((srcinfo.bmBitsPixel==8) && (dstinfo.bmBitsPixel==8))
+      if ((mSrcInfo.bmBitsPixel==8) && (mDstInfo.bmBitsPixel==8))
         {
         if(mask)
           {
@@ -126,22 +141,13 @@ nsColorMap          *colormap;
           }
         }
 
+      // put the new bits in
+    dstdc = (HDC)aDst;
+    dstbits = ::CreateDIBitmap(dstdc, mDstbinfo, CBM_INIT, mDstBytes, (LPBITMAPINFO)mDstbinfo, DIB_RGB_COLORS);
+    tb1 = ::SelectObject(dstdc,dstbits);
+    ::DeleteObject(tb1);
     }
 
-  // put the new bits in
-  ::DeleteObject(dstbits);
-  dstbits = ::CreateDIBitmap(dstdc, dstbinfo, CBM_INIT, dstbytes, (LPBITMAPINFO)dstbinfo, DIB_RGB_COLORS);
-
-
-  ::SelectObject(srcdc,srcbits);
-  ::SelectObject(dstdc,dstbits);
-
-  ::DeleteObject(tb1);
-  ::DeleteObject(tb2);
-
-  // get rid of the DIB's
-  DeleteDIB(&srcbinfo,&srcbytes);
-  DeleteDIB(&dstbinfo,&dstbytes);
 }
 
 //------------------------------------------------------------
@@ -248,6 +254,7 @@ PRUint8   *colortable;
 			numpalletcolors = -1;
       break;
     }
+
 
   if (numpalletcolors >= 0)
     {

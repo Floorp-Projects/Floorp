@@ -36,9 +36,16 @@ class nsIBlender : public nsISupports
 public:
   /**
    * Initialize the Blender
+   * @param  aSrc is the source drawing image to buffer
+   * @param  aDst is the dest drawing image to buffer
    * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init() = 0;
+  virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst) = 0;
+
+  /**
+   * Clean up the intialization stuff
+   */
+  virtual void CleanUp() = 0;
 
   /**
    * NOTE: if we can make this static, that would be great. I don't think we can.

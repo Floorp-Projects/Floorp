@@ -69,12 +69,7 @@ static nsITextWidget  *gBlendMessage;
 static nsITextWidget  *gQualMessage;
 
 
-#ifdef OLDWAY
-extern void    Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY);
-#else
 extern void    Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcDC,HDC aDestDC);
-#endif
-
 extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 extern PRInt32 drawtest(nsIRenderingContext *aSurface);
 extern PRInt32 filltest(nsIRenderingContext *aSurface);
@@ -149,10 +144,6 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           {
           nsColorMap *cmap = (*mImage)->GetColorMap();
           nsRect *rect = (nsRect *)aParam3;
-#ifdef OLDWAY
-          Compositetest(gTestNum,gImage,gBlendImage,gMaskImage,gXOff,gYOff);
-#else
-          {
           HBITMAP           dobits,sobits,srcbits,destbits;
           HDC               destdc,srcdc,screendc;
           void              *bits1,*bits2;
@@ -180,9 +171,6 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           DeleteObject(srcbits);
           DeleteObject(destbits);
           ReleaseDC(gHwnd,screendc);
-        }
-#endif
-
           }
        }
        break;
@@ -462,17 +450,18 @@ nsString        str;
 }
 #else
 void
-Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcHDC,HDC DestHDC)
+Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcHDC,HDC aDstHDC)
 {
-PRUint8       *thebytes,*curbyte,*srcbytes,*cursourcebytes;
-PRInt32       w,h,ls,x,y,numbytes,sls,numerror;
-float         blendamount;
-nsIBlender    *imageblender;
-nsresult      rv;
-HBITMAP       srcbits,tb1;
-BITMAP        srcinfo;
+PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
+PRInt32             w,h,ls,x,y,numbytes,sls,numerror;
+float               blendamount;
+nsIBlender          *imageblender;
+nsresult            rv;
+HBITMAP             srcbits,tb1;
+BITMAP              srcinfo;
 LPBITMAPINFOHEADER  srcbinfo;
-nsString      str;
+nsString            str;
+nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 
   static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
   static NS_DEFINE_IID(kBlenderIID, NS_IBLENDER_IID);
@@ -485,18 +474,20 @@ nsString      str;
     blendamount = 1.0f;
 
   rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&imageblender);
-  imageblender->Init();
-  imageblender->Blend(nsDrawingSurface (aSrcHDC),0,0,0,0,(DestHDC),0, 0,blendamount);
+  imageblender->Init(aSrcHDC,aDstHDC);
+  imageblender->Blend(aSrcHDC,0,0,0,0,aDstHDC,0, 0,blendamount);
+  imageblender->CleanUp();
 
 
   // this takes the Destination DC and copies the information into aImage
-  tb1 = CreateCompatibleBitmap(DestHDC,3,3);
-  srcbits = ::SelectObject(DestHDC, tb1);
+  tb1 = CreateCompatibleBitmap(aDstHDC,3,3);
+  srcbits = ::SelectObject(aDstHDC, tb1);
   numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
   // put into a DIB
   BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
-  numbytes = ::GetDIBits(DestHDC,srcbits,1,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+  numbytes = ::GetDIBits(aDstHDC,srcbits,0,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
 
+  // copy the information back into the source
   thebytes = aImage->GetBits();
   h = aImage->GetHeight();
   w = aImage->GetWidth();
@@ -512,9 +503,9 @@ nsString      str;
       curbyte++;
       cursourcebytes++;
       }
-    
     }
 
+  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 }
 #endif
 //------------------------------------------------------------
