@@ -52,6 +52,7 @@ public:
 	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsIEnumerator* *result);
 
 	// non-interface methods
+	PRBool TryReferenceThreading(nsIMsgDBHdr *newHeader);
     nsIMdbTable		*GetMDBTable() {return m_mdbTable;}
 	nsIMdbRow		*GetMetaRow() {return m_metaRow;}
 	nsMsgDatabase	*m_mdbDB ;
