@@ -41,7 +41,7 @@ return(1);
 
 sub StageProduct
 {
-  my($aDirSrcDist, $aDirStage, $aProductName, $aOsPkg, $aInOs) = @_;
+  my($aDirSrcDist, $aDirStage, $aProductName, $aOsPkg) = @_;
   my($dirDistPackagesProductName) = "$aDirSrcDist/packages/$aProductName";
   my($dirStageProductName)        = "$aDirStage/$aProductName";
   my($dirMozRoot)                 = StageUtils::GetAbsPath("moz_root");
@@ -62,9 +62,9 @@ sub StageProduct
 
   StageUtils::CleanupStage($aDirStage, $aProductName);
   StageUtils::CleanupDistPackages("$aDirSrcDist/packages", $aProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-$aInOs",                   $dirDistPackagesProductName);
-  StageUtils::CopyAdditionalPackage("$dirMozPackager/packages-$aInOs",                    $dirDistPackagesProductName);
-#  StageUtils::GeneratePackagesFromSinglePackage($inOs, "$dirMozPackager/packages-$aInOs", $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/xpcom-win.pkg",                   $dirDistPackagesProductName);
+  StageUtils::CopyAdditionalPackage("$dirMozPackager/packages-win",                    $dirDistPackagesProductName);
+#  StageUtils::GeneratePackagesFromSinglePackage($inOs, "$dirMozPackager/packages-win", $dirDistPackagesProductName);
 
   # Call CreateStage() to create the aProductName stage dir using the packages
   # in dist/packages.
