@@ -292,6 +292,23 @@ function allLeftButtonsAreHidden()
   return true;
 }
 
+function RegisterTabOpenObserver()
+{
+  const observer = {
+    observe: function(subject, topic, data)
+    {
+      if (topic != "open-new-tab-request" || subject != window)
+        return;
+
+      delayedOpenTab(data);
+    }
+  };
+
+  const service =
+    Components.classes["@mozilla.org/observer-service;1"].getService();
+  service.addObserver(observer, "open-new-tab-request", false);
+}
+
 function Startup()
 {
   // init globals
@@ -449,6 +466,8 @@ function Startup()
       remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
                                 .getService(Components.interfaces.nsIXRemoteService);
       remoteService.addBrowserInstance(window);
+
+      RegisterTabOpenObserver();
     }
   }
   
