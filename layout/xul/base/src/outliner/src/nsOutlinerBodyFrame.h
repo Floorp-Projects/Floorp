@@ -474,6 +474,5 @@ protected: // Data Members
 
   // Timer for opening spring-loaded folders.
   nsCOMPtr<nsITimer> mOpenTimer;
-  PRInt32 mOpenTimerRow;
 
 }; // class nsOutlinerBodyFrame
