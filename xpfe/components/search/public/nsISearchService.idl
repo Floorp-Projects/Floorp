@@ -38,7 +38,7 @@ interface nsILocalSearchService : nsISupports
 interface nsIInternetSearchService : nsISupports
 {
 	string			GetInternetSearchURL(in string searchEngineURI, in wstring searchStr);
-	void			FindInternetSearchResults(in string url);
+	boolean			FindInternetSearchResults(in string url);
 	void			Stop();
 	void			ClearResults();
 	void			ClearResultSearchSites();
