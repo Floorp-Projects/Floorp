@@ -413,11 +413,11 @@ function getOKAction(file) {
   var buttonLabel;
 
   if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder) {
-    document.documentElement.setAttribute("ondialogaccept", "openOnOK");
+    document.documentElement.setAttribute("ondialogaccept", "return openOnOK();");
     buttonLabel = gFilePickerBundle.getString("openButtonLabel");
   }
   else {
-    document.documentElement.setAttribute("ondialogaccept", "selectOnOK");
+    document.documentElement.setAttribute("ondialogaccept", "return selectOnOK();");
     switch(filePickerMode) {
     case nsIFilePicker.modeGetFolder:
       buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
