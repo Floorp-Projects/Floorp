@@ -197,7 +197,6 @@ nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
     transferable = mSelectionTransferable;
     break;
   }
-  NS_IF_ADDREF(transferable);
   return transferable;
 }
 
@@ -216,7 +215,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
-  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+  nsCOMPtr<nsITransferable> transferable(GetTransferable(aWhichClipboard));
 
   // FIXME Need to make sure mTransferable has reference to selectionclipboard.
   // This solves the problem with copying to an external app.

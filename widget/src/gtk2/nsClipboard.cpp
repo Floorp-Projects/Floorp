@@ -441,7 +441,6 @@ nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
     else
         retval = mGlobalTransferable.get();
         
-    NS_IF_ADDREF(retval);
     return retval;
 }
 
@@ -471,8 +470,7 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
     else
         return; // THAT AINT NO CLIPBOARD I EVER HEARD OF
 
-    nsCOMPtr<nsITransferable> trans;
-    trans = getter_AddRefs(GetTransferable(whichClipboard));
+    nsCOMPtr<nsITransferable> trans = GetTransferable(whichClipboard);
     
     nsresult rv;
     nsCOMPtr<nsISupports> item;
