@@ -168,6 +168,7 @@ NS_IMETHODIMP nsCyrXPCOMStringDetector::DoIt(const char* aBuf, PRUint32 aLen,
                      const char** oCharset, nsDetectionConfident &oConf)
 {
    mResult = nsnull;
+   mDone = PR_FALSE;
    this->HandleData(aBuf, aLen); 
    this->DataEnd();
    *oCharset=mResult;
