@@ -217,7 +217,7 @@ input[disabled],
 textarea[disabled],
 option[disabled],
 select[disabled],
-select[disabled] > :-moz-display-comboboxcontrol-frame {
+select[disabled]:-moz-display-comboboxcontrol-frame {
   color: GrayText;
   cursor: default;
 }

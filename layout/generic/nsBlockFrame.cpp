@@ -332,31 +332,30 @@ nsBlockFrame::Destroy(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtr, "null out param");
   if (aIID.Equals(kBlockFrameCID)) {
-    nsBlockFrame* tmp = this;
-    *aInstancePtr = (void*) tmp;
+    *aInstancePtr = NS_STATIC_CAST(void*, NS_STATIC_CAST(nsBlockFrame*, this));
     return NS_OK;
   }
-  if ( aIID.Equals(NS_GET_IID(nsILineIterator)) ||
-       aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)) )
+  if (aIID.Equals(NS_GET_IID(nsILineIterator)) ||
+      aIID.Equals(NS_GET_IID(nsILineIteratorNavigator)))
   {
     nsLineIterator* it = new nsLineIterator;
     if (!it) {
       *aInstancePtr = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    NS_ADDREF(it); // reference passed to caller
     const nsStyleVisibility* visibility;
     GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) visibility);
     nsresult rv = it->Init(mLines,
                            visibility->mDirection == NS_STYLE_DIRECTION_RTL);
     if (NS_FAILED(rv)) {
-      delete it;
+      NS_RELEASE(it);
       return rv;
     }
-    NS_ADDREF((nsILineIterator *) (*aInstancePtr = (void *) it));
+    *aInstancePtr = NS_STATIC_CAST(void*,
+            NS_STATIC_CAST(nsILineIteratorNavigator*, it));
     return NS_OK;
   }
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
@@ -1400,6 +1399,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // If we're requested to update our maximum width, then compute it
   if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
     // We need to add in for the right border/padding
+    // XXXldb Why right and not left?
     aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
 #ifdef NOISY_MAXIMUM_WIDTH
     printf("nsBlockFrame::ComputeFinalSize block %p setting aMetrics.mMaximumWidth to %d\n", this, aMetrics.mMaximumWidth);
@@ -4060,6 +4060,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);  // XXXldb This returned width as -15, 2001-06-12, Bugzilla
+  // XXX Changing the combined area here seems wrong. - LDB
   aLine->SetCombinedArea(combinedArea);
   if (addedBullet) {
     aLineLayout.RemoveBulletFrame(mBullet);
@@ -5977,6 +5978,16 @@ nsBlockFrame::Init(nsIPresContext*  aPresContext,
 nsIStyleContext*
 nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
 {
+  // This check is here because nsComboboxControlFrame creates
+  // nsBlockFrame objects that have an |mContent| pointing to a text
+  // node.  This check ensures we don't try to do selector matching on
+  // that text node.
+  //
+  // XXX This check should go away once we fix nsComboboxControlFrame.
+  //
+  if (!mContent->IsContentOfType(nsIContent::eELEMENT))
+    return nsnull;
+
   nsIStyleContext* fls;
   aPresContext->ProbePseudoStyleContextFor(mContent,
                                            nsHTMLAtoms::firstLetterPseudo,

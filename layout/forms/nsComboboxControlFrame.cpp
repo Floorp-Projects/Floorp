@@ -2269,11 +2269,10 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   if (NS_FAILED(rv)) { return rv; }
   if (!mTextFrame) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIStyleContext> textStyleContext;
-  rv = aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                                  nsHTMLAtoms::mozDisplayComboboxControlFrame,
-                                                  styleContext,
-                                                  PR_FALSE,
-                                                  getter_AddRefs(textStyleContext));
+  rv = aPresContext->ResolveStyleContextForNonElement(
+                                             styleContext,
+                                             PR_FALSE,
+                                             getter_AddRefs(textStyleContext));
   if (NS_FAILED(rv)) { return rv; }
   if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
@@ -2325,11 +2324,10 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Add a child text content node for the label
   nsresult result;
   nsCOMPtr<nsIContent> labelContent(do_CreateInstance(kTextNodeCID,&result));
-  nsAutoString value; value.AssignWithConversion("X");
   if (NS_SUCCEEDED(result) && labelContent) {
     // set the value of the text node
     mDisplayContent = do_QueryInterface(labelContent);
-    mDisplayContent->SetText(value.get(), value.Length(), PR_TRUE);
+    mDisplayContent->SetText(NS_LITERAL_STRING("X"), PR_TRUE);
 
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
@@ -2400,7 +2398,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
 
     // create the style context for the anonymous block frame
     nsCOMPtr<nsIStyleContext> styleContext;
-    rv = aPresContext->ResolvePseudoStyleContextFor(content, 
+    rv = aPresContext->ResolvePseudoStyleContextFor(mContent, 
                                                     nsHTMLAtoms::mozDisplayComboboxControlFrame,
                                                     mStyleContext,
                                                     PR_FALSE,
@@ -2413,11 +2411,10 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
     if (NS_FAILED(rv)) { return rv; }
     if (!mTextFrame)   { return NS_ERROR_NULL_POINTER; }
     nsCOMPtr<nsIStyleContext> textStyleContext;
-    rv = aPresContext->ResolvePseudoStyleContextFor(content, 
-                                                    nsHTMLAtoms::mozDisplayComboboxControlFrame,//nsHTMLAtoms::textPseudo,
-                                                    styleContext,
-                                                    PR_FALSE,
-                                                    getter_AddRefs(textStyleContext));
+    rv = aPresContext->ResolveStyleContextForNonElement(
+                                             styleContext,
+                                             PR_FALSE,
+                                             getter_AddRefs(textStyleContext));
     if (NS_FAILED(rv))     { return rv; }
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
 

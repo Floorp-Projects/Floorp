@@ -692,10 +692,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
 NS_IMETHODIMP
 nsPresContext::GetShell(nsIPresShell** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mShell;
   NS_IF_ADDREF(mShell);
   return NS_OK;
@@ -750,10 +747,7 @@ nsPresContext::Observe(nsISupports* aSubject,
 NS_IMETHODIMP
 nsPresContext::GetCompatibilityMode(nsCompatibility* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mCompatibilityMode;
   return NS_OK;
 }
@@ -782,7 +776,7 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 NS_IMETHODIMP
 nsPresContext::GetWidgetRenderingMode(nsWidgetRendering* aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mWidgetRenderingMode;
   return NS_OK;
 }
@@ -798,7 +792,7 @@ nsPresContext::SetWidgetRenderingMode(nsWidgetRendering aMode)
 NS_IMETHODIMP
 nsPresContext::GetImageAnimationMode(nsImageAnimation* aModeResult)
 {
-  NS_ENSURE_ARG_POINTER(aModeResult);
+  NS_PRECONDITION(aModeResult, "null out param");
   *aModeResult = mImageAnimationMode;
   return NS_OK;
 }
@@ -818,10 +812,7 @@ nsPresContext::SetImageAnimationMode(nsImageAnimation aMode)
 NS_IMETHODIMP
 nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
 {
-  NS_PRECONDITION(nsnull != aLookAndFeel, "null ptr");
-  if (nsnull == aLookAndFeel) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aLookAndFeel, "null out param");
   nsresult result = NS_OK;
   if (! mLookAndFeel) {
     mLookAndFeel = do_GetService(kLookAndFeelCID,&result);
@@ -836,10 +827,7 @@ nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
 NS_IMETHODIMP
 nsPresContext::GetBaseURL(nsIURI** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mBaseURL;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
@@ -851,10 +839,7 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
                                       PRBool aForceUnique,
                                       nsIStyleContext** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
@@ -867,6 +852,27 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
     }
+  }
+  *aResult = result;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPresContext::ResolveStyleContextForNonElement(
+                                      nsIStyleContext* aParentContext,
+                                      PRBool aForceUnique,
+                                      nsIStyleContext** aResult)
+{
+  NS_PRECONDITION(aResult, "null out param");
+
+  nsIStyleContext* result = nsnull;
+  nsCOMPtr<nsIStyleSet> set;
+  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
+  if (NS_SUCCEEDED(rv) && set) {
+    result = set->ResolveStyleForNonElement(this, aParentContext,
+                                            aForceUnique);
+    if (!result)
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
   *aResult = result;
   return rv;
@@ -891,10 +897,7 @@ nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
                                                 nsICSSPseudoComparator* aComparator,
                                                 nsIStyleContext** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
@@ -919,10 +922,7 @@ nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                           PRBool aForceUnique,
                                           nsIStyleContext** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   nsIStyleContext* result = nsnull;
   nsCOMPtr<nsIStyleSet> set;
@@ -973,10 +973,7 @@ nsPresContext::FreeToShell(size_t aSize, void* aFreeChunk)
 NS_IMETHODIMP
 nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   nsIFontMetrics* metrics = nsnull;
   if (mDeviceContext) {
@@ -1065,10 +1062,7 @@ nsPresContext::SetDefaultFont(const PRUint8 aFontID, const nsFont& aFont)
 NS_IMETHODIMP
 nsPresContext::GetFontScaler(PRInt32* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   *aResult = mFontScaler;
   return NS_OK;
@@ -1084,10 +1078,7 @@ nsPresContext::SetFontScaler(PRInt32 aScaler)
 NS_IMETHODIMP
 nsPresContext::GetDefaultColor(nscolor* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   *aResult = mDefaultColor;
   return NS_OK;
@@ -1096,10 +1087,7 @@ nsPresContext::GetDefaultColor(nscolor* aResult)
 NS_IMETHODIMP 
 nsPresContext::GetDefaultBackgroundColor(nscolor* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   *aResult = mDefaultBackgroundColor;
   return NS_OK;
@@ -1115,8 +1103,7 @@ nsPresContext::GetDefaultBackgroundImage(nsString& aImage)
 NS_IMETHODIMP
 nsPresContext::GetDefaultBackgroundImageRepeat(PRUint8* aRepeat)
 {
-  NS_PRECONDITION(nsnull != aRepeat, "null ptr");
-  if (nsnull == aRepeat) { return NS_ERROR_NULL_POINTER; }
+  NS_PRECONDITION(aRepeat, "null out param");
   *aRepeat = mDefaultBackgroundImageRepeat;
   return NS_OK;
 }
@@ -1124,8 +1111,7 @@ nsPresContext::GetDefaultBackgroundImageRepeat(PRUint8* aRepeat)
 NS_IMETHODIMP
 nsPresContext::GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY)
 {
-  NS_PRECONDITION((nsnull != aX) && (nsnull != aY), "null ptr");
-  if (!aX || !aY) { return NS_ERROR_NULL_POINTER; }
+  NS_PRECONDITION(aX && aY, "null out param");
   *aX = mDefaultBackgroundImageOffsetX;
   *aY = mDefaultBackgroundImageOffsetY;
   return NS_OK;
@@ -1134,8 +1120,7 @@ nsPresContext::GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY)
 NS_IMETHODIMP
 nsPresContext::GetDefaultBackgroundImageAttachment(PRUint8* aAttachment)
 {
-  NS_PRECONDITION(nsnull != aAttachment, "null ptr");
-  if (nsnull == aAttachment) { return NS_ERROR_NULL_POINTER; }
+  NS_PRECONDITION(aAttachment, "null out param");
   *aAttachment = mDefaultBackgroundImageAttachment;
   return NS_OK;
 }
@@ -1143,23 +1128,17 @@ nsPresContext::GetDefaultBackgroundImageAttachment(PRUint8* aAttachment)
 NS_IMETHODIMP
 nsPresContext::GetDefaultLinkColor(nscolor* aColor)
 {
-  NS_PRECONDITION(nsnull != aColor, "null argument");
-  if (aColor) {
-    *aColor = mLinkColor;
-    return NS_OK;
-  }
-  return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aColor, "null out param");
+  *aColor = mLinkColor;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsPresContext::GetDefaultVisitedLinkColor(nscolor* aColor)
 {
-  NS_PRECONDITION(nsnull != aColor, "null argument");
-  if (aColor) {
-    *aColor = mVisitedLinkColor;
-    return NS_OK;
-  }
-  return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aColor, "null out param");
+  *aColor = mVisitedLinkColor;
+  return NS_OK;
 }
 
 
@@ -1182,35 +1161,26 @@ nsPresContext::GetUseFocusColors(PRBool& aUseFocusColors)
 NS_IMETHODIMP
 nsPresContext::GetFocusTextColor(nscolor* aColor)
 {
-  NS_PRECONDITION(nsnull != aColor, "null argument");
-  if (aColor) {
-    *aColor = mFocusTextColor;
-    return NS_OK;
-  }
-  return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aColor, "null out param");
+  *aColor = mFocusTextColor;
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsPresContext::GetFocusBackgroundColor(nscolor* aColor)
 {
-  NS_PRECONDITION(nsnull != aColor, "null argument");
-  if (aColor) {
-    *aColor = mFocusBackgroundColor;
-    return NS_OK;
-  }
-  return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aColor, "null out param");
+  *aColor = mFocusBackgroundColor;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPresContext::GetFocusRingWidth(PRUint8 *aFocusRingWidth)
 {
-  NS_PRECONDITION(nsnull != aFocusRingWidth, "null argument");
-  if (aFocusRingWidth) {
-    *aFocusRingWidth = mFocusRingWidth;
-    return NS_OK;
-    }
-  return NS_ERROR_NULL_POINTER;
+  NS_PRECONDITION(aFocusRingWidth, "null out param");
+  *aFocusRingWidth = mFocusRingWidth;
+  return NS_OK;
 }
 
 
@@ -1288,10 +1258,7 @@ nsPresContext::SetVisibleArea(const nsRect& r)
 NS_IMETHODIMP
 nsPresContext::GetPixelsToTwips(float* aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   float p2t = 1.0f;
   if (mDeviceContext) {
@@ -1304,10 +1271,7 @@ nsPresContext::GetPixelsToTwips(float* aResult) const
 NS_IMETHODIMP
 nsPresContext::GetTwipsToPixels(float* aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   float app2dev = 1.0f;
   if (mDeviceContext) {
@@ -1320,10 +1284,7 @@ nsPresContext::GetTwipsToPixels(float* aResult) const
 NS_IMETHODIMP
 nsPresContext::GetScaledPixelsToTwips(float* aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
 
   float scale = 1.0f;
   if (mDeviceContext)
@@ -1340,10 +1301,7 @@ nsPresContext::GetScaledPixelsToTwips(float* aResult) const
 NS_IMETHODIMP
 nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mDeviceContext;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
@@ -1429,10 +1387,7 @@ nsPresContext::SetLinkHandler(nsILinkHandler* aHandler)
 NS_IMETHODIMP
 nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mLinkHandler;
   NS_IF_ADDREF(mLinkHandler);
   return NS_OK;
@@ -1451,10 +1406,7 @@ nsPresContext::SetContainer(nsISupports* aHandler)
 NS_IMETHODIMP
 nsPresContext::GetContainer(nsISupports** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mContainer;
   NS_IF_ADDREF(mContainer);
   return NS_OK;
@@ -1619,7 +1571,7 @@ nsPresContext::GetBidiCharset(nsAWritableString &aCharSet)
 NS_IMETHODIMP
 nsPresContext::GetLanguage(nsILanguageAtom** aLanguage)
 {
-  NS_ENSURE_ARG_POINTER(aLanguage);
+  NS_PRECONDITION(aLanguage, "null out param");
 
   *aLanguage = mLanguage;
   NS_IF_ADDREF(*aLanguage);
@@ -1631,7 +1583,7 @@ NS_IMETHODIMP
 nsPresContext::GetLanguageSpecificTransformType(
                 nsLanguageSpecificTransformType* aType)
 {
-  NS_ENSURE_ARG_POINTER(aType);
+  NS_PRECONDITION(aType, "null out param");
   *aType = mLanguageSpecificTransformType;
 
   return NS_OK;
@@ -1640,7 +1592,7 @@ nsPresContext::GetLanguageSpecificTransformType(
 NS_IMETHODIMP
 nsPresContext::IsRenderingOnlySelection(PRBool* aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_PRECONDITION(aResult, "null out param");
   *aResult = mIsRenderingOnlySelection;
 
   return NS_OK;

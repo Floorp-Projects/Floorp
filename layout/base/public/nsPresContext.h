@@ -200,6 +200,20 @@ public:
                                     nsIStyleContext** aResult) = 0;
 
   /**
+   * Resolve style for a non-element content node (i.e., one that is
+   * guaranteed not to match any rules).  Eventually such nodes
+   * shouldn't have style contexts at all, but this at least prevents
+   * the rule matching.
+   *
+   * XXX This is temporary.  It should go away when we stop creating
+   * style contexts for text nodes.
+   */
+  NS_IMETHOD ResolveStyleContextForNonElement(
+                                    nsIStyleContext* aParentContext,
+                                    PRBool aForceUnique,
+                                    nsIStyleContext** aResult) = 0;
+
+  /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
    * The tag should be lowercase and inclue the colon.
    * ie: NS_NewAtom(":first-line");

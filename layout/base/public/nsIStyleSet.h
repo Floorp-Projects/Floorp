@@ -125,7 +125,21 @@ public:
                                            nsIStyleContext* aParentContext,
                                            PRBool aForceUnique = PR_FALSE) = 0;
 
-  // get a style context for a pseudo-frame (ie: tag = NS_NewAtom(":first-line");
+  // Get a style context for a non-element (which no rules will match).
+  // Eventually, this should go away and we shouldn't even create style
+  // contexts for such content nodes.  However, not doing any rule
+  // matching for them is a first step.
+  //
+  // XXX This is temporary.  It should go away when we stop creating
+  // style contexts for text nodes.
+  //
+  virtual nsIStyleContext* ResolveStyleForNonElement(
+                                           nsIPresContext* aPresContext,
+                                           nsIStyleContext* aParentContext,
+                                           PRBool aForceUnique = PR_FALSE) = 0;
+
+  // get a style context for a pseudo-element (i.e.,
+  // |aPseudoTag == NS_NewAtom(":first-line")|;
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,
