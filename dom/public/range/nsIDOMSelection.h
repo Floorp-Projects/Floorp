@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIEnumerator.h"//BAD CHANGEIDL LATER
 
 class nsIDOMNode;
 class nsIDOMSelectionListener;
@@ -69,6 +70,8 @@ public:
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener)=0;
 
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove)=0;
+  //BAD CHANGE IDL LATER
+  NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator)=0;
 };
 
 
