@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.53 $ ';
+$::UtilsVersion = '$Revision: 1.54 $ ';
 
 package TinderUtils;
 
@@ -1009,11 +1009,14 @@ sub wait_for_pid {
     my ($pid, $timeout_secs) = @_;
     my ($exit_value, $signal_num, $dumped_core, $timed_out) = (0,0,0,0);
     my $sig_name;
+    my $loop_count;
 
-    $SIG{ALRM} = sub { die "timeout" };
+    die ("Invalid timeout value passed to wait_for_pid()\n")
+	if ($timeout_secs <= 0);
+
     eval {
-        alarm $timeout_secs;
-        while (1) {
+        $loop_count = 0;
+        while (++$loop_count < $timeout_secs) {
             my $wait_pid = waitpid($pid, POSIX::WNOHANG());
             last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
             sleep 1;
@@ -1021,14 +1024,16 @@ sub wait_for_pid {
         $exit_value = $? >> 8;
         $signal_num = $? >> 127;
         $dumped_core = $? & 128;
-        alarm 0; # Clear the alarm
+        if ($loop_count >= $timeout_secs) {
+            die "timeout";
+        }
+        return "done";
     };
     if ($@) {
         if ($@ =~ /timeout/) {
             kill_process($pid);
             $timed_out = 1;
         } else { # Died for some other reason.
-            alarm(0);
             die; # Propagate the error up.
         }
     }
