@@ -63,6 +63,10 @@ $mail          = '/bin/mail';
 $CVS           = 'cvs -q';
 $CVSCO         = 'checkout -P';
 
+# win32 usually doesn't have /bin/mail
+$blat           = 'c:/nstools/bin/blat';
+$use_blat       = 0;
+
 # Set moz_cvsroot to something like:
 # :pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot
 # :pserver:anonymous\@cvs-mirror.mozilla.org:/cvsroot

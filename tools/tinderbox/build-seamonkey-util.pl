@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.132 $ ';
+$::UtilsVersion = '$Revision: 1.133 $ ';
 
 package TinderUtils;
 
@@ -194,6 +194,9 @@ sub GetSystemInfo {
         $os_ver = `uname -v`;
         chomp($os_ver);
         $os_ver =~ s/^([0-9])([0-9]*)$/$1.$2/;
+    }
+    if ($Settings::OS eq 'WINNT') {
+        $host =~ tr/A-Z/a-z/;
     }
     
     $Settings::BuildName = "$host $Settings::OS ${os_ver} $build_type";
@@ -429,6 +432,11 @@ sub SetupPath {
             }
         }
     }
+    if ($Settings::OS eq 'WINNT') {
+        $Settings::use_blat = 1;
+        $Settings::Compiler = 'cl';
+
+    }
     $Settings::ConfigureArgs .= '--cache-file=/dev/null';
 
 	# Pass $ObjDir along to the build system.
@@ -474,8 +482,8 @@ sub adjust_start_time {
 
 sub mail_build_started_message {
     my ($start_time) = @_;
-    
-    open LOG, "|$Settings::mail $Settings::Tinderbox_server";
+    my $msg_log = "build_start_msg.tmp";
+    open LOG, ">$msg_log";
     
     PrintUsage() if $Settings::BuildTree =~ /^\s+$/i;
 
@@ -491,6 +499,14 @@ sub mail_build_started_message {
     print_log "\n";
     
     close LOG;
+
+    if ($Settings::blat ne "" && $Settings::use_blat) {
+        system("$Settings::blat $msg_log -t $Settings::Tinderbox_server");
+    } else {
+        system "$Settings::mail $Settings::Tinderbox_server "
+            ." < $msg_log";
+    }
+    unlink "$msg_log";
 }
 
 sub mail_build_finished_message {
@@ -537,8 +553,12 @@ sub mail_build_finished_message {
     unlink($logfile);
     
     if ($Settings::ReportStatus and $Settings::ReportFinalStatus) {
-        system "$Settings::mail $Settings::Tinderbox_server "
-              ." < $logfile.last";
+        if ($Settings::blat ne "" && $Settings::use_blat) {
+            system("$Settings::blat $logfile.last -t $Settings::Tinderbox_server");
+        } else {
+            system "$Settings::mail $Settings::Tinderbox_server "
+                ." < $logfile.last";
+        }
     } 
 }
 
