@@ -11,7 +11,7 @@
     {
       -moz-binding		  : url(chrome://global/skin/globalBindings.xml#menulist);
       padding             : 0px;
-      margin			  : 2px 3px 2px 5px;
+      margin			  : 3px 4px 3px 4px;
       font-size 		  : 10px;
       font-family		  : geneva, arial;
     }
@@ -164,8 +164,8 @@
   
  menulist:focus
    {
-      border              : 2px solid #F2C34F;
-      margin			  : 0px 1px 0px 3px;
-      -moz-border-radius  : 8px 7px 11px 9px;
+      border              : 3px solid #73869C;
+      margin			  : 0px 1px 0px 1px;
+      -moz-border-radius  : 10px 9px 11px 10px;
    }
   
