@@ -64,28 +64,35 @@ static char sccsid[] = "@(#)mktemp.c	8.1 (Berkeley) 6/4/93";
 #include "winfile.h"
 #endif
 
-static int _gettemp(char *path, register int *doopen);
+static int _gettemp(char *path, register int *doopen, int extraFlags);
 
 int
-mkstemp(path)
-	char *path;
+mkstemp(char *path)
 {
 	int fd;
 
-	return (_gettemp(path, &fd) ? fd : -1);
+	return (_gettemp(path, &fd, 0) ? fd : -1);
+}
+
+int
+mkstempflags(char *path, int extraFlags)
+{
+	int fd;
+
+	return (_gettemp(path, &fd, extraFlags) ? fd : -1);
 }
 
 char *
-mktemp(path)
-	char *path;
+mktemp(char *path)
 {
-	return(_gettemp(path, (int *)NULL) ? path : (char *)NULL);
+	return(_gettemp(path, (int *)NULL, 0) ? path : (char *)NULL);
 }
 
-static int
-_gettemp(path, doopen)
-	char *path;
-	register int *doopen;
+/* NB: This routine modifies its input string, and does not always restore it.
+** returns 1 on success, 0 on failure.
+*/
+static int 
+_gettemp(char *path, register int *doopen, int extraFlags)
 {    
 #if !defined(_WINDOWS) || defined(_WIN32)
 	extern int errno;                    
@@ -106,17 +113,21 @@ _gettemp(path, doopen)
 	 * doesn't exist this runs for a *very* long time.
 	 */
 	for (start = trv + 1;; --trv) {
+		char saved;
 		if (trv <= path)
 			break;
-		if (*trv == '/') {
+		saved = *trv;
+		if (saved == '/' || saved == '\\') {
+			int rv;
 			*trv = '\0';
-			if (stat(path, &sbuf))
+			rv = stat(path, &sbuf);
+			*trv = saved;
+			if (rv)
 				return(0);
 			if (!S_ISDIR(sbuf.st_mode)) {
 				errno = ENOTDIR;
 				return(0);
 			}
-			*trv = '/';
 			break;
 		}
 	}
@@ -124,7 +135,7 @@ _gettemp(path, doopen)
 	for (;;) {
 		if (doopen) {
 			if ((*doopen =
-			    open(path, O_CREAT|O_EXCL|O_RDWR, 0600)) >= 0)
+			    open(path, O_CREAT|O_EXCL|O_RDWR|extraFlags, 0600)) >= 0)
 				return(1);
 			if (errno != EEXIST)
 				return(0);

@@ -72,6 +72,9 @@ static char sccsid[] = "@(#)hash_page.c	8.7 (Berkeley) 8/16/94";
 
 #include <errno.h>
 #include <fcntl.h>
+#if defined(_WIN32) || defined(_WINDOWS) 
+#include <io.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +90,8 @@ static char sccsid[] = "@(#)hash_page.c	8.7 (Berkeley) 8/16/94";
 #include "hash.h"
 #include "page.h"
 /* #include "extern.h" */
+
+extern int mkstempflags(char *path, int extraFlags);
 
 static uint32	*fetch_bitmap __P((HTAB *, uint32));
 static uint32	 first_free __P((uint32));
@@ -826,6 +831,7 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
 	register int fd, page;
 	size_t size;
 	int wsize;
+	off_t offset;
 
 	size = hashp->BSIZE;
 	if ((hashp->fp == -1) && open_temp(hashp))
@@ -860,7 +866,8 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
 		page = BUCKET_TO_PAGE(bucket);
 	else
 		page = OADDR_TO_PAGE(bucket);
-	if ((MY_LSEEK(fd, (off_t)page << hashp->BSHIFT, SEEK_SET) == -1) ||
+	offset = (off_t)page << hashp->BSHIFT;
+	if ((MY_LSEEK(fd, offset, SEEK_SET) == -1) ||
 	    ((wsize = write(fd, p, size)) == -1))
 		/* Errno is set */
 		return (-1);
@@ -868,7 +875,11 @@ __put_page(HTAB *hashp, char *p, uint32 bucket, int is_bucket, int is_bitmap)
 		errno = EFTYPE;
 		return (-1);
 	}
-
+#if defined(_WIN32) || defined(_WINDOWS) 
+	if (offset + size > hashp->file_size) {
+		hashp->updateEOF = 1;
+	}
+#endif
 	/* put the page back the way it was so that it isn't byteswapped
 	 * if it remains in memory - LJM
 	 */
@@ -1151,7 +1162,11 @@ open_temp(HTAB *hashp)
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 	sigset_t set, oset;
 #endif
-	static char namestr[] = "_hashXXXXXX";
+	char * tmpdir;
+	int    len;
+	static const char namestr[] = "/_hashXXXXXX";
+	char filename[1024];
+	char last;
 
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 	/* Block signals; make sure file goes away at process exit. */
@@ -1159,12 +1174,42 @@ open_temp(HTAB *hashp)
 	(void)sigprocmask(SIG_BLOCK, &set, &oset);
 #endif
 
-	if ((hashp->fp = mkstemp(namestr)) != -1) {
-		(void)unlink(namestr);
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
+	filename[0] = 0;
+#if defined(macintosh)
+	strcat(filename, namestr + 1);
+#else
+	tmpdir = getenv("TMP");
+	if (!tmpdir)
+		tmpdir = getenv("TMPDIR");
+	if (!tmpdir)
+		tmpdir = getenv("TEMP");
+	if (!tmpdir)
+		tmpdir = ".";
+	len = strlen(tmpdir);
+	if (len && len < (sizeof filename - sizeof namestr)) {
+		strcpy(filename, tmpdir);
+	}
+	len = strlen(filename);
+	last = tmpdir[len - 1];
+	strcat(filename, (last == '/' || last == '\\') ? namestr + 1 : namestr);
+#endif
+
+#if defined(_WIN32) || defined(_WINDOWS) || defined(XP_OS2)
+	if ((hashp->fp = mkstempflags(filename, _O_BINARY|_O_TEMPORARY)) != -1) {
+		if (hashp->filename) {
+			free(hashp->filename);
+		}
+		hashp->filename = strdup(filename);
+		hashp->is_temp = 1;
+	}
+#else
+	if ((hashp->fp = mkstemp(filename)) != -1) {
+		(void)unlink(filename);
+#if !defined(macintosh)
 		(void)fcntl(hashp->fp, F_SETFD, 1);
 #endif									  
 	}
+#endif
 
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 	(void)sigprocmask(SIG_SETMASK, &oset, (sigset_t *)NULL);

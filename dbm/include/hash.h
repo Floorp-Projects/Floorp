@@ -51,9 +51,9 @@ struct _bufhead {
 	BUFHEAD		*prev;		/* LRU links */
 	BUFHEAD		*next;		/* LRU links */
 	BUFHEAD		*ovfl;		/* Overflow page buffer header */
-	uint32	 addr;		/* Address of this page */
+	uint32	 	addr;		/* Address of this page */
 	char		*page;		/* Actual page data */
-	char        is_disk;
+	char     	is_disk;
 	char	 	flags;
 #define	BUF_MOD		0x0001
 #define BUF_DISK	0x0002
@@ -77,7 +77,7 @@ typedef int DBFILE_PTR;
 typedef struct hashhdr {		/* Disk resident portion */
 	int32		magic;		/* Magic NO for hash tables */
 	int32		version;	/* Version ID */
-	uint32	lorder;		/* Byte Order */
+	uint32		lorder;		/* Byte Order */
 	int32		bsize;		/* Bucket/Page Size */
 	int32		bshift;		/* Bucket shift */
 	int32		dsize;		/* Directory Size */
@@ -97,7 +97,7 @@ typedef struct hashhdr {		/* Disk resident portion */
 #define NCACHED	32			/* number of bit maps and spare 
 					 * points */
 	int32		spares[NCACHED];/* spare pages for overflow */
-	uint16	bitmaps[NCACHED];	/* address of overflow page 
+	uint16		bitmaps[NCACHED];	/* address of overflow page 
 						 * bitmaps */
 } HASHHDR;
 
@@ -123,12 +123,15 @@ typedef struct htab	 {		/* Memory resident data structure */
 	int		save_file;	/* Indicates whether we need to flush 
 					 * file at
 					 * exit */
-	uint32	*mapp[NCACHED];	/* Pointers to page maps */
+	uint32		*mapp[NCACHED];	/* Pointers to page maps */
 	int		nmaps;		/* Initial number of bitmaps */
 	int		nbufs;		/* Number of buffers left to 
 					 * allocate */
 	BUFHEAD 	bufhead;	/* Header of buffer lru list */
 	SEGMENT 	*dir;		/* Hash Bucket directory */
+	off_t		file_size;	/* in bytes */
+	char		is_temp;	/* unlink file on close */
+	char		updateEOF;	/* close and reopen on flush */
 } HTAB;
 
 /*
