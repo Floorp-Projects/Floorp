@@ -128,6 +128,7 @@ class nsIDOMNode;
   NSModalSession mModalSession;
 
   BOOL mShouldAutosave;
+  BOOL mShouldLoadHomePage;
 
   BOOL mDrawerCachedFrame;
   NSRect mCachedFrameBeforeDrawerOpen; // This is used by the drawer to figure out if the window should
@@ -196,7 +197,7 @@ class nsIDOMNode;
 - (void)importBookmarks: (NSString*)aURLSpec;
 - (IBAction)toggleSidebar:(id)aSender;
 
-- (void)newTab;
+- (void)newTab:(BOOL)allowHomepage;
 - (void)closeTab;
 - (void)previousTab;
 - (void)nextTab;
@@ -215,6 +216,7 @@ class nsIDOMNode;
 
 -(void)autosaveWindowFrame;
 -(void)disableAutosave;
+-(void)disableLoadPage;
 
 -(void)setChromeMask:(unsigned int)aMask;
 -(unsigned int)chromeMask;
