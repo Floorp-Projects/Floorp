@@ -53,6 +53,7 @@
 - (void)dealloc
 {
   [mSearchText release];
+  [super dealloc];
 }
 
 - (void)windowDidLoad

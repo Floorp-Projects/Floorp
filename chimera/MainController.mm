@@ -106,10 +106,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(void)dealloc
 {
-    [super dealloc];
-    [mFindDialog release];
+  [mFindDialog release];
+  [super dealloc];
 #if DEBUG
-    NSLog(@"Main controller died");
+  NSLog(@"Main controller died");
 #endif
 }
 

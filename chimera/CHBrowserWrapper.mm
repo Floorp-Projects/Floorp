@@ -85,7 +85,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   [[NSNotificationCenter defaultCenter] removeObserver: self];
     
-	[defaultStatus release];
+  [defaultStatus release];
   [loadingStatus release];
 
   [super dealloc];
