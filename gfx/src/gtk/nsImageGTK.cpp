@@ -379,6 +379,9 @@ findIndex24(unsigned mask)
   }
 }
 
+// blending macro
+#define MOZ_BLEND(bg, fg, alpha) (((bg)*(255-(alpha)) + (fg)*(alpha))/255)
+
 // 32-bit (888) truecolor convert/composite function
 void
 nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
@@ -410,15 +413,10 @@ nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
 
     for (unsigned i=0; i<width;
          i++, baseRow+=4, targetRow+=3, imageRow+=3, alphaRow++) {
-      targetRow[0] = 
-        (unsigned(baseRow[redIndex])   * (255-*alphaRow) + 
-         unsigned(imageRow[0]) * *alphaRow) >> 8;
-      targetRow[1] = 
-        (unsigned(baseRow[greenIndex]) * (255-*alphaRow) +
-         unsigned(imageRow[1]) * *alphaRow) >> 8;
-      targetRow[2] = 
-        (unsigned(baseRow[blueIndex])  * (255-*alphaRow) +
-         unsigned(imageRow[2]) * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      targetRow[0] = MOZ_BLEND(baseRow[redIndex],   imageRow[0], alpha);
+      targetRow[1] = MOZ_BLEND(baseRow[greenIndex], imageRow[1], alpha);
+      targetRow[2] = MOZ_BLEND(baseRow[blueIndex],  imageRow[2], alpha);
     }
   }
 }
@@ -450,15 +448,10 @@ nsImageGTK::DrawComposited24(PRBool isLSB, PRBool flipBytes,
 
     for (unsigned i=0; i<width;
          i++, baseRow+=3, targetRow+=3, imageRow+=3, alphaRow++) {
-      targetRow[0] = 
-        (unsigned(baseRow[redIndex])   * (255-*alphaRow) +
-         unsigned(imageRow[0]) * *alphaRow) >> 8;
-      targetRow[1] = 
-        (unsigned(baseRow[greenIndex]) * (255-*alphaRow) + 
-         unsigned(imageRow[1]) * *alphaRow) >> 8;
-      targetRow[2] = 
-        (unsigned(baseRow[blueIndex])  * (255-*alphaRow) + 
-         unsigned(imageRow[2]) * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      targetRow[0] = MOZ_BLEND(baseRow[redIndex],   imageRow[0], alpha);
+      targetRow[1] = MOZ_BLEND(baseRow[greenIndex], imageRow[1], alpha);
+      targetRow[2] = MOZ_BLEND(baseRow[blueIndex],  imageRow[2], alpha);
     }
   }
 }
@@ -505,15 +498,16 @@ nsImageGTK::DrawComposited16(PRBool isLSB, PRBool flipBytes,
         pix = *((short *)tmp); 
       } else
         pix = *((short *)baseRow);
-      targetRow[0] =  
-        (redScale[(pix&visual->red_mask)>>visual->red_shift] * 
-         (255-*alphaRow) + unsigned(imageRow[0]) * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      targetRow[0] = 
+        MOZ_BLEND(redScale[(pix&visual->red_mask)>>visual->red_shift], 
+                  imageRow[0], alpha);
       targetRow[1] = 
-        (greenScale[(pix&visual->green_mask)>>visual->green_shift] * 
-         (255-*alphaRow) + unsigned(imageRow[1]) * *alphaRow) >> 8;
+        MOZ_BLEND(greenScale[(pix&visual->green_mask)>>visual->green_shift], 
+                  imageRow[1], alpha);
       targetRow[2] = 
-        (blueScale[(pix&visual->blue_mask)>>visual->blue_shift] * 
-         (255-*alphaRow) + unsigned(imageRow[2]) * *alphaRow) >> 8;
+        MOZ_BLEND(blueScale[(pix&visual->blue_mask)>>visual->blue_shift], 
+                  imageRow[2], alpha);
     }
   }
 }
@@ -654,12 +648,10 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
     unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
     
     for (unsigned i=0; i<width; i++) {
-      targetRow[3*i] =   (unsigned(targetRow[3*i])*(255-alphaRow[i]) +
-                           unsigned(imageRow[3*i])*alphaRow[i])>>8;
-      targetRow[3*i+1] = (unsigned(targetRow[3*i+1])*(255-alphaRow[i]) +
-                           unsigned(imageRow[3*i+1])*alphaRow[i])>>8;
-      targetRow[3*i+2] = (unsigned(targetRow[3*i+2])*(255-alphaRow[i]) +
-                           unsigned(imageRow[3*i+2])*alphaRow[i])>>8;
+      unsigned alpha = alphaRow[i];
+      targetRow[3*i]   = MOZ_BLEND(targetRow[3*i],   imageRow[3*i],   alpha);
+      targetRow[3*i+1] = MOZ_BLEND(targetRow[3*i+1], imageRow[3*i+1], alpha);
+      targetRow[3*i+2] = MOZ_BLEND(targetRow[3*i+2], imageRow[3*i+2], alpha);
     }
   }
 }
