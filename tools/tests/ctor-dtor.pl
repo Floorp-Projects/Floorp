@@ -21,6 +21,6 @@ while (<REPORT>) {
 }
 close(REPORT);
 
-if (-s ./ctor-dtor-report > 0) {
+if (-s "./ctor-dtor-report" > 0) {
     print "Global Constructors\/Destructors Found" . "\n";
 }
