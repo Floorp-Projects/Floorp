@@ -1129,9 +1129,7 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
 
 static PRBool HandleDumpArguments(int argc, char* argv[])
 {
-  int i = 0;
-
-  for (i=1; i<argc; i++) {
+  for (int i=1; i<argc; i++) {
     if ((PL_strcasecmp(argv[i], "-h") == 0)
         || (PL_strcasecmp(argv[i], "-help") == 0)
 #if defined(XP_UNIX) || defined(XP_BEOS)
