@@ -60,6 +60,7 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsXPIDLString.h"
+#include "nsNetUtil.h"
 #include "pldhash.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -1498,11 +1499,25 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
 
     nsresult rv;
 
+    // Attempt to canonify the URI before we look for it in the cache.
+    nsCAutoString spec;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), aURI);
+    if (uri) {
+        // XXXwaterson eliminate `temp' when we have shared strings.
+        nsXPIDLCString temp;
+        uri->GetSpec(getter_Copies(temp));
+        spec = temp;
+    }
+    else
+        spec = aURI;
+
     // First, check the cache to see if we already have this
     // datasource loaded and initialized.
     {
         nsIRDFDataSource* cached =
-            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, aURI));
+            NS_STATIC_CAST(nsIRDFDataSource*, PL_HashTableLookup(mNamedDataSources, spec.get()));
 
         if (cached) {
             NS_ADDREF(cached);
@@ -1513,36 +1528,23 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
 
     // Nope. So go to the repository to try to create it.
     nsCOMPtr<nsIRDFDataSource> ds;
-	nsAutoString rdfName; rdfName.AssignWithConversion(aURI);
-    static const char kRDFPrefix[] = "rdf:";
-    PRInt32 pos = rdfName.Find(kRDFPrefix);
-    if (pos == 0) {
-        // It's a built-in data source
-        nsAutoString dataSourceName;
-        rdfName.Right(dataSourceName, rdfName.Length() - (pos + sizeof(kRDFPrefix) - 1));
-
-        // Safely convert it to a C-string for the XPCOM APIs
+    if (Substring(spec, 0, 4) == NS_LITERAL_CSTRING("rdf:")) {
+        // It's a built-in data source. Convert it to a contract ID.
         nsCAutoString contractID(
                 NS_LITERAL_CSTRING(NS_RDF_DATASOURCE_CONTRACTID_PREFIX) +
-                NS_LossyConvertUCS2toASCII(dataSourceName));
+                Substring(spec, 4, spec.Length() - 4));
 
-        /* strip params to get ``base'' contractID for data source */
+        // Strip params to get ``base'' contractID for data source.
         PRInt32 p = contractID.FindChar(PRUnichar('&'));
-        if (p != kNotFound)
+        if (p >= 0)
             contractID.Truncate(p);
 
-        nsCOMPtr<nsISupports> isupports;
-        rv = nsServiceManager::GetService(contractID.get(), kISupportsIID,
-                                          getter_AddRefs(isupports), nsnull);
-
-        if (NS_FAILED(rv)) return rv;
-
-        ds = do_QueryInterface(isupports, &rv);
+        ds = do_GetService(contractID.get(), &rv);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(ds);
         if (remote) {
-            rv = remote->Init(aURI);
+            rv = remote->Init(spec.get());
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -1555,7 +1557,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, PRBool aBlock, nsIRDFDataSource*
         NS_ASSERTION(remote, "not a remote RDF/XML data source!");
         if (! remote) return NS_ERROR_UNEXPECTED;
 
-        rv = remote->Init(aURI);
+        rv = remote->Init(spec.get());
         if (NS_FAILED(rv)) return rv;
 
         rv = remote->Refresh(aBlock);
