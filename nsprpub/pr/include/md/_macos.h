@@ -114,22 +114,22 @@ typedef struct _MDSocketCallerInfo {
 } _MDSocketCallerInfo;
 
 struct _MDFileDesc {
-    PRInt32     osfd;
+    PRInt32         osfd;
     PRPackedBool    orderlyDisconnect;
     PRPackedBool    readReady;
     PRPackedBool    writeReady;
     PRPackedBool    exceptReady;
-	PRLock *    miscLock;
-	
-	/* Server sockets: listen bit tells the notifier func what to do */
-	PRBool		doListen;
+    PRLock *        miscLock;
+
+    /* Server sockets: listen bit tells the notifier func what to do */
+    PRBool          doListen;
 
     /* stored error for non-blocking connects, as a Unix-style error code */
     OTReason        disconnectError;
 
-	_MDSocketCallerInfo  misc;
-	_MDSocketCallerInfo  read;
-	_MDSocketCallerInfo  write;
+    _MDSocketCallerInfo  misc;
+    _MDSocketCallerInfo  read;
+    _MDSocketCallerInfo  write;
 };
 
 /*
