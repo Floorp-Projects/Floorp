@@ -101,12 +101,12 @@
      <rdf:li>
        <rdf:Description ID="bookmarks"
          nc:name="bookmarks"
-	 nc:link="nav_help.html#bookmarks:visitingIDX"/>
+	 nc:link="nav_help.xhtml#visiting_bookmarked_pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="browser"
          nc:name="browser"
-	 nc:link="nav_help.html"/>
+	 nc:link="nav_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="browsing_anonymously"
@@ -151,7 +151,7 @@
      <rdf:li>
        <rdf:Description ID="bookmarks:visiting"
          nc:name="visiting bookmarked pages"
-	 nc:link="nav_help.html#bookmarks:visitingIDX"/>
+	 nc:link="nav_help.xhtml#visiting_bookmarked_pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks:what_are_bookmarks"
@@ -171,7 +171,7 @@
      <rdf:li>
        <rdf:Description ID="browser:default"
          nc:name="default browser"
-	 nc:link="nav_help.html#browser:defaultIDX"/>
+	 nc:link="nav_help.xhtml#making_mozilla_your_default_browser"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="browser:start_up_components"
@@ -186,7 +186,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cache"
          nc:name="cache"
-	 nc:link="nav_help.html#cache:changing_settingsIDX"/>
+	 nc:link="nav_help.xhtml#changing_cache_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Certificates"
@@ -209,7 +209,7 @@
      </rdf:li><rdf:li>
        <rdf:Description ID="copy web pages"
          nc:name="copy"
-	 nc:link="nav_help.html#copy:web_pagesIDX"/>
+	 nc:link="nav_help.xhtml#copying_saving_and_printing_pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="CRLs"
@@ -229,7 +229,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cache:changing_settings"
          nc:name="changing cache settings"
-	 nc:link="nav_help.html#cache:changing_settingsIDX"/>
+	 nc:link="nav_help.xhtml#changing_cache_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="cache:preferences"
@@ -529,7 +529,7 @@
      <rdf:li>
        <rdf:Description ID="Download_Manager"
          nc:name="Download Manager"
-	 nc:link="nav_help.html#Download_ManagerIDX"/>
+	 nc:link="nav_help.xhtml#managing_different_file_types"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -608,7 +608,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="file_types"
          nc:name="file types"
-	 nc:link="nav_help.html#file_types:managingIDX"/>
+	 nc:link="nav_help.xhtml#managing_different_file_types"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Filing_messages"
@@ -718,7 +718,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="helper_applications"
          nc:name="helper applications"
-         nc:link="nav_help.html#Navigator:helper_applicationsIDX"/>
+         nc:link="nav_help.xhtml#managing_different_file_types"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="home_page"
@@ -785,7 +785,7 @@
      <rdf:li>
        <rdf:Description ID="Internet_Keywords"
          nc:name="Internet Keywords"
-	 nc:link="nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
+	 nc:link="nav_help.xhtml#using_internet_keywords"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -811,7 +811,7 @@
      <rdf:li>
        <rdf:Description ID="images:set_as_wallpaper"
          nc:name="set as wallpaper"
-	 nc:link="nav_help.html#images:set_as_wallpaperIDX"/>
+	 nc:link="nav_help.xhtml#setting_image_as_wallpaper"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -866,7 +866,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="java"
          nc:name="Java"
-         nc:link="nav_help.html#JavaSDX"/>
+         nc:link="nav_help.xhtml#managing_different_file_types"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="JavaScript"
@@ -950,7 +950,7 @@
      <rdf:li>
        <rdf:Description ID="languages"
          nc:name="languages"
-	 nc:link="nav_help.html#languages:and_international_contentIDX"/>
+	 nc:link="nav_help.xhtml#using_languages_and_international_content"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="LDAP"
@@ -980,7 +980,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="languages:and_international_content"
          nc:name="language and international content"
-	 nc:link="nav_help.html#languages:and_international_contentIDX"/>
+	 nc:link="nav_help.xhtml#using_languages_and_international_content"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="languages:Appearance_preferences"
@@ -1030,7 +1030,7 @@
      <rdf:li>
        <rdf:Description ID="mouse_wheel"
          nc:name="mouse wheel"
-	 nc:link="nav_help.html#mouse_wheel:usingIDX"/>
+	 nc:link="nav_help.xhtml#using_a_mouse_wheel"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1280,7 +1280,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator"
          nc:name="Navigator"
-	 nc:link="nav_help.html"/>
+	 nc:link="nav_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Newsgroups"
@@ -1305,12 +1305,12 @@
      <rdf:li>
        <rdf:Description ID="Navigator:Download_Manager"
          nc:name="Download Manager"
-	 nc:link="nav_help.html#Navigator:Download_ManagerIDX"/>
+	 nc:link="nav_help.xhtml#managing_different_file_types"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:full_screen_mode"
          nc:name="Full screen mode"
-         nc:link="nav_help.html#full_screen_mode"/>
+         nc:link="nav_help.xhtml#full_screen_mode"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:helper_applications"
@@ -1320,17 +1320,17 @@
      <rdf:li>
        <rdf:Description ID="Navigator:home_page"
          nc:name="home page"
-	 nc:link="nav_help.html#Navigator:home_pageIDX"/>
+	 nc:link="nav_help.xhtml#viewing_your_home_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:keyboard_shortcuts"
          nc:name="keyboard shortcuts"
-	 nc:link="shortcuts.html#navigator"/>
+	 nc:link="shortcuts-navigator.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:opening_pages"
          nc:name="opening pages"
-	 nc:link="nav_help.html#Navigator:opening_pagesIDX"/>
+	 nc:link="nav_help.xhtml#moving_to_another_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:preferences"
@@ -1340,7 +1340,7 @@
      <rdf:li>
        <rdf:Description ID="Navigator:set_as_wallpaper"
          nc:name="set as wallpaper"
-	 nc:link="nav_help.html#Navigator:set_as_wallpaperIDX"/>
+	 nc:link="nav_help.xhtml#Navigator:setting_image_as_wallpaper"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Navigator:controlling_popups"
@@ -1414,7 +1414,7 @@
      <rdf:li>
        <rdf:Description ID="plugins"
          nc:name="plug-ins"
-         nc:link="nav_help.html#Navigator:plug-insIDX"/>
+         nc:link="nav_help.xhtml#managing_different_file_types"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="POP"
@@ -1443,7 +1443,7 @@
      <rdf:li>
        <rdf:Description ID="print"
          nc:name="print"
-	 nc:link="nav_help.html#print:web_pagesIDX"/>
+	 nc:link="nav_help.xhtml#copying_saving_and_printing_pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="privacy"
@@ -1554,7 +1554,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:colors"
          nc:name="colors preferences"
-	 nc:link="cs_nav_prefs_appearance.xhtml#preferences:colors"/>
+	 nc:link="cs_nav_prefs_appearance.xhtml#colors"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:content_packs"
@@ -1764,7 +1764,7 @@
      <rdf:li>
        <rdf:Description ID="proxies:setting"
          nc:name="setting proxy values"
-	 nc:link="nav_help.html#proxies:settingIDX"/>
+	 nc:link="nav_help.xhtml#proxies"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1789,7 +1789,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Quick_Launch"
          nc:name="Quick Launch"
-	 nc:link="nav_help.html#Quick_Launch:usingIDX"/>
+	 nc:link="nav_help.xhtml#using_quick_launch"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1855,7 +1855,7 @@
      <rdf:li>
        <rdf:Description ID="search"
          nc:name="search"
-	 nc:link="nav_help.html#nav_search"/>
+	 nc:link="nav_help.xhtml#searching_the_web"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="shortcuts"
@@ -1910,7 +1910,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="save:web_pages"
          nc:name="saving and printing web pages"
-	 nc:link="nav_help.html#save:web_pagesIDX"/>
+	 nc:link="nav_help.xhtml#copying_saving__and_printing_pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="save:messages"
@@ -1925,17 +1925,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search:Advanced_mode"
          nc:name="Advanced Search mode"
-	 nc:link="nav_help.html#search:Advanced_modeIDX"/>
+	 nc:link="nav_help.xhtml#search:advanced_search_mode"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="search:bookmarks"
          nc:name="search bookmarks"
-	 nc:link="nav_help.html#search:bookmarksIDX"/>
+	 nc:link="nav_help.xhtml#searching_the_bookmarks_or_history_list"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="search:setting_preferences"
          nc:name="search preferences"
-	 nc:link="nav_help.html#search:setting_preferencesIDX"/>
+	 nc:link="nav_help.xhtml#setting_search_preferences"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2040,12 +2040,12 @@
      <rdf:li>
        <rdf:Description ID="Sidebar:search_categories"
          nc:name="search categories"
-	 nc:link="nav_help.html#Sidebar:search_categoriesIDX"/>
+	 nc:link="nav_help.xhtml#customizing_search_categories"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:searching_from"
          nc:name="searching from Sidebar"
-	 nc:link="nav_help.html#Sidebar:searching_fromIDX"/>
+	 nc:link="nav_help.xhtml#searching_from_sidebar"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Sidebar:using"
@@ -2124,7 +2124,7 @@
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:introduction"
          nc:name="using tabbed browsing"
-	 nc:link="nav_help.html#Tabbed_Browsing:introductionIDX"/>
+	 nc:link="nav_help.xhtml#using_tabbed_browsing"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Tabbed_Browsing:opening_tabs"
@@ -2238,7 +2238,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:copying"
          nc:name="copying web pages"
-	 nc:link="nav_help.html#web_pages:copyingIDX"/>
+	 nc:link="nav_help.xhtml#copying_saving_and_printing_pages"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:customizing_fonts"
@@ -2246,34 +2246,29 @@
 	 nc:link="chrome://help/locale/customize_help.xhtml#changing_fonts_colors_and_themes"/>
      </rdf:li>
      <rdf:li>
-       <rdf:Description ID="web_pages:finding_related"
-         nc:name="finding related web pages"
-	 nc:link="nav_help.html#web_pages:finding_relatedIDX"/>
-     </rdf:li>
-     <rdf:li>
        <rdf:Description ID="web_pages:finding_within"
          nc:name="finding text within a web page"
-	 nc:link="nav_help.html#web_pages:finding_withinIDX"/>
+	 nc:link="nav_help.xhtml#searching_within_a_page"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:history"
          nc:name="web page history"
-	 nc:link="nav_help.html#web_pages:historyIDX"/>
+	 nc:link="nav_help.xhtml#about_history_lists"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:navigating"
          nc:name="navigating web pages"
-	 nc:link="nav_help.html#web_pages:navigatingIDX"/>
+	 nc:link="nav_help.xhtml#browsing_the_web"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:searching"
          nc:name="searching web pages"
-	 nc:link="nav_help.html#web_pages:searchingIDX"/>
+	 nc:link="nav_help.xhtml#searching_the_web"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="web_pages:stopping"
          nc:name="stopping"
-	 nc:link="nav_help.html#web_pages:stoppingIDX"/>
+	 nc:link="nav_help.xhtml#stopping_and_reloading"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
