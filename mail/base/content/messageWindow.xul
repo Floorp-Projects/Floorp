@@ -139,6 +139,7 @@
              style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
              disablesecurity="true" disablehistory="true" type="content-primary" 
              src="about:blank" onclick="contentAreaClick(event);" autofind="false"/>
+    <hbox id="attachmentView"/>
   </vbox>  
 
   <statusbar class="chromeclass-status" id="status-bar"/>
