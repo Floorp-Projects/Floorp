@@ -523,3 +523,12 @@ NS_IMETHODIMP DeviceContextImpl::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   return NS_OK;
 }
 
+NS_IMETHODIMP DeviceContextImpl::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
+{
+  aPaletteInfo.isPaletteDevice = PR_FALSE;
+  aPaletteInfo.sizePalette = 0;
+  aPaletteInfo.numReserved = 0;
+  aPaletteInfo.palette = nsnull;
+  return NS_OK;
+}
+

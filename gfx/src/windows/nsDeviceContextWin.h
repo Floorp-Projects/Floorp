@@ -44,17 +44,14 @@ public:
 
   NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
-  //get the logical palette
-  HPALETTE  GetLogicalPalette();
+  NS_IMETHOD GetPaletteInfo(nsPaletteInfo&);
 
 protected:
   virtual ~nsDeviceContextWin();
 
   nsDrawingSurface  mSurface;
   PRUint32          mDepth;  // bit depth of device
-  PRBool            mIsPaletteDevice;
-
-  static HPALETTE   gPalette;
+  nsPaletteInfo     mPaletteInfo;
 };
 
 #endif /* nsDeviceContextWin_h___ */

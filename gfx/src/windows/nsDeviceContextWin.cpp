@@ -23,8 +23,6 @@
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
 
-HPALETTE  nsDeviceContextWin::gPalette = NULL;
-
 nsDeviceContextWin :: nsDeviceContextWin()
   : DeviceContextImpl()
 {
@@ -36,6 +34,10 @@ nsDeviceContextWin :: nsDeviceContextWin()
   ::ReleaseDC(NULL, hdc);
 
   mSurface = NULL;
+  mPaletteInfo.isPaletteDevice = PR_FALSE;
+  mPaletteInfo.sizePalette = 0;
+  mPaletteInfo.numReserved = 0;
+  mPaletteInfo.palette = NULL;
 }
 
 nsDeviceContextWin :: ~nsDeviceContextWin()
@@ -44,7 +46,10 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
 
   NS_IF_RELEASE(surf);    //this clears the surf pointer...
   mSurface = nsnull;
-  mIsPaletteDevice = PR_FALSE;
+
+  if (NULL != mPaletteInfo.palette) {
+    ::DeleteObject((HPALETTE)mPaletteInfo.palette);
+  }
 }
 
 nsresult nsDeviceContextWin::Init(nsNativeWidget aWidget)
@@ -54,7 +59,9 @@ nsresult nsDeviceContextWin::Init(nsNativeWidget aWidget)
   int   rasterCaps = ::GetDeviceCaps(hdc, RASTERCAPS);
 
   mDepth = (PRUint32)::GetDeviceCaps(hdc, BITSPIXEL);
-  mIsPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
+  mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
+  mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(hdc, SIZEPALETTE);
+  mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(hdc, NUMRESERVED);
   ::ReleaseDC(hwnd, hdc);
 
   return DeviceContextImpl::Init(aWidget);
@@ -115,7 +122,7 @@ NS_IMETHODIMP nsDeviceContextWin::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   if (nsnull == mColorSpace) {
     // See if we're dealing with an 8-bit palette device
-    if ((8 == mDepth) && mIsPaletteDevice) {
+    if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
       // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
       // than DIB_RGB_COLORS, so make sure the indexes match that of the
       // GDI physical palette
@@ -158,9 +165,13 @@ NS_IMETHODIMP nsDeviceContextWin::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   return NS_OK;
 }
 
-HPALETTE nsDeviceContextWin::GetLogicalPalette()
+NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
-  if (NULL == gPalette) {
+  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
+  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
+  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
+
+  if (NULL == mPaletteInfo.palette) {
     IL_ColorSpace*  colorSpace;
     GetILColorSpace(colorSpace);
 
@@ -181,7 +192,8 @@ HPALETTE nsDeviceContextWin::GetLogicalPalette()
       // Last ten system colors
       ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
   
-      // Now set the color cube entries
+      // Now set the color cube entries.
+      // XXX Need to gamma correct the palette entries...
       PALETTEENTRY* entry = &logPal->palPalEntry[10];
       NI_RGB*       map = colorSpace->cmap.map + 10;
       for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++) {
@@ -195,11 +207,13 @@ HPALETTE nsDeviceContextWin::GetLogicalPalette()
       }
   
       // Create a GDI palette
-      gPalette = ::CreatePalette(logPal);
+      mPaletteInfo.palette = ::CreatePalette(logPal);
     }
 
     IL_ReleaseColorSpace(colorSpace);
   }
 
-  return gPalette;
+  aPaletteInfo.palette = mPaletteInfo.palette;
+  return NS_OK;
 }
+
