@@ -52,6 +52,7 @@ use LWP::Simple;
 use Tinderbox;
 use Carp;
 use Chatbot::Eliza;
+use babel;
 
 $|++;
 
@@ -70,6 +71,7 @@ my %pubcmds = (
                "(trees|tree)" => \&bot_tinderbox,
                "debug" => \&bot_debug,
                "stocks" => \&bot_stocks,
+               "(translate|xlate|x)" => \&bot_translate,
                );
 
 my %admincmds = (
@@ -1061,6 +1063,25 @@ sub bot_stocks {
                 ReportStock($nick, $name, "");
             }
         }
+    }
+}
+
+sub translate_usage {
+    my ($nick) = (@_);
+    sendmsg($nick, "Usage: translate (to|from) (en|fr|pt|it|de) sentence");
+}
+
+sub bot_translate {
+    my ($nick, $cmd, $rest) = (@_);
+    my ($dir, $lang, @words) = split(/ +/, $rest);
+    if ($dir ne "to" && $dir ne "from") {
+        return translate_usage($nick);
+    }
+    my $result = babel::babelfish($dir, $lang, join(' ', @words));
+    if ($result ne '') {
+        sendmsg($nick, $result);
+    } else {
+        translate_usage($nick);
     }
 }
 
