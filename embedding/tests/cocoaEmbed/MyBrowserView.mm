@@ -69,6 +69,7 @@
     [status setStringValue:loadingStatus];
   }
 
+  [browserView setActive:YES];
 #ifdef DEBUG_vidur
   printf("Loading completed\n");
 #endif
