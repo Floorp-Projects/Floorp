@@ -237,7 +237,20 @@ function MsgFindAgain() {}
 function MsgSearchMessages() {}
 function MsgFilters() {}
 function MsgFolderProperties() {}
-function MsgPreferences() {}
+function MsgPreferences() 
+{
+    var prefsCore = XPAppCoresManager.Find("PrefsCore");
+    if (!prefsCore) {
+      prefsCore = new PrefsCore();
+      if (prefsCore) {
+        prefsCore.Init("PrefsCore");
+      }
+    }
+    if (prefsCore) {
+      prefsCore.ShowWindow(window);
+    }
+}
+
 function MsgShowMsgToolbar() {}
 function MsgShowLocationbar() {}
 function MsgShowMessage() {}
