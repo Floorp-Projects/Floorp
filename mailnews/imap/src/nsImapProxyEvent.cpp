@@ -1599,18 +1599,15 @@ nsImapMiscellaneousSinkProxy::FEAlertFromServer(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
-                                         const char* statusMsg)
+                                         PRUint32 aMsgId)
 {
     nsresult res = NS_OK;
-    NS_PRECONDITION (statusMsg, "Oops... null statusMsg");
-    if(!statusMsg)
-        return NS_ERROR_NULL_POINTER;
     NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
 
     if (PR_GetCurrentThread() == m_thread)
     {
         ProgressStatusProxyEvent *ev =
-            new ProgressStatusProxyEvent(this, statusMsg);
+            new ProgressStatusProxyEvent(this, aMsgId);
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
@@ -1618,7 +1615,7 @@ nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
     }
     else
     {
-        res = m_realImapMiscellaneousSink->ProgressStatus(aProtocol, statusMsg);
+        res = m_realImapMiscellaneousSink->ProgressStatus(aProtocol, aMsgId);
     }
     return res;
 }
@@ -3444,27 +3441,21 @@ FEAlertFromServerProxyEvent::HandleEvent()
 }
 
 ProgressStatusProxyEvent::ProgressStatusProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* statusMsg) :
+    nsImapMiscellaneousSinkProxy* aProxy, PRUint32 aMsgId) :
     nsImapMiscellaneousSinkProxyEvent(aProxy)
 {
-    NS_ASSERTION (statusMsg, "Oops... a null statusMsg");
-    if (statusMsg)
-        m_statusMsg = PL_strdup(statusMsg);
-    else
-        m_statusMsg = nsnull;
+	m_statusMsgId = aMsgId;
 }
 
 ProgressStatusProxyEvent::~ProgressStatusProxyEvent()
 {
-    if (m_statusMsg)
-        PL_strfree(m_statusMsg);
 }
 
 NS_IMETHODIMP
 ProgressStatusProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->ProgressStatus(
-        m_proxy->m_protocol, m_statusMsg);
+        m_proxy->m_protocol, m_statusMsgId);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
@@ -3477,7 +3468,7 @@ PercentProgressProxyEvent::PercentProgressProxyEvent(
     NS_ASSERTION (aInfo, "Oops... a null progress info");
     if (aInfo)
     {
-        m_progressInfo.message = PL_strdup(aInfo->message);
+        m_progressInfo.message = (aInfo->message) ? nsCRT::strdup(aInfo->message) : nsnull;
         m_progressInfo.percent = aInfo->percent;
     }
     else
@@ -3490,7 +3481,7 @@ PercentProgressProxyEvent::PercentProgressProxyEvent(
 PercentProgressProxyEvent::~PercentProgressProxyEvent()
 {
     if (m_progressInfo.message)
-        PL_strfree(m_progressInfo.message);
+        PR_Free(m_progressInfo.message);
 }
 
 NS_IMETHODIMP

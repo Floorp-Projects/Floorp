@@ -188,7 +188,7 @@ typedef struct _StreamInfo {
 } StreamInfo;
 
 typedef struct _ProgressInfo {
-	char *message;
+	PRUnichar *message;
 	int percent;
 } ProgressInfo;
 

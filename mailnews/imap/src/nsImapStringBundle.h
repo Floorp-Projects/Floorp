@@ -64,7 +64,7 @@ NS_END_EXTERN_C
 #define	IMAP_NO_ONLINE_FOLDER                                  5034
 #define	IMAP_LOGIN_FAILED                                  5035
 #define	IMAP_RECEIVING_MESSAGE_HEADERS_OF                                  5036
-#define	XP_RECEIVING_MESSAGE_FLAGS_OF                                  5037
+#define	IMAP_RECEIVING_MESSAGE_FLAGS_OF                                  5037
 #define	IMAP_DELETING_MESSAGES                                  5038
 #define	IMAP_DELETING_MESSAGE                                  5039
 #define	IMAP_MOVING_MESSAGES_TO                                  5040
@@ -72,6 +72,7 @@ NS_END_EXTERN_C
 #define	IMAP_COPYING_MESSAGES_TO                                  5042
 #define	IMAP_COPYING_MESSAGE_TO                                  5043
 #define	IMAP_SELECTING_MAILBOX                                  5044
+#define IMAP_FOLDER_RECEIVING_MESSAGE_OF						5045
 
 
 #endif /* _nsImapStringBundle_H__ */

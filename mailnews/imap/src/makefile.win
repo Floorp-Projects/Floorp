@@ -61,6 +61,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapMoveCoalescer.obj			\
 			.\$(OBJDIR)\nsImapUtils.obj					\
 			.\$(OBJDIR)\nsImapUndoTxn.obj					\
+			.\$(OBJDIR)\nsImapStringBundle.obj			\
 			$(NULL)
 
 

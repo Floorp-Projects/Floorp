@@ -285,7 +285,7 @@ public:
 	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
                                  const char* aString);
 	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              const char* statusMsg);
+                              PRUint32 aMsgId);
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
 	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);

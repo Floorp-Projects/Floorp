@@ -232,7 +232,7 @@ public:
     NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
                                  const char* aString);
     NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              const char* statusMsg);
+                              PRUint32 statusMsgId);
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
     NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
@@ -756,10 +756,10 @@ struct FEAlertFromServerProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 struct ProgressStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     ProgressStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                             const char* statusMsg);
+                            PRUint32 statusMsgId);
     virtual ~ProgressStatusProxyEvent();
     NS_IMETHOD HandleEvent();
-    char* m_statusMsg;
+    PRUint32 m_statusMsgId;
 };
 
 struct PercentProgressProxyEvent : public nsImapMiscellaneousSinkProxyEvent

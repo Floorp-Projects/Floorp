@@ -68,8 +68,7 @@ public:
 										 const char* aString) = 0;
 	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
 															 const char* aString) = 0;
-	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-														const char* statusMsg) = 0;
+	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol, PRUint32 aMsgId) = 0;
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
 														 ProgressInfo* aInfo) = 0;
 	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol) = 0;

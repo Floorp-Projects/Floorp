@@ -42,6 +42,8 @@
 #include "nsISocketTransportService.h"
 #include "nsXPIDLString.h"
 
+#include "nsImapStringBundle.h"
+
 PRLogModuleInfo *IMAP;
 
 // netlib required files
@@ -1305,7 +1307,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
             else
             {
             	// get new message counts, if any, from server
-//            	ProgressEventFunction_UsingId (MK_IMAP_STATUS_SELECTING_MAILBOX);
+            	ProgressEventFunctionUsingId (IMAP_STATUS_SELECTING_MAILBOX);
 				if (m_needNoop)
 				{
 					m_noopCount++;
@@ -1386,7 +1388,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 				if (HandlingMultipleMessages(messageIdString))
 				{
 					// multiple messages, fetch them all
-//						m_progressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
+						m_progressStringId =  IMAP_FOLDER_RECEIVING_MESSAGE_OF;
 					
 					m_progressIndex = 0;
 					m_progressCount = CountMessagesInIdString(messageIdString);
@@ -1537,12 +1539,10 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 nsString2 messageIdString("",eOneByte);
 				
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
-#ifdef DO_PROGRESS
 				if (HandlingMultipleMessages(messageIdString))
-					ProgressEventFunction_UsingId (XP_IMAP_DELETING_MESSAGES);
+					ProgressEventFunctionUsingId (IMAP_DELETING_MESSAGES);
 				else
-					ProgressEventFunction_UsingId(XP_IMAP_DELETING_MESSAGE);
-#endif
+					ProgressEventFunctionUsingId(IMAP_DELETING_MESSAGE);
                 Store(messageIdString, "+FLAGS (\\Deleted)", 
                       bMessageIdsAreUids);
                 
@@ -1678,20 +1678,19 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
                 if (destinationMailbox)
                 {
-#ifdef DOING_PROGRESS
-					if (imapAction == nsIImapUrl::nsImapOnlineMove) {
+					if (imapAction == nsIImapUrl::nsImapOnlineMove) 
+					{
 						if (HandlingMultipleMessages(messageIdString))
-							ProgressEventFunction_UsingIdWithString (XP_IMAP_MOVING_MESSAGES_TO, destinationMailbox);
+							ProgressEventFunctionUsingIdWithString (IMAP_MOVING_MESSAGES_TO, destinationMailbox);
 						else
-							ProgressEventFunction_UsingIdWithString (XP_IMAP_MOVING_MESSAGE_TO, destinationMailbox); 
+							ProgressEventFunctionUsingIdWithString (IMAP_MOVING_MESSAGE_TO, destinationMailbox); 
 					}
 					else {
 						if (HandlingMultipleMessages(messageIdString))
-							ProgressEventFunction_UsingIdWithString (XP_IMAP_COPYING_MESSAGES_TO, destinationMailbox);
+							ProgressEventFunctionUsingIdWithString (IMAP_COPYING_MESSAGES_TO, destinationMailbox);
 						else
-							ProgressEventFunction_UsingIdWithString (XP_IMAP_COPYING_MESSAGE_TO, destinationMailbox); 
+							ProgressEventFunctionUsingIdWithString (IMAP_COPYING_MESSAGE_TO, destinationMailbox); 
 					}
-#endif
                     Copy(messageIdString, destinationMailbox, bMessageIdsAreUids);
                     PR_FREEIF( destinationMailbox);
 					ImapOnlineCopyState copyState;
@@ -1730,15 +1729,15 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                 if (messageIdString)
                 {
-					fProgressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
-					fProgressIndex = 0;
-					fProgressCount = CountMessagesInIdString(messageIdString);
+					m_progressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
+					m_progressIndex = 0;
+					m_progressCount = CountMessagesInIdString(messageIdString);
 					
 					FetchMessage(messageIdString, 
                                  kEveryThingRFC822Peek,
                                  bMessageIdsAreUids);
                       
-                    fProgressStringId = 0;           
+                    m_progressStringId = 0;           
                     OnlineCopyCompleted(
                         GetServerStateParser().LastCommandSuccessful() ? 
                                 kSuccessfulCopy : kFailedCopy);
@@ -1951,7 +1950,7 @@ char *nsImapProtocol::CreateEscapedMailboxName(const char *rawName)
 
 void nsImapProtocol::SelectMailbox(const char *mailboxName)
 {
-//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_SELECTING_MAILBOX);
+    ProgressEventFunctionUsingId (IMAP_STATUS_SELECTING_MAILBOX);
     IncrementCommandTagNumber();
     
     m_closeNeededBeforeSelect = PR_FALSE;		// initial value
@@ -2728,26 +2727,24 @@ void nsImapProtocol::FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount)
 
 void nsImapProtocol::FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
 {
-#if 0
 	// lets worry about this progress stuff later.
 	switch (fields) {
-	case TIMAP4BlockingConnection::kHeadersRFC822andUid:
-		fProgressStringId =  XP_RECEIVING_MESSAGE_HEADERS_OF;
+	case kHeadersRFC822andUid:
+		m_progressStringId =  IMAP_RECEIVING_MESSAGE_HEADERS_OF;
 		break;
-	case TIMAP4BlockingConnection::kFlags:
-		fProgressStringId =  XP_RECEIVING_MESSAGE_FLAGS_OF;
+	case kFlags:
+		m_progressStringId =  IMAP_RECEIVING_MESSAGE_FLAGS_OF;
 		break;
 	default:
-		fProgressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
+		m_progressStringId =  IMAP_FOLDER_RECEIVING_MESSAGE_OF;
 		break;
 	}
 	
-	fProgressIndex = 0;
-	fProgressCount = msgCount;
-#endif // 0
+	m_progressIndex = 0;
+	m_progressCount = msgCount;
 	FolderMsgDumpLoop(msgUids, msgCount, fields);
 	
-//	fProgressStringId = 0;
+	m_progressStringId = 0;
 }
 
 void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount)
@@ -3673,18 +3670,32 @@ nsImapProtocol::ShowProgress()
 {
     ProgressInfo aProgressInfo;
 
-    aProgressInfo.message = "*** Fix me!! ***\r\n";
-    aProgressInfo.percent = 0;
+	if (m_progressStringId)
+	{
+		PRUnichar *progressString = NULL;
+		progressString = IMAPGetStringByID(m_progressStringId);
+		const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
+//		progressString = PR_sprintf_append(progressString, XP_GetString(m_progressStringId), (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
+		if (progressString)
+			PercentProgressUpdateEvent(progressString,(100*(++m_progressIndex))/m_progressCount );
+		PR_FREEIF(progressString);
+		aProgressInfo.message = progressString;
+		aProgressInfo.percent = (100*(m_progressIndex))/m_progressCount;
 
-    if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
+		if (m_imapMiscellaneousSink)
+			m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
+	}
 }
 
 void
 nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
+	PRUnichar *status = IMAPGetStringByID(aMsgId);
     if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->ProgressStatus(this, "*** Fix me!! ***\r\n");
+	{
+        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId);
+		// who's going to free this? Does ProgressStatus complete synchronously?
+	}
 }
 
 void
@@ -3692,11 +3703,16 @@ nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
                                                        char * aExtraInfo)
 {
     if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->ProgressStatus(this, "*** Fix me!! ***\r\n");
+	{
+//		PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
+
+		// ### FIXME - need to format this string, and pass it status. Or, invent a new interface
+        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId);
+	}
 }
 
 void
-nsImapProtocol::PercentProgressUpdateEvent(char *message, PRInt32 percent)
+nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent)
 {
     ProgressInfo aProgressInfo;
     aProgressInfo.message = message;
@@ -3935,7 +3951,7 @@ void nsImapProtocol::HandleCurrentUrlError()
 void nsImapProtocol::Capability()
 {
 
-//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_CHECK_COMPAT);
+    ProgressEventFunctionUsingId (IMAP_STATUS_CHECK_COMPAT);
     IncrementCommandTagNumber();
 	nsString2 command(GetServerCommandTag(), eOneByte);
 

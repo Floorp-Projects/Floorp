@@ -43,6 +43,9 @@
 #include "nsIIMAPHostSessionList.h"
 #include "nsIMsgCopyService.h"
 #include "nsICopyMsgStreamListener.h"
+#include "nsImapStringBundle.h"
+
+
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
@@ -2797,16 +2800,26 @@ nsImapMailFolder::FEAlertFromServer(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
-                                 const char* statusMsg)
+                                 PRUint32 aMsgId)
 {
-    return NS_ERROR_FAILURE;
+	PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
+#ifdef DEBUG_bienvenu
+	nsCString cString(progressMsg);
+	printf("status: %s\n", cString.GetBuffer());
+#endif
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
                                   ProgressInfo* aInfo)
 {
-    return NS_ERROR_FAILURE;
+#ifdef DEBUG_bienvenu
+	nsCString message(aInfo->message);
+	printf("progress: %d %s\n", aInfo->percent, message.GetBuffer());
+#endif
+    return NS_OK;
 }
 
 NS_IMETHODIMP
