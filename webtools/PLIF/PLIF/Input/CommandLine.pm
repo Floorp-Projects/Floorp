@@ -54,7 +54,7 @@ sub splitArguments {
     my $lastArgument;
     foreach my $argument (@ARGV) {
         if ($argument =~ /^-([^-]+)$/os) {
-            my @shortArguments = split(//o, $1);
+            my @shortArguments = split(//os, $1);
             foreach my $shortArgument (@shortArguments) {
                 $self->addArgument($shortArgument, 1);
             }
@@ -62,12 +62,14 @@ sub splitArguments {
         } elsif ($argument =~ /^--([^-][^=]*)=(.+)$/os) {
             $self->addArgument($1, $2);
             $lastArgument = undef;
-        } elsif ($argument =~ /^--no-([^-].+)/os) {
+        } elsif ($argument =~ /^--no-([^-].+)$/os) {
             $self->addArgument($1, 0);
             $lastArgument = undef;
-        } elsif ($argument =~ /^--([^-].+)/os) {
+        } elsif ($argument =~ /^--([^-].+)$/os) {
             $self->addArgument($1, 1);
             $lastArgument = $1;
+        } elsif ($argument =~ /^--$/os) {
+            $lastArgument = undef;
         } else {
             if (defined($lastArgument)) {
                 $self->addArgument($lastArgument, $argument);
@@ -84,7 +86,7 @@ sub createArgument {
     # @_ also contains @default, but to save copying it about we don't
     # use it directly in this method
     my($argument) = @_;
-    if ($argument eq 'batch' or $argument eq 'batch-force-defaults') {
+    if ($argument eq 'batch' or $argument eq 'batch-no-defaults') {
         # if --batch was not set, then we assume that means that
         # we are not in --batch mode... no point asking the user,
         # cos if we are, he won't reply, and if he isn't, we know
@@ -92,11 +94,11 @@ sub createArgument {
         $self->setArgument($argument, 0);
     } else {
         if ($self->getArgument('batch')) {
-            # defer to superclass
-            $self->SUPER::createArgument(@_);
-        } elsif ($self->getArgument('batch-force-defaults')) {
             # set this argument to its default value
             $self->setArgument(@_);            
+        } elsif ($self->getArgument('batch-no-defaults')) {
+            # defer to superclass
+            $self->SUPER::createArgument(@_);
         } else {
             $self->app->output->request(@_);
             # get input from user
