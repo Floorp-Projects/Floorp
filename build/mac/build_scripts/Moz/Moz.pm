@@ -30,7 +30,7 @@ not just the Mozilla build.
 =cut
 
 
-package			Moz;
+package			Moz::Moz;
 require			Exporter;
 
 use Cwd;
@@ -44,7 +44,7 @@ use Mac::Processes;
 
 use ExtUtils::Manifest 'maniread';
 
-use CodeWarriorLib;
+use Moz::CodeWarriorLib;
 
 @ISA				= qw(Exporter);
 
@@ -256,7 +256,7 @@ sub build_project($$$)
 		
 		print "Building \"$project_path\[$target_name\]\"\n";
 		
-		$had_errors = CodeWarriorLib::build_project(
+		$had_errors = Moz::CodeWarriorLib::build_project(
 			$project_path, $target_name, $recent_errors_file, $clean_build
 		);
 		WaitNextEvent();
@@ -297,7 +297,7 @@ sub BuildProjectClean($;$)
 sub ImportXMLProject($$)
 {
     my ($xml_path, $project_path) = @_;
-    my ($codewarrior_ide_name) = CodeWarriorLib::getCodeWarriorIDEName();
+    my ($codewarrior_ide_name) = Moz::CodeWarriorLib::getCodeWarriorIDEName();
     my $ascript = <<EOS;
     tell application "$codewarrior_ide_name"
         make new (project document) as ("$project_path") with data ("$xml_path")
@@ -477,7 +477,7 @@ sub LaunchCodeWarrior($)
   my($cur_dir) = cwd();
   
   # this both launches and writes the IDE path file
-  CodeWarriorLib::activate($idepath_file);
+  Moz::CodeWarriorLib::activate($idepath_file);
   
   chdir($cur_dir);
 }

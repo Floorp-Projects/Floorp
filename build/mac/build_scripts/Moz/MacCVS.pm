@@ -1,19 +1,20 @@
 #!perl -w
-package	MacCVS;
+package Moz::MacCVS;
 
-# package	Mac::Apps::MacCVS; this should really be the name of the package
+# package Mac::Apps::MacCVS; this should really be the name of the package
 # but due to our directory hierarchy in mozilla, I am not doing it
 
 require 5.004;
-require	Exporter;
+require Exporter;
 
 use strict;
+use Exporter;
 
 use vars qw($VERSION @ISA @EXPORT $MacCVSLib);
-use Mac::StandardFile;
-use Moz;
+
 use Cwd;
-use Exporter;
+
+use Mac::StandardFile;
 use File::Basename;
 
 @ISA				= qw(Exporter);
@@ -37,7 +38,7 @@ my($last_error) = 0;
 #
 
 # just like Mac::DoAppleScript, 1 is success, 0 is failure
-sub _myDoAppleScript($)	
+sub _myDoAppleScript($) 
 {
 	my($script) = @_;
 	my $asresult = MacPerl::DoAppleScript($script);
@@ -64,41 +65,63 @@ sub _myDoAppleScript($)
 	}
 }
 
+# get the full path to this module
+sub _getPathToMe()
+{
+	# this can be a relative or absolute path. If relative, is relative
+	# to the running script ($0)
+	my($my_path) = $INC{"Moz/MacCVS.pm"};
+	
+	if (substr($my_path, 0, 1) eq ":")	# relative path
+	{
+		$my_path = dirname($0).$my_path;
+	}
+	
+	return $my_path;
+}
+
 # _useMacCVSLib
 # returns 1 on success
 # Search the include path for the file called MacCVSLib
 sub _useMacCVSLib() 
 {
-	unless ( defined($MacCVSLib) )
+	unless (defined($MacCVSLib) && ($MacCVSLib ne ""))
 	{
 		my($libname) = "MacCVSLib";
-# try the directory we were run from
-		my($c) = dirname($0) . ":" . $libname;
+		
+		my($my_path) = _getPathToMe();
+		
+		# try in the same directory as this module
+		my($c) = dirname($my_path).":".$libname;
 		if ( -e $c)
 		{
 			$MacCVSLib = $c;
+			return 1;
 		}
-		else
+		
+		# try the directory we were run from
+		$c = dirname($0) . ":" . $libname;
+		if ( -e $c)
 		{
-	# now search the include directories
-			foreach (@INC)
+			$MacCVSLib = $c;
+			return 1;
+		}
+
+		# now search the include directories
+		foreach (@INC)
+		{
+			unless ( m/^Dev:Pseudo/ ) # This is some bizarre MacPerl special-case directory
 			{
-				unless ( m/^Dev:Pseudo/ )	# This is some bizarre MacPerl special-case directory
+				$c = $_ . $libname;
+				if (-e $c)
 				{
-					$c = $_ . $libname;
-					if (-e $c)
-					{
-						$MacCVSLib = $c;
-						last;
-					}
+					$MacCVSLib = $c;
+					return 1;
 				}
 			}
 		}
-		if (! (-e $MacCVSLib))
-		{
-			print STDERR "MacCVS lib could not be found! $MacCVSLib";
-			return 0;
-		}
+
+		die "Error: MacCVSLib could not be found!";
 	}
 	return 1;
 }
@@ -134,9 +157,9 @@ sub new
 sub assertSessionOpen()
 {
 	my ($self) = shift;
-	_useMacCVSLib() || die "Could not load MacCVSLib\n";
-
-    $last_error = 0;
+	
+	_useMacCVSLib() || die "Error: Could not load MacCVSLib\n";
+	$last_error = 0;
 
 	my $script = <<END_OF_APPLESCRIPT;
 	tell (load script file "$MacCVSLib") to OpenSession("$self->{session_file}")
@@ -148,7 +171,7 @@ END_OF_APPLESCRIPT
 sub print
 {
 	my($self) = shift;
-    $last_error = 0;
+		$last_error = 0;
 	print "MacCVS:: name: ", $self->{name}, " session file: ", $self->{session_file}, "\n";
 }
 
@@ -158,13 +181,13 @@ sub print
 sub checkout()
 {
 	my($self, $module, $revision, $date ) = @_;
-	unless( defined ($module) ) { $module = ""; }	# get rid of the pesky undefined warnings
+	unless( defined ($module) ) { $module = ""; } # get rid of the pesky undefined warnings
 	unless( defined ($revision) ) { $revision = ""; }
 	unless( defined ($date) ) { $date = ""; }
 
-    $last_error = 0;
-    
-	$self->assertSessionOpen() || return 1;
+	$last_error = 0;
+		
+	$self->assertSessionOpen() || die "Error: failed to open MacCVS session file at $self->{session_file}\n";
 	
 	my($revstring) = ($revision ne "") ? $revision : "(none)";
 	my($datestring) = ($date ne "") ? $date : "(none)";
