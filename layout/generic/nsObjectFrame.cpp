@@ -693,12 +693,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // handle an image elsewhere
-  PRBool isImage;
-  IsSupportedImage(mContent, &isImage);
-  if (isImage) {
-    return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, mFrames.FirstChild());
-  }
-
+  nsIFrame * child = mFrames.FirstChild();
+  if(child != nsnull)
+    return HandleImage(aPresContext, aMetrics, aReflowState, aStatus, child);
   // if we are printing, bail for now
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
   if (thePrinterContext) return rv;
@@ -897,32 +894,16 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     rv = ReinstantiatePlugin(aPresContext, aMetrics, aReflowState);
   }
   // finish up
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
+    // if we got an error, we'll check for alternative content with
+    // CantRenderReplacedElement()
+    nsIPresShell* presShell;
+    aPresContext->GetShell(&presShell);
+    presShell->CantRenderReplacedElement(aPresContext, this);
+    NS_RELEASE(presShell);
+  } else {
     NotifyContentObjectWrapper();
   }
-  else {
-    rv = NS_OK;
-    // reflow the 1st object frame child as an alternate. If there is none, 
-    // then display our alternative content with CantRenderReplacedElement()
-    nsIFrame* childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      nsCOMPtr<nsIAtom> frameType;
-      childFrame->GetFrameType(getter_AddRefs(frameType));
-      if (frameType.get() == nsLayoutAtoms::objectFrame) {
-        nsHTMLReflowState childRS(aPresContext, aReflowState, childFrame,
-                                  nsSize(aReflowState.availableWidth, aReflowState.availableHeight));
-        // reflow the child object frame and let it set rv, aStatus
-        return ReflowChild(childFrame, aPresContext, aMetrics, childRS,
-                           0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
-      }
-      childFrame->GetNextSibling(&childFrame);
-    }
-    // there was no object frame child, so render the content
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    presShell->CantRenderReplacedElement(aPresContext, this);
-  }
-
   aStatus = NS_FRAME_COMPLETE;
 
   return rv;

@@ -4764,13 +4764,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         }
         isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(aPresShell, &newFrame);
-        if (newFrame) {
-          PRBool isImage;
-          ((nsObjectFrame*)newFrame)->IsSupportedImage(aContent, &isImage);
-          if (!isImage) {
-            processChildren = PR_TRUE;
-          }
-        }
+        processChildren = PR_FALSE;
       }
       else if (nsHTMLAtoms::applet == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
