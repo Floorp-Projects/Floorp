@@ -90,9 +90,6 @@ private:
   void ProcessDirEntry(IconDirEntry& aTarget);
   void ProcessInfoHeader();
 
-  nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
-  nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
-  nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
   nsresult SetImageData();
   nsresult SetAlphaData();
 

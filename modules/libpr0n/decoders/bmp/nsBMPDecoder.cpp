@@ -141,46 +141,7 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
 // Actual Data Processing
 // ----------------------------------------
 
-inline nsresult nsBMPDecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx)
-{
-    PRUint8 red, green, blue;
-    red = mColors[idx].red;
-    green = mColors[idx].green;
-    blue = mColors[idx].blue;
-    return SetPixel(aDecoded, red, green, blue);
-}
-
-inline nsresult nsBMPDecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
-{
-#if defined(XP_MAC) || defined(XP_MACOSX)
-    *aDecoded++ = 0; // Mac needs this padding byte
-#endif
-#ifdef USE_RGB
-    *aDecoded++ = aRed;
-    *aDecoded++ = aGreen;
-    *aDecoded++ = aBlue;
-#else
-    *aDecoded++ = aBlue;
-    *aDecoded++ = aGreen;
-    *aDecoded++ = aRed;
-#endif
-    return NS_OK;
-}
-
-inline nsresult nsBMPDecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos)
-{
-    PRUint8 idx = aData >> 4;
-    nsresult rv = SetPixel(aDecoded, idx);
-    if ((++aPos >= mBIH.width) || NS_FAILED(rv))
-        return rv;
-
-    idx = aData & 0xF;
-    rv = SetPixel(aDecoded, idx);
-    ++aPos;
-    return rv;
-}
-
-inline nsresult nsBMPDecoder::SetData(PRUint8* aData)
+nsresult nsBMPDecoder::SetData(PRUint8* aData)
 {
     PRUint32 bpr;
     nsresult rv;
@@ -394,7 +355,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                               if (lpos >= mBIH.width)
                                   break;
                               idx = (*p >> bit) & 1;
-                              SetPixel(d, idx);
+                              SetPixel(d, idx, mColors);
                               ++lpos;
                           }
                           ++p;
@@ -402,13 +363,13 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         break;
                       case 4:
                         while (lpos < mBIH.width) {
-                          Set4BitPixel(d, *p, lpos);
+                          Set4BitPixel(d, *p, lpos, mBIH.width, mColors);
                           ++p;
                         }
                         break;
                       case 8:
                         while (lpos < mBIH.width) {
-                          SetPixel(d, *p);
+                          SetPixel(d, *p, mColors);
                           ++lpos;
                           ++p;
                         }

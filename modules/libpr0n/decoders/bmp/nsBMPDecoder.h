@@ -133,22 +133,10 @@ private:
      * @oaram count Number of bytes in mBuffer */
     NS_METHOD ProcessData(const char* aBuffer, PRUint32 aCount);
 
-    /** Sets the pixel data in aDecoded to the given values.
-     * The variable passed in as aDecoded will be moved on 3 bytes! */
-    inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
-    inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
-
-    /** Sets one or two pixels; it is ensured that aPos is <= mBIH.width
-     * @param aDecoded where the data is stored. Will be moved 3 or 6 bytes,
-     * depending on whether one or two pixels are written.
-     * @param aData The values for the two pixels
-     * @param aPos Current position. Is incremented by one or two. */
-    inline nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
-
     /** Sets the image data at specified position. mCurLine is used
      * to get the row
      * @param aData The data */
-    inline nsresult SetData(PRUint8* aData);
+    nsresult SetData(PRUint8* aData);
 
     nsCOMPtr<imgIDecoderObserver> mObserver;
 
@@ -175,6 +163,54 @@ private:
     void ProcessFileHeader();
     void ProcessInfoHeader();
 };
+
+/** Sets the pixel data in aDecoded to the given values.
+ * The variable passed in as aDecoded will be moved on 3 bytes! */
+inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    *aDecoded++ = 0; // Mac needs this padding byte
+#endif
+#ifdef USE_RGB
+    *aDecoded++ = aRed;
+    *aDecoded++ = aGreen;
+    *aDecoded++ = aBlue;
+#else
+    *aDecoded++ = aBlue;
+    *aDecoded++ = aGreen;
+    *aDecoded++ = aRed;
+#endif
+    return NS_OK;
+}
+
+inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)
+{
+    PRUint8 red, green, blue;
+    red = aColors[idx].red;
+    green = aColors[idx].green;
+    blue = aColors[idx].blue;
+    return SetPixel(aDecoded, red, green, blue);
+}
+
+/** Sets one or two pixels; it is ensured that aPos is <= mBIH.width
+ * @param aDecoded where the data is stored. Will be moved 3 or 6 bytes,
+ * depending on whether one or two pixels are written.
+ * @param aData The values for the two pixels
+ * @param aPos Current position. Is incremented by one or two. */
+inline nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData,
+                             PRUint32& aPos, PRUint32 aMaxWidth, colorTable* aColors)
+{
+    PRUint8 idx = aData >> 4;
+    nsresult rv = SetPixel(aDecoded, idx, aColors);
+    if ((++aPos >= aMaxWidth) || NS_FAILED(rv))
+        return rv;
+
+    idx = aData & 0xF;
+    rv = SetPixel(aDecoded, idx, aColors);
+    ++aPos;
+    return rv;
+}
+
 
 
 #endif
