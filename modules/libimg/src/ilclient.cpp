@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.12 1999/09/25 20:00:17 kipp%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.13 1999/10/13 00:41:43 beard%netscape.com Exp $
  */
 
 
@@ -663,6 +663,11 @@ il_delete_container(il_container *ic)
         if (ic->imgdcb) {
           ic->imgdcb->SetContainer(nsnull);
           NS_RELEASE(ic->imgdcb);
+        }
+        
+        if (ic->imgdec) {
+          ic->imgdec->SetContainer(nsnull);
+          NS_RELEASE(ic->imgdec);
         }
 
         FREE_IF_NOT_NULL(ic->comment);
