@@ -76,8 +76,12 @@ nsStyleStructID_Length /* one past the end; length of 0-based list */
 #define NS_STYLE_INHERIT_BIT(sid_)        (1 << PRInt32(eStyleStruct_##sid_))
 #define NS_STYLE_INHERIT_MASK             0x00ffffff
 
+// Additional bits for nsStyleContext's mBits:
 // A bit to test whether or not we have any text decorations.
 #define NS_STYLE_HAS_TEXT_DECORATIONS     0x01000000
+
+// Additional bits for nsRuleNode's mDependentBits:
+#define NS_RULE_NODE_GC_MARK              0x02000000
 
 #define NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(the_sid) \
   static const nsStyleStructID GetStyleStructID() {return the_sid;}

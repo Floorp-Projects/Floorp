@@ -4697,3 +4697,57 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   GetStyleDataFn fn = gGetStyleDataFn[aSID];
   return fn ? (this->*fn)(aContext, aComputeData) : nsnull;
 }
+
+void
+nsRuleNode::Mark()
+{
+  for (nsRuleNode *node = this;
+       node && !(node->mDependentBits & NS_RULE_NODE_GC_MARK);
+       node = node->mParent)
+    node->mDependentBits |= NS_RULE_NODE_GC_MARK;
+}
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+SweepRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                      PRUint32 number, void *arg)
+{
+  ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
+  if (entry->mRuleNode->Sweep())
+    return PL_DHASH_REMOVE | PL_DHASH_NEXT;
+  return PL_DHASH_NEXT;
+}
+
+PRBool
+nsRuleNode::Sweep()
+{
+  // If we're not marked, then we have to delete ourself.
+  if (!(mDependentBits & NS_RULE_NODE_GC_MARK)) {
+    Destroy();
+    return PR_TRUE;
+  }
+
+  // Clear our mark, for the next time around.
+  mDependentBits &= ~NS_RULE_NODE_GC_MARK;
+
+  // Call sweep on the children, since some may not be marked, and
+  // remove any deleted children from the child lists.
+  if (HaveChildren()) {
+    if (ChildrenAreHashed()) {
+      PLDHashTable *children = ChildrenHash();
+      PL_DHashTableEnumerate(children, SweepRuleNodeChildren, nsnull);
+    } else {
+      for (nsRuleList **children = ChildrenListPtr(); *children; ) {
+        if ((*children)->mRuleNode->Sweep()) {
+          // This rule node was destroyed, so remove this entry, and
+          // implicitly advance by making *children point to the next
+          // entry.
+          *children = (*children)->DestroySelf(mPresContext);
+        } else {
+          // Advance.
+          children = &(*children)->mNext;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
+}

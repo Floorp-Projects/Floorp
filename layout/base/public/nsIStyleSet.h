@@ -180,7 +180,12 @@ public:
                       nsIAtom* aPseudoTag,
                       nsStyleContext* aParentContext) = 0;
 
-  NS_IMETHOD Shutdown()=0;
+  NS_IMETHOD BeginShutdown(nsIPresContext* aPresContext) = 0;
+
+  NS_IMETHOD Shutdown(nsIPresContext* aPresContext) = 0;
+
+  NS_IMETHOD NotifyStyleContextDestroyed(nsIPresContext* aPresContext,
+                                         nsStyleContext* aStyleContext) = 0;
 
   // Get a new style context that lives in a different parent
   // The new context will be the same as the old if the new parent == the old parent

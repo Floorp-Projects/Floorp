@@ -93,6 +93,12 @@ public:
   void AddStyleBit(const PRUint32& aBit) { mBits |= aBit; }
   void GetStyleBits(PRUint32* aBits) { *aBits = mBits; }
 
+  /*
+   * Mark this style context's rule node (and its ancestors) to prevent
+   * it from being garbage collected.
+   */
+  void Mark();
+
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
   const nsStyleStruct* PeekStyleData(nsStyleStructID aSID);
 
