@@ -248,9 +248,48 @@ calDavCalendar.prototype = {
     getItems: function (aItemFilter, aCount,
                         aRangeStart, aRangeEnd, aListener)
     {
-        if (!aListener)
-            return;
+        if (!aListener) {
+            throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+        }
 
+        // XXX for now, we're just gonna start off getting events.
+        // worry about todos and other stuff later
+
+        var webSvc = Components.classes['@mozilla.org/webdav/service;1']
+            .getService(Components.interfaces.nsIWebDAVService);
+
+        // XXX we really should use DASL SEARCH or CalDAV REPORT, but the only
+        // server i can possibly test against doesn't yet support those
+
+        // So we need a list of items to iterate over.  Weirdly, we have to 
+        // search 
+        var eventDirUri = this.mUri.clone();
+        eventDirUri.spec = eventDirUri.spec + "calendar/events/";
+        var eventDirResource = new WebDavResource(eventDirUri);
+
+        var propsToGet = ["DAV: getlastmodified"];
+        webSvc.getResourceProperties(eventDirResource, propsToGet.length, 
+                                     propsToGet, true, this, aListener);
+
+    },
+
+    // onOperation* methods for nsIWebDavListener
+    onOperationComplete: function (aStatusCode, aResource, aOperation, 
+                                   aClosure) 
+    {
+        // XXX aClosure is the listener for now
+        aClosure.onOperationComplete(this, aStatusCode, 0, null, null);
+    },
+
+    onOperationDetail: function(aStatusCode, aResource, aOperation, aDetail,
+                                aClosure)
+    {
+        dump("calDavCalendar.onOperationDetail() called\n");
+    },
+
+    oldGetItems: function (aItemFilter, aCount,
+                           aRangeStart, aRangeEnd, aListener)
+    {
         const calICalendar = Components.interfaces.calICalendar;
         const calIItemBase = Components.interfaces.calIItemBase;
         const calIEvent = Components.interfaces.calIEvent;
@@ -383,6 +422,26 @@ calDavCalendar.prototype = {
     },
 }
 
+function WebDavResource(url)
+{
+    this.mResourceURL = url;
+}
+
+WebDavResource.prototype = {
+    mResourceURL: {},
+    get resourceURL() { 
+        dump(this.mResourceURL + "\n");
+        return this.mResourceURL;}  ,
+    QueryInterface: function(outer, iid) {
+        if (iid.equals(CI.nsIWebDAVResource) ||
+            iid.equals(CI.nsISupports)) {
+            return this;
+        }
+       
+        throw Components.interfaces.NS_NO_INTERFACE;
+    }
+};
+
 /****
  **** module registration
  ****/
@@ -423,6 +482,7 @@ var calDavCalendarModule = {
         return true;
     }
 };
+
 
 function NSGetModule(compMgr, fileSpec) {
     return calDavCalendarModule;
