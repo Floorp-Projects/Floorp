@@ -137,6 +137,9 @@ protected:
   nsresult DidDeleteSelection(nsISelection *aSelection, 
                               nsIEditor::EDirection aDir, 
                               nsresult aResult);
+  nsresult InsertBRIfNeeded(nsISelection *aSelection);
+  nsresult GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection aAction, 
+                                  nsCOMPtr<nsIDOMNode> *outSelNode, PRInt32 *outSelOffset);
   nsresult JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock, nsCOMPtr<nsIDOMNode> *aRightBlock, PRBool *aCanceled);
   nsresult MoveBlock(nsIDOMNode *aLeft, nsIDOMNode *aRight, PRInt32 aLeftOffset, PRInt32 aRightOffset);
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *aOffset);
@@ -263,8 +266,9 @@ protected:
 protected:
   nsHTMLEditor           *mHTMLEditor;
   nsCOMPtr<nsIDOMRange>   mDocChangeRange;
-  PRBool                  mListenerEnabled;
-  PRBool                  mReturnInEmptyLIKillsList;
+  PRPackedBool            mListenerEnabled;
+  PRPackedBool            mReturnInEmptyLIKillsList;
+  PRPackedBool            mDidRangedDelete;
   nsCOMPtr<nsIDOMRange>   mUtilRange;
   PRUint32                mJoinOffset;  // need to remember an int across willJoin/didJoin...
   nsCOMPtr<nsIDOMNode>    mNewBlock;

@@ -283,14 +283,14 @@ class nsAutoLockListener
 {
   public:
   
-  nsAutoLockListener(PRBool *enabled) : mEnabled(enabled)
+  nsAutoLockListener(PRPackedBool *enabled) : mEnabled(enabled)
                  {if (mEnabled) { mOldState=*mEnabled; *mEnabled = PR_FALSE;}}
   ~nsAutoLockListener() 
                  {if (mEnabled) *mEnabled = mOldState;}
   
   protected:
-  PRBool *mEnabled;
-  PRBool mOldState;
+  PRPackedBool *mEnabled;
+  PRPackedBool mOldState;
 };
 
 
