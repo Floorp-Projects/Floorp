@@ -408,7 +408,6 @@ GNOMEFE_GetDocPosition (MWContext *context,
 		       int32 *iX,
 		       int32 *iY)
 {
-#if 0
   MozHTMLView *view = find_html_view(context);
 
   if (!view) return; /* XXX */
@@ -416,7 +415,6 @@ GNOMEFE_GetDocPosition (MWContext *context,
 
   *iX = (int32) (view->doc_x);
   *iY = (int32) (view->doc_y);
-#endif
   printf ("GNOME_GetDocPosition (x %d, y %d)\n", *iX, *iY);
 
 }
