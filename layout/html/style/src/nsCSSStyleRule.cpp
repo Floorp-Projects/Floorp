@@ -1217,7 +1217,7 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
             list->mValue.GetStringValue(color->mCursorImage);
           }
           else if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
-            color->mCursor = NS_STYLE_CURSOR_INHERIT;
+            color->mCursor = parentColor->mCursor;
           }
         }
 

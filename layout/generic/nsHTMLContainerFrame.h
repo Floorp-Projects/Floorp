@@ -38,11 +38,6 @@ public:
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus& aEventStatus);
-  NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
-                          const nsPoint& aPoint,
-                          nsIFrame** aFrame,
-                          nsIContent** aContent,
-                          PRInt32& aCursor);
 
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);

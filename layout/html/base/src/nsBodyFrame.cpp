@@ -509,12 +509,9 @@ nsBodyFrame::HandleEvent(nsIPresContext& aPresContext,
       {
         nsIFrame* target = this;
         nsIContent* mTargetContent = mContent;
-        PRInt32 cursor;
+        PRInt32 cursor = NS_STYLE_CURSOR_AUTO;
        
         GetCursorAndContentAt(aPresContext, aEvent->point, &target, &mTargetContent, cursor);
-        if (cursor == NS_STYLE_CURSOR_INHERIT) {
-          cursor = NS_STYLE_CURSOR_DEFAULT;
-        }
         nsCursor c;
         switch (cursor) {
         default:
