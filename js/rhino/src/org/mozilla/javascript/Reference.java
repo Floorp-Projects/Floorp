@@ -44,6 +44,11 @@ package org.mozilla.javascript;
  */
 public abstract class Reference
 {
+    public boolean has()
+    {
+        return true;
+    }
+
     public abstract Object get();
 
     public abstract Object set(Object value);
