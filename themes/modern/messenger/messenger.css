@@ -75,8 +75,7 @@ iframe {
  * toolbar button images
  */
 
-#button-getmsg, #button-newmsg, #button-reply, #button-replyall, #button-forward, #button-file, #button-next, #button-mark
-#button-delete, #button-print, #button-stop  {
+#button-getmsg, #button-newmsg, #button-reply, #button-replyall, #button-forward, #button-file, #button-next, #button-mark, #button-delete, #button-print, #button-stop  {
 	min-width			: 52px;
 }
 
@@ -102,10 +101,19 @@ iframe {
     list-style-image      : url("chrome://messenger/skin/getmsg-clicked.gif");
   } 
 
-#button-mark {
-	margin-left			: 0px;
-	list-style-image	: url("chrome://messenger/skin/mark.gif");
-}
+#button-mark
+  {
+    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+    list-style-image      : url("chrome://messenger/skin/mark.gif");
+    margin                : 3px 3px 1px 3px;
+    text-align            : center;
+  }
+
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button
+  {
+    margin                : 0px;
+    padding               : 0px;
+  }
 
 #button-mark[disabled="true"],
 #button-mark[disabled="true"]:hover,
