@@ -2454,7 +2454,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
     if (rgFrame) {
       PRInt32 startRowIndex = rgFrame->GetStartRowIndex();
       PRInt32 numRows;
-      rgFrame->GetRowCount(numRows);
+      rgFrame->GetRowCount(numRows, PR_TRUE);
       // remove the row group from the cell map
       nsTableCellMap* cellMap = GetCellMap();
       if (cellMap) {
