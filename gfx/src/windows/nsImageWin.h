@@ -22,8 +22,7 @@
 #include <windows.h>
 #include "nsIImage.h"
 
-class nsImageWin : public nsIImage
-{
+class nsImageWin : public nsIImage{
 public:
   nsImageWin();
   ~nsImageWin();
@@ -37,9 +36,9 @@ public:
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
-  NS_IMETHOD      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                      PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
   virtual nsColorMap* GetColorMap() {return mColorMap;}
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
@@ -51,17 +50,16 @@ public:
   virtual PRInt32     GetAlphaXLoc() {return mLocation.x;}
   virtual PRInt32     GetAlphaYLoc() {return mLocation.y;}
   virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
-  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
-  virtual nsIImage*   DuplicateImage();
 
   /** 
    * Return the header size of the Device Independent Bitmap(DIB).
    * @return size of header in bytes
-  */
+   */
   PRIntn      GetSizeHeader(){return sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPaletteColors;}
 
   /** 
     * Return the image size of the Device Independent Bitmap(DIB).
+    * @update dc - 10/29/98
     * @return size of image in bytes
     */
   PRIntn      GetSizeImage(){ return mSizeImage; }
@@ -73,106 +71,54 @@ public:
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
 
+  /** 
+   * Set an alpha mask to this image
+   * @param aTheMask - The nsIImage used for the mask
+   * @return TRUE if successful
+   */
   PRBool  SetAlphaMask(nsIImage *aTheMask);
 
   virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
 
+  /** 
+    * Get the alpha level assigned.
+    * @update dc - 10/29/98
+    * @return The alpha level from 0 to 1
+    */
   virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
 
-  void MoveAlphaMask(PRInt32 aX, PRInt32 aY){mLocation.x=aX;mLocation.y=aY;}
-
+  /** 
+    * Get the DIB specific informations for this bitmap.
+    * @update dc - 10/29/98
+    * @return VOID
+    */
   void* GetBitInfo() {return mBHead;}
 
   static PRBool gIsWinNT;
 
 private:
-
-  /** 
-   * Blend two 24 bit image arrays using an 8 bit alpha mask
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   */
-  void Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
-
-  /** 
-   * Blend two 24 bit image arrays using a passed in blend value
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   */
-  void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
-
-
-    /** 
-   * Blend two 8 bit image arrays using an 8 bit alpha mask
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   */
-  void Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality);
-
-  /** 
-   * Blend two 8 bit image arrays using a passed in blend value
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   */
-  void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality);
-
-
-  /** 
-   * Calculate the information we need to do a blend
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   */
-  PRBool CalcAlphaMetrics(nsIImage *aTheImage,nsPoint *aULLocation,PRInt32 *aNumlines,
-                PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
-                PRUint8 **aMImage,PRInt32 *SLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
-
-
   /** 
    * Clean up the memory used nsImageWin.
-   * @param aCleanUpAll if True, all the memory used will be released otherwise just clean up the DIB memory
+   * @update dc - 10/29/98
+   * @param aCleanUpAll - if True, all the memory used will be released otherwise just clean up the DIB memory
    */
   void CleanUp(PRBool aCleanUpAll);
 
+  /** 
+   * Create a Device Dependent bitmap from a drawing surface
+   * @update dc - 10/29/98
+   * @param aSurface - The drawingsurface to create the DDB from.
+   */
   void CreateDDB(nsDrawingSurface aSurface);
 
+  /** 
+   * Get an index in the palette that matches as closly as possible the passed in RGB colors
+   * @update dc - 10/29/98
+   * @param aR - Red component of the color to match
+   * @param aG - Green component of the color to match
+   * @param aB - Blue component of the color to match
+   * @return - The closest palette match
+   */
   PRUint8 PaletteMatch(PRUint8 r, PRUint8 g, PRUint8 b);
 
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
@@ -184,9 +130,9 @@ private:
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
     
   // alpha layer members
-  PRUint8             *mAlphaBits;         // alpha layer if we made one
-  PRInt8              mAlphaDepth;         // alpha layer depth
-  PRInt16             mARowBytes;
+  PRUint8             *mAlphaBits;        // alpha layer if we made one
+  PRInt8              mAlphaDepth;        // alpha layer depth
+  PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
   nsPoint             mLocation;          // alpha mask location
