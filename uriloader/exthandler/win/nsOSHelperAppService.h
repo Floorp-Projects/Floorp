@@ -71,6 +71,7 @@ public:
   static PRBool GetValueString(HKEY hKey, const PRUnichar* pValueName, nsAString& result);
 
 protected:
+  nsresult GetDefaultAppInfo(nsAString& aTypeName, nsAString& aDefaultDescription, nsIFile** aDefaultApplication);
   // Lookup a mime info by extension, using an optional type hint
   already_AddRefed<nsMIMEInfoWin> GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint = nsnull);
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);

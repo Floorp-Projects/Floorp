@@ -46,7 +46,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsMIMEInfoWin.h"
 #include "nsMimeTypes.h"
-#include "nsILocalFile.h"
+#include "nsILocalFileWin.h"
 #include "nsIProcess.h"
 #include "plstr.h"
 #include "nsAutoPtr.h"
@@ -245,7 +245,6 @@ nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
 #ifdef WINCE // WinCE doesn't support helper applications yet.
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-
   nsresult rv = NS_OK;
 
   // 1. Find the default app for this protocol
@@ -347,7 +346,7 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry( const nsAFlatString& fil
 nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType)
 {
 #ifdef WINCE  // WinCE doesn't support helper applications yet.
-  return FALSE;
+  return PR_FALSE;
 #else
   if (!aType)
     return PR_FALSE;
@@ -385,12 +384,151 @@ nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType
 #endif
 }
 
+static void RemoveParameters(nsString& aPath)
+{
+  // Command Strings stored in the Windows registry with parameters look like 
+  // this:
+  //
+  // 1) "C:\Program Files\Company Name\product.exe" -foo -bar  (long version)
+  //                      -- OR --
+  // 2) C:\PROGRA~1\COMPAN~2\product.exe -foo -bar             (short version)
+  //
+  // For 1), the path is the first "" quoted string. (quotes are used to 
+  //         prevent parameter parsers from choking)
+  // For 2), the path is the string up until the first space (spaces are 
+  //         illegal in short DOS-style paths)
+  //
+  if (aPath.First() == PRUnichar('"')) {
+    aPath = Substring(aPath, 1, aPath.Length() - 1);
+    PRInt32 nextQuote = aPath.FindChar(PRUnichar('"'));
+    if (nextQuote != kNotFound)
+      aPath.Truncate(nextQuote);
+  }
+  else {
+    PRInt32 firstSpace = aPath.FindChar(PRUnichar(' '));
+    if (firstSpace != kNotFound) 
+      aPath.Truncate(firstSpace);
+  }
+}
+
+//
+// The "real" name of a given helper app (as specified by the path to the 
+// executable file held in various registry keys) is stored n the VERSIONINFO
+// block in the file's resources. We need to find the path to the executable
+// and then retrieve the "FileDescription" field value from the file. 
+//
+// For a given extension, we find the file handler like so:
+//
+// HKCR
+//     \.ext\                           <type key>     <-- default value
+//     \<type key>\   
+//                \shell\open\command\  <path+params>  <-- default value
+//
+// We need to do some parsing on the <path+params> to strip off params and
+// deal with some Windows quirks (like the fact that many Shell "applications"
+// are actually DLLs invoked via rundll32.exe) 
+//
+nsresult
+nsOSHelperAppService::GetDefaultAppInfo(nsAString& aTypeName, nsAString& aDefaultDescription, 
+                                        nsIFile** aDefaultApplication)
+{
+  // If all else fails, use the file type key name, which will be something like "pngfile" for
+  // .pngs, "WMVFile" for .wmvs, etc. 
+  aDefaultDescription = aTypeName;
+  *aDefaultApplication = nsnull;
+
+  nsCAutoString handlerKeyName;
+  NS_CopyUnicodeToNative(aTypeName, handlerKeyName);
+  handlerKeyName += "\\shell\\open\\command";
+  HKEY handlerKey;
+  LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, handlerKeyName.get(), 0, KEY_QUERY_VALUE, &handlerKey);
+  if (err == ERROR_SUCCESS) {
+    nsAutoString handlerCommand;
+    PRBool found = GetValueString(handlerKey, NULL, handlerCommand);
+    if (found) {
+      nsAutoString handlerFilePath;
+      // First look to see if we're invoking a Windows shell service, such as 
+      // the Picture & Fax Viewer, which are invoked through rundll32.exe, and
+      // so we need to extract the DLL path because that's where the version
+      // info is held - not in rundll32.exe
+      //
+      // The format of rundll32.exe calls is:
+      //
+      // rundll32.exe c:\path\to.dll,Function %args
+      //
+      // What we want is the DLL - since that's where the real application name
+      // is stored, e.g. zipfldr.dll, shimgvw.dll, etc. 
+      // 
+      // Working from the end of the registry value, the path begins at the last
+      // comma in the string (stripping off Function and args) to the position
+      // just after the first space (the space after rundll32.exe).
+      // 
+      NS_NAMED_LITERAL_STRING(rundllSegment, "rundll32.exe ");
+      if (StringBeginsWith(handlerCommand, rundllSegment)) {
+        PRInt32 lastCommaPos = handlerCommand.RFindChar(',');
+        PRUint32 rundllSegmentLength = rundllSegment.Length();
+        if (lastCommaPos != kNotFound)
+          handlerFilePath = Substring(handlerCommand, rundllSegmentLength, 
+                                      lastCommaPos - rundllSegmentLength);
+        else
+          handlerFilePath = Substring(handlerCommand, rundllSegmentLength, 
+                                      handlerCommand.Length() - rundllSegmentLength);
+      }
+      else
+        handlerFilePath = handlerCommand;
+
+      // Trim any command parameters so that we have a native path we can 
+      // initialize a local file with...
+      RemoveParameters(handlerFilePath);
+
+      // Similarly replace embedded environment variables... (this must be done
+      // AFTER |RemoveParameters| since it may introduce spaces into the path string)
+      TCHAR* destination = nsnull;
+      nsCAutoString nativeHandlerFilePath; 
+      NS_CopyUnicodeToNative(handlerFilePath, nativeHandlerFilePath);
+      DWORD required = ::ExpandEnvironmentStrings(nativeHandlerFilePath.get(), destination, 0);
+      destination = new TCHAR[required];
+      if (!destination) {
+        ::RegCloseKey(handlerKey);
+        delete[] destination;
+        destination = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      ::ExpandEnvironmentStrings(nativeHandlerFilePath.get(), destination, required);
+      NS_CopyNativeToUnicode(nsDependentCString(destination), handlerFilePath);
+      delete[] destination;
+      destination = nsnull;
+
+      nsCOMPtr<nsILocalFile> lf;
+      NS_NewLocalFile(handlerFilePath, PR_TRUE, getter_AddRefs(lf));
+      if (!lf) {
+        ::RegCloseKey(handlerKey);
+        delete[] destination;
+        destination = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      nsILocalFileWin* lfw = nsnull;
+      nsresult rv = CallQueryInterface(lf, &lfw);
+      if (NS_SUCCEEDED(rv) && lfw) {
+        // The "FileDescription" field contains the actual name of the application.
+        lfw->GetVersionInfoField("FileDescription", aDefaultDescription);
+        // QI addref'ed for us.
+        *aDefaultApplication = lfw;
+      }
+
+    }
+    ::RegCloseKey(handlerKey);
+  }
+
+  return NS_OK;
+}
+
 already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFlatString& aFileExt, const char *aTypeHint)
 {
-#ifdef WINCE  // WinCE doesn't support helper applications yet.
+#ifdef WINCE  // WinCE doesn't support helper applications yet
   return nsnull;
 #else
-
   if (aFileExt.IsEmpty())
     return nsnull;
 
@@ -441,14 +579,12 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
 
       mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
-      nsAutoString visibleDesc(description);
-      PRInt32 pos = visibleDesc.FindChar('.');
-      if (pos > 0) 
-        visibleDesc.Truncate(pos); 
-      // the format of the description usually looks like appname.version.something.
-      // for now, let's try to make it pretty and just show you the appname.
-
-      mimeInfo->SetDefaultDescription(visibleDesc);
+      nsAutoString defaultDescription;
+      nsCOMPtr<nsIFile> defaultApplication;
+      GetDefaultAppInfo(description, defaultDescription, getter_AddRefs(defaultApplication));
+  
+      mimeInfo->SetDefaultDescription(defaultDescription);
+      mimeInfo->SetDefaultApplicationHandler(defaultApplication);
 
       // Get other nsIMIMEInfo fields from registry, if possible.
       if ( found )

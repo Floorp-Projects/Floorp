@@ -46,6 +46,17 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 
+/** 
+ * UTF8 moz-icon URI string for the default handler application's icon, if 
+ * available.
+ */
+#define PROPERTY_DEFAULT_APP_ICON_URL "defaultApplicationIconURL"
+/** 
+ * UTF8 moz-icon URI string for the user's preferred handler application's 
+ * icon, if available.
+ */
+#define PROPERTY_CUSTOM_APP_ICON_URL "customApplicationIconURL"
+
 /**
  * Basic implementation of nsIMIMEInfo. Incomplete - it is meant to be
  * subclassed, and GetHasDefaultHandler as well as LaunchDefaultWithFile need to
