@@ -184,6 +184,7 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD SelectTableCell();
+  NS_IMETHOD SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndCell);
   NS_IMETHOD SelectTableRow();
   NS_IMETHOD SelectTableColumn();
   NS_IMETHOD SelectTable();
@@ -362,6 +363,8 @@ protected:
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document
   NS_IMETHOD SetSelectionAtDocumentStart(nsIDOMSelection *aSelection);
+
+  // end of table editing utilities
 
   NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, 
                                    nsString   &aParentTag,
@@ -602,6 +605,14 @@ protected:
   PRBool mCachedItalicStyle;
   PRBool mCachedUnderlineStyle;
   nsString mCachedFontName;
+
+  // True when selection consists of table cell(s)
+  PRBool mSelectingTableCells;
+
+  // Used to monitor block of cells selected
+  //   by dragging mouse across the table
+  nsCOMPtr<nsIDOMElement> mStartSelectedCell;
+  nsCOMPtr<nsIDOMElement> mCurrentSelectedCell;
 
 public:
   static nsIAtom *gTypingTxnName;

@@ -56,9 +56,3 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged()
   Reset(); 
   return NS_OK;
 };
-
-NS_IMETHODIMP TypeInState::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
-{
-  //stub
-  return NS_OK;
-}

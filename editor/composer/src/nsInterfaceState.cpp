@@ -91,13 +91,6 @@ nsInterfaceState::NotifyDocumentCreated()
 }
 
 NS_IMETHODIMP
-nsInterfaceState::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
-{
-  //stub
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsInterfaceState::NotifyDocumentWillBeDestroyed()
 {
   // cancel any outstanding udpate timer
@@ -335,25 +328,89 @@ nsInterfaceState::SelectionIsCollapsed()
 nsresult
 nsInterfaceState::UpdateParagraphState(const char* observerName, const char* attributeName, nsString& ioParaFormat)
 {
-  nsStringArray tagList;
-  
-  mEditor->GetParagraphTags(&tagList);
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  // Get the nsIEditor pointer (mEditor is nsIHTMLEditor)
+  if (!editor) return NS_ERROR_NULL_POINTER;
+  nsresult rv = editor->GetSelection(getter_AddRefs(domSelection));
+  if (NS_FAILED(rv)) return rv;
 
-  PRInt32 numTags = tagList.Count();
-  nsAutoString  thisTag;
-  //Note: If numTags == 0, we probably have a text node not in a container
-  //  (directly under <body>). Consider it normal
-  if (numTags > 0)
+  PRBool selectionCollapsed = PR_FALSE;
+  rv = domSelection->GetIsCollapsed(&selectionCollapsed);
+  if (NS_FAILED(rv)) return rv;
+  
+  // Get anchor and focus nodes:
+  nsCOMPtr<nsIDOMNode> anchorNode;
+  rv = domSelection->GetAnchorNode(getter_AddRefs(anchorNode));
+  if (NS_FAILED(rv)) return rv;
+  if (!anchorNode) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> focusNode;
+  rv = domSelection->GetFocusNode(getter_AddRefs(focusNode));
+  if (NS_FAILED(rv)) return rv;
+  if (!focusNode) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNode> anchorNodeBlockParent;
+  PRBool isBlock;
+  rv = editor->NodeIsBlock(anchorNode, isBlock);
+  if (NS_FAILED(rv)) return rv;
+
+  if (isBlock)
   {
-    // This will never show the "mixed state"
-    // TODO: Scan list of tags and if any are different, set to "mixed"
-    tagList.StringAt(0, thisTag);
+    anchorNodeBlockParent = anchorNode;
+  } 
+  else
+  {
+    // Get block parent of anchorNode node
+    // We could simply use this if it was in nsIEditor interface!
+    //rv = editor->GetBlockParent(anchorNode, getter_AddRefs(anchorNodeBlockParent));
+    // if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIDOMNode>parent;
+    nsCOMPtr<nsIDOMNode>temp;
+    rv = anchorNode->GetParentNode(getter_AddRefs(parent));
+    while (NS_SUCCEEDED(rv) && parent)
+    {
+      rv = editor->NodeIsBlock(parent, isBlock);
+      if (NS_FAILED(rv)) return rv;
+      if (isBlock)
+      {
+        anchorNodeBlockParent = parent;
+        break;
+      }
+      rv = parent->GetParentNode(getter_AddRefs(temp));
+      parent = do_QueryInterface(temp);
+    }
   }
-  if (thisTag != mParagraphFormat)
+  if (!anchorNodeBlockParent) return NS_ERROR_NULL_POINTER;
+
+  nsAutoString tagName;
+  
+  // Check if we have a selection that extends into multiple nodes,
+  //  so we can check for "mixed" selection state
+  if (selectionCollapsed || focusNode == anchorNode)
   {
-    nsresult rv = SetNodeAttribute(observerName, attributeName, thisTag);
+    // Entire selection is within one block
+    anchorNodeBlockParent->GetNodeName(tagName);
+  }
+  else
+  {
+    // We may have different block parent node types WITHIN the selection,
+    //  even if the anchor and focus parents are the same type.
+    // Getting the list of all block, e.g., by using GetParagraphTags(&tagList)
+    //  is too inefficient for long documents.
+    // TODO: Change to use selection iterator to detect each block node in the 
+    //  selection and if different from the anchorNodeBlockParent, use "mixed" state
+    // *** Not doing this now reduces risk for Beta1 -- simply assume mixed state
+    // Note that "mixed" displays as "normal" in UI as of 3/6. 
+    tagName = "mixed";
+  }
+
+  if (tagName != mParagraphFormat)
+  {
+    rv = SetNodeAttribute(observerName, attributeName, tagName);
     if (NS_FAILED(rv)) return rv;
-    mParagraphFormat = thisTag;
+    mParagraphFormat = tagName;
   }
   return NS_OK;
 }

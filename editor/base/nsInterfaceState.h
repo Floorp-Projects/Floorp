@@ -58,7 +58,6 @@ public:
   
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged();
-  NS_IMETHOD    TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   

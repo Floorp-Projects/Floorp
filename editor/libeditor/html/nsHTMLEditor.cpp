@@ -217,6 +217,7 @@ nsHTMLEditor::nsHTMLEditor()
 , mRules(nsnull)
 , mIsComposing(PR_FALSE)
 , mMaxTextLength(-1)
+, mSelectingTableCells(PR_FALSE)
 {
 // Done in nsEditor
 // NS_INIT_REFCNT();

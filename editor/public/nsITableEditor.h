@@ -82,6 +82,17 @@ public:
     * selects all cells (not TR in the case of rows)
     */
   NS_IMETHOD SelectTableCell()=0;
+
+  /** Select a rectangular block of cells:
+    *  all cells falling within the row/column index of aStartCell
+    *  to through the row/column index of the aEndCell
+    *  aStartCell can be any location relative to aEndCell,
+    *   as long as they are in the same table
+    *  @param aStartCell  starting cell in block
+    *  @param aEndCell    ending cell in block
+    */
+  NS_IMETHOD SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndCell)=0;
+
   NS_IMETHOD SelectTableRow()=0;
   NS_IMETHOD SelectTableColumn()=0;
   NS_IMETHOD SelectTable()=0;

@@ -284,20 +284,28 @@ text.color-caption {
 }
 
 div#ColorButtons {
-  /* Width needs to be >= 2x color button width 
-     (color.gif=14px + 2 for border) 
-     for initial layout.
-     Then use relative position to move buttons
-     to desired overlapping locations
+  /* Width needs to be enough for overlapping
+     buttons. Note: color.gif=14px + 2 for borders.
+     We use relative position to move buttons
+     to desired positions
   */
-  width:       32px;
-  max-width:   32px;
-  height:      19px;
-  /* This compensates for remaining gap 
-     on right after relative button positioning
+  width:       30px;
+  max-width:   30px;
+  /* Other toolbar buttons are 16px high (+border and margin), 
+     so limit total height of color buttons
+     region to a compatable height
   */
-  margin-right: -3px;
+  height:      22px;
+  max-height:  22px;
 }
+
+/* The initial layout of these buttons is:
+   BackColorPopupButton appears above TextColorPopupButton.
+   BackColorPopupButton must be 1st in XUL so that
+   TextColorPopupButton is on top after relative positioning,
+   which places TextColorPopupButton button in upper left and 
+   BackColorPopupButton button at lower right of the ColorButtons div
+*/
 
 titledbutton#TextColorPopupButton {
 	list-style-image:url("chrome://editor/skin/images/color.gif");
@@ -305,9 +313,8 @@ titledbutton#TextColorPopupButton {
   padding: 0px;
   margin:  0px;
   position: relative;
-  /* Position top left */
-  top:  1px;
-  left: -14px;
+  top:  -15px;
+  left: 1px;
 
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #AA0000;
@@ -323,8 +330,7 @@ titledbutton#BackColorPopupButton {
   padding: 0px;
   margin:  0px;
   position: relative;
-  /* Position lower right */
-  top:  8px;
+  top:  7px;
   left: 12px;
 
   /* TEMP: Set color here. TODO: Set color from page */

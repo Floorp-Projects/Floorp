@@ -211,7 +211,7 @@ nsEditorShell::nsEditorShell()
 nsEditorShell::~nsEditorShell()
 {
   NS_IF_RELEASE(mStateMaintainer);
-  
+
   // the only other references we hold are in nsCOMPtrs, so they'll take
   // care of themselves.
 }
@@ -302,7 +302,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
         NS_IF_RELEASE(mStateMaintainer);
       }
     }
-    
     mEditorType = eUninitializedEditorType;
     mEditor = 0;  // clear out the nsCOMPtr
 
@@ -365,8 +364,8 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   {
     txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mStateMaintainer));
   }
-  
-  
+
+
   if (NS_SUCCEEDED(rv) && mContentWindow)
   {
     nsCOMPtr<nsIController> controller;
@@ -3148,6 +3147,26 @@ nsEditorShell::SelectTableCell()
   }
   return result;
 }
+
+NS_IMETHODIMP    
+nsEditorShell::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndCell)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SelectBlockOfCells(aStartCell, aEndCell);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
 
 NS_IMETHODIMP    
 nsEditorShell::SelectTableRow()
