@@ -522,7 +522,7 @@ nsXFormsSubmissionElement::SubmitEnd(PRBool succeeded)
 nsresult
 nsXFormsSubmissionElement::GetSelectedInstanceData(nsIDOMNode **result)
 {
-  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> xpRes;
   nsresult rv =
     nsXFormsUtils::EvaluateNodeBinding(mElement, 0,

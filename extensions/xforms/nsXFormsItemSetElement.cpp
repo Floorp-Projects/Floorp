@@ -235,14 +235,14 @@ nsXFormsItemSetElement::Refresh()
   // which will return from GetAnonymousNodes.  We then clone our template
   // content and insert the cloned content as children of the HTML option.
 
-  nsCOMPtr<nsIDOMNode> modelNode;
+  nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> result;
   nsXFormsUtils::EvaluateNodeBinding(mElement,
                                      nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
                                      NS_LITERAL_STRING("nodeset"),
                                      EmptyString(),
                                      nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                                     getter_AddRefs(modelNode),
+                                     getter_AddRefs(model),
                                      getter_AddRefs(result));
   if (!result)
     return;
@@ -274,7 +274,7 @@ nsXFormsItemSetElement::Refresh()
     if (!itemNode)
       return;
 
-    nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
+    nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
     nsAutoString modelID;
     modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
 

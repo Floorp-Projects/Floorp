@@ -313,10 +313,10 @@ nsXFormsItemElement::WriteSelectedItems(nsIDOMNode *aContainer)
   rv = GetValue(value);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement,
-                                                           0);
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
-  NS_ENSURE_STATE(model);
+  nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement,
+                                                                   0);
+  nsCOMPtr<nsIDOMNode> modelNode = do_QueryInterface(model);
+  NS_ENSURE_STATE(modelNode);
 
   /// @todo beaufour: The update code should probably not be here.
   ///       @see https://bugzilla.mozilla.org/show_bug.cgi?id=278207

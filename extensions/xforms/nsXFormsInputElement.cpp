@@ -251,7 +251,8 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   nsresult rv = mMDG->SetNodeValue(mBoundNode, value, PR_TRUE, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
   if (changed) {
-    nsCOMPtr<nsIDOMNode> model = nsXFormsUtils::GetModel(mElement);
+    nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
  
     if (model) {
       rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);

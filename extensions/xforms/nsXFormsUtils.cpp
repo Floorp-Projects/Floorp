@@ -188,8 +188,8 @@ nsXFormsUtils::Init()
 }
 
 /* static */ PRBool
-nsXFormsUtils::GetParentModel(nsIDOMElement *aBindElement,
-                              nsIDOMNode   **aModel)
+nsXFormsUtils::GetParentModel(nsIDOMElement           *aBindElement,
+                              nsIModelElementPrivate **aModel)
 {
   PRBool res = PR_TRUE;
   nsCOMPtr<nsIDOMNode> modelWrapper;
@@ -216,7 +216,8 @@ nsXFormsUtils::GetParentModel(nsIDOMElement *aBindElement,
     res = PR_FALSE;
   }
   *aModel = nsnull;
-  modelWrapper.swap(*aModel);
+  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelWrapper);
+  model.swap(*aModel);
 
   return res;
 }
@@ -230,19 +231,20 @@ nsXFormsUtils::GetParentModel(nsIDOMElement *aBindElement,
  */
 
 /* static */ nsresult
-nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
-                              PRUint32        aElementFlags,
-                              nsIDOMNode    **aModel,
-                              nsIDOMElement **aBindElement,
-                              PRBool         *aOuterBind,
-                              nsIDOMNode    **aContextNode,
-                              PRInt32        *aContextPosition,
-                              PRInt32        *aContextSize)
+nsXFormsUtils::GetNodeContext(nsIDOMElement           *aElement,
+                              PRUint32                 aElementFlags,
+                              nsIModelElementPrivate **aModel,
+                              nsIDOMElement          **aBindElement,
+                              PRBool                  *aOuterBind,
+                              nsIDOMNode             **aContextNode,
+                              PRInt32                 *aContextPosition,
+                              PRInt32                  *aContextSize)
 {
-  *aBindElement = nsnull;
   NS_ENSURE_ARG(aElement);
   NS_ENSURE_ARG(aOuterBind);
   NS_ENSURE_ARG_POINTER(aContextNode);
+  NS_ENSURE_ARG_POINTER(aBindElement);
+  *aBindElement = nsnull;
 
   // Find correct model element
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -254,7 +256,10 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
   if (!bindId.IsEmpty()) {
     // CASE 1: Use @bind
     domDoc->GetElementById(bindId, aBindElement);
-    NS_ENSURE_STATE(*aBindElement);
+    if (!IsXFormsElement(*aBindElement, NS_LITERAL_STRING("bind"))) {
+      DispatchEvent(aElement, eEvent_BindingException);
+      return NS_ERROR_ABORT;
+    }
 
     // Context size and position are always 1
     if (aContextSize)
@@ -277,10 +282,15 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
     if (!modelId.IsEmpty()) {
       nsCOMPtr<nsIDOMElement> modelElement;
       domDoc->GetElementById(modelId, getter_AddRefs(modelElement));
-      NS_IF_ADDREF(*aModel = modelElement);
+      nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelElement);
       
-      // Not tag found for that ID
-      NS_ENSURE_TRUE(*aModel, NS_ERROR_FAILURE);
+      // No element found, or element not a \<model\> element
+      if (!model) {
+        nsXFormsUtils::DispatchEvent(aElement, eEvent_BindingException);        
+        return NS_ERROR_FAILURE;
+      }
+
+      NS_ADDREF(*aModel = model);
     }
   }
 
@@ -299,13 +309,13 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
   return NS_OK;
 }
 
-/* static */ already_AddRefed<nsIDOMNode>
+/* static */ already_AddRefed<nsIModelElementPrivate>
 nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
                         PRUint32        aElementFlags)
 
 {
 
-  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMNode> contextNode;
   nsCOMPtr<nsIDOMElement> bind;
   PRBool outerbind;
@@ -319,7 +329,7 @@ nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
 
   NS_ENSURE_TRUE(model, nsnull);
 
-  nsIDOMNode *result = nsnull;
+  nsIModelElementPrivate *result = nsnull;
   if (model)
     CallQueryInterface(model, &result);  // addrefs
   return result;
@@ -383,10 +393,10 @@ nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
 }
 
 /* static */ nsresult
-nsXFormsUtils::FindBindContext(nsIDOMElement         *aBindElement,
-                               PRBool                *aOuterBind,
-                               nsIDOMNode           **aModel,
-                               nsIDOMNode           **aContextNode)
+nsXFormsUtils::FindBindContext(nsIDOMElement           *aBindElement,
+                               PRBool                  *aOuterBind,
+                               nsIModelElementPrivate **aModel,
+                               nsIDOMNode             **aContextNode)
 {
   NS_ENSURE_ARG_POINTER(aContextNode);
   *aContextNode = nsnull;
@@ -413,14 +423,14 @@ nsXFormsUtils::FindBindContext(nsIDOMElement         *aBindElement,
 }
 
 /* static */ nsresult
-nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement      *aElement,
-                                   PRUint32            aElementFlags,
-                                   const nsString     &aBindingAttr,
-                                   const nsString     &aDefaultRef,
-                                   PRUint16            aResultType,
-                                   nsIDOMNode        **aModel,
-                                   nsIDOMXPathResult **aResult,
-                                   nsIMutableArray    *aDeps)
+nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
+                                   PRUint32                 aElementFlags,
+                                   const nsString          &aBindingAttr,
+                                   const nsString          &aDefaultRef,
+                                   PRUint16                 aResultType,
+                                   nsIModelElementPrivate **aModel,
+                                   nsIDOMXPathResult      **aResult,
+                                   nsIMutableArray         *aDeps)
 {
   if (!aElement || !aModel || !aResult) {
     return NS_OK;
@@ -672,7 +682,7 @@ nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
 {
   if (!aElement)
     return PR_FALSE;
-  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> result;
   
   nsresult rv = EvaluateNodeBinding(aElement,
@@ -773,11 +783,11 @@ nsXFormsUtils::CloneScriptingInterfaces(const nsIID *aIIDList,
 }
 
 /* static */ nsresult
-nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
-                                 nsIDOMNode    **aModel,
-                                 nsIDOMNode    **aContextNode,
-                                 PRInt32        *aContextPosition,
-                                 PRInt32        *aContextSize)
+nsXFormsUtils::FindParentContext(nsIDOMElement           *aElement,
+                                 nsIModelElementPrivate **aModel,
+                                 nsIDOMNode             **aContextNode,
+                                 PRInt32                 *aContextPosition,
+                                 PRInt32                 *aContextSize)
 {
   NS_ENSURE_ARG(aElement);
   NS_ENSURE_ARG_POINTER(aModel);
@@ -796,7 +806,7 @@ nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
     nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(*aModel);
     NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
     modelElement->GetAttribute(NS_LITERAL_STRING("id"), childModelID);
-  }  
+  }
 
   // Find our context:
   // Iterate over all parents and find first one that implements nsIXFormsContextControl,
@@ -840,6 +850,7 @@ nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
     
     NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
 
+    nsCOMPtr<nsIModelElementPrivate> model;
     if (!*aContextNode || contextModelID.IsEmpty()) {
       // We have either not found a context node, or we have found one where
       // the model ID is empty. That means we use the first model in document
@@ -848,15 +859,22 @@ nsXFormsUtils::FindParentContext(nsIDOMElement  *aElement,
                                      NS_LITERAL_STRING("model"),
                                      getter_AddRefs(nodes));
       // No model element in document!
-      NS_ENSURE_TRUE(nodes, NS_ERROR_FAILURE);
-      
-      nodes->Item(0, aModel);
+      NS_ENSURE_STATE(nodes);
+
+      nsCOMPtr<nsIDOMNode> modelNode;
+      nodes->Item(0, getter_AddRefs(modelNode));
+      model = do_QueryInterface(modelNode);
     } else {
       // Get the model with the correct ID
       nsCOMPtr<nsIDOMElement> modelElement;
       domDoc->GetElementById(contextModelID, getter_AddRefs(modelElement));
-      NS_IF_ADDREF(*aModel = modelElement);
+      model = do_QueryInterface(modelElement);
     }    
+    if (!model) {
+      DispatchEvent(aElement, eEvent_BindingException);
+      return NS_ERROR_ABORT;
+    }
+    NS_ADDREF(*aModel = model);
   }
   
   return NS_OK;

@@ -94,14 +94,14 @@ nsXFormsValueElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsValueElement::GetValue(nsAString &aValue)
 {
-  nsCOMPtr<nsIDOMNode> modelNode;
+  nsCOMPtr<nsIModelElementPrivate> model;
   nsCOMPtr<nsIDOMXPathResult> result;
   nsXFormsUtils::EvaluateNodeBinding(mElement,
                                      nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
                                      NS_LITERAL_STRING("ref"),
                                      EmptyString(),
                                      nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                     getter_AddRefs(modelNode),
+                                     getter_AddRefs(model),
                                      getter_AddRefs(result));
 
   if (result) {

@@ -54,7 +54,8 @@ NS_IMETHODIMP
 nsXFormsRevalidateElement::HandleAction(nsIDOMEvent* aEvent,
                                         nsIXFormsActionElement *aParentAction)
 {
-  nsCOMPtr<nsIDOMNode> model = nsXFormsUtils::GetModel(mElement);
+  nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
+  nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
   
   if (model) {
     if (aParentAction) {

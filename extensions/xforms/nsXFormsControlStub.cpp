@@ -92,19 +92,18 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
   }
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIDOMNode> modelNode;
+  nsCOMPtr<nsIModelElementPrivate> model;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           kElementFlags,
                                           aBindingAttr,
                                           EmptyString(),
                                           aResultType,
-                                          getter_AddRefs(modelNode),
+                                          getter_AddRefs(model),
                                           aResult,
                                           mDependencies);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
   if (model) {
     model->AddFormControl(this);
     model->GetMDG(&mMDG);
@@ -235,9 +234,7 @@ nsXFormsControlStub::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
   if (aName == nsXFormsAtoms::model ||
       aName == nsXFormsAtoms::bind ||
       aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
-
-    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
+    nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement);
     if (model)
       model->RemoveFormControl(this);
   }

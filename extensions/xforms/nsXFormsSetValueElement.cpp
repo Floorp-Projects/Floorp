@@ -65,7 +65,7 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
   if (!mElement)
     return NS_OK;
   
-  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIModelElementPrivate> modelPriv;
   nsCOMPtr<nsIDOMXPathResult> result;
   nsresult rv =
     nsXFormsUtils:: EvaluateNodeBinding(mElement,
@@ -73,11 +73,10 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
                                         NS_LITERAL_STRING("ref"),
                                         EmptyString(),
                                         nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                        getter_AddRefs(model),
+                                        getter_AddRefs(modelPriv),
                                         getter_AddRefs(result));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIModelElementPrivate> modelPriv = do_QueryInterface(model);
   if (!result | !modelPriv)
     return NS_OK;
 
@@ -115,6 +114,8 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (changed) {
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+    NS_ENSURE_STATE(model);
     if (aParentAction) {
       aParentAction->SetRecalculate(model, PR_TRUE);
       aParentAction->SetRevalidate(model, PR_TRUE);

@@ -43,6 +43,7 @@
 #include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMXPathResult.h"
+#include "nsIModelElementPrivate.h"
 
 class nsIDOMNode;
 class nsIDOMElement;
@@ -148,8 +149,8 @@ public:
    * @return                  Whether it's a reference to an outermost bind
    */
   static NS_HIDDEN_(PRBool)
-    GetParentModel(nsIDOMElement *aBindElement,
-                   nsIDOMNode   **aModel);
+    GetParentModel(nsIDOMElement           *aBindElement,
+                   nsIModelElementPrivate **aModel);
 
   /**
    * Find the evaluation context for an element.
@@ -168,14 +169,14 @@ public:
    * @param aContextSize      The context size for the element
    */
   static NS_HIDDEN_(nsresult)
-    GetNodeContext(nsIDOMElement  *aElement,
-                   PRUint32        aElementFlags,
-                   nsIDOMNode    **aModel,
-                   nsIDOMElement **aBindElement,
-                   PRBool         *aOuterBind,
-                   nsIDOMNode    **aContextNode,
-                   PRInt32        *aContextPosition = nsnull,
-                   PRInt32        *aContextSize = nsnull);
+    GetNodeContext(nsIDOMElement           *aElement,
+                   PRUint32                 aElementFlags,
+                   nsIModelElementPrivate **aModel,
+                   nsIDOMElement          **aBindElement,
+                   PRBool                  *aOuterBind,
+                   nsIDOMNode             **aContextNode,
+                   PRInt32                 *aContextPosition = nsnull,
+                   PRInt32                 *aContextSize = nsnull);
 
   /**
    * Locate the model for an element.
@@ -186,7 +187,7 @@ public:
    * @param aElementFlags     Flags describing characteristics of aElement
    * @return                  The model
    */
-  static NS_HIDDEN_(already_AddRefed<nsIDOMNode>)
+  static NS_HIDDEN_(already_AddRefed<nsIModelElementPrivate>)
     GetModel(nsIDOMElement  *aElement,
              PRUint32        aElementFlags = ELEMENT_WITH_MODEL_ATTR);
 
@@ -201,24 +202,24 @@ public:
    * nsIDOMXPathEvaluator::Evaluate().
    */
   static NS_HIDDEN_(nsresult)
-    EvaluateNodeBinding(nsIDOMElement      *aElement,
-                        PRUint32            aElementFlags,
-                        const nsString     &aBindingAttr,
-                        const nsString     &aDefaultRef,
-                        PRUint16            aResultType,
-                        nsIDOMNode        **aModel,
-                        nsIDOMXPathResult **aResult,
-                        nsIMutableArray    *aDeps = nsnull);
+    EvaluateNodeBinding(nsIDOMElement           *aElement,
+                        PRUint32                 aElementFlags,
+                        const nsString          &aBindingAttr,
+                        const nsString          &aDefaultRef,
+                        PRUint16                 aResultType,
+                        nsIModelElementPrivate **aModel,
+                        nsIDOMXPathResult      **aResult,
+                        nsIMutableArray         *aDeps = nsnull);
 
   /**
    * Given a bind element |aBindElement|, find the model and the context node
    * for it. |aOuterBind| tells whether the bind element is an outermost bind.
    */
   static NS_HIDDEN_(nsresult)
-    FindBindContext(nsIDOMElement         *aBindElement,
-                    PRBool                *aOuterBind,
-                    nsIDOMNode           **aModel,
-                    nsIDOMNode           **aContextNode);
+    FindBindContext(nsIDOMElement           *aBindElement,
+                    PRBool                  *aOuterBind,
+                    nsIModelElementPrivate **aModel,
+                    nsIDOMNode             **aContextNode);
   
   /**
    * Convenience method for doing XPath evaluations.  This gets a
@@ -301,11 +302,11 @@ public:
    * @param aContextPosition  The resulting context position
    * @param aContextSize      The resulting context size
    */
-  static NS_HIDDEN_(nsresult) FindParentContext(nsIDOMElement  *aElement,
-                                                nsIDOMNode    **aModel,
-                                                nsIDOMNode    **aContextNode,
-                                                PRInt32        *aContextPosition,
-                                                PRInt32        *aContextSize);
+  static NS_HIDDEN_(nsresult) FindParentContext(nsIDOMElement           *aElement,
+                                                nsIModelElementPrivate **aModel,
+                                                nsIDOMNode             **aContextNode,
+                                                PRInt32                 *aContextPosition,
+                                                PRInt32                 *aContextSize);
 
   /**
    * @return true if aTestURI has the same origin as aBaseURI

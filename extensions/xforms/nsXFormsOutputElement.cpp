@@ -184,9 +184,7 @@ nsXFormsOutputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
       aName == nsXFormsAtoms::ref ||
       aName == nsXFormsAtoms::model ||
       aName == nsXFormsAtoms::value) {
-    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
-
-    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
+    nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement);
     if (model)
       model->RemoveFormControl(this);
   }

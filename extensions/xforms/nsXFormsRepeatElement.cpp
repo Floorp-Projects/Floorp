@@ -230,9 +230,7 @@ nsXFormsRepeatElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
   if (aName == nsXFormsAtoms::bind ||
       aName == nsXFormsAtoms::nodeset ||
       aName == nsXFormsAtoms::model) {
-    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
-
-    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
+    nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement);
     if (model) {
       model->RemoveFormControl(this);
     }
