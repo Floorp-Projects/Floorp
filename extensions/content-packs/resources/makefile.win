@@ -26,4 +26,4 @@ include <$(DEPTH)\config\rules.mak>
 
 chrome::
         $(REGCHROME) content content-packs content-packs.jar
-        $(REGCHROME) locale en-US/content-packs content-packs.jar
+        $(REGCHROME) locale en-US/content-packs en-US.jar
