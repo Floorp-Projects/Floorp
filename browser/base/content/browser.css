@@ -5,5 +5,5 @@
 /* ::::: print preview toolbar ::::: */
 
 toolbar[printpreview="true"] {
-  -moz-binding: url("chrome://browser/content/printPreviewBindings.xml#printpreviewtoolbar");
+  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }

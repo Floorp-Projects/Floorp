@@ -17,7 +17,6 @@ browser.jar:
 *       content/browser/pageReport.js                 (content/pageReport.js)
 *       content/browser/pageReport.xul                (content/pageReport.xul)
 *       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
-        content/browser/printPreviewBindings.xml      (content/printPreviewBindings.xml)
 *       content/browser/search.xml                    (content/search.xml)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/web-panels.js                 (content/web-panels.js)
