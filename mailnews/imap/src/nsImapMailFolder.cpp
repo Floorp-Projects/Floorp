@@ -4388,6 +4388,8 @@ NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageFlags(nsIImapUrl *runningUr
       if (label != 0)
         *aResult |= label << 25;
     }
+    else if (mFlags & MSG_FOLDER_FLAG_DRAFTS) // if the message is being added to the drafts folder, don't add the seen flag (Bug #198087)
+      *aResult = 0;
   }
   return NS_OK;
 }

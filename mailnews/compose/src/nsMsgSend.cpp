@@ -4412,10 +4412,13 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   {
     char       *buf = 0;
     PRUint16   flags = 0;
-
-    flags |= MSG_FLAG_READ;
+    
+    // for save as draft and send later, we want to leave the message as unread.
+    // See Bug #198087
     if (mode == nsMsgQueueForLater)
       flags |= MSG_FLAG_QUEUED;
+    else if (mode != nsMsgSaveAsDraft)
+      flags |= MSG_FLAG_READ;
     buf = PR_smprintf(X_MOZILLA_STATUS_FORMAT CRLF, flags);
     if (buf)
     {
