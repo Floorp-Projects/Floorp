@@ -287,8 +287,7 @@ public:
   void GetAttributeValueAt(const nsIParserNode& aNode,
                            PRInt32 aIndex,
                            nsString& aResult);
-  nsresult AddAttributes(const nsIParserNode& aNode,
-                         nsIHTMLContent* aContent,
+  nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
                          PRBool aNotify = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode,
                                nsHTMLTag aNodeType,
@@ -385,7 +384,7 @@ public:
   nsresult ResumeParsing();
   PRBool   PreEvaluateScript();
   void     PostEvaluateScript(PRBool aBodyPresent);
-  nsresult EvaluateScript(nsString& aScript,
+  nsresult EvaluateScript(const nsAReadableString& aScript,
                           nsIURI *aScriptURI,
                           PRInt32 aLineNo,
                           const char* aVersion);
@@ -683,12 +682,12 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
 
 nsresult
 HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
-                               nsIHTMLContent* aContent,
-                               PRBool aNotify)
+                               nsIHTMLContent* aContent, PRBool aNotify)
 {
   // Add tag attributes to the content attributes
   nsAutoString k, v;
   PRInt32 ac = aNode.GetAttributeCount();
+
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsAReadableString& key = aNode.GetKeyAt(i);
@@ -698,7 +697,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
     nsIAtom*  keyAtom = NS_NewAtom(k);
     nsHTMLValue value;
-    
+
     if (NS_CONTENT_ATTR_NOT_THERE == 
         aContent->GetHTMLAttribute(keyAtom, value)) {
       // Get value and remove mandatory quotes
@@ -1388,9 +1387,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
   content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
-  
+
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   mSink->mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+
   rv = mSink->AddAttributes(aNode, content);
 
   if (mPreAppend) {
@@ -1747,10 +1747,12 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
       rv = mSink->AddAttributes(aNode, content);
+
       if (NS_OK != rv) {
         NS_RELEASE(content);
         return rv;
       }
+
       switch (nodeType) {
       case eHTMLTag_img:    // elements with 'SRC='
       case eHTMLTag_frame:
@@ -2730,7 +2732,10 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
   if(mRoot) {
     // Add attributes to the node...if found.
     PRInt32 ac = aNode.GetAttributeCount();
-    if(ac>0) AddAttributes(aNode,mRoot,PR_TRUE);
+
+    if(ac>0) {
+      AddAttributes(aNode, mRoot, PR_TRUE);
+    }
   }
 
   MOZ_TIMER_STOP(mWatch);
@@ -2823,7 +2828,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
                   mCurrentContext->mStackPos, this);
   // Add attributes, if any, to the current BODY node
   if(mBody != nsnull){
-    AddAttributes(aNode,mBody,PR_TRUE);
+    AddAttributes(aNode, mBody, PR_TRUE);
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenBody()\n"));
     MOZ_TIMER_STOP(mWatch);
     return NS_OK;
@@ -4675,7 +4680,7 @@ HTMLContentSink::IsInScript()
 }
 
 nsresult
-HTMLContentSink::EvaluateScript(nsString& aScript,
+HTMLContentSink::EvaluateScript(const nsAReadableString& aScript,
                                 nsIURI *aScriptURI,
                                 PRInt32 aLineNo,
                                 const char* aVersion)
@@ -4722,15 +4727,10 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
                                   const char* string)
 {
   nsresult rv = NS_OK;
-  
-  if (stringLen) {
 
-    PRUnichar *unicodeString = nsnull;
-    PRInt32 unicodeLength = 0;
+  if (stringLen) {
     nsAutoString characterSet;
-    nsICharsetConverterManager  *charsetConv = nsnull;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-    nsIAtom* contentTypeKey = NS_NewAtom("content-type");
     nsXPIDLCString contenttypeheader;
     nsCOMPtr<nsIHTTPChannel> httpChannel;
 
@@ -4745,99 +4745,110 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     if (channel) {
       httpChannel = do_QueryInterface(channel);
       if (httpChannel) {
-        rv = httpChannel->GetResponseHeader(contentTypeKey, getter_Copies(contenttypeheader));
-        NS_RELEASE(contentTypeKey);
+        nsCOMPtr<nsIAtom> contentTypeKey =
+          dont_AddRef(NS_NewAtom("content-type"));
+
+        rv = httpChannel->GetResponseHeader(contentTypeKey,
+                                            getter_Copies(contenttypeheader));
       }
     }
 
     if (NS_SUCCEEDED(rv)) {
+      nsAutoString contentType;
+      contentType.AssignWithConversion(contenttypeheader.get());
 
-        nsAutoString contentType; contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
-        PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
+      PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
 
-        if(kNotFound != start)
-        {
-          start += 8; // 8 = "charset=".length
-          PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
-          if(kNotFound == end ) end = contentType.Length();
+      if(kNotFound != start) {
+        start += 8; // 8 = "charset=".length
+        PRInt32 end = contentType.FindCharInSet(";\n\r ", start  );
+        if(kNotFound == end ) end = contentType.Length();
 
-          contentType.Mid(characterSet, start, end - start);
-          NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
-          if(NS_SUCCEEDED(rv) && (nsnull != calias) )
-          {
-           nsAutoString preferred;
-           rv = calias->GetPreferred(characterSet, preferred);
-           if(NS_SUCCEEDED(rv))
-           {
-              characterSet = preferred;
-           }
+        contentType.Mid(characterSet, start, end - start);
+        NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
+
+        if(NS_SUCCEEDED(rv) && calias) {
+          nsAutoString preferred;
+          rv = calias->GetPreferred(characterSet, preferred);
+
+          if(NS_SUCCEEDED(rv)) {
+            characterSet = preferred;
           }
         }
       }
-      
-    if (NS_FAILED(rv) || (characterSet.Length() == 0)) {
+    }
+
+    if (NS_FAILED(rv) || characterSet.IsEmpty()) {
       //charset from script charset tag
       characterSet.Assign(mScriptCharset);
     }
 
-    if (NS_FAILED(rv) || (characterSet.Length() == 0) ) {
+    if (NS_FAILED(rv) || characterSet.IsEmpty()) {
       // charset from document default
       rv = mDocument->GetDocumentCharacterSet(characterSet);
     }
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
 
-    rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                   NS_GET_IID(nsICharsetConverterManager), 
-                   (nsISupports**)&charsetConv);
+    nsCOMPtr<nsICharsetConverterManager> charsetConv =
+      do_GetService(kCharsetConverterManagerCID, &rv);
 
-    if (NS_SUCCEEDED(rv) && (charsetConv))
-    {
-       rv = charsetConv->GetUnicodeDecoder(&characterSet,
-           getter_AddRefs(unicodeDecoder));
-       NS_RELEASE(charsetConv);
+    if (NS_SUCCEEDED(rv) && charsetConv) {
+      rv = charsetConv->GetUnicodeDecoder(&characterSet,
+                                          getter_AddRefs(unicodeDecoder));
     }
 
     // converts from the charset to unicode
     if (NS_SUCCEEDED(rv)) {
+      PRInt32 unicodeLength = 0;
+
       rv = unicodeDecoder->GetMaxLength(string, stringLen, &unicodeLength);
       if (NS_SUCCEEDED(rv)) {
-          mUnicodeXferBuf.SetCapacity(unicodeLength);
-          unicodeString = (PRUnichar *) mUnicodeXferBuf.GetUnicode();
-          rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
-          if (NS_SUCCEEDED(rv)) {
-            mUnicodeXferBuf.SetLength(unicodeLength);
-          } else {
-            mUnicodeXferBuf.SetLength(0);
-          }
+        mUnicodeXferBuf.SetCapacity(unicodeLength);
+
+        // XXX: Whaaaaa! const violation!!!
+        PRUnichar *ustr = (PRUnichar *) mUnicodeXferBuf.GetUnicode();
+
+        rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, ustr,
+                                     &unicodeLength);
+
+        if (NS_SUCCEEDED(rv)) {
+          mUnicodeXferBuf.SetLength(unicodeLength);
+        } else {
+          mUnicodeXferBuf.SetLength(0);
+        }
       }
     }
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not convert external JavaScript to Unicode!");
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "Could not convert external JavaScript to Unicode!");
 
     if ((NS_OK == aStatus) && (NS_SUCCEEDED(rv))) {
-
-      nsAutoString jsUnicodeBuffer(CBufDescriptor(unicodeString, PR_TRUE, unicodeLength+1, unicodeLength));
       PRBool bodyPresent = PreEvaluateScript();
 
       //-- Merge the principal of the script file with that of the document
       nsCOMPtr<nsISupports> owner;
       channel->GetOwner(getter_AddRefs(owner));
       nsCOMPtr<nsIPrincipal> prin;
-      if (owner)
-      {
+
+      if (owner) {
         prin = do_QueryInterface(owner, &rv);
         if (NS_FAILED(rv)) return rv;
       }
+
       rv = mDocument->AddPrincipal(prin);
-      if (NS_FAILED(rv)) return rv;
+
+      if (NS_FAILED(rv))
+        return rv;
 
       if(mParser) {
         mParser->UnblockParser(); // make sure to unblock the parser before evaluating the script
       }
 
-      rv = EvaluateScript(jsUnicodeBuffer, mScriptURI, 1, mScriptLanguageVersion);
-      if (NS_FAILED(rv)) return rv;
+      rv = EvaluateScript(mUnicodeXferBuf, mScriptURI, 1,
+                          mScriptLanguageVersion);
+      if (NS_FAILED(rv))
+        return rv;
 
       PostEvaluateScript(bodyPresent);
 
@@ -4845,10 +4856,8 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   if(mParser && mParser->IsParserEnabled()){
-    rv=mParser->ContinueParsing();
+    rv = mParser->ContinueParsing();
   }
-
-  if (NS_FAILED(rv)) return rv;
 
   //invalidate Xfer buffer content
   mUnicodeXferBuf.SetLength(0); 
