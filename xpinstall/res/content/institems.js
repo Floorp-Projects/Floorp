@@ -69,7 +69,11 @@ function onLoad()
   var okText = document.getElementById("xpinstallBundle").getString("OK");
   var okButton = document.getElementById("ok")
   okButton.label = okText;
-  okButton.focus();
+  okButton.setAttribute("default",false);
+
+  var cancelButton = document.getElementById("cancel")
+  cancelButton.focus();
+  cancelButton.setAttribute("default",true);
 }
 
 function onOk()
