@@ -48,6 +48,10 @@
 
 #include "nsThread.h"
 
+#ifdef GC_LEAK_DETECTOR
+#include "nsLeakDetector.h"
+#endif
+
 // base
 static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
 // ds
@@ -147,11 +151,6 @@ nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 static nsFileSpec registryDirName;
 
-#ifdef GC_LEAK_DETECTOR
-extern "C" void NSInitGarbageCollector(void);
-extern "C" void NSShutdownGarbageCollector(void);
-#endif
-
 nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                              nsFileSpec *registryFile, nsFileSpec *componentDir)
 {
@@ -159,7 +158,8 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 
 #ifdef GC_LEAK_DETECTOR
 	// 0. Initialize the GC.
-	NSInitGarbageCollector();
+	rv = NS_InitGarbageCollector();
+	if (NS_FAILED(rv)) return rv;
 #endif
 
     // 1. Create the Global Service Manager
@@ -225,6 +225,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                   registryFactory, PR_TRUE);
     NS_RELEASE(registryFactory);
     if (NS_FAILED(rv)) return rv;
+
+#ifdef GC_LEAK_DETECTOR
+	rv = NS_InitLeakDetector();
+    if (NS_FAILED(rv)) return rv;
+#endif
 
     rv = RegisterGenericFactory(compMgr, kAllocatorCID,
                                 NS_ALLOCATOR_CLASSNAME,
@@ -489,8 +494,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     nsTraceRefcnt::ResetStatistics();
 
 #ifdef GC_LEAK_DETECTOR
+	// Shutdown the Leak detector.
+	NS_ShutdownLeakDetector();
 	// Shutdown the GC.
-	NSShutdownGarbageCollector();
+	NS_ShutdownGarbageCollector();
 #endif
 
     return NS_OK;
