@@ -630,8 +630,11 @@ nsWebShell::ReloadDocument(const char* aCharset,
       {
          muDV->SetHintCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
          muDV->SetHintCharacterSetSource((PRInt32)aSource);
-         mCharsetReloadState = eCharsetReloadRequested;
-         return Reload(LOAD_FLAGS_CHARSET_CHANGE);
+         if(eCharsetReloadRequested != mCharsetReloadState) 
+         {
+            mCharsetReloadState = eCharsetReloadRequested;
+            return Reload(LOAD_FLAGS_CHARSET_CHANGE);
+         }
       }
     }
   }
