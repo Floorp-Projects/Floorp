@@ -82,7 +82,10 @@ public:
     eColor_threedshadow,
     eColor_window,
     eColor_windowframe,
-    eColor_windowtext
+    eColor_windowtext,
+
+    // Colors which will hopefully become CSS3
+    eColor__moz_field
 
   } nsColorID;
 

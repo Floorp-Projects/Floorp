@@ -424,7 +424,7 @@ fieldset {
 
 /* default inputs, text inputs, and selects */
 input {
-  background-color: Window;
+  background-color: -moz-field;
   border: 2px inset ThreeDFace;
   color: WindowText;
   cursor: text;
@@ -437,7 +437,7 @@ input {
 }
 
 textarea {
-  background-color: Window;
+  background-color: -moz-field;
   border: 2px inset ThreeDFace;
   color: WindowText;
   font: field;
@@ -458,7 +458,7 @@ textarea {
 
 select {
   font: list;
-  background-color: Window;
+  background-color: -moz-field;
   border: 2px inset ThreeDFace;
   margin: 1px 0 1px 0;
   vertical-align: bottom;
@@ -604,7 +604,7 @@ input[type="file"] > input[type="button"] {
 /* radio buttons */
 input[type="radio"] {
   border: 2px inset ThreeDFace;
-  background-color: Window;
+  background-color: -moz-field;
   color: WindowText;
   width: 12px;
   height: 12px;
@@ -617,7 +617,7 @@ input[type="radio"] {
 /* check boxes */
 input[type="checkbox"] {
   border: 2px inset ThreeDFace;
-  background-color: Window;
+  background-color: -moz-field;
   color: WindowText;
   width: 13px;
   height: 13px;
