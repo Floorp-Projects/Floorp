@@ -72,11 +72,18 @@ do
 
 	rm -f $tmp_raw $file_list $file_list_devel $tmp_file_list $tmp_file_list_devel
 
+	print_cmd=$mozdir/build/package/rpm/print-module-filelist.sh
+
+	here=`pwd`
+
 	# Write the raw file list
 	for m in $modules
 	do
-		make -s -C $mozdir/$m echo-module-filelist >> $tmp_raw
+		cd $mozdir/$m
+		$print_cmd  >> $tmp_raw
 	done
+
+	cd $here
 
 	# Munge the raw list into the file list
 	for i in `cat $tmp_raw`

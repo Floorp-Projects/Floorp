@@ -6,3 +6,4 @@ widget
 layout
 webshell
 editor
+modules/plugin
