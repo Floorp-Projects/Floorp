@@ -68,7 +68,8 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GetUsername(char * *aUsername)
+NS_IMETHODIMP 
+nsUserInfo::GetUsername(char * *aUsername)
 {
     struct passwd *pw = nsnull;
 
@@ -87,7 +88,8 @@ NS_IMETHODIMP GetUsername(char * *aUsername)
     return NS_OK;
 }
 
-NS_IMETHODIMP GetDomain(char * *aDomain)
+NS_IMETHODIMP 
+nsUserInfo::GetDomain(char * *aDomain)
 {
     struct utsname buf;
     
@@ -100,7 +102,8 @@ NS_IMETHODIMP GetDomain(char * *aDomain)
     return NS_OK;
 }
 
-NS_IMETHODIMP GetEmailAddress(char * *aEmailAddress)
+NS_IMETHODIMP 
+nsUserInfo::GetEmailAddress(char * *aEmailAddress)
 {
     // use username + "@" + domain for the email address
 
