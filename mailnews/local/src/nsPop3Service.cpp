@@ -95,10 +95,14 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 	if (NS_FAILED(rv)) return rv;
 	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
     
+    nsXPIDLCString escapedUsername;
+    *((char**)getter_Copies(escapedUsername)) =
+        nsEscape(popUser, url_XAlphas);
+    
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)popUser, (const char *)popHost, POP3_PORT);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)escapedUsername, (const char *)popHost, POP3_PORT);
         rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
     }
@@ -136,13 +140,19 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
 
 	rv = server->GetUsername(getter_Copies(popUser));
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
+
+	nsXPIDLCString escapedUsername;
+    *((char **)getter_Copies(escapedUsername)) = 
+        nsEscape(popUser, url_XAlphas);
+    if (NS_FAILED(rv)) return rv;
+    
 	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
     
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)popUser, (const char *)popHost, POP3_PORT);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)escapedUsername, (const char *)popHost, POP3_PORT);
         rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
 	}
@@ -301,10 +311,21 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     nsXPIDLCString username;
     server->GetHostName(getter_Copies(hostname));
     server->GetUsername(getter_Copies(username));
+
+    PRInt32 port;
+    server->GetPort(&port);
+    if (port == -1) port = POP3_PORT;
+    
+    nsXPIDLCString escapedUsername;
+    *((char **)getter_Copies(escapedUsername)) =
+      nsEscape(username, url_XAlphas);
+    
     nsCAutoString popSpec = "pop://";
+    popSpec += escapedUsername;
+    popSpec += "@";
     popSpec += hostname;
     popSpec += ":";
-    popSpec.AppendInt(POP3_PORT);
+    popSpec.AppendInt(port);
     popSpec += "?";
     const char *uidl = PL_strstr(aSpec, "uidl=");
     if (!uidl) return NS_ERROR_FAILURE;
