@@ -40,6 +40,10 @@
 #include "prtime.h"
 #include "rdf.h"
 
+#ifdef MOZ_BRPROF
+#include "nsIBrowsingProfile.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // Common CIDs
 
@@ -48,6 +52,9 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 
+#ifdef MOZ_BRPROF
+static NS_DEFINE_CID(kBrowsingProfileCID,   NS_BROWSINGPROFILE_CID);
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // HistoryEntry
@@ -466,7 +473,7 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
   nsresult rv;
 
   nsIRDFResource* page;
-  rv == gRDFService->GetResource(aURL, &page);
+  rv = gRDFService->GetResource(aURL, &page);
   if (NS_FAILED(rv)) return rv;
 
   PRTime* date = (PRTime*) PL_HashTableLookup(mLastVisitDateHash, page);
@@ -598,8 +605,6 @@ nsGlobalHistory::Init()
     // Force the browsing profile to be loaded and initialized
     // here. Mostly we do this so that it's not on the netlib
     // thread, which seems to be broken right now.
-    static NS_DEFINE_CID(kBrowsingProfileCID, NS_BROWSINGPROFILE_CID);
-
     rv = nsServiceManager::GetService(kBrowsingProfileCID,
                                       nsIBrowsingProfile::GetIID(),
                                       (nsISupports**) &mBrowsingProfile);
@@ -711,7 +716,7 @@ nsGlobalHistory::ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec
     char buf[256];
     char* p = buf;
 
-    if (buffer.Length() >= sizeof(buf))
+    if (buffer.Length() >= PRInt32(sizeof buf))
       p = new char[buffer.Length() + 1];
 
     if (! p)
@@ -922,7 +927,7 @@ nsGlobalHistory::AddToDateHierarchy(PRTime aDate, const char *aURL)
   parent = timeResource;
 
   if (dayBuffer[0]) {
-    PRBool      found = PR_FALSE;
+    found = PR_FALSE;
     // XXXwaterson: fix this
     //if (NS_OK != gRDFService->FindResource(dayBuffer, &dayResource, &found))
     //return NS_ERROR_FAILURE;
