@@ -1101,12 +1101,6 @@ nsString::CompareWithConversion( const char* aString, PRBool aIgnoreCase, PRInt3
   }
 
 PRBool
-nsCString::EqualsWithConversion( const char* aString, PRBool aIgnoreCase, PRInt32 aCount ) const
-  {
-    return Compare(aString, aIgnoreCase, aCount) == 0;
-  }
-
-PRBool
 nsString::EqualsWithConversion( const char* aString, PRBool aIgnoreCase, PRInt32 aCount ) const
   {
     return CompareWithConversion(aString, aIgnoreCase, aCount) == 0;

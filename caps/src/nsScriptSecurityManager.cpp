@@ -360,7 +360,7 @@ struct DomainEntry
             return PR_FALSE;
         if (mOrigin.RFindChar(':', thisLen-1, 1) != -1)
         //-- Policy applies to all URLs of this scheme, compare scheme only
-            return mOrigin.EqualsWithConversion(anOrigin, PR_TRUE, thisLen);
+            return mOrigin.EqualsIgnoreCase(anOrigin, thisLen);
 
         //-- Policy applies to a particular host; compare domains
         if (!mOrigin.Equals(anOrigin + (len - thisLen)))
