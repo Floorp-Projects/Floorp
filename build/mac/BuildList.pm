@@ -56,7 +56,16 @@ sub BuildMozilla()
 		BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",							"Stubs");
 		BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",						"Stubs");
 		BuildProjectClean(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",			"Stubs");
-		BuildProjectClean(":mozilla:cmd:macfe:projects:client:NavigatorStubs.mcp",			"Stubs");
+		BuildProjectClean(":mozilla:cmd:macfe:projects:client:Client.mcp",					"Stubs");
+		
+		if ( $main::CARBON )
+		{
+			BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"Carbon Interfaces");
+		}
+		else
+		{
+			BuildProject(":mozilla:cmd:macfe:projects:interfaceLib:Interface.mcp",			"MacOS Interfaces");
+		}
 		
 		BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",							"NSRuntime$D.shlb");
 		MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
