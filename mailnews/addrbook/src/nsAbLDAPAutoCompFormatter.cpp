@@ -56,7 +56,6 @@
 #include "nsIStringBundle.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIDNSService.h"
 #include "nsNetError.h"
 
 NS_IMPL_ISUPPORTS2(nsAbLDAPAutoCompFormatter, 

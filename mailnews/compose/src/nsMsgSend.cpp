@@ -81,7 +81,6 @@
 #include "nsIAbAddressCollecter.h"
 #include "nsAbBaseCID.h"
 #include "nsCOMPtr.h"
-#include "nsIDNSService.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgMailSession.h"

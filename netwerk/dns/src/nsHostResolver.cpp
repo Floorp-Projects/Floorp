@@ -457,7 +457,8 @@ void
 nsHostResolver::DetachCallback(const char            *host,
                                PRUint16               flags,
                                PRUint16               af,
-                               nsResolveHostCallback *callback)
+                               nsResolveHostCallback *callback,
+                               nsresult               status)
 {
     nsRefPtr<nsHostRecord> rec;
     {
@@ -481,10 +482,10 @@ nsHostResolver::DetachCallback(const char            *host,
         }
     }
 
-    // complete callback with an error code; this would only be done
-    // if the record was in the process of being resolved.
+    // complete callback with the given status code; this would only be done if
+    // the record was in the process of being resolved.
     if (rec)
-        callback->OnLookupComplete(this, rec, NS_ERROR_ABORT);
+        callback->OnLookupComplete(this, rec, status);
 }
 
 nsresult

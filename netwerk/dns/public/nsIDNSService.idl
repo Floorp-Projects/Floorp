@@ -36,32 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDNSRecord.idl"
-#include "nsIDNSRequest.idl"
-#include "nsIDNSListener.idl"
+#include "nsISupports.idl"
 
-interface nsIEventQueue;
+interface nsICancelable;
+interface nsIEventTarget;
+interface nsIDNSRecord;
+interface nsIDNSListener;
 
 /**
  * nsIDNSService
  */
-[scriptable, uuid(2d6bbf2f-cf97-48f0-af29-642b86d0e59e)]
+[scriptable, uuid(5c8ec09d-bfbf-4eaf-8a36-0d84b5c8f35b)]
 interface nsIDNSService : nsISupports
 {
-    /**
-     * called to initialize the DNS service.
-     */
-    void init();
-
-    /**
-     * called to shutdown the DNS service.  any pending asynchronous
-     * requests will be canceled, and the local cache of DNS records
-     * will be cleared.  NOTE: the operating system may still have
-     * its own cache of DNS records, which would be unaffected by
-     * this method.
-     */
-    void shutdown();
-
     /**
      * kicks off an asynchronous host lookup.
      *
@@ -71,19 +58,19 @@ interface nsIDNSService : nsISupports
      *        a bitwise OR of the RESOLVE_ prefixed constants defined below.
      * @param aListener
      *        the listener to be notified when the result is available.
-     * @param aListenerEventQ
+     * @param aListenerEventTarget
      *        optional parameter (may be null).  if non-null, this parameter
-     *        specifies the nsIEventQueue of the thread on which the listener's
+     *        specifies the nsIEventTarget of the thread on which the listener's
      *        onLookupComplete should be called.  however, if this parameter is
      *        null, then onLookupComplete will be called on an unspecified
      *        thread (possibly recursively).
      *
-     * @return DNS request instance that can be used to cancel the host lookup.
+     * @return An object that can be used to cancel the host lookup.
      */
-    nsIDNSRequest asyncResolve(in AUTF8String    aHostName,
+    nsICancelable asyncResolve(in AUTF8String    aHostName,
                                in unsigned long  aFlags,
                                in nsIDNSListener aListener,
-                               in nsIEventQueue  aListenerEventQ);
+                               in nsIEventTarget aListenerEventTarget);
 
     /**
      * called to synchronously resolve a hostname.  warning this method may

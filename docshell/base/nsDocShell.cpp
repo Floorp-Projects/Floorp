@@ -114,11 +114,6 @@
 #include "nsISHistoryListener.h"
 #include "nsIWindowWatcher.h"
 
-// Pull in various NS_ERROR_* definitions
-#include "nsIDNSService.h"
-#include "nsISocketTransportService.h"
-#include "nsISocketProvider.h"
-
 // Editor-related
 #include "nsIEditingSession.h"
 

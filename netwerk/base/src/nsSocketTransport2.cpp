@@ -1518,7 +1518,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 
         // make sure there isn't any pending DNS request
         if (mDNSRequest) {
-            mDNSRequest->Cancel();
+            mDNSRequest->Cancel(NS_ERROR_ABORT);
             mDNSRequest = 0;
         }
 
@@ -1803,7 +1803,7 @@ nsSocketTransport::SetTimeout(PRUint32 type, PRUint32 value)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::OnLookupComplete(nsIDNSRequest *request,
+nsSocketTransport::OnLookupComplete(nsICancelable *request,
                                     nsIDNSRecord  *rec,
                                     nsresult       status)
 {

@@ -79,7 +79,6 @@
 #include "nsICopyMsgStreamListener.h"
 #include "nsTextFormatter.h"
 #include "nsAutoLock.h"
-#include "nsIDNSService.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgI18N.h"
 #include "nsEscape.h"

@@ -49,7 +49,6 @@
 #include "nsNetUtil.h"
 #include "nsIFileURL.h"
 #include "nsFileStream.h"
-#include "nsIDNSService.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIWebProgressListener.h"

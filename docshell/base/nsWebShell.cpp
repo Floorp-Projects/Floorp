@@ -52,8 +52,6 @@
 #include "nsIStreamListener.h"
 #include "nsIPrompt.h"
 #include "nsNetUtil.h"
-#include "nsIDNSService.h"
-#include "nsISocketProvider.h"
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
