@@ -137,9 +137,7 @@ nsLayoutUtils::GetBeforeFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
   NS_ASSERTION(!prevInFlow, "aFrame must be first-in-flow");
 #endif
   
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  nsIFrame* firstFrame = GetFirstChildFrame(aPresContext, aFrame, content);
+  nsIFrame* firstFrame = GetFirstChildFrame(aPresContext, aFrame, aFrame->GetContent());
 
   if (firstFrame && IsGeneratedContentFor(nsnull, firstFrame,
                                           nsCSSPseudoElements::before)) {
@@ -155,9 +153,7 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  nsIFrame* lastFrame = GetLastChildFrame(aPresContext, aFrame, content);
+  nsIFrame* lastFrame = GetLastChildFrame(aPresContext, aFrame, aFrame->GetContent());
 
   if (lastFrame && IsGeneratedContentFor(nsnull, lastFrame,
                                          nsCSSPseudoElements::after)) {
@@ -171,14 +167,12 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
 nsIFrame*
 nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
 {
-  nsIFrame* frame = aFrame;
-  while (frame) {
+  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
     nsCOMPtr<nsIAtom> type;
     frame->GetFrameType(getter_AddRefs(type));
     if (type.get() == nsLayoutAtoms::pageFrame) {
       return frame;
     }
-    frame->GetParent(&frame);
   }
   return nsnull;
 }
@@ -196,12 +190,8 @@ nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
     return PR_FALSE;
   }
 
-  if (aContent) {
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    if (content != aContent) {
-      return PR_FALSE;
-    }
+  if (aContent && aFrame->GetContent() != aContent) {
+    return PR_FALSE;
   }
 
   nsStyleContext* styleContext = aFrame->GetStyleContext();

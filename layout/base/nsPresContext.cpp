@@ -1386,8 +1386,7 @@ nsPresContext::LoadImage(const nsString& aURL,
   NS_NewURI(getter_AddRefs(uri), aURL, nsnull, baseURI, ioService);
 
   if (!loader) {
-    nsCOMPtr<nsIContent> content;
-    aTargetFrame->GetContent(getter_AddRefs(content));
+    nsIContent* content = aTargetFrame->GetContent();
 
     // Check with the content-policy things to make sure this load is permitted.
     nsresult rv;
@@ -1435,10 +1434,7 @@ nsPresContext::LoadImage(const nsString& aURL,
   // Allow for a null target frame argument (for precached images)
   if (aTargetFrame) {
     // Mark frame as having loaded an image
-    nsFrameState state;
-    aTargetFrame->GetFrameState(&state);
-    state |= NS_FRAME_HAS_LOADED_IMAGES;
-    aTargetFrame->SetFrameState(state);
+    aTargetFrame->AddStateBits(NS_FRAME_HAS_LOADED_IMAGES);
   }
 
   loader->Load(uri);
