@@ -32,10 +32,6 @@
     {
       border              : 1px solid transparent;
       margin              : 1px;
-    }     
-    
-  menulist[open="true"]:focus
-    {
       background-color    : -moz-field;
       color               : WindowText;
     }     
@@ -130,7 +126,7 @@
 
   menulist > menupopup > menuitem[selected="true"]
     {
-      border              : 1px dotted Highlight;
+      border              : 1px dotted #F5DB95;
     }
 
   menulist > menupopup > menuitem > .menu-iconic-left,
