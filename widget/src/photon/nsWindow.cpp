@@ -594,6 +594,9 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		if( aRepaint == PR_FALSE )  PtStartFlux(mWidget);
 		PtSetResource( mWidget, Pt_ARG_DIM, &dim, 0 );
 		if( aRepaint == PR_FALSE ) PtEndFlux(mWidget);
+
+		/* ATENTIE Remove when wojtek fixes PR:22930 in the photon library */
+		if( PtWidgetClass( mWidget ) == PtRegion ) PtSetResource( mWidget, Pt_ARG_REGION_OPAQUE, 0, Ph_EV_KEY );
 		}
 
 	if( mIsToplevel || mListenForResizes ) {
@@ -888,6 +891,9 @@ NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
     if(( mWidget->area.pos.x != aX ) || ( mWidget->area.pos.y != aY )) {
       PhPoint_t pos = { aX, aY };
       PtSetResource( mWidget, Pt_ARG_POS, &pos, 0 );
+
+			/* ATENTIE Remove when wojtek fixes PR:22930 in the photon library */
+			if( PtWidgetClass( mWidget ) == PtRegion ) PtSetResource( mWidget, Pt_ARG_REGION_OPAQUE, 0, Ph_EV_KEY );
     	}
   	}
 
