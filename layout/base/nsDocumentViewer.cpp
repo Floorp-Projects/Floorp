@@ -4690,7 +4690,7 @@ DocumentViewerImpl::InstallNewPresentation()
   mViewManager->SetWindowDimensions(width, height);
 
   mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_FALSE);
-  mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATE_RC, PR_FALSE);
+  mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATERC_PAINT, PR_TRUE);
 
   mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
   Show();
@@ -4999,7 +4999,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 
   if (mDeviceContext) {
     mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_TRUE);
-    mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATE_RC, PR_TRUE);
+    mDeviceContext->SetUseAltDC(kUseAltDCFor_CREATERC_REFLOW, PR_TRUE);
     mDeviceContext->SetUseAltDC(kUseAltDCFor_SURFACE_DIM, PR_TRUE);
   }
   rv = DocumentReadyForPrinting();
@@ -5051,11 +5051,25 @@ DocumentViewerImpl::SetDocAndURLIntoProgress(nsIWebShell* aWebShell,
   if (aWebShell == nsnull || aParams == nsnull) {
     return;
   }
+  const PRInt32 kTitleLength = 64;
+
   PRUnichar * docTitleStr;
   PRUnichar * docURLStr;
-  GetWebShellTitleAndURL(aWebShell, mPrt->mPrintSettings, &docTitleStr, &docURLStr); 
+  GetWebShellTitleAndURL(aWebShell, mPrt->mPrintSettings, &docTitleStr, &docURLStr);
+
+  // Make sure the URLS don't get too long for the progress dialog
+  if (docURLStr != nsnull && nsCRT::strlen(docURLStr) > kTitleLength) {
+    PRUnichar * ptr = &docURLStr[nsCRT::strlen(docURLStr)-kTitleLength+3];
+    nsAutoString newURLStr;
+    newURLStr.AppendWithConversion("...");
+    newURLStr += ptr;
+    nsMemory::Free(docURLStr);
+    docURLStr = ToNewUnicode(newURLStr);
+  }
+
   mPrt->mPrintProgressParams->SetDocTitle((const PRUnichar*) docTitleStr);
   mPrt->mPrintProgressParams->SetDocURL((const PRUnichar*) docURLStr);
+
   if (docTitleStr != nsnull) nsMemory::Free(docTitleStr);
   if (docURLStr != nsnull) nsMemory::Free(docURLStr);
 }
