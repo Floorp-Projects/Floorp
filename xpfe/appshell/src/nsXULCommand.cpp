@@ -31,6 +31,7 @@
 
 #include "nsXULCommand.h"
 
+#define DEBUGCMDS 0
 //----------------------------------------------------------------------
 
 // Class IID's
@@ -194,7 +195,11 @@ NS_IMETHODIMP nsXULCommand::SetCommand(const nsString & aStrCmd)
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::DoCommand()
 {
-  //printf("DoCommand mWebShell is 0x%x\n", mWebShell);
+  PRUnichar * name;
+  mWebShell->GetName( &name);
+  nsAutoString str(name);
+
+  if (DEBUGCMDS) printf("DoCommand -  mWebShell is [%s] 0x%x\n", str.ToNewCString(), mWebShell);
   return ExecuteJavaScriptString(mWebShell, mCommandStr);
 }
 
@@ -234,9 +239,10 @@ NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsSt
     status = scriptContextOwner->GetScriptContext(&scriptContext);
     if (NS_OK == status) {
       // Ask the script context to evalute the javascript string
-      PRBool isUndefined;
-      nsString rVal;
+      PRBool isUndefined = PR_FALSE;
+      nsString rVal("xxx");
       scriptContext->EvaluateString(aJavaScript, url, 0, rVal, &isUndefined);
+      if (DEBUGCMDS) printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
 
       NS_RELEASE(scriptContext);
     } 		NS_RELEASE(scriptContextOwner);
@@ -297,7 +303,7 @@ nsresult nsXULCommand::MouseDown(nsIDOMEvent* aMouseEvent)
 //-----------------------------------------------------------------
 nsresult nsXULCommand::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  //printf("Executing [%s]\n", mCommandStr.ToNewCString());
+  if (DEBUGCMDS) printf("Executing [%s]\n", mCommandStr.ToNewCString());
   if (mIsEnabled) {
     DoCommand();
   }
@@ -330,7 +336,6 @@ nsresult nsXULCommand::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRUint32 type;
   aKeyEvent->GetKeyCode(&type);
-  //printf("Key KeyDown: [%d]\n", type);
   return NS_OK;
 }
 
@@ -339,7 +344,6 @@ nsresult nsXULCommand::KeyUp(nsIDOMEvent* aKeyEvent)
 {
   PRUint32 type;
   aKeyEvent->GetKeyCode(&type);
-  //printf("Key Pressed: [%d]\n", type);
   if (nsIDOMEvent::VK_RETURN != type) {
     return NS_OK;
   }
