@@ -2869,7 +2869,19 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     SetStatusMessage( msg );
     PR_FREEIF(msg);
 
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mNewsPostListener, nsnull);
+	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
+	if (!mailSession) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIMsgWindow>    msgWindow;
+    rv = mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
+	if (NS_FAILED(rv)) return rv;
+
+	if (!msgWindow) return NS_ERROR_FAILURE;
+
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mNewsPostListener, msgWindow, nsnull);
+	if (NS_FAILED(rv)) return rv;
   }
 
   return rv;

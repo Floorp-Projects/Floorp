@@ -1174,7 +1174,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
          ((m_responseCode != MK_NNTP_RESPONSE_AUTHINFO_REQUIRE) &&
           (m_responseCode != MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE))) {
         nsresult rv;
-        NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+        nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
         if (NS_SUCCEEDED(rv) || dialog) {
             nsXPIDLString errorText;
             GetNewsStringByName("errorFromServer", getter_Copies(errorText));
@@ -2366,6 +2366,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
     }
 
     if (NS_FAILED(rv) || !cachedUsername) {
+		rv = NS_OK;
 #ifdef DEBUG_NEWS
         printf("ask for the news username\n");
 #endif /* DEBUG_NEWS */
@@ -2373,14 +2374,23 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
         nsXPIDLString usernamePromptText;
         GetNewsStringByName("enterUsername", getter_Copies(usernamePromptText));
         if (m_newsFolder) {
-
             if (!m_msgWindow) {
 		        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		        if (mailnewsurl) {
                     rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
                 }
-            }
-            rv = m_newsFolder->GetGroupUsernameWithUI(usernamePromptText, nsnull, m_msgWindow, getter_Copies(username));
+			}
+
+			if (!m_msgWindow) {
+#ifdef DEBUG_NEWS
+				printf("unable to get the msg window\n");
+#endif /* DEBUG_NEWS */
+				rv = NS_ERROR_NULL_POINTER;
+			}
+
+			if (NS_SUCCEEDED(rv)) {
+				rv = m_newsFolder->GetGroupUsernameWithUI(usernamePromptText, nsnull, m_msgWindow, getter_Copies(username));
+			}
         }
         else {
             printf("we don't know the folder\n");
@@ -2486,6 +2496,8 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
             rv = m_newsFolder->GetGroupPassword(getter_Copies(cachedPassword));
         }
 		if (NS_FAILED(rv) || !cachedPassword) {
+			rv = NS_OK;
+
 #ifdef DEBUG_NEWS
             printf("ask for the news password\n");
 #endif /* DEBUG_NEWS */
@@ -2502,7 +2514,17 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
                         rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
                     }
                 }
-                rv = m_newsFolder->GetGroupPasswordWithUI(passwordPromptText, passwordPromptTitleText, m_msgWindow, getter_Copies(password));
+
+				if (!m_msgWindow) {
+					rv = NS_ERROR_NULL_POINTER;
+#ifdef DEBUG_NEWS
+					printf("unable to get the msg window\n");
+#endif /* DEBUG_NEWS */
+				}
+
+				if (NS_SUCCEEDED(rv)) {
+	               rv = m_newsFolder->GetGroupPasswordWithUI(passwordPromptText, passwordPromptTitleText, m_msgWindow, getter_Copies(password));
+				}
             }
             else {
                 printf("we don't know the folder\n");
@@ -3746,7 +3768,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   cancelInfo.old_from = m_cancelFromHdr;
   cancelInfo.from = nsnull;
 
-  NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+  nsCOMPtr <nsIPrompt> dialog = do_GetService(kCNetSupportDialogCID, &rv);
   if (NS_FAILED(rv) || !dialog) return -1;  /* unable to get the dialog service */
 
   NS_ASSERTION (id && newsgroups, "null ptr");
@@ -4795,9 +4817,6 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 	            break;
 
 	        case NNTP_ERROR:
-#ifdef DEBUG_NEWS
-				printf("NNTP_ERROR!\n");
-#endif
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 	            if(cd->stream)
 				  {

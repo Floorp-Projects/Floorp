@@ -36,7 +36,7 @@ interface nsINntpService : nsISupports {
   
   string convertNewsgroupsString(in string newsgroupsStr);
 
-  nsIURI postMessage (in nsIFileSpec fileToPost, in string newsgroupNames, in nsIUrlListener aUrlListener);
+  nsIURI postMessage (in nsIFileSpec fileToPost, in string newsgroupNames, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 
   nsIURI getNewNews (in nsINntpIncomingServer nntpServer, in string uri, in nsIUrlListener aUrlListener, in nsIMsgWindow aMsgWindow);
 

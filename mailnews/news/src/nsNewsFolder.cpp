@@ -1311,7 +1311,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
                                        nsIMsgWindow* aMsgWindow,
                                        char **aGroupUsername)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = NS_ERROR_FAILURE;;
 
     NS_ENSURE_ARG_POINTER(aMsgWindow);
     NS_ENSURE_ARG_POINTER(aGroupUsername);

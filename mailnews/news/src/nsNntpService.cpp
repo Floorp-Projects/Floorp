@@ -723,11 +723,12 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
   return NS_OK;
 }
 
-nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIURI **_retval)
+nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **_retval)
 {
 #ifdef DEBUG_NEWS
   printf("nsNntpService::PostMessage(??,%s,??,??)\n",newsgroupsNames);
 #endif
+  if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
   if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
   if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
     
@@ -756,7 +757,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
-  nntpProtocol = new nsNNTPProtocol(mailnewsurl, nsnull);
+  nntpProtocol = new nsNNTPProtocol(mailnewsurl, aMsgWindow);
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
   
   rv = nntpProtocol->Initialize();
