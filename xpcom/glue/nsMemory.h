@@ -63,12 +63,12 @@
 class nsMemory
 {
 public:
-    static NS_EXPORT void*      Alloc(size_t size);
-    static NS_EXPORT void*      Realloc(void* ptr, size_t size);
-    static NS_EXPORT void       Free(void* ptr);
-    static NS_EXPORT nsresult   HeapMinimize(PRBool aImmediate);
-    static NS_EXPORT void*      Clone(const void* ptr, size_t size);
-    static NS_EXPORT nsIMemory* GetGlobalMemoryService();       // AddRefs
+    static NS_COM void*      Alloc(size_t size);
+    static NS_COM void*      Realloc(void* ptr, size_t size);
+    static NS_COM void       Free(void* ptr);
+    static NS_COM nsresult   HeapMinimize(PRBool aImmediate);
+    static NS_COM void*      Clone(const void* ptr, size_t size);
+    static NS_COM nsIMemory* GetGlobalMemoryService();       // AddRefs
 };
 
 /** 

@@ -24,38 +24,39 @@
 DEPTH=..\..
 MODULE = xpcom
 XPIDL_MODULE = xpcom_components
-REQUIRES	= mozreg \
-		  string \
-		  $(NULL)
+REQUIRES        = mozreg \
+                  string \
+                  $(NULL)
 
 ################################################################################
 ## exports
 
 EXPORTS =                         \
+        nsCategoryManagerUtil.h   \
         nsComponentManagerObsolete.h \
-	nsComponentManagerUtils.h \
+        nsComponentManagerUtils.h \
         nsIComponentManagerUtils.h \
         nsIRegistryUtils.h        \
         nsIServiceManagerObsolete.h \
         nsIServiceManagerUtils.h  \
         nsXPComFactory.h          \
-	nsNativeComponentLoader.h \
+        nsNativeComponentLoader.h \
         nsStaticComponent.h       \
-	xcDll.h \
+        xcDll.h \
         nsObsoleteModuleLoading.h \
-        $(NULL)			
+        $(NULL)                 
 
 XPIDLSRCS =               \
-	.\nsICategoryHandler.idl \
-	.\nsICategoryManager.idl \
-	.\nsIClassInfo.idl \
+        .\nsICategoryHandler.idl \
+        .\nsICategoryManager.idl \
+        .\nsIClassInfo.idl \
         .\nsIComponentLoader.idl \
-	.\nsIComponentManager.idl \
+        .\nsIComponentManager.idl \
         .\nsIComponentManagerObsolete.idl \
         .\nsIComponentRegistrar.idl \
-	.\nsIFactory.idl	\
-        .\nsIModule.idl	  \
-	.\nsIRegistry.idl \
+        .\nsIFactory.idl        \
+        .\nsIModule.idl   \
+        .\nsIRegistry.idl \
         .\nsIServiceManager.idl \
         $(NULL)
 
@@ -68,7 +69,7 @@ LINCS =                    \
         -I..\base          \
         -I..\threads       \
         -I..\io       \
-	$(NULL)
+        $(NULL)
 
 LCFLAGS = -DUSE_NSREG -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
@@ -90,7 +91,7 @@ CPP_OBJS =                                 \
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
         $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib

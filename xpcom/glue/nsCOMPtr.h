@@ -67,7 +67,7 @@
 
 #ifndef nscore_h___
 #include "nscore.h"
-  // for |NS_..._CAST|, |NS_EXPORT|
+  // for |NS_..._CAST|, |NS_COM|
 #endif
 
 
@@ -403,16 +403,16 @@ class nsCOMPtr_base
         }
 
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-      NS_EXPORT ~nsCOMPtr_base();
+      NS_COM ~nsCOMPtr_base();
 #else
       // Allow debug builds to link with optimized versions of nsCOMPtr-using
       // plugins (e.g., JVMs).
-      NS_EXPORT ~nsCOMPtr_base() { }
+      NS_COM ~nsCOMPtr_base() { }
 #endif
 
-      NS_EXPORT void    assign_with_AddRef( nsISupports* );
-      NS_EXPORT void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
-      NS_EXPORT void**  begin_assignment();
+      NS_COM void    assign_with_AddRef( nsISupports* );
+      NS_COM void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
+      NS_COM void**  begin_assignment();
 
     protected:
       nsISupports* mRawPtr;

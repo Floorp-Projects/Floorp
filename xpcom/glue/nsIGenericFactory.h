@@ -68,7 +68,7 @@ public:
     NS_IMETHOD GetComponentInfo(const nsModuleComponentInfo **infop) = 0;
 };
 
-extern NS_COM nsresult
+NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory **result,
                      const nsModuleComponentInfo *info);
 
@@ -299,13 +299,13 @@ struct nsModuleInfo {
  * Create a new generic module. Use the NS_IMPL_NSGETMODULE macro, or
  * one of its relatives, rather than using this directly.
  */
-extern NS_COM nsresult
+NS_COM nsresult
 NS_NewGenericModule2(nsModuleInfo *info, nsIModule* *result);
 
 /**
  * Obsolete. Use NS_NewGenericModule2() instead.
  */
-extern NS_COM nsresult
+NS_COM nsresult
 NS_NewGenericModule(const char* moduleName,
                     PRUint32 componentCount,
                     nsModuleComponentInfo* components,

@@ -43,7 +43,6 @@
  * of the interface nsISample.
  *
  */
-#include "plstr.h"
 #include <stdio.h>
 
 #include "nsSample.h"
@@ -54,13 +53,13 @@
 nsSampleImpl::nsSampleImpl() : mValue(nsnull)
 {
     NS_INIT_ISUPPORTS();
-    mValue = PL_strdup("initial value");
+    mValue = (char*)nsMemory::Clone("initial value", 14);
 }
 
 nsSampleImpl::~nsSampleImpl()
 {
     if (mValue)
-        PL_strfree(mValue);
+        nsMemory::Free(mValue);
 }
 
 /**
@@ -105,11 +104,9 @@ nsSampleImpl::GetValue(char** aValue)
          * This convention lets things like JavaScript reflection do their
          * job, and simplifies the way C++ clients deal with returned buffers.
          */
-        *aValue = (char*) nsMemory::Alloc(PL_strlen(mValue) + 1);
+        *aValue = (char*) nsMemory::Clone(mValue, strlen(mValue) + 1);
         if (! *aValue)
             return NS_ERROR_NULL_POINTER;
-
-        PL_strcpy(*aValue, mValue);
     }
     else {
         *aValue = nsnull;
@@ -125,7 +122,7 @@ nsSampleImpl::SetValue(const char* aValue)
         return NS_ERROR_NULL_POINTER;
 
     if (mValue) {
-        PL_strfree(mValue);
+        nsMemory::Free(mValue);
     }
 
     /**
@@ -134,7 +131,7 @@ nsSampleImpl::SetValue(const char* aValue)
      * declared "inout".  If you want to keep the value for posterity,
      * you will have to make a copy of it.
      */
-    mValue = PL_strdup(aValue);
+    mValue = (char*) nsMemory::Clone(aValue, strlen(aValue) + 1);
     return NS_OK;
 }
 

@@ -35,12 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
+#include "nsXPCOM.h"
 #include "nsMemory.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "nsIServiceManager.h"
-
 #include "nsXPCOMPrivate.h"
 
 
@@ -72,7 +68,7 @@ SetupGlobalMemory()
 ////////////////////////////////////////////////////////////////////////////////
 // nsMemory static helper routines
 
-NS_EXPORT void*
+NS_COM void*
 nsMemory::Alloc(PRSize size)
 {
     if (!ENSURE_ALLOCATOR)
@@ -81,7 +77,7 @@ nsMemory::Alloc(PRSize size)
    return gMemory->Alloc(size);
 }
 
-NS_EXPORT void*
+NS_COM void*
 nsMemory::Realloc(void* ptr, PRSize size)
 {
     if (!ENSURE_ALLOCATOR)
@@ -90,7 +86,7 @@ nsMemory::Realloc(void* ptr, PRSize size)
     return gMemory->Realloc(ptr, size);
 }
 
-NS_EXPORT void
+NS_COM void
 nsMemory::Free(void* ptr)
 {
     if (!ENSURE_ALLOCATOR)
@@ -99,7 +95,7 @@ nsMemory::Free(void* ptr)
     gMemory->Free(ptr);
 }
 
-NS_EXPORT nsresult
+NS_COM nsresult
 nsMemory::HeapMinimize(PRBool aImmediate)
 {
     if (!ENSURE_ALLOCATOR)
@@ -108,7 +104,7 @@ nsMemory::HeapMinimize(PRBool aImmediate)
     return gMemory->HeapMinimize(aImmediate);
 }
 
-NS_EXPORT void*
+NS_COM void*
 nsMemory::Clone(const void* ptr, PRSize size)
 {
     if (!ENSURE_ALLOCATOR)
@@ -120,7 +116,7 @@ nsMemory::Clone(const void* ptr, PRSize size)
     return newPtr;
 }
 
-NS_EXPORT nsIMemory*
+NS_COM nsIMemory*
 nsMemory::GetGlobalMemoryService()
 {
     if (!ENSURE_ALLOCATOR)

@@ -78,27 +78,6 @@ private:
     nsresult*	  mErrorPtr;
 };
 
-class nsCreateInstanceFromCategory : public nsCOMPtr_helper
-{
-public:
-    nsCreateInstanceFromCategory(const char *aCategory, const char *aEntry,
-                                 nsISupports *aOuter, nsresult *aErrorPtr)
-        : mCategory(aCategory),
-          mEntry(aEntry),
-          mErrorPtr(aErrorPtr)
-    {
-        // nothing else to do;
-    }
-    virtual nsresult operator()( const nsIID&, void** ) const;
-    virtual ~nsCreateInstanceFromCategory() {};
-    
-private:
-    const char *mCategory;
-    const char *mEntry;
-    nsISupports *mOuter;
-    nsresult *mErrorPtr;
-};
-
 inline
 const nsCreateInstanceByCID
 do_CreateInstance( const nsCID& aCID, nsresult* error = 0 )
@@ -125,22 +104,6 @@ const nsCreateInstanceByContractID
 do_CreateInstance( const char* aContractID, nsISupports* aOuter, nsresult* error = 0 )
 {
     return nsCreateInstanceByContractID(aContractID, aOuter, error);
-}
-
-inline
-const nsCreateInstanceFromCategory
-do_CreateInstanceFromCategory( const char *aCategory, const char *aEntry,
-                               nsresult *aErrorPtr = 0)
-{
-    return nsCreateInstanceFromCategory(aCategory, aEntry, 0, aErrorPtr);
-}
-
-inline
-const nsCreateInstanceFromCategory
-do_CreateInstanceFromCategory( const char *aCategory, const char *aEntry,
-                               nsISupports *aOuter, nsresult *aErrorPtr = 0)
-{
-    return nsCreateInstanceFromCategory(aCategory, aEntry, aOuter, aErrorPtr);
 }
 
 // type-safe shortcuts for calling |CreateInstance|

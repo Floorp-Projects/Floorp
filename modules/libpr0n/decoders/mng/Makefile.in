@@ -34,7 +34,8 @@ ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx
 endif
 
-REQUIRES	= xpcom \
+REQUIRES	= string \
+		  xpcom \
 		  gfx \
 		  gfx2 \
 		  imglib2 \

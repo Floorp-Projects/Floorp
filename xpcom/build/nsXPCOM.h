@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXPCom_h__
-#define nsXPCom_h__
+#ifndef nsXPCOM_h__
+#define nsXPCOM_h__
 
 #include "nscore.h"
 

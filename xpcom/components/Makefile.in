@@ -45,11 +45,12 @@ CPPSRCS		= \
 
 # XXX not really right.
 ifdef MOZ_STATIC_COMPONENT_LIBS
-CPPSRCS         += nsStaticComponentLoader.cpp
+CPPSRCS		+= nsStaticComponentLoader.cpp
 DEFINES		+= -DENABLE_STATIC_COMPONENT_LOADER=1
 endif
 
 EXPORTS		= \
+		nsCategoryManagerUtils.h \
 		nsComponentManagerUtils.h \
 		nsComponentManagerObsolete.h \
 		nsIRegistryUtils.h \
@@ -71,11 +72,11 @@ XPIDLSRCS	= \
 		nsIRegistry.idl \
 		$(NULL)
 
-SDK_XPIDLSRCS   = \
-		nsIClassInfo.idl        \
-		nsIFactory.idl	        \
-		nsIModule.idl	        \
-		nsIServiceManager.idl   \
+SDK_XPIDLSRCS	= \
+		nsIClassInfo.idl	\
+		nsIFactory.idl		\
+		nsIModule.idl		\
+		nsIServiceManager.idl	\
 		nsIComponentManager.idl \
 		$(NULL)
 

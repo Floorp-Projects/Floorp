@@ -492,8 +492,8 @@ NS_ErrorAccordingToNSPR()
 #include "nsISupportsUtils.h"
 #include "prthread.h"
 
-extern "C" NS_EXPORT void* NS_CurrentThread(void);
-extern "C" NS_EXPORT void NS_CheckThreadSafe(void* owningThread, const char* msg);
+extern "C" NS_COM void* NS_CurrentThread(void);
+extern "C" NS_COM void NS_CheckThreadSafe(void* owningThread, const char* msg);
 
 void*
 NS_CurrentThread(void)

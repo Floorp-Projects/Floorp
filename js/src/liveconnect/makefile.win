@@ -47,7 +47,8 @@
 DEPTH= ..\..\..
 MODULE = java
 REQUIRES	= xpcom \
-		  js \
+		  string\
+                  js \
 		  xpconnect \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>

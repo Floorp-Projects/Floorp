@@ -53,8 +53,8 @@
 
 #if defined(NS_DEBUG) && defined(NS_MT_SUPPORTED)
 
-extern "C" NS_EXPORT void* NS_CurrentThread(void);
-extern "C" NS_EXPORT void NS_CheckThreadSafe(void* owningThread,
+extern "C" NS_COM void* NS_CurrentThread(void);
+extern "C" NS_COM void NS_CheckThreadSafe(void* owningThread,
                                              const char* msg);
 
 #define NS_DECL_OWNINGTHREAD            void* _mOwningThread;

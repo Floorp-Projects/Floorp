@@ -25,21 +25,22 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/objs.mk
+
+DIRS            = standalone
 
 MODULE		= xpcom
 XPIDL_MODULE	= xpcom_glue
-LIBRARY_NAME	= xpcomglue
+LIBRARY_NAME	= xpcomglue_s
 
-CPPSRCS		= \
-		nsCOMPtr.cpp \
-		nsDebug.cpp \
-		nsGenericFactory.cpp \
-		nsMemory.cpp \
-		nsWeakReference.cpp \
-		$(NULL)
+REQUIRES	= $(NULL)
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
+		$(NULL)
+
+CPPSRCS		= \
+		$(XPCOM_GLUE_SRC_LCSRCS) \
 		$(NULL)
 
 EXPORTS		= \
@@ -51,14 +52,11 @@ EXPORTS		= \
 		$(NULL)
 
 SDK_HEADERS     = \
-		nsCOMPtr.h	 \
-		nsDebug.h	 \
-		nsMemory.h	 \
-		nsWeakReference.h\
+		$(XPCOM_GLUE_SRC_LEXPORTS) \
 		$(NULL)
 
 SDK_BINARY     =                        \
-		$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -69,7 +67,9 @@ FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_COM -D_IMPL_NS_BASE 
+DEFINES		+= \
+		-D_IMPL_NS_COM \
+		-D_IMPL_NS_BASE 
 
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN

@@ -25,6 +25,7 @@ DEPTH=..\..
 
 MODULE=gfx2
 REQUIRES	= xpcom \
+                  string \
 		  gfx \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
