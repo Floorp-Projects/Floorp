@@ -1597,6 +1597,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
   PRBool    canBePositioned = PR_TRUE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
+  PRBool    isReplaced = PR_FALSE;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
@@ -1621,6 +1622,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
       // Create a frame based on the tag
       if (nsHTMLAtoms::img == aTag) {
+        isReplaced = PR_TRUE;
         // XXX If image display is turned off, then use ConstructAlternateImageFrame()
         // instead...
         rv = NS_NewImageFrame(newFrame);
@@ -1635,17 +1637,21 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         rv = NS_NewWBRFrame(newFrame);
       }
       else if (nsHTMLAtoms::input == aTag) {
+        isReplaced = PR_TRUE;
         rv = CreateInputFrame(aContent, newFrame);
       }
       else if (nsHTMLAtoms::textarea == aTag) {
+        isReplaced = PR_TRUE;
         rv = NS_NewTextControlFrame(newFrame);
       }
       else if (nsHTMLAtoms::select == aTag) {
+        isReplaced = PR_TRUE;
         rv = ConstructSelectFrame(aPresContext, aContent, aParentFrame,
                                   aTag, aStyleContext, aAbsoluteItems, newFrame, 
                                   processChildren, isAbsolutelyPositioned, frameHasBeenInitialized);
       }
       else if (nsHTMLAtoms::applet == aTag) {
+        isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(newFrame);
       }
       else if (nsHTMLAtoms::embed == aTag) {
@@ -1661,6 +1667,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         canBePositioned = PR_FALSE;
       }
       else if (nsHTMLAtoms::object == aTag) {
+        isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(newFrame);
         nsIFrame *blockFrame;
         NS_NewBlockFrame(blockFrame, 0);
@@ -1676,6 +1683,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         canBePositioned = PR_FALSE;
       }
       else if (nsHTMLAtoms::iframe == aTag) {
+        isReplaced = PR_TRUE;
         rv = NS_NewHTMLFrameOuterFrame(newFrame);
       }
       else if (nsHTMLAtoms::spacer == aTag) {
@@ -1696,6 +1704,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+    // If the frame is a replaced element, then set the frame state bit
+    if (isReplaced) {
+      nsFrameState  state;
+      newFrame->GetFrameState(&state);
+      newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+    }
+
     if (!frameHasBeenInitialized) {
       nsIFrame* geometricParent = aParentFrame;
        
