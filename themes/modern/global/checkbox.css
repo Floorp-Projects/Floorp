@@ -27,8 +27,8 @@
   checkbox > .internal-box > .checkmark-box > image 
     {
       border: 1px outset #CCCCCC;
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
     }
   
   checkbox[checked="true"] > .internal-box > .checkmark-box > image 
