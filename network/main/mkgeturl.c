@@ -171,6 +171,10 @@ void net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
 #include "mkaccess.h"		/* change to trust.h for phase 2 */
 #endif
 
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#include "progress.h"
+#endif
+
 /* for XP_GetString() */
 #include "xpgetstr.h"
 extern int MK_CONNECTION_REFUSED;
@@ -2136,6 +2140,10 @@ NET_GetURL (URL_Struct *URL_s,
 															window_id,
 															exit_routine));
 	}
+
+#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+    PM_StartBinding(window_id, URL_s);
+#endif
 
 	/* put a limit on the total number of active urls
 	 */
