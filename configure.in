@@ -2909,6 +2909,8 @@ if test ! -z "$MISSING_FULLCIRCLE"; then
     echo
 else
     AC_DEFINE(MOZ_FULLCIRCLE)
+    CFLAGS="$CFLAGS -I${FULLCIRCLE_DIR}"
+    CXXFLAGS="$CXXFLAGS -I${FULLCIRCLE_DIR}"
 fi
 
 fi
