@@ -232,14 +232,34 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     // Construct a chrome URL and use it to look up a resource.
     nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
 
-    // Find out if the chrome URL referenced a skin or content.
+    // Find out the provider type of the URL
     const char* file;
     aChromeURL->GetFile(&file);
     nsAutoString restOfURL(file);
     restOfURL.ToLowerCase();
-    if (restOfURL.Find("/skin") == 0)
-        windowType += "skin/";
-    else windowType += "content/";
+
+		// Find the second slash.
+		nsAutoString providerType("content");
+		nsAutoString path("");
+	  PRInt32 slashIndex = -1;
+	  if (restOfURL.Length() > 1)
+		{
+			// There is something to the right of that slash. A provider type must have
+			// been specified.
+			slashIndex = restOfURL.Find('/', 1);
+		  if (slashIndex == -1)
+		    slashIndex = restOfURL.Length();
+
+			restOfURL.Mid(providerType, 1, slashIndex - 1);
+
+			if (slashIndex < restOfURL.Length()-1)
+			{
+				// There are some extra subdirectories to remember.
+				restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
+			}
+		}
+
+    windowType += providerType + "/";
 
     // We have the resource URI that we wish to retrieve. Fetch it.
     nsCOMPtr<nsIRDFResource> chromeResource;
@@ -254,12 +274,28 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
         return rv;
     }
 
+		// Make sure base ends in a slash
+	  PRInt32 length = chromeBase.Length();
+		if (length > 0)
+		{
+			PRUnichar c = chromeBase[length-1];
+			if (c != '/')
+				chromeBase += "/"; // Ensure that a slash is present.
+		}
+
     // Check to see if we should append the "main" entry in the registry.
     // Only do this when the user doesn't have anything following "skin"
     // or "content" in the specified URL.
-    if (restOfURL == "/skin" || restOfURL == "/skin/" ||
-        restOfURL == "/content" || restOfURL == "/content/")
+    if (path == "")
     {
+			  PRInt32 length = restOfURL.Length();
+				if (length > 0)
+				{
+					PRUnichar c = restOfURL[length-1];
+					if (c != '/')
+						restOfURL += "/"; // Ensure that a slash is present.
+				}
+				  
         // Append the "main" entry.
         nsString mainFile;
         if (NS_FAILED(rv = GetChromeResource(mainFile, chromeResource, kCHROME_main))) {
@@ -270,7 +306,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     }
     else
     {
-        // XXX Just append the rest of the URL following the skin or content.
+        // XXX Just append the rest of the URL to base to get the actual URL to look up.
+			  chromeBase += path;
     }
 
     char* finalDecision = chromeBase.ToNewCString();
