@@ -88,6 +88,7 @@ const long kMinSearchPaneHeight = 80;
     mExpandedStatus = nil;
     mSearchResultArray = nil;
     mOpenActionFlag = 0;
+    mSplittersRestored = NO;
     
     // wait for |-completeSetup| to be called to lazily complete our setup
     mSetupComplete = NO;
@@ -643,11 +644,14 @@ const long kMinSearchPaneHeight = 80;
   // manager view resized correctly. If we did it earlier, it would resize again
   // to stretch proportionally to the size of the browser window, destroying 
   // the width we just set.
-  const float kDefaultSplitWidth = kMinContainerSplitWidth;
-  float savedWidth = [[NSUserDefaults standardUserDefaults] floatForKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
-  if (savedWidth < kDefaultSplitWidth)
-    savedWidth = kDefaultSplitWidth;
-  [mContainersSplit setLeftWidth:savedWidth];
+  if (!mSplittersRestored) {
+    const float kDefaultSplitWidth = kMinContainerSplitWidth;
+    float savedWidth = [[NSUserDefaults standardUserDefaults] floatForKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
+    if (savedWidth < kDefaultSplitWidth)
+      savedWidth = kDefaultSplitWidth;
+    [mContainersSplit setLeftWidth:savedWidth];
+    mSplittersRestored = YES;              // needed first time only
+  }
 }
 
 - (void) setCanEditSelectedContainerContents:(BOOL)inCanEdit
