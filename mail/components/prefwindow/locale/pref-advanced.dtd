@@ -13,6 +13,12 @@
 <!ENTITY viewSignons.label             "Manage Stored Passwords">
 <!ENTITY viewSignons.accesskey         "e">
 
+<!-- General -->
+<!ENTITY generalSettings.label         "General Settings">
+<!ENTITY markAsRead.label              "Mark message read after displaying for">
+<!ENTITY markAsReadEnd.label           "second(s).">
+<!ENTITY showFolderColumns.label       "Show expanded columns in the folder pane.">
+
 <!-- Return Receipts -->
 <!ENTITY receiptSettings.label         "Return Receipts">
 <!ENTITY requestReceipt.label          "When sending messages, always request a return receipt">
