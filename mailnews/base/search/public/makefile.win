@@ -31,6 +31,7 @@ XPIDLSRCS =							\
 			.\nsIMsgSearchSession.idl \
 			.\nsIMsgSearchAdapter.idl \
 			.\nsIMsgSearchScopeTerm.idl \
+			.\nsIMsgSearchNotify.idl \
 			.\nsIMsgSearchValidityManager.idl \
 			.\nsIMsgSearchValidityTable.idl \
 			.\nsMsgFilterCore.idl \
@@ -39,13 +40,13 @@ XPIDLSRCS =							\
 
 EXPORTS =	 						\
 			nsMsgSearchAdapter.h \
-		        nsMsgBodyHandler.h      \
-       			nsMsgResultElement.h    \
-        		nsMsgSearchArray.h      \
-        		nsMsgSearchBoolExpression.h \
-        		nsMsgSearchScopeTerm.h  \
-        		nsMsgSearchTerm.h       \
-        		nsMsgSearchAdapter.h \
+		    nsMsgBodyHandler.h      \
+			nsMsgResultElement.h    \
+			nsMsgSearchArray.h      \
+			nsMsgSearchBoolExpression.h \
+			nsMsgSearchScopeTerm.h  \
+			nsMsgSearchTerm.h       \
+			nsMsgSearchAdapter.h \
 			$(NULL)
 
 MODULE=msgsearch
