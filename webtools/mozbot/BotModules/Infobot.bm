@@ -264,7 +264,7 @@ sub DoFactoidCheck {
                                    $1, # subject
                           $direct || $self->{'ridiculouslyEagerToHelp'})
           if ($3 or ($direct == 2 and $self->{'eagerToHelp'}));
-    } elsif ((not $direct or $direct == 2) and $shortMessage =~ /^(.+?)[?\s]*(\?)?[?\s]*$/osi) {
+    } elsif ((not $direct or $direct == 2) and $shortMessage =~ /^(.+?)[?!.\s]*(\?)?[?!.\s]*$/osi) {
         $self->GiveFactoid($event,
                                 undef, # is/are (optional)
                                    $1, # subject
