@@ -31,6 +31,7 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsMsgI18N.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgSend.h"
 #include "nsIMessenger.h"	//temporary!
@@ -1389,9 +1390,27 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
 
               // Re-label "us-ascii" to "ISO-8859-1" since the original body may contain
               // non us-ascii characters with eitity encoded.
-              nsAutoString aCharset; aCharset.AssignWithConversion(ptr);
+              aCharset.AssignWithConversion(ptr);
               if (aCharset.EqualsIgnoreCase("us-ascii"))
                 aCharset.AssignWithConversion("ISO-8859-1");
+              else {
+                // Use canonical charset name instead of using the charset name from the message header as is.
+                // This is needed for charset menu item to have a check mark correctly, for example.
+                nsCOMPtr <nsICharsetConverterManager2> ccm2 = do_GetService(kCharsetConverterManagerCID, &rv);
+                if (NS_SUCCEEDED(rv)) {
+                  nsCOMPtr <nsIAtom> charsetAtom;
+                  rv = ccm2->GetCharsetAtom(aCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+                  if (NS_SUCCEEDED(rv)) {
+                    nsAutoString canonicalCharset;
+                    rv = charsetAtom->ToString(canonicalCharset);
+                    if (NS_SUCCEEDED(rv))
+                      aCharset = canonicalCharset;
+                    else
+                      rv = NS_OK;   // no cannonical charset name does not mean an error
+                  }
+                }
+              }
+
               compFields->SetCharacterSet(aCharset.GetUnicode());
             }
 
