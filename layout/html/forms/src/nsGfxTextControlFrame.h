@@ -173,6 +173,8 @@ public:
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame)=0;
 
   NS_IMETHOD SetPresContext(nsIPresContext *aCx)=0;
+
+  NS_IMETHOD SetView(nsIView *aView)=0;
 };
 
 /******************************************************************************
@@ -204,6 +206,7 @@ public:
   /* nsIEnderEventListener interfaces */
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
   NS_IMETHOD SetPresContext(nsIPresContext *aCx) {mContext = do_QueryInterface(aCx); return NS_OK;}
+  NS_IMETHOD SetView(nsIView *aView) {mView = aView; return NS_OK;}
   /* END nsIEnderEventListener interfaces */
 
 
@@ -217,6 +220,7 @@ protected:
 
 protected:
   nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsIView                  *mView;    // not ref counted
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
 };
@@ -253,6 +257,7 @@ public:
   /* nsIEnderEventListener interfaces */
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
   NS_IMETHOD SetPresContext(nsIPresContext *aCx) {mContext = do_QueryInterface(aCx); return NS_OK;}
+  NS_IMETHOD SetView(nsIView *aView) {mView = aView; return NS_OK;}
   /* END nsIEnderEventListener interfaces */
 
 
@@ -266,6 +271,7 @@ protected:
 
 protected:
   nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsIView                  *mView;    // not ref counted
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
 };
@@ -300,6 +306,7 @@ public:
   /* nsIEnderEventListener interfaces */
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
   NS_IMETHOD SetPresContext(nsIPresContext *aCx) {mContext = do_QueryInterface(aCx); return NS_OK;}
+  NS_IMETHOD SetView(nsIView *aView) {mView = aView; return NS_OK;}
   /* END nsIEnderEventListener interfaces */
 
   friend nsresult NS_NewEnderFocusListener(nsIDOMFocusListener ** aInstancePtrResult);
@@ -312,6 +319,7 @@ protected:
 
 protected:
   nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsIView                  *mView;    // not ref counted
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
   nsString                  mTextValue; // the value of the text field at focus
@@ -345,6 +353,7 @@ public:
   /* nsIEnderEventListener interfaces */
   NS_IMETHOD SetFrame(nsGfxTextControlFrame *aFrame);
   NS_IMETHOD SetPresContext(nsIPresContext *aCx) {mContext = do_QueryInterface(aCx); return NS_OK;}
+  NS_IMETHOD SetView(nsIView *aView) {mView = aView; return NS_OK;}
   /* END nsIEnderEventListener interfaces */
 
   friend nsresult NS_NewEnderSelectionListener(nsIDOMSelectionListener ** aInstancePtrResult);
@@ -357,6 +366,7 @@ protected:
 
 protected:
   nsGfxTextControlFrame    *mFrame;   // not ref counted
+  nsIView                  *mView;    // not ref counted
   nsCOMPtr<nsIPresContext>  mContext; // ref counted
   nsCOMPtr<nsIContent>      mContent; // ref counted
 };
