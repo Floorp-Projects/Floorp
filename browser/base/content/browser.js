@@ -2778,6 +2778,7 @@ nsBrowserStatusHandler.prototype =
   jsDefaultStatus : "",
   overLink : "",
   startTime : 0,
+  statusText: "",
 
   statusTimeoutInEffect : false,
 
@@ -2817,6 +2818,7 @@ nsBrowserStatusHandler.prototype =
     this.statusTextField = null;
     this.securityButton  = null;
     this.userTyped       = null;
+    this.statusText      = null;
   },
 
   setJSStatus : function(status)
@@ -2849,16 +2851,10 @@ nsBrowserStatusHandler.prototype =
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
-    if (this.statusTextField.label != text)
+    if (this.statusText != text) {
       this.statusTextField.label = text;
-  },
-
-  mimeTypeIsTextBased : function(contentType)
-  {
-    return /^text\/|\+xml$/.test(contentType) ||
-           contentType == "application/x-javascript" ||
-           contentType == "application/xml" ||
-           contentType == "mozilla.application/cached-xul";
+      this.statusText = text;
+    }
   },
 
   onLinkIconAvailable : function(aHref) {
@@ -2899,7 +2895,7 @@ nsBrowserStatusHandler.prototype =
             aRequest && aWebProgress.DOMWindow == content)
           this.startDocumentLoad(aRequest);
   
-        if (this.throbberElement) {
+        if (this.throbberElement) {          
           // Turn the throbber on.
           this.throbberElement.setAttribute("busy", "true");
         }
