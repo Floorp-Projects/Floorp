@@ -134,7 +134,7 @@
                containment="http://home.netscape.com/NC-rdf#subheadings"
                ref="urn:root"
                flags="dont-build-content"
-               onselect="onselect_loadURI(this, 'GlossaryNameColumn')">
+               onselect="onselect_loadURI(this);">
         <template>
           <rule>
           <conditions>
@@ -148,18 +148,13 @@
             <binding subject="?subheading"
               predicate="http://home.netscape.com/NC-rdf#name"
               object="?name" />
-
-            <binding subject="?subheading"
-              predicate="http://home.netscape.com/NC-rdf#link"
-              object="?link" />
           </bindings>
 
           <action>
             <treechildren>
               <treeitem uri="?subheading">
                 <treerow>
-                  <treecell label="?name"
-                    properties="link-?link"/>
+                  <treecell label="?name"/>
                 </treerow>
               </treeitem>
             </treechildren>
@@ -183,7 +178,7 @@
                containment="http://home.netscape.com/NC-rdf#subheadings"
                ref="urn:root"
                flags="dont-build-content dont-test-empty"
-               onselect="onselect_loadURI(this, 'IndexNameColumn')">
+               onselect="onselect_loadURI(this);">
         <template>
           <rule>
           <conditions>
@@ -197,18 +192,13 @@
             <binding subject="?subheading"
               predicate="http://home.netscape.com/NC-rdf#name"
               object="?name" />
-
-            <binding subject="?subheading"
-              predicate="http://home.netscape.com/NC-rdf#link"
-              object="?link" />
           </bindings>
 
           <action>
             <treechildren>
               <treeitem uri="?subheading">
                 <treerow>
-                  <treecell ref="IndexNameColumn" label="?name"
-                      properties="link-?link"/>
+                  <treecell label="?name"/>
                 </treerow>
               </treeitem>
             </treechildren>
@@ -245,7 +235,7 @@
                       containment="http://home.netscape.com/NC-rdf#child"
                       ref="urn:root"
                       flags="dont-build-content"
-                      onselect="onselect_loadURI(this, 'ResultsColumn')">
+                      onselect="onselect_loadURI(this);">
             <template>
               <rule>
                 <conditions>
@@ -257,18 +247,14 @@
                   <binding subject="?subheading"
                    predicate="http://home.netscape.com/NC-rdf#name"
                    object="?name" />
-                  <binding subject="?subheading"
-                   predicate="http://home.netscape.com/NC-rdf#link"
-                   object="?link" />
                 </bindings>
 
                 <action>
                   <treechildren>
                     <treeitem uri="?subheading">
-                     <treerow>
-                      <treecell label="?name"
-                         properties="link-?link"/>
-                     </treerow>
+                      <treerow>
+                        <treecell label="?name"/>
+                      </treerow>
                     </treeitem>
                   </treechildren>
                 </action>
@@ -294,7 +280,7 @@
                 containment="http://home.netscape.com/NC-rdf#subheadings"
                 ref="urn:root"
                 flags="dont-build-content"
-                onselect="onselect_loadURI(this, 'NameColumn')">
+                onselect="onselect_loadURI(this);">
           <template>
             <rule>
               <conditions>
@@ -309,17 +295,13 @@
                <binding subject="?subheading"
                  predicate="http://home.netscape.com/NC-rdf#name"
                  object="?name" />
-               <binding subject="?subheading"
-                 predicate="http://home.netscape.com/NC-rdf#link"
-                 object="?link" />
               </bindings>
 
               <action>
                 <treechildren>
                   <treeitem uri="?subheading">
                     <treerow>
-                      <treecell label="?name"
-                          properties="link-?link"/>
+                      <treecell label="?name"/>
                     </treerow>
                   </treeitem>
               </treechildren>

@@ -445,29 +445,14 @@ function showPanel(panelId) {
   theButton.setAttribute("selected", "true");
 }
 
-function onselect_loadURI(tree, columnName) {
-  try {
-    var row = tree.currentIndex;
-    var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    var col = tree.columns[columnName];
-    tree.view.getCellProperties(row, col, properties);
-    if (!properties) return;
-    var uri = getPropertyValue(properties, "link-");
-    if (uri)
-      loadURI(uri);
+function onselect_loadURI(tree) {
+  var row = tree.currentIndex;
+  if (row >= 0) {
+    var resource = tree.view.getResourceAtIndex(row);
+    var link = tree.database.GetTarget(resource, NC_LINK, true);
+    if (link instanceof Components.interfaces.nsIRDFLiteral)
+      loadURI(link.Value);
   }
-  catch (e) {}// when switching between tabs a spurious row number is returned.
-}
-
-/** Search properties nsISupportsArray for an nsIAtom which starts with the given property name. **/
-function getPropertyValue(properties, propName) {
-  for (var i=0; i< properties.Count(); ++i) {
-    var atom = properties.GetElementAt(i).QueryInterface(Components.interfaces.nsIAtom);
-    var atomValue = atom.toString();
-    if (atomValue.substr(0, propName.length) == propName)
-      return atomValue.substr(propName.length);
-  }
-  return null;
 }
 
 function doFind() {
