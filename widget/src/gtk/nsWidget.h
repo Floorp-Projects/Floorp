@@ -24,6 +24,8 @@
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
 
+#include "nsFileSpec.h" // for nsAutoCString()
+
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 

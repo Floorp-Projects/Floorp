@@ -131,10 +131,8 @@ NS_METHOD  nsFileWidget::GetSelectedType(PRInt16& theType)
 NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 {
   if (mWidget) {
-    char *fn = aString.ToNewCString();
-    g_print("%s\n",fn);
-    gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget), fn);
-    delete[] fn;
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
+                                    (const gchar*)nsAutoCString(aString));
   }
   return NS_OK;
 }
@@ -175,20 +173,17 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
   mMode = aMode;
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
-  char *title = mTitle.ToNewCString();
 
-  mWidget = gtk_file_selection_new(title);
+  mWidget = gtk_file_selection_new((const gchar *)nsAutoCString(aTitle));
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
 
   // Hide the file column for the folder case.
-  if(aMode == eMode_getfolder) {
-    	gtk_widget_hide( (((GtkFileSelection *) mWidget)->file_list)->parent );
+  if (aMode == eMode_getfolder) {
+    gtk_widget_hide((((GtkFileSelection *) mWidget)->file_list)->parent);
   }
-
-  delete[] title;
 
   return NS_OK;
 }
