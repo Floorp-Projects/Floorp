@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.5 2000/03/15 22:29:45 seth%cs.brandeis.edu Exp $
+# $Id: bug_email.pl,v 1.6 2000/03/18 23:32:49 seth%cs.brandeis.edu Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1183,7 +1183,7 @@ END
     my $reporter = "";
 
     my $query = "insert into bugs (\n" . join(",\n", @used_fields ) . 
-	", bug_status, creation_ts) values ( ";
+	", bug_status, creation_ts, everconfirmed) values ( ";
     
     my $tmp_reply = "These values were stored by bugzilla:\n";
     my $val;
@@ -1216,7 +1216,18 @@ END
     SendSQL("SELECT now()");
     my $bug_when = FetchOneColumn();
 
-    $query .=  SqlQuote( "NEW" ) . ", \'$bug_when\')\n";
+    my $ever_confirmed = 0;
+    my $state = SqlQuote("UNCONFIRMED");
+
+    SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
+            SqlQuote($Control{'product'}) . ";");
+    if (!FetchOneColumn()) {
+      $ever_confirmed = 1;
+      $state = SqlQuote("NEW");
+    }
+
+
+    $query .=  $state . ", \'$bug_when\', $ever_confirmed)\n";
 #    $query .=  SqlQuote( "NEW" ) . ", now(), " . SqlQuote($comment) . " )\n";
 
     SendSQL("SELECT userid FROM profiles WHERE login_name=\'$reporter\'");
