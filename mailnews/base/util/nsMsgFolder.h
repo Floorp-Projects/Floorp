@@ -98,7 +98,6 @@ public:
   NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *msgWindow);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
   NS_IMETHOD Rename(const PRUnichar *name, nsIMsgWindow *msgWindow);
-  NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);
   NS_IMETHOD IsAncestorOf(nsIMsgFolder *folder, PRBool *_retval);
   NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder, char **_retval); 
