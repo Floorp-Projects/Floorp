@@ -8,7 +8,7 @@ pref("mail.identity.default.request_return_receipt_on", false);
 
 pref("mail.server.default.incorporate_return_receipt", 0);       // 0: Inbox/filter 1: Sent folder
 
-pref("mail.server.default.mdn_report_enabled", false);           // false: Never return receipts true: Return some receipts
+pref("mail.server.default.mdn_report_enabled", true);            // false: Never return receipts true: Return some receipts
 
 pref("mail.server.default.mdn_not_in_to_cc", 2);                 // 0: Never 1: Always 2: Ask me 3: Denial
 pref("mail.server.default.mdn_outside_domain", 2); 
