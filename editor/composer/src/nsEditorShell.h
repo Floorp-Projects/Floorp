@@ -78,7 +78,8 @@ class nsIStyleSheet;
 class nsEditorShell :   public nsIEditorShell,
                         public nsIEditorSpellCheck,
                         public nsIWebProgressListener,
-                        public nsIURIContentListener
+                        public nsIURIContentListener,
+                        public nsSupportsWeakReference
 {
   public:
 

@@ -272,7 +272,12 @@ nsEditorShell::~nsEditorShell()
   // care of themselves.
 }
 
-NS_IMPL_ISUPPORTS4(nsEditorShell, nsIEditorShell, nsIWebProgressListener, nsIURIContentListener, nsIEditorSpellCheck);
+NS_IMPL_ISUPPORTS5(nsEditorShell, 
+                   nsIEditorShell, 
+                   nsIWebProgressListener, 
+                   nsIURIContentListener, 
+                   nsIEditorSpellCheck, 
+                   nsISupportsWeakReference);
 
 NS_IMETHODIMP    
 nsEditorShell::Init()
