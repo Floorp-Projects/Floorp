@@ -1993,8 +1993,8 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
         // do not free 'map', it is cached in the gFontMaps hashtable and
         // it is going to be deleted by the cleanup observer
       }
-      ::SelectObject(aDC, (HGDIOBJ)oldFont);
     }  
+    ::SelectObject(aDC, (HGDIOBJ)oldFont);
     ::DeleteObject(hfont);
   }
   return nsnull;
@@ -3289,6 +3289,7 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
                                   nsFontSwitchCallback aFunc, 
                                   void*                aData)
 {
+  NS_ASSERTION(aString || !aLength, "invalid call");
   PRBool running;
   const PRUnichar* firstChar = aString;
   const PRUnichar* lastChar  = aString + aLength;
@@ -3341,7 +3342,7 @@ callback:
     i = mLoadedFonts.IndexOf(currFont);
 
     // bail out if something weird happened, this error must never happen
-    NS_ASSERTION(currFont, "Could not find a font");
+    NS_ASSERTION(currFont && i >= 0, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
 
 #if 0
@@ -3361,6 +3362,7 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
                                    nsFontSwitchCallback aFunc, 
                                    void*                aData)
 {
+  NS_ASSERTION(aString || !aLength, "invalid call");
   PRBool running;
   const PRUnichar* firstChar = aString + aLength - 1;
   const PRUnichar* lastChar  = aString - 1;
@@ -3413,7 +3415,7 @@ callback:
     i = mLoadedFonts.IndexOf(currFont);
 
     // bail out if something weird happened, this error must never happen
-    NS_ASSERTION(currFont, "Could not find a font");
+    NS_ASSERTION(currFont && i >= 0, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
 
 #if 0
@@ -4373,7 +4375,9 @@ nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
             ::SelectObject(aDC, (HGDIOBJ)oldFont);
             return font;
           }
-          delete font;
+          ::SelectObject(aDC, (HGDIOBJ)oldFont);
+          delete font; // will release hfont as well
+          return nsnull;
         }
         // do not free 'map', it is cached in the gFontMaps hashtable and
         // it is going to be deleted by the cleanup observer
@@ -4401,13 +4405,17 @@ nsFontMetricsWinA::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
   if (hfont) {
     nsFontWinA* font = new nsFontWinA(&logFont, hfont, aGlobalFont->map);
     if (font) {
+      HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
       if (font->GetSubsets(aDC)) {
         // XXX InitMetricsFor(aDC, font) is not here, except if
         // we can assume that it is the same for all subsets?
         mLoadedFonts.AppendElement(font);
+        ::SelectObject(aDC, (HGDIOBJ)oldFont);
         return font;
       }
-      delete font;
+      ::SelectObject(aDC, (HGDIOBJ)oldFont);
+      delete font; // will release hfont as well
+      return nsnull;
     }
     ::DeleteObject(hfont);
   }
@@ -4652,9 +4660,10 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
 
   if (mSubstituteFont) {
     nsFontWinA* substituteFont = (nsFontWinA*)mSubstituteFont;
+    nsFontSubset* substituteSubset = substituteFont->mSubsets[0];
     ADD_GLYPH(substituteFont->mMap, aChar);
-    ADD_GLYPH(substituteFont->mSubsets[0]->mMap, aChar);
-    return mSubstituteFont;
+    ADD_GLYPH(substituteSubset->mMap, aChar);
+    return substituteSubset;
   }
 
   int count = mLoadedFonts.Count();
@@ -4673,10 +4682,10 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
             nsFontSubset* substituteSubset = substituteFont->mSubsets[0];
             substituteSubset->mCharset = (*subset)->mCharset;
             if (substituteSubset->Load(aDC, this, substituteFont)) {
-              ADD_GLYPH(substituteFont->mMap, aChar);
-              ADD_GLYPH(substituteFont->mSubsets[0]->mMap, aChar);
               mSubstituteFont = (nsFontWin*)substituteFont;
-              return mSubstituteFont;
+              ADD_GLYPH(substituteFont->mMap, aChar);
+              ADD_GLYPH(substituteSubset->mMap, aChar);
+              return substituteSubset;
             }
             mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
             PR_Free(substituteFont->mMap);
@@ -4729,7 +4738,10 @@ nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, nsString* aName)
             PR_Free(font->mSubsets);
             font->mSubsets = nsnull;
           }
-          delete font;
+          ::SelectObject(aDC, (HGDIOBJ)oldFont);
+          delete font; // will release hfont as well
+          PR_Free(map);
+          return nsnull;
         }
         PR_Free(map);
       }
@@ -4747,6 +4759,7 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
                                    nsFontSwitchCallback aFunc, 
                                    void*                aData)
 {
+  NS_ASSERTION(aString || !aLength, "invalid call");
   PRBool running;
   const PRUnichar* firstChar = aString;
   const PRUnichar* lastChar  = aString + aLength;
@@ -4830,16 +4843,18 @@ callback:
     }
 
     // load additional fonts
-    currFont = (nsFontWinA*)FindFont(aDC, *currChar);
-    i = mLoadedFonts.IndexOf(currFont);
+    // beware: for 'A' functions, this call returns the subset but 
+    // mLoadedFonts[] always stores the container font
+    currSubset = (nsFontSubset*)FindFont(aDC, *currChar);
+    i = 0;
 
     // bail out if something weird happened, this error must never happen
-    NS_ASSERTION(currFont, "Could not find a font");
-    if (!currFont) return NS_ERROR_FAILURE;
+    NS_ASSERTION(currSubset, "Could not find a font");
+    if (!currSubset) return NS_ERROR_FAILURE;
 
 #if 0
     // XXX fix me - bug 104153
-    if (currFont == mSubstituteFont) {
+    if (mSubstituteFont && mSubstituteFont->mSubsets[0] == currSubset) {
     }
 #endif
   }
