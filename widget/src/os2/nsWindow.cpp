@@ -140,7 +140,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mPrevWndProc        = NULL;
     mParent             = 0;
     mNextID             = 1;
-    mNextCmdID          = 1;
     mSWPs               = 0;
     mlHave              = 0;
     mlUsed              = 0;
@@ -2092,7 +2091,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                if( !gJustGotActivate )
                {
                  gJustGotActivate = PR_TRUE;
-                 if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == mNextCmdID == 1)
+                 if ( WinIsChild( mWnd, HWNDFROMMP(mp1)) && mNextID == 1)
                     result = DispatchFocus( NS_PLUGIN_ACTIVATE, isMozWindowTakingFocus );
                  else
                     result = DispatchFocus( NS_ACTIVATE, isMozWindowTakingFocus );
