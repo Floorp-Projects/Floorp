@@ -54,4 +54,5 @@ interface nsIAggregatePrincipal : nsISupports {
     readonly attribute nsIPrincipal primaryChild;
 
     void intersect(in nsIPrincipal other);
+    boolean wasCodebaseChanged();
 };
