@@ -749,7 +749,7 @@ static JSObjectOps WrappedNativeWithCall_ops = {
     WrappedNative_Call,         /* call         */
     WrappedNative_Construct,    /* construct    */
     nsnull,                     /* xdrObject    */
-    WrappedNative_HasInstance   /* hasInstance  */
+    WrappedNative_HasInstance,  /* hasInstance  */
     NULL,                       /* setProto */
     NULL,                       /* setParent */
     0,0,0,0                     /* spare */
