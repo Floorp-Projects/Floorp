@@ -680,7 +680,6 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
   return NS_OK;
 }
 
-    
 //-------------------------------------------------------------------------
 //
 // Resize this component
@@ -689,12 +688,19 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
                            PRUint32 aHeight, PRBool aRepaint)
 {
+  /* XXX: This seems like a very ugly routine here.  I think having two
+   * routines of the same name like this that call each other in this
+   * manner makes the code less readable, and I think we should ideally
+   * find a way of doing away with this routine.
+   * --ZuperDee of Penguin Land(tm).
+   */
+
+  printf("EVIL nsWindow::Resize called\n");
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
   return NS_OK;
 }
 
-    
 //-------------------------------------------------------------------------
 //
 // Enable/disable this component
@@ -1592,6 +1598,7 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
   win->SetResizeRect(bounds); 
 
   if (! win->GetResized()) {
+    win->SetResized(PR_TRUE);
     if (win->IsChild()) {
        // Call refresh directly. Don't filter resize events.
       nsWindow_Refresh_Callback(win);
@@ -1605,8 +1612,6 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
       XtAppAddTimeOut(win->mAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
     }
   }
-
-  win->SetResized(PR_TRUE);
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
