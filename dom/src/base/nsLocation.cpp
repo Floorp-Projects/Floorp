@@ -199,7 +199,7 @@ LocationImpl::SetHash(const nsString& aHash)
       char *buf = aHash.ToNewCString();
       uri->SetRef(buf);
       SetURL(uri);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(uri);      
     }
 #else
@@ -212,7 +212,7 @@ LocationImpl::SetHash(const nsString& aHash)
       char *buf = aHash.ToNewCString();
       url->SetRef(buf);
       SetURL(url);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
 #endif // NECKO
@@ -282,7 +282,7 @@ LocationImpl::SetHost(const nsString& aHost)
       char *buf = aHost.ToNewCString();
       url->SetHost(buf);
       SetURL(url);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -342,7 +342,7 @@ LocationImpl::SetHostname(const nsString& aHostname)
       char *buf = aHostname.ToNewCString();
       url->SetHost(buf);
       SetURL(url);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -506,7 +506,7 @@ LocationImpl::SetPathname(const nsString& aPathname)
       url->SetFile(buf);
 #endif
       SetURL(url);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -579,7 +579,7 @@ LocationImpl::SetPort(const nsString& aPort)
       url->SetHostPort(port);
 #endif
       SetURL(url);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -645,7 +645,7 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
       url->SetProtocol(buf);
 #endif
       SetURL(url);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -724,7 +724,7 @@ LocationImpl::SetSearch(const nsString& aSearch)
       result = uri->SetSearch(buf);
 #endif
       SetURL(uri);
-      delete[] buf;
+      nsCRT::free(buf);
       NS_RELEASE(uri);      
     }
   }
