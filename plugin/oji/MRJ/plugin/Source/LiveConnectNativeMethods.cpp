@@ -66,17 +66,20 @@ static jmethodID netscape_oji_JNIUtils_GetCurrentThread = NULL;
 static jmethodID netscape_oji_JNIUtils_GetCurrentClassLoader = NULL;
 static jmethodID netscape_oji_JNIUtils_GetObjectClassLoader = NULL;
 
-extern "C" nsresult NS_GetGlobalComponentManager(nsIComponentManager* *result);
-
 static NS_DEFINE_IID(kLiveConnectCID, NS_CLIVECONNECT_CID);
+static NS_DEFINE_IID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+static nsresult getGlobalComponentManager(nsIComponentManager* *result)
+{
+    return theServiceManager->GetService(kComponentManagerCID, NS_GET_IID(nsIComponentManager),
+                                         (nsISupports**)result);
+}
 
 nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
 {
     theJVMPlugin = jvmPlugin;
 
-    if (&NS_GetGlobalComponentManager) {
-        NS_GetGlobalComponentManager(&theComponentManager);
-    }
+    getGlobalComponentManager(&theComponentManager);
 
     nsresult result = theServiceManager->GetService(kLiveConnectCID, NS_GET_IID(nsILiveconnect),
                                                     (nsISupports**)&theLiveConnectManager);
@@ -135,11 +138,9 @@ nsresult InitLiveConnectSupport(MRJPlugin* jvmPlugin)
 
 nsresult ShutdownLiveConnectSupport()
 {
-    
-    if (theLiveConnectManager != NULL) {
-        theLiveConnectManager->Release();
-        theLiveConnectManager = NULL;
-    }
+    NS_IF_RELEASE(theLiveConnectManager);
+
+    NS_IF_RELEASE(theComponentManager);
     
     if (theJVMPlugin != NULL) {
         theJVMPlugin = NULL;
