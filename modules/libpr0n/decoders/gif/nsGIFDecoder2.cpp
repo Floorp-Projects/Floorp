@@ -279,6 +279,10 @@ int EndImageFrame(
 // XXXXXXXX
   // decoder->mImageFrame->SetTimeout(aDelayTimeout);
   decoder->mImageContainer->EndFrameDecode(aFrameNumber, aDelayTimeout);
+
+  if (decoder->mObserver)
+    decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mImageFrame);
+
   return 0;
 }
   
@@ -291,7 +295,6 @@ int HaveImageAll(
 {
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   if (decoder->mObserver) {
-    decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mImageFrame);
     decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImageContainer);
     decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
   }
