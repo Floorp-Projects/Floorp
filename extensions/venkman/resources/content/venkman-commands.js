@@ -51,8 +51,10 @@ function initCommands(commandObject)
     add (CMD_EVALD,  "onInputEvalD",     CMD_EVALD_PARAMS,  CMD_EVALD_HELP);
     add (CMD_FBREAK, "onInputFBreak",    CMD_FBREAK_PARAMS, CMD_FBREAK_HELP);
     add (CMD_FCLEAR, "onInputFClear",    CMD_FCLEAR_PARAMS, CMD_FCLEAR_HELP);
+    add (CMD_FINISH, "onInputFinish",    CMD_FINISH_PARAMS, CMD_FINISH_HELP);
     add (CMD_FRAME,  "onInputFrame",     CMD_FRAME_PARAMS,  CMD_FRAME_HELP);
     add (CMD_HELP,   "onInputHelp",      CMD_HELP_PARAMS,   CMD_HELP_HELP);
+    add (CMD_NEXT,   "onInputNext",      CMD_NEXT_PARAMS,   CMD_NEXT_HELP);
     add (CMD_PROPS,  "onInputProps",     CMD_PROPS_PARAMS,  CMD_PROPS_HELP);
     add (CMD_PROPSD, "onInputPropsD",    CMD_PROPSD_PARAMS, CMD_PROPSD_HELP);
     add (CMD_SCOPE,  "onInputScope",     CMD_SCOPE_PARAMS,  CMD_SCOPE_HELP);
