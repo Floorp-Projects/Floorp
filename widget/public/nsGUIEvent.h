@@ -59,6 +59,7 @@ class nsIWidget;
 class nsIMenuItem;
 class nsIAccessible;
 class nsIContent;
+class nsIURI;
 
 /**
  * Event Struct Types
@@ -87,6 +88,7 @@ class nsIContent;
 #define NS_FOCUS_EVENT        22
 #define NS_POPUP_EVENT        23
 #define NS_APPCOMMAND_EVENT   24
+#define NS_POPUPBLOCKED_EVENT 25
 
 
 #define NS_EVENT_FLAG_NONE                0x0000
@@ -390,6 +392,14 @@ struct nsFocusEvent : public nsGUIEvent {
 
 struct nsAppCommandEvent : public nsInputEvent {
     PRUint32     appCommand;
+};
+
+/**
+ * blocked popup window event
+ */
+struct nsPopupBlockedEvent : public nsEvent {
+  nsIURI* mRequestingWindowURI; // owning reference
+  nsIURI* mPopupWindowURI;      // owning reference
 };
 
 /**
