@@ -1,3 +1,7 @@
+1998-08-18  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (setDefaultRebindProc): It's back!
+
 1998-08-13  Leif Hedstrom  <leif@netscape.com>
 
 	* Makefile.PL: Fixed so that automated installs works.
