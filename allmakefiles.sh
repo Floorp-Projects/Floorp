@@ -749,7 +749,7 @@ if [ `echo "$MOZ_EXTENTIONS" | grep -c psm-glue` != 0 ]; then
   extensions/psm-glue/res/Makefile
   extensions/psm-glue/res/skin/Makefile
   extensions/psm-glue/res/locale/Makefile
-  extentions/psm-glue/res/locale/en-US/Makefile
+  extensions/psm-glue/res/locale/en-US/Makefile
   extensions/psm-glue/src/Makefile
 END_EXTENTIONS_PSM_GLUE_MAKEFILES
 fi
