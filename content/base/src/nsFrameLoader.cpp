@@ -438,6 +438,11 @@ nsFrameLoader::EnsureDocShell()
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, frameName);
+    // XXX if no NAME then use ID, after a transition period this will be
+    // changed so that XUL only uses ID too (bug 254284).
+    if (frameName.IsEmpty() && ni && ni->NamespaceID() == kNameSpaceID_XUL) {
+      mOwnerContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, frameName);
+    }
   }
 
   if (!frameName.IsEmpty()) {
