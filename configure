@@ -8775,9 +8775,9 @@ fi # SKIP_COMPILER_CHECKS
 # Check whether --with-system-nspr or --without-system-nspr was given.
 if test "${with_system_nspr+set}" = set; then
   withval="$with_system_nspr"
-  if test "$withval" = "no"; then
+  if test "$withval" = "yes"; then
     _USE_SYSTEM_NSPR=1 
-  elif test "$withval" = "yes"; then
+  elif test "$withval" = "no"; then
     :
   else
     { echo "configure: error: Option, system-nspr, does not take an argument ($withval)." 1>&2; exit 1; }
