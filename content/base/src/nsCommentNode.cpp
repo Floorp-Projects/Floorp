@@ -127,6 +127,9 @@ public:
                      nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aResult);
   }
+  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute) const {
+    return mInner.HasAttribute(aNameSpaceID, aAttribute);
+  }
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                      nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);

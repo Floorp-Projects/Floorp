@@ -2055,6 +2055,12 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
   return result;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsGenericHTMLElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
+{
+  return mAttributes ? mAttributes->HasAttribute(aName) : PR_FALSE;
+}
+
 nsresult
 nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aValue) const

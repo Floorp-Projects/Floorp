@@ -196,6 +196,15 @@ public:
                      nsIAtom*& aPrefix, nsAWritableString& aResult) const = 0;
 
   /**
+   * Determine if an attribute has been set.
+   *
+   * @param aNameSpaceId the namespace id of the attribute
+   * @param aAttr the attribute name
+   */
+
+  NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const = 0;
+
+  /**
    * Remove an attribute so that it is no longer explicitly specified.
    *
    * @param aAttr the name of the attribute to unset
