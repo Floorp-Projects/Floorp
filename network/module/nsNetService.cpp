@@ -43,6 +43,8 @@ extern "C" {
 #include "nsIProtocolURLFactory.h"
 #include "nsIProtocol.h"
 #include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
 #include "nsCRT.h"
 
 #ifdef XP_PC
@@ -99,7 +101,7 @@ nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
 #endif /* XP_WIN && !NETLIB_THREAD */
 
 char *mangleResourceIntoFileURL(const char* aResourceFileName) ;
-extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener);
+extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener, PLEventQueue* aEventQ);
 
 extern "C" {
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -119,11 +121,23 @@ extern const char *XP_AppPlatform;
 } /* end of extern "C" */
 
 static NS_DEFINE_IID(kINetlibURLIID,  NS_INETLIBURL_IID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 
 nsNetlibService::nsNetlibService()
 {
+  nsresult rv;
+
     NS_INIT_REFCNT();
+
+  /*
+   * Cache the EventQueueService...
+   */
+  // XXX: What if this fails?
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&mEventQService);
 
     /*
       m_stubContext = new_stub_context();
@@ -217,6 +231,11 @@ nsNetlibService::~nsNetlibService()
         delete mNetlibThread;
     }
 
+    if (nsnull != mEventQService) {
+      nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
+      mEventQService = nsnull;
+    }
+
     delete mProtocols;
 }
 
@@ -295,13 +314,19 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     nsINetlibURL *netlibURL;
     nsresult result;
     nsIStreamListener* consumer;
+    PLEventQueue* evQueue = nsnull;
 
     if ((NULL == aConsumer) || (NULL == aUrl)) {
         return NS_FALSE;
     }
 
 #if defined(NETLIB_THREAD)
-    consumer = ns_NewStreamListenerProxy(aConsumer);
+    mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+    if (nsnull == evQueue) {
+      return NS_FALSE;
+    }
+
+    consumer = ns_NewStreamListenerProxy(aConsumer, evQueue);
     if (nsnull == consumer) {
         return NS_FALSE;
     }
@@ -354,6 +379,15 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
      * The Reference count on pConn is already 1 so no AddRef() is necessary.
      */
     URL_s->fe_data = pConn;
+    
+    /*
+     * Attach the Event Queue to use when proxying data back to the thread
+     * which initiated the URL load...
+     *
+     * Currently, this information is needed to marshall the call to the URL
+     * exit_routine(...) on the correct thread...
+     */
+    URL_s->owner_data = evQueue;
 
     /*
      * Give the protocol a chance to initialize any URL_Struct fields...
@@ -402,6 +436,7 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
     nsNetlibStream *pBlockingStream;
     nsINetlibURL *netlibURL;
     nsIStreamListener* consumer = nsnull;
+    PLEventQueue* evQueue = nsnull;
     nsresult result;
 
     if (NULL == aNewStream) {
@@ -410,8 +445,13 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
     if (NULL != aUrl) {
 #if defined(NETLIB_THREAD)
+        mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &evQueue);
+        if (nsnull == evQueue) {
+          goto loser;
+        }
+
         if (nsnull != aConsumer) {
-            consumer = ns_NewStreamListenerProxy(aConsumer);
+          consumer = ns_NewStreamListenerProxy(aConsumer, evQueue);
             if (nsnull == consumer) {
                 goto loser;
             }
@@ -494,6 +534,15 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
          * necessary.
          */
         URL_s->fe_data = pConn;
+
+        /*
+         * Attach the Event Queue to use when proxying data back to the thread
+         * which initiated the URL load...
+         *
+         * Currently, this information is needed to marshall the call to the URL
+         * exit_routine(...) on the correct thread...
+         */
+        URL_s->owner_data = evQueue;
 
         /*
          * Give the protocol a chance to initialize any URL_Struct fields...

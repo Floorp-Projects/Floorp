@@ -21,8 +21,8 @@
 #define nsNetService_h___
 
 #include "nspr.h"
-#include "plevent.h"
 #include "nsIPref.h"
+#include "nsIEventQueueService.h"
 #include "nsINetService.h"
 #include "nsNetThread.h"
 #include "nsHashtable.h"
@@ -119,6 +119,7 @@ private:
     nsITimer* mPollingTimer;
 
     nsNetlibThread* mNetlibThread;
+    nsIEventQueueService* mEventQService;
 
     nsHashtable* mProtocols;
 };
