@@ -195,7 +195,8 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
         mTargetNode = targetContent;
       }
       if (mTargetNode) {
-        nsresult rv = mTooltipTimer->Init(sTooltipCallback, this, kTooltipShowTime, PR_TRUE);
+        nsresult rv = mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this, 
+                                                          kTooltipShowTime, nsITimer::TYPE_ONE_SHOT);
         if (NS_FAILED(rv))
           mTargetNode = nsnull;
       }
@@ -650,7 +651,8 @@ nsXULTooltipListener::CreateAutoHideTimer()
   
   mAutoHideTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mAutoHideTimer )
-    mAutoHideTimer->Init(sAutoHideCallback, this, kTooltipAutoHideTime, PR_TRUE);
+    mAutoHideTimer->InitWithFuncCallback(sAutoHideCallback, this, kTooltipAutoHideTime, 
+                                         nsITimer::TYPE_ONE_SHOT);
 }
 
 void

@@ -147,6 +147,7 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITimer.h"
+#include "nsITimerInternal.h"
 
 // For style data reconstruction
 #include "nsStyleChangeList.h"
@@ -2893,7 +2894,12 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
       if (prefs)
         prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
-      mPaintSuppressionTimer->Init(sPaintSuppressionCallback, this, delay, PR_FALSE);
+
+      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mPaintSuppressionTimer);
+      ti->SetIdle(PR_TRUE);
+
+      mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback, this, delay, 
+                                                   nsITimer::TYPE_ONE_SHOT);
     }
   }
 
@@ -3030,7 +3036,8 @@ PresShell::CreateResizeEventTimer ()
 
   mResizeEventTimer = do_CreateInstance("@mozilla.org/timer;1");
   if (mResizeEventTimer) {
-    mResizeEventTimer->Init(sResizeEventCallback, this, RESIZE_EVENT_DELAY, PR_TRUE);
+    mResizeEventTimer->InitWithFuncCallback(sResizeEventCallback, this, RESIZE_EVENT_DELAY, 
+                                            nsITimer::TYPE_ONE_SHOT);
   }
 }
 

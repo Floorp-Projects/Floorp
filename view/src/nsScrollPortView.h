@@ -46,7 +46,7 @@ class nsISupportsArray;
 //this is a class that acts as a container for other views and provides
 //automatic management of scrolling of the views it contains.
 
-class nsScrollPortView : public nsView, public nsIScrollableView //, public nsITimerCallback
+class nsScrollPortView : public nsView, public nsIScrollableView
 {
 public:
   nsScrollPortView();
@@ -102,9 +102,6 @@ private:
 
 protected:
   virtual ~nsScrollPortView();
-
-  // nsITimerCallback Interface
-  //NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   //private
   void AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);

@@ -44,10 +44,10 @@
 #include <string.h>
 #include <stdio.h>
 #include "nsRecyclingAllocator.h"
-#include "nsITimer.h"
 #include "nsIMemory.h"
 #include "nsAutoLock.h"
 #include "prprf.h"
+#include "nsITimer.h"
 
 #define NS_SEC_TO_MS(s) ((s) * 1000)
 
@@ -189,9 +189,13 @@ nsRecyclingAllocator::Malloc(PRSize bytes, PRBool zeroit)
     // will try again to set the timer.
     if (mRecycleAfter && !mRecycleTimer)
     {
-        (void) NS_NewTimer(&mRecycleTimer, nsRecycleTimerCallback, this,
-                           NS_SEC_TO_MS(mRecycleAfter), PR_TRUE,
-                           NS_TYPE_REPEATING_SLACK);
+        // known only to stuff in xpcom.  
+        extern nsresult NS_NewTimer(nsITimer* *aResult, nsTimerCallbackFunc aCallback, void *aClosure,
+                                    PRUint32 aDelay, PRUint32 aType);
+
+        (void) NS_NewTimer(&mRecycleTimer, nsRecycleTimerCallback, this, 
+                           NS_SEC_TO_MS(mRecycleAfter),
+                           nsITimer::TYPE_REPEATING_SLACK);
         NS_ASSERTION(mRecycleTimer, "nsRecyclingAllocator: Creating timer failed.\n");
     }
  

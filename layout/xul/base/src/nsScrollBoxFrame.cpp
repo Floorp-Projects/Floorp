@@ -60,7 +60,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 #include "nsButtonBoxFrame.h"
-#include "nsITimerCallback.h"
+#include "nsITimer.h"
 #include "nsRepeatService.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
@@ -873,8 +873,7 @@ public:
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
-
+  NS_DECL_NSITIMERCALLBACK
   nsIPresContext* mPresContext;
   
 };
@@ -940,10 +939,11 @@ nsAutoRepeatBoxFrame::HandleEvent(nsIPresContext* aPresContext,
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-NS_IMETHODIMP_(void) 
+NS_IMETHODIMP
 nsAutoRepeatBoxFrame::Notify(nsITimer *timer)
 {
   MouseClicked(mPresContext, nsnull);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

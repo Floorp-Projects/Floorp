@@ -1183,8 +1183,8 @@ nsWebShellWindow::SetPersistenceTimer(PRBool aSize, PRBool aPosition, PRBool aMo
     nsresult rv;
     mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      mSPTimer->Init(FirePersistenceTimer, this,
-                     SIZE_PERSISTENCE_TIMEOUT, NS_TYPE_ONE_SHOT);
+      mSPTimer->InitWithFuncCallback(FirePersistenceTimer, this,
+                                     SIZE_PERSISTENCE_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
       mSPTimerSize = aSize;
       mSPTimerPosition = aPosition;
       mSPTimerMode = aMode;

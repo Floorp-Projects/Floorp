@@ -3644,7 +3644,7 @@ nsDocShell::RefreshURI(nsIURI * aURI, PRInt32 aDelay, PRBool aRepeat, PRBool aMe
         NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
 
         mRefreshURIList->AppendElement(timer);      // owning timer ref
-        timer->Init(refreshTimer, aDelay);
+        timer->InitWithCallback(refreshTimer, aDelay, nsITimer::TYPE_ONE_SHOT);
     }
     return NS_OK;
 }
@@ -3890,7 +3890,7 @@ nsDocShell::RefreshURIFromQueue()
                 // load comes through before the timer can go off, the timer will
                 // get cancelled in CancelRefreshURITimer()
                 mRefreshURIList->ReplaceElementAt(timer, n);
-                timer->Init(refreshInfo, delay);
+                timer->InitWithCallback(refreshInfo, delay, nsITimer::TYPE_ONE_SHOT);
             }           
         }        
     }  // while
@@ -6587,7 +6587,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 ///*****************************************************************************
 // nsRefreshTimer::nsITimerCallback
 //*****************************************************************************   
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsRefreshTimer::Notify(nsITimer * aTimer)
 {
     NS_ASSERTION(mDocShell, "DocShell is somehow null");
@@ -6599,10 +6599,10 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
         PRBool allowRedirects = PR_TRUE;
         mDocShell->GetAllowMetaRedirects(&allowRedirects);
         if (!allowRedirects)
-          return;
+          return NS_OK;
         // Get the delay count
-        PRUint32 delay;
-        delay = aTimer->GetDelay();
+        PRUint32 delay = 0;
+        aTimer->GetDelay(&delay);
         // Get the current uri from the docshell.
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
         nsCOMPtr<nsIURI> currURI;
@@ -6633,13 +6633,14 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
              */
             mDocShell->LoadURI(mURI, loadInfo,
                                nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
-            return;
+            return NS_OK;
 
         }
         else
             loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
         mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
     }
+    return NS_OK;
 }
 
 //*****************************************************************************

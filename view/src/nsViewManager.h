@@ -37,7 +37,7 @@
 
 #ifndef nsViewManager_h___
 #define nsViewManager_h___
-
+#include "nsCOMPtr.h"
 #include "nsIViewManager.h"
 #include "nsCRT.h"
 #include "nsIPresContext.h"

@@ -55,19 +55,18 @@ EXPORTS		= \
 		nsAutoLock.h \
 		plevent.h \
 		nsProcess.h \
-		nsITimer.h \
-		nsITimerCallback.h \
 		$(NULL)
 
 XPIDLSRCS	= \
 		nsIThread.idl \
 		nsIThreadPool.idl \
+		nsITimer.idl \
+		nsITimerInternal.idl \
 		nsITimerManager.idl \
 		nsIRunnable.idl \
 		nsIEventQueue.idl \
 		nsIEventQueueService.idl \
 		nsIProcess.idl \
-		nsIScriptableTimer.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

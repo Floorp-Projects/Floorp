@@ -39,7 +39,6 @@
 
 // Timer Includes
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsITimelineService.h"
 
 // Interfaces
@@ -66,7 +65,7 @@ public:
   virtual ~nsPagePrintTimer();
 
   // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   // Other Methods
   nsresult StartTimer(PRBool aUseDelay = PR_TRUE);

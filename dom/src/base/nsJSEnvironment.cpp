@@ -1586,7 +1586,7 @@ nsJSContext::ScriptExecuted()
   return ScriptEvaluated(PR_FALSE);
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsJSContext::Notify(nsITimer *timer)
 {
   NS_ASSERTION(mContext, "No context in nsJSContext::Notify()!");
@@ -1596,6 +1596,7 @@ nsJSContext::Notify(nsITimer *timer)
   sReadyForGC = PR_TRUE;
 
   NS_RELEASE(sGCTimer);
+  return NS_OK;
 }
 
 void
@@ -1625,8 +1626,9 @@ nsJSContext::FireGCTimer()
 
   static PRBool first = PR_TRUE;
 
-  sGCTimer->Init(this, first ? NS_FIRST_GC_DELAY : NS_GC_DELAY,
-                 PR_TRUE);
+  sGCTimer->InitWithCallback(this, 
+                             first ? NS_FIRST_GC_DELAY : NS_GC_DELAY,
+                             nsITimer::TYPE_ONE_SHOT);
 
   first = PR_FALSE;
 }

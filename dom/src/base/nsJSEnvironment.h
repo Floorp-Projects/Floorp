@@ -45,7 +45,7 @@
 #include "nsIObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPCScriptNotify.h"
-#include "nsITimerCallback.h"
+#include "nsITimer.h"
 
 
 class nsJSContext : public nsIScriptContext,
@@ -131,7 +131,7 @@ public:
 
   NS_DECL_NSIXPCSCRIPTNOTIFY
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
 protected:
   nsresult InitClasses();

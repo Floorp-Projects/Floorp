@@ -46,7 +46,6 @@
 #include "nsITransactionListener.h"
 #include "nsIWebShell.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 class nsIHTMLEditor;
 class nsIDOMDocument;
@@ -74,7 +73,7 @@ public:
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
   // nsITimerCallback interfaces
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   /** nsITransactionListener interfaces
     */

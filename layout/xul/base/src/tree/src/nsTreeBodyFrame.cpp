@@ -88,7 +88,7 @@
 #include "nsIScrollableView.h"
 #include "nsITheme.h"
 #include "nsITimelineService.h"
-
+#include "nsITimerInternal.h"
 #ifdef USE_IMG2
 #include "imgIRequest.h"
 #include "imgIContainer.h"
@@ -3513,9 +3513,16 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
         mTimer->Cancel();
         mTimer = nsnull;
       }
-      NS_NewTimer(getter_AddRefs(mTimer), ScrollCallback, this,
-                  kLazyScrollDelay, PR_FALSE, NS_TYPE_REPEATING_SLACK);
-    }
+
+      mTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+      nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mTimer);
+      ti->SetIdle(PR_TRUE);
+
+      mTimer->InitWithFuncCallback(ScrollCallback, this, kLazyScrollDelay, 
+                                   nsITimer::TYPE_REPEATING_SLACK);
+
+     }
 #else
     ScrollByLines(mScrollLines);
 #endif
@@ -3549,8 +3556,11 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
           mView->IsContainerOpen(mDropRow, &isOpen);
           if (!isOpen) {
             // This node isn't expanded, set a timer to expand it.
-            NS_NewTimer(getter_AddRefs(mTimer), OpenCallback, this,
-                        kOpenDelay, PR_FALSE, NS_TYPE_ONE_SHOT);
+            mTimer = do_CreateInstance("@mozilla.org/timer;1");
+            nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mTimer);
+            ti->SetIdle(PR_TRUE);
+            mTimer->InitWithFuncCallback(OpenCallback, this, kOpenDelay, 
+                                         nsITimer::TYPE_ONE_SHOT);
           }
         }
       }
@@ -3706,7 +3716,9 @@ nsTreeBodyFrame::ScrollCallback(nsITimer *aTimer, void *aClosure)
     // Don't scroll if we are already at the top or bottom of the view.
     if (self->CanAutoScroll(self->mDropRow)) {
       self->ScrollByLines(self->mScrollLines);
-      if (aTimer->GetDelay() != kScrollDelay)
+      PRUint32 delay = 0;
+      aTimer->GetDelay(&delay);
+      if (delay != kScrollDelay)
         aTimer->SetDelay(kScrollDelay);
     }
     else {

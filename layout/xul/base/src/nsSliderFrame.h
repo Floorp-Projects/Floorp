@@ -43,7 +43,7 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-#include "nsITimerCallback.h"
+#include "nsITimer.h"
 #include "nsIDOMMouseListener.h"
 
 class nsString;
@@ -115,8 +115,7 @@ public:
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
 
 }; // class nsSliderFrame

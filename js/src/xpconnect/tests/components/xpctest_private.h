@@ -60,7 +60,6 @@
 
 #ifdef IMPLEMENT_TIMER_STUFF
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #endif // IMPLEMENT_TIMER_STUFF
 
 // {ED132C20-EED1-11d2-BAA4-00805F8A5DD7}

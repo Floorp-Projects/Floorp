@@ -66,7 +66,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -103,7 +102,7 @@ public:
   virtual ~nsListScrollSmoother();
 
   // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   void Start();
   void Stop();
@@ -126,16 +125,17 @@ nsListScrollSmoother::~nsListScrollSmoother()
   Stop();
 }
 
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 nsListScrollSmoother::Notify(nsITimer *timer)
 {
   Stop();
 
   NS_ASSERTION(mOuter, "mOuter is null, see bug #68365");
-  if (!mOuter) return;
+  if (!mOuter) return NS_OK;
 
   // actually do some work.
   mOuter->InternalPositionChangedCallback();
+  return NS_OK;
 }
 
 PRBool
@@ -149,7 +149,7 @@ nsListScrollSmoother::Start()
 {
   Stop();
   mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mRepeatTimer->Init(this, SMOOTH_INTERVAL);
+  mRepeatTimer->InitWithCallback(this, SMOOTH_INTERVAL, nsITimer::TYPE_ONE_SHOT);
 }
 
 void

@@ -759,7 +759,7 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
   }
 }
 
-NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
+NS_IMETHODIMP nsScrollingView::Notify(nsITimer * aTimer)
 {
   nscoord xoff, yoff;
 
@@ -801,7 +801,9 @@ NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
   nsresult rv;
   mScrollingTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
-    mScrollingTimer->Init(this, 25);
+    mScrollingTimer->InitWithCallback(this, 25, nsITimer::TYPE_ONE_SHOT);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)

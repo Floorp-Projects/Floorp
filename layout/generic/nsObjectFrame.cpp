@@ -70,7 +70,6 @@
 #include "nsIScrollPositionListener.h"
 #include "nsIStringStream.h" // for NS_NewCharInputStream
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -305,7 +304,7 @@ public:
   void Paint(const nsRect& aDirtyRect, PRUint32 ndc = nsnull);
 
   // nsITimerCallback interface
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
   
   void CancelTimer();
   
@@ -3741,7 +3740,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 
 // Here's how we give idle time to plugins.
 
-NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
+NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 {
 #ifdef XP_MAC
     // validate the plugin clipping information by syncing the plugin window info to
@@ -3772,8 +3771,9 @@ NS_IMETHODIMP_(void) nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
   nsresult rv;
   mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
   if (NS_SUCCEEDED(rv))
-    mPluginTimer->Init(this, 1020 / 60);
+    mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_ONE_SHOT);
 #endif
+  return NS_OK;
 }
 
 void nsPluginInstanceOwner::CancelTimer()
@@ -3986,7 +3986,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
           // start a periodic timer to provide null events to the plugin instance.
           mPluginTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
           if (rv == NS_OK)
-            rv = mPluginTimer->Init(this, 1020 / 60, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+            rv = mPluginTimer->InitWithCallback(this, 1020 / 60, nsITimer::TYPE_REPEATING_SLACK);
 #endif
         }
       }

@@ -489,7 +489,8 @@ il_mng_settimer(mng_handle handle, mng_uint32 msec)
   EXTRACT_CONTAINER;
 
   container->mTimer = do_CreateInstance("@mozilla.org/timer;1");
-  container->mTimer->Init(il_mng_timeout_func, (void *)handle, msec);
+  container->mTimer->InitWithFuncCallback(il_mng_timeout_func, (void *)handle, msec,
+                                          nsITimer::TYPE_ONE_SHOT);
 
   return MNG_TRUE;
 }  

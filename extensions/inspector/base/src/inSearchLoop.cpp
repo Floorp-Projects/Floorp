@@ -39,7 +39,7 @@
 #include "inSearchLoop.h"
 
 #include "nsITimer.h"
-
+#include "nsIServiceManager.h"
 ///////////////////////////////////////////////////////////////////////////////
 
 inSearchLoop::inSearchLoop(inISearchProcess* aSearchProcess)
@@ -59,7 +59,7 @@ inSearchLoop::~inSearchLoop()
 nsresult
 inSearchLoop::Start()
 {
-  mTimer->Init(inSearchLoop::TimerCallback, (void*)this, 0, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+  mTimer->InitWithFuncCallback(inSearchLoop::TimerCallback, (void*)this, 0, nsITimer::TYPE_REPEATING_SLACK);
 
   return NS_OK;
 }

@@ -316,10 +316,10 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn)
     if (!ts)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = timer->Init(nsFtpProtocolHandler::Timeout,
-                     ts,
-                     mIdleTimeout*1000,
-                     PR_TRUE);
+    rv = timer->InitWithFuncCallback(nsFtpProtocolHandler::Timeout,
+                                     ts,
+                                     mIdleTimeout*1000,
+                                     nsITimer::TYPE_REPEATING_SLACK);
     if (NS_FAILED(rv)) {
         delete ts;
         return rv;

@@ -1200,7 +1200,8 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
     if ( eventTarget )
       mPossibleTooltipNode = do_QueryInterface(eventTarget);
     if ( mPossibleTooltipNode ) {
-      nsresult rv = mTooltipTimer->Init(sTooltipCallback, this, kTooltipShowTime, PR_TRUE);
+      nsresult rv = mTooltipTimer->InitWithFuncCallback(sTooltipCallback, this, kTooltipShowTime, 
+                                                        nsITimer::TYPE_ONE_SHOT);
       if (NS_FAILED(rv))
         mPossibleTooltipNode = nsnull;
     }
@@ -1332,7 +1333,8 @@ ChromeTooltipListener :: CreateAutoHideTimer ( )
   
   mAutoHideTimer = do_CreateInstance("@mozilla.org/timer;1");
   if ( mAutoHideTimer )
-    mAutoHideTimer->Init(sAutoHideCallback, this, kTooltipAutoHideTime, PR_TRUE);
+    mAutoHideTimer->InitWithFuncCallback(sAutoHideCallback, this, kTooltipAutoHideTime, 
+                                         nsITimer::TYPE_ONE_SHOT);
 
 } // CreateAutoHideTimer
 

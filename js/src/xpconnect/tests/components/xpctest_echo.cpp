@@ -51,8 +51,7 @@ public:
     NS_DECL_NSIECHO
 
 #ifdef IMPLEMENT_TIMER_STUFF
-    // not very xpcom compilant method from nsITimerCallback
-    NS_IMETHOD_(void) Notify(nsITimer *timer);
+    NS_DECL_NSITIMERCALLBACK
 #endif // IMPLEMENT_TIMER_STUFF
 
     xpctestEcho();
@@ -532,7 +531,8 @@ xpctestEcho::CallReceiverSometimeLater(void)
     timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
-    timer->Init(NS_STATIC_CAST(nsITimerCallback*,this), 2000);
+    timer->InitWithCallback(NS_STATIC_CAST(nsITimerCallback*,this), 2000,
+                            nsITimer::TYPE_ONE_SHOT);
     return NS_OK;
 #else
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -540,12 +540,13 @@ xpctestEcho::CallReceiverSometimeLater(void)
 }
 
 #ifdef IMPLEMENT_TIMER_STUFF
-NS_IMETHODIMP_(void)
+NS_IMETHODIMP
 xpctestEcho::Notify(nsITimer *timer)
 {
     if(mReceiver)
         mReceiver->CallReceiverSometimeLater();
     NS_RELEASE(timer);
+    return NS_OK;
 }        
 #endif // IMPLEMENT_TIMER_STUFF
 

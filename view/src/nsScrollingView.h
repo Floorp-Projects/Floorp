@@ -40,8 +40,8 @@
 
 #include "nsView.h"
 #include "nsIScrollableView.h"
+#include "nsCOMPtr.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 
 class nsISupportsArray;
 
@@ -131,7 +131,7 @@ protected:
   virtual ~nsScrollingView();
 
   // nsITimerCallback Interface
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   //private
   void AdjustChildWidgets(nsScrollingView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);

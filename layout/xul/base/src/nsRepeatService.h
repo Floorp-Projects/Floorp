@@ -42,7 +42,6 @@
 #define nsRepeatService_h__
 
 #include "nsCOMPtr.h"
-#include "nsITimerCallback.h"
 #include "nsITimer.h"
 
 class nsITimer;
@@ -51,7 +50,7 @@ class nsRepeatService : public nsITimerCallback
 {
 public:
 
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
+  NS_DECL_NSITIMERCALLBACK
 
   void Start(nsITimerCallback* aCallback);
   void Stop();

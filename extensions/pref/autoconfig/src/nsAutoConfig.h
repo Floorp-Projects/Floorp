@@ -38,7 +38,6 @@
 
 #include "nsIAutoConfig.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsNetUtil.h"
@@ -60,7 +59,8 @@ class nsAutoConfig : public nsIAutoConfig,
         NS_DECL_NSIREQUESTOBSERVER
         NS_DECL_NSISTREAMLISTENER
         NS_DECL_NSIOBSERVER
-        NS_IMETHOD_(void) Notify(nsITimer *timer);
+        NS_DECL_NSITIMERCALLBACK
+
         nsAutoConfig();
         virtual ~nsAutoConfig();
         nsresult Init();

@@ -43,6 +43,7 @@
 //
 
 #include "nsRepeatService.h"
+#include "nsIServiceManager.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #define INITAL_REPEAT_DELAY 250
@@ -92,7 +93,7 @@ void nsRepeatService::Start(nsITimerCallback* aCallback)
   mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
   if (NS_OK == rv)  {
-    mRepeatTimer->Init(this, INITAL_REPEAT_DELAY);
+    mRepeatTimer->InitWithCallback(this, INITAL_REPEAT_DELAY, nsITimer::TYPE_ONE_SHOT);
   }
 
 }
@@ -107,7 +108,7 @@ void nsRepeatService::Stop()
   }
 }
 
-NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
+NS_IMETHODIMP nsRepeatService::Notify(nsITimer *timer)
 {
    // if the repeat delay is the initial one reset it.
   if (mRepeatTimer) {
@@ -121,9 +122,9 @@ NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
   // start timer again.
   if (mRepeatTimer) {
      mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1");
-     mRepeatTimer->Init(this, REPEAT_DELAY);
+     mRepeatTimer->InitWithCallback(this, REPEAT_DELAY, nsITimer::TYPE_ONE_SHOT);
   }
-
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(nsRepeatService, nsITimerCallback)
