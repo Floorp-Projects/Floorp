@@ -224,6 +224,26 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
+nsTextNode::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
+{
+  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
+
+  if(aDumpAll) {
+    PRInt32 index;
+    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
+    nsAutoString tmp;
+    mInner.ToCString(tmp, 0, mInner.mText.GetLength());
+    
+    if(!tmp.EqualsWithConversion("\\n")) {
+      fputs(tmp, out);
+      if(aIndent) fputs("\n", out);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTextNode::HandleDOMEvent(nsIPresContext* aPresContext,
                            nsEvent* aEvent,
                            nsIDOMEvent** aDOMEvent,

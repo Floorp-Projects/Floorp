@@ -2853,6 +2853,11 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
+nsresult 
+nsGenericContainerElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
+  return NS_OK;
+}
+
 nsresult
 nsGenericContainerElement::CanContainChildren(PRBool& aResult) const
 {
