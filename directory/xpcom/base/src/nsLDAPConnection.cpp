@@ -35,17 +35,13 @@
 #include "nsIComponentManager.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPMessage.h"
-#include "nsIProxyObjectManager.h"
 #include "nsIEventQueueService.h"
-#include "nsIServiceManager.h"
 
 // XXX deal with timeouts better
 //
 struct timeval nsLDAPConnection::sNullTimeval = {0, 0};
 
 static NS_DEFINE_CID(kLDAPMessageCID, NS_LDAPMESSAGE_CID);
-static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 
 extern "C" int nsLDAPThreadDataInit(void);
 extern "C" int nsLDAPThreadFuncsInit(LDAP *aLDAP);
@@ -80,19 +76,23 @@ nsLDAPConnection::~nsLDAPConnection()
     PR_fprintf(PR_STDERR,"unbound\n");
 #endif
 
-  // XXX use delete here?
   // XXX can delete fail?
   //
   if (mBindName) {
       delete mBindName;
   }
+
+  if (mPendingOperations) {
+      // XXXdmose  remove all items from the array first!
+      // XXXdmose  can delete fail?
+      delete mPendingOperations;
+  }
+
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPConnection, nsILDAPConnection, 
 			      nsIRunnable);
 
-// wrapper for ldap_init()
-//
 NS_IMETHODIMP
 nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 {
@@ -132,6 +132,14 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 	return NS_ERROR_FAILURE;
     }
 
+    // allocate a hashtable to keep track of pending operations.
+    // 10 buckets seems like a reasonable size, and we do want it to 
+    // be threadsafe
+    //
+    mPendingOperations = new nsSupportsHashtable(10, PR_TRUE);
+    if (!mPendingOperations)
+	return NS_ERROR_FAILURE;
+
 #ifdef DEBUG_dmose
     const int lDebug = 0;
     ldap_set_option(this->mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
@@ -149,32 +157,6 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
     if (NS_FAILED(rv)) {
 	return rv;
     }
-
-    return NS_OK;
-}
-
-  
-/**
- * Operations on this connection get their results called back to this
- * interface.  This really should (and eventually will be) implemented
- * implemented on a per operation-basis (to allow for shared 
- * nsILDAPConnections), but for now, this MUST be set before doing any
- * operations on this connection.
- */
-NS_IMETHODIMP
-nsLDAPConnection::SetMessageListener(nsILDAPMessageListener *aMessageListener)
-{
-    mMessageListener = aMessageListener;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLDAPConnection::GetMessageListener(nsILDAPMessageListener **aMessageListener)
-{
-    NS_ENSURE_ARG_POINTER(aMessageListener);
-
-    *aMessageListener = mMessageListener;
-    NS_IF_ADDREF(*aMessageListener);
 
     return NS_OK;
 }
@@ -248,6 +230,51 @@ nsLDAPConnection::GetConnectionHandle(LDAP* *aConnectionHandle)
     return NS_OK;
 }
 
+/** 
+ * Add an nsILDAPOperation to the list of operations pending on
+ * this connection.  This is also mainly intended for use by the
+ * nsLDAPOperation code.
+ */
+NS_IMETHODIMP
+nsLDAPConnection::AddPendingOperation(nsILDAPOperation *aOperation)
+{
+    nsresult rv;
+    PRInt32 msgId;
+
+    NS_ENSURE_ARG_POINTER(aOperation);
+
+    // find the message id
+    //
+    rv = aOperation->GetMessageId(&msgId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // turn it into an nsVoidKey.  note that this is another spot that
+    // assumes that sizeof(void*) >= sizeof(PRInt32).  
+    //
+    // XXXdmose  should really create an nsPRInt32Key.
+    //
+    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
+    if (!key) {
+	return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // actually add it to the queue.  if Put indicates that an item in 
+    // the hashtable was actually overwritten, something is really wrong.
+    //
+    if (mPendingOperations->Put(key, aOperation) == PR_TRUE) {
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR, "nsLDAPConnection::AddPendingOperation() "
+		   "mPendingOperations->Put() overwrote an item.  msgId "
+		   "is supposed to be unique\n");
+#endif
+	delete key;
+	return NS_ERROR_UNEXPECTED;
+    }
+
+    delete key;
+    return NS_OK;
+}
+
 // for nsIRunnable.  this thread spins in ldap_result() awaiting the next
 // message.  once one arrives, it dispatches it to the nsILDAPMessageListener 
 // on the main thread.
@@ -258,11 +285,7 @@ nsLDAPConnection::Run(void)
     PRInt32 returnCode;
     LDAPMessage *msgHandle;
     nsCOMPtr<nsILDAPMessage> msg;
-    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr;
-    nsCOMPtr<nsILDAPMessageListener> listener;
     char *errString;
-
-    NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
     // initialize the thread-specific data for the child thread (as necessary)
     //
@@ -274,15 +297,6 @@ nsLDAPConnection::Run(void)
     PR_fprintf(PR_STDERR, "nsLDAPConnection::Run() entered\n");
 #endif
 
-    proxyObjMgr = do_GetService(kProxyObjectManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv); 
-
-    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-					kILDAPMessageListenerIID,
-					mMessageListener, PROXY_ASYNC, 
-					(void **)getter_AddRefs(listener));
-    NS_ENSURE_SUCCESS(rv, rv);     
-	
     // wait for results
     //
     while(1) {
@@ -304,35 +318,39 @@ nsLDAPConnection::Run(void)
 #endif
 	    PR_Sleep(2000);
 	    continue;
+
 	    break;
 
 	case -1: // something went wrong 
 	         // XXXdmose should propagate the error to the listener
 #ifdef DEBUG
 	    (void)this->GetErrorString(&errString);
-	    PR_fprintf(PR_STDERR,"\nmyOperation->Result() [URLSearch]: %s\n",
-		       errString);
+	    PR_fprintf(PR_STDERR,"nsLDAPConnection::Run(): "
+		       "ldap_result() failed: %s\n", errString);
 	    ldap_memfree(errString); 
 #endif
 	    break;
 
-	default: // create & initialize the message
+	default: // initialize the message and call the callback
 
 	    msg = do_CreateInstance(kLDAPMessageCID, &rv);
-	    NS_ENSURE_SUCCESS(rv, rv); // XXX
+	    NS_ENSURE_SUCCESS(rv, rv);
 
 	    rv = msg->Init(this, msgHandle);
-	    NS_ENSURE_SUCCESS(rv, rv); // XXX
+	    NS_ENSURE_SUCCESS(rv, rv);
+
+	    // call the callback on the nsILDAPOperation corresponding to this 
+	    //
+	    rv = InvokeMessageCallback(msgHandle, msg, returnCode);
+	    NS_ENSURE_SUCCESS(rv, rv);
+
+	    // we're all done with the message here.  make nsCOMPtr release it.
+	    //
+	    msg = 0;
+
 	    break;
 	}	
 
-	// invoke the callback through the proxy object
-	//
-	listener->OnLDAPMessage(msg, returnCode);
-
-	// we're all done with the message here.  make nsCOMPtr release it.
-	//
-	msg = 0;
     }
 
     // XXX figure out how to break out of the while() loop and get here to
@@ -343,3 +361,66 @@ nsLDAPConnection::Run(void)
 }
 
 
+nsresult
+nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle, 
+					nsILDAPMessage *aMsg,
+					PRInt32 aReturnCode)
+{
+    PRInt32 msgId;
+    nsresult rv;
+    nsCOMPtr<nsILDAPOperation> operation;
+    nsCOMPtr<nsILDAPMessageListener> listener;
+
+#ifdef DEBUG_dmose
+    PR_fprintf(PR_STDERR, "InvokeMessageCallback entered\n");
+#endif
+
+    // get the message id corresponding to this operation
+    //
+    msgId = ldap_msgid(aMsgHandle);
+    if (msgId == -1) {
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR, "nsLDAPConnection::GetCallbackByMessage():"
+		   "ldap_msgid() failed\n");
+#endif
+	return NS_ERROR_FAILURE;
+    }
+
+    // get this in key form.  note that using nsVoidKey in this way assumes
+    // that sizeof(void *) >= sizeof PRInt32
+    //
+    nsVoidKey *key = new nsVoidKey(NS_REINTERPRET_CAST(void *, msgId));
+    if (!key)
+	return NS_ERROR_OUT_OF_MEMORY;
+
+    // find the operation in question
+    //
+    nsISupports *data = mPendingOperations->Get(key);
+    if (data == nsnull) {
+#ifdef DEBUG
+	PR_fprintf(PR_STDERR, "InvokeMessageCallback(): couldn't find "
+		   "nsILDAPOperation corresponding to this message id\n");
+#endif
+	delete key;
+
+	return NS_ERROR_UNEXPECTED;
+    }
+
+    operation = getter_AddRefs(NS_STATIC_CAST(nsILDAPOperation *, data));
+
+    // get the proxy object for the listener (which lives on the 
+    // UI thread)
+    //
+    rv = operation->GetMessageListener(getter_AddRefs(listener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // invoke the callback through the proxy object
+    //
+    listener->OnLDAPMessage(aMsg, aReturnCode);
+
+    // XXX - this clean above; use auto_ptr? 
+    //
+    delete key;
+
+    return NS_OK;
+}

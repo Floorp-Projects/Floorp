@@ -60,10 +60,13 @@ class nsLDAPMessage : public nsILDAPMessage
     nsLDAPMessage();
     virtual ~nsLDAPMessage();
 
-    // turn an error condition associated with this message into a string
+    // XXXdmose - cleanup: turn an error condition associated with this 
+    // message into a string
+    //
     char *GetErrorString(void);
 
-    // wrapper for ldap_msgtype()
+    // XXXdmose - cleanup: wrapper for ldap_msgtype()
+    //
     int Type(void);
 
   protected:

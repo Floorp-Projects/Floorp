@@ -41,6 +41,7 @@
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
 #include "nsILDAPMessageListener.h"
+#include "nsHashtable.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
@@ -64,12 +65,19 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
     virtual ~nsLDAPConnection();
 
   protected:
-  
-    // the LDAP SDK's struct for the connection
+
+    // invoke the callback associated with a given message
+    //
+    nsresult InvokeMessageCallback(LDAPMessage *aMsgHandle, 
+				   nsILDAPMessage *aMsg,
+				   PRInt32 aReturnCode);
+
     LDAP *mConnectionHandle;		// the LDAP C SDK's connection object
     nsCString *mBindName; 		// who to bind as
     nsCOMPtr<nsIThread> mThread;       	// thread which marshals results
-    nsCOMPtr<nsILDAPMessageListener> mMessageListener;	// results go here
+
+    nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
+
     static struct timeval sNullTimeval;
 };
 

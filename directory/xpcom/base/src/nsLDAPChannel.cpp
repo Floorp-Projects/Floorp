@@ -79,11 +79,6 @@ nsLDAPChannel::Init(nsIURI *uri)
     mConnection = do_CreateInstance("mozilla.network.ldapconnection", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    // set up the listener callback
-    //
-    rv = mConnection->SetMessageListener(this);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     return NS_OK;
 }
 
@@ -577,6 +572,8 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     bindOperation = do_CreateInstance("mozilla.network.ldapoperation", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // our OnLDAPMessage accepts all result callbacks
+    //
     rv = bindOperation->Init(mConnection, this);
     NS_ENSURE_SUCCESS(rv, rv);
 

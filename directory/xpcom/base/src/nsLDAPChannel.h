@@ -73,14 +73,15 @@ protected:
   nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
   nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
   nsresult OnLDAPBind(nsILDAPMessage *aMessage);
-  // XXX - should go away
+
+  // write down the pipe to whoever is consuming our data
   //
   nsresult pipeWrite(char *str);
   
   // instance vars for read/write nsIChannel attributes
   //
   nsCOMPtr<nsIURI> mURI; // the URI we're processing
-  nsCOMPtr<nsILoadGroup> mLoadGroup; // the LoadGroup that we belong toxo
+  nsCOMPtr<nsILoadGroup> mLoadGroup; // the LoadGroup that we belong to
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
   nsCOMPtr<nsIURI> mOriginalURI; // the URI we started prcessing
   nsLoadFlags mLoadAttributes; // load attributes for this channel

@@ -41,29 +41,28 @@
 
 [ptr] native ldapConnectionHandle(LDAP);
 
-interface nsILDAPMessageListener;
+interface nsILDAPOperation;
 
 [scriptable, uuid(337ad2fe-1dd2-11b2-89f8-aae1221ec86c)]
 interface nsILDAPConnection : nsISupports
 {
-    // return the string version of lderrno
+    /**
+     * the string version of lderrno
+     */
     readonly attribute string errorString;
 
-    // who we're binding as
+    /**
+     * DN to bind as.  use the init() method to set this.
+     */
     readonly attribute string bindName;
 
-    /**
-     * Operations on this connection get their results called back to this
-     * interface.  This really should (and eventually will be) implemented
-     * implemented on a per operation-basis (to allow for shared 
-     * nsILDAPConnections), but for now, this MUST be set BEFORE calling
-     * init on this connection.
+    /** 
+     * set up the connection.  
+     *
+     * @param aHost	 	server name for ldap_init()
+     * @param aPort 		server port number for ldap_init()
+     * @param aBindName 	DN to bind as
      */
-    attribute nsILDAPMessageListener messageListener;
-
-    // set up the connection.  the first two params are for ldap init, 
-    // the third is for this connection
-    //
     void init(in string aHost, in short aPort, in string aBindName);
 
     // wrapper for ldap_get_lderrno()
@@ -73,5 +72,17 @@ interface nsILDAPConnection : nsISupports
     //
     [noscript] readonly attribute ldapConnectionHandle connectionHandle;
 
+    /** 
+     * Add an nsILDAPOperation to the list of operations pending on
+     * this connection.  This is also mainly intended for use by the
+     * nsLDAPOperation code.  Used so that the thread waiting on messages
+     * for this connection has an operation to callback to.
+     *
+     * @param aOperation		    operation to add
+     * @exception NS_ERROR_INVALID_POINTER  aOperation was NULL
+     * @exception NS_ERROR_UNEXPECTED	    this operation's msgId was not
+     *	                                    unique to this connection
+     */
+    void addPendingOperation(in nsILDAPOperation aOperation);
 };
 

@@ -37,6 +37,11 @@
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
 #include "nspr.h"
+#include "nsIProxyObjectManager.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
 
 // constructor
 nsLDAPOperation::nsLDAPOperation()
@@ -55,26 +60,36 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPOperation, nsILDAPOperation);
  * Initializes this operation.  Must be called prior to use. 
  *
  * @param aConnection connection this operation should use
- * @param aMessageListener where are the results are called back to.  NOTE:
- *        this param is currently unused; it's here in preparation for
- * 	  shared nsILDAPConnections.
+ * @param aMessageListener where are the results are called back to. 
  */
 NS_IMETHODIMP
 nsLDAPOperation::Init(nsILDAPConnection *aConnection,
 		      nsILDAPMessageListener *aMessageListener)
 {
-    nsresult rv;
-
-    // set the connection & listener
+    // set the connection 
     //
     mConnection = aConnection;
-    mMessageListener = aMessageListener;
 
     // get and cache the connection handle
     //	
-    rv = this->mConnection->GetConnectionHandle(&this->mConnectionHandle);
+    nsresult rv = mConnection->GetConnectionHandle(&this->mConnectionHandle);
     if (NS_FAILED(rv)) 
 	return rv;
+
+    // get the proxy object manager
+    //
+    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
+	do_GetService(kProxyObjectManagerCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    // and use it to get a proxy for this callback, saving it off in mListener
+    //
+    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+					kILDAPMessageListenerIID,
+					aMessageListener,
+					PROXY_ASYNC|PROXY_ALWAYS,
+					getter_AddRefs(mMessageListener));
+    NS_ENSURE_SUCCESS(rv, rv);     
 
     return NS_OK;
 }
@@ -90,6 +105,17 @@ nsLDAPOperation::GetConnection(nsILDAPConnection* *aConnection)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLDAPOperation::GetMessageListener(nsILDAPMessageListener **aMessageListener)
+{
+    NS_ENSURE_ARG_POINTER(aMessageListener);
+
+    *aMessageListener = mMessageListener;
+    NS_IF_ADDREF(*aMessageListener);
+
+    return NS_OK;
+}
+
 // wrapper for ldap_simple_bind()
 //
 NS_IMETHODIMP
@@ -97,6 +123,8 @@ nsLDAPOperation::SimpleBind(const char *passwd)
 {
     nsresult rv;
     nsXPIDLCString bindName;
+
+    NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
     rv = this->mConnection->GetBindName(getter_Copies(bindName));
     if (NS_FAILED(rv))
@@ -106,9 +134,16 @@ nsLDAPOperation::SimpleBind(const char *passwd)
 
     if (this->mMsgId == -1) {
         return NS_ERROR_FAILURE;
-    } else {
-        return NS_OK;
-    }
+    } 
+  
+    // make sure the connection knows where to call back once the messages
+    // for this operation start coming in
+    //
+    // XXX should abandon operation if this fails
+    rv = mConnection->AddPendingOperation(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
 }
 
 // wrappers for ldap_search_ext
@@ -124,6 +159,8 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
 			   struct timeval *timeoutp, // how long to wait
 			   int sizelimit) // max # of entries to return
 {
+    NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
+
     return ldap_search_ext(this->mConnectionHandle, base, scope, 
 			   filter, attrs, attrsOnly, serverctrls, 
 			   clientctrls, timeoutp, sizelimit, 
@@ -151,6 +188,8 @@ nsLDAPOperation::SearchExt(const char *aBaseDn, PRInt32 aScope,
 			   const char *aFilter, PRIntervalTime aTimeOut,
 			   PRInt32 aSizeLimit) 
 {
+    NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
+
     // XXX deal with timeouts
     //
     int retVal = nsLDAPOperation::SearchExt(aBaseDn, aScope, aFilter, NULL, 0, 
@@ -159,7 +198,6 @@ nsLDAPOperation::SearchExt(const char *aBaseDn, PRInt32 aScope,
     switch (retVal) {
 
     case LDAP_SUCCESS: 
-	return NS_OK;
 	break;
 
     case LDAP_PARAM_ERROR:
@@ -181,9 +219,19 @@ nsLDAPOperation::SearchExt(const char *aBaseDn, PRInt32 aScope,
     case LDAP_NOT_SUPPORTED:
 	return NS_ERROR_LDAP_NOT_SUPPORTED;
 	break;
+
+    default:
+	return NS_ERROR_UNEXPECTED;
     }
 
-    return NS_ERROR_UNEXPECTED;
+    // make sure the connection knows where to call back once the messages
+    // for this operation start coming in
+    // XXX should abandon operation if this fails
+    //
+    nsresult rv = mConnection->AddPendingOperation(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
 }
 
 // wrapper for ldap_url_search
@@ -193,6 +241,7 @@ nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
 			   PRBool aAttrsOnly) // skip attribute names?
 {
     NS_ENSURE_ARG(aURL);
+    NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
     this->mMsgId = ldap_url_search(this->mConnectionHandle, aURL, 
 				   aAttrsOnly);
@@ -208,5 +257,20 @@ nsLDAPOperation::UrlSearch(const char *aURL, // the search URL
 	return NS_ERROR_FAILURE;
     }
 
+    // make sure the connection knows where to call back once the messages
+    // for this operation start coming in
+    // XXX should abandon operation if this fails
+    nsresult rv = mConnection->AddPendingOperation(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPOperation::GetMessageId(PRInt32 *aMsgId)
+{
+    NS_ENSURE_ARG_POINTER(aMsgId);
+    *aMsgId = this->mMsgId;
+   
     return NS_OK;
 }

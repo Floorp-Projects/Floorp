@@ -57,7 +57,8 @@ class nsLDAPOperation : public nsILDAPOperation
     nsLDAPOperation();
     virtual ~nsLDAPOperation();
 
-    // wrappers for ldap_search_ext
+  protected:
+    // wrapper for ldap_search_ext 
     //
     int SearchExt(const char *base, // base DN to search
 		  int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
@@ -69,13 +70,6 @@ class nsLDAPOperation : public nsILDAPOperation
 		  struct timeval *timeoutp, // how long to wait
 		  int sizelimit); // max # of entries to return
 
-    int SearchExt(const char *base, // base DN to search
-		  int scope, // LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
-		  const char* filter, // search filter
-		  struct timeval *timeoutp, // how long to wait
-		  int sizelimit); // max # of entries to return
-
-  protected:
     nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
     nsCOMPtr<nsILDAPMessageListener> mMessageListener; // results go here
     PRInt32 mMsgId;	     // opaque handle to outbound message for this op
