@@ -498,16 +498,12 @@ public:
   struct TextStyle {
     const nsStyleFont* mFont;
     const nsStyleText* mText;
-    const nsStyleColor* mColor;
-    const nsStyleVisibility* mVisibility;
     nsIFontMetrics* mNormalFont;
     nsIFontMetrics* mSmallFont;
     nsIFontMetrics* mLastFont;
     PRBool mSmallCaps;
     nscoord mWordSpacing;
     nscoord mLetterSpacing;
-    nscolor mSelectionTextColor;
-    nscolor mSelectionBGColor;
     nscoord mSpaceWidth;
     nscoord mAveCharWidth;
     PRBool mJustifying;
@@ -521,15 +517,9 @@ public:
               nsIRenderingContext& aRenderingContext,
               nsStyleContext* sc)
     {
-      mNormalFont = nsnull;
-      mSmallFont = nsnull;
-      mLastFont = nsnull;
-
       // Get style data
-      mColor = sc->GetStyleColor();
       mFont = sc->GetStyleFont();
       mText = sc->GetStyleText();
-      mVisibility = sc->GetStyleVisibility();
 
       // Cache the original decorations and reuse the current font
       // to query metrics, rather than creating a new font which is expensive.
@@ -560,26 +550,19 @@ public:
       // Reset to the decoration saved earlier
       plainFont->decorations = originalDecorations; 
 
-      // Get colors from look&feel
-      mSelectionBGColor = NS_RGB(0, 0, 0);
-      mSelectionTextColor = NS_RGB(255, 255, 255);
-      nsILookAndFeel* look = aPresContext->LookAndFeel();
-      look->GetColor(nsILookAndFeel::eColor_TextSelectBackground,
-                     mSelectionBGColor);
-      look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
-                     mSelectionTextColor);
-
       // Get the word and letter spacing
-      mWordSpacing = 0;
       PRIntn unit = mText->mWordSpacing.GetUnit();
       if (eStyleUnit_Coord == unit) {
         mWordSpacing = mText->mWordSpacing.GetCoordValue();
+      } else {
+        mWordSpacing = 0;
       }
 
-      mLetterSpacing = 0;
       unit = mText->mLetterSpacing.GetUnit();
       if (eStyleUnit_Coord == unit) {
         mLetterSpacing = mText->mLetterSpacing.GetCoordValue();
+      } else {
+        mLetterSpacing = 0;
       }
 
       mNumSpacesToRender = 0;
@@ -596,14 +579,34 @@ public:
     ~TextStyle() {
       NS_IF_RELEASE(mNormalFont);
       NS_IF_RELEASE(mSmallFont);
+    }
+  };
 
-    mFont = nsnull;
-    mText = nsnull;
-    mColor = nsnull;
-    mNormalFont = nsnull;
-    mSmallFont = nsnull;
-    mLastFont = nsnull;
+  // Contains extra style data needed only for painting (not reflowing)
+  struct TextPaintStyle : TextStyle {
+    const nsStyleColor* mColor;
+    nscolor mSelectionTextColor;
+    nscolor mSelectionBGColor;
 
+    TextPaintStyle(nsIPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   nsStyleContext* sc)
+      : TextStyle(aPresContext, aRenderingContext, sc)
+    {
+      mColor = sc->GetStyleColor();
+
+      // Get colors from look&feel
+      mSelectionBGColor = NS_RGB(0, 0, 0);
+      mSelectionTextColor = NS_RGB(255, 255, 255);
+      nsILookAndFeel* look = aPresContext->LookAndFeel();
+      look->GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                     mSelectionBGColor);
+      look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
+                     mSelectionTextColor);
+    }
+
+    ~TextPaintStyle() {
+      mColor = nsnull;
     }
   };
 
@@ -661,7 +664,7 @@ public:
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
                             nsIPresContext* aPresContext,
-                            TextStyle& aStyle,
+                            TextPaintStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth,
                             PRUnichar* aText = nsnull,
                             SelectionDetails *aDetails = nsnull,
@@ -672,13 +675,13 @@ public:
   void PaintTextSlowly(nsIPresContext* aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        nsStyleContext* aStyleContext,
-                       TextStyle& aStyle,
+                       TextPaintStyle& aStyle,
                        nscoord aX, nscoord aY);
 
   void RenderString(nsIRenderingContext& aRenderingContext,
                     nsStyleContext* aStyleContext,
                     nsIPresContext* aPresContext,
-                    TextStyle& aStyle,
+                    TextPaintStyle& aStyle,
                     PRUnichar* aBuffer, PRInt32 aLength,
                     nscoord aX, nscoord aY,
                     nscoord aWidth,
@@ -729,13 +732,13 @@ public:
   void PaintUnicodeText(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsStyleContext* aStyleContext,
-                        TextStyle& aStyle,
+                        TextPaintStyle& aStyle,
                         nscoord dx, nscoord dy);
 
   void PaintAsciiText(nsIPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nsStyleContext* aStyleContext,
-                      TextStyle& aStyle,
+                      TextPaintStyle& aStyle,
                       nscoord dx, nscoord dy);
 
   nsTextDimensions ComputeTotalWordDimensions(nsIPresContext* aPresContext,
@@ -941,7 +944,7 @@ class DrawSelectionIterator
   enum {SELECTION_TYPES_WE_CARE_ABOUT=nsISelectionController::SELECTION_NONE+nsISelectionController::SELECTION_NORMAL};
 public:
   DrawSelectionIterator(nsIContent *aContent, const SelectionDetails *aSelDetails, PRUnichar *aText,
-                        PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
+                        PRUint32 aTextLength, nsTextFrame::TextPaintStyle &aTextStyle,
                         PRInt16 aSelectionStatus, nsIPresContext *aPresContext,
                         nsStyleContext *aStyleContext);
   ~DrawSelectionIterator();
@@ -952,7 +955,7 @@ public:
   PRUnichar * CurrentTextUnicharPtr();
   char *      CurrentTextCStrPtr();
   PRUint32    CurrentLength();
-  nsTextFrame::TextStyle & CurrentStyle();
+  nsTextFrame::TextPaintStyle & CurrentStyle();
   nscolor     CurrentForeGroundColor();
   PRBool      CurrentBackGroundColor(nscolor &aColor, PRBool *aIsTransparent);
   PRBool      IsBeforeOrAfter();
@@ -964,7 +967,7 @@ private:
   PRUint32  mLength;
   PRUint32  mCurrentIdx;
   PRUint32  mCurrentLength;
-  nsTextFrame::TextStyle &mOldStyle;//base new styles on this one???
+  nsTextFrame::TextPaintStyle &mOldStyle;//base new styles on this one???
   const SelectionDetails *mDetails;
   PRBool    mDone;
   PRUint8 * mTypes;
@@ -985,7 +988,7 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
                                              const SelectionDetails *aSelDetails, 
                                              PRUnichar *aText, 
                                              PRUint32 aTextLength, 
-                                             nsTextFrame::TextStyle &aTextStyle, 
+                                             nsTextFrame::TextPaintStyle &aTextStyle, 
                                              PRInt16 aSelectionStatus, 
                                              nsIPresContext *aPresContext,
                                              nsStyleContext *aStyleContext)
@@ -1180,7 +1183,7 @@ DrawSelectionIterator::CurrentLength()
     return mCurrentLength;
 }
 
-nsTextFrame::TextStyle & 
+nsTextFrame::TextPaintStyle & 
 DrawSelectionIterator::CurrentStyle()
 {
   return mOldStyle;
@@ -1413,7 +1416,7 @@ nsTextFrame::Paint(nsIPresContext*      aPresContext,
   nsStyleContext* sc = mStyleContext;
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
-    TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
+    TextPaintStyle ts(aPresContext, aRenderingContext, mStyleContext);
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
       || ts.mJustifying) {
       PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
@@ -1724,7 +1727,7 @@ void
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                   nsStyleContext* aStyleContext,
                                   nsIPresContext* aPresContext,
-                                  TextStyle& aTextStyle,
+                                  TextPaintStyle& aTextStyle,
                                   nscoord aX, nscoord aY, nscoord aWidth,
                                   PRUnichar *aText, /*=nsnull*/
                                   SelectionDetails *aDetails,/*= nsnull*/
@@ -2065,7 +2068,7 @@ nsTextFrame::IsTextInSelection(nsIPresContext* aPresContext,
   if (NS_FAILED(indexBuffer.GrowTo(mContentLength + 1))) {
     return PR_FALSE;
   }
-  TextStyle ts(aPresContext, aRenderingContext, mStyleContext);
+  TextPaintStyle ts(aPresContext, aRenderingContext, mStyleContext);
 
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and the text wasn't
@@ -2169,7 +2172,7 @@ void
 nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsStyleContext* aStyleContext,
-                              TextStyle& aTextStyle,
+                              TextPaintStyle& aTextStyle,
                               nscoord dx, nscoord dy)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -2566,7 +2569,7 @@ void
 nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                           nsStyleContext* aStyleContext,
                           nsIPresContext* aPresContext,
-                          TextStyle& aTextStyle,
+                          TextPaintStyle& aTextStyle,
                           PRUnichar* aBuffer, PRInt32 aLength,
                           nscoord aX, nscoord aY,
                           nscoord aWidth, 
@@ -2877,7 +2880,7 @@ void
 nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              nsStyleContext* aStyleContext,
-                             TextStyle& aTextStyle,
+                             TextPaintStyle& aTextStyle,
                              nscoord dx, nscoord dy)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -3056,7 +3059,7 @@ void
 nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
-                            TextStyle& aTextStyle,
+                            TextPaintStyle& aTextStyle,
                             nscoord dx, nscoord dy)
 {
   NS_PRECONDITION(0 == (TEXT_HAS_MULTIBYTE & mState), "text is multi-byte");
