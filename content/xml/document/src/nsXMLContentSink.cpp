@@ -1730,7 +1730,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
                       NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, PR_FALSE);
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, nsIScriptSecurityManager::ALLOW_CHROME);
       if (NS_FAILED(rv)) 
           return rv;
 

@@ -3665,7 +3665,7 @@ HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
   nsCOMPtr<nsIURI> baseHrefURI;
   rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
   if (NS_FAILED(rv)) return;
-  rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, PR_FALSE);
+  rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, nsIScriptSecurityManager::STANDARD);
   if (NS_FAILED(rv)) return;
 
   if (nsnull == mBody) {  // still in real HEAD
@@ -4355,7 +4355,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                     if (NS_SUCCEEDED(rv)) {
                         rv = securityManager->CheckLoadURI(baseURI,
                                                            uri,
-                                                           PR_TRUE);
+                                                           nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
                         if (NS_SUCCEEDED(rv)) {
                             nsCOMPtr<nsIRefreshURI> reefer = 
                                 do_QueryInterface(mWebShell);
@@ -4934,7 +4934,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
                       NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, mScriptURI, PR_FALSE);
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, mScriptURI, nsIScriptSecurityManager::ALLOW_CHROME);
       if (NS_FAILED(rv)) 
           return rv;
 

@@ -983,7 +983,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
     nsCOMPtr<nsIURI> newURI;
     rv = NS_NewURI(getter_AddRefs(newURI), absURL, baseURI);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = secMan->CheckLoadURI(referrer, newURI, PR_FALSE);
+    rv = secMan->CheckLoadURI(referrer, newURI, nsIScriptSecurityManager::STANDARD);
     if (NS_FAILED(rv))
       return rv; // We're not
 

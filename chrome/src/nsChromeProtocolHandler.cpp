@@ -724,7 +724,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
         nsXPIDLCString fileExtension;
         rv = url->GetFileExtension(getter_Copies(fileExtension));
-        if (PL_strcmp(fileExtension, "xul") == 0)
+        if (PL_strcasecmp(fileExtension, "xul") == 0 || PL_strcasecmp(fileExtension, "html") == 0 ||
+            PL_strcasecmp(fileExtension, "xml") == 0)
         {
             NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                             NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

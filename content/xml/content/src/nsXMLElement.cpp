@@ -293,7 +293,7 @@ static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI, ns
     if (NS_SUCCEEDED(rv)) {
       rv= securityManager->CheckLoadURI(aBaseURI,
                                          *aAbsURI,
-                                         PR_TRUE);
+                                         nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
     }
   }
 

@@ -479,7 +479,7 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
     nsCOMPtr<nsIURI> uri;
     if (NS_FAILED(codebase->GetURI(getter_AddRefs(uri)))) 
         return NS_ERROR_FAILURE;
-    if (NS_SUCCEEDED(CheckLoadURI(uri, aURI, PR_FALSE)))
+    if (NS_SUCCEEDED(CheckLoadURI(uri, aURI, nsIScriptSecurityManager::STANDARD )))
         return NS_OK;
 
     // See if we're attempting to load a file: URI. If so, let a 
@@ -506,72 +506,73 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
-                                      PRBool aDisallowFromMail)
+nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
+                                      PRUint32 aFlags)
 {
     nsCOMPtr<nsIJARURI> jarURI;
-    nsCOMPtr<nsIURI> uri = aFromURI;
-    while(uri && NS_SUCCEEDED(uri->QueryInterface(NS_GET_IID(nsIJARURI),
-                                                  getter_AddRefs(jarURI))))
-        jarURI->GetJARFile(getter_AddRefs(uri));
-    if (!uri) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIURI> sourceUri(aSourceURI);
+    while((jarURI = do_QueryInterface(sourceUri)))
+        jarURI->GetJARFile(getter_AddRefs(sourceUri));
+    if (!sourceUri) return NS_ERROR_FAILURE;
 
-    nsXPIDLCString fromScheme;
-    if (NS_FAILED(uri->GetScheme(getter_Copies(fromScheme))))
+    nsXPIDLCString sourceScheme;
+    if (NS_FAILED(sourceUri->GetScheme(getter_Copies(sourceScheme))))
         return NS_ERROR_FAILURE;
 
-    if (aDisallowFromMail && 
-        (nsCRT::strcasecmp(fromScheme, "mailbox")  == 0 ||
-         nsCRT::strcasecmp(fromScheme, "imap")     == 0 ||
-         nsCRT::strcasecmp(fromScheme, "news")     == 0))
+    // Some loads are not allowed from mail/news messages
+    if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) && 
+        (nsCRT::strcasecmp(sourceScheme, "mailbox")  == 0 ||
+         nsCRT::strcasecmp(sourceScheme, "imap")     == 0 ||
+         nsCRT::strcasecmp(sourceScheme, "news")     == 0))
     {
         return NS_ERROR_DOM_BAD_URI;
     }
 
-    uri = aURI;
-    while(uri && NS_SUCCEEDED(uri->QueryInterface(NS_GET_IID(nsIJARURI),
-                                                  getter_AddRefs(jarURI))))
-        jarURI->GetJARFile(getter_AddRefs(uri));
-    if (!uri) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIURI> targetUri(aTargetURI);
+    while((jarURI = do_QueryInterface(targetUri)))
+        jarURI->GetJARFile(getter_AddRefs(targetUri));
+    if (!targetUri) return NS_ERROR_FAILURE;
 
-    nsXPIDLCString scheme;
-    if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
+    nsXPIDLCString targetScheme;
+    if (NS_FAILED(targetUri->GetScheme(getter_Copies(targetScheme))))
         return NS_ERROR_FAILURE;
     
-    if (nsCRT::strcasecmp(scheme, fromScheme) == 0)
+    if (nsCRT::strcasecmp(targetScheme, sourceScheme) == 0)
     {
         // every scheme can access another URI from the same scheme
         return NS_OK;
     }
 
-    enum Action { AllowProtocol, DenyProtocol, PrefControlled };
+    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol };
     static const struct { 
         const char *name;
         Action action;
     } protocolList[] = {
-        { "about",           AllowProtocol },
-        { "data",            AllowProtocol },
-        { "file",            PrefControlled   },
-        { "ftp",             AllowProtocol },
+        //-- Keep the most commonly used protocols at the top of the list
+        //   to increase performance
         { "http",            AllowProtocol },
+        { "file",            PrefControlled },
         { "https",           AllowProtocol },
+        { "chrome",          ChromeProtocol },
+        { "mailbox",         DenyProtocol  },
+        { "pop",             AllowProtocol },
+        { "imap",            DenyProtocol  },
+        { "pop3",            DenyProtocol  },
+        { "news",            AllowProtocol },
+        { "javascript",      AllowProtocol },
+        { "ftp",             AllowProtocol },
+        { "about",           AllowProtocol },
+        { "mailto",          AllowProtocol },
+        { "data",            AllowProtocol },
         { "keyword",         DenyProtocol  },
-        { "res",             DenyProtocol  },
         { "resource",        DenyProtocol  },
         { "datetime",        DenyProtocol  },
         { "finger",          AllowProtocol },
-        { "chrome",          AllowProtocol },
-        { "javascript",      AllowProtocol },
-        { "mailto",          AllowProtocol },
-        { "imap",            DenyProtocol  },
-        { "mailbox",         DenyProtocol  },
-        { "pop3",            DenyProtocol  },
-        { "pop",             AllowProtocol },
-        { "news",            AllowProtocol },
+        { "res",             DenyProtocol  }
     };
 
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
-        if (nsCRT::strcasecmp(scheme, protocolList[i].name) == 0) {
+        if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0) {
             PRBool doCheck = PR_FALSE;
             switch (protocolList[i].action) {
             case AllowProtocol:
@@ -581,6 +582,9 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
                 // Allow access if pref is false
                 mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
                 return doCheck ? NS_ERROR_DOM_BAD_URI : NS_OK;
+            case ChromeProtocol:
+                return (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) ?
+                    NS_OK : NS_ERROR_DOM_BAD_URI; 
             case DenyProtocol:
                 // Deny access
                 return NS_ERROR_DOM_BAD_URI;
