@@ -675,6 +675,8 @@ nsDocLoaderImpl::Destroy()
     // Clear factory pointer (which is the docloader)
     (void)mLoadGroup->SetGroupListenerFactory(nsnull);
 
+    mLoadGroup->SetGroupObserver(nsnull);
+
     return NS_OK;
 }
 
