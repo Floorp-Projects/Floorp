@@ -65,6 +65,15 @@ public:
   nsresult CreateSyntheticDocument();
 
   nsresult StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener);
+#ifdef NECKO
+  nsresult EndLayout(nsISupports *ctxt, 
+                        nsresult status, 
+                        const PRUnichar *errorMsg);
+#else
+  nsresult EndLayout(nsIURI* aURL, 
+                        nsresult aStatus,
+                        const PRUnichar* aMsg);
+#endif
 
   void StartLayout();
 
@@ -182,8 +191,10 @@ ImageListener::OnStopRequest(nsIURI* aURL, nsresult aStatus,
     return NS_ERROR_FAILURE;
   }
 #ifdef NECKO
+  mDocument->EndLayout(ctxt, status, errorMsg);
   return mNextStream->OnStopRequest(ctxt, status, errorMsg);
 #else
+  mDocument->EndLayout(aURL, aStatus, aMsg);
   return mNextStream->OnStopRequest(aURL, aStatus, aMsg);
 #endif
 }
@@ -401,4 +412,28 @@ nsImageDocument::StartLayout()
       NS_RELEASE(shell);
     }
   }
+}
+
+nsresult
+#ifdef NECKO
+nsImageDocument::EndLayout(nsISupports *ctxt, 
+                           nsresult status, 
+                           const PRUnichar *errorMsg)
+#else
+nsImageDocument::EndLayout(nsIURI* aURL, 
+                           nsresult aStatus, 
+                           const PRUnichar* aMsg)
+#endif
+{
+  nsString titleStr = "Image ";
+  if (mImageRequest) {
+    PRUint32 width, height;
+    mImageRequest->GetNaturalDimensions(&width, &height);
+    titleStr.Append((PRInt32)width);
+    titleStr.Append("x");
+    titleStr.Append((PRInt32)height);
+    titleStr.Append(" pixels ");
+  } 
+  SetTitle(titleStr);
+  return NS_OK;
 }
