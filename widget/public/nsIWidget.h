@@ -106,9 +106,6 @@ class nsIWidget : public nsISupports {
      * @param      parent or null if it's a top level window
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
-     * @return    aToolkit  The toolkit which this widget and any widgets attached
-     *                      to this widget are created in. If nsnull the default
-     *                      toolkit is used.
      *
      */
     virtual void Create(nsIWidget        *aParent,
@@ -134,9 +131,6 @@ class nsIWidget : public nsISupports {
      * @param     aParent   native window.
      * @param     aRect     the widget dimension
      * @param     aHandleEventFunction the event handler callback function
-     * @return    aToolkit  The toolkit which this widget and any widgets attached
-     *                      to this widget are created in. If nsnull the default
-     *                      toolkit is used.
      *
      */
     virtual void Create(nsNativeWindow aParent,
@@ -349,11 +343,32 @@ class nsIWidget : public nsISupports {
     /*
      * Internal methods
      */
+
+    /**
+     * Internal Method
+    */
     virtual void AddChild(nsIWidget* aChild) = 0;
+
+    /**
+     * Internal Method
+    */
     virtual void RemoveChild(nsIWidget* aChild) = 0;
+
+    /**
+     * Internal Method
+    */
     virtual void* GetNativeData(PRUint32 aDataType) = 0;
+
+    /**
+     * Internal Method
+    */
     virtual nsIRenderingContext* GetRenderingContext() = 0;
+
+    /**
+     * Internal Method
+    */
     virtual nsIDeviceContext* GetDeviceContext() = 0;
+
 
 };
 
