@@ -1211,11 +1211,7 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
   mSelCon = 0;
   mEditor = 0;
   
-  if (mCachedState)
-  {
-    delete mCachedState;
-    mCachedState = nsnull;
-  }
+  InvalidateCachedState();
 
 //unregister self from content
   mTextListener->SetFrame(nsnull);
@@ -1716,13 +1712,8 @@ nsGfxTextControlFrame2::SetInitialValue()
   }
 
   // Free mCachedState since we don't need it anymore!
+  InvalidateCachedState();
 
-  if (mCachedState)
-  {
-    delete mCachedState;
-    mCachedState = nsnull;
-  }
-   
   return NS_OK;
 }
 
@@ -2454,13 +2445,22 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
 {
   NS_ENSURE_ARG_POINTER(aTextLength);
+
+  // We should probably invalidate the cached string on more
+  // than just selection changes; maybe we should listen
+  // for editor transactions etc.
   nsString *str = GetCachedString();
   if (str)
   {
     *aTextLength = str->Length();
     return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  
+  // otherwise, do it the long way
+  nsAutoString   textContents;
+  GetTextControlFrameState(textContents);   // this is expensive!
+  *aTextLength = textContents.Length();
+  return NS_OK;
 }
 
 
@@ -3002,6 +3002,8 @@ nsGfxTextControlFrame2::InternalContentChanged()
 
   if (!mContent) { return NS_ERROR_NULL_POINTER; }
 
+  InvalidateCachedState();
+  
   if (PR_FALSE==mNotifyOnInput) { 
     return NS_OK; // if notification is turned off, just return ok
   } 
@@ -3071,6 +3073,16 @@ nsGfxTextControlFrame2::GetCachedString()
     GetTextControlFrameState(*mCachedState);  
   }
   return mCachedState;
+}
+
+void
+nsGfxTextControlFrame2::InvalidateCachedState()
+{
+  if (mCachedState)
+  {
+    delete mCachedState;
+    mCachedState = nsnull;
+  }
 }
 
 void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
