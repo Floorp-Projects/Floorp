@@ -304,8 +304,11 @@ NS_IMPL_ISUPPORTS(nsJISx4501LineBreaker, kILineBreakerIID);
 
 #define U_PERIOD ((PRUnichar) '.')
 #define U_COMMA ((PRUnichar) ',')
-#define NEED_CONTEXTUAL_ANALYSIS(c) (((c)==U_PERIOD)||((c)==U_COMMA))
+#define U_SPACE ((PRUnichar) ' ')
+#define U_RIGHT_SINGLE_QUOTATION_MARK ((PRUnichar) 0x2019)
+#define NEED_CONTEXTUAL_ANALYSIS(c) (((c)==U_PERIOD)||((c)==U_COMMA)||((c)==U_RIGHT_SINGLE_QUOTATION_MARK))
 #define NUMERIC_CLASS  6 // JIS x4501 class 15 is now map to simplified class 6
+#define CHARACTER_CLASS  8 // JIS x4501 class 18 is now map to simplified class 8
 #define IS_ASCII_DIGIT(u) ((0x0030 <= (u)) && ((u) <= 0x0039))
 
 PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
@@ -323,6 +326,12 @@ PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
          if( (IS_ASCII_DIGIT (prev) || (0x0020 == prev) )&& 
              IS_ASCII_DIGIT (next) )
            return NUMERIC_CLASS;
+   }
+   else if(  U_RIGHT_SINGLE_QUOTATION_MARK == cur)
+   {
+        // somehow people use this as ' in "it's" sometimes...
+        if( U_SPACE != next )
+           return CHARACTER_CLASS;
    }
    return this->GetClass(cur);
 }
