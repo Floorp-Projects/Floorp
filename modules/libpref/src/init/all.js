@@ -481,7 +481,7 @@ pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only
 pref("network.http.sendSecureXSiteReferrer", true);
 
 // Maximum number of consecutive redirects before aborting.
-pref("network.http.redirection-limit", 10);
+pref("network.http.redirection-limit", 20);
 
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding" ,"gzip, deflate, compress;q=0.9");
