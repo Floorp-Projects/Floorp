@@ -1257,7 +1257,6 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
     
 
     *aFileSize = mFileInfo64.size;
-    printf("filesize = %ld\n", mFileInfo64.size);
     return NS_OK;
 }
 
