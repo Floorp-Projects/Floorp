@@ -121,6 +121,8 @@ protected:
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
 
+  static PRUint32 mInstanceCount;
+
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);
