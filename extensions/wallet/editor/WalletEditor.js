@@ -85,7 +85,7 @@ function Startup()
   walleteditor = Components.classes["component://netscape/walleteditor/walleteditor-world"].createInstance();
   walleteditor = walleteditor.QueryInterface(Components.interfaces.nsIWalletEditor);
 
-  walletservice = Components.classes['component://netscape/wallet'];
+  walletservice = Components.classes['component://netscape/wallet/wallet-service'];
   walletservice = walletservice.getService();
   walletservice = walletservice.QueryInterface(Components.interfaces.nsIWalletService);
 
