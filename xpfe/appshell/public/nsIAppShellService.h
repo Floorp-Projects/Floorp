@@ -20,7 +20,7 @@
 #ifndef nsIAppShellService_h__
 #define nsIAppShellService_h__
 
-#include "nsappshell.h"
+#include "nscore.h"
 #include "nsCom.h"
 #include "nsISupports.h"
 

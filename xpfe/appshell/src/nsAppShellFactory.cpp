@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIFactory.h"
-#include "nsappshell.h"
+#include "nscore.h"
 #include "nsIAppShellService.h"
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
