@@ -24,8 +24,8 @@
 
 #include "xptcprivate.h"
 
-#if !defined(LINUX) || !defined(__arm)
-#error "this code is for Linux ARM only"
+#if !defined(LINUX) || !defined(__arm__)
+#error "This code is for Linux ARM only. Please check if it works for you, too.\nDepends strongly on gcc behaviour."
 #endif
 
 static nsresult
@@ -102,37 +102,64 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
     return result;
 }
 
+
+/* The easiest way to implement this is to do it as a c++ method. This means that
+ * the compiler will same some registers to the stack as soon as this method is
+ * entered. We have to be aware of that and have to know the number of registers
+ * that will be pushed to the stack for now.
+ * The compiler passes arguments to functions/methods in r1-r3 and the rest is on the
+ * stack. r0 is (self).
+ *
+ *
+ * !!! IMPORTANT !!!
+ * This code will *not* work if compiled without optimization (-O / -O2) because
+ * the compiler overwrites the registers r0-r3 (it thinks it's called without 
+ * parameters) and perhaps reserves more stack space than we think.
+ *
+ *
+ * Since we don't know the number of parameters we have to pass to the required
+ * method we use the following scheme:
+ * 1.) Save method parameters that are passed in r1-r3 to a secure location
+ * 2.) copy the stack space that is reserved at method entry to a secure location
+ * 3.) copy the method arguments that formerly where in r1-r3 right in front of the
+ *     other arguments (if any). PrepareAndDispatch needs all arguments in an array.
+ *     It will sort out the correct argument passing convention using the InterfaceInfo's.
+ * 4.) Call PrepareAndDispatch
+ * 5.) Copy the stack contents from our method entry back in place to exit cleanly.
+ * 
+ * The easier way would be to completly implement this in assembler. This way one could get rid
+ * of the compiler generated function prologue.
+
 #define STUB_ENTRY(n)								   \
 nsresult nsXPTCStubBase::Stub##n()						   \
 { 										   \
-  register void* method = &PrepareAndDispatch;					   \
   register nsresult result;							   \
   __asm__ __volatile__(								   \
     "sub 	sp, sp, #32	\n\t"    /* correct stack for pushing all args	*/ \
     "str	r1, [sp]	\n\t"    /* push all args in r1-r3 to stack	*/ \
-    "str   	r2, [sp, #4]	\n\t"    /* to make a PRUint32 array of		*/ \
-    "str	r3, [sp, #8]	\n\t"	 /* functin parameters			*/ \
+    "str   	r2, [sp, #4]	\n\t"    /* 					*/ \
+    "str	r3, [sp, #8]	\n\t"	 /* 					*/ \
     "add	r1, sp, #32	\n\t"	 /* copy saved registers:		*/ \
     "ldr	r2, [r1]	\n\t"	 /* The scene is as follows - 		*/ \
     "str	r2, [sp, #12]	\n\t"    /* sl, fp, ip, lr, pc get saved to the */ \
     "ldr        r2, [r1, # 4]   \n\t"    /* stack, and behind that is the rest	*/ \
     "str        r2, [sp, #16]   \n\t"    /* of our function parameters.		*/ \
-    "ldr        r2, [r1, # 8]   \n\t"    /* So we make some room and copy r1-r3	*/ \
-    "str        r2, [sp, #20]   \n\t"    /* right in place.			*/ \
+    "ldr        r2, [r1, # 8]   \n\t"    /*					*/ \
+    "str        r2, [sp, #20]   \n\t"    /*					*/ \
     "ldr        r2, [r1, #12]   \n\t"    \
     "str        r2, [sp, #24]   \n\t"    \
     "ldr        r2, [r1, #16]   \n\t"    \
     "str        r2, [sp, #28]   \n\t"    \
-    "ldmia	sp, {r1, r2, r3}\n\t"	 \
-    "add	lr, sp, #40	\n\t"	 \
+    "ldmia	sp, {r1, r2, r3}\n\t"	 /* Copy method arguments to the right  */ \
+    "add	lr, sp, #40	\n\t"	 /* location.				*/ \
     "stmia	lr, {r1, r2, r3}\n\t"	 \
     "add	sp, sp, #12	\n\t"	 \
-    "mov	r1, #"#n"	\n\t"    /* methodIndex 			*/ \
-    "mov	r2, lr		\n\t"	 /* &args				*/ \
+    "mov	r1, #"#n"	\n\t"    /* = methodIndex 			*/ \
+    "mov	r2, lr		\n\t"	 /* = &(args)				*/ \
     "bl	PrepareAndDispatch__FP14nsXPTCStubBaseUiPUi   \n\t" /*PrepareAndDispatch*/ \
     "mov	%0, r0		\n\t"	 /* Result				*/ \
-    "add	r0, sp, #20	\n\t"	 \
-    "ldmia	sp!, {r1,r2,r3} \n\t"	 \
+    "add	r0, sp, #20	\n\t"	 /* copy everything back in place for	*/ \
+    "ldmia	sp!, {r1,r2,r3} \n\t"	 /* the normal c++ m,ethod exit		*/ \
     "stmia	r0!, {r1,r2,r3}	\n\t"	 \
     "ldmia	sp!, {r1, r2}	\n\t"	 \
     "stmia	r0, {r1, r2}	\n\t"	 \

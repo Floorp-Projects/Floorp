@@ -93,6 +93,7 @@ endif
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_arm.cpp xptcstubs_arm.cpp
+OS_CXXFLAGS += -O2
 endif
 endif
 #
