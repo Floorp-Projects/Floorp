@@ -32,10 +32,29 @@
 CIEHtmlElementCollection::CIEHtmlElementCollection()
 {
 	m_pIDispParent = NULL;
+    mNodeList = NULL;
+    mNodeListCount = 0;
+    mNodeListCapacity = 0;
 }
 
 CIEHtmlElementCollection::~CIEHtmlElementCollection()
 {
+    // Clean the node list
+    if (mNodeList)
+    {
+        for (PRUint32 i = 0; i < mNodeListCount; i++)
+        {
+            IDispatch *pDisp = mNodeList[i];
+            if (pDisp)
+            {
+                pDisp->Release();
+            }
+        }
+        free(mNodeList);
+        mNodeList = NULL;
+        mNodeListCount = 0;
+        mNodeListCapacity = 0;
+    }
 }
 
 HRESULT CIEHtmlElementCollection::SetParentNode(IDispatch *pIDispParent)
@@ -44,22 +63,90 @@ HRESULT CIEHtmlElementCollection::SetParentNode(IDispatch *pIDispParent)
 	return S_OK;
 }
 
-
-struct NodeListPos
+template <class nodeListType>
+HRESULT PopulateFromList(CIEHtmlElementCollection *pCollection, nodeListType *pNodeList, BOOL bRecurseChildren)
 {
-	nsIDOMNodeList *m_pIDOMNodeList;
-	PRUint32 m_nListPos;
-
-	NodeListPos(nsIDOMNodeList *pIDOMNodeList, PRUint32 nListPos) :
-		m_pIDOMNodeList(pIDOMNodeList),
-		m_nListPos(nListPos)
+	if (pNodeList == nsnull)
 	{
+		return S_OK;
 	}
 
-	NodeListPos()
+	// Recurse through the children of the node (and the children of that)
+	// to populate the collection
+
+	// Iterate through items in list
+	PRUint32 length = 0;
+	pNodeList->GetLength(&length);
+	for (PRUint32 i = 0; i < length; i++)
 	{
-	};
-};
+		// Get the next item from the list
+		nsCOMPtr<nsIDOMNode> childNode;
+		pNodeList->Item(i, getter_AddRefs(childNode));
+		if (!childNode)
+		{
+			// Empty node (unexpected, but try and carry on anyway)
+			NG_ASSERT(0);
+			continue;
+		}
+
+        // Skip nodes representing, text, attributes etc.
+        PRUint16 nodeType;
+        childNode->GetNodeType(&nodeType);
+        if (nodeType != nsIDOMNode::ELEMENT_NODE)
+        {
+            continue;
+        }
+
+		// Create an equivalent IE element
+        CIEHtmlNode *pHtmlNode = NULL;
+        CIEHtmlElementInstance *pHtmlElement = NULL;
+        CIEHtmlElementInstance::FindFromDOMNode(childNode, &pHtmlNode);
+        if (!pHtmlNode)
+        {
+    		CIEHtmlElementInstance::CreateInstance(&pHtmlElement);
+			pHtmlElement->SetDOMNode(childNode);
+			pHtmlElement->SetParentNode(pCollection->m_pIDispParent);
+        }
+        else
+        {
+            pHtmlElement = (CIEHtmlElementInstance *) pHtmlNode;
+        }
+		if (pHtmlElement)
+		{
+			pCollection->AddNode(pHtmlElement);
+		}
+
+		if (bRecurseChildren)
+		{
+			// Test if the node has children and recursively add them too
+			nsCOMPtr<nsIDOMNodeList> childNodeList;
+			childNode->GetChildNodes(getter_AddRefs(childNodeList));
+            PRUint32 childListLength = 0;
+            if (childNodeList)
+            {
+                childNodeList->GetLength(&childListLength);
+            }
+            if (childListLength > 0)
+            {
+                PopulateFromList<nsIDOMNodeList>(pCollection, childNodeList, bRecurseChildren);
+            }
+		}
+	}
+
+    return S_OK;
+}
+
+
+HRESULT CIEHtmlElementCollection::PopulateFromDOMNodeList(nsIDOMNodeList *pNodeList, BOOL bRecurseChildren)
+{
+    return PopulateFromList<nsIDOMNodeList>(this, pNodeList, bRecurseChildren);
+}
+
+
+HRESULT CIEHtmlElementCollection::PopulateFromDOMHTMLCollection(nsIDOMHTMLCollection *pNodeList, BOOL bRecurseChildren)
+{
+    return PopulateFromList<nsIDOMHTMLCollection>(this, pNodeList, bRecurseChildren);
+}
 
 
 HRESULT CIEHtmlElementCollection::PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren)
@@ -71,82 +158,18 @@ HRESULT CIEHtmlElementCollection::PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOO
 	}
 
 	// Get elements from the DOM node
-	nsIDOMNodeList *pNodeList = nsnull;
-	pIDOMNode->GetChildNodes(&pNodeList);
-	if (pNodeList == nsnull)
+	nsCOMPtr<nsIDOMNodeList> nodeList;
+	pIDOMNode->GetChildNodes(getter_AddRefs(nodeList));
+	if (!nodeList)
 	{
 		return S_OK;
 	}
 
-	// Recurse through the children of the node (and the children of that)
-	// to populate the collection
-
-	std::stack< NodeListPos > cNodeStack;
-	cNodeStack.push(NodeListPos(pNodeList, 0));
-	while (!cNodeStack.empty())
-	{
-		// Pop an item from the stack
-		NodeListPos pos = cNodeStack.top();
-		cNodeStack.pop();
-
-		// Iterate through items in list
-		PRUint32 aLength = 0;
-		pNodeList = pos.m_pIDOMNodeList;
-		pNodeList->GetLength(&aLength);
-		for (PRUint32 i = pos.m_nListPos; i < aLength; i++)
-		{
-			// Get the next item from the list
-			nsIDOMNode *pChildNode = nsnull;
-			pNodeList->Item(i, &pChildNode);
-			if (pChildNode == nsnull)
-			{
-				// Empty node (unexpected, but try and carry on anyway)
-				NG_ASSERT(0);
-				continue;
-			}
-
-			// Create an equivalent IE element
-			CIEHtmlElementInstance *pElement = NULL;
-			CIEHtmlElementInstance::CreateInstance(&pElement);
-			if (pElement)
-			{
-				pElement->SetDOMNode(pChildNode);
-				pElement->SetParentNode(m_pIDispParent);
-				AddNode(pElement);
-			}
-
-			if (bRecurseChildren)
-			{
-				// Test if the node has children and pop them onto the stack too
-				nsIDOMNodeList *pChildNodeList = nsnull;
-				pChildNode->GetChildNodes(&pChildNodeList);
-				if (pChildNodeList)
-				{
-					// Push the child collection onto the stack
-					cNodeStack.push(NodeListPos(pChildNodeList, 0));
-					// Push the current position onto the stack ( if necessary )
-					if (i + 1 < aLength)
-					{
-						pNodeList->AddRef();
-						cNodeStack.push(NodeListPos(pNodeList, i + 1));
-					}
-					break;
-				}
-			}
-			
-			// Cleanup for next iteration
-			pChildNode->Release();
-		}
-
-		// Cleanup for next iteration
-		pNodeList->Release();
-	}
-
-	return S_OK;
+    return PopulateFromDOMNodeList(nodeList, bRecurseChildren);
 }
 
 
-HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren)
+HRESULT CIEHtmlElementCollection::CreateFromDOMHTMLCollection(CIEHtmlNode *pParentNode, nsIDOMHTMLCollection *pNodeList, CIEHtmlElementCollection **pInstance)
 {
 	if (pInstance == NULL || pParentNode == NULL)
 	{
@@ -155,9 +178,9 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 	}
 
 	// Get the DOM node from the parent node
-	nsIDOMNode *pIDOMNode = nsnull;
-	pParentNode->GetDOMNode(&pIDOMNode);
-	if (pIDOMNode == nsnull)
+	nsCOMPtr<nsIDOMNode> domNode;
+	pParentNode->GetDOMNode(getter_AddRefs(domNode));
+	if (!domNode)
 	{
 		NG_ASSERT(0);
 		return E_INVALIDARG;
@@ -178,9 +201,86 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 	CIPtr(IDispatch) cpDispNode;
 	pParentNode->GetIDispatch(&cpDispNode);
 	pCollection->SetParentNode(cpDispNode);
-	pCollection->PopulateFromDOMNode(pIDOMNode, bRecurseChildren);
+	pCollection->PopulateFromDOMHTMLCollection(pNodeList, FALSE);
 
-	pIDOMNode->Release();
+	*pInstance = pCollection;
+
+	return S_OK;
+}
+
+
+HRESULT CIEHtmlElementCollection::CreateFromDOMNodeList(CIEHtmlNode *pParentNode, nsIDOMNodeList *pNodeList, CIEHtmlElementCollection **pInstance)
+{
+	if (pInstance == NULL || pParentNode == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// Get the DOM node from the parent node
+	nsCOMPtr<nsIDOMNode> domNode;
+	pParentNode->GetDOMNode(getter_AddRefs(domNode));
+	if (!domNode)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pInstance = NULL;
+
+	// Create a collection object
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
+	if (pCollection == NULL)
+	{
+		NG_ASSERT(0);
+		return E_OUTOFMEMORY;
+	}
+
+	// Initialise and populate the collection
+	CIPtr(IDispatch) cpDispNode;
+	pParentNode->GetIDispatch(&cpDispNode);
+	pCollection->SetParentNode(cpDispNode);
+	pCollection->PopulateFromDOMNodeList(pNodeList, FALSE);
+
+	*pInstance = pCollection;
+
+	return S_OK;
+}
+
+HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, BOOL bRecurseChildren, CIEHtmlElementCollection **pInstance)
+{
+	if (pInstance == NULL || pParentNode == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// Get the DOM node from the parent node
+	nsCOMPtr<nsIDOMNode> domNode;
+	pParentNode->GetDOMNode(getter_AddRefs(domNode));
+	if (!domNode)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pInstance = NULL;
+
+	// Create a collection object
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
+	if (pCollection == NULL)
+	{
+		NG_ASSERT(0);
+		return E_OUTOFMEMORY;
+	}
+
+	// Initialise and populate the collection
+	CIPtr(IDispatch) cpDispNode;
+	pParentNode->GetIDispatch(&cpDispNode);
+	pCollection->SetParentNode(cpDispNode);
+	pCollection->PopulateFromDOMNode(domNode, bRecurseChildren);
 
 	*pInstance = pCollection;
 
@@ -196,7 +296,28 @@ HRESULT CIEHtmlElementCollection::AddNode(IDispatch *pNode)
 		return E_INVALIDARG;
 	}
 
-	m_cNodeList.push_back(pNode);
+    const PRUint32 c_NodeListResizeBy = 10;
+
+    if (mNodeList == NULL)
+    {
+        mNodeListCapacity = c_NodeListResizeBy;
+        mNodeList = (IDispatch **) malloc(sizeof(IDispatch *) * mNodeListCapacity);
+        mNodeListCount = 0;
+    }
+    else if (mNodeListCount == mNodeListCapacity)
+    {
+        mNodeListCapacity += c_NodeListResizeBy;
+        mNodeList = (IDispatch **) realloc(mNodeList, sizeof(IDispatch *) * mNodeListCapacity);
+    }
+
+    if (mNodeList == NULL)
+    {
+		NG_ASSERT(0);
+        return E_OUTOFMEMORY;
+    }
+
+    pNode->AddRef();
+    mNodeList[mNodeListCount++] = pNode;
 
 	return S_OK;
 }
@@ -232,7 +353,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get_length(long __RPC_FAR *p
 	}
 	
 	// Return the size of the collection
-	*p = m_cNodeList.size();
+	*p = mNodeListCount;
 	return S_OK;
 }
 
@@ -257,7 +378,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
 	}
 
 	int nObject;
-	int nObjects = m_cNodeList.size();
+	int nObjects = mNodeListCount;
 
 	// Create an array of VARIANTs
 	VARIANT *avObjects = new VARIANT[nObjects];
@@ -271,7 +392,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::get__newEnum(IUnknown __RPC_
 	for (nObject = 0; nObject < nObjects; nObject++)
 	{
 		VARIANT *pVariant = &avObjects[nObject];
-		IUnknown *pUnkObject = m_cNodeList[nObject];
+		IUnknown *pUnkObject = mNodeList[nObject];
 		VariantInit(pVariant);
 		pVariant->vt = VT_UNKNOWN;
 		pVariant->punkVal = pUnkObject;
@@ -311,13 +432,13 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElementCollection::item(VARIANT name, VARIANT i
 	{
 		// Test for stupid values
 		int nIndex = vIndex.lVal;
-		if (nIndex < 0 || nIndex >= m_cNodeList.size())
+		if (nIndex < 0 || nIndex >= mNodeListCount)
 		{
 			return E_INVALIDARG;
 		}
 	
 		*pdisp = NULL;
-		IDispatch *pNode = m_cNodeList[nIndex];
+		IDispatch *pNode = mNodeList[nIndex];
 		if (pNode == NULL)
 		{
 			NG_ASSERT(0);

@@ -26,6 +26,8 @@
 #define IEHTMLDOCUMENT_H
 
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
+
 #include "IEHtmlNode.h"
 
 class CMozillaBrowser;

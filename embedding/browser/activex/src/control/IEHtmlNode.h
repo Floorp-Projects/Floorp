@@ -37,7 +37,9 @@ protected:
 	virtual ~CIEHtmlNode();
 
 public:
-	virtual HRESULT SetDOMNode(nsIDOMNode *pIDOMNode);
+    static HRESULT FindFromDOMNode(nsIDOMNode *pIDOMNode, CIEHtmlNode **pHtmlNode);
+    
+    virtual HRESULT SetDOMNode(nsIDOMNode *pIDOMNode);
 	virtual HRESULT GetDOMNode(nsIDOMNode **pIDOMNode);
 	virtual HRESULT GetDOMElement(nsIDOMElement **pIDOMElement);
 	virtual HRESULT SetParentNode(IDispatch *pIDispParent);

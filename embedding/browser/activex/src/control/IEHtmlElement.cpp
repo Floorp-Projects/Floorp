@@ -60,7 +60,7 @@ HRESULT CIEHtmlElement::GetChildren(CIEHtmlElementCollectionInstance **ppCollect
 
 	// Create a collection representing the children of this node
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
+	CIEHtmlElementCollection::CreateFromParentNode(this, FALSE, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)
 	{
 		pCollection->AddRef();
@@ -679,7 +679,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_all(IDispatch __RPC_FAR *__RPC_FAR
 	// TODO get ALL contained elements, not just the immediate children
 
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
+	CIEHtmlElementCollection::CreateFromParentNode(this, TRUE, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)
 	{
 		pCollection->AddRef();

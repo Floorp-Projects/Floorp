@@ -25,6 +25,8 @@
 #include "stdafx.h"
 #include "IEHtmlDocument.h"
 #include "IEHtmlElementCollection.h"
+#include "IEHtmlElement.h"
+
 #include "MozillaBrowser.h"
 
 #include <stack>
@@ -103,17 +105,13 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_
 
 	*p = NULL;
 
-	std::vector< CIPtr(IDispatch) > cNodeList;
-
 	// Get all elements
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection, TRUE);
+	CIEHtmlElementCollection::CreateFromParentNode(this, TRUE, (CIEHtmlElementCollection **) &pCollection);
 	if (pCollection)
 	{
-		pCollection->AddRef();
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
 	}
-
-	*p = pCollection;
 
 	return S_OK;
 }
@@ -121,8 +119,31 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_all(IHTMLElementCollection __RPC_
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_body(IHTMLElement __RPC_FAR *__RPC_FAR *p)
 {
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
 	*p = NULL;
-	return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
+
+    m_pNative->GetBody(getter_AddRefs(bodyElement));
+    if (bodyElement)
+    {
+        nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+
+	    CIEHtmlElementInstance *pElement = NULL;
+	    CIEHtmlElementInstance::CreateInstance(&pElement);
+	    if (pElement)
+	    {
+		    pElement->SetDOMNode(bodyNode);
+		    pElement->SetParentNode(this);
+            pElement->QueryInterface(IID_IHTMLElement, (void **) p);
+	    }
+    }
+
+	return S_OK;
 }
 
 
@@ -135,42 +156,137 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_activeElement(IHTMLElement __RPC_
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_images(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
 	*p = NULL;
-	return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
+    m_pNative->GetImages(getter_AddRefs(nodeList));
+
+	// Get all elements
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromDOMHTMLCollection(this, nodeList, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+	}
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_applets(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
 	*p = NULL;
-	return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
+    m_pNative->GetApplets(getter_AddRefs(nodeList));
+
+	// Get all elements
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromDOMHTMLCollection(this, nodeList, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+	}
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_links(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
 	*p = NULL;
-	return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
+    m_pNative->GetLinks(getter_AddRefs(nodeList));
+
+	// Get all elements
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromDOMHTMLCollection(this, nodeList, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+	}
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_forms(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
 	*p = NULL;
-	return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
+    m_pNative->GetForms(getter_AddRefs(nodeList));
+
+	// Get all elements
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromDOMHTMLCollection(this, nodeList, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+	}
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_anchors(IHTMLElementCollection __RPC_FAR *__RPC_FAR *p)
 {
+	// Validate parameters
+	if (p == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
 	*p = NULL;
-	return E_NOTIMPL;
+
+    nsCOMPtr<nsIDOMHTMLCollection> nodeList;
+    m_pNative->GetAnchors(getter_AddRefs(nodeList));
+
+	// Get all elements
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromDOMHTMLCollection(this, nodeList, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+	}
+
+	return S_OK;
 }
 
 
 HRESULT STDMETHODCALLTYPE CIEHtmlDocument::put_title(BSTR v)
 {
-	return E_NOTIMPL;
+    if (m_pNative)
+    {
+        nsAutoString newTitle((PRUnichar *) v);
+        m_pNative->SetTitle(newTitle);
+    }
+	return S_OK;
 }
 
 

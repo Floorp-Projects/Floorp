@@ -25,20 +25,20 @@
 #ifndef IEHTMLNODECOLLECTION_H
 #define IEHTMLNODECOLLECTION_H
 
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMNodeList.h"
+
 #include "IEHtmlNode.h"
 
 class CIEHtmlElement;
 
-
-
 class CIEHtmlElementCollection : public CComObjectRootEx<CComSingleThreadModel>,
 							  public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
 {
-public:
-	typedef std::vector< CIPtr(IDispatch) > ElementList;
-
 private:
-	ElementList m_cNodeList;
+    IDispatch **mNodeList;
+    PRUint32    mNodeListCount;
+    PRUint32    mNodeListCapacity;
 
 public:
 	CIEHtmlElementCollection();
@@ -46,27 +46,34 @@ public:
 protected:
 	virtual ~CIEHtmlElementCollection();
 
+public:
 	// Pointer to parent node/document
 	IDispatch *m_pIDispParent;
 
-public:
 	// Adds a node to the collection
 	virtual HRESULT AddNode(IDispatch *pNode);
 
 	// Sets the parent node of this collection
 	virtual HRESULT SetParentNode(IDispatch *pIDispParent);
 
+    // Populates the collection from a DOM HTML collection
+    virtual HRESULT PopulateFromDOMHTMLCollection(nsIDOMHTMLCollection *pNodeList, BOOL bRecurseChildren);
+
+    // Populates the collection from a DOM node list
+    virtual HRESULT PopulateFromDOMNodeList(nsIDOMNodeList *pNodeList, BOOL bRecurseChildren);
+
 	// Populates the collection with items from the DOM node
 	virtual HRESULT PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren);
 
 	// Helper method creates a collection from a parent node
-	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren = FALSE);
+	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, BOOL bRecurseChildren, CIEHtmlElementCollection **pInstance);
 
+    // Helper method creates a collection from the specified node list
+    static HRESULT CreateFromDOMNodeList(CIEHtmlNode *pParentNode, nsIDOMNodeList *pNodeList, CIEHtmlElementCollection **pInstance);
 
-	ElementList &GetElements()
-	{
-		return m_cNodeList;
-	}
+    // Helper method creates a collection from the specified HTML collection
+    static HRESULT CreateFromDOMHTMLCollection(CIEHtmlNode *pParentNode, nsIDOMHTMLCollection *pNodeList, CIEHtmlElementCollection **pInstance);
+
 
 BEGIN_COM_MAP(CIEHtmlElementCollection)
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)
