@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/prefs.dtd">
+<!DOCTYPE page SYSTEM "chrome://inspector/locale/prefs.dtd">
 
 <?xml-stylesheet href="chrome://inspector/skin/"?>
 

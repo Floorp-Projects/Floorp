@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://inspector/content/inspector.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://inspector/content/inspector.dtd">
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/dom/findDialog.css"?>
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE rdf [
+<!DOCTYPE overlay [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd1;
 ]>
 

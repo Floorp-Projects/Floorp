@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/search/junkImgs.dtd">
+<!DOCTYPE window SYSTEM "chrome://inspector/locale/search/junkImgs.dtd">
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
