@@ -45,6 +45,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
+char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
+
 //-------------------------------------------------------------------------
 //
 // nsFilePicker constructor
@@ -56,6 +58,7 @@ nsFilePicker::nsFilePicker()
   mWnd = NULL;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
+  mSelectedType   = 1;
   mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
 }
 
@@ -97,6 +100,15 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     title = ToNewCString(mTitle);
   char *initialDir;
   mDisplayDirectory->GetPath(&initialDir);
+  // If no display directory, re-use the last one.
+  if(!initialDir || !*initialDir) {
+    // Free empty string returned from GetPath.
+    if (initialDir) {
+        nsMemory::Free(initialDir);
+    }
+    // Allocate copy of last used dir.
+    initialDir = NS_STATIC_CAST( char*, nsMemory::Clone(mLastUsedDirectory, PL_strlen(mLastUsedDirectory)+1) );
+  }
 
   mFile.SetLength(0);
 
@@ -206,12 +218,6 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     // Remember what filter type the user selected
     mSelectedType = (PRInt16)ofn.nFilterIndex;
 
-    // Store the current directory in mDisplayDirectory
-    char* newCurrentDirectory = NS_STATIC_CAST( char*, nsMemory::Alloc( MAX_PATH+1 ) );
-    VERIFY(::GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
-    mDisplayDirectory->InitWithPath(newCurrentDirectory);
-    nsMemory::Free( newCurrentDirectory );
-
     // Clean up filter buffers
     if (filterBuffer)
       nsMemory::Free( filterBuffer );
@@ -234,15 +240,30 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   if (result) {
     PRInt16 returnOKorReplace = returnOK;
 
+    // Remember last used directory.
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+    file->InitWithPath(mFile.get());
+    nsCOMPtr<nsIFile> dir;
+    if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
+      nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
+      if (localDir) {
+        char *newDir;
+        localDir->GetPath(&newDir);
+        if(newDir) {
+          PL_strncpyz(mLastUsedDirectory, newDir, MAX_PATH+1);
+          nsMemory::Free(newDir);
+        }
+        // Update mDisplayDirectory with this directory, also.
+        // Some callers rely on this.
+        mDisplayDirectory->InitWithPath( mLastUsedDirectory );
+      }
+    }
+
     if (mMode == modeSave) {
       // Windows does not return resultReplace,
       //   we must check if file already exists
-      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-
-      NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-      file->InitWithPath(mFile.get());
-
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
       if (exists)
