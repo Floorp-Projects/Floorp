@@ -429,9 +429,13 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   // just get the one and only style rule from the content's STYLE attribute
   if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
     nsIStyleRule* rule = nsnull;
-    if (NS_SUCCEEDED(styledContent->GetInlineStyleRule(rule))) {
-      if (nsnull != rule) {
-        aResults->AppendElement(rule);
+    PRUint32 index = 0;
+    aResults->Count(&index);
+    if (NS_SUCCEEDED(styledContent->GetInlineStyleRules(aResults))) {
+      PRUint32 postCount = 0;
+      aResults->Count(&postCount);
+      while (index < postCount) {
+        nsIStyleRule* rule = (nsIStyleRule*)aResults->ElementAt(index++);
         matchCount++;
         nsICSSStyleRule*  cssRule;
         if (NS_SUCCEEDED(rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule))) {

@@ -506,13 +506,12 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     } // end html namespace
 
     // just get the one and only style rule from the content
-    nsIStyleRule* rule;
-    styledContent->GetContentStyleRule(rule);
-    if (nsnull != rule) {
-      aResults->AppendElement(rule);
-      NS_RELEASE(rule);
-      matchCount++;
-    }
+    PRUint32 preCount = 0;
+    PRUint32 postCount = 0;
+    aResults->Count(&preCount);
+    styledContent->GetContentStyleRules(aResults);
+    aResults->Count(&postCount);
+    matchCount += (postCount - preCount);
 
     NS_RELEASE(styledContent);
   }
