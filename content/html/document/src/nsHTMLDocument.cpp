@@ -92,7 +92,9 @@ NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
 nsHTMLDocument::nsHTMLDocument()
   : nsMarkupDocument(),
     mAttrStyleSheet(nsnull),
-    mStyleAttrStyleSheet(nsnull)
+    mStyleAttrStyleSheet(nsnull),
+    mBaseURL(nsnull),
+    mBaseTarget(nsnull)
 {
   mImages = nsnull;
   mApplets = nsnull;
@@ -139,6 +141,11 @@ nsHTMLDocument::~nsHTMLDocument()
   if (nsnull != mStyleAttrStyleSheet) {
     mStyleAttrStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mStyleAttrStyleSheet);
+  }
+  NS_IF_RELEASE(mBaseURL);
+  if (nsnull != mBaseTarget) {
+    delete mBaseTarget;
+    mBaseTarget = nsnull;
   }
   NS_IF_RELEASE(mParser);
   for (i = 0; i < mImageMaps.Count(); i++) {
@@ -429,6 +436,73 @@ void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet
     aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it in front
   }
 }
+
+
+NS_IMETHODIMP
+nsHTMLDocument::GetBaseURL(nsIURL*& aURL) const
+{
+  if (nsnull != mBaseURL) {
+    NS_ADDREF(mBaseURL);
+    aURL = mBaseURL;
+  }
+  else {
+    aURL = GetDocumentURL();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument:: SetBaseURL(const nsString& aURLSpec)
+{
+  nsresult result = NS_OK;
+
+  NS_IF_RELEASE(mBaseURL);
+  if (0 < aURLSpec.Length()) {
+    nsIURLGroup* urlGroup = nsnull;
+    (void)mDocumentURL->GetURLGroup(&urlGroup);
+    if (urlGroup) {
+      result = urlGroup->CreateURL(&mBaseURL, mDocumentURL, aURLSpec, nsnull);
+      NS_RELEASE(urlGroup);
+    }
+    else {
+      result = NS_NewURL(&mBaseURL, aURLSpec, mDocumentURL);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument:: GetBaseTarget(nsString& aTarget) const
+{
+  if (nsnull != mBaseTarget) {
+    aTarget = *mBaseTarget;
+  }
+  else {
+    aTarget.Truncate();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument:: SetBaseTarget(const nsString& aTarget)
+{
+  if (0 < aTarget.Length()) {
+    if (nsnull != mBaseTarget) {
+      *mBaseTarget = aTarget;
+    }
+    else {
+      mBaseTarget = aTarget.ToNewString();
+    }
+  }
+  else {
+    if (nsnull != mBaseTarget) {
+      delete mBaseTarget;
+      mBaseTarget = nsnull;
+    }
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLDocument::GetDTDMode(nsDTDMode& aMode)

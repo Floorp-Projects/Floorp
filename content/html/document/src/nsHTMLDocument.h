@@ -64,6 +64,11 @@ public:
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
 
+  NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
+  NS_IMETHOD SetBaseURL(const nsString& aURLSpec);
+  NS_IMETHOD GetBaseTarget(nsString& aTarget) const;
+  NS_IMETHOD SetBaseTarget(const nsString& aTarget);
+
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
@@ -184,6 +189,8 @@ protected:
 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
+  nsIURL*     mBaseURL;
+  nsString*   mBaseTarget;
   nsDTDMode mDTDMode;
   nsVoidArray mImageMaps;
 
