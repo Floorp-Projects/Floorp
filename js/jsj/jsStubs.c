@@ -312,7 +312,9 @@ native_netscape_javascript_JSObject_removeMember(
     JSContext *cx;
     JSObject *jso;
     JSSavedState saved;
+#ifdef JAVA /* only referenced if defined */
     const char *cstr;
+#endif
 
     if (!enterJS(env, self, &cx, &jso, &saved))
         return;
@@ -335,8 +337,9 @@ native_netscape_javascript_JSObject_removeMember(
 
     /* PR_LOG(Moja, debug,
            ("JSObject.removeMember(%s)\n", cstr)); */
-
+#ifdef JAVA /* only referenced if defined */
   do_exit:
+#endif
     exitJS(env, self, cx, jso, &saved);
     return;
 }
@@ -516,8 +519,10 @@ native_netscape_javascript_JSObject_toString(
     JSContext *cx;
     JSObject *jso;
     JSSavedState saved;
+#ifdef JAVA /* only referenced if defined */
     JSString *jsstr;
     char *cstr;
+#endif
     struct java_lang_String *ret;
 
     if (!enterJS(env, self, &cx, &jso, &saved))
