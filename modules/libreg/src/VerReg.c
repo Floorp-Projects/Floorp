@@ -91,8 +91,10 @@ static HREG vreg = 0;
  *   be the global registry read-only (unless we couldn't
  *   open it).
  */
+#if !defined(STANDALONE_REGISTRY)
 static HREG unixreg = 0;
 static RKEY unixver = 0;
+#endif
 XP_Bool bGlobalRegistry = FALSE;
 #endif
 
@@ -107,7 +109,6 @@ static char *app_dir = NULL;
  * ---------------------------------------------------------------------
  */
 static REGERR vr_Init(void);
-static REGERR vr_BuildVersion(VERSION *pVer, char *buf);
 static Bool   vr_CompareDirs( char *dir1, char *dir2 );
 static REGERR vr_SetCurrentNav( char *product, char *programPath, char *versionStr);
 static REGERR vr_ParseVersion(char *verstr, VERSION *result);
@@ -769,11 +770,13 @@ VR_INTERFACE(REGERR) VR_Close(void)
 VR_INTERFACE(REGERR) VR_GetVersion(char *component_path, VERSION *result)
 {
 	REGERR  err;
-	RKEY    rootkey;
-    RKEY    key;
-    HREG    hreg;
+	RKEY    key;
+	HREG    hreg;
 	VERSION ver;
 	char    buf[MAXREGNAMELEN];
+#if defined(STANDALONE_REGISTRY) || !defined(XP_UNIX)
+	RKEY    rootkey;
+#endif
 
 	err = vr_Init();
 	if (err != REGERR_OK)
@@ -805,9 +808,11 @@ VR_INTERFACE(REGERR) VR_GetVersion(char *component_path, VERSION *result)
 VR_INTERFACE(REGERR) VR_GetPath(char *component_path, uint32 sizebuf, char *buf)
 {
 	REGERR err;
-	RKEY rootkey;
 	RKEY key;
-    HREG hreg;
+	HREG hreg;
+#if defined(STANDALONE_REGISTRY) || !defined(XP_UNIX)
+	RKEY rootkey;
+#endif
 
 	err = vr_Init();
 	if (err != REGERR_OK)
@@ -857,10 +862,11 @@ VR_INTERFACE(REGERR) VR_SetDefaultDirectory(char *component_path, char *director
 VR_INTERFACE(REGERR) VR_GetDefaultDirectory(char *component_path, uint32 sizebuf, char *buf)
 {
 	REGERR err;
-	RKEY rootkey;
 	RKEY key;
-    HREG hreg;
-
+	HREG hreg;
+#if defined(STANDALONE_REGISTRY) || !defined(XP_UNIX)
+	RKEY rootkey;
+#endif
 	err = vr_Init();
 	if (err != REGERR_OK)
 		return err;
@@ -978,10 +984,11 @@ VR_INTERFACE(REGERR) VR_Enum(char *component_path, REGENUM *state,
 VR_INTERFACE(REGERR) VR_InRegistry(char *component_path)
 {
 	REGERR err;
-	RKEY rootkey;
 	RKEY key;
 #if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX)
-    HREG hreg;
+	HREG hreg;
+#else
+	RKEY rootkey;
 #endif
 
 	err = vr_Init();
@@ -1001,11 +1008,12 @@ VR_INTERFACE(REGERR) VR_InRegistry(char *component_path)
 VR_INTERFACE(REGERR) VR_ValidateComponent(char *component_path)
 {
 	REGERR err;
-	RKEY rootkey;
 	RKEY key;
 	char path[MAXREGPATHLEN];
 #if !defined(STANDALONE_REGISTRY) && defined(XP_UNIX)
-    HREG hreg;
+	HREG hreg;
+#else
+	RKEY rootkey;
 #endif
 
 
