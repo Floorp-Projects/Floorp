@@ -703,7 +703,7 @@ static char    gVerifyDir[_MAX_PATH];
 static PRBool  gVisualDebug = PR_TRUE;
 
 // Robot
-static nsIBrowserWindow * mRobotDialog = nsnull;
+static nsIWidget      * mRobotDialog = nsnull;
 static nsIButton      * mCancelBtn;
 static nsIButton      * mStartBtn;
 static nsITextWidget  * mVerDirTxt;
@@ -711,7 +711,7 @@ static nsITextWidget  * mStopAfterTxt;
 static nsICheckButton * mUpdateChkBtn;
 
 // Site
-static nsIBrowserWindow * mSiteDialog = nsnull;
+static nsIWidget * mSiteDialog = nsnull;
 static nsIButton      * mSiteCancelBtn;
 static nsIButton      * mSitePrevBtn;
 static nsIButton      * mSiteNextBtn;
@@ -723,6 +723,7 @@ static NS_DEFINE_IID(kTextFieldCID,   NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kWindowCID,      NS_WINDOW_CID);
 static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kLabelCID,       NS_LABEL_CID);
+
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
@@ -821,7 +822,8 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
     case NS_PAINT: 
 #ifndef XP_UNIX
         // paint the background
-      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mRobotDialog ) {
+    //  if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mRobotDialog ) {
+        if (aEvent->widget == mRobotDialog ) {
           nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
           drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
           drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
@@ -829,6 +831,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
           return nsEventStatus_eIgnore;
       }
 #endif
+      return nsEventStatus_eIgnore;
       break;
 
     default:
@@ -868,9 +871,16 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nsRect rect;
   rect.SetRect(0, 0, dialogWidth, 162);  
 
-  nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull, kIBrowserWindowIID, (void**)&mRobotDialog);
+  nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID, (void**)&mRobotDialog);
   if (nsnull == mRobotDialog)
   	return PR_FALSE;
+
+  nsIWidget* dialogWidget = nsnull;
+  if (NS_OK == mRobotDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget))
+  {
+    dialogWidget->Create(aParent, rect, HandleRobotEvent, NULL);
+    NS_RELEASE(dialogWidget);
+  }
   
   //mRobotDialog->SetLabel("Debug Robot Options");
 
@@ -1245,8 +1255,8 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     rect.SetRect(0, 0, dialogWidth, 125);  
 
     nsIWidget* widget = nsnull;
-    nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull, 
-                                       kIBrowserWindowIID, (void**)&mSiteDialog);
+    nsComponentManager::CreateInstance(kWindowCID, nsnull, 
+                                       kIWidgetIID, (void**)&mSiteDialog);
     if (nsnull == mSiteDialog)
       return PR_FALSE;
     
@@ -1324,8 +1334,8 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
   if (nsnull == gWinData) {
     gWinData = aWindow;
     NS_ADDREF(aWindow);
-    CreateSiteDialog(aWindow->mWindow);
   }
+  CreateSiteDialog(aWindow->mWindow);
   return NS_OK;
 }
 
