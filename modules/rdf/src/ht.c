@@ -8378,11 +8378,7 @@ HT_MakeNewContainer(HT_Resource parent, char* name)
 	RDF_Resource		nc;
 	char			*id = NULL;
 
-#ifdef	NSPR20
 	PRTime			tm;
-#else
-	int64			tm;
-#endif
 
 #ifndef	HAVE_LONG_LONG
 	double			doubletm;
@@ -8393,11 +8389,7 @@ HT_MakeNewContainer(HT_Resource parent, char* name)
 	{
 		db = parent->view->pane->db;
 
-#ifdef NSPR20
 		tm = PR_Now();
-#else
-		tm = PR_LocalTime();
-#endif
 
 #ifdef HAVE_LONG_LONG
 		id = PR_smprintf("Topic%d", (double)tm);
