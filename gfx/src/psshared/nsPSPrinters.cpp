@@ -106,6 +106,10 @@ nsPSPrinterList::GetPrinterList(nsCStringArray& aList)
             for (int i = 0; i < num_dests; i++) {
                 nsCAutoString fullName(NS_CUPS_PRINTER);
                 fullName.Append(dests[i].name);
+                if (dests[i].instance != NULL) {
+                    fullName.Append("/");
+                    fullName.Append(dests[i].instance);
+                }
                 if (dests[i].is_default)
                     aList.InsertCStringAt(fullName, 0);
                 else

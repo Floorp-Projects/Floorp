@@ -45,6 +45,7 @@
 // Making this an array of arrays instead of pointers allows storing the
 // whole thing in read-only memory.
 static const char gSymName[][sizeof("cupsPrintFile")] = {
+    { "cupsGetDest" },
     { "cupsGetDests" },
     { "cupsFreeDests" },
     { "cupsPrintFile" },
@@ -62,6 +63,7 @@ nsCUPSShim::Init()
 
     // List of symbol pointers. Must match gSymName[] defined above.
     void **symAddr[] = {
+        (void **)&mCupsGetDest,
         (void **)&mCupsGetDests,
         (void **)&mCupsFreeDests,
         (void **)&mCupsPrintFile,
