@@ -64,8 +64,7 @@ function HistoryCommonInit()
     // If it's empty, this will do the right thing and just group by the old grouping.
     searchHistory(gSearchBox.value);
     
-    gHistoryTree.focus();
-    gHistoryTree.treeBoxObject.view.selection.select(0);
+    gSearchBox.focus();
 }
 
 function historyOnSelect()
