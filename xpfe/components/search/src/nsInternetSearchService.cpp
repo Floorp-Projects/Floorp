@@ -116,7 +116,7 @@ private:
 	static nsIRDFResource	*kNC_HTML;
 	static nsIRDFResource	*kNC_Banner;
 
-	char			*mLine;
+	nsAutoString		mBuffer;
 
 	nsresult	CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult);
 
@@ -1722,8 +1722,7 @@ InternetSearchDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult
 InternetSearchDataSourceCallback::InternetSearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent, nsIRDFResource *engine)
 	: mDataSource(ds),
 	  mParent(parent),
-	  mEngine(engine),
-	  mLine(nsnull)
+	  mEngine(engine)
 {
 	NS_INIT_REFCNT();
 	NS_IF_ADDREF(mDataSource);
@@ -1738,12 +1737,6 @@ InternetSearchDataSourceCallback::~InternetSearchDataSourceCallback()
 	NS_IF_RELEASE(mDataSource);
 	NS_IF_RELEASE(mParent);
 	NS_IF_RELEASE(mEngine);
-
-	if (mLine)
-	{
-		nsCRT::free(mLine);
-		mLine = nsnull;
-	}
 
 	if (--gRefCnt == 0)
 	{
@@ -1875,7 +1868,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		NS_RELEASE(literal);
 	}
 
-	if (!mLine)
+	if (mBuffer.Length() < 1)
 	{
 #ifdef	DEBUG_SEARCH_OUTPUT
 		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
@@ -1883,13 +1876,8 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		return(NS_OK);
 	}
 
-#ifdef	DEBUG_SEARCH_OUTPUT
-	printf("\n\n%s\n\n", mLine);
-#endif
-
-	nsAutoString	htmlResults(mLine);
-	nsCRT::free(mLine);
-	mLine = nsnull;
+	nsAutoString	htmlResults(mBuffer);
+	mBuffer.Truncate();
 
 	// save HTML result page for this engine
 	const PRUnichar	*htmlUni = htmlResults.GetUnicode();
@@ -2480,39 +2468,31 @@ InternetSearchDataSourceCallback::OnDataAvailable(nsIChannel* channel, nsISuppor
 {
 	nsresult	rv = NS_OK;
 
-	if (aLength > 0)
-	{
-		nsAutoString	line;
-		if (mLine)
-		{
-			line += mLine;
-			nsCRT::free(mLine);
-			mLine = nsnull;
-		}
+	if (aLength < 1)	return(rv);
 
-		char	buffer[257];
-		while (aLength > 0)
-		{
-			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
-			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)) || count == 0)
-			{
-#ifdef	DEBUG_SEARCH_OUTPUT			
-				printf("Search datasource read failure.\n");
+	PRUint32	count;
+	char		*buffer = new char[ aLength ];
+	if (!buffer)	return(NS_ERROR_OUT_OF_MEMORY);
+
+	if (NS_FAILED(rv = aIStream->Read(buffer, aLength, &count)) || count == 0)
+	{
+#ifdef	DEBUG
+		printf("Search datasource read failure.\n");
 #endif
-				break;
-			}
-			if (numBytes != count)
-			{
-#ifdef	DEBUG_SEARCH_OUTPUT
-				printf("Search datasource read # of bytes failure.\n");
-#endif
-				break;
-			}
-			buffer[count] = '\0';
-			line += buffer;
-			aLength -= count;
-		}
-		mLine = line.ToNewCString();
+		delete []buffer;
+		return(rv);
 	}
+	if (count != aLength)
+	{
+#ifdef	DEBUG
+		printf("Search datasource read # of bytes failure.\n");
+#endif
+		delete []buffer;
+		return(NS_ERROR_UNEXPECTED);
+	}
+
+	mBuffer.Append(buffer, aLength);
+	delete [] buffer;
+	buffer = nsnull;
 	return(rv);
 }
