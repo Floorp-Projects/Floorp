@@ -86,5 +86,19 @@ extern NS_COM nsresult
 NS_NewConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second,
                            nsIBidirectionalEnumerator* *aInstancePtrResult);
 
+// Construct and return an implementation of a "union enumerator." This
+// enumerator will only return elements that are found in both constituent
+// enumerators.
+extern NS_COM nsresult
+NS_NewUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
+                      nsIEnumerator* *aInstancePtrResult);
+
+// Construct and return an implementation of an "intersection enumerator." This
+// enumerator will return elements that are found in either constituent
+// enumerators, eliminating duplicates.
+extern NS_COM nsresult
+NS_NewIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second,
+                             nsIEnumerator* *aInstancePtrResult);
+
 #endif // __nsIEnumerator_h
 
