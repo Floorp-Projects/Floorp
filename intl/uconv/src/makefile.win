@@ -68,7 +68,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUConvModule.obj 			\
 	.\$(OBJDIR)\nsMappingCache.obj 			\
 	.\$(OBJDIR)\nsURLProperties.obj 		\
-	.\$(OBJDIR)\nsCharsetMenu.obj 			\
 	.\$(OBJDIR)\nsISO88591ToUnicode.obj			\
 	.\$(OBJDIR)\nsCP1252ToUnicode.obj			\
 	.\$(OBJDIR)\nsMacRomanToUnicode.obj			\
