@@ -297,6 +297,9 @@ netwerk/protocol/jar/public/Makefile
 netwerk/protocol/jar/src/Makefile
 netwerk/protocol/keyword/Makefile
 netwerk/protocol/keyword/src/Makefile
+netwerk/protocol/res/Makefile
+netwerk/protocol/res/public/Makefile
+netwerk/protocol/res/src/Makefile
 netwerk/protocol/resource/Makefile
 netwerk/protocol/resource/src/Makefile
 netwerk/mime/Makefile
