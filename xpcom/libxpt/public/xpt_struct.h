@@ -164,8 +164,9 @@ struct XPTInterfaceDescriptor {
 };
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_IndexForInterface(XPTInterfaceDirectoryEntry *ide_block,
-                      uint32 num_interfaces, nsID *iid, uint16 *indexp);
+XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
+                            uint32 num_interfaces, char *name, 
+                            uint16 *indexp);
 
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
 XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
