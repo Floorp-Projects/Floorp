@@ -899,12 +899,7 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
   nsCOMPtr <nsIFileSpec> oldPrefPath;
   rv = m_prefs->GetFilePref(pref, getter_AddRefs(oldPrefPath));
   if (NS_FAILED(rv)) return rv;
-  
-  PRBool exists;
-  rv = oldPath->Exists(&exists);
-  if (NS_FAILED(rv)) return rv;
-  if (!exists) return rv;
-  
+ 
   rv = oldPath->FromFileSpec(oldPrefPath);
   if (NS_FAILED(rv)) return rv;
   

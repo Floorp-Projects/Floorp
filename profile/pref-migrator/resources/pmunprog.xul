@@ -9,9 +9,7 @@
         title="Migrating Profiles"
 		onload="onLoad()">
 		 
-    
-	<html:script language="javascript" src="pmunprog.js">
-    </html:script>
+<html:script language="javascript" src="pmunprog.js"/>
   
     <box align="vertical" style="height: 30%; width: 50%">
 
@@ -44,8 +42,7 @@
           <spring style="width:10px"/>
           <box align="vertical">
             <spring style="height:6px"/>
-            <progressmeter id="dialog.progress" mode="undetermined" style="width:200px;height:10px">
-            </progressmeter>
+            <progressmeter id="dialog.progress" mode="undetermined" style="width:200px;height:10px"/>
           </box>
        </box>
 
