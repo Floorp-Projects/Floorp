@@ -37,6 +37,7 @@ install::
 	$(MAKE_INSTALL) pref-cookies.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-debug.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-download.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-editing.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-fonts.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-fonts.js  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-languages.xul  $(DIST)\bin\chrome\pref\content\default

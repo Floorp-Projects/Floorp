@@ -42,6 +42,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-composer.js \
 		$(srcdir)/pref-debug.xul \
 		$(srcdir)/pref-download.xul \
+		$(srcdir)/pref-editing.xul \
 		$(srcdir)/pref-fonts.xul \
 		$(srcdir)/pref-fonts.js \
 		$(srcdir)/pref-languages.xul \
