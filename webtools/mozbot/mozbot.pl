@@ -56,6 +56,7 @@ use Chatbot::Eliza;
 use babel;
 use IPC::Open2;
 use FileHandle;
+use Net::FTP;
 
 $|++;
 
@@ -78,6 +79,7 @@ my %pubcmds = (
                "(stocks|stock)" => \&bot_pub_stocks,
                "(translate|xlate|x)" => \&bot_translate,
                "review" => \&bot_review,
+               "ftp" => \&ftp_stamp
                );
 
 my %admincmds = (
@@ -86,6 +88,8 @@ my %admincmds = (
                  "shutdown" => \&bot_shutdown,
                  "say" => \&bot_say,
                  "list" => \&bot_list,
+                 "ftpx" => \&ftp_check,
+                 "ftpc" => \&ftp_clear
                  );
 
 my %rdfcmds = (
@@ -101,6 +105,8 @@ my %rdf_title;
 my %rdf_link;
 my %rdf_last;
 my %rdf_items;
+my %latestbuilds;
+my $ftpscanned = 0;
 
 @::origargv = @ARGV;
 
@@ -155,6 +161,7 @@ my $status;
 my $last_tree;
 my %broken;
 my @urls;
+my $ftpsite="ftp.mozilla.org";
 
 my $greet = 0;
 my @greetings = 
@@ -194,6 +201,7 @@ $bot->add_handler ('join',   \&on_join);
 $bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&stocks);
+$bot->schedule (0, \&ftp_scan);
 
 foreach my $i (keys %rdfcmds) {
     $bot->schedule(0, \&rdfchannel, $rdfcmds{$i});
@@ -204,7 +212,8 @@ foreach my $i (keys %rdfcmds) {
 
 $::megahal = "./megahal/megahal";
 $::megahal = (-f $::megahal) ? $::megahal : "";
-$::megahal_pid;
+#david: why does the following line need to be commented out?
+#$::megahal_pid;
 
 if ($::megahal) {
    $::WTR = FileHandle->new;
@@ -343,6 +352,56 @@ sub bot_bless {
     &debug ("$nick blessed $who ($where)");
     &store_admin_conf (\%admins);
     sendmsg($nick, "mozbot admins: " . join ' ', (sort keys %admins));
+}
+
+sub ftp_clear {
+ %latestbuilds=();
+}
+
+sub ftp_stamp {
+    my $nick=$_[0];
+    my $msg = "Available from $ftpsite: " .
+        join(' ', sort(keys(%latestbuilds)));
+    saylongline($nick, $msg, " ... ");
+}
+
+sub ftp_check {
+    my $nick=($_[0])?$_[0]:$channel;
+    my $buf="";
+    my $mdtms;
+    my $ftpserver=($_[2])?$_[2]:$ftpsite;
+    my $ftp = new Net::FTP($ftpserver, Debug => 0);
+    &debug ("fetching FTP $ftpserver nightly/latest");
+    if ($ftp->login("anonymous","mozbot\@localhost")){
+        $ftp->cwd("/pub/mozilla/nightly/latest");
+        for my $f ($ftp->ls){
+            $mdtms=$ftp->mdtm($f);
+            if (!$latestbuilds{$f} || $mdtms>$latestbuilds{$f}) {
+                $buf.=$f."; "; 
+                $latestbuilds{$f}=$mdtms;
+            } 
+        }
+        $ftp->quit;
+    };
+    $buf="New files @ ftp://$ftpserver/pub/mozilla/nightly/latest ".$buf if ($buf);
+    &debug("$nick $buf");
+    if ($ftpscanned) {
+        sendmsg($nick, $buf);
+    }
+    $ftpscanned = 1;
+}
+#DBM or DB_File %hash that's tied to a file
+#DBM and DB_File are documented on the
+# http://www.perl.com/CPAN-local/doc/manual/html/lib/ page.
+# (note there are several DBM links there so be sure to check each
+# (= exhaustive look not brief look))
+# timeless believes ftp info doesn't need to persist across multiple sessions
+# of mozbot 
+# Lots of help from
+
+sub ftp_scan{
+ ftp_check(0);
+ $bot->schedule(300,\&ftp_scan);
 }
 
 sub bot_unbless {
@@ -492,7 +551,7 @@ sub reportDiffs {
         if (!exists $::headCache{$url}->{$i}) {
             $::headCache{$url}->{$i} = 1;
             if ($outstr eq "") {
-                $outstr = "Just appeared in $name ($url): ";
+                $outstr = "Just appeared in $name - $url : ";
             } else {
                 $outstr .= $spacer;
             }
@@ -541,11 +600,11 @@ sub bot_debug
 	do_headlines ($nick, "Boring Debug Information", \@list);
 	}
 
-
+#timeless didn't like http://server): it upset his irc client/browser link
 sub bot_rdfchannel {
     my ($nick, $cmd, $rest, $url) = (@_);
     if (defined $rdf_title{$url}) {
-        do_headlines($nick, "Items in $rdf_title{$url} ($rdf_link{$url})",
+        do_headlines($nick, "Items in $rdf_title{$url} - $rdf_link{$url} ",
                      $rdf_items{$url});
     } else {
         sendmsg($nick, "Nothing has been found yet at $url");
@@ -697,7 +756,11 @@ sub bot_tinderbox {
     my $buf;
     my @buf;
     my @tree;
-
+#    my @rstats;
+#    my $ttree;
+    my $rg=0;
+    my $ry=0;
+    my $rr=0;
     my $terse = (defined $rest && $rest eq "all");
     if ($nick eq $channel) {
         $terse = 1;
@@ -716,7 +779,6 @@ sub bot_tinderbox {
         {
         $bustage = 0;
         $buf = "$t " . ($$status{$t} ? "<$$status{$t}> " : "") . ": ";
-        
         # politely report failures
         if (! exists $$trees{$t})
             {
@@ -724,16 +786,25 @@ sub bot_tinderbox {
             }
         else
             {
+    $rg=0;
+    $ry=0;
+    $rr=0;
             foreach my $e (sort keys %{$$trees{$t}})
                 {
+$rg++           if ($$trees{$t}{$e}=~/Success/); 
+$ry++           if ($$trees{$t}{$e}=~/Test Failed/);
+$rr++           if ($$trees{$t}{$e}=~/Horked/);
+&debug("$rg $ry $rr $e => $$trees{$t}{$e}");
                 next if ($terse && $$trees{$t}{$e} eq "Success");
                 $buf .= "[$e: $$trees{$t}{$e}] ";
                 $bustage++;
                 }
             }
         
-        $buf .= "- no known bustage -" if (! $bustage);
-        
+#        $buf .= "- no known bustage -" if (! $bustage);
+        if ( $bustage) {$buf .= 
+"$rg success, $ry test failures, and $rr horked.";}
+        else { $buf .= "- no known bustage -";};
         push @buf, $buf;
         }
 
@@ -762,7 +833,8 @@ sub debug
 
     foreach (@_)
         {
-        chomp;
+#timeless: Broken
+#        chomp;
         print &logdate() . " $_ [$$]\n";
         }
     }
