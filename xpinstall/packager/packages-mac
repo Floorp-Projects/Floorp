@@ -76,6 +76,7 @@ viewer:Components:bookmarks.xpt
 viewer:Components:Caps.shlb 
 viewer:Components:caps.xpt 
 viewer:Components:chardet.shlb 
+viewer:Components:universalchardet.shlb 
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
 viewer:Components:Composer.shlb 
@@ -116,6 +117,7 @@ viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
 viewer:Components:layout.xpt
 viewer:Components:chardet.xpt
+viewer:Components:universalchardet.xpt
 viewer:Components:libjar.xpt 
 viewer:Components:libpref.shlb 
 viewer:Components:libpref.xpt 
