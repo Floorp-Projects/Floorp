@@ -61,6 +61,13 @@ nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstanceP
 		return NS_OK;
 	}
 
+	if (aIID.Equals(kIDocumentLoaderObserverIID))
+	{
+		*aInstancePtrResult = (void*) ((nsIDocumentLoaderObserver*)this);
+		AddRef();
+		return NS_OK;
+	}
+
 	if (aIID.Equals(kIWebShellContainerIID))
 	{
 		*aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
@@ -192,6 +199,21 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 	CComVariant vURL(bstrURL);
 	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
 
+	// Fire the new NavigateForward state
+	VARIANT_BOOL bEnableForward = VARIANT_FALSE;
+	if (m_pOwner->m_pIWebShell->CanForward() == NS_OK)
+	{
+		bEnableForward = VARIANT_TRUE;
+	}
+	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
+
+	// Fire the new NavigateBack state
+	VARIANT_BOOL bEnableBack = VARIANT_FALSE;
+	if (m_pOwner->m_pIWebShell->CanBack() == NS_OK)
+	{
+		bEnableBack = VARIANT_TRUE;
+	}
+	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
 
 	m_pOwner->m_bBusy = FALSE;
 	SysFreeString(bstrURL);
@@ -214,8 +236,20 @@ CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& a
 {
 	USES_CONVERSION;
 	NG_TRACE(_T("CWebShellContainer::FindWebShellWithName(\"%s\", ...)\n"), W2T(aName));
-	return NS_ERROR_FAILURE;
+
+	nsresult rv = NS_OK; 
+
+	// Zero result (in case we fail). 
+	aResult = nsnull;  
+
+	if (m_pOwner->m_pIWebShell != NULL)
+	{ 
+		rv = m_pOwner->m_pIWebShell->FindChildWithName(aName, aResult); 
+	} 
+
+	return rv; 
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
@@ -223,6 +257,33 @@ CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocus
 	NG_TRACE(_T("CWebShellContainer::FocusAvailable()\n"));
 	return NS_OK;
 }
+
+
+NS_IMETHODIMP
+CWebShellContainer::CanCreateNewWebShell(PRBool& aResult)
+{		
+	aResult = PR_FALSE;
+	nsresult rv = NS_OK;
+	return rv;
+}
+
+NS_IMETHODIMP
+CWebShellContainer::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+							nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
+							nsIWebShell** aNewShell, nsIWebShell** anInnerShell)
+{
+	nsresult rv = NS_ERROR_FAILURE;
+	return rv;
+}
+
+
+NS_IMETHODIMP
+CWebShellContainer::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
+{
+	nsresult rv = NS_OK;
+	return rv;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
@@ -273,3 +334,74 @@ CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnicha
 
 	return NS_OK;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIDocumentLoaderObserver implementation 
+
+
+NS_IMETHODIMP 
+CWebShellContainer::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand) 
+{ 
+	return NS_OK; 
+} 
+
+// we need this to fire the document complete 
+NS_IMETHODIMP 
+CWebShellContainer::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus) 
+{
+	PRUnichar* wString = nsnull;    
+
+	aUrl->ToString(&wString);
+	if (wString == NULL)
+	{
+		return NS_ERROR_NULL_POINTER;
+	}
+
+	USES_CONVERSION; 
+	delete [] wString; // clean up. 
+
+	BSTR bstrURL = SysAllocString(W2OLE((WCHAR *) wString)); 
+		
+	// Fire a DocumentComplete event
+	CComVariant vURL(bstrURL);
+	m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURL);
+	SysFreeString(bstrURL);
+
+	return NS_OK; 
+} 
+
+// we don't care about these. 
+NS_IMETHODIMP 
+CWebShellContainer::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer) 
+{ 
+	return NS_OK; 
+} 
+
+
+NS_IMETHODIMP 
+CWebShellContainer::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
+{ 
+	return NS_OK; 
+} 
+
+
+NS_IMETHODIMP 
+CWebShellContainer::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg) 
+{ 
+	return NS_OK; 
+} 
+
+
+NS_IMETHODIMP 
+CWebShellContainer::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus) 
+{ 
+	return NS_OK; 
+} 
+
+
+NS_IMETHODIMP 
+CWebShellContainer::HandleUnknownContentType( nsIURL *aURL, const char *aContentType, const char *aCommand ) 
+{ 
+	return NS_OK; 
+} 
