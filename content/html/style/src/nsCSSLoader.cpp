@@ -1687,6 +1687,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
   }
   rv = parser->Parse(aStream, uri, *getter_AddRefs(dummySheet));
   mParsingDatas.RemoveElementAt(mParsingDatas.Count() - 1);
+  RecycleParser(parser);
 
   NS_ASSERTION(aLoadData->mPendingChildren >= 0,
                "Negatively many kids?");
