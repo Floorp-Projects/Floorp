@@ -22,6 +22,8 @@ MODULE = shell
 EXPORTS =			\
 	nsIApplicationShell.h	\
 	nsIShellInstance.h	\
+    nsIMenuBar.h \
+    nsIMenuItem.h \
 	nsshell.h			\
 	$(NULL)
 
