@@ -20,17 +20,18 @@
 #define nsNNTPProtocol_h___
 
 #include "nsIStreamListener.h"
+#include "nsITransport.h"
 #include "rosetta.h"
 #include HG40855
 
 #include "nsIOutputStream.h"
+#include "nsINntpUrl.h"
 
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
 #include "nsINNTPHost.h"
 #include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
-
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
@@ -131,7 +132,7 @@ class nsNNTPProtocol : public nsIStreamListener
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
 	// a transport layer. 
-	nsNNTPProtocol(nsIURL * aURL /* , nsITransportLayer * transportLayer */);
+	nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer);
 	
 	virtual ~nsNNTPProtocol();
 
@@ -173,16 +174,20 @@ public:
 
 private:
 	// News Event Sinks
-    nsINNTPNewsgroupList *  m_newsgroupList;
-    nsINNTPArticleList *	m_articleList;
+    nsINNTPNewsgroupList	* m_newsgroupList;
+    nsINNTPArticleList		* m_articleList;
 
-	nsINNTPHost			* m_newsHost;
-	nsINNTPNewsgroup			* m_newsgroup;
+	nsINNTPHost				* m_newsHost;
+	nsINNTPNewsgroup		* m_newsgroup;
 	nsIMsgOfflineNewsState  * m_offlineNewsState;
 
 	// Ouput stream for writing commands to the socket
-	nsIOutputStream			* m_outputStream;
-	nsIStreamListener	    * m_outputConsumer; // this will eventually be queried from from the transport layer
+	nsITransport			* m_transport; 
+	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
+	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+
+	// the nsINntpURL that is currently running
+	nsINntpURL				* m_runningURL;
 	
 	PRUint32 m_flags; // used to store flag information
 
@@ -194,19 +199,18 @@ private:
     PRInt32     m_responseCode;    /* code returned from NNTP server */
 	PRInt32 	m_previousResponseCode; 
     char       *m_responseText;   /* text returned from NNTP server */
-
 	char	   *m_hostName;
 
 #ifdef XP_WIN
 	PRBool		calling_netlib_all_the_time;
 #endif
 
-    char		*	m_dataBuf;
-    PRUint32		m_dataBufSize;
+    char		*m_dataBuf;
+    PRUint32	 m_dataBufSize;
 
 	/* for group command */
-    char    * m_path; /* message id */
-    char    * m_currentGroup;     /* current group */
+    char     *m_path;			  /* message id */
+    char     *m_currentGroup;     /* current group */
 
     PRInt32   m_firstArticle;
     PRInt32   m_lastArticle;
@@ -240,7 +244,7 @@ private:
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
 
 	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL /* , nsITransportLayer * transportLayer */);
+	void Initialize(nsIURL * aURL, nsITransport * transportLayer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
@@ -253,9 +257,9 @@ private:
 	PRInt32 SendData(const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
-	// Protocol Methods --> This protocol is state driven so each protocol method is designed 
-	//						to re-act to the current "state". I've attempted to group them 
-	//						together based on functionality. 
+	// Protocol Methods --> This protocol is state driven so each protocol method is 
+	//						designed to re-act to the current "state". I've attempted to 
+	//						group them together based on functionality. 
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	// gets the response code from the nntp server and the response line. Returns the TCP return code 
@@ -367,5 +371,3 @@ private:
 };
 
 #endif  // nsNNTPProtocol_h___
-
-

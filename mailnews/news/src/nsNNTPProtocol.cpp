@@ -19,9 +19,6 @@
 /* Please leave outside of ifdef for windows precompiled headers */
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 
-// #include "mkutils.h"
-// #include "netutils.h"
-
 #include "nsNNTPProtocol.h"
 #include "nsIOutputStream.h"
 
@@ -40,6 +37,8 @@
 
 #include "nsIMsgRFC822Parser.h" 
 #include "nsMsgRFC822Parser.h"
+
+#include "nsINntpURL.h"
 
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
@@ -159,35 +158,73 @@ static char * last_username_hostname=0;
 
 /* end of globals I'd like to move somewhere else */
 
+static NS_DEFINE_IID(kINntpURLIID, NS_INNTPURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
-nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL /* , nsITransportLayer * transportLayer */)
+nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-  Initialize(aURL /* , transportLayer */);
+  Initialize(aURL, transportLayer);
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
-{}
-
-void nsNNTPProtocol::Initialize(nsIURL * aURL /* , nsITransportLayer * transportLayer */)
 {
+	// release all of our event sinks
+	if (m_newsgroupList)
+		NS_RELEASE(m_newsgroupList);
+	if (m_articleList)
+		NS_RELEASE(m_articleList);
+	if (m_newsHost)
+		NS_RELEASE(m_newsHost);
+	if (m_newsgroup)
+		NS_RELEASE(m_newsgroup);
+	if (m_offlineNewsState)
+		NS_RELEASE(m_offlineNewsState);
+
+	// free our local state
+}
+
+void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
+{
+	NS_PRECONDITION(aURL, "invalid URL passed into NNTP Protocol");
+
 	m_flags = 0;
 
 	// Right now, we haven't written an nsNNTPURL yet. When we do, we'll pull the event sink
 	// data out of it and set our event sink member variables from it. For now, just set them
 	// to NULL. 
-
+	
+	// query the URL for a nsINNTPUrl
+	m_runningURL = NULL; // initialize to NULL
     m_newsgroupList = NULL;
 	m_articleList = NULL;
 	m_newsHost	  = NULL;
 	m_newsgroup	  = NULL;
 	m_offlineNewsState = NULL; 
 
-	// We need a factory from netlib (through nsINetService??) which will allow us to create our output stream.
+	if (aURL)
+	{
+		nsresult rv = aURL->QueryInterface(kINntpURLIID, (void **)&m_runningURL);
+		if (NS_SUCCEEDED(rv) && m_runningURL)
+		{
+			// okay, now fill in our event sinks...Note that each getter ref counts before
+			// it returns the interface to us...we'll release when we are done
+			m_runningURL->GetNewsgroupList(&m_newsgroupList);
+			m_runningURL->GetNNTPArticleList(&m_articleList);
+			m_runningURL->GetNNTPHost(&m_newsHost);
+			m_runningURL->GetNewsgroup(&m_newsgroup);
+			m_runningURL->GetOfflineNewsState(&m_offlineNewsState);
+		}
+	}
+	
 	m_outputStream = NULL;
-	m_outputConsumer = NULL; // once we have a transport interface, we'll use it to set the output consumer
+	m_outputConsumer = NULL;
+
+	nsresult rv = m_transport->GetOutputStream(&m_outputStream);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
+	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
 
 	m_hostName = NULL;
 	m_dataBuf = NULL;
@@ -252,7 +289,8 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 
 	CloseConnection();
 
-	// and we want to mark ourselves for deletion....
+	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
+	// available for another url if there is one....
 
 	return NS_OK;
 
@@ -270,6 +308,21 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 typedef PRUint32 MessageKey;
 const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
 
+/*
+ * This function takes an error code and associated error data
+ * and creates a string containing a textual description of
+ * what the error is and why it happened.
+ *
+ * The returned string is allocated and thus should be freed
+ * once it has been used.
+ *
+ * This function is defined in mkmessag.c.
+ */
+char * NET_ExplainErrorDetails (int code, ...)
+{
+	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
+	return rv;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,18 +392,14 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	{
         m_nextState = NNTP_ERROR;
         ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
         return(MK_NNTP_SERVER_ERROR);
 	}
 
     /* if TCP error of if there is not a full line yet return */
     if(status < 0)
 	{
-#ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
         /* return TCP error
          */
         return MK_TCP_READ_ERROR;
@@ -455,9 +504,7 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 
     if(MK_NNTP_RESPONSE_TYPE(m_responseCode)!=MK_NNTP_RESPONSE_TYPE_OK)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg  = NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, m_responseText);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_ERROR_MESSAGE, m_responseText));
 
     	m_nextState = NNTP_ERROR;
 #ifdef UNREADY_CODE
@@ -526,18 +573,15 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		{
 			m_nextState = NNTP_ERROR;
 			ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 			return MK_NNTP_SERVER_ERROR;
 		}
 		if (!line)
 			return status;  /* no line yet */
 		if (status < 0)
 		{
-#ifdef UNREADY_CODE
-			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+
 			/* return TCP error */
 			return MK_TCP_READ_ERROR;
 		}
@@ -603,18 +647,14 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -658,18 +698,15 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -719,18 +756,15 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -798,18 +832,14 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -902,9 +932,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 
 		if(!last_update)
 		{	
-#ifdef UNREADY_CODE
-			ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_NEWSGROUP_SCAN_ERROR);
-#endif
+			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_NEWSGROUP_SCAN_ERROR));
 			m_nextState = NEWS_ERROR;
 			return(MK_INTERRUPTED);
 		}
@@ -1245,9 +1273,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return(MK_NNTP_SERVER_ERROR);
 	}
 
@@ -1418,10 +1444,8 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	  net_news_last_username_probably_valid = PR_FALSE;
 	  if(!username) 
 	  {
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = 
-		  NET_ExplainErrorDetails( MK_NNTP_AUTH_FAILED, "Aborted by user");
-#endif
+		m_runningURL->SetErrorMessage(
+		  NET_ExplainErrorDetails( MK_NNTP_AUTH_FAILED, "Aborted by user"));
 		return(MK_NNTP_AUTH_FAILED);
 	  }
 	  else 
@@ -1561,10 +1585,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		  
 		if(!password)	
 		{
-#ifdef UNREADY_CODE
-		  ce->URL_s->error_msg = 
-			NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user");
-#endif
+		  m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
 		  return(MK_NNTP_AUTH_FAILED);
 		}
 		else 
@@ -1602,11 +1623,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 	  }
 	else
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
-									m_responseText ? m_responseText : "");
-#endif
+									m_responseText ? m_responseText : ""));
 
 #ifdef CACHE_NEWSGRP_PASSWORD
 		if (cd->pane)
@@ -1653,11 +1672,9 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 	  }
 	else
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
-									m_responseText ? m_responseText : "");
-#endif
+									m_responseText ? m_responseText : ""));
 
 #ifdef CACHE_NEWSGRP_PASSWORD
 		if (cd->pane)
@@ -1712,9 +1729,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
     {
         m_nextState = NNTP_ERROR;
         ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
         return(MK_NNTP_SERVER_ERROR);
     }
 
@@ -1723,9 +1738,8 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 
     if(status<0)
     {
-#ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+
         /* return TCP error
          */
         return MK_TCP_READ_ERROR;
@@ -1848,9 +1862,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
     {
         m_nextState = NNTP_ERROR;
         ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
         return(MK_NNTP_SERVER_ERROR);
     }
 
@@ -1859,9 +1871,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 
     if(status<0)
 	{
-#ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
         /* return TCP error
          */
         return MK_TCP_READ_ERROR;
@@ -2135,9 +2145,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 		NNTP_LOG_NOTE(("received unexpected TCP EOF!!!!  aborting!"));
         m_nextState = NNTP_ERROR;
         ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
         return(MK_NNTP_SERVER_ERROR);
     }
 
@@ -2148,10 +2156,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 
 	if(status<0) 
 	{
-#ifdef UNREADY_CODE
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR,
-													  PR_GetOSError());
-#endif
+        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 
         /* return TCP error
          */
@@ -2270,9 +2275,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   {
 	  m_nextState = NNTP_ERROR;
 	  ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-	  ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+	  m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 	  return(MK_NNTP_SERVER_ERROR);
   }
 
@@ -2283,10 +2286,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
   if(status < 0)
   {
-#ifdef UNREADY_CODE
-	  ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
-
+	  m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
 	  /* return TCP error
 	   */
 	  return MK_TCP_READ_ERROR;
@@ -2684,9 +2684,7 @@ PRInt32 nsNNTPProtocol::Cancel()
 	if (!ok)
 	{
 		status = MK_NNTP_CANCEL_DISALLOWED;
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = PL_strdup (XP_GetString(status));
-#endif
+		m_runningURL->SetErrorMessage(PL_strdup (XP_GetString(status)));
 		m_nextState = NEWS_ERROR; /* even though it worked */
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		goto FAIL;
@@ -2763,10 +2761,7 @@ PRInt32 nsNNTPProtocol::Cancel()
     PR_Free (data);
     if (status < 0)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR,
-													  status);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, status));
 		goto FAIL;
 	}
 
@@ -2863,9 +2858,7 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return(MK_NNTP_SERVER_ERROR);
 	}
 
@@ -2944,9 +2937,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return(MK_NNTP_SERVER_ERROR);
 	}
 
@@ -3024,9 +3015,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return(MK_NNTP_SERVER_ERROR);
 	}
 
@@ -3162,9 +3151,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return(MK_NNTP_SERVER_ERROR);
 	}
 
@@ -3214,18 +3201,15 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 	{
 		m_nextState = NNTP_ERROR;
 		ClearFlag(NNTP_PAUSE_FOR_READ); 
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR);
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
 		return MK_NNTP_SERVER_ERROR;
 	}
 	if (!line)
 		return status;  /* no line yet */
 	if (status < 0)
 	{
-#ifdef UNREADY_CODE
-		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
-#endif
+		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError()));
+
 		/* return TCP error */
 		return MK_TCP_READ_ERROR;
 	}
@@ -3279,9 +3263,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 
 			// mscott: I've removed the states involving connections on the assumption
 			// that core netlib will now be managing that information.
-#ifdef UNREADY_CODE
 			HG42871
-#endif
 
             case NNTP_LOGIN_RESPONSE:
                 status = LoginResponse();
