@@ -874,9 +874,20 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
       if (nsnull != ourPosition) {
         nsStylePosition* position = (nsStylePosition*)aContext->GetData(kStylePositionSID);
 
-        // positioning scheme
-        if (ourPosition->mPosition.GetUnit() == eCSSUnit_Enumerated) {
+        // position: normal, enum, inherit
+        if (ourPosition->mPosition.GetUnit() == eCSSUnit_Normal) {
+          position->mPosition = NS_STYLE_POSITION_NORMAL;
+        }
+        else if (ourPosition->mPosition.GetUnit() == eCSSUnit_Enumerated) {
           position->mPosition = ourPosition->mPosition.GetIntValue();
+        }
+        else if (ourPosition->mPosition.GetUnit() == eCSSUnit_Inherit) {
+          // explicit inheritance
+          nsIStyleContext* parentContext = aContext->GetParent();
+          if (nsnull != parentContext) {
+            nsStylePosition* parentPosition = (nsStylePosition*)parentContext->GetData(kStylePositionSID);
+            position->mPosition = parentPosition->mPosition;
+          }
         }
 
         // overflow
