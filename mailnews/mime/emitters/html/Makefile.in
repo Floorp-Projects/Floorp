@@ -31,7 +31,7 @@ CPPSRCS = \
 		nsMimeEmitter.cpp	    \
 		nsEmitterFactory.cpp	\
 		nsEmitterUtils.cpp	\
-		rebuffer.cpp          \  
+		rebuffer.cpp          \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
