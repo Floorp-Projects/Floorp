@@ -119,7 +119,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsInstallFolder* folder = new nsInstallFolder();
         if ( folder )
         {
-          folder->Init(a->GetJarFileLocation(),nsString());
+          folder->Init(a->GetJarFileLocation(),EmptyString());
           JSObject* fileSpecObject =
               JS_NewObject(cx, &FileSpecObjectClass, gFileSpecProto, NULL);
 

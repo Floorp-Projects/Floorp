@@ -1201,7 +1201,7 @@ nsHTMLInputElement::SelectAll(nsIPresContext* aPresContext)
 
   if (formControlFrame) {
     formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
-                                  nsAutoString());
+                                  EmptyString());
   }
 }
 

@@ -170,7 +170,7 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
       nsresult rv;
       nsCOMPtr<nsILineBreakerFactory> lf(do_GetService(kLWBrkCID, &rv));
       if (NS_SUCCEEDED(rv)) {
-        rv = lf->GetBreaker(nsString(), getter_AddRefs(mLineBreaker));
+        rv = lf->GetBreaker(EmptyString(), getter_AddRefs(mLineBreaker));
         // Ignore result value.
         // If we are unable to obtain a line breaker,
         // we will use our simple fallback logic.
@@ -655,7 +655,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     if (IsShorthandAttr(attrName, aTagName) && valueStr.IsEmpty()) {
       valueStr = nameStr;
     }
-    SerializeAttr(nsAutoString(), nameStr, valueStr, aStr, !isJS);
+    SerializeAttr(EmptyString(), nameStr, valueStr, aStr, !isJS);
   }
 }
 
@@ -1321,7 +1321,7 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
   if (offset == 0 && found) {
     // offset = 0 => LI itself has the value attribute and we did not need to traverse back.
     // Just serialize value attribute like other tags.
-    SerializeAttr(nsAutoString(), NS_LITERAL_STRING("value"), valueStr, aStr, PR_FALSE);
+    SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"), valueStr, aStr, PR_FALSE);
   }
   else if (offset == 1 && !found) {
     /*(offset = 1 && !found) means either LI is the first child node of OL 
@@ -1336,7 +1336,7 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
 
     //As serializer needs to use this valueAttr we are creating here, 
     valueStr.AppendInt(startVal + offset);
-    SerializeAttr(nsAutoString(), NS_LITERAL_STRING("value"), valueStr, aStr, PR_FALSE);
+    SerializeAttr(EmptyString(), NS_LITERAL_STRING("value"), valueStr, aStr, PR_FALSE);
   }
 }
 

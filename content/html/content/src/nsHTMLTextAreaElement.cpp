@@ -329,7 +329,7 @@ nsHTMLTextAreaElement::SelectAll(nsIPresContext* aPresContext)
 
   if (formControlFrame) {
     formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
-                                  nsString());
+                                  EmptyString());
   }
 
   return NS_OK;

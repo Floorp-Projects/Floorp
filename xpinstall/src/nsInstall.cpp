@@ -547,7 +547,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                         PRInt32* aReturn)
 {
     return AddDirectory(aRegName,
-                        nsAutoString(),
+                        EmptyString(),
                         aJarSource,
                         aFolder,
                         aSubdir,
@@ -565,11 +565,11 @@ nsInstall::AddDirectory(const nsString& aJarSource,
         return NS_OK;
     }
 
-    return AddDirectory(nsAutoString(),
-                        nsAutoString(),
+    return AddDirectory(EmptyString(),
+                        EmptyString(),
                         aJarSource,
                         mPackageFolder,
-                        nsAutoString(),
+                        EmptyString(),
                         INSTALL_NO_COMPARE,
                         aReturn);
 }
@@ -740,11 +740,11 @@ nsInstall::AddSubcomponent(const nsString& aJarSource,
         return NS_OK;
     }
 
-    return AddSubcomponent(nsAutoString(),
+    return AddSubcomponent(EmptyString(),
                            version,
                            aJarSource,
                            mPackageFolder,
-                           nsAutoString(),
+                           EmptyString(),
                            INSTALL_NO_COMPARE,
                            aReturn);
 }
@@ -1032,7 +1032,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 PRInt32
 nsInstall::GetComponentFolder(const nsString& aComponentName, nsInstallFolder** aNewFolder)
 {
-    return GetComponentFolder(aComponentName, nsAutoString(), aNewFolder);
+    return GetComponentFolder(aComponentName, EmptyString(), aNewFolder);
 }
 
 PRInt32
@@ -1064,7 +1064,7 @@ PRInt32
 nsInstall::GetFolder(const nsString& targetFolder, nsInstallFolder** aNewFolder)
 {
     /* This version of GetFolder takes an nsString object as the only param */
-    return GetFolder(targetFolder, nsAutoString(), aNewFolder);
+    return GetFolder(targetFolder, EmptyString(), aNewFolder);
 }
 
 PRInt32
@@ -1348,7 +1348,7 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsStr
 PRInt32
 nsInstall::Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn)
 {
-    return Patch(aRegName, nsAutoString(), aJarSource, aFolder, aTargetName, aReturn);
+    return Patch(aRegName, EmptyString(), aJarSource, aFolder, aTargetName, aReturn);
 }
 
 PRInt32
@@ -1415,7 +1415,7 @@ nsInstall::SetPackageFolder(nsInstallFolder& aFolder)
     {
         return OUT_OF_MEMORY;
     }
-    nsresult res = folder->Init(aFolder, nsAutoString());
+    nsresult res = folder->Init(aFolder, EmptyString());
 
     if (NS_FAILED(res))
     {
@@ -1495,7 +1495,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
         if (mPackageFolder && packageDir)
         {
-            if (NS_FAILED( mPackageFolder->Init(packageDir, nsString()) ))
+            if (NS_FAILED( mPackageFolder->Init(packageDir, EmptyString()) ))
             {
                 delete mPackageFolder;
                 mPackageFolder = nsnull;
@@ -1635,7 +1635,7 @@ nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsInstallFolder** thePar
     {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-      folder->Init(parent,nsString());
+      folder->Init(parent,EmptyString());
       *theParentFolder = folder;
   }
   else

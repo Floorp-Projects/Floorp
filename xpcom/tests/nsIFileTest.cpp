@@ -257,7 +257,7 @@ CopyTest(const char *testFile, const char *targetDir)
   rv = dir->InitWithNativePath(nsDependentCString(targetDir));
   VerifyResult(rv);
 
-  rv = file->CopyTo(dir, nsString());
+  rv = file->CopyTo(dir, EmptyString());
   VerifyResult(rv);
 
   printf("end copy test\n");
