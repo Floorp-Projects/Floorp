@@ -58,16 +58,21 @@ function Init(sidebardb, sidebar_resource)
 function createSidebarTitle(title) {
   var div = document.createElement('html:div');
   var titleB = document.createElement('titledbutton');
+  var reloadB = document.createElement('titledbutton');
   var customizeB = document.createElement('titledbutton');
   var spring = document.createElement('spring');
-  var toolbar = document.createElement('toolbar');
+  var toolbar = document.createElement('box');
+  toolbar.setAttribute('class', 'maintitle');
   titleB.setAttribute('value', title);
+  reloadB.setAttribute('value', 'Reload');
+  reloadB.setAttribute('onclick', 'window.location.reload()');
   customizeB.setAttribute('value', 'Customize');
-  //customize.setAttribute('onclick', '');
+  //customizeB.setAttribute('onclick', '');
   spring.setAttribute('flex', '100%');
 
   toolbar.appendChild(titleB);
   toolbar.appendChild(spring);
+  toolbar.appendChild(reloadB);
   toolbar.appendChild(customizeB);
   div.appendChild(toolbar);
   return div;
@@ -79,13 +84,17 @@ function createPanel(registry, service) {
   var panel_customize = getAttr(registry, service, 'customize');
 
   dump('Adding...' + panel_title + '\n');
-  var div = document.createElement('html:div');
+  var div = document.createElement('box');
   var title = document.createElement('titledbutton');
   var customize = document.createElement('titledbutton');
   var spring = document.createElement('spring');
-  var toolbar = document.createElement('toolbar');
+  var toolbar = document.createElement('box');
   var iframe = document.createElement('html:iframe');
   var newline = document.createElement('html:br');
+
+  div.setAttribute('align', 'vertical');
+
+  //title.setAttribute('style', 'width=100%; color=red');
   title.setAttribute('value', panel_title);
   customize.setAttribute('value', 'Customize');
   //customize.setAttribute('onclick', '');
