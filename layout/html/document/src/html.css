@@ -212,6 +212,9 @@ a[href]:visited {
   text-decoration: underline;
   cursor: pointer;
 }
+a[href]:focus, a[href]:focus img {
+  outline: 1px dotted black;
+}
 a[href]:active {
   color: red;
   text-decoration: underline;
@@ -449,69 +452,6 @@ form {
 }
 
 
-/* button */
-input[type=button] {
-  border: 1px solid rgb(156, 154, 156);
-  background-color: rgb(192, 192, 192);
-}
-
-input[type=button]:active {
-  border: 2px solid black;
-}
-
-input[type=button]:-moz-buttonlabel {
-  box-sizing: border-box;
-  content:"   ";
-  font-family: sans-serif;
-  font-size: small;
-  background-color:inherit;
-}
-
-input[type="button"][disabled]:-moz-buttonlabel {
-  color: gray;
-}
-
-input[type=button][value]:-moz-buttonlabel {
-  content:attr(value);
-  font-family: sans-serif;
-  font-size: small;
-  background-color:inherit;
-}
-
-/* submit */
-input[type=submit]:-moz-buttonlabel {
-  content:"Submit Query";
-  font-family: sans-serif;
-  font-size: small;
-}
-
-input[type="submit"][disabled]:-moz-buttonlabel  {
-  color: gray;
-}
-
-input[type=submit][value]:-moz-buttonlabel {
-  content:attr(value);
-  font-family: sans-serif;
-  font-size: small;
-}
-
-/* reset */
-input[type=reset]:-moz-buttonlabel {
-  content:"Reset";
-  font-family: sans-serif;
-  font-size: small;
-}
-
-input[type="reset"][disabled]:-moz-buttonlabel  {
-  color: gray;
-}
-
-input[type=reset][value]:-moz-buttonlabel {
-  content:attr(value);
-  font-family: sans-serif;
-  font-size: small;
-}
-
 input {
   vertical-align: bottom;
   border: 2px inset rgb(204, 204, 204);
@@ -522,29 +462,14 @@ input[type=hidden] {
   visibility: collapse;
 }
 
-/*------- Focus ------*/
-a[href]:focus, a[href]:focus img {
-  outline: 1px dotted black;
-}
-
-input[type=radio]:focus {
-  border: 2px inset rgb(153, 153, 153);
-}
-
-input[type=checkbox]:focus {
-  border: 2px dotted rgb(153, 153, 153);
-}
-
-input[type=image]:focus {
-  border: 2px dotted black;
-}
-
-/*------- End Focus ------*/
-
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
   vertial-align:baseline;
+}
+
+input[type=image]:focus {
+  border: 2px dotted black;
 }
 
 input[type=image][disabled] {
@@ -559,7 +484,7 @@ input[type=file] {
 }
 
 /* browse button for file selector */
-input[type=file] input[type=button] {
+input[type=file] input[type="button"] {
   height:inherit;
 }
 
@@ -568,13 +493,13 @@ input[type=file][disabled] input[type="button"] {
   border: 1px solid;
 } 
 
-input[type=file] input[type=button]:-moz-buttonlabel {
+input[type=file] input[type="button"]:-moz-buttonlabel {
   content:"Browse...";
   font-family: sans-serif;
 }
 
 /* Show browse button disabled */
-input[type="file"][disabled] input[type=button]:-moz-buttonlabel  {
+input[type="file"][disabled] input[type="button"]:-moz-buttonlabel  {
   color: gray;
 }
 
@@ -596,6 +521,10 @@ input[type=radio] {
 
 input[type=radio][disabled] {
   border: 1px solid;
+}
+
+input[type=radio]:focus {
+  border: 2px inset rgb(153, 153, 153);
 }
 
 input[type=radio]:hover {
@@ -643,26 +572,31 @@ input[type=checkbox] {
 /*  -moz-border-radius:1px; */
 }
 
-input[type=checkbox][disabled] {
-  border: 2px solid;
-}
-
-input[type=checkbox]:active {
-  background-color: white;
-}
-
-input[type=checkbox][disabled]:active {
-  background-color:rgb(204, 204, 204);
+input[type=checkbox]:focus {
+  border: 2px dotted rgb(153, 153, 153);
 }
 
 input[type=checkbox]:hover {
   border : 2px solid black;
 }
 
+input[type=checkbox]:active {
+  background-color: white;
+}
+
+input[type=checkbox][disabled] {
+  border: 2px solid;
+}
+
 input[type=checkbox][disabled]:hover {
   border: 2px solid rgb(153, 153, 153);
 }
 
+input[type=checkbox][disabled]:active {
+  background-color:rgb(204, 204, 204);
+}
+
+/* submit */
 input[type="submit"] { 
   box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
@@ -670,6 +604,10 @@ input[type="submit"] {
   color:black; 
 
   padding: 1px;
+}
+
+input[type="submit"]:hover {
+   border : 2px solid black;
 }
 
 input[type="submit"]:active {
@@ -681,16 +619,12 @@ input[type="submit"]:active {
   padding-bottom: 0px;
 }
 
-input[type="submit"]:active:-moz-outline {
-   border : 1px solid black;
-}
-
 input[type="submit"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="submit"]:hover {
-   border : 2px solid black;
+input[type="submit"]:active:-moz-outline {
+   border : 1px solid black;
 }
 
 input[type="submit"][disabled] {
@@ -704,7 +638,6 @@ input[type="submit"][disabled]:hover {
 input[type="submit"][disabled]:active {
   padding: 1px;
 }
-
 
 input[type="submit"]:-moz-focus-inner {
    padding-left  : 2px;
@@ -724,6 +657,24 @@ input[type="submit"]:focus:-moz-focus-inner {
    border : 1px dotted black;
 }
 
+input[type=submit]:-moz-buttonlabel {
+  content:"Submit Query";
+  font-family: sans-serif;
+  font-size: small;
+}
+
+input[type="submit"][disabled]:-moz-buttonlabel  {
+  color: gray;
+}
+
+input[type=submit][value]:-moz-buttonlabel {
+  content:attr(value);
+  font-family: sans-serif;
+  font-size: small;
+}
+
+
+/* reset */
 input[type="reset"] { 
   box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
@@ -731,6 +682,10 @@ input[type="reset"] {
   color:black; 
 
   padding: 1px;
+}
+
+input[type="reset"]:hover {
+   border : 2px solid black;
 }
 
 input[type="reset"]:active {
@@ -742,16 +697,12 @@ input[type="reset"]:active {
   padding-bottom: 0px;
 }
 
-input[type="reset"]:active:-moz-outline {
-   border : 1px solid black;
-}
-
 input[type="reset"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="reset"]:hover {
-   border : 2px solid black;
+input[type="reset"]:active:-moz-outline {
+   border : 1px solid black;
 }
 
 input[type="reset"][disabled] {
@@ -783,13 +734,33 @@ input[type="reset"]:focus:-moz-focus-inner {
    margin: 0px;
    border : 1px dotted black;
 }
+input[type=reset]:-moz-buttonlabel {
+  content:"Reset";
+  font-family: sans-serif;
+  font-size: small;
+}
 
+input[type="reset"][disabled]:-moz-buttonlabel  {
+  color: gray;
+}
+
+input[type=reset][value]:-moz-buttonlabel {
+  content:attr(value);
+  font-family: sans-serif;
+  font-size: small;
+}
+
+/* button */
 input[type="button"] { 
   box-sizing: border-box;
   border: 2px outset rgb(156, 154, 156);
   background-color: rgb(206, 207, 206);
   color:black; 
   padding: 1px;
+}
+
+input[type="button"]:hover {
+   border : 2px solid black;
 }
 
 input[type="button"]:active {
@@ -800,16 +771,12 @@ input[type="button"]:active {
   padding-bottom: 0px;
 }
 
-input[type="button"]:active:-moz-outline {
-   border : 1px solid black;
-}
-
 input[type="button"]:hover:-moz-outline {
    border : 1px solid black;
 }
 
-input[type="button"]:hover {
-   border : 2px solid black;
+input[type="button"]:active:-moz-outline {
+   border : 1px solid black;
 }
 
 input[type="button"][disabled] {
@@ -822,6 +789,25 @@ input[type="button"][disabled]:hover {
 
 input[type="button"][disabled]:active {
   padding: 1px;
+}
+
+input[type="button"]:-moz-buttonlabel {
+  box-sizing: border-box;
+  content:"   ";
+  font-family: sans-serif;
+  font-size: small;
+  background-color:inherit;
+}
+
+input[type="button"][disabled]:-moz-buttonlabel {
+  color: gray;
+}
+
+input[type="button"][value]:-moz-buttonlabel {
+  content:attr(value);
+  font-family: sans-serif;
+  font-size: small;
+  background-color:inherit;
 }
 
 
@@ -861,6 +847,10 @@ button {
   padding: 1px;
 }
 
+button:hover {
+   border : 2px solid black;
+}
+
 button:active {
   border-style: inset;
 
@@ -870,15 +860,11 @@ button:active {
   padding-bottom: 0px;
 }
 
-button:hover {
-   border : 2px solid black;
-}
-
-button:active:-moz-outline {
+button:hover:-moz-outline {
    border : 1px solid black;
 }
 
-button:hover:-moz-outline {
+button:active:-moz-outline {
    border : 1px solid black;
 }
 
@@ -1017,7 +1003,7 @@ select[multiple][size="1"] {
 }
 
 /* combobox button */
-select input[type=button] {
+select input[type="button"] {
   white-space:nowrap;
   border: outset 2px rgb(204, 204, 204);
   background-image:url("arrow.gif");
@@ -1029,12 +1015,12 @@ select input[type=button] {
 }
 
 /* combobox button depressed */
-select input[type=button]:active {
+select input[type="button"]:active {
   background-image:url("arrowd.gif");
   padding:1px;
 }
 
-select[disabled] input[type=button] {
+select[disabled] input[type="button"] {
   border: solid 1px rgb(204, 204, 204);
 }
 
