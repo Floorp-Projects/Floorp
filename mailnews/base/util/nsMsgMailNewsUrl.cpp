@@ -140,8 +140,14 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
 
 	nsXPIDLCString host;
 	nsXPIDLCString scheme;
+	nsXPIDLCString userName;
 
 	nsresult rv = GetHost(getter_Copies(host));
+	GetUsername(getter_Copies(userName));
+
+  if ((const char *) userName)
+	nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+
 	rv = GetScheme(getter_Copies(scheme));
     if (NS_SUCCEEDED(rv))
     {
@@ -150,7 +156,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
         if (NS_FAILED(rv)) return rv;
         
         nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = accountManager->FindServer(GetUserName(),
+        rv = accountManager->FindServer(userName,
                                         host,
                                         scheme,
                                         aIncomingServer);

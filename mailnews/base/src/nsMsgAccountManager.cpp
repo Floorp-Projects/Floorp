@@ -605,7 +605,7 @@ nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMsgAccountManager::setDefaultAccountPref(nsIMsgAccount* aDefaultAccount)
 {
   nsresult rv;

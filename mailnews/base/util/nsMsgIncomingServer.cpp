@@ -172,7 +172,8 @@ nsMsgIncomingServer::GetServerURI(char **aResult)
     if (NS_SUCCEEDED(rv) && ((const char*)username) && username[0]) {
         nsXPIDLCString escapedUsername;
         *((char **)getter_Copies(escapedUsername)) =
-            nsEscape(username, url_Path);
+            nsEscape(username, url_XAlphas);
+//            nsEscape(username, url_Path);
         // not all servers have a username 
         uri += escapedUsername;
         uri += '@';
