@@ -196,7 +196,6 @@ public:
 
     Type                     mType;
 
-    PRInt32                  mLineNo;
     PRInt32                  mRefCnt;
           
     virtual ~nsXULPrototypeNode() {}
@@ -218,15 +217,15 @@ public:
     virtual void ReleaseSubtree() { Release(); };
 
 protected:
-    nsXULPrototypeNode(Type aType, PRInt32 aLineNo)
-        : mType(aType), mLineNo(aLineNo), mRefCnt(1) {}
+    nsXULPrototypeNode(Type aType)
+        : mType(aType), mRefCnt(1) {}
 };
 
 class nsXULPrototypeElement : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeElement(PRInt32 aLineNo)
-        : nsXULPrototypeNode(eType_Element, aLineNo),
+    nsXULPrototypeElement()
+        : nsXULPrototypeNode(eType_Element),
           mNumChildren(0),
           mChildren(nsnull),
           mNumAttributes(0),
@@ -302,7 +301,7 @@ class nsXULDocument;
 class nsXULPrototypeScript : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion);
+    nsXULPrototypeScript(PRUint16 aLineNo, const char *aVersion);
     virtual ~nsXULPrototypeScript();
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
@@ -316,13 +315,14 @@ public:
                                                 nsIScriptContext* aContext);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
-                     nsIURI* aURI, PRInt32 aLineNo,
+                     nsIURI* aURI, PRUint16 aLineNo,
                      nsIDocument* aDocument,
                      nsIXULPrototypeDocument* aPrototypeDocument);
 
     nsCOMPtr<nsIURI>         mSrcURI;
-    PRBool                   mSrcLoading;
-    PRBool                   mOutOfLine;
+    PRUint16                 mLineNo;
+    PRPackedBool             mSrcLoading;
+    PRPackedBool             mOutOfLine;
     nsXULDocument*           mSrcLoadWaiters;   // [OWNER] but not COMPtr
     JSObject*                mJSObject;
     const char*              mLangVersion;
@@ -346,8 +346,8 @@ protected:
 class nsXULPrototypeText : public nsXULPrototypeNode
 {
 public:
-    nsXULPrototypeText(PRInt32 aLineNo)
-        : nsXULPrototypeNode(eType_Text, aLineNo)
+    nsXULPrototypeText()
+        : nsXULPrototypeNode(eType_Text)
     {
         MOZ_COUNT_CTOR(nsXULPrototypeText);
     }

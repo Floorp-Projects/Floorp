@@ -358,7 +358,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         return NS_ERROR_OUT_OF_MEMORY;
     rv |= mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
 
-    mRoot = new nsXULPrototypeElement(-1);
+    mRoot = new nsXULPrototypeElement();
     if (! mRoot)
        return NS_ERROR_OUT_OF_MEMORY;
 

@@ -734,7 +734,7 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode)
             break;
 
         // Trim the leading and trailing whitespace
-        nsXULPrototypeText* text = new nsXULPrototypeText(/* line number */ -1);
+        nsXULPrototypeText* text = new nsXULPrototypeText();
         if (! text)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -803,7 +803,7 @@ nsresult
 XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
                                   nsXULPrototypeElement** aResult)
 {
-    nsXULPrototypeElement* element = new nsXULPrototypeElement(/* line number */ -1);
+    nsXULPrototypeElement* element = new nsXULPrototypeElement();
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
 
