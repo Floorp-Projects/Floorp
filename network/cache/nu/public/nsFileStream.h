@@ -27,14 +27,12 @@
 
 //#include "nsISupports.h"
 #include "nsStream.h"
-#include "xp.h" // Reqd. for xp_file.h
-#include "xp_file.h" // Cuz we don't have a better choice, as yet
-
+#include "prio.h" // PRFileDesc
 class nsFileStream: public nsStream
 {
 
 public:
-            nsFileStream(XP_File* i_pFile);
+            nsFileStream(PRFileDesc* i_pFile);
     virtual ~nsFileStream();
 /*
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 
@@ -43,6 +41,7 @@ public:
     NS_IMETHOD_(nsrefcnt)   Release(void);
 */
     PRInt32     Read(void* o_Buffer, PRUint32 i_Len);
+    void        Reset(void);
     PRInt32     Write(const void* i_Buffer, PRUint32 i_Len);
 
 protected:
@@ -50,7 +49,7 @@ protected:
 private:
     nsFileStream(const nsFileStream& o);
     nsFileStream& operator=(const nsFileStream& o);
-    XP_File* m_pFile;
+    PRFileDesc* m_pFile;    
 };
 
 #endif // nsFileStream_h__
