@@ -136,7 +136,7 @@ nsLDBBrowserContentListener.prototype = {
   mBackButton : null,
   mStopButton : null,
 
-  mLoading : false,
+  mLoading : false
 
 }
 
@@ -326,7 +326,7 @@ RTestIndexList.prototype = {
   mDataSource : null,
   mLDB_Root : null,
   mNC_Child : null,
-  mNC_Name : null,
+  mNC_Name : null
 }
 
 const nsIFileInputStream = Components.interfaces.nsIFileInputStream;
