@@ -996,6 +996,66 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
+		0FFE0A7E079B147F00966027 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = bm_sort.tiff;
+			path = chrome/bm_sort.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FFE0A7F079B147F00966027 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = bm_add.tiff;
+			path = chrome/bm_add.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FFE0A80079B147F00966027 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = bm_action.tiff;
+			path = chrome/bm_action.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0FFE0A81079B147F00966027 = {
+			fileRef = 0FFE0A7E079B147F00966027;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FFE0A82079B147F00966027 = {
+			fileRef = 0FFE0A7F079B147F00966027;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FFE0A83079B147F00966027 = {
+			fileRef = 0FFE0A80079B147F00966027;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FFE0A84079B147F00966027 = {
+			fileRef = 0FFE0A7E079B147F00966027;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FFE0A85079B147F00966027 = {
+			fileRef = 0FFE0A7F079B147F00966027;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FFE0A86079B147F00966027 = {
+			fileRef = 0FFE0A80079B147F00966027;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //0F0
 //0F1
 //0F2
@@ -2585,6 +2645,9 @@
 				82CE28CA0736633900B4DE07,
 				82180ACA07368BDF002EFA6D,
 				0FBC0ECB0798F92600E8E0E2,
+				0FFE0A81079B147F00966027,
+				0FFE0A82079B147F00966027,
+				0FFE0A83079B147F00966027,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6511,6 +6574,9 @@
 				82CE28C50736625800B4DE07,
 				82CE28C90736633900B4DE07,
 				0FBC0ECC0798F92600E8E0E2,
+				0FFE0A84079B147F00966027,
+				0FFE0A85079B147F00966027,
+				0FFE0A86079B147F00966027,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -11664,6 +11730,9 @@
 				3F42E91005EAD4260045A30C,
 				3F42E91105EAD4260045A30C,
 				3F42E91205EAD4260045A30C,
+				0FFE0A7E079B147F00966027,
+				0FFE0A7F079B147F00966027,
+				0FFE0A80079B147F00966027,
 			);
 			isa = PBXGroup;
 			name = images;
