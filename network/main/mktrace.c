@@ -170,6 +170,7 @@ TimingWriteMessage(const char* fmtstr, ...)
 {
     char line[256];
     va_list ap;
+    PRUint32 nb;
 
     if (! EnsureLogModule())
         return;
@@ -177,12 +178,8 @@ TimingWriteMessage(const char* fmtstr, ...)
     if (gTimingLog->level == PR_LOG_NONE)
         return;
 
-    va_start(ap, fmtstr);
-
     {
         PRExplodedTime now;
-        PRUint32 nb;
-
         PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
 
         /* Print out "YYYYMMDD.HHMMSS.UUUUUU: " */
@@ -191,12 +188,13 @@ TimingWriteMessage(const char* fmtstr, ...)
                          now.tm_year, now.tm_month + 1, now.tm_mday,
                          now.tm_hour, now.tm_min, now.tm_sec,
                          now.tm_usec);
-
-        /* ...followed by the "real" message */
-        nb += PR_vsnprintf(line + nb, sizeof(line) - nb - 1, fmtstr, ap);
     }
 
-    PR_LOG(gTimingLog, PR_LOG_NOTICE, (line));
+    /* ...followed by the "real" message */
+    va_start(ap, fmtstr);
+    nb += PR_vsnprintf(line + nb, sizeof(line) - nb - 1, fmtstr, ap);
+
+    PR_LOG(gTimingLog, PR_LOG_NOTICE, ("%s", line));
 }
 
 
