@@ -14,13 +14,17 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
+ * 
+ * Contributors:
+ * hwaara@chello.se
  */
 
 var stringBundle;
 
-function onInit() {
+function onInit() 
+{
     stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
     initServerType();
 }
@@ -31,7 +35,7 @@ function onPreInit(account, accountValues)
     
     hideShowControls(type);
 
-    enableBiffUI();
+    setupBiffUI();
 }
 
 
@@ -174,18 +178,30 @@ function secureSelect() {
         document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(false);
 }
 
-function enableBiffUI()
+function setupBiffUI()
 { 
     var parentCheckBox = document.getElementById('server.doBiff');
     var checkBox = document.getElementById('server.downloadOnBiff');
     var textField = document.getElementById('server.biffMinutes');
+    var textLabel = document.getElementById('biffEnd');
 
-    if (parentCheckBox.getAttribute("checked")) {
-      checkBox.setAttribute("disabled", "true");
-      textField.setAttribute("disabled", "true");
+    var checked = parentCheckBox.getAttribute("checked");
+
+    if (checked == "true") {
+        checked = true;
     }
     else {
-      checkBox.setAttribute("disabled", "false");
-      textField.setAttribute("disabled", "false");
+        checked = false;
+    }
+
+    if (checked) {
+      checkBox.setAttribute("disabled", "true");
+      textField.setAttribute("disabled", "true");
+      textLabel.setAttribute("disabled", "true");
+    }
+    else {
+      checkBox.removeAttribute("disabled");
+      textField.removeAttribute("disabled");
+      textLabel.removeAttribute("disabled");
     } 
 }
