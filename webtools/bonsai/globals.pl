@@ -111,8 +111,7 @@ sub ConnectToDatabase {
 
 #        DBI->trace(1, "/tmp/dbi.out");
 
-	$::db = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'),
-                             "mysql")
+	$::db = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'))
             || die "Can't connect to database server.";
     }
 }

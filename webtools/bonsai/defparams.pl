@@ -148,7 +148,7 @@ DefParam("mysqlpassword",
          "");
 
 DefParam("dbiparam",
-         "The first parameter to pass to the DBI->connect() method.  This may need to be changed to be simply 'bonsai' for older versions of the perl MySQL libraries.",
+         "The first parameter to pass to the DBI->connect() method.<br>Example: <code>DBI:mysql:host=localhost;database=bonsai</code>",
          "t",
          "DBI:mysql:database=bonsai;");
 
