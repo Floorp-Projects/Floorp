@@ -2,29 +2,28 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/junkMail.dtd">
 
-<window id="junkMail"
+<dialog id="junkMail"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         windowtype="mailnews:junk"
         title="&window.title;"
-        onload="onJunkMailLoad()"
-        persist="screenX screenY width height">
+        onload="onJunkMailLoad();"
+        buttons="accept,cancel,help"
+	ondialogaccept="return onAccept();"
+	ondialoghelp="return doHelpButton();">
 
-<stringbundleset id="stringbundleset">
-  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-</stringbundleset>
+  <script type="application/x-javascript" src="chrome://messenger/content/junkMail.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
-<script type="application/x-javascript" src="chrome://messenger/content/junkMail.js"/>
-<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  </stringbundleset>
 
-<vbox>
   <hbox align="center">
     <label value="&account.label;" accesskey="&account.accesskey;"/>
     <menulist oncommand="onServerClick(event);" id="server">
@@ -47,8 +46,8 @@
     <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommand="junkLog()"/>
   </hbox>
 
-  <description>&info1.label;</description>
-  <description>&info2.label;</description>
+  <description width="1">&info1.label;</description>
+  <description width="1">&info2.label;</description>
 
   <checkbox id="level" oncommand="conditionallyEnableUI(null);" accesskey="&level.accesskey;" label="&level.label;"/>
 
@@ -96,7 +95,7 @@
       </grid>
     </radiogroup>
     
-    <hbox autostretch="never" align="center">
+    <hbox align="center">
       <spacer width="20px"/>
       <checkbox id="purge" oncommand="conditionallyEnableUI('purge')" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
       <textbox size="3" id="purgeInterval" />
@@ -104,10 +103,4 @@
     </hbox>
   </vbox>
 
-  <separator/>
-
-  <hbox id="okCancelHelpButtonsRight"/>
-
-</vbox>
-
-</window>
+</dialog>
