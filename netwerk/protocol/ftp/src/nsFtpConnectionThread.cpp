@@ -1301,7 +1301,7 @@ nsFtpConnectionThread::S_pasv() {
 
     PRUint32 bytes;
     const char *comm = mIPv6ServerAddress ? EPSV_COMM : PASV_COMM;
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\" (addr is %s)\n", mURL.get(), comm, mIPv6ServerAddress ? mIPv6ServerAddress : "v6"));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\" (addr is %s)\n", mURL.get(), comm, mIPv6ServerAddress ? mIPv6ServerAddress : "v4"));
     return mCOutStream->Write(comm, PL_strlen(comm), &bytes);
 }
 
