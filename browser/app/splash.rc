@@ -64,12 +64,28 @@ END
 
 // We need this cursor for versions of Windows that don't support IDC_HAND,
 // namely Win95 and NT4.
-#define IDC_SELECTANCHOR 4100
-IDC_SELECTANCHOR CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\select.cur"
+#define IDC_SELECTANCHOR                4100
+#define IDC_GRAB                        4101
+#define IDC_GRABBING                    4102
+#define IDC_CELL                        4103
+#define IDC_COPY                        4104
+#define IDC_ALIAS                       4105
+#define IDC_ZOOMIN                      4106
+#define IDC_ZOOMOUT                     4107
+#define IDC_COLRESIZE                   4108
+#define IDC_ROWRESIZE                   4109
+#define IDC_VERTICALTEXT                4110
 
-#define IDC_ZOOMIN       4114
-IDC_ZOOMIN       CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_in.cur"
-#define IDC_ZOOMOUT      4115
-IDC_ZOOMOUT      CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_out.cur"
+IDC_SELECTANCHOR        CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\select.cur"
+IDC_GRAB                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\grab.cur"
+IDC_GRABBING            CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\grabbing.cur"
+IDC_CELL                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\cell.cur"
+IDC_COPY                CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\copy.cur"
+IDC_ALIAS               CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\aliasb.cur"
+IDC_ZOOMIN              CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\zoom_in.cur"
+IDC_ZOOMOUT             CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\zoom_out.cur"
+IDC_COLRESIZE           CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\col_resize.cur"
+IDC_ROWRESIZE           CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\row_resize.cur"
+IDC_VERTICALTEXT        CURSOR  DISCARDABLE     "..\\..\\widget\\src\\build\\res\\vertical_text.cur"
 
 #endif
