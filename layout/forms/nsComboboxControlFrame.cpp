@@ -1194,7 +1194,7 @@ nsComboboxControlFrame::SelectionChanged()
           if (NS_SUCCEEDED(rv) && shell) {
             if (NS_SUCCEEDED(shell->EnterReflowLock())) {
               shell->AppendReflowCommand(cmd);
-              shell->ExitReflowLock(PR_TRUE, PR_TRUE);
+              shell->ExitReflowLock(PR_TRUE);
             }
           }
           NS_RELEASE(cmd);

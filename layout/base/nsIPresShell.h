@@ -149,7 +149,7 @@ public:
 
   NS_IMETHOD EnterReflowLock() = 0;
 
-  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow, PRBool aDoSynchronousReflow) = 0;
+  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow) = 0;
 
   // Make shell be a document observer
   NS_IMETHOD BeginObservingDocument() = 0;

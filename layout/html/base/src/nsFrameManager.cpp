@@ -758,7 +758,7 @@ FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
   frameManager->mPresShell->EnterReflowLock();
   frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
   frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);    
-  frameManager->mPresShell->ExitReflowLock(PR_TRUE, PR_TRUE);
+  frameManager->mPresShell->ExitReflowLock(PR_TRUE);
 }
 
 void
