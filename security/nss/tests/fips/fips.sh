@@ -91,68 +91,68 @@ fips_init()
 fips_140_1()
 {
   echo "$SCRIPTNAME: List the FIPS module certificates -----------------"
-  echo "certutil -d ${FIPSDIR} -L"
-  certutil -d ${FIPSDIR} -L 2>&1
+  echo "certutil -d ${R_FIPSDIR} -L"
+  certutil -d ${R_FIPSDIR} -L 2>&1
   html_msg $? 0 "List the FIPS module certificates (certutil -L)"
 
   echo "$SCRIPTNAME: List the FIPS module keys -------------------------"
-  echo "certutil -d ${FIPSDIR} -K -f ${FIPSPWFILE}"
-  certutil -d ${FIPSDIR} -K -f ${FIPSPWFILE} 2>&1
+  echo "certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE}"
+  certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "List the FIPS module keys (certutil -K)"
 
   echo "$SCRIPTNAME: Attempt to list FIPS module keys with incorrect password"
-  echo "certutil -d ${FIPSDIR} -K -f ${FIPSBADPWFILE}"
-  certutil -d ${FIPSDIR} -K -f ${FIPSBADPWFILE} 2>&1
+  echo "certutil -d ${R_FIPSDIR} -K -f ${FIPSBADPWFILE}"
+  certutil -d ${R_FIPSDIR} -K -f ${FIPSBADPWFILE} 2>&1
   html_msg $? 255 "Attempt to list FIPS module keys with incorrect password (certutil -K)"
 
   echo "$SCRIPTNAME: Validate the certificate --------------------------"
-  echo "certutil -d ${FIPSDIR} -V -n ${FIPSCERTNICK} -u SR -e -f ${FIPSPWFILE}"
-  certutil -d ${FIPSDIR} -V -n ${FIPSCERTNICK} -u SR -e -f ${FIPSPWFILE}
+  echo "certutil -d ${R_FIPSDIR} -V -n ${FIPSCERTNICK} -u SR -e -f ${R_FIPSPWFILE}"
+  certutil -d ${R_FIPSDIR} -V -n ${FIPSCERTNICK} -u SR -e -f ${R_FIPSPWFILE}
   html_msg $? 0 "Validate the certificate (certutil -V -e)"
 
   echo "$SCRIPTNAME: Export the certificate and key as a PKCS#12 file --"
-  echo "pk12util -d ${FIPSDIR} -o fips140.p12 -n ${FIPSCERTNICK} -w ${FIPSP12PWFILE} -k ${FIPSPWFILE}"
-  pk12util -d ${FIPSDIR} -o fips140.p12 -n ${FIPSCERTNICK} -w ${FIPSP12PWFILE} -k ${FIPSPWFILE} 2>&1
+  echo "pk12util -d ${R_FIPSDIR} -o fips140.p12 -n ${FIPSCERTNICK} -w ${R_FIPSP12PWFILE} -k ${R_FIPSPWFILE}"
+  pk12util -d ${R_FIPSDIR} -o fips140.p12 -n ${FIPSCERTNICK} -w ${R_FIPSP12PWFILE} -k ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "Export the certificate and key as a PKCS#12 file (pk12util -o)"
 
   echo "$SCRIPTNAME: List the FIPS module certificates -----------------"
-  echo "certutil -d ${FIPSDIR} -L"
-  certutil -d ${FIPSDIR} -L 2>&1
+  echo "certutil -d ${R_FIPSDIR} -L"
+  certutil -d ${R_FIPSDIR} -L 2>&1
   html_msg $? 0 "List the FIPS module certificates (certutil -L)"
 
   echo "$SCRIPTNAME: Delete the certificate and key from the FIPS module"
-  echo "certutil -d ${FIPSDIR} -F -n ${FIPSCERTNICK} -f ${FIPSPWFILE}"
-  certutil -d ${FIPSDIR} -F -n ${FIPSCERTNICK} -f ${FIPSPWFILE} 2>&1
+  echo "certutil -d ${R_FIPSDIR} -F -n ${FIPSCERTNICK} -f ${R_FIPSPWFILE}"
+  certutil -d ${R_FIPSDIR} -F -n ${FIPSCERTNICK} -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "Delete the certificate and key from the FIPS module (certutil -D)"
 
   echo "$SCRIPTNAME: List the FIPS module certificates -----------------"
-  echo "certutil -d ${FIPSDIR} -L"
-  certutil -d ${FIPSDIR} -L 2>&1
+  echo "certutil -d ${R_FIPSDIR} -L"
+  certutil -d ${R_FIPSDIR} -L 2>&1
   html_msg $? 0 "List the FIPS module certificates (certutil -L)"
 
   echo "$SCRIPTNAME: List the FIPS module keys."
-  echo "certutil -d ${FIPSDIR} -K -f ${FIPSPWFILE}"
-  certutil -d ${FIPSDIR} -K -f ${FIPSPWFILE} 2>&1
+  echo "certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE}"
+  certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "List the FIPS module keys (certutil -K)"
 
   echo "$SCRIPTNAME: Import the certificate and key from the PKCS#12 file"
-  echo "pk12util -d ${FIPSDIR} -i fips140.p12 -w ${FIPSP12PWFILE} -k ${FIPSPWFILE}"
-  pk12util -d ${FIPSDIR} -i fips140.p12 -w ${FIPSP12PWFILE} -k ${FIPSPWFILE} 2>&1
+  echo "pk12util -d ${R_FIPSDIR} -i fips140.p12 -w ${R_FIPSP12PWFILE} -k ${R_FIPSPWFILE}"
+  pk12util -d ${R_FIPSDIR} -i fips140.p12 -w ${R_FIPSP12PWFILE} -k ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "Import the certificate and key from the PKCS#12 file (pk12util -i)"
 
   echo "$SCRIPTNAME: List the FIPS module certificates -----------------"
-  echo "certutil -d ${FIPSDIR} -L"
-  certutil -d ${FIPSDIR} -L 2>&1
+  echo "certutil -d ${R_FIPSDIR} -L"
+  certutil -d ${R_FIPSDIR} -L 2>&1
   html_msg $? 0 "List the FIPS module certificates (certutil -L)"
 
   echo "$SCRIPTNAME: List the FIPS module keys --------------------------"
-  echo "certutil -d ${FIPSDIR} -K -f ${FIPSPWFILE}"
-  certutil -d ${FIPSDIR} -K -f ${FIPSPWFILE} 2>&1
+  echo "certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE}"
+  certutil -d ${R_FIPSDIR} -K -f ${R_FIPSPWFILE} 2>&1
   html_msg $? 0 "List the FIPS module keys (certutil -K)"
 
   echo "$SCRIPTNAME: Export the certificate as a DER-encoded file ------"
-  echo "certutil -d ${FIPSDIR} -L -n ${FIPSCERTNICK} -r -o fips140.crt"
-  certutil -d ${FIPSDIR} -L -n ${FIPSCERTNICK} -r -o fips140.crt 2>&1
+  echo "certutil -d ${R_FIPSDIR} -L -n ${FIPSCERTNICK} -r -o fips140.crt"
+  certutil -d ${R_FIPSDIR} -L -n ${FIPSCERTNICK} -r -o fips140.crt 2>&1
   html_msg $? 0 "Export the certificate as a DER (certutil -L -r)"
 }
 
