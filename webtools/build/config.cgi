@@ -11,12 +11,18 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is the Bonsai CVS tool.
+# The Original Code is this file as it was released upon February 18, 1999.
 #
 # The Initial Developer of the Original Code is Netscape Communications
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+# config.cgi - Configure a mozilla build.
+#   Outputs a form of configure options.
+#   On submit, the cgi prints out a shell script that the user can
+#   save to configure their build.
+
+# Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 use CGI;
 
 $query = new CGI;
