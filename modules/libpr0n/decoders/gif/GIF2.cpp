@@ -1114,13 +1114,7 @@ void gif_destroy(gif_struct *gs)
   gif_free(gs->stack);
   PR_FREEIF(gs->hold);
 
-  /* Free the colormap that is not in use.  The other one, if
-   * present, will be freed when the image container is
-   * destroyed.
-   */
-  if (gs->is_local_colormap_defined)
-    PR_FREEIF(gs->local_colormap);
-
+  PR_FREEIF(gs->local_colormap);
   PR_FREEIF(gs->global_colormap);
   PR_FREEIF(gs);
 }
