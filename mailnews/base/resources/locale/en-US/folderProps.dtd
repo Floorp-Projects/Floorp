@@ -37,4 +37,9 @@
 <!ENTITY folderProps.information.label  "Information:">
 <!ENTITY folderProps.name.label	        "Name:">
 
-
+<!ENTITY folderSharingTab.label                             "Sharing">
+<!ENTITY folderSharingTab.accesskey                         "s">
+<!ENTITY privilegesDesc.label  "Share this and other folders with network users and display and set access privileges">
+<!ENTITY privileges.button.label                      "Privileges">
+<!ENTITY permissionsDesc.label                            "You have the following permissions:">
+<!ENTITY folderType.label                             "Folder Type:">
