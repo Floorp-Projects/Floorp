@@ -21,7 +21,10 @@
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
+#import "NSString+Utils.h"
+
 #import "CHGoMenu.h"
+#import "MainController.h"
 #import "BrowserWindowController.h"
 #import "CHBrowserWrapper.h"
 #import "CHBrowserView.h"
@@ -55,7 +58,7 @@ static const NSString *kEllipsis = @"...";
 - (nsIWebNavigation*) currentWebNavigation
 {
   // get controller for current window
-  BrowserWindowController *controller = [[NSApp delegate] getMainWindowBrowserController];
+  BrowserWindowController *controller = [(MainController *)[NSApp delegate] getMainWindowBrowserController];
   if (!controller) return nsnull;
   
   // get web navigation for current browser

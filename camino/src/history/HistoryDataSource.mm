@@ -6,6 +6,8 @@
 //  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
 //
 
+#import "NSString+Utils.h"
+
 #import "CHHistoryDataSource.h"
 #import "CHBrowserView.h"
 
