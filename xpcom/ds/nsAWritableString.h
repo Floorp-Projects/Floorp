@@ -75,7 +75,7 @@ class nsWritingIterator
         }
 
     public:
-      nsWritingIterator<CharT>() { }
+      nsWritingIterator() { }
       // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK
       // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
