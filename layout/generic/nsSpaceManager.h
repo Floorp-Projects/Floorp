@@ -26,10 +26,10 @@
  * Implementation of nsISpaceManager that maintains a region data structure of
  * unavailable space
  */
-class SpaceManager : public nsISpaceManager {
+class nsSpaceManager : public nsISpaceManager {
 public:
-  SpaceManager(nsIFrame* aFrame);
-  ~SpaceManager();
+  nsSpaceManager(nsIFrame* aFrame);
+  ~nsSpaceManager();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -153,8 +153,8 @@ protected:
                                    nsBandData&     aAvailableSpace) const;
 
 private:
-	SpaceManager(const SpaceManager&);    // no implementation
-	void operator=(const SpaceManager&);  // no implementation
+	nsSpaceManager(const nsSpaceManager&);    // no implementation
+	void operator=(const nsSpaceManager&);  // no implementation
   friend PR_CALLBACK PRIntn NS_RemoveFrameInfoEntries(PLHashEntry*, PRIntn, void*);
 };
 

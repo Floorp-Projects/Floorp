@@ -24,7 +24,7 @@ struct nsStyleDisplay;
 
 // Implementation of a frame that's used as a placeholder for an absolutely
 // positioned frame
-class AbsoluteFrame : public nsFrame
+class nsAbsoluteFrame : public nsFrame
 {
 public:
   /**
@@ -53,9 +53,9 @@ protected:
 
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
-  AbsoluteFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  virtual ~AbsoluteFrame();
+  virtual ~nsAbsoluteFrame();
 
   nsIView*  CreateView(nsIView*         aContainingView,
                        const nsRect&    aRect,

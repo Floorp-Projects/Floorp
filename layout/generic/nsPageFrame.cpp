@@ -23,12 +23,12 @@
 #include "nsReflowCommand.h"
 #include "nsIRenderingContext.h"
 
-PageFrame::PageFrame(nsIContent* aContent, nsIFrame* aParent)
+nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsContainerFrame(aContent, aParent)
 {
 }
 
-void PageFrame::CreateFirstChild(nsIPresContext* aPresContext)
+void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
 {
   // Create a frame for our one and only content child
   if (mContent->ChildCount() > 0) {
@@ -54,10 +54,10 @@ void PageFrame::CreateFirstChild(nsIPresContext* aPresContext)
   }
 }
 
-NS_METHOD PageFrame::Reflow(nsIPresContext*      aPresContext,
-                            nsReflowMetrics&     aDesiredSize,
-                            const nsReflowState& aReflowState,
-                            nsReflowStatus&      aStatus)
+NS_METHOD nsPageFrame::Reflow(nsIPresContext*      aPresContext,
+                              nsReflowMetrics&     aDesiredSize,
+                              const nsReflowState& aReflowState,
+                              nsReflowStatus&      aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
@@ -98,7 +98,7 @@ NS_METHOD PageFrame::Reflow(nsIPresContext*      aPresContext,
         // Create the first child frame
         CreateFirstChild(aPresContext);
       } else {
-        PageFrame*  prevPage = (PageFrame*)mPrevInFlow;
+        nsPageFrame*  prevPage = (nsPageFrame*)mPrevInFlow;
   
         NS_ASSERTION(!prevPage->mLastContentIsComplete, "bad continuing page");
         nsIFrame* prevLastChild;
@@ -155,12 +155,12 @@ NS_METHOD PageFrame::Reflow(nsIPresContext*      aPresContext,
 }
 
 NS_METHOD
-PageFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
-                                 nsIFrame*        aParent,
-                                 nsIStyleContext* aStyleContext,
-                                 nsIFrame*&       aContinuingFrame)
+nsPageFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame)
 {
-  PageFrame* cf = new PageFrame(mContent, aParent);
+  nsPageFrame* cf = new nsPageFrame(mContent, aParent);
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -169,7 +169,7 @@ PageFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD PageFrame::Paint(nsIPresContext&      aPresContext,
+NS_METHOD nsPageFrame::Paint(nsIPresContext&      aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect)
 {
@@ -182,7 +182,7 @@ NS_METHOD PageFrame::Paint(nsIPresContext&      aPresContext,
   return NS_OK;
 }
 
-NS_METHOD PageFrame::ListTag(FILE* out) const
+NS_METHOD nsPageFrame::ListTag(FILE* out) const
 {
   fprintf(out, "*PAGE@%p", this);
   return NS_OK;

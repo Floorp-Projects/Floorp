@@ -227,7 +227,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
   // Are we paginated?
   if (aPresContext->IsPaginated()) {
     // Yes. Create the first page frame
-    mFirstChild = new PageFrame(mContent, this);
+    mFirstChild = new nsPageFrame(mContent, this);
     mChildCount = 1;
     mLastContentOffset = mFirstContentOffset;
 

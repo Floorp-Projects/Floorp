@@ -19,7 +19,7 @@
 #define nsIFloaterContainer_h___
 
 #include <stdio.h>
-class PlaceholderFrame;
+class nsPlaceholderFrame;
 class nsIPresContext;
 
 // IID for the nsIFloaterContainer interface {5A305EE0-CB55-11d1-8556-00A02468FAB6}
@@ -42,9 +42,9 @@ public:
    * @param aPlaceholder the placeholder frame associated with the floating
    *          element.
    */
-  virtual PRBool AddFloater(nsIPresContext*   aPresContext,
-                            nsIFrame*         aFloater,
-                            PlaceholderFrame* aPlaceholder) = 0;
+  virtual PRBool AddFloater(nsIPresContext*     aPresContext,
+                            nsIFrame*           aFloater,
+                            nsPlaceholderFrame* aPlaceholder) = 0;
 
  /**
   * Call to place the floating element, because the placeholder frame has been
@@ -55,9 +55,9 @@ public:
   * decides to move it... It would probably be better if the implementor of this
   * interface managed the tracking of the placeholder within the containing line
   **/
-  virtual void PlaceFloater(nsIPresContext*   aPresContext,
-                            nsIFrame*         aFloater,
-                            PlaceholderFrame* aPlaceholder) = 0;
+  virtual void PlaceFloater(nsIPresContext*     aPresContext,
+                            nsIFrame*           aFloater,
+                            nsPlaceholderFrame* aPlaceholder) = 0;
 };
 
 #endif /* nsIFloaterContainer_h___ */

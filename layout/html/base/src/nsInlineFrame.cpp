@@ -673,12 +673,12 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
     // Check whether it wants to floated or absolutely positioned
     nsresult rv;
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-      rv = AbsoluteFrame::NewFrame(&kidFrame, kid, this);
+      rv = nsAbsoluteFrame::NewFrame(&kidFrame, kid, this);
       if (NS_OK == rv) {
         kidFrame->SetStyleContext(aPresContext, kidStyleContext);
       }
     } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
-      rv = PlaceholderFrame::NewFrame(&kidFrame, kid, this);
+      rv = nsPlaceholderFrame::NewFrame(&kidFrame, kid, this);
       if (NS_OK == rv) {
         kidFrame->SetStyleContext(aPresContext, kidStyleContext);
       }

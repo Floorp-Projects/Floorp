@@ -1294,12 +1294,12 @@ nsLineLayout::CreateFrameFor(nsIContent* aKid)
   nsIFrame* kidFrame;
   nsresult rv;
   if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-    rv = AbsoluteFrame::NewFrame(&kidFrame, aKid, mBlock);
+    rv = nsAbsoluteFrame::NewFrame(&kidFrame, aKid, mBlock);
     if (NS_OK == rv) {
       kidFrame->SetStyleContext(mPresContext, kidSC);
     }
   } else if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
-    rv = PlaceholderFrame::NewFrame(&kidFrame, aKid, mBlock);
+    rv = nsPlaceholderFrame::NewFrame(&kidFrame, aKid, mBlock);
     if (NS_OK == rv) {
       kidFrame->SetStyleContext(mPresContext, kidSC);
     }
