@@ -395,11 +395,6 @@ PCMT_CONTROL CMT_ControlConnect(CMT_MUTEX *mutex, CMT_SocketFuncs *sockFuncs)
 #endif
 
 	LOG("Connected to Cartman\n");
-
-    /* Set up the protocol obfuscation */
-    if (!(obscureObj = InitClientObscureObject(sockFuncs, sock))) {
-        goto loser;
-    }
 	
 	/* fill in the CMTControl struct */
 	control = (PCMT_CONTROL)calloc(sizeof(CMT_CONTROL), 1);

@@ -49,7 +49,7 @@ typedef enum CMTDataType {
     CMT_DT_END_CHOICE,
 	CMT_DT_STRUCT_LIST,
 	CMT_DT_END_STRUCT_LIST,
-	CMT_DT_STRUCT_PTR,
+	CMT_DT_STRUCT_PTR
 } CMTDataType;
 
 typedef struct CMTMessageTemplate {

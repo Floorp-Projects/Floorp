@@ -63,5 +63,7 @@ CSRCS = cmtinit.c  \
 	cmtrng.c \
 	$(NULL)
 
+EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin -lprotocol
+
 include $(topsrcdir)/config/rules.mk
 
