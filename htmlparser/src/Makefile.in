@@ -55,6 +55,7 @@ CPPSRCS= \
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp 		\
 	nsXIFDTD.cpp				\
+	nsExpatDTD.cpp				\
 	$(NULL)
 
 # Disable some DTD debugging code in the parser that 
