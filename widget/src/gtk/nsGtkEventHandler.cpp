@@ -485,7 +485,7 @@ void nsGtkWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 }
 
 //==============================================================
-void nsGtkWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data)
+void nsGtkWidget_FSBCancel_Callback(GtkWidget w, gpointer p)
 {
   nsFileWidget * widgetWindow = (nsFileWidget *) p ;
   if (p != nsnull) {
@@ -494,9 +494,9 @@ void nsGtkWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data)
 }
 
 //==============================================================
-void nsGtkWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
+void nsGtkWidget_FSBOk_Callback(GtkWidget w, gpointer p)
 {
-  nsFileWidget * widgetWindow = (nsFileWidget *) p ;
+  nsFileWidget * widgetWindow = (nsFileWidget *) p;
   if (p != nsnull) {
     widgetWindow->OnOk();
   }

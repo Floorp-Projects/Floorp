@@ -75,17 +75,16 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-//  mWidget = XmCreateFileSelectionDialog(parentWidget, "filesb", NULL, 0);
   NS_ALLOC_STR_BUF(title, aTitle, 256);
   mWidget = gtk_file_selection_new(title);
   NS_FREE_STR_BUF(title);
 
   gtk_signal_connect_object(GTK_OBJECT(mWidget->ok_button),
-    "clicked", NULL, NULL);
-/*
-  XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, this);
-  XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, this);
-*/
+    "clicked", GTK_SIGNAL_FUNC(nsGtkWidget_FSBOk_Callback), this);
+
+  gtk_signal_connect_object(GTK_OBJECT(mWidget->cancel_button),
+    "clicked", GTK_SIGNAL_FUNC(nsGtkWidget_FSBCancel_Callback), this);
+
   return NS_OK;
 }
 
