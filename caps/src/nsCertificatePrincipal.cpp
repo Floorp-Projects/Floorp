@@ -59,21 +59,6 @@ nsCertificatePrincipal::SetCommonName(const char* aCommonName)
 	return * mCommonName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP
-nsCertificatePrincipal::GetArchive(nsIZipReader** aArchive)
-{
-    *aArchive = mArchive;
-    NS_IF_ADDREF(*aArchive);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::SetArchive(nsIZipReader* aArchive)
-{
-    mArchive = aArchive;
-    return NS_OK;
-}
-
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////
