@@ -36,14 +36,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsTimer.h"
 #ifdef MOZ_PERF_METRICS
-  #include "nsITimeRecorder.h"
-  #define STYLESET_START_TIMER(a) \
-    StartTimer(a)
-  #define STYLESET_STOP_TIMER(a) \
-    StopTimer(a)
-#else
-  #define STYLESET_START_TIMER(a) ((void)0)
-  #define STYLESET_STOP_TIMER(a) ((void)0)
+#include "nsITimeRecorder.h"
 #endif
 
 static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
@@ -208,11 +201,6 @@ protected:
   nsIStyleFrameConstruction* mFrameConstructor;
 
   MOZ_TIMER_DECLARE(mStyleResolutionWatch)
-
-#ifdef MOZ_PERF_METRICS
-  PRBool            mTimerEnabled;   // true if timing is enabled, false if disabled
-#endif
-
 };
 
 StyleSetImpl::StyleSetImpl()
@@ -222,9 +210,6 @@ StyleSetImpl::StyleSetImpl()
     mRuleProcessors(nsnull),
     mRecycler(nsnull),
     mFrameConstructor(nsnull)
-#ifdef MOZ_PERF_METRICS
-    ,mTimerEnabled(PR_FALSE)
-#endif
 {
   NS_INIT_REFCNT();
 }
@@ -635,8 +620,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                PRBool aForceUnique)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
-  STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
-
+  MOZ_TIMER_START(mStyleResolutionWatch);
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aContent, "must have content");
@@ -680,7 +664,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   }
 
   MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ResolveStyleFor(), this=%p\n", this));
-  STYLESET_STOP_TIMER(NS_TIMER_STYLE_RESOLUTION);
+  MOZ_TIMER_STOP(mStyleResolutionWatch);
   return result;
 }
 
@@ -726,8 +710,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      PRBool aForceUnique)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
-  STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
-
+  MOZ_TIMER_START(mStyleResolutionWatch);
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
@@ -773,7 +756,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
   }
 
   MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
-  STYLESET_STOP_TIMER(NS_TIMER_STYLE_RESOLUTION);
+  MOZ_TIMER_STOP(mStyleResolutionWatch);
   return result;
 }
 
@@ -784,8 +767,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                    PRBool aForceUnique)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
-  STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
-
+  MOZ_TIMER_START(mStyleResolutionWatch);
   nsIStyleContext*  result = nsnull;
 
   NS_ASSERTION(aPseudoTag, "must have pseudo tag");
@@ -830,7 +812,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   }
   
   MOZ_TIMER_DEBUGLOG(("Stop: StyleSetImpl::ProbePseudoStyleFor(), this=%p\n", this));
-  STYLESET_STOP_TIMER(NS_TIMER_STYLE_RESOLUTION);
+  MOZ_TIMER_STOP(mStyleResolutionWatch);
   return result;
 }
 
@@ -1123,52 +1105,6 @@ NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 // nsITimeRecorder implementation
 
 #ifdef MOZ_PERF_METRICS
-
-NS_IMETHODIMP
-StyleSetImpl::EnableTimer(PRUint32 aTimerID)
-{
-  nsresult rv = NS_OK;
-
-  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    mTimerEnabled = PR_TRUE;
-  }
-  else 
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-StyleSetImpl::DisableTimer(PRUint32 aTimerID)
-{
-  nsresult rv = NS_OK;
-
-  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    mTimerEnabled = PR_FALSE;
-  }
-  else 
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-  
-  return rv;
-}
-
-NS_IMETHODIMP
-StyleSetImpl::IsTimerEnabled(PRBool *aIsEnabled, PRUint32 aTimerID)
-{
-  NS_ASSERTION(aIsEnabled != nsnull, "aIsEnabled paramter cannot be null" );
-  nsresult rv = NS_OK;
-
-  if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-	  if (*aIsEnabled != nsnull) {
-      *aIsEnabled = mTimerEnabled;		
-	  }
-  }
-  else 
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-  
-  return rv;
-}
-
 NS_IMETHODIMP
 StyleSetImpl::ResetTimer(PRUint32 aTimerID)
 {
@@ -1189,14 +1125,7 @@ StyleSetImpl::StartTimer(PRUint32 aTimerID)
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    // only do it if enabled
-    if (mTimerEnabled) {
-      MOZ_TIMER_START(mStyleResolutionWatch);
-    } else {
-#ifdef _DEBUG
-      // printf( "Attempt to start timer while disabled - ignoring\n" );
-#endif
-    }
+    MOZ_TIMER_START(mStyleResolutionWatch);
   }
   else 
     rv = NS_ERROR_NOT_IMPLEMENTED;
@@ -1210,14 +1139,7 @@ StyleSetImpl::StopTimer(PRUint32 aTimerID)
   nsresult rv = NS_OK;
 
   if (NS_TIMER_STYLE_RESOLUTION == aTimerID) {
-    // only do it if enabled
-    if (mTimerEnabled) {
-      MOZ_TIMER_STOP(mStyleResolutionWatch);
-    } else {
-#ifdef _DEBUG
-      // printf( "Attempt to stop timer while disabled - ignoring\n" );
-#endif
-    }
+    MOZ_TIMER_STOP(mStyleResolutionWatch);
   }
   else 
     rv = NS_ERROR_NOT_IMPLEMENTED;
