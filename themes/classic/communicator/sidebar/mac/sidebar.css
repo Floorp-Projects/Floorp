@@ -52,6 +52,13 @@
     list-style-image	: url("chrome://global/skin/grippy-short-vert-before.gif"); 
 }
 
+#sidebar-panel-picker > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+  {
+    padding-left            : 4px;
+    list-style-image        : url("chrome://global/skin/menu-arrow.gif") !important;
+  }
+
+
 #sidebar-panel-picker > .menu-right {
     padding-left		: 0px;
 }
