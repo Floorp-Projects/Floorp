@@ -44,7 +44,7 @@
  */
 
 #define DEFINE_RDF_VOCAB(namespace, prefix, name) \
-static const char* kURI##prefix##_##name = ##namespace #name ;\
+static const char* kURI##prefix##_##name = namespace #name ;\
 static const char* kTag##prefix##_##name = #name
 
 /**
