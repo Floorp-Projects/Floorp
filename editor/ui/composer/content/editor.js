@@ -52,6 +52,7 @@ const gDisplayModePreview = 0;
 const gDisplayModeNormal = 1;
 const gDisplayModeAllTags = 2;
 const gDisplayModeSource = 3;
+const gBaseEditorStyleSheet = "chrome://editor/content/EditorOverride.css";
 const gNormalStyleSheet = "chrome://editor/content/EditorContent.css";
 const gAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
 const gParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
@@ -283,6 +284,11 @@ var MessageComposeDocumentStateListener =
     DoAllQueryInterfaceOnEditor();
 
     addEditorClickEventListener();
+
+    try {
+      // Add the base sheet for editor cursor etc.
+      gEditor.addOverrideStyleSheet(gBaseEditorStyleSheet);
+    } catch (e) {}
   },
 
   NotifyDocumentWillBeDestroyed: function()
@@ -350,6 +356,11 @@ var DocumentStateListener =
     // Add mouse click watcher if right type of editor
     if (isHTMLEditor())
       addEditorClickEventListener();
+
+    try {
+      // Add the base sheet for editor cursor etc.
+      gEditor.addOverrideStyleSheet(gBaseEditorStyleSheet);
+    } catch (e) {}
 
     // Start in "Normal" edit mode
     SetDisplayMode(gDisplayModeNormal);
