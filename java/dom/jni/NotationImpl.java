@@ -25,6 +25,4 @@ public class NotationImpl extends NodeImpl implements Notation {
     
     public native String getPublicId();
     public native String getSystemId();
-
-    protected native void finalize();
 }

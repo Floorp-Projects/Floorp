@@ -45,25 +45,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentImpl_initialize
 
 /*
  * Class:     org_mozilla_dom_DocumentImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMDocument* doc = (nsIDOMDocument*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!doc) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Document.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(doc);
-}
-
-/*
- * Class:     org_mozilla_dom_DocumentImpl
  * Method:    createAttribute
  * Signature: (Ljava/lang/String;)Lorg/w3c/dom/Attr;
  */

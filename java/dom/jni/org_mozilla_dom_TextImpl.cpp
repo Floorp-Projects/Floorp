@@ -19,24 +19,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_TextImpl.h"
 
-/*
- * Class:     org_mozilla_dom_TextImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_TextImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMText* text = (nsIDOMText*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!text) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Text.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(text);
-}
 
 /*
  * Class:     org_mozilla_dom_TextImpl

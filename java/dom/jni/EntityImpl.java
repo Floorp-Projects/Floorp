@@ -26,6 +26,4 @@ public class EntityImpl extends NodeImpl implements Entity {
     public native String getPublicId();
     public native String getSystemId();
     public native String getNotationName();
-
-    protected native void finalize();
 }

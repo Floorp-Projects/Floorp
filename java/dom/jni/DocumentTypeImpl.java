@@ -27,6 +27,4 @@ public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
     public native String getName();
     public native NamedNodeMap getEntities();
     public native NamedNodeMap getNotations();
-
-    protected native void finalize();
 }

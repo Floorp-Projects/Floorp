@@ -25,14 +25,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
 
 /*
  * Class:     org_mozilla_dom_CharacterDataImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_finalize
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_mozilla_dom_CharacterDataImpl
  * Method:    getData
  * Signature: ()Ljava/lang/String;
  */

@@ -19,24 +19,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NotationImpl.h"
 
-/*
- * Class:     org_mozilla_dom_NotationImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NotationImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMNotation* notation = (nsIDOMNotation*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!notation) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Notation.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(notation);
-}
 
 /*
  * Class:     org_mozilla_dom_NotationImpl

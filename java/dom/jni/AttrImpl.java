@@ -27,6 +27,4 @@ public class AttrImpl extends NodeImpl implements Attr {
     public native boolean getSpecified();
     public native String getValue();
     public native void setValue(String value);
-
-    protected native void finalize();
 }

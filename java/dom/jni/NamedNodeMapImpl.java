@@ -29,6 +29,4 @@ public class NamedNodeMapImpl extends NodeImpl implements NamedNodeMap {
     public native Node item(int index);
     public native Node removeNamedItem(String name);
     public native Node setNamedItem(Node arg);
-
-    protected native void finalize();
 }

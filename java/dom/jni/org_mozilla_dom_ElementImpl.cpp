@@ -21,24 +21,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_ElementImpl.h"
 
-/*
- * Class:     org_mozilla_dom_ElementImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMElement* element = (nsIDOMElement*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!element) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Element.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(element);
-}
 
 /*
  * Class:     org_mozilla_dom_ElementImpl

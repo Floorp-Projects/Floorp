@@ -20,24 +20,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NamedNodeMapImpl.h"
 
-/*
- * Class:     org_mozilla_dom_NamedNodeMapImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!map) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("NodeMap.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(map);
-}
 
 /*
  * Class:     org_mozilla_dom_NamedNodeMapImpl

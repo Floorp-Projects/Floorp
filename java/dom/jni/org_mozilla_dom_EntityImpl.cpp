@@ -19,24 +19,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_EntityImpl.h"
 
-/*
- * Class:     org_mozilla_dom_EntityImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_EntityImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMEntity* entity = (nsIDOMEntity*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!entity) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("Entity.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(entity);
-}
 
 /*
  * Class:     org_mozilla_dom_EntityImpl

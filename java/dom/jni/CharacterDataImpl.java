@@ -31,6 +31,4 @@ public class CharacterDataImpl extends NodeImpl implements CharacterData {
     public native void replaceData(int offset, int count, String arg);
     public native void setData(String data);
     public native String substringData(int offset, int count);
-
-    protected native void finalize();
 }

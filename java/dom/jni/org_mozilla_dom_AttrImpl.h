@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_dom_AttrImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_finalize
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_mozilla_dom_AttrImpl
  * Method:    getName
  * Signature: ()Ljava/lang/String;
  */

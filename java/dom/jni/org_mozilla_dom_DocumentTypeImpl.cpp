@@ -20,24 +20,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_DocumentImpl.h"
 
-/*
- * Class:     org_mozilla_dom_DocumentTypeImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentTypeImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMDocumentType* docType = (nsIDOMDocumentType*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!docType) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("DocumentType.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(docType);
-}
 
 /*
  * Class:     org_mozilla_dom_DocumentTypeImpl

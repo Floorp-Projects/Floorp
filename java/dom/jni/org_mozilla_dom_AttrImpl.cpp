@@ -150,22 +150,4 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_setValue
   }
 }
 
-/*
- * Class:     org_mozilla_dom_AttrImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_AttrImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMAttr* attr = (nsIDOMAttr*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!attr) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("Attr.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(attr);
-}
 

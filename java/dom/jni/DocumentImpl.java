@@ -50,7 +50,6 @@ public class DocumentImpl extends NodeImpl implements Document {
     public native NodeList getElementsByTagName(String tagName);
     public native DOMImplementation getImplementation();
 
-    protected native void finalize();
     private static native void initialize();
 
     static {

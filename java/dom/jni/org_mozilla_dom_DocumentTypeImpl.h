@@ -2,15 +2,6 @@
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_DocumentTypeImpl.h"
 
-/*
- * Class:     org_mozilla_dom_DocumentTypeImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentTypeImpl_finalize
-  (JNIEnv *, jobject)
-{
-}
 
 /*
  * Class:     org_mozilla_dom_DocumentTypeImpl

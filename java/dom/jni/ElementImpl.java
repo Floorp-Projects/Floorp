@@ -34,6 +34,4 @@ public class ElementImpl extends NodeImpl implements Element {
     public native Attr removeAttributeNode(Attr oldAttr);
     public native void setAttribute(String name, String value);
     public native Attr setAttributeNode(Attr newAttr);
-
-    protected native void finalize();
 }

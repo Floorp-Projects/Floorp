@@ -79,25 +79,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
 
 /*
  * Class:     org_mozilla_dom_CharacterDataImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMCharacterData* data = (nsIDOMCharacterData*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!data) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
-	   ("CharacterData.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(data);
-}
-
-/*
- * Class:     org_mozilla_dom_CharacterDataImpl
  * Method:    getData
  * Signature: ()Ljava/lang/String;
  */

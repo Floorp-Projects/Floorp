@@ -19,24 +19,6 @@ Inc. All Rights Reserved.
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_ProcessingInstructionImpl.h"
 
-/*
- * Class:     org_mozilla_dom_ProcessingInstructionImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_finalize
-  (JNIEnv *env, jobject jthis)
-{
-  nsIDOMProcessingInstruction* pi = (nsIDOMProcessingInstruction*) 
-    env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!pi) {
-    PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING, 
-	   ("ProcessingInstruction.finalize: NULL pointer\n"));
-    return;
-  }
-
-  JavaDOMGlobals::AddToGarbage(pi);
-}
 
 /*
  * Class:     org_mozilla_dom_ProcessingInstructionImpl

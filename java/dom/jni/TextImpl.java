@@ -24,7 +24,5 @@ public class TextImpl extends CharacterDataImpl implements Text {
     protected TextImpl() {}
 
     public native Text splitText(int offset);
-
-    protected native void finalize();
 }    
 

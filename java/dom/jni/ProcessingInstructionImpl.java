@@ -26,6 +26,4 @@ public class ProcessingInstructionImpl extends NodeImpl implements ProcessingIns
     public native String getData();
     public native String getTarget();
     public native void setData(String data);
-
-    protected native void finalize();
 }

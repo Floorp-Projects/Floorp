@@ -7,13 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
- * Class:     org_mozilla_dom_ProcessingInstructionImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_finalize
-  (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_ProcessingInstructionImpl

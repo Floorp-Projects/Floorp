@@ -71,13 +71,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
 JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   (JNIEnv *, jobject, jstring);
 
-/*
- * Class:     org_mozilla_dom_DocumentImpl
- * Method:    finalize
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_mozilla_dom_DocumentImpl_finalize
-  (JNIEnv *, jobject);
 
 /*
  * Class:     org_mozilla_dom_DocumentImpl
