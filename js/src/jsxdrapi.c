@@ -41,6 +41,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsobj.h"              /* js_XDRObject */
+#include "jsscript.h"           /* js_XDRScript */
 #include "jsstr.h"
 #include "jsxdrapi.h"
 
