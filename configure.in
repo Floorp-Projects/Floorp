@@ -1666,6 +1666,11 @@ AC_ARG_WITH(libIDL,
 	SKIP_IDL_CHECK="yes"
    fi ])
 
+dnl
+dnl Only do silly ORBit fallback check if not cross-compiling
+dnl
+if test -z "$CROSS_COMPILE"; then
+
 AC_PATH_PROGS(LIBIDL_CONFIG, $LIBIDL_CONFIG libIDL-config)
 
 dnl We don't have a libIDL config program.  Look for orbit-config instead
@@ -1680,6 +1685,7 @@ if test -z "$LIBIDL_CONFIG"; then
         LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
         LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
     fi
+fi
 fi
 
 if test "$SKIP_IDL_CHECK" = "no"
