@@ -25,6 +25,7 @@
 #include "nsINetPluginInstance.h"
 #include "nsIComponentManager.h"
 #include "nsNetConverterStream.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_CID(kINetPluginCID, NS_INET_PLUGIN_CID);
@@ -39,6 +40,9 @@ plugin_stream_complete(NET_StreamClass *stream)
 	nsINetOStream *instance_stream = (nsINetOStream *)stream->data_object;
 
 	instance_stream->Complete();
+	// mscott -- release instance_stream because we are done with it..
+	// the owner of the NET_Stream object just frees the struct..
+	NS_RELEASE(instance_stream);
 }
 
 
@@ -48,6 +52,9 @@ plugin_stream_abort(NET_StreamClass *stream, int status)
 	nsINetOStream *instance_stream = (nsINetOStream *)stream->data_object;
 
 	instance_stream->Abort(status);
+		// mscott -- release instance_stream because we are done with it..
+	// the owner of the NET_Stream object just frees the struct..
+	NS_RELEASE(instance_stream);
 }
 
 
@@ -161,11 +168,12 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 	const char *mime_type_out;
 	NET_StreamClass *new_stream = NULL;
 	NET_StreamClass *next_stream = NULL;
-	nsINetPluginInstance *plugin_inst;
+	nsCOMPtr <nsINetPluginInstance> plugin_inst;
 	nsINetOStream *instance_stream;
 	nsINetOStream *out_stream;
 	nsNetConverterStream *converter_stream;
 	nsCID classID = {0};
+	nsresult rv = NS_OK;
 
 	if (URL_s->transfer_encoding != NULL)
 	{
@@ -196,9 +204,9 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 			break;
 		}
 
-		nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **)&plugin_inst);
+		nsComponentManager::CreateInstance(classID, (nsISupports *)nsnull, kINetPluginInstanceIID, (void **) getter_AddRefs(plugin_inst));
 
-		if (plugin_inst == NULL)
+		if (!plugin_inst)
 		{
 			error = PR_TRUE;
 			break;
@@ -221,8 +229,8 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 		}
 
 		converter_stream->Initialize((void *)next_stream);
-
-		if (NS_OK != converter_stream->QueryInterface(kINetOStreamIID, (void **)&out_stream))
+		rv = converter_stream->QueryInterface(kINetOStreamIID, (void **)&out_stream);
+		if (NS_FAILED(rv))
 		{
 			delete converter_stream;
 			error = PR_TRUE;
@@ -230,8 +238,8 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 		}
 
 		plugin_inst->Initialize(out_stream, URL_s->address);
-
-		if (NS_OK != plugin_inst->QueryInterface(kINetOStreamIID, (void **)&instance_stream))
+		rv = plugin_inst->QueryInterface(kINetOStreamIID, (void **)&instance_stream);
+		if (NS_FAILED(rv))
 		{
 			delete converter_stream;
 			error = PR_TRUE;
