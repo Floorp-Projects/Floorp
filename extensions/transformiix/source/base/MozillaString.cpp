@@ -639,8 +639,11 @@ String& String::subString(Int32 start, Int32 end, String& dest) const
 char* String::toCharArray() const
 {
   char* tmpBuffer = new char[ptrNSString->Length()+1];
-
-  return toCharArray(tmpBuffer);
+  if (memset(tmpBuffer,' ',ptrNSString->Length())){
+    return toCharArray(tmpBuffer);
+  } else {
+    return nsnull;
+  }
 }
 
 /**
