@@ -48,7 +48,6 @@ ldap            1      MOZ_LDAP_XPCOM
 ldap_experimental 0    MOZ_LDAP_XPCOM_EXPERIMENTAL
 xmlextras       1
 soap            0      MOZ_SOAP
-vixen           0
 inspector       0
 mailextras      1
 xptlink         0

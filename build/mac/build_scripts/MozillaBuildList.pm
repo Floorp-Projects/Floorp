@@ -334,10 +334,6 @@ sub ProcessJarManifests()
     {
       CreateJarFromManifest(":mozilla:extensions:help:resources:jar.mn", $chrome_dir, \%jars);
     }
-    if ($main::options{vixen})
-    {
-      CreateJarFromManifest(":mozilla:extensions:vixen:resources:jar.mn", $chrome_dir, \%jars);
-    }
     if ($main::options{inspector})
     {
       CreateJarFromManifest(":mozilla:extensions:inspector:jar.mn", $chrome_dir, \%jars);
@@ -1197,11 +1193,6 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.mcp", "xmlsoap");
     }
 
-    if ($main::options{vixen})
-    {
-        BuildIDLProject(":mozilla:extensions:vixen:macbuild:vixenIDL.mcp", "vixen");
-    }
-
     if ($main::options{inspector})
     {
         BuildIDLProject(":mozilla:extensions:inspector:macbuild:inspectorIDL.mcp", "inspector");
@@ -1877,14 +1868,6 @@ sub BuildExtensionsProjects()
     if ($main::options{xmlextras})
     {
         BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.mcp", "xmlextras$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    }
-    
-    # Vixen
-    if ($main::options{vixen})
-    {
-        BuildOneProject(":mozilla:extensions:vixen:macbuild:vixen.mcp", "vixen$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
-        InstallResources(":mozilla:extensions:vixen:base:src:MANIFEST_COMPONENTS", "$components_dir");
     }
     
     # Document Inspector

@@ -1012,15 +1012,6 @@ for extension in $MOZ_EXTENSIONS; do
         venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/venkman/Makefile"
             ;;
-        vixen ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/vixen/Makefile
-            extensions/vixen/base/Makefile
-            extensions/vixen/base/public/Makefile
-            extensions/vixen/base/src/Makefile
-            extensions/vixen/build/Makefile
-            extensions/vixen/build/src/Makefile
-            extensions/vixen/resources/Makefile
-            " ;;
         wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/wallet/Makefile
             extensions/wallet/public/Makefile
