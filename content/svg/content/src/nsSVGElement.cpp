@@ -738,6 +738,16 @@ nsSVGElement::UpdateContentStyleRule()
   if (!parser)
     return;
 
+  // SVG and CSS differ slightly in their interpretation of some of
+  // the attributes.  SVG allows attributes of the form: font-size="5" 
+  // (style="font-size: 5" if using a style attribute)
+  // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
+  // Set a flag to pass information to the parser so that we can use
+  // the CSS parser to parse the font-size attribute.  Note that this
+  // does *not* effect the use of CSS stylesheets, which will still
+  // require units
+  parser->SetSVGMode(PR_TRUE);
+
   PRUint32 attrCount = mAttrsAndChildren.AttrCount();
   for (PRUint32 i = 0; i < attrCount; ++i) {
     const nsAttrName* attrName = mAttrsAndChildren.GetSafeAttrNameAt(i);

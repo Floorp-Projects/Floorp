@@ -72,6 +72,11 @@ public:
   // Set whether or not to emulate Nav quirks
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode) = 0;
 
+#ifdef  MOZ_SVG
+  // Set whether or not we are in an SVG element
+  NS_IMETHOD SetSVGMode(PRBool aSVGMode) = 0;
+#endif
+
   // Set loader to use for child sheets
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 

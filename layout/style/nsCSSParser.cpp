@@ -99,6 +99,10 @@ public:
 
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode);
 
+#ifdef  MOZ_SVG
+  NS_IMETHOD SetSVGMode(PRBool aSVGMode);
+#endif
+
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader);
 
   NS_IMETHOD Parse(nsIUnicharInputStream* aInput,
@@ -338,6 +342,11 @@ protected:
   // True if we are in quirks mode; false in standards or almost standards mode
   PRPackedBool  mNavQuirkMode;
 
+#ifdef MOZ_SVG
+  // True if we are in SVG mode; false in "normal" CSS
+  PRPackedBool  mSVGMode;
+#endif
+
   // True if tagnames and attributes are case-sensitive
   PRPackedBool  mCaseSensitive;
 
@@ -431,6 +440,9 @@ CSSParserImpl::CSSParserImpl()
     mSection(eCSSSection_Charset),
     mHavePushBack(PR_FALSE),
     mNavQuirkMode(PR_FALSE),
+#ifdef MOZ_SVG
+    mSVGMode(PR_FALSE),
+#endif
     mCaseSensitive(PR_FALSE),
     mParsingCompoundProperty(PR_FALSE)
 {
@@ -475,6 +487,15 @@ CSSParserImpl::SetQuirkMode(PRBool aQuirkMode)
   mNavQuirkMode = aQuirkMode;
   return NS_OK;
 }
+
+#ifdef MOZ_SVG
+NS_IMETHODIMP
+CSSParserImpl::SetSVGMode(PRBool aSVGMode)
+{
+  mSVGMode = aSVGMode;
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP
 CSSParserImpl::SetChildLoader(nsICSSLoader* aChildLoader)
@@ -3515,6 +3536,19 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
       return PR_TRUE;
     }
   }
+
+#ifdef  MOZ_SVG
+  if (mSVGMode && !IsParsingCompoundProperty()) {
+    // STANDARD: SVG Spec states that lengths and coordinates can be unitless
+    // in which case they default to user-units (1 px = 1 user unit)
+    if (((aVariantMask & VARIANT_LENGTH) != 0) &&
+        (eCSSToken_Number == tk->mType)) {
+      aValue.SetFloatValue(tk->mNumber, eCSSUnit_Pixel);
+      return PR_TRUE;
+    }
+  }
+#endif
+
   if (((aVariantMask & VARIANT_URL) != 0) &&
       (eCSSToken_Function == tk->mType) && 
       tk->mIdent.LowerCaseEqualsLiteral("url")) {
