@@ -438,20 +438,22 @@ qa_errorlist()
         grep strsclnt |
         grep -v '0 cache hits; 0 cache misses, 0 cache not reusable' | 
         grep -v ' cache hits; 1 cache misses, 0 cache not reusable'
-    grep -vi "write to SSL socket" ${MACHINES_TO_CHECK}*/output.log |
-        grep -vi "HDX PR_Read returned error" |
-        grep -vi "no error" |
-        grep -vi "12285" |
-        grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP error 
-        #grep -vi "5938" |  needed for -v option
-        #grep -vi "HDX PR_Read hit EOF" | 
-    grep  -vi "write to SSL socket" ${MACHINES_TO_CHECK}*/output.log |
-        grep -vi "peer cannot verify" |
-        grep -vi "error" |
-        grep -vi "fatal" |
-        grep -vi "TCP Connection aborted" |
-        grep -vi "TCP connection reset" |
-        grep  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP  -i failed  
+    for logfile in ${MACHINES_TO_CHECK}*/output.log; do
+        grep -vi "write to SSL socket" $logfile |
+            grep -vi "HDX PR_Read returned error" |
+            grep -vi "no error" |
+            grep -vi "12285" |
+            grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP error 
+            #grep -vi "5938" |  needed for -v option
+            #grep -vi "HDX PR_Read hit EOF" | 
+        grep  -vi "write to SSL socket" $logfile |
+            grep -vi "peer cannot verify" |
+            grep -vi "error" |
+            grep -vi "fatal" |
+            grep -vi "TCP Connection aborted" |
+            grep -vi "TCP connection reset" |
+            grep  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP  -i failed
+    done
     grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "segmentation violation" \
         ${MACHINES_TO_CHECK}*/output.log
     grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "memory fault" \
