@@ -97,15 +97,7 @@ ifeq ($(CPU_ARCH),x86)
 PLATFORM_FLAGS		+= -Di386
 endif
 ifeq ($(CPU_ARCH),m68k)
-#
-# gcc on Linux/m68k either has a bug or triggers a code-sequence
-# bug in the 68060 which causes gcc to crash.  The simplest way to
-# avoid this is to enable a minimum level of optimization.
-#
-ifndef BUILD_OPT
-OPTIMIZER		+= -O
-endif
-PLATFORM_FLAGS		+= -m68020-40
+PLATFORM_FLAGS		+= -m68020-60
 endif
 
 #
