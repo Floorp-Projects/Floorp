@@ -44,6 +44,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIPresShell.h"
 
 // Printing Includes
 #include "nsIContentViewer.h"
@@ -1536,13 +1537,50 @@ NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMW
 /* void activate (); */
 NS_IMETHODIMP nsWebBrowser::Activate(void)
 {
-  return NS_OK;
+    // Make sure we can get the to a valid nsIPresShell
+    // Without this check we assert when the embeddor calls
+    // us and the presShell is not yet created
+    // For ex, under MSFT Windows embeddors can trap
+    // the WM_ACTIVATE message in response to which
+    // can call nsIWebBrowser->Activate(). During the initial
+    // window creation the presShell will not be created when
+    // the call to the initial Activate() is made
+
+    NS_ENSURE_STATE(mDocShell);
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    if(!presShell)
+        return NS_OK;
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+        nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+        if(privateDOMWindow)
+          privateDOMWindow->Activate();
+    }
+
+    return NS_OK;
 }
 
 /* void deactivate (); */
 NS_IMETHODIMP nsWebBrowser::Deactivate(void)
 {
-  return NS_OK;
+    NS_ENSURE_STATE(mDocShell);
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    if(!presShell)
+        return NS_OK;
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+        nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+        if(privateDOMWindow)
+          privateDOMWindow->Deactivate();
+    }
+
+    return NS_OK;
 }
 
 /* void setFocusAtFirstElement (); */
