@@ -27,7 +27,7 @@
 class nsIWebShell;
 class nsIWidget;
 class nsString;
-
+class nsIDOMWindow; 
 // Interface ID for nsIWebShellWindow
 #define NS_IWEBSHELL_WINDOW_IID \
  { 0x28dce479, 0xbf73, 0x11d2, { 0x96, 0xc8, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}}
@@ -42,6 +42,7 @@ public:
   NS_IMETHOD Close() = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
+  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow) = 0;
 
   NS_IMETHOD AddWebShellInfo(const nsString& aID, nsIWebShell* aChildShell) = 0;
 
