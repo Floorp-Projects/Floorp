@@ -50,6 +50,8 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 
+#include "nsEnumeratorUtils.h"
+
 #ifdef NS_DEBUG
 #include "prlog.h"
 #include "prprf.h"
@@ -1132,6 +1134,42 @@ NS_IMETHODIMP
 CompositeDataSourceImpl::GetAllCmds(nsIRDFResource* source,
                                         nsISimpleEnumerator/*<nsIRDFResource>*/** result)
 {
+	nsCOMPtr<nsISupportsArray>	cmdArray;
+	nsresult			rv;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(cmdArray));
+	if (NS_FAILED(rv)) return(rv);
+
+	for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i)
+	{
+		nsIRDFDataSource		*ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+		nsCOMPtr<nsISimpleEnumerator>	dsCmds;
+
+		rv = ds->GetAllCmds(source, getter_AddRefs(dsCmds));
+		if (NS_SUCCEEDED(rv))
+		{
+			PRBool	hasMore = PR_FALSE;
+			while(NS_SUCCEEDED(rv = dsCmds->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+			{
+				// strip out command duplicates
+				nsCOMPtr<nsISupports>	item;
+				if (NS_SUCCEEDED(rv = dsCmds->GetNext(getter_AddRefs(item))))
+				{
+					PRInt32	cmdIndex = cmdArray->IndexOf(item);
+					if (cmdIndex < 0)
+					{
+						cmdArray->AppendElement(item);
+					}
+				}
+			}
+			if (NS_FAILED(rv))	return(rv);
+		}
+	}
+	nsISimpleEnumerator	*commands = new nsArrayEnumerator(cmdArray);
+	if (! commands)
+		return(NS_ERROR_OUT_OF_MEMORY);
+	NS_ADDREF(commands);
+	*result = commands;
 	return(NS_OK);
 }
 
