@@ -240,9 +240,14 @@ NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 extern nsresult
 NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                   nsIFrame*& aFrameResult);
+
 nsresult
 NS_NewSpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                   nsIFrame*& aResult);
+
+nsresult
+NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+               nsIFrame*& aResult);
 
 // Everything below this line is obsolete...
 //----------------------------------------------------------------------

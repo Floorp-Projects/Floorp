@@ -204,6 +204,7 @@ nsIAtom* nsHTMLAtoms::visibility;
 nsIAtom* nsHTMLAtoms::visited;
 nsIAtom* nsHTMLAtoms::vlink;
 nsIAtom* nsHTMLAtoms::vspace;
+nsIAtom* nsHTMLAtoms::wbr;
 nsIAtom* nsHTMLAtoms::width;
 nsIAtom* nsHTMLAtoms::wrap;
 nsIAtom* nsHTMLAtoms::zindex;
@@ -398,6 +399,7 @@ void nsHTMLAtoms::AddrefAtoms()
     visited = NS_NewAtom("VISITED");
     vlink = NS_NewAtom("VLINK");
     vspace = NS_NewAtom("VSPACE");
+    wbr = NS_NewAtom("WBR");
     width = NS_NewAtom("WIDTH");
     wrap = NS_NewAtom("WRAP");
     zindex = NS_NewAtom("ZINDEX");
@@ -582,6 +584,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(visited);
     NS_RELEASE(vlink);
     NS_RELEASE(vspace);
+    NS_RELEASE(wbr);
     NS_RELEASE(width);
     NS_RELEASE(wrap);
     NS_RELEASE(zindex);
