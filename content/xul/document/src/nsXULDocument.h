@@ -402,11 +402,16 @@ protected:
     nsCOMPtr<nsIRequest> mPlaceHolderRequest;
         
     /**
-     * Create a XUL template builder on the specified node if a 'datasources'
-     * attribute is present.
+     * Check if a XUL template builder has already been hooked up.
      */
     static nsresult
-    CheckTemplateBuilder(nsIContent* aElement);
+    CheckTemplateBuilderHookup(nsIContent* aElement, PRBool* aNeedsHookup);
+
+    /**
+     * Create a XUL template builder on the specified node.
+     */
+    static nsresult
+    CreateTemplateBuilder(nsIContent* aElement);
 
     /**
      * Do hookup for <xul:observes> tag
@@ -470,6 +475,20 @@ protected:
 
     friend class OverlayForwardReference;
 
+    class TemplateBuilderHookup : public nsForwardReference
+    {
+    protected:
+        nsCOMPtr<nsIContent> mElement; // [OWNER]
+
+    public:
+        TemplateBuilderHookup(nsIContent* aElement)
+            : mElement(aElement) {}
+
+        virtual Phase GetPhase() { return eHookup; }
+        virtual Result Resolve();
+    };
+
+    friend class TemplateBuilderHookup;
 
     static
     nsresult
