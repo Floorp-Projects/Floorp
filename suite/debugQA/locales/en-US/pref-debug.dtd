@@ -13,7 +13,6 @@
 <!ENTITY gfxWidgets.label "gfx">
 <!ENTITY gfxScrollbars.label "gfx scrollbars">
 
-
 <!-- Event Debugging -->
 <!ENTITY debugEventDebugging.label "Event Debugging">
 <!ENTITY debugPaintFlashing.label "Paint Flashing (Caps-Lock toggles on/off)">
@@ -22,3 +21,7 @@
 <!ENTITY debugEventDumping.label "Event Dumping">
 <!ENTITY debugMotionEventDumping.label "Motion Event Dumping">
 <!ENTITY debugCrossingEventDumping.label "Crossing Event Dumping">
+
+<!-- Miscelleneous -->
+<!ENTITY debugMiscellaneous.label   "Miscelleneous">
+<!ENTITY debugDisableXULCache.label "Disable XUL Cache">

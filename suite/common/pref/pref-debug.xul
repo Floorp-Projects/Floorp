@@ -75,7 +75,6 @@
 				</html:label>
 			</html:div>
 
-
 		</html:fieldset>
 	</box>
 </html:form> 
@@ -132,6 +131,23 @@
 		</html:fieldset>
 	</box>
 </html:form> 
+
+
+<html:form>
+        <box align="vertical" style="width: 100%;">
+                <html:fieldset style="width: 100%;">
+                        <html:legend align="left">
+                                <html:div>&debugMiscellaneous.label;</html:div>
+                        </html:legend>
+			<html:div>
+				<html:input type="checkbox" id="pref:0:bool:nglayout.debug.disable_xul_cache" />
+				<html:label for="pref:0:bool:nglayout.debug.disable_xul_cache" accesskey="n" tabindex="0">
+				&debugDisableXULCache.label;
+				</html:label>
+			</html:div>
+                </html:fieldset>
+        </box>                
+</html:form>
 
 </html:div>
 </window>
