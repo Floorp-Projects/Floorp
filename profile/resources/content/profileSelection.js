@@ -109,7 +109,6 @@ function AddItem( aChildren, aProfileObject )
   item.setAttribute("profile_name", aProfileObject.mName );
   item.setAttribute("rowName", aProfileObject.mName );
   item.setAttribute("id", ( "profileName_" + aProfileObject.mName ) );
-  item.setAttribute("directory", aProfileObject.mDir );
   // 23/10/99 - no roaming access yet!
   //  var roaming = document.getElementById("roamingitem");
   //  kids.insertBefore(item,roaming);
@@ -117,10 +116,9 @@ function AddItem( aChildren, aProfileObject )
   return item;
 }
 
-function Profile ( aName, aDir, aMigrated ) 
+function Profile ( aName, aMigrated ) 
 {
   this.mName       = aName ? aName : null;
-  this.mDir        = aDir ? aDir : null;
   this.mMigrated   = aMigrated ? aMigrated : null;
 }
 
@@ -145,9 +143,8 @@ function loadElements()
         break;
 
       var migrated = Registry.getString( node.key, "migrated" );
-      var directory = Registry.getString( node.key, "directory" );
 
-      AddItem( "profilekids", new Profile( node.name, directory, migrated ) );
+      AddItem( "profilekids", new Profile( node.name, migrated ) );
 
       regEnum.next();
     }
