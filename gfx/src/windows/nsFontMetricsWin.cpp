@@ -925,7 +925,8 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
     HFONT oldFont = (HFONT) ::SelectObject(aDC, (HGDIOBJ) hfont);
     char name[sizeof(logFont.lfFaceName)];
     if ((!::GetTextFace(aDC, sizeof(name), name)) ||
-        strcmp(name, logFont.lfFaceName)) {
+        // MJA strcmp(name, logFont.lfFaceName)) {
+        strcmpi(name, logFont.lfFaceName)) {
       ::SelectObject(aDC, (HGDIOBJ) oldFont);
       ::DeleteObject(hfont);
       return nsnull;
