@@ -51,6 +51,7 @@ struct nsJVMInitArgs {
  */
 #define nsJVMInitArgs_Version   0x00010000L
 
+class nsISecureJNI2;
 
 class nsIJVMPlugin : public nsIPlugin {
 public:
@@ -103,6 +104,12 @@ public:
     // This decrements a refcount associated with it may free it.
     NS_IMETHOD_(nsrefcnt)
     ReleaseJNIEnv(JNIEnv* env) = 0;
+
+	/**
+	 * This creates a new secure communication channel with Java.
+	 */
+	NS_IMETHOD
+	GetSecureJNI(JNIEnv* proxyJNI, nsISecureJNI2* *result) = 0;
 
 	/**
 	 * Gives time to the JVM from the main event loop of the browser. This is
