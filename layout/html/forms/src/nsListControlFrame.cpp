@@ -3049,6 +3049,7 @@ nsListControlFrame::DropDownToggleKey(nsIDOMEvent* aKeyEvent)
     PRBool isDroppedDown;
     mComboboxFrame->IsDroppedDown(&isDroppedDown);
     mComboboxFrame->ShowDropDown(!isDroppedDown);
+    mComboboxFrame->RedisplaySelectedText();
     aKeyEvent->PreventDefault();
   }
 }
