@@ -27,8 +27,6 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
-#include "nsIXULCommand.h"
-
 class nsIMenu;
 class nsIPopUpMenu;
 
@@ -59,8 +57,6 @@ public:
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   
-  NS_IMETHOD SetXULCommand(nsIXULCommand * aXULCommand);
-
 protected:
   nsIWidget * GetMenuBarParent(nsISupports * aParent);
 

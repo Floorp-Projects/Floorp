@@ -216,10 +216,3 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
   	return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
-// Set the nsIXULCommand to poke when we get a nsMenuEvent from the user
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetXULCommand(nsIXULCommand * aXULCommand)
-{
-  return NS_OK;
-}
