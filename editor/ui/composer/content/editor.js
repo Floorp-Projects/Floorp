@@ -1769,23 +1769,15 @@ function EditorSetDefaultPrefsAndDoctype()
     return;
   }
 
-  var newDoc = window.editorShell.editorDocument.location == "about:blank";
-
   // Insert a doctype element 
   // if it is missing from existing doc
-  var needDoctype = !domdoc.doctype;
-  if ( needDoctype )
+  if (!domdoc.doctype)
   {
     var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
-    domdoc.insertBefore(newdoctype, domdoc.firstChild);
+    if (newdoctype)
+      domdoc.insertBefore(newdoctype, domdoc.firstChild);
   }
   
-  /* only set default prefs for new documents */
-  if ( !newDoc  )
-    return;
-
-  var element;
-
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
   var headnodelist = domdoc.getElementsByTagName("head");
@@ -1793,10 +1785,28 @@ function EditorSetDefaultPrefsAndDoctype()
   {
     var sz = headnodelist.length;
     if ( sz >= 1 )
-    {
       headelement = headnodelist.item(0);
-    }
   }
+  else
+  {
+    headelement = domdoc.createElement("head");
+    if (headelement)
+      domdoc.insertAfter(headelement, domdoc.firstChild);
+  }
+
+  // add title tag if not present
+  var titlenodelist = window.editorShell.editorDocument.getElementsByTagName("title");
+  if (headelement && titlenodelist && titlenodelist.length == 0)
+  {
+     titleElement = domdoc.createElement("title");
+     if (titleElement)
+       headelement.appendChild(titleElement);
+  }
+
+  /* only set default prefs for new documents */
+  var newDoc = window.editorShell.editorDocument.location == "about:blank";
+  if (!newDoc)
+    return;
 
   // search for author meta tag.
   // if one is found, don't do anything.
@@ -1809,6 +1819,7 @@ function EditorSetDefaultPrefsAndDoctype()
     // we should do charset first since we need to have charset before
     // hitting other 8-bit char in other meta tags
     // grab charset pref and make it the default charset
+    var element;
     var prefCharsetString = 0;
     try
     {
@@ -1879,7 +1890,6 @@ function EditorSetDefaultPrefsAndDoctype()
   {
     if ( use_custom_colors )
     {
-
       // try to get the default color values.  ignore them if we don't have them.
       var text_color;
       var link_color;
