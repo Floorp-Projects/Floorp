@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.4 2005/02/26 02:20:40 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.5 2005/02/28 17:45:19 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -66,7 +66,7 @@ publish:
 	mkdir -p opt/sun/private/bin
 	(cd $(CORE_DEPTH)/../dist/$(OBJDIR)/bin && tar cphf - \
 		certutil cmsutil crlutil modutil pk12util signtool \
-		signver ssltap ) | (cd opt/sun/private/bin && tar xvfBp -)
+		signver ssltap addbuiltin ) | (cd opt/sun/private/bin && tar xvfBp -)
 	(cd $(CORE_DEPTH)/../dist/public && tar cphf - .) \
 		| (mkdir -p opt/sun/private/include && cd opt/sun/private/include && tar xvfBp -)
 	rm -rf opt/sun/private/include/seccmd
