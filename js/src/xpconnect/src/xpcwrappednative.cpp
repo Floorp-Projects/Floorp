@@ -34,8 +34,8 @@ nsXPCWrappedNative::AddRef(void)
     if(1 == ++mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
     else if(2 == mRefCnt && NULL != (xpcc = mClass->GetXPCContext()))
-        JS_AddRoot(xpcc->GetJSContext(), &mJSObj);
-
+        JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj, 
+                        "nsXPCWrappedNative::mJSObj");
 //    XPC_LOG_DEBUG(("+++ AddRef  of %x with mJSObj %x and mRefCnt = %d",this,mJSObj, mRefCnt));
 
     return mRefCnt;

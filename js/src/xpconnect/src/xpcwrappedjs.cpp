@@ -190,7 +190,8 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);
     NS_ASSERTION(mClass->GetXPCContext(),"bad context when making wrapper");
-    JS_AddRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
+    JS_AddNamedRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj,
+                    "nsXPCWrappedJS::mJSObj");
 }
 
 nsXPCWrappedJS::~nsXPCWrappedJS()

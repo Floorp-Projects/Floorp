@@ -744,8 +744,8 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
             NS_CONST_CAST(XPCNativeMemberDescriptor*,desc);
 
         descRW->invokeFuncObj = JS_GetFunctionObject(fun);
-        // XXX verify released in dtor
-        JS_AddRoot(cx, &descRW->invokeFuncObj);
+        JS_AddNamedRoot(cx, &descRW->invokeFuncObj, 
+                        "XPCNativeMemberDescriptor::invokeFuncObj");
     }
     return desc->invokeFuncObj;
 }
