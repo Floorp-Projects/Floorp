@@ -67,7 +67,7 @@ NS_IMETHODIMP nsSupportsIDImpl::SetData(nsID *aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsIDImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsIDImpl::ToString(char **_retval)
 {
     char* result = nsnull;
     if(!_retval)
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsSupportsStringImpl::SetData(char *aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
 {
     return GetData(_retval);
 }  
@@ -197,7 +197,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::SetData(PRUnichar *aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsWStringImpl::toString(PRUnichar **_retval)
+NS_IMETHODIMP nsSupportsWStringImpl::ToString(PRUnichar **_retval)
 {
     return GetData(_retval);
 }  
@@ -231,7 +231,7 @@ NS_IMETHODIMP nsSupportsPRBoolImpl::SetData(PRBool aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRBoolImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRBoolImpl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -274,7 +274,7 @@ NS_IMETHODIMP nsSupportsPRUint8Impl::SetData(PRUint8 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint8Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRUint8Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -321,7 +321,7 @@ NS_IMETHODIMP nsSupportsPRUint16Impl::SetData(PRUint16 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint16Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRUint16Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -368,7 +368,7 @@ NS_IMETHODIMP nsSupportsPRUint32Impl::SetData(PRUint32 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint32Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRUint32Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsSupportsPRUint64Impl::SetData(PRUint64 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRUint64Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRUint64Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -462,7 +462,7 @@ NS_IMETHODIMP nsSupportsPRTimeImpl::SetData(PRTime aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRTimeImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRTimeImpl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -509,7 +509,7 @@ NS_IMETHODIMP nsSupportsCharImpl::SetData(char aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsCharImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsCharImpl::ToString(char **_retval)
 {
     char* result;
     if(!_retval)
@@ -556,7 +556,7 @@ NS_IMETHODIMP nsSupportsPRInt16Impl::SetData(PRInt16 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt16Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRInt16Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -603,7 +603,7 @@ NS_IMETHODIMP nsSupportsPRInt32Impl::SetData(PRInt32 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt32Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRInt32Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -650,7 +650,7 @@ NS_IMETHODIMP nsSupportsPRInt64Impl::SetData(PRInt64 aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsPRInt64Impl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsPRInt64Impl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -697,7 +697,7 @@ NS_IMETHODIMP nsSupportsFloatImpl::SetData(float aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsFloatImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsFloatImpl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -744,7 +744,7 @@ NS_IMETHODIMP nsSupportsDoubleImpl::SetData(double aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsDoubleImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsDoubleImpl::ToString(char **_retval)
 {
     if(!_retval)
     {
@@ -792,7 +792,7 @@ NS_IMETHODIMP nsSupportsVoidImpl::SetData(void * aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsVoidImpl::toString(char **_retval)
+NS_IMETHODIMP nsSupportsVoidImpl::ToString(char **_retval)
 {
     if(!_retval)
     {

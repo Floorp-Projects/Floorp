@@ -822,7 +822,7 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
     if(data)
     {
         char* formattedMsg;
-        if(NS_FAILED(data->toString(&formattedMsg)))
+        if(NS_FAILED(data->ToString(&formattedMsg)))
             formattedMsg = nsnull;
 
         result = ConstructException(NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS,

@@ -97,11 +97,11 @@ nsXPCException::nsXPCException()
 
 nsXPCException::~nsXPCException()
 {
-    reset();
+    Reset();
 }
 
 void
-nsXPCException::reset()
+nsXPCException::Reset()
 {
     if(mMessage)
     {
@@ -180,12 +180,12 @@ nsXPCException::GetData(nsISupports * *aData)
 
 /* void initialize (in string aMessage, in nsresult aCode, in string aName, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
 NS_IMETHODIMP
-nsXPCException::initialize(const char *aMessage, nsresult aCode, const char *aName, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
+nsXPCException::Initialize(const char *aMessage, nsresult aCode, const char *aName, nsIJSStackFrameLocation *aLocation, nsISupports *aData)
 {
     if(mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
 
-    reset();
+    Reset();
 
     if(aMessage)
     {
@@ -228,7 +228,7 @@ nsXPCException::initialize(const char *aMessage, nsresult aCode, const char *aNa
 
 /* string toString (); */
 NS_IMETHODIMP
-nsXPCException::toString(char **_retval)
+nsXPCException::ToString(char **_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
@@ -245,7 +245,7 @@ nsXPCException::toString(char **_retval)
     if(mLocation)
     {
         // we need to free this if it does not fail
-        nsresult rv = mLocation->toString(&indicatedLocation);
+        nsresult rv = mLocation->ToString(&indicatedLocation);
         if(NS_FAILED(rv))
             return rv;
     }
@@ -319,7 +319,7 @@ nsXPCException::NewException(const char *aMessage,
             location = caller;
         }
         // at this point we have non-null location with one extra addref
-        rv = e->initialize(aMessage, aCode, nsnull, location, aData);
+        rv = e->Initialize(aMessage, aCode, nsnull, location, aData);
         NS_RELEASE(location);
         if(NS_FAILED(rv))
             NS_RELEASE(e);
@@ -477,7 +477,7 @@ xpcJSErrorReport::GetError(PRBool *aError)
 
 /* string toString (); */
 NS_IMETHODIMP
-xpcJSErrorReport::toString(char **_retval)
+xpcJSErrorReport::ToString(char **_retval)
 {
     static const char format0[] =
         "[%s: \"%s\" {file: \"%s\" line: %d column: %d source: \"%s\"}]";

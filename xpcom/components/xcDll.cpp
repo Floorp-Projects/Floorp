@@ -90,7 +90,7 @@ nsDll::Init(nsIFileSpec *dllSpec)
 
     // Make sure we are dealing with a file
     PRBool isFile = PR_FALSE;
-    nsresult rv = m_dllSpec->isFile(&isFile);
+    nsresult rv = m_dllSpec->IsFile(&isFile);
     if (NS_FAILED(rv))
     {
         m_status = DLL_INVALID_PARAM;
@@ -192,7 +192,7 @@ nsDll::HasChanged()
 
     // If mod date has changed, then dll has changed
     PRBool modDateChanged = PR_FALSE;
-    nsresult rv = m_dllSpec->modDateChanged(m_modDate, &modDateChanged);
+    nsresult rv = m_dllSpec->ModDateChanged(m_modDate, &modDateChanged);
     if (NS_FAILED(rv) || modDateChanged == PR_TRUE)
       return PR_TRUE;
 

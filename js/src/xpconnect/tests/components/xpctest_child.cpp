@@ -53,9 +53,9 @@ xpctestOther::xpctestOther()
     NS_ADDREF_THIS();
 }
 
-NS_IMETHODIMP xpctestOther::method3(PRInt16 i, PRInt16 j, PRInt16 k)
+NS_IMETHODIMP xpctestOther::Method3(PRInt16 i, PRInt16 j, PRInt16 k)
 {
-    printf("method3 called on inherited other\n");
+    printf("Method3 called on inherited other\n");
     return NS_OK;
 }
 
@@ -65,22 +65,22 @@ xpctestChild::xpctestChild()
 {
 }
 
-NS_IMETHODIMP xpctestChild::method1(PRInt16 i)
+NS_IMETHODIMP xpctestChild::Method1(PRInt16 i)
 {
-    printf("method1 called on child\n");
+    printf("Method1 called on child\n");
     return NS_OK;
 }
 
-NS_IMETHODIMP xpctestChild::method1a(nsIXPCTestParent *foo)
+NS_IMETHODIMP xpctestChild::Method1a(nsIXPCTestParent *foo)
 {
-    printf("method1a called on child\n");
+    printf("Method1a called on child\n");
     return NS_OK;
 }
 
 
-NS_IMETHODIMP xpctestChild::method2(PRInt16 i, PRInt16 j)
+NS_IMETHODIMP xpctestChild::Method2(PRInt16 i, PRInt16 j)
 {
-    printf("method2 called on child\n");
+    printf("Method2 called on child\n");
     return NS_OK;
 }
 
@@ -104,14 +104,14 @@ public:
     xpctestChild();
 };
 
-NS_IMETHODIMP xpctestParent::method1(PRInt16 i)
+NS_IMETHODIMP xpctestParent::Method1(PRInt16 i)
 {
-    printf("method1 called on parent via child\n");
+    printf("Method1 called on parent via child\n");
     return NS_OK;
 }
-NS_IMETHODIMP xpctestParent::method1a(nsIXPCTestParent *foo)
+NS_IMETHODIMP xpctestParent::Method1a(nsIXPCTestParent *foo)
 {
-    printf("method1a called on parent via child\n");
+    printf("Method1a called on parent via child\n");
     return NS_OK;
 }
 
@@ -158,21 +158,21 @@ xpctestChild::xpctestChild()
     NS_ADDREF_THIS();
 }
 
-NS_IMETHODIMP xpctestChild::method1(PRInt16 i)
+NS_IMETHODIMP xpctestChild::Method1(PRInt16 i)
 {
-    printf("method1 called on child\n");
+    printf("Method1 called on child\n");
     return NS_OK;
 }
 
-NS_IMETHODIMP xpctestChild::method1a(nsIXPCTestParent *foo)
+NS_IMETHODIMP xpctestChild::Method1a(nsIXPCTestParent *foo)
 {
-    printf("method1a called on child\n");
+    printf("Method1a called on child\n");
     return NS_OK;
 }
 
-NS_IMETHODIMP xpctestChild::method2(PRInt16 i, PRInt16 j)
+NS_IMETHODIMP xpctestChild::Method2(PRInt16 i, PRInt16 j)
 {
-    printf("method2 called on child\n");
+    printf("Method2 called on child\n");
     return NS_OK;
 }
 #endif

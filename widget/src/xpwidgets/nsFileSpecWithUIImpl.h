@@ -41,8 +41,8 @@ class nsFileSpecWithUIImpl
 	// INHERITED/FORWARDED METHODS
 	//------------------
 	
-	NS_IMETHOD fromFileSpec(const nsIFileSpec *original)
-		{ return mBaseFileSpec ? mBaseFileSpec->fromFileSpec(original) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD FromFileSpec(const nsIFileSpec *original)
+		{ return mBaseFileSpec ? mBaseFileSpec->FromFileSpec(original) : NS_ERROR_NOT_INITIALIZED; }
 
 	NS_IMETHOD GetURLString(char * *aURLString)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetURLString(aURLString) : NS_ERROR_NOT_INITIALIZED; }
@@ -72,16 +72,16 @@ class nsFileSpecWithUIImpl
 		{ return mBaseFileSpec ? mBaseFileSpec->GetNSPRPath(aNSPRPath) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute nsresult Error; */
-	NS_IMETHOD error()
-		{ return mBaseFileSpec ? mBaseFileSpec->error() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Error()
+		{ return mBaseFileSpec ? mBaseFileSpec->Error() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean isValid (); */
-	NS_IMETHOD isValid(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->isValid(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD IsValid(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->IsValid(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean failed (); */
-	NS_IMETHOD failed(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->failed(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Failed(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->Failed(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* attribute string LeafName; */
 	NS_IMETHOD GetLeafName(char * *aLeafName)
@@ -94,44 +94,44 @@ class nsFileSpecWithUIImpl
 		{ return mBaseFileSpec ? mBaseFileSpec->GetParent(aParent) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* nsIFileSpec makeUnique (); */
-	NS_IMETHOD makeUnique()
-		{ return mBaseFileSpec ? mBaseFileSpec->makeUnique() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD MakeUnique()
+		{ return mBaseFileSpec ? mBaseFileSpec->MakeUnique() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* nsIFileSpec makeUniqueWithSuggestedName (in string suggestedName); */
-	NS_IMETHOD makeUniqueWithSuggestedName(const char* inSuggestedLeafName)
-		{ return mBaseFileSpec ? mBaseFileSpec->makeUniqueWithSuggestedName(inSuggestedLeafName) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD MakeUniqueWithSuggestedName(const char* inSuggestedLeafName)
+		{ return mBaseFileSpec ? mBaseFileSpec->MakeUniqueWithSuggestedName(inSuggestedLeafName) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute unsigned long ModDate; */
 	NS_IMETHOD GetModDate(PRUint32 *aModDate)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetModDate(aModDate) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean modDateChanged (in unsigned long oldStamp); */
-	NS_IMETHOD modDateChanged(PRUint32 oldStamp, PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->modDateChanged(oldStamp, _retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD ModDateChanged(PRUint32 oldStamp, PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->ModDateChanged(oldStamp, _retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean isDirectory (); */
-	NS_IMETHOD isDirectory(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->isDirectory(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD IsDirectory(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->IsDirectory(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean isFile (); */
-	NS_IMETHOD isFile(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->isFile(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD IsFile(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->IsFile(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean exists (); */
-	NS_IMETHOD exists(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->exists(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Exists(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->Exists(_retval) : NS_ERROR_NOT_INITIALIZED; }
     
     /* boolean isHidden (); */
-	NS_IMETHOD isHidden(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->isHidden(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD IsHidden(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->IsHidden(_retval) : NS_ERROR_NOT_INITIALIZED; }
     
     /* boolean isSymlink (); */
-	NS_IMETHOD isSymlink(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->isSymlink(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD IsSymlink(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->IsSymlink(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
     /* void resolveSymlink (); */
-	NS_IMETHOD resolveSymlink()
-		{ return mBaseFileSpec ? mBaseFileSpec->resolveSymlink() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD ResolveSymlink()
+		{ return mBaseFileSpec ? mBaseFileSpec->ResolveSymlink() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute unsigned long FileSize; */
 	NS_IMETHOD GetFileSize(PRUint32 *aFileSize)
@@ -146,48 +146,48 @@ class nsFileSpecWithUIImpl
 		{ return mBaseFileSpec ? mBaseFileSpec->AppendRelativeUnixPath(relativePath) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void createDir (); */
-	NS_IMETHOD createDir()
-		{ return mBaseFileSpec ? mBaseFileSpec->createDir() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD CreateDir()
+		{ return mBaseFileSpec ? mBaseFileSpec->CreateDir() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void touch (); */
-	NS_IMETHOD touch ()
-		{ return mBaseFileSpec ? mBaseFileSpec->touch() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Touch ()
+		{ return mBaseFileSpec ? mBaseFileSpec->Touch() : NS_ERROR_NOT_INITIALIZED; }
        
 	/* void rename ([const] in string newLeafName); */
-	NS_IMETHOD rename(const char *newLeafName)
-		{ return mBaseFileSpec ? mBaseFileSpec->rename(newLeafName) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Rename(const char *newLeafName)
+		{ return mBaseFileSpec ? mBaseFileSpec->Rename(newLeafName) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void copyToDir ([const] in nsIFileSpec newParentDir); */
-	NS_IMETHOD copyToDir(const nsIFileSpec *newParentDir)
-		{ return mBaseFileSpec ? mBaseFileSpec->copyToDir(newParentDir) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD CopyToDir(const nsIFileSpec *newParentDir)
+		{ return mBaseFileSpec ? mBaseFileSpec->CopyToDir(newParentDir) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void moveToDir ([const] in nsIFileSpec newParentDir); */
-	NS_IMETHOD moveToDir(const nsIFileSpec *newParentDir)
-		{ return mBaseFileSpec ? mBaseFileSpec->moveToDir(newParentDir) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD MoveToDir(const nsIFileSpec *newParentDir)
+		{ return mBaseFileSpec ? mBaseFileSpec->MoveToDir(newParentDir) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void execute ([const] in string args); */
-	NS_IMETHOD execute(const char *args)
-		{ return mBaseFileSpec ? mBaseFileSpec->execute(args) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Execute(const char *args)
+		{ return mBaseFileSpec ? mBaseFileSpec->Execute(args) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void openStreamForReading (); */
-	NS_IMETHOD openStreamForReading()
-		{ return mBaseFileSpec ? mBaseFileSpec->openStreamForReading() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD OpenStreamForReading()
+		{ return mBaseFileSpec ? mBaseFileSpec->OpenStreamForReading() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void openStreamForWriting (); */
-	NS_IMETHOD openStreamForWriting()
-		{ return mBaseFileSpec ? mBaseFileSpec->openStreamForWriting() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD OpenStreamForWriting()
+		{ return mBaseFileSpec ? mBaseFileSpec->OpenStreamForWriting() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void openStreamForReadingAndWriting (); */
-	NS_IMETHOD openStreamForReadingAndWriting()
-		{ return mBaseFileSpec ? mBaseFileSpec->openStreamForReadingAndWriting() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD OpenStreamForReadingAndWriting()
+		{ return mBaseFileSpec ? mBaseFileSpec->OpenStreamForReadingAndWriting() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void close (); */
-	NS_IMETHOD closeStream()
-		{ return mBaseFileSpec ? mBaseFileSpec->closeStream() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD CloseStream()
+		{ return mBaseFileSpec ? mBaseFileSpec->CloseStream() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean isOpen (); */
-	NS_IMETHOD isStreamOpen(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->isStreamOpen(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD IsStreamOpen(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->IsStreamOpen(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	NS_IMETHOD GetInputStream(nsIInputStream** _retval)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetInputStream(_retval) : NS_ERROR_NOT_INITIALIZED; }
@@ -202,41 +202,41 @@ class nsFileSpecWithUIImpl
 
 	NS_IMETHOD GetFileSpec(nsFileSpec *_retval)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetFileSpec(_retval) : NS_ERROR_NOT_INITIALIZED; }
-    NS_IMETHOD setFromFileSpec(const nsFileSpec& s)
-		{ return mBaseFileSpec ? mBaseFileSpec->setFromFileSpec(s) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD SetFromFileSpec(const nsFileSpec& s)
+		{ return mBaseFileSpec ? mBaseFileSpec->SetFromFileSpec(s) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* boolean eof (); */
-	NS_IMETHOD eof(PRBool *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->eof(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Eof(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->Eof(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
-	NS_IMETHOD read(char** buffer, PRInt32 requestedCount, PRInt32 *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->read(buffer, requestedCount, _retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Read(char** buffer, PRInt32 requestedCount, PRInt32 *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->Read(buffer, requestedCount, _retval) : NS_ERROR_NOT_INITIALIZED; }
 
-	NS_IMETHOD readLine(char** line, PRInt32 bufferSize, PRBool *wasTruncated)
-		{ return mBaseFileSpec ? mBaseFileSpec->readLine(line, bufferSize, wasTruncated) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD ReadLine(char** line, PRInt32 bufferSize, PRBool *wasTruncated)
+		{ return mBaseFileSpec ? mBaseFileSpec->ReadLine(line, bufferSize, wasTruncated) : NS_ERROR_NOT_INITIALIZED; }
 					// Check eof() before each call.
 					// CAUTION: false result only indicates line was truncated
 					// to fit buffer, or an error occurred (OTHER THAN eof).
 
 
-	NS_IMETHOD write(const char* data, PRInt32 requestedCount, PRInt32 *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->write(data, requestedCount, _retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Write(const char* data, PRInt32 requestedCount, PRInt32 *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->Write(data, requestedCount, _retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void flush (); */
-	NS_IMETHOD flush()
-		{ return mBaseFileSpec ? mBaseFileSpec->flush() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Flush()
+		{ return mBaseFileSpec ? mBaseFileSpec->Flush() : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void seek (in long offset); */
-	NS_IMETHOD seek(PRInt32 offset)
-		{ return mBaseFileSpec ? mBaseFileSpec->seek(offset) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Seek(PRInt32 offset)
+		{ return mBaseFileSpec ? mBaseFileSpec->Seek(offset) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* long tell (); */
-	NS_IMETHOD tell(PRInt32 *_retval)
-		{ return mBaseFileSpec ? mBaseFileSpec->tell(_retval) : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD Tell(PRInt32 *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->Tell(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* void endline (); */
-	NS_IMETHOD endline()
-		{ return mBaseFileSpec ? mBaseFileSpec->endline() : NS_ERROR_NOT_INITIALIZED; }
+	NS_IMETHOD EndLine()
+		{ return mBaseFileSpec ? mBaseFileSpec->EndLine() : NS_ERROR_NOT_INITIALIZED; }
 
 	// Data
 protected:

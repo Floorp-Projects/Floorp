@@ -41,7 +41,7 @@ public:
     NS_IMETHOD GetCaller(nsIJSStackFrameLocation * *aCaller);
 
     /* string toString (); */
-    NS_IMETHOD toString(char **_retval);
+    NS_IMETHOD ToString(char **_retval);
 
     static XPCJSStackFrame* CreateStack(JSContext* cx, XPCJSStack* stack,
                                         JSStackFrame* fp);
@@ -350,7 +350,7 @@ NS_IMETHODIMP XPCJSStackFrame::GetCaller(nsIJSStackFrameLocation * *aCaller)
 }
 
 /* string toString (); */
-NS_IMETHODIMP XPCJSStackFrame::toString(char **_retval)
+NS_IMETHODIMP XPCJSStackFrame::ToString(char **_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;

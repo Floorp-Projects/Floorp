@@ -38,24 +38,24 @@ class NS_COM nsFileSpecImpl
 	// COM Cruft
 	//----------------------
 
-      static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
 
 	//----------------------
 	// Implementation
 	//----------------------
 
-			nsFileSpecImpl();
-			nsFileSpecImpl(const nsFileSpec& inSpec);
-			virtual ~nsFileSpecImpl();
-			static nsresult MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** outSpec);
+	nsFileSpecImpl();
+	nsFileSpecImpl(const nsFileSpec& inSpec);
+	virtual ~nsFileSpecImpl();
+	static nsresult MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** outSpec);
 
 	//----------------------
 	// Data
 	//----------------------
-	
-		nsFileSpec							mFileSpec;
-		nsIInputStream*						mInputStream;
-		nsIOutputStream*					mOutputStream;
+
+	nsFileSpec							mFileSpec;
+	nsIInputStream*					mInputStream;
+	nsIOutputStream*				mOutputStream;
 
 }; // class nsFileSpecImpl
 
@@ -74,9 +74,9 @@ public:
 
 	NS_IMETHOD Init(nsIFileSpec *parent, PRBool resolveSymlink);
 
-	NS_IMETHOD exists(PRBool *_retval);
+	NS_IMETHOD Exists(PRBool *_retval);
 
-	NS_IMETHOD next();
+	NS_IMETHOD Next();
 
 	NS_IMETHOD GetCurrentSpec(nsIFileSpec * *aCurrentSpec);
 
@@ -84,7 +84,7 @@ public:
 	// COM Cruft
 	//----------------------
 
-    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
 
 protected:
 

@@ -51,7 +51,7 @@ nsFileSpecWithUIImpl::~nsFileSpecWithUIImpl()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecWithUIImpl::chooseOutputFile(
+NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
 	const char *windowTitle,
 	const char *suggestedLeafName)
 //----------------------------------------------------------------------------------------
@@ -74,19 +74,19 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseOutputFile(
     	return NS_FILE_FAILURE;
     if (spec.Exists() && result != nsFileDlgResults_Replace)
     	return NS_FILE_FAILURE;
-    return mBaseFileSpec->setFromFileSpec(spec);
-} // nsFileSpecImpl::chooseOutputFile
+    return mBaseFileSpec->SetFromFileSpec(spec);
+} // nsFileSpecImpl::ChooseOutputFile
 
-NS_IMETHODIMP nsFileSpecWithUIImpl::chooseFile(const char *title, char **_retval)
+NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseFile(const char *title, char **_retval)
 {
-	nsresult rv = chooseInputFile(title, eAllFiles, nsnull, nsnull);
+	nsresult rv = ChooseInputFile(title, eAllFiles, nsnull, nsnull);
 	if (NS_FAILED(rv)) return rv;
 	rv = GetURLString(_retval);
 	return rv;
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecWithUIImpl::chooseInputFile(
+NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
 		const char *inTitle,
 		nsIFileSpecWithUI::StandardFilterMask inMask,
 		const char *inExtraFilterTitle, const char *inExtraFilter)
@@ -156,16 +156,16 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::chooseInputFile(
 	fileWidget->SetFilterList(nextFilter - filters, titles, filters);
 	if (fileWidget->GetFile(nsnull, inTitle, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
-    rv = mBaseFileSpec->setFromFileSpec(spec);
+    rv = mBaseFileSpec->SetFromFileSpec(spec);
 
 Clean:
 	delete [] titles;
 	delete [] filters;
 	return rv;
-} // nsFileSpecWithUIImpl::chooseInputFile
+} // nsFileSpecWithUIImpl::ChooseInputFile
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecWithUIImpl::chooseDirectory(const char *title, char **_retval)
+NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_retval)
 //----------------------------------------------------------------------------------------
 {
     if (!mBaseFileSpec)

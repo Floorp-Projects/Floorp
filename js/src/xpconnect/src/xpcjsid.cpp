@@ -55,7 +55,7 @@ nsJSID::~nsJSID()
         delete [] mName;
 }
 
-void nsJSID::reset()
+void nsJSID::Reset()
 {
     mID = GetInvalidIID();
 
@@ -68,7 +68,7 @@ void nsJSID::reset()
 }
 
 PRBool
-nsJSID::setName(const char* name)
+nsJSID::SetName(const char* name)
 {
     NS_ASSERTION(!mName || mName == gNoString ,"name already set");
     NS_ASSERTION(name,"null name");
@@ -83,8 +83,8 @@ nsJSID::setName(const char* name)
 NS_IMETHODIMP
 nsJSID::GetName(char * *aName)
 {
-    if(!nameIsSet())
-        setNameToNoString();
+    if(!NameIsSet())
+        SetNameToNoString();
     NS_ASSERTION(mName, "name not set");
     *aName = (char*) nsAllocator::Clone(mName, strlen(mName)+1);
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -118,7 +118,7 @@ nsJSID::GetValid(PRBool *aValid)
 }
 
 NS_IMETHODIMP
-nsJSID::equals(nsIJSID *other, PRBool *_retval)
+nsJSID::Equals(nsIJSID *other, PRBool *_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
@@ -138,7 +138,7 @@ nsJSID::equals(nsIJSID *other, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsJSID::initialize(const char *idString)
+nsJSID::Initialize(const char *idString)
 {
     if(!idString)
         return NS_ERROR_NULL_POINTER;
@@ -147,7 +147,7 @@ nsJSID::initialize(const char *idString)
 
     if(strlen(idString) && mID.Equals(GetInvalidIID()))
     {
-        reset();
+        Reset();
 
         if(idString[0] == '{')
         {
@@ -163,17 +163,17 @@ nsJSID::initialize(const char *idString)
 }
 
 PRBool
-nsJSID::initWithName(const nsID& id, const char *nameString)
+nsJSID::InitWithName(const nsID& id, const char *nameString)
 {
     NS_ASSERTION(nameString, "no name");
-    reset();
+    Reset();
     mID = id;
-    return setName(nameString);
-}
+    return SetName(nameString);
+}        
 
 // try to use the name, if no name, then use the number
 NS_IMETHODIMP
-nsJSID::toString(char **_retval)
+nsJSID::ToString(char **_retval)
 {
     if(mName != gNoString)
     {
@@ -215,7 +215,7 @@ nsJSID::NewID(const char* str)
     if(idObj)
     {
         NS_ADDREF(idObj);
-        if(NS_FAILED(idObj->initialize(str)))
+        if(NS_FAILED(idObj->Initialize(str)))
             NS_RELEASE(idObj);
     }
     return idObj;
@@ -230,7 +230,7 @@ nsJSIID::nsJSIID()  {NS_INIT_ISUPPORTS();}
 nsJSIID::~nsJSIID() {}
 
 NS_IMETHODIMP nsJSIID::GetName(char * *aName)
-    {resolveName(); return mDetails.GetName(aName);}
+    {ResolveName(); return mDetails.GetName(aName);}
 
 NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
     {return mDetails.GetNumber(aNumber);}
@@ -241,33 +241,33 @@ NS_IMETHODIMP nsJSIID::GetId(nsID* *aId)
 NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
     {return mDetails.GetValid(aValid);}
 
-NS_IMETHODIMP nsJSIID::equals(nsIJSID *other, PRBool *_retval)
-    {return mDetails.equals(other, _retval);}
+NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, PRBool *_retval)
+    {return mDetails.Equals(other, _retval);}
 
-NS_IMETHODIMP nsJSIID::initialize(const char *idString)
-    {return mDetails.initialize(idString);}
+NS_IMETHODIMP nsJSIID::Initialize(const char *idString)
+    {return mDetails.Initialize(idString);}
 
-NS_IMETHODIMP nsJSIID::toString(char **_retval)
-    {resolveName(); return mDetails.toString(_retval);}
+NS_IMETHODIMP nsJSIID::ToString(char **_retval)
+    {ResolveName(); return mDetails.ToString(_retval);}
 
 void
-nsJSIID::resolveName()
+nsJSIID::ResolveName()
 {
-    if(!mDetails.nameIsSet())
+    if(!mDetails.NameIsSet())
     {
         nsIInterfaceInfoManager* iim;
         if(nsnull != (iim = nsXPConnect::GetInterfaceInfoManager()))
         {
             char* name;
-            if(NS_SUCCEEDED(iim->GetNameForIID(mDetails.getID(), &name)) && name)
+            if(NS_SUCCEEDED(iim->GetNameForIID(mDetails.GetID(), &name)) && name)
             {
-                mDetails.setName(name);
+                mDetails.SetName(name);
                 nsAllocator::Free(name);
             }
             NS_RELEASE(iim);
         }
-        if(!mDetails.nameIsSet())
-            mDetails.setNameToNoString();
+        if(!mDetails.NameIsSet())
+            mDetails.SetNameToNoString();
     }
 }
 
@@ -289,7 +289,7 @@ nsJSIID::NewID(const char* str)
 
         if(str[0] == '{')
         {
-            if(NS_SUCCEEDED(idObj->initialize(str)))
+            if(NS_SUCCEEDED(idObj->Initialize(str)))
                 success = PR_TRUE;
         }
         else
@@ -300,7 +300,7 @@ nsJSIID::NewID(const char* str)
                 nsID* pid;
                 if(NS_SUCCEEDED(iim->GetIIDForName(str, &pid)) && pid)
                 {
-                    success = idObj->mDetails.initWithName(*pid, str);
+                    success = idObj->mDetails.InitWithName(*pid, str);
                     nsAllocator::Free(pid);
                 }
                 NS_RELEASE(iim);
@@ -710,7 +710,7 @@ nsJSCID::nsJSCID()  {NS_INIT_ISUPPORTS();}
 nsJSCID::~nsJSCID() {}
 
 NS_IMETHODIMP nsJSCID::GetName(char * *aName)
-    {resolveName(); return mDetails.GetName(aName);}
+    {ResolveName(); return mDetails.GetName(aName);}
 
 NS_IMETHODIMP nsJSCID::GetNumber(char * *aNumber)
     {return mDetails.GetNumber(aNumber);}
@@ -721,20 +721,20 @@ NS_IMETHODIMP nsJSCID::GetId(nsID* *aId)
 NS_IMETHODIMP nsJSCID::GetValid(PRBool *aValid)
     {return mDetails.GetValid(aValid);}
 
-NS_IMETHODIMP nsJSCID::equals(nsIJSID *other, PRBool *_retval)
-    {return mDetails.equals(other, _retval);}
+NS_IMETHODIMP nsJSCID::Equals(nsIJSID *other, PRBool *_retval)
+    {return mDetails.Equals(other, _retval);}
 
-NS_IMETHODIMP nsJSCID::initialize(const char *idString)
-    {return mDetails.initialize(idString);}
+NS_IMETHODIMP nsJSCID::Initialize(const char *idString)
+    {return mDetails.Initialize(idString);}
 
-NS_IMETHODIMP nsJSCID::toString(char **_retval)
-    {resolveName(); return mDetails.toString(_retval);}
+NS_IMETHODIMP nsJSCID::ToString(char **_retval)
+    {ResolveName(); return mDetails.ToString(_retval);}
 
 void
-nsJSCID::resolveName()
+nsJSCID::ResolveName()
 {
-    if(!mDetails.nameIsSet())
-        mDetails.setNameToNoString();
+    if(!mDetails.NameIsSet())
+        mDetails.SetNameToNoString();
 }
 
 //static
@@ -755,7 +755,7 @@ nsJSCID::NewID(const char* str)
 
         if(str[0] == '{')
         {
-            if(NS_SUCCEEDED(idObj->initialize(str)))
+            if(NS_SUCCEEDED(idObj->Initialize(str)))
                 success = PR_TRUE;
         }
         else
@@ -763,7 +763,7 @@ nsJSCID::NewID(const char* str)
             nsCID cid;
             if(NS_SUCCEEDED(nsComponentManager::ProgIDToCLSID(str, &cid)))
             {
-                success = idObj->mDetails.initWithName(cid, str);
+                success = idObj->mDetails.InitWithName(cid, str);
             }
         }
         if(!success)

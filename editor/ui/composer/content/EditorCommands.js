@@ -680,7 +680,7 @@ function EditorGetScriptFileSpec()
 {
   var fs = Components.classes["component://netscape/filespec"].createInstance();
   fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
-  fs.UnixStyleFilePath = "journal.js";
+  fs.unixStyleFilePath = "journal.js";
   return fs;
 }
 

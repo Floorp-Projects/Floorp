@@ -2099,7 +2099,7 @@ NS_IMETHODIMP nsBrowserAppCore::OpenWindow()
   if (!fileSpec)
   	return NS_ERROR_FAILURE;
 
-  nsresult rv = fileSpec->chooseInputFile(
+  nsresult rv = fileSpec->ChooseInputFile(
   	"Open File", nsIFileSpecWithUI::eAllStandardFilters, nsnull, nsnull);
   if (NS_FAILED(rv))
     return rv;

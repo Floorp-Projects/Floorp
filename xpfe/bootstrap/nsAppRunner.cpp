@@ -49,6 +49,9 @@
 #include "nsICookieService.h"
 #endif // NECKO
 
+#ifdef DEBUG
+#include "prlog.h"
+#endif
 
 // Temporary stuff.
 #include "nsIDOMToolkitCore.h"
@@ -139,7 +142,7 @@ static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
       nsIPrefWindow::GetIID(),
       (void **)&prefWindow);
 	if (NS_SUCCEEDED(rv))
-	  prefWindow->showWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
+	  prefWindow->ShowWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
 	NS_IF_RELEASE(prefWindow);
 	return PR_TRUE;
   }
@@ -357,10 +360,10 @@ int main1(int argc, char* argv[])
 				// No directory name provided. Get File Locator
 				nsIFileLocator* locator = nsnull;
 				rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-        if (NS_FAILED(rv))
-          return rv;
-        if (!locator)
-          return NS_ERROR_FAILURE;
+				if (NS_FAILED(rv))
+				    return rv;
+				if (!locator)
+				  return NS_ERROR_FAILURE;
 				
 				// Get current profile, make the new one a sibling...
 				nsIFileSpec* spec;
@@ -525,7 +528,7 @@ int main1(int argc, char* argv[])
   if (height) {
     PR_sscanf(height, "%d", &heightVal);
   }
-  
+
   /*
    * Load preferences, causing them to be initialized, and hold a reference to them.
    */
@@ -586,7 +589,7 @@ int main1(int argc, char* argv[])
       nsIPrefWindow::GetIID(),
       (void **)&prefWindow);
 	if (NS_SUCCEEDED(rv))
-	  prefWindow->showWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
+	  prefWindow->ShowWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
 	NS_IF_RELEASE(prefWindow);
 	goto done;
   }

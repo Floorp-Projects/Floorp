@@ -1975,7 +1975,7 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
     PRBool isDir = PR_FALSE;
 
     // Maker sure we are dealing with a directory
-    rv = dirSpec->isDirectory(&isDir);
+    rv = dirSpec->IsDirectory(&isDir);
     if (NS_FAILED(rv)) return rv;
     if (isDir == PR_FALSE)
     {
@@ -1992,14 +1992,14 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
     // whip through the directory to register every file
     nsIFileSpec *dirEntry = NULL;
     PRBool more = PR_FALSE;
-    rv = dirIterator->exists(&more);
+    rv = dirIterator->Exists(&more);
     if (NS_FAILED(rv)) return rv;
     while (more == PR_TRUE)
     {
         rv = dirIterator->GetCurrentSpec(&dirEntry);
         if (NS_FAILED(rv)) return rv;
 
-        rv = dirEntry->isDirectory(&isDir);
+        rv = dirEntry->IsDirectory(&isDir);
         if (NS_FAILED(rv)) return rv;
         if (isDir == PR_TRUE)
         {
@@ -2021,9 +2021,9 @@ nsComponentManagerImpl::SyncComponentsInDir(RegistrationTime when, nsIFileSpec *
 
         NS_RELEASE(dirEntry);
         
-        rv = dirIterator->next();
+        rv = dirIterator->Next();
         if (NS_FAILED(rv)) return rv;
-        rv = dirIterator->exists(&more);
+        rv = dirIterator->Exists(&more);
         if (NS_FAILED(rv)) return rv;
     }
     
@@ -2052,7 +2052,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
     // Ensure we are dealing with a file as opposed to a dir
     PRBool b = PR_FALSE;
 
-    rv = component->isFile(&b);
+    rv = component->IsFile(&b);
     if (NS_FAILED(rv)) return rv;
 
     if (b == PR_FALSE) return NS_ERROR_FAILURE;

@@ -317,7 +317,7 @@ NS_IMETHODIMP nsPref::ReadUserPrefsFrom(nsIFileSpec* inFile)
 	nsresult rv = NS_OK;
 	JS_BeginRequest(gMochaContext);
     PRBool exists;
-    if (!(NS_SUCCEEDED(mFileSpec->exists(&exists)) && exists)
+    if (!(NS_SUCCEEDED(mFileSpec->Exists(&exists)) && exists)
       || pref_OpenFileSpec(mFileSpec, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE)
         								!= PREF_NOERROR)
       rv = NS_ERROR_FAILURE;
@@ -762,8 +762,8 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
         NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 	    if (!tmp)
 	    	return NS_ERROR_FAILURE;
-		tmp->fromFileSpec(value);
-        tmp->createDir();
+		tmp->FromFileSpec(value);
+        tmp->CreateDir();
         NS_RELEASE(tmp);
     }
     char* encodedString = nsnull;
@@ -1159,7 +1159,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
         }
     }
     PR_Free(valueArray);
-	fileSpec->closeStream();
+	fileSpec->CloseStream();
     return PREF_NOERROR;
 }
 
@@ -1223,7 +1223,7 @@ extern "C" JSBool pref_InitInitialObjects()
 	NS_ASSERTION(worked, "initpref.js not parsed successfully");
 	// Keep this child
 
-	for (; Exists(i); i->next())
+	for (; Exists(i); i->Next())
 	{
 		nsIFileSpec* child;
 		PRBool shouldParse = PR_TRUE;
