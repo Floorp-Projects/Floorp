@@ -26,8 +26,8 @@
 
 #include "nsISupports.idl"
 
-[object, uuid(E628ED10-9452-11d2-B7EA-00805F05FFA5)]
-interface nsIMsgNewsgroup : nsISupports {
+[object, uuid(1A39CD90-ACAF-11d2-B7EE-00805F05FFA5)]
+interface nsINNTPNewsgroup : nsISupports {
   
   attribute string name;
   

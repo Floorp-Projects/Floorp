@@ -1,28 +1,28 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgNewsgroup.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsINNTPNewsgroup.idl
  */
 
-#ifndef __gen_nsIMsgNewsgroup_h__
-#define __gen_nsIMsgNewsgroup_h__
+#ifndef __gen_nsINNTPNewsgroup_h__
+#define __gen_nsINNTPNewsgroup_h__
 
 #include "nsISupports.h" /* interface nsISupports */
 
 
-/* starting interface nsIMsgNewsgroup */
+/* starting interface nsINNTPNewsgroup */
 
-/* {E628ED10-9452-11d2-B7EA-00805F05FFA5} */
-#define NS_IMSGNEWSGROUP_IID_STR "E628ED10-9452-11d2-B7EA-00805F05FFA5"
-#define NS_IMSGNEWSGROUP_IID \
-  {0xE628ED10, 0x9452, 0x11d2, \
-    { 0xB7, 0xEA, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
+/* {1A39CD90-ACAF-11d2-B7EE-00805F05FFA5} */
+#define NS_INNTPNEWSGROUP_IID_STR "1A39CD90-ACAF-11d2-B7EE-00805F05FFA5"
+#define NS_INNTPNEWSGROUP_IID \
+  {0x1A39CD90, 0xACAF, 0x11d2, \
+    { 0xB7, 0xEE, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
-class nsIMsgNewsgroup : public nsISupports {
+class nsINNTPNewsgroup : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 
  public: 
   static const nsIID& IID() {
-    static nsIID iid = NS_IMSGNEWSGROUP_IID;
+    static nsIID iid = NS_INNTPNEWSGROUP_IID;
     return iid;
   }
 
@@ -46,4 +46,4 @@ class nsIMsgNewsgroup : public nsISupports {
   NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval) = 0;
 };
 
-#endif /* __gen_nsIMsgNewsgroup_h__ */
+#endif /* __gen_nsINNTPNewsgroup_h__ */
