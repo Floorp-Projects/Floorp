@@ -148,6 +148,7 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 #include "nsIPrintPreviewContext.h"
 #include "imgIContainer.h" // image animation mode constants
 #include "nsIScrollableView.h"
+#include "nsIScrollable.h"
 #include "nsIWebBrowserPrint.h" // needed for PrintPreview Navigation constants
 
 // Print Progress
@@ -1288,6 +1289,28 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   mViewManager->SetDefaultBackgroundColor(bgcolor);
 
   if (aDoInitialReflow) {
+    nsCOMPtr<nsIScrollable> sc = do_QueryInterface(mContainer);
+
+    if (sc) {
+      nsCOMPtr<nsIContent> root;
+      mDocument->GetRootContent(getter_AddRefs(root));
+
+      nsCOMPtr<nsIDOMHTMLFrameSetElement> frameset(do_QueryInterface(root));
+
+      if (frameset) {
+        // If this is a frameset (i.e. not a frame) then we never want
+        // scrollbars on it, the scrollbars go inside the frames
+        // inside the frameset...
+
+        sc->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
+                                           NS_STYLE_OVERFLOW_HIDDEN);
+        sc->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
+                                           NS_STYLE_OVERFLOW_HIDDEN);
+      } else {
+        sc->ResetScrollbarPreferences();
+      }
+    }
+
     // Initial refllow
     mPresShell->InitialReflow(width, height);
 

@@ -1038,10 +1038,12 @@ nsHTMLFrameInnerFrame::ShowDocShell(nsIPresContext* aPresContext)
   nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryInterface(docShell));
 
   if (scrollableContainer) {
+    PRInt32 scrolling = GetScrolling(content);
+
     scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                                        GetScrolling(content));
+                                                        scrolling);
     scrollableContainer->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                                        GetScrolling(content));
+                                                        scrolling);
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
