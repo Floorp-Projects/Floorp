@@ -85,9 +85,12 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
 }
 
 NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
-   const char* aCommand, const char* aWindowTarget, PRBool* aCanHandle)
+   const char* aCommand, const char* aWindowTarget, char ** aDesiredContentType, PRBool* aCanHandle)
 {
    NS_ENSURE_ARG_POINTER(aCanHandle);
+   NS_ENSURE_ARG_POINTER(aDesiredContentType);
+
+   *aDesiredContentType = nsnull;
 
    *aCanHandle = PR_TRUE;  // Always say true and let DoContent decide.
    return NS_OK;
