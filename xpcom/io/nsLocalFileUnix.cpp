@@ -824,7 +824,8 @@ NS_IMETHODIMP
 nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
     NS_ENSURE_ARG_POINTER(aFileSize);
-    InvalidateCache();
+    VALIDATE_STAT_CACHE();
+    
     /* XXX autoconf for and use stat64 if available */
     mLL_II2L(0, (PRUint32)mCachedStat.st_size, *aFileSize);
     return NS_OK;
@@ -836,9 +837,10 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
     PRInt32 hi, lo;
     mLL_L2II(aFileSize, hi, lo);
     /* XXX truncate64? */
+    InvalidateCache();
     if (truncate((const char *)mPath, (off_t)lo) == -1)
         return NSRESULT_FOR_ERRNO();
-    return NS_OK;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
