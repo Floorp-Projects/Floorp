@@ -2759,7 +2759,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 {
     static UINT vkKeyCached = 0;              // caches VK code fon WM_KEYDOWN
     PRBool        result = PR_FALSE; // call the default nsWindow proc
-    PRBool getWheelInfo = PR_TRUE;
+    static PRBool getWheelInfo = PR_TRUE;
     nsPaletteInfo palInfo;
     *aRetValue = 0;
 
