@@ -38,6 +38,8 @@ REQUIRES = seccmd dbm
 
 PROGRAM = bltest
 
+# USE_STATIC_LIBS = 1
+
 EXPORTS = \
 	$(NULL)
 

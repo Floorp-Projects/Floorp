@@ -31,6 +31,8 @@
 # GPL.
 #
 
+
+ifdef USE_STATIC_LIBS
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
@@ -117,3 +119,48 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
+else
+# can't do this in manifest.mn because OS_ARCH isn't defined there.
+ifeq ($(OS_ARCH), WINNT)
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+EXTRA_LIBS += \
+	$(DIST)/lib/sectool.lib \
+	$(DIST)/lib/smime3.lib \
+	$(DIST)/lib/ssl3.lib \
+	$(DIST)/lib/nss3.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NULL)
+
+# $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
+OS_LIBS += \
+	wsock32.lib \
+	winmm.lib \
+	$(NULL)
+else
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+EXTRA_LIBS += \
+	$(DIST)/lib/libsectool.$(LIB_SUFFIX) \
+	$(NULL)
+
+ifeq ($(OS_ARCH), AIX) 
+EXTRA_SHARED_LIBS += -brtl 
+endif
+
+# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
+# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-lnss3 \
+	-lssl3 \
+	-lsmime3 \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+endif
+
+endif

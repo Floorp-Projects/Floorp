@@ -43,3 +43,4 @@ REQUIRES = security nspr dbm seccmd
 PROGRAM = instinit
 # PROGRAM = ./$(OBJDIR)/selfserv.exe
 
+USE_STATIC_LIBS = 1

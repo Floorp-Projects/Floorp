@@ -49,3 +49,5 @@ CSRCS = crlutil.c
 # this has to be different for NT and UNIX.
 # PROGRAM	= ./$(OBJDIR)/crlutil.exe
 PROGRAM	= crlutil
+
+USE_STATIC_LIBS = 1

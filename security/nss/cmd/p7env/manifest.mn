@@ -42,3 +42,5 @@ REQUIRES = seccmd dbm
 PROGRAM = p7env
 # PROGRAM = ./$(OBJDIR)/p7env.exe
 
+USE_STATIC_LIBS = 1
+

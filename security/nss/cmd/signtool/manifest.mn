@@ -51,3 +51,5 @@ PROGRAM =  signtool
 REQUIRES = security dbm seccmd
 
 DEFINES += -DNSPR20
+
+USE_STATIC_LIBS = 1

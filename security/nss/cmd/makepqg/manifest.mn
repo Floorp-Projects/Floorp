@@ -43,3 +43,5 @@ CSRCS	=  makepqg.c
 
 PROGRAM	= makepqg
 
+USE_STATIC_LIBS = 1
+
