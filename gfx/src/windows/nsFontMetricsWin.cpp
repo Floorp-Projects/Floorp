@@ -88,15 +88,20 @@ static void GenerateMultiByte(nsCharSetInfo* aSelf);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+PRUint32* nsFontMetricsWin::gEmptyMap = nsnull;
+
 nsGlobalFont* nsFontMetricsWin::gGlobalFonts = nsnull;
 static int gGlobalFontsAlloc = 0;
 int nsFontMetricsWin::gGlobalFontsCount = 0;
 
+static int gInitializedFontMaps = 0;
 PLHashTable* nsFontMetricsWin::gFontMaps = nsnull;
 
+static int gInitializedFamilyNames = 0;
 PLHashTable* nsFontMetricsWin::gFamilyNames = nsnull;
 
 //-- Font weight
+static int gInitializedFontWeights = 0;
 PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
 
 #define NS_MAX_FONT_WEIGHT 900
@@ -167,6 +172,31 @@ FreeGlobals(void)
   NS_IF_RELEASE(gKO);
   NS_IF_RELEASE(gZHTW);
   NS_IF_RELEASE(gZHCN);
+
+  // free CMap
+  if (nsFontMetricsWin::gFontMaps) {
+    PL_HashTableDestroy(nsFontMetricsWin::gFontMaps);
+    if (nsFontMetricsWin::gEmptyMap) {
+      PR_Free(nsFontMetricsWin::gEmptyMap);
+      nsFontMetricsWin::gEmptyMap = nsnull;
+    }
+    nsFontMetricsWin::gFontMaps = nsnull;
+    gInitializedFontMaps = 0;
+  }
+
+  // free FamilyNames
+  if (nsFontMetricsWin::gFamilyNames) {
+    PL_HashTableDestroy(nsFontMetricsWin::gFamilyNames);
+    nsFontMetricsWin::gFamilyNames = nsnull;
+    gInitializedFamilyNames = 0;
+  }
+
+  // free Font weight
+  if (nsFontMetricsWin::gFontWeights) {
+    PL_HashTableDestroy(nsFontMetricsWin::gFontWeights);
+    nsFontMetricsWin::gFontWeights = nsnull;
+    gInitializedFontWeights = 0;
+  }
 }
 
 static nsresult
@@ -1067,7 +1097,7 @@ GetConverter(const char* aName)
   return nsnull;
 }
 
-class nsFontInfo
+class nsFontInfo : public PLHashEntry
 {
 public:
   nsFontInfo(int aFontType, PRUint8 aCharset, PRUint32* aMap)
@@ -1099,16 +1129,63 @@ public:
 #endif
 };
 
+/*-----------------------
+** Hash table allocation
+**----------------------*/
+//-- Font Metrics
+PR_STATIC_CALLBACK(void*) fontmap_AllocTable(void *pool, size_t size)
+{
+  return PR_Malloc(size);
+}
+
+PR_STATIC_CALLBACK(void) fontmap_FreeTable(void *pool, void *item)
+{
+  PR_Free(item);
+}
+
+PR_STATIC_CALLBACK(PLHashEntry*) fontmap_AllocEntry(void *pool, const void *key)
+{
+ return new nsFontInfo(NS_FONT_TYPE_UNICODE, DEFAULT_CHARSET, nsnull);
+}
+
+PR_STATIC_CALLBACK(void) fontmap_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
+{
+  if (flag == HT_FREE_ENTRY)  {
+    nsFontInfo *fontInfo = NS_STATIC_CAST(nsFontInfo *, he);
+    if (fontInfo->mMap && (fontInfo->mMap != nsFontMetricsWin::gEmptyMap))
+      PR_Free(fontInfo->mMap); 
+#ifdef MOZ_MATHML
+    if (fontInfo->mCMAP.mData)
+      PR_Free(fontInfo->mCMAP.mData);
+#endif
+    delete (nsString *) (he->key);
+    delete fontInfo;
+  }
+}
+
+PLHashAllocOps fontmap_HashAllocOps = {
+  fontmap_AllocTable, fontmap_FreeTable,
+  fontmap_AllocEntry, fontmap_FreeEntry
+};
+
 PRUint32*
 nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset)
 {
-  static PRUint32* emptyMap = nsnull;
-  static int initialized = 0;
-  if (!initialized) {
-    initialized = 1;
-    gFontMaps = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull,
+  if (!gInitializedFontMaps) {
+    gInitializedFontMaps = 1;
+    gFontMaps = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, &fontmap_HashAllocOps,
       nsnull);
-    emptyMap = (PRUint32*) PR_Calloc(2048, 4);
+    if (!gFontMaps) { // error checking
+      gInitializedFontMaps = 0;
+      return nsnull;
+    }
+    gEmptyMap = (PRUint32*) PR_Calloc(2048, 4);
+    if (!nsFontMetricsWin::gEmptyMap) {
+      PL_HashTableDestroy(gFontMaps);
+      gFontMaps = nsnull;
+      gInitializedFontMaps = 0;
+      return nsnull;
+    }
   }
   nsString* name = new nsString();
   if (!name) {
@@ -1118,9 +1195,14 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   nsFontInfo* info;
   nsGetNameError ret = GetNAME(aDC, name);
   if (ret == eGetName_OK) {
-    info = (nsFontInfo*) PL_HashTableLookup(gFontMaps, name);
-    if (info) {
+    PLHashEntry **hep, *he;
+    PLHashNumber hash = HashKey(name);
+    hep = PL_HashTableRawLookup(gFontMaps, hash, name);
+    he = *hep;
+    if (he) {
       delete name;
+      // an identical map has already been added
+      info = NS_STATIC_CAST(nsFontInfo *, he);
       if (aCharset) {
         *aCharset = info->mCharset;
       }
@@ -1140,14 +1222,14 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     delete name;
     int charset = GetTextCharset(aDC);
     if (charset & (~0xFF)) {
-      return emptyMap;
+      return gEmptyMap;
     }
     else {
       int j = gCharSetToIndex[charset];
       
       //default charset is not dependable, skip it at this time
       if (j == eCharSet_DEFAULT)
-        return emptyMap;
+        return gEmptyMap;
       PRUint32* charSetMap = gCharSetInfo[j].mMap;
       if (!charSetMap) {
         charSetMap = (PRUint32*) PR_Calloc(2048, 4);
@@ -1156,7 +1238,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
           gCharSetInfo[j].GenerateMap(&gCharSetInfo[j]);
         }
         else {
-          return emptyMap;
+          return gEmptyMap;
         }
       }
       if (aFontType) {
@@ -1168,7 +1250,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   else {
     // return an empty map, so that we never try this font again
     delete name;
-    return emptyMap;
+    return gEmptyMap;
   }
 
   DWORD len = GetFontData(aDC, CMAP, 0, nsnull, 0);
@@ -1214,6 +1296,23 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         while (f->mName) {
           if (!strcmpi(f->mName, aShortName)) 
           {
+            PLHashEntry **hep, *he;
+            PLHashNumber hash = HashKey(name);
+            hep = PL_HashTableRawLookup(gFontMaps, hash, name);
+            he = *hep;
+            if (he) {
+              // an identical map has already been added
+              info = NS_STATIC_CAST(nsFontInfo *, he);
+              if (aCharset) {
+                *aCharset = info->mCharset;
+              }
+              if (aFontType) {
+                *aFontType = info->mType;
+              }
+              return info->mMap;
+            } 
+
+            // map didn't exist in the HashTable, let's add 
             if (aCharset) {
               *aCharset = DEFAULT_CHARSET;
             }
@@ -1222,22 +1321,45 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
             }
             if (!GetMap(aShortName, map)) {
               PR_Free(map);
-              map = emptyMap;
+              map = gEmptyMap;
             }
             PR_Free(buf);
 
-            info = new nsFontInfo(NS_FONT_TYPE_NON_UNICODE, DEFAULT_CHARSET, map);
-            if (info) {
-              // XXX check to see if an identical map has already been added
-              PL_HashTableAdd(gFontMaps, name, info);
-            }            
-            return map;
-          }
+            he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
+            if (he) {   
+              info = NS_STATIC_CAST(nsFontInfo*, he);
+              info->mType = NS_FONT_TYPE_NON_UNICODE;
+              info->mMap = map;
+              he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
+              return map;
+            }
+            delete name;
+            if (map != gEmptyMap)
+              PR_Free(map);
+            return nsnull;
+          } // if (!strcmpi(f->mName, aShortName)) 
           f++;
-        }
-        break;
-      }
+        } //while (f->mName)
+        break;  // break out from for(;;) loop
+      } //if (encodingID == 1)
       else if (encodingID == 0) { // symbol
+        PLHashEntry **hep, *he;
+        PLHashNumber hash = HashKey(name);
+        hep = PL_HashTableRawLookup(gFontMaps, hash, name);
+        he = *hep;
+        if (he) {
+          // an identical map has already been added
+          info = NS_STATIC_CAST(nsFontInfo *, he);
+          if (aCharset) {
+            *aCharset = info->mCharset;
+          }
+          if (aFontType) {
+            *aFontType = info->mType;
+          }
+          return info->mMap;
+        }
+
+        // map didn't exist in the HashTable, let's add 
         if (aCharset) {
           *aCharset = SYMBOL_CHARSET;
         }
@@ -1246,20 +1368,27 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         }
         if (!GetMap(aShortName, map)) {
           PR_Free(map);
-          map = emptyMap;
+          map = gEmptyMap;
         }
         PR_Free(buf);
 
-        info = new nsFontInfo(NS_FONT_TYPE_NON_UNICODE, SYMBOL_CHARSET, map);
-        if (info) {
-          // XXX check to see if an identical map has already been added
-          PL_HashTableAdd(gFontMaps, name, info);
+        he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
+        if (he) {
+          info = NS_STATIC_CAST(nsFontInfo*, he);
+          info->mCharset = SYMBOL_CHARSET;
+          info->mType = NS_FONT_TYPE_NON_UNICODE;
+          info->mMap = map;
+          he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
+          return map;
         }
-
-        return map;
+        delete name;
+        if (map != gEmptyMap)
+          PR_Free(map);
+        return nsnull;
       }
-    }
-  }
+    } // if (platformID == 3) 
+  } // for loop
+
   if (i == n) {
     PR_Free(buf);
     delete name;
@@ -1370,13 +1499,33 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     *aFontType = NS_FONT_TYPE_UNICODE;
   }
 
-  info = new nsFontInfo(NS_FONT_TYPE_UNICODE, DEFAULT_CHARSET, map);
-  if (info) {
-    // XXX check to see if an identical map has already been added to table
-    PL_HashTableAdd(gFontMaps, name, info);
-  }
+  PLHashEntry **hep, *he;
+  PLHashNumber hash = HashKey(name);
+  hep = PL_HashTableRawLookup(gFontMaps, hash, name);
+  he = *hep;
+  if (he) {
+    // an identical map has already been added
+    info = NS_STATIC_CAST(nsFontInfo *, he);
+    if (aCharset) {
+      *aCharset = info->mCharset;
+    }
+    if (aFontType) {
+      *aFontType = info->mType;
+    }
+    return info->mMap;
+  } 
 
-  return map;
+  he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
+  if (he) {
+    info = NS_STATIC_CAST(nsFontInfo*, he);
+    he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
+    info->mMap = map;
+    return map;
+  }
+  delete name;
+  if (map != gEmptyMap)
+    PR_Free(map);
+  return nsnull;
 }
 
 // The following function returns the glyph indices of a Unicode string.
@@ -2137,12 +2286,12 @@ nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
 // fontName and weight.
 
 
-typedef struct nsFontWeightEntry
+class nsFontWeightEntry : public PLHashEntry
 {
+public:
   nsString mFontName;
   PRUint16 mWeightTable; // Each bit indicates the availability of a font weight.
-} nsFontWeightEntry;
-
+};
 
 static PLHashNumber
 HashKeyFontWeight(const void* aFontWeightEntry)
@@ -2161,6 +2310,37 @@ CompareKeysFontWeight(const void* aFontWeightEntry1, const void* aFontWeightEntr
   return nsCRT::strcmp(str1->GetUnicode(), str2->GetUnicode()) == 0;
 }
 
+/*-----------------------
+** Hash table allocation
+**----------------------*/
+//-- Font weight
+PR_STATIC_CALLBACK(void*) fontweight_AllocTable(void *pool, size_t size)
+{
+  return PR_Malloc(size);
+}
+
+PR_STATIC_CALLBACK(void) fontweight_FreeTable(void *pool, void *item)
+{
+  PR_Free(item);
+}
+
+PR_STATIC_CALLBACK(PLHashEntry*) fontweight_AllocEntry(void *pool, const void *key)
+{
+  return new nsFontWeightEntry;
+}
+
+PR_STATIC_CALLBACK(void) fontweight_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
+{
+  if (flag == HT_FREE_ENTRY)  {
+    nsFontWeightEntry *fontWeightEntry = NS_STATIC_CAST(nsFontWeightEntry *, he);
+    delete (fontWeightEntry);
+  }
+}
+
+PLHashAllocOps fontweight_HashAllocOps = {
+  fontweight_AllocTable, fontweight_FreeTable,
+  fontweight_AllocEntry, fontweight_FreeEntry
+};
 
 // Store the font weight as a bit in the aWeightTable
 void nsFontMetricsWin::SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable) {
@@ -2443,21 +2623,20 @@ nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable) {
 PRUint16
 nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
 {
-  static int gInitializedFontWeights = 0;
- 
     // Initialize the font weight table if need be.
   if (!gInitializedFontWeights) {
     gInitializedFontWeights = 1;
-    gFontWeights = PL_NewHashTable(0, HashKeyFontWeight, CompareKeysFontWeight, nsnull, nsnull,
+    gFontWeights = PL_NewHashTable(0, HashKeyFontWeight, CompareKeysFontWeight, nsnull, &fontweight_HashAllocOps,
       nsnull);
     if (!gFontWeights) {
+      gInitializedFontWeights = 0;
       return 0;
     }
   }
 
-     // Use lower case name for hash table searches. This eliminates
-     // keeping multiple font weights entries when the font name varies 
-     // only by case.
+  // Use lower case name for hash table searches. This eliminates
+  // keeping multiple font weights entries when the font name varies 
+  // only by case.
   nsAutoString low; low.Assign(*aName);
   low.ToLowerCase();
 
@@ -2466,9 +2645,14 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
   searchEntry.mFontName = low;
   searchEntry.mWeightTable = 0;
 
-  nsFontWeightEntry* weightEntry = (nsFontWeightEntry*)PL_HashTableLookup(gFontWeights, &searchEntry);
-  if (nsnull != weightEntry) {
- //   printf("Re-use weight entry\n");
+  nsFontWeightEntry* weightEntry;
+  PLHashEntry **hep, *he;
+  PLHashNumber hash = HashKeyFontWeight(&searchEntry);
+  hep = PL_HashTableRawLookup(gFontWeights, hash, &searchEntry);
+  he = *hep;
+  if (he) {
+    // an identical fontweight has already been added
+    weightEntry = NS_STATIC_CAST(nsFontWeightEntry *, he);
     return weightEntry->mWeightTable;
   }
 
@@ -2476,13 +2660,18 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
   PRUint16 weightTable = GetFontWeightTable(aDC, aName);
 //  printf("Compute font weight %d\n",  weightTable);
 
-    // Store it in font weight HashTable.
-   nsFontWeightEntry* fontWeightEntry = new nsFontWeightEntry;
-   fontWeightEntry->mFontName = low;
-   fontWeightEntry->mWeightTable = weightTable;
-   PL_HashTableAdd(gFontWeights, fontWeightEntry, fontWeightEntry);
-     
-   return weightTable;
+   // Store it in font weight HashTable.
+  he = PL_HashTableRawAdd(gFontWeights, hep, hash, &searchEntry, nsnull);
+  if (he) {   
+    weightEntry = NS_STATIC_CAST(nsFontWeightEntry*, he);
+    weightEntry->mFontName = low;
+    weightEntry->mWeightTable = weightTable;
+    he->key = weightEntry;
+    he->value = weightEntry;
+    return weightEntry->mWeightTable;
+  }
+
+  return 0;
 }
 
 
@@ -2524,15 +2713,49 @@ static nsFontFamilyName gFamilyNameTable[] =
   { nsnull, nsnull }
 };
 
+/*-----------------------
+** Hash table allocation
+**----------------------*/
+//-- Font FamilyNames
+PR_STATIC_CALLBACK(void*) familyname_AllocTable(void *pool, size_t size)
+{
+  return PR_Malloc(size);
+}
+
+PR_STATIC_CALLBACK(void) familyname_FreeTable(void *pool, void *item)
+{
+  PR_Free(item);
+}
+
+PR_STATIC_CALLBACK(PLHashEntry*) familyname_AllocEntry(void *pool, const void *key)
+{
+  return PR_NEW(PLHashEntry);
+}
+
+PR_STATIC_CALLBACK(void) familyname_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
+{
+  delete (nsString *) (he->value);
+
+  if (flag == HT_FREE_ENTRY)  {
+    delete (nsString *) (he->key);
+    PR_Free(he);
+  }
+}
+
+PLHashAllocOps familyname_HashAllocOps = {
+  familyname_AllocTable, familyname_FreeTable,
+  familyname_AllocEntry, familyname_FreeEntry
+};
+
 PLHashTable*
 nsFontMetricsWin::InitializeFamilyNames(void)
 {
-  static int gInitializedFamilyNames = 0;
   if (!gInitializedFamilyNames) {
     gInitializedFamilyNames = 1;
-    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, nsnull,
+    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, &familyname_HashAllocOps,
       nsnull);
     if (!gFamilyNames) {
+      gInitializedFamilyNames = 0;
       return nsnull;
     }
     nsFontFamilyName* f = gFamilyNameTable;
@@ -2542,9 +2765,16 @@ nsFontMetricsWin::InitializeFamilyNames(void)
       if (name && winName) {
         name->AssignWithConversion(f->mName);
         winName->AssignWithConversion(f->mWinName);
-        PL_HashTableAdd(gFamilyNames, name, (void*) winName);
+        if (PL_HashTableAdd(gFamilyNames, name, (void*) winName))  
+        { 
+          f++;
+          continue;
+        }
       }
-      f++;
+      // if we reach here, no FamilyName was added to the hashtable
+      if (name) delete name;
+      if (winName) delete winName;
+      return nsnull;
     }
   }
 
