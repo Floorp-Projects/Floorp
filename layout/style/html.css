@@ -760,6 +760,7 @@ input[type="button"] {
   font-family: sans-serif;
   font-size: small;
   behavior: none;
+  white-space: pre;
 }
 
 input[type="button"]:hover {
