@@ -264,50 +264,58 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 
 void nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PRBool notifyForReflow)
 {
-	nsCOMPtr<nsIContent> parentContent;
-  nsCOMPtr<nsIDOMElement> element;
-  nsCOMPtr<nsIDOMElement> parentElement;
+	nsCOMPtr<nsIAtom> kSelectedCellAtom(dont_AddRef(NS_NewAtom("selectedcell")));
+  nsCOMPtr<nsIAtom> kSelectedAtom(dont_AddRef(NS_NewAtom("selected")));
 
-  mContent->GetParent(*getter_AddRefs(parentContent));
-  element = do_QueryInterface(mContent);
-  parentElement = do_QueryInterface(parentContent);
+  nsIContent* pParentContent = nsnull;
+  mContent->GetParent(pParentContent);
 
   if (isSelected)
 	{
 		// We're selecting the node.
-    element->SetAttribute("selectedcell", "true");
-    parentElement->SetAttribute("selected", "true");
+		mContent->SetAttribute(kNameSpaceID_None, kSelectedCellAtom, "true", notifyForReflow);
+    if(pParentContent) {
+      pParentContent->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", notifyForReflow);
+    }
 	}
 	else
 	{
 		// We're deselecting the node.
-		element->RemoveAttribute("selectedcell");
-    parentElement->RemoveAttribute("selected");
+		mContent->UnsetAttribute(kNameSpaceID_None, kSelectedCellAtom, notifyForReflow);
+    if(pParentContent) {
+      pParentContent->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, notifyForReflow);
+    }
 	}
+
+  NS_IF_RELEASE(pParentContent);
 }
 
 void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool notifyForReflow)
 {
-	nsCOMPtr<nsIContent> parentContent;
-  nsCOMPtr<nsIDOMElement> element;
-  nsCOMPtr<nsIDOMElement> parentElement;
+	nsCOMPtr<nsIAtom> kHoverCellAtom(dont_AddRef(NS_NewAtom("hovercell")));
+  nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("hover")));
 
-  mContent->GetParent(*getter_AddRefs(parentContent));
-  element = do_QueryInterface(mContent);
-  parentElement = do_QueryInterface(parentContent);
+  nsIContent* pParentContent = nsnull;
+  mContent->GetParent(pParentContent);
 
   if (isHover)
 	{
-		// We're selecting the node.
-    element->SetAttribute("hovercell", "true");
-    parentElement->SetAttribute("hover", "true");
+		// We're hovering over the node.
+		mContent->SetAttribute(kNameSpaceID_None, kHoverCellAtom, "true", notifyForReflow);
+    if(pParentContent) {
+      pParentContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
+    }
 	}
 	else
 	{
 		// We're deselecting the node.
-		element->RemoveAttribute("hovercell");
-    parentElement->RemoveAttribute("hover");
-	}
+		mContent->UnsetAttribute(kNameSpaceID_None, kHoverCellAtom, notifyForReflow);
+    if(pParentContent) {
+      pParentContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
+    }
+  }
+
+  NS_IF_RELEASE(pParentContent);
 }
 
 // XXX This method will go away.  I think it can
