@@ -54,6 +54,14 @@ blockquote {
   display: block;
   margin: 1em 40px;
 }
+blockquote[type=cite] {
+  display: block;
+  margin: 1em 0px;
+  padding-left: 1em;
+  border-left: solid;
+  border-color: blue;
+  border-width: thin;
+}
 center {
   display: block;
   text-align: -moz-center;
