@@ -426,18 +426,6 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
   {
     event.renderingContext = nsnull;
 
-#ifdef NS_DEBUG
-    if (CAPS_LOCK_IS_ON)
-    {
-      debug_DumpPaintEvent(stdout,
-                           this,
-                           &event,
-                           debug_GetName(mWidget),
-                           (PRInt32) debug_GetRenderXID(mWidget));
-    }
-#endif // NS_DEBUG
-
-
     // expose.. we didn't get an Invalidate, so we should up the count here
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
@@ -462,6 +450,17 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
       return NS_OK;
     }
 
+    // print out stuff here incase the event got dropped on the floor above
+#ifdef NS_DEBUG
+    if (CAPS_LOCK_IS_ON)
+    {
+      debug_DumpPaintEvent(stdout,
+                           this,
+                           &event,
+                           debug_GetName(mWidget),
+                           (PRInt32) debug_GetRenderXID(mWidget));
+    }
+#endif // NS_DEBUG
 
     event.renderingContext = GetRenderingContext();
     if (event.renderingContext)
