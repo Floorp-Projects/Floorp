@@ -767,7 +767,8 @@ HRESULT ProcessProgramFolderShowCmd()
     else if(strcmpi(szBuf, "SHOWNORMAL") == 0)
       iShowFolder = SW_SHOWNORMAL;
 
-    WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
+    if(iShowFolder != SW_HIDE)
+      WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
 
     ++dwIndex0;
     itoa(dwIndex0, szIndex0, 10);
