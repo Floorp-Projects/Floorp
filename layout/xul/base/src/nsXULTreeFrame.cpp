@@ -238,7 +238,7 @@ nsXULTreeFrame::GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aEle
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   nsCOMPtr<nsIContent> root;
   treeOuterGroup->GetContent(getter_AddRefs(root));
-  return treeOuterGroup->IndexOfItem(root, content, PR_TRUE, PR_TRUE, aResult);
+  return treeOuterGroup->IndexOfItem(root, content, PR_FALSE, PR_TRUE, aResult);
 }
 
 /* void getNumberOfVisibleRows (); */
