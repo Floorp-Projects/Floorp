@@ -48,6 +48,8 @@
 #include "prprf.h"
 #include "prmem.h"
 
+class nsIWebShell;
+
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
@@ -227,6 +229,13 @@ nsGenericXMLElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
   aNameSpaceID = mNameSpaceID;
   
   return NS_OK;
+}
+
+nsresult
+nsGenericXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+{
+  // Implement in subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult 

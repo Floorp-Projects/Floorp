@@ -26,7 +26,7 @@
 #include "nsIAtom.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMScriptObjectFactory.h"
-
+#include "nsIWebShell.h"
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsINameSpace.h"
@@ -35,6 +35,10 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsIDocShell.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIRefreshURI.h"
+
 
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -58,6 +62,9 @@ static nsIAtom* kHrefAtom;
 static nsIAtom* kShowAtom;
 static nsIAtom* kTypeAtom;
 static nsIAtom* kBaseAtom;
+static nsIAtom* kActuateAtom;
+static nsIAtom* kOnLoadAtom;
+static nsIAtom* kEmbedAtom;
 static PRUint32 kElementCount;
 
 nsXMLElement::nsXMLElement(nsIAtom *aTag)
@@ -73,6 +80,9 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
     kShowAtom = NS_NewAtom("show");
     kTypeAtom = NS_NewAtom("type");
     kBaseAtom = NS_NewAtom("base");
+    kActuateAtom = NS_NewAtom("actuate");
+    kOnLoadAtom = NS_NewAtom("onLoad");
+    kEmbedAtom = NS_NewAtom("embed");
   }
 }
  
@@ -84,6 +94,9 @@ nsXMLElement::~nsXMLElement()
     NS_RELEASE(kShowAtom);
     NS_RELEASE(kTypeAtom);
     NS_RELEASE(kBaseAtom);
+    NS_RELEASE(kActuateAtom);
+    NS_RELEASE(kOnLoadAtom);
+    NS_RELEASE(kEmbedAtom);
   }
 }
 
@@ -140,8 +153,6 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
     rv = content->GetAttribute(kNameSpaceID_XML,kBaseAtom,value);
     PRInt32 value_len;
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      // XXX Need to convert unicode to ???
-      // XXX Need to URL-escape string
       PRInt32 colon = value.FindChar(':',PR_FALSE);
       PRInt32 slash = value.FindChar('/',PR_FALSE);
       if (colon > 0 && !( slash >= 0 && slash < colon)) {
@@ -149,6 +160,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         // The complex looking if above is to make sure that we do not erroneously
         // think a value of "./this:that" would have a scheme of "./that"
 
+        // XXX URL escape?
         nsCAutoString str; str.AssignWithConversion(value);
       
         rv = MakeURI(str,nsnull,aURI);
@@ -156,6 +168,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
           break;
 
         if (!base.IsEmpty()) {
+          // XXX URL escape?
           str.AssignWithConversion(base.GetUnicode());
           nsXPIDLCString resolvedStr;
           rv = (*aURI)->Resolve(str, getter_Copies(resolvedStr));
@@ -193,8 +206,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         *aURI = docBase.get();    
         NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
       } else {
-        // XXX Need to convert unicode to ???
-        // XXX Need to URL-escape string
+        // XXX URL escape?
         nsCAutoString str; str.AssignWithConversion(base);
         rv = MakeURI(str,docBase,aURI);
       }
@@ -211,9 +223,6 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 			                     const nsString& aValue,
 			                     PRBool aNotify)
 {
-  // XXX It sucks that we have to do a strcmp for
-  // every attribute set. It might be a bit more expensive
-  // to create an atom.
   if ((kNameSpaceID_XLink == aNameSpaceID) &&
       (kTypeAtom == aName)) { 
     if (aValue.EqualsAtom(kSimpleAtom, PR_FALSE)) {
@@ -228,12 +237,136 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     } else {
       mIsLink = PR_FALSE;
     }
+
+    // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
 
-  // XXX If the XLink actuate attribute is present and its value is
-  //     onLoad, we should obey that too [XLink 3.6.2].
-
   return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+}
+
+static nsresult WebShellToPresContext(nsIWebShell *aShell, nsIPresContext **aPresContext)
+{
+  *aPresContext = nsnull;
+
+  nsresult rv;
+  nsCOMPtr<nsIDocShell> ds = do_QueryInterface(aShell,&rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return ds->GetPresContext(aPresContext);
+}
+
+
+static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsString& aURI, nsIURI **aAbsURI)
+{
+  // XXX URL escape?
+  nsCAutoString str; str.AssignWithConversion(aURI);
+
+  *aAbsURI = nsnull;
+
+  nsresult rv;
+  rv = MakeURI(str,aBaseURI,aAbsURI);
+  if (NS_SUCCEEDED(rv)) {
+    NS_WITH_SERVICE(nsIScriptSecurityManager,
+                    securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID,
+                    &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv= securityManager->CheckLoadURI(aBaseURI,
+                                         *aAbsURI,
+                                         PR_TRUE);
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    NS_IF_RELEASE(*aAbsURI);
+  }
+
+  return rv;
+}
+
+static inline nsresult SpecialAutoLoadReturn(nsresult aRv, nsLinkVerb aVerb)
+{
+  if (NS_SUCCEEDED(aRv)) {
+    switch(aVerb) {
+      case eLinkVerb_Embed:
+        aRv = NS_XML_AUTOLINK_EMBED;
+        break;
+      case eLinkVerb_New:
+        aRv = NS_XML_AUTOLINK_NEW;
+        break;
+      case eLinkVerb_Replace:
+        aRv = NS_XML_AUTOLINK_REPLACE;
+        break;
+      default:
+        aRv = NS_XML_AUTOLINK_UNDEFINED;
+        break;
+    }
+  }
+  return aRv;
+}
+
+NS_IMETHODIMP
+nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+{
+  NS_ABORT_IF_FALSE(aShell,"null ptr");
+  if (!aShell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+
+  if (mIsLink) {
+    do {
+      // actuate="onLoad" ?
+      nsAutoString value;
+      rv = GetAttribute(kNameSpaceID_XLink,kActuateAtom,value);
+      if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
+          value.EqualsAtom(kOnLoadAtom,PR_FALSE)) {
+
+        // show= ?
+        nsLinkVerb verb = eLinkVerb_Undefined;
+        rv = GetAttribute(kNameSpaceID_XLink, kShowAtom, value);
+        if (NS_FAILED(rv))
+          break;
+        // XXX Should probably do this using atoms 
+        if (value.EqualsWithConversion("new")) {
+          verb = eLinkVerb_New;
+        } else if (value.EqualsWithConversion("replace")) {
+          // We want to actually stop processing the current document now.
+          // We do this by returning the correct value so that the one
+          // that called us knows to stop processing.
+          verb = eLinkVerb_Replace;
+        } else if (value.EqualsWithConversion("embed")) {
+          // XXX TODO
+          break;
+        }
+
+        // base
+        nsCOMPtr<nsIURI> base;
+        rv = GetXMLBaseURI(getter_AddRefs(base));
+        if (NS_FAILED(rv))
+          break;
+
+        // href= ?
+        rv = GetAttribute(kNameSpaceID_XLink,kHrefAtom,value);
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE && !value.IsEmpty()) {
+          nsCOMPtr<nsIURI> uri;
+          rv = CheckLoadURI(base,value,getter_AddRefs(uri));
+          if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIPresContext> pc;
+            rv = WebShellToPresContext(aShell,getter_AddRefs(pc));
+            if (NS_SUCCEEDED(rv)) {
+              rv = mInner.TriggerLink(pc, verb, base, value, nsAutoString(), PR_TRUE);
+
+              return SpecialAutoLoadReturn(rv,verb);
+            }
+          }
+        } // href
+      }
+    } while (0);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <?xml-stylesheet href="xmlbase.css" type="text/css"?>
 <root xmlns:xlink="http://www.w3.org/1999/xlink">
 <title>Root: no xml:base</title>
@@ -58,5 +58,15 @@
   <title>Sect1: xml:base="/not"</title>
   <xlink:link xlink:type="simple" xlink:href="k.xml">k.xml</xlink:link>
   <p>Expected: file:///not/k.xml</p>
+</sect1>
+<sect1 xml:base="http://foobar.com/ä ö/">
+  <title>Sect1: xml:base="http://foobar.com/ä ö/"</title>
+  <xlink:link xlink:type="simple" xlink:href="l.xml">l.xml</xlink:link>
+  <p>Expected: http://foobar.com/%E4%20%F6/l.xml</p>
+</sect1>
+<sect1 xml:base="http://foobar.com/ /%20/">
+  <title>Sect1: xml:base="http://foobar.com/ /%20/"</title>
+  <xlink:link xlink:type="simple" xlink:href="m.xml">m.xml</xlink:link>
+  <p>Expected: http://foobar.com/%20/%20/m.xml</p>
 </sect1>
 </root>

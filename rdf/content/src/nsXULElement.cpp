@@ -131,6 +131,8 @@
 
 #include "nsISizeOfHandler.h"
 
+class nsIWebShell;
+
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
@@ -1687,6 +1689,12 @@ nsXULElement::SetNameSpaceID(PRInt32 aNameSpaceID)
 
     mSlots->mNameSpaceID = aNameSpaceID;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
+{
+  return NS_OK;
 }
 
 

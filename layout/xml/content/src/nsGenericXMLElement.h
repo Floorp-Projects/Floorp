@@ -30,6 +30,8 @@
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
 #include "nsINameSpace.h"
 
+class nsIWebShell;
+
 class nsGenericXMLElement : public nsGenericContainerElement {
 public:
   nsGenericXMLElement();
@@ -85,6 +87,7 @@ public:
   nsresult GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
   nsresult SetNameSpaceID(PRInt32 aNameSpaceId);
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
+  nsresult MaybeTriggerAutoLink(nsIWebShell *aShell);
 
   // nsIScriptObjectOwner
   nsresult GetScriptObject(nsIScriptContext* aContext, 

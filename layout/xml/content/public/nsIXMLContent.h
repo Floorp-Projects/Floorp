@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 
 class nsINameSpace;
+class nsIWebShell;
 
 #define NS_IXMLCONTENT_IID \
  { 0xa6cf90cb, 0x15b3, 0x11d2, \
@@ -46,7 +47,28 @@ public:
   NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const = 0;
 
   NS_IMETHOD SetNameSpaceID(PRInt32 aNSIdentifier) = 0;
+
+  /**
+   * Give this element a change to fire its links that should be fired
+   * automatically when loaded. If the element was an autoloading link
+   * and it was succesfully handled, we will return informal return value.
+   * If the return value is NS_XML_AUTOLINK_REPLACE, the caller should
+   * stop processing the current document because it will be replaced.
+   * We normally treat NS_XML_AUTOLINK_UNDEFINED the same way as replace
+   * links, so processing should usually stop after that as well.
+   */
+  NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell) = 0;
 };
+
+// Some return values for MaybeTriggerAutoLink
+#define NS_XML_AUTOLINK_EMBED \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 4)
+#define NS_XML_AUTOLINK_NEW \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 5)
+#define NS_XML_AUTOLINK_REPLACE \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 6)
+#define NS_XML_AUTOLINK_UNDEFINED \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 7)
 
 extern nsresult
 NS_NewXMLElement(nsIXMLContent** aResult, nsIAtom* aTag);

@@ -38,6 +38,7 @@ class nsIAtom;
 class nsIEventListenerManager;
 class nsIHTMLAttributes;
 class nsIURI;
+class nsIWebShell;
 
 class nsXMLElement : public nsIDOMElement,
 		     public nsIXMLContent,
@@ -206,6 +207,7 @@ public:
   NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceId) {
     return mInner.SetNameSpaceID(aNameSpaceId);
   }
+  NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);

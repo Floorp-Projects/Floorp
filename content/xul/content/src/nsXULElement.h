@@ -73,6 +73,7 @@ class nsRDFDOMNodeList;
 class nsString;
 class nsVoidArray;
 class nsXULAttributes;
+class nsIWebShell;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -436,6 +437,7 @@ public:
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
     NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
     NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
+    NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;
