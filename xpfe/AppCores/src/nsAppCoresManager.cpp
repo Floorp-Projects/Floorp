@@ -195,19 +195,31 @@ nsAppCoresManager::Startup()
   return result;
 }
 
-
+/*
 static PRBool CleanUp(void* aElement, void *aData)
 {
   nsIDOMBaseAppCore * appCore = (nsIDOMBaseAppCore *)aElement;
   NS_RELEASE(appCore);
   return PR_TRUE;
 }
+*/
 
 //--------------------------------------------------------
 NS_IMETHODIMP
 nsAppCoresManager::Shutdown()
 {
-  mList.EnumerateForwards(CleanUp, nsnull);
+  // this won't work, because elements are still in the list when they get
+  // released, and ~nsBaseAppCore tries again to remove them, with bad
+  // results.
+  //mList.EnumerateForwards(CleanUp, nsnull);
+  
+  void*  thisElement;
+  while ((thisElement = mList.ElementAt(0)) != nsnull)
+  {
+    nsIDOMBaseAppCore* thisAppCore = NS_REINTERPRET_CAST(nsIDOMBaseAppCore*, thisElement);
+    Remove(thisAppCore);
+  }
+  
   return NS_OK;
 }
 
@@ -245,7 +257,16 @@ nsAppCoresManager::Add(nsIDOMBaseAppCore* aAppCore)
 NS_IMETHODIMP    
 nsAppCoresManager::Remove(nsIDOMBaseAppCore* aAppCore)
 {
-  return (mList.RemoveElement(aAppCore)?NS_OK : NS_ERROR_FAILURE);
+  // this is fucked up. If you want addreffing, why not use
+  // an nsISupports array? if you don't, why did you addref
+  // in the Add()? So I'm gonna fix this to Release here.
+  if (mList.RemoveElement(aAppCore))
+  {
+    aAppCore->Release();
+    return NS_OK;
+  }
+  
+  return NS_ERROR_FAILURE;
 }
 
 

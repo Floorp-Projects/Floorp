@@ -59,7 +59,11 @@ nsBaseAppCore::~nsBaseAppCore()
         (nsISupports**)&appCoreManager);
     if (NS_FAILED(rv))
         return;
+        
+    // because the appcores manager list holds references, we should
+    // never still be in the list now. So this will always fail.
     appCoreManager->Remove((nsIDOMBaseAppCore *)this);
+    
     nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
 
     DecInstanceCount();  
