@@ -6482,6 +6482,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
         nsCOMPtr <nsIMsgDBHdr> msgDBHdr = do_QueryElementAt(messages, i, &rv);
         if (mDatabase && msgDBHdr)
         {
+          nsMsgLabelValue label;
           nsXPIDLCString junkScore, junkScoreOrigin;
           msgDBHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
           msgDBHdr->GetStringProperty("junkscoreorigin", getter_Copies(junkScoreOrigin));
@@ -6489,6 +6490,13 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
             mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscore", junkScore.get(), 0);
           if (!junkScoreOrigin.IsEmpty())
             mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscoreorigin", junkScore.get(), 0);
+          msgDBHdr->GetLabel(&label);
+          if (label != 0)
+          {
+            nsCAutoString labelStr;
+            labelStr.AppendInt(label);
+            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "label", labelStr.get(), 0);
+          }
         }
       }
    }
