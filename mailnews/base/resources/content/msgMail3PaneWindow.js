@@ -41,6 +41,8 @@ messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 function OnLoadMessenger()
 {
 
+    verifyAccounts();
+    
     loadStartPage();
 	messenger.SetWindow(window, statusFeedback);
 
@@ -48,6 +50,7 @@ function OnLoadMessenger()
 	InitPanes();
 
 	//Load StartFolder
+    var pref = Components.classes['component://netscape/preferences'].getService(Components.interfaces.nsIPref);
 	if(pref)
 	{
 		try
@@ -67,6 +70,33 @@ function OnUnloadMessenger()
 	dump("\nOnUnload from XUL\nClean up ...\n");
 	messenger.OnUnload();
 }
+
+function verifyAccounts() {
+    try {
+        var mail = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
+
+        var am = mail.accountManager;
+        var accounts = am.accounts;
+
+        // as long as we have some accounts, we're fine.
+        if (accounts.Count() < 0) return;
+
+        try {
+            am.UpgradePrefs();
+        }
+        catch (ex) {
+            // upgrade prefs failed, so open account wizard
+            MsgAccountWizard();
+        }
+        
+
+    }
+    catch (ex) {
+        dump("error verifying accounts " + ex + "\n");
+        return;
+    }
+}
+
 
 function loadStartPage() {
 
