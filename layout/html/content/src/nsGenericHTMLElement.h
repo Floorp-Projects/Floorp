@@ -516,6 +516,12 @@ public:
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
+  }                                                             \
+  if (_id.Equals(kIStyledContentIID)) {                         \
+    nsIStyledContent* tmp = _this;                              \
+    *_iptr = (void*) tmp;                                       \
+    NS_ADDREF_THIS();                                           \
+    return NS_OK;                                               \
   }
 
 /**
