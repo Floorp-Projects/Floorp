@@ -919,7 +919,8 @@ nsInstallFileOpItem::NativeFileOpFileDeleteComplete(nsIFile *aTarget)
       return nsInstall::IS_DIRECTORY;
   }
     
-  return nsInstall::DOES_NOT_EXIST;
+  // file went away on its own, not a problem
+  return nsInstall::SUCCESS;
 }
 
 PRInt32

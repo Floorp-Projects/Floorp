@@ -15,24 +15,28 @@
  *
  * The Initial Developer of the Original Code is Netscape Communications 
  * Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
- *     Sean Su <ssu@netscape.com>
+ *     Daniel Veditz <dveditz@netscape.com>
  */
 
-#ifndef __NSINSTALLBITWISE_H__
-#define __NSINSTALLBITWISE_H__
+#ifndef nsXPIProxy_h__
+#define nsXPIProxy_h__
 
-#include "NSReg.h"
-#include "nsFileSpec.h"
-#include "nsIFile.h"
+#include "nscore.h"
+#include "nsPIXPIProxy.h"
 
-PR_BEGIN_EXTERN_C
+class nsXPIProxy : public nsPIXPIProxy
+{
+    public:
 
-PRInt32 RegisterSharedFile(const char *file, PRBool bAlreadyExists);
+        nsXPIProxy();
+        virtual ~nsXPIProxy();
 
-PR_END_EXTERN_C
+        NS_DECL_ISUPPORTS;
+        NS_DECL_NSPIXPIPROXY;
+};
 
-#endif
+#endif /* nsXPIProxy_h__ */

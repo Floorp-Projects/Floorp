@@ -52,14 +52,15 @@
 #include "nsInstallFolder.h"
 #include "nsInstallVersion.h"
 #include "nsInstallFile.h"
-#include "nsInstallDelete.h"
 #include "nsInstallExecute.h"
 #include "nsInstallPatch.h"
 #include "nsInstallUninstall.h"
 #include "nsInstallResources.h"
+#include "nsXPIProxy.h"
 #include "nsRegisterItem.h"
 #include "nsNetUtil.h"
 
+#include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 #include "nsICommonDialogs.h"
 #include "nsIPrompt.h"
@@ -81,8 +82,17 @@
 #include "nsILocalFile.h"
 #include "nsIURL.h"
 
+#if defined(XP_UNIX) || defined(XP_BEOS)
+#include <sys/utsname.h>
+#endif /* XP_UNIX */
+
+#if defined(XP_PC) && !defined(XP_OS2)
+#include <windows.h>
+#endif
+
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 
@@ -226,18 +236,91 @@ nsInstall::RetrieveWinProfilePrototype()
 
 
 PRInt32    
-nsInstall::GetUserPackageName(nsString& aUserPackageName)
+nsInstall::GetInstallPlatform(nsCString& aPlatform)
 {
-  aUserPackageName = mUIName;
+  if (mInstallPlatform.IsEmpty())
+  {
+    // Duplicated from mozilla/netwerk/protocol/http/src/nsHTTPHandler.cpp
+    // which is not yet available in a wizard install
+
+    // Gather platform.
+#if defined(XP_OS2)
+    mInstallPlatform = "OS/2";
+#elif defined(XP_PC)
+    mInstallPlatform = "Windows";
+#elif defined(RHAPSODY)
+    mInstallPlatform = "Macintosh";
+#elif defined (XP_UNIX)
+    mInstallPlatform = "X11";
+#elif defined(XP_BEOS)
+    mInstallPlatform = "BeOS";
+#elif defined(XP_MAC)
+    mInstallPlatform = "Macintosh";
+#endif
+
+    mInstallPlatform += "; ";
+
+    // Gather OS/CPU.
+#if defined(XP_OS2)
+    ULONG os2ver = 0;
+    DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
+                    &os2ver, sizeof(os2ver));
+    if (os2ver == 11)
+        mInstallPlatform += "2.11";
+    else if (os2ver == 30)
+        mInstallPlatform += "Warp 3";
+    else if (os2ver == 40)
+        mInstallPlatform += "Warp 4";
+    else if (os2ver == 45)
+        mInstallPlatform += "Warp 4.5";
+    else
+        mInstallPlatform += "Warp ???";
+
+#elif defined(XP_PC)
+    OSVERSIONINFO info = { sizeof OSVERSIONINFO };
+    if (GetVersionEx(&info)) {
+        if ( info.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
+            if (info.dwMajorVersion      == 3) {
+                mInstallPlatform += "WinNT3.51";
+            }
+            else if (info.dwMajorVersion == 4) {
+                mInstallPlatform += "WinNT4.0";
+            }
+            else if (info.dwMajorVersion == 5) {
+                mInstallPlatform += "Windows NT 5.0";
+            }
+            else {
+                mInstallPlatform += "WinNT";
+            }
+        } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+            if (info.dwMinorVersion == 90)
+                mInstallPlatform += "Win 9x 4.90";
+            else if (info.dwMinorVersion > 0)
+                mInstallPlatform += "Win98";
+            else
+                mInstallPlatform += "Win95";
+        }
+    }
+#elif defined (XP_UNIX) || defined (XP_BEOS)
+    struct utsname name;
+    
+    int ret = uname(&name);
+    if (ret >= 0) {
+       mInstallPlatform +=  (char*)name.sysname;
+       mInstallPlatform += ' ';
+       mInstallPlatform += (char*)name.release;
+       mInstallPlatform += ' ';
+       mInstallPlatform += (char*)name.machine;
+    }
+#elif defined (XP_MAC)
+    mInstallPlatform += "PPC";
+#endif
+  }
+
+  aPlatform = mInstallPlatform;
   return NS_OK;
 }
 
-PRInt32    
-nsInstall::GetRegPackageName(nsString& aRegPackageName)
-{
-  aRegPackageName = mRegistryPackageName;
-  return NS_OK;
-}
 
 void
 nsInstall::InternalAbort(PRInt32 errcode)
@@ -385,6 +468,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                                 aFolder,
                                 newSubDir,
                                 aMode,
+                                (i == 0), // register the first one only
                                 &result);
         
         if (ie == nsnull)
@@ -530,6 +614,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                             aFolder,
                             tempTargetName, 
                             aMode, 
+                            PR_TRUE,
                             &errcode );
     
     if (ie == nsnull)
@@ -636,77 +721,6 @@ nsInstall::AddSubcomponent(const nsString& aJarSource,
                            aReturn);
 }
 
-PRInt32    
-nsInstall::DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn)
-{
-    PRInt32 result = SanityCheck();
-
-    if (result != nsInstall::SUCCESS)
-    {
-        *aReturn = SaveError( result );
-        return NS_OK;
-    }
-
-    nsString qualifiedRegName;
-
-    *aReturn = GetQualifiedRegName( aRegistryName, qualifiedRegName);
-    
-    if (*aReturn != SUCCESS)
-    {
-        return NS_OK;
-    }
-    
-    nsInstallDelete* id = new nsInstallDelete(this, qualifiedRegName, &result);
-    
-    if (id == nsnull)
-    {
-        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-        return NS_OK;
-    }
-
-    if (result == nsInstall::SUCCESS) 
-    {
-        result = ScheduleForInstall( id );
-    }
-    
-    *aReturn = SaveError(result);
-
-    return NS_OK;
-}
-
-PRInt32    
-nsInstall::DeleteFile(nsInstallFolder* aFolder, const nsString& aRelativeFileName, PRInt32* aReturn)
-{
-    PRInt32 result = SanityCheck();
-
-    if (result != nsInstall::SUCCESS)
-    {
-        *aReturn = SaveError( result );
-        return NS_OK;
-    }
-   
-    nsInstallDelete* id = new nsInstallDelete(this, aFolder, aRelativeFileName, &result);
-
-    if (id == nsnull)
-    {
-        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-        return NS_OK;
-    }
-
-    if (result == nsInstall::SUCCESS) 
-    {
-        result = ScheduleForInstall( id );
-    }
-        
-    if (result == nsInstall::DOES_NOT_EXIST) 
-    {
-        result = nsInstall::SUCCESS;
-    }
-
-    *aReturn = SaveError(result);
-
-    return NS_OK;
-}
 
 PRInt32    
 nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
@@ -1365,6 +1379,24 @@ nsInstall::RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path
         return SaveError(OUT_OF_MEMORY);
     else
         return SaveError(ScheduleForInstall( ri ));
+}
+
+
+PRInt32
+nsInstall::RefreshPlugins()
+{
+    nsresult rv;
+    NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsPIXPIProxy> tmp = do_QueryInterface(new nsXPIProxy());
+        nsCOMPtr<nsPIXPIProxy> proxy;
+        rv = pmgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsPIXPIProxy),
+                tmp, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs(proxy) );
+        if (NS_SUCCEEDED(rv))
+            rv = proxy->RefreshPlugins(GetParentDOMWindow());
+    }
+    return rv;
 }
 
 
@@ -2577,7 +2609,12 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
     rv = mJarFileData->Extract(nsAutoCString(aJarfile), extractHereSpec);
     if (NS_FAILED(rv)) 
     {
-        return EXTRACTION_FAILED;
+        switch (rv) {
+          case NS_ERROR_FILE_ACCESS_DENIED:         return ACCESS_DENIED;
+          case NS_ERROR_FILE_DISK_FULL:             return INSUFFICIENT_DISK_SPACE;
+          case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST: return DOES_NOT_EXIST;
+          default:                                  return EXTRACTION_FAILED;
+        }
     }
     
 #ifdef XP_MAC

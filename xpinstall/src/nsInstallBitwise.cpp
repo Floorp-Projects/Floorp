@@ -36,7 +36,7 @@
 
 #define KEY_SHARED_DLLS "Software\\Microsoft\\Windows\\CurrentVersion\\SharedDlls"
 
-PRInt32 RegisterSharedFile(char *file, PRBool bAlreadyExists)
+PRInt32 RegisterSharedFile(const char *file, PRBool bAlreadyExists)
 {
   PRInt32 rv = nsInstall::SUCCESS;
 

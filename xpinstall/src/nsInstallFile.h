@@ -63,6 +63,7 @@ class nsInstallFile : public nsInstallObject
                         nsInstallFolder *folderSpec,
                         const nsString& inPartialPath,
                         PRInt32 mode,
+                        PRBool  bRegister,
                         PRInt32 *error);
 
         virtual ~nsInstallFile();
@@ -87,18 +88,14 @@ class nsInstallFile : public nsInstallObject
 
         nsString*   mVersionRegistryName; /* full version path */
 
-        PRBool      mForceInstall;   /* whether install is forced */
         PRBool      mReplaceFile;    /* whether file exists */
-        PRBool      mChildFile;      /* whether file is a child */
-        PRBool      mUpgradeFile;    /* whether file is an upgrade */
-        PRBool      mSkipInstall;    /* if true don't install this file */
+        PRBool      mRegister;       /* if true register this file */
         PRUint32    mFolderCreateCount; /* int to keep count of the number of folders created for a given path */
         
         PRInt32    mMode;            /* an integer used like a bitfield to control *
                                       * how a file is installed or registered      */
 
         PRInt32     CompleteFileMove();
-        PRInt32     RegisterInVersionRegistry();
         void        CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath, PRInt32 *error);
     
 

@@ -1,4 +1,3 @@
-
 #!nmake
 #
 # The contents of this file are subject to the Netscape Public
@@ -46,7 +45,6 @@ LLIBS =                                \
         $(DIST)\lib\xpcom.lib          \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\zlib.lib           \
-        $(DIST)\lib\strres.lib         \
         $(LIBNSPR)                     \
         $(DIST)\lib\mozreg.lib         \
         $(NULL)
@@ -64,7 +62,6 @@ OBJS =                                          \
        .\$(OBJDIR)\nsSoftwareUpdate.obj         \
        .\$(OBJDIR)\nsSoftwareUpdateRun.obj      \
        .\$(OBJDIR)\nsInstallFile.obj            \
-       .\$(OBJDIR)\nsInstallDelete.obj          \
        .\$(OBJDIR)\nsInstallExecute.obj         \
        .\$(OBJDIR)\nsInstallPatch.obj           \
        .\$(OBJDIR)\nsInstallUninstall.obj       \
@@ -81,6 +78,7 @@ OBJS =                                          \
        .\$(OBJDIR)\nsJSWinProfile.obj           \
        .\$(OBJDIR)\nsWinProfileItem.obj         \
        .\$(OBJDIR)\nsInstallProgressDialog.obj  \
+       .\$(OBJDIR)\nsXPIProxy.obj               \
        .\$(OBJDIR)\nsXPITriggerInfo.obj         \
        .\$(OBJDIR)\nsXPInstallManager.obj       \
        .\$(OBJDIR)\nsInstallFileOpItem.obj      \
