@@ -240,7 +240,7 @@ NSPR_API(void) _MD_FREE_LOCK(struct _MDLock *lockp);
 
 #define _MD_LOCK(_lockp) _PR_LOCK((_lockp)->lock)
 #define _MD_UNLOCK(_lockp) _PR_UNLOCK((_lockp)->lock)
-#define _MD_TEST_AND_LOCK(_lockp) uscsetlock((_lockp)->lock, 1)
+#define _MD_TEST_AND_LOCK(_lockp) (uscsetlock((_lockp)->lock, 1) == 0)
 
 extern ulock_t _pr_heapLock;
 

@@ -881,7 +881,8 @@ NSPR_API(void) _PR_MD_FREE_LOCK(_MDLock *md);
 NSPR_API(void) _PR_MD_LOCK(_MDLock *md);
 #define    _PR_MD_LOCK _MD_LOCK
 
-NSPR_API(PRBool) _PR_MD_TEST_AND_LOCK(_MDLock *md);
+/* Return 0 on success, a nonzero value on failure. */
+NSPR_API(PRIntn) _PR_MD_TEST_AND_LOCK(_MDLock *md);
 #define    _PR_MD_TEST_AND_LOCK _MD_TEST_AND_LOCK
 
 NSPR_API(void) _PR_MD_UNLOCK(_MDLock *md);

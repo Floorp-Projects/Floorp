@@ -349,11 +349,11 @@ void _PR_MD_LOCK(_MDLock *lock)
     DosRequestMutexSem(lock->mutex, SEM_INDEFINITE_WAIT);
 }
 
-PRBool
+PRIntn
 _PR_MD_TEST_AND_LOCK(_MDLock *lock)
 {
     DosRequestMutexSem(lock->mutex, SEM_INDEFINITE_WAIT);
-    return PR_SUCCESS;
+    return 0;
 }
 
 void
