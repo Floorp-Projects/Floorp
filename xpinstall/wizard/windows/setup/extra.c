@@ -2706,8 +2706,8 @@ HRESULT DecriptString(LPSTR szOutputStr, LPSTR szInputStr)
 
     szPrepend[dwPrepend] = '\0';
 
-    /* if Variable is "JAR PATH", do special processing */
-    if(lstrcmpi(szVariable, "JAR PATH") == 0)
+    /* if Variable is "XPI PATH", do special processing */
+    if(lstrcmpi(szVariable, "XPI PATH") == 0)
     {
       lstrcpy(szBuf, sgProduct.szAlternateArchiveSearchPath);
       RemoveBackSlash(szBuf);
