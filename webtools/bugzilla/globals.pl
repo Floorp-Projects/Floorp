@@ -1584,7 +1584,7 @@ use Template;
 
 # Create the global template object that processes templates and specify
 # configuration parameters that apply to all templates processed in this script.
-$::template = Template->new(
+$::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
     INCLUDE_PATH => "template/custom:template/default" ,
@@ -1595,6 +1595,9 @@ $::template = Template->new(
     # of directives to maintain white space (i.e. [%+ DIRECTIVE %]).
     PRE_CHOMP => 1 ,
     TRIM => 1 , 
+
+    COMPILE_EXT => ".ttc",
+    COMPILE_DIR => "data/templates",
 
     # Functions for processing text within templates in various ways.
     FILTERS =>
@@ -1614,7 +1617,8 @@ $::template = Template->new(
         }
       } ,
   }
-);
+) || DisplayError("Template creation failed: " . Template->error())
+  && exit;
 
 # Use the Toolkit Template's Stash module to add utility pseudo-methods
 # to template variables.
