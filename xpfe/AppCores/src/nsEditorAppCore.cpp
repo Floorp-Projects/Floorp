@@ -26,7 +26,7 @@
 #include "nsIComponentManager.h"
 #include "nsAppCores.h"
 #include "nsAppCoresCIDs.h"
-#include "nsAppCoresManager.h"
+#include "nsIDOMAppCoresManager.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
@@ -94,14 +94,14 @@ static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 
 
 /* Define Class IDs */
-static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,         NS_EDITORAPPCORE_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 
 static NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIEditorAppCoreIID,        NS_IDOMEDITORAPPCORE_IID);
+static NS_DEFINE_IID(kIEditorAppCoreIID,         NS_IDOMEDITORAPPCORE_IID);
 
 static NS_DEFINE_IID(kIDOMDocumentIID,           nsIDOMDocument::GetIID());
 static NS_DEFINE_IID(kIDocumentIID,              nsIDocument::GetIID());
@@ -216,12 +216,18 @@ nsEditorAppCore::Init(const nsString& aId)
    
   nsBaseAppCore::Init(aId);
 
-  // XXX This is lame and needs to be changed
-	nsAppCoresManager* sdm = new nsAppCoresManager();
-	sdm->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
-	delete sdm;
+  // register object into Service Manager
+  static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
+  static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
-	return NS_OK;
+  nsIDOMAppCoresManager * appCoreManager;
+  nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID,
+                                             kIDOMAppCoresManagerIID,
+                                             (nsISupports**)&appCoreManager);
+  if (NS_OK == rv) {
+	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
+  }
+	return rv;
 }
 
 nsIPresShell*
