@@ -1934,21 +1934,29 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
         m_start->m_datetime = icalproperty_get_dtstart( prop );
+        bool datevalue=m_start->m_datetime.is_date;
+        m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
+        const char *tzid=nsnull;
+        if( m_start->m_datetime.is_utc && !datevalue )
+            tzid="/Mozilla.org/BasicTimezones/GMT";
         m_start->m_datetime.is_utc = false;
-        if( m_start->m_datetime.is_date == true ) {
+        if( datevalue ) {
             m_allday = true;
             m_start->SetHour( 0 );
             m_start->SetMinute( 0 );
             m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
         }
         icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_TZID_PARAMETER );
-        const char *tzid=nsnull;
         if( tmppar )
             tzid = icalparameter_get_tzid( tmppar );
         if( tzid ) {
-            PRTime timeinms;
-            m_start->GetTime( &timeinms );
-            m_start->SetTimeInTimezone( timeinms, tzid );
+            if( !datevalue ) {
+                PRTime timeinms;
+                m_start->GetTime( &timeinms );
+                m_start->SetTimeInTimezone( timeinms, tzid );
+            } else {
+                m_start->SetTzID( tzid );
+            }
         }
     } else {
         m_start->m_datetime = icaltime_null_time();
@@ -1967,20 +1975,27 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
         if ( prop != 0) {
             m_end->m_datetime = icalproperty_get_dtend( prop );
+            bool datevalue=m_end->m_datetime.is_date;
+            m_end->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
+            const char *tzid=nsnull;
+            if( m_end->m_datetime.is_utc  && !datevalue )
+                tzid="/Mozilla.org/BasicTimezones/GMT";
             m_end->m_datetime.is_utc = false;
-            if( m_end->m_datetime.is_date == true ) {
+            if( datevalue ) {
                 m_end->SetHour( 0 );
                 m_end->SetMinute( 0 );
-                m_end->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
             }
             icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_TZID_PARAMETER );
-            const char *tzid=nsnull;
             if( tmppar )
                 tzid = icalparameter_get_tzid( tmppar );
             if( tzid ) {
-                PRTime timeinms;
-                m_end->GetTime( &timeinms );
-                m_end->SetTimeInTimezone( timeinms, tzid );
+                if( !datevalue ) {
+                    PRTime timeinms;
+                    m_end->GetTime( &timeinms );
+                    m_end->SetTimeInTimezone( timeinms, tzid );
+                } else {
+                    m_end->SetTzID( tzid );
+                }
             }
         } else if( !icaltime_is_null_time( m_start->m_datetime ) ) {
             m_end->m_datetime = m_start->m_datetime;
@@ -2447,54 +2462,84 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     char *starttzid=nsnull;
     if( m_start && !icaltime_is_null_time( m_start->m_datetime ) ) {
         m_start->GetTzID( &starttzid );
-        if( m_allday && !starttzid ) {
+        if( m_allday ) {
             m_start->SetHour( 0 );
             m_start->SetMinute( 0 );
             m_start->m_datetime.is_date = true; //This will reflect the event being an all-day event
-        }
-        prop = icalproperty_new_dtstart( m_start->m_datetime );
-        if( starttzid ) {
-            icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (starttzid);
-            icaltimetype convertedtime = m_start->m_datetime;
-            icaltimezone_convert_time ( &convertedtime, currenttimezone, timezone );
-            if( m_allday ) {
-                convertedtime.is_date = true; //This will reflect the event being an all-day event
+            prop = icalproperty_new_dtstart( m_start->m_datetime );
+            if( starttzid ) {
+                icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (starttzid);
+                icalparameter *tmppar = icalparameter_new_tzid( starttzid );
+                icalproperty_add_parameter( prop, tmppar );
+                icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
             }
-            icalproperty_set_dtstart( prop, convertedtime );
-            icalparameter *tmppar = icalparameter_new_tzid( starttzid );
-            icalproperty_add_parameter( prop, tmppar );
-            icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
+            m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
+        } else {
+            if( starttzid ) {
+                icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (starttzid);
+                icaltimetype convertedtime = m_start->m_datetime;
+                icaltimezone_convert_time ( &convertedtime, currenttimezone, timezone );
+                if( strcmp( starttzid, "/Mozilla.org/BasicTimezones/GMT" )==0 ) {
+                    convertedtime.is_utc = true;
+                    prop = icalproperty_new_dtstart( convertedtime );
+                } else {
+                    prop = icalproperty_new_dtstart( convertedtime );
+                    icalparameter *tmppar = icalparameter_new_tzid( starttzid );
+                    icalproperty_add_parameter( prop, tmppar );
+                    icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
+                }
+            } else 
+                prop = icalproperty_new_dtstart( m_start->m_datetime );
         }
         icalcomponent_add_property( vevent, prop );
-        m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
     }
 
     //enddate
     if( m_end && !icaltime_is_null_time( m_end->m_datetime ) ) {
         char *tzid=nsnull;
         m_end->GetTzID( &tzid );
-        if( m_allday && !tzid && m_end->CompareDate( m_start )==0 ) {
-            m_end->SetHour( 23 );
-            m_end->SetMinute( 59 );
-        }
-        prop = icalproperty_new_dtend( m_end->m_datetime );
-        if( tzid ) {
-            icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (tzid);
-            icaltimetype convertedtime = m_end->m_datetime;
-            icaltimezone_convert_time ( &convertedtime, currenttimezone, timezone );
-            if( m_allday ) {
-                convertedtime.hour=23;
-                convertedtime.minute=59;
+        if( m_allday ) {
+            if( m_end->CompareDate( m_start )==0 ) {
+                m_end->m_datetime = m_start->m_datetime;
+                icaltime_adjust( &(m_end->m_datetime), 1, 0, 0, 0 );
+            } else {
+                m_end->SetHour( 0 );
+                m_end->SetMinute( 0 );
             }
-            icalproperty_set_dtend( prop, convertedtime );
-            icalparameter *tmppar = icalparameter_new_tzid( tzid );
-            icalproperty_add_parameter( prop, tmppar );
-            if( !starttzid || strcmp( starttzid, tzid ) != 0 ) 
-                icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
-            nsMemory::Free( tzid );
+            m_end->m_datetime.is_date = true;
+            prop = icalproperty_new_dtend( m_end->m_datetime );
+            if( tzid ) {
+                icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (tzid);
+                icalparameter *tmppar = icalparameter_new_tzid( tzid );
+                icalproperty_add_parameter( prop, tmppar );
+                if( !starttzid || strcmp( starttzid, tzid ) != 0 ) 
+                    icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
+                nsMemory::Free( tzid );
+            }
+            icalcomponent_add_property( vevent, prop );
+            m_end->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
+        } else {
+            if( tzid ) {
+                icaltimezone *timezone = icaltimezone_get_builtin_timezone_from_tzid (tzid);
+                icaltimetype convertedtime = m_end->m_datetime;
+                icaltimezone_convert_time ( &convertedtime, currenttimezone, timezone );
+                if( strcmp( tzid, "/Mozilla.org/BasicTimezones/GMT" )==0 ) {
+                    convertedtime.is_utc = true;
+                    prop = icalproperty_new_dtend( convertedtime );
+                } else {
+                    prop = icalproperty_new_dtend( convertedtime );
+                    icalparameter *tmppar = icalparameter_new_tzid( tzid );
+                    icalproperty_add_parameter( prop, tmppar );
+                    if( !starttzid || strcmp( starttzid, tzid ) != 0 ) 
+                        icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
+                }
+                nsMemory::Free( tzid );
+            } else 
+                prop = icalproperty_new_dtend( m_end->m_datetime );
+            icalcomponent_add_property( vevent, prop );
         }
-        icalcomponent_add_property( vevent, prop );
     }
+
     if( starttzid )
         nsMemory::Free( starttzid );
 

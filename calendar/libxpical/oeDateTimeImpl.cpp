@@ -240,6 +240,21 @@ NS_IMETHODIMP oeDateTimeImpl::GetTzID(char **aRetVal)
     return NS_OK;
 }
 
+void oeDateTimeImpl::SetTzID(const char *aNewVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "SetTzID( %s )\n", aNewVal );
+#endif
+    if( m_tzid )
+        nsMemory::Free( m_tzid );
+    
+    if( aNewVal )
+        m_tzid= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
+    else
+        m_tzid = nsnull;
+    return NS_OK;
+}
+
 int oeDateTimeImpl::CompareDate( oeDateTimeImpl *anotherdt ) {
     if( m_datetime.year == anotherdt->m_datetime.year &&
         m_datetime.month == anotherdt->m_datetime.month &&

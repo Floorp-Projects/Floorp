@@ -75,6 +75,11 @@ RRULE:FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=1,2,3,4,5,6,7;BYDAY=SU\n\
 END:DAYLIGHT\n\
 END:VTIMEZONE\n";
 
+    char *zulutimezonestr = "BEGIN:VTIMEZONE\n\
+TZID:/Mozilla.org/BasicTimezones/GMT\n\
+LOCATION:GMT\n\
+END:VTIMEZONE\n";
+
     char timezonestr[1024];
 
     if( builtin_timezones )
@@ -84,6 +89,10 @@ END:VTIMEZONE\n";
 
     icalcomponent *vcalendar = icalparser_parse_string(timezonecalstr);
     icalcomponent *vtimezone;
+
+    //first add the UTC timezone
+    vtimezone = icalcomponent_new_from_string( zulutimezonestr );
+    icalcomponent_add_component( vcalendar, vtimezone );
 
     //Components should be sorted by location
     //+00:00 to +12:00
