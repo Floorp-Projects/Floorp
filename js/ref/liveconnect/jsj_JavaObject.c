@@ -174,14 +174,14 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
     jobject java_obj;
     JNIEnv *jEnv;
 
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return;
-
     java_wrapper = JS_GetPrivate(cx, obj);
     if (!java_wrapper)
         return;
     java_obj = java_wrapper->java_obj;
+
+    jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return;
 
     if (java_obj) {
         remove_java_obj_reflection_from_hashtable(java_obj, jEnv);

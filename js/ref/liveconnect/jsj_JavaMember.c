@@ -64,13 +64,14 @@ JavaMember_finalize(JSContext *cx, JSObject *obj)
     JavaMethodOrFieldValue *member_val;
     JNIEnv *jEnv;
 
+    member_val = JS_GetPrivate(cx, obj);
+    if (!member_val)
+        return;
+
     jsj_MapJSContextToJSJThread(cx, &jEnv);
     if (!jEnv)
         return;
 
-    member_val = JS_GetPrivate(cx, obj);
-    if (!member_val)
-        return;
     JS_RemoveRoot(cx, &member_val->method_val);
     if (JSVAL_IS_GCTHING(member_val->method_val))
         JS_RemoveRoot(cx, &member_val->method_val);
