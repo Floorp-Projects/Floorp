@@ -60,12 +60,12 @@ public:
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-  static nsresult ConsumeData(nsIInputStream* in,
-                              void* closure,
-                              const char* fromRawSegment,
-                              PRUint32 toOffset,
-                              PRUint32 count,
-                              PRUint32 *writeCount);
+  static NS_METHOD ConsumeData(nsIInputStream* in,
+                               void* closure,
+                               const char* fromRawSegment,
+                               PRUint32 toOffset,
+                               PRUint32 count,
+                               PRUint32 *writeCount);
 
   nsCOMPtr<nsIDownloadObserver>     mObserver;
   nsCOMPtr<nsISupports>             mContext;  // the observer's context

@@ -139,7 +139,7 @@ nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   return mObserver->OnDownloadComplete(this, mContext, aStatus, file);
 }
 
-nsresult 
+NS_METHOD
 nsDownloader::ConsumeData(nsIInputStream* in,
                           void* closure,
                           const char* fromRawSegment,
@@ -159,5 +159,5 @@ nsDownloader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
   // This function simply disposes of the data as it's read in. 
   // We assume it's already been cached and that's what we're interested in.
   PRUint32 lenRead;  
-  return inStr->ReadSegments((nsWriteSegmentFun)nsDownloader::ConsumeData, nsnull, count, &lenRead);
+  return inStr->ReadSegments(nsDownloader::ConsumeData, nsnull, count, &lenRead);
 }
