@@ -602,7 +602,8 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::AccDoAction(PRUint8 index)
 
     nsIFrame *selectFrame = nsnull;
     presShell->GetPrimaryFrameFor(selectContent, &selectFrame);
-    nsCOMPtr<nsIComboboxControlFrame> comboBoxFrame(do_QueryInterface(selectFrame));
+    nsIComboboxControlFrame *comboBoxFrame = nsnull;
+    selectFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboBoxFrame);
     if (comboBoxFrame) {
       nsIFrame *listFrame = nsnull;
       comboBoxFrame->GetDropDown(&listFrame);
@@ -610,7 +611,8 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::AccDoAction(PRUint8 index)
       comboBoxFrame->IsDroppedDown(&isDroppedDown);
       if (isDroppedDown && listFrame) {
         // use this list control frame to roll up the list
-        nsCOMPtr<nsIListControlFrame> listControlFrame(do_QueryInterface(listFrame));
+        nsIListControlFrame *listControlFrame = nsnull;
+        listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&listControlFrame);
         if (listControlFrame) {
           PRInt32 newIndex = 0;
           option->GetIndex(&newIndex);
@@ -645,6 +647,8 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
 
   nsIFrame *frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
+  if (!frame)
+    return NS_ERROR_FAILURE;
 
   PRInt32 focusedOptionIndex = 0;
 
@@ -656,7 +660,8 @@ nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIDOMNode *aListNod
   nsresult rv = selectElement->GetOptions(getter_AddRefs(options));
   
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
+    nsIListControlFrame *listFrame = nsnull;
+    frame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&listFrame);
     if (listFrame) {
       // Get what's focused in listbox by asking frame for "selected item". 
       // Can't use dom interface for this, because it will always return the first selected item
@@ -840,7 +845,9 @@ NS_IMETHODIMP nsHTMLComboboxAccessible::GetAccState(PRUint32 *_retval)
 
   // we are open or closed
   PRBool isOpen = PR_FALSE;
-  nsCOMPtr<nsIComboboxControlFrame> comboFrame(do_QueryInterface(GetBoundsFrame()));
+  nsIFrame *frame = GetBoundsFrame();
+  nsIComboboxControlFrame *comboFrame = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
   if (comboFrame)
     comboFrame->IsDroppedDown(&isOpen);
 

@@ -132,6 +132,9 @@ nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsI
 
   if (mState.siblingIndex < 0)
     mState.siblingList = nsnull;
+  NS_ASSERTION(mState.siblingList || mState.siblingIndex < 0,
+    "Accessible tree walker initialization error, "
+    "can't have index into null sibling list");
 
   if (aWalkAnonContent) {
     nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
@@ -142,6 +145,7 @@ nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsI
     }
   }
   MOZ_COUNT_CTOR(nsAccessibleTreeWalker);
+  mInitialState = mState;  // deep copy
 }
 
 nsAccessibleTreeWalker::~nsAccessibleTreeWalker()
@@ -205,6 +209,8 @@ void nsAccessibleTreeWalker::GetSiblings(nsIDOMNode *aOneOfTheSiblings)
   if (NS_SUCCEEDED(GetFullTreeParentNode(aOneOfTheSiblings, getter_AddRefs(node)))) {
     GetKids(node);
     if (mState.siblingList) {      // Init index by seeing how far we are into list
+      if (mState.domNode == mInitialState.domNode)
+        mInitialState = mState; // deep copy, we'll use sibling info for caching
       while (NS_SUCCEEDED(mState.siblingList->Item(mState.siblingIndex, getter_AddRefs(node))) && node != mState.domNode) {
         NS_ASSERTION(node, "Something is terribly wrong - the child is not in it's parent's children!");
         ++mState.siblingIndex;
@@ -595,8 +601,12 @@ NS_IMETHODIMP nsAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling)
   if (NS_SUCCEEDED(walker.GetNextSibling())) {
     *aAccNextSibling = walker.mState.accessible;
     NS_ADDREF(*aAccNextSibling);
-    mSiblingList = walker.mState.siblingList;
-    (*aAccNextSibling)->CacheOptimizations(mParent, walker.mState.siblingIndex, mSiblingList);
+    // Use last walker state to cache data on next accessible
+    (*aAccNextSibling)->CacheOptimizations(mParent, walker.mState.siblingIndex, 
+                                           walker.mState.siblingList);
+    // Use first walker state to cache data on this accessible
+    CacheOptimizations(mParent, walker.mInitialState.siblingIndex,
+                       walker.mInitialState.siblingList);
   }
 
   return NS_OK;  
@@ -612,8 +622,12 @@ NS_IMETHODIMP nsAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPreviousS
   if (NS_SUCCEEDED(walker.GetPreviousSibling())) {
     *aAccPreviousSibling = walker.mState.accessible;
     NS_ADDREF(*aAccPreviousSibling);
-    mSiblingList = walker.mState.siblingList;
-    (*aAccPreviousSibling)->CacheOptimizations(mParent, walker.mState.siblingIndex, mSiblingList);
+    // Use last walker state to cache data on prev accessible
+    (*aAccPreviousSibling)->CacheOptimizations(mParent, walker.mState.siblingIndex, 
+                                           walker.mState.siblingList);
+    // Use first walker state to cache data on this accessible
+    CacheOptimizations(mParent, walker.mInitialState.siblingIndex,
+                       walker.mInitialState.siblingList);
   }
 
   return NS_OK;  
