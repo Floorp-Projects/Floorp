@@ -205,11 +205,13 @@ function merge_arrays(a, b, b_is_select) {
     return ret;
 }
 
-[%# Returns an array of indexes.
+[%# Returns an array of indexes or values from a select form control.
   #    - control: select control from which to find selections
-  #    - findall: boolean, dumping all options if all or just the selected 
-  #      indexes. %]
-function getSelection(control, findall) {
+  #    - findall: boolean, store all options when true or just the selected 
+  #      indexes
+  #    - want_values: boolean; we store values when true and indexes when
+  #      false %]
+function getSelection(control, findall, want_values) {
     var ret = new Array();
 
     if ((!findall) && (control.selectedIndex == -1)) {
@@ -218,7 +220,7 @@ function getSelection(control, findall) {
 
     for (var i=0; i<control.length; i++) {
         if (findall || control.options[i].selected) {
-            ret[ret.length] = i;
+            ret[ret.length] = want_values ? control.options[i].value : i;
         }
     }
     return ret;
@@ -226,10 +228,16 @@ function getSelection(control, findall) {
 
 [%# Selects items in control that have index defined in sel
   #    - control: SELECT control to be restored
-  #    - sel: array of indexes in select form control %]
-function restoreSelection(control, sel) {
-    for (var s in sel) {
-        control.options[sel[s]].selected = true;
+  #    - selnames: array of indexes in select form control %]
+function restoreSelection(control, selnames) {
+    [%# right. this sucks. but I see no way to avoid going through the
+      # list and comparing to the contents of the control. %]
+    for (var j=0; j < selnames.length; j++) {
+        for (var i=0; i < control.options.length; i++) {
+            if (control.options[i].value == selnames[j]) {
+                control.options[i].selected = true;
+            }
+        }
     }
 }
 
@@ -276,11 +284,9 @@ function selectProduct(f) {
     var sel = Array();
 
     [%# if nothing selected, pick all %]
-    if (f.product.selectedIndex == -1) {
-        sel = getSelection(f.product, true);
-    } else {
-        sel = getSelection(f.product, false);
-
+    var findall = f.product.selectedIndex == -1;
+    sel = getSelection(f.product, findall, false);
+    if (!findall) {
         [%# save sel for the next invocation of selectProduct() %]
         var tmp = sel;
     
@@ -292,15 +298,23 @@ function selectProduct(f) {
             sel = fake_diff_array(sel, last_sel);
             merging = true;
         }
-
         last_sel = tmp;
     }
-
-    [%# do the actual fill/update %]
-    updateSelect(cpts, sel, f.component, merging);
-    updateSelect(vers, sel, f.version, merging);
+    [%# save original options selected %]
+    var saved_cpts = getSelection(f.component, false, true);
+    var saved_vers = getSelection(f.version, false, true);
     [% IF Param('usetargetmilestone') %]
-        updateSelect(tms, sel, f.target_milestone, merging);
+    var saved_tms = getSelection(f.target_milestone, false, true);
+    [% END %]
+
+    [%# do the actual fill/update, reselect originally selected options %]
+    updateSelect(cpts, sel, f.component, merging);
+    restoreSelection(f.component, saved_cpts);
+    updateSelect(vers, sel, f.version, merging);
+    restoreSelection(f.version, saved_vers);
+    [% IF Param('usetargetmilestone') %]
+    updateSelect(tms, sel, f.target_milestone, merging);
+    restoreSelection(f.target_milestone, saved_tms);
     [% END %]
 }
 
