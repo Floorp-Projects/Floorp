@@ -78,6 +78,8 @@ en-US.jar:
 *+       locale/en-US/global/brand.properties               (locale/brand.properties)
 +        locale/en-US/global/build.dtd                      (locale/build.dtd)
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
++        locale/en-US/global/commonDialog.dtd               (locale/commonDialog.dtd)
++        locale/en-US/global/commonDialogs.properties       (locale/commonDialogs.properties)
 +        locale/en-US/global/customizeToolbar.dtd           (locale/customizeToolbar.dtd)
 +        locale/en-US/global/customizeToolbar.properties    (locale/customizeToolbar.properties)
 +        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
