@@ -440,7 +440,10 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						w = theApp.findWidget(parms);
 
 					if (w)
-						theApp.GenerateList(pcmd, w, p2);
+					{
+						CString p2path = replaceVars(p2,NULL);
+						theApp.GenerateList(pcmd, w, p2path);
+					}
 				}
 				else if (strcmp(pcmd, "BrowseFile") == 0)
 				{

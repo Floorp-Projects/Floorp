@@ -572,7 +572,7 @@ BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName)
 		return FALSE;
 
 	CString tmpFunction = tmpWidget->action.function;
-	CString params = CString(tmpWidget->action.parameters);
+	CString params = theInterpreter->replaceVars(tmpWidget->action.parameters,NULL);
 	theApp.GenerateList(tmpFunction, tmpWidget, params);	
 					
 	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
