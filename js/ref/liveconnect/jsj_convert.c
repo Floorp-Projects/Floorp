@@ -312,7 +312,7 @@ static jlong jsint_to_jlong(jsint ivalue)
     return SInt64ToWide(val);
 }
 
-static jdouble jlong_to_jdouble(lvalue)
+static jdouble jlong_to_jdouble(jlong lvalue)
 {
     SInt64 val = WideToSInt64(lvalue);
     return SInt64ToLongDouble(val);
