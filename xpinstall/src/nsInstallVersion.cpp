@@ -272,7 +272,7 @@ nsInstallVersion::ToString(nsString& aReturn)
     char *result=NULL;
     result = PR_sprintf_append(result, "%d.%d.%d.%d", major, minor, release, build);
     
-    aReturn.Assign(result);
+    aReturn.AssignWithConversion(result);
 
     PR_FREEIF(result);
 

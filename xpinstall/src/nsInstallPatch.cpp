@@ -89,7 +89,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
         *error = nsInstall::NO_SUCH_COMPONENT;
         return;
     }
-	nsString folderSpec(tempTargetFile);
+	nsString folderSpec; folderSpec.AssignWithConversion(tempTargetFile);
 
     mPatchFile      =   nsnull;
     mTargetFile     =   nsnull;
@@ -124,7 +124,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 {
     MOZ_COUNT_CTOR(nsInstallPatch);
 
-    if ((inInstall == nsnull) || (inVRName.Equals("")) || (inJarLocation.Equals(""))) 
+    if ((inInstall == nsnull) || (inVRName.IsEmpty()) || (inJarLocation.IsEmpty())) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -157,7 +157,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mVersionInfo->Init(inVInfo);
     
     
-    if(! inPartialPath.Equals(""))
+    if(! inPartialPath.IsEmpty())
         *mTargetFile += inPartialPath;
 }
 
@@ -343,7 +343,7 @@ char* nsInstallPatch::toString()
 
     if (mTargetFile != nsnull)
     {
-        rsrcVal = mInstall->GetResourcedString("Patch");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Patch"));
 
         if (rsrcVal)
         {
@@ -417,8 +417,8 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
         {
             // make an unique tmp file  (FILENAME-src.EXT)
             *tempSrcFile = sourceFile;
-            nsString tmpName = "-src";
-		    nsString tmpFileName = sourceFile.GetLeafName();
+            nsString tmpName; tmpName.AssignWithConversion("-src");
+		    nsString tmpFileName; tmpFileName.AssignWithConversion(sourceFile.GetLeafName());
 
             PRInt32 i;
 		    if ((i = tmpFileName.RFindChar('.')) > 0)
@@ -471,8 +471,8 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 			goto cleanup;
 
 		// make a unique file at the same location of our source file  (FILENAME-ptch.EXT)
-        nsString patchFileName = "-ptch";
-		nsString newFileName = sourceFile.GetLeafName();
+        nsString patchFileName; patchFileName.AssignWithConversion("-ptch");
+		nsString newFileName; newFileName.AssignWithConversion(sourceFile.GetLeafName());
 
         PRInt32 index;
 		if ((index = newFileName.RFindChar('.')) > 0)

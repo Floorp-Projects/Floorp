@@ -287,7 +287,7 @@ InstallVersionInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   else 
   {
-      b0 = "0.0.0.0";
+      b0.AssignWithConversion("0.0.0.0");
   }
     
   if (NS_OK != nativeThis->Init(b0)) 
@@ -403,7 +403,7 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
         if(JS_FALSE == ConvertJSValToObj(getter_AddRefs(versionObj),
                                          kIInstallVersionIID,
-                                         "InstallVersion",
+                                         NS_ConvertASCIItoUCS2("InstallVersion"),
                                          cx,
                                          argv[0]))
         {

@@ -686,7 +686,7 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
         mFinalizing = PR_TRUE;
         if (mStringBundle)
         {
-            nsString rsrcName = "FinishingInstallMsg";
+            nsString rsrcName; rsrcName.AssignWithConversion("FinishingInstallMsg");
             const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
             PRUnichar* ucRsrcVal = nsnull;
             nsresult rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);

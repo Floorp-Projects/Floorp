@@ -111,7 +111,7 @@ nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar*
 //    char* time;
 //    GetTime(&time);
 
-    nsCString name(UIPackageName);
+    nsCString name; name.AssignWithConversion(UIPackageName);
     nsCString uline;
     uline.SetCapacity(name.Length());
     for ( unsigned int i=0; i < name.Length(); ++i)

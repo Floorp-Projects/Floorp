@@ -451,7 +451,7 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 
     if ( aURL.EqualsIgnoreCase("file:/", 6) )
     {       
-        tempFileString.Assign( nsNSPRPath(nsFileURL(aURL)) );
+        tempFileString.AssignWithConversion( NS_STATIC_CAST(const char*, nsNSPRPath(nsFileURL(aURL))) );
     }
     else
     {
@@ -482,7 +482,7 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
 
         tempFile.MakeUnique();
 
-        tempFileString.Assign( nsNSPRPath( nsFilePath(tempFile) ) );
+        tempFileString.AssignWithConversion( NS_STATIC_CAST(const char*, nsNSPRPath( nsFilePath(tempFile) )) );
     }
 }
 

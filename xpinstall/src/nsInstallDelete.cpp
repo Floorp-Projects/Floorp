@@ -55,7 +55,6 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
     
     mDeleteStatus = DELETE_FILE;
     mFinalFile      = nsnull;
-    mRegistryName   = "";
     
     nsFileSpec* tmp = folderSpec->GetFileSpec();
     if (!tmp)
@@ -158,7 +157,7 @@ char* nsInstallDelete::toString()
     if (mDeleteStatus == DELETE_COMPONENT)
     {
         char* temp = mRegistryName.ToNewCString();
-        rsrcVal = mInstall->GetResourcedString("DeleteComponent");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("DeleteComponent"));
 
         if (rsrcVal)
         {
@@ -172,7 +171,7 @@ char* nsInstallDelete::toString()
     {
         if (mFinalFile)
         {
-            rsrcVal = mInstall->GetResourcedString("DeleteComponent");
+            rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("DeleteComponent"));
 
             if (rsrcVal)
             {

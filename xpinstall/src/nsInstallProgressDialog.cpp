@@ -217,7 +217,7 @@ nsInstallProgressDialog::SetActionText(const PRUnichar * aActionText)
         PRInt32 offset = (len/2) - ((len - maxChars)/2);
         PRInt32 count  = (len - maxChars);
         theMessage.Cut(offset, count);  
-        theMessage.Insert(nsString("..."), offset);
+        theMessage.Insert(NS_ConvertASCIItoUCS2("..."), offset);
     }
 
     return setDlgAttribute( "dialog.currentAction", "value", theMessage );
@@ -238,7 +238,7 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
         previousMax = aMax;
 
         PR_snprintf( buf, sizeof buf, "%lu", aMax );
-        rv = setDlgAttribute( "dialog.progress", "max", buf );
+        rv = setDlgAttribute( "dialog.progress", "max", NS_ConvertASCIItoUCS2(buf) );
     }
     
     //I use this modeFlag business so I don't have to send
@@ -247,9 +247,9 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
     {
         modeFlag = mode;
         if ( modeFlag == 'n' )
-            rv = setDlgAttribute( "dialog.progress", "mode", "normal");
+            rv = setDlgAttribute( "dialog.progress", "mode", NS_ConvertASCIItoUCS2("normal"));
         else
-            rv = setDlgAttribute( "dialog.progress", "mode", "undetermined");
+            rv = setDlgAttribute( "dialog.progress", "mode", NS_ConvertASCIItoUCS2("undetermined"));
     }
 
     if ( NS_SUCCEEDED(rv))
@@ -259,7 +259,7 @@ nsInstallProgressDialog::SetProgress(PRInt32 aValue, PRInt32 aMax, char mode)
         else
             PR_snprintf( buf, sizeof buf, "%lu", 0 );
 
-        rv = setDlgAttribute( "dialog.progress", "value", buf );
+        rv = setDlgAttribute( "dialog.progress", "value", NS_ConvertASCIItoUCS2(buf) );
     }
     return rv;
 }
@@ -270,7 +270,7 @@ nsInstallProgressDialog::StartInstallPhase()
     nsresult rv = NS_OK;
 
     // don't care if this fails
-    setDlgAttribute("dialog.cancel", "disabled", nsString("true"));
+    setDlgAttribute("dialog.cancel", "disabled", NS_ConvertASCIItoUCS2("true"));
 
     return rv;
 }
@@ -303,10 +303,10 @@ nsresult nsInstallProgressDialog::setDlgAttribute( const char *id,
     if ( mDocument ) {
         // Find specified element.
         nsCOMPtr<nsIDOMElement> elem;
-        rv = mDocument->GetElementById( id, getter_AddRefs( elem ) );
+        rv = mDocument->GetElementById( NS_ConvertASCIItoUCS2(id), getter_AddRefs( elem ) );
         if ( elem ) {
             // Set the text attribute.
-            rv = elem->SetAttribute( name, value );
+            rv = elem->SetAttribute( NS_ConvertASCIItoUCS2(name), value );
             if ( NS_SUCCEEDED( rv ) ) {
             } else {
                  DEBUG_PRINTF( PR_STDOUT, "%s %d: SetAttribute failed, rv=0x%X\n",
@@ -343,10 +343,10 @@ nsresult nsInstallProgressDialog::getDlgAttribute(  const char *id,
     if ( mDocument ) {
         // Find specified element.
         nsCOMPtr<nsIDOMElement> elem;
-        rv = mDocument->GetElementById( id, getter_AddRefs( elem ) );
+        rv = mDocument->GetElementById( NS_ConvertASCIItoUCS2(id), getter_AddRefs( elem ) );
         if ( elem ) {
             // Set the text attribute.
-            rv = elem->GetAttribute( name, value );
+            rv = elem->GetAttribute( NS_ConvertASCIItoUCS2(name), value );
             if ( NS_SUCCEEDED( rv ) ) {
             } else {
                  DEBUG_PRINTF( PR_STDOUT, "%s %d: GetAttribute failed, rv=0x%X\n",

@@ -157,7 +157,7 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  nativeRetNSStr = nativeRet.GetNativePathCString();
+  nativeRetNSStr.AssignWithConversion(nativeRet.GetNativePathCString());
   *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRetNSStr.GetUnicode(), nativeRetNSStr.Length()));
 
   return JS_TRUE;
@@ -474,7 +474,7 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     ConvertJSValToStr(b1, cx, argv[1]);
   }
   else
-    b1 = "";
+    b1.SetLength(0);
 
   if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
@@ -1152,7 +1152,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     
     b0 += b1;
     b2 += b1;
-    b2 += " alias";   // XXX use GetResourcedString(id)
+    b2.AppendWithConversion(" alias");   // XXX use GetResourcedString(id)
     
     if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b2, &nativeRet))
     {

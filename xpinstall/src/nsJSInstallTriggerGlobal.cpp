@@ -541,7 +541,7 @@ InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *
         return JS_FALSE;
   }
   
-  if(version.Equals(""))
+  if(version.IsEmpty())
       *rval = JSVAL_NULL;
     else
       ConvertStrToJSVal(version, cx, rval);
