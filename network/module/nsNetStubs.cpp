@@ -27,7 +27,6 @@
 #include "net.h"
 
 extern "C" {
-#include "xp_reg.h"
 #include "secnav.h"
 #include "preenc.h"
 };
@@ -1206,28 +1205,6 @@ void
 LM_SendOnHelp(MWContext *context)
 {
     MOZ_FUNCTION_STUB;
-}
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/xp/xp_reg.c
- *---------------------------------------------------------------------------
- */
-
-
-PUBLIC int 
-XP_RegExpMatch(char *str, char *xp, Bool case_insensitive) 
-{
-    MOZ_FUNCTION_STUB;
-    return 1;
-}
-
-
-PUBLIC int 
-XP_RegExpValid(char *exp) 
-{
-    MOZ_FUNCTION_STUB;
-    return INVALID_SXP;
 }
 
 /*

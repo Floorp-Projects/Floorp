@@ -1,4 +1,4 @@
-#! gmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,23 +15,22 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#  
-#
+DEPTH		= ../..
 
-DEPTH	= ..
+MODULE		= network
+LIBRARY_NAME	= netutil
 
-DIRS	= \
-	cache		\
-	client		\
-	cnvts		\
-	mimetype	\
-	main		\
-	protocol	\
-	util
+CSRCS		= \
+	mkreg.c	\
+	$(NULL)
 
-ifdef MODULAR_NETLIB
-DIRS	+= module
-endif
+EXPORTS=mkreg.h
+
+include $(DEPTH)/config/config.mk
+
+REQUIRES	= network
 
 include $(DEPTH)/config/rules.mk
+
+
 

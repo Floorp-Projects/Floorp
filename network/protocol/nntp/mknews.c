@@ -34,7 +34,6 @@
 #include "mime.h"
 #include "shist.h"
 #include "glhist.h"
-#include "xp_reg.h"
 #include "mknews.h"
 #include "mktcp.h"
 #include "mkparse.h"

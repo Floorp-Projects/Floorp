@@ -38,7 +38,6 @@
 #include "gui.h"
 #include "msgcom.h"
 
-#include "xp_reg.h"
 #if defined(XP_UNIX) || defined(XP_WIN32)
 #include "prnetdb.h"
 #else

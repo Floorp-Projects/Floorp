@@ -20,23 +20,63 @@ IGNORE_MANIFEST=1
 
 #------------------------------------------------------------------------
 #
-# Makefile to build the network stuff
+# Makefile to build the Network LIB
 #
 #------------------------------------------------------------------------
 
-DEPTH=..
 
-DIRS= \
-        util \
-	main \
-	mimetype \
-	cache \
-	protocol \
-	cnvts \
-	client \
-!ifdef MODULAR_NETLIB
-	module \
+#
+# Make sure we have MOZILLA_CLIENT defined so we get the
+#   proper JS includes
+#
+LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
+
+!ifdef BUILD_DEBUG_GC
+LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 !endif
+
+LLIBS=  \
 	$(NULL)
 
+MISCDEP=$(LLIBS)
+
+OBJS=   \
+	.\$(OBJDIR)\mkreg.obj	\
+	$(NULL)
+
+
+CSRCS =	\
+	mkreg.c	\
+	$(NULL)
+
+MODULE=network
+DEPTH=..\..
+
+LIBRARY_NAME=netutil
+
+EXTRA_LIBS=
+
+REQUIRES= network
+EXPORTS= \
+	 mkreg.h \
+	$(NULL);
+
+C_OBJS = \
+	$(NULL)
+
+
+# use LINCS on win32 for now since REQUIRES seems to be broken
+#!if "$(MOZ_BITS)" != "16"
+LINCS= \
+	-I$(PUBLIC)\network \
+	$(NULL)
+#!endif
+
 include <$(DEPTH)\config\rules.mak> 
+
+libs:: $(LIBRARY)
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+symbols::
+	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
+	@echo "LIBRARY          is $(LIBRARY)"
