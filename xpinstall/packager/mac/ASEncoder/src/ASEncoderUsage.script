@@ -1,0 +1,83 @@
+(* 
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/ 
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License 
+ * for the specific language governing rights and limitations under the 
+ * License. 
+ * 
+ * The Original Code is Mozilla Communicator client code, released March
+ * 31, 1998. 
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation. Portions created by Netscape are Copyright (C) 1999
+ * Netscape Communications Corporation. All Rights Reserved.  
+ * 
+ * Contributors:
+ *     Samir Gehani <sgehani@netscape.com>
+ *)
+
+--
+-- Simple demo script of ASEncoder's usage from a a script component/client
+-- 
+-- Commands supported by ASEncoder:
+--
+----------------------------------------
+--        Required Suite:
+----------------------------------------
+-- quit
+--  Description: Quit ASEncoder (you can open it using activate)
+--  Params: No params
+--  Return value: No retval
+--
+----------------------------------------
+--        ASEncoder Suite:
+----------------------------------------
+-- encode	
+--  Description: Encode a file in AppleSingle format in place
+--  Params: A file system specification
+--  Return value: A success boolean (false also returned if file didn't have a res fork)
+--			
+-- decode	
+--  Description: Decode an AppleSingle file in place
+--  Params: A file system specification
+--  Return value: A success boolean (false also returned if file wasn't in AS format)
+--
+
+on run
+	set kTargetFile to "HD:genJS:ASEncoder"
+	tell application "ASEncoder"
+		activate
+		
+		-- pre-condition:  kTargetFile is set to a local un-encoded (containing a res fork) file
+		
+		-- encode should succeed
+		set bSuccess to encode file kTargetFile
+		SUCCESS_MSG(kTargetFile, "encode", bSuccess)
+		-- encode should fail
+		set bSuccess to encode file kTargetFile
+		SUCCESS_MSG(kTargetFile, "encode", bSuccess)
+		
+		-- decode should succeed
+		set bSuccess to decode file kTargetFile
+		SUCCESS_MSG(kTargetFile, "decode", bSuccess)
+		--decode should fail
+		set bSuccess to decode file kTargetFile
+		SUCCESS_MSG(kTargetFile, "decode", bSuccess)
+		
+		-- post-condition: kTargetFile is a decoded (containing a res fork) file as it originally was
+		
+		quit
+	end tell
+end run
+
+on SUCCESS_MSG(target, method, retval)
+	
+	display dialog "ASEncoder's " & method & " command 
+					of file " & target & "
+					returned success value: " & retval
+	
+end SUCCESS_MSG
