@@ -908,8 +908,6 @@ NS_IMETHODIMP nsPref::CopyUnicharPref(const char *pref, PRUnichar ** return_buf)
 NS_IMETHODIMP
 nsPref::GetLocalizedUnicharPref(const char *pref, PRUnichar **return_buf)
 {
-    nsresult rv;
-
 #if defined(DEBUG_tao_)
     printf("\n --> nsPref::GetLocalizedUnicharPref(%s) --", pref);
 #endif
@@ -919,9 +917,18 @@ nsPref::GetLocalizedUnicharPref(const char *pref, PRUnichar **return_buf)
 
     // user has not set the pref, so the default value
     // contains a URL to a .properties file
+    return GetDefaultLocalizedUnicharPref(pref, return_buf);
+}
+
+NS_IMETHODIMP
+nsPref::GetDefaultLocalizedUnicharPref(const char *pref, PRUnichar **return_buf)
+{
+    nsresult rv;
+
+    // the default value contains a URL to a .properties file
     
     nsXPIDLCString propertyFileURL;
-    rv = CopyCharPref(pref, getter_Copies(propertyFileURL));
+    rv = CopyDefaultCharPref(pref, getter_Copies(propertyFileURL));
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIStringBundleService> bundleService =
