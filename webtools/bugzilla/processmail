@@ -121,7 +121,16 @@ sub DescDependencies {
             push(@list, FetchOneColumn());
         }
         if (@list) {
-            $result .= "$title: " . join(',', @list) . "\n";
+            my @verbose;
+            foreach my $i (@list) {
+                SendSQL("select bug_status, resolution from bugs where bug_id = $i");
+                my ($bug_status, $resolution) = (FetchSQLData());
+                if ($resolution ne "") {
+                    $resolution = "/$resolution";
+                }
+                push(@verbose, $i . "[$bug_status$resolution]");
+            }
+            $result .= "$title: " . join(', ', @verbose) . "\n";
         }
         my $tmp = $me;
         $me = $target;

@@ -431,6 +431,8 @@ The changes made were:
                 push(@oldlist, FetchOneColumn());
             }
             my @newlist = sort {$a <=> $b} @{$deps{$target}};
+            @dependencychanged{@oldlist} = 1;
+            @dependencychanged{@newlist} = 1;
 
             while (0 < @oldlist || 0 < @newlist) {
                 if (@oldlist == 0 || (@newlist > 0 &&
@@ -459,11 +461,7 @@ The changes made were:
                     SendSQL("insert into dependencies ($me, $target) values ($id, $i)");
                 }
                 foreach my $k (@keys) {
-                    if (LogDependencyActivity($k, $snapshot{$k}, $me,
-                                              $target)) {
-                        $dependencychanged{$k} = 1;
-                    }
-
+                    LogDependencyActivity($k, $snapshot{$k}, $me, $target);
                 }
                 LogDependencyActivity($id, $oldsnap, $target, $me);
             }
@@ -505,7 +503,7 @@ The changes made were:
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
     foreach my $k (keys(%dependencychanged)) {
-        print "<TABLE BORDER=1><TD><H2>Dependency changed for bug $k</H2>\n";
+        print "<TABLE BORDER=1><TD><H2>Checking for dependency changes on bug $k</H2>\n";
         system("./processmail $k $::FORM{'who'}");
         print "<TD><A HREF=\"show_bug.cgi?id=$k\">Go To BUG# $k</A></TABLE>\n";
     }
