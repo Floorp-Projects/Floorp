@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
+
+#ifndef nsIDOMBrowserAppCore_h__
+#define nsIDOMBrowserAppCore_h__
+
+#include "nsISupports.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
+#include "nsIDOMBaseAppCore.h"
+
+class nsIDOMWindow;
+
+#define NS_IDOMBROWSERAPPCORE_IID \
+ { 0xb0ffb697, 0xbab4, 0x11d2, \
+    {0x96, 0xc4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}} 
+
+class nsIDOMBrowserAppCore : public nsIDOMBaseAppCore {
+public:
+  static const nsIID& IID() { static nsIID iid = NS_IDOMBROWSERAPPCORE_IID; return iid; }
+
+  NS_IMETHOD    Back()=0;
+
+  NS_IMETHOD    Forward()=0;
+
+  NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
+
+  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
+
+  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
+
+  NS_IMETHOD    DisableCallback(const nsString& aScript)=0;
+
+  NS_IMETHOD    EnableCallback(const nsString& aScript)=0;
+};
+
+
+#define NS_DECL_IDOMBROWSERAPPCORE   \
+  NS_IMETHOD    Back();  \
+  NS_IMETHOD    Forward();  \
+  NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
+  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
+  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
+  NS_IMETHOD    DisableCallback(const nsString& aScript);  \
+  NS_IMETHOD    EnableCallback(const nsString& aScript);  \
+
+
+
+#define NS_FORWARD_IDOMBROWSERAPPCORE(_to)  \
+  NS_IMETHOD    Back() { return _to##Back(); }  \
+  NS_IMETHOD    Forward() { return _to##Forward(); }  \
+  NS_IMETHOD    LoadUrl(const nsString& aUrl) { return _to##LoadUrl(aUrl); }  \
+  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
+  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \
+  NS_IMETHOD    DisableCallback(const nsString& aScript) { return _to##DisableCallback(aScript); }  \
+  NS_IMETHOD    EnableCallback(const nsString& aScript) { return _to##EnableCallback(aScript); }  \
+
+
+extern nsresult NS_InitBrowserAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
+
+extern "C" NS_DOM nsresult NS_NewScriptBrowserAppCore(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
+
+#endif // nsIDOMBrowserAppCore_h__

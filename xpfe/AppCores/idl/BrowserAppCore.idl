@@ -1,0 +1,19 @@
+interface BrowserAppCore : BaseAppCore
+{
+/* IID: { 0xb0ffb697, 0xbab4, 0x11d2, \
+    {0x96, 0xc4, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56}} */
+	
+	void BrowserAppCore();
+	
+	void back();
+	void forward();
+	void loadUrl(in wstring url);
+
+	void setToolbarWindow(in Window win);
+	void setContentWindow(in Window win);
+
+	void disableCallback(in wstring script);
+	void enableCallback(in wstring script);
+
+};
+
