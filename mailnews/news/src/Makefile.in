@@ -24,7 +24,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE=nntp
 LIBRARY_NAME=nntp
-# NO_SHARED_LIB=1
 
 EXPORTS = \
 	nsNNTPProtocol.h	\
@@ -32,8 +31,9 @@ EXPORTS = \
 	nsNNTPArticleSet.h	\
 	nsNNTPNewsgroupList.h	\
 	nsNNTPNewsgroup.h	\
-	nsNNTPNewsgroupPost.h \
+	nsNNTPNewsgroupPost.h   \
 	nntpCore.h		\
+	nsNntpService.h		\
 	$(NULL)
 
 CPPSRCS = \
@@ -44,6 +44,7 @@ CPPSRCS = \
 	nsNNTPProtocol.cpp \
 	nsNntpUrl.cpp	\
 	nsNNTPHost.cpp \
+	nsNntpService.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\
