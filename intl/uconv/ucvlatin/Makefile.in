@@ -129,6 +129,7 @@ CPPSRCS		= \
 		nsUnicodeToCP866.cpp \
 		nsUnicodeToKOI8R.cpp \
 		nsUnicodeToKOI8U.cpp \
+		nsUnicodeToLangBoxArabic8.cpp \
 		nsUnicodeToMacCE.cpp \
 		nsUnicodeToMacGreek.cpp \
 		nsUnicodeToMacTurkish.cpp \

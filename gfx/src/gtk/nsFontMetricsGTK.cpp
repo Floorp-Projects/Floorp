@@ -236,6 +236,9 @@ static nsFontCharSetInfo ISO88595 =
 static nsFontCharSetInfo ISO88596 =
   { "ISO-8859-6", SingleByteConvert, 0,
       TT_OS2_CPR1_ARABIC, TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708 };
+static nsFontCharSetInfo ISO885968x =
+  { "x-iso-8859-6-8-x", SingleByteConvert, 0,
+      TT_OS2_CPR1_ARABIC, TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708 };
 static nsFontCharSetInfo ISO88597 =
   { "ISO-8859-7", SingleByteConvert, 0,
     TT_OS2_CPR1_GREEK, TT_OS2_CPR2_GREEK | TT_OS2_CPR2_GREEK_437G };
@@ -497,6 +500,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-4",          &FLG_WESTERN, &ISO88594      },
   { "iso8859-5",          &FLG_RUSSIAN, &ISO88595      },
   { "iso8859-6",          &FLG_ARABIC,  &ISO88596      },
+  { "iso8859-6.8x",       &FLG_ARABIC,  &ISO885968x    },
   { "iso8859-7",          &FLG_GREEK,   &ISO88597      },
   { "iso8859-8",          &FLG_HEBREW,  &ISO88598      },
   { "iso8859-9",          &FLG_TURKISH, &ISO88599      },
