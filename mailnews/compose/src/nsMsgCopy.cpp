@@ -157,7 +157,7 @@ CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
 // to listen for message copy completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsMsgCopy, NS_GET_IID(nsMsgCopy));
+NS_IMPL_ISUPPORTS(nsMsgCopy, NS_GET_IID(nsIUrlListener))
 
 nsMsgCopy::nsMsgCopy()
 {
@@ -184,6 +184,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 {
   nsCOMPtr<nsIMsgFolder>  dstFolder;
   PRBool                  isDraft = PR_FALSE;
+  PRBool                  waitForUrl = PR_FALSE;
   nsresult			rv;
 
   if (!aMsgSendObj)
@@ -198,7 +199,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   //
   if (aMode == nsIMsgSend::nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
-    rv = GetUnsentMessagesFolder(aUserIdentity, getter_AddRefs(dstFolder));
+    rv = GetUnsentMessagesFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
     if (!dstFolder || NS_FAILED(rv)) {
         return NS_MSG_UNABLE_TO_SEND_LATER;
@@ -206,7 +207,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   }
   else if (aMode == nsIMsgSend::nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
-    rv = GetDraftsFolder(aUserIdentity, getter_AddRefs(dstFolder));
+    rv = GetDraftsFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_TRUE;
     if (!dstFolder || NS_FAILED(rv)) {
 	return NS_MSG_UNABLE_TO_SAVE_DRAFT;
@@ -214,7 +215,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   }
   else if (aMode == nsIMsgSend::nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
-    rv = GetTemplatesFolder(aUserIdentity, getter_AddRefs(dstFolder));
+    rv = GetTemplatesFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
     if (!dstFolder || NS_FAILED(rv)) {
 	return NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
@@ -222,7 +223,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   }
   else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
   {
-    rv = GetSentFolder(aUserIdentity, getter_AddRefs(dstFolder));
+    rv = GetSentFolder(aUserIdentity, getter_AddRefs(dstFolder), &waitForUrl);
     isDraft = PR_FALSE;
     if (!dstFolder || NS_FAILED(rv)) {
 	return NS_MSG_COULDNT_OPEN_FCC_FOLDER;
@@ -230,7 +231,19 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   }
 
   mMode = aMode;
-  rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, nsnull, aMsgSendObj);
+  if (!waitForUrl)
+  {
+    rv = DoCopy(aFileSpec, dstFolder, aMsgToReplace, isDraft, nsnull, aMsgSendObj);
+  }
+  else
+  {
+    mFileSpec = aFileSpec;
+    mDstFolder = dstFolder;
+    mMsgToReplace = aMsgToReplace;
+    mIsDraft = isDraft;
+    mMsgSendObj = aMsgSendObj;
+    // cache info needed for DoCopy and call DoCopy when OnStopUrl is called.
+  }
   return rv;
 }
 
@@ -305,30 +318,103 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	return rv;
 }
 
-nsresult
-nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity, nsIMsgFolder **folder)
+  // nsIUrlListener methods
+
+NS_IMETHODIMP
+nsMsgCopy::OnStartRunningUrl(nsIURI * aUrl)
 {
-  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgQueueForLater, mSavePref, folder);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgCopy::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
+{
+  nsresult rv = aExitCode;
+  if (NS_SUCCEEDED(aExitCode))
+  {
+    rv = DoCopy(mFileSpec, mDstFolder, mMsgToReplace, mIsDraft, nsnull, mMsgSendObj);
+  }
+  return rv;
+}
+
+nsresult
+nsMsgCopy::GetUnsentMessagesFolder(nsIMsgIdentity   *userIdentity, nsIMsgFolder **folder, PRBool *waitForUrl)
+{
+  nsresult ret = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgQueueForLater, mSavePref, folder);
+  CreateIfMissing(folder, waitForUrl);
+  return ret;
 }
  
 nsresult 
-nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
+nsMsgCopy::GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder, PRBool *waitForUrl)
 {
-  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgSaveAsDraft, mSavePref, folder);
+  nsresult ret = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgSaveAsDraft, mSavePref, folder);
+  CreateIfMissing(folder, waitForUrl);
+  return ret;
 }
 
 nsresult 
-nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
+nsMsgCopy::GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder, PRBool *waitForUrl)
 {
-  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgSaveAsTemplate, mSavePref, folder);
+  nsresult ret = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgSaveAsTemplate, mSavePref, folder);
+  CreateIfMissing(folder, waitForUrl);
+  return ret;
 }
 
 nsresult 
-nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder)
+nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder, PRBool *waitForUrl)
 {
-  return LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgDeliverNow, mSavePref, folder);
+  nsresult ret = LocateMessageFolder(userIdentity, nsIMsgSend::nsMsgDeliverNow, mSavePref, folder);
+  CreateIfMissing(folder, waitForUrl);
+  return ret;
 }
 
+nsresult 
+nsMsgCopy::CreateIfMissing(nsIMsgFolder **folder, PRBool *waitForUrl)
+{
+  nsresult ret = NS_OK;
+  if (folder && *folder)
+  {
+    nsCOMPtr <nsIFolder> parent;
+    (*folder)->GetParent(getter_AddRefs(parent));
+    if (!parent)
+    {
+      nsCOMPtr <nsIFileSpec> folderPath;
+      // for local folders, path is to the berkeley mailbox. 
+      // for imap folders, path needs to have .msf appended to the name
+      (*folder)->GetPath(getter_AddRefs(folderPath));
+      if (folderPath)
+      {
+        PRBool isImapFolder = !nsCRT::strncasecmp(mSavePref, "imap:", 5);
+        if (isImapFolder)
+        {
+	        nsXPIDLCString leafName;
+        
+          folderPath->GetLeafName(getter_Copies(leafName));
+
+	        nsCString fullLeafName(leafName);
+
+	        // Append .msf (msg summary file) this is what windows will want.
+	        // Mac and Unix can decide for themselves.
+
+	        fullLeafName.Append(".msf");				// message summary file
+	        folderPath->SetLeafName(fullLeafName);
+        }
+        PRBool exists;
+        folderPath->Exists(&exists);
+        if (!exists)
+        {
+          (*folder)->CreateStorageIfMissing(this);
+          if (isImapFolder)
+            *waitForUrl = PR_TRUE;
+ 
+          ret = NS_OK;
+        }
+      }
+    }
+  }
+  return ret;
+}
 ////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions for MsgFolders
 ////////////////////////////////////////////////////////////////////////////////////

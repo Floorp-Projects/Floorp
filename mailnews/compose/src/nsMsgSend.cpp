@@ -3289,7 +3289,7 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
   // This is one per copy so make sure we clean this up first.
   if (mCopyObj)
   {
-    delete mCopyObj;
+    NS_RELEASE(mCopyObj);
     mCopyObj = nsnull;
   }
 
@@ -4118,7 +4118,7 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   mCopyObj = new nsMsgCopy();
   if (!mCopyObj)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+  NS_ADDREF(mCopyObj);
   //
   // Actually, we need to pick up the proper folder from the prefs and not
   // default to the default "Flagged" folder choices

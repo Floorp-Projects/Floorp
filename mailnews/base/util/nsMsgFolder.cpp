@@ -1038,6 +1038,15 @@ NS_IMETHODIMP nsMsgFolder::DeleteSubFolders(nsISupportsArray *folders,
 
 }
 
+NS_IMETHODIMP nsMsgFolder::CreateStorageIfMissing(nsIUrlListener* /* urlListener */)
+{
+  NS_ASSERTION(PR_FALSE, "needs to be overridden");
+	nsresult status = NS_OK;
+
+  return status;
+}
+
+
 NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage)
 {
 	nsresult status = NS_OK;

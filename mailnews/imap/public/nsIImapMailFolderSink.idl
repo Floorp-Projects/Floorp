@@ -53,6 +53,7 @@ interface nsIImapMailFolderSink : nsISupports {
     attribute boolean folderNeedsACLListed;
     attribute boolean folderNeedsSubscribing;
     attribute boolean folderNeedsAdded;
+	attribute boolean folderVerifiedOnline;
     string GetOnlineDelimiter();
     // Tell mail master about the newly selected mailbox
     void UpdateImapMailboxInfo(in nsIImapProtocol aProtocol,

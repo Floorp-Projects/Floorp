@@ -205,6 +205,16 @@ interface nsIImapService : nsISupports
                            in wstring mailboxName,
                            in nsIUrlListener aUrlListener);
 
+  // this method will first check if the folder exists but is
+  // not subscribed to, in which case it will subscribe to the folder.
+  // otherwise, it will try to create the folder. It will try to do this
+  // with one url.
+  nsIURI ensureFolderExists(in nsIEventQueue aClientEventQueue,
+							in nsIMsgFolder aParentFolder,
+							in wstring aLeafName,
+							in nsIUrlListener aUrlListener);
+
+
   void buildSubscribeDatasource(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow);
   void buildSubscribeDatasourceWithPath(in nsIImapIncomingServer aServer, in nsIMsgWindow aMsgWindow, in string folderPath);
 };

@@ -138,6 +138,12 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
 	void createSubfolder(in wstring folderName);
   [noscript] nsIMsgFolder addSubfolder(in nsAutoString folderName);
+	/* this method ensures the storage for the folder exists.
+		For local folders, it creates the berkeley mailbox if missing.
+		For imap folders, it subscribes to the folder if it exists,
+		or creates it if it doesn't exist
+	*/
+	void createStorageIfMissing(in nsIUrlListener urlListener);
   
   void compact();
   void emptyTrash(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);

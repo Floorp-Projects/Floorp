@@ -53,6 +53,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsISubscribableServer.h"
+#include "nsIMessage.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -469,8 +470,50 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
         imapUrl->SetFetchPartsOnDemand(PR_TRUE);
         msgurl->SetAddToMemoryCache(PR_FALSE);
       }
+      PRBool msgLoadingFromCache = PR_FALSE;
       rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
                         aURL, aDisplayConsumer, msgKey, PR_TRUE);
+      if (NS_SUCCEEDED(rv))
+      {
+        imapUrl->GetMsgLoadingFromCache(&msgLoadingFromCache);
+        // we're reading this msg from the cache - mark it read on the server.
+        if (msgLoadingFromCache)
+        {
+          nsCOMPtr <nsIMsgDatabase> database;
+          if (NS_SUCCEEDED(folder->GetMsgDatabase(nsnull, getter_AddRefs(database))) && database)
+          {
+            PRBool msgRead = PR_TRUE;
+            database->IsRead(key, &msgRead);
+            if (!msgRead)
+            {
+              nsCOMPtr<nsISupportsArray> messages;
+              rv = NS_NewISupportsArray(getter_AddRefs(messages));
+              if (NS_FAILED(rv)) 
+                return rv;
+              NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
+              if (NS_FAILED(rv)) return rv;
+              nsCOMPtr<nsIRDFResource> msgResource;
+              nsCOMPtr<nsIMessage> message;
+              rv = rdfService->GetResource(aMessageURI,
+                                           getter_AddRefs(msgResource));
+              if(NS_SUCCEEDED(rv))
+              {
+                rv = msgResource->QueryInterface(NS_GET_IID(nsIMessage),
+                                                 getter_AddRefs(message));
+                if (NS_SUCCEEDED(rv) && message)
+                {
+                  nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
+                  if (msgSupport)
+                  {
+                    messages->AppendElement(msgSupport);
+                    folder->MarkMessagesRead(messages, PR_TRUE);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
 	}
 	return rv;
@@ -1971,7 +2014,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
                             nsIUrlListener* urlListener, nsIURI** url)
 {
     NS_ASSERTION(eventQueue && parent && newFolderName && *newFolderName,
-                 "Oops ... [RenameLeaf] null pointers");
+                 "Oops ... [CreateFolder] null pointers");
     if (!eventQueue || !parent || !newFolderName || !*newFolderName)
         return NS_ERROR_NULL_POINTER;
     
@@ -2012,6 +2055,55 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
     } // if (NS_SUCCEEDED(rv) && imapUrl)
     return rv;
 }
+
+NS_IMETHODIMP
+nsImapService::EnsureFolderExists(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
+                            const PRUnichar* newFolderName, 
+                            nsIUrlListener* urlListener, nsIURI** url)
+{
+    NS_ASSERTION(eventQueue && parent && newFolderName && *newFolderName,
+                 "Oops ... [EnsureExists] null pointers");
+    if (!eventQueue || !parent || !newFolderName || !*newFolderName)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
+    nsresult rv;
+
+	PRUnichar hierarchySeparator = GetHierarchyDelimiter(parent);
+    rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), parent, urlListener, urlSpec, hierarchySeparator);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(parent, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+
+            nsXPIDLCString folderName;
+            GetFolderName(parent, getter_Copies(folderName));
+            urlSpec.Append("/ensureExists>");
+            urlSpec.AppendWithConversion(hierarchySeparator);
+            if ((const char *) folderName && nsCRT::strlen(folderName) > 0)
+            {
+                urlSpec.Append((const char *) folderName);
+                urlSpec.AppendWithConversion(hierarchySeparator);
+            }
+			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newFolderName);
+			char *escapedFolderName = nsEscape(utfNewName, url_Path);
+            urlSpec.Append(escapedFolderName);
+			nsCRT::free(escapedFolderName);
+			nsCRT::free(utfNewName);
+    
+            rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                     nsnull,
+                                                     url);
+        } // if (NS_SUCCEEDED(rv))
+    } // if (NS_SUCCEEDED(rv) && imapUrl)
+    return rv;
+}
+
 
 NS_IMETHODIMP
 nsImapService::ListFolder(nsIEventQueue* aClientEventQueue,

@@ -911,6 +911,52 @@ nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListener)
+{
+	nsresult status = NS_OK;
+  nsCOMPtr <nsIFolder> parent;
+  GetParent(getter_AddRefs(parent));
+  nsCOMPtr <nsIMsgFolder> msgParent;
+  if (parent)
+    msgParent = do_QueryInterface(parent);
+  // parent is probably not set because *this* was probably created by rdf
+  // and not by folder discovery. So, we have to compute the parent.
+  if (!msgParent)
+  {
+    nsCAutoString folderName = mURI;
+      
+    nsCAutoString uri;
+
+    PRInt32 leafPos = folderName.RFindChar('/');
+
+    nsCAutoString parentName(folderName);
+
+    if (leafPos > 0)
+	  {
+		// If there is a hierarchy, there is a parent.
+		// Don't strip off slash if it's the first character
+      parentName.Truncate(leafPos);
+      // get the corresponding RDF resource
+      // RDF will create the folder resource if it doesn't already exist
+      NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &status);
+      if (NS_FAILED(status)) return status;
+      nsCOMPtr<nsIRDFResource> resource;
+      status = rdf->GetResource(parentName, getter_AddRefs(resource));
+      if (NS_FAILED(status)) return status;
+
+      msgParent = do_QueryInterface(resource, &status);
+	  }
+  }
+  if (msgParent)
+
+  {
+    nsXPIDLString folderName;
+    GetName(getter_Copies(folderName));
+    status = msgParent->CreateSubfolder(folderName);
+  }
+  return status;
+}
+
 nsresult
 nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 {

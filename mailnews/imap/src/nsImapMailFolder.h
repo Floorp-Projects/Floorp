@@ -120,6 +120,7 @@ public:
     
 	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
 	NS_IMETHOD AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, nsIMsgFolder **child);
+  NS_IMETHODIMP CreateStorageIfMissing(nsIUrlListener* urlListener);
     
   NS_IMETHOD Compact();
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);

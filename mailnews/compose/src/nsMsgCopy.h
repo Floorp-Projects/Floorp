@@ -75,7 +75,7 @@ private:
 // This is a class that deals with processing remote attachments. It implements
 // an nsIStreamListener interface to deal with incoming data
 //
-class nsMsgCopy : public nsISupports
+class nsMsgCopy : public nsIUrlListener
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IMSGCOPY_IID; return iid; }
@@ -85,6 +85,8 @@ public:
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIURLLISTENER
+
 
   //////////////////////////////////////////////////////////////////////
   // Object methods...
@@ -102,10 +104,11 @@ public:
                                nsIMsgWindow *msgWindow,
                                nsMsgComposeAndSend   *aMsgSendObj);
 
-  nsresult	GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);
-  nsresult	GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);
-  nsresult	GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder);
-  nsresult	GetSentFolder(nsIMsgIdentity *userIdentity,  nsIMsgFolder **msgFolder);
+  nsresult	GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder, PRBool *waitForUrl);
+  nsresult	GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder, PRBool *waitForUrl);
+  nsresult	GetTemplatesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder, PRBool *waitForUrl);
+  nsresult	GetSentFolder(nsIMsgIdentity *userIdentity,  nsIMsgFolder **msgFolder, PRBool *waitForUrl);
+  nsresult   CreateIfMissing(nsIMsgFolder **folder, PRBool *waitForUrl);
 
   
   //
@@ -114,6 +117,10 @@ public:
   nsIFileSpec                     *mFileSpec;     // the file we are sending...
   nsMsgDeliverMode                mMode;
   nsCOMPtr<CopyListener>          mCopyListener;
+  nsCOMPtr<nsIMsgFolder>          mDstFolder;
+  nsCOMPtr<nsIMessage>            mMsgToReplace;
+  PRBool                          mIsDraft;
+  nsMsgComposeAndSend             *mMsgSendObj;
   char                            *mSavePref;
 };
 

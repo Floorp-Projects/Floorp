@@ -108,6 +108,7 @@ public:
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
+  NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
 	NS_IMETHOD Rename (const PRUnichar *aNewName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 

@@ -453,6 +453,7 @@ private:
 	char * OnCreateServerSourceFolderPathString();
   char * OnCreateServerDestinationFolderPathString();
 	void OnCreateFolder(const char * aSourceMailbox);
+	void OnEnsureExistsFolder(const char * aSourceMailbox);
 	void OnSubscribe(const char * aSourceMailbox);
 	void OnUnsubscribe(const char * aSourceMailbox);
   void RefreshACLForFolderIfNecessary(const char * mailboxName);

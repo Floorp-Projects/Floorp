@@ -90,6 +90,7 @@ public:
   NS_IMETHOD ForceDBClosed(void);
   NS_IMETHOD Delete(void);
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
+  NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
   NS_IMETHOD PropagateDelete(nsIMsgFolder *folder, PRBool deleteStorage);
   NS_IMETHOD RecursiveDelete(PRBool deleteStorage);
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);

@@ -685,6 +685,59 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
     return nsMsgFolder::DeleteSubFolders(folders, nsnull);
 }
 
+NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListener)
+{
+	nsresult status = NS_OK;
+  nsCOMPtr <nsIFolder> parent;
+  GetParent(getter_AddRefs(parent));
+  nsCOMPtr <nsIMsgFolder> msgParent;
+  if (parent)
+    msgParent = do_QueryInterface(parent);
+  // parent is probably not set because *this* was probably created by rdf
+  // and not by folder discovery. So, we have to compute the parent.
+  if (!msgParent)
+  {
+    nsCAutoString folderName = mURI;
+      
+    nsCAutoString uri;
+
+    PRInt32 leafPos = folderName.RFindChar('/');
+
+    nsCAutoString parentName(folderName);
+
+    if (leafPos > 0)
+	  {
+		// If there is a hierarchy, there is a parent.
+		// Don't strip off slash if it's the first character
+      parentName.Truncate(leafPos);
+      // get the corresponding RDF resource
+      // RDF will create the folder resource if it doesn't already exist
+      NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &status);
+      if (NS_FAILED(status)) return status;
+      nsCOMPtr<nsIRDFResource> resource;
+      status = rdf->GetResource(parentName, getter_AddRefs(resource));
+      if (NS_FAILED(status)) return status;
+
+      msgParent = do_QueryInterface(resource, &status);
+	  }
+  }
+  if (msgParent)
+  {
+    nsXPIDLString folderName;
+    GetName(getter_Copies(folderName));
+    nsresult rv;
+	  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
+	  if (NS_SUCCEEDED(rv) && imapService)
+    {
+      nsCOMPtr <nsIURI> uri;
+
+      imapService->EnsureFolderExists(m_eventQueue, msgParent, folderName, urlListener, getter_AddRefs(uri));
+    }
+  }
+
+  return status;
+}
+
 
 NS_IMETHODIMP nsImapMailFolder::GetVerifiedAsOnlineFolder(PRBool *aVerifiedAsOnlineFolder)
 {
@@ -4205,6 +4258,20 @@ NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsAdded(PRBool *bVal)
 NS_IMETHODIMP nsImapMailFolder::SetFolderNeedsAdded(PRBool bVal)
 {
     m_folderNeedsAdded = bVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderVerifiedOnline(PRBool *bVal)
+{
+    if (!bVal)
+        return NS_ERROR_NULL_POINTER;
+    *bVal = m_verifiedAsOnlineFolder;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailFolder::SetFolderVerifiedOnline(PRBool bVal)
+{
+    m_verifiedAsOnlineFolder = bVal;
     return NS_OK;
 }
 

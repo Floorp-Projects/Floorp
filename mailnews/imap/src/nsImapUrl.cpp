@@ -66,6 +66,7 @@ nsImapUrl::nsImapUrl()
 	m_mimePartSelectorDetected = PR_FALSE;
 	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
   m_fetchPartsOnDemand = PR_FALSE; // but assume we're not doing it :-)
+  m_msgLoadingFromCache = PR_FALSE;
 	m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
 	m_validUrl = PR_TRUE;	// assume the best.
 	m_flags = 0;
@@ -540,6 +541,11 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 		else if (!nsCRT::strcasecmp(m_urlidSubString, "create"))
 		{
 			m_imapAction   					 = nsImapCreateFolder;
+			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+		}
+		else if (!nsCRT::strcasecmp(m_urlidSubString, "ensureExists"))
+		{
+			m_imapAction   					 = nsImapEnsureExistsFolder;
 			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
 		}
 		else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverchildren"))
@@ -1067,6 +1073,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
 
 NS_IMPL_GETSET(nsImapUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
 NS_IMPL_GETSET(nsImapUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
+NS_IMPL_GETSET(nsImapUrl, MsgLoadingFromCache, PRBool, m_msgLoadingFromCache);
 
 NS_IMETHODIMP nsImapUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {

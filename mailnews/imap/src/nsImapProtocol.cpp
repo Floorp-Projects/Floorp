@@ -4734,6 +4734,31 @@ void nsImapProtocol::OnCreateFolder(const char * aSourceMailbox)
         FolderNotCreated(aSourceMailbox);
 }
 
+void nsImapProtocol::OnEnsureExistsFolder(const char * aSourceMailbox)
+{
+
+  List(aSourceMailbox, PR_FALSE); // how to tell if that succeeded?
+  PRBool exists = PR_FALSE;
+  if (m_imapMailFolderSink)
+    m_imapMailFolderSink->GetFolderVerifiedOnline(&exists);
+
+  if (exists)
+  {
+      Subscribe(aSourceMailbox);
+  }
+  else
+  {
+    PRBool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
+    if (created)
+    {
+        List(aSourceMailbox, PR_FALSE);
+    }
+  }
+  if (!GetServerStateParser().LastCommandSuccessful())
+        FolderNotCreated(aSourceMailbox);
+}
+
+
 void nsImapProtocol::OnSubscribe(const char * sourceMailbox)
 {
   Subscribe(sourceMailbox);
@@ -6058,6 +6083,10 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
       sourceMailbox = OnCreateServerSourceFolderPathString();
       OnCreateFolder(sourceMailbox);
       break;
+    case nsIImapUrl::nsImapEnsureExistsFolder:
+      sourceMailbox = OnCreateServerSourceFolderPathString();
+      OnEnsureExistsFolder(sourceMailbox);
+      break;
     case nsIImapUrl::nsImapDiscoverChildrenUrl:
         {
             char *canonicalParent = nsnull;
@@ -6795,7 +6824,12 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
       NS_RELEASE(cacheListener);
 
       if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+      {
+        // if the msg is unread, we should mark it read on the server. This lets
+        // the code running this url we're loading from the cache, if it cares.
+        imapUrl->SetMsgLoadingFromCache(PR_TRUE);
         return rv;
+      }
     }    
   }
 
