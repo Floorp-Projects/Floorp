@@ -2073,19 +2073,7 @@ PresShell::HandleEvent(nsIView         *aView,
       mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
       //we are a listener now.
     }
-  if (aEvent->message >= 1400) {
-    int x  = 0;
-  }
     frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
-  if (aEvent->message >= 1400) {
-    int x  = 0;
-    if (aEvent->message >= NS_DRAGDROP_ENTER) {
-      int y = 0;
-    }
-    if (aEvent->message == NS_DRAGDROP_OVER) {
-      int y = 0;
-    }
-  }
     if (nsnull != mCurrentEventFrame) {
       //Once we have the targetFrame, handle the event in this order
       nsIEventStateManager *manager;
