@@ -1,5 +1,5 @@
 /*
- * $Id: WindowCreatorTest.java,v 1.2 2005/01/18 15:20:52 edburns%acm.org Exp $
+ * $Id: WindowCreatorTest.java,v 1.3 2005/01/19 13:33:31 edburns%acm.org Exp $
  */
 
 /* 
@@ -176,8 +176,6 @@ public class WindowCreatorTest extends WebclientTestCase {
 	Thread.currentThread().sleep(3000);
 	assertTrue(!bitSet.isEmpty());
 
-	/***
-
 	// keep waiting until the previous load completes
 	while (WindowCreatorTest.keepWaiting) {
 	    Thread.currentThread().sleep(1000);
@@ -187,8 +185,6 @@ public class WindowCreatorTest extends WebclientTestCase {
 	secondCurrentPage.selectAll();
 	selection = secondCurrentPage.getSelection();
 	assertTrue(-1 !=selection.toString().indexOf("This is page 1 of the WindowCreatorTest."));
-
-	**********/
 
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
