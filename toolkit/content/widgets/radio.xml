@@ -408,6 +408,14 @@
             this.radioGroup.focusedItem = this;
          ]]>
       </handler>
+      <handler event="focus">
+        <![CDATA[
+          if (!this.disabled) {
+            this.radioGroup.focusedItem = this;
+            this.radioGroup.focus();
+          }
+         ]]>
+      </handler>
     </handlers>
   </binding>
 </bindings>
