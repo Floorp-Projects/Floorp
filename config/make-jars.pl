@@ -5,7 +5,8 @@
 sub JarIt
 {
     my ($jarfile, $args) = @_;
-    print "jaring $jarfile\n";
+    print "+++ jaring $jarfile\n";
+    flush;
     system "zip -u $jarfile $args\n";
 }
 
