@@ -222,8 +222,10 @@ class XFE_CommandList {
 public:
 	friend XFE_Command*     findCommand(XFE_CommandList*, CommandType);
 	friend XFE_CommandList* registerCommand(XFE_CommandList*&, XFE_Command*);
+	friend void             destroyCommandList(XFE_CommandList*);
 private:
 	XFE_CommandList(XFE_CommandList*, XFE_Command*);
+	~XFE_CommandList();
 	XFE_CommandList* m_next;
 	XFE_Command*     m_command;
 };

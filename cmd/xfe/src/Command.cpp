@@ -439,6 +439,16 @@ XFE_CommandList::XFE_CommandList(XFE_CommandList* list, XFE_Command* command)
 	m_command = command;
 }
 
+XFE_CommandList::~XFE_CommandList()
+{
+	m_next = 0;
+
+	if (m_command) {
+		delete m_command;
+		m_command = 0;
+	}
+}
+
 XFE_CommandList*
 registerCommand(XFE_CommandList*& list, XFE_Command* command)
 {
@@ -455,6 +465,18 @@ findCommand(XFE_CommandList* list, CommandType id)
 		list = list->m_next;
 	}
 	return NULL;
+}
+
+void
+destroyCommandList(XFE_CommandList* list)
+{
+	XFE_CommandList *next;
+
+	while (list != NULL) {
+		next = list->m_next;
+		delete list;
+		list = next;
+	}
 }
 
 XFE_ObjectIsCommand::XFE_ObjectIsCommand(XFE_View *view) : XFE_ViewCommand(xfeCmdObjectIs, view)
