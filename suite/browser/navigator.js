@@ -655,9 +655,16 @@ function UpdateBookmarksLastVisitedDate(event)
     if (url.substring(0, 3) == "NC:") {
       return false;
     }
-
-    window.content.location.href = url;
-    RefreshUrlbar();
+	// Check if we have a browser window
+	if ( window.content == null )
+	{
+		window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); 
+	}
+	else
+	{
+  	  window.content.location.href = url;
+    	RefreshUrlbar();
+  	}
   }
 
 function OpenSearch(tabName, searchStr)

@@ -259,21 +259,21 @@ Contributor(s): ______________________________________. -->
     ondraggesture="return BeginDragPersonalToolbar(event);"
     ondragdrop="return DropPersonalToolbar(event);"
     ondragover="return DragOverPersonalToolbar(event);"
-    onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')">
+   >
 
     <!-- This template builds content from the bookmarks datasource -->
     <template>
       <!-- Rules for content hanging _directly_ off the toolbar -->
       <rule parent="toolbar" iscontainer="true">
         <menu uri="...">
-          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
+          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"  onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')"
             align="left" />
           <menupopup />
         </menu>
       </rule>
       <rule parent="toolbar">
         <titledbutton uri="..." align="left" 
-          value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          value="rdf:http://home.netscape.com/NC-rdf#Name"  onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
       </rule>
 
       <!-- Recursive rules for nested folders -->
@@ -288,7 +288,7 @@ Contributor(s): ______________________________________. -->
       <rule>
         <menupopup>
           <menuitem align="left" uri="..." 
-            value="rdf:http://home.netscape.com/NC-rdf#Name" />
+            value="rdf:http://home.netscape.com/NC-rdf#Name"  onclick="OpenBookmarkURL(event.target, 'PersonalToolbar')"/>
         </menupopup>
       </rule>
     </template>
