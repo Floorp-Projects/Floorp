@@ -83,7 +83,6 @@ nsWindow::nsWindow()
   mContainer           = nsnull;
   mDrawingarea         = nsnull;
   mShell               = nsnull;
-  mIsTopLevel          = PR_FALSE;
   mIsDestroyed         = PR_FALSE;
   mWindowType          = eWindowType_child;
   mPreferredWidth      = 0;
@@ -98,6 +97,7 @@ nsWindow::nsWindow()
 
 nsWindow::~nsWindow()
 {
+  printf("nsWindow::~nsWindow() [%p]\n", (void *)this);
   Destroy();
 }
 
@@ -133,7 +133,10 @@ nsWindow::Destroy(void)
   if (mIsDestroyed)
     return NS_OK;
 
+  printf("nsWindow::Destroy [%p]\n", (void *)this);
   mIsDestroyed = PR_TRUE;
+
+  NativeShow(PR_FALSE);
 
   // make sure that we remove ourself as the focus window
   if (mHasFocus) {
@@ -161,27 +164,6 @@ nsWindow::Destroy(void)
 }
 
 NS_IMETHODIMP
-nsWindow::Show(PRBool aState)
-{
-  if (mIsTopLevel) {
-    moz_drawingarea_set_visibility(mDrawingarea, aState);
-    if (aState) {
-      gtk_widget_show(GTK_WIDGET(mContainer));
-      gtk_widget_show(mShell);
-    }
-    else {
-      gtk_widget_hide(GTK_WIDGET(mShell));
-      gtk_widget_hide(GTK_WIDGET(mContainer));
-    }
-  }
-  else {
-    moz_drawingarea_set_visibility(mDrawingarea, aState);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWindow::SetModal(PRBool aModal)
 {
   return NS_ERROR_NOT_IMPLEMENTED; 
@@ -202,7 +184,7 @@ nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 NS_IMETHODIMP
 nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-  if ((aX == mBounds.x) && (aY == mBounds.y) && !mIsTopLevel)
+  if ((aX == mBounds.x) && (aY == mBounds.y))
     return NS_OK;
 
   printf("nsWindow::Move [%p] %d %d\n", (void *)this,
@@ -227,73 +209,6 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     moz_drawingarea_move(mDrawingarea, aX, aY);
   }
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aWidth,
-		 PRInt32 aHeight,
-		 PRBool  aRepaint)
-{
-  mBounds.width = aWidth;
-  mBounds.height = aHeight;
-
-  printf("nsWindow::Resize [%p] %d %d\n", (void *)this,
-	 aWidth, aHeight);
-
-  if (mIsTopLevel)
-    gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-
-  moz_drawingarea_resize (mDrawingarea, aWidth, aHeight);
-
-  // synthesize a resize event if this isn't a toplevel
-  if (!mIsTopLevel) {
-    nsRect rect(mBounds.x, mBounds.y, aWidth, aHeight);
-    nsEventStatus status;
-    SendResizeEvent(rect, status);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Resize(PRInt32 aX,
-		 PRInt32 aY,
-		 PRInt32 aWidth,
-		 PRInt32 aHeight,
-		 PRBool  aRepaint)
-{
-  mBounds.x = aX;
-  mBounds.y = aY;
-  mBounds.width = aWidth;
-  mBounds.height = aHeight;
-
-  printf("nsWindow::Resize [%p] %d %d %d %d\n", (void *)this,
-	 aX, aY, aWidth, aHeight);
-
-  if (mIsTopLevel) {
-    if (mParent && mWindowType == eWindowType_popup) {
-      nsRect oldrect, newrect;
-      oldrect.x = aX;
-      oldrect.y = aY;
-      mParent->WidgetToScreen(oldrect, newrect);
-      gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
-      gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-
-    }
-    else {
-      gtk_window_move(GTK_WINDOW(mShell), aX, aY);
-      gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
-      moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
-    }
-  }
-  else {
-    moz_drawingarea_move_resize(mDrawingarea, aX, aY, aWidth, aHeight);
-    // synthesize a resize event
-    nsRect rect(aX, aY, aWidth, aHeight);
-    nsEventStatus status;
-    SendResizeEvent(rect, status);
-  }
   return NS_OK;
 }
 
@@ -697,7 +612,7 @@ gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
   if (mIsDestroyed) {
-    NS_WARNING("Expose event on destroyed window!");
+    printf("Expose event on destroyed window [%p]!\n", (void *)this);
     return NS_OK;
   }
 
@@ -766,7 +681,7 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
   printf("size_allocate [%p] %d %d %d %d\n",
 	 (void *)this, aAllocation->x, aAllocation->y,
 	 aAllocation->width, aAllocation->height);
-
+  
   nsRect rect(aAllocation->x, aAllocation->y,
 	      aAllocation->width, aAllocation->height);
 
@@ -776,7 +691,7 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
   moz_drawingarea_resize (mDrawingarea, rect.width, rect.height);
 
   nsEventStatus status;
-  SendResizeEvent (rect, status);
+  DispatchResizeEvent (rect, status);
 }
 
 void
@@ -1036,22 +951,6 @@ nsWindow::OnScrollEvent(GtkWidget *aWidget, GdkEventScroll *aEvent)
   DispatchEvent(&event, status);
 }
 
-void
-nsWindow::SendResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
-{
-  nsSizeEvent event;
-  InitSizeEvent(event);
-
-  event.windowSize = &aRect;
-  event.point.x = aRect.x;
-  event.point.y = aRect.y;
-  event.mWinWidth = aRect.width;
-  event.mWinHeight = aRect.height;
-
-  nsEventStatus status;
-  DispatchEvent(&event, status); 
-}
-
 nsresult
 nsWindow::NativeCreate(nsIWidget        *aParent,
 		       nsNativeWidget    aNativeParent,
@@ -1074,7 +973,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 	     aAppShell, aToolkit, aInitData);
   
   // and do our common creation
-  CommonCreate(aParent);
+  CommonCreate(aParent, aNativeParent);
 
   // save our bounds
   mBounds = aRect;
@@ -1232,6 +1131,78 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
   Resize(mBounds.width, mBounds.height, PR_FALSE);
 
   return NS_OK;
+}
+
+void
+nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
+{
+  printf("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
+	 aWidth, aHeight);
+
+  // clear our resize flag
+  mNeedsResize = PR_FALSE;
+
+  if (mIsTopLevel)
+    gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+  
+  moz_drawingarea_resize (mDrawingarea, aWidth, aHeight);
+}
+
+void
+nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
+		       PRInt32 aWidth, PRInt32 aHeight,
+		       PRBool  aRepaint)
+{
+  mNeedsResize = PR_FALSE;
+  
+  printf("nsWindow::NativeResize [%p] %d %d %d %d\n", (void *)this,
+	 aX, aY, aWidth, aHeight);
+  
+  if (mIsTopLevel) {
+    if (mParent && mWindowType == eWindowType_popup) {
+      nsRect oldrect, newrect;
+      oldrect.x = aX;
+      oldrect.y = aY;
+      mParent->WidgetToScreen(oldrect, newrect);
+      moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
+      gtk_window_move(GTK_WINDOW(mShell), newrect.x, newrect.y);
+      gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+    }
+    else {
+      gtk_window_move(GTK_WINDOW(mShell), aX, aY);
+      gtk_window_resize(GTK_WINDOW(mShell), aWidth, aHeight);
+      moz_drawingarea_resize(mDrawingarea, aWidth, aHeight);
+    }
+  }
+  else {
+    moz_drawingarea_move_resize(mDrawingarea, aX, aY, aWidth, aHeight);
+  }
+}
+
+void
+nsWindow::NativeShow (PRBool  aAction)
+{
+  if (aAction) {
+    // unset our flag now that our window has been shown
+    mNeedsShow = PR_FALSE;
+    
+    if (mIsTopLevel) {
+      moz_drawingarea_set_visibility(mDrawingarea, aAction);
+      gtk_widget_show(GTK_WIDGET(mContainer));
+      gtk_widget_show(mShell);
+      
+    }
+    else {
+      moz_drawingarea_set_visibility(mDrawingarea, aAction);
+    }
+  }
+  else {
+    if (mIsTopLevel) {
+      gtk_widget_hide(GTK_WIDGET(mShell));
+      gtk_widget_hide(GTK_WIDGET(mContainer));
+    }
+    moz_drawingarea_set_visibility(mDrawingarea, aAction);
+  }
 }
 
 /* static */

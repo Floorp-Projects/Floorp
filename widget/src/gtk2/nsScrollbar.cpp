@@ -76,12 +76,6 @@ nsScrollbar::Create(nsNativeWidget aParent,
 }
 
 NS_IMETHODIMP
-nsScrollbar::Show(PRBool aState)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsScrollbar::IsVisible(PRBool & aState)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -95,19 +89,6 @@ nsScrollbar::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 
 NS_IMETHODIMP
 nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsScrollbar::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool   aRepaint)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsScrollbar::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                    PRBool   aRepaint)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -299,3 +280,19 @@ nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void
+nsScrollbar::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
+{
+}
+  
+void
+nsScrollbar::NativeResize(PRInt32 aX, PRInt32 aY,
+			  PRInt32 aWidth, PRInt32 aHeight,
+			  PRBool  aRepaint)
+{
+}
+  
+void
+nsScrollbar::NativeShow  (PRBool  aAction)
+{
+}

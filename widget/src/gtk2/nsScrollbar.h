@@ -63,13 +63,9 @@ class nsScrollbar : public nsCommonWidget,
                     nsIAppShell      *aAppShell = nsnull,
                     nsIToolkit       *aToolkit = nsnull,
                     nsWidgetInitData *aInitData = nsnull);
-  NS_IMETHOD Show(PRBool aState);
   NS_IMETHOD IsVisible(PRBool & aState);
   NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
-  NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool   aRepaint);
-  NS_IMETHOD Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
-                    PRBool   aRepaint);
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE);
   virtual nsIFontMetrics* GetFont(void);
@@ -104,6 +100,15 @@ class nsScrollbar : public nsCommonWidget,
   NS_IMETHOD GetLineIncrement(PRUint32& aSize);
   NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 			   PRUint32 aPosition, PRUint32 aLineIncrement);
+
+  // stuff from common widget
+  void NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint);
+  
+  void NativeResize(PRInt32 aX, PRInt32 aY,
+		    PRInt32 aWidth, PRInt32 aHeight,
+		    PRBool  aRepaint);
+  
+  void NativeShow  (PRBool  aAction);
   
  private:
   GtkWidget *mScrollbar;
