@@ -500,6 +500,7 @@ void nsPop3TestDriver::InitializeProtocol(const char * urlString)
     nsPop3Sink* aPop3Sink = new nsPop3Sink;
     if (aPop3Sink)
     {
+		NS_ADDREF(aPop3Sink);
         aPop3Sink->SetMailDirectory(m_mailDirectory);
         m_url->SetPop3Sink(aPop3Sink);
     }
