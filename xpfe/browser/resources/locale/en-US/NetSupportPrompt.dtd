@@ -1,0 +1,6 @@
+<!-- extracted from content/NetSupportPrompt.xul -->
+
+<!ENTITY mess.label "message text here ">
+<!ENTITY user.label "User:">  
+<!ENTITY cancel.label "cancel">
+<!ENTITY ok.label "ok"> 
