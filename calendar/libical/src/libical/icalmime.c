@@ -4,7 +4,7 @@
  CREATOR: eric 26 July 2000
 
 
- $Id: icalmime.c,v 1.7 2003/05/09 14:30:06 acampi Exp $
+ $Id: icalmime.c,v 1.8 2005/01/24 12:49:11 acampi Exp $
  $Locker:  $
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -199,7 +199,7 @@ icalcomponent* icalmime_parse(char* (*get_string)(char *s, size_t size,
 	    minor = parts[i].header.minor_text;
 	}
 	
-	sprintf(mimetype,"%s/%s",major,minor);
+	snprintf(mimetype,sizeof(mimetype),"%s/%s",major,minor);
 
 	comp = icalcomponent_new(ICAL_XLICMIMEPART_COMPONENT);
 

@@ -3,7 +3,7 @@
     FILE: icaldirset.c
     CREATOR: eric 28 November 1999
   
-    $Id: icaldirset.c,v 1.21 2004/05/10 23:06:35 acampi Exp $
+    $Id: icaldirset.c,v 1.22 2005/01/24 14:00:39 acampi Exp $
     $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -315,7 +315,7 @@ int icaldirset_next_uid_number(icaldirset* dset)
 
     icalerror_check_arg_rz( (dset!=0), "dset");
 
-    sprintf(filename,"%s/%s",dset->dir,"SEQUENCE");
+    snprintf(filename,sizeof(filename),"%s/%s",dset->dir,"SEQUENCE");
 
     /* Create the file if it does not exist.*/
     if (stat(filename,&sbuf) == -1 || !S_ISREG(sbuf.st_mode)){
@@ -374,7 +374,7 @@ icalerrorenum icaldirset_next_cluster(icaldirset* dset)
 	return ICAL_NO_ERROR;
     }
 	    
-    sprintf(path,"%s/%s", dset->dir,(char*)pvl_data(dset->directory_iterator));
+    snprintf(path,sizeof(path),"%s/%s", dset->dir,(char*)pvl_data(dset->directory_iterator));
 
     icalcluster_free(dset->cluster);
     dset->cluster = icalfileset_produce_icalcluster(path);
@@ -399,9 +399,9 @@ static void icaldirset_add_uid(icalcomponent* comp)
 #ifndef WIN32
 	uname(&unamebuf);
 	
-	sprintf(uidstring,"%d-%s",(int)getpid(),unamebuf.nodename);
+	snprintf(uidstring,sizeof(uidstring),"%d-%s",(int)getpid(),unamebuf.nodename);
 #else
-	sprintf(uidstring,"%d-%s",(int)getpid(),"WINDOWS");  /* FIX: There must be an easy get the system name */
+	snprintf(uidstring,sizeof(uidstring),"%d-%s",(int)getpid(),"WINDOWS");  /* FIX: There must be an easy get the system name */
 #endif
 	
 	uid = icalproperty_new_uid(uidstring);

@@ -3,7 +3,7 @@
   FILE: sspm.c Parse Mime
   CREATOR: eric 25 June 2000
   
-  $Id: sspm.c,v 1.8 2003/11/17 22:51:53 gray-john Exp $
+  $Id: sspm.c,v 1.9 2005/01/24 13:15:19 acampi Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -1250,9 +1250,9 @@ void sspm_write_part(struct sspm_buffer *buf,struct sspm_part *part, int *part_n
 
 void sspm_append_hex(struct sspm_buffer* buf, char ch)
 {
-    char tmp[3];
+    char tmp[4];
 
-    sprintf(tmp,"=%02X",ch);
+    snprintf(tmp,sizeof(tmp),"=%02X",ch);
 
     sspm_append_string(buf,tmp);
 }
@@ -1481,19 +1481,19 @@ void sspm_write_header(struct sspm_buffer *buf,struct sspm_header *header)
 	minor = header->minor_text;
     }
     
-    sprintf(temp,"Content-Type: %s/%s",major,minor);
+    snprintf(temp,sizeof(temp),"Content-Type: %s/%s",major,minor);
 
     sspm_append_string(buf,temp);
 
     if(header->boundary != 0){
-	sprintf(temp,";boundary=\"%s\"",header->boundary);
+	snprintf(temp,sizeof(temp),";boundary=\"%s\"",header->boundary);
 	sspm_append_string(buf,temp);
     }
     
     /* Append any content type parameters */    
     if(header->content_type_params != 0){
 	for(i=0; *(header->content_type_params[i])!= 0;i++){
-	    sprintf(temp,header->content_type_params[i]);
+	    snprintf(temp,sizeof(temp),header->content_type_params[i]);
 	    sspm_append_char(buf,';');
 	    sspm_append_string(buf,temp);
 	}
@@ -1505,7 +1505,7 @@ void sspm_write_header(struct sspm_buffer *buf,struct sspm_header *header)
 
     if(header->encoding != SSPM_UNKNOWN_ENCODING &&
 	header->encoding != SSPM_NO_ENCODING){
-	sprintf(temp,"Content-Transfer-Encoding: %s\n",
+	snprintf(temp,sizeof(temp),"Content-Transfer-Encoding: %s\n",
 		sspm_encoding_string(header->encoding));
     }
 
