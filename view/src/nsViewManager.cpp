@@ -727,7 +727,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
     nsRect    *currect;
     PRUint32  curflags;
     PRBool    pushing;
-    PRUint32  pushcnt = 0;
+    PRInt32   pushcnt = 0;
     PRBool    clipstate;
 
     for (cnt = loopstart; (increment > 0) ? (cnt < loopend) : (cnt > loopend); cnt += increment)
@@ -757,14 +757,14 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
             mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
 
-            pushcnt--;
-            NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+            --pushcnt;
+            NS_ASSERTION((pushcnt >= 0), "underflow");
           }
           else if (state == BACK_TO_FRONT_TRANS)
           {
             aRC.PopState(clipstate);
-            pushcnt--;
-            NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+            --pushcnt;
+            NS_ASSERTION((pushcnt >= 0), "underflow");
 
             // permanently remove any painted opaque views.
             aRC.SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
@@ -776,7 +776,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             aRC.PushState();
             aRC.SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
 
-            pushcnt++;
+            ++pushcnt;
           }
         }
         else if (curflags & POP_CLIP)
@@ -793,7 +793,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             mRedCX->SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
             mBlueCX->SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
 
-            pushcnt++;
+            ++pushcnt;
           }
           else if (state == BACK_TO_FRONT_TRANS)
           {
@@ -802,13 +802,13 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             aRC.PushState();
             aRC.SetClipRect(*currect, nsClipCombine_kIntersect, clipstate);
 
-            pushcnt++;
+            ++pushcnt;
           }
           else
           {
             aRC.PopState(clipstate);
-            pushcnt--;
-            NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+            --pushcnt;
+            NS_ASSERTION((pushcnt >= 0), "underflow");
 
             // permanently remove any painted opaque views.
             aRC.SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
@@ -1058,11 +1058,11 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
       }
     }
 
-    NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+    NS_ASSERTION((pushcnt >= 0), "underflow");
 
     while (pushcnt--)
     {
-      NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+      NS_ASSERTION((pushcnt >= 0), "underflow");
 
       if (pushing == BACK_TO_FRONT_OPACITY)
       {
