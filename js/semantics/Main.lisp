@@ -33,7 +33,7 @@
   '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup"))
 
 (defparameter *semantics-filenames*
-  '("JS20/Parser" "JS20/Lexer" "JS20/RegExp" "JS20/Kernel"))
+  '("JS20/Parser" "JS20/Lexer" "JS20/Units" "JS20/RegExp" "JS20/Kernel"))
 
 (defparameter *semantic-engine-directory*
   (make-pathname
