@@ -28,7 +28,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 #include "nsRange.h"
 
 #include "nsIDOMSelection.h"
@@ -165,9 +165,9 @@ public:
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
   // Implementation for nsIContent
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const;
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const;
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const;
   NS_IMETHOD CanContainChildren(PRBool& aResult) const { aResult = PR_FALSE; return NS_OK; }
 
   NS_IMETHOD ChildCount(PRInt32& aResult) const { aResult = 0; return NS_OK;  }
@@ -318,13 +318,13 @@ nsresult nsAttributeContent::QueryInterface(const nsIID& aIID, void** aInstanceP
 
 
 nsresult
-nsAttributeContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsAttributeContent::BeginConvertToXIF(nsIXIFConverter* ) const
 {
   return NS_OK;
 }
 
 nsresult
-nsAttributeContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsAttributeContent::FinishConvertToXIF(nsIXIFConverter*) const
 {
   return NS_OK;
 }
@@ -335,7 +335,7 @@ nsAttributeContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
 nsresult
-nsAttributeContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsAttributeContent::ConvertContentToXIF(nsIXIFConverter* ) const
 {
 
   return NS_OK;

@@ -51,7 +51,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsStyleConsts.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 #include "nsFrame.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
@@ -91,7 +91,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsXIFDTD.h"
-
+#include "nsLayoutCID.h"
 // XXX todo: add in missing out-of-memory checks
 NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 
@@ -109,6 +109,8 @@ static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+
+static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
 
 //----------------------------------------------------------------------
 
@@ -797,7 +799,13 @@ nsGenericHTMLElement::GetInnerHTML(nsString& aInnerHTML)
 
   // Frist we create XIF for the children of this node...
   nsAutoString buf;
-  nsXIFConverter xifc(buf);
+  nsCOMPtr<nsIXIFConverter> xifc;
+  nsresult res = nsComponentManager::CreateInstance(kXIFConverterCID,
+                           nsnull,
+                           NS_GET_IID(nsIXIFConverter),
+                           getter_AddRefs(xifc));
+  NS_ENSURE_TRUE(xifc,NS_ERROR_FAILURE);
+  xifc->Init(aInnerHTML);
 
   PRUint32 i, count = 0;
   nsCOMPtr<nsIDOMNodeList> childNodes;
@@ -3031,14 +3039,14 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 }
 
 nsresult
-nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericHTMLLeafElement::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   nsresult rv = NS_OK;
   if (mNodeInfo)
   {
     nsAutoString name;
     mNodeInfo->GetQualifiedName(name);
-    aConverter.BeginLeaf(name);    
+    aConverter->BeginLeaf(name);    
   }
 
   // Add all attributes to the convert
@@ -3057,26 +3065,26 @@ nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
       GetAttribute(kNameSpaceID_None, atom, value);
       NS_RELEASE(atom);
       
-      aConverter.AddHTMLAttribute(name,value);
+      aConverter->AddHTMLAttribute(name,value);
     }
   }
   return rv;
 }
 
 nsresult
-nsGenericHTMLLeafElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsGenericHTMLLeafElement::ConvertContentToXIF(nsIXIFConverter*) const
 {
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLLeafElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericHTMLLeafElement::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
   if (mNodeInfo)
   {
     nsAutoString name;
     mNodeInfo->GetQualifiedName(name);
-    aConverter.EndLeaf(name);    
+    aConverter->EndLeaf(name);    
   }
   return NS_OK;
 }
@@ -3195,14 +3203,14 @@ nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
 }
 
 nsresult
-nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericHTMLContainerElement::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   nsresult rv = NS_OK;
   if (mNodeInfo)
   {
     nsAutoString name;
     mNodeInfo->GetQualifiedName(name);
-    aConverter.BeginContainer(name);
+    aConverter->BeginContainer(name);
   }
 
   // Add all attributes to the convert
@@ -3221,26 +3229,26 @@ nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) con
       GetAttribute(kNameSpaceID_None, atom, value);
       NS_RELEASE(atom);
       
-      aConverter.AddHTMLAttribute(name,value);
+      aConverter->AddHTMLAttribute(name,value);
     }
   }
   return rv;
 }
 
 nsresult
-nsGenericHTMLContainerElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsGenericHTMLContainerElement::ConvertContentToXIF(nsIXIFConverter* ) const
 {
   return NS_OK;
 }
 
 nsresult
-nsGenericHTMLContainerElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericHTMLContainerElement::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
   if (mNodeInfo)
   {
     nsAutoString name;
     mNodeInfo->GetQualifiedName(name);
-    aConverter.EndContainer(name);
+    aConverter->EndContainer(name);
   }
   return NS_OK;
 }

@@ -364,9 +364,9 @@ public:
   }
 
   // Remainder of nsIHTMLContent (and nsIContent)
-  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult BeginConvertToXIF(nsIXIFConverter* aConverter) const;
+  nsresult ConvertContentToXIF(nsIXIFConverter* aConverter) const;
+  nsresult FinishConvertToXIF(nsIXIFConverter* aConverter) const;
   nsresult Compact() {
     return NS_OK;
   }
@@ -437,9 +437,9 @@ public:
   }
 
   // Remainder of nsIHTMLContent (and nsIContent)
-  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult BeginConvertToXIF(nsIXIFConverter* aConverter) const;
+  nsresult ConvertContentToXIF(nsIXIFConverter* aConverter) const;
+  nsresult FinishConvertToXIF(nsIXIFConverter* aConverter) const;
   nsresult Compact();
   nsresult CanContainChildren(PRBool& aResult) const;
   nsresult ChildCount(PRInt32& aResult) const;
