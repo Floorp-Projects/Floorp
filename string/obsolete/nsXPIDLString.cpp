@@ -30,8 +30,8 @@
 // nsXPIDLString
 
 nsXPIDLString::nsXPIDLString()
-    : mBufOwner(PR_FALSE),
-      mBuf(0)
+    : mBuf(0),
+      mBufOwner(PR_FALSE)
 {
 }
 
@@ -106,8 +106,8 @@ nsXPIDLString::StartAssignmentByReference()
 // nsXPIDLCString
 
 nsXPIDLCString::nsXPIDLCString()
-    : mBufOwner(PR_FALSE),
-      mBuf(0)
+    : mBuf(0),
+      mBufOwner(PR_FALSE)
 {
 }
 
