@@ -62,7 +62,7 @@ public:
   NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
                                const PRUint8* key2, const PRUint32 len2, 
                                PRInt32* result) 
-                               {*result = strcmp((const char *)key1, (const char *)key2); return NS_OK;}
+                               {*result = PL_strcmp((const char *)key1, (const char *)key2); return NS_OK;}
 
   // init this interface to a specified locale (should only be called by collation factory)
   //
