@@ -1,0 +1,53 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Chris Yeh">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en]C-NSCP  (WinNT; U) [Netscape]">
+   <TITLE>Running Mozilla...</TITLE>
+</HEAD>
+<BODY>
+
+<H2>
+<FONT FACE="Arial,Helvetica">Running Mozilla Without Trashing Netscape
+Installation</FONT></H2>
+This document explains how to run <TT>mozilla.exe</TT> separately from
+<TT>netscape.exe</TT> without trashing your regular installation of Netscape
+Communicator. This is necessary if, for example, you want to use Communicator's
+mail client while you work on Mozilla development.
+<BR>
+<HR WIDTH="100%">
+<OL>
+<LI>
+Before running <TT>mozilla.exe</TT>, create a new user profile either from
+a Netscape 4.0x installation using the "User Profile Manager" shortcut
+in the Utilities folder (on Windows) or by using&nbsp; the <TT>-new_account</TT>
+option on the command line of either <TT>netscape.exe</TT> or <TT>mozilla.exe</TT>.&nbsp;
+We suggest calling the profile "<TT>mozilla</TT>."</LI>
+
+<LI>
+Always use that new account when running <TT>mozilla.exe</TT>, and never
+run <TT>netscape.exe</TT> using that same account profile.</LI>
+</OL>
+To make things easier, you can start the application with the user account
+on the command line, for example:
+<UL><TT>mozilla.exe -P"mozilla"</TT></UL>
+This assures that prefs and the cache will not interfere between the two
+versions. This will be especially
+<BR>important as new prefs are added to the Mozilla product. Note that
+you must use quotes around the name and there can be no space between the
+"P" and the profile name. Otherwise, the application won't catch the profile
+switch, and it will try to load the profile name as the initial URL.
+
+<P>
+<HR WIDTH="100%">
+<BR>You can copy your <TT>bookmark.htm</TT> file from an existing profile
+to your new profile directory if you want to share bookmarks.
+
+<P>After the initial 3/31 release, we will add some code to Mozilla to
+prevent running with a profile that is already being used by <TT>netscape.exe</TT>.
+<BR>&nbsp;
+<HR WIDTH="100%">
+<BR><FONT SIZE=-1>Copyright &copy; 1998 <A HREF="http://home.netscape.com/misc/contact_info.html">Netscape
+Communications Corporation</A></FONT>
+</BODY>
+</HTML>

@@ -1,0 +1,137 @@
+<HTML>
+<HEAD>
+<TITLE>Building Mozilla on unix platforms</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B"
+ALINK="#FF0000">
+<HR>
+<H1>
+Building Mozilla on Unix platforms</H1>
+
+<H2>
+Daniel Nunes, <TT><A HREF="mailto:leaf@netscape.com">leaf@netscape.com</A></TT></H2>
+v 1.0, June 1998
+
+<P>
+<HR><I>How to build Mozilla on a Unix System.</I>
+<HR>
+<H2>1. <A HREF="#s1">Introduction</A></H2>
+
+<H2>2. <A HREF="#s2">Building Mozilla</A></H2>
+
+<UL>
+<LI>
+<A HREF="#ss2.1">2.1 Get the Code </A></LI>
+
+<LI>
+<A HREF="#ss2.2">2.2 Requirements</A></LI>
+
+<LI>
+<A HREF="#ss2.3">2.3 Set up the Build Environment</A></LI>
+
+<LI>
+<A HREF="#ss2.4">2.4 Build the Lizard </A></LI>
+</UL>
+
+<H2>3. <A HREF="#s3"> Common Problems </A></H2>
+
+<HR>
+<H2><A NAME="s1">1. Introduction</A></H2>
+
+<P>
+What this document is: A guide to building the Mozilla application.
+<BR>
+This includes:
+<OL>
+<LI> A listing of the development tools you will need to build Mozilla. </LI>
+<LI> A list of environment variables you will need to set before building. </LI>
+</OL>
+<P>
+If you're looking for documentation on developing features or fixing bugs,
+the Mozilla
+<A HREF="http://www.mozilla.org/docs/tplist/tplist.html">Technical Documents
+</A> or <A HREF="http://www.mozilla.org/library.html"> Library </A>
+are probably what you're looking for.
+<P>
+<HR>
+<H2><A NAME="s2">2. Building Mozilla </A></H2>
+<P>
+<UL>Each of the following subsections describes, or gives references to
+descriptions of, the steps necessary to build Mozilla.
+</UL>
+<H2><A NAME="ss2.1">2.1 Get the Code</A></H2>
+<P>
+<UL>
+There are two principal ways of getting the code,
+<A HREF="http://www.mozilla.org/download.html"> ftp</A> and
+<A HREF="http://www.mozilla.org/cvs.html"> CVS</A>.
+CVS will provide the least outdated code for building, but is
+slower than ftp.
+</UL>
+<P>
+<H2><A NAME="ss2.2">2.2 Requirements</A></H2>
+<UL>
+The following need to be installed:
+<UL>
+<LI>Motif 1.2 (2.1 recommended for RedHat Linux)
+<LI>GNU C/C++ compiler 2.7.2
+<LI>GNU make 3.74 or better
+<LI>Perl (or, if you have no Perl, then set <CODE>PERL=/bin/echo</CODE>)
+</UL>
+<P>
+Your hardware should be equal to, or better than:
+<UL>
+32 MB RAM, 128 MB swap (64 MB RAM recommended)
+</UL>
+</UL>
+<P>
+<H2><A NAME="ss2.3">2.3 Setup the Build Environment</A></H2>
+<P>
+<UL>
+The following environment variables need to be set:
+<CODE>
+<PRE>
+MOZILLA_CLIENT=1
+MOZ_MEDIUM=1
+NO_SECURITY=1
+NO_MDUPDATE=1
+</PRE>
+</CODE>
+Optionally, you can set <CODE>BUILD_OPT=1</CODE> if you don't want a debug
+build.
+<BR>
+Environment variables are set by the shell, and each shell may or may not have
+its own way of setting them. Type <CODE>man setenv</CODE> to find out how your
+shell sets variables, if you don't know already.
+<P>
+</UL>
+
+<H2><A NAME="ss2.4">2.4 Run the build </A></H2>
+<UL>
+Change to the directory you copied the source into (for example,
+<CODE>cd /builds</CODE>). If this directory was empty before you
+installed the source, there should be two directories here:
+<CODE>README</CODE> and <CODE>mozilla</CODE>.
+<CODE>
+<PRE>
+cd mozilla
+gmake
+</PRE>
+</CODE>
+</UL>
+<HR>
+<H2><A NAME="s3">3. Common Sticking Points</A></H2>
+<LI>My linker dies with this error: undefined reference to `_Xsetlocale'
+<UL>If this error occurs, you might have to recompile libX11.so
+with the -DX_LOCALE flag (thanks to Scott Lampert,
+<A HREF="mailto:fortunato@heavymetal.org">fortunato@heavymetal.org</A>).
+This problem stems from use of an older version of RedHat Motif.
+Moving to Motif 2.1 should resolve this. There are probably other problems
+with using the older versions of Motif, but i haven't encountered them.
+
+</UL>
+<HR>
+
+
+</BODY>
+</HTML>

@@ -1,0 +1,209 @@
+<HTML>
+<HEAD>
+<TITLE>Building Mozilla on Microsoft Windows 32-bit platforms</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B"
+ALINK="#FF0000">
+<HR>
+<H1>
+Building Mozilla on Microsoft Windows 32-bit platforms</H1>
+
+<H2>
+Daniel Nunes, <TT><A HREF="mailto:leaf@netscape.com">leaf@netscape.com</A></TT>
+</H2>
+v 1.0, June 1998
+
+<P>
+<HR><I>How to build Mozilla on a Microsoft Windows 32-bit System.</I>
+<HR>
+<H2>1. <A HREF="#s1">Introduction</A></H2>
+
+<H2>2. <A HREF="#s2">Building Mozilla</A></H2>
+
+<UL>
+<LI>
+<A HREF="#ss2.1">2.1 Get the Code </A></LI>
+
+<LI>
+<A HREF="#ss2.2">2.2 Requirements</A></LI>
+
+<LI>
+<A HREF="#ss2.3">2.3 Set up the Build Environment</A></LI>
+
+<LI>
+<A HREF="#ss2.4">2.4 Build the Lizard </A></LI>
+</UL>
+
+<H2>3. <A HREF="#s3"> Common Problems </A></H2>
+
+<HR>
+<H2><A NAME="s1">1. Introduction</A></H2>
+
+<P>
+What this document is: A guide to building the Mozilla application.
+<BR>
+This includes:
+<OL>
+<LI> A listing of the development tools you will need to build Mozilla. </LI>
+<LI> A list of environment variables you will need to set before building. </LI>
+</OL>
+<P>
+If you're looking for documentation on developing features or fixing bugs,
+the Mozilla
+<A HREF="http://www.mozilla.org/docs/tplist/tplist.html">Technical Documents
+</A> or <A HREF="http://www.mozilla.org/library.html"> Library </A>
+are probably what you're looking for.
+<P>
+<HR>
+<H2><A NAME="s2">2. Building Mozilla </A></H2>
+<P>
+<UL>Each of the following subsections describes, or gives references to
+descriptions of, the steps necessary to build Mozilla.
+<H2><A NAME="ss2.1">2.1 Get the Code</A></H2>
+<P>
+<UL>
+There are two principal ways of getting the code, 
+<A HREF="http://www.mozilla.org/download.html"> ftp</A> and 
+<A HREF="http://www.mozilla.org/cvs.html"> CVS</A>.
+CVS will provide the least outdated code for building, but is
+slower than ftp.
+
+</UL>
+<P>
+<H2><A NAME="ss2.2">2.2 Requirements</A></H2>
+<UL>
+The following need to be installed:
+<UL>
+<LI>Microsoft Visual C++ version 4.2 or later
+<LI>GNU Tools for Microsoft Windows, located:
+<UL>
+<LI><A HREF="http://www.cygnus.com/misc/gnu-win32">Cygnus</A></LI>
+<LI><A HREF="http://www.gnu.org/order/ftp.html">GNU home page</A></LI>
+<LI><A HREF="ftp://prep.ai.mit.edu/pub/gnu">MIT</A></LI>
+</UL>
+Specifically, you'll need:
+<UL><CODE>
+cp.exe<BR>
+rm.exe<BR>
+uname.exe<BR>
+</CODE>
+</UL>
+Netscape has internally modified version of gmake, shmsdos and win32gnu
+that we use to get around some problems we were having keeping in sync
+with the Unix version of gmake. This version of gmake can be found in the 
+Windows Build Tools package, which can be ftp'd from
+<A HREF="http://www.mozilla.org/download-mozilla.html"> the Mozilla
+Download page</A>.
+The three files you will need are:
+<UL><CODE>
+gmake.exe<BR>
+shmsdos.exe<BR>
+uname.exe<BR>
+</CODE>
+</UL>
+
+</UL>
+<P>
+Hardware/OS
+<UL>
+<LI>Pentium 133 MHz or better</LI>
+<LI>64 MB RAM, 128 MB recommended</LI>
+<LI>250 MB NTFS or 500 MB FAT disk space</LI>
+<LI>NT 4.0 is preferred; NT 3.51 will also work.
+</LI>
+</UL>
+</UL>
+<P>
+<H2><A NAME="ss2.3">2.3 Setup the Build Environment</A></H2>
+<P>
+<UL>
+The following environment variables need to be set:
+<UL>
+<CODE>
+set MOZ_BITS=32
+<BR>
+set MOZ_DEBUG=1 (set this only if you want to build a debug build)
+<BR>
+set MOZ_GOLD=1
+<BR>
+set MOZ_MEDIUM=1
+<BR>
+set MOZ_NT=351 (if running NT3.51)
+<BR>
+set MOZ_OUT=(optional: specifies location of resultant executable)
+<BR>
+set MOZ_SRC=(top of your tree, for example: set MOZ_SRC=d:\mozilla_source 
+    if this is the directory where you checked or unzipped the source into)
+<BR>
+set MOZ_TOOLS=(location of the bin directory of your GNU tools. The build
+    looks for MOZ_TOOLS\bin\gmake.exe, so make sure that the gmake.exe from
+    the Windows Build Tools package resides there.)
+<BR>
+set NO_SECURITY=1
+<BR>
+set NSPR20=1
+<BR>
+set _MSC_VER=1100 (if you are running VC++ 5.0 or higher)
+<BR>
+</CODE>
+</UL>
+<BR>
+<P>
+</UL>
+
+<H2><A NAME="ss2.4">2.4 Run the build </A></H2>
+<UL>
+Change to the directory you copied the source into (for example,
+<CODE>cd d:\mozilla_source</CODE>). If this directory was empty before you
+installed the source, there should be two directories here:
+<CODE>README</CODE> and <CODE>mozilla</CODE>.
+<CODE>
+<PRE>
+cd mozilla\config
+nmake /f makefile.win
+cd ..
+nmake /f client.mak
+</PRE>
+</CODE>
+</UL>
+</UL>
+
+<HR>
+<H2><A NAME="s3">3. Common Sticking Points</A></H2>
+<UL>
+<LI><B>nmake has a 'fatal error', listing one of the GNU commands and a 
+hexadecimal return code.</B>
+<UL>
+This will happen as a result of not having the GNU tools and Windows Build
+tools in your path. Add the directories with the appropriate binaries to your 
+path.
+</UL>
+</LI>
+<LI>
+<B>It fails with the message "'.\WIN32' unexpected": </B>
+<UL>
+You didn't properly
+set the environment variables -- you must not include a space at the end
+of the set statements (be careful if you are cut'n'pasting).
+</UL>
+</LI>
+<LI>
+<B>It fails to build, with directory-related errors: </B>
+<UL>
+The full path
+to the source must not include any spaces. Additionally, the source must
+be extracted with an intact directory structure by a utility that understands
+long filenames. If in doubt, grab Info-Zip at 
+<A HREF="ftp://ftp.cdrom.com/pub/infozip">ftp://ftp.cdrom.com/pub/infozip</A>
+</UL>
+</LI>
+<LI>
+<B>I'm not running a 32-bit windows system, how do i build?</B>
+<UL>
+Currently, the build process depends on a 32-bit operating system. 
+Windows NT 4.0 is the recommended windows operating system. 
+</UL>
+</UL>
+<HR>
+</BODY>
+</HTML>
