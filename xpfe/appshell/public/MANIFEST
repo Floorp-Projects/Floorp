@@ -3,3 +3,4 @@
 #
 
 nsIXULCommand.h
+nsIWebShellWindow.h
