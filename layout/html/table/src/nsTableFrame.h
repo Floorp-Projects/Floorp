@@ -159,7 +159,7 @@ public:
     */
   nsCellLayoutData* FindCellLayoutData(nsTableCell* aCell);
   void    AppendLayoutData(nsVoidArray* aList, nsTableCell* aTableCell);
-  void    ResetColumnLayoutData();
+  void    RecalcLayoutData();
   void    ResetCellLayoutData( nsTableCell* aCell, 
                                nsTableCell* aAbove,
                                nsTableCell* aBelow,

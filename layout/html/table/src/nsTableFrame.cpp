@@ -241,7 +241,7 @@ void nsTableFrame::AppendLayoutData(nsVoidArray* aList, nsTableCell* aTableCell)
   }
 }
 
-void nsTableFrame::ResetColumnLayoutData()
+void nsTableFrame::RecalcLayoutData()
 {
 
   nsTablePart*  table = (nsTablePart*)mContent;
