@@ -519,6 +519,10 @@ a:focus img {
   outline: 1px dotted black;
 }
 
+select:focus {
+  border: 1px dotted black;
+}
+
 select[multiple]:focus {
   border: 1px dotted black;
 }
@@ -528,11 +532,11 @@ select[size]:focus {
 }
 
 select[size="1"]:focus {
-  border: 0px dotted black;
+  border: 1px dotted black;
 }
 
 select[size="1"]:focus input#-moz-display {
-  border: 1px dotted black;
+  border: none;
 }
 
 input[type=radio]:focus {
@@ -927,8 +931,10 @@ select:-moz-dummy-option {
 }
 
 select, select[size="1"] {
+  border: inset 1px rgb(192, 192, 192);
+  padding: 0px 0px 0px 0px;
+  margin: 0px 0px 0px 0px;
   vertical-align: bottom;
-  border: none;
   background-color:rgb(204, 204, 204);  
   color:black;
   white-space:nowrap;
@@ -967,8 +973,8 @@ select[multiple][size="1"] {
 }
 
 select[size="1"] {
+  border: inset 1px rgb(204, 204, 204);
   vertical-align: bottom;
-  border: none;
   background-color:rgb(204, 204, 204);  
   color:black;
   white-space:nowrap;
@@ -995,23 +1001,25 @@ select[disabled] input[type=button] {
 
 /* combobox display area */
 select input#-moz-display {
-  border: inset 1px rgb(204, 204, 204);
+  box-sizing: border-box;
+  border: none;
   background-color: white;
   background-image: none;
   -moz-border-radius:0px;
-  padding-left: 0px;
+  padding-left: 1px;
   padding-right: 0px;
   padding-top: 0px;
   padding-bottom: 0px;
+  margin: 0px;
 }
 
 select[disabled] input#-moz-display {
-  border: inset 1px rgb(204, 204, 204);
+  border: none;
   color: gray;
   background-color: white;
   background-image: none;
   -moz-border-radius:0px;
-  padding-left: 0px;
+  padding-left: 1px;
   padding-right: 0px;
   padding-top: 0px;
   padding-bottom: 0px;
@@ -1019,11 +1027,11 @@ select[disabled] input#-moz-display {
 
 /* combbox display area - active */
 select input#-moz-display:active {
-  border: inset 1px rgb(204, 204, 204);
+  border: none;
   background-color:white;
   background-image: none;
   -moz-border-radius:0px;
-  padding-left: 0px;
+  padding-left: 1px;
   padding-right: 0px;
   padding-top: 0px;
   padding-bottom: 0px;
@@ -1104,6 +1112,21 @@ select[multiple][size="1"] option[-moz-option-selected] {
   background-color:rgb(51,51,102); 
 }
 
+select input[type="button"]#-moz-display:-moz-focus-inner {
+   padding-left  : 3px;
+   padding-right : 0px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+   margin: 0px;
+}
+
+select input[type="button"]#-moz-display:focus:-moz-focus-inner {
+   padding-left  : 0px;
+   padding-right : 0px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+   margin: 0px;
+}
 
 option.selectedfocus {
   border:   1px dotted white;
