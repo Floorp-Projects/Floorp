@@ -1026,6 +1026,8 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext*      aPresContext,
     nsRect rect;
     mScrollbar->GetRect(rect);
     aReflowState.availSize.width -= rect.width;
+    ((nsHTMLReflowState&)aReflowState.reflowState).mComputedWidth -= rect.width;
+    ((nsHTMLReflowState&)aReflowState.reflowState).availableWidth -= rect.width;
   }
 
   return rv;
