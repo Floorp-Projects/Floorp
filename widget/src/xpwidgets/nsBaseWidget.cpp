@@ -321,7 +321,8 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
       if (childCount-- > 1) {
         parent->mChildren->RemoveElement(this);
 
-        for (PRUint32 index = 0; index < childCount; index++) {
+        PRUint32 index;
+        for (index = 0; index < childCount; index++) {
           nsCOMPtr<nsIWidget> childWidget;
           if (NS_SUCCEEDED(parent->mChildren->QueryElementAt(index, NS_GET_IID(nsIWidget), (void**)getter_AddRefs(childWidget)))) {
             PRInt32 childZIndex;
