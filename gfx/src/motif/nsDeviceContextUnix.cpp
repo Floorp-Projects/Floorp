@@ -20,8 +20,13 @@
 #include "nsRenderingContextUnix.h"
 #include "../nsGfxCIID.h"
 
+#include "math.h"
+#include "nspr.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+#define NS_TO_X_COMPONENT(a) (a << 8)
 
 nsDeviceContextUnix :: nsDeviceContextUnix()
 {
@@ -116,74 +121,180 @@ void nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, 
   InstallColormap();
 }
 
+PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
+{
+  PRUint32 i ;
+  PRUint32 newcolor = 0;
+  PRBool foundcolor = PR_FALSE;
+
+  if (mDepth == 8) {
+
+    if (mWriteable == PR_FALSE) {
+
+      Status rc ;
+      XColor colorcell;
+      
+      colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
+      colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
+      colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
+      
+      colorcell.pixel = 0;
+      colorcell.flags = 0;
+      colorcell.pad = 0;
+
+      // On static displays, this will return closest match
+      rc = ::XAllocColor(mSurface->display,
+			 mColormap,
+			 &colorcell);
+
+      if (rc == 0) {
+	// Punt ... this cannot happen!
+	fprintf(stderr,"WHOA! IT FAILED!\n");
+      } else {
+	newcolor = colorcell.pixel;
+      }
+    } else {
+
+      // Check to see if this exact color is present.  If not, add it ourselves.  
+      // If there are no unallocated cells left, do our own closest match lookup 
+      //since X doesn't provide us with one.
+
+      Status rc ;
+      XColor colorcell;
+      
+      colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
+      colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
+      colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
+      
+      colorcell.pixel = 0;
+      colorcell.flags = 0;
+      colorcell.pad = 0;
+
+      // On non-static displays, this may fail
+      rc = ::XAllocColor(mSurface->display,
+			 mColormap,
+			 &colorcell);
+
+      if (rc == 0) {
+	
+	// The color does not already exist AND we do not have any unallocated colorcells left
+	// At his point we need to implement our own lookup matching algorithm.
+
+	unsigned long pixel;
+      
+	rc = ::XAllocColorCells(mSurface->display,
+				mColormap,
+				False,0,0,
+				&pixel,
+				1);
+	
+	if (rc == 0){
+
+	  fprintf(stderr, "Failed to allocate Color cells...this sux\n");
+
+	} else {
+
+	  colorcell.pixel = pixel;
+	  colorcell.pad = 0 ;
+	  colorcell.flags = DoRed | DoGreen | DoBlue ;
+	  colorcell.red   = NS_TO_X_COMPONENT(NS_GET_R(aColor));
+	  colorcell.green = NS_TO_X_COMPONENT(NS_GET_G(aColor));
+	  colorcell.blue  = NS_TO_X_COMPONENT(NS_GET_B(aColor));
+	  
+	  ::XStoreColor(mSurface->display, mColormap, &colorcell);
+	  
+	  newcolor = colorcell.pixel;
+	
+	} 
+      } else {
+	newcolor = colorcell.pixel;
+      }
+    }
+      
+#if 0
+      // Find the exact color.  If it is not exact, allocate
+      // The exact color and return it. If we cannot find the exact color,
+      // mark the colormap as not writeable, and return closest.
+
+      XColor * xcolors = (XColor *) PR_Malloc(sizeof(XColor)*mNumCells);
+      XColor * thiscolor;
+      
+      // XXX God this is expensive.  We either need to cache
+      //or install an RGB colormap!
+      ::XQueryColors(mSurface->display,
+		     mColormap,
+		     xcolors, 
+		     mNumCells);
+      
+      // Find the closest color and return it
+      for (i = 0; i < mNumCells; i++){
+	
+	thiscolor = (xcolors+i);
+	
+	if (thiscolor->red == NS_GET_R(aColor) &&
+	  thiscolor->green == NS_GET_G(aColor) &&
+	    thiscolor->blue == NS_GET_B(aColor)){
+	  foundcolor = PR_TRUE;
+	  break ;
+	}
+	
+      }
+      
+      if (foundcolor) {
+	newcolor = thiscolor->pixel;
+      }
+      
+      PR_Free((void*)xcolors);
+#endif
+    
+  }
+
+  return (newcolor);
+}
+
 void nsDeviceContextUnix :: InstallColormap()
 {
 
-  PRUint32 screen;
-  Visual * visual;
-  XStandardColormap * stdcmap;
-  PRInt32 numcmaps;
-  Status status;
-  PRInt32 i,j,k,l;
-  XColor * colors;
+  /*  
+      Unfortunately, we don't have control of the visual created for this display.  
+      That should be managed at an application level, since the gfx only cares that all 
+      values be passed in as 32 bit RGBA quantites.  
 
-  screen = DefaultScreen(mSurface->display);
-  visual = DefaultVisual(mSurface->display, screen);
+      This means we have to write lots and lots of code to support the fact that any 
+      number of visuals may be the one associated with this device context.
+   */
 
-  // First, let's see if someone else did the hard work already
-  status = XGetRGBColormaps(mSurface->display,
-			    RootWindow(mSurface->display,screen),
-			    &stdcmap, &numcmaps, XA_RGB_BEST_MAP);
+  XWindowAttributes wa;
 
-  if (status == 0) {
-    fprintf(stderr, "InstallColormap - FAILED\n");
-    // DoSomething here!
-    return;
-  }
+  // Find the depth of this visual
+  ::XGetWindowAttributes(mSurface->display,
+			 mSurface->drawable,
+			 &wa);
+  
+  mDepth = wa.depth;
 
-  if (stdcmap->colormap && (!stdcmap->red_max || !stdcmap->visualid)) {
-    fprintf(stderr, "InstallColormap - FAILED\n");
-    // DoSomething here!
-    return ;
-  }
+  // Check to see if the colormap is writable
+  mVisual = wa.visual;
 
-  if (!stdcmap->colormap){
-    // Do the hard work ... Create the Colormap here...
-    XVisualInfo * vinfo, vtemplate;
-    XVisualInfo * v;
-    PRInt32 numinfo;
+  if (mVisual->c_class == GrayScale || mVisual->c_class == PseudoColor || mVisual->c_class == DirectColor)
+    mWriteable = PR_TRUE;
+  else // We have StaticGray, StaticColor or TrueColor
+    mWriteable = PR_FALSE;
 
-    vinfo = ::XGetVisualInfo(mSurface->display, VisualNoMask, &vtemplate, &numinfo);
+  mNumCells = pow(2, mDepth);
 
-    for (v = vinfo; v < vinfo + numinfo; v++)
-      if (v->visualid == stdcmap->visualid){
-	visual = v->visual;
-	break;
-      }
+  mColormap = wa.colormap;
 
-    stdcmap->colormap = ::XCreateColormap(mSurface->display, 
-					 RootWindow(mSurface->display, screen),
-					 visual, AllocAll);
+  // if the colormap is writeable .....
+  if (mWriteable) {
 
-    // If this is the case, we supposedly cannot change the hw colormap
-    if (stdcmap->colormap == DefaultColormap(mSurface->display, screen)) {
-      fprintf(stderr, "InstallColormap - FAILED\n");
-      // DoSomething here!
-      return;
+    // XXX We should check the XExtensions to see if this hardware supports multiple
+    //         hardware colormaps.  If so, change this colormap to be a RGB ramp.
+    if (mDepth == 8) {
+
     }
-
-    // Go and allocate the colorcells
-
-    
-    PRUint32 numcells = stdcmap->base_pixel + 
-      ((stdcmap->red_max+1)*
-       (stdcmap->green_max+1)*
-       (stdcmap->blue_max+1));
-
   }
 
-
-  return ;
 }
 
 nsIFontCache* nsDeviceContextUnix::GetFontCache()
@@ -260,6 +371,12 @@ PRUint8 * nsDeviceContextUnix :: GetGammaTable(void)
 
   return nsnull;
 }
+
+
+
+
+
+
 
 
 

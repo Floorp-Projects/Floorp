@@ -17,6 +17,8 @@
  */
 
 #include "nsRenderingContextUnix.h"
+#include "nsDeviceContextUnix.h"
+
 #include <math.h>
 #include "nspr.h"
 
@@ -132,18 +134,25 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
 {
   XGCValues values ;
 
-  //mCurrentColor = aColor ;
+  mCurrentColor = aColor ;
 
   // XXX
-  mCurrentColor++;
+  //mCurrentColor++;
+
+  PRUint32 pixel ;
+
+  pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+
+  mCurrentColor = pixel;
 
   values.foreground = mCurrentColor;
   values.background = mCurrentColor;
 
-  XChangeGC(mRenderingSurface->display,
-	    mRenderingSurface->gc,
-	    GCForeground | GCBackground,
-	    &values);
+  ::XChangeGC(mRenderingSurface->display,
+	      mRenderingSurface->gc,
+	      GCForeground | GCBackground,
+	      &values);
+  
 }
 
 nscolor nsRenderingContextUnix :: GetColor() const

@@ -33,7 +33,7 @@ EXTRA_DSO_LDOPTS+=\
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libreg.so \
 	$(LIBNSPR)\
-	$(DIST)/lib/libplc21.a -lXt -lX11
+	$(DIST)/lib/libplc21.a -lXt -lX11 -lm
 
 CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
 	nsRenderingContextUnix.cpp nsRegionUnix.cpp nsImageUnix.cpp
