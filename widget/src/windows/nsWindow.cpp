@@ -2054,6 +2054,23 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
         break;
 
+        case WM_SYSCOMMAND:
+          // all we care about right now are the minimize and maximize buttons
+          if (wParam == SC_MINIMIZE || wParam == SC_MAXIMIZE || wParam == SC_RESTORE) {
+            nsSizeModeEvent event;
+            event.eventStructType = NS_SIZEMODE_EVENT;
+            event.mSizeMode = nsSizeMode_Normal;
+            if (wParam == SC_MINIMIZE)
+              event.mSizeMode = nsSizeMode_Minimized;
+            if (wParam == SC_MAXIMIZE)
+              event.mSizeMode = nsSizeMode_Maximized;
+            InitEvent(event, NS_SIZEMODE);
+
+            result = DispatchWindowEvent(&event);
+            NS_RELEASE(event.widget);
+          }
+          break;
+
         case WM_DISPLAYCHANGE:
           DispatchStandardEvent(NS_DISPLAYCHANGED);
         break;

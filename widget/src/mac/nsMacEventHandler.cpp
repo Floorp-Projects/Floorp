@@ -114,6 +114,27 @@ void nsMacEventDispatchHandler::DispatchGuiEvent(nsWindow *aWidget, PRUint32 aEv
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
+void nsMacEventDispatchHandler::DispatchSizeModeEvent(nsWindow *aWidget, nsSizeMode aMode)
+{
+	NS_ASSERTION(aWidget,"attempted to dispatch gui event to null widget");
+	if (!aWidget)
+		return;
+
+	nsSizeModeEvent	event;
+	event.eventStructType = NS_SIZEMODE_EVENT;
+	event.point.x = 0;
+	event.point.y = 0;
+	event.time = PR_IntervalNow();
+	event.nativeMsg = nsnull;
+	event.message = NS_SIZEMODE;
+	event.widget = aWidget;
+	event.mSizeMode = aMode;
+	aWidget->DispatchWindowEvent(event);
+}
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 {
     // This short circut lives inside of nsEventStateManager now
@@ -393,7 +414,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	menuEvent.nativeMsg	= (void*)&aOSEvent;
 
 	// nsMenuEvent
-	menuEvent.mMenuItem	= nsnull;						//€TODO: initialize mMenuItem
+	menuEvent.mMenuItem	= nsnull;						//ÄTODO: initialize mMenuItem
 	menuEvent.mCommand	= aMenuResult;
 
 	// dispatch the menu event
@@ -442,7 +463,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 // for processing. Create a Gecko event (using the appropriate message type) and pass
 // it along.
 //
-// €€€THIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
+// ÄÄÄTHIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
 //
 PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
@@ -1013,7 +1034,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		}
 		else
 		{
-		  //€TODO:	if the focusedWidget doesn't have a menubar,
+		  //ÄTODO:	if the focusedWidget doesn't have a menubar,
 		  //				look all the way up to the window
 		  //				until one of the parents has a menubar
 		}
@@ -1153,6 +1174,9 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 		case inZoomIn:
 		case inZoomOut:
 		{
+			gEventDispatchHandler.DispatchSizeModeEvent(mTopLevelWidget,
+				partCode == inZoomIn ? nsSizeMode_Normal : nsSizeMode_Maximized);
+
 			// Now that we have found the partcode it is ok to actually zoom the window
 			ZoomWindow(whichWindow, partCode, (whichWindow == FrontWindow()));
 			
