@@ -83,12 +83,6 @@ static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 static NS_DEFINE_IID(kCSSBreaksSID, NS_CSS_BREAKS_SID);
 static NS_DEFINE_IID(kCSSPageSID, NS_CSS_PAGE_SID);
 
-// EnsureBlockDisplay:
-//  - if the display value (argument) is not a block-type
-//    then we set it to a valid block display value
-//  - For enforcing the floated/positioned element CSS2 rules
-static void EnsureBlockDisplay(/*in out*/PRUint8 &display);
-
 // -- nsCSSSelector -------------------------------
 
 #define NS_IF_COPY(dest,source,type)  \
@@ -3108,41 +3102,6 @@ MapDeclarationPrintInto(nsICSSDeclaration* aDeclaration,
 	}
 }
 
-void EnsureBlockDisplay(/*in out*/PRUint8 &display)
-{
-  // see if the display value is already a block
-  switch (display) {
-  case NS_STYLE_DISPLAY_NONE :
-    // never change display:none *ever*
-    break;
-
-  case NS_STYLE_DISPLAY_TABLE :
-  case NS_STYLE_DISPLAY_BLOCK :
-    // do not muck with these at all - already blocks
-    break;
-
-  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_COLUMN :
-  case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP :
-  case NS_STYLE_DISPLAY_TABLE_ROW :
-  case NS_STYLE_DISPLAY_TABLE_CELL :
-  case NS_STYLE_DISPLAY_TABLE_CAPTION :
-    // special cases: don't do anything since these cannot really be floated anyway
-    break;
-
-  case NS_STYLE_DISPLAY_INLINE_TABLE :
-    // make inline tables into tables
-    display = NS_STYLE_DISPLAY_TABLE;
-    break;
-
-  default :
-    // make it a block
-    display = NS_STYLE_DISPLAY_BLOCK;
-  }
-}
-
 void MapDeclarationInto(nsICSSDeclaration* aDeclaration, 
                         nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
@@ -3160,34 +3119,6 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
     MapDeclarationContentInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationUIInto(aDeclaration, aContext, parentContext, font, aPresContext);
     MapDeclarationPrintInto(aDeclaration, aContext, parentContext, font, aPresContext);
-
-    // CSS2 specified fixups:
-    //  - these must be done after all declarations are mapped since they can cross style-structs
-
-    // 1) if float is not none, and display is not none, then we must set display to block
-    //    XXX - there are problems with following the spec here: what we will do instead of
-    //          following the letter of the spec is to make sure that floated elements are
-    //          some kind of block, not strictly 'block' - see EnsureBlockDisplay method
-    nsStyleDisplay *disp = (nsStyleDisplay *)aContext->GetMutableStyleData(eStyleStruct_Display);
-    if (disp) {
-      if (disp->mDisplay != NS_STYLE_DISPLAY_NONE &&
-          disp->mFloats != NS_STYLE_FLOAT_NONE ) {
-        EnsureBlockDisplay(disp->mDisplay);
-      }
-    }
-    // 2) if position is 'absolute' or 'fixed' then display must be 'block and float must be 'none'
-    //    XXX - see note for fixup 1) above...
-    nsStylePosition *pos = (nsStylePosition *)aContext->GetStyleData(eStyleStruct_Position);
-    if (pos) {
-      if (pos->IsAbsolutelyPositioned()) {
-        if (disp) {
-          if(disp->mDisplay != NS_STYLE_DISPLAY_NONE) {
-            EnsureBlockDisplay(disp->mDisplay);
-            disp->mFloats = NS_STYLE_FLOAT_NONE;
-          }
-        }
-      }
-    }
 
     NS_IF_RELEASE(parentContext);
   }
