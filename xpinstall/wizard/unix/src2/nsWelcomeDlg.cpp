@@ -58,18 +58,22 @@ nsWelcomeDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
     if (aData != gCtx->wdlg) return;
+#ifdef MOZ_WIDGET_GTK
     if (gCtx->bMoving) 
     {
         gCtx->bMoving = FALSE;
         return;
     }
+#endif
 
     // hide this notebook page
     gCtx->wdlg->Hide();
 
     // show the next dlg
     gCtx->ldlg->Show();
+#ifdef MOZ_WIDGET_GTK
     gCtx->bMoving = TRUE;
+#endif
 }
 
 int
@@ -137,27 +141,44 @@ nsWelcomeDlg::Show()
         }
 
         // create a new scrollable textarea and add it to the table
+#if defined(MOZ_WIDGET_GTK)
         GtkWidget *text = gtk_text_new(NULL, NULL);
         GdkFont *font = gdk_font_load( README_FONT );
         gtk_text_set_editable(GTK_TEXT(text), FALSE);
         gtk_table_attach(GTK_TABLE(mTable), text, 1, 2, 0, 1,
-            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-			0, 0);
+                       static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+                       static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+                       0, 0);
         gtk_text_freeze(GTK_TEXT(text));
         gtk_text_insert (GTK_TEXT(text), font, &text->style->black, NULL,
-                          readmeContents, -1);
+                       readmeContents, -1);
         gtk_text_thaw(GTK_TEXT(text));
         gtk_text_set_word_wrap(GTK_TEXT(text), TRUE);
         gtk_widget_show(text);
 
         // Add a vertical scrollbar to the GtkText widget 
         GtkWidget *vscrollbar = gtk_vscrollbar_new (GTK_TEXT (text)->vadj);
-        gtk_table_attach(GTK_TABLE(mTable), vscrollbar, 2, 3, 0, 1,
-            GTK_FILL,
-			static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL),
-			0, 0);
+        gtk_table_attach(GTK_TABLE(mTable), vscrollbar, 2, 3, 0, 1, GTK_FILL,
+                       static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL),
+                       0, 0);
         gtk_widget_show(vscrollbar);
+#elif defined(MOZ_WIDGET_GTK2)
+        GtkWidget *text = gtk_scrolled_window_new (NULL, NULL);
+        GtkWidget *textview = gtk_text_view_new();
+        GtkTextBuffer *textbuffer;
+
+        textbuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+        gtk_text_buffer_set_text (textbuffer, readmeContents, -1);
+        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (text),
+                       GTK_POLICY_AUTOMATIC,
+                       GTK_POLICY_AUTOMATIC);
+        gtk_container_add (GTK_CONTAINER (text), textview);
+        gtk_text_view_set_editable(GTK_TEXT_VIEW(textview), FALSE);
+        gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(textview), FALSE);
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(textview), GTK_WRAP_WORD);
+        gtk_table_attach_defaults(GTK_TABLE(mTable), text, 1, 2, 0, 1);
+        gtk_widget_show_all(text);
+#endif
 
         mWidgetsInit = TRUE;
     }

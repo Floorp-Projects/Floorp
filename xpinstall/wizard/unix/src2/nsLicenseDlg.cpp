@@ -56,11 +56,13 @@ nsLicenseDlg::Back(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Back");
     if (aData != gCtx->ldlg) return;
+#ifdef MOZ_WIDGET_GTK
     if (gCtx->bMoving) 
     {
         gCtx->bMoving = FALSE;
         return;
     }
+#endif
     
     gtk_main_quit();
     return;
@@ -71,18 +73,22 @@ nsLicenseDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
     if (aData != gCtx->ldlg) return;
+#ifdef MOZ_WIDGET_GTK
     if (gCtx->bMoving) 
     {
         gCtx->bMoving = FALSE;
         return;
     }
+#endif
 
     // hide this notebook page
     gCtx->ldlg->Hide();
 
     // show the next dlg
     gCtx->sdlg->Show();
+#ifdef MOZ_WIDGET_GTK
     gCtx->bMoving = TRUE;
+#endif
 }
 
 int
@@ -149,6 +155,7 @@ nsLicenseDlg::Show()
             goto BAIL;
         }
 
+#if defined(MOZ_WIDGET_GTK)
         // create a new scrollable textarea and add it to the table
         GtkWidget *text = gtk_text_new(NULL, NULL);
         GdkFont *font = gdk_font_load( LICENSE_FONT );
@@ -172,6 +179,24 @@ nsLicenseDlg::Show()
 			static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_SHRINK | GTK_FILL),
 			0, 0);
         gtk_widget_show(vscrollbar);
+#elif defined(MOZ_WIDGET_GTK2)
+        GtkWidget *text = gtk_scrolled_window_new (NULL, NULL);
+        GtkWidget *textview = gtk_text_view_new();
+        GtkTextBuffer *textbuffer;
+
+        textbuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview));
+        gtk_text_buffer_set_text (textbuffer, licenseContents, -1);
+        gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (text),
+            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+        gtk_container_add (GTK_CONTAINER (text), textview);
+        gtk_text_view_set_editable(GTK_TEXT_VIEW(textview), FALSE);
+        gtk_text_view_set_cursor_visible (GTK_TEXT_VIEW(textview), FALSE);
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(textview), GTK_WRAP_WORD);
+        gtk_table_attach(GTK_TABLE(mTable), text, 1, 2, 0, 1,
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND ),
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), 0, 0);
+        gtk_widget_show_all(text);
+#endif
 
         mWidgetsInit = TRUE;
     }

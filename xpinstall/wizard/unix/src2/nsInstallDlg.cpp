@@ -99,11 +99,13 @@ nsInstallDlg::Back(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Back");
     if (aData != gCtx->idlg) return;
+#ifdef MOZ_WIDGET_GTK
     if (gCtx->bMoving)
     {
         gCtx->bMoving = FALSE;
         return;
     }
+#endif
 
     // hide this notebook page
     gCtx->idlg->Hide();
@@ -113,7 +115,9 @@ nsInstallDlg::Back(GtkWidget *aWidget, gpointer aData)
     {
         gCtx->cdlg->Show();
         // only set bMoving for component dlg since setuptype has no "back"
+#ifdef MOZ_WIDGET_GTK
         gCtx->bMoving = TRUE;
+#endif
     }
     else
     {
@@ -130,12 +134,14 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     GtkWidget *pauseLabel, *resumeLabel;
 
     if (aData != gCtx->idlg) return;
+#ifdef MOZ_WIDGET_GTK
     if (gCtx->bMoving)
     {
         gCtx->bMoving = FALSE;
         DUMP("Moving done!");
         return;
     }
+#endif
 
     bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
     comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
@@ -210,7 +216,9 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     if (gCtx->opt->mMode == nsXIOptions::MODE_DEFAULT)
         gtk_main_quit();
     
+#ifdef MOZ_WIDGET_GTK
     gCtx->bMoving = TRUE;
+#endif
     return;
 }
 
@@ -959,7 +967,7 @@ nsInstallDlg::SaveModulesToggled(GtkWidget *aWidget, gpointer aData)
 void
 nsInstallDlg::ShowProxySettings(GtkWidget *aWidget, gpointer aData)
 {
-    GtkWidget *psDlg, *psTable, *packer;
+    GtkWidget *psDlg, *psTable;
     GtkWidget *okButton, *cancelButton;
     GtkWidget *psLabel[NUM_PS_ENTRIES];
     int i;
@@ -981,12 +989,9 @@ nsInstallDlg::ShowProxySettings(GtkWidget *aWidget, gpointer aData)
         psLabel[i] = gtk_label_new(gCtx->Res(resName));
         gtk_widget_show(psLabel[i]);
 
-        packer = gtk_packer_new();
-        gtk_packer_add_defaults(GTK_PACKER(packer), psLabel[i], GTK_SIDE_RIGHT,
-            GTK_ANCHOR_CENTER, GTK_FILL_X);
-        gtk_widget_show(packer);
+        gtk_misc_set_alignment(GTK_MISC(psLabel[i]), 1, 0.5);
 
-        gtk_table_attach(GTK_TABLE(psTable), packer, 0, 1, i, i + 1,
+        gtk_table_attach(GTK_TABLE(psTable), psLabel[i], 0, 1, i, i + 1,
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), 5, 5);
     }
@@ -1190,7 +1195,7 @@ static GtkWidget *crcDlg = (GtkWidget *) NULL;
 void
 nsInstallDlg::ShowCRCDlg()
 {
-    GtkWidget *label, *okButton, *packer;
+    GtkWidget *label, *okButton;
 
     if (gCtx->opt->mMode == nsXIOptions::MODE_SILENT) {
        ErrorHandler(E_CRC_FAILED);
@@ -1204,17 +1209,14 @@ nsInstallDlg::ShowCRCDlg()
        gtk_window_set_modal(GTK_WINDOW(crcDlg), TRUE);
        label = gtk_label_new(gCtx->Res("CRC_CHECK"));
        okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-       packer = gtk_packer_new();
-
-       if (crcDlg && label && okButton && packer)
+       if (crcDlg && label && okButton )
        {
-           gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
-           gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
-                                   GTK_ANCHOR_CENTER, GTK_FILL_X);
+           gtk_misc_set_padding(GTK_MISC(label), 20, 20);
+           gtk_misc_set_alignment(GTK_MISC(label), 0.5, 1);
            gtk_window_set_title(GTK_WINDOW(crcDlg), gCtx->opt->mTitle);
            gtk_window_set_position(GTK_WINDOW(crcDlg), GTK_WIN_POS_CENTER);
            gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcDlg)->vbox), 
-                             packer);
+                             label);
            gtk_container_add(GTK_CONTAINER(GTK_DIALOG(crcDlg)->action_area),
                              okButton);
            gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
@@ -1230,7 +1232,7 @@ nsInstallDlg::ShowCRCDlg()
 int
 nsInstallDlg::ShowCxnDroppedDlg()
 {
-    GtkWidget *cxnDroppedDlg, *label, *okButton, *packer;
+    GtkWidget *cxnDroppedDlg, *label, *okButton;
 
     // throw up dialog informing user to press resume
     // or to cancel out
@@ -1243,18 +1245,16 @@ nsInstallDlg::ShowCxnDroppedDlg()
     gtk_window_set_modal(GTK_WINDOW(cxnDroppedDlg), TRUE);
     label = gtk_label_new(gCtx->Res("CXN_DROPPED"));
     okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
-    packer = gtk_packer_new();
 
-    if (cxnDroppedDlg && label && okButton && packer)
+    if (cxnDroppedDlg && label && okButton )
     {
-        gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);
-        gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
-                                GTK_ANCHOR_CENTER, GTK_FILL_X);
+        gtk_misc_set_padding(GTK_MISC(label), 20, 20);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.5, 1);
         gtk_window_set_modal(GTK_WINDOW(cxnDroppedDlg), TRUE);
         gtk_window_set_title(GTK_WINDOW(cxnDroppedDlg), gCtx->opt->mTitle);
         gtk_window_set_position(GTK_WINDOW(cxnDroppedDlg), GTK_WIN_POS_CENTER);
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(cxnDroppedDlg)->vbox), 
-                          packer);
+                          label);
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(cxnDroppedDlg)->action_area),
                           okButton);
         gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
