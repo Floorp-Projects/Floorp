@@ -1121,7 +1121,7 @@ function ComposeFieldsReady(msgType)
 function handleMailtoArgs(mailtoUrl)
 {
   // see if the string is a mailto url....do this by checking the first 7 characters of the string
-  if (mailtoUrl.search(/(^mailto:)/i) == 0)
+  if (/^mailto:/i.test(mailtoUrl))
   {
     // if it is a mailto url, turn the mailto url into a MsgComposeParams object....
     var uri = gIOService.newURI(mailtoUrl, null, null);
@@ -2707,6 +2707,13 @@ var envelopeDragObserver = {
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
+      // make sure the attachment box is visible during drag over
+      var attachmentBox = document.getElementById("attachments-box");
+      if (attachmentBox.hidden)
+      {
+        attachmentBox.hidden = false;
+        document.getElementById("attachmentbucket-sizer").hidden=false;
+      }
     },
 
   onDragExit: function (aEvent, aDragSession)
