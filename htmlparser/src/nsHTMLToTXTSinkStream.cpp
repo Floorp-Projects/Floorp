@@ -371,6 +371,31 @@ nsHTMLToTXTSinkStream::DoFragment(PRBool aFlag)
   return NS_OK; 
 }
 
+/**
+ * This gets called when handling illegal contents, especially
+ * in dealing with tables. This method creates a new context.
+ * 
+ * @update 04/04/99 harishd
+ * @param aPosition - The position from where the new context begins.
+ */
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::BeginContext(PRInt32 aPosition) 
+{
+  return NS_OK;
+}
+
+/**
+ * This method terminates any new context that got created by
+ * BeginContext and switches back to the main context.  
+ *
+ * @update 04/04/99 harishd
+ * @param aPosition - Validates the end of a context.
+ */
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::EndContext(PRInt32 aPosition)
+{
+  return NS_OK;
+}
 
 void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 {
