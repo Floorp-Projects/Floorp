@@ -74,21 +74,14 @@ public class Interpreter extends LabelTable {
                                             Scriptable scope,
                                             Vector regexps)
     {
-        Object v = scope.get("RegExp", scope);   
         Object[] result = new Object[regexps.size()];
+        RegExpProxy rep = cx.getRegExpProxy();
         for (int i = 0; i < regexps.size(); i++) {
             Node regexp = (Node) regexps.elementAt(i);
             Node left = regexp.getFirstChild();
             Node right = regexp.getLastChild();
-            Object[] args = new Object[left == right ? 1 : 2];
-            args[0] = left.getString();
-            if (left != right)
-                args[1] = right.getString();
-            try {
-                result[i] = ScriptRuntime.call(cx, v, scope, args);
-            } catch (JavaScriptException e) {
-                result[i] = null;
-            }
+            result[i] = rep.newRegExp(scope, left.getString(), 
+                                (left != right) ? right.getString() : null);
             regexp.putProp(Node.REGEXP_PROP, new Integer(i));
         }
         return result;
