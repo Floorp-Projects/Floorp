@@ -423,6 +423,9 @@ BookmarksTree.prototype = {
         if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" &&
             i > 1)
           return;
+        // Don't allow editing of the root folder name
+        if (gSelectionTracker.currentItem.id == "NC:BookmarksRoot")
+          return;
         if (gSelectionTracker.clickCount == 1) 
           gBookmarksShell.commands.editCell(this.tree.currentItem, i);
         break;
@@ -437,7 +440,8 @@ BookmarksTree.prototype = {
   {
     if (this.tree.selectedItems.length > 1) return;
     if (aEvent.keyCode == 113 && aEvent.shiftKey) {
-      if (this.resolveType(NODE_ID(this.tree.currentItem)) == NC_NS + "Bookmark")
+      const kNodeID = NODE_ID(this.tree.currentItem);
+      if (this.resolveType(kNodeId) == NC_NS + "Bookmark" && kNodeID != "NC:NavCenter")
         gBookmarksShell.commands.editCell (this.tree.currentItem, 1);
     }
     else if (aEvent.keyCode == 113)
@@ -453,6 +457,7 @@ BookmarksTree.prototype = {
     var kids = ContentUtils.childByLocalName(folder, "treechildren");
     if (!kids) return;
     
+    dump("*** trying to select items\n");
     var item = kids.firstChild;
     while (item) {
       if (item.id == aItemURI) break;

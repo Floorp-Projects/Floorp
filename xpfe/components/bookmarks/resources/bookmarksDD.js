@@ -21,13 +21,6 @@
  *   Ben Goodger <ben@netscape.com> (Original Author, v2.0)
  */
 
-////////////////////////////////////////////////////////////////////////////
-// XXX - WARNING - XXX
-// This file is being reimplemented for Mozilla 0.8. Do NOT make modifications
-// to this file without consulting ben@netscape.com first. This code is being
-// rewritten to use the nsDragAndDrop library so changes you make here will
-// likely be lost. 
-
 var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
@@ -142,6 +135,13 @@ var bookmarksDNDObserver = {
     var dropItem = aEvent.target.parentNode.parentNode;
     if (aEvent.target.localName == "treechildren") 
       dropItem = aEvent.target.parentNode; // handle drop on blank space. 
+
+    // In the default view, the root node is the NC root, and we don't want to append
+    // to that. Adjust accordingly...
+    if (NODE_ID(dropItem) == "NC:NavCenter")
+      dropItem = document.getElementById("treechildren-bookmarks").firstChild;
+    
+    if (!dropItem) return;
       
     // XXX we could probably compute this ourselves, but let the tree do this 
     //     automagically for now.

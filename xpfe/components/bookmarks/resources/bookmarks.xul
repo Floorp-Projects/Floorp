@@ -26,12 +26,6 @@
 
 -->
 
-<!--
-// XXX - WARNING - XXX
-// This file is being reimplemented for Mozilla 0.8. Do NOT make modifications
-// to this file without consulting ben@netscape.com first. 
-  -->
-
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks-tree.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -306,18 +300,18 @@
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
-              <treecell class="treecell-bookmark treecell-indent-editable"
+              <treecell class="treecell-bookmark treecell-indent treecell-editable"
                         editable="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-              <treecell crop="right" class="treecell-inline-edit" editable="true"
+              <treecell crop="right" class="treecell-editable" editable="true"
                         value="rdf:http://home.netscape.com/NC-rdf#URL"/>
               <treecell value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"
-                        class="treecell-inline-edit" editable="true"/>
+                        class="treecell-editable" editable="true"/>
               <treecell value="rdf:http://home.netscape.com/NC-rdf#Description"
-                        class="treecell-inline-edit" editable="true"/>
+                        class="treecell-editable" editable="true"/>
               <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
               <treecell value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
               <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
