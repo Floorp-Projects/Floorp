@@ -21,7 +21,7 @@
    -   Blake Ross <blakeross@telocity.com>
   --> 
 
-<!-- extracted from ./bookmarks.xul -->
+<!-- extracted from bookmarksManager.xul -->
 <!ENTITY menuBar.tooltip               "Menu Bar">
 <!ENTITY bookmarkToolbar.tooltip       "Bookmark Toolbar">
 <!ENTITY menuitem.newBookmark.label    "New Bookmark...">
@@ -39,12 +39,12 @@
 <!ENTITY menuitem.find.accesskey       "S">
 <!ENTITY edit.find.keybinding          "f">
 <!ENTITY command.properties.label      "Properties...">
-<!ENTITY command.properties.accesskey  "r">
+<!ENTITY command.properties.accesskey  "i">
 <!ENTITY edit.properties.keybinding    "i">
 <!ENTITY command.rename.label          "Rename...">
 <!ENTITY command.delete.label          "Delete">
-<!ENTITY command.fileBookmark.label    "File Bookmark(s)...">
-<!ENTITY command.fileBookmark.accesskey "l">
+<!ENTITY command.moveBookmark.label    "Move Bookmark(s)...">
+<!ENTITY command.moveBookmark.accesskey "M">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
 

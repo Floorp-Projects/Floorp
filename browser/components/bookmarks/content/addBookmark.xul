@@ -25,16 +25,10 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css"?>
-<?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/"?>
+<?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % addBookmarkDTD SYSTEM "chrome://communicator/locale/bookmarks/addBookmark.dtd">
-%addBookmarkDTD;
-]>
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/addBookmark.dtd">
 
 <dialog id="newBookmarkDialog" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -44,13 +38,8 @@
         persist="screenX screenY width height"
         screenX="24" screenY="24">
    
-  
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/addBookmark.js"/>
-
-  <stringbundle id="bookmarksbundle"
-                src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/addBookmark.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
 
   <broadcaster id="showaddgroup" hidden="true"/>
 
