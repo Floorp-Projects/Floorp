@@ -19,7 +19,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onload="Startup()" title="&editorWindow.title;">
+			  onload="Startup()" title="Editor">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
@@ -27,8 +27,8 @@
   <broadcaster id="canPrint"/>
   
   <menubar>
-    <menu name="&fileMenu.label;">
-      <menuitem name="&newCmd.label;" onclick=""/>
+    <menu name="File">
+      <menuitem name=".New" onclick=""/>
       <menuitem name=".Change Icons" onclick=""/>
       <separator />
       <menuitem name=".Print Setup" onclick=""/>
