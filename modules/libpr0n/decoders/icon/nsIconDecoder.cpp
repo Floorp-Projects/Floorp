@@ -113,7 +113,10 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   if (mObserver)
     mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
-  mFrame->Init(0, 0, w, h, gfxIFormats::RGB_A1);
+  rv = mFrame->Init(0, 0, w, h, gfxIFormats::RGB_A1);
+  if (NS_FAILED(rv))
+    return rv;
+
   mImage->AppendFrame(mFrame);
   if (mObserver)
     mObserver->OnStartFrame(nsnull, nsnull, mFrame);

@@ -336,8 +336,12 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
 
   // initalize the frame and append it to the container
   decoder->mImageFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-  decoder->mImageFrame->Init(0, 0, width, height, format);
-  
+  if (!decoder->mImageFrame)
+    return MNG_FALSE;
+
+  if (NS_FAILED(decoder->mImageFrame->Init(0, 0, width, height, format)))
+    return MNG_FALSE;
+
   decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
     
   if (decoder->mObserver)
