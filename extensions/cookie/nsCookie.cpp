@@ -86,7 +86,7 @@ typedef struct _cookie_CookieStruct {
   char * cookie;
   time_t expires;
   time_t lastAccessed;
-  PRBool xxx;
+  PRBool secure;
   PRBool isDomain;   /* is it a domain instead of an absolute host? */
 } cookie_CookieStruct;
 
@@ -1038,7 +1038,7 @@ PUBLIC char *
 COOKIE_GetCookie(char * address) {
   char *name=0;
   cookie_CookieStruct * cookie_s;
-  PRBool xxx = PR_FALSE;
+  PRBool secure = PR_FALSE;
   time_t cur_time = get_current_time();
 
   int host_length;
@@ -1051,7 +1051,7 @@ COOKIE_GetCookie(char * address) {
     return NULL;
   }
   if (!PL_strncasecmp(address, "https", 5)) {
-     xxx = PR_TRUE;
+     secure = PR_TRUE;
   }
 
   /* search for all cookies */
@@ -1088,8 +1088,8 @@ COOKIE_GetCookie(char * address) {
     /* shorter strings always come last so there can be no ambiquity */
     if(cookie_s->path && !PL_strncmp(path, cookie_s->path, PL_strlen(cookie_s->path))) {
 
-      /* if the cookie is xxx and the path isn't, dont send it */
-      if (cookie_s->xxx & !xxx) {
+      /* if the cookie is secure and the path isn't, dont send it */
+      if (cookie_s->secure & !secure) {
         continue; /* back to top of while */
       }
 
@@ -1382,7 +1382,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
   char *cur_path = cookie_ParseURL(curURL, GET_PATH_PART);
   char *cur_host = cookie_ParseURL(curURL, GET_HOST_PART);
   char *semi_colon, *ptr, *equal;
-  PRBool xxx=PR_FALSE, isDomain=PR_FALSE;
+  PRBool secure=PR_FALSE, isDomain=PR_FALSE;
   PRBool bCookieAdded;
   PRBool pref_scd = PR_FALSE;
 
@@ -1429,10 +1429,10 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
     *semi_colon++ = '\0';
 
     /* there must be some attributes. (hopefully) */
-    if ((ptr=PL_strcasestr(semi_colon, "secure="))) {
+    if ((ptr=PL_strcasestr(semi_colon, "secure"))) {
       char cPre=*(ptr-1), cPost=*(ptr+6);
       if (((cPre==' ') || (cPre==';')) && (!cPost || (cPost==' ') || (cPost==';'))) {
-        xxx = PR_TRUE;
+        secure = PR_TRUE;
       } 
     }
 
@@ -1678,7 +1678,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
     prev_cookie->path = path_from_header;
     prev_cookie->host = host_from_header;
     prev_cookie->name = name_from_header;
-    prev_cookie->xxx = xxx;
+    prev_cookie->secure = secure;
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = get_current_time();
   } else {
@@ -1701,7 +1701,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
     prev_cookie->path = path_from_header;
     prev_cookie->host = host_from_header;
     prev_cookie->expires = cookie_TrimLifetime(timeToExpire);
-    prev_cookie->xxx = xxx;
+    prev_cookie->secure = secure;
     prev_cookie->isDomain = isDomain;
     prev_cookie->lastAccessed = get_current_time();
     if(!cookie_cookieList) {
@@ -2026,10 +2026,10 @@ cookie_Save() {
 
   /* format shall be:
    *
-   * host \t isDomain \t path \t xxx \t expires \t name \t cookie
+   * host \t isDomain \t path \t secure \t expires \t name \t cookie
    *
    * isDomain is PR_TRUE or PR_FALSE
-   * xxx is PR_TRUE or PR_FALSE
+   * secure is PR_TRUE or PR_FALSE
    * expires is a time_t integer
    * cookie can have tabs
    */
@@ -2052,7 +2052,7 @@ cookie_Save() {
 
       strm.write(cookie_s->path, nsCRT::strlen(cookie_s->path));
 
-      if (cookie_s->xxx) {
+      if (cookie_s->secure) {
         strm.write("\tTRUE\t", 6);
       } else {
         strm.write("\tFALSE\t", 7);
@@ -2093,11 +2093,11 @@ cookie_Load() {
 
   /* format is:
    *
-   * host \t isDomain \t path \t xxx \t expires \t name \t cookie
+   * host \t isDomain \t path \t secure \t expires \t name \t cookie
    *
    * if this format isn't respected we move onto the next line in the file.
    * isDomain is PR_TRUE or PR_FALSE -- defaulting to PR_FALSE
-   * xxx is PR_TRUE or PR_FALSE   -- should default to PR_TRUE
+   * secure is PR_TRUE or PR_FALSE   -- should default to PR_TRUE
    * expires is a time_t integer
    * cookie can have tabs
    */
@@ -2111,21 +2111,21 @@ cookie_Load() {
         continue;
       }
     }
-    int hostIndex, isDomainIndex, pathIndex, xxxIndex, expiresIndex, nameIndex, cookieIndex;
+    int hostIndex, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
     hostIndex = 0;
     if ((isDomainIndex=buffer.FindChar('\t', PR_FALSE,hostIndex)+1) == 0 ||
         (pathIndex=buffer.FindChar('\t', PR_FALSE,isDomainIndex)+1) == 0 ||
-        (xxxIndex=buffer.FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
-        (expiresIndex=buffer.FindChar('\t', PR_FALSE,xxxIndex)+1) == 0 ||
+        (secureIndex=buffer.FindChar('\t', PR_FALSE,pathIndex)+1) == 0 ||
+        (expiresIndex=buffer.FindChar('\t', PR_FALSE,secureIndex)+1) == 0 ||
         (nameIndex=buffer.FindChar('\t', PR_FALSE,expiresIndex)+1) == 0 ||
         (cookieIndex=buffer.FindChar('\t', PR_FALSE,nameIndex)+1) == 0 ) {
       continue;
     }
-    nsAutoString host, isDomain, path, xxx, expires, name, cookie;
+    nsAutoString host, isDomain, path, secure, expires, name, cookie;
     buffer.Mid(host, hostIndex, isDomainIndex-hostIndex-1);
     buffer.Mid(isDomain, isDomainIndex, pathIndex-isDomainIndex-1);
-    buffer.Mid(path, pathIndex, xxxIndex-pathIndex-1);
-    buffer.Mid(xxx, xxxIndex, expiresIndex-xxxIndex-1);
+    buffer.Mid(path, pathIndex, secureIndex-pathIndex-1);
+    buffer.Mid(secure, secureIndex, expiresIndex-secureIndex-1);
     buffer.Mid(expires, expiresIndex, nameIndex-expiresIndex-1);
     buffer.Mid(name, nameIndex, cookieIndex-nameIndex-1);
     buffer.Mid(cookie, cookieIndex, buffer.Length()-cookieIndex);
@@ -2146,10 +2146,10 @@ cookie_Load() {
     } else {
       new_cookie->isDomain = PR_FALSE;
     }
-    if (xxx.EqualsWithConversion("TRUE")) {
-      new_cookie->xxx = PR_TRUE;
+    if (secure.EqualsWithConversion("TRUE")) {
+      new_cookie->secure = PR_TRUE;
     } else {
-      new_cookie->xxx = PR_FALSE;
+      new_cookie->secure = PR_FALSE;
     }
     char * expiresCString = expires.ToNewCString();
     new_cookie->expires = strtoul(expiresCString, nsnull, 10);
@@ -2454,7 +2454,7 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     aCookieList.AppendWithConversion(BREAK);
     aCookieList.AppendWithConversion(fixed_path);
     aCookieList.AppendWithConversion(BREAK);
-    aCookieList.Append(cookie->xxx ? Yes : No);
+    aCookieList.Append(cookie->secure ? Yes : No);
     aCookieList.AppendWithConversion(BREAK);
     if (cookie->expires) {
       /*
