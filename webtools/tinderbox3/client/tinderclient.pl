@@ -835,6 +835,15 @@ EOM
   $client->end_section("SETTING MOZ_OBJDIR");
 
   #
+  # Clean non-objdir stuff out
+  #
+  # XXX only the rm -rf is necessary now, this is temporary while I clean out
+  # my personal trees
+  if (-f "Makefile") {
+    $client->do_command("make distclean", $init_tree_status+2);
+  }
+
+  #
   # Checkout
   #
   # - If cvs co date is off, do nothing
@@ -926,11 +935,6 @@ EOM
   #
   if (!$err && (($build_vars->{SHOULD_BUILD} && $config->{clobber}) ||
       $client->eat_command("clobber") || $please_clobber)) {
-    # XXX only the rm -rf is necessary now, this is temporary while I clean out
-    # my personal trees
-    if (-f "Makefile") {
-      $client->do_command("make distclean", $init_tree_status+2);
-    }
     $client->do_command("rm -rf objdir", $init_tree_status+2);
     $build_vars->{SHOULD_BUILD} = 1;
   }
