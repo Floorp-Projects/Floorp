@@ -683,10 +683,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
       nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
       if (parentTreeOwner) {
-        PRInt32 shellType;
-        parentAsItem->GetItemType(&shellType);
         PRBool is_primary_content =
-          shellType == nsIDocShellTreeItem::typeChrome &&
           value.EqualsIgnoreCase("content-primary");
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary_content,
