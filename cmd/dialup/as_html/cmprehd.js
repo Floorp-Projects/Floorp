@@ -17,10 +17,20 @@
  */
 <!--  to hide script contents from old browsers
 
+var globals = parent.parent.parent.globals;
+
 function loadData()
 {
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
 	
+	globals.debug( "removing support window" );
+	
+	if ( globals.supportWindow && globals.supportWindow != null )
+	{
+		globals.supportWindow.close();
+		globals.supportWindow = null;
+	}
+
 	if ( parent.parent.controls.generateControls )
 		parent.parent.controls.generateControls();
 }

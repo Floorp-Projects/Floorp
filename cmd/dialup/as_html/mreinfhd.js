@@ -39,11 +39,11 @@ function loadData()
 	
 	//globals.debug( "removing support window" );
 
-	if ( globals.supportWindow && globals.supportWindow != null )
-	{
-		globals.supportWindow.close();
-		globals.supportWindow = null;
-	}
+//	if ( globals.supportWindow && globals.supportWindow != null )
+//	{
+//		globals.supportWindow.close();
+//		globals.supportWindow = null;
+//	}
 	
 	if ( controls.generateControls )
 		controls.generateControls();
