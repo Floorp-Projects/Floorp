@@ -68,14 +68,6 @@ tree {
     margin: 0px;
 }
 
-treechildren {
-    border: 1px white solid;
-}
-
-treechildren[focused] {
-    border: 1px black solid;
-}
-
 tabpanels {
     background: none;
     padding: 2px;

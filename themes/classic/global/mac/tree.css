@@ -41,6 +41,16 @@ tree {
   color: -moz-DialogText;
 }
 
+/* ::::: tree focusring ::::: */
+
+.focusring > .tree-rows > .tree-bodybox {
+  border: 2px solid transparent;  
+}
+
+.focusring:focus > .tree-rows > .tree-bodybox {
+  border: 2px solid -moz-mac-focusring;
+}
+
 /* ::::: tree rows ::::: */
 
 tree[selstyle="primary"] > treechildren:-moz-tree-row,

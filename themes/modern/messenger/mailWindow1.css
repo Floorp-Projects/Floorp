@@ -102,16 +102,6 @@
   -moz-border-bottom-colors: #5D616E #BEC3D3;
 }
 
-#folderTree > .tree-rows > .tree-bodybox,
-#threadTree > .tree-rows > .tree-bodybox {
-  border: 1px solid transparent;  
-}
-
-#folderTree:focus > .tree-rows > .tree-bodybox,
-#threadTree:focus > .tree-rows > .tree-bodybox {
-  border: 1px solid #000000;
-}
-
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {

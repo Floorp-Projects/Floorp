@@ -1504,9 +1504,6 @@ function xtv_pactcell (action)
 XULTreeView.prototype.onRouteFocus =
 function xtv_rfocus (event)
 {
-    if (this.tree && this.tree.treeBody)
-        this.tree.treeBody.setAttribute("focused", true)
-
     if ("onFocus" in this)
         this.onFocus(event);
 }
@@ -1514,9 +1511,6 @@ function xtv_rfocus (event)
 XULTreeView.prototype.onRouteBlur =
 function xtv_rblur (event)
 {
-    if (this.tree && this.tree.treeBody)
-        this.tree.treeBody.removeAttribute("focused");
-
     if ("onBlur" in this)
         this.onBlur(event);
 }

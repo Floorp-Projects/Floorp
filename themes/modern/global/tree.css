@@ -54,6 +54,16 @@ tree {
   color: #000000;
 }
 
+/* ::::: tree focusring ::::: */
+
+.focusring > .tree-rows > .tree-bodybox {
+  border: 1px solid transparent;  
+}
+
+.focusring:focus > .tree-rows > .tree-bodybox {
+  border: 1px solid #000000;
+}
+
 /* ::::: tree rows ::::: */
 
 tree[selstyle="primary"] > treechildren:-moz-tree-row,

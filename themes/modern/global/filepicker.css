@@ -66,17 +66,6 @@ treechildren:-moz-tree-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/filepicker/blank.gif");
 }
 
-
-/* ::::: focus rules ::::: */
-
-#directoryTree > treerows > .tree-bodybox {
-  border: 1px solid transparent;
-} 
-
-#directoryTree:focus > treerows > .tree-bodybox {
-  border-color: #000000;
-}
-
 /* ::::: button items ::::: */
 
 .up-button {

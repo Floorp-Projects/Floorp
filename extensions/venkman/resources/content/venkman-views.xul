@@ -49,6 +49,7 @@
     <floatingview id="breaks" title="&Break.label;" flex="1">
       <vbox id="break-view-content" flex="1">
         <tree flex="1" id="break-tree" persist="height" hidecolumnpicker="true"
+          class="focusring"
           context="context:breaks">
 
           <treecols>
@@ -71,6 +72,7 @@
     <floatingview id="locals" title="&Locals.label;" flex="1">
       <vbox id="locals-view-content" flex="1">
         <tree flex="1" id="locals-tree" persist="height"
+          class="focusring"
           context="context:locals">
 
           <treecols>
@@ -117,6 +119,7 @@
             oninput="console.views.scripts.onSearchInput(event);"/>
         </hbox>
         <tree flex="1" id="scripts-tree" persist="height"
+          class="focusring"
           context="context:scripts">
 
           <treecols>
@@ -163,6 +166,7 @@
           </toolbar>
         </toolbox>
         <tree id="source-tree" flex="1" persist="width"
+          class="focusring"
           onclick="console.views.source.onClick(event);"
           onselect="console.views.source.onSelect(event);"
           context="context:source">
@@ -189,7 +193,9 @@
     <floatingview id="stack" title="&Stack.label;" flex="1"
       grippytooltiptext="&Stack.label;">
       <vbox id="stack-view-content" flex="1">
-        <tree flex="2" id="stack-tree" persist="width" context="context:stack">
+        <tree flex="2" id="stack-tree" persist="width"
+          class="focusring"
+          context="context:stack">
 
           <treecols>
             <treecol id="stack:col-0" flex="1" persist="hidden width"
@@ -211,6 +217,7 @@
     <floatingview id="watches" title="&Watch.label;" flex="1">
       <vbox id="watch-view-content" flex="1">
         <tree flex="1" id="watch-tree" persist="height"
+          class="focusring"
           context="context:watches">
 
           <treecols>
@@ -238,6 +245,7 @@
     <floatingview id="windows" title="&Windows.label;" flex="1">
       <vbox id="windows-view-content" flex="1">
         <tree flex="1" id="windows-tree" persist="height"
+          class="focusring"
           context="context:windows"
           hidecolumnpicker="true">
 
