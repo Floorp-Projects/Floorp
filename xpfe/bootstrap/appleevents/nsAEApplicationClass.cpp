@@ -323,6 +323,8 @@ void AEApplicationClass::HandleRun(AEDesc *token, const AppleEvent *appleEvent, 
 ----------------------------------------------------------------------------*/
 void AEApplicationClass::HandleReOpen(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
 {
+  // XXXbsmedberg this is just a hack to turn the tbox green, I will fix this tomorrow.
+#ifndef MOZ_XUL_APP
   OSErr	err = noErr;
   nsresult rv = NS_OK;
   nsCOMPtr<nsINativeAppSupport> nas;
@@ -340,6 +342,7 @@ void AEApplicationClass::HandleReOpen(AEDesc *token, const AppleEvent *appleEven
     
 	err = CheckForUnusedParameters(appleEvent);
 	ThrowIfOSErr(err);
+#endif
 }
 
 /*----------------------------------------------------------------------------
