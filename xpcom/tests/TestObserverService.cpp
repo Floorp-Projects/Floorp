@@ -74,7 +74,7 @@ TestObserver::Observe( nsISupports     *aSubject,
     		the compiler currently used on wensleydale.  This is a test.
     	*/
     cout << mName << " has observed something: subject@" << (void*)aSubject
-         << " name=" << NS_REINTERPRET(TestObserver*, NS_REINTERPRET_CAST(void*, aSubject))->mName
+         << " name=" << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, aSubject))->mName
          << " aTopic=" << topic
          << " someData=" << data << endl;
     return NS_OK;
