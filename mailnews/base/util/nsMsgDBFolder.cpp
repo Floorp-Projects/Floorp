@@ -1556,7 +1556,7 @@ nsMsgDBFolder::MatchOrChangeFilterDestination(nsIMsgFolder *newFolder, PRBool ca
     rv = accountMgr->GetAllServers(getter_AddRefs(allServers));
     if (NS_SUCCEEDED(rv) && allServers)
     {
-      PRUint32 numServers,
+      PRUint32 numServers;
       rv = allServers->Count(&numServers);
       for (PRUint32 serverIndex=0; serverIndex < numServers; serverIndex++)
       {
