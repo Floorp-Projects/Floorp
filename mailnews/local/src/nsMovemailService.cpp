@@ -612,7 +612,7 @@ nsMovemailService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopie
 }   
 
 NS_IMETHODIMP
-nsMovemailService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+nsMovemailService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {
     NS_ASSERTION(0, "This should probably never be called!");
     NS_ENSURE_ARG_POINTER(aDefaultPort);

@@ -176,3 +176,15 @@ function getEnclosingContainer(startNode) {
     
     return box;
 }
+
+function secureSelect() {
+    var serverType   = document.getElementById("server.type").getAttribute("value");
+    var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
+
+    // If the secure option is checked, protocolInfo returns a secure port value
+	// for the corresponding protocol. Otherwise, a default value is returned.
+    if (document.getElementById("server.isSecure").checked)
+        document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(true);
+    else
+        document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(false);
+}

@@ -1005,7 +1005,9 @@ nsMsgIncomingServer::GetPort(PRInt32 *aPort)
     rv = getProtocolInfo(getter_AddRefs(protocolInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return protocolInfo->GetDefaultServerPort(aPort);
+    // First param is set to FALSE so that the non-secure
+    // default port is returned
+    return protocolInfo->GetDefaultServerPort(PR_FALSE, aPort);
 }
 
 NS_IMETHODIMP
@@ -1018,7 +1020,9 @@ nsMsgIncomingServer::SetPort(PRInt32 aPort)
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 defaultPort;
-    rv = protocolInfo->GetDefaultServerPort(&defaultPort);
+    // First param is set to FALSE so that the non-secure
+    // default port is returned
+    rv = protocolInfo->GetDefaultServerPort(PR_FALSE, &defaultPort);
     if (NS_SUCCEEDED(rv) && aPort == defaultPort)
         // clear it out by setting it to the default
         rv = SetIntValue("port", PORT_NOT_SET);

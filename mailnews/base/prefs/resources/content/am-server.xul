@@ -38,18 +38,22 @@
         <text class="label" id="username.verbose"/>
       </row>
       <row autostretch="never">
-        <text class="label" value="&port.label;"/>
-        <textfield wsm_persist="true" size="3" id="server.port"/>
+        <box>
+          <text class="label" value="&port.label;"/>
+          <textfield wsm_persist="true" size="4" id="server.port"/>
+          <spring flex="1"/>
+        </box> 
       </row>
     </rows>
   </grid>
+
   <spring class="spacer"/>
 
   <titledbox>
   <title value="&serverSettings.label;"/>
   <box id="serverPrefContainer" orient="vertical" flex="1">
 
-  <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3"/>
+  <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"/>
 <!--
   <checkbox wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>

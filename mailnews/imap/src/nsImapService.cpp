@@ -2790,13 +2790,22 @@ NS_IMETHODIMP nsImapService::GetDefaultPort(PRInt32 *aDefaultPort)
 {
     NS_ENSURE_ARG_POINTER(aDefaultPort);
     *aDefaultPort = IMAP_PORT;
-	return NS_OK;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImapService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+nsImapService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {
-    return GetDefaultPort(aDefaultPort);
+    nsresult rv = NS_OK;
+
+    // Return Secure IMAP Port if secure option chosen i.e., if isSecure is TRUE
+    if (isSecure)
+       *aDefaultPort = SECURE_IMAP_PORT;
+    else    
+        rv = GetDefaultPort(aDefaultPort);
+
+    return rv;
 }
 
 NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)

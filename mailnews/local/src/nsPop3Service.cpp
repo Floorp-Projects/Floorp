@@ -522,7 +522,7 @@ nsPop3Service::GetCanDuplicate(PRBool *aCanDuplicate)
 }        
 
 NS_IMETHODIMP
-nsPop3Service::GetDefaultServerPort(PRInt32 *aPort)
+nsPop3Service::GetDefaultServerPort(PRBool isSecure, PRInt32 *aPort)
 {
     return GetDefaultPort(aPort);
 }

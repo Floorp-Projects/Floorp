@@ -167,7 +167,7 @@ nsNoneService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 }   
 
 NS_IMETHODIMP
-nsNoneService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+nsNoneService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {
     NS_ASSERTION(0, "This should probably never be called!");
     NS_ENSURE_ARG_POINTER(aDefaultPort);

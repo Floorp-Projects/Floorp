@@ -77,7 +77,10 @@ interface nsIMsgProtocolInfo : nsISupports
 
     /* the default port
        This is similar to nsIProtocolHanderl.defaultPort,
-       but for architectural reasons, there is a mail-specific interface to this */
-    readonly attribute long defaultServerPort;
+       but for architectural reasons, there is a mail-specific interface to this.
+       When the input param isSecure is set to true, for all supported protocols, 
+       the secure port value is returned. If isSecure is set to false the default
+       port value is returned  */
+    long getDefaultServerPort(in boolean isSecure);
 };
 

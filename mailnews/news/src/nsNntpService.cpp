@@ -1202,9 +1202,17 @@ NS_IMETHODIMP nsNntpService::GetDefaultPort(PRInt32 *aDefaultPort)
 }
 
 NS_IMETHODIMP
-nsNntpService::GetDefaultServerPort(PRInt32 *aDefaultPort)
+nsNntpService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 {
-    return GetDefaultPort(aDefaultPort);
+    nsresult rv = NS_OK;
+
+    // Return Secure NNTP Port if secure option chosen i.e., if isSecure is TRUE
+    if (isSecure)
+        *aDefaultPort = SECURE_NEWS_PORT;
+    else
+        rv = GetDefaultPort(aDefaultPort);
+ 
+    return rv;
 }
 
 NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
