@@ -1,6 +1,10 @@
 /** Contains style definitions for the navigator application 
  **/
 
+box#sidebar-parent {
+	margin-right: 2px;
+}
+
 [chromehidden] { /* what to do if chrome requests you be invisible */
 	display: none;
 }
@@ -94,6 +98,8 @@ input[type="text"]#urlbar {
 toolbox#main-toolbox {
 	min-width: 10px;
 	background-color: #CCCCCC;
+	margin-top: 2px;
+	margin-right: 2px;
 }
 
 toolbox#main-toolbox:toolbox-normal {
