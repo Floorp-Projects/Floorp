@@ -44,6 +44,13 @@ CPPSRCS=nsBaseWidget.cpp                \
 	nsToolbarManager.cpp            \
 	nsImageButton.cpp               \
 	nsToolbar.cpp                   \
+	nsHTColumn.cpp \
+	nsHTControlStripItem.cpp \
+	nsHTTreeItem.cpp \
+	nsHTItem.cpp \
+	nsHTTreeDataModel.cpp \
+	nsHTDataModel.cpp \
+	nsTreeView.cpp \
 	$(NULL)
 
 MODULE=raptor 
