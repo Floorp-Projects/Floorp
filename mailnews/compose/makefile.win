@@ -22,9 +22,6 @@
 DEPTH=..\..
 
 DIRS=public src prefs build resources \
-!if !defined(DISABLE_TESTS)
-      tests \
-!endif
       $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
