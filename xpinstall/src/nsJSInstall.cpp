@@ -849,23 +849,14 @@ InstallFinalizeInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     return JS_TRUE;
   }
 
-  if(argc >= 0)
-  {
-    jsrefcount saveDepth;
-    saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
-    //  public int FinalizeInstall (void);
-    nsresult rv = nativeThis->FinalizeInstall(&nativeRet);
-    JS_ResumeRequest(cx, saveDepth);
-    if (NS_FAILED(rv)) 
-        return JS_FALSE;
+  jsrefcount saveDepth;
+  saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
+  //  public int FinalizeInstall (void);
+  nsresult rv = nativeThis->FinalizeInstall(&nativeRet);
+  JS_ResumeRequest(cx, saveDepth);
 
+  if (NS_SUCCEEDED(rv))
     *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function FinalizeInstall requires 0 parameters");
-    return JS_FALSE;
-  }
 
   return JS_TRUE;
 }
@@ -1102,21 +1093,10 @@ InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     return JS_TRUE;
   }
 
-  if(argc >= 0)
-  {
-    //  public int GetLastError (void);
+  //  public int GetLastError (void);
 
-    if(NS_OK != nativeThis->GetLastError(&nativeRet))
-    {
-      return JS_FALSE;
-    }
-
+  if(NS_OK == nativeThis->GetLastError(&nativeRet)) {
     *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function GetLastError requires 0 parameters");
-    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -1184,18 +1164,11 @@ InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     return JS_TRUE;
   }
 
-  if(argc >= 0)
+  //  public int GetWinRegistry (void);
+  if(NS_OK != nativeThis->GetWinRegistry(cx, &WinRegClass, rval))
   {
-    //  public int GetWinRegistry (void);
-    if(NS_OK != nativeThis->GetWinRegistry(cx, &WinRegClass, rval))
-    {
-      return JS_FALSE;
-    }
-  }
-  else
-  {
-    JS_ReportError(cx, "Function GetWinRegistry requires 0 parameters");
-    return JS_FALSE;
+    *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
+    return JSVAL_NULL;
   }
 #endif
 
@@ -1668,7 +1641,6 @@ InstallAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsrefcount saveDepth = JS_SuspendRequest(cx);//Need to suspend use of thread or deadlock occurs
 
     nativeThis->Alert(b0);
-
     JS_ResumeRequest(cx, saveDepth);
 
   }

@@ -132,27 +132,16 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  PRBool nativeRet;
+  PRBool nativeRet = PR_FALSE;
 
-  *rval = JSVAL_NULL;
+  *rval = JSVAL_FALSE;
 
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-    return JS_FALSE;
+    return JS_TRUE;
 
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->UpdateEnabled(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function UpdateEnabled requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
+   nativeThis->UpdateEnabled(&nativeRet); 
+   *rval = BOOLEAN_TO_JSVAL(nativeRet);
+   return JS_TRUE;
 }
 
 //
