@@ -3950,6 +3950,13 @@ top.window.open("%1$s",'%2$s',null,true);
 ; OK-6px-Cancel-12px-HELP|<- end of frame
 ;
 buttons_only:
+<script language=javascript>
+var doCancel = false;
+
+function setCancelFlag() {
+  doCancel = true;
+}
+</script>
 <div align=right>
 <table border=0 cellspacing=0 cellpadding=0 height=100%%>
 <tr align=right valign=center>
@@ -3960,7 +3967,8 @@ buttons_only:
 </td>
 <td>
 <div class=buttonspace>
-<input type="submit" name="do_cancel" value="{text_cancel}" width="72" >
+<input type="submit" name="do_cancel" value="{text_cancel}" width="72" 
+       onClick="setCancelFlag();">
 </div>
 </td>
 <td width=30%%>
@@ -4719,7 +4727,7 @@ set_token_password_main_content:
 <body class=content alink="#333399">
 {formsubmit document.forms[0]}
 <div>
-<form method="get" action="formsubmit_handler" > 
+<form method="get" action="formsubmit_handler">
 <input type=hidden name="formName" value="set_db_password">
 <input type=hidden name="target" value="%1$d">
 <input type=hidden name="baseRef" value="windowclose_doclose_js">
@@ -4855,22 +4863,36 @@ set_token_password_buttons_content:
 	onLoad="parent.SetHelpURL('help.htm#1051739')">
 <script language=javascript>
 {pop_up_alert}
+function resetForm(f)
+{
+  if (f.oldpassword) {
+    f.oldpassword.focus();
+  } else {
+    f.newpassword.focus();
+  }
+  f.reset();
+}
 function checknewpasswordfield()
 {
   var passwordform = window.parent.DialogContent.document.forms[0];
+  if (doCancel) {
+    return true;
+  }
   if (passwordform.oldpassword && passwordform.oldpassword.value == '') {
     PopUpAlert('{supply_current_password}');
+    resetForm(passwordform);
     return false;
   }
   if (passwordform.newpassword.value != 
     passwordform.repeatpassword.value) {
     PopUpAlert('{invalid_new_password}');
+    resetForm(passwordform);
     return false;
   }
   return true;
 }
 </script>
-<form method="get" action="check_for_cancel" >
+<form method="get" action="check_for_cancel" onSubmit="return (checknewpasswordfield())">
 
 <input type=hidden name="baseRef" value="formsubmit_dosubmit_js">
 <input type=hidden name=target value="%1$d">
