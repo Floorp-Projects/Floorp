@@ -24,6 +24,8 @@ Rights Reserved.
 <!ENTITY confirmMove.accesskey            "C">
 <!ENTITY useMessenger.label               "Use Mail from MAPI-based applications">
 <!ENTITY useMessenger.accesskey           "U">
+<!ENTITY autounzip.label                  "Automatically expand zip files when saving attachments">
+<!ENTITY autounzip.accesskey              "A">
 <!ENTITY messengerStartPage.label         "Mail Start Page">
 <!ENTITY enableStartPage.label            "When Mail launches, show the Start Page in the message area">
 <!ENTITY enableStartPage.accesskey        "W">
