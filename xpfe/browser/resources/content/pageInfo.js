@@ -944,6 +944,7 @@ function getContentTypeFromHeaders(cacheEntryDescriptor)
     match = /^Content-Type:\s*(.*?)\s*(?:\;|$)/mi.exec(headers);
     return match[1];
   }
+  return "";
 }
 
 function getContentTypeFromImgRequest(item)
