@@ -107,7 +107,7 @@ XPCJSContextStack::Push(JSContext * cx)
 JSBool 
 XPCJSContextStack::DEBUG_StackHasJSContext(JSContext*  aJSContext)
 {
-    for(PRInt32 i; i < mStack.GetSize(); i++)
+    for(PRInt32 i = 0; i < mStack.GetSize(); i++)
         if(aJSContext == (JSContext*)mStack.ObjectAt(i))
             return JS_TRUE;
     return JS_FALSE;

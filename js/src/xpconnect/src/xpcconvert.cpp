@@ -757,7 +757,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             // only wrap JSObjects
             if(!JSVAL_IS_OBJECT(s) || !(obj = JSVAL_TO_OBJECT(s)))
+            {
+                if(pErr && JSVAL_IS_INT(s) && 0 == JSVAL_TO_INT(s))
+                    *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL;
                 return JS_FALSE;
+            }
 
             return JSObject2NativeInterface(ccx, (void**)d, obj, iid,
                                             nsnull, pErr);
