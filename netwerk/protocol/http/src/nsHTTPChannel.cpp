@@ -1043,38 +1043,33 @@ nsHTTPChannel::CheckCache()
                                     PR_FALSE);
     rv = mCachedResponse->ParseHeaders(cachedHeadersCStr);
     if (NS_FAILED(rv)) return rv;
+
+    // If validation is inhibited, we'll just use whatever data is in
+    // the cache, regardless of whether or not it has expired.
+    if (mLoadAttributes & nsIChannel::VALIDATE_NEVER) {
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+              ("nsHTTPChannel::checkCache() [this=%x].\t"
+               "obeying VALIDATE_NEVER\n", this));
+        mCachedContentIsValid = PR_TRUE;
+        return NS_OK;
+     }
+ 
     
     // At this point, we know there is an existing, non-truncated entry in the
     // cache and that it has apparently valid HTTP headers.
     mCachedContentIsAvailable = PR_TRUE;
 
-    // This is a hack for bug 40449. We checking the expiration time
-    // to see if a cache entry is valid. If the current time is greater
-    // than the expiration time, we must revalidate this entry.
+    // validate against expiration time
     PRBool mustRevalidate = PR_FALSE;
     PRTime expirationTime;
     mCacheEntry->GetExpirationTime(&expirationTime);
     if (!LL_IS_ZERO(expirationTime)) {
         PRTime now = PR_Now();
         if( LL_UCMP( now, >, expirationTime )) {
-            // -dp- This shouldn't happen.
-            mCacheEntry->SetExpirationTime(LL_ZERO);
             mustRevalidate = PR_TRUE;
         }
     }
   
-
-    // If validation is inhibited, we'll just use whatever data is in
-    // the cache, regardless of whether or not it has expired.
-    if (mLoadAttributes & nsIChannel::VALIDATE_NEVER) {
-        // hack for bug 40449. If the cache entry is invalid,
-        // we must revalidate with the server.
-        if (mustRevalidate == PR_FALSE) {
-            mCachedContentIsValid = PR_TRUE;
-            return NS_OK;
-        }
-    }
-
     // If the must-revalidate directive is present in the cached response, data
     // must always be revalidated with the server, even if the user has
     // configured validation to be turned off.
@@ -1263,16 +1258,9 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     rv = mCacheEntry->GetInUse(&inUse);
     if (NS_FAILED(rv)) return rv;
     if (inUse) {
-        // This is a hack for bug 40449. We are also using the expiration time
-        // to mark a cache entry is invalid. When we are not able to update the 
-        // cache entry, we set the expiration time to the current time, so 
-        // we force it to revalidate itself, next time the page is accessed, 
-        // instead of the stale value in the cache. We might need to subtract a 
-        // number from the result received from PR_Now, before passing it 
-        // to SetExpirationTime() as two consecutive calls to PR_Now might return
-        // the same value
-        PRTime curTime = PR_Now();
-        mCacheEntry->SetExpirationTime(curTime);
+#if defined(DEBUG_dp) || defined(DEBUG_neeti) || defined (DEBUG_gagan)
+        NS_ASSERTION(inUse, "cacheEntry inUse. Cannot update with new content.");
+#endif
         return NS_OK;
     }
 
@@ -1796,6 +1784,10 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                 this, rv));
         }
     }
+
+    // Release the cache transport. This would free the entry's channelCount enabling changes
+    // to the cacheEntry
+    mCacheTransport = nsnull;
 
     // The no-store directive within the 'Cache-Control:' header indicates
     // that we should not store the response in the cache
