@@ -1456,7 +1456,7 @@ struct PRMonitor {
     const char* name;           /* monitor name for debugging */
 #if defined(_PR_PTHREADS)
     PRLock lock;                /* the lock structure */
-    PRThread *owner;            /* the owner of the lock or NULL */
+    pthread_t owner;            /* the owner of the lock or invalid */
     PRCondVar *cvar;            /* condition variable queue */
 #else  /* defined(_PR_PTHREADS) */
     PRCondVar *cvar;            /* associated lock and condition variable queue */
