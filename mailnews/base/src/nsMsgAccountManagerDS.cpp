@@ -509,8 +509,14 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       rv = source->GetValueConst(&sourceValue);
       NS_ENSURE_SUCCESS(rv, NS_RDF_NO_VALUE);
       
-      // make sure the pointer math we're about to do is safe.
-      if (sourceValue && (strlen(sourceValue) > strlen(NC_RDF_PAGETITLE_PREFIX))) {
+      // if this is a page (which we determine by the prefix of the URI)
+      // we want to generate a sort value
+      // so that we can sort the categories in the account manager tree
+      // (or the folder pane)
+      //
+      // otherwise, return NS_RDF_NO_VALUE
+      // so that the folder data source will take care of it.
+      if (sourceValue && (strncmp(sourceValue, NC_RDF_PAGETITLE_PREFIX, strlen(NC_RDF_PAGETITLE_PREFIX)) == 0)) {
         if (source == kNC_PageTitleSMTP)
           str = NS_LITERAL_STRING("4000");
         else if (source == kNC_PageTitleFakeAccount)
