@@ -176,7 +176,6 @@ messenger.jar:
     content/messenger/fieldMapImport.xul                                       (import/resources/content/fieldMapImport.xul)
     content/messenger/fieldMapImport.js                                        (import/resources/content/fieldMapImport.js)
     content/messenger/attach.js                                                (mime/emitters/resources/content/attach.js)
-    content/messenger/mime.js                                                  (mime/resources/content/mime.js)
     content/messenger/downloadheaders.js                                       (news/resources/content/downloadheaders.js)
     content/messenger/downloadheaders.xul                                      (news/resources/content/downloadheaders.xul)
     content/messenger/markByDate.js                                            (base/resources/content/markByDate.js)
