@@ -49,7 +49,7 @@ toolkit.jar:
 en-US.jar:
 +   locale/en-US/messenger/start.html               (locale/start.html)
 *   locale/en-US/messenger/credits.html             (locale/credits.html)
-    locale/en-US/messenger/bird.png                 (locale/bird.png)
+    locale/en-US/messenger/thunderbird-watermark.png (locale/thunderbird-watermark.png)
     locale/en-US/messenger/h1.png                   (locale/h1.png)
     locale/en-US/messenger/h2.png                   (locale/h2.png)
     locale/en-US/messenger/back.png                 (locale/back.png)
