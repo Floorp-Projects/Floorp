@@ -21,6 +21,7 @@ nsITransport.idl
 nsIStreamLoader.idl
 nsIDownloader.idl
 nsIRequestObserver.idl
+nsIRequestObserverProxy.idl
 nsIStreamProvider.idl
 nsIURI.idl
 nsIURL.idl
