@@ -667,7 +667,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           else if(focus)
             receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
           else if (xul)
-            receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
+            receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
           else if (scroll)
             receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
 
