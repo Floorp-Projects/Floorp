@@ -416,7 +416,7 @@ nsSocketTransportService::Run(void)
   // occurs...
   //
   mSelectFDSetCount = 0;
-  pollTimeout = PR_MillisecondsToInterval(250);
+  pollTimeout = PR_MillisecondsToInterval(5);
 #endif /* USE_POLLABLE_EVENT */
 
   while (mThreadRunning) {
