@@ -159,24 +159,6 @@ test_output_init_fn (const char *type,
   return 0;
 }
 
-
-static int
-test_set_html_state_fn (void *stream_closure,
-                        PRBool layer_encapsulate_p,
-                        PRBool start_p,
-                        PRBool abort_p)
-{
-  char random_close_tags[] =
-		"</TABLE></TABLE></TABLE></TABLE></TABLE></TABLE>"
-		"</DL></DL></DL></DL></DL></DL></DL></DL></DL></DL>"
-		"</DL></DL></DL></DL></DL></DL></DL></DL></DL></DL>"
-		"</B></B></B></B></B></B></B></B></B></B></B></B>"
-		"</PRE></PRE></PRE></PRE></PRE></PRE></PRE></PRE>"
-		"<BASEFONT SIZE=3></SCRIPT>";
-  return test_output_fn(random_close_tags, nsCRT::strlen(random_close_tags),
-						stream_closure);
-}
-
 static void *
 test_image_begin(const char *image_url, const char *content_type,
 				 void *stream_closure)
@@ -267,10 +249,8 @@ test(FILE *in, FILE *out,
   opt->dexlate_p			= dexlate_p;
   opt->output_init_fn		= test_output_init_fn;
   opt->output_fn			= test_output_fn;
-  opt->set_html_state_fn  = test_set_html_state_fn;
   opt->charset_conversion_fn= 0;
   opt->rfc1522_conversion_fn= 0;
-  opt->reformat_date_fn		= 0;
   opt->file_type_fn			= test_file_type;
   opt->stream_closure		= out;
 

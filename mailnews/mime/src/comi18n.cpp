@@ -307,9 +307,6 @@ static int      intlmime_encode_base64 (const char *in, char *out);
 static char *   intlmime_encode_base64_buf(char *subject, size_t size);
 static char *   intlmime_encode_qp_buf(char *subject);
 
-
-static PRBool intlmime_is_mime_part2_header(const char *header);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 

@@ -99,19 +99,6 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
     }
     /* rhp - for MHTML Spec changes!!! */
     
-    /* Encapsulate the entire text/html part inside an in-flow
-    layer.  This will provide it a private coordinate system and
-    prevent it from escaping the bounds of its clipping so that
-    it might, for example, spoof a mail header. */
-    if (obj->options->set_html_state_fn)
-    {
-      status = obj->options->set_html_state_fn(obj->options->stream_closure,
-        PR_TRUE,   /* layer_encapulate_p */
-        PR_TRUE,   /* start_p */
-        PR_FALSE); /* abort_p */
-      if (status < 0) return status;
-    }
-    
     if (base_hdr)
     {
       char *buf = (char *) PR_MALLOC(nsCRT::strlen(base_hdr) + 20);
@@ -234,15 +221,5 @@ MimeInlineTextHTML_parse_eof (MimeObject *obj, PRBool abort_p)
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
     status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
 
-  if (obj->output_p &&
-	  obj->options &&
-	  obj->options->write_html_p &&
-	  obj->options->set_html_state_fn)
-	{
-      return obj->options->set_html_state_fn(obj->options->stream_closure,
-                                             PR_TRUE,  /* layer_encapulate_p */
-                                             PR_FALSE, /* start_p */
-                                             abort_p);
-	}
   return 0;
 }

@@ -802,25 +802,6 @@ compose_only_output_fn(char *buf, PRInt32 size, void *stream_closure)
 }
 #endif
 
-static int
-mime_set_html_state_fn (void *stream_closure,
-                        PRBool layer_encapsulate_p,
-                        PRBool start_p,
-                        PRBool abort_p)
-{
-  int status = 0;
-
-  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */  
-  if (start_p) 
-  {
-  } 
-  else 
-  {
-  }
-
-  return status;
-}
-
 extern "C" int
 mime_display_stream_write (nsMIMESession *stream,
                            const char* buf,
@@ -961,21 +942,6 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
       nsCRT::free(msd->orig_url_name);
 
   PR_FREEIF(msd);
-}
-
-static int
-mime_insert_html_convert_charset (const PRBool input_autodetect, const char *input_line, 
-                                  PRInt32 input_length, const char *input_charset, 
-                                  const char *output_charset,
-                                  char **output_ret, PRInt32 *output_size_ret,
-                                  void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
-{
-  //struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  
-  return mime_convert_charset (input_autodetect, input_line, input_length,
-                               input_charset, output_charset,
-                               output_ret, output_size_ret,
-                               stream_closure, decoder, encoder);
 }
 
 #ifdef XP_MAC
@@ -1314,10 +1280,8 @@ MimeDisplayOptions::MimeDisplayOptions()
 
   output_closure = nsnull;
 
-  set_html_state_fn = nsnull;
   charset_conversion_fn = nsnull;
   rfc1522_conversion_fn = nsnull;
-  reformat_date_fn = nsnull;
 
   file_type_fn = nsnull;
 
@@ -1517,18 +1481,10 @@ mime_bridge_create_display_stream(
   msd->options->output_init_fn        = mime_output_init_fn;
   
   msd->options->output_fn             = mime_output_fn;
-  msd->options->set_html_state_fn     = mime_set_html_state_fn;
 
-  if ( format_out == nsMimeOutput::nsMimeMessageQuoting || format_out == nsMimeOutput::nsMimeMessageBodyQuoting || 
-       format_out == nsMimeOutput::nsMimeMessagePrintOutput || format_out == nsMimeOutput::nsMimeMessageSaveAs )
-  {
-    msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
-  }
-  
   msd->options->whattodo 	      = whattodo;
   msd->options->charset_conversion_fn = mime_convert_charset;
   msd->options->rfc1522_conversion_fn = mime_convert_rfc1522;
-  msd->options->reformat_date_fn      = mime_reformat_date;
   msd->options->file_type_fn          = mime_file_type;
   msd->options->stream_closure        = msd;
   msd->options->passwd_prompt_fn      = 0;

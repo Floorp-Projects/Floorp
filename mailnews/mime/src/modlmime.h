@@ -236,24 +236,6 @@ public:
 	 stream_closure is used. */
   void *output_closure;
 
-  /* A callback used to encapsulate an HTML section and to reset the
-     HTML parser to its default state at the end of a section.
-     start_p indicates whether this is being called just before the
-     start or immediately after the end of the encapsulated HTML.
-     layer_encapsulate_p indicates whether or not to put special
-     ILAYER container tags around the HTML -- Also, when start_p is
-     PR_FALSE, this function should close off any tags we've left open,
-     reset the font size and face, etc.  This may be called multiple
-     times -- in particular, it will be called at the end of each
-     message part which might contain human-generated (and thus
-     arbitrarily buggy) markup.  The `abort_p' argument specifies
-     whether it's ok for data to be discarded.
-   */
-  int (*set_html_state_fn) (void *stream_closure,
-                            PRBool layer_encapsulate_p,
-                            PRBool start_p,
-                            PRBool abort_p);
-
   /* A hook for the caller to perform charset-conversion before HTML is
 	 returned.  Each set of characters which originated in a mail message
 	 (body or headers) will be run through this filter before being converted
@@ -286,10 +268,6 @@ public:
 								const char *output_charset,
 								char **output_ret, PRInt32 *output_size_ret,
 								void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder);
-
-  /* A hook for the caller to translate a time string into a prettier or more
-	 compact or localized form. */
-  char *(*reformat_date_fn) (const char *old_date, void *stream_closure);
 
   /* A hook for the caller to turn a file name into a content-type. */
   char *(*file_type_fn) (const char *filename, void *stream_closure);

@@ -350,14 +350,5 @@ MimeInlineTextRichtext_parse_eof (MimeObject *obj, PRBool abort_p)
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   if (status < 0) return status;
 
-  if (obj->options &&
-	  obj->options->write_html_p &&
-	  obj->options->set_html_state_fn)
-	{
-	  return obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                 PR_FALSE, /* layer_encapulate_p */
-                                                 PR_FALSE, /* start_p */
-                                                 abort_p);
-	}
   return 0;
 }

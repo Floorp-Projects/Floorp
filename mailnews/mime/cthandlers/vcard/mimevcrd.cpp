@@ -1209,14 +1209,6 @@ static int EndVCard (MimeObject *obj)
 
 	if (status < 0) return status;
 
-    if (obj->options && obj->options->set_html_state_fn) {
-        status = obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                 PR_TRUE,   /* layer_encapulate_p */
-                                                 PR_FALSE,  /* start_p */
-                                                 PR_FALSE); /* abort_p */
-        if (status < 0) return status;
-    }
-    
 	return 0;
 }
 
@@ -1227,14 +1219,6 @@ static int BeginVCard (MimeObject *obj)
 	/* Scribble HTML-starting stuff into the stream */
 	char htmlHeaders[32];
 
-    if (obj->options && obj->options->set_html_state_fn) {
-        status = obj->options->set_html_state_fn(obj->options->stream_closure,
-                                                 PR_TRUE,   /* layer_encapulate_p */
-                                                 PR_TRUE,   /* start_p */
-                                                 PR_FALSE); /* abort_p */
-        if (status < 0) return status;
-    }
-    
 	s_unique++;
 	PR_snprintf (htmlHeaders, sizeof(htmlHeaders), "<HTML>%s<BODY>%s", MSG_LINEBREAK, MSG_LINEBREAK);
     status = COM_MimeObject_write(obj, htmlHeaders, nsCRT::strlen(htmlHeaders), PR_TRUE);
