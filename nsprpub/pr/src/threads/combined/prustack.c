@@ -58,6 +58,14 @@ void _PR_InitStacks(void)
     _pr_stackLock = PR_NewLock();
 }
 
+void _PR_CleanupStacks(void)
+{
+    if (_pr_stackLock) {
+        PR_DestroyLock(_pr_stackLock);
+        _pr_stackLock = NULL;
+    }
+}
+
 /*
 ** Allocate a stack for a thread.
 */
