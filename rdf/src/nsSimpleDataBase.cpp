@@ -26,7 +26,7 @@
 
 /*
 
-  XXX --- chris, are you happy with this (I rewrote it).
+  XXX rvg --- chris, are you happy with this (I rewrote it).
 
   A simple "database" implementation. An RDF database is just a
   "strategy" pattern for combining individual data sources into a
@@ -172,7 +172,7 @@ MultiCursor::HasMoreElements(PRBool& result)
                 return rv;
 
             // See if data source zero has the negation
-            // XXX --- this needs to be fixed so that we look at all the prior 
+            // XXX rvg --- this needs to be fixed so that we look at all the prior 
             // data sources for negations
             PRBool hasNegation;
             if (NS_FAILED(rv = HasNegation(mDataSource0,
@@ -337,7 +337,7 @@ dbArcCursorImpl::HasNegation(nsIRDFDataSource* ds0,
 
 ////////////////////////////////////////////////////////////////////////
 // nsSimpleDataBase
-// XXX --- shouldn't this take a char** argument indicating the data sources
+// XXX rvg  --- shouldn't this take a char** argument indicating the data sources
 // we want to aggregate?
 
 nsSimpleDataBase::nsSimpleDataBase(void)
@@ -526,6 +526,8 @@ nsSimpleDataBase::Unassert(nsIRDFNode* source,
 {
     // XXX I have no idea what this is trying to do. I'm just going to
     // copy Guha's logic and punt.
+    // xxx rvg - first need to check whether the data source does have the
+    // assertion. Only then do you try to unassert it.
     nsresult rv;
     PRInt32 count = mDataSources.Count();
 
@@ -625,7 +627,7 @@ nsSimpleDataBase::Flush()
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataBase methods
-// XXX We should make this take an additional argument specifying where
+// XXX rvg We should make this take an additional argument specifying where
 // in the sequence of data sources (of the db), the new data source should
 // fit in. Right now, the new datasource gets stuck at the end.
 
