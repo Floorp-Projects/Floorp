@@ -20,6 +20,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsCollationUnix.h"
+#include "nsDateTimeFormatCID.h"
 #include "nsDateTimeFormatUnix.h"
 #include "nsLocaleFactoryUnix.h"
 
@@ -101,6 +102,9 @@ nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (aIID.Equals(kIDateTimeFormatIID)) {
      NS_NEWXPCOM(inst, nsDateTimeFormatUnix);
+  }
+  else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+     inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
   else 
   {
