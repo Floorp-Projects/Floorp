@@ -97,8 +97,8 @@ public:
   nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement, REFNSIID aIID,
                              void **aInstancePtr);
 
-  // From nsGenericElement
-  nsresult CopyInnerTo(nsGenericHTMLElement* aDest, PRBool aDeep);
+  // From nsGenericContainerElement
+  nsresult CopyInnerTo(nsGenericContainerElement* aDest, PRBool aDeep);
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);

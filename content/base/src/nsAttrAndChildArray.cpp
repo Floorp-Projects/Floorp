@@ -398,16 +398,16 @@ nsAttrAndChildArray::GetExistingAttrNameFromQName(const nsACString& aName) const
 PRInt32
 nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) const
 {
-  PRInt32 i;
+  PRInt32 idx;
   if (mImpl && mImpl->mMappedAttrs) {
-    i = mImpl->mMappedAttrs->IndexOfAttr(aLocalName, aNamespaceID);
-    if (i >= 0) {
-      return i;
+    idx = mImpl->mMappedAttrs->IndexOfAttr(aLocalName, aNamespaceID);
+    if (idx >= 0) {
+      return idx;
     }
   }
 
-  PRInt32 mapped = MappedAttrCount();
-
+  PRUint32 i;
+  PRUint32 mapped = MappedAttrCount();
   PRUint32 slotCount = AttrSlotCount();
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
