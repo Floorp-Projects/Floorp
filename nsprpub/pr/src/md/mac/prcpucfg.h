@@ -42,6 +42,8 @@
 #undef  IS_LITTLE_ENDIAN
 #define IS_BIG_ENDIAN 1
 
+#define	HAVE_LONG_LONG
+
 #define PR_AF_INET6 30  /* same as AF_INET6 */
 
 #define PR_BYTES_PER_BYTE   1L
