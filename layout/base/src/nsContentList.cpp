@@ -34,7 +34,6 @@
 
 nsContentList::nsContentList(nsIDocument *aDocument)
 {
-  nsLayoutAtoms::AddRefAtoms();
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mFunc = nsnull;
@@ -50,7 +49,6 @@ nsContentList::nsContentList(nsIDocument *aDocument,
                              PRInt32 aMatchNameSpaceId,
                              nsIContent* aRootContent)
 {
-  nsLayoutAtoms::AddRefAtoms();
   mMatchAtom = aMatchAtom;
   NS_IF_ADDREF(mMatchAtom);
   if (nsLayoutAtoms::wildcard == mMatchAtom) {
@@ -71,7 +69,6 @@ nsContentList::nsContentList(nsIDocument *aDocument,
                              const nsString* aData,
                              nsIContent* aRootContent)
 {
-  nsLayoutAtoms::AddRefAtoms();
   mFunc = aFunc;
   if (nsnull != aData) {
     mData = new nsString(*aData);
@@ -113,7 +110,6 @@ nsContentList::~nsContentList()
   if (nsnull != mData) {
     delete mData;
   }
-  nsLayoutAtoms::ReleaseAtoms();
 }
 
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
