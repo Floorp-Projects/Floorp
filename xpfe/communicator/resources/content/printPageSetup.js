@@ -180,8 +180,7 @@ function changeMargin( node )
     nodeToStyle = gDialog.marginRight;
     val = checkMargin( val, gPageWidth, gDialog.leftInput );
   }
-  val /= gDoingMetric ? 100 : 10;
-  var style = attr + ":" + val + unitString() + ";";
+  var style = attr + ":" + (val/10) + unitString() + ";";
   nodeToStyle.setAttribute( "style", style );
 }
 
