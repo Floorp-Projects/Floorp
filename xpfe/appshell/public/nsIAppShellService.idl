@@ -149,6 +149,9 @@ interface nsIAppShellService : nsISupports
    */
   void CloseTopLevelWindow(in nsIWebShellWindow aWindow);
 
+  [noscript]
+  void CreateHiddenWindow();
+
   /**
    * Return the (singleton) application hidden window, automatically created
    * and maintained by this AppShellService.

@@ -114,7 +114,6 @@ protected:
                                  nsIXULWindowCallbacks *aCallbacks,
                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                  nsIWebShellWindow **aResult);
-  void CreateHiddenWindow();
   void InitializeComponent( const nsCID &aComponentCID );
   void ShutdownComponent( const nsCID &aComponentCID );
   typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
@@ -258,13 +257,16 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 	rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
                                    (nsISupports**) &mWindowMediator);
 
-  CreateHiddenWindow();
+//  CreateHiddenWindow();	// rjc: now require this to be explicitly called
 
 done:
   return rv;
 }
 
-void nsAppShellService::CreateHiddenWindow()
+
+
+NS_IMETHODIMP
+nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
   nsIURI* url = nsnull;
@@ -814,15 +816,24 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
   if (0 == cnt)
   {
   #if XP_MAC
-  	// Given hidden window the focus so it puts up the menu
- 	nsIWidget* widget = NULL;
- 	mHiddenWindow->GetWidget( widget );
- 	if( widget )
- 	{
- 		widget->SetFocus();
- 	
-  		widget->Release();
-  	}
+  	if (mHiddenWindow)
+  	{
+	  	// Given hidden window the focus so it puts up the menu
+	 	nsIWidget* widget = NULL;
+	 	mHiddenWindow->GetWidget( widget );
+	 	if( widget )
+	 	{
+	 		widget->SetFocus();
+	 	
+	  		widget->Release();
+	  	}
+	}
+	else
+	{
+		// if no hidden window is available (perhaps due to initial
+		// Profile Manager window being cancelled), then just quit
+		Quit();
+	}
   #else
   	  Quit();
   #endif 

@@ -516,8 +516,8 @@ static nsresult main1(int argc, char* argv[])
 #ifdef DEBUG
   printf("started appcores\n");
 #endif
+
   
-    
   // Create the Application Shell instance...
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv)) {
@@ -547,6 +547,10 @@ static nsresult main1(int argc, char* argv[])
   	return NS_ERROR_FAILURE;
   }
   PR_FREEIF(currentProfileStr);   
+
+  // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
+  //      if the profile manager ever switches to using nsIDOMWindow stuff, this might have to change
+  appShell->CreateHiddenWindow();
 
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
