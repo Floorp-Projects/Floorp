@@ -38,6 +38,7 @@
 #include "nsINetService.h"
 #endif
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
  /************************************************************************
   And now for the main class -- nsExpatTokenizer...
@@ -57,6 +58,7 @@ static CTokenRecycler* gTokenRecycler=0;
 static nsDeque* gTokenDeque=0;
 static XML_Parser gExpatParser=0;
 static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
+static const char* kChromeProtocol = "chrome";
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -499,28 +501,34 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
 {
   nsresult rv;
 #ifndef NECKO
-  nsINetService* pNetService = nsnull;
+  nsCOMPtr<nsINetService> pNetService = nsnull;
 
   aAbsURL->Truncate(0);
   rv = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID, (nsISupports**) &pNetService);
+                                     kINetServiceIID, (nsISupports**) getter_AddRefs(pNetService));
   
-  if (NS_SUCCEEDED(rv)) {
-    nsIURI* contextURL = nsnull;
-    rv = pNetService->CreateURL(&contextURL, aBaseURL);
-    if (NS_SUCCEEDED(rv)) {
-      nsIURI* url = nsnull;
-      rv = pNetService->CreateURL(&url, aURLStr, contextURL);
-      if (NS_SUCCEEDED(rv)) {
-        rv = pNetService->OpenBlockingStream(url, nsnull, in);
-        const char* absURL = nsnull;
-        url->GetSpec(&absURL);
-        aAbsURL->Append(absURL);
-        NS_RELEASE(url);
-      }    
-      NS_RELEASE(contextURL);
-    }
-    NS_RELEASE(pNetService);
+  if (NS_SUCCEEDED(rv) && nsnull != pNetService) {
+    nsCOMPtr<nsIURI> contextURL = nsnull;
+    rv = pNetService->CreateURL(getter_AddRefs(contextURL), aBaseURL);
+    if (NS_SUCCEEDED(rv) && nsnull != contextURL) {
+      nsCOMPtr<nsIURI> url = nsnull;
+      rv = pNetService->CreateURL(getter_AddRefs(url), aURLStr, contextURL);
+      if (NS_SUCCEEDED(rv) && nsnull != url) {
+        char* protocol = nsnull;
+        rv = url->GetProtocol(&protocol);
+        if (NS_SUCCEEDED(rv) &&
+          nsnull != protocol &&
+          PL_strcmp(protocol, kChromeProtocol) == 0 ) {
+          rv = pNetService->OpenBlockingStream(url, nsnull, in);
+          const char* absURL = nsnull;
+          url->GetSpec(&absURL);
+          aAbsURL->Append(absURL);
+        }
+        else {
+          rv = NS_ERROR_NOT_IMPLEMENTED;
+        }        
+      }          
+    }    
   }
 #else // NECKO
   nsIURI* uri;
@@ -600,36 +608,37 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
                                          const XML_Char *systemId,
                                          const XML_Char *publicId)
 {
-  int result = 0;
+  int result = PR_TRUE;
 
 #ifdef XML_DTD
-  // Create a parser for parsing the external entity
-  nsAutoString encoding("UTF-16");  
-  XML_Parser entParser = nsnull;
-
-  entParser = XML_ExternalEntityParserCreate(parser, 
-                                   0, 
-                                   (const XML_Char*) encoding.GetUnicode());
-
   // Load the external entity into a buffer
-  nsIInputStream *in = nsnull;
-  nsString urlSpec = (const PRUnichar*) systemId;
-  nsString baseURL = (const PRUnichar*) base;
-  nsString absURL;
+  nsCOMPtr<nsIInputStream> in = nsnull;
+  nsAutoString urlSpec = (const PRUnichar*) systemId;
+  nsAutoString baseURL = (const PRUnichar*) base;
+  nsAutoString absURL;
 
-  nsresult rv = OpenInputStream(urlSpec, baseURL, &in, &absURL);
+  nsresult rv = OpenInputStream(urlSpec, baseURL, getter_AddRefs(in), &absURL);
 
-  if (entParser && NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && nsnull != in) {
     PRUint32 retLen = 0;
     PRUnichar *uniBuf = nsnull;
-    rv = LoadStream(in, uniBuf, retLen);
-    NS_RELEASE(in);
+    rv = LoadStream(in, uniBuf, retLen);    
 
     // Pass the buffer to expat for parsing
-    if (NS_SUCCEEDED(rv)) {    
-      XML_SetBase(entParser, (const XML_Char*) absURL.GetUnicode());
-      result = XML_Parse(entParser, (char *)uniBuf,  retLen * sizeof(PRUnichar), 1);
-      XML_ParserFree(entParser);
+    if (NS_SUCCEEDED(rv) && nsnull != uniBuf) {    
+      // Create a parser for parsing the external entity
+      nsAutoString encoding("UTF-16");  
+      XML_Parser entParser = nsnull;
+
+      entParser = XML_ExternalEntityParserCreate(parser, 0, 
+        (const XML_Char*) encoding.GetUnicode());
+
+      if (nsnull != entParser) {
+        XML_SetBase(entParser, (const XML_Char*) absURL.GetUnicode());
+        result = XML_Parse(entParser, (char *)uniBuf,  retLen * sizeof(PRUnichar), 1);
+        XML_ParserFree(entParser);
+      }
+
       PR_FREEIF(uniBuf);      
     }
   }
