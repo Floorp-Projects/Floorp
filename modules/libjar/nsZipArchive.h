@@ -38,7 +38,7 @@
 
 #define ZIP_Seek(fd,p,m) (fseek((fd),(p),(m))==0)
 #else
-#define ZIP_Seek(fd,p,m) (PR_Seek((fd),(p),(m))==(p))
+#define ZIP_Seek(fd,p,m) (PR_Seek((fd),((PROffset32)p),(m))==((PROffset32)p))
 #endif
 
 #define ZIFLAG_SYMLINK      0x01  /* zip item is a symlink */
@@ -238,7 +238,7 @@ public:
 
 private:
   //--- private members ---
-  
+
   PRFileDesc    *mFd;
   nsZipItem*    mFiles[ZIP_TABSIZE];
 

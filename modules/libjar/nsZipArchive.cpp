@@ -74,6 +74,14 @@ char * strdup(const char *src)
 
 #endif /* STANDALONE */
 
+#include "nsZlibAllocator.h"
+/**
+ * Globals
+ *
+ * Global allocator used with zlib. Destroyed in module shutdown.
+ */
+nsZlibAllocator *gZlibAllocator = NULL;
+
 #ifdef XP_UNIX
     #include <sys/stat.h>
     #include <limits.h>
@@ -328,7 +336,196 @@ void ProcessWindowsMessages()
 
 #endif /* STANDALONE */
 
+//***********************************************************
+// Allocators for use with zlib
+//
+// WARNING: NOT THREADSAFE. But usage from nsJAR.cpp protects against
+//          multithread usage. nsJAR.cpp assumes nsZipArchive is
+//          not thread safe.
+//
+// These are allocators that are performance tuned for
+// use with zlib. Our use of zlib for every file we read from
+// the jar file when running navigator, we do these allocation.
+// alloc 24
+// alloc 64
+// alloc 11520
+// alloc 32768
+// alloc 1216 [304x4] max
+// alloc 76   [19x4]
+// free  76   [19x4]
+// alloc 1152 [288x4]
+// free  1152 [288x4]
+// free  1216 [304x4]
+// alloc 28
+// free  28
+// free  32768
+// free  11520
+// free  64
+// free  24
+//
+// The pool will allocate these as:
+//
+//          32,768
+//          11,520
+//           1,280 [320x4] - shared by first x4 alloc, 28
+//           1,280 [320x4] - shared by second and third x4 alloc
+//              64
+//              24
+//          ------
+//          46,936
+//
+// And almost all of the file reads happen serially. Hence this
+// allocator tries to keep one set of memory needed for one file around
+// and reused the same blocks for other file reads.
+//
+// The interesting question is when should be free this ?
+// - memory pressure should be one.
+// - after startup of navigator
+// - after startup of mail
+// In general, this allocator should be enabled before
+// we startup and disabled after we startup if memory is a concern.
+//***********************************************************
 
+// zClearBuckets() : Frees used memory and initalizes all memory to 0
+// DO NOT CALL THIS FROM CONSTRUCTOR. Set all memebers to 0 in constructor.
+int nsZlibAllocator::zClearBuckets()
+{
+  for (int i = 0; i < NBUCKETS; i++)
+  {
+    if (mMemBucket[i].ptr)
+    {
+      // If the bucket is in use, then we will leak that memory.
+      PR_ASSERT(!mMemBucket[i].inUse);
+      if (!mMemBucket[i].inUse)
+      {
+        free(mMemBucket[i].ptr);
+      }
+    }
+
+    mMemBucket[i].ptr = NULL;
+    mMemBucket[i].size = 0;
+    mMemBucket[i].inUse = PR_FALSE;
+  }
+  
+  return 0;
+}
+
+void * nsZlibAllocator::zAlloc(PRUint32 items, PRUint32 size)
+{
+  PRUint32 totalsize = items * size;
+  nsMemBucket *freeBucket = NULL;
+  nsMemBucket *freeAllocatedBucket = NULL;
+
+  for (int i = 0; i < NBUCKETS; i++)
+  {
+    // See if we have the memory already allocated. This is the
+    // most common case.
+    if (!mMemBucket[i].inUse && mMemBucket[i].ptr && mMemBucket[i].size == totalsize)
+    {
+      // zero out memory, increase refcnt and return it
+      memset(mMemBucket[i].ptr, 0, totalsize);
+      mMemBucket[i].inUse = PR_TRUE;
+      return mMemBucket[i].ptr;
+    }
+
+    // Meanwhile, remember a free bucket, any one will do
+    if (!mMemBucket[i].inUse) {
+      if (mMemBucket[i].size >= totalsize)
+        freeAllocatedBucket = &mMemBucket[i];
+      else if (!mMemBucket[i].ptr) {
+        // This is a free slot
+        freeBucket = &mMemBucket[i];
+      }
+    }
+  }
+
+  // See if we have an allocated bucket
+  if (freeAllocatedBucket)
+  {
+    // Clear it, Mark it used and return ptr
+    // We need to clear only the size that was requested although
+    // the bucket may be larger
+    memset(freeAllocatedBucket->ptr, 0, totalsize);
+    freeAllocatedBucket->inUse = PR_TRUE;
+    return freeAllocatedBucket->ptr;
+  }
+    
+  // We dont have that memory already
+  // Allocate. Make sure we bump up our allocations of x4 allocations
+  int realitems = items;
+  if (size == 4)
+    realitems = BY4ALLOC_ITEMS;
+  void *ptr = calloc(realitems, size);
+  
+  if (freeBucket)
+  {
+    // Found free slot. Store it
+    freeBucket->inUse = PR_TRUE;
+    freeBucket->ptr = ptr;
+    freeBucket->size = realitems * size;
+  }
+#ifdef DEBUG_dp
+  // Warn if we are failing over to calloc and not storing it
+  // This says we have a misdesigned memory pool. The intent was
+  // once the pool was full, we would never fail over to calloc.
+  else
+  {
+    printf("0x%p - zalloc %d [%dx%d] - FAILOVER 0x%p Memory pool has sizes: ",
+           this, items*size, items, size, ptr);
+    for (i = 0; i < NBUCKETS; i++)
+    {
+      printf("%d ", mMemBucket[i].size);
+    }
+    printf("\n");
+  }
+#endif
+
+  return ptr;
+}
+
+void nsZlibAllocator::zFree(void *ptr)
+{
+  for (int i = 0; i < NBUCKETS; i++)
+  {
+    if (mMemBucket[i].ptr == ptr)
+    {
+      // Ah ha. One of the slots we allocated.
+      // Nothing to do. Mark it unused.
+      mMemBucket[i].inUse = PR_FALSE;
+      return;
+    }
+  }
+
+#ifdef DEBUG_dp
+  // Warn if we are failing over to free.
+  // This says we have a misdesigned memory pool. The intent was
+  // once the pool was full, we would never fail over to free.
+  printf("DEBUG: zlib memory pool freeing 0x%p", ptr);
+#endif
+
+  // Failover to free
+  free(ptr);
+  return;
+}
+
+static void *zlibAlloc(void *opaque, uInt items, uInt size)
+{
+  nsZlibAllocator *zallocator = (nsZlibAllocator *)opaque;
+  if (zallocator)
+    return zallocator->zAlloc(items, size);
+  else
+    return calloc(items, size);
+}
+
+static void zlibFree(void *opaque, void *ptr)
+{
+  nsZlibAllocator *zallocator = (nsZlibAllocator *)opaque;
+  if (zallocator)
+    zallocator->zFree(ptr);
+  else
+    free(ptr);
+  return;
+}
 
 
 //***********************************************************
@@ -977,7 +1174,7 @@ PRInt32 nsZipArchive::BuildFileList()
     }
 
     //-- make sure we've read enough
-    if ( bufsize < pos + sizeof(ZipCentral) )
+    if ( (PRUint32)bufsize < pos + sizeof(ZipCentral) )
     {
       status = ZIP_ERR_CORRUPT;
       break;
@@ -1190,9 +1387,17 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
   //-- allocate deflation buffers
   Bytef inbuf[ZIP_BUFLEN];
   Bytef outbuf[ZIP_BUFLEN];
-  
+
+  //-- ensure we have our zlib allocator for better performance
+  if (!gZlibAllocator) {
+    gZlibAllocator = new nsZlibAllocator();
+  }
+
   //-- set up the inflate
   memset( &zs, 0, sizeof(zs) );
+  zs.zalloc = zlibAlloc;
+  zs.zfree = zlibFree;
+  zs.opaque = gZlibAllocator;
   zerr = inflateInit2( &zs, -MAX_WBITS );
   if ( zerr != Z_OK )
   {
