@@ -45,7 +45,7 @@ public:
 
 /* we're still trying to decide how edit atoms will work.  Until then, use these */
 // XXX: fix ASAP!
-  // tags
+  // inline tags
   static nsIAtom *a;
   static nsIAtom *b;
   static nsIAtom *big;
@@ -70,6 +70,11 @@ SMALL places text in a small font
 SUB places text in subscript style 
 SUP places text in superscript style 
 */
+
+  // block tags 
+  static nsIAtom *h1;
+  static nsIAtom *h2;
+
 
   /** properties */
   static nsIAtom *color;
