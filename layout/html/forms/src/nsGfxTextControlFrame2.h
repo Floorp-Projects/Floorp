@@ -45,7 +45,7 @@ class nsISelectionController;
 
 
 class nsGfxTextControlFrame2 : public nsHTMLContainerFrame,
-                           public nsIAnonymousContentCreator
+                           public nsIAnonymousContentCreator, public nsIFormControlFrame
 {
 public:
   nsGfxTextControlFrame2();
@@ -76,6 +76,38 @@ public:
                                   nsIFrame*       aChildList);
   NS_IMETHOD GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
 
+
+
+
+//==== BEGIN NSIFORMCONTROLFRAME
+  NS_IMETHOD GetType(PRInt32* aType) const; //*
+  NS_IMETHOD GetName(nsString* aName);//*
+  virtual void SetFocus(PRBool aOn , PRBool aRepaint); 
+  virtual void ScrollIntoView(nsIPresContext* aPresContext);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
+  virtual void Reset(nsIPresContext* aPresContext);
+  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
+  virtual PRInt32 GetMaxNumValues();/**/
+  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
+  virtual void SetFormFrame(nsFormFrame* aFrame);
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
+                                           float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;/**/
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
+                     const nsFont*&  aFont);
+  NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
+
+//==== END NSIFORMCONTROLFRAME
   NS_DECL_ISUPPORTS_INHERITED
 protected:
   virtual PRIntn GetSkipSides() const;
@@ -89,6 +121,13 @@ protected:
                                nsIContent *      aContent,
                                nsIFrame**        aFrame);
 
+  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+                                         nsIAtom *     aColSizeAttr,
+                                         nsHTMLValue & aColSize,
+                                         nsresult &    aColStatus,
+                                         nsIAtom *     aRowSizeAttr,
+                                         nsHTMLValue & aRowSize,
+                                         nsresult &    aRowStatus);
   NS_IMETHOD GetType(PRInt32* aType) const;
 
   nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
@@ -101,10 +140,13 @@ protected:
 
   PRInt32 GetWidthInCharacters() const;
 
+>>>>>>> 1.6
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
   nsString mCachedState;
+  PRBool mIsProcessing;
+  nsFormFrame *mFormFrame;
 };
 
 #endif
