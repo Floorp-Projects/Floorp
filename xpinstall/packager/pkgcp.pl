@@ -357,6 +357,7 @@ sub do_copyfile
 				print " copy\t$srcpath$srcname$srcsuffix =>\n\t\t$destpath$destname$destsuffix\n";
 			}
 		}
+		unlink("$destpath$destname$destsuffix") if ( -e "$destpath$destname$destsuffix");
 		copy ("$srcpath$srcname$srcsuffix", "$destpath$destname$destsuffix") ||
 			die "Error: copy of file $srcpath$srcname$srcsuffix failed ($package, $component, $lineno): $!.  Exiting...\n";
 
