@@ -851,7 +851,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     {
       EnsureVerticalSpace(mEmptyLines+1);
     }
-    else Write(" ");
+    else Write(NS_ConvertASCIItoUCS2(" "));
   }
   else if (type == eHTMLTag_hr &&
            (mFlags & nsIDocumentEncoder::OutputFormatted))
