@@ -252,7 +252,8 @@ private:
 	{
 		jint version = 0;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result =  secureEnv->GetVersion(&version);
+		nsresult result;
+        result = secureEnv->GetVersion(&version);
 		return version;
 	}
 
@@ -260,7 +261,8 @@ private:
 	{
 		jclass outClass = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->DefineClass(name, loader, buf, len, &outClass);
+		nsresult result;
+        result = secureEnv->DefineClass(name, loader, buf, len, &outClass);
 		return outClass;
 	}
 
@@ -268,7 +270,8 @@ private:
 	{
 		jclass outClass = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->FindClass(name, &outClass);
+		nsresult result;
+        result = secureEnv->FindClass(name, &outClass);
 		return outClass;
 	}
 
@@ -276,7 +279,8 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jclass outSuper = NULL;
-		nsresult result = secureEnv->GetSuperclass(sub, &outSuper);
+		nsresult result;
+        result = secureEnv->GetSuperclass(sub, &outSuper);
 		return outSuper;
 	}
 
@@ -284,7 +288,8 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jboolean outIsAssignable = PR_FALSE;
-		nsresult result = secureEnv->IsAssignableFrom(sub, sup, &outIsAssignable);
+		nsresult result;
+        result = secureEnv->IsAssignableFrom(sub, sup, &outIsAssignable);
 		return outIsAssignable;
 	}
 	
@@ -292,7 +297,8 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jint outStatus = PR_FALSE;
-		nsresult result = secureEnv->Throw(obj, &outStatus);
+		nsresult result;
+        result = secureEnv->Throw(obj, &outStatus);
 		return outStatus;
 	}
 	
@@ -300,7 +306,8 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jint outStatus = PR_FALSE;
-		nsresult result = secureEnv->ThrowNew(clazz, msg, &outStatus);
+		nsresult result;
+        result = secureEnv->ThrowNew(clazz, msg, &outStatus);
 		return outStatus;
 	}
 	
@@ -308,53 +315,61 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jthrowable outThrowable = NULL;
-		nsresult result = secureEnv->ExceptionOccurred(&outThrowable);
+		nsresult result;
+        result = secureEnv->ExceptionOccurred(&outThrowable);
 		return outThrowable;
 	}
 
 	static void JNICALL ExceptionDescribe(JNIEnv *env)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->ExceptionDescribe();
+		nsresult result;
+        result = secureEnv->ExceptionDescribe();
 	}
 	
 	static void JNICALL ExceptionClear(JNIEnv *env)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->ExceptionClear();
+		nsresult result;
+        result = secureEnv->ExceptionClear();
 	}
 	
 	static void JNICALL FatalError(JNIEnv *env, const char *msg)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->FatalError(msg);
+		nsresult result;
+        result = secureEnv->FatalError(msg);
 	}
 
 	static jobject JNICALL NewGlobalRef(JNIEnv *env, jobject lobj)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jobject outGlobalRef = NULL;
-		nsresult result = secureEnv->NewGlobalRef(lobj, &outGlobalRef);
+		nsresult result;
+        result = secureEnv->NewGlobalRef(lobj, &outGlobalRef);
 		return outGlobalRef;
 	}
 	
 	static void JNICALL DeleteGlobalRef(JNIEnv *env, jobject gref)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->DeleteGlobalRef(gref);
+		nsresult result;
+        result = secureEnv->DeleteGlobalRef(gref);
 	}
 	
 	static void JNICALL DeleteLocalRef(JNIEnv *env, jobject obj)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->DeleteLocalRef(obj);
+		nsresult result;
+        result = secureEnv->DeleteLocalRef(obj);
 	}
 	
 	static jboolean JNICALL IsSameObject(JNIEnv *env, jobject obj1, jobject obj2)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jboolean outIsSameObject = PR_FALSE;
-		nsresult result = secureEnv->IsSameObject(obj1, obj2, &outIsSameObject);
+		nsresult result;
+        result = secureEnv->IsSameObject(obj1, obj2, &outIsSameObject);
 		return outIsSameObject;
 	}
 
@@ -362,7 +377,8 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jobject outObject = NULL;
-		nsresult result = secureEnv->AllocObject(clazz, &outObject);
+		nsresult result;
+        result = secureEnv->AllocObject(clazz, &outObject);
 		return outObject;
 	}
 	
@@ -384,7 +400,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject, securityContext);
+		nsresult result;
+        result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject, securityContext);
 		NS_IF_RELEASE(securityContext);
 		
 		return outObject;
@@ -397,7 +414,8 @@ private:
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		JNIMethod* method = (JNIMethod*)methodID;
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject, securityContext);
+		nsresult result;
+        result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject, securityContext);
 		NS_IF_RELEASE(securityContext);
 		return outObject;
 	}
@@ -406,7 +424,8 @@ private:
 	{
 		jclass outClass = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetObjectClass(obj, &outClass);
+		nsresult result;
+        result = secureEnv->GetObjectClass(obj, &outClass);
 		return outClass;
 	}
 	
@@ -414,7 +433,8 @@ private:
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		jboolean outIsInstanceOf = PR_FALSE;
-		nsresult result = secureEnv->IsInstanceOf(obj, clazz, &outIsInstanceOf);
+		nsresult result;
+        result = secureEnv->IsInstanceOf(obj, clazz, &outIsInstanceOf);
 		return outIsInstanceOf;
 	}
 
@@ -447,7 +467,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, securityContext);
+		nsresult result;
+        result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
@@ -465,7 +486,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue, securityContext);
+		nsresult result;
+        result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 	}
 
@@ -553,7 +575,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, securityContext);
+		nsresult result;
+        result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
@@ -571,7 +594,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue, securityContext);
+		nsresult result;
+        result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 	}
 
@@ -655,7 +679,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, securityContext);
+		nsresult result;
+        result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
@@ -683,7 +708,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value, securityContext);
+		nsresult result;
+        result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value, securityContext);
 		NS_IF_RELEASE(securityContext);
 	}
 
@@ -736,7 +762,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, securityContext);
+		nsresult result;
+        result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
@@ -754,7 +781,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue, securityContext);
+		nsresult result;
+        result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 	}
 
@@ -838,7 +866,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, securityContext);
+		nsresult result;
+        result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, securityContext);
 		NS_IF_RELEASE(securityContext);
 		return outValue;
 	}
@@ -866,7 +895,8 @@ private:
 		ProxyJNIEnv& proxyEnv = GetProxyEnv(env);
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
 		nsISecurityContext* securityContext = proxyEnv.getContext();
-		nsresult result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value, securityContext);
+		nsresult result;
+        result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value, securityContext);
 		NS_IF_RELEASE(securityContext);
 	}
 
@@ -894,7 +924,8 @@ private:
 	{
 		jstring outString;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->NewString(unicode, len, &outString);
+		nsresult result;
+        result = secureEnv->NewString(unicode, len, &outString);
 		return outString;
 	}
 	
@@ -902,7 +933,8 @@ private:
 	{
 		jsize outLength;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetStringLength(str, &outLength);
+		nsresult result;
+        result = secureEnv->GetStringLength(str, &outLength);
 		return outLength;
 	}
 	
@@ -910,21 +942,24 @@ private:
 	{
 		const jchar* outChars = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetStringChars(str, isCopy, &outChars);
+		nsresult result;
+        result = secureEnv->GetStringChars(str, isCopy, &outChars);
 		return outChars;
 	}
 	
 	static void JNICALL ReleaseStringChars(JNIEnv *env, jstring str, const jchar *chars)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->ReleaseStringChars(str, chars);
+		nsresult result;
+        result = secureEnv->ReleaseStringChars(str, chars);
 	}
 
 	static jstring JNICALL NewStringUTF(JNIEnv *env, const char *utf)
 	{
 		jstring outString;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->NewStringUTF(utf, &outString);
+		nsresult result;
+        result = secureEnv->NewStringUTF(utf, &outString);
 		return outString;
 	}
 	
@@ -932,7 +967,8 @@ private:
 	{
 		jsize outLength;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetStringUTFLength(str, &outLength);
+		nsresult result;
+        result = secureEnv->GetStringUTFLength(str, &outLength);
 		return outLength;
 	}
 	
@@ -940,21 +976,24 @@ private:
 	{
 		const char* outChars = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetStringUTFChars(str, isCopy, &outChars);
+		nsresult result;
+        result = secureEnv->GetStringUTFChars(str, isCopy, &outChars);
 		return outChars;
 	}
 	
 	static void JNICALL ReleaseStringUTFChars(JNIEnv *env, jstring str, const char* chars)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->ReleaseStringUTFChars(str, chars);
+		nsresult result;
+        result = secureEnv->ReleaseStringUTFChars(str, chars);
 	}
 
 	static jsize JNICALL GetArrayLength(JNIEnv *env, jarray array)
 	{
 		jsize outLength;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetArrayLength(array, &outLength);
+		nsresult result;
+        result = secureEnv->GetArrayLength(array, &outLength);
 		return outLength;
 	}
 
@@ -962,7 +1001,8 @@ private:
 	{
 		jobjectArray outArray = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->NewObjectArray(len, clazz, initVal, &outArray);
+		nsresult result;
+        result = secureEnv->NewObjectArray(len, clazz, initVal, &outArray);
 		return outArray;
 	}
 
@@ -970,14 +1010,16 @@ private:
 	{
 		jobject outObject = NULL;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetObjectArrayElement(array, index, &outObject);
+		nsresult result;
+        result = secureEnv->GetObjectArrayElement(array, index, &outObject);
 		return outObject;
 	}
 
 	static void JNICALL SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject val)
 	{
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->SetObjectArrayElement(array, index, val);
+		nsresult result;
+        result = secureEnv->SetObjectArrayElement(array, index, val);
 	}
 
 #define IMPLEMENT_NEW_ARRAY(methodName, type)														\
@@ -985,7 +1027,8 @@ private:
 	{																								\
 		type##Array outArray = NULL;																\
 		nsISecureEnv* secureEnv = GetSecureEnv(env);												\
-		nsresult result = secureEnv->NewArray(type##_type, len, (jarray*)&outArray);				\
+		nsresult result; \
+        result = secureEnv->NewArray(type##_type, len, (jarray*)&outArray);				\
 		return outArray;																			\
 	}																								\
 
@@ -1005,7 +1048,8 @@ private:
 	{																										\
 		type* outElements = NULL;																			\
 		nsISecureEnv* secureEnv = GetSecureEnv(env);														\
-		nsresult result = secureEnv->GetArrayElements(type##_type, array, isCopy, &outElements);			\
+		nsresult result;	\
+		result = secureEnv->GetArrayElements(type##_type, array, isCopy, &outElements);			\
 		return outElements;																					\
 	}																										\
 
@@ -1024,7 +1068,8 @@ private:
 	static void JNICALL methodName(JNIEnv *env, type##Array array, type* elems, jint mode)					\
 	{																										\
 		nsISecureEnv* secureEnv = GetSecureEnv(env);														\
-		nsresult result = secureEnv->ReleaseArrayElements(type##_type, array, elems, mode);					\
+		nsresult result;	\
+		result = secureEnv->ReleaseArrayElements(type##_type, array, elems, mode);					\
 	}																										\
 
 	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseBooleanArrayElements, jboolean)
@@ -1042,7 +1087,8 @@ private:
 	static void JNICALL methodName(JNIEnv *env, type##Array array, jsize start, jsize len, type* buf)		\
 	{																										\
 		nsISecureEnv* secureEnv = GetSecureEnv(env);														\
-		nsresult result = secureEnv->GetArrayRegion(type##_type, array, start, len, buf);					\
+		nsresult result;    \
+        result = secureEnv->GetArrayRegion(type##_type, array, start, len, buf);					\
 	}																										\
 
 	IMPLEMENT_GET_ARRAY_REGION(GetBooleanArrayRegion, jboolean)
@@ -1060,7 +1106,8 @@ private:
 	static void JNICALL methodName(JNIEnv *env, type##Array array, jsize start, jsize len, type* buf)		\
 	{																										\
 		nsISecureEnv* secureEnv = GetSecureEnv(env);														\
-		nsresult result = secureEnv->SetArrayRegion(type##_type, array, start, len, buf);					\
+		nsresult result;    \
+        result = secureEnv->SetArrayRegion(type##_type, array, start, len, buf);					\
 	}																										\
 
 	IMPLEMENT_SET_ARRAY_REGION(SetBooleanArrayRegion, jboolean)
@@ -1078,7 +1125,8 @@ private:
 	{
 		jint outStatus = -1;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->RegisterNatives(clazz, methods, nMethods, &outStatus);
+		nsresult result;
+        result = secureEnv->RegisterNatives(clazz, methods, nMethods, &outStatus);
 		return outStatus;
 	}
 	
@@ -1086,7 +1134,8 @@ private:
 	{
 		jint outStatus = -1;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->UnregisterNatives(clazz, &outStatus);
+		nsresult result;
+        result = secureEnv->UnregisterNatives(clazz, &outStatus);
 		return outStatus;
 	}
 
@@ -1094,7 +1143,8 @@ private:
 	{
 		jint outStatus = -1;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->MonitorEnter(obj, &outStatus);
+		nsresult result;
+        result = secureEnv->MonitorEnter(obj, &outStatus);
 		return outStatus;
 	}
 	
@@ -1102,7 +1152,8 @@ private:
 	{
 		jint outStatus = -1;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->MonitorExit(obj, &outStatus);
+		nsresult result;
+		result = secureEnv->MonitorExit(obj, &outStatus);
 		return outStatus;
 	}
 
@@ -1110,7 +1161,8 @@ private:
 	{
 		jint outStatus = -1;
 		nsISecureEnv* secureEnv = GetSecureEnv(env);
-		nsresult result = secureEnv->GetJavaVM(vm, &outStatus);
+		nsresult result;
+		result = secureEnv->GetJavaVM(vm, &outStatus);
 		return outStatus;
 	}
 
