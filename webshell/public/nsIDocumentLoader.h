@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -37,8 +37,19 @@ class nsIDocumentLoaderObserver;
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADERFACTORY_IID   \
-{ 0xf43ba260, 0x0737, 0x11d2, \
-  {0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+ { 0xf43ba260, 0x0737, 0x11d2,{0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc}}
+
+// Registered components that can instantiate a
+// nsIDocumentLoaderFactory for a given mimetype must be prefixed with
+// this prefix to be found. The format is <prefix>/%s/%s where the
+// first %s is replaced with the command and the second %s is replaced
+// with the mimetype. For example, to view a image/gif file you would
+// create this progid:
+//
+//  "component://netscape/content-viewer-factory/view/image/gif"
+//
+#define NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX \
+  "component://netscape/content-viewer-factory/"
 
 /*
  * The factory API for creating a content viewer for a given
@@ -47,7 +58,7 @@ class nsIDocumentLoaderObserver;
 class nsIDocumentLoaderFactory : public nsISupports
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENTLOADERFACTORY_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADERFACTORY_IID)
 
     NS_IMETHOD CreateInstance(nsIURL* aURL,
                               const char* aContentType, 
@@ -57,6 +68,8 @@ public:
                               nsIStreamListener** aDocListenerResult,
                               nsIContentViewer** aDocViewerResult) = 0;
 };
+
+//----------------------------------------------------------------------
 
 /* b9d685e0-fcae-11d1-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADER_IID   \
@@ -70,7 +83,7 @@ public:
 class nsIDocumentLoader : public nsISupports 
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENTLOADER_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADER_IID)
 
     NS_IMETHOD LoadDocument(const nsString& aURLSpec, 
                             const char* aCommand,
@@ -92,10 +105,6 @@ public:
 
     NS_IMETHOD CreateDocumentLoader(nsIDocumentLoader** anInstance) = 0;
 
-    NS_IMETHOD SetDocumentFactory(nsIDocumentLoaderFactory* aFactory) = 0;
-
-		NS_IMETHOD GetDocumentFactory(nsIDocumentLoaderFactory** aResult) = 0;
-
     NS_IMETHOD AddObserver(nsIDocumentLoaderObserver *aObserver) = 0;
 
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver) = 0;
@@ -109,7 +118,6 @@ public:
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
 #define NS_DOCUMENTLOADER_SERVICE_CID   \
-{ 0x057b04d0, 0x0ccf, 0x11d2, \
-  {0xbe, 0xba, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+ { 0x057b04d0, 0x0ccf, 0x11d2,{0xbe, 0xba, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc}}
 
 #endif /* nsIDocumentLoader_h___ */
