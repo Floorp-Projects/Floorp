@@ -23,7 +23,7 @@
 <!ENTITY imageDetails "Images are the pictures that websites display on your computer.">
 <!ENTITY accAllImagesRadio.label "Accept all images">
 <!ENTITY accAllImagesRadio.accesskey "a">
-<!ENTITY accpOrgImagesRadio.label "Accept images that come from the originating server only">
+<!ENTITY accpOrgImagesRadio.label "Accept images that come from the originating site only">
 <!ENTITY accpOrgImagesRadio.accesskey "o">
 <!ENTITY disImagesRadio.label "Reject all images">
 <!ENTITY disImagesRadio.accesskey "r">
