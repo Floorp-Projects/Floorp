@@ -61,7 +61,7 @@ XP_LIBS		+= $(TK_LIBS)
 endif
 
 ifdef DETECT_WEBSHELL_LEAKS
-XP_LIBS         += -lraptorwebwidget
+XP_LIBS         += -lraptorwebwidget -ldocshell -ljsdom
 endif
 
 ifdef MOZ_JPROF
