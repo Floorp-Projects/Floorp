@@ -2235,7 +2235,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrl
   
   nsCOMPtr<nsIMsgFolder> inbox;
   nsCOMPtr<nsIMsgFolder> rootFolder;
-  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  rv = server->GetRootMsgFolder(getter_AddRefs(rootFolder));
   if(NS_SUCCEEDED(rv) && rootFolder)
   {
     PRUint32 numFolders;
@@ -2982,7 +2982,7 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
   PRUint32 srcCount;
   aMessages->Count(&srcCount);
   
-  for (PRInt32 i = 0; header && (i < srcCount); i++)
+  for (PRInt32 i = 0; i < srcCount; i++)
   {
     /* get uidl for this message */
     uidl = nsnull;

@@ -54,6 +54,8 @@ interface nsIPop3IncomingServer : nsISupports {
   void addUidlToMarkDeleted(in string aUidl);
   void markMessagesDeleted(in boolean aDeleteMsgs);
   attribute boolean authenticated;
+  /* account to which this server defers storage, for global inbox */
+  attribute string deferredToAccount;
 };
 
 

@@ -64,10 +64,12 @@ public:
     NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
+    NS_IMETHOD GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder);
 private:    
     PRUint32 m_capabilityFlags;
     PRBool m_authenticated;
     nsCOMPtr <nsIPop3Protocol> m_runningProtocol;
+    nsCOMPtr <nsIMsgFolder> m_rootMsgFolder;
     nsCStringArray m_uidlsToMarkDeleted;
 };
 

@@ -897,12 +897,8 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
 
   // add the resource to the array
   nsCOMPtr<nsIRDFResource> serverResource = do_QueryInterface(serverFolder);
-  if(!serverResource)
-    return PR_TRUE;
-
-  rv = servers->AppendElement(serverResource);
-  if (NS_FAILED(rv)) return PR_TRUE;
-
+  if(serverResource)
+    (void) servers->AppendElement(serverResource);
   return PR_TRUE;
 }
 

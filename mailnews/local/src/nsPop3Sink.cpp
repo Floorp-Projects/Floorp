@@ -167,21 +167,9 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     else
       return NS_MSG_FOLDER_BUSY;
 
-    if (uidlDownload)
-    {
-      nsCOMPtr<nsIFileSpec> path;
-      m_folder->GetPath(getter_AddRefs(path));
-      path->GetFileSpec(&fileSpec);
-    }
-    else
-    {
-      nsCOMPtr<nsIFileSpec> mailDirectory;
-      rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
-      if (NS_FAILED(rv)) return rv;
-    
-      mailDirectory->GetFileSpec(&fileSpec);
-      fileSpec += "Inbox";
-    }
+    nsCOMPtr<nsIFileSpec> path;
+    m_folder->GetPath(getter_AddRefs(path));
+    path->GetFileSpec(&fileSpec);
     m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
     
     // The following (!m_outFileStream etc) was added to make sure that we don't write somewhere 

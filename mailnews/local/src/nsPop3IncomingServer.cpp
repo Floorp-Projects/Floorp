@@ -53,6 +53,7 @@
 #include "nsIFileSpec.h"
 #include "nsPop3Protocol.h"
 #include "nsIMsgLocalMailFolder.h"
+#include "nsIMsgAccountManager.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
@@ -105,6 +106,10 @@ NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
                         "num_days_to_leave_on_server")
 
 
+NS_IMPL_SERVERPREF_STR(nsPop3IncomingServer, 
+                          DeferredToAccount,
+                          "deferred_to_account")
+
 //NS_IMPL_GETSET(nsPop3IncomingServer, Authenticated, PRBool, m_authenticated);
 
 NS_IMETHODIMP nsPop3IncomingServer::GetAuthenticated(PRBool *aAuthenticated)
@@ -140,6 +145,42 @@ nsPop3IncomingServer::GetLocalStoreType(char **type)
     NS_ENSURE_ARG_POINTER(type);
     *type = nsCRT::strdup("mailbox");
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsPop3IncomingServer::GetRootMsgFolder(nsIMsgFolder **aRootMsgFolder)
+{
+  NS_ENSURE_ARG_POINTER(aRootMsgFolder);
+  nsresult rv = NS_OK;
+  if (!m_rootMsgFolder)
+  {
+    nsXPIDLCString deferredToAccount;
+    GetDeferredToAccount(getter_Copies(deferredToAccount));
+    if (deferredToAccount.IsEmpty())
+    {
+      rv = CreateRootFolder();
+      m_rootMsgFolder = m_rootFolder;
+    }
+    else
+    {
+      nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      nsCOMPtr <nsIMsgAccount> account;
+      rv = accountManager->GetAccount(deferredToAccount, getter_AddRefs(account));
+      if (account)
+      {
+        nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+        rv = account->GetIncomingServer(getter_AddRefs(incomingServer));
+        // make sure we're not deferred to ourself...
+        if (incomingServer && incomingServer != this) 
+          rv = incomingServer->GetRootMsgFolder(getter_AddRefs(m_rootMsgFolder));
+      }
+    }
+  }
+
+  NS_IF_ADDREF(*aRootMsgFolder = m_rootMsgFolder);
+  return rv;
 }
 
 NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
