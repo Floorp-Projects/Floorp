@@ -1,5 +1,5 @@
 <!-- Entities for the Sample Extension Options Dialog go here -->
-<!ENTITY reportWizard.title                         "Report Broken Website Tool">
+<!ENTITY reportWizard.title                         "Report A Broken Website">
 
 <!ENTITY privacyNotice.label                        "Privacy Policy">
 <!ENTITY reportWizardPrivacy.description            "This tool allows you to tell the Evangelism Team about web sites that do not work properly in Firefox, or shut Firefox out. This is your way to help us ensure the best possible experience for Firefox users. Please take a moment to read the following to learn how we use the information we collect should you choose to participate.">
@@ -12,7 +12,6 @@
 <!ENTITY registration.registerButton.label          "Generate ID">
 <!ENTITY registration.registerButton.accesskey      "G">
 
-<!ENTITY reportWizard.title                         "Report Broken Website Tool">
 <!ENTITY reportForm.label                           "Fill out Report">
 
 <!ENTITY reportForm.description                     "Tell us a little about the problem you encountered:">
