@@ -131,6 +131,8 @@
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
     <command id="cmd_insertHTML"       oncommand="goDoCommand('cmd_insertHTML')"     value="&insertHTMLCmd.label;"/>
     <command id="cmd_smiley"           state=""         oncommand="goDoCommand('cmd_smiley')"/>
+    <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"/>
+    <command id="cmd_insertBreakAll"   oncommand="goDoCommand('cmd_insertBreakAll')"/>
     
     <command id="cmd_NormalMode"       oncommand="goDoCommand('cmd_NormalMode')"     value="&NormalMode.label;"/>
     <command id="cmd_AllTagsMode"      oncommand="goDoCommand('cmd_AllTagsMode')"    value="&AllTagsMode.label;"/>
@@ -363,6 +365,11 @@
       <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_InsertTable" value="&insertTableCmd.label;"/>
       <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTML"  key="inserthtmlkb"/>
       <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
+      <menuseparator/>
+<!-- Activate this after Enter key inserts P tag and not BR
+      <menuitem accesskey="&insertbreak.accesskey;"      observes="cmd_insertBreak"      value="&insertBreakCmd.label;"/>
+-->
+      <menuitem accesskey="&insertbreakall.accesskey;"   observes="cmd_insertBreakAll"   value="&insertBreakAllCmd.label;"/>
     </menupopup>
   </menu>
     
