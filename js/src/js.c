@@ -1480,6 +1480,7 @@ static char *shell_help_messages[] = {
 #endif
     "build()                Show build date and time",
     "clear([obj])           Clear properties of object",
+    "intern(str)            Internalize str in the atom table",
     0
 };
 
