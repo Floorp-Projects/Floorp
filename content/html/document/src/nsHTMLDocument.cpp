@@ -95,7 +95,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
-#include "nsIFormManager.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIDOMHTMLElement.h"
