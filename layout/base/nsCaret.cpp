@@ -496,19 +496,18 @@ void nsCaret::KillTimer()
 //-----------------------------------------------------------------------------
 nsresult nsCaret::PrimeTimer()
 {
-  KillTimer();
-  
   // set up the blink timer
   if (!mReadOnly && mBlinkRate > 0)
   {
-    nsresult  err;
-    mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);
-    
-    if (NS_FAILED(err))
-      return err;
-    
+    if (!mBlinkTimer) {
+      nsresult  err;
+      mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);    
+      if (NS_FAILED(err))
+        return err;
+    }    
+
     mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, mBlinkRate,
-                                      nsITimer::TYPE_REPEATING_PRECISE);
+                                      nsITimer::TYPE_REPEATING_SLACK);
   }
 
   return NS_OK;
