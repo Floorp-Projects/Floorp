@@ -17,6 +17,7 @@
 // Copyright (C) 1998 Netscape Communications Corporation. All
 // Rights Reserved.
 
+#include <cstdlib>
 #include <cstring>
 #include <new>
 #include <iomanip>
@@ -1532,6 +1533,99 @@ const char16 *JS::skipWhiteSpace(const char16 *str, const char16 *strEnd)
 	while (str != strEnd && isSpace(*str))
 		str++;
 	return str;
+}
+
+
+//
+// Arenas
+//
+
+// #define DEBUG_ARENA to allocate each object in its own malloc block.
+// This allows tools such as Purify to do bounds checking on all blocks.
+
+
+// Construct an Arena that allocates memory in chunks of the given size.
+JS::Arena::Arena(size_t blockSize): blockSize(blockSize), freeBegin(0), freeEnd(0)
+{
+	ASSERT(blockSize && !(blockSize & basicAlignment-1));
+	rootDirectory.next = 0;
+	currentDirectory = &rootDirectory;
+}
+
+
+// Deallocate the Directory's blocks but do not follow the next link.
+void JS::Arena::Directory::clear()
+{
+	void **b = blocks + nBlocks;
+	while (b != blocks)
+		STD::free(*--b);
+}
+
+
+// Deallocate the Arena's blocks and directories.
+void JS::Arena::clear()
+{
+	Directory *d = rootDirectory.next;
+	while (d) {
+		Directory *next = d->next;
+		d->clear();
+		delete d;
+		d = next;
+	}
+	rootDirectory.clear();
+	rootDirectory.next = 0;
+	currentDirectory = &rootDirectory;
+}
+
+
+// Allocate an internal block of the given size and link it into a Directory.
+// Throw bad_alloc if out of memory, without corrupting any of the Arena data structures.
+void *JS::Arena::newBlock(size_t size)
+{
+	Directory *d = currentDirectory;
+	uint nBlocks = d->nBlocks;
+
+	// Allocate a new Directory if the current one is full.  Link it just past the
+	// rootDirectory so that the links are in reverse order.  This allows clear() to
+	// deallocate memory in the reverse order from that in which it was allocated.
+	if (nBlocks == Directory::maxNBlocks) {
+		d = new Directory;
+		d->next = rootDirectory.next;
+		rootDirectory.next = d;
+		currentDirectory = d;
+		nBlocks = 0;
+	}
+	
+	void *p = STD::malloc(size);
+	d->blocks[nBlocks] = p;
+	d->nBlocks = nBlocks + 1;
+	return p;
+}
+
+
+// Allocate a naturally-aligned object of the given size (in bytes).  Throw
+// bad_alloc if out of memory, without corrupting any of the Arena data structures.
+void *JS::Arena::allocate(size_t size)
+{
+	ASSERT(size);	// Can't allocate zero-size blocks.
+#ifdef DEBUG_ARENA
+	return newBlock(size);
+#else
+	size = size + (basicAlignment-1) & -basicAlignment;	// Round up to natural alignment if necessary
+	char *p = freeBegin;
+	size_t freeBytes = static_cast<size_t>(freeEnd - p);
+
+	if (size > freeBytes) {
+		// If freeBytes is at least a quarter of blockSize, allocate a separate block.
+		if (freeBytes<<2 >= blockSize || size >= blockSize)
+			return newBlock(size);
+		
+		p = static_cast<char *>(newBlock(blockSize));
+		freeEnd = p + blockSize;
+	}
+	freeBegin = p + size;
+	return p;
+#endif
 }
 
 

@@ -237,6 +237,90 @@ namespace JavaScript {
 
 
 //
+// Arenas
+//
+
+	// An arena is a region of memory from which objects either derived from ArenaObject or allocated
+	// using a ArenaAllocator can be allocated.  Deleting these objects individually runs the destructors,
+	// if any, but does not deallocate the memory.  On the other hand, the entire arena can be deallocated
+	// as a whole.
+	class Arena {
+		struct Directory {
+			enum {maxNBlocks = 31};
+			
+			Directory *next;			// Next directory in linked list
+			uint nBlocks;				// Number of blocks used in this directory
+			void *blocks[maxNBlocks];	// Pointers to data blocks; only the first nBlocks are valid
+			
+			Directory(): nBlocks(0) {}
+			void clear();
+		};
+		
+		char *freeBegin;				// Pointer to free bytes left in current block
+		char *freeEnd;					// Pointer to end of free bytes left in current block
+		size_t blockSize;				// Size of individual arena blocks
+		Directory *currentDirectory;	// Directory in which the last block was allocated
+		Directory rootDirectory;		// Initial directory; root of linked list of Directories
+		
+	  public:
+		explicit Arena(size_t blockSize = 1024);
+	  private:
+	    Arena(const Arena&);			// No copy constructor
+	    void operator=(const Arena&);	// No assignment operator
+	  public:
+		void clear();
+		~Arena() {clear();}
+		
+	  private:
+		void *newBlock(size_t size);
+	  public:
+		void *allocate(size_t size);
+	};
+
+	
+	// Objects derived from this class will be contained in the Arena passed to the new operator.
+	struct ArenaObject {
+		void *operator new(size_t size, Arena &arena) {return arena.allocate(size);}
+		void *operator new[](size_t size, Arena &arena) {return arena.allocate(size);}
+		void operator delete(void *, size_t) {}
+		void operator delete[](void *) {}
+	};
+
+
+	// Objects allocated by passing this class to standard containers will be contained in the Arena
+	// passed to the ArenaAllocator's constructor.
+	template<class T>
+	class ArenaAllocator {
+		Arena &arena;
+
+	  public:
+		typedef T value_type;
+		typedef size_t size_type;
+		typedef ptrdiff_t difference_type;
+		typedef T *pointer;
+		typedef const T *const_pointer;
+		typedef T &reference;
+		typedef const T &const_reference;
+		
+		static pointer address(reference r) {return &r;}
+		static const_pointer address(const_reference r) {return &r;}
+		
+		ArenaAllocator(Arena &arena): arena(arena) {}
+		template<class U> ArenaAllocator(const ArenaAllocator<U> &u): arena(u.arena) {}
+		
+		pointer allocate(size_type n, const void *hint = 0) {return static_cast<pointer>(arena.allocate(n*sizeof(T)));}
+		static void deallocate(pointer, size_type) {}
+		
+		static void construct(pointer p, const T &val) {new(p) T(val);}
+		static void destroy(pointer p) {p->~T();}
+		
+		static size_type max_size() {return std::numeric_limits<size_type>::max() / sizeof(T);}
+		
+		template<class U> struct rebind {typedef ArenaAllocator<U> other;};
+	};
+
+
+//
 // Array auto_ptr's
 //
 
@@ -379,6 +463,26 @@ namespace JavaScript {
 
 
 //
+// Source File Positions
+//
+
+	// A FileOffset holds the raw, zero-based offset of a position in the source input.
+	// This offset is designed of easy indexing and depends on the format of the input.
+	// If the input is a String or array of char16, then this is merely a character index.
+	// If the input is utf-8, then this is a byte offset (which is very different from
+	// a character offset in this case!).
+	typedef uint32 FileOffset;
+
+
+	// A SourcePosition describes a character position in a source file or eval string.
+	struct SourcePosition {
+		FileOffset lineFileOffset;		// Byte or character offset of start of source line relative to source file
+		uint32 lineNum;					// One-based source line number
+		uint32 charPos;					// Zero-based character offset of target character relative to the beginning of its source line
+	};
+
+
+//
 // Exceptions
 //
 
@@ -392,13 +496,12 @@ namespace JavaScript {
 		Kind kind;						// The exception's kind
 		String message;					// The detailed message
 		String sourceFile;				// A description of the source code that caused the error
-		uint32 lineNum;					// One-based source line number; 0 if unknown
-		uint32 charPos;					// Zero-based character offset within the line
+		SourcePosition position;		// Position of first character in token that caused the error
 		String sourceLine;				// The text of the source line
 
-		Exception(Kind kind, const String &message): kind(kind), message(message), lineNum(0) {}
-		Exception(Kind kind, const String &message, const String &sourceFile, uint32 lineNum, uint32 charPos, const String sourceLine):
-			kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charPos(charPos), sourceLine(sourceLine) {}
+		Exception(Kind kind, const String &message): kind(kind), message(message) {position.lineNum = 0;}
+		Exception(Kind kind, const String &message, const String &sourceFile, SourcePosition &position, const String &sourceLine):
+			kind(kind), message(message), sourceFile(sourceFile), position(position), sourceLine(sourceLine) {}
 			
 		const char *kindString() const;
 		String fullMessage() const;

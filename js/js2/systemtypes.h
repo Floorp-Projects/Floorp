@@ -81,3 +81,12 @@ typedef float float32;
  #define IS_LITTLE_ENDIAN
 #endif
 #endif
+
+
+// basicAlignment is the maximum alignment required by any native type.  An object aligned to
+// a multiple of basicAlignment can hold any native type.  malloc should return a pointer whose
+// lgBasicAlignment least significant bits are clear.
+// Currently basicAlignment is set to 8 to allow doubles and int64s to have their natural alignment;
+// may be customized for individual platforms.
+const uint lgBasicAlignment = 3;
+const uint basicAlignment = 1u<<lgBasicAlignment;
