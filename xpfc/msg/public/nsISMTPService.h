@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIMessage.h"
+#include "nsIMIMEMessage.h"
 #include "nsISMTPObserver.h"
 
 //b64f8b50-6f77-11d2-8dbc-00805f8a7ab6
@@ -45,6 +46,10 @@ public:
 
   NS_IMETHOD SendMail(nsString& aServer, 
                       nsIMessage& aMessage,
+                      nsISMTPObserver * aObserver = nsnull) = 0;
+
+  NS_IMETHOD SendMail(nsString& aServer, 
+                      nsIMIMEMessage& aMIMEMessage,
                       nsISMTPObserver * aObserver = nsnull) = 0;
 
 };

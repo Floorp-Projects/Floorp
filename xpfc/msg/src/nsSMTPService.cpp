@@ -25,10 +25,11 @@
 #include <stdio.h>
 #include "nsCRT.h"
 #include "nsSMTPServerCallback.h"
+#include "nsIMIMEMessage.h"
 
 static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kSMTPServiceIID,   NS_ISMTP_SERVICE_IID);
-
+static NS_DEFINE_IID(kIMIMEMessageIID,  NS_IMIME_MESSAGE_IID);
 
 nsSMTPService :: nsSMTPService()
 {
@@ -58,8 +59,37 @@ nsresult nsSMTPService::SendMail(nsString& aServer,
    * plain/text mail
    */
 
+  nsIMIMEMessage * mime_message = nsnull;
   
+  nsresult res = NS_OK;    
 
+  res = aMessage.QueryInterface(kIMIMEMessageIID, (void**)&mime_message);
+
+  if (res == NS_OK)
+    return (SendMail(aServer, *mime_message, aObserver));
+
+  /*
+   * this is not a MIME message. Send as plain text
+   */
+
+  nsString str_from;
+  nsString str_to;
+  nsString str_subject;
+  nsString str_body;
+
+  aMessage.GetSender(str_from);
+  aMessage.GetRecipients(str_to);
+  aMessage.GetSubject(str_subject);
+  aMessage.GetBody(str_body);
+
+  return (SendMail(aServer, str_from,str_to, str_subject, str_body));
+
+}
+
+nsresult nsSMTPService::SendMail(nsString& aServer, 
+                                 nsIMIMEMessage& aMIMEMessage,
+                                 nsISMTPObserver * aObserver) 
+{
   return NS_OK;
 }
 

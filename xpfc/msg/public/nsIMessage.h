@@ -41,7 +41,7 @@ public:
   NS_IMETHOD SetBody(nsString& aBody) = 0;
 
   NS_IMETHOD GetSender(nsString& aSender) = 0;
-  NS_IMETHOD GetReciepients(nsString& aRecipients) = 0;
+  NS_IMETHOD GetRecipients(nsString& aRecipients) = 0;
   NS_IMETHOD GetSubject(nsString& aSubject) = 0;
   NS_IMETHOD GetBody(nsString& aBody) = 0;
 
