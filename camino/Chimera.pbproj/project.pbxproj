@@ -855,6 +855,7 @@
 				3FC0FB8A05A0D2F4002F47DE,
 				3FC0FB8B05A0D2F4002F47DE,
 				3FC0FB8C05A0D2F4002F47DE,
+				3FC7EBFC05AA1D1C00C557AA,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2467,6 +2468,33 @@
 		};
 		3FC7E24E05A229A400C557AA = {
 			fileRef = 3FC0FB8305A0D2F4002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC7EBFA05AA1D1C00C557AA = {
+			children = (
+				3FC7EBFB05AA1D1C00C557AA,
+			);
+			isa = PBXVariantGroup;
+			name = AccessoryViews.nib;
+			path = "";
+			refType = 2;
+		};
+		3FC7EBFB05AA1D1C00C557AA = {
+			isa = PBXFileReference;
+			name = AccessoryViews.nib;
+			path = resources/localized/English.lproj/AccessoryViews.nib;
+			refType = 4;
+		};
+		3FC7EBFC05AA1D1C00C557AA = {
+			fileRef = 3FC7EBFA05AA1D1C00C557AA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC7EBFD05AA1D1C00C557AA = {
+			fileRef = 3FC7EBFA05AA1D1C00C557AA;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7216,6 +7244,7 @@
 				F5F7EF0D03C1F29C01BDD337,
 				F507A85003116E7901026D5D,
 				3FB2BAE50545EBAB002B9691,
+				3FC7EBFA05AA1D1C00C557AA,
 			);
 			isa = PBXGroup;
 			name = Nibs;
@@ -8562,6 +8591,7 @@
 				3FC7E24C05A229A300C557AA,
 				3FC7E24D05A229A400C557AA,
 				3FC7E24E05A229A400C557AA,
+				3FC7EBFD05AA1D1C00C557AA,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
