@@ -1514,10 +1514,10 @@ void nsImageGTK::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
        bitmask data are arranged left to right on the screen,
        low to high address in memory. */
     mAlphaXImage->byte_order = MSBFirst;
-  }
 
-  if (!s1bitGC)
-    s1bitGC = gdk_gc_new(mAlphaPixmap);
+    if (!s1bitGC)
+      s1bitGC = gdk_gc_new(mAlphaPixmap);
+  }
 
   if (!sXbitGC)
     sXbitGC = gdk_gc_new(mImagePixmap);
