@@ -1,5 +1,6 @@
 #include "Converters.h"
 #include "nsIStringStream.h"
+#include "nsCOMPtr.h"
 
 //////////////////////////////////////////////////
 // TestConverter
@@ -20,7 +21,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
                        const PRUnichar *aToType, 
                        nsISupports *ctxt, 
                        nsIInputStream **_retval) {
-    char buf[1024];
+    char buf[1024+1];
     PRUint32 read;
     nsresult rv = aFromStream->Read(buf, 1024, &read);
     if (NS_FAILED(rv) || read == 0) return rv;
@@ -34,19 +35,18 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     for (PRUint32 i = 0; i < read; i++) 
         buf[i] = toChar;
 
+    buf[read] = '\0';
+
     nsString convDataStr;
     convDataStr.AssignWithConversion(buf);
-    nsIInputStream *inputData = nsnull;
-    nsISupports *inputDataSup = nsnull;
+    nsCOMPtr<nsISupports> inputDataSup;
 
-    rv = NS_NewStringInputStream(&inputDataSup, convDataStr);
+    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), convDataStr);
     if (NS_FAILED(rv)) return rv;
 
-    rv = inputDataSup->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&inputData);
-    NS_RELEASE(inputDataSup);
+    nsCOMPtr<nsIInputStream> inputData(do_QueryInterface(inputDataSup));
     *_retval = inputData;
-    if (NS_FAILED(rv)) return rv;
-
+    NS_ADDREF(*_retval);
     return NS_OK; 
 }
 
@@ -60,7 +60,6 @@ TestConverter::AsyncConvertData(const PRUnichar *aFromType,
     NS_ASSERTION(aListener, "null listener");
 
     mListener = aListener;
-    NS_ADDREF(mListener);
 
     // based on these types, setup internal state to handle the appropriate conversion.
     fromType = aFromType;
@@ -78,11 +77,11 @@ TestConverter::OnDataAvailable(nsIRequest* request,
                                PRUint32 sourceOffset, 
                                PRUint32 count) {
     nsresult rv;
-    nsIInputStream *convertedStream = nsnull;
+    nsCOMPtr<nsIInputStream> convertedStream;
     // just make a syncronous call to the Convert() method.
     // Anything can happen here, I just happen to be using the sync call to 
     // do the actual conversion.
-    rv = Convert(inStr, fromType.GetUnicode(), toType.GetUnicode(), ctxt, &convertedStream);
+    rv = Convert(inStr, fromType.GetUnicode(), toType.GetUnicode(), ctxt, getter_AddRefs(convertedStream));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 len;
@@ -139,10 +138,6 @@ TestConverterFactory::CreateInstance(nsISupports *aOuter,
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kTestConverterCID)) {
         TestConverter *conv = new TestConverter();
-        if (!conv) return NS_ERROR_OUT_OF_MEMORY;
-        conv->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
-    } else if (mClassID.Equals(kTestConverter1CID)) {
-        TestConverter1 *conv = new TestConverter1();
         if (!conv) return NS_ERROR_OUT_OF_MEMORY;
         conv->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
     }

@@ -174,12 +174,120 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "nsUnknownDecoder.h"
 #include "nsTXTToHTMLConv.h"
 #include "nsIndexedToHTML.h"
+
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv (nsMultiMixedConv** result);
 nsresult MOZ_NewTXTToHTMLConv (mozTXTToHTMLConv** result);
 nsresult NS_NewHTTPChunkConv  (nsHTTPChunkConv ** result);
 nsresult NS_NewHTTPCompressConv  (nsHTTPCompressConv ** result);
 nsresult NS_NewNSTXTToHTMLConv(nsTXTToHTMLConv** result);
+nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
+
+#define FTP_UNIX_TO_INDEX            "?from=text/ftp-dir-unix&to=application/http-index-format"
+#define FTP_NT_TO_INDEX              "?from=text/ftp-dir-nt&to=application/http-index-format"
+#define INDEX_TO_HTML                "?from=application/http-index-format&to=text/html"
+#define MULTI_MIXED_X                "?from=multipart/x-mixed-replace&to=*/*"
+#define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
+#define UNKNOWN_CONTENT              "?from=application/x-unknown-content-type&to=*/*"
+#define CHUNKED_TO_UNCHUNKED         "?from=chunked&to=unchunked"
+#define UNCHUNKED_TO_CHUNKED         "?from=unchunked&to=chunked"
+#define GZIP_TO_UNCOMPRESSED         "?from=gzip&to=uncompressed"
+#define XGZIP_TO_UNCOMPRESSED        "?from=x-gzip&to=uncompressed"
+#define COMPRESS_TO_UNCOMPRESSED     "?from=compress&to=uncompressed"
+#define XCOMPRESS_TO_UNCOMPRESSED    "?from=x-compress&to=uncompressed"
+#define DEFLATE_TO_UNCOMPRESSED      "?from=deflate&to=uncompressed"
+#define PLAIN_TO_HTML                "?from=text/plain&to=text/html"
+
+static PRUint32 g_StreamConverterCount = 14;
+
+static char *g_StreamConverterArray[] = {
+        FTP_UNIX_TO_INDEX,
+        FTP_NT_TO_INDEX,
+        INDEX_TO_HTML,
+        MULTI_MIXED_X,
+        MULTI_MIXED,
+        UNKNOWN_CONTENT,
+        CHUNKED_TO_UNCHUNKED,
+        UNCHUNKED_TO_CHUNKED,
+        GZIP_TO_UNCOMPRESSED,
+        XGZIP_TO_UNCOMPRESSED,
+        COMPRESS_TO_UNCOMPRESSED,
+        XCOMPRESS_TO_UNCOMPRESSED,
+        DEFLATE_TO_UNCOMPRESSED,
+        PLAIN_TO_HTML
+    };
+
+// each stream converter must add its from/to key to the category manager
+// in RegisterStreamConverters(). This provides a string representation
+// of each registered converter, rooted in the NS_ISTREAMCONVERTER_KEY
+// category. These keys are then (when the stream converter service
+// needs to chain converters together) enumerated and parsed to build
+// a graph of converters for potential chaining.
+static NS_METHOD
+RegisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                         const char *registryLocation, const char *componentType) {
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catmgr =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString previous;
+
+    PRUint32 count = 0;
+    while (count < g_StreamConverterCount) {
+        (void) catmgr->AddCategoryEntry(NS_ISTREAMCONVERTER_KEY, g_StreamConverterArray[count],
+                                      "", PR_TRUE, PR_TRUE, getter_Copies(previous));
+        if (NS_FAILED(rv)) NS_ASSERTION(0, "adding a cat entry failed");
+        count++;
+    }
+    
+    return rv;
+}
+
+// same as RegisterStreamConverters except the reverse.
+static NS_METHOD
+UnregisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                           const char *registryLocation) {
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catmgr =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString entry;
+
+    PRUint32 count = 0;
+    while (count < g_StreamConverterCount) {
+        rv = catmgr->DeleteCategoryEntry(NS_ISTREAMCONVERTER_KEY, g_StreamConverterArray[count],
+                                         PR_TRUE, getter_Copies(entry));
+        if (NS_FAILED(rv)) return rv;
+        NS_ASSERTION(entry, "deleting an entry that doesn't exist");
+        count++;
+    }
+    return rv;
+}
+
+static NS_IMETHODIMP                 
+CreateNewStreamConvServiceFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    nsStreamConverterService* inst = nsnull;
+    nsresult rv = NS_NewStreamConv(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
 
 static NS_IMETHODIMP                 
 CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
@@ -498,90 +606,98 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       nsProtocolProxyService::Create },
 
     // from netwerk/streamconv:
+
+    // this converter is "always" part of a build.
+    // HACK-ALERT, register *all* converters
+    // in this converters component manager 
+    // registration. just piggy backing here until
+    // you can add registration functions to
+    // the generic module macro.
     { "Stream Converter Service", 
       NS_STREAMCONVERTERSERVICE_CID,
       "@mozilla.org/streamConverters;1", 
-      nsStreamConverterService::Create },
+      CreateNewStreamConvServiceFactory,
+      RegisterStreamConverters,   // registers *all* converters
+      UnregisterStreamConverters  // unregisters *all* converters
+    },
 
     // from netwerk/streamconv/converters:
     { "FTPDirListingConverter", 
-      NS_FTPDIRLISTINGCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-unix&to=application/http-index-format", 
+      NS_FTPDIRLISTINGCONVERTER_CID, 
+      NS_ISTREAMCONVERTER_KEY FTP_UNIX_TO_INDEX, 
       CreateNewFTPDirListingConv
     },
 
     { "FTPDirListingConverter", 
       NS_FTPDIRLISTINGCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt&to=application/http-index-format", 
+      NS_ISTREAMCONVERTER_KEY FTP_NT_TO_INDEX, 
       CreateNewFTPDirListingConv
     },
 
     { "Indexed to HTML Converter", 
       NS_NSINDEXEDTOHTMLCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=application/http-index-format&to=text/html", 
+      NS_ISTREAMCONVERTER_KEY INDEX_TO_HTML, 
       nsIndexedToHTML::Create
     },
     
     { "MultiMixedConverter", 
       NS_MULTIMIXEDCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace&to=*/*", 
+      NS_ISTREAMCONVERTER_KEY MULTI_MIXED_X, 
       CreateNewMultiMixedConvFactory
     },
 
-    // There are servers that hand back "multipart/mixed" to
-    // indicate they want x-mixed-replace behavior.
     { "MultiMixedConverter2",
       NS_MULTIMIXEDCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=multipart/mixed&to=*/*",
+      NS_ISTREAMCONVERTER_KEY MULTI_MIXED,
       CreateNewMultiMixedConvFactory
     },
     { "Unknown Content-Type Decoder",
       NS_UNKNOWNDECODER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=application/x-unknown-content-type&to=*/*",
+      NS_ISTREAMCONVERTER_KEY UNKNOWN_CONTENT,
       CreateNewUnknownDecoderFactory
     },
 
     { "HttpChunkConverter", 
       NS_HTTPCHUNKCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=chunked&to=unchunked",
+      NS_ISTREAMCONVERTER_KEY CHUNKED_TO_UNCHUNKED,
       CreateNewHTTPChunkConvFactory
     },
 
     { "HttpChunkConverter", 
       NS_HTTPCHUNKCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=unchunked&to=chunked",
+      NS_ISTREAMCONVERTER_KEY UNCHUNKED_TO_CHUNKED,
       CreateNewHTTPChunkConvFactory
     },
 
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=gzip&to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY GZIP_TO_UNCOMPRESSED,
       CreateNewHTTPCompressConvFactory
     },
 
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=x-gzip&to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY XGZIP_TO_UNCOMPRESSED,
       CreateNewHTTPCompressConvFactory
     },
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=compress&to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY COMPRESS_TO_UNCOMPRESSED,
       CreateNewHTTPCompressConvFactory
     },
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=x-compress&to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY XCOMPRESS_TO_UNCOMPRESSED,
       CreateNewHTTPCompressConvFactory
     },
     { "HttpCompressConverter", 
       NS_HTTPCOMPRESSCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=deflate&to=uncompressed",
+      NS_ISTREAMCONVERTER_KEY DEFLATE_TO_UNCOMPRESSED,
       CreateNewHTTPCompressConvFactory
     },
     { "NSTXTToHTMLConverter",
       NS_NSTXTTOHTMLCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=text/plain&to=text/html",
+      NS_ISTREAMCONVERTER_KEY PLAIN_TO_HTML,
       CreateNewNSTXTToHTMLConvFactory
 	},
 	// This is not a real stream converter, it's just
