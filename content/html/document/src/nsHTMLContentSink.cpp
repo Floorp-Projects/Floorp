@@ -1757,6 +1757,13 @@ SinkContext::DemoteForm(const nsIParserNode& aNode)
           mSink->mDocument->GetScriptLoader(getter_AddRefs(loader));
           if (loader) {
             loader->Suspend();
+            // Bug: 96861
+            // XXX- Apparenly just suspending the script loader is not
+            // sufficient to prevent scripts from getting reevaluated!
+            // Do the following so that the script element does not get
+            // removed accidently from the scriptelements stack. 
+            // Note: The correct thing to do is to fix the script loader.
+            loader->RemoveObserver(mSink);
           }
         }
      
@@ -1799,6 +1806,10 @@ SinkContext::DemoteForm(const nsIParserNode& aNode)
 
 
         if (loader) {
+          // XXX - Put back the observer so that the script element
+          // can be removed off the scriptelements stack when we
+          // unwind from this stack.
+          loader->AddObserver(mSink);
           loader->Resume();
         }
 
