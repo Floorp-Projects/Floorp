@@ -517,6 +517,8 @@
 				F50EA34A02BAAAB701000103,
 				F50EA34B02BAAAB701000103,
 				F52CE65D02BFA8B701026D5D,
+				F5C2793302C514FF010000E1,
+				F5C2793402C514FF010000E1,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -2000,9 +2002,11 @@
 			refType = 4;
 		};
 		F52D5CD8027D3D5001A80166 = {
+			indentWidth = 2;
 			isa = PBXFileReference;
 			path = CHPreferenceManager.mm;
 			refType = 4;
+			indentWidth = 2;
 		};
 		F52D5CD9027D3D5001A80166 = {
 			fileRef = F52D5CD7027D3D5001A80166;
@@ -4459,6 +4463,8 @@
 				F50EA35102BAB1E401000103,
 				F50EA35202BAB1E401000103,
 				F52CE65E02BFA8B701026D5D,
+				F5C2793502C51500010000E1,
+				F5C2793602C51500010000E1,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -5927,6 +5933,8 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F5BAAC2002AC69DA01A967F3,
+				F5C2793A02C515F2010000E1,
+				F5C2793B02C515F2010000E1,
 				F5BAAC2102AC69DA01A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -6174,6 +6182,66 @@
 		};
 		F5BF71520231DC5D010001CA = {
 			fileRef = F5BF71460231B8BC010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793102C514FF010000E1 = {
+			isa = PBXFileReference;
+			name = initpref.js;
+			path = ../dist/Embed/defaults/pref/initpref.js;
+			refType = 2;
+		};
+		F5C2793202C514FF010000E1 = {
+			isa = PBXFileReference;
+			name = macprefs.js;
+			path = ../dist/Embed/defaults/pref/macprefs.js;
+			refType = 2;
+		};
+		F5C2793302C514FF010000E1 = {
+			fileRef = F5C2793102C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793402C514FF010000E1 = {
+			fileRef = F5C2793202C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793502C51500010000E1 = {
+			fileRef = F5C2793102C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793602C51500010000E1 = {
+			fileRef = F5C2793202C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793702C5158B010000E1 = {
+			fileRef = F5C2793102C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793802C5158B010000E1 = {
+			fileRef = F5C2793202C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793A02C515F2010000E1 = {
+			fileRef = F5C2793102C514FF010000E1;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5C2793B02C515F2010000E1 = {
+			fileRef = F5C2793202C514FF010000E1;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -8166,6 +8234,8 @@
 		F6BD64FB01B3184301A962F7 = {
 			children = (
 				F6BD64FC01B3184301A962F7,
+				F5C2793102C514FF010000E1,
+				F5C2793202C514FF010000E1,
 				F55A9BC60228CCE101DAE4DB,
 			);
 			isa = PBXGroup;
@@ -8263,6 +8333,8 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F6BD652001B3184301A962F7,
+				F5C2793702C5158B010000E1,
+				F5C2793802C5158B010000E1,
 				F55A9BC70228CCE201DAE4DB,
 			);
 			isa = PBXCopyFilesBuildPhase;
