@@ -13993,6 +13993,19 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     rm -f config/autoconf.mk.bak
 fi
 
+# Hack to make sure that mozilla-config has the proper nspr dependencies
+if test -z "$MOZ_NATIVE_NSPR"; then
+    FULL_NSPR_CFLAGS=`./nsprpub/config/nspr-config --cflags`
+    FULL_NSPR_LIBS=`./nsprpub/config/nspr-config --libs`
+else
+    FULL_NSPR_CFLAGS=`${NSPR_CONFIG} --cflags`
+    FULL_NSPR_LIBS=`${NSPR_CONFIG} --libs`
+fi
+mv build/unix/mozilla-config build/unix/mozilla-config.bak
+cat build/unix/mozilla-config.bak | sed -e "s|@FULL_NSPR_LIBS@|${FULL_NSPR_LIBS}|" -e "s|@FULL_NSPR_CFLAGS@|${FULL_NSPR_CFLAGS}|" > build/unix/mozilla-config
+rm -f build/unix/mozilla-config.bak
+
+
 # if we're building the LDAP XPCOM component, we need to build 
 # the c-sdk first.  
 #
