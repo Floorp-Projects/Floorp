@@ -21,6 +21,11 @@ BUILD_MODULE_DIRS := config build
 _BUILD_MODS = 
 NSPRPUB_DIR =
 
+# client.mk does not have topsrcdir set
+ifndef topsrcdir
+topsrcdir=$(TOPSRCDIR)
+endif
+
 ifndef MOZ_NATIVE_NSPR
 # Do not regenerate Makefile for NSPR
 ifdef USE_NSPR_AUTOCONF
@@ -46,11 +51,16 @@ BUILD_MODULE_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DIRS_$(mod))
 
 # Remove dups from the list to speed up the build
 #
+ifdef PERL
 BUILD_MODULE_DIRS := $(shell $(PERL) -e 'undef @out; \
     foreach $$d (@ARGV) { \
 	push @out, $$d if (!grep(/$$d/, @out)); \
     }; \
     print "@out\n"; ' $(BUILD_MODULE_DIRS))
+else
+# Since PERL isn't defined, client.mk must've called us so order doesn't matter
+BUILD_MODULE_DIRS := $(sort $(BUILD_MODULE_DIRS))
+endif
 
 endif # BUILD_MODULES
 
