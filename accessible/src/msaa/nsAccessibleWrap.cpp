@@ -397,22 +397,20 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   }
 
   VariantInit(pvarChild);
-  if (mDOMNode == gLastFocusedNode) {
-     pvarChild->vt = VT_I4;
-     pvarChild->lVal = CHILDID_SELF;
-     return S_OK;
-  }
 
   // Return the current IAccessible child that has focus
-  pvarChild->vt = VT_EMPTY; // Fallback when focus isn't a child of this
   nsCOMPtr<nsIAccessible> focusedAccessible;
-  if (NS_SUCCEEDED(GetFocusedChild(getter_AddRefs(focusedAccessible)))) {
-    nsCOMPtr<nsIAccessible> parentAccessible;
-    focusedAccessible->GetParent(getter_AddRefs(parentAccessible));
-    if (parentAccessible == this) {
-      pvarChild->vt = VT_DISPATCH;
-      pvarChild->pdispVal = NativeAccessible(focusedAccessible);
-    }
+  GetFocusedChild(getter_AddRefs(focusedAccessible));
+  if (focusedAccessible == this) {
+    pvarChild->vt = VT_I4;
+    pvarChild->lVal = CHILDID_SELF;
+  }
+  else if (focusedAccessible) {
+    pvarChild->vt = VT_DISPATCH;
+    pvarChild->pdispVal = NativeAccessible(focusedAccessible);
+  }
+  else {
+    pvarChild->vt = VT_EMPTY;   // No focus or focus is not a child
   }
 
   return S_OK;
