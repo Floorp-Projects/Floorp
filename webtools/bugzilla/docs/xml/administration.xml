@@ -129,6 +129,19 @@
         blurb about how to use Bugzilla at your site.</para>
       </step>
 
+
+      <step>
+        <para>
+	<command>movebugs</command>:
+
+	This option is an undocumented feature to allow moving bugs
+	between separate Bugzilla installations.  You will need to understand
+	the source code in order to use this feature.  Please consult
+	<filename>movebugs.pl</filename> in your Bugzilla source tree for
+	further documentation, such as it is.
+	</para>
+      </step>
+
       <step>
         <para>
         <command>useqacontact</command>:
