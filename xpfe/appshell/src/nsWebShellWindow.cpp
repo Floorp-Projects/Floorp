@@ -1881,12 +1881,12 @@ void nsWebShellWindow::ShowAppropriateChrome()
           // show or hide the element according to its chromeclass and the chromemask
           domElement->GetAttribute("chromeclass", chromeClass);
           makeChange = PR_FALSE;
-          if (chromeClass == "location") {
+          if (chromeClass == "menubar") {
+            if (!(mChromeMask & NS_CHROME_MENU_BAR_ON))
+              mWindow->ShowMenuBar(PR_FALSE);
+          } else if (chromeClass == "location") {
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_LOCATION_BAR_ON;
-          } else if (chromeClass == "menubar") {
-            makeChange = PR_TRUE;
-            flag = mChromeMask & NS_CHROME_MENU_BAR_ON;
           } else if (chromeClass == "status") {
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_STATUS_BAR_ON;
@@ -1958,7 +1958,6 @@ void nsWebShellWindow::LoadContentAreas() {
       if (NS_SUCCEEDED(rv)) {
         urlChar = contentURL.ToNewCString();
         if (urlChar) {
-          PRInt32 colonPos;
           nsUnescape(urlChar);
           contentURL = urlChar;
           contentShell->LoadURL(contentURL.GetUnicode());
