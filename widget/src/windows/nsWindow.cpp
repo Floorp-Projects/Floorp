@@ -483,17 +483,19 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     }
  
     HWND parent;
-    if (nsnull != aParent) {
-       // has a nsIWidget parent
+    if (nsnull != aParent) { // has a nsIWidget parent
       parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
        aParent->AddChild(this);
-    }
-    else {
-        // has a nsNative parent
+    } else { // has a nsNative parent
        parent = (HWND)aNativeParent;
     }
 
-    mWnd = ::CreateWindowEx(WindowExStyle(),
+    DWORD extendedStyle = WindowExStyle();
+    if (nsnull != aInitData && aInitData->mBorderStyle == eBorderStyle_dialog) {
+      extendedStyle = 0;
+    }
+
+    mWnd = ::CreateWindowEx(extendedStyle,
                             WindowClass(),
                             "",
                             style,
