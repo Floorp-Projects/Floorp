@@ -211,6 +211,10 @@ protected:
                       PRInt32 aPropID, PRInt32 aVariantMask,
                       const PRInt32 aKeywordTable[],
                       PRInt32& aParsedVariant);
+  PRBool ParsePositiveVariant(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
+                            PRInt32 aPropID, PRInt32 aVariantMask, 
+                            const PRInt32 aKeywordTable[], 
+                            PRInt32& aParsedVariant); 
   PRBool ParseCounter(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue);
@@ -1651,6 +1655,32 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode,
   return PR_FALSE;
 }
 
+PRBool CSSParserImpl::ParsePositiveVariant(PRInt32& aErrorCode, 
+                                           nsICSSDeclaration* aDeclaration, 
+                                           PRInt32 aPropID, 
+                                           PRInt32 aVariantMask, 
+                                           const PRInt32 aKeywordTable[], 
+                                           PRInt32& aParsedVariant) 
+{ 
+  nsCSSValue  value; 
+  if (ParseVariant(aErrorCode, value, aVariantMask, aKeywordTable, aParsedVariant)) { 
+    if (eCSSUnit_Number == value.GetUnit() || 
+        value.IsLengthUnit()){ 
+      if (value.GetFloatValue() < 0) { 
+        return PR_FALSE; 
+      } 
+    } 
+    else if(value.GetUnit() == eCSSUnit_Percent) { 
+      if (value.GetPercentValue() < 0) { 
+        return PR_FALSE; 
+      } 
+    } 
+    aDeclaration->AppendValue(aPropID, value); 
+    return PR_TRUE; 
+  } 
+  return PR_FALSE; 
+} 
+
 PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
                                    PRInt32 aVariantMask,
                                    const PRInt32 aKeywordTable[],
@@ -2086,7 +2116,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case PROP_RIGHT:
   case PROP_HEIGHT:
   case PROP_WIDTH:
-    return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_AHLP, nsnull, parsed);
+    return ParsePositiveVariant(aErrorCode, aDeclaration, aPropID, VARIANT_AHLP, nsnull, parsed);
   case PROP_CAPTION_SIDE:
     return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HK, 
                         nsCSSProps::kCaptionSideKTable, parsed);
@@ -2131,7 +2161,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case PROP_FONT_FAMILY:
     return ParseFamily(aErrorCode, aDeclaration, aPropID);
   case PROP_FONT_SIZE:
-    return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HKLP,
+    return ParsePositiveVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HKLP,
                         nsCSSProps::kFontSizeKTable, parsed);
   case PROP_FONT_SIZE_ADJUST:
     return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HON,
@@ -2152,7 +2182,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case PROP_WORD_SPACING:
     return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HL | VARIANT_NORMAL, nsnull, parsed);
   case PROP_LINE_HEIGHT:
-    return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HLPN | VARIANT_NORMAL,
+    return ParsePositiveVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HLPN | VARIANT_NORMAL,
                         nsnull, parsed);
   case PROP_LIST_STYLE:
     return ParseListStyle(aErrorCode, aDeclaration);
@@ -2206,7 +2236,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case PROP_PADDING_LEFT:
   case PROP_PADDING_RIGHT:
   case PROP_PADDING_TOP:
-    return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HLP, nsnull, parsed);
+    return ParsePositiveVariant(aErrorCode, aDeclaration, aPropID, VARIANT_HLP, nsnull, parsed);
   case PROP_PAGE:
     return ParseVariant(aErrorCode, aDeclaration, aPropID, VARIANT_AUTO | VARIANT_IDENTIFIER, 
                         nsnull, parsed);
