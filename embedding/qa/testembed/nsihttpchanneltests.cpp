@@ -45,6 +45,7 @@ nsIHttpChannel * CnsIHttpChannelTests::GetHttpChannelObject(nsCAutoString theSpe
 	NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	if (!theChannel)
 	   QAOutput("Didn't get Channel object. GetChannelObject Test failed.", 2);
+
 	theHttpChannel = do_QueryInterface(theChannel);
 	if (!theHttpChannel)
 	   QAOutput("Didn't get httpChannel object. Test failed.", 2);
@@ -269,12 +270,18 @@ void  CnsIHttpChannelTests::GetRedirectionLimitTest(nsIHttpChannel *theHttpChann
 }
 
 // Response tests
+// called from OnStartRequest
 
 void CnsIHttpChannelTests::CallResponseTests(nsIHttpChannel *theHttpChannel,
 												 PRInt16 displayMode)
 {
 	GetResponseStatusTest(theHttpChannel, displayMode);
 	GetResponseStatusTextTest(theHttpChannel, displayMode);
+	GetRequestSucceededTest(theHttpChannel, displayMode);
+	GetResponseHeaderTest(theHttpChannel, displayMode);
+	SetResponseHeaderTest(theHttpChannel, displayMode);
+	IsNoStoreResponseTest(theHttpChannel, displayMode);
+	IsNoCacheResponseTest(theHttpChannel, displayMode);
 }
 
 void CnsIHttpChannelTests::GetResponseStatusTest(nsIHttpChannel *theHttpChannel,
@@ -298,4 +305,50 @@ void CnsIHttpChannelTests::GetResponseStatusTextTest(nsIHttpChannel *theHttpChan
 }
 
 
+void CnsIHttpChannelTests::GetRequestSucceededTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	PRBool mRequest;
 
+	rv = theHttpChannel->GetRequestSucceeded(&mRequest);
+	RvTestResult(rv, "GetRequestSucceeded()", displayMode);
+	FormatAndPrintOutput("GetRequestSucceeded = ", mRequest, displayMode);
+}
+
+void CnsIHttpChannelTests::GetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	nsCAutoString mResponse;
+
+	rv = theHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Set-Cookie"), mResponse);
+	RvTestResult(rv, "GetResponseHeader()", displayMode);
+	FormatAndPrintOutput("GetResponseHeader = ", mResponse, displayMode);
+}
+ 
+void CnsIHttpChannelTests::SetResponseHeaderTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	rv = theHttpChannel->SetResponseHeader(NS_LITERAL_CSTRING("Refresh"),
+                                           NS_LITERAL_CSTRING(""), PR_FALSE);
+	RvTestResult(rv, "SetResponseHeader()", displayMode);
+}
+
+void CnsIHttpChannelTests::IsNoStoreResponseTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	PRBool mNoResponse;
+
+	rv = theHttpChannel->IsNoStoreResponse(&mNoResponse);
+	RvTestResult(rv, "IsNoStoreResponse()", displayMode);
+	FormatAndPrintOutput("IsNoStoreResponse = ", mNoResponse, displayMode);
+}
+
+void CnsIHttpChannelTests::IsNoCacheResponseTest(nsIHttpChannel *theHttpChannel,
+												 PRInt16 displayMode)
+{
+	PRBool mNoResponse;
+
+	rv = theHttpChannel->IsNoCacheResponse(&mNoResponse);
+	RvTestResult(rv, "IsNoCacheResponse()", displayMode);
+	FormatAndPrintOutput("IsNoCacheResponse = ", mNoResponse, displayMode);
+}

@@ -554,10 +554,8 @@ NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 
 	if (!httpObj)
 		QAOutput("No object to run GetResponseStatusTest().", 1);
-	else {
-		httpObj->GetResponseStatusTest(httpChannel, 1);
-		httpObj->GetResponseStatusTextTest(httpChannel, 1);
-	}
+	else
+		httpObj->CallResponseTests(httpChannel, 1);
 
 	if (!ctxt)
 		QAOutput("OnStartRequest():We didn't get the nsISupports object.", 1);
