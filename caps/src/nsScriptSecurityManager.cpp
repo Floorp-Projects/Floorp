@@ -132,9 +132,7 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
     }
     JSContext *cx = (JSContext*) aContext->GetNativeContext();
     nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))) || 
-        !principal)
-    {
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
         return NS_ERROR_FAILURE;
     }
     if (nsCRT::strcmp(scheme, "file") == 0) {
@@ -349,7 +347,9 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
     }
 #endif
     // Couldn't find principals: no mobile code on stack.
-    *result = nsnull;
+    // Use system principal.
+    *result = mSystemPrincipal;
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
@@ -386,7 +386,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     ** Get origin of subject and object and compare.
     */
     nsCOMPtr<nsIPrincipal> subject;
-    if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))) || !subject)
+    if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIPrincipal> object;
@@ -495,91 +495,9 @@ nsScriptSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str)
 char *
 nsScriptSecurityManager::GetSitePolicy(const char *org)
 {
-    char *sitepol, *sp, *nextsp, *orghost = 0, *retval = 0, *prot, *bar;
-    char *end, *match = 0;
-    int splen, matlen;
-    nsIURL *url;
-    nsresult rv;
-    nsIPref *mPrefs;
-    NS_WITH_SERVICE(nsIComponentManager, compMan, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) 
-        return nsnull;
-    rv = compMan->CreateInstance(kURLCID, nsnull, NS_GET_IID(nsIURL), 
-                                 (void**) &url);
-    if (NS_FAILED(rv)) 
-        return nsnull;
-    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
-        (nsISupports **) &mPrefs);
-    if (NS_OK != mPrefs->CopyCharPref("security.policy.site_policy", &sitepol)) 
-        return nsnull;
-    /* Site policy comprises text of the form site1-policy,site2-policy,siteNpolicy
-     * where each site-policy is site|policy and policy is presumed to be one of strict/moderate/default
-     * site may be either a URL or a hostname.  In the former case we do a prefix match with the origin URL; in the latter case
-     * we just compare hosts. Process entry by entry.  Take longest match, to account for
-     * cases like: *	http://host/|moderate,http://host/dir/|strict
-     */
-    for (sp = sitepol; sp != 0; sp = nextsp) {
-        if ((nextsp = strchr(sp, ',')) != 0) *nextsp++ = '\0';
-        if ((bar = strchr(sp, '|')) == 0) 
-            continue;			/* no | for this entry */
-        *bar = '\0';
-        /* Isolate host, then policy. */
-        sp += strspn(sp, " ");	/* skip leading spaces */
-        end = sp + strcspn(sp, " |"); /* skip up to space or | */
-        *end = '\0';
-        if ((splen = end-sp) == 0) 
-            continue;			/* no URL or hostname */
-        /* Check whether this is long enough. */
-        if (match != 0 && matlen >= splen) 
-            continue;			/* Nope.  New shorter than old. */
-        /* Check which case, URL or hostname, we're dealing with. */
-        rv = url->SetSpec(sp);
-        if (NS_FAILED(rv)) 
-            return nsnull;
-        url->GetScheme(& prot);
-        if (prot != 0 && *prot != '\0') {
-            /* URL case.  Do prefix match, make sure we're at proper boundaries. */
-            if (PL_strncmp(org, sp, splen) != 0 || (org[splen] != '\0'	/* exact match */
-                && sp[splen-1] != '/'	/* site policy ends with / */
-                && org[splen] != '/'	/* site policy doesn't, but org does */
-                )) 
-            {
-                nsCRT::free(prot);
-                continue;			/* no match */
-            }
-        } else {
-            /* Host-only case. */
-            PR_FREEIF(prot);
-            rv = url->SetSpec((char *)org);
-            if (NS_FAILED(rv)) 
-                return nsnull;
-            url->GetHost(& orghost);
-            if (orghost == 0) 
-                return nsnull;			/* out of mem */
-            if (PL_strcasecmp(orghost, sp) != 0) 
-                continue;			/* no match */
-        }
-        /* Had a match.  Remember policy and length of host/URL match. */
-        match = bar;
-        matlen = splen;
-    }
-    if (match != 0) {
-        /* Longest hostname or URL match.  Get policy.
-        ** match points to |.
-        ** Skip spaces after | and after policy name.
-        */
-        ++match;
-        sp = match + strspn(match, " ");
-        end = sp + strcspn(sp, " ");
-        *end = '\0';
-        if (sp != end) 
-            retval = PL_strdup(sp);
-    }
-    
-    nsCRT::free(orghost);
-    PR_FREEIF(sitepol);
-    return retval;
+    return nsnull;
 }
+
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
@@ -588,8 +506,6 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
-    if (!subject)
-        return NS_OK;   // No mobile code executing.
     PRBool ok = PR_FALSE;
     if (NS_FAILED(subject->CanAccess("UniversalXPConnect", &ok)))
         return NS_ERROR_FAILURE;

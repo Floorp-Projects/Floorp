@@ -46,7 +46,6 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 CSRCS = \
-		jpermission.c \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
