@@ -965,7 +965,6 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void
                   if (isImap &&  passwd && nsCRT::strlen((const char*) passwd))
 				  {
 					nsresult rv;
-					nsCOMPtr<nsIMsgFolder> inboxFolder;
 					nsCOMPtr<nsIEnumerator> aEnumerator;
                     folder->GetSubFolders(getter_AddRefs(aEnumerator));
                     nsCOMPtr<nsISupports> aSupport;
