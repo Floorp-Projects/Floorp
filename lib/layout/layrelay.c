@@ -552,7 +552,7 @@ lo_rl_InitDocState( MWContext *context, lo_DocState *state, int32 width, int32 h
 		XP_FREE_BLOCK(state->line_array);
 #ifdef XP_WIN16
 		XP_FREE_BLOCK(state->larray_array);
-#endif /* XP_WIN16 */
+#endif
 		/*
 		XP_DELETE(state->font_stack);
 		*/
@@ -1405,7 +1405,7 @@ static LO_Element *
 lo_rl_FitFloat( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 {
 	LO_Element *next = lo_tv_GetNextLayoutElement( relay_state->doc_state, lo_ele, TRUE);
-	int32 x, y;
+	int32 x=0, y=0;
 	CL_Layer *layer = NULL;
 
 	if (lo_ele->lo_float.float_ele->lo_any.type == LO_IMAGE) {

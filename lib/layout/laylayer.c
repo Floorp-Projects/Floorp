@@ -1919,7 +1919,7 @@ lo_AttachHTMLLayer(MWContext *context, CL_Layer *layer, CL_Layer *parent,
                    char *above, char *below, int32 z_order)
 {
     CL_Layer *sibling;
-    CL_LayerPosition pos;
+    CL_LayerPosition pos=0;
 
     if (parent != NULL)
     {
@@ -2771,7 +2771,7 @@ lo_CreateImageLayer(MWContext *context, LO_ImageStruct *image,
 void
 lo_ActivateImageLayer(MWContext *context, LO_ImageStruct *image)
 {
-    PRBool suppress_mode, is_mocha_image, draw_delayed_icon;
+    PRBool suppress_mode=PR_FALSE, is_mocha_image, draw_delayed_icon;
  	int x, y;
 	CL_Layer *layer;
     char *image_url;

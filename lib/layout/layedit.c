@@ -237,7 +237,7 @@ void lo_MergeState( MWContext *context, lo_DocState *old_state, int32 iStartLine
 		int32 iEndLine, lo_DocState *new_state, int32* pRetY, int32* pRetHeight )
 {
 	LO_Element **old_line_array, **new_line_array;
-	LO_Element *prev_element, *start_element, *eptr, *end_element, *new_end_element;
+	LO_Element *prev_element, *start_element, *eptr, *end_element, *new_end_element=NULL;
 	int32 yDelta;
 	int32 ele_id;
 	int32 new_line_num;
@@ -500,8 +500,8 @@ void lo_MergeElements( MWContext *context, lo_DocState *old_state, int32 iStartL
 		int32 iEndLine, lo_DocState *new_state, int32* pRetY, int32* pRetHeight )
 {
 	LO_Element **old_line_array, **new_line_array;
-	LO_Element *prev_element, *eptr, *end_element, *new_end_element;
-	int32 yDelta;
+	LO_Element *prev_element, *eptr, *end_element, *new_end_element=NULL;
+	int32 yDelta=0;
 	int32 ele_id;
 	int32 new_line_num;
 	int32 new_changed_line_count;
