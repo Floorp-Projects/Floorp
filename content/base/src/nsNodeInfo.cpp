@@ -126,6 +126,8 @@ nsNodeInfo::GetQualifiedName(nsAWritableString& aQualifiedName)
     mInner.mPrefix->ToString(aQualifiedName);
 
     aQualifiedName.Append(PRUnichar(':'));
+  } else {
+    aQualifiedName.Truncate();
   }
 
   const PRUnichar *name;
