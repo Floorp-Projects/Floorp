@@ -1,4 +1,24 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 #include "nsIStreamConverter.h"
+#include "nsIChannel.h"
+#include "nsIURI.h"
 #include "nsString2.h"
 
 #include "nsIFactory.h"
@@ -40,7 +60,8 @@ public:
     nsMultiMixedConv();
     virtual ~nsMultiMixedConv();
     nsresult Init();
-    nsresult SendPart(const char *aBuffer, nsIChannel *aChannel, nsISupports *aCtxt);
+    nsresult SendData(const char *aBuffer, nsIChannel *aChannel, nsISupports *aCtxt);
+    nsresult BuildURI(nsIChannel *aChannel, nsIURI **_retval);
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
@@ -63,12 +84,13 @@ public:
     }
 
     // member data
-    nsCAutoString       mBuffer;
-    PRBool              mBoundaryStart;
-    nsCAutoString       *mBoundryString;
-    nsIStreamListener   *mFinalListener;
+    PRBool              mBoundaryStart;  // are we in the middle of a boundary?
+    nsIStreamListener   *mFinalListener; // this guy gets the converted data via his OnDataAvailable()
     char                *mBoundaryCStr;
     PRInt32             mBoundaryStrLen;
+    PRUint16            mPartCount;     // the number of parts we've seen so far
+    nsIChannel          *mPartChannel;  // the channel for the given part we're processing.
+                                        // one channel per part.
 };
 
 //////////////////////////////////////////////////
