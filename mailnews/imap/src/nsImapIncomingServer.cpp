@@ -2354,6 +2354,27 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 	return rv;
 }
 
+NS_IMETHODIMP nsImapIncomingServer::ForgetSessionPassword()
+{
+  nsresult rv = nsMsgIncomingServer::ForgetSessionPassword();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // fix for bugscape bug #15485
+  // if we use turbo, and we logout, we need to make sure
+  // the server doesn't think it's authenticated.
+  // the biff timer continues to fire when you use turbo
+  // (see #143848).  if we exited, we've set the password to null
+  // but if we're authenticated, and the biff timer goes off
+  // we'll still perform biff, because we use m_userAuthenticated
+  // to determine if we require a password for biff.
+  // (if authenticated, we don't require a password
+  // see nsMsgBiffManager::PerformBiff())
+  // performing biff without a password will pop up the prompt dialog
+  // which is pretty wacky, when it happens after you quit the application
+  m_userAuthenticated = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImapIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
