@@ -957,7 +957,9 @@ function GetLocalFileURL(filterType)
     fp.init(window, GetString("SelectImageFile"), nsIFilePicker.modeOpen);
     fp.appendFilters(nsIFilePicker.filterImages);
   }
-  else if (filterType == "html")
+  // Current usage of this is in Link dialog,
+  //  where we always want HTML first
+  else if (filterType.indexOf("html") == 0)
   {
     fp.init(window, GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
 
@@ -965,6 +967,11 @@ function GetLocalFileURL(filterType)
     //   so we call separately to control the order of the filter list
     fp.appendFilters(nsIFilePicker.filterHTML);
     fp.appendFilters(nsIFilePicker.filterText);
+
+    // Link dialog also allows linking to images
+    if (filterType.indexOf("img") > 0)
+      fp.appendFilters(nsIFilePicker.filterImages);
+
   }
   // Default or last filter is "All Files"
   fp.appendFilters(nsIFilePicker.filterAll);

@@ -254,7 +254,7 @@ function InitDialog()
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  var fileName = GetLocalFileURL("html");
+  var fileName = GetLocalFileURL("html,img");
   if (fileName) 
   {
     // Always try to relativize local file URLs
