@@ -102,12 +102,12 @@ treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#Folder"][id="NC:
  list-style-image: url("chrome://communicator/skin/bookmarks/personal-folder-closed-sel.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > > treerow > .treecell-bookmark
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treerow > .treecell-bookmark
 {
  list-style-image: url("chrome://communicator/skin/bookmarks/personal-folder-open.gif");
 }
 
-treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > > treerow > .treecell-bookmark
+treeitem[selected="true"][type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treerow > .treecell-bookmark
 {
  list-style-image: url("chrome://communicator/skin/bookmarks/personal-folder-open-sel.gif");
 }
