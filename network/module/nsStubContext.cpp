@@ -421,9 +421,10 @@ MWContext *new_stub_context(URL_Struct *URL_s)
     context = (MWContext *)calloc(sizeof(struct MWContext_), 1);
 
     if (nsnull != context) {
-        context->funcs = &stub_context_funcs;
-        context->type  = MWContextBrowser;
+        context->funcs        = &stub_context_funcs;
+        context->type         = MWContextBrowser;
         context->modular_data = URL_s;
+        context->ref_count    = 0;
 
         if (nsnull != stub_context_list) {
             XP_ListAddObjectToEnd(stub_context_list, context);
