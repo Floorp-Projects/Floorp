@@ -470,7 +470,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
 
 PRBool processQueue(void *aElement, void *aData)
 {
-  PLEventQueue *queue = NS_STATIC_CAST(PLEventQueue *, aElement);
+  PLEventQueue *queue = (PLEventQueue *) aElement;
   unsigned int  id = (unsigned int)aData;
   PL_ProcessEventsBeforeID(queue, id);
   return PR_TRUE;
