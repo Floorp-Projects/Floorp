@@ -25,7 +25,7 @@ Contributors:
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/am-smime.dtd">
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/am-smime.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"

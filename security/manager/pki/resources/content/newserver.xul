@@ -19,7 +19,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % newserverDTD SYSTEM "chrome://pippki/locale/newserver.dtd" >
 %newserverDTD;
 <!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
