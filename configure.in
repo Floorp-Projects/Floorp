@@ -2715,7 +2715,7 @@ AC_SUBST(MOZ_MAIL_NEWS)
 dnl Turn on the new lightweight gfx text control frames
 MOZ_ENDER_LITE=1
 MOZ_ARG_DISABLE_BOOL(ender-lite,
-[  --disable-ender-lite      Disable new lightweight text control frames],
+[  --disable-ender-lite    Disable new lightweight text control frames],
   MOZ_ENDER_LITE= )
 if test "$MOZ_ENDER_LITE"; then
   AC_DEFINE(MOZ_ENDER_LITE)
@@ -2725,7 +2725,7 @@ AC_SUBST(MOZ_ENDER_LITE)
 dnl Turn on malloc tracing
 NS_TRACE_MALLOC=
 MOZ_ARG_ENABLE_BOOL(trace-malloc,
-[  --enable-trace-malloc    Enable malloc tracing],
+[  --enable-trace-malloc   Enable malloc tracing],
   NS_TRACE_MALLOC=1 )
 if test "$NS_TRACE_MALLOC"; then
   AC_DEFINE(NS_TRACE_MALLOC)
@@ -2735,10 +2735,6 @@ AC_SUBST(NS_TRACE_MALLOC)
 dnl make sure that we compile in multi-processor support
 NS_MT_SUPPORTED=1
 AC_DEFINE(NS_MT_SUPPORTED)
-
-MOZ_ARG_ENABLE_BOOL(new-strings,
-[  --enable-new-strings         blah blah blah],
-  AC_DEFINE(NEW_STRING_APIS))
 
 dnl build the tests by default
 ENABLE_TESTS=1
@@ -2870,7 +2866,7 @@ ENABLE_PIC_DSO_CFLAGS=1
 
 MOZ_ARG_DISABLE_BOOL(pic-dso-cflags,
 [  --disable-pic-dso-cflags
-                          Do not generate PIC for shared libs)],
+                          Do not generate PIC for shared libs],
   ENABLE_PIC_DSO_CFLAGS= )
 
 if test ! "$ENABLE_PIC_DSO_CFLAGS"
@@ -3013,7 +3009,7 @@ dnl ========================================================
 USE_ELF_DYNSTR_GC=
 
 MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
-[  --enable-elf-dynstr-gc  Enable elf dynstr garbage collector],
+[  --enable-elf-dynstr-gc  Enable elf dynstr garbage collector (opt builds only)],
   USE_ELF_DYNSTR_GC=1)
 
 AC_SUBST(USE_ELF_DYNSTR_GC)
@@ -3154,7 +3150,7 @@ if test "$_IGNORE_LONG_LONG_WARNINGS"; then
 fi
 
 MOZ_ARG_DISABLE_BOOL(shared,
-[  --disable-shared        Disable building of internal shared libs],
+[  --disable-shared        Disable building of internal shared libs (BROKEN)],
   NO_SHARED_LIB=1)
 
 dnl C++ rtti (g++/egcs only - for now)
@@ -3267,11 +3263,6 @@ MOZ_ARG_WITH_STRING(wrap-malloc,
 MOZ_ARG_ENABLE_BOOL(efence,
 [  --enable-efence         Link with Electric Fence if available (default=no) ],
   AC_CHECK_LIB(efence,malloc))
-
-dnl XXX temporary: will be removed once new string APIs are un-#ifdef'd
-MOZ_ARG_ENABLE_BOOL(new-string-apis,
-[  --enable-new-string-apis Use the new string APIs (default=no) ],
-  AC_DEFINE(NEW_STRING_APIS))
 
 dnl ========================================================
 dnl =
@@ -3444,7 +3435,7 @@ dnl ========================================================
 NO_STATIC_LIB=1
 
 MOZ_ARG_ENABLE_BOOL(static,
-[  --enable-static         Enable building of internal static libs],
+[  --enable-static         Enable building of internal static libs (BROKEN)],
   NO_STATIC_LIB=)
 
 case "$target" in
