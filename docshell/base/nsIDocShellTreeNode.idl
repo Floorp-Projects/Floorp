@@ -50,11 +50,20 @@ interface nsIDocShellTreeNode : nsISupports
 	void removeChild(in nsIDocShellTreeItem child);
 
 	/* Return the child at the index requested.  This is 0-based.*/
-	void getChildAt(in long index, out nsIDocShellTreeItem child);
+	nsIDocShellTreeItem getChildAt(in long index);
 
 	/*
 	Return the child DocShellTreeItem with the specified name.
+	aName - This is the name of the item that is trying to be found.
+	aRecurse - Is used to tell the function to recurse through children.
+		Note, recursion will only happen through items of the same type.
+	aRequestor - This is the docshellTreeItem that is requesting the find.  This
+		parameter is used when recursion is being used to avoid searching the same
+		tree again when a child has asked a parent to search for children.
+
+	Note the search is depth first.
 	*/
-	nsIDocShellTreeItem findChildWithName(in wstring name);
+	nsIDocShellTreeItem findChildWithName(in wstring aName, in boolean aRecurse, 
+		in nsIDocShellTreeItem aRequestor);
 };
 
