@@ -19,6 +19,7 @@
 SUBDIRS=					\
 	addressparser				\
 	intertwingle				\
+	nntp					\
 	$(NULL)
 
 SRCS=						\
