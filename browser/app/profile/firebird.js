@@ -51,7 +51,9 @@ pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UT
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
 pref("general.useragent.vendor", "Firebird");
-pref("general.useragent.vendorSub", "0.7+");
+pref("general.useragent.vendorSub",
+#expand __APP_VERSION__
+);
 
 pref("general.smoothScroll", false);
 #ifndef XP_UNIX

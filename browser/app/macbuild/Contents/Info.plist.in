@@ -70,7 +70,7 @@
 	<key>CFBundleExecutable</key>
 	<string>MozillaFirebird-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Mozilla 1.4a, © 1998-2003 The Mozilla Organization</string>
+	<string>Mozilla Firebird APP_VERSION, © 1998-2003 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
 	<string>mach</string>
 	<key>CFBundleIdentifier</key>
@@ -82,7 +82,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.4a</string>
+	<string>@BROWSER_VERSION@</string>
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleURLTypes</key>
@@ -133,7 +133,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.6.1</string>
+	<string>@BROWSER_VERSION@</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 </dict>
