@@ -37,6 +37,7 @@
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
 #include "nsMacLocaleFactory.h"
+#include "nsILanguageAtomService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -47,6 +48,11 @@ NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
 NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+
+//
+// for the language atom service
+//
+NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -210,6 +216,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
     NS_SCRIPTABLEDATEFORMAT_PROGID, path, PR_TRUE, PR_TRUE);
 	NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register ScriptableDateFormat failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+  
+  //
+  // register the language atom service
+  //
+  rv = compMgr->RegisterComponent(kLanguageAtomServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register LanguageAtomService failed.");
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -243,6 +256,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
 	rv = compMgr->UnregisterComponent(kScriptableDateFormatCID, path);
 	if (NS_FAILED(rv)) goto done;
+	
+  rv = compMgr->UnregisterComponent(kLanguageAtomServiceCID, path);
+  if (NS_FAILED(rv)) goto done;
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
