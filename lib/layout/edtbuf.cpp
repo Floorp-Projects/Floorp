@@ -12442,7 +12442,7 @@ EDT_ClipboardResult CEditBuffer::DeleteSelection(XP_Bool bCopyAppendAttributes){
         return EDT_COP_OK;
 
     // Do strict testing and tell us if we crossed a cell boundary
-    EDT_ClipboardResult result = CanCut(TRUE, TRUE);
+    EDT_ClipboardResult result = CanCut((XP_Bool)TRUE, (XP_Bool)TRUE);
     if ( result == EDT_COP_OK || result == EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL )
     {
         if ( IsSelected() )
@@ -14505,7 +14505,7 @@ void CEditBuffer::FixupSpace( XP_Bool /*bTyping*/){
 EDT_ClipboardResult CEditBuffer::CutSelection( char **ppText, int32* pTextLen,
                     char **ppHtml, int32* pHtmlLen){
     VALIDATE_TREE(this);
-    EDT_ClipboardResult result = CanCut(TRUE);
+    EDT_ClipboardResult result = CanCut((XP_Bool)TRUE, (XP_Bool)FALSE);
     if ( result != EDT_COP_OK ) return result;
 
     result = CopySelection( ppText, pTextLen, ppHtml, pHtmlLen );
@@ -16383,8 +16383,11 @@ CEditTableElement* CEditBuffer::SelectTable(XP_Bool bSelect, LO_TableStruct *pLo
     // We can allow NULL pointer for table if we are just unselecting existing table
     if( bSelect && !pLoTable )
     {
-        XP_ASSERT(FALSE);
-        return NULL;
+        if( !pEdTable || (pLoTable = pEdTable->GetLoTable()) == NULL )
+        {
+            XP_ASSERT(FALSE);
+            return NULL;
+        }
     }
     // Assume we are deselecting current table if no pointers supplied or
     //   edit table is the selected table
