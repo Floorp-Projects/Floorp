@@ -69,7 +69,9 @@ public:
   void ToggleOpenClose();
   void Open();
   void Close();
- 
+
+  static PRBool ShouldBuildCell(nsIFrame* aParentFrame, nsIContent* aCellContent);
+
 protected:
   nsTreeCellFrame();
   virtual ~nsTreeCellFrame();

@@ -37,6 +37,7 @@
 #include "nsXULAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h"
+#include "nsTableColFrame.h"
 
 //
 // NS_NewTreeCellFrame
@@ -461,4 +462,45 @@ NS_IMETHODIMP
 nsTreeCellFrame::Destroy(nsIPresContext* aPresContext)
 {
   return nsTableCellFrame::Destroy(aPresContext);
+}
+
+PRBool nsTreeCellFrame::ShouldBuildCell(nsIFrame* aParentFrame, nsIContent* aCellContent)
+{
+  return PR_TRUE;
+  
+  /* Working on column show/hide
+  nsTableFrame* tableFrame = nsnull;
+  nsTableFrame::GetTableFrame(aParentFrame, tableFrame);
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;  
+  
+  // Get the index of the child content.
+  nsCOMPtr<nsIContent> parent;
+  aParentFrame->GetContent(getter_AddRefs(parent));
+  PRInt32 index;
+  parent->IndexOf(aCellContent, index);
+
+  if (index == -1)
+    return PR_TRUE;
+
+  nsTableColFrame* colFrame = tableFrame->GetColFrame(index);
+  if (!colFrame)
+    return PR_FALSE;
+
+  // See if the column's index matches.
+  nsCOMPtr<nsIContent> colContent; 
+  colFrame->GetContent(getter_AddRefs(colContent));
+  if (!colContent)
+    return PR_TRUE;
+
+  // Get the index attribute.
+  nsAutoString value;
+  colContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value);
+  
+  nsAutoString value2;
+  value2.Append(index);
+  if (value == "" || value == value2)
+    return PR_TRUE;
+
+  return PR_FALSE;
+  */
 }
