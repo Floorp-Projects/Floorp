@@ -48,12 +48,12 @@ class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
   xpcTestObjectReadOnly();
    
  private:
-	PRBool  boolProperty;
-	PRInt16 shortProperty;
-	PRInt32 longProperty;
-	float   floatProperty;
-	char    charProperty;
-	char	*stringID;
+    PRBool  boolProperty;
+    PRInt16 shortProperty;
+    PRInt32 longProperty;
+    float   floatProperty;
+    char    charProperty;
+    char    *stringID;
 };
 
 NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly);
@@ -62,50 +62,50 @@ xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-	boolProperty = PR_TRUE;
-	shortProperty = 32767;
-	longProperty =  2147483647;
-	charProperty = 'X';
+    boolProperty = PR_TRUE;
+    shortProperty = 32767;
+    longProperty =  2147483647;
+    charProperty = 'X';
 
-	const char _id[] = "a68cc6a6-6552-11d3-82ef-0060b0eb596f";
-	stringID = (char*) nsMemory::Clone(_id, sizeof(char)*(strlen(_id)+1));
+    const char _id[] = "a68cc6a6-6552-11d3-82ef-0060b0eb596f";
+    stringID = (char*) nsMemory::Clone(_id, sizeof(char)*(strlen(_id)+1));
 };
 
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetID(char **_retval) {
     *_retval= (char*) nsMemory::Clone(stringID, 
                                          sizeof(char)*(strlen(stringID)+1));
-	return *_retval? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return *_retval? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetStrReadOnly(char * *aStrReadOnly){
-	char aString[] = "XPConnect Read-Only String";
+    char aString[] = "XPConnect Read-Only String";
 
-	if(!aStrReadOnly)
-		return NS_ERROR_NULL_POINTER;
+    if(!aStrReadOnly)
+        return NS_ERROR_NULL_POINTER;
     *aStrReadOnly = (char*) nsMemory::Clone(aStrReadOnly, 
                                                sizeof(char)*(strlen(aString)+1));
-	return *aStrReadOnly ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return *aStrReadOnly ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 };
 
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(PRBool *aBoolReadOnly) {
-	*aBoolReadOnly = boolProperty;
-	return NS_OK;
+    *aBoolReadOnly = boolProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetShortReadOnly(PRInt16 *aShortReadOnly){
-	*aShortReadOnly = shortProperty;
-	return NS_OK;
+    *aShortReadOnly = shortProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetLongReadOnly(PRInt32 *aLongReadOnly){
-	*aLongReadOnly = longProperty;
-	return NS_OK;
+    *aLongReadOnly = longProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetFloatReadOnly(float *aFloatReadOnly){
-	*aFloatReadOnly = floatProperty;
-	return NS_OK;
+    *aFloatReadOnly = floatProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadOnly :: GetCharReadOnly(char *aCharReadOnly){
-	*aCharReadOnly = charProperty;
-	return NS_OK;
+    *aCharReadOnly = charProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP
 xpctest::ConstructXPCTestObjectReadOnly(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -147,12 +147,12 @@ class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
   xpcTestObjectReadWrite();
 
  private:
-	 PRBool boolProperty;
-	 PRInt16 shortProperty;
-	 PRInt32 longProperty;
-	 float floatProperty;
-	 char charProperty;
-	 const char *stringProperty;
+     PRBool boolProperty;
+     PRInt16 shortProperty;
+     PRInt32 longProperty;
+     float floatProperty;
+     char charProperty;
+     const char *stringProperty;
 };
 
 NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite);
@@ -162,68 +162,68 @@ xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
     NS_ADDREF_THIS();
 
 
-	boolProperty = PR_TRUE;
-	shortProperty = 32767;
-	longProperty =  2147483647;
-	charProperty = 'X';
+    boolProperty = PR_TRUE;
+    shortProperty = 32767;
+    longProperty =  2147483647;
+    charProperty = 'X';
 
-	const char s[] = "XPConnect Read-Writable String";
-	stringProperty = (char*) nsMemory::Clone(s, 
+    const char s[] = "XPConnect Read-Writable String";
+    stringProperty = (char*) nsMemory::Clone(s, 
                                                 sizeof(char)*(strlen(s)+1));
 };
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringProperty) {
-	if(!aStringProperty)
-		return NS_ERROR_NULL_POINTER;
+    if(!aStringProperty)
+        return NS_ERROR_NULL_POINTER;
     *aStringProperty = (char*) nsMemory::Clone(stringProperty, 
                                                sizeof(char)*(strlen(stringProperty)+1));
-	return *aStringProperty ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return *aStringProperty ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetStringProperty(const char * aStringProperty) {
-	stringProperty = aStringProperty;
-	return NS_OK;
+    stringProperty = aStringProperty;
+    return NS_OK;
 };
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(PRBool *aBooleanProperty) {
-	*aBooleanProperty = boolProperty;
-	return NS_OK;
+    *aBooleanProperty = boolProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(PRBool aBooleanProperty) {
-	boolProperty = aBooleanProperty;
-	return NS_OK;
+    boolProperty = aBooleanProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetShortProperty(PRInt16 *aShortProperty) {
-	*aShortProperty = shortProperty;
-	return NS_OK;
+    *aShortProperty = shortProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetShortProperty(PRInt16 aShortProperty) {
-	shortProperty = aShortProperty;
-	return NS_OK;
+    shortProperty = aShortProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetLongProperty(PRInt32 *aLongProperty) {
-	*aLongProperty = longProperty;
-	return NS_OK;
+    *aLongProperty = longProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetLongProperty(PRInt32 aLongProperty) {
-	longProperty = aLongProperty;
-	return NS_OK;
+    longProperty = aLongProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetFloatProperty(float *aFloatProperty) {
-	*aFloatProperty = floatProperty;
-	return NS_OK;
+    *aFloatProperty = floatProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetFloatProperty(float aFloatProperty) {
-	floatProperty = aFloatProperty;
-	return NS_OK;
+    floatProperty = aFloatProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetCharProperty(char *aCharProperty) {
-	*aCharProperty = charProperty;
-	return NS_OK;
+    *aCharProperty = charProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetCharProperty(char aCharProperty) {
-	charProperty = aCharProperty;
-	return NS_OK;
+    charProperty = aCharProperty;
+    return NS_OK;
 };
 NS_IMETHODIMP
 xpctest::ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -250,7 +250,7 @@ xpctest::ConstructXPCTestObjectReadWrite(nsISupports *aOuter, REFNSIID aIID, voi
 /****************************************************************************/
 /*
 class xpcTestAttributes : public nsIXPCTestObjectReadWrite, 
-	public nsIXPCTestObjectReadOnly
+    public nsIXPCTestObjectReadOnly
 {
 public: 
   NS_DECL_ISUPPORTS
@@ -261,22 +261,22 @@ public:
   NS_IMETHOD SetName(char * aString );
 
 private:
-	char *name;
+    char *name;
 };
   
 NS_IMPL_ISUPPORTS2(xpcTestAttributes, nsIXPCTestObjectReadWrite, nsIXPCTestObjectReadOnly);
 
 NS_IMETHODIMP xpcTestAttributes ::GetName(char * *aString) {
-	if(!aString)
-		return NS_ERROR_NULL_POINTER;
+    if(!aString)
+        return NS_ERROR_NULL_POINTER;
     *aString = (char*) nsMemory::Clone(name, 
-				sizeof(char)*(strlen(name)+1));
-	return *aString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+                sizeof(char)*(strlen(name)+1));
+    return *aString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 
 };
 NS_IMETHODIMP xpcTestAttributes ::SetName(char * aString) {
-	name = aString;
-	return NS_OK;
+    name = aString;
+    return NS_OK;
 };
 
 NS_IMETHODIMP
