@@ -309,10 +309,10 @@ Rights Reserved.
 
 
 
+  <toolbox id="mailToolbarToolbox" class="toolbox-top">
     <menubar id="mailMenubar"/>
+  </toolbox>
 
-
-	<toolbox id="mailToolbarToolbox"/>
   <!-- The main mail three pane frame -->
 
 
@@ -357,7 +357,7 @@ Rights Reserved.
 		</box>
 	</box>
 
-	<toolbar id="taskbar"/>
+	<toolbox id="taskbar" class="toolbox-bottom"/>
 
 </window>
 

@@ -104,6 +104,7 @@ Rights Reserved.
 
 <popupset id="aTooltipSet"/>
 
+<toolbox class="toolbox-top">
 	<menubar>
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
@@ -219,7 +220,6 @@ Rights Reserved.
 	</menubar>
 	
 	<!-- toolbar -->
-	<toolbox>
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
 				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" onclick="AbNewCard()"/>
@@ -278,7 +278,7 @@ Rights Reserved.
 		
 	</box>
 	
-	<toolbar id="taskbar"/>
+	<toolbox id="taskbar" class="toolbox-bottom"/>
 
 </window>
 
