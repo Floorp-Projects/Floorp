@@ -97,6 +97,7 @@ $build{nglayout} 		= 1;
 $build{editor} 			= 1;
 $build{viewer} 			= 1;
 $build{xpapp} 			= 1;
+$build{extensions} 		= 1;
 $build{mailnews} 		= 1;
 $build{apprunner} 		= 1;
 
@@ -160,6 +161,7 @@ if ($build{most})
 	$build{editor}		= 1;
 	$build{viewer}		= 1;
 	$build{xpapp}		= 1;
+	$build{extensions} 	= 1;
 	$build{mailnews}	= 1;
 	$build{apprunner} 	= 1;
 }
