@@ -48,6 +48,9 @@ const UnifinderTreeName = "unifinder-search-results-listbox";
 
 var gCalendarEventTreeClicked = false; //set this to true when the calendar event tree is clicked
                                        //to allow for multiple selection
+
+var gEventArray = new Array();
+
 function calendarUnifinderInit( )
 {
    var unifinderEventSelectionObserver = 
@@ -630,104 +633,157 @@ function setUnifinderEventTreeItem( treeItem, calendarEvent )
 /**
 *  Redraw the categories unifinder tree
 */
-function treeView( EventArray )
+var treeView =
 {
-   this.eventArray = EventArray;
-   this.rowCount = EventArray.length;
-}
+   rowCount : gEventArray.length,
+   selectedColumn : null,
+   sortDirection : null,
 
-treeView.prototype.isContainer = function()
-{return false;}
-treeView.prototype.getCellProperties = function()
-{return false;}
-treeView.prototype.getColumnProperties = function()
-{return false;}
-treeView.prototype.getRowProperties = function()
-{return false;}
-treeView.prototype.isSorted = function()
-{return false;}
-treeView.prototype.isEditable = function()
-{return true;}
-treeView.prototype.isSeparator = function()
-{return false;}
-treeView.prototype.getImageSrc = function()
-{return false;}
-treeView.prototype.cycleHeader = function( ColId, element )
-{
-   /*
-   **  NOT IMPLEMENTED YET
-   */
-   return false;
-   this.eventArray.sort( sortEventByTitle );
-}
-
-function sortEventByTitle( EventA, EventB )
-{
-   return( EventA.title - EventB.title );
-}
-
-treeView.prototype.setTree = function( tree )
-{
-   this.tree = tree;
-}
-treeView.prototype.getCellText = function(row,column)
-{
-   calendarEvent = this.eventArray[row];
-   var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
-   switch( column )
+   isContainer : function(){return false;},
+   getCellProperties : function(){return false;},
+   getColumnProperties : function(){return false;},
+   getRowProperties : function(){return false;},
+   isSorted : function(){return false;},
+   isEditable : function(){return true;},
+   isSeparator : function(){return false;},
+   getImageSrc : function(){return false;},
+   cycleHeader : function( ColId, element )
    {
-      case "unifinder-search-results-tree-col-title":
-         if( calendarEvent.title == "" )
-            var titleText = "Untitled";
-         else  
-         var titleText = calendarEvent.title;
-         return( titleText );
-      break;
-      case "unifinder-search-results-tree-col-startdate":
-         var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
-         var startTime = formatUnifinderEventTime( eventStartDate );
-         var startDate = formatUnifinderEventDate( eventStartDate );
-         if( calendarEvent.allDay )
+      var sortActive;
+      var treeCols;
+   
+      this.selectedColumn = ColId;
+      sortActive = element.getAttribute("sortActive");
+      this.sortDirection = element.getAttribute("sortDirection");
+   
+      if (sortActive != "true")
+      {
+         treeCols = document.getElementsByTagName("treecol");
+         for (var i = 0; i < treeCols.length; i++)
          {
-            startText = "All day " + startDate;
+            treeCols[i].removeAttribute("sortActive");
+            treeCols[i].removeAttribute("sortDirection");
+         }
+         sortActive = true;
+         this.sortDirection = "ascending";
+      }
+      else
+      {
+         sortActive = true;
+         if (this.sortDirection == "" || this.sortDirection == "descending")
+         {
+            this.sortDirection = "ascending";
          }
          else
          {
-            startText = startDate + " " + startTime;
+            this.sortDirection = "descending";
          }
-         return( startText );
-      break;
-      case "unifinder-search-results-tree-col-enddate":
-         var eventEndDate = new Date( calendarEvent.end.getTime() );
-         var endTime = formatUnifinderEventTime( eventEndDate );
-         var endDate = formatUnifinderEventDate( eventEndDate );
-         if( calendarEvent.allDay )
-         {
-            endText = "All day " + endDate;
-         }
-         else
-         {
-            endText = endDate + " " + endTime;
-         }
-         return( endText );
-      break;
-      case "unifinder-search-results-tree-col-categories":
-         return( calendarEvent.categories );
-      break;
-      case "unifinder-search-results-tree-col-location":
-         return( calendarEvent.location );
-      break;
-      case "unifinder-search-results-tree-col-status":
-         switch( calendarEvent.status )
-         {
-            case calendarEvent.ICAL_STATUS_TENTATIVE:
-               return( calendarStringBundle.GetStringFromName( "Tentative" ) );
-            case calendarEvent.ICAL_STATUS_CONFIRMED:
-               return( calendarStringBundle.GetStringFromName( "Confirmed" ) );
-            case calendarEvent.ICAL_STATUS_CANCELLED:
-               return( calendarStringBundle.GetStringFromName( "Cancelled" ) );
-         }
-      break;
+      }
+      element.setAttribute("sortActive", sortActive);
+      element.setAttribute("sortDirection", this.sortDirection);
+      gEventArray.sort( sortEvents );
+      document.getElementById( UnifinderTreeName ).view = this;
+   },
+   setTree : function( tree ){this.tree = tree;},
+   getCellText : function(row,column)
+   {
+      var columnElement = document.getElementById(column);
+      var sortActive = columnElement.getAttribute("sortActive");
+      if (sortActive == "true")
+      {
+         this.selectedColumn = column;
+         this.sortDirection = columnElement.getAttribute("sortDirection");
+         gEventArray.sort(sortEvents);
+      }
+   
+      calendarEvent = gEventArray[row];
+      var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+      switch( column )
+      {
+         case "unifinder-search-results-tree-col-title":
+            if( calendarEvent.title == "" )
+               var titleText = "Untitled";
+            else  
+               var titleText = calendarEvent.title;
+            return( titleText );
+         break;
+         case "unifinder-search-results-tree-col-startdate":
+            var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+            var startTime = formatUnifinderEventTime( eventStartDate );
+            var startDate = formatUnifinderEventDate( eventStartDate );
+            if( calendarEvent.allDay )
+            {
+               startText = "All day " + startDate;
+            }
+            else
+            {
+               startText = startDate + " " + startTime;
+            }
+            return( startText );
+         break;
+         case "unifinder-search-results-tree-col-enddate":
+            var eventEndDate = new Date( calendarEvent.end.getTime() );
+            var endTime = formatUnifinderEventTime( eventEndDate );
+            var endDate = formatUnifinderEventDate( eventEndDate );
+            if( calendarEvent.allDay )
+            {
+               endText = "All day " + endDate;
+            }
+            else
+            {
+               endText = endDate + " " + endTime;
+            }
+            return( endText );
+         break;
+         case "unifinder-search-results-tree-col-categories":
+            return( calendarEvent.categories );
+         break;
+         case "unifinder-search-results-tree-col-location":
+            return( calendarEvent.location );
+         break;
+         case "unifinder-search-results-tree-col-status":
+            switch( calendarEvent.status )
+            {
+               case calendarEvent.ICAL_STATUS_TENTATIVE:
+                  return( calendarStringBundle.GetStringFromName( "Tentative" ) );
+               case calendarEvent.ICAL_STATUS_CONFIRMED:
+                  return( calendarStringBundle.GetStringFromName( "Confirmed" ) );
+               case calendarEvent.ICAL_STATUS_CANCELLED:
+                  return( calendarStringBundle.GetStringFromName( "Cancelled" ) );
+            }
+         break;
+      }
+   }
+}
+
+function sortEvents( EventA, EventB )
+{
+   var modifier = 1;
+   if (treeView.sortDirection == "descending")
+	{
+		modifier = -1;
+	}
+
+   switch(treeView.selectedColumn)
+   {
+   case "unifinder-search-results-tree-col-title":
+      return( ((EventA.title > EventB.title) ? 1 : -1) * modifier );
+   
+   case "unifinder-search-results-tree-col-startdate":
+      return( ((EventA.start.getTime() > EventB.start.getTime()) ? 1 : -1) * modifier );
+
+   case "unifinder-search-results-tree-col-enddate":
+         return( ((EventA.end.getTime() > EventB.end.getTime()) ? 1 : -1) * modifier );
+
+   case "unifinder-search-results-tree-col-categories":
+         return( ((EventA.categories > EventB.categories) ? 1 : -1) * modifier );
+
+   case "unifinder-search-results-tree-col-location":
+         return( ((EventA.location > EventB.location) ? 1 : -1) * modifier );
+
+   case "unifinder-search-results-tree-col-status":
+         return( ((EventA.status > EventB.status) ? 1 : -1) * modifier );
+
    }
 }
 
@@ -760,7 +816,13 @@ function refreshEventTree( eventArray )
       eventArray = getEventTable();
    }
    
-   document.getElementById( UnifinderTreeName ).view = new treeView( eventArray );
+   gEventArray = null;
+
+   gEventArray = eventArray;
+
+   treeView.rowCount = gEventArray.length;
+      
+   document.getElementById( UnifinderTreeName ).view = treeView;
 
    document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
 
