@@ -54,8 +54,6 @@
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
 
-#include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID
-
 #ifdef XP_PC
 #define NETLIB_DLL	"netlib.dll"
 #define XPCOM_DLL	"xpcom32.dll"
@@ -85,8 +83,6 @@ static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
-
-static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
