@@ -3290,9 +3290,16 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
                              4.x' HTML editor, it will not be able to
                              break this HTML sig, if quoted (for the user to
                              interleave a comment). */
-  static const char      preopen[] = "<pre class=\"moz-signature\" cols=$mailwrapcol>";
+  static const char      _preopen[] = "<pre class=\"moz-signature\" cols=%d>";
+  char*                  preopen;
   static const char      preclose[] = "</pre>";
 
+  PRInt32 wrapLength = 72; // setup default value in case GetWrapLength failed
+  GetWrapLength(&wrapLength);
+  preopen = PR_smprintf(_preopen, wrapLength);
+  if (!preopen)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
   if (imageSig)
   {
     // We have an image signature. If we're using the in HTML composer, we
@@ -3363,6 +3370,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   }
 
   aMsgBody->Append(sigOutput);
+  PR_Free(preopen);
   return NS_OK;
 }
 
