@@ -43,10 +43,8 @@ CPPSRCS		= \
 		xcDll.cpp \
 		$(NULL)
 
-# XXX not really right.
-ifdef MOZ_STATIC_COMPONENT_LIBS
+ifdef MOZ_STATIC_COMPONENT_LOADER
 CPPSRCS		+= nsStaticComponentLoader.cpp
-DEFINES		+= -DENABLE_STATIC_COMPONENT_LOADER=1
 endif
 
 EXPORTS		= \

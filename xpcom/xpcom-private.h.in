@@ -3,6 +3,9 @@
 #ifndef _XPCOM_PRIVATE_H_
 #define _XPCOM_PRIVATE_H_
 
+/* Define to build the static component loader */
+#undef ENABLE_STATIC_COMPONENT_LOADER
+
 /* Define if getpagesize() is available */
 #undef HAVE_GETPAGESIZE
 

@@ -4638,6 +4638,19 @@ if (test -z "$BUILD_SHARED_LIBS" && test -z "$BUILD_STATIC_LIBS") ||
 fi
 
 dnl ========================================================
+dnl static component loader
+dnl ========================================================
+MOZ_STATIC_COMPONENT_LOADER=1
+MOZ_ARG_DISABLE_BOOL(static-component-loader,
+[  --disable-static-component-loader
+                          Disable the static component loader],
+    MOZ_STATIC_COMPONENT_LOADER=)
+
+if test -n "$MOZ_STATIC_COMPONENT_LOADER"; then
+    AC_DEFINE(ENABLE_STATIC_COMPONENT_LOADER)
+fi
+
+dnl ========================================================
 dnl Generate static component from list of modules
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(meta-component-modules,
@@ -5054,6 +5067,7 @@ AC_SUBST(MOZ_ENABLE_XINERAMA)
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(BUILD_SHARED_LIBS)
 AC_SUBST(BUILD_STATIC_LIBS)
+AC_SUBST(MOZ_STATIC_COMPONENT_LOADER)
 AC_SUBST(MOZ_STATIC_COMPONENT_LIBS)
 AC_SUBST(MOZ_STATIC_COMPONENTS)
 AC_SUBST(MOZ_META_COMPONENTS)
@@ -5329,6 +5343,7 @@ HAVE_MBRTOWC
 HAVE_SYS_MOUNT_H
 HAVE_SYS_VFS_H
 HAVE_WCRTOMB
+ENABLE_STATIC_COMPONENT_LOADER
 "
 
 AC_CONFIG_HEADER(
