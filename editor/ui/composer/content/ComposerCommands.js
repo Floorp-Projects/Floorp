@@ -848,8 +848,18 @@ var gEditorOutputProgressListener =
         // Get the new docUrl from the "browse location" in case "publish location" was FTP
         var urlstring = GetDocUrlFromPublishData(gPublishData);
         
+        try {
+          // check http channel for response: 200 range is ok; other ranges are not
+          var httpChannel = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel);
+          var httpResponse = httpChannel.responseStatus;
+          if (httpResponse < 200 || httpResponse >= 300)
+            aStatus = httpResponse;   // not a real error but enough to pass check below
+        } catch(e) {}
+
         if (aStatus)
         {
+          // we should cancel the publish transaction here!
+
           // we should provide more meaningful errors (if possible)
           var saveDocStr = GetString("Publish");
           var failedStr = GetString("PublishFailed");
