@@ -543,6 +543,8 @@ StackArena::Pop()
   return NS_OK;
 }
 
+// Uncomment this to disable the frame arena.
+//#define DEBUG_TRACEMALLOC_FRAMEARENA 1
 
 // Memory is allocated 4-byte aligned. We have recyclers for chunks up to
 // 200 bytes
@@ -556,32 +558,41 @@ public:
   nsresult  FreeFrame(size_t aSize, void* aPtr);
 
 private:
+#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Underlying arena pool
   PLArenaPool mPool;
 
   // The recycler array is sparse with the indices being multiples of 4,
   // i.e., 0, 4, 8, 12, 16, 20, ...
   void*       mRecyclers[gMaxRecycledSize >> 2];
+#endif
 };
 
 FrameArena::FrameArena(PRUint32 aArenaSize)
 {
+#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Initialize the arena pool
   PL_INIT_ARENA_POOL(&mPool, "FrameArena", aArenaSize);
 
   // Zero out the recyclers array
   nsCRT::memset(mRecyclers, 0, sizeof(mRecyclers));
+#endif
 }
 
 FrameArena::~FrameArena()
 {
+#if !defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   // Free the arena in the pool and finish using it
   PL_FinishArenaPool(&mPool);
+#endif
 } 
 
 nsresult
 FrameArena::AllocateFrame(size_t aSize, void** aResult)
 {
+#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
+  *aResult = PR_Malloc(aSize);
+#else
   void* result = nsnull;
   
   // Ensure we have correct alignment for pointers.  Important for Tru64
@@ -605,12 +616,16 @@ FrameArena::AllocateFrame(size_t aSize, void** aResult)
   }
 
   *aResult = result;
+#endif
   return NS_OK;
 }
 
 nsresult
 FrameArena::FreeFrame(size_t aSize, void* aPtr)
 {
+#if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
+  PR_Free(aPtr);
+#else
   // Ensure we have correct alignment for pointers.  Important for Tru64
   aSize = PR_ROUNDUP(aSize, sizeof(void*));
 
@@ -621,7 +636,7 @@ FrameArena::FreeFrame(size_t aSize, void* aPtr)
     mRecyclers[index] = aPtr;
     *((void**)aPtr) = currentTop;
   }
-
+#endif
   return NS_OK;
 }
 
