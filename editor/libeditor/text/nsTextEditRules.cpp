@@ -218,9 +218,7 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
     mEditor->DeleteNode(mBogusNode);
     mBogusNode = do_QueryInterface(nsnull);
     // there is no longer any legit selection, so clear it.
-    
-    // xxx why?  The selection is still legit, it just happens to be in an empty doc
-    //aSelection->ClearSelection();
+    aSelection->ClearSelection();
   }
 
   return NS_OK;
