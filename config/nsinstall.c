@@ -56,6 +56,7 @@
 #endif
 
 #ifdef XP_OS2_VACPP
+getopt(int nargc, char **nargv, char *ostr);
 #include <dirent.h>
 #include <direct.h>
 #include <io.h>
