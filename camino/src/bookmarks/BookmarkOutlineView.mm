@@ -44,7 +44,6 @@
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
 #import "BookmarkManager.h"
-#import "NSArray+Utils.h"
 
 
 @implementation BookmarkOutlineView
@@ -75,7 +74,7 @@
 {
   if (operation == NSDragOperationDelete) {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray* bookmarks = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[pboard propertyListForType: @"MozBookmarkType"]];
+    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: @"MozBookmarkType"]];
     if (bookmarks) {
       for (unsigned int i = 0; i < [bookmarks count]; ++i) {
         BookmarkItem* item = [bookmarks objectAtIndex:i];

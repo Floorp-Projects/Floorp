@@ -39,10 +39,13 @@
 * a more intelligent manner.
 *
 * ***** END LICENSE BLOCK ***** */
+
+
 #import "KindaSmartFolderManager.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
 #import "BookmarkManager.h"
+#import "AddressBookManager.h"
 #import "NetworkServices.h"
 #import "BookmarksClient.h"
 
@@ -110,7 +113,7 @@
   NSString *addressBookManagerBundlePath = [[appBundle resourcePath] stringByAppendingPathComponent:@"AddressBookManager.bundle"];
   NSBundle *addressBookBundle = [NSBundle bundleWithPath:addressBookManagerBundlePath];
   Class principalClass = [addressBookBundle principalClass];
-  mAddressBookManager = [[principalClass alloc] initWithFolder:mAddressBookFolder];
+  mAddressBookManager = [(AddressBookManager*)[principalClass alloc] initWithFolder:mAddressBookFolder];
   if (mAddressBookManager)
     [mAddressBookFolder release];
 }

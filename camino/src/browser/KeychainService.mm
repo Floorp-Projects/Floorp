@@ -71,7 +71,8 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-extern NSString* XPCOMShutDownNotificationName;
+// from CHBrowserService.h
+extern NSString* const XPCOMShutDownNotificationName;
 
 
 nsresult

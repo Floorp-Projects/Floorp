@@ -37,30 +37,4 @@
 
 #import "NSArray+Utils.h"
 
-
-@implementation NSArray (ChimeraArrayUtils)
-
-+(NSArray *)pointerArrayFromDataArrayForMozBookmarkDrop:(NSArray *)dragArray
-{
-  NSMutableArray *fixedArray = [NSMutableArray arrayWithCapacity:[dragArray count]];
-  NSEnumerator *enumerator = [dragArray objectEnumerator];
-  id aDataToPointer, aPointerToBookmark;
-  while ((aDataToPointer = [enumerator nextObject])) {
-    [aDataToPointer getBytes:&aPointerToBookmark length:(sizeof(id))];
-    [fixedArray addObject:aPointerToBookmark];
-  }
-  return [NSArray arrayWithArray:fixedArray];
-}
-
-+(NSArray *)dataArrayFromPointerArrayForMozBookmarkDrop:(NSArray *)dragArray
-{
-  NSMutableArray *dataArray = [NSMutableArray arrayWithCapacity:[dragArray count]];
-  NSEnumerator *enumerator = [dragArray objectEnumerator];
-  id aBookmark;
-  while ((aBookmark = [enumerator nextObject]))
-    [dataArray addObject:[NSData dataWithBytes:&aBookmark length:(sizeof(id))]];
-  return [NSArray arrayWithArray:dataArray];  
-}
-
-
-@end
+// nothing to see here (functionality moved elsewhere)

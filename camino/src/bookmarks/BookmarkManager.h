@@ -41,6 +41,7 @@
 #import <Appkit/Appkit.h>
 #import "BookmarksClient.h"
 
+@class BookmarkItem;
 @class BookmarkFolder;
 @class BookmarkImportDlgController;
 @class BookmarkOutlineView;
@@ -53,17 +54,18 @@ enum {
   kHistoryContainerIndex = 2,
 };
 
-@interface BookmarkManager : NSObject <BookmarksClient> {
-  BookmarkFolder *mRootBookmarks;	// root bookmark object
-  KindaSmartFolderManager *mSmartFolderManager; //brains behind 4 smart folders
-  NSUndoManager *mUndoManager; // handles deletes, adds of bookmarks
-  BookmarkImportDlgController *mImportDlgController;
-  NSString *mPathToBookmarkFile; //exactly what it looks like
+@interface BookmarkManager : NSObject <BookmarksClient>
+{
+  BookmarkFolder*                 mRootBookmarks;           // root bookmark object
+  KindaSmartFolderManager*        mSmartFolderManager;      // brains behind 4 smart folders
+  NSUndoManager*                  mUndoManager;             // handles deletes, adds of bookmarks
+  BookmarkImportDlgController*    mImportDlgController;
+  NSString*                       mPathToBookmarkFile;      // exactly what it looks like
   
   // smart folders
-  BookmarkFolder *mTop10Container;
-  BookmarkFolder *mRendezvousContainer;
-  BookmarkFolder *mAddressBookContainer;
+  BookmarkFolder*                 mTop10Container;
+  BookmarkFolder*                 mRendezvousContainer;
+  BookmarkFolder*                 mAddressBookContainer;
 }
 
 // Class Methods & shutdown stuff
@@ -71,6 +73,9 @@ enum {
 + (BookmarkManager*)sharedBookmarkManager;
 + (NSString*)managerStartedNotification;
 - (void)shutdown;
+
++ (NSArray*)serializableArrayWithBookmarkItems:(NSArray*)bmArray;
++ (NSArray*)bookmarkItemsFromSerializableArray:(NSArray*)bmArray;
 
 // Getters/Setters
 -(BookmarkFolder *) rootBookmarks;
@@ -81,6 +86,7 @@ enum {
 -(BookmarkFolder *) rendezvousFolder;
 -(BookmarkFolder *) addressBookFolder;
 -(BookmarkFolder *) historyFolder;
+-(BookmarkItem*) itemWithUUID:(NSString*)uuid;
 -(NSUndoManager *) undoManager;
 -(void) setRootBookmarks:(BookmarkFolder *)anArray;
 

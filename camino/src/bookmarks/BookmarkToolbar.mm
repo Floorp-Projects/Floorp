@@ -47,7 +47,6 @@
 #import "BrowserWindowController.h"
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
-#import "NSArray+Utils.h"
 #import "NSPasteboard+Utils.h"
 
 
@@ -468,7 +467,7 @@ static const int kBMBarScanningStep = 5;
     return NO;
 
   if ([types containsObject: @"MozBookmarkType"]) {
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[draggingPasteboard propertyListForType: @"MozBookmarkType"]];
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[draggingPasteboard propertyListForType: @"MozBookmarkType"]];
     BookmarkItem* destItem = nil;
 
     if (mDragInsertionButton == nil) {
@@ -573,10 +572,10 @@ static const int kBMBarScanningStep = 5;
   BOOL dropHandled = NO;
   BOOL isCopy = ([sender draggingSourceOperationMask] == NSDragOperationCopy);
 
-  NSArray	*draggedTypes = [[sender draggingPasteboard] types];
+  NSArray *draggedTypes = [[sender draggingPasteboard] types];
 
   if ([draggedTypes containsObject:@"MozBookmarkType"]) {
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     // added sequentially, so use reverse object enumerator to preserve order.
     NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;

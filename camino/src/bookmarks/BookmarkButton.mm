@@ -40,7 +40,6 @@
 
 #import "BookmarkButton.h"
 #import "NSString+Utils.h"
-#import "NSArray+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "DraggableImageAndTextCell.h"
 #import "BookmarkManager.h"
@@ -285,7 +284,7 @@
     [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
   }
   // MozBookmarkType
-  NSArray *pointerArray = [NSArray dataArrayFromPointerArrayForMozBookmarkDrop:[NSArray arrayWithObject:item]];
+  NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:[NSArray arrayWithObject:item]];
   [pboard setPropertyList:pointerArray forType: @"MozBookmarkType"];
   [self dragImage: [MainController createImageForDragging:[self image] title:title]
                at: NSMakePoint(0,NSHeight([self bounds])) offset: NSMakeSize(0,0)
@@ -297,7 +296,7 @@
   if (operation == NSDragOperationDelete)
   {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
-    NSArray* bookmarks = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[pboard propertyListForType: @"MozBookmarkType"]];
+    NSArray* bookmarks = [BookmarkManager bookmarkItemsFromSerializableArray:[pboard propertyListForType: @"MozBookmarkType"]];
     if (bookmarks)
     {
       for (unsigned int i = 0; i < [bookmarks count]; ++i)

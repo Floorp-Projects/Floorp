@@ -2238,8 +2238,6 @@ nsSimpleGlobalHistory::CloseDB()
   if (!mStore)
     return NS_OK;
 
-printf("Closing history DB\n");
-
   mdb_err err;
 
   ExpireEntries(PR_FALSE /* don't notify */);

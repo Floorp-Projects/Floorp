@@ -93,6 +93,9 @@ enum {
 -(BookmarkFolder *) addBookmarkFolder; //adds to end
 -(BookmarkFolder *) addBookmarkFolder:(NSString *)aTitle inPosition:(unsigned)aIndex isGroup:(BOOL)aFlag;
 
+// finding items by uuid
+-(BookmarkItem *)itemWithUUID:(NSString*)uuid;
+
 // Moving & Copying & inserting bookmarks/bookmark arrays
 -(void) insertChild:(BookmarkItem *)aChild;
 -(void) insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aIndex isMove:(BOOL)aBool;

@@ -37,10 +37,4 @@
 
 #import <Foundation/Foundation.h>
 
-
-@interface NSArray (ChimeraArrayUtils)
-// Packages pointers to BookmarkItems into NSData objects for pasteboard
-+(NSArray *)dataArrayFromPointerArrayForMozBookmarkDrop:(NSArray *)dragArray;
-// Converts NSData objects on a pasteboard back into pointers to BookmarkItems.
-+(NSArray *)pointerArrayFromDataArrayForMozBookmarkDrop:(NSArray *)dragArray;
-@end
+// nothing to see here (functionality moved elsewhere)

@@ -44,7 +44,6 @@
 #import "BookmarkViewController.h"
 
 #import "NSString+Utils.h"
-#import "NSArray+Utils.h"
 #import "NSPasteboard+Utils.h"
 #import "NSSplitView+Utils.h"
 #import "NSView+Utils.h"
@@ -846,19 +845,48 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   if ([types containsObject: @"MozBookmarkType"])
   {
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    // added sequentially, so use reverse object enumerator to preserve order.
-    NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
-    id aKid;
-    while ((aKid = [enumerator nextObject]))
-    {
-      if (isCopy)
-        [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
-      else
-        [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
 
-      [self selectItems:draggedItems expandingContainers:NO scrollIntoView:NO];
-    }
+    // turn off updates to avoid lots of reloadData with multiple items
+    mBookmarkUpdatesDisabled = YES;
+    
+    // make sure we re-enable updates
+    NS_DURING
+      NSEnumerator *enumerator = [draggedItems objectEnumerator];
+
+      id aKid;
+      while ((aKid = [enumerator nextObject]))
+      {
+        if (isCopy)
+        {
+          [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+          ++index;
+        }
+        else
+        {
+          // need to be careful to adjust index as we insert items to avoid
+          // inserting in reverse order
+          if ([aKid parent] == dropFolder)
+          {
+            int kidIndex = [dropFolder indexOfObject:aKid];
+            [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+            if (kidIndex > index)
+              ++index;
+          }
+          else
+          {
+            [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+            ++index;
+          }
+        }
+      }
+    NS_HANDLER
+    NS_ENDHANDLER
+    
+    mBookmarkUpdatesDisabled = NO;
+    [self reloadDataForItem:nil reloadChildren:YES];
+    [self selectItems:draggedItems expandingContainers:NO scrollIntoView:NO];
+
     return YES;
   }
   else if ([types containsObject: @"MozURLType"])
@@ -1029,7 +1057,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return NO;
   }
   // Pack pointers to bookmark items into this array
-  NSArray *pointerArray = [NSArray dataArrayFromPointerArrayForMozBookmarkDrop:itemArray];
+  NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:itemArray];
   [itemArray release];
   [pboard declareTypes:[NSArray arrayWithObject:@"MozBookmarkType"] owner:self];
   [pboard setPropertyList:pointerArray forType:@"MozBookmarkType"];
@@ -1061,7 +1089,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       // special check if we're moving pointers around
       if ([types containsObject:@"MozBookmarkType"])
       {
-        NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+        NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
         BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
         return (isOK) ? NSDragOperationGeneric: NSDragOperationNone;
       }
@@ -1212,7 +1240,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return NO;
 
   // Pack pointers to bookmark items into this array.
-  NSArray *pointerArray = [NSArray dataArrayFromPointerArrayForMozBookmarkDrop:items];
+  NSArray *pointerArray = [BookmarkManager serializableArrayWithBookmarkItems:items];
   if (count == 1) {
     id aBookmark = [items objectAtIndex:0];
     if ([aBookmark isKindOfClass:[Bookmark class]]) {
@@ -1238,7 +1266,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return NSDragOperationNone;
 
   if ([types containsObject: @"MozBookmarkType"]) {
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     BookmarkFolder* parent = (item) ? item : [self itemTreeRootContainer];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
     return (isOK) ? NSDragOperationGeneric : NSDragOperationNone;
@@ -1289,6 +1317,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren
 {
+  if (mBookmarkUpdatesDisabled)
+    return;
+
   if (!item)
     [mBookmarksOutlineView reloadData];
   else
@@ -1420,13 +1451,16 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 #pragma mark -
 
-// called when the user typed into the quicksearch field
+// called when the user typed into the quicksearch field, or edits an item inline
 - (void)controlTextDidChange:(NSNotification *)aNotification
 {
-  // NSTextView *fieldEditor = [[aNotification userInfo] objectForKey:@"NSFieldEditor"];
-  NSString* currentText = [mSearchField stringValue];
-
-  [self searchStringChanged:currentText];
+  // how can I tell if this is coming from the quicksearch field?
+  // the object seems to be the field editor in that situation
+  if ([aNotification object] != mBookmarksOutlineView && [aNotification object] != mHistoryOutlineView)
+  {
+    NSString* currentText = [mSearchField stringValue];
+    [self searchStringChanged:currentText];
+  }
 }
 
 - (void)searchStringChanged:(NSString*)searchString

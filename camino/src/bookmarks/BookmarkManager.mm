@@ -109,6 +109,40 @@ static unsigned gFirstUserCollection = 0;
   return @"BookmarkManagerStartedNotification";
 }
 
+// serialize to an array of UUIDs
++ (NSArray*)serializableArrayWithBookmarkItems:(NSArray*)bmArray
+{
+  NSMutableArray* dataArray = [NSMutableArray arrayWithCapacity:[bmArray count]];
+  NSEnumerator* bmEnum = [bmArray objectEnumerator];
+  id bmItem;
+  while ((bmItem = [bmEnum nextObject]))
+  {
+    [dataArray addObject:[bmItem UUID]];
+  }
+  
+  return dataArray;
+}
+
++ (NSArray*)bookmarkItemsFromSerializableArray:(NSArray*)dataArray
+{
+  NSMutableArray* itemsArray = [NSMutableArray arrayWithCapacity:[dataArray count]];
+  NSEnumerator* dataEnum = [dataArray objectEnumerator];
+  BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
+  id itemUUID;
+  while ((itemUUID = [dataEnum nextObject]))
+  {
+    BookmarkItem* foundItem = [bmManager itemWithUUID:itemUUID];
+    if (foundItem)
+      [itemsArray addObject:foundItem];
+    else
+      NSLog(@"Failed to find bm item with uuid %@", itemUUID);
+  }
+  
+  return itemsArray;
+}
+
+#pragma mark -
+
 //
 // Init, dealloc - better get inited on background thread.
 //
@@ -216,10 +250,11 @@ static unsigned gFirstUserCollection = 0;
   [[NSNotificationCenter defaultCenter] postNotificationName:[BookmarkManager managerStartedNotification] object:nil];
 }
 
-- (void)shutdown;
+- (void)shutdown
 {
   [self writeBookmarks:nil];
 }
+
 
 //
 // smart collections, as of now, are Rendezvous, Address Book, Top 10 List.
@@ -327,6 +362,11 @@ static unsigned gFirstUserCollection = 0;
 -(BookmarkFolder *) addressBookFolder
 {
   return mAddressBookContainer;
+}
+
+-(BookmarkItem*) itemWithUUID:(NSString*)uuid
+{
+  return [mRootBookmarks itemWithUUID:uuid];
 }
 
 -(NSUndoManager *) undoManager
@@ -655,7 +695,7 @@ static unsigned gFirstUserCollection = 0;
 }
 
 
--(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+-(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
   // get file as NSString
   NSString* fileAsString = [self decodedTextFile:pathToFile];

@@ -55,8 +55,8 @@
 #include "nsIMIMEInfo.h"
 #include "nsIPref.h"
 
-NSString* TermEmbeddingNotificationName = @"TermEmbedding";
-NSString* XPCOMShutDownNotificationName = @"XPCOMShutDown";
+NSString* const TermEmbeddingNotificationName = @"TermEmbedding";
+NSString* const XPCOMShutDownNotificationName = @"XPCOMShutDown";
 
 nsAlertController* CHBrowserService::sController = nsnull;
 CHBrowserService* CHBrowserService::sSingleton = nsnull;

@@ -74,6 +74,8 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 @end
 
+#pragma mark -
+
 @implementation BookmarkFolder
 
 -(id) init
@@ -300,7 +302,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [self setIsDockMenu:YES];
 }
 
--(void) setIsDockMenu:(BOOL)aBool;
+-(void) setIsDockMenu:(BOOL)aBool
 {
   unsigned curVal = [self specialFlag];
   if (aBool) 
@@ -369,7 +371,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // Adding bookmarks
 //
 
--(Bookmark *)addBookmark;
+-(Bookmark *)addBookmark
 {
   if (![self isRoot]) {
     Bookmark* theBookmark = [[Bookmark alloc] init];
@@ -458,6 +460,35 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [theFolder setIsGroup:aFlag];
   [self insertChild:theFolder atIndex:aPosition isMove:NO];
   return theFolder;
+}
+
+// if we start spending too much time here, we could build an NSDictionary map
+-(BookmarkItem *)itemWithUUID:(NSString*)uuid
+{
+  // see if we match
+  if ([[self UUID] isEqualToString:uuid])
+    return self;
+
+  // see if our kids match
+  NSEnumerator *enumerator = [[self childArray] objectEnumerator];
+  id childItem;
+  while ((childItem = [enumerator nextObject]))
+  {
+    if ([childItem isKindOfClass:[Bookmark class]])
+    {
+      if ([[childItem UUID] isEqualToString:uuid])
+        return childItem;
+    }
+    else if ([childItem isKindOfClass:[BookmarkFolder class]])
+    {
+      // recurse
+      id foundItem = [childItem itemWithUUID:uuid];
+      if (foundItem)
+        return foundItem;
+    }
+  }
+
+  return nil;
 }
 
 //

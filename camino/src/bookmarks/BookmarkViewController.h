@@ -100,6 +100,8 @@
   BOOL                    mSetupComplete;       // have we been fully initialized?
   BOOL                    mSplittersRestored;   // splitters can only be positioned after we resize to fit the window
   
+  BOOL                    mBookmarkUpdatesDisabled;
+  
   NSMutableDictionary*    mExpandedStatus;
   NSString*               mCachedHref;
   BookmarkFolder*         mActiveRootCollection;

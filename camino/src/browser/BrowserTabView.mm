@@ -39,7 +39,6 @@
 
 #import "NSString+Utils.h"
 #import "NSPasteboard+Utils.h"
-#import "NSArray+Utils.h"
 
 #import "BrowserTabView.h"
 #import "BrowserWrapper.h"
@@ -47,6 +46,7 @@
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
 #import "BookmarkToolbar.h"
+#import "BookmarkManager.h"
 #import "BrowserTabBarView.h"
 #import "MainController.h"
 
@@ -374,7 +374,7 @@
     overTabViewItem = [mTabBar tabViewItemAtPoint:[sender draggingLocation]];
     
   if ([pasteBoardTypes containsObject:@"MozBookmarkType"]) {
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+    NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     if (draggedItems) {
       id aBookmark;
       if ([draggedItems count] == 1) {
