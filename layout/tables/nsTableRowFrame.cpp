@@ -929,9 +929,6 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
   if (gsDebug==PR_TRUE)
     printf("nsTableRowFrame::Reflow - aMaxSize = %d, %d\n",
             aReflowState.maxSize.width, aReflowState.maxSize.height);
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
 
   // Initialize 'out' parameters
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -967,10 +964,6 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
     break;
 
   }
-
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
 
   if (gsDebug==PR_TRUE) 
   {

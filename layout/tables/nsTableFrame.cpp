@@ -1498,10 +1498,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
             this, aReflowState.reason, aReflowState.maxSize.width, aReflowState.maxSize.height);
   }
 
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
-
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = 0;
@@ -1608,10 +1604,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
               this, aDesiredSize.width, aDesiredSize.height);
   }
-
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif  
 
   if (PR_TRUE==gsDebug) printf("end reflow for table %p\n", this);
   return NS_OK;
