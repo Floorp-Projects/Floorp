@@ -20,6 +20,7 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
 #include "nsMailCoreFactory.h"
+#include "nsPrefsCoreFactory.h"
 #include "nsRDFCoreFactory.h"
 #include "nsToolbarCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
@@ -37,6 +38,7 @@ static PRInt32 gInstanceCnt = 0;
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kMailCoreCID,        NS_MAILCORE_CID);
+static NS_DEFINE_IID(kPrefsCoreCID,       NS_PREFSCORE_CID);
 static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,     NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
@@ -58,9 +60,10 @@ NSCanUnload(nsISupports* serviceMgr)
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
-    printf("*** AppCores is being registered\n");
+    printf("*** AppCores object is being registered\n");
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kMailCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kPrefsCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolbarCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -72,10 +75,11 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
-    printf("*** AppCores is being unregistered\n");
+    printf("*** AppCores object is being unregistered\n");
     
     nsComponentManager::UnregisterFactory(kAppCoresManagerCID, path);
     nsComponentManager::UnregisterFactory(kMailCoreCID, path);
+    nsComponentManager::UnregisterFactory(kPrefsCoreCID, path);
     nsComponentManager::UnregisterFactory(kRDFCoreCID, path);
     nsComponentManager::UnregisterFactory(kToolbarCoreCID, path);
     nsComponentManager::UnregisterFactory(kToolkitCoreCID, path);
@@ -110,6 +114,10 @@ NSGetFactory(nsISupports* serviceMgr,
     else if ( aClass.Equals(kMailCoreCID) )
     {
         inst = new nsMailCoreFactory();      
+    }
+    else if ( aClass.Equals(kPrefsCoreCID) )
+    {
+        inst = new nsPrefsCoreFactory();      
     }
     else if ( aClass.Equals(kRDFCoreCID) )
     {
