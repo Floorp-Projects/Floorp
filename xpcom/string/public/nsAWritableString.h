@@ -346,16 +346,16 @@ copy_chunky( typename basic_nsAReadableString<CharT>::ConstIterator first,
   {
     while ( first != last )
       {
-        basic_nsAReadableString<CharT>::ConstIterator::difference_type lengthToCopy = std::min(first.size_forward(), result.size_forward());
+        PRUint32 lengthToCopy = PRUint32( std::min(first.size_forward(), result.size_forward()) );
         if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = std::min(lengthToCopy, last.operator->() - first.operator->());
+          lengthToCopy = std::min(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
 
         // assert(lengthToCopy > 0);
 
         std::char_traits<CharT>::copy(result.operator->(), first.operator->(), lengthToCopy);
 
-        first += lengthToCopy;
-        result += lengthToCopy;
+        first += PRInt32(lengthToCopy);
+        result += PRInt32(lengthToCopy);
       }
 
     return result;
@@ -369,14 +369,14 @@ copy_backward_chunky( typename basic_nsAReadableString<CharT>::ConstIterator fir
   {
     while ( first != last )
       {
-        typename basic_nsAReadableString<CharT>::ConstIterator::difference_type lengthToCopy = std::min(first.size_backward(), result.size_backward());
+        PRUint32 lengthToCopy = PRUint32( std::min(first.size_backward(), result.size_backward()) );
         if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = std::min(lengthToCopy, first.operator->() - last.operator->());
+          lengthToCopy = std::min(lengthToCopy, PRUint32(first.operator->() - last.operator->()));
 
         std::char_traits<CharT>::move(result.operator->(), first.operator->(), lengthToCopy);
 
-        first -= lengthToCopy;
-        result -= lengthToCopy;
+        first -= PRInt32(lengthToCopy);
+        result -= PRInt32(lengthToCopy);
       }
 
     return result;
