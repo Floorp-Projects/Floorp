@@ -397,6 +397,7 @@ $(RES): $(RESNAME)
 endif
 
 $(MAPFILE): $(LIBRARY_NAME).def
+	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),SunOS)
 	grep -v ';-' $(LIBRARY_NAME).def | \
 	 sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
