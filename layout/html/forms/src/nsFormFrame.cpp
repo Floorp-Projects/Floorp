@@ -47,6 +47,8 @@
 #include "nsIHTMLAttributes.h"
 #include "nsCRT.h"
 #include "nsIURL.h"
+#include "nsIHTMLDocument.h"
+
 #ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -106,6 +108,7 @@ static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 NS_IMETHODIMP
 nsFormFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -468,14 +471,29 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   if (NS_OK == aPresContext->GetLinkHandler(&handler)) {
     nsAutoString href;
     GetAction(&href);
-    if (href.Equals("")) {
-      return NS_OK;
-    }
 
     // Resolve url to an absolute url
     nsIURI* docURL = nsnull;
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
+
+      // If an action is not specified and we are inside 
+      // a HTML document then reload the URL. This makes us
+      // compatible with 4.x browsers.
+      // If we are in some other type of document such as XML or
+      // XUL, do nothing. This prevents undesirable reloading of
+      // a document inside XUL.
+
+    if (href.Equals("")) {
+      nsCOMPtr<nsIHTMLDocument> htmlDoc;
+      if (PR_FALSE == NS_SUCCEEDED(doc->QueryInterface(kIHTMLDocumentIID,
+                                             getter_AddRefs(htmlDoc)))) {   
+        // Must be a XML, XUL or other non-HTML document type
+        // so do nothing.
+        return NS_OK;
+      } 
+    }
+
     while (doc && !docURL) {
       doc->GetBaseURL(docURL);
       if (!docURL) {
