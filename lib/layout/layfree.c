@@ -752,7 +752,7 @@ lo_ScrapeElement(MWContext *context, LO_Element *element)
 
 		case LO_TABLE:
 			{
-			lo_ScrapeTableElement( context, element );
+			lo_ScrapeTableElement( context, (LO_TableStruct *) element );
 			}
 			break;
 
