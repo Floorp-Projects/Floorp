@@ -251,6 +251,8 @@ bin\components\xmlextras.xpt
 bin\components\xmlextras.dll
 bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
+bin\components\nsProgressDialog.js
+bin\components\progressDlg.xpt
 bin\components\transformiix.xpt
 bin\components\transformiix.dll
 bin\ISimpleDOMNodeMarshal.dll

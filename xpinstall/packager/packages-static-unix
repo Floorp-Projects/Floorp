@@ -155,6 +155,8 @@ bin/components/windowwatcher.xpt
 bin/components/xmlextras.xpt
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
+bin/components/nsProgressDialog.js
+bin/components/progressDlg.xpt
 bin/components/transformiix.xpt
 
 bin/chrome/help.jar

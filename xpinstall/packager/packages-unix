@@ -239,6 +239,8 @@ bin/components/xmlextras.xpt
 bin/components/libxmlextras.so
 bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
+bin/components/nsProgressDialog.js
+bin/components/progressDlg.xpt
 bin/components/transformiix.xpt
 bin/components/libtransformiix.so
 bin/components/libfileview.so
