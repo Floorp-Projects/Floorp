@@ -542,7 +542,7 @@ OS=NT51
 
 
 [Component MailNews]
-Description Short=Mail & News
+Description Short=Mail & Newsgroups
 ;*** LOCALIZE ME BABY ***
 Description Long=Email and Newsgroup Software
 Archive=mail.xpi
