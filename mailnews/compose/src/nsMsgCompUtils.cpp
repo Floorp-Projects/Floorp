@@ -39,8 +39,6 @@
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsIURI.h"
 
-/* for GET_xxx_PART */
-#include "net.h"
 /* for StrAllocCat */
 #include "xp_str.h"
 
