@@ -27,11 +27,13 @@
 #include "nsIObserver.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIDocumentLoaderObserver.h"
+#include "nsWeakReference.h"
 
 class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
                            public nsIFormSubmitObserver,
-                           public nsIDocumentLoaderObserver {
+                           public nsIDocumentLoaderObserver,
+                           public nsSupportsWeakReference {
 
 public:
   NS_DECL_ISUPPORTS

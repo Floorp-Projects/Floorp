@@ -341,7 +341,7 @@ typedef struct _findAccountByKeyEntry {
 
 
 
-NS_IMPL_ISUPPORTS2(nsMsgAccountManager, nsIMsgAccountManager, nsIObserver)
+NS_IMPL_ISUPPORTS3(nsMsgAccountManager, nsIMsgAccountManager, nsIObserver, nsISupportsWeakReference)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),

@@ -32,6 +32,7 @@
 #include "nsIThreadPool.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
@@ -39,7 +40,8 @@
 
 class nsFtpProtocolHandler : public nsIProtocolHandler,
                              public nsIConnectionCache,
-                             public nsIObserver
+                             public nsIObserver,
+                             public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS

@@ -33,9 +33,11 @@
 #include "nsITransactionManager.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgRDFDataSource.h"
+#include "nsWeakReference.h"
 
 class nsMsgRDFDataSource : public nsIRDFDataSource,
                            public nsIObserver,
+                           public nsSupportsWeakReference,
   						   public nsIMsgRDFDataSource
 {
  public:

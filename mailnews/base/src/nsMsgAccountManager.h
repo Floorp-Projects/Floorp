@@ -28,6 +28,7 @@
 #include "nsIPref.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 /*
  * some platforms (like Windows and Mac) use a map file, because of
@@ -61,7 +62,10 @@
 #define HAVE_MOVEMAIL 1
 #endif /* HAVE_MOVEMAIL */
 
-class nsMsgAccountManager : public nsIMsgAccountManager, public nsIObserver
+class nsMsgAccountManager
+	: public nsIMsgAccountManager,
+		public nsIObserver,
+		public nsSupportsWeakReference
 {
 public:
 

@@ -28,6 +28,7 @@
 #include "nsIScrollableView.h"
 #ifdef XSL
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 #include "nsITransformMediator.h"
 #endif
 #include "nsIUnicharInputStream.h"
@@ -56,6 +57,7 @@ typedef enum {
 class nsXMLContentSink : public nsIXMLContentSink,
 #ifdef XSL
                          public nsIObserver,
+                         public nsSupportsWeakReference,
 #endif
                          public nsIUnicharStreamLoaderObserver
 {

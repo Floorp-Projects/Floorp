@@ -55,34 +55,26 @@ nsWalletlibService::~nsWalletlibService()
 {
 }
 
-NS_IMETHODIMP
-nsWalletlibService::QueryInterface(REFNSIID iid, void** result)
-{
-  if (! result) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *result = nsnull;
-
-  if (iid.Equals(NS_GET_IID(nsISupports)) || iid.Equals(kIWalletServiceIID)) {
-    *result = NS_STATIC_CAST(nsIWalletService*, this);
-    AddRef();
-    return NS_OK;
-  }
-  if (iid.Equals(kIFormSubmitObserverIID)) {
-    *result = NS_STATIC_CAST(nsIFormSubmitObserver*, this);
-    AddRef();
-    return NS_OK;
-  }
-  if (iid.Equals(nsIDocumentLoaderObserver::GetIID())) {
-    *result = (void*) ((nsIDocumentLoaderObserver*)this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMPL_ADDREF(nsWalletlibService);
 NS_IMPL_RELEASE(nsWalletlibService);
+
+NS_INTERFACE_MAP_BEGIN(nsWalletlibService)
+	NS_INTERFACE_MAP_ENTRY(nsIWalletService)
+
+		/*
+			Note: although this class always inherited from |nsIObserver|,
+			|QueryInterface| didn't previously respond to this request.
+			Now it does.
+		*/
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+
+	NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWalletService)
+NS_INTERFACE_MAP_END
+
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAutoString& walletList) {
   ::WLLT_PreEdit(walletList);

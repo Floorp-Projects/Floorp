@@ -58,7 +58,16 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
 }
 
-NS_IMPL_ISUPPORTS3(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache, nsIObserver);
+NS_IMPL_ADDREF(nsFtpProtocolHandler)
+NS_IMPL_RELEASE(nsFtpProtocolHandler)
+
+NS_INTERFACE_MAP_BEGIN(nsFtpProtocolHandler)
+	NS_INTERFACE_MAP_ENTRY(nsIProtocolHandler)
+	NS_INTERFACE_MAP_ENTRY(nsIConnectionCache)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolHandler)
+NS_INTERFACE_MAP_END
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)

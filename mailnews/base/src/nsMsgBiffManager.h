@@ -32,6 +32,7 @@
 #include "nsCOMPtr.h"
 #include "nsIIncomingServerListener.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 typedef struct {
 	nsCOMPtr<nsIMsgIncomingServer> server;
@@ -39,7 +40,11 @@ typedef struct {
 } nsBiffEntry;
 
 
-class nsMsgBiffManager: public nsIMsgBiffManager, public nsIIncomingServerListener, public nsIObserver
+class nsMsgBiffManager
+	: public nsIMsgBiffManager,
+		public nsIIncomingServerListener,
+		public nsIObserver,
+		public nsSupportsWeakReference
 {
 public:
 	nsMsgBiffManager(); 

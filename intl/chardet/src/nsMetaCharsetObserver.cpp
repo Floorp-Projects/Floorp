@@ -32,6 +32,7 @@
 #include "nsCharDetDll.h"
 #include "nsIServiceManager.h"
 #include "nsObserverBase.h"
+#include "nsWeakReference.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -43,7 +44,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 class nsMetaCharsetObserver: public nsIElementObserver, 
                              public nsIObserver, 
                              public nsObserverBase,
-                             public nsIMetaCharsetService {
+                             public nsIMetaCharsetService,
+                             public nsSupportsWeakReference {
 
   NS_DECL_ISUPPORTS
 
@@ -110,39 +112,13 @@ nsMetaCharsetObserver::~nsMetaCharsetObserver()
 NS_IMPL_ADDREF ( nsMetaCharsetObserver );
 NS_IMPL_RELEASE ( nsMetaCharsetObserver );
 
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsMetaCharsetObserver::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-
-  if( NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aInstancePtr = NULL;
-
-  if( aIID.Equals ( nsIElementObserver::GetIID() )) {
-    *aInstancePtr = (void*) ((nsIElementObserver*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if( aIID.Equals ( nsIObserver::GetIID() )) {
-    *aInstancePtr = (void*) ((nsIObserver*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if( aIID.Equals ( nsIMetaCharsetService::GetIID() )) {
-    *aInstancePtr = (void*) ((nsIMetaCharsetService*) this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if( aIID.Equals ( kISupportsIID )) {
-    *aInstancePtr = (void*) ( this );
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsMetaCharsetObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIElementObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIMetaCharsetService)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIElementObserver)
+NS_INTERFACE_MAP_END
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP_(const char*) nsMetaCharsetObserver::GetTagNameAt(PRUint32 aTagIndex)

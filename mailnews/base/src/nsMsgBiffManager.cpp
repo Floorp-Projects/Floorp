@@ -28,7 +28,7 @@
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
-NS_IMPL_ISUPPORTS3(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener, nsIObserver)
+NS_IMPL_ISUPPORTS4(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener, nsIObserver, nsISupportsWeakReference)
 
 void OnBiffTimer(nsITimer *timer, void *aBiffManager)
 {

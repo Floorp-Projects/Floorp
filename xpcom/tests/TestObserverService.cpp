@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include <iostream.h>
+#include "nsWeakReference.h"
 
 static nsIObserverService *anObserverService = NULL;
 
@@ -48,7 +49,7 @@ extern ostream &operator<<( ostream &s, nsString &str ) {
     return s;
 }
 
-class TestObserver : public nsIObserver {
+class TestObserver : public nsIObserver, public nsSupportsWeakReference {
 public:
     TestObserver( const nsString &name = "unknown" )
         : mName( name ) {
@@ -60,7 +61,7 @@ public:
     nsString mName;
 };
 
-NS_IMPL_ISUPPORTS( TestObserver, NS_GET_IID(nsIObserver) );
+NS_IMPL_ISUPPORTS2( TestObserver, nsIObserver, nsISupportsWeakReference );
 
 NS_IMETHODIMP
 TestObserver::Observe( nsISupports     *aSubject,

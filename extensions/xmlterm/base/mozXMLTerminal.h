@@ -25,6 +25,7 @@
 #include "nscore.h"
 #include "nspr.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 #include "nsString.h"
 
 #include "mozXMLT.h"
@@ -38,7 +39,8 @@
 
 class mozXMLTerminal : public mozIXMLTerminal,
                        public nsIDocumentLoaderObserver,
-                       public nsIObserver
+                       public nsIObserver,
+                       public nsSupportsWeakReference
 {
   public:
 

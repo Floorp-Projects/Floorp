@@ -77,32 +77,14 @@ void nsMsgRDFDataSource::Close()
 
 NS_IMPL_ADDREF(nsMsgRDFDataSource)
 NS_IMPL_RELEASE(nsMsgRDFDataSource)
-    
-nsresult
-nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
-{
-    nsresult rv = NS_NOINTERFACE;
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
 
-  void *res=nsnull;
-  
-  if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
-      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-      res = NS_STATIC_CAST(nsIRDFDataSource*, this);
-  else if(iid.Equals(nsCOMTypeInfo<nsIObserver>::GetIID()))
-      res = NS_STATIC_CAST(nsIObserver*, this);
-  else if(iid.Equals(nsCOMTypeInfo<nsIMsgRDFDataSource>::GetIID()))
-	  res = NS_STATIC_CAST(nsIMsgRDFDataSource*, this);
-
-  if (res) {
-      NS_ADDREF(this);
-      *result = res;
-      rv = NS_OK;
-  }
-
-  return rv;
-}
+NS_INTERFACE_MAP_BEGIN(nsMsgRDFDataSource)
+	NS_INTERFACE_MAP_ENTRY(nsIRDFDataSource)
+	NS_INTERFACE_MAP_ENTRY(nsIObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIMsgRDFDataSource)
+	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRDFDataSource)
+NS_INTERFACE_MAP_END
 
 
 /* readonly attribute string URI; */
