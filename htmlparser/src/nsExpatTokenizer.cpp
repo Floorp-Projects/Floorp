@@ -448,7 +448,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
   } else {
     CToken* newToken = 0;
 
-    switch(s[0]){
+    switch(((PRUnichar*)s)[0]){
       case kNewLine:
       case CR:
         newToken = state->tokenRecycler->CreateTokenOfType(eToken_newline,eHTMLTag_unknown); 
@@ -462,7 +462,7 @@ void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, in
     }
     
     if(newToken) {
-      if ((s[0] != (XML_Char)kNewLine) && (s[0] != (XML_Char)kCR)) {
+      if ((((PRUnichar*)s)[0] != (XML_Char)kNewLine) && (((PRUnichar*)s)[0] != (XML_Char)kCR)) {
         nsString& theString=newToken->GetStringValueXXX();
         theString.Append((PRUnichar *) s,len);
       }
