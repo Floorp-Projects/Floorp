@@ -2030,6 +2030,11 @@ nsBrowserWindow::NotifyImageButtonEvent(nsIImageButton * aImgBtn, nsGUIEvent* an
 
   // Do the rest of the commands
   switch (command) {
+    case kStopCmd :
+      mWebShell->Stop();
+      UpdateToolbarBtns();
+      break;
+
     case kBackCmd :
       Back();
       UpdateToolbarBtns();
