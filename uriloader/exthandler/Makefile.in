@@ -72,7 +72,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  rdf \
 		  webshell \
-		  helperAppDlg \
 		  plugin \
 		  pref \
 		  intl \
@@ -126,6 +125,7 @@ XPIDLSRCS = \
 	nsCExternalHandlerService.idl	\
 	nsIExternalProtocolService.idl \
 	nsIExternalHelperAppService.idl	\
+	nsIHelperAppLauncherDialog.idl \
 	$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

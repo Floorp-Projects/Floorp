@@ -69,7 +69,7 @@ REQUIRES = \
 	windowwatcher \
 	layout \
 	history \
-	helperAppDlg \
+	exthandler \
 	content \
 	webbrowserpersist \
 	xpinstall \

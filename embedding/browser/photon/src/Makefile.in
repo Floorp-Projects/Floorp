@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  webbrowserpersist \
 		  find \
 		  exthandler \
-		  helperAppDlg \
 			profdirserviceprovider \
 		  $(NULL)
 

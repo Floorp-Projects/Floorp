@@ -44,7 +44,6 @@ REQUIRES    = xpcom \
 			  windowwatcher \
 			  appshell \
 			  exthandler \
-			  helperAppDlg \
 			  mozcomps \
 			  find \
 			  appcomps \

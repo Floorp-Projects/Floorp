@@ -72,7 +72,6 @@ REQUIRES = \
     necko \
     windowwatcher \
     webbrowserpersist \
-    helperAppDlg \
     exthandler \
     mimetype \
     composer \
