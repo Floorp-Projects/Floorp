@@ -700,7 +700,7 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   /* open output stream */
   nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   walletFile += "res";
-  walletFile += "wallet";
+//  walletFile += "wallet";
   walletFile += filename;
   nsOutputFileStream strm(walletFile);
   if (!strm.is_open()) {
@@ -749,7 +749,7 @@ wallet_ReadFromFile
   /* open input stream */
   nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   walletFile += "res";
-  walletFile += "wallet";
+//  walletFile += "wallet";
   walletFile += filename;
   nsInputFileStream strm(walletFile);
   if (!strm.is_open()) {
@@ -938,7 +938,7 @@ wallet_FetchFromNetCenter(char* from, char* to) {
         /* open output file */
         nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
         walletFile += "res";
-        walletFile += "wallet";
+//        walletFile += "wallet";
         walletFile += to;
         nsOutputFileStream strm(walletFile);
         if (!strm.is_open()) {
