@@ -211,7 +211,7 @@ function CompilerContext(inFunction) {
 
 var CCp = CompilerContext.prototype;
 CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = CCp.hookLevel = 0;
-CCp.inForLoopInit = false;
+CCp.ecmaStrictMode = CCp.inForLoopInit = false;
 
 function compile(s, f, l) {
     var t = new Tokenizer(s, f, l);
@@ -471,9 +471,10 @@ function Statement(t, x) {
             t.mustMatch(LEFT_PAREN);
             n2.varName = t.mustMatch(IDENTIFIER).value;
             if (t.match(IF)) {
-                // XXX throw an error if in strict ECMA mode
+                if (x.ecmaStrictMode)
+                    throw t.newSyntaxError("Illegal catch guard");
                 if (n.catchClauses.length && !n.catchClauses.top().guard)
-                    throw t.newSyntaxError("guarded catch after unguarded");
+                    throw t.newSyntaxError("Guarded catch after unguarded");
                 n2.guard = Expression(t, x);
             } else {
                 n2.guard = null;
@@ -865,7 +866,8 @@ loop:
                     tt = t.get();
                     if ((t.token.value == "get" || t.token.value == "set") &&
                         t.peek() == IDENTIFIER) {
-                        // XXX only if not in strict ECMA mode
+                        if (x.ecmaStrictMode)
+                            throw t.newSyntaxError("Illegal property accessor");
                         n.push(FunctionDeclaration(t, x, true, false));
                     } else {
                         switch (tt) {
@@ -875,7 +877,8 @@ loop:
                             id = new Node(t);
                             break;
                           case RIGHT_CURLY:
-                            // XXX throw an error if in strict ECMA mode
+                            if (x.ecmaStrictMode)
+                                throw t.newSyntaxError("Illegal trailing ,");
                             break object_init;
                           default:
                             throw t.newSyntaxError("Invalid property name");
