@@ -549,18 +549,17 @@ nsUrlbarHistory::GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn)
     if (!aPath || !aReturn)
         return NS_ERROR_FAILURE;
 
-    nsAutoString  path(aPath);
     PRInt32 slashIndex=-1;    
     nsresult rv;
     
-    char * pathCStr = path.ToNewCString();
     nsCOMPtr<nsIURL> pathURL=do_CreateInstance(kStandardURLCID, &rv);
     if (pathURL) {
-       pathURL->SetSpec(pathCStr);
+       pathURL->SetSpec(NS_ConvertUCS2toUTF8(aPath));
        char *  host=nsnull, *preHost = nsnull, * filePath = nsnull;
        pathURL->GetHost(&host);
        pathURL->GetFilePath(&filePath);
        pathURL->GetPreHost(&preHost);
+       nsAutoString path(aPath);
        if (preHost) 
            slashIndex  = path.Find(preHost, PR_TRUE);
        else if (host)
@@ -576,7 +575,6 @@ nsUrlbarHistory::GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn)
        //printf("$$$$ Scheme for uri = %s, preHost = %s, filepath = %s, Host = %s HostIndex = %d\n", pathScheme, preHost, filePath, pathHost, *aReturn);
     }
 
-    nsCRT::free(pathCStr);
     *aReturn = slashIndex;
 
     return NS_OK;
@@ -589,8 +587,6 @@ nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteR
         return PR_FALSE;
     
     nsresult rv;
-    nsAutoString searchURL(aItem);
-    char * searchCStr = searchURL.ToNewCString();
     *aResult = PR_FALSE;
 
     nsCOMPtr<nsISupportsArray> array;
@@ -608,29 +604,23 @@ nsUrlbarHistory::CheckItemAvailability(const PRUnichar * aItem, nsIAutoCompleteR
         nsCOMPtr <nsIAutoCompleteItem> resultItem;
         for (i = 0; i < nbrOfItems; i ++)
         {          
-            rv = array->QueryElementAt(i, nsIAutoCompleteItem::GetIID(), getter_AddRefs(resultItem));
+            rv = array->QueryElementAt(i, NS_GET_IID(nsIAutoCompleteItem),
+                                       getter_AddRefs(resultItem));
             if (NS_FAILED(rv))
                 return NS_ERROR_FAILURE;
 
-            PRUnichar *  itemValue=nsnull;
-            resultItem->GetValue(&itemValue);            
-            nsAutoString arrayAutoStr(itemValue);            
-            char *  arrayCString = arrayAutoStr.ToNewCString();            
+            nsXPIDLString itemValue;
+            resultItem->GetValue(getter_Copies(itemValue));
             // Using nsIURI to do comparisons didn't quite work out.
             // So use nsCRT methods
-            if (nsCRT::strcasecmp(arrayCString, searchCStr) == 0)
+            if (nsCRT::strcasecmp(itemValue, aItem) == 0)
             {
                 //printf("In CheckItemAvailability. Item already found\n");
                 *aResult = PR_TRUE;
-                Recycle(itemValue);
-                nsCRT::free(arrayCString);
                 break;
             }
-            Recycle(itemValue);
-            nsCRT::free(arrayCString);
         }  // for
     }
-    nsCRT::free(searchCStr);
     return NS_OK;
 }
 
@@ -640,44 +630,35 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
     if (!aSearchItem || !aMatchStr || !aResultArray)
         return NS_ERROR_FAILURE;
 
-    nsAutoString item(aSearchItem);
-    char * searchCStr = item.ToNewCString();
     PRInt32 searchStrLen = 0;
 
-    if (searchCStr)
-        searchStrLen = nsCRT::strlen(searchCStr);
+    if (aSearchItem)
+        searchStrLen = nsCRT::strlen(aSearchItem);
     nsresult rv;
     nsCOMPtr<nsIURL>  searchURL = do_CreateInstance(kStandardURLCID, &rv);
     if (searchURL) {
-        searchURL->SetSpec(searchCStr);
-        char * filePath = nsnull;
-        searchURL->GetFilePath(&filePath);
+        searchURL->SetSpec(NS_ConvertUCS2toUTF8(aSearchItem));
+        nsXPIDLCString filePath;
+        searchURL->GetFilePath(getter_Copies(filePath));
         // Don't bother checking for hostname if the search string
         // already has a filepath;
         if (filePath && (nsCRT::strlen(filePath) > 1)) {
-            nsCRT::free(filePath);
-            nsCRT::free(searchCStr);
             return NS_OK;
         }
-        nsCRT::free(filePath);
-        nsCRT::free(searchCStr);
     }
           
-    nsAutoString matchAutoStr(aMatchStr);            
-    char * matchCString = matchAutoStr.ToNewCString();
     nsCOMPtr<nsIURL> matchURL = do_CreateInstance(kStandardURLCID, &rv);
     if (matchURL) {
-        matchURL->SetSpec(matchCString);
-        char * filePath = nsnull;
-        matchURL->GetFilePath(&filePath);
+        matchURL->SetSpec(NS_ConvertUCS2toUTF8(aMatchStr));
+        nsXPIDLCString filePath;
+        matchURL->GetFilePath(getter_Copies(filePath));
         // If the match string doesn't have a filepath
         // we need to do nothing here,  return.
-        if (!filePath || (filePath && (nsCRT::strlen(filePath) <=1))) {
-            nsCRT::free(filePath);
-            nsCRT::free(matchCString);
+        if (!filePath || (filePath && (nsCRT::strlen(filePath) <=1)))
             return NS_OK;
-        }
+        
         // Find the position of the filepath in the result string
+        nsAutoString matchAutoStr(aMatchStr);
         PRInt32 slashIndex = matchAutoStr.Find("/", PR_FALSE, searchStrLen);
         // Extract the host name
         nsAutoString hostName;
@@ -700,9 +681,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
                 array->InsertElementAt(newItem, 0);
             }
         }       
-        nsCRT::free(filePath);
     }
-    nsCRT::free(matchCString);
     return NS_OK;
 }
 
