@@ -278,6 +278,7 @@ function getCalendarDataFilePath()
       if (!aLocalFile) return false;
       
       aLocalFile.initWithPath(FilePath);
+      aLocalFile.append( "Calendar" );
       aLocalFile.append( "tempIcal.ics" );
 
       FilePath = aLocalFile.path;
