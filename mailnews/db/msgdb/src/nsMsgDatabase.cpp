@@ -2319,7 +2319,7 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 {
 	PRUint32 result;
 	char *p = (char *) yarn->mYarn_Buf;
-	PRInt32 numChars = MIN(8, yarn->mYarn_Fill);
+	PRInt32 numChars = PR_MIN(8, yarn->mYarn_Fill);
 	PRInt32 i;
 	for (i=0, result = 0; i<numChars; i++, p++)
 	{
