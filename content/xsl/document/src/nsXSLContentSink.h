@@ -60,13 +60,6 @@ public:
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
 
   // nsIExpatSink
-  NS_IMETHOD HandleStartElement(const PRUnichar *aName,
-                                const PRUnichar **aAtts,
-                                PRUint32 aAttsCount,
-                                PRUint32 aIndex,
-                                PRUint32 aLineNumber);
-  NS_IMETHOD HandleProcessingInstruction(const PRUnichar *aTarget,
-                                         const PRUnichar *aData);
   NS_IMETHOD ReportError(const PRUnichar *aErrorText,
                          const PRUnichar *aSourceText);
 
