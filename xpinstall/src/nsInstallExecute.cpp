@@ -44,7 +44,7 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
-    if ((inInstall == nsnull) || (inJarLocation == "null"))
+    if ((inInstall == nsnull) || (inJarLocation.Equals("")) )
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -67,7 +67,7 @@ nsInstallExecute::~nsInstallExecute()
 
 PRInt32 nsInstallExecute::Prepare()
 {
-    if (mInstall == NULL || mJarLocation == "null") 
+    if (mInstall == NULL || mJarLocation.Equals("")) 
         return nsInstall::INVALID_ARGUMENTS;
 
     return mInstall->ExtractFileFromJar(mJarLocation, nsnull, &mExecutableFile);

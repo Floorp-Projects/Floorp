@@ -255,7 +255,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     nsInstallFile* ie = nsnull;
     PRInt32 result;
     
-    if ( aJarSource == "null" || aFolder == "null") 
+    if ( aJarSource.Equals("") || aFolder.Equals("") ) 
     {
         *aReturn = SaveError(nsInstall::INVALID_ARGUMENTS);
         return NS_OK;
@@ -271,7 +271,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     nsString qualifiedRegName;
     
-    if ( aRegName == "" || aRegName == "null") 
+    if ( aRegName.Equals("")) 
     {
         // Default subName = location in jar file
         *aReturn = GetQualifiedRegName( aJarSource, qualifiedRegName);
@@ -440,7 +440,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     
     PRInt32         errcode = nsInstall::SUCCESS;
 
-    if((aTargetName == "") || (aTargetName == "null"))
+    if( aTargetName.Equals("") )
     {
       tempTargetName = aJarSource;
     }
@@ -449,7 +449,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
       tempTargetName = aTargetName;
     }
     
-    if(aJarSource == "null" || aFolder == "null") 
+    if(aJarSource.Equals("") || aFolder.Equals("") ) 
     {
         *aReturn = SaveError( nsInstall::INVALID_ARGUMENTS );
         return NS_OK;
@@ -476,7 +476,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
         }	
     }
 
-    if ( aRegName == "" || aRegName == "null") 
+    if ( aRegName.Equals("") ) 
     {
         // Default subName = location in jar file
         *aReturn = GetQualifiedRegName( aJarSource, qualifiedRegName);
@@ -557,7 +557,7 @@ PRInt32
 nsInstall::AddSubcomponent(const nsString& aJarSource,
                            PRInt32* aReturn)
 {
-    if(mPackageFolder == "null")
+    if(mPackageFolder.Equals(""))
     {
         *aReturn = SaveError( nsInstall::PACKAGE_FOLDER_NOT_SET );
         return NS_OK;
@@ -1221,7 +1221,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
         
     mUserCancelled = PR_FALSE; 
     
-    if ( aRegistryPackageName.Equals("") || aRegistryPackageName.EqualsIgnoreCase("null"))  
+    if ( aRegistryPackageName.Equals("") )  
     {
         *aReturn = nsInstall::INVALID_ARGUMENTS;
         return NS_OK;
@@ -1242,7 +1242,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     }
     else
     {
-      mPackageFolder = "null";
+      mPackageFolder.SetString("");
     }
 
     if(szRegPackageName)

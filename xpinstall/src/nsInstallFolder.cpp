@@ -397,7 +397,7 @@ nsInstallFolder::MapNameToEnum(const nsString& name)
 {
 	int i = 0;
 
-	if ( name == "null")
+	if ( name.Equals(""))
         return -1;
 
 	while ( DirectoryTable[i].directoryName[0] != 0 )
