@@ -64,13 +64,6 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
 
-#ifdef XP_UNIX
-extern "C" char *fe_GetConfigDir(void) {
-  printf("XXX: return /tmp for fe_GetConfigDir\n");
-  return strdup("/tmp");
-}
-#endif /* XP_UNIX */
-
 
 /* XXX: Don't include net.h... */
 extern "C" {
