@@ -11,6 +11,13 @@
 			<key>Name</key>
 			<string>Get URL</string>
 		</dict>
+		<key>OpenURL</key>
+		<dict>
+			<key>Description</key>
+			<string>Load a URL in the frontmost window</string>
+			<key>Name</key>
+			<string>open url</string>
+		</dict>
 	</dict>
 	<key>Description</key>
 	<string>Navigator's scripting suite</string>
