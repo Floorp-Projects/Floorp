@@ -421,7 +421,7 @@ main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
-      pMsgSend->SendWebPage(ident, pMsgCompFields, url, nsMsgDeliverNow, tArray);
+      pMsgSend->SendWebPage(ident, pMsgCompFields, url, nsIMsgSend::nsMsgDeliverNow, tArray, 2);
     }    
   }
 

@@ -432,7 +432,7 @@ int main(int argc, char *argv[])
                                       pMsgCompFields, 
                                       PR_FALSE,         // PRBool                            digest_p,
                                       PR_FALSE,         // PRBool                            dont_deliver_p,
-                                      nsMsgDeliverNow,  // nsMsgDeliverMode                  mode,
+                                      nsIMsgSend::nsMsgDeliverNow,  // nsMsgDeliverMode                  mode,
                                       nsnull,           // nsIMessage *msgToReplace
                                       TEXT_HTML,        // const char                        *attachment1_type,
                                       pBody,            // const char                        *attachment1_body,
@@ -440,7 +440,7 @@ int main(int argc, char *argv[])
                                       remotePtr,        // const struct nsMsgAttachmentData   *attachments,
                                       localPtr,         // const struct nsMsgAttachedFile     *preloaded_attachments,
                                       NULL,             // nsMsgSendPart                     *relatedPart,
-                                      nsnull);          // listener array
+                                      nsnull, 0);          // listener array
       
       PR_FREEIF(localPtr);
       PR_FREEIF(remotePtr);

@@ -440,9 +440,9 @@ int main(int argc, char *argv[])
                           mailIFile,             // nsFileSpec                        *sendFileSpec,
                           PR_TRUE,              // PRBool                            deleteSendFileOnCompletion,
 						              PR_FALSE,             // PRBool                            digest_p,
-						              nsMsgDeliverNow,      // nsMsgDeliverMode                  mode,
+						              nsIMsgSend::nsMsgDeliverNow,      // nsMsgDeliverMode                  mode,
                   			  nsnull, // nsIMessage *msgToReplace
-                          tArray);              // nsIMsgSendListener array
+                          tArray, 2);              // nsIMsgSendListener array
     }    
   }
 
