@@ -97,7 +97,6 @@ nsTreeBoxObject::InvalidatePresentationStuff()
   
 nsTreeBoxObject::nsTreeBoxObject()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTreeBoxObject::~nsTreeBoxObject()

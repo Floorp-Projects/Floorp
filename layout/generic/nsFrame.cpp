@@ -254,7 +254,6 @@ NS_IMPL_ISUPPORTS1(SelectionImageService, nsISelectionImageService)
 
 SelectionImageService::SelectionImageService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 SelectionImageService::~SelectionImageService()

@@ -85,7 +85,6 @@ PRBool nsMenuBarListener::mAccessKeyFocuses = PR_FALSE;
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
   :mAccessKeyDown(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mMenuBarFrame = aMenuBar;
 }
 

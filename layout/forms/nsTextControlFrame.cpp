@@ -221,7 +221,6 @@ nsTextInputListener::nsTextInputListener()
 , mHadUndoItems(PR_FALSE)
 , mHadRedoItems(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTextInputListener::~nsTextInputListener() 
@@ -509,7 +508,6 @@ NS_IMPL_ISUPPORTS3(nsTextInputSelectionImpl, nsISelectionController, nsISupports
 
 nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter)
 {
-  NS_INIT_ISUPPORTS();
   if (aSel && aShell)
   {
     mFrameSelection = aSel;//we are the owner now!

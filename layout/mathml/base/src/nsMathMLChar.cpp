@@ -676,7 +676,6 @@ public:
   nsGlyphTableList()
   {
     MOZ_COUNT_CTOR(nsGlyphTableList);
-    NS_INIT_ISUPPORTS();
     mDefaultCount = 0;
   }
 

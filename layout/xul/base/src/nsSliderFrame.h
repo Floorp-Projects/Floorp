@@ -64,7 +64,7 @@ public:
 
   nsSliderFrame* mSlider;
 
-  nsSliderMediator(nsSliderFrame* aSlider) {  mSlider = aSlider; NS_INIT_ISUPPORTS(); }
+  nsSliderMediator(nsSliderFrame* aSlider) {  mSlider = aSlider; }
   virtual ~nsSliderMediator() {}
 
   virtual void SetSlider(nsSliderFrame* aSlider) { mSlider = aSlider; }

@@ -905,7 +905,6 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollb
                                                mHasVerticalScrollbar(PR_FALSE), 
                                                mHasHorizontalScrollbar(PR_FALSE)
 {
-   NS_INIT_ISUPPORTS();
    mOuter = aOuter;
    mMaxElementSize.width = 0;
    mMaxElementSize.height = 0;

@@ -1841,7 +1841,6 @@ NS_IMPL_ISUPPORTS2(nsBulletListener, imgIDecoderObserver, imgIContainerObserver)
 nsBulletListener::nsBulletListener() :
   mFrame(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBulletListener::~nsBulletListener()

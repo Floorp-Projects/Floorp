@@ -83,7 +83,6 @@ NS_IMPL_RELEASE(nsBoxObject)
 nsBoxObject::nsBoxObject(void)
   :mContent(nsnull), mPresShell(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsBoxObject::~nsBoxObject(void)

@@ -1347,8 +1347,6 @@ nsHTMLFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
  *****************************************************************************/
 FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
 {
-  NS_INIT_ISUPPORTS();
-
   mFrameSize = aSize;
 }
 

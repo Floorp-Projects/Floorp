@@ -159,8 +159,6 @@ nsTreeContentView::nsTreeContentView(void) :
   mBoxObject(nsnull), mSelection(nsnull), mRoot(nsnull), mDocument(nsnull),
   mUpdateSelection(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
-
   static const size_t kBucketSizes[] = {
     sizeof(Row)
   };

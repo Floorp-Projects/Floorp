@@ -3776,7 +3776,6 @@ NS_IMPL_ISUPPORTS3(nsTreeImageListener, imgIDecoderObserver, imgIContainerObserv
 
 nsTreeImageListener::nsTreeImageListener(nsITreeBoxObject* aTree, const PRUnichar* aColID)
 {
-  NS_INIT_ISUPPORTS();
   mTree = aTree;
   mColID = aColID;
   mMin = -1; // min should start out "undefined"
