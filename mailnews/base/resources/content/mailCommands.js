@@ -131,7 +131,7 @@ function ComposeMessage(type, format, folder, messageArray)
       if (!folder.isServer && server.type == "nntp" && type == msgComposeType.New)
 			{
         type = msgComposeType.NewsPost;
-        newsgroup = server.hostName + "/" + folder.name; 
+        newsgroup = folder.folderURL;
 			}
       identity = getIdentityForServer(server);
       // dump("identity = " + identity + "\n");
