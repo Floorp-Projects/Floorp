@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.12 $ $Date: 2001/12/14 17:32:20 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.13 $ $Date: 2002/01/03 20:09:24 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -281,13 +281,22 @@ nssBestCertificate_Callback
   void *arg
 );
 
+NSS_EXTERN PRStatus
+nssPKIObject_Initialize
+(
+  struct nssPKIObjectBaseStr *object,
+  NSSArena *arena,
+  NSSTrustDomain *td,
+  NSSCryptoContext *cc
+);
+
 NSS_EXTERN void
 nssPKIObject_AddRef
 (
   struct nssPKIObjectBaseStr *object
 );
 
-NSS_EXTERN void
+NSS_EXTERN PRBool
 nssPKIObject_Destroy
 (
   struct nssPKIObjectBaseStr *object

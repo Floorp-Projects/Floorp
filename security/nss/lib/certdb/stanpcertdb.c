@@ -164,6 +164,7 @@ CERTCertificate *
 __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 			  char *nickname, PRBool isperm, PRBool copyDER)
 {
+    PRStatus nssrv;
     NSSCertificate *c;
     NSSCryptoContext *context;
     NSSArena *arena;
@@ -174,13 +175,14 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     }
     c = nss_ZNEW(arena, NSSCertificate);
     if (!c) {
-	goto loser;
+	nssArena_Destroy(arena);
+	return NULL;
     }
     NSSITEM_FROM_SECITEM(&c->encoding, derCert);
-    c->object.arena = arena;
-    c->object.refCount = 1;
-    c->object.instanceList = nssList_Create(arena, PR_TRUE);
-    c->object.instances = nssList_CreateIterator(c->object.instanceList);
+    nssrv = nssPKIObject_Initialize(&c->object, arena, NULL, NULL);
+    if (nssrv != PR_SUCCESS) {
+	goto loser;
+    }
     /* Forces a decoding of the cert in order to obtain the parts used
      * below
      */
@@ -204,11 +206,14 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	                          PORT_Strlen(cc->emailAddr));
     }
     context = STAN_GetDefaultCryptoContext();
-    NSSCryptoContext_ImportCertificate(context, c);
+    nssrv = NSSCryptoContext_ImportCertificate(context, c);
+    if (nssrv != PR_SUCCESS) {
+	goto loser;
+    }
     c->object.trustDomain = STAN_GetDefaultTrustDomain();
     return cc;
 loser:
-    nssArena_Destroy(arena);
+    nssPKIObject_Destroy(&c->object);
     return NULL;
 }
 
@@ -404,28 +409,50 @@ CERT_DestroyCertificate(CERTCertificate *cert)
     int refCount;
     CERTCertDBHandle *handle;
     if ( cert ) {
+	NSSCertificate *tmp = STAN_GetNSSCertificate(cert);
 	handle = cert->dbhandle;
+#ifdef NSS_CLASSIC
         CERT_LockCertRefCount(cert);
 	PORT_Assert(cert->referenceCount > 0);
 	refCount = --cert->referenceCount;
         CERT_UnlockCertRefCount(cert);
-	if ( ( refCount == 0 ) && !cert->keepSession ) {
-	    PRArenaPool *arena  = cert->arena;
+#else
+	if (tmp) {
 	    /* delete the NSSCertificate */
 	    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
-	    NSSCertificate *tmp = STAN_GetNSSCertificate(cert);
+	    refCount = (int)tmp->object.refCount;
 	    if (tmp) {
-		NSSCryptoContext *cc = tmp->object.cryptoContext;
-		nssTrustDomain_RemoveCertFromCache(td, tmp);
-		/* In 4.0, in context references of this cert would go
-		 * away with the context.  but here the context persists,
-		 * so explicity remove the cert.
+		/* This is a hack.  For 3.4, there are persistent references
+		 * to 4.0 certificates during the lifetime of a cert.  In the
+		 * case of a temp cert, the persistent reference is in the
+		 * cert store of the global crypto context.  For a perm cert,
+		 * the persistent reference is in the cache.  Thus, the last
+		 * external reference is really the penultimate NSS reference.
+		 * When the count drops to two, it is really one, but the
+		 * persistent reference must be explicitly deleted.  In 4.0,
+		 * this ugliness will not appear.  Crypto contexts will remove
+		 * their own cert references, and the cache will have its
+		 * own management code also.
 		 */
-		if (cc != NULL) {
-		    nssCertificateStore_Remove(cc->certStore, tmp);
+		if (refCount == 2) {
+		    NSSCryptoContext *cc = tmp->object.cryptoContext;
+		    if (cc != NULL) {
+			nssCertificateStore_Remove(cc->certStore, tmp);
+		    } else {
+			nssTrustDomain_RemoveCertFromCache(td, tmp);
+		    }
+		    refCount = (int)tmp->object.refCount;
 		}
 		NSSCertificate_Destroy(tmp);
+		/* another hack...  the destroy *must* decrement the count */
+		--refCount;
 	    }
+	} else {
+	    refCount = 0;
+	}
+#endif
+	if ( ( refCount == 0 ) && !cert->keepSession ) {
+	    PRArenaPool *arena  = cert->arena;
 	    /* zero cert before freeing. Any stale references to this cert
 	     * after this point will probably cause an exception.  */
 	    PORT_Memset(cert, 0, sizeof *cert);

@@ -32,16 +32,20 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.2 $ $Date: 2001/12/19 20:27:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.3 $ $Date: 2002/01/03 20:09:24 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
 #include "pkim.h"
 #endif /* PKIM_H */
 
-#ifndef PKIT_H
-#include "pkit.h"
-#endif /* PKIT_H */
+#ifndef PKI_H
+#include "pki.h"
+#endif /* PKI_H */
+
+#ifndef NSSPKI_H
+#include "nsspki.h"
+#endif /* NSSPKI_H */
 
 #ifndef BASE_H
 #include "base.h"
@@ -58,9 +62,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.2 $ $Da
  * stay in until they are explicitly removed.  It is only used by crypto
  * contexts at this time, but may be more generally useful...
  *
- * TODO:
- * 1)  In the future (4.0), the cert entries are ref-counted.  In 3.4, they
- *     are managed by the CERTCertificate pointer.
  */
 
 struct nssCertificateStoreStr 
@@ -244,7 +245,9 @@ nssCertificateStore_Add
     nssrv = add_certificate_entry(store, cert);
     if (nssrv == PR_SUCCESS) {
 	nssrv = add_subject_entry(store, cert);
-	if (nssrv != PR_SUCCESS) {
+	if (nssrv == PR_SUCCESS) {
+	    nssCertificate_AddRef(cert); /* obtain a reference for the store */
+	} else {
 	    remove_certificate_entry(store, cert);
 	}
     }
@@ -290,7 +293,6 @@ remove_subject_entry
 	if (nssList_Count(subjectList) == 0) {
 	    nssHash_Remove(store->subject, &cert->subject);
 	    nssList_Destroy(subjectList);
-	    /* XXX need to deref objects here in 4.0 */
 	}
     }
 }
@@ -306,6 +308,7 @@ nssCertificateStore_Remove
     remove_certificate_entry(store, cert);
     remove_subject_entry(store, cert);
     PZ_Unlock(store->lock);
+    NSSCertificate_Destroy(cert); /* release the store's reference */
 }
 
 NSS_IMPLEMENT NSSCertificate **
@@ -318,7 +321,7 @@ nssCertificateStore_FindCertificatesBySubject
   NSSArena *arenaOpt
 )
 {
-    PRUint32 count;
+    PRUint32 i, count;
     NSSCertificate **rvArray = NULL;
     nssList *subjectList;
     PZ_Lock(store->lock);
@@ -331,12 +334,14 @@ nssCertificateStore_FindCertificatesBySubject
 	}
 	if (rvOpt) {
 	    nssList_GetArray(subjectList, (void **)rvOpt, count);
+	    for (i=0; i<count; i++) nssCertificate_AddRef(rvOpt[i]);
 	} else {
 	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
 	    if (!rvArray) {
 		return (NSSCertificate **)NULL;
 	    }
 	    nssList_GetArray(subjectList, (void **)rvArray, count);
+	    for (i=0; i<count; i++) nssCertificate_AddRef(rvArray[i]);
 	}
     }
     return rvArray;
@@ -386,7 +391,7 @@ nssCertificateStore_FindCertificatesByNickname
   NSSArena *arenaOpt
 )
 {
-    PRUint32 count;
+    PRUint32 i, count;
     NSSCertificate **rvArray = NULL;
     struct nickname_template_str nt;
     nt.nickname = nickname;
@@ -401,12 +406,14 @@ nssCertificateStore_FindCertificatesByNickname
 	}
 	if (rvOpt) {
 	    nssList_GetArray(nt.subjectList, (void **)rvOpt, count);
+	    for (i=0; i<count; i++) nssCertificate_AddRef(rvOpt[i]);
 	} else {
 	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
 	    if (!rvArray) {
 		return (NSSCertificate **)NULL;
 	    }
 	    nssList_GetArray(nt.subjectList, (void **)rvArray, count);
+	    for (i=0; i<count; i++) nssCertificate_AddRef(rvArray[i]);
 	}
     }
     return rvArray;
@@ -455,7 +462,7 @@ nssCertificateStore_FindCertificatesByEmail
   NSSArena *arenaOpt
 )
 {
-    PRUint32 count;
+    PRUint32 i, count;
     NSSCertificate **rvArray = NULL;
     struct email_template_str et;
     et.email = email;
@@ -473,12 +480,14 @@ nssCertificateStore_FindCertificatesByEmail
 	}
 	if (rvOpt) {
 	    nssList_GetArray(et.emailList, (void **)rvOpt, count);
+	    for (i=0; i<count; i++) nssCertificate_AddRef(rvOpt[i]);
 	} else {
 	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
 	    if (!rvArray) {
 		return (NSSCertificate **)NULL;
 	    }
 	    nssList_GetArray(et.emailList, (void **)rvArray, count);
+	    for (i=0; i<count; i++) nssCertificate_AddRef(rvArray[i]);
 	}
     }
     return rvArray;
@@ -501,7 +510,7 @@ nssCertificateStore_FindCertificateByIssuerAndSerialNumber
                            nssHash_Lookup(store->issuer_and_serial, &index);
     PZ_Unlock(store->lock);
     if (entry) {
-	return entry->cert;
+	return nssCertificate_AddRef(entry->cert);
     }
     return NULL;
 }
@@ -548,7 +557,7 @@ nssCertificateStore_FindCertificateByEncodedCertificate
     PZ_Lock(store->lock);
     nssHash_Iterate(store->subject, match_encoding, &der);
     PZ_Unlock(store->lock);
-    return der.cert;
+    return nssCertificate_AddRef(der.cert);
 }
 
 NSS_EXTERN PRStatus

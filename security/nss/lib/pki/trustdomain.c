@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.22 $ $Date: 2001/12/14 20:50:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.23 $ $Date: 2002/01/03 20:09:25 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -355,6 +355,12 @@ NSSTrustDomain_ImportEncodedPublicKey
     return NULL;
 }
 
+static void cert_destructor(void *el)
+{
+    NSSCertificate *c = (NSSCertificate *)el;
+    NSSCertificate_Destroy(c);
+}
+
 struct collect_arg_str {
     nssList *list;
     PRUint32 maximum;
@@ -411,6 +417,7 @@ NSSTrustDomain_FindBestCertificateByNickname
 	                                                name, &search);
     }
     nssListIterator_Finish(td->tokens);
+    nssList_Clear(nameList, cert_destructor);
     nssList_Destroy(nameList);
     if (best.cert) {
 	nssTrustDomain_AddCertsToCache(td, &best.cert, 1);
@@ -466,6 +473,7 @@ NSSTrustDomain_FindCertificatesByNickname
 	}
 	nssTrustDomain_AddCertsToCache(td, rvCerts, count);
     }
+    nssList_Clear(nameList, cert_destructor);
     nssList_Destroy(nameList);
     return rvCerts;
 }
@@ -541,6 +549,7 @@ NSSTrustDomain_FindBestCertificateBySubject
 	                                               subject, &search);
     }
     nssListIterator_Finish(td->tokens);
+    nssList_Clear(subjectList, cert_destructor);
     nssList_Destroy(subjectList);
     if (best.cert) {
 	nssTrustDomain_AddCertsToCache(td, &best.cert, 1);
@@ -596,6 +605,7 @@ NSSTrustDomain_FindCertificatesBySubject
 	}
 	nssTrustDomain_AddCertsToCache(td, rvCerts, count);
     }
+    nssList_Clear(subjectList, cert_destructor);
     nssList_Destroy(subjectList);
     return rvCerts;
 }
@@ -694,6 +704,7 @@ NSSTrustDomain_FindCertificateByEmail
 	                                             email, &search);
     }
     nssListIterator_Finish(td->tokens);
+    nssList_Clear(emailList, cert_destructor);
     nssList_Destroy(emailList);
     if (best.cert) {
 	nssTrustDomain_AddCertsToCache(td, &best.cert, 1);
@@ -848,6 +859,7 @@ NSSTrustDomain_TraverseCertificates
 	nssrv = nssToken_TraverseCertificates(token, NULL, &search);
     }
     nssListIterator_Finish(td->tokens);
+    nssList_Clear(certList, cert_destructor);
     nssList_Destroy(certList);
     return NULL;
 }
