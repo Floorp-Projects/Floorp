@@ -3899,7 +3899,7 @@ function asyncOpenWebPanel(event)
        else if (target == "_search") {
          // Used in WinIE as a way of transiently loading pages in a sidebar.  We
          // mimic that WinIE functionality here and also load the page transiently.
-         openWebPanel("Search Companion", linkNode.href);
+         openWebPanel(gNavigatorBundle.getString("webPanels"), linkNode.href);
          event.preventDefault();
          return false;
        }
