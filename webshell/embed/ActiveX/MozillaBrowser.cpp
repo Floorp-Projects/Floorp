@@ -25,7 +25,7 @@
 #include <string.h>
 #include <string>
 #include <objidl.h>
-#include <comdef.h>
+//#include <comdef.h>
 
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
@@ -63,11 +63,13 @@ static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVers
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
-const GUID CGID_IWebBrowser =
+// Some recent SDKs define these IOleCommandTarget groups, so they're
+// postfixed with _Moz to prevent linker errors.
+
+GUID CGID_IWebBrowser_Moz =
 	{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
 
-// TODO
-const GUID CGID_MSHTML =
+GUID CGID_MSHTML_Moz =
 	{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -354,9 +356,10 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 
 
 	//Get the title of the current web page to set as the default filename.
+	USES_CONVERSION;
 	char szTmp[256];
 	get_LocationName(&pageName);
-	strcpy(szTmp, _bstr_t(pageName));
+	strcpy(szTmp, OLE2A(pageName));
 	
 	int j = 0;									//The SaveAs dialog will fail if szFile contains any "bad" characters.
 	for (int i=0; szTmp[i]!='\0'; i++) {		//This hunk of code attempts to mimick the IE way of replacing "bad"
@@ -697,7 +700,6 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	rv = m_pIWebShell->Init(m_hWnd, 
 					r.x, r.y,
 					r.width, r.height,
-					nsScrollPreference_kAuto,
 					aAllowPlugins,
 					aIsSunkenBorder);
 	
@@ -707,7 +709,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	m_pWebShellContainer = new CWebShellContainer(this);
 	m_pWebShellContainer->AddRef();
 
-	m_pIWebShell->SetPrefs(m_pIPref);
+//	m_pIWebShell->SetPrefs(m_pIPref);
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 ///	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
 	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
