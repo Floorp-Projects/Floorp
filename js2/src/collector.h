@@ -49,14 +49,9 @@ namespace JavaScript
         kObjectAlignment = (1 << kLogObjectAlignment),
         kObjectAddressMask = (-1 << kLogObjectAlignment),
 
-        kFloat64Tag = 0x2,
-        kFloat64TagMask = ~(-1 << 2),
-        kFloat64AddressMask = (-1 << 2),
-
         kIsForwardingPointer = 0x1,
 
-        kObjectSpaceSize = 1024 * 1024,
-        kFloatSpaceSize = kObjectSpaceSize / sizeof(float64)
+        kObjectSpaceSize = 1024 * 1024
     };
     
     // collector entry points.
@@ -67,25 +62,6 @@ namespace JavaScript
         typedef char *pointer;
         typedef const char *const_pointer;
 
-        /**
-         * Abstract class used by clients of the collector to scan objects.
-         */
-        class ObjectScanner {
-        public:
-            /**
-             * For each object associated with this scanner, the collector
-             * will call the scan method until it returns NULL. The return
-             * value should be a pointer to a slot in the object that
-             * contains a valid pointer or NULL.
-             */
-            virtual pointer* scan(size_type& offset) = 0;
-        };
-        
-        struct ObjectHeader {
-            size_type mSize;
-            pointer mType;
-        };
-        
         Collector();
         ~Collector();
 
@@ -96,25 +72,39 @@ namespace JavaScript
         void addRoot(pointer* root, size_type count = 1);
         void removeRoot(pointer* root);
 
-        pointer allocateObject(size_type n, pointer type = 0);
-        float64* allocateFloat64(float64 value = 0.0);
+        class ObjectOwner;
+
+        /**
+         * Allocates an object, which will be managed by the specified ObjectOwner.
+         */
+        pointer allocateObject(size_type n, ObjectOwner* owner);
         
+        /**
+         * Runs a garbage collection cycle.
+         */
         void collect();
         
-        pointer getType(pointer object)
-        {
-            return ((ObjectHeader*)object)[-1].mType;
-        }
+        /**
+         * Abstract class used by clients of the collector to manage objects.
+         */
+        class ObjectOwner {
+        public:
+            /**
+             * Scans the owned object, calling Collector::copy() on each
+             * of the object's references.
+             */
+            virtual size_type scan(Collector* collector, void* object) = 0;
+
+            /**
+             * Performs a bitwise copy of oldObject into newObject.
+             * This is only called when Collector::copy() is passed
+             * 0 as its size parameter.
+             */
+            virtual size_type copy(void* newObject, void* oldObject) = 0;
+        };
         
-        size_type getSize(pointer object)
-        {
-            return ((ObjectHeader*)object)[-1].mSize;
-        }
-        
-        float64 getFloat64(float64* fptr)
-        {
-            return *(float64*)(uint32(fptr) & kFloat64AddressMask);
-        }
+ /* private: */
+        void* copy(void* object, size_type size = 0);
         
     private:
         template <typename T> struct Space {
@@ -127,7 +117,8 @@ namespace JavaScript
             pointer_type mLimitPtr;
             
             Space(size_type n)
-                :   mSize(n), mFromPtr(0), mToPtr(0),
+                :   mSize(n),
+                    mFromPtr(0), mToPtr(0),
                     mAllocPtr(0), mLimitPtr(0)
             {
                 mFromPtr = new value_type[n];
@@ -145,25 +136,34 @@ namespace JavaScript
             pointer_type Swap()
             {
                 pointer_type newToPtr = mFromPtr;
-                pointer_type newFromPtr = mToPtr;
+                mFromPtr = mToPtr;
                 mToPtr = newToPtr;
                 mAllocPtr = newToPtr;
                 mLimitPtr = newToPtr + mSize;
-                mFromPtr = newFromPtr;
-                pointer_type scanPtr = newToPtr;
-                return scanPtr;
+                return newToPtr;
+            }
+            
+            bool Grow()
+            {
+                mSize *= 2;
+                delete[] mFromPtr;
+                mFromPtr = new value_type[mSize];
+                collect();
+                delete[] mFromPtr;
+                mFromPtr = new value_type[mSize];
+            }
+            
+            bool Contains(pointer ptr)
+            {
+                return (ptr >= mToPtr && ptr < mLimitPtr);
             }
         };
         Space<char> mObjectSpace;
-        Space<float64> mFloatSpace;
 
         typedef pair<pointer*, size_type> RootSegment;
         typedef deque<RootSegment> RootSegments;
         RootSegments mRoots;
 
-        pointer copy(pointer object);
-        pointer copyFloat64(pointer object);
-        
         Collector(const Collector&);        // No copy constructor
         void operator=(const Collector&);   // No assignment operator
     };

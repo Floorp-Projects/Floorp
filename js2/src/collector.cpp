@@ -37,8 +37,7 @@ namespace JavaScript
 {
 
 Collector::Collector()
-    :   mObjectSpace(kObjectSpaceSize),
-        mFloatSpace(kFloatSpaceSize)
+    :   mObjectSpace(kObjectSpaceSize)
 {
 }
 
@@ -68,43 +67,31 @@ inline Collector::size_type align(Collector::size_type n)
     return (n + (kObjectAlignment - 1)) & kObjectAddressMask;
 }
 
+/**
+ * Simple object header union. Contains a
+ * float64 element to ensure proper object
+ * alignment. On some architectures, the
+ * proper alignment may be wider.
+ */
+union ObjectHeader {
+    Collector::ObjectOwner* mOwner;
+    Collector::pointer mForwardingPointer;
+    float64 mAlignment;
+};
+
 Collector::pointer
-Collector::allocateObject(size_type n, pointer type)
+Collector::allocateObject(size_type n, ObjectOwner* owner)
 {
     size_type size = align(n + sizeof(ObjectHeader));
     pointer ptr = mObjectSpace.mAllocPtr;
     if ((ptr + size) <= mObjectSpace.mLimitPtr) {
         mObjectSpace.mAllocPtr += size;
         ObjectHeader* header = (ObjectHeader*) ptr;
-        header->mSize = size;
-        header->mType = type;
-        return (pointer) std::memset(ptr + sizeof(ObjectHeader), 0, n);
+        header->mOwner = owner;
+        return (pointer) std::memset(header + 1, 0, n);
     }
     // need to run a garbage collection to recover more space, or double space size?
     return 0;
-}
-
-float64*
-Collector::allocateFloat64(float64 value)
-{
-    float64* fptr = mFloatSpace.mAllocPtr;
-    if (fptr < mFloatSpace.mLimitPtr) {
-        mFloatSpace.mAllocPtr++;
-        *fptr = value;
-        return (float64*) (uint32(fptr) | kFloat64Tag);
-    }
-    // need to run a garbage collection to recover more space, or double space size?
-    return 0;
-}
-
-inline bool is_object(Collector::pointer ref)
-{
-    return ((uint32(ref) & kObjectAddressMask) == uint32(ref));
-}
-
-inline bool is_float64(Collector::pointer ref)
-{
-    return ((uint32(ref) & kFloat64TagMask) == kFloat64Tag);
 }
 
 void
@@ -112,7 +99,6 @@ Collector::collect()
 {
     // 0. swap from/to space. we now start allocating in the new toSpace.
     Space<char>::pointer_type scanPtr = mObjectSpace.Swap();
-    mFloatSpace.Swap();
 
     // 1. scan all registered root segments.
     for (RootSegments::iterator i = mRoots.begin(), e = mRoots.end(); i != e; ++i) {
@@ -123,11 +109,7 @@ Collector::collect()
         while (refs < limit) {
             pointer& ref = *refs++;
             if (ref) {
-                if (is_object(ref))
-                    ref = copy(ref);
-                else
-                if (is_float64(ref))
-                    ref = copyFloat64(ref);
+                ref = (pointer) copy(ref);
             }
         }
     }
@@ -135,63 +117,80 @@ Collector::collect()
     // 2. Scan through toSpace until scanPtr meets mAllocPtr.
     while (scanPtr < mObjectSpace.mAllocPtr) {
         ObjectHeader* header = (ObjectHeader*) scanPtr;
-        if (header->mType)
-            header->mType = copy(header->mType);
-        scanPtr += header->mSize;
-        pointer* refs = (pointer*) (header + 1);
-        pointer* limit = (pointer*) scanPtr;
-        while (refs < limit) {
-            pointer& ref = *refs++;
-            if (ref) {
-                if (is_object(ref))
-                    ref = copy(ref);
-                else
-                if (is_float64(ref))
-                    ref = copyFloat64(ref);
-            }
-        }
+        size_type size = header->mOwner->scan(this, (header + 1));
+        scanPtr += align(size + sizeof(ObjectHeader));
     }
 }
 
-Collector::pointer
-Collector::copy(pointer object)
+inline bool isForwardingPointer(void* ptr)
+{
+    return (uint32(ptr) & kIsForwardingPointer);
+}
+
+void* Collector::copy(void* object, Collector::size_type size)
 {
     // forwarding pointer?
     ObjectHeader* oldHeader = ((ObjectHeader*)object) - 1;
-    if (oldHeader->mSize == kIsForwardingPointer)
-        return oldHeader->mType;
+    if (isForwardingPointer(oldHeader->mForwardingPointer))
+        return (oldHeader->mForwardingPointer - kIsForwardingPointer);
 
     // copy the old object into toSpace. copy will always succeed,
     // because we only call it from within collect. the problem
     // is when we don't recover any space... will have to be able
     // to expand the heaps.
-    size_type n = oldHeader->mSize;
+    ObjectOwner* owner = oldHeader->mOwner;
     ObjectHeader* newHeader = (ObjectHeader*) mObjectSpace.mAllocPtr;
-    mObjectSpace.mAllocPtr += n;
-    std::memcpy(newHeader, oldHeader, n);
-    oldHeader->mSize = kIsForwardingPointer;
-    oldHeader->mType = (pointer) (newHeader + 1);
-    
-    return (pointer) (newHeader + 1);
-}
-
-Collector::pointer
-Collector::copyFloat64(pointer object)
-{
-    float64* fptr = mFloatSpace.mAllocPtr++;
-    *fptr = *(float64*) (uint32(object) & kFloat64AddressMask);
-    return (pointer) (uint32(fptr) | kFloat64Tag);
+    newHeader->mOwner = owner;
+    void* newObject = (newHeader + 1);
+    if (size) {
+        std::memcpy(newObject, object, size);
+    } else {
+        size = owner->copy(newObject, object);
+    }
+    mObjectSpace.mAllocPtr += align(size + sizeof(ObjectHeader));
+    oldHeader->mForwardingPointer = pointer(newObject) + kIsForwardingPointer;
+    return newObject;
 }
 
 #if DEBUG
 
 struct ConsCell {
-    float64* car;
+    float64 car;
     ConsCell* cdr;
 
+private:
+    typedef Collector::size_type size_type;
+
+    class Owner : public Collector::ObjectOwner {
+    public:
+        /**
+         * Scans through the object, and copies all references.
+         */
+        virtual size_type scan(Collector* collector, void* object)
+        {
+            ConsCell* cell = (ConsCell*) object;
+            cell->cdr = (ConsCell*) collector->copy(cell->cdr, sizeof(ConsCell));
+            return sizeof(ConsCell);
+        }
+        
+        /**
+         * Performs a bitwise copy of the old object into the new object.
+         */
+        virtual size_type copy(void* newObject, void* oldObject)
+        {
+            ConsCell* newCell = (ConsCell*) newObject;
+            ConsCell* oldCell = (ConsCell*) oldObject;
+            newCell->car = oldCell->car;
+            newCell->cdr = oldCell->cdr;
+            return sizeof(ConsCell);
+        }
+    };
+
+public:
     void* operator new(std::size_t n, Collector& gc)
     {
-        return gc.allocateObject(n);
+        static Owner owner;
+        return gc.allocateObject(n, &owner);
     }
 };
 
@@ -200,7 +199,7 @@ void testCollector()
     Collector gc;
     
     ConsCell* head = 0;
-    gc.addRoot(reinterpret_cast<Collector::pointer*>(&head));
+    gc.addRoot((Collector::pointer*)&head);
     
     const uint32 kCellCount = 100;
     
@@ -210,8 +209,7 @@ void testCollector()
     for (uint32 i = 0; i < kCellCount; ++i) {
         *link = cell = new (gc) ConsCell;
         ASSERT(cell);
-        cell->car = gc.allocateFloat64(i);
-        ASSERT(cell->car);
+        cell->car = i;
         link = &cell->cdr;
     }
     
@@ -225,9 +223,9 @@ void testCollector()
     link = &head;
     for (uint32 i = 0; i < kCellCount; i++) {
         cell = *link;
-        ASSERT(cell->car);
-        float64 value = gc.getFloat64(cell->car);
-        ASSERT(value == (float64)i);
+        ASSERT(cell);
+        ASSERT(cell->car == (float64)i);
+        ASSERT(cell->cdr);
         link = &cell->cdr;
     }
     
