@@ -88,7 +88,7 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return rv;
 }
 
-NS_IMPL_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
 
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
