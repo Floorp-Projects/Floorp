@@ -19,9 +19,11 @@
 #ifndef nsRepeater_h___
 #define nsRepeater_h___
 
+#include "nscore.h"
+
 class EventRecord;
 
-class Repeater {
+class NS_BASE Repeater {
   public:
   
     Repeater();
