@@ -120,6 +120,8 @@ protected:
 
   void ComputeVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
 
+  void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
+
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
   // info.

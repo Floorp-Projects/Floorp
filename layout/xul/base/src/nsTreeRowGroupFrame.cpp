@@ -920,7 +920,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
       PRInt32 delta = 1;
       FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
       if (!topRowContent) {
-        DidAppendRow((nsTableRowFrame*)mTopFrame);
+        PostAppendRow((nsTableRowFrame*)mTopFrame, aPresContext);
       }
       else {
         // Retrieve the primary frame.
@@ -930,7 +930,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
         nsIFrame* result = nsnull;
         shell->GetPrimaryFrameFor(topRowContent, &result);
         if (!result) {
-          DidAppendRow((nsTableRowFrame*)mTopFrame);
+          PostAppendRow((nsTableRowFrame*)mTopFrame, aPresContext);
         }
         else {
           // We have a primary frame. Get its row index. We're equal to that + 1.
@@ -1017,7 +1017,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
           PRInt32 delta = 1;
           FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
           if (!topRowContent) {
-            DidAppendRow((nsTableRowFrame*)(*aResult));
+            PostAppendRow((nsTableRowFrame*)(*aResult), aPresContext);
           }
           else {
             // Retrieve the primary frame.
@@ -1027,7 +1027,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
             nsIFrame* result = nsnull;
             shell->GetPrimaryFrameFor(topRowContent, &result);
             if (!result) {
-              DidAppendRow((nsTableRowFrame*)(*aResult));
+              PostAppendRow((nsTableRowFrame*)(*aResult), aPresContext);
             }
             else {
               // We have a primary frame. Get its row index. We're equal to that + 1.
@@ -1325,3 +1325,22 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
   }
 }
 
+void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext)
+{
+  DidAppendRow((nsTableRowFrame*)aRowFrame);
+
+  // Get the table frame.
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+
+  // See if any implicit column frames need to be created as a result of
+  // adding the new rows
+  PRBool  createdColFrames;
+  tableFrame->EnsureColumns(aPresContext, createdColFrames);
+  if (createdColFrames) {
+    // We need to rebuild the column cache
+    // XXX It would be nice if this could be done incrementally
+    tableFrame->InvalidateColumnCache();
+  }
+
+}

@@ -450,7 +450,6 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(frame);
     UpdateDismissalListener(childPopup);
 
-    ActivateMenu(PR_TRUE);
     if (menuPopup) {
       // Tell the menu bar we're active.
       if (mMenuParent)
@@ -463,6 +462,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       menuPopup->SyncViewWithFrame(*mPresContext, onMenuBar, this, -1, -1);
     }
+
+    ActivateMenu(PR_TRUE);
 
     mMenuOpen = PR_TRUE;
 
