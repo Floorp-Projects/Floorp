@@ -631,12 +631,17 @@ nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
       PRInt32 colIndex;
       aCellFrame->GetColIndex(colIndex);
       aDamageArea.width = PR_MAX(0, GetColCount() - colIndex - 1);
-      break;
+      //Dump("after RemoveCell");
+      return;
     }
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  //Dump("after RemoveCell");
+  // if we reach this point - the cell did not get removed, the caller of this routine 
+  // will delete the cell and the cellmap will probably hold a reference to 
+  // the deleted cell which will cause a subsequent crash when this cell is 
+  // referenced later
+  NS_ERROR("nsTableCellMap::RemoveCell - could not remove cell");
 }
 
 PRInt32 
@@ -1990,9 +1995,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
 
   // For for cell deletion, since the row is not being deleted, 
   // keep mRowCount the same as before. 
-  if (!aInsert) {
-    mRowCount = mRowCountOrig;
-  }
+  mRowCount = PR_MAX(mRowCount, mRowCountOrig);
 
   // delete the old cell map
   for (rowX = 0; rowX < numOrigRows; rowX++) {
@@ -2040,6 +2043,8 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
   // XXX if the cell has a col span to the end of the map, and the end has no originating 
   // cells, we need to assume that this the only such cell, and rebuild so that there are 
   // no extraneous cols at the end. The same is true for removing rows.
+  if (!aCellFrame->GetRowSpan() || !aCellFrame->GetColSpan())
+    spansCauseRebuild = PR_TRUE;
 
   if (spansCauseRebuild) {
     RebuildConsideringCells(aMap, nsnull, aRowIndex, startColIndex, PR_FALSE, aDamageArea);
