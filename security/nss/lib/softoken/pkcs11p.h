@@ -32,7 +32,7 @@
  */
 /*
  * Copyright (C) 1994-1999 RSA Security Inc. Licence to copy this document
- * is granted provided that it is identified as "RSA Security In.c Public-Key
+ * is granted provided that it is identified as "RSA Security Inc. Public-Key
  * Cryptography Standards (PKCS)" in all material mentioning or referencing
  * this document.
  */
@@ -41,9 +41,9 @@
  * Packing was removed from the shipped RSA header files, even
  * though it's still needed. put in a central file to help merging..
  */
-#if defined(XP_WIN) 
+
 #if defined(_WIN32)
 #pragma warning(disable:4103)
 #pragma pack(push, cryptoki, 1)
 #endif
-#endif
+
