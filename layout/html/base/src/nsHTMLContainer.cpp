@@ -467,6 +467,14 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
   if (nsnull != mAttributes) {
     nsHTMLValue value;
 
+    // Check for attributes common to most html containers
+    GetAttribute(nsHTMLAtoms::dir, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        aContext->GetData(eStyleStruct_Display);
+      display->mDirection = value.GetIntValue();
+    }
+
     if (mTag == nsHTMLAtoms::p) {
       // align: enum
       GetAttribute(nsHTMLAtoms::align, value);
