@@ -130,11 +130,18 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
         return E_PARAM;
 
     // handle LD_LIBRARY_PATH settings
+#ifdef SOLARIS
+    sprintf(new_LD_LIBRARY_PATH, "LD_LIBRARY_PATH=%s/bin:.", mTmp);
+#else
     sprintf(new_LD_LIBRARY_PATH, "%s/bin:.", mTmp);
+#endif
     DUMP(new_LD_LIBRARY_PATH);
     old_LD_LIBRARY_PATH = getenv("LD_LIBRARY_PATH");
+#ifdef SOLARIS
+    putenv(new_LD_LIBRARY_PATH);
+#else
     setenv("LD_LIBRARY_PATH", new_LD_LIBRARY_PATH, 1);
- 
+#endif 
     currComp = aComps->GetHead();
     err = LoadXPIStub(&stub, aDestination);
     if (err == OK)
@@ -162,7 +169,14 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
     UnloadXPIStub(&stub);
 
     // restore LD_LIBRARY_PATH settings
+#ifdef SOLARIS
+    char old_LD_env[MAXPATHLEN];
+
+    sprintf(old_LD_env, "LD_LIBRARY_PATH=%s", old_LD_LIBRARY_PATH);
+    putenv(old_LD_env);
+#else
     setenv("LD_LIBRARY_PATH", old_LD_LIBRARY_PATH, 1);
+#endif
 
     return err;
 }
