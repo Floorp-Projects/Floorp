@@ -308,7 +308,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 
 
 			// Create the listener for the send operation...
-			nsMsgComposeSendListener *m_sendListener = new nsMsgComposeSendListener();
+			m_sendListener = new nsMsgComposeSendListener();
 			if (!m_sendListener)
 				return NS_ERROR_FAILURE;
       
