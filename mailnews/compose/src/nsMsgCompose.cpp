@@ -1407,7 +1407,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   // mark any disposition flags like replied or forwarded on the message.
   mOriginalMsgURI = originalMsgURI;
 
-  char *uriList = strdup(originalMsgURI);
+  char *uriList = PL_strdup(originalMsgURI);
   if (!uriList)
     return NS_ERROR_OUT_OF_MEMORY;
 
