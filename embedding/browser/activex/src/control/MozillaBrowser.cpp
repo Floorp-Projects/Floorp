@@ -844,8 +844,19 @@ BOOL CMozillaBrowser::IsValid()
 // Initialises the web shell engine
 HRESULT CMozillaBrowser::Initialize()
 {
-    // Extract the bin directory path from the control's filename
+#ifdef HACK_NON_REENTRANCY
+    // Attempt to open a named event for this process. If it's not there we
+    // know this is the first time the control has run in this process, so create
+    // the named event and do the initialisation. Otherwise do nothing.
+    TCHAR szHackEvent[255];
+    _stprintf(szHackEvent, _T("MozCtlEvent%d"), (int) GetCurrentProcessId());
+    s_hHackedNonReentrancy = OpenEvent(EVENT_ALL_ACCESS, FALSE, szHackEvent);
+    if (s_hHackedNonReentrancy == NULL)
+    {
+        s_hHackedNonReentrancy = CreateEvent(NULL, FALSE, FALSE, szHackEvent);
+#endif
 
+    // Extract the bin directory path from the control's filename
     TCHAR szMozCtlPath[MAX_PATH];
     memset(szMozCtlPath, 0, sizeof(szMozCtlPath));
     GetModuleFileName(_Module.m_hInst, szMozCtlPath, sizeof(szMozCtlPath) / sizeof(szMozCtlPath[0]));
@@ -859,35 +870,25 @@ HRESULT CMozillaBrowser::Initialize()
     _tsplitpath(szMozCtlPath, szTmpDrive, szTmpDir, szTmpFname, szTmpExt);
     memset(szBinDirPath, 0, sizeof(szBinDirPath));
     _tmakepath(szBinDirPath, szTmpDrive, szTmpDir, NULL, NULL);
-
-#ifdef HACK_NON_REENTRANCY
-    // Attempt to open a named event for this process. If it's not there we
-    // know this is the first time the control has run in this process, so create
-    // the named event and do the initialisation. Otherwise do nothing.
-    TCHAR szHackEvent[255];
-    _stprintf(szHackEvent, _T("MozCtlEvent%d"), (int) GetCurrentProcessId());
-    s_hHackedNonReentrancy = OpenEvent(EVENT_ALL_ACCESS, FALSE, szHackEvent);
-    if (s_hHackedNonReentrancy == NULL)
+    if (_tcslen(szBinDirPath) == 0)
     {
-        s_hHackedNonReentrancy = CreateEvent(NULL, FALSE, FALSE, szHackEvent);
-#endif
-
-	// Create an object to represent the path
-	if (_tcslen(szBinDirPath) > 0)
-	{
-	    nsCOMPtr<nsILocalFile> binDir;
-	    
-		    USES_CONVERSION;
-		    NS_NewLocalFile(T2A(szBinDirPath), TRUE, getter_AddRefs(binDir));
-		    nsresult res = NS_InitEmbedding(binDir, nsnull);
-	}
-    else
-    {
-        NS_InitEmbedding(nsnull, nsnull);
+        return E_FAIL;
     }
 
+    nsresult rv;
+
+    // Create a directory file loc object
+    nsCOMPtr<nsIDirectoryServiceProvider> provider; // nsnull for the moment
+    // TODO put alternative directory service provider here at some point
+
+    // Create an object to represent the path
+    nsCOMPtr<nsILocalFile> binDir;
+    USES_CONVERSION;
+    NS_NewLocalFile(T2A(szBinDirPath), TRUE, getter_AddRefs(binDir));
+    rv = NS_InitEmbedding(binDir, provider);
+
 	// Load preferences service
-	nsresult rv = nsServiceManager::GetService(kPrefCID, 
+	rv = nsServiceManager::GetService(kPrefCID, 
 									NS_GET_IID(nsIPref), 
 									(nsISupports **)&mPrefs);
 	if (NS_FAILED(rv))
@@ -946,7 +947,6 @@ HRESULT CMozillaBrowser::Initialize()
 	return S_OK;
 }
 
-
 // Terminates the web shell engine
 HRESULT CMozillaBrowser::Terminate()
 {
@@ -999,7 +999,6 @@ HRESULT CMozillaBrowser::CreateBrowser()
 		return rv;
 	}
 
-
     // Configure what the web browser can and cannot do
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
     // webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
@@ -1021,28 +1020,17 @@ HRESULT CMozillaBrowser::CreateBrowser()
     }
 	mWebBrowserContainer->AddRef();
 
-	// Set up the web shell
-	mWebBrowser->SetParentURIContentListener(mWebBrowserContainer);
-
-    // XXX delete when tree owner is not necessary (to receive context menu events)
-    nsCOMPtr<nsIDocShellTreeItem> browserAsItem = do_QueryInterface(mWebBrowser);
-	browserAsItem->SetTreeOwner(NS_STATIC_CAST(nsIDocShellTreeOwner *, mWebBrowserContainer));
-
-    // XXX delete when docshell becomes inaccessible
-    nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
-    if (rootDocShell == nsnull)
-    {
-		NG_ASSERT(0);
-		NG_TRACE_ALWAYS(_T("Could not get root docshell object rv=%08x\n"), (int) rv);
-        SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
-        return rv;
-    }
-	mWebBrowserAsWin->SetVisibility(PR_TRUE);
+	// Set up the browser with its chrome
+    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, mWebBrowserContainer));
+    mWebBrowser->SetParentURIContentListener(mWebBrowserContainer);
 
     // Subscribe for progress notifications
 	nsCOMPtr<nsIWeakReference> listener(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mWebBrowserContainer))));
     mWebBrowser->AddWebBrowserListener(listener, NS_GET_IID(nsIWebProgressListener));
+
+    // Visible
+    mWebBrowserAsWin->SetVisibility(PR_TRUE);
 
     // Append browser to browser list
     sBrowserList.AppendElement(this);

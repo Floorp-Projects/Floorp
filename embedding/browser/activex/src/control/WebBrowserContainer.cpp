@@ -30,6 +30,8 @@
 
 #include "WebBrowserContainer.h"
 
+#include "nsICategoryManager.h"
+
 CWebBrowserContainer::CWebBrowserContainer(CMozillaBrowser *pOwner)
 {
 	NS_INIT_REFCNT();
@@ -56,7 +58,6 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
-	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
     NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
@@ -367,7 +368,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
 	m_pEvents1->Fire_DownloadComplete();
 	m_pEvents2->Fire_DownloadComplete();
 
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_OK;
 }
 
 /* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
@@ -387,14 +388,34 @@ NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoa
 /* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
 NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return CanHandleContent(aContentType, aCommand, aDesiredContentType, _retval);
 }
 
 
 /* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
 NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (aContentType)
+    {
+        nsCOMPtr<nsICategoryManager> catMgr;
+        nsresult rv;
+        catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+        nsXPIDLCString value;
+        rv = catMgr->GetCategoryEntry("Gecko-Content-Viewers",
+            aContentType, 
+            getter_Copies(value));
+
+        // If the category manager can't find what we're looking for
+        // it returns NS_ERROR_NOT_AVAILABLE, we don't wanto propagate
+        // that to the caller since it's really not a failure
+
+        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+            return rv;
+
+        if (value && *value)
+            *_retval = PR_TRUE;
+    }
+    return NS_OK;
 }
 
 
@@ -423,100 +444,6 @@ NS_IMETHODIMP CWebBrowserContainer::SetParentContentListener(nsIURIContentListen
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIDocShellTreeOwner
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::FindItemWithName(const PRUnichar* aName,
-   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
-{
-	return NS_ERROR_FAILURE;
-/*
-	nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(m_pOwner->mWebBrowser));
-	NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-	return docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aFoundItem);
-	*/
-}
-
-static nsIDocShellTreeItem* contentShell = nsnull; 
-NS_IMETHODIMP
-CWebBrowserContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-   PRBool aPrimary, const PRUnichar* aID)
-{
-    if (aPrimary)
-        contentShell = aContentShell;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
-{
-	// NS_ERROR("Haven't Implemented this yet");
-    NS_IF_ADDREF(contentShell);
-	*aShell = contentShell;
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
-   PRInt32 aCX, PRInt32 aCY)
-{
-	// Ignore request to be resized
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags, 
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-  	IDispatch *pDispNew = NULL;
-  	VARIANT_BOOL bCancel = VARIANT_FALSE;
-
-    *aDocShellTreeItem = nsnull;
-
-  	// Test if the event sink can give us a new window to navigate into
-  	m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
-
-	if ((bCancel == VARIANT_FALSE) && pDispNew)
-  	{
-        CComQIPtr<IMozControlBridge, &IID_IMozControlBridge> cpBridge = pDispNew;
-        if (cpBridge)
-        {
-            nsIWebBrowser *browser = nsnull;
-            cpBridge->GetWebBrowser((void **) &browser);
-            if (browser)
-            {
-                nsCOMPtr<nsIDocShell> docshell = do_GetInterface(browser);
-                docshell->QueryInterface(NS_GET_IID(nsIDocShellTreeItem), (void **) aDocShellTreeItem);
-                NS_RELEASE(browser);
-            }
-        }
-		pDispNew->Release();
-	}
-  
-	return (*aDocShellTreeItem) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::SetPersistence(PRBool aPersistPosition,
-                                     PRBool aPersistSize,
-                                     PRBool aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-CWebBrowserContainer::GetPersistence(PRBool* aPersistPosition,
-                                     PRBool* aPersistSize,
-                                     PRBool* aPersistSizeMode)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIEmbeddingSiteWindow
@@ -622,6 +549,30 @@ CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 NS_IMETHODIMP
 CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags,  PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nsIWebBrowser **_retval)
 {
+  	IDispatch *pDispNew = NULL;
+  	VARIANT_BOOL bCancel = VARIANT_FALSE;
+
+    *_retval = nsnull;
+
+  	// Test if the event sink can give us a new window to navigate into
+  	m_pEvents2->Fire_NewWindow2(&pDispNew, &bCancel);
+
+	if ((bCancel == VARIANT_FALSE) && pDispNew)
+  	{
+        CComQIPtr<IMozControlBridge, &IID_IMozControlBridge> cpBridge = pDispNew;
+        if (cpBridge)
+        {
+            nsIWebBrowser *browser = nsnull;
+            cpBridge->GetWebBrowser((void **) &browser);
+            if (browser)
+            {
+                *_retval = browser;
+                return NS_OK;
+            }
+        }
+		pDispNew->Release();
+	}
+
 	return NS_ERROR_FAILURE;
 }
 
