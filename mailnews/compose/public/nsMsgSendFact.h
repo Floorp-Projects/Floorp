@@ -30,4 +30,5 @@
 extern nsresult NS_NewMsgSend(nsIMsgSend** aInstancePtrResult);
 
 
-#endif _MsgSendFact_H_
+#endif
+

@@ -30,4 +30,4 @@
 extern nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult);
 
 
-#endif _MsgComposeFact_H_
+#endif
