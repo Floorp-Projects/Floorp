@@ -83,6 +83,11 @@ nsScrollingView :: nsScrollingView()
 
 nsScrollingView :: ~nsScrollingView()
 {
+  if (nsnull != mScrollBarView)
+  {
+    NS_RELEASE(mScrollBarView);
+    mScrollBarView = nsnull;
+  }
 }
 
 nsresult nsScrollingView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -136,10 +141,10 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
     mScrollBarView = new ScrollBarView();
 
-    NS_IF_ADDREF(mScrollBarView);
-
     if (nsnull != mScrollBarView)
     {
+      NS_ADDREF(mScrollBarView);
+
       nsRect trect = aBounds;
 
       trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
