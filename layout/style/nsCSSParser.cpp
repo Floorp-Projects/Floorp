@@ -986,7 +986,9 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32* aErrorCode,
 
 //----------------------------------------------------------------------
 
-PRBool CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* aDeclaration)
+PRBool
+CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
+                                nsICSSDeclaration* aDeclaration)
 {
   // Get property name
   nsCSSToken* tk = &mToken;
@@ -1017,12 +1019,42 @@ PRBool CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* a
     return PR_FALSE;
   }
 
+  // See if the declaration is followed by a "!important" declaration
+  PRBool isImportant = PR_FALSE;
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    // Premature eof is not ok
+    return PR_FALSE;
+  }
+  if (eCSSToken_Symbol == tk->mType) {
+    if ('!' == tk->mSymbol) {
+      // Look for important ident
+      if (!GetToken(aErrorCode, PR_TRUE)) {
+        // Premature eof is not ok
+        return PR_FALSE;
+      }
+      if ((eCSSToken_Ident != tk->mType) ||
+          !tk->mIdent.EqualsIgnoreCase("important")) {
+        UngetToken();
+        return PR_FALSE;
+      }
+      isImportant = PR_TRUE;
+    }
+    else {
+      // Not a !important declaration
+      UngetToken();
+    }
+  }
+  else {
+    // Not a !important declaration
+    UngetToken();
+  }
+
   // Make sure valid property declaration is terminated with either a
   // semicolon or a right-curly-brace.
   if (!GetToken(aErrorCode, PR_TRUE)) {
     // Premature eof is not ok
     return PR_FALSE;
-  }
+  } 
   if (eCSSToken_Symbol == tk->mType) {
     if (';' == tk->mSymbol) {
       return PR_TRUE;
