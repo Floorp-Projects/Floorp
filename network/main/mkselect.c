@@ -210,24 +210,24 @@ NET_PollSockets(void)
 void 
 net_process_net_timer_callback(void *closure)
 {
-	if(!NET_ProcessNet(NULL, NET_EVERYTIME_TYPE))
-		return;  /* dont reset the timer */
+    PR_ASSERT(net_calling_all_the_time_count >= 0);
+    if (net_calling_all_the_time_count == 0)
+        return;
 
-	if(net_calling_all_the_time_count)
-		FE_SetTimeout(net_process_net_timer_callback, NULL, 1);
+    if (NET_ProcessNet(NULL, NET_EVERYTIME_TYPE) == 0)
+        net_calling_all_the_time_count = 0;
+    else
+        FE_SetTimeout(net_process_net_timer_callback, NULL, 1);
 }
 
 MODULE_PRIVATE void
 NET_SetCallNetlibAllTheTime(MWContext *context, char *caller)
 {
-	if(net_calling_all_the_time_count < 0)
-	{
-		PR_ASSERT(0);
-		net_calling_all_the_time_count = 0;
-	}
+    PR_ASSERT(net_calling_all_the_time_count >= 0);
 
 #ifdef USE_TIMERS_FOR_CALL_ALL_THE_TIME
-	FE_SetTimeout(net_process_net_timer_callback, NULL, 1);
+    if (net_calling_all_the_time_count == 0)
+        FE_SetTimeout(net_process_net_timer_callback, NULL, 1);
 #endif /* USE_TIMERS_FOR_CALL_ALL_THE_TIME */
 	
 	net_calling_all_the_time_count++;
@@ -269,14 +269,8 @@ NET_SetNetlibSlowKickTimer(PRBool set)
 MODULE_PRIVATE void
 NET_ClearCallNetlibAllTheTime(MWContext *context, char *caller)
 {
-	if(net_calling_all_the_time_count < 1)
-	{
-		PR_ASSERT(0);
-		net_calling_all_the_time_count = 1;
-	}
-
+    PR_ASSERT(net_calling_all_the_time_count > 0);
 	net_calling_all_the_time_count--;
-
 }
 
 MODULE_PRIVATE PRBool
