@@ -161,9 +161,10 @@ Description Long=Program will be installed with the minimal options.
 ; this Setup Type is selected.
 C0=Component XPCOM
 C1=Component Navigator
-C2=Component Uninstaller
-C3=Component US English Profile Defaults
-C4=Component En US lang pack
+C2=Component PSM
+C3=Component Uninstaller
+C4=Component US English Profile Defaults
+C5=Component En US lang pack
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -177,10 +178,11 @@ Description Long=Program will be installed with the most common options.
 C0=Component XPCOM
 C1=Component Navigator
 C2=Component MailNews
-C3=Component Uninstaller
-C4=Component Chatzilla
-C5=Component US English Profile Defaults
-C6=Component En US lang pack
+C3=Component PSM
+C4=Component Uninstaller
+C5=Component Chatzilla
+C6=Component US English Profile Defaults
+C7=Component En US lang pack
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -196,23 +198,13 @@ Description Long=You may choose the options you want to install.  Recommended fo
 C0=Component XPCOM
 C1=Component Navigator
 C2=Component MailNews
-C3=Component Uninstaller
-C4=Component Chatzilla
-C5=Component US English Profile Defaults
-C6=Component En US lang pack
+C3=Component PSM
+C4=Component Uninstaller
+C5=Component Chatzilla
+C6=Component US English Profile Defaults
+C7=Component En US lang pack
 
-;[Setup Type3]
-;Description Short=C&ustom
-;Description Long=You may choose the options you want to install.  Recommended for advanced users.
 
-; List of components to install/enable for this Setup Type.
-; All other components not listed here will be disabled if
-; this Setup Type is selected.
-;C0=Component XPCOM
-;C1=Component Navigator
-;C2=Component MailNews
-;C3=Component Uninstaller
-;C4=Component Chatzilla
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -427,6 +419,22 @@ $InstallSizeArchive$:langenus.xpi
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
 Attributes=SELECTED|INVISIBLE
 Parameter=
+
+[Component PSM]
+Description Short=Personal Security Manager
+;*** LOCALIZE ME BABY ***
+Description Long=Personal Security Manager (PSM) for crypto operations
+Archive=psm.xpi
+$InstallSize$:psm
+$InstallSizeSystem$
+$InstallSizeArchive$:psm.xpi
+;Dependency0=
+; Attributes can be the following values:
+;   SELECTED  - the component is selected to be installed by default.
+;   INVISIBLE - the component is not shown in the Select Components dialog.
+Attributes=SELECTED
+Parameter=
+
 
 
 [Core]

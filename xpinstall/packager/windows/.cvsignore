@@ -15,3 +15,5 @@ mail.template
 uninstall.ini
 xpcom.js
 xpcom.template
+psm.js
+psm.template

@@ -275,3 +275,9 @@ bin\chrome\messenger\*
 [chatzilla]
 bin\components\chatzilla-service.js
 bin\chrome\chatzilla\*
+
+[psm]
+bin\psm.exe
+bin\nssckbi.dll
+bin\psmdata\*
+
