@@ -37,6 +37,12 @@ scrollbar {
   cursor: default;
 }
 
+/* ::::: square at the corner of two scrollbars ::::: */
+
+scrollcorner {
+  background-color: -moz-Dialog;
+}
+
 /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::: */
 /* ::::::::::::::::::::: MEDIA PRINT :::::::::::::::::::::: */
 /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::: */

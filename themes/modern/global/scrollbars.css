@@ -110,6 +110,12 @@ scrollbarbutton:hover:active {
   background-color: #9CA8B4;
 }
 
+/* ::::: square at the corner of two scrollbars ::::: */
+
+scrollcorner { 
+  background-color: #B1BBC5;
+}
+
 /* ..... increment .... */
 
 scrollbarbutton[type="increment"] {

@@ -49,6 +49,12 @@ scrollbar {
   cursor: default;
 }
 
+/* ::::: square at the corner of two scrollbars ::::: */
+
+scrollcorner { 
+  background-color: #B1BBC5;
+}
+
 /* ::::: slider ::::: */
 
 slider {
