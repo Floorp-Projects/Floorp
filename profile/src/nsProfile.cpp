@@ -70,7 +70,9 @@
 #define OLD_REGISTRY_FILE_NAME "Netscape Registry"
 #elif defined (XP_BEOS)
 #else /* assume XP_PC */
+#ifndef XP_OS2
 #include <direct.h>
+#endif
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
 
