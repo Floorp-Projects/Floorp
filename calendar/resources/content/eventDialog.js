@@ -173,7 +173,6 @@ function loadCalendarEventDialog()
    setFieldValue( "title-field", gEvent.title  );
    setFieldValue( "description-field", gEvent.description );
    setFieldValue( "location-field", gEvent.location );
-   setFieldValue( "category-field", gEvent.category );
    
    setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
