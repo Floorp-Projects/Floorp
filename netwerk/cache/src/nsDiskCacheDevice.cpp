@@ -22,6 +22,8 @@
  *    Patrick C. Beard <beard@netscape.com>
  */
 
+#include <limits.h>
+
 #include "nsDiskCacheDevice.h"
 #include "nsDiskCacheEntry.h"
 #include "nsCacheService.h"

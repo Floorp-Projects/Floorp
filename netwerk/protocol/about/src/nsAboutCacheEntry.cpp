@@ -21,6 +21,8 @@
  *   Darin Fisher <darin@netscape.com> (original author)
  */
 
+#include <limits.h>
+
 #ifdef MOZ_NEW_CACHE
 
 #include "nsAboutCacheEntry.h"
