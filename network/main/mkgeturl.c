@@ -244,6 +244,27 @@ extern int gethostname(char *, int);
 #define LIBNET_UNLOCK_AND_RETURN(value) \
 	do { int rv = (value); LIBNET_UNLOCK(); return rv; } while (0)
 
+/*
+** Don't ever forget about this!!!
+**
+** This is ALL superseeded by the setting in /ns/modules/libpref/src/init/all.js
+** lock for timebomb.use_timebomb
+ 
+** Define TIMEBOMB_ON for beta builds.
+** Undef TIMEBOMB_ON for release builds.
+*/
+#define TIMEBOMB_ON
+/* #undef TIMEBOMB_ON  */
+/*
+** After this date all hell breaks loose
+*/
+#define TIME_BOMB_TIME          888739203       /* 3/01/98 + 3 secs */
+#ifdef XP_OS2
+#define TIME_BOMB_WARNING_TIME  869976003       /* 7/21/97 + 3 secs */
+#else
+#define TIME_BOMB_WARNING_TIME  857203203       /* 3/01/97 + 3 secs */
+#endif
+
 #ifndef XP_UNIX
 #ifdef NADA_VERSION
 HG73787
@@ -926,13 +947,7 @@ NET_CheckForTimeBomb(MWContext *context)
 	/*
 	 * Check if any timebomb is enabled
 	 */
-
-	if (PREF_ERROR == PREF_GetConfigInt("timebomb.expiration_time",
-                                        (int32 *)&timebomb_time) ) {
-        timebomb_time = TIME_BOMB_TIME;
-    }
-
-
+	PREF_GetConfigInt("timebomb.expiration_time",(int32 *)&timebomb_time);
 	PREF_GetConfigInt("timebomb.relative_timebomb_days",
 								(int32 *)&relative_timebomb_days);
 
@@ -1006,12 +1021,7 @@ NET_CheckForTimeBomb(MWContext *context)
 	/*
 	 * check the absolute timebomb warning
 	 */
-    if (PREF_ERROR == PREF_GetConfigInt("timebomb.warning_time",
-                                        (int32 *)&timebomb_warning_time) ) {
-        timebomb_warning_time = TIME_BOMB_WARNING_TIME;
-    }
-
-
+	PREF_GetConfigInt("timebomb.warning_time",(int32 *)&timebomb_warning_time);
 	TRACEMSG(("Timebomb warning time is: %ld %s", timebomb_warning_time,
 								ctime(&timebomb_warning_time)));
 	if ((timebomb_warning_time >= 1) && (cur_time > timebomb_warning_time))
