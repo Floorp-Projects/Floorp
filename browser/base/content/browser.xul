@@ -220,10 +220,8 @@
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
-#ifdef XP_WIN
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
-#endif
     <key keycode="VK_F5" oncommand="BrowserReload();"/>
     <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
 
