@@ -56,12 +56,12 @@ echo"Categories: $categories<br>\n";
 
 ?>
 
-<h3>Listed Versions</h3>
+<h2>Listed Versions</h2>
 <?php
 $approved_array = array("?"=>"Pending Approval", "YES"=>"Approved", "NO"=>"Denied", "DISABLED"=>"Disabled");
 $sql = "SELECT vID, TV.Version, URI, OSName, approved FROM `version` TV
 INNER JOIN os TOS ON TOS.OSID = TV.OSID
-WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version`";
+WHERE `ID`='$id' GROUP BY `URI` ORDER BY `Version` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while($row = mysql_fetch_array($sql_result)) {
     $vid = $row["vID"];
@@ -96,6 +96,20 @@ $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `version` TV
 
  }
 ?>
+
+<h2>Add New Version of <?php echo"$name"; ?></h2>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: solid 0px #000000; width: 100%">
+<FORM NAME="additem" METHOD="POST" ACTION="additem.php?function=additem2" enctype="multipart/form-data">
+<INPUT NAME="type" TYPE="hidden" VALUE="<?php echo"$_GET[type]"; ?>">
+<TR><TD style="padding-left: 20px">
+Your <?php echo"$typename"?> File:<BR>
+<INPUT NAME="file" SIZE=40 TYPE="FILE"><BR>
+<BR>
+<INPUT NAME="button" TYPE="BUTTON" VALUE="Cancel" onclick="javascript:history.back()"> <INPUT NAME="submit" TYPE="SUBMIT" VALUE="Next &#187;"> 
+</TD></TR>
+</FORM>
+</TABLE>
+
 
 
 	</div>
