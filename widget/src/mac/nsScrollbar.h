@@ -18,18 +18,19 @@
 
 #ifndef nsScrollbar_h__
 #define nsScrollbar_h__
-#include "nsWindow.h"
 
+#include "nsMacControl.h"
 #include "nsIScrollbar.h"
-#include <quickdraw.h>
 
 
 /**
  * Mac Scrollbar. 
  */
 
-class nsScrollbar : public nsWindow, public nsIScrollbar
+class nsScrollbar : public nsMacControl, public nsIScrollbar
 {
+private:
+	typedef nsMacControl Inherited;
 
 public:
   nsScrollbar(PRBool aIsVertical);
@@ -48,6 +49,8 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
+  // nsWindow Interface
+  virtual PRBool	DispatchMouseEvent(nsMouseEvent &aEvent);
 
   // nsIScrollbar part
   NS_IMETHOD      SetMaxRange(PRUint32 aEndRange);
@@ -61,26 +64,17 @@ public:
   NS_IMETHOD     	SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                   PRUint32 aPosition, PRUint32 aLineIncrement);
 
-    virtual PRBool    OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    virtual PRBool 		DispatchMouseEvent(nsMouseEvent &aEvent);
-
 
 private:
 
 	PRUint32			mMaxRange;
-	PRUint32			mPosition;
 	PRUint32			mThumbSize;
   PRUint32 			mLineIncrement;
   int      			mIsVertical;
   PRBool				mMouseDownInScroll;
-  PRBool				mWidgetArmed;
-  
+  short					mClickedPartCode;
 
-
-  int AdjustScrollBarPosition(int aPosition);
   void DrawWidget();
-  void DrawThumb(PRBool	aClear);
 
 };
 
