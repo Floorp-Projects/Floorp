@@ -265,7 +265,6 @@ public:
         *inStr = str->mInputStream;
         NS_ADDREF(*inStr);
         *outStr = str;
-        NS_ADDREF(*outStr);
         return NS_OK;
     }
 
@@ -528,6 +527,11 @@ nsFileChannel::Process(void)
       }
       case ENDING: {
           mBufferOutputStream->Flush();
+          if (mListener) {
+              // XXX where do we get the error message?
+              (void)mListener->OnStopBinding(mContext, mStatus, nsnull);
+          }
+
           NS_IF_RELEASE(mBufferOutputStream);
           mBufferOutputStream = nsnull;
           NS_IF_RELEASE(mBufferInputStream);
@@ -536,11 +540,6 @@ nsFileChannel::Process(void)
           mFileStream = nsnull;
           NS_IF_RELEASE(mContext);
           mContext = nsnull;
-
-          if (mListener) {
-              // XXX where do we get the error message?
-              (void)mListener->OnStopBinding(mContext, mStatus, nsnull);
-          }
 
           mState = QUIESCENT;
           break;
