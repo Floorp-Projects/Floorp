@@ -107,6 +107,7 @@ JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
 export:: $(JAVAH_FILES) linkSetupRegistry
 
 linkSetupRegistry:
+	rm -f nsSetupRegistry.cpp
 	ln -s $(DEPTH)/xpfe/bootstrap/nsSetupRegistry.cpp .
 
 $(JAVAH_FILES): 
