@@ -37,7 +37,7 @@ EXPORTS = \
 	secmodt.h \
 	pk11func.h \
 	pk11sdr.h \
-    pk11pqg.h \
+	pk11pqg.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
