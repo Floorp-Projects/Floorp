@@ -1754,7 +1754,8 @@ void nsWindow::SubclassWindow(BOOL bState)
         ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)this);
     } 
     else {
-        (void) ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        ::SetWindowLong(mWnd, GWL_USERDATA, (LONG)NULL);
         mPrevWndProc = NULL;
     }
 }
@@ -1768,7 +1769,7 @@ void nsWindow::SubclassWindow(BOOL bState)
 void nsWindow::OnDestroy()
 {
     SubclassWindow(FALSE);
-    mWnd = 0;
+    mWnd = NULL;
 
     // free GDI objects
     if (mBrush) {
