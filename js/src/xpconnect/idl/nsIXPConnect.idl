@@ -172,7 +172,7 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 
 /**
 * This is a somewhat special interface. It is available from the global
-* nsIXPConnect object when native methods have been called. It is only relevent 
+* nsIXPConnect object when native methods have been called. It is only relevant 
 * to the currently called native method on the given JSContext/thread. Holding
 * a reference past that time (or while other native methods are being called)
 * will not assure access to this data.

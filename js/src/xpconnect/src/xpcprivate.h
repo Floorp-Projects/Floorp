@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -209,8 +209,8 @@ public:
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect,
                                          nsIJSRuntimeService* aJSRuntimeService);
 
-    JSRuntime*      GetJSRuntime() const {return mJSRuntime;}
-    nsXPConnect*    GetXPConnect() const {return mXPConnect;}
+    JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
+    nsXPConnect*   GetXPConnect() const {return mXPConnect;}
 
     JSObject2WrappedJSMap*     GetWrappedJSMap()          const
         {return mWrappedJSMap;}
@@ -224,7 +224,7 @@ public:
     XPCContext* GetXPCContext(JSContext* cx);
     XPCContext* SyncXPCContextList(JSContext* cx = nsnull);
 
-
+    
     // Mapping of often used strings to jsid atoms that live 'forever'.
     //
     // To add a new string: add to this list and to XPCJSRuntime::mStrings
@@ -1145,7 +1145,7 @@ private:
 };
 
 /***************************************************************************/
-// data convertion
+// data conversion
 
 // class here just for static methods
 class XPCConvert
@@ -1215,6 +1215,82 @@ public:
 
 private:
     XPCConvert(); // not implemented
+
+};
+
+// class to export a JSString as an nsAReadableString, including refcounting
+class XPCReadableJSStringWrapper : public nsLiteralString
+{
+public:
+    XPCReadableJSStringWrapper(JSString *str) :
+        nsLiteralString(NS_REINTERPRET_CAST(PRUnichar *,
+                                            JS_GetStringChars(str)),
+                        JS_GetStringLength(str)),
+        mStr(str), mBufferHandle(0), mHandleIsShared(JS_FALSE)
+    { }
+
+    ~XPCReadableJSStringWrapper();
+
+    // buffer-handle accessors
+    const nsBufferHandle<PRUnichar>* GetBufferHandle() const
+    {
+        return BufferHandle(JS_FALSE);
+    }
+    
+    const nsSharedBufferHandle<PRUnichar>* GetSharedBufferHandle() const
+    {
+        return BufferHandle(JS_TRUE);
+    }
+
+protected:
+    struct WrapperBufferHandle :
+        public nsSharedBufferHandleWithAllocator<PRUnichar>
+    {
+        WrapperBufferHandle(XPCReadableJSStringWrapper *outer, JSString *str) :
+            nsSharedBufferHandleWithAllocator<PRUnichar>
+                (NS_CONST_CAST(PRUnichar *, outer->get()),
+                 NS_CONST_CAST(PRUnichar *, outer->get() + outer->Length()),
+                 mAllocator),
+            mAllocator(str)
+        { }
+
+        XPCReadableJSStringWrapper *mOuter;
+
+        struct Allocator : nsStringAllocator<PRUnichar>
+        {
+            Allocator(JSString *str) :  mStr(OBJECT_TO_JSVAL(str)) { }
+            virtual ~Allocator() { }
+
+            virtual void Deallocate(PRUnichar *) const;
+
+            JSBool RootString();
+            jsval mStr;
+        };
+
+        Allocator mAllocator;
+    };
+    
+    const nsSharedBufferHandle<PRUnichar>* BufferHandle(JSBool shared) const;
+
+    JSString            *mStr;
+    WrapperBufferHandle *mBufferHandle;
+    JSBool              mHandleIsShared;
+};
+
+// readable string conversions, static methods only
+class XPCStringConvert
+{
+public:
+
+    static JSString *ReadableToJSString(JSContext *cx, 
+                                        const nsAReadableString &readable);
+
+    static XPCReadableJSStringWrapper *JSStringToReadable(JSString *str);
+
+    static void ShutdownDOMStringFinalizer();
+
+private:
+    XPCStringConvert();         // not implemented
 };
 
 extern JSBool JS_DLL_CALLBACK

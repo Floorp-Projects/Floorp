@@ -62,6 +62,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpcnativecallcontext.obj	\
 	.\$(OBJDIR)\xpcruntimesvc.obj  \
 	.\$(OBJDIR)\xpcstack.obj	\
+	.\$(OBJDIR)\xpcstring.obj \
 	.\$(OBJDIR)\xpcthreadcontext.obj	\
 	.\$(OBJDIR)\xpcthrower.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\

@@ -225,6 +225,9 @@ XPCJSRuntime::~XPCJSRuntime()
         printf("deleting XPCJSRuntime with %d live nsXPCWrappedNative (found in wrapper check)\n", (int)LiveWrapperCount);        
     JS_HashTableDestroy(DEBUG_WrappedNativeHashtable);
 #endif
+
+    // unwire the readable/JSString sharing magic
+    XPCStringConvert::ShutdownDOMStringFinalizer();
 }
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,

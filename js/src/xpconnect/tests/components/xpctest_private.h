@@ -144,6 +144,11 @@
 { 0x5b9af380, 0x6569, 0x11d3, \
     { 0x98, 0x9e, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
+// {DB569F7E-16FB-4BCB-A86C-E08AA7F97666}
+#define NS_XPCTESTDOMSTRING_CID \
+  {0xdb569f7e, 0x16fb, 0x1bcb, \
+    { 0xa8, 0x6c, 0xe0, 0x8a, 0xa7, 0xf9, 0x76, 0x66 }}
+
 // 'namespace' class
 class xpctest
 {
@@ -167,6 +172,7 @@ public:
   static NS_METHOD ConstructXPCTestChild4(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   static NS_METHOD ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   static NS_METHOD ConstructArrayTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static NS_METHOD ConstructXPCTestDOMString(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
     xpctest();  // not implemented

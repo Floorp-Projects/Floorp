@@ -513,13 +513,16 @@ extern JS_PUBLIC_API(JSBool)
 JS_AddRoot(JSContext *cx, void *rp);
 
 extern JS_PUBLIC_API(JSBool)
+JS_AddNamedRoot(JSContext *cx, void *rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddNamedRootRT(JSRuntime *rt, void *rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
 JS_RemoveRoot(JSContext *cx, void *rp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveRootRT(JSRuntime *rt, void *rp);
-
-extern JS_PUBLIC_API(JSBool)
-JS_AddNamedRoot(JSContext *cx, void *rp, const char *name);
 
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)

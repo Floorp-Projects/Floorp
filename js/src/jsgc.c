@@ -373,7 +373,15 @@ js_FinishGC(JSRuntime *rt)
 JSBool
 js_AddRoot(JSContext *cx, void *rp, const char *name)
 {
-    JSRuntime *rt;
+    JSBool ok = js_AddRootRT(cx->runtime, rp, name);
+    if (!ok)
+	JS_ReportOutOfMemory(cx);
+    return ok;
+}
+
+JSBool
+js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
+{
     JSBool ok;
 
     /*
@@ -389,7 +397,6 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
      * of deadlock because the GC doesn't set rt->gcRunning until after it has
      * waited for all active requests to end.
      */
-    rt = cx->runtime;
     JS_LOCK_GC(rt);
 #ifdef JS_THREADSAFE
     JS_ASSERT(!rt->gcRunning || rt->gcLevel > 0);
@@ -401,8 +408,6 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
 #endif
     ok = (JS_HashTableAdd(rt->gcRootsHash, rp, (void *)name) != NULL);
     JS_UNLOCK_GC(rt);
-    if (!ok)
-	JS_ReportOutOfMemory(cx);
     return ok;
 }
 

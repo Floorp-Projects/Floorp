@@ -60,6 +60,7 @@ CPPSRCS		= \
 		xpcnativecallcontext.cpp \
 		xpcruntimesvc.cpp \
 		xpcstack.cpp \
+		xpcstring.cpp \
 		xpcthreadcontext.cpp \
 		xpcthrower.cpp \
 		xpcwrappedjs.cpp \
