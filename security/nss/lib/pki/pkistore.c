@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.12 $ $Date: 2002/03/05 16:08:53 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.13 $ $Date: 2002/03/05 16:54:16 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -370,6 +370,9 @@ get_array_from_list
     PRUint32 count;
     NSSCertificate **rvArray = NULL;
     count = nssList_Count(certList);
+    if (count == 0) {
+	return NULL;
+    }
     if (maximumOpt > 0) {
 	count = PR_MIN(maximumOpt, count);
     }
