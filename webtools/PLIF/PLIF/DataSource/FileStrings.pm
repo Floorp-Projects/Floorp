@@ -28,7 +28,7 @@
 
 package PLIF::DataSource::FileStrings;
 use strict;
-use vars qw(@ISA);
+use vars qw(@ISA $DIR);
 use PLIF::DataSource;
 @ISA = qw(PLIF::DataSource);
 1;
@@ -52,6 +52,7 @@ sub init {
     my($app) = @_;
     $self->SUPER::init(@_);
     require File::Basename; import File::Basename; # DEPENDENCY
+    $DIR = dirname(__FILE__);
 }
 
 sub getDefaultString {
@@ -63,10 +64,12 @@ sub getDefaultString {
         foreach my $piece ($protocol, $string) {
             $piece =~ s/[^a-zA-Z\/0-9.]/_/gos;
         }
-        # create a path relative to the application
+        # create a couple of paths relative to the application
+        push(@filenames, "output-compiled/$protocol/$string");
         push(@filenames, "output/$protocol/$string");
-        # and a patch relative to the PLIF library
-        push(@filenames, dirname(__FILE__)."/../../output/$protocol/$string");
+        # and a couple relative to the PLIF library
+        push(@filenames, $DIR."/../../output-compiled/$protocol/$string");
+        push(@filenames, $DIR."/../../output/$protocol/$string");
     } else {
         $self->error(0, "Platform '$^O' not supported yet.");
     }
@@ -88,8 +91,10 @@ sub getDefaultString {
                 push(@data, $line);
             }
             # and then slurp entire file (no record delimiter)
+            # while we're at it, untaint it (it came from the file system, it's safe).
             local $/ = undef;
-            push(@data, <FILE>);
+            <FILE> =~ m/^(.*)$/os;
+            push(@data, $1);
             $self->assert(close(FILE), 3, "Could not close output template file '$filename': $!");
             return @data;
         }
