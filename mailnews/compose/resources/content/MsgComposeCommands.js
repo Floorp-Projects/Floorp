@@ -163,7 +163,7 @@ function disableEditableFields()
 
 function enableEditableFields()
 {
-  editorShell.editor.flags ^= nsIPlaintextEditorMail.eEditorReadonlyMask;
+  editorShell.editor.flags &= ~nsIPlaintextEditorMail.eEditorReadonlyMask;
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {
