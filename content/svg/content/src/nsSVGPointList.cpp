@@ -41,6 +41,7 @@
 #include "nsDOMError.h"
 #include "prdtoa.h"
 #include "nsReadableUtils.h"
+#include "nsTextFormatter.h"
 
 nsresult
 nsSVGPointList::Create(const nsAReadableString& aValue,
@@ -217,7 +218,7 @@ nsSVGPointList::GetValueString(nsAWritableString& aValue)
   if (count<=0) return NS_OK;
 
   PRInt32 i = 0;
-  char buf[80];
+  PRUnichar buf[48];
   
   while (1) {
     nsIDOMSVGPoint* point = ElementAt(i);
@@ -225,8 +226,8 @@ nsSVGPointList::GetValueString(nsAWritableString& aValue)
     point->GetX(&x);
     point->GetY(&y);
     
-    sprintf(buf, "%g,%g", (double)x, (double)y);
-    aValue.Append(NS_ConvertASCIItoUCS2(buf));
+    nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("%g,%g").get(), (double)x, (double)y);
+    aValue.Append(buf);
 
     if (++i >= count) break;
 
