@@ -41,6 +41,9 @@
 // pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
+pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
+pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
+pref("xpinstall.dialog.progress.type", "Download:Manager");
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");

@@ -132,7 +132,7 @@
     
     <command id="Tools:Downloads" oncommand="toOpenWindowByType('Download:Manager', 
                                                                 'chrome://mozapps/content/downloads/downloads.xul',
-                                                                'chrome,all,dialog=no,resizable');"/>
+                                                                'chrome,dialog=no,resizable');"/>
     
 #ifdef XP_MACOSX
     <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>

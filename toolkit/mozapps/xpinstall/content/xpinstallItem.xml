@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/xpinstall/xpinstallConfirm.dtd">
+
+<bindings id="xpinstallItemBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="installitem">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/xpinstall/xpinstallConfirm.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox align="center" pack="center">
+          <xul:image class="xpinstallItemIcon" xbl:inherits="src=icon"/>
+        </xul:vbox>
+        <xul:vbox flex="1">
+          <xul:hbox class="xpinstallItemNameRow" align="center">
+            <xul:label class="xpinstallItemName" xbl:inherits="value=name" flex="1" crop="right"/>
+            <xul:label class="xpinstallItemSigned" xbl:inherits="value=cert,signed"/>
+          </xul:hbox>
+          <xul:hbox class="xpinstallItemDetailsRow" align="center">
+            <xul:label class="xpinstallItemFromLabel">&from.label;</xul:label>
+            <xul:textbox class="xpinstallItemURL" xbl:inherits="value=url" flex="1" readonly="true" crop="right"/>
+          </xul:hbox>
+        </xul:vbox> 
+      </xul:hbox>
+    </content>
+    <implementation>
+      <property name="name"   onset="this.setAttribute('name', val); return val;"
+                              onget="return this.getAttribute('name');"/>
+      <property name="cert"   onset="this.setAttribute('cert', val); return val;"
+                              onget="return this.getAttribute('cert');"/>
+      <property name="signed" onset="this.setAttribute('signed', val); return val;"
+                              onget="return this.getAttribute('signed');"/>
+      <property name="url"    onset="this.setAttribute('url', val); return val;"
+                              onget="return this.getAttribute('url');"/>
+      <property name="icon"   onset="this.setAttribute('icon', val); return val;"
+                              onget="return this.getAttribute('icon');"/>
+    </implementation>
+  </binding>
+         
+</bindings>
+

@@ -325,62 +325,83 @@ nsUnknownContentTypeDialog.prototype = {
 
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
-         // Put file name in window title.
-         var win   = this.dialogElement( "unknownContentType" );
-         var suggestedFileName = this.mLauncher.suggestedFileName;
+      // Put file name in window title.
+      var win   = this.dialogElement( "unknownContentType" );
+      var suggestedFileName = this.mLauncher.suggestedFileName;
 
-         // Some URIs do not implement nsIURL, so we can't just QI.
-         var url   = this.mLauncher.source;
-         var fname = "";
-         this.mSourcePath = url.prePath;
-         try {
-             url = url.QueryInterface( Components.interfaces.nsIURL );
-             // A url, use file name from it.
-             fname = url.fileName;
-             this.mSourcePath += url.directory;
-         } catch (ex) {
-             // A generic uri, use path.
-             fname = url.path;
-             this.mSourcePath += url.path;
-         }
+      // Some URIs do not implement nsIURL, so we can't just QI.
+      var url   = this.mLauncher.source;
+      var fname = "";
+      this.mSourcePath = url.prePath;
+      try {
+          url = url.QueryInterface( Components.interfaces.nsIURL );
+          // A url, use file name from it.
+          fname = url.fileName;
+          this.mSourcePath += url.directory;
+      } catch (ex) {
+          // A generic uri, use path.
+          fname = url.path;
+          this.mSourcePath += url.path;
+      }
 
-         if (suggestedFileName)
-           fname = suggestedFileName;
-           
+      if (suggestedFileName)
+        fname = suggestedFileName;
+        
 
-         this.mTitle = this.dialogElement("strings").getFormattedString("title", [fname]);
-         win.setAttribute( "title", this.mTitle );
+      this.mTitle = this.dialogElement("strings").getFormattedString("title", [fname]);
+      win.setAttribute( "title", this.mTitle );
 
-         // Put content type, filename and location into intro.
-         this.initIntro(url, fname);
+      // Put content type, filename and location into intro.
+      this.initIntro(url, fname);
 
-         var iconString = "moz-icon://" + fname + "?size=16&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
-         this.dialogElement("contentTypeImage").setAttribute("src", iconString);
+      var iconString = "moz-icon://" + fname + "?size=16&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
+      this.dialogElement("contentTypeImage").setAttribute("src", iconString);
 
-         this.initAppAndSaveToDiskValues();
+      this.initAppAndSaveToDiskValues();
 
-         // Initialize "always ask me" box. This should always be disabled
-         // and set to true for the ambiguous type application/octet-stream.
-         // We don't also check for application/x-msdownload here since we
-         // want users to be able to autodownload .exe files. 
-         var rememberChoice = this.dialogElement("rememberChoice");
-         if (this.mLauncher.MIMEInfo.MIMEType == "application/octet-stream") {
-            rememberChoice.checked = false;
-            rememberChoice.disabled = true;
-         }
-         else {
-            rememberChoice.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
-         }
-         this.toggleRememberChoice(rememberChoice);
-         
+      // Initialize "always ask me" box. This should always be disabled
+      // and set to true for the ambiguous type application/octet-stream.
+      // We don't also check for application/x-msdownload here since we
+      // want users to be able to autodownload .exe files. 
+      var rememberChoice = this.dialogElement("rememberChoice");
 
-         // XXXben - menulist won't init properly, hack. 
-         var openHandler = this.dialogElement("openHandler");
-         openHandler.parentNode.removeChild(openHandler);
-         var openParent = this.dialogElement("open").parentNode;
-         openParent.appendChild(openHandler);
-         
-         this.mDialog.setTimeout("dialog.postShowCallback()", 0);
+#if 0
+      // Just because we have a content-type of application/octet-stream 
+      // here doesn't actually mean that the content is of that type. Many 
+      // servers default to sending text/plain for file types they don't know
+      // about. To account for this, the uriloader does some checking to see 
+      // if a file sent as text/plain contains binary characters, and if so (*)
+      // it morphs the content-type into application/octet-stream so that
+      // the file can be properly handled. Since this is not generic binary
+      // data, rather, a data format that the system probably knows about, 
+      // we don't want to use the content-type provided by this dialog's 
+      // opener, as that's the generic application/octet-stream that the 
+      // uriloader has passed, rather we want to ask the External Helper App
+      // Service, which will ask the host OS. This is so we don't needlessly
+      // disable the "autohandle" checkbox. 
+      var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
+      var type = mimeService.getTypeFromURI(this.mLauncher.source);
+      this.realMIMEInfo = mimeService.getFromTypeAndExtension(type, "");
+
+      if (type == "application/octet-stream") {
+#endif
+      if (this.mLauncher.MIMEInfo.MIMEType == "application/octet-stream") {
+        rememberChoice.checked = false;
+        rememberChoice.disabled = true;
+      }
+      else {
+        rememberChoice.checked = !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+      }
+      this.toggleRememberChoice(rememberChoice);
+
+
+      // XXXben - menulist won't init properly, hack. 
+      var openHandler = this.dialogElement("openHandler");
+      openHandler.parentNode.removeChild(openHandler);
+      var openParent = this.dialogElement("open").parentNode;
+      openParent.appendChild(openHandler);
+
+      this.mDialog.setTimeout("dialog.postShowCallback()", 0);
     },
     
     postShowCallback: function () {
