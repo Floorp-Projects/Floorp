@@ -346,24 +346,21 @@ function loadPermissions()
     if(host.charAt(0) == ".") {  // get rid of the ugly dot on the start of some domains
       host = host.substring(1,host.length);
     }
-    if(capability) {
-      contentStr = bundle.GetStringFromName("can");
-    } else {
-      contentStr = bundle.GetStringFromName("cannot");    
-    }
     if (type == cookieType) {
+      contentStr = bundle.GetStringFromName(capability ? "can" : "cannot");
       AddPermissionToList(cookie_permissions_count, host, type, capability);
       AddItem("cookiePermList", [host, contentStr], "cookiepermtree_", cookie_permissions_count++);
+      if (cookie_permissions_count == 0) {
+        document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+      }
     } else if (type == imageType) {
+      contentStr = bundle.GetStringFromName(capability ? "canImages" : "cannotImages");
       AddPermissionToList(image_permissions_count, host, type, capability);
       AddItem("imagePermList", [host, contentStr], "imagepermtree_", image_permissions_count++);
+      if (image_permissions_count == 0) {
+        document.getElementById("removeAllImages").setAttribute("disabled","true");
+      }
     }
-  }
-  if (cookie_permissions_count == 0) {
-    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
-  }
-  if (image_permissions_count == 0) {
-    document.getElementById("removeAllImages").setAttribute("disabled","true");
   }
 }
 
