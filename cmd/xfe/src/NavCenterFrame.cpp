@@ -57,7 +57,7 @@ XFE_NavCenterFrame::XFE_NavCenterFrame(Widget toplevel,
 			  True,
 			  False,
 			  True,
-			  False) // m_destroyOnClose, always keep one Bookmark instance
+			  True)
 {
   D(printf("XFE_NavCenterFrame SUB-SYSTEM INSTANCIATING\n");)
 
@@ -66,8 +66,6 @@ XFE_NavCenterFrame::XFE_NavCenterFrame(Widget toplevel,
                                          NULL, m_context);
   setView(view);
   setMenubar(menu_bar_spec);
-
-  //setMenubar(menu_bar_spec);
 
 #ifdef NOTYET
   //
