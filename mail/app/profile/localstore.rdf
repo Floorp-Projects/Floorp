@@ -20,14 +20,6 @@
   <RDF:Description about="chrome://messenger/content/messenger.xul#sizeCol">
     <hidden>true</hidden>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#folderUnreadCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#folderTotalCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/messenger.xul#folderSizeCol">
-    <hidden>true</hidden>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul">
     <NC:persist resource="chrome://messenger/content/addressbook/addressbook.xul#abResultsOutliner"/>
@@ -42,9 +34,6 @@
     <NC:persist resource="chrome://messenger/content/messenger.xul#flaggedCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#messengerWindow"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#threadOutliner"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#folderUnreadCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#folderTotalCol"/>
-    <NC:persist resource="chrome://messenger/content/messenger.xul#folderSizeCol"/>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul#messengerWindow">
     <screenX>4</screenX>
@@ -76,11 +65,7 @@
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#sizeCol">
     <hidden>true</hidden>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderUnreadCol">
-    <hidden>true</hidden>
   </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderTotalCol">
-    <hidden>true</hidden>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderSizeCol">
     <hidden>true</hidden>
@@ -92,8 +77,5 @@
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#totalCol"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#OrderReceivedColumn"/>
     <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderUnreadCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderTotalCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderSizeCol"/>
   </RDF:Description>
 </RDF:RDF>

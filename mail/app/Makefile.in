@@ -76,9 +76,8 @@ MOZ_WINCONSOLE = 0
 endif
 endif
 
-
-EXTRA_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
+LIBS = \
+	$(call EXPAND_LIBNAME, xulapp_s) \
 	$(MOZ_JS_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(TK_LIBS) \
