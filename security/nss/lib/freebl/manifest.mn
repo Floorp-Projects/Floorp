@@ -57,6 +57,7 @@ CSRCS = \
 	$(NULL)
 else
 CSRCS = \
+	prng_fips1861.c \
 	sha_fast.c \
 	md2.c \
 	md5.c \

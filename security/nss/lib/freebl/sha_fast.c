@@ -34,33 +34,17 @@
  */
 #include <memory.h>
 #include "blapi.h"
+#include "sha_fast.h"
 
 #ifdef TRACING_SSL
 #include "ssl.h"
 #include "ssltrace.h"
 #endif
 
-struct SHA1ContextStr {
-  union {
-    PRUint32 w[80];		/* input buffer, plus 64 words */
-    PRUint8  b[320];
-  } u;
-  PRUint32 H[5];		/* 5 state variables */
-  PRUint32 sizeHi,sizeLo;	/* 64-bit count of hashed bytes. */
-};
-#define W u.w
-#define B u.b
-
 static void shaCompress(SHA1Context *ctx);
 
-#define SHA_MASK      0x00FF00FF
-#if defined(IS_LITTLE_ENDIAN)
-#define SHA_HTONL(x)  (A = (x), A = A << 16 | A >> 16, \
-                       (A & SHA_MASK) << 8 | (A >> 8) & SHA_MASK)
-#else
-#define SHA_HTONL(x)  (x)
-#endif
-#define SHA_BYTESWAP(x) x = SHA_HTONL(x)
+#define W u.w
+#define B u.b
 
 #define SHA_ROTL(X,n) (((X) << (n)) | ((X) >> (32-(n))))
 #define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
@@ -69,6 +53,7 @@ static void shaCompress(SHA1Context *ctx);
 #define SHA_F4(X,Y,Z) ((X)^(Y)^(Z))
 #define SHA_MIX(t)    ctx->W[t] = \
   (A = ctx->W[t-3] ^ ctx->W[t-8] ^ ctx->W[t-14] ^ ctx->W[t-16], SHA_ROTL(A, 1))
+
 
 /*
  *  SHA: Zeroize and initialize context
