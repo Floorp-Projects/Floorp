@@ -533,10 +533,11 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
   aEventStatus = nsEventStatus_eIgnore;
   
   if (nsnull != mContent) {
-    nsIEventStateManager *mManager;
-    if (NS_OK == aPresContext.GetEventStateManager(&mManager)) {
-      mManager->SetEventTarget((nsISupports*)mContent);
-      NS_RELEASE(mManager);
+    nsIEventStateManager *manager = nsnull;
+    aPresContext.GetEventStateManager(&manager);
+    if (nsnull != manager) {
+      manager->SetEventTarget((nsISupports*)mContent);
+      NS_RELEASE(manager);
     }
     mContent->HandleDOMEvent(aPresContext, aEvent, nsnull, aEventStatus);
   }
