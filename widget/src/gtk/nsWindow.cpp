@@ -2261,6 +2261,15 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
   if (mIsToplevel && mShell)
   {
+    PRInt32 screenWidth = gdk_screen_width();
+    PRInt32 screenHeight = gdk_screen_height();
+    
+    if(aX >= screenWidth)
+      aX = screenWidth - mBounds.width;
+    
+    if(aY >= screenHeight)
+      aY = screenHeight - mBounds.height;
+  
     // do it the way it should be done period.
     if (mParent && mWindowType == eWindowType_popup) {
       // *VERY* stupid hack to make gfx combo boxes work
@@ -2273,8 +2282,7 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
       gtk_widget_set_uposition(mShell, aX, aY);
     }
   }
-  else if (mSuperWin)
-  {
+  else if (mSuperWin) {
     gdk_window_move(mSuperWin->shell_window, aX, aY);
   }
   return NS_OK;
@@ -2290,6 +2298,15 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
          this,
          aWidth, aHeight);
 #endif
+  
+  PRInt32 screenWidth = gdk_screen_width();
+  PRInt32 screenHeight = gdk_screen_height();
+    
+  if(aWidth > screenWidth)
+    aWidth = screenWidth;
+    
+  if(aHeight > screenHeight)
+    aHeight = screenHeight;
 
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
