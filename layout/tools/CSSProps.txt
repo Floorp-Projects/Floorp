@@ -1,3 +1,4 @@
+-moz-border-radius
 azimuth
 background
 background-attachment

@@ -341,6 +341,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
  
   nsAutoString  buffer;
+  mBorderRadius.AppendToString(buffer, PROP__MOZ_BORDER_RADIUS);
   mOutlineWidth.AppendToString(buffer, PROP_OUTLINE_WIDTH);
   mOutlineColor.AppendToString(buffer, PROP_OUTLINE_COLOR);
   mOutlineStyle.AppendToString(buffer, PROP_OUTLINE_STYLE);
@@ -1036,14 +1037,16 @@ CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
       }
       break;
 
+    case PROP__MOZ_BORDER_RADIUS:
     case PROP_OUTLINE_WIDTH:
     case PROP_OUTLINE_COLOR:
     case PROP_OUTLINE_STYLE:
       CSS_ENSURE(Margin) {
         switch (aProperty) {
-          case PROP_OUTLINE_WIDTH:  mMargin->mOutlineWidth = aValue;  break;
-          case PROP_OUTLINE_COLOR:  mMargin->mOutlineColor = aValue;  break;
-          case PROP_OUTLINE_STYLE:  mMargin->mOutlineStyle = aValue;  break;
+          case PROP__MOZ_BORDER_RADIUS: mMargin->mBorderRadius = aValue;  break;
+          case PROP_OUTLINE_WIDTH:      mMargin->mOutlineWidth = aValue;  break;
+          case PROP_OUTLINE_COLOR:      mMargin->mOutlineColor = aValue;  break;
+          case PROP_OUTLINE_STYLE:      mMargin->mOutlineStyle = aValue;  break;
         }
       }
       break;
@@ -1634,15 +1637,17 @@ CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
         }
         break;
 
+      case PROP__MOZ_BORDER_RADIUS:
       case PROP_OUTLINE_WIDTH:
       case PROP_OUTLINE_COLOR:
       case PROP_OUTLINE_STYLE:
         if (nsnull != mMargin) {
           CSS_ENSURE_IMPORTANT(Margin) {
             switch (aProperty) {
-              CSS_CASE_IMPORTANT(PROP_OUTLINE_WIDTH,  mMargin->mOutlineWidth);
-              CSS_CASE_IMPORTANT(PROP_OUTLINE_COLOR,  mMargin->mOutlineColor);
-              CSS_CASE_IMPORTANT(PROP_OUTLINE_STYLE,  mMargin->mOutlineStyle);
+              CSS_CASE_IMPORTANT(PROP__MOZ_BORDER_RADIUS, mMargin->mBorderRadius);
+              CSS_CASE_IMPORTANT(PROP_OUTLINE_WIDTH,      mMargin->mOutlineWidth);
+              CSS_CASE_IMPORTANT(PROP_OUTLINE_COLOR,      mMargin->mOutlineColor);
+              CSS_CASE_IMPORTANT(PROP_OUTLINE_STYLE,      mMargin->mOutlineStyle);
             }
           }
         }
@@ -2257,14 +2262,16 @@ CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
       }
       break;
 
+    case PROP__MOZ_BORDER_RADIUS:
     case PROP_OUTLINE_WIDTH:
     case PROP_OUTLINE_COLOR:
     case PROP_OUTLINE_STYLE:
       if (nsnull != mMargin) {
         switch (aProperty) {
-          case PROP_OUTLINE_WIDTH: aValue = mMargin->mOutlineWidth; break;
-          case PROP_OUTLINE_COLOR: aValue = mMargin->mOutlineColor; break;
-          case PROP_OUTLINE_STYLE: aValue = mMargin->mOutlineStyle; break;
+          case PROP__MOZ_BORDER_RADIUS: aValue = mMargin->mBorderRadius; break;
+          case PROP_OUTLINE_WIDTH:      aValue = mMargin->mOutlineWidth; break;
+          case PROP_OUTLINE_COLOR:      aValue = mMargin->mOutlineColor; break;
+          case PROP_OUTLINE_STYLE:      aValue = mMargin->mOutlineStyle; break;
         }
       }
       else {

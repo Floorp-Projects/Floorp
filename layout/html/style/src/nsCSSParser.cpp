@@ -2297,6 +2297,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case PROP_BORDER_TOP_WIDTH:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
                         nsCSSProps::kBorderWidthKTable);
+  case PROP__MOZ_BORDER_RADIUS:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
   case PROP_BOTTOM:
   case PROP_TOP:
   case PROP_LEFT:
