@@ -125,7 +125,7 @@ public:
 
 	NS_IMETHOD SetPriority(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetPriority(char **_retval);
-	const char* GetPriority() {return GetHeader(nsMsgPriority_HEADER_MASK);}
+	const char* GetPriority() {return GetHeader(MSG_PRIORITY_HEADER_MASK);}
 
 	NS_IMETHOD SetMessageEncoding(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetMessageEncoding(char **_retval);

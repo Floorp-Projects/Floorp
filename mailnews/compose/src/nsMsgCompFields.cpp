@@ -381,12 +381,12 @@ nsresult nsMsgCompFields::GetDefaultBody(char **_retval)
 
 nsresult nsMsgCompFields::SetPriority(const char *value, PRInt32 *_retval)
 {
-	return SetHeader(nsMsgPriority_HEADER_MASK, value, _retval);
+	return SetHeader(MSG_PRIORITY_HEADER_MASK, value, _retval);
 }
 
 nsresult nsMsgCompFields::GetPriority(char **_retval)
 {
-	return GetHeader(nsMsgPriority_HEADER_MASK, _retval);
+	return GetHeader(MSG_PRIORITY_HEADER_MASK, _retval);
 }
 
 nsresult nsMsgCompFields::SetMessageEncoding(const char *value, PRInt32 *_retval)
@@ -595,7 +595,7 @@ PRInt16 nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
     case MSG_REFERENCES_HEADER_MASK			: result = 11;		break;
     case MSG_OTHERRANDOMHEADERS_HEADER_MASK	: result = 12;		break;
     case MSG_NEWSPOSTURL_HEADER_MASK		: result = 13;		break;
-    case nsMsgPriority_HEADER_MASK			: result = 14;		break;
+    case MSG_PRIORITY_HEADER_MASK			: result = 14;		break;
 	case MSG_NEWS_FCC_HEADER_MASK			: result = 15;		break;
 	case MSG_MESSAGE_ENCODING_HEADER_MASK	: result = 16;		break;
 	case MSG_CHARACTER_SET_HEADER_MASK		: result = 17;		break;
