@@ -75,7 +75,7 @@ EXTRA_LIBS += \
 	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
-OS_LIBS += \
+#OS_LIBS += \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
@@ -155,7 +155,7 @@ EXTRA_LIBS += \
 	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(OS_LIBS)
-OS_LIBS += \
+#OS_LIBS += \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
