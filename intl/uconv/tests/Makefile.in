@@ -34,7 +34,7 @@ REQUIRES	= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsTestUConv.cpp \
+		TestUConv.cpp \
 		nsconv.cpp \
 		plattest.cpp \
 		$(NULL)
