@@ -47,11 +47,17 @@ interface nsIOutlinerStore : nsISupports
   nsISupportsArray getCellProperties(in long row, in wstring colID);
   
   // The text for a given cell.  If a column consists only of an image, then
-  // the empty string is returned.  The alignment variable has values of 0 for left
-  // alignment (the default) and 1 for right alignment.  The crop style has values
-  // 0 (for right cropping, the default), 1 for middle cropping, and 2 for left
-  // cropping.
-  wstring getCellText(in long row, in wstring colID, out long alignment, out long cropstyle);
+  // the empty string is returned.  The level is an integer value that represents
+  // the level of indentation.  It is multiplied by the width specified in the 
+  // :moz-outliner-indentation element to compute the exact indendation.
+  //
+  // The alignment variable has values of 0 for left
+  // alignment (the default) and 1 for right alignment.  
+  // 
+  // The crop style has values 0 (for right cropping, the default), 1 for middle 
+  // cropping, and 2 for left cropping.
+  wstring getCellText(in long row, in wstring colID, out long level, 
+                      out long alignment, out long cropstyle);
   
   // Ensures that a row at a given index is visible.
   void scrollToRow(in long index);
@@ -70,6 +76,15 @@ interface nsIOutlinerStore : nsISupports
 
   // Called on the store when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
   void cycleCell(in long row, in wstring colID);
+  
+  // A command API that can be used to invoke commands on the selection.
+  void performAction(in wstring action);
+
+  // A command API that can be used to invoke commands on a specific row.
+  void performActionOnRow(in wstring action, in long row);
+
+  // A command API that can be used to invoke commands on a specific cell.
+  void performActionOnCell(in wstring action, in long row, in wstring colID);
 };
 
 %{C++
