@@ -23,7 +23,7 @@
  *  Peter Annema <disttsc@bart.nl>
  *
  */
-const MAX_HISTORY_MENU_ITEMS = 15
+const MAX_HISTORY_MENU_ITEMS = 15;
 const MAX_HISTORY_ITEMS = 100;
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
              .getService(Components.interfaces.nsIRDFService);
@@ -37,100 +37,81 @@ function FillHistoryMenu( aParent, aMenu )
     var browserElement = document.getElementById("content");
     if (browserElement)
       {
-	     var foopy = { }; 
-         var ds;
-		 var docShell;
-		 // Try to get docshell from appCore so that go/forward/back
-		 // menus work right after a theme switch. If fetching from
-		 // appCore fails use, the original method,
-         if (appCore) {
-		    appCore.getContentDocShell(foopy); 
-            ds = foopy.value; 
-		 }
-		 if (ds) {
-		    dump("Got docshell from appCOre\n");
-		    docShell = ds;
-		 }
-	     else
-            docShell = browserElement.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;
-        if (docShell) {        
-		    var webNavigation = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-            if (webNavigation)
+        var webNavigation = browserElement.webNavigation;
+        if (webNavigation)
+          {
+            var shistory = webNavigation.sessionHistory;
+            if (shistory)
               {
-                var shistory = webNavigation.sessionHistory;
-                if (shistory)
+                //Remove old entries if any
+                deleteHistoryItems( aParent );
+                var count = shistory.count;
+                var index = shistory.index;
+                var end;
+                var j;
+                var entry;
+
+                switch (aMenu)
                   {
-                    //Remove old entries if any
-                    deleteHistoryItems( aParent );
-                    var count = shistory.count;
-                    var index = shistory.index;
-                    var end;
-                    var j;
-                    var entry;
-                    
-                    switch (aMenu)
-                      {
-                        case "back":
-                          end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
-                          for ( j = index - 1; j >= end; j--) 
-                            {
-                              entry = shistory.getEntryAtIndex(j, false);
-                              if (entry) 
-                                createMenuItem( aParent, j, entry.title );
-                            }
-                          break;
-                        case "forward":
-                          end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
-                          for ( j = index + 1; j < end; j++)
-                            {
-                              entry = shistory.getEntryAtIndex(j, false);
-                              if (entry)
-                                createMenuItem( aParent, j, entry.title );
-                            }
-                          break;
-                        case "go":
-                          end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
-                          for( j = count - 1; j >= end; j-- )
-                            {
-                              entry = shistory.getEntryAtIndex(j, false);
-                              if (entry)
-                                createCheckboxMenuItem( aParent, j, entry.title, j==index );
-                            }
-                          break;
-                      }
+                    case "back":
+                      end = (index > MAX_HISTORY_MENU_ITEMS) ? index - MAX_HISTORY_MENU_ITEMS : 0;
+                      for ( j = index - 1; j >= end; j--)
+                        {
+                          entry = shistory.getEntryAtIndex(j, false);
+                          if (entry)
+                            createMenuItem( aParent, j, entry.title );
+                        }
+                      break;
+                    case "forward":
+                      end  = ((count-index) > MAX_HISTORY_MENU_ITEMS) ? index + MAX_HISTORY_MENU_ITEMS : count;
+                      for ( j = index + 1; j < end; j++)
+                        {
+                          entry = shistory.getEntryAtIndex(j, false);
+                          if (entry)
+                            createMenuItem( aParent, j, entry.title );
+                        }
+                      break;
+                    case "go":
+                      end = count > MAX_HISTORY_MENU_ITEMS ? count - MAX_HISTORY_MENU_ITEMS : 0;
+                      for( j = count - 1; j >= end; j-- )
+                        {
+                          entry = shistory.getEntryAtIndex(j, false);
+                          if (entry)
+                            createCheckboxMenuItem( aParent, j, entry.title, j==index );
+                        }
+                      break;
                   }
               }
           }
       }
   }
- 
-function executeUrlBarHistoryCommand( aTarget) 
+
+function executeUrlBarHistoryCommand( aTarget )
   {
     var index = aTarget.getAttribute("index");
     var value = aTarget.getAttribute("value");
-    if (index != "nothing_available" && value) 
+    if (index != "nothing_available" && value)
       {
         gURLBar.value = value;
         BrowserLoadURL();
       }
-  } 
- 
+  }
+
 function createUBHistoryMenu( aParent )
   {
-    var ubHistory = appCore.urlbarHistory;
     if (localstore) {
       var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history")).GetElements();
       var i= MAX_HISTORY_MENU_ITEMS;
-      
+
       // Delete any old menu items only if there are legitimate
-      // urls to display, otherwise we want to display the 
-      // '(Nothing Available)' item.     
-	  deleteHistoryItems(aParent);
-      if (!entries.hasMoreElements()) {               
-	    //Create the "Nothing Available" Menu item          	   
-		var na = bundle.GetStringFromName( "nothingAvailable" );
-		createMenuItem(aParent, "nothing_available", na);      
-      }     
+      // urls to display, otherwise we want to display the
+      // '(Nothing Available)' item.
+      deleteHistoryItems(aParent);
+      if (!entries.hasMoreElements()) {
+        //Create the "Nothing Available" Menu item
+        var na = bundle.GetStringFromName( "nothingAvailable" );
+        createMenuItem(aParent, "nothing_available", na);
+      }
 
       while (entries.hasMoreElements() && (i-- > 0)) {
         var entry = entries.getNext();
@@ -145,7 +126,6 @@ function createUBHistoryMenu( aParent )
 
 function addToUrlbarHistory()
   {
-    //var ubHistory = appCore.urlbarHistory;
 	var urlToAdd = gURLBar.value;
 	if (!urlToAdd)
 	   return;
@@ -155,7 +135,7 @@ function addToUrlbarHistory()
     var index = entries.IndexOf(entry);
 
     if (index != -1) {
-      // we've got it already. Remove it from its old place 
+      // we've got it already. Remove it from its old place
       // and insert it to the top
       //dump("URL already in urlbar history\n");
       entries.RemoveElementAt(index, true);
@@ -172,7 +152,7 @@ function addToUrlbarHistory()
     }
   }
   }
-  
+ 
 function createMenuItem( aParent, aIndex, aValue)
   {
     var menuitem = document.createElement( "menuitem" );
@@ -192,13 +172,13 @@ function createCheckboxMenuItem( aParent, aIndex, aValue, aChecked)
     aParent.appendChild( menuitem );
   }
 
-function deleteHistoryItems( aParent)
+function deleteHistoryItems(aParent)
   {
     var children = aParent.childNodes;
     for (var i = 0; i < children.length; i++ )
       {
         var index = children[i].getAttribute( "index" );
-        if (index) 		  
+        if (index) 		 
           aParent.removeChild( children[i] );
       }
   }
