@@ -21,7 +21,7 @@
       <image id="webpanels-throbber"/>
     </hbox>
     <hbox align="center">
-        <toolbarbutton label="&addPanel.label;" oncommand="addWebPanel()"/>
+        <toolbarbutton id="addpanel-button" label="&addPanel.label;" oncommand="addWebPanel()"/>
         <spacer flex="1"/>
         <toolbarbutton label="&viewPage.label;" oncommand="grabPage()"/>
     </hbox>

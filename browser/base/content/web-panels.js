@@ -57,6 +57,8 @@ var panelAreaDNDObserver = {
       var uri = getShortcutOrURI(url);
       try {
         document.getElementById('webpanels-browser').webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+        var addButton = document.getElementById('addpanel-button');
+        addButton.disabled = false;
       } catch (e) {}
 
       // keep the event from being handled by the dragDrop listeners
@@ -79,6 +81,8 @@ function loadWebPanel(aURI) {
     gLoadPlaceHolder = false;
     try {
       document.getElementById('webpanels-browser').webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+      var addButton = document.getElementById('addpanel-button');
+      addButton.disabled = false;
     } catch (e) {}
 }
 
@@ -99,8 +103,11 @@ function unload()
 var gLoadPlaceHolder = true;
 function loadPlaceholderPage() {
     var panelBrowser = document.getElementById('webpanels-browser');
-    if (gLoadPlaceHolder)
+    var addButton = document.getElementById('addpanel-button');
+    if (gLoadPlaceHolder) {
         panelBrowser.setAttribute("src", "chrome://browser/content/web-panels.xml");
+        addButton.disabled = true;
+    }
 }
 
 
@@ -109,6 +116,8 @@ function grabPage()
     var panelBrowser = document.getElementById('webpanels-browser');
     try {
       panelBrowser.webNavigation.loadURI(window.parent.gBrowser.currentURI.spec, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+      var addButton = document.getElementById('addpanel-button');
+      addButton.disabled = false;
     } catch (e) {}
 }
 
