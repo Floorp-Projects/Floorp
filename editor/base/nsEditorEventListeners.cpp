@@ -720,13 +720,17 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 {
+  PRBool canDrag = PR_FALSE;
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  if ( !htmlEditor )
+    return NS_ERROR_NULL_POINTER;
+  
   // ...figure out if a drag should be started...
-  
-  // ...until we have this implemented, just eat the drag event so it
-  // ...doesn't leak out into the rest of the app/handlers.
-  aDragEvent->PreventBubble();
-  
-  return NS_OK;
+  nsresult rv = htmlEditor->CanDrag(aDragEvent, canDrag);
+  if ( NS_SUCCEEDED(rv) && canDrag )
+    rv = htmlEditor->DoDrag(aDragEvent);
+
+  return rv;
 }
 
 
@@ -810,7 +814,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if ( htmlEditor )
   {
-    htmlEditor->InsertFromDrop();
+    return htmlEditor->InsertFromDrop(aMouseEvent);
   }
 
   return NS_OK;

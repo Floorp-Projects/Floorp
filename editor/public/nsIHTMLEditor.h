@@ -40,6 +40,7 @@ class nsIAtom;
 class nsIDOMNode;
 class nsIDOMElement;
 class nsIDOMKeyEvent;
+class nsIDOMEvent;
 
 
 class nsIHTMLEditor : public nsISupports
@@ -180,9 +181,19 @@ public:
   NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction)=0;
 
   /** 
+   * CanDrag decides if a drag should be started (for example, based on the current selection and mousepoint).
+   */
+  NS_IMETHOD CanDrag(nsIDOMEvent *aEvent, PRBool &aCanDrag)=0;
+
+  /** 
+   * DoDrag transfers the relevant data (as appropriate) to a transferable so it can later be dropped.
+   */
+  NS_IMETHOD DoDrag(nsIDOMEvent *aEvent)=0;
+
+  /** 
    * InsertFromDrop looks for a dragsession and inserts the relevant data in response to a drop.
    */
-  NS_IMETHOD InsertFromDrop()=0;
+  NS_IMETHOD InsertFromDrop(nsIDOMEvent *aEvent)=0;
 
   /**
    * Insert a break into the content model.<br>
