@@ -111,7 +111,6 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
       if (NS_FRAME_OUTSIDE_CHILDREN & frame->GetStateBits()) {
         // The background covers the content area and padding area, so check
         // for children sticking outside the child frame's padding edge
-        nscoord paddingEdgeX = aDesiredSize.width - border.right - padding.right;
         if (aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width) {
           mPD->mPageContentXMost =  aDesiredSize.mOverflowArea.XMost() + border.right + padding.right;
         }

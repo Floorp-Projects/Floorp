@@ -122,10 +122,6 @@ public:
   NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup);
   NS_IMETHOD SetClipRect(nsIPresContext* aPresContext, nsRect* aSize);
 
-  NS_IMETHOD  SizeTo(nsIPresContext* aPresContext,
-                     nscoord         aWidth,
-                     nscoord         aHeight);
-
   /**
    * Get the "type" of the frame
    *

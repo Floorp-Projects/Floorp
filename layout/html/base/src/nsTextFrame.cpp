@@ -338,16 +338,12 @@ NS_IMETHODIMP nsBlinkTimer::Notify(nsITimer *timer)
 
     // Determine damaged area and tell view manager to redraw it
     nsPoint offset;
-    nsRect bounds;
-    frameData->mFrame->GetRect(bounds);
+    nsRect bounds = frameData->mFrame->GetRect();
     nsIView* view;
     frameData->mFrame->GetOffsetFromView(frameData->mPresContext, offset, &view);
-    nsIViewManager* vm;
-    view->GetViewManager(vm);
     bounds.x = offset.x;
     bounds.y = offset.y;
-    vm->UpdateView(view, bounds, 0);
-    NS_RELEASE(vm);
+    view->GetViewManager()->UpdateView(view, bounds, 0);
   }
   return NS_OK;
 }
@@ -889,10 +885,7 @@ nsContinuingTextFrame::Init(nsIPresContext*  aPresContext,
     mPrevInFlow = aPrevInFlow;
     aPrevInFlow->SetNextInFlow(this);
 #ifdef IBMBIDI
-    nsFrameState state;
-    aPrevInFlow->GetFrameState(&state);
-
-    if (state & NS_FRAME_IS_BIDI) {
+    if (aPrevInFlow->GetStateBits() & NS_FRAME_IS_BIDI) {
       PRInt32 start, end;
       aPrevInFlow->GetOffsets(start, mContentOffset);
 
@@ -1860,8 +1853,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
   }
 
   if (aDetails){
-    nsRect rect;
-    GetRect(rect);
+    nsRect rect = GetRect();
     while(aDetails){
       const nscoord* sp= aSpacing;
       PRInt32 startOffset = 0;
@@ -1983,26 +1975,23 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
   *aContent = nsnull;
   *aOffset = mContentOffset;
   *aLength = mContentLength;
-  nsIFrame *parent;
-  nsresult rv = GetParent(&parent);
-  if (NS_SUCCEEDED(rv) && parent)
+  nsIFrame *parent = GetParent();
+  if (parent)
   {
     if ((mState & NS_FRAME_GENERATED_CONTENT) != 0)//parent is generated so so are we.
     {
       //we COULD check the previous sibling but I dont think that is reliable
-      rv = parent->GetContent(aContent);
-      if (NS_FAILED(rv))
-        return rv;
+      *aContent = parent->GetContent();
       if(!*aContent)
         return NS_ERROR_FAILURE;
+      NS_ADDREF(*aContent);
 
       //ARE WE A BEFORE FRAME? if not then we assume we are an after frame. this may be bad later
-      nsIFrame *grandParent;
-      nsIFrame *firstParent;
-      rv = parent->GetParent(&grandParent);
-      if (NS_SUCCEEDED(rv) && grandParent)
+      nsIFrame *grandParent = parent->GetParent();
+      if (grandParent)
       {
-        rv = grandParent->FirstChild(aPresContext,nsnull, &firstParent);
+	nsIFrame *firstParent;
+        nsresult rv = grandParent->FirstChild(aPresContext,nsnull, &firstParent);
         if (NS_SUCCEEDED(rv) && firstParent)
         {
           *aLength = 0;
@@ -2090,9 +2079,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
 
   doc->GetLineBreaker(aLineBreaker);
 
-  nsFrameState  frameState;
-  GetFrameState(&frameState);
-  aIsSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+  aIsSelected = (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
   return NS_OK;
 }
@@ -3605,10 +3592,8 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
 
-  nsFrameState  frameState;
-  GetFrameState(&frameState);
 #if 0
-  PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
+  PRBool isSelected = ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
   if (!aSelected && !isSelected) //already set thanks
   {
     return NS_OK;
@@ -3633,10 +3618,7 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     aRange->GetEndOffset(&endOffset);
     aRange->GetStartContainer(getter_AddRefs(startNode));
     aRange->GetStartOffset(&startOffset);
-    nsCOMPtr<nsIContent> content;
-    result = GetContent(getter_AddRefs(content));
-    nsCOMPtr<nsIDOMNode> thisNode;
-    thisNode = do_QueryInterface(content);
+    nsCOMPtr<nsIDOMNode> thisNode = do_QueryInterface(GetContent());
 
     if (thisNode == startNode)
     {
@@ -3669,13 +3651,13 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     }
   }
   else {
-    if ( aSelected != (PRBool)(frameState | NS_FRAME_SELECTED_CONTENT) ){
+    if (aSelected != ((GetStateBits() & NS_FRAME_SELECTED_CONTENT) != 0)) {
       found = PR_TRUE;
     }
   }
 
   if ( aSelected )
-    frameState |=  NS_FRAME_SELECTED_CONTENT;
+    AddStateBits(NS_FRAME_SELECTED_CONTENT);
   else
   {//we need to see if any other selection available.
     SelectionDetails *details = nsnull;
@@ -3707,7 +3689,7 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
       }
     }
     if (!details)
-      frameState &= ~NS_FRAME_SELECTED_CONTENT;
+      RemoveStateBits(NS_FRAME_SELECTED_CONTENT);
     else
     {
       SelectionDetails *sdptr = details;
@@ -3718,10 +3700,8 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
       delete details;
     }
   }
-  SetFrameState(frameState);
   if (found){ //if range contains this frame...
-    nsRect frameRect;
-    GetRect(frameRect);
+    nsRect frameRect = GetRect();
     nsRect rect(0, 0, frameRect.width, frameRect.height);
     if (!rect.IsEmpty())
       Invalidate(aPresContext, rect, PR_FALSE);
@@ -3902,8 +3882,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
     // continuation frame
     if (mState & NS_FRAME_IS_BIDI)
     {
-      nsIFrame *nextBidi;
-      GetNextSibling(&nextBidi);
+      nsIFrame *nextBidi = GetNextSibling();
       if (nextBidi)
       {
         PRInt32 start, end;
@@ -5710,9 +5689,8 @@ nsTextFrame::ComputeTotalWordDimensions(nsIPresContext* aPresContext,
   nsTextDimensions addedDimensions;
   PRUnichar *newWordBuf = aWordBuf;
   PRUint32 newWordBufSize = aWordBufSize;
-  while (nsnull != aNextFrame) {
-    nsCOMPtr<nsIContent> content;
-    aNextFrame->GetContent(getter_AddRefs(content));
+  while (aNextFrame) {
+    nsIContent* content = aNextFrame->GetContent();
 
 #ifdef DEBUG_WORD_WRAPPING
     printf("  next textRun=");
@@ -6010,7 +5988,7 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
   fprintf(out, " [parent=%p]", mParent);
 #endif
   if (HasView()) {
-    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView(aPresContext)));
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, GetView()));
   }
 
   PRInt32 totalContentLength;
@@ -6118,12 +6096,7 @@ void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
 void
 nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
 {
-  nsFrameState frameState;
-
-  GetFrameState(&frameState);
-  frameState |= NS_FRAME_IS_BIDI;
-  SetFrameState(frameState);
-
+  AddStateBits(NS_FRAME_IS_BIDI);
   SetOffsets(aStart, aEnd);
 }
 
