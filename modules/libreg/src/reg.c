@@ -64,13 +64,13 @@
 #include "NSReg.h"
 
 #if !defined(STANDALONE_REGISTRY) && defined(SEEK_SET)
-	/* Undo the damage caused by xp_core.h, which is included by NSReg.h */
-	#undef SEEK_SET
-	#undef SEEK_CUR
-	#undef SEEK_END
-	#define SEEK_SET PR_SEEK_SET
-	#define SEEK_CUR PR_SEEK_CUR
-	#define SEEK_END PR_SEEK_END
+    /* Undo the damage caused by xp_core.h, which is included by NSReg.h */
+    #undef SEEK_SET
+    #undef SEEK_CUR
+    #undef SEEK_END
+    #define SEEK_SET PR_SEEK_SET
+    #define SEEK_CUR PR_SEEK_CUR
+    #define SEEK_END PR_SEEK_END
 #endif
 
 #if defined(XP_UNIX)
@@ -92,12 +92,12 @@
  * Overview
  * --------------------------------------------------------------------
  *
- * Layers:
- *		Interface
- *			Path Parsing
- *			Key/Entry Management
- *				Block I/O
- *					Virtual I/O
+ *  Layers:
+ *      Interface
+ *          Path Parsing
+ *              Key/Entry Management
+ *                  Block I/O
+ *                      Virtual I/O
  *
  * The functions in this file search and add to a binary Registry file
  * quite efficiently.  So efficiently, squeezing out space left by
@@ -116,16 +116,19 @@
 
 /* --------------------------------------------------------------------
  * Module Global Data
+ *
+ * use of this data must be protected by the reglist lock
  * --------------------------------------------------------------------
  */
 
-static REGFILE *RegList = NULL;
-static XP_Bool bRegStarted = FALSE;
 #if !defined(STANDALONE_REGISTRY)
-static PRMonitor *reglist_monitor;
+static PRLock   *reglist_lock = NULL;
 #endif
-char *globalRegName = NULL;
-static char *user_name = NULL;
+
+static REGFILE  *RegList = NULL;
+static int32    regStartCount = 0;
+char            *globalRegName = NULL;
+static char     *user_name = NULL;
 
 
 
@@ -281,8 +284,8 @@ static void nr_DeleteNode(REGFILE* pReg)
 
     /* free memory */
 #ifndef STANDALONE_REGISTRY
-    if ( pReg->monitor != NULL )
-        PR_DestroyMonitor( pReg->monitor );
+    if ( pReg->lock != NULL )
+        PR_DestroyLock( pReg->lock );
 #endif
     XP_FREEIF( pReg->filename );
     XP_FREE( pReg );
@@ -310,7 +313,7 @@ static REGFILE* vr_findRegFile(char *filename)
 
 /* --------------------------------------------------------------------
  * Virtual I/O
- *	Platform-specifics go in this section
+ *  Platform-specifics go in this section
  * --------------------------------------------------------------------
  */
 static REGERR nr_OpenFile(char *path, FILEHANDLE *fh);
@@ -325,44 +328,44 @@ static int32  nr_GetFileLength(FILEHANDLE fh);
 #ifdef STANDALONE_REGISTRY
 static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 {
-	XP_ASSERT( path != NULL );
+    XP_ASSERT( path != NULL );
     XP_ASSERT( fh != NULL );
 
-	/* Open the file for exclusive random read/write */
-	(*fh) = vr_fileOpen(path, XP_FILE_UPDATE_BIN);
-	if ( !VALID_FILEHANDLE(*fh) )
-	{
-		switch (errno)
-		{
+    /* Open the file for exclusive random read/write */
+    (*fh) = vr_fileOpen(path, XP_FILE_UPDATE_BIN);
+    if ( !VALID_FILEHANDLE(*fh) )
+    {
+        switch (errno)
+        {
 #ifdef XP_MAC
-		case fnfErr:
+        case fnfErr:
 #else
-		case ENOENT:	/* file not found */
+        case ENOENT:	/* file not found */
 #endif
-			return REGERR_NOFILE;
+            return REGERR_NOFILE;
 
 #ifdef XP_MAC
-		case opWrErr:
+        case opWrErr:
 #else
-		case EACCES:	/* file in use */
+        case EACCES:	/* file in use */
 #endif
             /* DVNOTE: should we try read only? */
-    	    (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
-	        if ( VALID_FILEHANDLE(*fh) )
+            (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
+            if ( VALID_FILEHANDLE(*fh) )
                 return REGERR_READONLY;
             else
                 return REGERR_FAIL;
 #ifdef EMFILE   /* Mac Does not have EMFILE  */               
-		case EMFILE:	/* too many files open */
+        case EMFILE:	/* too many files open */
 #endif
-		default:
-			return REGERR_FAIL;
-		}
-	}
+        default:
+            return REGERR_FAIL;
+        }
+    }
 
-	return REGERR_OK;
+    return REGERR_OK;
 
-}	/* OpenFile */
+}   /* OpenFile */
 #else
 static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 {
@@ -472,56 +475,56 @@ static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
         }
     }
 
-	return err;
+    return err;
 
-}	/* ReadFile */
+}   /* ReadFile */
 
 
 
 static REGERR nr_WriteFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer)
 {
 
-	/* Note: 'offset' will commonly be the end of the file, in which
-	 * case this function extends the file to 'offset'+'len'. This may
-	 * be a two-step operation on some platforms.
-	 */
-	XP_ASSERT(len > 0);
-	XP_ASSERT(buffer);
-	XP_ASSERT(fh != NULL);
+    /* Note: 'offset' will commonly be the end of the file, in which
+     * case this function extends the file to 'offset'+'len'. This may
+     * be a two-step operation on some platforms.
+     */
+    XP_ASSERT(len > 0);
+    XP_ASSERT(buffer);
+    XP_ASSERT(fh != NULL);
 
-	if (XP_FileSeek(fh, offset, SEEK_SET) != 0)
+    if (XP_FileSeek(fh, offset, SEEK_SET) != 0)
         return REGERR_FAIL;
 
-	if ((int32)XP_FileWrite(buffer, len, fh) != len)
+    if ((int32)XP_FileWrite(buffer, len, fh) != len)
     {
         /* disk full or some other catastrophic error */
-		return REGERR_FAIL;
-	}
+        return REGERR_FAIL;
+    }
 
-	return REGERR_OK;
+    return REGERR_OK;
 
-}	/* WriteFile */
+}   /* WriteFile */
 
 
 
 static REGERR nr_LockRange(FILEHANDLE fh, REGOFF offset, int32 len)
 {
-	/* TODO: Implement XP lock function with built-in retry. */
+    /* TODO: Implement XP lock function with built-in retry. */
 
-	return REGERR_OK;
+    return REGERR_OK;
 
-}	/* LockRange */
+}   /* LockRange */
 
 
 
 static REGERR nr_UnlockRange(FILEHANDLE fh, REGOFF offset, int32 len)
 {
-	/* TODO: Implement XP unlock function with built-in retry. */
+    /* TODO: Implement XP unlock function with built-in retry. */
 
-	XP_FileFlush( fh );
+    XP_FileFlush( fh );
     return REGERR_OK;
 
-}	/* UnlockRange */
+}   /* UnlockRange */
 
 
 
@@ -531,13 +534,13 @@ static int32 nr_GetFileLength(FILEHANDLE fh)
     int32 length;
     int32 curpos;
 
-	curpos = XP_FileTell(fh);
-	XP_FileSeek(fh, 0, SEEK_END);
+    curpos = XP_FileTell(fh);
+    XP_FileSeek(fh, 0, SEEK_END);
     length = XP_FileTell(fh);
-	XP_FileSeek(fh, curpos, SEEK_SET);
-	return length;
+    XP_FileSeek(fh, curpos, SEEK_SET);
+    return length;
 
-}	/* GetFileLength */
+}   /* GetFileLength */
 #endif
 
 
@@ -812,49 +815,51 @@ static REGERR nr_CreateRoot(REGFILE *reg)
 
 static REGERR nr_Lock(REGFILE *reg)
 {
+    REGERR status;
 
-	REGERR err;
+    /* lock file */
+    status = nr_LockRange(reg->fh, 0, sizeof(REGHDR));
 
-	/* lock header */
-	err = nr_LockRange(reg->fh, 0, sizeof(REGHDR));
-	if (err != REGERR_OK)
-		return err;
+    if (status == REGERR_OK)
+    {
+        /* lock the object */
+        PR_Lock( reg->lock );
 
-#ifndef STANDALONE_REGISTRY
-    PR_EnterMonitor( reg->monitor );
-#endif
+        /* try to refresh header info */
+        status = nr_ReadHdr(reg);
+        if ( status != REGERR_OK ) {
+            PR_Unlock( reg->lock );
+        }
+    }
 
-	return nr_ReadHdr(reg);
-
-}	/* Lock */
+    return status;
+}   /* Lock */
 
 
 
 static REGERR nr_Unlock(REGFILE *reg)
 {
-#ifndef STANDALONE_REGISTRY
-    PR_ExitMonitor( reg->monitor );
-#endif
+    PR_Unlock( reg->lock );
 
-	return nr_UnlockRange(reg->fh, 0, sizeof(REGHDR));
-}	/* Unlock */
+    return nr_UnlockRange(reg->fh, 0, sizeof(REGHDR));
+}   /* Unlock */
 
 
 
 static REGERR nr_ReadDesc(REGFILE *reg, REGOFF offset, REGDESC *desc)
 {
 
-	REGERR err;
+    REGERR err;
     char descBuf[ DESC_SIZE ];
 
-	XP_ASSERT(reg);
-	XP_ASSERT(offset >= HDRRESERVE);
-	XP_ASSERT(offset < reg->hdr.avail);
-	XP_ASSERT(desc);
+    XP_ASSERT(reg);
+    XP_ASSERT(offset >= HDRRESERVE);
+    XP_ASSERT(offset < reg->hdr.avail);
+    XP_ASSERT(desc);
 
-	err = nr_ReadFile(reg->fh, offset, DESC_SIZE, &descBuf);
-	if (err == REGERR_OK)
-	{
+    err = nr_ReadFile(reg->fh, offset, DESC_SIZE, &descBuf);
+    if (err == REGERR_OK)
+    {
         desc->location  = nr_ReadLong ( descBuf + DESC_LOCATION );
         desc->name      = nr_ReadLong ( descBuf + DESC_NAME );
         desc->namelen   = nr_ReadShort( descBuf + DESC_NAMELEN );
@@ -873,15 +878,15 @@ static REGERR nr_ReadDesc(REGFILE *reg, REGOFF offset, REGDESC *desc)
             desc->valuebuf  = 0;
         }
 
-		if (desc->location != offset)
-			err = REGERR_BADLOCN;
+        if (desc->location != offset)
+            err = REGERR_BADLOCN;
         else if ( desc->type & REGTYPE_DELETED )
             err = REGERR_DELETED;
-	}
+    }
 
-	return err;
+    return err;
 
-}	/* ReadDesc */
+}   /* ReadDesc */
 
 
 
@@ -1036,7 +1041,7 @@ static REGERR nr_AppendName(REGFILE *reg, char *name, REGDESC *desc)
     if (reg->readOnly)
         return REGERR_READONLY;
 
-	len = XP_STRLEN(name) + 1;
+    len = XP_STRLEN(name) + 1;
 
     /* check for valid name parameter */
     if ( len == 1 )
@@ -1051,31 +1056,31 @@ static REGERR nr_AppendName(REGFILE *reg, char *name, REGDESC *desc)
     }
 
     /* save the name */
-	err = nr_WriteFile(reg->fh, reg->hdr.avail, len, name);
+    err = nr_WriteFile(reg->fh, reg->hdr.avail, len, name);
 
     /* if write successful update the desc and hdr */
-	if (err == REGERR_OK)
-	{
+    if (err == REGERR_OK)
+    {
         desc->namelen = (uint16)len;
         desc->name = reg->hdr.avail;
-		reg->hdr.avail += len;
-		reg->hdrDirty = 1;
+        reg->hdr.avail += len;
+        reg->hdrDirty = 1;
 #if NOCACHE_HDR
-		err = nr_WriteHdr(reg);
+        err = nr_WriteHdr(reg);
 #endif
-	}
+    }
 
-	return err;
+    return err;
 
-}	/* nr_AppendName */
+}   /* nr_AppendName */
 
 
 
 static REGERR nr_WriteString(REGFILE *reg, char *string, REGDESC *desc)
 {
-	uint32 len;
+    uint32 len;
 
-	XP_ASSERT(string);
+    XP_ASSERT(string);
     if (!nr_IsValidUTF8(string))
         return REGERR_BADUTF8;
     if (reg->readOnly)
@@ -1084,17 +1089,17 @@ static REGERR nr_WriteString(REGFILE *reg, char *string, REGDESC *desc)
 
     return nr_WriteData( reg, string, len, desc );
 
-}	/* nr_WriteString */
+}   /* nr_WriteString */
 
 
 
 static REGERR nr_WriteData(REGFILE *reg, char *string, uint32 len, REGDESC *desc)
 {
-	REGERR err;
+    REGERR err;
 
-	XP_ASSERT(reg);
-	XP_ASSERT(string);
-	XP_ASSERT(desc);
+    XP_ASSERT(reg);
+    XP_ASSERT(string);
+    XP_ASSERT(desc);
 
     if (reg->readOnly)
         return REGERR_READONLY;
@@ -1107,7 +1112,7 @@ static REGERR nr_WriteData(REGFILE *reg, char *string, uint32 len, REGDESC *desc
 
     /* save the data in the same place if it fits */
     if ( len <= desc->valuebuf ) {
-    	err = nr_WriteFile( reg->fh, desc->value, len, string );
+        err = nr_WriteFile( reg->fh, desc->value, len, string );
         if ( err == REGERR_OK ) {
             desc->valuelen = len;
         }
@@ -1115,28 +1120,28 @@ static REGERR nr_WriteData(REGFILE *reg, char *string, uint32 len, REGDESC *desc
     else {
         /* otherwise append new data */
         err = nr_AppendData( reg, string, len, desc );
-	}
+    }
 
-	return err;
+    return err;
 
-}	/* nr_WriteData */
+}   /* nr_WriteData */
 
 
 
 static REGERR nr_AppendString(REGFILE *reg, char *string, REGDESC *desc)
 {
-	uint32 len;
+    uint32 len;
 
-	XP_ASSERT(string);
+    XP_ASSERT(string);
     if (!nr_IsValidUTF8(string))
         return REGERR_BADUTF8;
     if (reg->readOnly)
         return REGERR_READONLY;
-	len = XP_STRLEN(string) + 1;
+    len = XP_STRLEN(string) + 1;
 
     return nr_AppendData( reg, string, len, desc );
 
-}	/* nr_AppendString */
+}   /* nr_AppendString */
 
 
 
@@ -1462,53 +1467,53 @@ static REGERR nr_Find(REGFILE *reg,
 			Bool raw)
 {
 
-	REGERR  err;
-	REGDESC desc;
-	REGOFF  offPrev = 0;
-	char    namebuf[MAXREGNAMELEN];
-	char    *p;
+    REGERR  err;
+    REGDESC desc;
+    REGOFF  offPrev = 0;
+    char    namebuf[MAXREGNAMELEN];
+    char    *p;
 
     XP_ASSERT( pPath != NULL );
     XP_ASSERT( offParent >= HDRRESERVE );
     XP_ASSERT( VALID_FILEHANDLE( reg->fh ) );
 
-	if (pPrev)
+    if (pPrev)
         *pPrev = 0;
-	if (pParent)
+    if (pParent)
         *pParent = 0;
 
     /* read starting desc */
-	err = nr_ReadDesc( reg, offParent, &desc);
+    err = nr_ReadDesc( reg, offParent, &desc);
 
-	if (raw == TRUE) {
-		/* save current location as parent of next segment */
-		offParent = desc.location;
-		/* look for name at next level down */
-		err = nr_FindAtLevel(reg, desc.down, pPath, &desc, &offPrev);
-	}
-	else {
-		/* Walk 'path', reading keys into 'desc' */
-		p = pPath;
-		while ( err == REGERR_OK ) {
-			
-			err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
-			
-			if ( err == REGERR_OK ) {
-				/* save current location as parent of next segment */
-				offParent = desc.location;
-				/* look for name at next level down */
-				err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, &offPrev);
-			}
-		}
-	}
+    if (raw == TRUE) {
+        /* save current location as parent of next segment */
+        offParent = desc.location;
+        /* look for name at next level down */
+        err = nr_FindAtLevel(reg, desc.down, pPath, &desc, &offPrev);
+    }
+    else {
+        /* Walk 'path', reading keys into 'desc' */
+        p = pPath;
+        while ( err == REGERR_OK ) 
+        {
+            err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
+
+            if ( err == REGERR_OK ) {
+                /* save current location as parent of next segment */
+                offParent = desc.location;
+                /* look for name at next level down */
+                err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, &offPrev);
+            }
+        }
+    }
 
     if ( (raw == FALSE && err == REGERR_NOMORE) ||
-		 (raw == TRUE && err == REGERR_OK) ) {
+            (raw == TRUE && err == REGERR_OK) ) {
         /* we found all the segments of the path--success! */
         err = REGERR_OK;
 
-    	if (pDesc) {
-    		COPYDESC(pDesc, &desc);
+        if (pDesc) {
+            COPYDESC(pDesc, &desc);
         }
     	if (pPrev) {
     		*pPrev = offPrev;
@@ -1518,9 +1523,11 @@ static REGERR nr_Find(REGFILE *reg,
         }
     }
     
-	return err;
+    return err;
 
-}	/* nr_Find */
+}   /* nr_Find */
+
+
 
 
 /* nr_FindAtLevel -- looks for a node matching "pName" on the level starting
@@ -1588,74 +1595,74 @@ static REGERR nr_CreateSubKey(REGFILE *reg, REGDESC *pParent, char *name)
     /* nr_CreateSubKey does NO error checking--callers *MUST*
      * ensure that there are no duplicates
      */
-	REGDESC desc;
-	REGERR err;
+    REGDESC desc;
+    REGERR err;
 
-	XP_ASSERT(reg);
-	XP_ASSERT(pParent);
-	XP_ASSERT(name);
+    XP_ASSERT(reg);
+    XP_ASSERT(pParent);
+    XP_ASSERT(name);
 
-	err = nr_AppendName(reg, name, &desc);
+    err = nr_AppendName(reg, name, &desc);
     if (err != REGERR_OK)
-		return err;
+        return err;
 
     desc.type = REGTYPE_KEY;
-	desc.left = pParent->down;
-	desc.down = 0;
-	desc.value = 0;
+    desc.left = pParent->down;
+    desc.down = 0;
+    desc.value = 0;
     desc.valuelen = 0;
     desc.valuebuf = 0;
     desc.parent   = pParent->location;
 
-	err = nr_AppendDesc(reg, &desc, &pParent->down);
+    err = nr_AppendDesc(reg, &desc, &pParent->down);
     if (err != REGERR_OK)
-		return err;
+        return err;
 
-	/* printf("nr_CreateSubKey: %s @0x%lx\n", name, pParent->down); */
+    /* printf("nr_CreateSubKey: %s @0x%lx\n", name, pParent->down); */
 
-	err = nr_WriteDesc(reg, pParent);
-	COPYDESC(pParent, &desc);
+    err = nr_WriteDesc(reg, pParent);
+    COPYDESC(pParent, &desc);
 
-	return err;
+    return err;
 
-}	/* nr_CreateSubKey */
+}   /* nr_CreateSubKey */
 
 
 
 static REGERR nr_CreateEntryString(REGFILE *reg, REGDESC *pParent, char *name, char *value)
 {
-	REGDESC desc;
-	REGERR  err;
+    REGDESC desc;
+    REGERR  err;
 
-	XP_ASSERT(reg);
-	XP_ASSERT(pParent);
-	XP_ASSERT(name);
-	XP_ASSERT(value);
+    XP_ASSERT(reg);
+    XP_ASSERT(pParent);
+    XP_ASSERT(name);
+    XP_ASSERT(value);
 
     memset( &desc, 0, sizeof(REGDESC) );
 
-	err = nr_AppendName(reg, name, &desc);
+    err = nr_AppendName(reg, name, &desc);
     if (err != REGERR_OK)
-		return err;
+        return err;
 
-	err = nr_AppendString(reg, value, &desc);
+    err = nr_AppendString(reg, value, &desc);
     if (err != REGERR_OK)
-		return err;
+        return err;
 
     desc.type = REGTYPE_ENTRY_STRING_UTF;
-	desc.left = pParent->value;
-	desc.down = 0;
+    desc.left = pParent->value;
+    desc.down = 0;
     desc.parent = pParent->location;
 
-	err = nr_AppendDesc(reg, &desc, &pParent->value);
+    err = nr_AppendDesc(reg, &desc, &pParent->value);
     if (err != REGERR_OK)
-		return err;
+        return err;
 
-	/* printf("nr_AddEntry: %s=%s @0x%lx\n", name, value, pParent->value); */
+    /* printf("nr_AddEntry: %s=%s @0x%lx\n", name, value, pParent->value); */
 
-	return nr_WriteDesc(reg, pParent);
+    return nr_WriteDesc(reg, pParent);
 
-}	/* nr_CreateEntryString */
+}   /* nr_CreateEntryString */
 
 
 
@@ -1811,7 +1818,9 @@ static REGOFF nr_TranslateKey( REGFILE *reg, RKEY key );
 static void   nr_InitStdRkeys( REGFILE *reg );
 static Bool   nr_ProtectedNode( REGFILE *reg, REGOFF key );
 static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bool raw );
-static void   nr_Upgrade_1_1( REGFILE *reg );
+static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, Bool raw );
+static REGERR nr_RegOpen( char *filename, HREG *hReg );
+static REGERR nr_RegClose( HREG hReg );
 static char*  nr_GetUsername();
 static char*  nr_GetRegName (char *name);
 
@@ -1958,57 +1967,57 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bo
 {
     REGERR      err;
     REGDESC     desc;
+    REGOFF      start;
     char        namebuf[MAXREGNAMELEN];
     char        *p;
 
+    XP_ASSERT( regStartCount > 0 );
+    XP_ASSERT( reg != NULL );
     XP_ASSERT( path != NULL );
     XP_ASSERT( *path != '\0' );
-    XP_ASSERT( key >= HDRRESERVE );
     XP_ASSERT( VALID_FILEHANDLE( reg->fh ) );
 
-    /* lock registry */
-	err = nr_Lock( reg );
-	if ( err != REGERR_OK ) {
-    	return err;
+    /* have to translate again in case this is an internal call */
+    start = nr_TranslateKey( reg, key );
+
+    /* Get starting desc */
+    err = nr_ReadDesc( reg, start, &desc );
+
+    if (raw == TRUE) {
+        /* look for name at next level down */
+        err = nr_FindAtLevel(reg, desc.down, path, &desc, 0);
+
+        /* if key is not found */
+        if ( err == REGERR_NOFIND ) {
+            /* add it as a sub-key to the last found key */
+            err = nr_CreateSubKey(reg, &desc, path);
+        }
     }
+    else {
+        /* Walk 'path', reading keys into 'desc' */
+        p = path;
+        while ( err == REGERR_OK ) {
 
-	/* Get starting desc */
-	err = nr_ReadDesc( reg, key, &desc );
+            /* get next name on the path */
+            err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
+            if ( err == REGERR_OK ) {
 
-	if (raw == TRUE) {
-		/* look for name at next level down */
-		err = nr_FindAtLevel(reg, desc.down, path, &desc, 0);
-		
-		/* if key is not found */
-		if ( err == REGERR_NOFIND ) {
-			/* add it as a sub-key to the last found key */
-			err = nr_CreateSubKey(reg, &desc, path);
-		}
-	}
-	else {
-		/* Walk 'path', reading keys into 'desc' */
-		p = path;
-		while ( err == REGERR_OK ) {
-			
-			/* get next name on the path */
-			err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
-			if ( err == REGERR_OK ) {
-				
-				/* look for name at next level down */
-				err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, 0);
-				
-				/* if key is not found */
-				if ( err == REGERR_NOFIND ) {
-					/* add it as a sub-key to the last found key */
-					err = nr_CreateSubKey(reg, &desc, namebuf);
-				}
-			}
-		}
-	}
+                /* look for name at next level down */
+                err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, 0);
+
+                /* if key is not found */
+                if ( err == REGERR_NOFIND ) {
+                    /* add it as a sub-key to the last found key */
+                    err = nr_CreateSubKey(reg, &desc, namebuf);
+                }
+            }
+        }
+    }
 
     /* it's good to have processed the whole path */
     if ( (raw == FALSE && err == REGERR_NOMORE) ||
-		 (raw == TRUE && err == REGERR_OK) ) {
+         (raw == TRUE && err == REGERR_OK) ) 
+    {
         err = REGERR_OK;
 
         /* return new key if the caller wants it */
@@ -2017,186 +2026,101 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bo
         }
     }
 
-    /* unlock registry */
-	nr_Unlock(reg);
-
-	return err;
+    return err;
 
 }   /* nr_RegAddKey */
 
 
 
-static void nr_Upgrade_1_1(REGFILE *reg)
+
+static REGERR nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, Bool raw )
 {
-	REGDESC desc;
-    REGOFF  level;
-	REGERR err;
+    REGERR      err;
+    REGOFF      start;
+    REGDESC     desc;
+    REGDESC     predecessor;
+    REGOFF      offPrev;
+    REGOFF      offParent;
+    REGOFF*     link;
 
-	XP_ASSERT(reg);
+    XP_ASSERT( regStartCount > 0 );
+    XP_ASSERT( reg != NULL );
+    XP_ASSERT( path != NULL );
+    XP_ASSERT( *path != '\0' );
+    XP_ASSERT( VALID_FILEHANDLE( reg->fh ) );
 
-    /* find offset for start of the top-level nodes */
-    err = nr_ReadDesc( reg, reg->hdr.root, &desc);
-    if ( err != REGERR_OK ) {
-        return;
-    }
-    level = desc.down;
+    start = nr_TranslateKey( reg, key );
+    if ( path == NULL || *path == '\0' || start == 0 )
+        return REGERR_PARAM;
 
-    /* ROOTKEY_VERSIONS */
-    err = nr_FindAtLevel( reg, level, OLD_VERSIONS_STR, &desc, NULL );
-    if ( err == REGERR_NOFIND ) {
-        err = REGERR_OK;
-    }
-    else if ( REGERR_OK == err ) {
-        err = nr_AppendName( reg, ROOTKEY_VERSIONS_STR, &desc );
-        if ( REGERR_OK == err ) {
-            err = nr_WriteDesc( reg, &desc );
+    /* find the specified key */
+    err = nr_Find( reg, start, path, &desc, &offPrev, &offParent, raw );
+    if ( err == REGERR_OK ) {
+
+        XP_ASSERT( !TYPE_IS_ENTRY( desc.type ) );
+
+        /* make sure it's childless and not a top-level key */
+        if ( (desc.down == 0) && !nr_ProtectedNode( reg, desc.location ) ) {
+
+            /* Are we the first on our level? */
+            if ( offPrev == 0 ) {
+                /* Yes: link to parent's "down" pointer */
+                err = nr_ReadDesc( reg, offParent, &predecessor );
+                link = &(predecessor.down);
+            }
+            else {
+                /* No: link using predecessor's "left" pointer */
+                err = nr_ReadDesc( reg, offPrev, &predecessor );
+                link = &(predecessor.left);
+            }
+
+            /* If we read the predecessor desc OK */
+            if (err == REGERR_OK) {
+                XP_ASSERT( *link == desc.location );
+
+                /* link predecessor to next, removing current node from chain */
+                *link = desc.left;
+
+                /* Write the updated predecessor */
+                err = nr_WriteDesc( reg, &predecessor );
+                if ( err == REGERR_OK ) {
+                    /* Mark key deleted to prevent bogus use by anyone
+                     * who is holding an RKEY for that node
+                     */
+                    desc.type |= REGTYPE_DELETED;
+                    err = nr_WriteDesc( reg, &desc );
+                }
+            }
+        }
+        else {
+            /* specified node is protected from deletion */
+            err = REGERR_FAIL;
         }
     }
-    if ( err != REGERR_OK )
-        return;
 
-    /* ROOTKEY_USERS */
-    err = nr_FindAtLevel( reg, level, OLD_USERS_STR, &desc, NULL );
-    if ( err == REGERR_NOFIND ) {
-        err = REGERR_OK;
-    }
-    else if ( REGERR_OK == err ) {
-        err = nr_AppendName( reg, ROOTKEY_USERS_STR, &desc );
-        if ( REGERR_OK == err ) {
-            err = nr_WriteDesc( reg, &desc );
-        }
-    }
-    if ( err != REGERR_OK )
-        return;
+    return err;
 
-    /* ROOTKEY_COMMON */
-    err = nr_FindAtLevel( reg, level, OLD_COMMON_STR, &desc, NULL );
-    if ( err == REGERR_NOFIND ) {
-        err = REGERR_OK;
-    }
-    else if ( REGERR_OK == err ) {
-        err = nr_AppendName( reg, ROOTKEY_COMMON_STR, &desc );
-        if ( REGERR_OK == err ) {
-            err = nr_WriteDesc( reg, &desc );
-        }
-    }
-    if ( err != REGERR_OK )
-        return;
+}   /* nr_RegDeleteKey */
 
-    /* Mark registry with new version */
-    reg->hdr.verMinor = MINOR_VERSION;
-    nr_WriteHdr(reg);
 
-}
 
-static char *nr_GetUsername()
-{
-  if (NULL == user_name) {
-    return "default";
-  } else {
-    return user_name;
-  }
-}
 
-static char* nr_GetRegName (char *name)
-{
-    if (name == NULL || *name == '\0') {
-        XP_ASSERT( globalRegName != NULL );
-        return globalRegName;
-    } else {
-        return name;
-    }
-}
-
-/* ---------------------------------------------------------------------
- * Public API
- * --------------------------------------------------------------------- */
-
-/* ---------------------------------------------------------------------
- * NR_RegGetUsername - Gets a copy of the current username
- *
- * Parameters:
- *   A variable which, on exit will contain an alloc'ed string which is a
- *   copy of the current username.
- *
- * Output: 
- * ---------------------------------------------------------------------
- */
-
-VR_INTERFACE(REGERR) NR_RegGetUsername(char **name)
-{
-  char *tmp = XP_STRDUP(nr_GetUsername());
-
-  XP_ASSERT(name);
-
-  if (NULL == tmp) {
-    *name = NULL;
-    return REGERR_MEMORY;
-  }
-  
-  *name = tmp;
-  
-  return REGERR_OK;
-}
-
-/* ---------------------------------------------------------------------
- * NR_RegSetUsername - Set the current username
- *
- * Parameters:
- *     name     - name of the current user
- *
- * Output:
- * ---------------------------------------------------------------------
- */
-
-VR_INTERFACE(REGERR) NR_RegSetUsername(const char *name)
-{
-  char *tmp = XP_STRDUP(name);
-  if (NULL == tmp) {
-    return REGERR_MEMORY;
-  }
-  
-  XP_FREEIF(user_name);
-
-/* changing the username should go through and clear out the current.user
-   for each open registry. */
-   
-  user_name = tmp;
-  
-  return REGERR_OK;
-}
-
-/* ---------------------------------------------------------------------
- * NReg_Open - Open a netscape XP registry
- *
- * Parameters:
- *    filename   - registry file to open. NULL or ""  opens standard
- *                 local registry. (This parameter currently ignored)
- *    hReg       - OUT: handle to opened registry
- *
- * Output:
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
+static REGERR nr_RegOpen( char *filename, HREG *hReg )
 {
     REGERR    status = REGERR_OK;
     REGFILE   *pReg;
     REGHANDLE *pHandle;
 
+    XP_ASSERT( regStartCount > 0 );
+
     /* initialize output handle in case of error */
+    if ( hReg == NULL ) {
+        return REGERR_PARAM;
+    }
     *hReg = NULL;
-
-    XP_ASSERT(bRegStarted); /* you must call NR_StartupRegistry() */
-    if ( !bRegStarted )
-        return REGERR_FAIL;
-
-    filename = nr_GetRegName( filename );
-
-#if !defined(STANDALONE_REGISTRY)
-    PR_EnterMonitor(reglist_monitor);
-#endif
-
+    
     /* Look for named file in list of open registries */
+    filename = nr_GetRegName( filename );
     if (filename == NULL) {
         filename = "";
     }
@@ -2219,7 +2143,7 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
             XP_FREE( pReg );
             status = REGERR_MEMORY;
             goto bail;
-	    }
+        }
 
         status = nr_OpenFile( filename, &(pReg->fh) );
         if (status == REGERR_READONLY) {
@@ -2228,7 +2152,9 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
             status = REGERR_OK;
         }
         if ( status != REGERR_OK ) {
+            XP_FREE( pReg->filename );
             XP_FREE( pReg );
+
             goto bail;
         }
 
@@ -2236,6 +2162,7 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
         status = nr_ReadHdr( pReg );
         if ( status != REGERR_OK ) {
             nr_CloseFile( &(pReg->fh) );
+            XP_FREE( pReg->filename );
             XP_FREE( pReg );
             goto bail;
         }
@@ -2244,13 +2171,10 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
         pReg->refCount = 0;
 
 #ifndef STANDALONE_REGISTRY
-        pReg->monitor = PR_NewMonitor();
+        pReg->lock = PR_NewLock();
 #endif
         /* now done with everything that needs to protect the header */
         pReg->inInit = FALSE;
-
-        if ( pReg->hdr.verMajor == 1 && pReg->hdr.verMinor <= 1 )
-            nr_Upgrade_1_1(pReg);
 
         nr_InitStdRkeys( pReg );
 
@@ -2280,13 +2204,172 @@ VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
     *hReg = (void*)pHandle;
 
 bail:
-#if !defined(STANDALONE_REGISTRY)
-    PR_ExitMonitor(reglist_monitor);
-#endif
+    return status;
+
+}   /* nr_RegOpen */
+
+
+
+static REGERR nr_RegClose( HREG hReg )
+{
+    REGERR      err = REGERR_OK;
+    REGHANDLE*  reghnd = (REGHANDLE*)hReg;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify handle */
+    err = VERIFY_HREG( hReg );
+    if ( err == REGERR_OK )
+    {
+        XP_ASSERT( VALID_FILEHANDLE(reghnd->pReg->fh) );
+
+        /* lower REGFILE user count */
+        reghnd->pReg->refCount--;
+
+        /* if registry is no longer in use */
+        if ( reghnd->pReg->refCount < 1 ) {
+            /* ...then close the file */
+            if ( reghnd->pReg->hdrDirty ) {
+                nr_WriteHdr( reghnd->pReg );
+            }
+            nr_CloseFile( &(reghnd->pReg->fh) );
+            /* ...and delete REGFILE node from list */
+            nr_DeleteNode( reghnd->pReg );
+        }
+
+        reghnd->magic = 0;    /* prevent accidental re-use */  
+        XP_FREE( reghnd );
+    }
+
+    return err;
+
+}   /* nr_RegClose */
+
+
+
+static char *nr_GetUsername()
+{
+  if (NULL == user_name) {
+    return "default";
+  } else {
+    return user_name;
+  }
+}
+
+static char* nr_GetRegName (char *name)
+{
+    if (name == NULL || *name == '\0') {
+        XP_ASSERT( globalRegName != NULL );
+        return globalRegName;
+    } else {
+        return name;
+    }
+}
+
+
+
+
+/* ---------------------------------------------------------------------
+ * Public API
+ * --------------------------------------------------------------------- */
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetUsername - Gets a copy of the current username
+ *
+ * Parameters:
+ *   A variable which, on exit will contain an alloc'ed string which is a
+ *   copy of the current username.
+ *
+ * Output: 
+ * ---------------------------------------------------------------------
+ */
+
+VR_INTERFACE(REGERR) NR_RegGetUsername(char **name)
+{
+    /* XXX: does this need locking? */
+
+    if ( name == NULL )
+        return REGERR_PARAM;
+
+    *name = XP_STRDUP(nr_GetUsername());
+
+    if ( NULL == *name )
+        return REGERR_MEMORY;
+
+    return REGERR_OK;
+}
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetUsername - Set the current username
+ *
+ * Parameters:
+ *     name     - name of the current user
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ */
+
+VR_INTERFACE(REGERR) NR_RegSetUsername(const char *name)
+{
+    char *tmp;
+
+    if ( name == NULL || *name == '\0' )
+        return REGERR_PARAM;
+
+    tmp = XP_STRDUP(name);
+    if (NULL == tmp) {
+        return REGERR_MEMORY;
+    }
+
+    PR_Lock( reglist_lock );
+
+    XP_FREEIF(user_name);
+    user_name = tmp;
+
+/* XXX: changing the username should go through and clear out the current.user
+   for each open registry. */
+
+    PR_Unlock( reglist_lock );
+  
+    return REGERR_OK;
+}
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NReg_Open - Open a netscape XP registry
+ *
+ * Parameters:
+ *    filename   - registry file to open. NULL or ""  opens standard
+ *                 local registry. (This parameter currently ignored)
+ *    hReg       - OUT: handle to opened registry
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
+{
+    REGERR    status = REGERR_OK;
+
+     /* you must call NR_StartupRegistry() first */
+    if ( regStartCount <= 0 )
+        return REGERR_FAIL;
+
+    PR_Lock(reglist_lock);
+
+    status = nr_RegOpen( filename, hReg );
+
+    PR_Unlock(reglist_lock);
 
     return status;
 
 }   /* NR_RegOpen */
+
 
 
 
@@ -2301,53 +2384,1174 @@ bail:
  */
 VR_INTERFACE(REGERR) NR_RegClose( HREG hReg )
 {
-    REGERR      err;
+    REGERR      err = REGERR_OK;
     REGHANDLE*  reghnd = (REGHANDLE*)hReg;
 
-    XP_ASSERT(bRegStarted);
+    PR_Lock( reglist_lock );
 
-    /* verify handle */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
+    err = nr_RegClose( hReg );
 
-    XP_ASSERT( VALID_FILEHANDLE(reghnd->pReg->fh) );
+    PR_Unlock(reglist_lock);
 
-#if !defined(STANDALONE_REGISTRY)
-    PR_EnterMonitor(reglist_monitor);
-#endif
-    /* lower REGFILE user count */
-    reghnd->pReg->refCount--;
-
-    /* if registry is no longer in use */
-    if ( reghnd->pReg->refCount < 1 ) {
-        /* ...then close the file */
-    	if ( reghnd->pReg->hdrDirty ) {
-    		nr_WriteHdr( reghnd->pReg );
-        }
-    	nr_CloseFile( &(reghnd->pReg->fh) );
-        /* ...and delete REGFILE node from list */
-        nr_DeleteNode( reghnd->pReg );
-    }
-#if !defined(STANDALONE_REGISTRY)
-    PR_ExitMonitor(reglist_monitor);
-#endif
-
-    reghnd->magic = 0;    /* prevent accidental re-use */  
-    XP_FREE( reghnd );
-
-    return REGERR_OK;
+    return err;
 
 }   /* NR_RegClose */
 
 
-#ifndef STANDALONE_REGISTRY
-#include "VerReg.h"
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegAddKey - Add a key node to the registry
+ *
+ *      This routine is simply a wrapper to perform user input
+ *      validation and translation from HREG and standard key
+ *      values into the internal format
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - registry key obtained from NR_RegGetKey(),
+ *               or one of the standard top-level keys
+ *    path     - relative path of key to be added.  Intermediate
+ *               nodes will also be added if necessary.
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegAddKey( HREG hReg, RKEY key, char *path, RKEY *newKey )
+{
+    REGERR      err;
+    REGOFF      start;
+    REGFILE*    reg;
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    if ( path == NULL || *path == '\0' || reg == NULL )
+        return REGERR_PARAM;
+
+    /* lock the registry file */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        /* ... don't allow additional children of ROOTKEY */
+        start = nr_TranslateKey( reg, key );
+        if ( start != 0 && start != reg->hdr.root )
+        {
+            err = nr_RegAddKey( reg, start, path, newKey, FALSE );
+        }
+        else
+            err = REGERR_PARAM;
+
+        /* unlock the registry */
+        nr_Unlock( reg );
+    }
+
+    return err;
+}   /* NR_RegAddKey */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegAddKeyRaw - Add a key node to the registry
+ *
+ *      This routine is simply a wrapper to perform user input
+ *      validation and translation from HREG and standard key
+ *      values into the internal format. It is different from
+ *		NR_RegAddKey() in that it takes a keyname rather than
+ *		a path.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - registry key obtained from NR_RegGetKey(),
+ *               or one of the standard top-level keys
+ *    keyname  - name of key to be added. No parsing of this
+ *				 name happens.
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegAddKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *newKey )
+{
+    REGERR      err;
+    REGOFF      start;
+    REGFILE*    reg;
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    if ( keyname == NULL || *keyname == '\0' || reg == NULL )
+        return REGERR_PARAM;
+
+    /* lock the registry file */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        /* ... don't allow additional children of ROOTKEY */
+        start = nr_TranslateKey( reg, key );
+        if ( start != 0 && start != reg->hdr.root ) 
+        {
+            err = nr_RegAddKey( reg, start, keyname, newKey, TRUE );
+        }
+        else
+            err = REGERR_PARAM;
+
+        /* unlock the registry */
+        nr_Unlock( reg );
+    }
+
+    return err;
+}   /* NR_RegAddKeyRaw */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegDeleteKey - Delete the specified key
+ *
+ * Note that delete simply orphans blocks and makes no attempt
+ * to reclaim space in the file. Use NR_RegPack()
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    path     - relative path of key to delete
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegDeleteKey( HREG hReg, RKEY key, char *path )
+{
+    REGERR      err;
+    REGFILE*    reg;
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        err = nr_RegDeleteKey( reg, key, path, FALSE );
+        nr_Unlock( reg );
+    }
+
+    return err;
+}   /* NR_RegDeleteKey */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegDeleteKeyRaw - Delete the specified raw key
+ *
+ * Note that delete simply orphans blocks and makes no attempt
+ * to reclaim space in the file. Use NR_RegPack()
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY or parent to the raw key you wish to delete
+ *    keyname  - name of child key to delete
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw( HREG hReg, RKEY key, char *keyname )
+{
+    REGERR      err;
+    REGFILE*    reg;
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        err = nr_RegDeleteKey( reg, key, keyname, TRUE );
+        nr_Unlock( reg );
+    }
+
+    return err;
+}   /* NR_RegDeleteKeyRaw */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetKey - Get the RKEY value of a node from its path
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    path     - relative path of key to find.  (a blank path just gives you
+ *               the starting key--useful for verification, VersionRegistry)
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result )
+{
+    REGERR      err;
+    REGOFF      start;
+    REGFILE*    reg;
+    REGDESC     desc;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( path == NULL || result == NULL )
+        return REGERR_PARAM;
+
+    *result = (RKEY)0;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        start = nr_TranslateKey( reg, key );
+        if ( start != 0 )
+        {
+            /* find the specified key ( if it's valid )*/
+            err = nr_Find( reg, start, path, &desc, 0, 0, FALSE );
+            if ( err == REGERR_OK ) {
+                *result = (RKEY)desc.location;
+            }
+        }
+        else {
+            err = REGERR_PARAM;
+        }
+
+        nr_Unlock( reg );
+    }
+
+    return err;
+
+}   /* NR_RegGetKey */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetKeyRaw - Get the RKEY value of a node from its keyname
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    keyname  - keyname of key to find.  (a blank keyname just gives you
+ *               the starting key--useful for verification, VersionRegistry)
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *result )
+{
+    REGERR      err;
+    REGOFF      start;
+    REGFILE*    reg;
+    REGDESC     desc;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( keyname == NULL || result == NULL )
+        return REGERR_PARAM;
+
+    *result = (RKEY)0;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        start = nr_TranslateKey( reg, key );
+        if ( start != 0 )
+        {
+            /* find the specified key ( if it's valid )*/
+            err = nr_Find( reg, start, keyname, &desc, 0, 0, TRUE );
+            if ( err == REGERR_OK ) {
+                *result = (RKEY)desc.location;
+            }
+        }
+        else {
+            err = REGERR_PARAM;
+        }
+
+        nr_Unlock( reg );
+    }
+
+    return err;
+
+}   /* NR_RegGetKeyRaw */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetEntryInfo - Get some basic info about the entry data
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    info     - return: Entry info object
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetEntryInfo( HREG hReg, RKEY key, char *name, 
+                            REGINFO *info )
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+    
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( name == NULL || *name == '\0' || info == NULL )
+        return REGERR_PARAM;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        /* read starting desc */
+        err = nr_ReadDesc( reg, key, &desc);
+        if ( err == REGERR_OK ) 
+        {
+            /* if the named entry exists */
+            err = nr_FindAtLevel( reg, desc.value, name, &desc, NULL );
+            if ( err == REGERR_OK ) 
+            {
+                /* ... return the values */
+                if ( info->size == sizeof(REGINFO) )
+                {
+                    info->entryType   = desc.type;
+                    info->entryLength = desc.valuelen;
+                }
+                else
+                {
+                    /* uninitialized (maybe invalid) REGINFO structure */
+                    err = REGERR_PARAM;
+                }
+            }
+        }
+        nr_Unlock( reg );
+    }
+
+    return err;
+
+}   /* NR_RegGetEntryInfo */
+
+
+
+       
+/* ---------------------------------------------------------------------
+ * NR_RegGetEntryString - Get the UTF string value associated with the
+ *                       named entry of the specified key.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    buffer   - destination for string
+ *    bufsize  - size of buffer
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetEntryString( HREG  hReg, RKEY  key, char  *name,
+                            char  *buffer, uint32 bufsize)
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( name == NULL || *name == '\0' || buffer == NULL || bufsize == 0 )
+        return REGERR_PARAM;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        /* read starting desc */
+        err = nr_ReadDesc( reg, key, &desc);
+        if ( err == REGERR_OK ) 
+        {
+            /* if the named entry exists */
+            err = nr_FindAtLevel( reg, desc.value, name, &desc, NULL );
+            if ( err == REGERR_OK ) 
+            {
+                /* read the string */
+                if ( desc.type == REGTYPE_ENTRY_STRING_UTF ) 
+                {
+                    err = nr_ReadData( reg, &desc, bufsize, buffer );
+                    /* prevent run-away strings */
+                    buffer[bufsize-1] = '\0';
+                }
+                else {
+                    err = REGERR_BADTYPE;
+                }
+            }
+        }
+        nr_Unlock( reg );
+    }
+
+    return err;
+
+}   /* NR_RegGetEntryString */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetEntry - Get the value data associated with the
+ *                  named entry of the specified key.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    buffer   - destination for data
+ *    size     - in:  size of buffer
+ *               out: size of actual data (incl. \0 term. for strings)
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
+    void *buffer, uint32 *size )
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+    char        *tmpbuf = NULL;  /* malloc a tmp buffer to convert XP int arrays */
+    uint32      nInt;
+    uint32      *pISrc;
+    uint32      *pIDest;
+    XP_Bool     needFree = FALSE;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( name == NULL || *name == '\0' || buffer == NULL || size == NULL )
+        return REGERR_PARAM;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    err = nr_Lock( reg );
+    if ( err == REGERR_OK )
+    {
+        /* read starting desc */
+        err = nr_ReadDesc( reg, key, &desc);
+        if ( err == REGERR_OK )
+        {
+            /* if the named entry exists */
+            err = nr_FindAtLevel( reg, desc.value, name, &desc, NULL );
+            if ( err == REGERR_OK )
+            {
+                if ( desc.valuelen > *size ) {
+                    err = REGERR_BUFTOOSMALL;
+                }
+                else if ( desc.valuelen == 0 ) {
+                    err = REGERR_FAIL;
+                }
+                else switch (desc.type)
+                {
+                /* platform independent array of 32-bit integers */
+                case REGTYPE_ENTRY_INT32_ARRAY:
+                    tmpbuf = (char*)XP_ALLOC( desc.valuelen );
+                    if ( tmpbuf != NULL ) 
+                    {
+                        needFree = TRUE;
+                        err = nr_ReadData( reg, &desc, desc.valuelen, tmpbuf );
+                        if ( REGERR_OK == err )
+                        {
+                            /* convert int array */
+                            nInt = (desc.valuelen / INTSIZE);
+                            pISrc = (uint32*)tmpbuf;
+                            pIDest = (uint32*)buffer;
+                            for(; nInt > 0; nInt--, pISrc++, pIDest++) {
+                                *pIDest = nr_ReadLong((char*)pISrc);
+                            }
+                        }
+                    }
+                    else
+                        err = REGERR_MEMORY;
+                    break;
+
+                case REGTYPE_ENTRY_STRING_UTF:
+                    tmpbuf = (char*)buffer;
+                    err = nr_ReadData( reg, &desc, *size, tmpbuf );
+                    /* prevent run-away strings */
+                    tmpbuf[(*size)-1] = '\0';
+                    break;
+
+                case REGTYPE_ENTRY_FILE:
+
+                    err = nr_ReadData( reg, &desc, *size, (char*)buffer );
+#ifdef XP_MAC
+                    if (err == 0)
+                    {
+                        tmpbuf = nr_PathFromMacAlias(buffer, *size);
+                        if (tmpbuf == NULL) 
+                        {
+                            buffer = NULL;
+                            err = REGERR_NOFIND;
+                        }
+                        else 
+                        {
+                            needFree = TRUE;
+
+                            if (XP_STRLEN(tmpbuf) < *size) /* leave room for \0 */
+                                XP_STRCPY(buffer, tmpbuf);
+                            else 
+                                err = REGERR_BUFTOOSMALL;
+                        }
+                    }
+#endif
+                    break;
+                
+                case REGTYPE_ENTRY_BYTES:
+                default:              /* return raw data for unknown types */
+                    err = nr_ReadData( reg, &desc, *size, (char*)buffer );
+                    break;
+                }
+
+                /* return the actual data size */
+                *size = desc.valuelen;
+            }
+        }
+        nr_Unlock( reg );
+    }
+
+    if (needFree)
+        XP_FREE(tmpbuf);
+
+    return err;
+
+}   /* NR_RegGetEntry */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetEntryString - Store a UTF string value associated with the
+ *                       named entry of the specified key.  Used for
+ *                       both creation and update.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    buffer   - UTF String to store
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegSetEntryString( HREG hReg, RKEY key, char *name,
+                                     char *buffer )
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+    REGDESC     parent;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( name == NULL || *name == '\0' || buffer == NULL )
+        return REGERR_PARAM;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( err != REGERR_OK )
+        return err;
+
+    /* read starting desc */
+    err = nr_ReadDesc( reg, key, &parent);
+    if ( err == REGERR_OK ) {
+
+        /* if the named entry already exists */
+        err = nr_FindAtLevel( reg, parent.value, name, &desc, NULL );
+        if ( err == REGERR_OK ) {
+            /* then update the existing one */
+            err = nr_WriteString( reg, buffer, &desc );
+            if ( err == REGERR_OK ) {
+                desc.type = REGTYPE_ENTRY_STRING_UTF;
+                err = nr_WriteDesc( reg, &desc );
+            }
+        }
+        else if ( err == REGERR_NOFIND ) {
+            /* otherwise create a new entry */
+            err = nr_CreateEntryString( reg, &parent, name, buffer );
+        }
+        /* other errors fall through */
+    }
+
+    /* unlock registry */
+    nr_Unlock( reg );
+
+    return err;
+
+}   /* NR_RegSetEntryString */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetEntry - Store value data associated with the named entry
+ *                  of the specified key.  Used for both creation and update.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ *    type     - type of data to be stored
+ *    buffer   - data to store
+ *    size     - length of data to store in bytes
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 type,
+    void *buffer, uint32 size )
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+    REGDESC     parent;
+    char        *data = NULL;
+    uint32      nInt;
+    uint32      *pIDest;
+    uint32      *pISrc;
+    XP_Bool     needFree = FALSE;
+    int32       datalen = size;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( name == NULL || *name == '\0' || buffer == NULL || size == 0 )
+        return REGERR_PARAM;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* validate type and convert numerics to XP format */
+    switch (type)
+    {
+        case REGTYPE_ENTRY_BYTES:
+            data = (char*)buffer;
+            break;
+
+        case REGTYPE_ENTRY_FILE:
+
+#ifdef XP_MAC
+            nr_MacAliasFromPath(buffer, &data, &datalen);
+            if (data)
+                needFree = TRUE;
+#else
+            data = (char*)buffer;	
+#endif
+            break;
+
+
+        case REGTYPE_ENTRY_STRING_UTF:
+            data = (char*)buffer;
+            /* string must be null terminated */
+            if ( data[size-1] != '\0' )
+                return REGERR_PARAM;
+            break;
+
+
+        case REGTYPE_ENTRY_INT32_ARRAY:
+            /* verify no partial integers */
+            if ( (size % INTSIZE) != 0 )
+                return REGERR_PARAM;
+
+            /* get a conversion buffer */
+            data = (char*)XP_ALLOC(size);
+            if ( data == NULL )
+                return REGERR_MEMORY;
+            else
+                needFree = TRUE;
+
+            /* convert array to XP format */
+            nInt = ( size / INTSIZE );
+            pIDest = (uint32*)data;
+            pISrc  = (uint32*)buffer;
+
+            for( ; nInt > 0; nInt--, pIDest++, pISrc++) {
+                nr_WriteLong( *pISrc, (char*)pIDest );
+            }
+            break;
+
+
+        default:
+            return REGERR_BADTYPE;
+    }
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( REGERR_OK == err )
+    {
+        /* read starting desc */
+        err = nr_ReadDesc( reg, key, &parent);
+        if ( err == REGERR_OK ) 
+        {
+            /* if the named entry already exists */
+            err = nr_FindAtLevel( reg, parent.value, name, &desc, NULL );
+            if ( err == REGERR_OK ) 
+            {
+                /* then update the existing one */
+                err = nr_WriteData( reg, data, datalen, &desc );
+                if ( err == REGERR_OK ) 
+                {
+                    desc.type = type;
+                    err = nr_WriteDesc( reg, &desc );
+                }
+            }
+            else if ( err == REGERR_NOFIND ) 
+            {
+                /* otherwise create a new entry */
+                err = nr_CreateEntry( reg, &parent, name, type, data, datalen );
+            }
+            else {
+                /* other errors fall through */
+            }
+        }
+        /* unlock registry */
+        nr_Unlock( reg );
+    }
+
+    if (needFree)
+        XP_FREE(data);
+
+    return err;
+
+}   /* NR_RegSetEntry */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegDeleteEntry - Delete the named entry
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    name     - name of entry
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegDeleteEntry( HREG hReg, RKEY key, char *name )
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+    REGDESC     parent;
+    REGOFF      offPrev;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    if ( name == NULL || *name == '\0' )
+        return REGERR_PARAM;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lock registry */
+    err = nr_Lock( reg );
+    if ( err != REGERR_OK )
+    	return err;
+
+    /* read starting desc */
+    err = nr_ReadDesc( reg, key, &parent);
+    if ( err == REGERR_OK ) {
+
+        /* look up the named entry */
+        err = nr_FindAtLevel( reg, parent.value, name, &desc, &offPrev );
+        if ( err == REGERR_OK ) {
+
+            XP_ASSERT( TYPE_IS_ENTRY( desc.type ) );
+
+            /* if entry is the head of a chain */
+            if ( offPrev == 0 ) {
+                /* hook parent key to next entry */
+                XP_ASSERT( parent.value == desc.location );
+                parent.value = desc.left;
+            }
+            else {
+                /* otherwise hook previous entry to next */
+                err = nr_ReadDesc( reg, offPrev, &parent );
+                parent.left = desc.left;
+            }
+            /* write out changed desc for previous node */
+            if ( err == REGERR_OK ) {
+                err = nr_WriteDesc( reg, &parent );
+                /* zap the deleted desc because an enum state may contain a
+                 * reference to a specific entry node
+                 */
+                if ( err == REGERR_OK ) {
+                    desc.type |= REGTYPE_DELETED;
+                    err = nr_WriteDesc( reg, &desc );
+                }
+            }
+        }
+    }
+
+    /* unlock registry */
+    nr_Unlock( reg );
+
+    return err;
+
+}   /* NR_RegDeleteEntry */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegEnumSubkeys - Enumerate the subkey names for the specified key
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key to enumerate--obtain with NR_RegGetKey()
+ *    eState   - enumerations state, must contain NULL to start
+ *    buffer   - location to store subkey names.  Once an enumeration
+ *               is started user must not modify contents since values
+ *               are built using the previous contents.
+ *    bufsize  - size of buffer for names
+ *    style    - 0 returns direct child keys only, REGENUM_DESCEND
+ *               returns entire sub-tree
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
+                                    char *buffer, uint32 bufsize, uint32 style)
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lcok registry */
+    err = nr_Lock( reg );
+    if ( err != REGERR_OK )
+        return err;
+
+    key = nr_TranslateKey( reg, key );
+
+    /* verify starting key */
+    err = nr_ReadDesc( reg, key, &desc);
+    if ( err == REGERR_OK )
+    {
+        /* if in initial state and no children return now */
+        if ( *state == 0 && desc.down == 0 ) 
+        {
+            err = REGERR_NOMORE;
+        }
+        else switch ( style )
+        {
+          case REGENUM_CHILDREN:
+            *buffer = '\0';
+            if ( *state == 0 ) 
+            {
+                /* initial state: get first child (.down) */
+                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
+            }
+            else 
+            {
+                /* get sibling (.left) of current key */
+                err = nr_ReadDesc( reg, *state, &desc );
+                if ( err == REGERR_OK || REGERR_DELETED == err )
+                {
+                    /* it's OK for the current (state) node to be deleted */
+                    if ( desc.left != 0 ) 
+                    {
+                        err = nr_ReplaceName( reg, desc.left, 
+                                    buffer, bufsize, &desc );
+                    }
+                    else
+                        err = REGERR_NOMORE;
+                }
+            }
+            break;
+
+
+          case REGENUM_DESCEND:
+            if ( *state == 0 ) 
+            {
+                /* initial state */
+                *buffer = '\0';
+                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
+            }
+            else 
+            {
+                /* get last position */
+                err = nr_ReadDesc( reg, *state, &desc );
+                if ( REGERR_OK != err && REGERR_DELETED != err ) 
+                {
+                    /* it is OK for the state node to be deleted
+                     * (the *next* node MUST be "live", though).
+                     * bail out on any other error */
+                    break;
+                }
+
+                if ( desc.down != 0 ) {
+                    /* append name of first child key */
+                    err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
+                }
+                else if ( desc.left != 0 ) {
+                    /* replace last segment with next sibling */
+                    err = nr_ReplaceName( reg, desc.left, 
+                                buffer, bufsize, &desc );
+                }
+                else {
+                  /* done with level, pop up as many times as necessary */
+                    while ( err == REGERR_OK ) 
+                    {
+                        if ( desc.parent != key && desc.parent != 0 ) 
+                        {
+                            err = nr_RemoveName( buffer );
+                            if ( err == REGERR_OK ) 
+                            {
+                                err = nr_ReadDesc( reg, desc.parent, &desc );
+                                if ( err == REGERR_OK && desc.left != 0 ) 
+                                {
+                                    err = nr_ReplaceName( reg, desc.left, 
+                                                buffer, bufsize, &desc );
+                                    break;  /* found a node */
+                                }
+                            }
+                        }
+                        else
+                            err = REGERR_NOMORE;
+                    }
+                }
+            }
+            break;
+
+
+          case REGENUM_DEPTH_FIRST:
+            if ( *state == 0 ) 
+            {
+                /* initial state */
+
+                *buffer = '\0';
+                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
+                while ( REGERR_OK == err && desc.down != 0 )
+                {
+                    /* start as far down the tree as possible */
+                    err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
+                }
+            }
+            else 
+            {
+                /* get last position */
+                err = nr_ReadDesc( reg, *state, &desc );
+                if ( REGERR_OK != err && REGERR_DELETED != err ) 
+                {
+                    /* it is OK for the state node to be deleted
+                     * (the *next* node MUST be "live", though).
+                     * bail out on any other error */
+                    break;
+                }
+
+                if ( desc.left != 0 )
+                {
+                    /* get sibling, then descend as far as possible */
+                    err = nr_ReplaceName(reg, desc.left, buffer,bufsize,&desc);
+
+                    while ( REGERR_OK == err && desc.down != 0 ) 
+                    {
+                        err = nr_CatName(reg, desc.down, buffer,bufsize,&desc);
+                    }
+                }
+                else 
+                {
+                    /* pop up to parent */
+                    if ( desc.parent != key && desc.parent != 0 )
+                    {
+                        err = nr_RemoveName( buffer );
+                        if ( REGERR_OK == err )
+                        {
+                            /* validate parent key */
+                            err = nr_ReadDesc( reg, desc.parent, &desc );
+                        }
+                    }
+                    else 
+                        err = REGERR_NOMORE;
+                }
+            }
+            break;
+
+
+          default:
+            err = REGERR_PARAM;
+            break;
+        }
+    }
+
+    /* set enum state to current key */
+    if ( err == REGERR_OK ) {
+        *state = desc.location;
+    }
+
+    /* unlock registry */
+    nr_Unlock( reg );
+
+    return err;
+
+}   /* NR_RegEnumSubkeys */
+
+
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegEnumEntries - Enumerate the entry names for the specified key
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
+ *    eState   - enumerations state, must contain NULL to start
+ *    buffer   - location to store entry names
+ *    bufsize  - size of buffer for names
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
+                            char *buffer, uint32 bufsize, REGINFO *info )
+{
+    REGERR      err;
+    REGFILE*    reg;
+    REGDESC     desc;
+
+    XP_ASSERT( regStartCount > 0 );
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    /* lcok registry */
+    err = nr_Lock( reg );
+    if ( err != REGERR_OK )
+        return err;
+    
+    /* verify starting key */
+    err = nr_ReadDesc( reg, key, &desc);
+    if ( err == REGERR_OK )
+    {
+        if ( *state == 0 ) 
+        {
+            /* initial state--get first entry */
+            if ( desc.value != 0 ) 
+            {
+                *buffer = '\0';
+                err =  nr_ReplaceName( reg, desc.value, buffer, bufsize, &desc );
+            }
+            else  
+            { 
+                /* there *are* no entries */
+                err = REGERR_NOMORE;
+            }
+        }
+        else 
+        {
+            /* 'state' stores previous entry */
+            err = nr_ReadDesc( reg, *state, &desc );
+            if ( err == REGERR_OK  || err == REGERR_DELETED ) 
+            {
+                /* get next entry in chain */
+                if ( desc.left != 0 ) 
+                {
+                    *buffer = '\0';
+                    err =  nr_ReplaceName( reg, desc.left, buffer, bufsize, &desc );
+                }
+                else 
+                {
+                    /* at end of chain */
+                    err = REGERR_NOMORE;
+                }
+            }
+        }
+
+        /* if we found an entry */
+        if ( err == REGERR_OK ) 
+        {
+            /* set enum state to current entry */
+            *state = desc.location;
+
+            /* return REGINFO if requested */
+            if ( info != NULL && info->size >= sizeof(REGINFO) ) 
+            {
+                info->entryType   = desc.type;
+                info->entryLength = desc.valuelen;
+            }
+        }
+    }
+
+    /* unlock registry */
+    nr_Unlock( reg );
+
+    return err;
+
+}   /* NR_RegEnumEntries */
+
+
+
+
 
 /* --------------------------------------------------------------------
  * Registry Packing
  * --------------------------------------------------------------------
  */
+#ifndef STANDALONE_REGISTRY
+#include "VerReg.h"
+
 static REGERR nr_createTempRegName( char *filename, uint32 filesize );
 static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *userData, nr_RegPackCallbackFunc fn );
 /* -------------------------------------------------------------------- */
@@ -2488,22 +3692,22 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
     XP_Bool bCloseTempFile = FALSE;
 
     char *path = NULL;
-	int err = REGERR_OK;
+    int err = REGERR_OK;
     int status = REGERR_OK;
-   	RKEY key;
+    RKEY key;
 
-    XP_ASSERT(bRegStarted);
-    if ( !bRegStarted )
+    XP_ASSERT( regStartCount > 0 );
+    if ( regStartCount <= 0 )
         return REGERR_FAIL;
 
     reg = ((REGHANDLE*)hReg)->pReg;
 
     /* lock registry */
-	err = nr_Lock( reg );
-	if ( err != REGERR_OK )
+    err = nr_Lock( reg );
+    if ( err != REGERR_OK )
     	return err; 
 
-    PR_EnterMonitor(reglist_monitor); 
+    PR_Lock(reglist_lock); 
     XP_STRCPY(tempfilename, reg->filename);
     err = nr_createTempRegName(tempfilename, sizeof(tempfilename));
     if ( err != REGERR_OK )
@@ -2511,8 +3715,8 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
      
     /* force file creation */
     fh = vr_fileOpen(tempfilename, XP_FILE_WRITE_BIN);
-	if ( !VALID_FILEHANDLE(fh) ) {
-		err = REGERR_FAIL;
+    if ( !VALID_FILEHANDLE(fh) ) {
+        err = REGERR_FAIL;
         goto safe_exit;
     }
     XP_FileClose(fh);
@@ -2521,7 +3725,7 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
     if ( err != REGERR_OK )
     	goto safe_exit;
     bCloseTempFile = TRUE;
-	
+
     /* must open temp file first or we get the same name twice */
     XP_STRCPY(oldfilename, reg->filename);
     err = nr_createTempRegName(oldfilename, sizeof(oldfilename));
@@ -2539,7 +3743,7 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
     key = ROOTKEY_COMMON;
     err = nr_addNodesToNewReg( hReg, key, hRegTemp, userData, fn);
     if ( err != REGERR_OK  )
-    	goto safe_exit;
+        goto safe_exit;
     key = ROOTKEY_USERS;
     err = nr_addNodesToNewReg( hReg, key, hRegTemp, userData, fn);
     if ( err != REGERR_OK  )
@@ -2557,7 +3761,7 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
         /* rename failed, get rid of the new registry and reopen the old one*/
         remove(tempfilename);
         reg->fh = vr_fileOpen(reg->filename, XP_FILE_UPDATE_BIN);
-    	goto safe_exit;
+        goto safe_exit;
     }
 
     /* rename packed registry to the correct name */
@@ -2567,7 +3771,7 @@ VR_INTERFACE(REGERR) NR_RegPack( HREG hReg, void *userData, nr_RegPackCallbackFu
         err = nr_RenameFile(oldfilename, reg->filename);
         remove(tempfilename);
         reg->fh = vr_fileOpen(reg->filename, XP_FILE_UPDATE_BIN);
-    	goto safe_exit;
+        goto safe_exit;
     
     } else {
         remove(oldfilename); 
@@ -2578,11 +3782,11 @@ safe_exit:
     if ( bCloseTempFile ) {
         NR_RegClose(hRegTemp);
     }
-    PR_ExitMonitor( reglist_monitor );
-	nr_Unlock(reg);
-	return err;
+    PR_Unlock( reglist_lock );
+    nr_Unlock(reg);
+    return err;
 
-}	
+}
 
 #ifdef XP_MAC
 #pragma export reset
@@ -2592,1082 +3796,6 @@ safe_exit:
 
 
 
-
-/* ---------------------------------------------------------------------
- * NR_RegAddKey - Add a key node to the registry
- *
- *      This routine is simply a wrapper to perform user input
- *      validation and translation from HREG and standard key
- *      values into the internal format
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - registry key obtained from NR_RegGetKey(),
- *               or one of the standard top-level keys
- *    path     - relative path of key to be added.  Intermediate
- *               nodes will also be added if necessary.
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegAddKey( HREG hReg, RKEY key, char *path, RKEY *newKey )
-{
-    REGERR      err;
-    REGOFF      start;
-    REGFILE*    reg;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    start = nr_TranslateKey( reg, key );
-
-    /* ... don't allow additional children of ROOTKEY */
-    if ( start == reg->hdr.root )
-        return REGERR_PARAM;
-
-    if ( path == NULL || *path == '\0' || start == 0 || reg == NULL )
-        return REGERR_PARAM;
-
-    /* call the real routine */
-    return nr_RegAddKey( reg, start, path, newKey, FALSE );
-}   /* NR_RegAddKey */
-
-
-/* ---------------------------------------------------------------------
- * NR_RegAddKeyRaw - Add a key node to the registry
- *
- *      This routine is simply a wrapper to perform user input
- *      validation and translation from HREG and standard key
- *      values into the internal format. It is different from
- *		NR_RegAddKey() in that it takes a keyname rather than
- *		a path.
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - registry key obtained from NR_RegGetKey(),
- *               or one of the standard top-level keys
- *    keyname  - name of key to be added. No parsing of this
- *				 name happens.
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegAddKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *newKey )
-{
-    REGERR      err;
-    REGOFF      start;
-    REGFILE*    reg;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    start = nr_TranslateKey( reg, key );
-
-    /* ... don't allow additional children of ROOTKEY */
-    if ( start == reg->hdr.root )
-        return REGERR_PARAM;
-
-    if ( keyname == NULL || *keyname == '\0' || start == 0 || reg == NULL )
-        return REGERR_PARAM;
-
-    /* call the real routine */
-    return nr_RegAddKey( reg, start, keyname, newKey, TRUE );
-}   /* NR_RegAddKeyRaw */
-
-
-/* ---------------------------------------------------------------------
- * NR_RegDeleteKey - Delete the specified key and all of its children
- *
- * Note that delete simply orphans blocks and makes no attempt
- * to reclaim space in the file. Use NR_RegPack()
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - starting node RKEY, typically one of the standard ones.
- *    path     - relative path of key to delete
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) nr_RegDeleteKey( HREG hReg, RKEY key, char *path, Bool raw )
-{
-    REGERR      err;
-    REGOFF      start;
-    REGFILE*    reg;
-    REGDESC     desc;
-    REGDESC     predecessor;
-	REGOFF      offPrev;
-	REGOFF      offParent;
-    REGOFF*     link;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    start = nr_TranslateKey( reg, key );
-    if ( path == NULL || *path == '\0' || start == 0 )
-        return REGERR_PARAM;
-
-    /* lock registry */
-	err = nr_Lock( reg );
-	if ( err != REGERR_OK )
-    	return err;
-
-    /* find the specified key */
-	err = nr_Find( reg, start, path, &desc, &offPrev, &offParent, raw );
-    if ( err == REGERR_OK ) {
-
-        XP_ASSERT( !TYPE_IS_ENTRY( desc.type ) );
-
-        /* make sure it's childless and not a top-level key */
-        if ( (desc.down == 0) && !nr_ProtectedNode( reg, desc.location ) ) {
-
-            /* Are we the first on our level? */
-            if ( offPrev == 0 ) {
-                /* Yes: link to parent's "down" pointer */
-        		err = nr_ReadDesc( reg, offParent, &predecessor );
-                link = &(predecessor.down);
-        	}
-        	else {
-                /* No: link using predecessor's "left" pointer */
-        		err = nr_ReadDesc( reg, offPrev, &predecessor );
-                link = &(predecessor.left);
-            }
-
-        	/* If we read the predecessor desc OK */
-        	if (err == REGERR_OK) {
-                XP_ASSERT( *link == desc.location );
-
-                /* link predecessor to next, removing current node from chain */
-                *link = desc.left;
-
-            	/* Write the updated predecessor */
-            	err = nr_WriteDesc( reg, &predecessor );
-                if ( err == REGERR_OK ) {
-                    /* Mark key deleted to prevent bogus use by anyone
-                     * who is holding an RKEY for that node
-                     */
-                    desc.type |= REGTYPE_DELETED;
-                    err = nr_WriteDesc( reg, &desc );
-                }
-            }
-        }
-        else {
-            /* specified node is protected from deletion */
-            err = REGERR_FAIL;
-        }
-	}
-
-    /* unlock registry */
-	nr_Unlock(reg);
-
-	return err;
-
-}   /* nr_RegDeleteKey */
-
-VR_INTERFACE(REGERR) NR_RegDeleteKey( HREG hReg, RKEY key, char *path )
-{
-	return (nr_RegDeleteKey(hReg, key, path, FALSE));
-}   /* NR_RegDeleteKey */
-
-VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw( HREG hReg, RKEY key, char *path )
-{
-	return (nr_RegDeleteKey(hReg, key, path, TRUE));
-}   /* NR_RegDeleteKey */
-
-/* ---------------------------------------------------------------------
- * NR_RegGetKey - Get the RKEY value of a node from its path
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - starting node RKEY, typically one of the standard ones.
- *    path     - relative path of key to find.  (a blank path just gives you
- *               the starting key--useful for verification, VersionRegistry)
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result )
-{
-    REGERR      err;
-    REGOFF      start;
-    REGFILE*    reg;
-    REGDESC     desc;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-    start = nr_TranslateKey( reg, key );
-
-    if ( path == NULL || start == 0 || result == NULL )
-        return REGERR_PARAM;
-
-    /* find the specified key */
-	err = nr_Find( reg, start, path, &desc, 0, 0, FALSE );
-    if ( err == REGERR_OK ) {
-    	*result = (RKEY)desc.location;
-    }
-
-	return err;
-
-}   /* NR_RegGetKey */
-
-
-/* ---------------------------------------------------------------------
- * NR_RegGetKeyRaw - Get the RKEY value of a node from its keyname
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - starting node RKEY, typically one of the standard ones.
- *    keyname  - keyname of key to find.  (a blank keyname just gives you
- *               the starting key--useful for verification, VersionRegistry)
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegGetKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *result )
-{
-    REGERR      err;
-    REGOFF      start;
-    REGFILE*    reg;
-    REGDESC     desc;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-    start = nr_TranslateKey( reg, key );
-
-    if ( keyname == NULL || start == 0 || result == NULL )
-        return REGERR_PARAM;
-
-    /* find the specified key */
-	err = nr_Find( reg, start, keyname, &desc, 0, 0, TRUE );
-    if ( err == REGERR_OK ) {
-    	*result = (RKEY)desc.location;
-    }
-
-	return err;
-
-}   /* NR_RegGetKeyRaw */
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegGetEntryInfo - Get some basic info about the entry data
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    name     - name of entry
- *    info     - return: Entry info object
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegGetEntryInfo( HREG hReg, RKEY key, char *name, 
-                            REGINFO *info )
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-    
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( name == NULL || *name == '\0' || info == NULL )
-        return REGERR_PARAM;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* read starting desc */
-	err = nr_ReadDesc( reg, key, &desc);
-    if ( err == REGERR_OK ) {
-
-        /* if the named entry exists */
-        err = nr_FindAtLevel( reg, desc.value, name, &desc, NULL );
-        if ( err == REGERR_OK ) {
-
-            /* ... return the values */
-            if ( info->size != sizeof(REGINFO) )
-                err = REGERR_PARAM;
-            else {
-                info->entryType   = desc.type;
-                info->entryLength = desc.valuelen;
-            }
-        }
-    }
-
-    return err;
-
-}   /* NR_RegGetEntryInfo */
-
-
-       
-/* ---------------------------------------------------------------------
- * NR_RegGetEntryString - Get the UTF string value associated with the
- *                       named entry of the specified key.
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    name     - name of entry
- *    buffer   - destination for string
- *    bufsize  - size of buffer
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegGetEntryString( HREG  hReg, RKEY  key, char  *name,
-                            char  *buffer, uint32 bufsize)
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( name == NULL || *name == '\0' || buffer == NULL || bufsize == 0 )
-        return REGERR_PARAM;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* read starting desc */
-	err = nr_ReadDesc( reg, key, &desc);
-    if ( err == REGERR_OK ) 
-    {
-        /* if the named entry exists */
-        err = nr_FindAtLevel( reg, desc.value, name, &desc, NULL );
-        if ( err == REGERR_OK ) 
-        {
-            /* read the string */
-            if ( desc.type == REGTYPE_ENTRY_STRING_UTF ) 
-            {
-                err = nr_ReadData( reg, &desc, bufsize, buffer );
-                /* prevent run-away strings */
-                buffer[bufsize-1] = '\0';
-            }
-            else {
-                err = REGERR_BADTYPE;
-            }
-        }
-    }
-
-    return err;
-
-}   /* NR_RegGetEntryString */
-
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegGetEntry - Get the value data associated with the
- *                  named entry of the specified key.
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    name     - name of entry
- *    buffer   - destination for data
- *    size     - in:  size of buffer
- *               out: size of actual data (incl. \0 term. for strings)
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
-    void *buffer, uint32 *size )
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-    char        *tmpbuf = NULL;  /* malloc a tmp buffer to convert XP int arrays */
-    uint32      nInt;
-    uint32      *pISrc;
-    uint32      *pIDest;
-    XP_Bool     needFree = FALSE;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( name == NULL || *name == '\0' || buffer == NULL || size == NULL )
-        return REGERR_PARAM;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* read starting desc */
-	err = nr_ReadDesc( reg, key, &desc);
-    if ( err == REGERR_OK )
-    {
-        /* if the named entry exists */
-        err = nr_FindAtLevel( reg, desc.value, name, &desc, NULL );
-        if ( err == REGERR_OK )
-        {
-            if ( desc.valuelen > *size ) {
-                err = REGERR_BUFTOOSMALL;
-            }
-            else if ( desc.valuelen == 0 ) {
-                err = REGERR_FAIL;
-            }
-            else switch (desc.type)
-            {
-                /* platform independent array of 32-bit integers */
-                case REGTYPE_ENTRY_INT32_ARRAY:
-                    tmpbuf = (char*)XP_ALLOC( desc.valuelen );
-                    if ( tmpbuf != NULL ) 
-                    {
-                        needFree = TRUE;
-                        err = nr_ReadData( reg, &desc, desc.valuelen, tmpbuf );
-                        if ( REGERR_OK == err )
-                        {
-                            /* convert int array */
-                            nInt = (desc.valuelen / INTSIZE);
-                            pISrc = (uint32*)tmpbuf;
-                            pIDest = (uint32*)buffer;
-                            for(; nInt > 0; nInt--, pISrc++, pIDest++) {
-                                *pIDest = nr_ReadLong((char*)pISrc);
-                            }
-                        }
-                    }
-                    else
-                        err = REGERR_MEMORY;
-
-                    break;
-
-                case REGTYPE_ENTRY_STRING_UTF:
-                    tmpbuf = (char*)buffer;
-                    err = nr_ReadData( reg, &desc, *size, tmpbuf );
-                    /* prevent run-away strings */
-                    tmpbuf[(*size)-1] = '\0';
-                    break;
-
-                case REGTYPE_ENTRY_FILE:
-
-					err = nr_ReadData( reg, &desc, *size, (char*)buffer );                
-#ifdef XP_MAC
-					if (err == 0)
-					{
-						tmpbuf = nr_PathFromMacAlias(buffer, *size);
-						if (tmpbuf == NULL) 
-						{
-	                        buffer = NULL;
-	                        err = REGERR_NOFIND;
-	                    }
-			            else 
-			            {
-			            	needFree = TRUE;
-			            	
-							if (XP_STRLEN(tmpbuf) > *size)
-							{
-								err = REGERR_BUFTOOSMALL;
-							}
-							else
-							{
-								XP_STRCPY(buffer, tmpbuf);
-							}
-						}
-					}
-#endif					
-					            
-                
-                	break;
-                
-                case REGTYPE_ENTRY_BYTES:
-                default:              /* return raw data for unknown types */
-                    err = nr_ReadData( reg, &desc, *size, (char*)buffer );
-                    break;
-            }
-            
-            /* return the actual data size */
-            *size = desc.valuelen;
-        }
-    }
-
-    if (needFree)
-        XP_FREE(tmpbuf);
-
-    return err;
-
-}   /* NR_RegGetEntry */
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegSetEntryString - Store a UTF string value associated with the
- *                       named entry of the specified key.  Used for
- *                       both creation and update.
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    name     - name of entry
- *    buffer   - UTF String to store
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegSetEntryString( HREG hReg, RKEY key, char *name,
-                                     char *buffer )
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-    REGDESC     parent;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( name == NULL || *name == '\0' || buffer == NULL )
-        return REGERR_PARAM;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* lock registry */
-	err = nr_Lock( reg );
-	if ( err != REGERR_OK )
-    	return err;
-
-    /* read starting desc */
-	err = nr_ReadDesc( reg, key, &parent);
-    if ( err == REGERR_OK ) {
-
-        /* if the named entry already exists */
-        err = nr_FindAtLevel( reg, parent.value, name, &desc, NULL );
-        if ( err == REGERR_OK ) {
-            /* then update the existing one */
-            err = nr_WriteString( reg, buffer, &desc );
-            if ( err == REGERR_OK ) {
-                desc.type = REGTYPE_ENTRY_STRING_UTF;
-                err = nr_WriteDesc( reg, &desc );
-            }
-        }
-        else if ( err == REGERR_NOFIND ) {
-            /* otherwise create a new entry */
-            err = nr_CreateEntryString( reg, &parent, name, buffer );
-        }
-        /* other errors fall through */
-    }
-
-    /* unlock registry */
-    nr_Unlock( reg );
-
-    return err;
-
-}   /* NR_RegSetEntryString */
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegSetEntry - Store value data associated with the named entry
- *                  of the specified key.  Used for both creation and update.
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    name     - name of entry
- *    type     - type of data to be stored
- *    buffer   - data to store
- *    size     - length of data to store in bytes
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 type,
-    void *buffer, uint32 size )
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-    REGDESC     parent;
-    char        *data = NULL;
-    uint32      nInt;
-    uint32      *pIDest;
-    uint32      *pISrc;
-    XP_Bool     needFree = FALSE;
-	int32  		datalen = size;
-	
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( name == NULL || *name == '\0' || buffer == NULL || size == 0 )
-        return REGERR_PARAM;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* validate type and convert numerics to XP format */
-    switch (type)
-    {
-        case REGTYPE_ENTRY_BYTES:
-            data = (char*)buffer;
-            break;
-		
-		case REGTYPE_ENTRY_FILE:
-
-#ifdef XP_MAC
-            nr_MacAliasFromPath(buffer, &data, &datalen);
-            if (data)
-                needFree = TRUE;
-#else
-            data = (char*)buffer;	
-#endif			
-			break;
-			
-
-        case REGTYPE_ENTRY_STRING_UTF:
-            data = (char*)buffer;
-            /* string must be null terminated */
-            if ( data[size-1] != '\0' )
-                return REGERR_PARAM;
-            break;
-
-
-        case REGTYPE_ENTRY_INT32_ARRAY:
-            /* verify no partial integers */
-            if ( (size % INTSIZE) != 0 )
-                return REGERR_PARAM;
-
-            /* get a conversion buffer */
-            data = (char*)XP_ALLOC(size);
-            if ( data == NULL )
-                return REGERR_MEMORY;
-            else
-                needFree = TRUE;
-
-            /* convert array to XP format */
-            nInt = ( size / INTSIZE );
-            pIDest = (uint32*)data;
-            pISrc  = (uint32*)buffer;
-
-            for( ; nInt > 0; nInt--, pIDest++, pISrc++) {
-                nr_WriteLong( *pISrc, (char*)pIDest );
-            }
-            break;
-
-
-        default:
-            return REGERR_BADTYPE;
-    }
-
-    /* lock registry */
-	err = nr_Lock( reg );
-    if ( REGERR_OK == err )
-    {
-        /* read starting desc */
-    	err = nr_ReadDesc( reg, key, &parent);
-        if ( err == REGERR_OK ) 
-        {
-            /* if the named entry already exists */
-            err = nr_FindAtLevel( reg, parent.value, name, &desc, NULL );
-            if ( err == REGERR_OK ) 
-            {
-                /* then update the existing one */
-                err = nr_WriteData( reg, data, datalen, &desc );
-                if ( err == REGERR_OK ) 
-                {
-                    desc.type = type;
-                    err = nr_WriteDesc( reg, &desc );
-                }
-            }
-            else if ( err == REGERR_NOFIND ) 
-            {
-                /* otherwise create a new entry */
-                err = nr_CreateEntry( reg, &parent, name, type, data, datalen );
-            }
-            else {
-                /* other errors fall through */
-            }
-        }
-    }
-
-    /* unlock registry */
-    nr_Unlock( reg );
-
-    if (needFree)
-        XP_FREE(data);
-
-    return err;
-
-}   /* NR_RegSetEntry */
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegDeleteEntry - Delete the named entry
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    name     - name of entry
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegDeleteEntry( HREG hReg, RKEY key, char *name )
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-    REGDESC     parent;
-    REGOFF      offPrev;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( name == NULL || *name == '\0' )
-        return REGERR_PARAM;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* lock registry */
-	err = nr_Lock( reg );
-	if ( err != REGERR_OK )
-    	return err;
-
-    /* read starting desc */
-	err = nr_ReadDesc( reg, key, &parent);
-    if ( err == REGERR_OK ) {
-
-        /* look up the named entry */
-        err = nr_FindAtLevel( reg, parent.value, name, &desc, &offPrev );
-        if ( err == REGERR_OK ) {
-
-            XP_ASSERT( TYPE_IS_ENTRY( desc.type ) );
-
-            /* if entry is the head of a chain */
-            if ( offPrev == 0 ) {
-                /* hook parent key to next entry */
-                XP_ASSERT( parent.value == desc.location );
-                parent.value = desc.left;
-            }
-            else {
-                /* otherwise hook previous entry to next */
-                err = nr_ReadDesc( reg, offPrev, &parent );
-                parent.left = desc.left;
-            }
-            /* write out changed desc for previous node */
-            if ( err == REGERR_OK ) {
-                err = nr_WriteDesc( reg, &parent );
-                /* zap the deleted desc because an enum state may contain a
-                 * reference to a specific entry node
-                 */
-                if ( err == REGERR_OK ) {
-                    desc.type |= REGTYPE_DELETED;
-                    err = nr_WriteDesc( reg, &desc );
-                }
-            }
-        }
-    }
-
-    /* unlock registry */
-    nr_Unlock( reg );
-
-    return err;
-
-}   /* NR_RegDeleteEntry */
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegEnumSubkeys - Enumerate the subkey names for the specified key
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key to enumerate--obtain with NR_RegGetKey()
- *    eState   - enumerations state, must contain NULL to start
- *    buffer   - location to store subkey names.  Once an enumeration
- *               is started user must not modify contents since values
- *               are built using the previous contents.
- *    bufsize  - size of buffer for names
- *    style    - 0 returns direct child keys only, REGENUM_DESCEND
- *               returns entire sub-tree
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegEnumSubkeys( HREG hReg, RKEY key, REGENUM *state,
-                                    char *buffer, uint32 bufsize, uint32 style)
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    key = nr_TranslateKey( reg, key );
-
-    /* verify starting key */
-	err = nr_ReadDesc( reg, key, &desc);
-    if ( err != REGERR_OK )
-        return err;
-
-    /* if in initial state and no children return now */
-    if ( *state == 0 && desc.down == 0 )
-        return REGERR_NOMORE;
-
-
-    switch ( style )
-    {
-        case REGENUM_CHILDREN:
-            *buffer = '\0';
-            if ( *state == 0 ) 
-            {
-                /* initial state: get first child (.down) */
-                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
-            }
-            else 
-            {
-                /* get sibling (.left) of current key */
-                err = nr_ReadDesc( reg, *state, &desc );
-                if ( err == REGERR_OK || REGERR_DELETED == err )
-                {
-                    /* it's OK for the current (state) node to be deleted */
-                    if ( desc.left != 0 ) 
-                    {
-                        err = nr_ReplaceName( reg, desc.left, 
-                                    buffer, bufsize, &desc );
-                    }
-                    else
-                        err = REGERR_NOMORE;
-                }
-            }
-            break;
-
-
-        case REGENUM_DESCEND:
-            if ( *state == 0 ) 
-            {
-                /* initial state */
-                *buffer = '\0';
-                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
-            }
-            else 
-            {
-                /* get last position */
-                err = nr_ReadDesc( reg, *state, &desc );
-                if ( REGERR_OK != err && REGERR_DELETED != err ) 
-                {
-                    /* it is OK for the state node to be deleted
-                     * (the *next* node MUST be "live", though).
-                     * bail out on any other error */
-                    break;
-                }
-
-                if ( desc.down != 0 ) {
-                    /* append name of first child key */
-                    err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
-                }
-                else if ( desc.left != 0 ) {
-                    /* replace last segment with next sibling */
-                    err = nr_ReplaceName( reg, desc.left, 
-                                buffer, bufsize, &desc );
-                }
-                else {
-                    /* done with level, pop up as many times as necessary */
-                    while ( err == REGERR_OK ) 
-                    {
-                        if ( desc.parent != key && desc.parent != 0 ) 
-                        {
-                            err = nr_RemoveName( buffer );
-                            if ( err == REGERR_OK ) 
-                            {
-                                err = nr_ReadDesc( reg, desc.parent, &desc );
-                                if ( err == REGERR_OK && desc.left != 0 ) 
-                                {
-                                    err = nr_ReplaceName( reg, desc.left, 
-                                                buffer, bufsize, &desc );
-                                    break;  /* found a node */
-                                }
-                            }
-                        }
-                        else
-                            err = REGERR_NOMORE;
-                    }
-                }
-            }
-            break;
-
-
-        case REGENUM_DEPTH_FIRST:
-            if ( *state == 0 ) 
-            {
-                /* initial state */
-
-                *buffer = '\0';
-                err = nr_ReplaceName( reg, desc.down, buffer, bufsize, &desc );
-                while ( REGERR_OK == err && desc.down != 0 )
-                {
-                    /* start as far down the tree as possible */
-                    err = nr_CatName( reg, desc.down, buffer, bufsize, &desc );
-                }
-            }
-            else 
-            {
-                /* get last position */
-                err = nr_ReadDesc( reg, *state, &desc );
-                if ( REGERR_OK != err && REGERR_DELETED != err ) 
-                {
-                    /* it is OK for the state node to be deleted
-                     * (the *next* node MUST be "live", though).
-                     * bail out on any other error */
-                    break;
-                }
-
-                if ( desc.left != 0 )
-                {
-                    /* get sibling, then descend as far as possible */
-                    err = nr_ReplaceName(reg, desc.left, buffer,bufsize,&desc);
-
-                    while ( REGERR_OK == err && desc.down != 0 ) 
-                    {
-                        err = nr_CatName(reg, desc.down, buffer,bufsize,&desc);
-                    }
-                }
-                else 
-                {
-                    /* pop up to parent */
-                    if ( desc.parent != key && desc.parent != 0 )
-                    {
-                        err = nr_RemoveName( buffer );
-                        if ( REGERR_OK == err )
-                        {
-                            /* validate parent key */
-                            err = nr_ReadDesc( reg, desc.parent, &desc );
-                        }
-                    }
-                    else 
-                        err = REGERR_NOMORE;
-                }
-            }
-            break;
-
-
-        default:
-            err = REGERR_PARAM;
-            break;
-    }
-
-    /* set enum state to current key */
-    if ( err == REGERR_OK ) {
-        *state = desc.location;
-    }
-
-    return err;
-
-}   /* NR_RegEnumSubkeys */
-
-
-
-/* ---------------------------------------------------------------------
- * NR_RegEnumEntries - Enumerate the entry names for the specified key
- *
- * Parameters:
- *    hReg     - handle of open registry
- *    key      - RKEY of key that contains entry--obtain with NR_RegGetKey()
- *    eState   - enumerations state, must contain NULL to start
- *    buffer   - location to store entry names
- *    bufsize  - size of buffer for names
- * ---------------------------------------------------------------------
- */
-VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
-                            char *buffer, uint32 bufsize, REGINFO *info )
-{
-    REGERR      err;
-    REGFILE*    reg;
-    REGDESC     desc;
-
-    XP_ASSERT(bRegStarted);
-
-    /* verify parameters */
-    err = VERIFY_HREG( hReg );
-    if ( err != REGERR_OK )
-        return err;
-
-    reg = ((REGHANDLE*)hReg)->pReg;
-
-    /* verify starting key */
-	err = nr_ReadDesc( reg, key, &desc);
-    if ( err != REGERR_OK )
-        return err;
-
-    if ( *state == 0 ) {
-        /* initial state--get first entry */
-
-        if ( desc.value != 0 ) {
-            *buffer = '\0';
-            err =  nr_ReplaceName( reg, desc.value, buffer, bufsize, &desc );
-        }
-        else  { 
-            /* there *are* no entries */
-            err = REGERR_NOMORE;
-        }
-    }
-    else {
-        /* 'state' stores previous entry */
-        err = nr_ReadDesc( reg, *state, &desc );
-        if ( err == REGERR_OK  || err == REGERR_DELETED ) 
-        {
-            /* get next entry in chain */
-            if ( desc.left != 0 ) {
-                *buffer = '\0';
-                err =  nr_ReplaceName( reg, desc.left, buffer, bufsize, &desc );
-            }
-            else {
-                /* at end of chain */
-                err = REGERR_NOMORE;
-            }
-        }
-    }
-
-    /* if we found an entry */
-    if ( err == REGERR_OK ) {
-
-        /* set enum state to current entry */
-        *state = desc.location;
-
-        /* return REGINFO if requested */
-        if ( info != NULL && info->size >= sizeof(REGINFO) ) {
-            info->entryType   = desc.type;
-            info->entryLength = desc.valuelen;
-        }
-    }
-
-    return err;
-
-}   /* NR_RegEnumEntries */
 
 
 
@@ -3694,81 +3822,110 @@ extern XP_Bool bGlobalRegistry;
 #pragma export on
 #endif
 
-VR_INTERFACE(void) NR_StartupRegistry(void)
+VR_INTERFACE(REGERR) NR_StartupRegistry(void)
 {
+    REGERR status = REGERR_OK;
     HREG reg;
 
-    if (bRegStarted)
-        return;
-        
 #ifndef STANDALONE_REGISTRY
-    vr_monitor = PR_NewMonitor();
-    XP_ASSERT( vr_monitor != NULL );
-    reglist_monitor = PR_NewMonitor();
-    XP_ASSERT( reglist_monitor != NULL );
+    if ( reglist_lock == NULL ) {
+        reglist_lock = PR_NewLock();
+    }
+
+    if ( reglist_lock != NULL ) {
+        PR_Lock( reglist_lock );
+    }
+    else {
+        XP_ASSERT( reglist_lock );
+        status = REGERR_FAIL;
+    }
+#endif
+
+    if ( status == REGERR_OK && regStartCount == 0 )
+    {
+        ++regStartCount;
+
+#ifndef STANDALONE_REGISTRY
+        vr_monitor = PR_NewMonitor();
+        XP_ASSERT( vr_monitor != NULL );
 #endif 
 
 #ifdef XP_UNIX
-    bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
+        bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
 #endif
 
-    bRegStarted = TRUE;
+        vr_findGlobalRegName();
 
-    vr_findGlobalRegName();
+        /* check to see that we have a valid registry */
+        /* or create one if it doesn't exist */
+        if (REGERR_OK == nr_RegOpen("", &reg))
+        {
+            nr_RegClose(reg);
+        }
 
-    /* check to see that we have a valid registry */
-    if (REGERR_OK == NR_RegOpen("", &reg))
-    {
-        NR_RegClose(reg);
+#ifndef STANDALONE_REGISTRY
+        PR_Unlock( reglist_lock );
+#endif
     }
-    else {
-        /* Couldn't open -- make a VersionRegistry call to force creation */
-        /* Didn't worry about this before because Netcaster was doing it */
-        VR_InRegistry("/Netscape");
-        VR_Close();
-    }
-}
+
+    return status;
+}   /* NR_StartupRegistry */
 
 VR_INTERFACE(void) NR_ShutdownRegistry(void)
 {
     REGFILE* pReg;
 
-    if (!bRegStarted)
-        return;
-        
 #ifndef STANDALONE_REGISTRY
-    if ( vr_monitor != NULL ) {
-        VR_Close();
-        PR_DestroyMonitor(vr_monitor);
-        vr_monitor = NULL;
-    }
+    /* people should track whether NR_StartupRegistry() was successful
+     * and not call this if it fails... but they won't so we'll try to
+     * handle that case gracefully.
+     */
+    if ( reglist_lock == NULL ) 
+        return;  /* was not started successfully */
+
+    PR_Lock( reglist_lock );
+#endif
+
+    --regStartCount;
+    if ( regStartCount == 0 )
+    {
+#ifndef STANDALONE_REGISTRY
+        if ( vr_monitor != NULL ) 
+        {
+            VR_Close();
+            PR_DestroyMonitor(vr_monitor);
+            vr_monitor = NULL;
+        }
 #endif 
 
-    /* close any forgotten open registries */
-    while ( RegList != NULL ) {
-        pReg = RegList;
-    	if ( pReg->hdrDirty ) {
-    		nr_WriteHdr( pReg );
+        /* close any forgotten open registries */
+        while ( RegList != NULL ) 
+        {
+            pReg = RegList;
+            if ( pReg->hdrDirty ) {
+                nr_WriteHdr( pReg );
+            }
+            nr_CloseFile( &(pReg->fh) );
+            nr_DeleteNode( pReg );
         }
-        nr_CloseFile( &(pReg->fh) );
-        nr_DeleteNode( pReg );
-    }
     
+        XP_FREEIF(user_name);
+        XP_FREEIF(globalRegName);
 
 #ifndef STANDALONE_REGISTRY    
-    if ( reglist_monitor != NULL ) {
-        PR_DestroyMonitor( reglist_monitor );
-        reglist_monitor = NULL;
+        PR_Unlock( reglist_lock );
+
+        if ( reglist_lock != NULL ) 
+        {
+            PR_DestroyLock( reglist_lock );
+            reglist_lock = NULL;
+        }
     }
-#endif 
-
-
-    XP_FREEIF(user_name);
-
-    XP_FREEIF(globalRegName);
-
-    bRegStarted = FALSE;
-}
+    else {
+        PR_Unlock( reglist_lock );
+#endif
+    }
+}   /* NR_ShutdownRegistry */
 
 #ifdef XP_MAC
 #pragma export reset

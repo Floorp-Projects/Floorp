@@ -136,11 +136,11 @@ VR_INTERFACE(REGERR) NR_RegPack(
        );
 
 VR_INTERFACE(REGERR) NR_RegGetUsername(
-	    char **name        /* on return, an alloc'ed copy of the current user name */
+         char **name        /* on return, an alloc'ed copy of the current user name */
        );
 
 VR_INTERFACE(REGERR) NR_RegSetUsername(
-	 const char *name  /* name of current user */
+         const char *name  /* name of current user */
        );
 
 /* ---------------------------------------------------------------------
@@ -257,8 +257,8 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries(
        );
 
 
-VR_INTERFACE(void) NR_ShutdownRegistry(void);
-VR_INTERFACE(void) NR_StartupRegistry(void);
+VR_INTERFACE(void)      NR_ShutdownRegistry(void);
+VR_INTERFACE(REGERR)    NR_StartupRegistry(void);
 
 
 XP_END_PROTOS
