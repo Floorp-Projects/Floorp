@@ -69,6 +69,7 @@ ziperr2nsresult(PRInt32 ziperr)
   }
 }
 
+#if 0
 static PRInt32
 nsresult2ziperr(nsresult rv)
 {
@@ -83,6 +84,7 @@ nsresult2ziperr(nsresult rv)
     default:                                    return ZIP_ERR_GENERAL;
   }    
 }
+#endif /* 0 */
 
 nsJAR::nsJAR()
 {

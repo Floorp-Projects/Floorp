@@ -58,11 +58,11 @@
 
 nsDocShell::nsDocShell() : 
   mCreated(PR_FALSE),
-  mInitInfo(nsnull), 
   mContentListener(nsnull),
-  mItemType(typeContent),
+  mInitInfo(nsnull), 
   mMarginWidth(0), 
   mMarginHeight(0),
+  mItemType(typeContent),
   mParent(nsnull),
   mTreeOwner(nsnull),
   mChromeEventHandler(nsnull)
@@ -1517,7 +1517,6 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
       ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
        this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
 
-  nsRect bounds;
   // (1) reset state, clean up any left-over data from previous embedding
   mContentViewer = nsnull;
   if (nsnull != mScriptContext) {
@@ -1537,6 +1536,7 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
      by the OS. It's handy, then, that GetNativeData on Windows returns
      null in this case. */
   /* XXX native window
+  nsRect bounds;
   if(mWindow && mWindow->GetNativeData(NS_NATIVE_WIDGET)) 
   {
     mWindow->GetClientBounds(bounds);

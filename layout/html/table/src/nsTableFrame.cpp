@@ -3803,7 +3803,7 @@ void nsTableFrame::GetTableBorderForRowGroup(nsTableRowGroupFrame* aRowGroupFram
         PRInt32 rowCount;
         aRowGroupFrame->GetRowCount(rowCount);
         nsCellMap* cellMap = GetCellMap();
-        PRInt32 colCount = cellMap->GetColCount();
+        //PRInt32 colCount = cellMap->GetColCount();
         mBorderCollapser->GetMaxBorder(aRowGroupFrame->GetStartRowIndex(), rowCount - 1,
                                        0, cellMap->GetColCount() - 1, aBorder);
       }
