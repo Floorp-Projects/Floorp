@@ -17,6 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  This class serves as a base for aggregates that will implement a
+  per-element XUL API.
+
+*/
+
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
