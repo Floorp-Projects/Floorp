@@ -30,33 +30,52 @@
 	/* external string references in allxpstr */
 extern	int	RDF_UNABLETODELETEFILE, RDF_UNABLETODELETEFOLDER;
 
-#define IMPORT_LIST_SIZE 8
+#define IMPORT_LIST_SIZE 12
 
   	/* XXX localization */
-char	*importList[IMPORT_LIST_SIZE] = {"Favorites", "NC:Bookmarks", "Recent", "NC:Bookmarks",
-					"Start Menu", "NC:Bookmarks", "Desktop", "NC:LocalFiles"};
+char	*importList[IMPORT_LIST_SIZE] = {"Favorites", "NC:Bookmarks", "%s IE Favorites",
+					"Recent", "NC:Bookmarks", "%s Recent Documents",
+					"Start Menu", "NC:Bookmarks", "%s Start Menu",
+					"Desktop", "NC:LocalFiles", "%s Desktop" };
 
 
 
 void
 importForProfile (char *dir, const char *uname)
 {
-  int32 n = 0;
-  char* pn = getMem(100 + strlen(dir));
-  char* name = getMem(100 + strlen(uname));
-  RDF_Resource item;
-  RDF_Resource parent;
-  while (n < IMPORT_LIST_SIZE) {
-    sprintf(pn, "%s%s/", dir, importList[n++]);
-    item = RDF_GetResource(NULL, pn, 1);
-    parent = RDF_GetResource(NULL, importList[n++], 1);
-    sprintf(name, "%s IE %s", uname,  importList[n-2]);
-    remoteStoreAdd(gRemoteStore, item, gCoreVocab->RDF_name, copyString(name), 
-                   RDF_STRING_TYPE, 1);
-    remoteStoreAdd(gRemoteStore, item, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE, 1);   
-  }
-  freeMem(pn);
-  freeMem(name);
+	RDF_Resource		item;
+	RDF_Resource		parent;
+	char			*pn, *name, *temp;
+	int32			n = 0;
+
+	while (n < IMPORT_LIST_SIZE)
+	 {
+		if ((pn = PR_smprintf("%s%s/", dir, importList[n++])) == NULL)	break;
+		item = RDF_GetResource(NULL, pn, 1);
+		freeMem(pn);
+
+		parent = RDF_GetResource(NULL, importList[n++], 1);
+
+		if (uname != NULL)
+		{
+			/* XXX localization */
+			if ((temp = append2Strings(uname, "'s")) == NULL)	break;
+			name = PR_smprintf(importList[n++], temp);
+			freeMem(temp);
+			if (name == NULL)	break;
+		}
+		else
+		{
+			/* XXX localization */
+			if ((name = PR_smprintf(importList[n++], "Your")) == NULL)	break;
+		}
+		remoteStoreAdd(gRemoteStore, item, gCoreVocab->RDF_name, copyString(name), 
+			RDF_STRING_TYPE, 1);
+		freeMem(name);
+
+		remoteStoreAdd(gRemoteStore, item, gCoreVocab->RDF_parent, parent,
+			RDF_RESOURCE_TYPE, 1);   
+	}
 }
 
 
@@ -65,25 +84,44 @@ void
 GuessIEBookmarks (void)
 {
 #ifdef XP_WIN
-  RDF_Resource bmk = RDF_GetResource(NULL, "NC:Bookmarks", true);
-  PRDir* ProfilesDir = OpenDir("file:///c|/winnt/profiles/");
-  if (!ProfilesDir) {
-  	/* XXX localization */
-    importForProfile("file:///c|/windows/", "Your");
-  } else {
-    int32 n = PR_SKIP_BOTH;
-    PRDirEntry	*de;
-    while (de = PR_ReadDir(ProfilesDir, n++)) {
-      if (strcmp(de->name, "Administrator") && strcmp(de->name, "Default User") && 
-          strcmp(de->name, "All Users")) {
-        char* dir = getMem(100 + strlen(de->name));
-        sprintf(dir, "file:///c|/winnt/profiles/%s/", de->name);
-        importForProfile(dir, de->name);
-        freeMem(dir);
-      }
-    }
-    PR_CloseDir(ProfilesDir);
-  }
+	PRDir			*profileDir;
+	PRDirEntry		*de;
+	RDF_Resource		bmk;
+	char			*nativePath, *userProfile, *uname, *temp;
+	int32			n;
+
+	bmk = RDF_GetResource(NULL, "NC:Bookmarks", true);
+	if ((userProfile = getenv("USERPROFILE")) == NULL)	return;
+	nativePath = XP_PlatformFileToURL(userProfile);
+	if (nativePath == NULL)	return;
+	if (!endsWith("/",nativePath))
+	{
+		temp = append2Strings(nativePath, "/");
+		XP_FREE(nativePath);
+		nativePath = temp;
+	}
+	uname = getenv("USERNAME");
+
+	profileDir = OpenDir(nativePath);
+	if (profileDir != NULL)
+	{
+		n = PR_SKIP_BOTH;
+		while (de = PR_ReadDir(profileDir, n++))
+		{
+			if (strcmp(de->name, "Administrator") &&
+				strcmp(de->name, "Default User") && 
+				strcmp(de->name, "All Users"))
+			{
+				importForProfile(nativePath, uname);
+			}
+		}
+		PR_CloseDir(profileDir);
+	}
+	else
+	{
+		importForProfile("file:///c|/windows/", NULL);
+	}
+	XP_FREE(nativePath);
 #endif
 }
 
