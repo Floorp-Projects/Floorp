@@ -586,10 +586,19 @@ nsHTMLContentSinkStream::SetTitle(const nsString& aValue){
   * @return PR_TRUE if successful. 
   */     
 NS_IMETHODIMP
-nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
-    eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
-    if (tag == eHTMLTag_html)
-     AddStartTag(aNode);
+nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode)
+{
+  eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
+  if (tag == eHTMLTag_html)
+#ifdef BUG_20246_IS_FIXED
+    AddStartTag(aNode);
+#else /* BUG_20246_IS_FIXED */
+  {
+    Write(kLessThan);
+    Write("html");
+    Write(kGreaterThan);
+  }
+#endif /* BUG_20246_IS_FIXED */
   return NS_OK;
 }
 
@@ -810,7 +819,8 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   mHTMLTagStack[mHTMLStackPos++] = tag;
   tagName = name;
-  
+
+
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();
   else
@@ -986,7 +996,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
     const nsString& entity = aNode.GetText();
     EncodeToBuffer(entity);
     Write('&');
-    Write(mBuffer);  
+    Write(mBuffer);
     Write(';');
     mColPos += entity.Length() + 2;
   }
