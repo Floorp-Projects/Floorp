@@ -28,6 +28,7 @@
 #include "nsViewsCID.h"
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
+#include "nsILookAndFeel.h"
 
 static inline PRBool
 ViewIsShowing(nsIView *aView)
@@ -42,6 +43,8 @@ static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 //----------------------------------------------------------------------
 
@@ -139,18 +142,6 @@ NS_IMETHODIMP ScrollBarView :: SetDimensions(nscoord width, nscoord height, PRBo
 
 //----------------------------------------------------------------------
 
-#if 0
-class nsICornerWidget : public nsISupports {
-public:
-  NS_IMETHOD Init(nsIWidget* aParent, const nsRect& aBounds) = 0;
-  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
-  NS_IMETHOD Show() = 0;
-  NS_IMETHOD Hide() = 0;
-  NS_IMETHOD Start() = 0;
-  NS_IMETHOD Stop() = 0;
-};
-#endif
-
 class CornerView : public nsView
 {
 public:
@@ -166,6 +157,7 @@ public:
   PRBool            mShowQuality;
   nsContentQuality  mQuality;
   PRBool            mShow;
+  nsILookAndFeel    *mLookAndFeel;
 };
 
 CornerView :: CornerView()
@@ -173,10 +165,12 @@ CornerView :: CornerView()
   mShowQuality = PR_FALSE;
   mQuality = nsContentQuality_kGood;
   mShow = PR_FALSE;
+  mLookAndFeel = nsnull;
 }
 
 CornerView :: ~CornerView()
 {
+  NS_IF_RELEASE(mLookAndFeel);
 }
 
 NS_IMETHODIMP CornerView :: ShowQuality(PRBool aShow)
@@ -257,7 +251,20 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
     if (clipres == PR_FALSE)
     {
-      rc.SetColor(NS_RGB(192, 192, 192));
+      nscolor bgcolor;
+
+      if (nsnull == mLookAndFeel)
+      {
+        nsRepository::CreateInstance(kLookAndFeelCID, nsnull,
+                                     kILookAndFeelIID, (void **)&mLookAndFeel);
+      }
+
+      if (nsnull != mLookAndFeel)
+        mLookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground, bgcolor);
+      else
+        bgcolor = NS_RGB(192, 192, 192);
+
+      rc.SetColor(bgcolor);
       rc.FillRect(brect);
 
       if (PR_TRUE == mShowQuality)
@@ -861,6 +868,8 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
     rv = mCornerView->Init(mViewManager, trect, this,
                            nsnull, nsViewVisibility_kHide);
     mViewManager->InsertChild(this, mCornerView, 1);
+    mClipView->CreateWidget(kWidgetCID, nsnull,
+                            mWindow ? nsnull : aNative);
   }
 
   // Create a view for a vertical scrollbar
