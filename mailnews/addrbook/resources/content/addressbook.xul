@@ -121,6 +121,14 @@ Contributor(s):
   <key id="key_selectAll"/>
   <key id="showHideSidebar"/>
   <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
+
+  <!-- Tab/F6 Keys -->
+  <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
+  <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="control"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 </keyset>
 
 <popup id="sidebarPopup"/>

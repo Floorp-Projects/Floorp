@@ -46,6 +46,11 @@ var gStatusText = null;
 var gQueryURIFormat = null;
 var gSearchInput;
 var gPrintSettings = null;
+var gDirTree;
+var gSearchBox;
+var gAbResultsTree;
+var gCardViewBox;
+var gCardViewBoxEmail1;
 
 // Constants that correspond to choices
 // in Address Book->View -->Show Name as
@@ -518,3 +523,141 @@ function onEnterInSearchBar()
   // but not for LDAP searches
   SelectFirstCard();
 }
+
+function SwitchPaneFocus(event)
+{
+  var focusedElement    = WhichPaneHasFocus();
+  var abResultsTree     = GetAbResultsTree();
+  var cardViewBox       = GetCardViewBox();
+  var cardViewBoxEmail1 = GetCardViewBoxEmail1();
+  var searchBox         = GetSearchBox();
+  var dirTree           = GetDirTree();
+  var searchInput       = GetSearchInput();
+
+  if (event && event.shiftKey)
+  {
+    if (focusedElement == abResultsTree && searchBox.getAttribute('hidden') != 'true')
+      searchInput.focus();
+    else if ((focusedElement == abResultsTree || focusedElement == searchBox) && !IsDirPaneCollapsed())
+      dirTree.focus();
+    else if (focusedElement != cardViewBox && !IsCardViewAndAbResultsPaneSplitterCollapsed())
+    {
+      if(cardViewBoxEmail1)
+        cardViewBoxEmail1.focus();
+      else
+        cardViewBox.focus();    
+    }
+    else 
+      abResultsTree.focus();
+  }
+  else
+  {
+    if (focusedElement == searchBox)
+      abResultsTree.focus();
+    else if (focusedElement == abResultsTree && !IsCardViewAndAbResultsPaneSplitterCollapsed())
+    {
+      if(cardViewBoxEmail1)
+        cardViewBoxEmail1.focus();
+      else
+        cardViewBox.focus();    
+    }
+    else if (focusedElement != dirTree && !IsDirPaneCollapsed())
+      dirTree.focus();
+    else if (searchBox.getAttribute('hidden') != 'true')
+      searchInput.focus();
+    else
+      abResultsTree.focus();
+  }
+}
+
+function WhichPaneHasFocus()
+{
+  var abResultsTree     = GetAbResultsTree();
+  var cardViewBox       = GetCardViewBox();
+  var searchBox         = GetSearchBox();
+  var dirTree           = GetDirTree();
+    
+  var currentNode = top.document.commandDispatcher.focusedElement;
+  while (currentNode)
+  {
+    var nodeId = currentNode.getAttribute('id');
+
+    if(currentNode == abResultsTree ||
+       currentNode == cardViewBox ||
+       currentNode == searchBox ||
+       currentNode == dirTree)
+      return currentNode;
+
+    currentNode = currentNode.parentNode;
+  }
+
+  return null;
+}
+
+function GetDirTree()
+{
+  if (!gDirTree)
+    gDirTree = document.getElementById('dirTree');
+  return gDirTree;
+}
+
+function GetSearchInput()
+{
+  if (!gSearchInput)
+    gSearchInput = document.getElementById('searchInput');
+  return gSearchInput;
+}
+
+function GetSearchBox()
+{
+  if (!gSearchBox)
+    gSearchBox = document.getElementById('searchBox');
+  return gSearchBox;
+}
+
+function GetAbResultsTree()
+{
+  if (!gAbResultsTree)
+    gAbResultsTree = document.getElementById('abResultsTree');
+  return gAbResultsTree;
+}
+
+function GetCardViewBox()
+{
+  if (!gCardViewBox)
+    gCardViewBox = document.getElementById('CardViewBox');
+  return gCardViewBox;
+}
+
+function GetCardViewBoxEmail1()
+{
+  if (!gCardViewBoxEmail1)
+  {
+    try {
+      gCardViewBoxEmail1 = document.getElementById('cvEmail1');
+    }
+    catch (ex) {
+      gCardViewBoxEmail1 = null;
+    }
+  }
+  return gCardViewBoxEmail1;
+}
+
+function IsDirPaneCollapsed()
+{
+  var dirPaneBox = GetDirTree().parentNode;
+  return dirPaneBox.getAttribute("collapsed") == "true" ||
+         dirPaneBox.getAttribute("hidden") == "true";
+}
+
+function IsCardViewAndAbResultsPaneSplitterCollapsed()
+{
+  var cardViewBox = document.getElementById('CardViewOuterBox');
+  try {
+    return (cardViewBox.getAttribute("collapsed") == "true");
+  }
+  catch (ex) {
+    return false;
+  }
+}
+
