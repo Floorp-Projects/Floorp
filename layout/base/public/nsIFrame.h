@@ -988,8 +988,6 @@ public:
    */
   NS_IMETHOD  Scrolled(nsIView *aView) = 0;
 
-
-
   /** Selection related calls
    */
   /** 
@@ -1027,6 +1025,14 @@ public:
 
   /** EndSelection related calls
    */
+
+  /**
+   *  Call to turn on/off mouseCapture at the view level. Needed by the ESM so
+   *  it must be in the public interface.
+   *  @param aPresContext presContext associated with the frame
+   *  @param aGrabMouseEvents PR_TRUE to enable capture, PR_FALSE to disable
+   */
+  NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents) = 0;
 
   /**
    *  called to find the previous/next character, word, or line  returns the actual 
