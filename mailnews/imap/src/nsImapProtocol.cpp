@@ -231,6 +231,7 @@ nsImapProtocol::nsImapProtocol() :
   m_flags = 0;
   m_urlInProgress = PR_FALSE;
   m_socketIsOpen = PR_FALSE;
+  m_ignoreExpunges = PR_FALSE;
   m_gotFEEventCompletion = PR_FALSE;
   m_connectionStatus = 0;
   m_hostSessionList = nsnull;
@@ -600,7 +601,12 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     GetServerStateParser().SetCapabilityFlag(capability);
 
     if (imapServer)
+    {
+      nsXPIDLCString redirectorType;
+      imapServer->GetRedirectorType(getter_Copies(redirectorType));
+      m_ignoreExpunges = redirectorType.Equals("aol");
       imapServer->GetFetchByChunks(&m_fetchByChunks);
+    }
 
     if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
     {
@@ -2304,10 +2310,10 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
 }
 
 void
-nsImapProtocol::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
+nsImapProtocol::GetShouldDownloadAllHeaders(PRBool *aResult)
 {
   if (m_imapServerSink)
-    m_imapServerSink->GetShouldDownloadArbitraryHeaders(aResult);
+    m_imapServerSink->GetShouldDownloadAllHeaders(aResult);
 }
 
 void
@@ -2576,21 +2582,20 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
       {
         PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
-		    PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
-        PRBool useArbitraryHeaders = PR_FALSE;
-        GetShouldDownloadArbitraryHeaders(&useArbitraryHeaders); // checks filter headers, etc.
-        if (/***** Fix me *** gOptimizedHeaders &&  */// preference -- able to turn it off
-          useArbitraryHeaders)  // if it's ok -- no filters on any header, etc.
+        PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
+        PRBool downloadAllHeaders = PR_FALSE; // we don't currently ever need to do this.
+//        GetShouldDownloadAllHeaders(&downloadAllHeaders); // checks if we're filtering on "any header"
+        if (!downloadAllHeaders)  // if it's ok -- no filters on any header, etc.
         {
           char *headersToDL = nsnull;
           char *what = nsnull;
           const char *dbHeaders = (gUseEnvelopeCmd) ? IMAP_DB_HEADERS : IMAP_ENV_AND_DB_HEADERS;
           nsXPIDLCString arbitraryHeaders;
           GetArbitraryHeadersToDownload(getter_Copies(arbitraryHeaders));
-          if (arbitraryHeaders)
-            headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders.get());
-          else
+          if (arbitraryHeaders.IsEmpty())
             headersToDL = nsCRT::strdup(dbHeaders);
+          else
+            headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders.get());
 
           if (aolImapServer)
             what = nsCRT::strdup(" XAOL-ENVELOPE INTERNALDATE)");

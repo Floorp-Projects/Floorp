@@ -83,6 +83,7 @@ protected:
 		void Dump();
 #endif
 protected:
+        nsresult ComputeArbitraryHeaders();
 	nsresult SaveTextFilters(nsIOFileStream *aStream);
 	// file streaming methods
 	char			ReadChar(nsIOFileStream *aStream);

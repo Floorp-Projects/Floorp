@@ -173,7 +173,7 @@ public:
   static void EscapeUserNamePasswordString(const char *strToEscape, nsCString *resultStr);
 
 	// used to start fetching a message.
-  void GetShouldDownloadArbitraryHeaders(PRBool *aResult);
+  void GetShouldDownloadAllHeaders(PRBool *aResult);
   void GetArbitraryHeadersToDownload(char **aResult);
   virtual void AdjustChunkSize();
   virtual void FetchMessage(const char * messageIds, 
@@ -222,7 +222,7 @@ public:
 	// Used for MIME parts on demand.
 	void	SetContentModified(IMAP_ContentModifiedType modified);
 	PRBool	GetShouldFetchAllParts();
-
+        PRBool  GetIgnoreExpunges() {return m_ignoreExpunges;}
 	// Generic accessors required by the imap parser
 	char * CreateNewLineFromSocket();
 	PRInt32 GetConnectionStatus();
@@ -544,6 +544,7 @@ private:
   PRInt32		m_chunkStartSize;
   PRInt32		m_maxChunkSize;
   PRBool		m_fetchByChunks;
+  PRBool                m_ignoreExpunges;
   PRInt32		m_chunkSize;
   PRInt32		m_chunkThreshold;
   TLineDownloadCache m_downloadLineCache;

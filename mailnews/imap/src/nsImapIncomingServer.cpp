@@ -3591,14 +3591,14 @@ nsImapIncomingServer::GetNewMessagesAllFolders(nsIMsgFolder *aRootFolder, nsIMsg
 }
 
 NS_IMETHODIMP 
-nsImapIncomingServer::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
+nsImapIncomingServer::GetShouldDownloadAllHeaders(PRBool *aResult)
 {
   nsresult rv = NS_OK;      //for now checking for filters is enough
   nsCOMPtr <nsIMsgFilterList> filterList;  //later on we might have to check for MDN                              ;
   if (!mFilterList)       
     GetFilterList(nsnull, getter_AddRefs(filterList));
   if (mFilterList)
-    rv = mFilterList->GetShouldDownloadArbitraryHeaders(aResult);
+    rv = mFilterList->GetShouldDownloadAllHeaders(aResult);
   else
     *aResult = PR_FALSE;
   return rv;

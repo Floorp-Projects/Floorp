@@ -985,7 +985,16 @@ NS_IMETHODIMP nsMsgFilterList::MatchOrChangeFilterTarget(const char *oldFolderUr
   return rv;
 }
 
-NS_IMETHODIMP nsMsgFilterList::GetShouldDownloadArbitraryHeaders(PRBool *aResult)
+// this would only return true if any filter was on "any header", which we
+// don't support in 6.x
+NS_IMETHODIMP nsMsgFilterList::GetShouldDownloadAllHeaders(PRBool *aResult)
+{
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+// leaves m_arbitraryHeaders filed in with the arbitrary headers.
+nsresult nsMsgFilterList::ComputeArbitraryHeaders()
 {
   nsresult rv = NS_OK;
   if (m_arbitraryHeaders.Length() == 0)
@@ -1025,17 +1034,13 @@ NS_IMETHODIMP nsMsgFilterList::GetShouldDownloadArbitraryHeaders(PRBool *aResult
       }
     }
   }
-  if (m_arbitraryHeaders.Length() > 0)  //if any arbitraryHeaders;
-    *aResult=PR_TRUE;
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgFilterList::GetArbitraryHeaders(char **aResult)
 {
-  PRBool headers=PR_FALSE;
-  GetShouldDownloadArbitraryHeaders(&headers);
-  if (headers)
-    *aResult = ToNewCString(m_arbitraryHeaders);
+  ComputeArbitraryHeaders();
+  *aResult = ToNewCString(m_arbitraryHeaders);
   return NS_OK;
 }
 
