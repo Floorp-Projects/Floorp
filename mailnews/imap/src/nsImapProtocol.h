@@ -44,6 +44,7 @@
 #include "nsIImapMockChannel.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
+#include "nsIImapIncomingServer.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -330,6 +331,7 @@ private:
 
 	PRBool			m_nextUrlReadyToRun;
     nsCOMPtr<nsIMsgIncomingServer>  m_server;
+	nsCOMPtr<nsIImapIncomingServer> m_imapServer;
 
     nsCOMPtr<nsIImapLog>			m_imapLog;
     nsCOMPtr<nsIImapMailFolderSink> m_imapMailFolderSink;
@@ -469,6 +471,7 @@ private:
 	PRBool  RenameHierarchyByHand(const char *oldParentMailboxName, 
                                   const char *newParentMailboxName);
 
+	nsresult GlobalInitialization();
 
 	// End Process AuthenticatedState Url helper methods
 

@@ -176,6 +176,31 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   return NS_NOINTERFACE;
 }
 
+static PRInt32 gTooFastTime = 2;
+static PRInt32 gIdealTime = 4;
+static PRInt32 gChunkAddSize = 2048;
+static PRInt32 gChunkSize = 10240;
+static PRInt32 gChunkThreshold = 10240 + 4096;
+static PRBool gFetchByChunks = PR_TRUE;
+static PRInt32 gMaxChunkSize = 40960;
+static PRBool gInitialized = PR_FALSE;
+nsresult nsImapProtocol::GlobalInitialization()
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+	if (NS_SUCCEEDED(rv) && prefs) 
+	{
+		prefs->GetIntPref("mail.imap.chunk_fast", &gTooFastTime);		// secs we read too little too fast
+		prefs->GetIntPref("mail.imap.chunk_ideal", &gIdealTime);		// secs we read enough in good time
+		prefs->GetIntPref("mail.imap.chunk_add", &gChunkAddSize);		// buffer size to add when wasting time
+		prefs->GetIntPref("mail.imap.chunk_size", &gChunkSize);
+		prefs->GetIntPref("mail.imap.min_chunk_size_threshold",	&gChunkThreshold);
+		prefs->GetIntPref("mail.imap.max_chunk_size", &gMaxChunkSize);
+	}
+	gInitialized = PR_TRUE;
+	return rv;
+}
+
 nsImapProtocol::nsImapProtocol() : 
     m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
 {
@@ -186,6 +211,9 @@ nsImapProtocol::nsImapProtocol() :
     m_connectionStatus = 0;
 	m_hostSessionList = nsnull;
     
+	if (!gInitialized)
+		GlobalInitialization();
+
     // ***** Thread support *****
     m_thread = nsnull;
     m_dataAvailableMonitor = nsnull;
@@ -507,6 +535,8 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
             rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
+			if (m_server)
+				m_imapServer = do_QueryInterface(m_server);
 		}
 
         nsCOMPtr<nsIStreamListener> aRealStreamListener = do_QueryInterface(aConsumer);
@@ -535,6 +565,9 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
 		m_hostSessionList->GetCapabilityForHost(GetImapServerKey(), capability);
 		GetServerStateParser().SetCapabilityFlag(capability);
+
+		if (m_imapServer)
+			m_imapServer->GetFetchByChunks(&m_fetchByChunks);
 
 		if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
 		{

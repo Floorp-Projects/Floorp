@@ -44,7 +44,9 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean overrideNamespaces;
   attribute boolean usingSubscription;
   attribute string manageMailAccountUrl;
-    
+  attribute boolean fetchByChunks;
+  attribute boolean mimePartsOnDemand;
+       
   void GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsISupports aConsumer);

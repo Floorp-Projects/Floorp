@@ -247,6 +247,12 @@ NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, PublicNamespace,
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, OtherUsersNamespace,
                        "namespace.other_users");
 
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, FetchByChunks,
+                       "fetch_by_chunks");
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, MimePartsOnDemand,
+                       "mime_parts_on_demand");
+
 NS_IMETHODIMP
 nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQueue,
                                                   nsIImapUrl* aImapUrl,
