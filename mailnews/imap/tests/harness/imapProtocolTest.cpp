@@ -1520,6 +1520,16 @@ int main()
     nsComponentManager::RegisterComponent(kImapProtocolCID, nsnull, nsnull,
                                           MSGIMAP_DLL, PR_FALSE, PR_FALSE);
 
+	// make sure prefs get initialized and loaded..
+	// mscott - this is just a bad bad bad hack right now until prefs
+	// has the ability to take nsnull as a parameter. Once that happens,
+	// prefs will do the work of figuring out which prefs file to load...
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
+	if (NS_SUCCEEDED(result) && prefs)
+	{
+		prefs->Startup("prefs50.js");
+	}
+
 	// Create the Event Queue for the test app thread...a standin for the ui thread
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
