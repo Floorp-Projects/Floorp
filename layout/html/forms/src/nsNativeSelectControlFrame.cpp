@@ -102,6 +102,11 @@ public:
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   virtual void Reset();
 
+  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+
   //
   // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
   // under windows. Later it may be used to GFX-render the controls to the display. 
@@ -1418,4 +1423,14 @@ NS_IMETHODIMP nsNativeSelectControlFrame::GetProperty(nsIAtom* aName, nsString& 
     return Inherited::GetProperty(aName, aValue);
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeSelectControlFrame::AppendFrames(nsIPresContext& aPresContext,
+                                          nsIPresShell&   aPresShell,
+                                          nsIAtom*        aListName,
+                                          nsIFrame*       aFrameList)
+{
+  //NS_PRECONDITION(PR_FALSE, "not a container");
+  return NS_ERROR_UNEXPECTED;
 }
