@@ -1,0 +1,41 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIStreamListener.idl"
+#include "nsIDocumentLoaderObserver.idl"
+#include "nsrootidl.idl"
+#include "domstubs.idl"
+
+%{C++
+#include "nsIDOMWindow.h"
+%}
+
+[scriptable, uuid(91FD6B10-E0BC-11d3-8F97-000064657374)]
+interface nsIMsgPrintEngine : nsIDocumentLoaderObserver {
+
+    void SetWindow(in nsIDOMWindow ptr);
+
+    void SetPrintURICount(in PRInt32 aCount);
+    void AddPrintURI(in wstring aURI);
+    void StartPrintOperation();
+};
+
