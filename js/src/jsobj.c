@@ -1786,7 +1786,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     JS_ASSERT(!MAP_IS_NATIVE(map) || ((JSScope *)map)->object == obj);
     nslots = map->nslots;
     if (map->freeslot >= nslots) {
-        nslots = JS_MAX(map->freeslot, nslots);
+        nslots = map->freeslot;
         JS_ASSERT(nslots >= JS_INITIAL_NSLOTS);
         nslots += (nslots + 1) / 2;
 
@@ -3463,7 +3463,7 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
          */
         return (uint32) obj->slots[-1];
     }
-    return obj->map->freeslot;
+    return JS_MIN(obj->map->freeslot, obj->map->nslots);
 }
 
 void

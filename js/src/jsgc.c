@@ -819,7 +819,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
         }
         nslots = (obj->map->ops->mark)
                  ? obj->map->ops->mark(cx, obj, arg)
-                 : obj->map->freeslot;
+                 : JS_MIN(obj->map->freeslot, obj->map->nslots);
 #ifdef GC_MARK_DEBUG
         scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
 #endif
