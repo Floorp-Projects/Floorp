@@ -112,7 +112,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (nsIContentViewer*)getContentViewer;		// addrefs return value
 - (float)getTextZoom;
 - (void)incrementTextZoom:(float)increment min:(float)min max:(float)max;
-- (nsIDocShell*)getDocShell;							// addrefs return value
+- (nsIDocShell*)getDocShell;
 @end
 
 @implementation CHBrowserView
@@ -958,14 +958,12 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(domWindow));
   if (!global)
     return NULL;
-  nsIDocShell* docShell = NULL;
-  global->GetDocShell(&docShell);     // addrefs
-  return docShell;
+  return global->GetDocShell();
 }
 
 - (nsIContentViewer*)getContentViewer		// addrefs return value
 {
-  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
+  nsIDocShell* docShell = [self getDocShell];
   nsIContentViewer* cv = NULL;
   docShell->GetContentViewer(&cv);		// addrefs
   return cv;
@@ -1205,8 +1203,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 - (IBAction)reloadWithNewCharset:(NSString*)inCharset
 {
   // set charset on document then reload the page (hopefully not hitting the network)
-  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
-  nsCOMPtr<nsIDocCharset> charset ( do_QueryInterface(docShell) );
+  nsCOMPtr<nsIDocCharset> charset ( do_QueryInterface([self getDocShell]) );
   if ( charset ) {
     charset->SetCharset([inCharset cString]);
     [self reload:nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE];
@@ -1249,8 +1246,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 - (already_AddRefed<nsISupports>)getPageDescriptor
 {
-  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
-  nsCOMPtr<nsIWebPageDescriptor> wpd = do_QueryInterface(docShell);
+  nsCOMPtr<nsIWebPageDescriptor> wpd = do_QueryInterface([self getDocShell]);
   if(!wpd)
     return NULL;
 
@@ -1261,8 +1257,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 - (void)setPageDescriptor:(nsISupports*)aDesc displayType:(PRUint32)aDisplayType
 {
-  nsCOMPtr<nsIDocShell> docShell = dont_AddRef([self getDocShell]);
-  nsCOMPtr<nsIWebPageDescriptor> wpd = do_QueryInterface(docShell);
+  nsCOMPtr<nsIWebPageDescriptor> wpd = do_QueryInterface([self getDocShell]);
   if(!wpd)
     return;
 
