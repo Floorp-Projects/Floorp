@@ -41,11 +41,16 @@ ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   WINAPP=mfcembed
   #WINAPP=winembed
 else
+ifdef MINIMO
+  BASEBROWSER = minimo-unix
+else
   BASEBROWSER = basebrowser-unix
+endif
   CLIENTMANIFEST = client-unix
   _PLATFORM = unix
 endif
 endif
+
 
 embed_chrome: embed-jar.mn
 ifneq (jar,$(MOZ_CHROME_FILE_FORMAT))
@@ -79,7 +84,9 @@ endif
 	fi
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
 	$(NSINSTALL) -t $(srcdir)/readme.html $(DIST)/Embed
-	-$(NSINSTALL) -t $(DEPTH)/embedding/lite/$(LIB_PREFIX)embed_lite$(DLL_SUFFIX) $(DIST)/Embed/components
+ifndef MINIMO
+	$(NSINSTALL) -t $(DEPTH)/embedding/lite/$(LIB_PREFIX)embed_lite$(DLL_SUFFIX) $(DIST)/Embed/components
+endif
 ifeq ($(OS_ARCH),WINNT)
 ifeq ($(WINAPP),mfcembed)
 	$(NSINSTALL) -t $(DIST)/bin/mfcembed.exe $(DIST)/Embed
