@@ -55,6 +55,7 @@ long					sleep=0;
 PRInt16				haveevent;
 WindowPtr			whichwindow;
 RgnHandle			currgn;
+unsigned char	evtype;
 
 #define SUSPENDRESUMEMESSAGE 		0x01
 #define MOUSEMOVEDMESSAGE				0xFA
@@ -69,7 +70,7 @@ RgnHandle			currgn;
 	
 	while(mRunning && stillrunning)
 		{			
-		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,currgn);
+		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,0l);
 
 		if(haveevent)
 			{
@@ -110,15 +111,13 @@ RgnHandle			currgn;
 						}
 					break;
 				case osEvt:
-					unsigned char	evtype;
-					
-					whichwindow = (WindowPtr)theevent.message;
+				default:
 					evtype = (unsigned char) (theevent.message>>24)&0x00ff;
 					switch(evtype)
 						{
-						case MOUSEMOVEDMESSAGE:
-							DoMouseMove(&theevent);
-							break;
+						//case MOUSEMOVEDMESSAGE:
+							//DoMouseMove(&theevent);
+							//break;
 						case SUSPENDRESUMEMESSAGE:
 							if(theevent.message&0x00000001)
 								{
@@ -130,6 +129,7 @@ RgnHandle			currgn;
 								// suspend message
 								mInBackground = PR_TRUE;
 								}
+							break;
 						}
 					break;
 				}
@@ -140,6 +140,12 @@ RgnHandle			currgn;
 				{
 				case nullEvent:
 					DoIdleWidgets();	
+					
+					// construct the mousemove myself
+					
+					::GetMouse(&theevent.where);
+					LocalToGlobal(&theevent.where);
+					DoMouseMove(&theevent);
 					break;
 				}		
 			}
@@ -217,6 +223,7 @@ WindowPtr			whichwindow;
 PRInt16				partcode;
 nsWindow			*thewindow;
 nsMouseEvent	mouseevent;
+
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
