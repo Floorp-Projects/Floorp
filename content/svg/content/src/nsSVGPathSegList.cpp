@@ -209,8 +209,13 @@ NS_IMETHODIMP nsSVGPathSegList::Clear()
 }
 
 /* nsIDOMSVGPathSeg initialize (in nsIDOMSVGPathSeg newItem); */
-NS_IMETHODIMP nsSVGPathSegList::Initialize(nsIDOMSVGPathSeg *newItem, nsIDOMSVGPathSeg **_retval)
+NS_IMETHODIMP nsSVGPathSegList::Initialize(nsIDOMSVGPathSeg *newItem,
+                                           nsIDOMSVGPathSeg **_retval)
 {
+  if (!newItem) {
+    *_retval = nsnull;
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  }
   Clear();
   return AppendItem(newItem, _retval);
 }
@@ -229,15 +234,27 @@ NS_IMETHODIMP nsSVGPathSegList::GetItem(PRUint32 index, nsIDOMSVGPathSeg **_retv
 }
 
 /* nsIDOMSVGPathSeg insertItemBefore (in nsIDOMSVGPathSeg newItem, in unsigned long index); */
-NS_IMETHODIMP nsSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *newItem, PRUint32 index, nsIDOMSVGPathSeg **_retval)
+NS_IMETHODIMP nsSVGPathSegList::InsertItemBefore(nsIDOMSVGPathSeg *newItem,
+                                                 PRUint32 index,
+                                                 nsIDOMSVGPathSeg **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!newItem)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* nsIDOMSVGPathSeg replaceItem (in nsIDOMSVGPathSeg newItem, in unsigned long index); */
-NS_IMETHODIMP nsSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *newItem, PRUint32 index, nsIDOMSVGPathSeg **_retval)
+NS_IMETHODIMP nsSVGPathSegList::ReplaceItem(nsIDOMSVGPathSeg *newItem,
+                                            PRUint32 index,
+                                            nsIDOMSVGPathSeg **_retval)
 {
+  // null check when implementing - this method can be used by scripts!
+  // if (!newItem)
+  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -259,15 +276,18 @@ NS_IMETHODIMP nsSVGPathSegList::RemoveItem(PRUint32 index, nsIDOMSVGPathSeg **_r
 }
 
 /* nsIDOMSVGPathSeg appendItem (in nsIDOMSVGPathSeg newItem); */
-NS_IMETHODIMP nsSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *newItem, nsIDOMSVGPathSeg **_retval)
+NS_IMETHODIMP nsSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *newItem,
+                                           nsIDOMSVGPathSeg **_retval)
 {
   // XXX The SVG specs state that 'if newItem is already in a list, it
   // is removed from its previous list before it is inserted into this
   // list'. We don't do that. Should we?
-  
+
   *_retval = newItem;
-  NS_ADDREF(*_retval);
+  if (!newItem)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
   AppendElement(newItem);
+  NS_ADDREF(*_retval);
   return NS_OK;
 }
 

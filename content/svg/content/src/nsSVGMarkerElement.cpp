@@ -52,6 +52,7 @@
 #include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGMatrix.h"
+#include "nsDOMError.h"
 
 typedef nsSVGGraphicElement nsSVGMarkerElementBase;
 
@@ -368,6 +369,9 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAuto()
 /* void setOrientToAngle (in nsIDOMSVGAngle angle); */
 NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
 {
+  if (!angle)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   mOrientType->SetBaseVal(SVG_MARKER_ORIENT_ANGLE);
 
   nsIDOMSVGAngle *a;

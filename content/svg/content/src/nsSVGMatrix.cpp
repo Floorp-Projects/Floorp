@@ -189,10 +189,12 @@ NS_IMETHODIMP nsSVGMatrix::SetF(float aF)
 }
 
 /* nsIDOMSVGMatrix multiply (in nsIDOMSVGMatrix secondMatrix); */
-NS_IMETHODIMP nsSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix, nsIDOMSVGMatrix **_retval)
+NS_IMETHODIMP nsSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix,
+                                    nsIDOMSVGMatrix **_retval)
 {
-  if (!secondMatrix) return NS_ERROR_FAILURE;
-  
+  if (!secondMatrix)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+
   float sa,sb,sc,sd,se,sf;
   secondMatrix->GetA(&sa);
   secondMatrix->GetB(&sb);
