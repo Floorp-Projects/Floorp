@@ -23,7 +23,7 @@ class MailDB
 public:
 	static nsresult			Open(const char * dbName, PRBool create, 
 								MailDB** pMessageDB,
-								PRBool upgrading = PR_FALSE) {return -1;}
+								PRBool upgrading = PR_FALSE) {return NS_ERROR_NOT_IMPLEMENTED;}
 	nsresult Close(void) {return 0;}
 	virtual nsresult		AddHdrToDB(void *newHdr, PRBool *newThread, PRBool notify = PR_FALSE) {return PR_FALSE;}
 	unsigned long GetUnusedFakeId() {return 0;}
