@@ -410,6 +410,24 @@ EmbedPrivate::LoadCurrentURI(void)
 }
 
 void
+EmbedPrivate::Reload(PRUint32 reloadFlags)
+{
+  /* Use the session history if it is available, this
+   * allows framesets to reload correctly */
+  nsCOMPtr<nsIWebNavigation> wn;
+
+  if (mSessionHistory) {
+    wn = do_QueryInterface(mSessionHistory);
+  }
+  if (!wn)
+    wn = mNavigation;
+
+  if (wn)
+    wn->Reload(reloadFlags);
+}
+
+
+void
 EmbedPrivate::ApplyChromeMask()
 {
    if (mWindow) {
