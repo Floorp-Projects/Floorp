@@ -284,7 +284,7 @@ static nsresult OpenWindow(const char *urlstr, const PRUnichar *args, const char
   sarg->SetData(args);
 
   nsCAutoString features("chrome,dialog=no,all");
-  if (aFeatures) {
+  if (aFeatures && *aFeatures) {
     features.Append(",");
     features.Append(aFeatures);
   }
@@ -696,10 +696,16 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString features;
-    features.Assign("height=");
-    features.AppendInt(height);
-    features.Append(",width=");
-    features.AppendInt(width);
+    if (height != NS_SIZETOCONTENT) {
+      features.Append("height=");
+      features.AppendInt(height);
+    }
+    if (width != NS_SIZETOCONTENT) {
+      if (!features.IsEmpty())
+        features.Append(',');
+      features.Append("width=");
+      features.AppendInt(width);
+    }
 
     if (!urlToLoad.IsEmpty()) {
 #ifdef DEBUG_CMD_LINE
