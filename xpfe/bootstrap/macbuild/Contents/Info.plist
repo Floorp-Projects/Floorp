@@ -9,7 +9,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.mozilla</string>
 	<key>CFBundleVersion</key>
-	<string>1.8a2</string>
+	<string>1.8a3</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleName</key>
@@ -21,9 +21,9 @@
 	<key>CFBundleIconFile</key>
 	<string>mozilla.icns</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.8a2</string>
+	<string>1.8a3</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Mozilla 1.8a2, © 1998-2004 The Mozilla Organization</string>
+	<string>Mozilla 1.8a3, © 1998-2004 The Mozilla Organization</string>
         <key>NSAppleScriptEnabled</key>
         <true/>
 	<key>CFBundleDocumentTypes</key>
