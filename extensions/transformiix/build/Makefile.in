@@ -84,6 +84,7 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathExpression.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathNSResolver.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathResult.$(OBJ_SUFFIX) \
+  ../source/xpath/nsXPath1Scheme.$(OBJ_SUFFIX) \
   ../source/xpath/NumberExpr.$(OBJ_SUFFIX) \
   ../source/xpath/NumberFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/NumberResult.$(OBJ_SUFFIX) \

@@ -83,6 +83,7 @@
 #include "nsDOMAttribute.h"
 #include "nsGUIEvent.h"
 #include "nsFIXptr.h"
+#include "nsXPointer.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
@@ -201,7 +202,7 @@ nsXMLDocument::~nsXMLDocument()
 }
 
 
-// QueryInterface implementation for nsHTMLAnchorElement
+// QueryInterface implementation for nsXMLDocument
 NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
@@ -332,6 +333,15 @@ nsXMLDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange
 {
   return nsFIXptr::Evaluate(this, aExpression, aRange);
 }
+
+NS_IMETHODIMP
+nsXMLDocument::EvaluateXPointer(const nsAString& aExpression,
+                                nsIXPointerResult **aResult)
+{
+  return nsXPointer::Evaluate(this, aExpression, aResult);
+}
+
+
 
 NS_IMETHODIMP
 nsXMLDocument::Load(const nsAString& aUrl)
