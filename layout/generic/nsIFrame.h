@@ -579,7 +579,12 @@ public:
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext) = 0;
 
   /**
-   * Get the style data associated with this frame.
+   * Get the style data associated with this frame.  This fills in a
+   * const style struct pointer that should never be modified.  See
+   * |nsIStyleContext::GetStyleData| for more information.
+   *
+   * The use of the typesafe global helper function |GetStyleData|,
+   * below, is preferred to direct use of this function.
    */
   NS_IMETHOD GetStyleDataExternal(nsStyleStructID aSID,
                                   const nsStyleStruct*& aStyleStruct) const = 0;

@@ -189,6 +189,10 @@ public:
   virtual nsresult BeginRuleTreeReconstruct();
   virtual nsresult EndRuleTreeReconstruct();
   
+  // For getting the cached default data in case we hit out-of-memory.
+  // To be used only by nsRuleNode.
+  virtual nsCachedStyleData* GetDefaultStyleData();
+
   virtual nsresult GetRuleTree(nsRuleNode** aResult);
   virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule);
   
@@ -319,6 +323,9 @@ protected:
   
   void EnsureRuleWalker(nsIPresContext* aPresContext);
 
+  // Returns false on out-of-memory.
+  PRBool BuildDefaultStyleData(nsIPresContext* aPresContext);
+
   void ClearRuleProcessors(void);
   void ClearAgentRuleProcessors(void);
   void ClearUserRuleProcessors(void);
@@ -364,6 +371,11 @@ protected:
   nsIStyleSheet*    mQuirkStyleSheet; // cached instance for enabling/disabling
 
   nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; 
+
+  // To be used only in case of emergency, such as being out of memory
+  // or operating on a deleted rule node.  The latter should never
+  // happen, of course.
+  nsCachedStyleData mDefaultStyleData;
 
   nsRuleNode* mRuleTree; // This is the root of our rule tree.  It is a lexicographic tree of
                          // matched rules that style contexts use to look up properties.
@@ -1143,23 +1155,53 @@ StyleSetImpl::WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc,
     mOverrideRuleProcessors->EnumerateForwards(aFunc, aData);
 }
 
-#ifdef NS_DEBUG
-#define NS_ASSERT_REFCOUNT(ptr,cnt,msg) { \
-  nsrefcnt  count = ptr->AddRef();        \
-  ptr->Release();                         \
-  NS_ASSERTION(--count == cnt, msg);      \
-}
-#else
-#define NS_ASSERT_REFCOUNT(ptr,cnt,msg) {}
-#endif
-
 void StyleSetImpl::EnsureRuleWalker(nsIPresContext* aPresContext)
-{ 
+{
   if (mRuleWalker)
     return;
 
-  nsRuleNode::CreateRootNode(aPresContext, &mRuleTree);
+  if (!mDefaultStyleData.mResetData && !BuildDefaultStyleData(aPresContext)) {
+    mDefaultStyleData.Destroy(0, aPresContext);
+    return;
+  }
+
+  mRuleTree = nsRuleNode::CreateRootNode(aPresContext);
+  if (!mRuleTree)
+    return;
   mRuleWalker = new nsRuleWalker(mRuleTree);
+}
+
+PRBool StyleSetImpl::BuildDefaultStyleData(nsIPresContext* aPresContext)
+{
+  NS_ASSERTION(!mDefaultStyleData.mResetData &&
+               !mDefaultStyleData.mInheritedData,
+               "leaking default style data");
+  mDefaultStyleData.mResetData = new (aPresContext) nsResetStyleData;
+  if (!mDefaultStyleData.mResetData)
+    return PR_FALSE;
+  mDefaultStyleData.mInheritedData = new (aPresContext) nsInheritedStyleData;
+  if (!mDefaultStyleData.mInheritedData)
+    return PR_FALSE;
+
+#define SSARG_PRESCONTEXT aPresContext
+
+#define CREATE_DATA(name, type, args) \
+  if (!(mDefaultStyleData.m##type##Data->m##name##Data = \
+          new (aPresContext) nsStyle##name args)) \
+    return PR_FALSE;
+
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
+  CREATE_DATA(name, Inherited, ctor_args)
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
+  CREATE_DATA(name, Reset, ctor_args)
+
+#include "nsStyleStructList.h"
+
+#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT_RESET
+#undef SSARG_PRESCONTEXT
+
+  return PR_TRUE;
 }
 
 already_AddRefed<nsStyleContext>
@@ -1184,6 +1226,7 @@ StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
         mDocRuleProcessors   ||
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
+      NS_ENSURE_TRUE(mRuleWalker, nsnull);
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
       RulesMatchingData data(aPresContext, medium, aContent, mRuleWalker);
@@ -1218,6 +1261,7 @@ StyleSetImpl::ResolveStyleForNonElement(nsIPresContext* aPresContext,
         mDocRuleProcessors   ||
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
+      NS_ENSURE_TRUE(mRuleWalker, nsnull);
       result = GetContext(aPresContext, aParentContext,
                           nsCSSAnonBoxes::mozNonElement).get();
       NS_ASSERTION(mRuleWalker->AtRoot(), "rule walker must be at root");
@@ -1282,6 +1326,7 @@ StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContext,
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
       EnsureRuleWalker(aPresContext);
+      NS_ENSURE_TRUE(mRuleWalker, nsnull);
       PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
                                    aPseudoTag, aComparator, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
@@ -1324,6 +1369,7 @@ StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
       EnsureRuleWalker(aPresContext);
+      NS_ENSURE_TRUE(mRuleWalker, nsnull);
       PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
                                    aPseudoTag, nsnull, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
@@ -1378,11 +1424,15 @@ NS_IMETHODIMP
 StyleSetImpl::Shutdown(nsIPresContext* aPresContext)
 {
   delete mRuleWalker;
+  mRuleWalker = nsnull;
   if (mRuleTree)
   {
     mRuleTree->Destroy();
     mRuleTree = nsnull;
   }
+
+  mDefaultStyleData.Destroy(0, aPresContext);
+
   return NS_OK;
 }
 
@@ -1450,6 +1500,12 @@ StyleSetImpl::EndRuleTreeReconstruct()
   return NS_OK;
 }
 
+nsCachedStyleData*
+StyleSetImpl::GetDefaultStyleData()
+{
+  return &mDefaultStyleData;
+}
+
 nsresult
 StyleSetImpl::ClearCachedDataInRuleTree(nsIStyleRule* aInlineStyleRule)
 {
@@ -1507,6 +1563,7 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
       nsRuleNode* ruleNode;
       aStyleContext->GetRuleNode(&ruleNode);
       EnsureRuleWalker(aPresContext);
+      NS_ENSURE_TRUE(mRuleWalker, nsnull);
       mRuleWalker->SetCurrentNode(ruleNode);
 
       already_AddRefed<nsStyleContext> result =
@@ -1845,14 +1902,9 @@ void StyleSetImpl::ListContexts(nsIFrame* aRootFrame, FILE* out, PRInt32 aIndent
 nsresult
 NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 {
-  if (!aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  StyleSetImpl  *it = new StyleSetImpl();
-  if (!it) {
+  StyleSetImpl *it = new StyleSetImpl();
+  if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   return CallQueryInterface(it, aInstancePtrResult);
 }

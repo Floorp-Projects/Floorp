@@ -416,9 +416,9 @@ nsRuleNode::Destroy()
   mPresContext->FreeToShell(sizeof(nsRuleNode), this);
 }
 
-void nsRuleNode::CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResult)
+nsRuleNode* nsRuleNode::CreateRootNode(nsIPresContext* aPresContext)
 {
-  *aResult = new (aPresContext) nsRuleNode(aPresContext);
+  return new (aPresContext) nsRuleNode(aPresContext, nsnull, nsnull);
 }
 
 nsILanguageAtomService* nsRuleNode::gLangService = nsnull;
@@ -555,6 +555,8 @@ nsRuleNode::PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched)
 nsresult
 nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
 {
+  NS_ASSERTION(aRule, "you should be using ClearCachedDataInSubtree");
+
   nsRuleNode* ruleDest = this;
   while (ruleDest) {
     if (ruleDest->mRule == aRule)
@@ -563,6 +565,8 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
   }
 
   if (ruleDest) {
+    NS_ASSERTION(ruleDest->mParent, "node must not be root");
+
     // The rule was contained along our branch.  We need to blow away
     // all cached data along this path.  Note that, because of the definition
     // of inline style, all nodes along this path must have exactly one child.  This
@@ -603,8 +607,10 @@ nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
     // We have a match.  Blow away all data stored at this node.
     if (mStyleData.mResetData || mStyleData.mInheritedData)
       mStyleData.Destroy(0, mPresContext);
+
     mNoneBits &= ~NS_STYLE_INHERIT_MASK;
     mDependentBits &= ~NS_STYLE_INHERIT_MASK;
+
     aRule = nsnull;  // Cause everything to be blown away in the descendants.
   }
 
@@ -980,7 +986,7 @@ static const PropertyCheckData SVGCheckProperties[] = {
   
 static const StructCheckData gCheckProperties[] = {
 
-#define STYLE_STRUCT(name, checkdata_cb) \
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
   {name##CheckProperties, \
    sizeof(name##CheckProperties)/sizeof(PropertyCheckData), \
    checkdata_cb},
@@ -1608,16 +1614,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   return res;
 }
 
-static nscoord
-ZoomFont(nsIPresContext* aPresContext, nscoord aInSize)
-{
-  nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext->GetDeviceContext(getter_AddRefs(dc));
-  float textZoom;
-  dc->GetTextZoom(textZoom);
-  return nscoord(aInSize * textZoom);
-}
-
 static PRBool
 IsChrome(nsIPresContext* aPresContext)
 {
@@ -1643,10 +1639,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
   switch (aSID) {
     case eStyleStruct_Font: 
     {
-      const nsFont* defaultFont;
-      mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
-      nsStyleFont* fontData = new (mPresContext) nsStyleFont(*defaultFont);
-      fontData->mSize = ZoomFont(mPresContext, fontData->mFont.size);
+      nsStyleFont* fontData = new (mPresContext) nsStyleFont(mPresContext);
 
       nscoord minimumFontSize = 0;
       mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize, minimumFontSize);
@@ -1792,7 +1785,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
 nsRuleNode::ComputeStyleDataFn
 nsRuleNode::gComputeStyleDataFn[] = {
 
-#define STYLE_STRUCT(name, checkdata_cb) \
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
   &nsRuleNode::Compute##name##Data,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -1805,7 +1798,7 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
         nscoord aMinFontSize, PRBool aUseDocumentFonts, PRBool aChromeOverride,
         PRBool aIsGeneric, const nsRuleDataFont& aFontData,
         const nsFont& aDefaultFont, const nsStyleFont* aParentFont,
-        nsStyleFont* aFont, PRBool aZoom, PRBool& aInherited)
+        nsStyleFont* aFont, PRBool& aInherited)
 {
   const nsFont* defaultVariableFont;
   const nsFont* defaultFixedFont;
@@ -1863,7 +1856,9 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
       if (NS_FAILED(dc->GetSystemFont(sysID, &aFont->mFont))) {
         aFont->mFont.name = defaultVariableFont->name;
       }
-      aFont->mSize = aFont->mFont.size; // this becomes our cascading size
+      // this becomes our cascading size
+      aFont->mSize = aFont->mFont.size
+          = nsStyleFont::ZoomText(aPresContext, aFont->mFont.size);
     }
 
     aFont->mFont.familyNameQuirks = PR_FALSE;
@@ -1964,7 +1959,7 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   }
 
   // font-size: enum, length, percent, inherit
-  PRBool zoom = aZoom;
+  PRBool zoom = PR_FALSE;
   if (eCSSUnit_Enumerated == aFontData.mSize.GetUnit()) {
     PRInt32 value = aFontData.mSize.GetIntValue();
     PRInt32 scaler;
@@ -1987,12 +1982,8 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
 
       // Un-zoom so we use the tables correctly.  We'll then rezoom due
       // to the |zoom = PR_TRUE| above.
-      nsCOMPtr<nsIDeviceContext> dc;
-      aPresContext->GetDeviceContext(getter_AddRefs(dc));
-      float textZoom;
-      dc->GetTextZoom(textZoom);
-
-      nscoord parentSize = nscoord(aParentFont->mSize / textZoom);
+      nscoord parentSize =
+          nsStyleFont::UnZoomText(aPresContext, aParentFont->mSize);
 
       if (NS_STYLE_FONT_SIZE_LARGER == value) {
         PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentSize, (PRInt32)aDefaultFont.size,
@@ -2058,7 +2049,7 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   // We want to zoom the cascaded size so that em-based measurements,
   // line-heights, etc., work.
   if (zoom)
-    aFont->mSize = ZoomFont(aPresContext, aFont->mSize);
+    aFont->mSize = nsStyleFont::ZoomText(aPresContext, aFont->mSize);
 
   // enforce the user' specified minimum font-size on the value that we expose
   if (aChromeOverride) {
@@ -2116,8 +2107,9 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   const nsFont* defaultFont;
   aPresContext->GetDefaultFont(aGenericFontID, &defaultFont);
   nsStyleFont parentFont(*defaultFont);
+  parentFont.mSize = parentFont.mFont.size
+      = nsStyleFont::ZoomText(aPresContext, parentFont.mSize);
   PRInt32 i = contextPath.Count() - 1;
-  PRBool zoom = PR_TRUE;
   if (higherContext) {
     nsStyleContext* context = (nsStyleContext*)contextPath[i];
     nsStyleFont* tmpFont = (nsStyleFont*)context->GetStyleData(eStyleStruct_Font);
@@ -2125,7 +2117,6 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     parentFont.mFont = tmpFont->mFont;
     parentFont.mSize = tmpFont->mSize;
     --i;
-    zoom = PR_FALSE;
   }
   aFont->mFlags = parentFont.mFlags;
   aFont->mFont = parentFont.mFont;
@@ -2163,7 +2154,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
 
     SetFont(aPresContext, context, aMinFontSize,
             aUseDocumentFonts, aChromeOverride, PR_TRUE,
-            fontData, *defaultFont, &parentFont, aFont, zoom, dummy);
+            fontData, *defaultFont, &parentFont, aFont, dummy);
 
     // XXX Not sure if we need to do this here
     // If we have a post-resolve callback, handle that now.
@@ -2173,7 +2164,6 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     parentFont.mFlags = aFont->mFlags;
     parentFont.mFont = aFont->mFont;
     parentFont.mSize = aFont->mSize;
-    zoom = PR_FALSE;
   }
 
   // Finish off by applying our own rules. In this case, aFontData
@@ -2181,7 +2171,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   // can just compute the delta from the parent.
   SetFont(aPresContext, aContext, aMinFontSize,
           aUseDocumentFonts, aChromeOverride, PR_TRUE,
-          aFontData, *defaultFont, &parentFont, aFont, zoom, dummy);
+          aFontData, *defaultFont, &parentFont, aFont, dummy);
 }
 
 const nsStyleStruct* 
@@ -2222,12 +2212,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
     }
   }
 
-  PRBool zoom = PR_FALSE;
-  const nsFont* defaultFont;
   if (!font) {
-    mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID, &defaultFont);
-    font = new (mPresContext) nsStyleFont(*defaultFont);
-    zoom = PR_TRUE;
+    font = new (mPresContext) nsStyleFont(mPresContext);
   }
   if (!parentFont)
     parentFont = font;
@@ -2268,6 +2254,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   // determine if we have to override the minimum font-size constraint.
   if (!useDocumentFonts || minimumFontSize > 0) {
     chromeOverride = IsChrome(mPresContext);
+    // XXXldb Just fix up |useDocumentFonts| here and drop the
+    // |chromeOverride| variable from here on!
   }
 
   // If we don't have to use document fonts, then we are only entitled
@@ -2282,10 +2270,11 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
     // continue the normal processing
     // our default font is the most recent generic font
     generic = parentFont->mFlags & NS_STYLE_FONT_FACE_MASK;
+    const nsFont* defaultFont;
     mPresContext->GetDefaultFont(generic, &defaultFont);
     SetFont(mPresContext, aContext, minimumFontSize,
             useDocumentFonts, chromeOverride, PR_FALSE,
-            fontData, *defaultFont, parentFont, font, zoom, inherited);
+            fontData, *defaultFont, parentFont, font, inherited);
   }
   else {
     // re-calculate the font as a generic font
@@ -2368,8 +2357,8 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
              aContext, mPresContext, inherited);
     if (textData.mLineHeight.IsFixedLengthUnit() ||
         textData.mLineHeight.GetUnit() == eCSSUnit_Pixel)
-      text->mLineHeight.SetCoordValue(
-                    ZoomFont(mPresContext, text->mLineHeight.GetCoordValue()));
+      text->mLineHeight.SetCoordValue(nsStyleFont::ZoomText(mPresContext,
+                                           text->mLineHeight.GetCoordValue()));
   }
 
 
@@ -4637,24 +4626,31 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
 inline const nsStyleStruct* 
 nsRuleNode::GetParentData(const nsStyleStructID aSID)
 {
-  nsRuleNode* ruleNode = mParent;
-  nsStyleStruct* currStruct = nsnull;
-  while (ruleNode) {
-    currStruct = ruleNode->mStyleData.GetStyleData(aSID);
-    if (currStruct)
-      break; // We found a rule with fully specified data.  We don't need to go up
-             // the tree any further, since the remainder of this branch has already
-             // been computed.
-    ruleNode = ruleNode->mParent; // Climb up to the next rule in the tree (a less specific rule).
-  }  
+  // Walk up the rule tree from this rule node (towards less specific
+  // rules).
+  for (nsRuleNode* ruleNode = mParent; ruleNode; ruleNode = ruleNode->mParent)
+  {
+    const nsStyleStruct *currStruct = ruleNode->mStyleData.GetStyleData(aSID);
+    if (currStruct) {
+      // We found a rule with fully specified data.  We don't need to go
+      // up the tree any further, since the remainder of this branch has
+      // already been computed.
+      return currStruct;
+    }
+    NS_ASSERTION(ruleNode->mDependentBits &
+                 nsCachedStyleData::GetBitForSID(aSID),
+                 "dependent bits improperly set");
+  }
 
-  return currStruct; // Just return whatever we found.
+  NS_NOTREACHED("dependent bits set on root or improperly set");
+  return nsnull;
 }
 
 nsRuleNode::GetStyleDataFn
 nsRuleNode::gGetStyleDataFn[] = {
 
-#define STYLE_STRUCT(name, checkdata_cb) &nsRuleNode::Get##name##Data,
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+  &nsRuleNode::Get##name##Data,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
@@ -4666,21 +4662,42 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
                          nsStyleContext* aContext,
                          PRBool aComputeData)
 {
-  const nsStyleStruct* cachedData = mStyleData.GetStyleData(aSID);
-  if (cachedData)
-    return cachedData; // We have a fully specified struct. Just return it.
+  const nsStyleStruct* data = mStyleData.GetStyleData(aSID);
+  if (data)
+    return data; // We have a fully specified struct. Just return it.
 
-  if (mDependentBits & nsCachedStyleData::GetBitForSID(aSID))
-    return GetParentData(aSID); // We depend on an ancestor for this
-                                // struct since the cached struct it has
-                                // is also appropriate for this rule
-                                // node.  Just go up the rule tree and
-                                // return the first cached struct we
-                                // find.
+  if (mDependentBits & nsCachedStyleData::GetBitForSID(aSID)) {
+    // We depend on an ancestor for this struct since the cached struct
+    // it has is also appropriate for this rule node.  Just go up the
+    // rule tree and return the first cached struct we find.
+    data = GetParentData(aSID);
+    if (data)
+      return data;
+    NS_NOTREACHED("dependent bits set but no cached struct present");
+  }
 
   // Nothing is cached.  We'll have to delve further and examine our rules.
   GetStyleDataFn fn = gGetStyleDataFn[aSID];
-  return fn ? (this->*fn)(aContext, aComputeData) : nsnull;
+  if (!fn) {
+    NS_NOTREACHED("unknown style struct requested");
+    return nsnull;
+  }
+  data = (this->*fn)(aContext, aComputeData);
+  if (data || !aComputeData)
+    return data;
+
+  NS_NOTREACHED("could not create style struct");
+  // To ensure that |GetStyleData| never returns null (even when we're
+  // out of memory), we'll get the style set and get a copy of the
+  // default values for the given style struct from the set.  Note that
+  // this works fine even if |this| is a rule node that has been
+  // destroyed (leftover from a previous rule tree) but is somehow still
+  // used.
+  nsCOMPtr<nsIPresShell> shell;
+  mPresContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIStyleSet> set;
+  shell->GetStyleSet(getter_AddRefs(set));
+  return set->GetDefaultStyleData()->GetStyleData(aSID);
 }
 
 void

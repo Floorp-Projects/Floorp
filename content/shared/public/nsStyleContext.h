@@ -98,7 +98,27 @@ public:
    */
   void Mark();
 
+  /*
+   * Get the style data for a style struct.  This is the most important
+   * member function of nsIStyleContext.  It fills in a const pointer
+   * to a style data struct that is appropriate for the style context's
+   * frame.  This struct may be shared with other contexts (either in
+   * the rule tree or the style context tree), so it should not be
+   * modified.
+   *
+   * This function will NOT return null (even when out of memory) when
+   * given a valid style struct ID, so the result does not need to be
+   * null-checked.
+   *
+   * The typesafe global helper function |GetStyleData| (below) is
+   * preferred to the use of this function (and is a simple typesafe
+   * wrapper for this function).
+   *
+   * See also |nsIFrame::GetStyleData| and the other global
+   * |GetStyleData| in nsIFrame.h.
+   */
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
+
   const nsStyleStruct* PeekStyleData(nsStyleStructID aSID);
 
   nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID);
