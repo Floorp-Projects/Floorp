@@ -161,6 +161,7 @@ components\lwbrk.dll
 components\nslocale.dll
 components\ucvlatin.dll
 components\unicharutil.xpt
+components\chardet.dll
 ; optional - on english only systems
 ; components\ucvja.dll for japanese 
 ; components\ucvko.dll for korean
