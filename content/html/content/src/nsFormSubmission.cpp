@@ -49,7 +49,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsDOMError.h"
-#include "nsHTMLValue.h"
 #include "nsGenericHTMLElement.h"
 #include "nsISaveAsCharset.h"
 
@@ -1226,11 +1225,8 @@ nsFormSubmission::GetSubmitCharset(nsGenericHTMLElement* aForm,
 
   nsresult rv = NS_OK;
   nsAutoString acceptCharsetValue;
-  nsHTMLValue value;
-  rv = aForm->GetHTMLAttribute(nsHTMLAtoms::acceptcharset, value);
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE && value.GetUnit() == eHTMLUnit_String) {
-    value.GetStringValue(acceptCharsetValue);
-  }
+  aForm->GetAttr(kNameSpaceID_None, nsHTMLAtoms::acceptcharset,
+                 acceptCharsetValue);
 
   PRInt32 charsetLen = acceptCharsetValue.Length();
   if (charsetLen > 0) {
@@ -1395,11 +1391,9 @@ void
 nsFormSubmission::GetEnumAttr(nsGenericHTMLElement* aContent,
                               nsIAtom* atom, PRInt32* aValue)
 {
-  nsHTMLValue value;
-  if (aContent->GetHTMLAttribute(atom, value) == NS_CONTENT_ATTR_HAS_VALUE) {
-    if (eHTMLUnit_Enumerated == value.GetUnit()) {
-      *aValue = value.GetIntValue();
-    }
+  const nsAttrValue* value = aContent->GetParsedAttr(atom);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    *aValue = value->GetEnumValue();
   }
 }
 

@@ -72,9 +72,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 };
@@ -110,6 +107,32 @@ NS_IMPL_STRING_ATTR(nsHTMLFontElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Face, face)
 NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
 
+static const nsAttrValue::EnumTable kRelFontSizeTable[] = {
+  { "-10", -10 },
+  { "-9", -9 },
+  { "-8", -8 },
+  { "-7", -7 },
+  { "-6", -6 },
+  { "-5", -5 },
+  { "-4", -4 },
+  { "-3", -3 },
+  { "-2", -2 },
+  { "-1", -1 },
+  { "-0", 0 },
+  { "+0", 0 },
+  { "+1", 1 },
+  { "+2", 2 },
+  { "+3", 3 },
+  { "+4", 4 },
+  { "+5", 5 },
+  { "+6", 6 },
+  { "+7", 7 },
+  { "+8", 8 },
+  { "+9", 9 },
+  { "+10", 10 },
+  { 0 }
+};
+
 
 PRBool
 nsHTMLFontElement::ParseAttribute(nsIAtom* aAttribute,
@@ -118,15 +141,13 @@ nsHTMLFontElement::ParseAttribute(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::size) {
     nsAutoString tmp(aValue);
-    PRInt32 ec, v = tmp.ToInteger(&ec);
-    if(NS_SUCCEEDED(ec)) {
-      tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
-      PRUnichar ch = tmp.First();
-      aResult.SetTo(v, (ch == '+' || ch == '-') ?
-                       nsAttrValue::eEnum : nsAttrValue::eInteger);
-      return PR_TRUE;
+    tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+    PRUnichar ch = tmp.First();
+    if (ch == '+' || ch == '-') {
+      return aResult.ParseEnumValue(aValue, kRelFontSizeTable);
     }
-    return PR_FALSE;
+
+    return aResult.ParseIntValue(aValue);
   }
   if (aAttribute == nsHTMLAtoms::pointSize ||
       aAttribute == nsHTMLAtoms::fontWeight) {
@@ -137,33 +158,6 @@ nsHTMLFontElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
-                                     const nsHTMLValue& aValue,
-                                     nsAString& aResult) const
-{
-  if ((aAttribute == nsHTMLAtoms::size) ||
-      (aAttribute == nsHTMLAtoms::pointSize) ||
-      (aAttribute == nsHTMLAtoms::fontWeight)) {
-    if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
-      nsAutoString intVal;
-      PRInt32 value = aValue.GetIntValue(); 
-      intVal.AppendInt(value, 10);
-      if (value >= 0) {
-        aResult = NS_LITERAL_STRING("+") + intVal;
-      }
-      else {
-        aResult = intVal;
-      }
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

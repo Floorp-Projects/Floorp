@@ -117,9 +117,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -363,22 +360,22 @@ nsHTMLImageElement::GetWidthHeight()
       size.height = NSTwipsToIntPixels(size.height, t2p);
     }
   } else {
-    nsHTMLValue value;
+    const nsAttrValue* value;
     nsCOMPtr<imgIContainer> image;
     if (mCurrentRequest) {
       mCurrentRequest->GetImage(getter_AddRefs(image));
     }
 
-    if (GetHTMLAttribute(nsHTMLAtoms::width,
-                         value) == NS_CONTENT_ATTR_HAS_VALUE) {
-      size.width = value.GetIntValue();
+    if ((value = GetParsedAttr(nsHTMLAtoms::width)) &&
+        value->Type() == nsAttrValue::eInteger) {
+      size.width = value->GetIntegerValue();
     } else if (image) {
       image->GetWidth(&size.width);
     }
 
-    if (GetHTMLAttribute(nsHTMLAtoms::height,
-                         value) == NS_CONTENT_ATTR_HAS_VALUE) {
-      size.height = value.GetIntValue();
+    if ((value = GetParsedAttr(nsHTMLAtoms::height)) &&
+        value->Type() == nsAttrValue::eInteger) {
+      size.height = value->GetIntegerValue();
     } else if (image) {
       image->GetHeight(&size.height);
     }
@@ -441,21 +438,6 @@ nsHTMLImageElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
-                                      const nsHTMLValue& aValue,
-                                      nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      VAlignValueToString(aValue, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

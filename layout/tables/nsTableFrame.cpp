@@ -51,7 +51,6 @@
 #include "nsTableRowGroupFrame.h"
 #include "nsTableOuterFrame.h"
 #include "nsTablePainter.h"
-#include "nsHTMLValue.h"
 
 #include "BasicTableLayoutStrategy.h"
 #include "FixedTableLayoutStrategy.h"

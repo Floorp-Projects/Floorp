@@ -78,9 +78,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
@@ -126,7 +123,7 @@ NS_IMPL_INT_ATTR(nsHTMLSharedListElement, Start, start)
 NS_IMPL_STRING_ATTR(nsHTMLSharedListElement, Type, type)
 
 
-nsHTMLValue::EnumTable kListTypeTable[] = {
+nsAttrValue::EnumTable kListTypeTable[] = {
   { "none", NS_STYLE_LIST_STYLE_NONE },
   { "disc", NS_STYLE_LIST_STYLE_DISC },
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
@@ -140,7 +137,7 @@ nsHTMLValue::EnumTable kListTypeTable[] = {
   { 0 }
 };
 
-nsHTMLValue::EnumTable kOldListTypeTable[] = {
+nsAttrValue::EnumTable kOldListTypeTable[] = {
   { "1", NS_STYLE_LIST_STYLE_OLD_DECIMAL },
   { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
   { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
@@ -166,34 +163,6 @@ nsHTMLSharedListElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLSharedListElement::AttributeToString(nsIAtom* aAttribute,
-                                           const nsHTMLValue& aValue,
-                                           nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::type &&
-      (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
-       mNodeInfo->Equals(nsHTMLAtoms::ul))) {
-    PRInt32 v = aValue.GetIntValue();
-    switch (v) {
-      case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
-      case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-      case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
-      case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
-      case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
-        aValue.EnumValueToString(kOldListTypeTable, aResult);
-        break;
-      default:
-        aValue.EnumValueToString(kListTypeTable, aResult);
-        break;
-    }
-
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

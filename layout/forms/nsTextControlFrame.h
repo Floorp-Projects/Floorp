@@ -46,7 +46,6 @@
 #include "nsIEditor.h"
 #include "nsITextControlFrame.h"
 #include "nsFormControlHelper.h"//for the inputdimensions
-#include "nsHTMLValue.h" //for nsHTMLValue
 #include "nsIFontMetrics.h"
 #include "nsWeakReference.h" //for service and presshell pointers
 #include "nsIScrollableViewProvider.h"

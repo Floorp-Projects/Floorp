@@ -1474,19 +1474,18 @@ nsTextControlFrame::GetCols()
   NS_ASSERTION(content, "Content is not HTML content!");
 
   if (IsTextArea()) {
-    nsHTMLValue attr;
-    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, attr);
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      PRInt32 cols = attr.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::cols);
+    if (attr) {
+      PRInt32 cols = attr->Type() == nsAttrValue::eInteger ?
+                     attr->GetIntegerValue() : 0;
       // XXX why a default of 1 char, why hide it
       return (cols <= 0) ? 1 : cols;
     }
   } else {
     // Else we know (assume) it is an input with size attr
-    nsHTMLValue attr;
-    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::size, attr);
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      PRInt32 cols = attr.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::size);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      PRInt32 cols = attr->GetIntegerValue();
       if (cols > 0) {
         return cols;
       }
@@ -1505,10 +1504,9 @@ nsTextControlFrame::GetRows()
       nsGenericHTMLElement::FromContent(mContent);
     NS_ASSERTION(content, "Content is not HTML content!");
 
-    nsHTMLValue attr;
-    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::rows, attr);
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      PRInt32 rows = attr.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::rows);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      PRInt32 rows = attr->GetIntegerValue();
       return (rows <= 0) ? DEFAULT_ROWS_TEXTAREA : rows;
     }
     return DEFAULT_ROWS_TEXTAREA;
@@ -2902,18 +2900,17 @@ nsresult
 nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
-  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
 
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
-
   if (content) {
-    nsHTMLValue value;
-    rv = content->GetHTMLAttribute(nsHTMLAtoms::maxlength, value);
-    if (eHTMLUnit_Integer == value.GetUnit()) { 
-      *aSize = value.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::maxlength);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      *aSize = attr->GetIntegerValue();
+
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return rv;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 // this is where we propagate a content changed event
@@ -3197,14 +3194,9 @@ nsTextControlFrame::GetWidthInCharacters() const
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
   if (content)
   {
-    nsHTMLValue resultValue;
-    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
-    {
-      if (resultValue.GetUnit() == eHTMLUnit_Integer) 
-      {
-        return (resultValue.GetIntValue());
-      }
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::cols);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      return attr->GetIntegerValue();
     }
   }
 

@@ -71,9 +71,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -254,7 +251,7 @@ nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
 }
 
 
-static const nsHTMLValue::EnumTable kCellScopeTable[] = {
+static const nsAttrValue::EnumTable kCellScopeTable[] = {
   { "row",      NS_STYLE_CELL_SCOPE_ROW },
   { "col",      NS_STYLE_CELL_SCOPE_COL },
   { "rowgroup", NS_STYLE_CELL_SCOPE_ROWGROUP },
@@ -284,7 +281,7 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
       // reset large colspan values as IE and opera do
       // quirks mode does not honor the special html 4 value of 0
       if (val > MAX_COLSPAN || val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
-        aResult.SetTo(1, nsAttrValue::eInteger);
+        aResult.SetTo(1);
       }
     }
     return res;
@@ -295,7 +292,7 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
       PRInt32 val = aResult.GetIntegerValue();
       // quirks mode does not honor the special html 4 value of 0
       if (val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
-        aResult.SetTo(1, nsAttrValue::eInteger);
+        aResult.SetTo(1);
       }
     }
     return res;
@@ -320,36 +317,6 @@ nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
-                                          const nsHTMLValue& aValue,
-                                          nsAString& aResult) const
-{
-  /* ignore these attributes, stored already as strings
-     abbr, axis, ch, headers
-   */
-  /* ignore attributes that are of standard types
-     charoff, colspan, rowspan, height, width, nowrap, background, bgcolor
-   */
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (TableCellHAlignValueToString(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::scope) {
-    if (aValue.EnumValueToString(kCellScopeTable, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::valign) {
-    if (TableVAlignValueToString(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static 

@@ -53,7 +53,7 @@
 #include "nsStyleContext.h"
 
 // XXX nav4 has type= start= (same as OL/UL)
-extern nsHTMLValue::EnumTable kListTypeTable[];
+extern nsAttrValue::EnumTable kListTypeTable[];
 
 class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsImageLoadingContent,
@@ -120,9 +120,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -292,38 +289,6 @@ nsHTMLSharedElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLSharedElement::AttributeToString(nsIAtom* aAttribute,
-                                       const nsHTMLValue& aValue,
-                                       nsAString& aResult) const
-{
-  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    if (aAttribute == nsHTMLAtoms::align) {
-      if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-        AlignValueToString(aValue, aResult);
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-    }
-  }
-  else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
-    if (aAttribute == nsHTMLAtoms::align) {
-      if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-        AlignValueToString(aValue, aResult);
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-    }
-  }
-  else if (mNodeInfo->Equals(nsHTMLAtoms::dir) ||
-           mNodeInfo->Equals(nsHTMLAtoms::menu)) {
-    if (aAttribute == nsHTMLAtoms::type) {
-      aValue.EnumValueToString(kListTypeTable, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 // spacer element code

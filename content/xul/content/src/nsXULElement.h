@@ -51,7 +51,6 @@
 // XXX because nsIEventListenerManager has broken includes
 #include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"
-#include "nsHTMLValue.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsIControllers.h"

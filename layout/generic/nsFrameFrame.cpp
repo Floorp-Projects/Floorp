@@ -574,13 +574,12 @@ nsSize nsSubDocumentFrame::GetMargin()
   nsSize result(-1, -1);
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
   if (content) {
-    nsHTMLValue value;
-    content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
-    if (eHTMLUnit_Integer == value.GetUnit())
-      result.width = value.GetIntValue();
-    content->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
-    if (eHTMLUnit_Integer == value.GetUnit())
-      result.height = value.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::marginwidth);
+    if (attr && attr->Type() == nsAttrValue::eInteger)
+      result.width = attr->GetIntegerValue();
+    attr = content->GetParsedAttr(nsHTMLAtoms::marginheight);
+    if (attr && attr->Type() == nsAttrValue::eInteger)
+      result.height = attr->GetIntegerValue();
   }
   return result;
 }

@@ -670,18 +670,17 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
     }
   }
   float p2t = aPresContext->ScaledPixelsToTwips();
-  nsHTMLValue htmlVal;
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::border, htmlVal))) {
-      nsHTMLUnit unit = htmlVal.GetUnit();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::border);
+    if (attr) {
       PRInt32 intVal = 0;
-      if (eHTMLUnit_Integer == unit) {
-        intVal = htmlVal.GetIntValue();
-      }
-      if (intVal < 0) {
-        intVal = 0;
+      if (attr->Type() == nsAttrValue::eInteger) {
+        intVal = attr->GetIntegerValue();
+        if (intVal < 0) {
+          intVal = 0;
+        }
       }
 
       if (forcing && intVal == 0) {
@@ -895,22 +894,20 @@ static
 nsFrameborder GetFrameBorderHelper(nsGenericHTMLElement* aContent)
 {
   if (nsnull != aContent) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetHTMLAttribute(nsHTMLAtoms::frameborder, value))) {
-      if (eHTMLUnit_Enumerated == value.GetUnit()) {       
-        switch (value.GetIntValue())
-        {
-          case NS_STYLE_FRAME_YES:
-          case NS_STYLE_FRAME_1:
-            return eFrameborder_Yes;
-            break;
+    const nsAttrValue* attr = aContent->GetParsedAttr(nsHTMLAtoms::frameborder);
+    if (attr && attr->Type() == nsAttrValue::eEnum) {
+      switch (attr->GetEnumValue())
+      {
+        case NS_STYLE_FRAME_YES:
+        case NS_STYLE_FRAME_1:
+          return eFrameborder_Yes;
+          break;
 
-          case NS_STYLE_FRAME_NO:
-          case NS_STYLE_FRAME_0:
-            return eFrameborder_No;
-            break;
-        }
-      }      
+        case NS_STYLE_FRAME_NO:
+        case NS_STYLE_FRAME_0:
+          return eFrameborder_No;
+          break;
+      }
     }
   }
   return eFrameborder_Notset;
@@ -950,10 +947,10 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::bordercolor);
+    if (attr) {
       nscolor color;
-      if (value.GetColorValue(color)) {
+      if (attr->GetColorValue(color)) {
         return color;
       }
     }
@@ -967,10 +964,10 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
 
   if (content) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::bordercolor, value))) {
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::bordercolor);
+    if (attr) {
       nscolor color;
-      if (value.GetColorValue(color)) {
+      if (attr->GetColorValue(color)) {
         return color;
       }
     }

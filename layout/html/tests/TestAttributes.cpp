@@ -61,15 +61,14 @@ void testAttributes(nsGenericHTMLElement* content) {
   content->SetAttribute(kNameSpaceID_None, sHEIGHT, sempty, PR_FALSE);
   content->SetAttribute(kNameSpaceID_None, sSRC, sfoo_gif, PR_FALSE);
 
-  nsHTMLValue ret;
-  nsresult rv;
-  rv = content->GetHTMLAttribute(sBORDER, ret);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE || ret.GetUnit() != eHTMLUnit_String) {
+  const nsAttrValue* attr;
+  attr = content->GetParsedAttr(sBORDER);
+  if (!attr || attr->Type() != nsAttrValue::eString) {
     printf("test 0 failed\n");
   }
 
-  rv = content->GetHTMLAttribute(sBAD, ret);
-  if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+  attr = content->GetParsedAttr(sBAD);
+  if (attr) {
     printf("test 2 failed\n");
   }
 

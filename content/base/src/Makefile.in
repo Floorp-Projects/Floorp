@@ -82,7 +82,6 @@ REQUIRES	= xpcom \
 
 EXPORTS		= \
 		nsAtomListUtils.h \
-		nsHTMLValue.h \
 		nsNodeInfoManager.h \
 		nsPropertyTable.h \
 		nsStubDocumentObserver.h \
@@ -116,7 +115,6 @@ CPPSRCS		= \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \
 		nsHTMLContentSerializer.cpp \
-		nsHTMLValue.cpp \
 		nsImageLoadingContent.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \

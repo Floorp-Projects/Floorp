@@ -41,7 +41,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIStyledContent.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsHTMLValue.h"
 #include "nsICSSStyleRule.h"
 #include "nsINodeInfo.h"
 #include "nsICSSLoader.h"

@@ -59,7 +59,6 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLValue.h"
 #include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "prprf.h"
@@ -6839,12 +6838,9 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetHTMLAttribute(nsHTMLAtoms::start, value)) {
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        ordinal = value.GetIntValue();
-      }
+    const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::start);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      ordinal = attr->GetIntegerValue();
     }
   }
 

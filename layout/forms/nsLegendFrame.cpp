@@ -150,11 +150,9 @@ PRInt32 nsLegendFrame::GetAlign()
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::align, value))) {
-      if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        intValue = value.GetIntValue();
-      }
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::align);
+    if (attr && attr->Type() == nsAttrValue::eEnum) {
+      intValue = attr->GetEnumValue();
     }
   }
   return intValue;
