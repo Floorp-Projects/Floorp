@@ -37,7 +37,6 @@
 #endif
 
 class nsIDNSListener;
-class nsICancelable;
 class nsDNSLookup;
 
 class nsDNSService : public nsIDNSService,
@@ -62,36 +61,29 @@ public:
 
 protected:
     friend class nsDNSLookup;
-#if defined(XP_MAC)
-    friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
-#elif defined(XP_PC)
-    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#endif
-
-    nsIThread *     mThread;
-    nsresult        mState;
+    nsIThread *         mThread;
+    nsresult            mState;
 
     // nsDNSLookup cache? - list of nsDNSLookups, hash table (nsHashTable, nsStringKey)
     // list of nsDNSLookups in order of expiration (PRCList?)
 
 #if defined(XP_MAC)
-
-    PRBool          mThreadRunning;
-    InetSvcRef  mServiceRef;
-    QHdr		mCompletionQueue;
-
+    friend pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
+    PRBool              mThreadRunning;
+    InetSvcRef          mServiceRef;
+    QHdr		            mCompletionQueue;
 #if TARGET_CARBON
     OTClientContextPtr  mClientContext;
     OTNotifyUPP         nsDnsServiceNotifierRoutineUPP;
 #endif /* TARGET_CARBON */
+#endif /* XP_MAC */
 
-#elif defined(XP_PC)
+#if defined(XP_PC)
+    friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HWND                mDNSWindow;
     UINT                mMsgFoundDNS;
     nsVoidArray         mCompletionQueue;
-#elif defined(XP_UNIX)
-    //XXX - to be defined
-#endif
+#endif /* XP_PC */
 };
 
 #endif /* nsDNSService_h__ */
