@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		= @srcdir@/../src
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -55,16 +55,3 @@ endif
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
-
-export::	copysrcs
-
-copysrcs::
-	cp $(srcdir)/../src/*.c .
-	cp $(srcdir)/../src/*.h .
-
-clean::
-	$(RM) *.h *.c *.o *.a
-
-clobber::	clean
-
-clobber_all::	clean
