@@ -30,7 +30,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\winmain.obj		\
  $(NULL)
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\shell -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I..
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\shell -I$(XPDIST)\public\pref -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I..
 
 MAKE_OBJ_TYPE = LIB
 
@@ -52,6 +52,7 @@ LLIBS=				\
  $(DIST)\lib\util.lib        \
  $(DIST)\lib\libplc21.lib    \
  $(DIST)\lib\jsdom.lib       \
+ $(DIST)\lib\xppref32.lib        \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#define NS_IMPL_IDS 1
+
 #include "nspr.h"
 #include "net.h"
 
@@ -35,6 +37,8 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsParserCIID.h"
+
+#include "nsIPref.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -67,10 +71,12 @@ private:
 nsShellInstance::nsShellInstance()
 {
   mApplicationWindow = NULL;
+  mPref = nsnull;
 }
 
 nsShellInstance::~nsShellInstance()
 {
+  NS_IF_RELEASE(mPref);
 }
 
 NS_DEFINE_IID(kIShellInstanceIID, NS_ISHELLINSTANCE_IID);
@@ -81,6 +87,13 @@ nsresult nsShellInstance::Init()
   nsresult res = NS_OK;
 
   RegisterFactories() ;
+
+  // Load preferences
+  res = NSRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
+                                     (void **) &mPref);
+  if (NS_OK != res) {
+    return res;
+  }
 
   return res;
 }
@@ -124,6 +137,11 @@ void * nsShellInstance::GetNativeInstance()
   return mNativeInstance ;
 }
 
+nsIPref * nsShellInstance::GetPreferences()
+{
+  return (mPref) ;
+}
+
 void nsShellInstance::SetNativeInstance(void * aNativeInstance)
 {
   mNativeInstance = aNativeInstance;
@@ -152,10 +170,12 @@ nsresult nsShellInstance::RegisterFactories()
   #define GFXWIN_DLL "raptorgfxwin.dll"
   #define WIDGET_DLL "raptorwidget.dll"
   #define PARSER_DLL "raptorhtmlpars.dll"
+  #define PREF_DLL   "xppref32.dll"
 #else
   #define GFXWIN_DLL "libgfxunix.so"
   #define WIDGET_DLL "libwidgetunix.so"
   #define PARSER_DLL "libraptorhtmlpars.so"
+  #define PREF_DLL   "libpref.so"
 #endif
 
 
@@ -205,6 +225,8 @@ nsresult nsShellInstance::RegisterFactories()
   NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCParserNodeCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+
+  NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
   
 
   return NS_OK;

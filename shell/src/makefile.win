@@ -18,7 +18,7 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DEFINES=-D_IMPL_NS_SHELL -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_SHELL -DWIN32_LEAN_AND_MEAN 
 MODULE=shell
 
 DIRS = windows
@@ -38,7 +38,7 @@ CPP_OBJS=				\
  $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib -I$(PUBLIC)\shell
+      -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib -I$(PUBLIC)\shell -I$(PUBLIC)\pref
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = shell
@@ -60,6 +60,7 @@ LLIBS=				\
  $(DIST)\lib\libplc21.lib    \
  $(DIST)\lib\jsdom.lib       \
  $(DIST)\lib\netlib.lib       \
+ $(DIST)\lib\xppref32.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
