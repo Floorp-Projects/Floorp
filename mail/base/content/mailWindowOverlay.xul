@@ -1873,14 +1873,14 @@
 
 <hbox id="junkBar" collapsed="true" align="center">
   <image id="junkBarImage"/>
-  <label id="junkBarMessage" value="&junkBarMessage.label;"/>
+  <description flex="1" id="junkBarMessage">&junkBarMessage.label;</description>
   <spacer flex="1"/>
   <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false)"/>
 </hbox>
 
 <hbox id="remoteContentBar" collapsed="true" align="center">
   <image id="remoteContentImage"/>
-  <label id="remoteContentMessage" value="&remoteContenMessage.label;"/>
+  <description flex="1" id="remoteContentMessage">&remoteContenMessage.label;</description>
   <spacer flex="1"/>
   <button label="&loadRemoteContentButton.label;" oncommand="LoadMsgWithRemoteContent()"/>
 </hbox>
