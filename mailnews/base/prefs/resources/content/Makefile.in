@@ -53,6 +53,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/aw-server.xul			\
 	$(srcdir)/aw-smtp.xul			\
 	$(srcdir)/aw-done.xul			\
+	$(srcdir)/aw-accounttype.xul	\
+	$(srcdir)/aw-mailtype.xul		\
+	$(srcdir)/aw-fullname.xul		\
+	$(srcdir)/aw-email.xul			\
+	$(srcdir)/aw-login.xul			\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
