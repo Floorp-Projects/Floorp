@@ -65,7 +65,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsISO2022JPToUnicode();
+  virtual ~nsISO2022JPToUnicode();
 
   /**
    * Static class constructor.

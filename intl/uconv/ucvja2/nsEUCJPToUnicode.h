@@ -40,7 +40,7 @@ public:
   /**
    * Class destructor.
    */
-  ~nsEUCJPToUnicode();
+  virtual ~nsEUCJPToUnicode();
 
   /**
    * Static class constructor.
