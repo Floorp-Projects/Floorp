@@ -97,8 +97,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTextNode);
 
-#define XML_PSEUDO_ELEMENT  0
-
 // XXX Open Issues:
 // 1) html:style - Should we allow inline style? If so, the content
 //    sink needs to process the tag and invoke the CSS parser.
@@ -276,32 +274,7 @@ nsXMLContentSink::WillBuildModel(void)
 {
   // Notify document that the load is beginning
   mDocument->BeginLoad();
-  nsresult result = NS_OK;
-
-#if XML_PSEUDO_ELEMENT
-  // XXX Create a pseudo root element. This is a parent of the
-  // document element. For now, it will be seen in the document
-  // hierarchy. In the future we might want to get rid of it
-  // or at least make it invisible from the perspective of the
-  // DOM.
-  nsIAtom *tagAtom = NS_NewAtom("xml");
-  nsIXMLContent *content;
-  result = NS_NewXMLElement(&content, tagAtom);
-  NS_RELEASE(tagAtom);
-  // For XML elements, set the namespace
-  if (NS_OK == result) {
-    content->SetNameSpaceIdentifier(kNameSpaceID_None);
-    content->SetDocument(mDocument, PR_FALSE);
-
-    mRootElement = content;
-    NS_ADDREF(mRootElement);
-    PushContent(content);
-
-    mDocument->SetRootContent(mRootElement);
-  }
-#endif
-
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -319,11 +292,6 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
       }
     }
   }
-
-#if XML_PSEUDO_ELEMENT
-  // Pop the pseudo root content
-  PopContent();
-#endif
 
 #ifndef XSL
   StartLayoutProcess();
