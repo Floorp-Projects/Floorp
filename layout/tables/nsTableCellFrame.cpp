@@ -86,6 +86,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
         mBorderEdges.mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
       }
     }
+    mCollapseOffset = nsPoint(0,0);
   }
 }
 
@@ -168,7 +169,21 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 
+
+  // if the cell originates in a row and/or col that is collapsed, the bottom and/or
+  // right portion of the cell is painted by translating the rendering context.
+  // XXX What about content that can leak outside the cell?
+  PRBool clipState;
+  aRenderingContext.PushState();
+  nsPoint offset = mCollapseOffset;
+  if ((0 != offset.x) || (0 != offset.y)) {
+    aRenderingContext.Translate(offset.x, offset.y);
+  }
+  aRenderingContext.SetClipRect(nsRect(-offset.x, -offset.y, mRect.width, mRect.height),
+                                nsClipCombine_kIntersect, clipState);
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  aRenderingContext.PopState(clipState);
+  
   return NS_OK;
 }
 
@@ -1062,3 +1077,19 @@ nsTableCellFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableCell", aResult);
 }
+
+void nsTableCellFrame::SetCollapseOffsetX(nscoord aXOffset)
+{
+  mCollapseOffset.x = aXOffset;
+}
+
+void nsTableCellFrame::SetCollapseOffsetY(nscoord aYOffset)
+{
+  mCollapseOffset.y = aYOffset;
+}
+
+nsPoint nsTableCellFrame::GetCollapseOffset()
+{
+  return mCollapseOffset;
+}
+

@@ -634,21 +634,22 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
 nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
 {
   nsTableColFrame *result = nsnull;
-  PRInt32 count=0;
+  PRInt32 count = 0;
   nsIFrame *childFrame = mFrames.FirstChild();
-  while (nsnull!=childFrame)
-  {
+
+  while (nsnull!=childFrame) {
     const nsStyleDisplay *childDisplay;
     childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
-    {
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay) {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
       count += col->GetSpan();
-      if (aColIndex<=count)
+      if (aColIndex<=count) {
         result = col;
+      }
     }
     childFrame->GetNextSibling(&childFrame);
   }
+
   return result;
 }
 
