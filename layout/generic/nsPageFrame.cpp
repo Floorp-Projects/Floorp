@@ -23,8 +23,8 @@
 #include "nsReflowCommand.h"
 #include "nsIRenderingContext.h"
 
-PageFrame::PageFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent->GetIndexInParent(), aParent)
+PageFrame::PageFrame(nsIContent* aContent, PRInt32 aIndexInParent, nsIFrame* aParent)
+  : nsContainerFrame(aContent, aIndexInParent, aParent)
 {
 }
 
@@ -56,16 +56,16 @@ void PageFrame::CreateFirstChild(nsIPresContext* aPresContext)
   }
 }
 
-nsIFrame::ReflowStatus
-PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                        nsReflowMetrics& aDesiredSize,
-                        const nsSize&    aMaxSize,
-                        nsSize*          aMaxElementSize)
+NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                                  nsReflowMetrics& aDesiredSize,
+                                  const nsSize&    aMaxSize,
+                                  nsSize*          aMaxElementSize,
+                                  ReflowStatus&    aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
-  ReflowStatus  result = frComplete;
+  aStatus = frComplete;  // initialize out parameter
 
   // Do we have any children?
   if (nsnull == mFirstChild) {
@@ -76,10 +76,11 @@ PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
       PageFrame*  prevPage = (PageFrame*)mPrevInFlow;
 
       NS_ASSERTION(!prevPage->mLastContentIsComplete, "bad continuing page");
-      nsIFrame* prevLastChild = prevPage->LastChild();
+      nsIFrame* prevLastChild;
+      prevPage->LastChild(prevLastChild);
 
       // Create a continuing child of the previous page's last child
-      mFirstChild = prevLastChild->CreateContinuingFrame(aPresContext, this);
+      prevLastChild->CreateContinuingFrame(aPresContext, this, mFirstChild);
       mChildCount = 1;
       mLastContentOffset = mFirstContentOffset;
     }
@@ -89,9 +90,9 @@ PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // XXX Pay attention to the page's border and padding...
   if (nsnull != mFirstChild) {
     // Get the child's desired size
-    result = ReflowChild(mFirstChild, aPresContext, aDesiredSize, aMaxSize,
-                         aMaxElementSize);
-    mLastContentIsComplete = PRBool(result == frComplete);
+    aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, aMaxSize,
+                          aMaxElementSize);
+    mLastContentIsComplete = PRBool(aStatus == frComplete);
 
     // Make sure the child is at least as tall as our max size (the containing window)
     if (aDesiredSize.height < aMaxSize.height) {
@@ -103,8 +104,11 @@ PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
     mFirstChild->SetRect(rect);
 
     // Is the frame complete?
-    if (frComplete == result) {
-      NS_ASSERTION(nsnull == mFirstChild->GetNextInFlow(), "bad child flow list");
+    if (frComplete == aStatus) {
+      nsIFrame* childNextInFlow;
+
+      mFirstChild->GetNextInFlow(childNextInFlow);
+      NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
     }
   }
 
@@ -113,28 +117,27 @@ PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
   aDesiredSize.height = aMaxSize.height;
 
 #ifdef NS_DEBUG
-  PostReflowCheck(result);
+  PostReflowCheck(aStatus);
 #endif
-  return result;
+  return NS_OK;
 }
 
 // XXX Do something sensible in page mode...
-nsIFrame::ReflowStatus
-PageFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize&    aMaxSize,
-                             nsReflowCommand& aReflowCommand)
+NS_METHOD PageFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                       nsReflowMetrics& aDesiredSize,
+                                       const nsSize&    aMaxSize,
+                                       nsReflowCommand& aReflowCommand,
+                                       ReflowStatus&    aStatus)
 {
   // We don't expect the target of the reflow command to be page frame
   NS_ASSERTION(aReflowCommand.GetTarget() != this, "page frame is reflow command target");
 
   nsSize        maxSize(aMaxSize.width, NS_UNCONSTRAINEDSIZE);
-  ReflowStatus  status;
   nsIFrame*     child;
 
   // Dispatch the reflow command to our pseudo frame. Allow it to be as high
   // as it wants
-  status = aReflowCommand.Next(aDesiredSize, maxSize, child);
+  aStatus = aReflowCommand.Next(aDesiredSize, maxSize, child);
 
   // Place and size the child. Make sure the child is at least as
   // tall as our max size (the containing window)
@@ -148,20 +151,22 @@ PageFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     child->SetRect(rect);
   }
 
-  return status;
+  return NS_OK;
 }
 
-nsIFrame* PageFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                           nsIFrame*       aParent)
+NS_METHOD PageFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                           nsIFrame*       aParent,
+                                           nsIFrame*&      aContinuingFrame)
 {
-  PageFrame* cf = new PageFrame(mContent, aParent);
+  PageFrame* cf = new PageFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
-void PageFrame::Paint(nsIPresContext&      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect&        aDirtyRect)
+NS_METHOD PageFrame::Paint(nsIPresContext&      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect&        aDirtyRect)
 {
   nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
@@ -169,10 +174,12 @@ void PageFrame::Paint(nsIPresContext&      aPresContext,
   // where each page begins and ends
   aRenderingContext.SetColor(NS_RGB(0, 0, 0));
   aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
+  return NS_OK;
 }
 
-void PageFrame::ListTag(FILE* out) const
+NS_METHOD PageFrame::ListTag(FILE* out) const
 {
   fprintf(out, "*PAGE@%p", this);
+  return NS_OK;
 }
 

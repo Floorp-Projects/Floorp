@@ -274,7 +274,7 @@ nsInputButtonFrame::~nsInputButtonFrame()
 void
 nsInputButtonFrame::MouseClicked() 
 {
-  nsInputButton* button = (nsInputButton *) GetContent();
+  nsInputButton* button = (nsInputButton *)mContent;
   nsIFormManager* formMan = button->GetFormManager();
   if (nsnull != formMan) {
     if (kInputButtonReset == button->GetButtonType()) {
@@ -284,7 +284,6 @@ nsInputButtonFrame::MouseClicked()
     }
     NS_RELEASE(formMan);
   }
-  NS_RELEASE(button);
 }
 
 
@@ -293,10 +292,9 @@ nsInputButtonFrame::PreInitializeWidget(nsIPresContext* aPresContext, nsSize& aB
 {
   float p2t = aPresContext->GetPixelsToTwips();
 
-  nsInputButton* content = (nsInputButton *)GetContent(); // this must be an nsInputButton 
-  nsIStyleContext* styleContext = GetStyleContext(aPresContext);
+  nsInputButton* content = (nsInputButton *)mContent; // this must be an nsInputButton 
   // should this be the parent
-  nsStyleFont* styleFont = (nsStyleFont*)styleContext->GetData(kStyleFontSID);
+  nsStyleFont* styleFont = (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
   nsIDeviceContext* deviceContext = aPresContext->GetDeviceContext();
   nsIFontCache* fontCache = deviceContext->GetFontCache();
 
@@ -321,8 +319,6 @@ nsInputButtonFrame::PreInitializeWidget(nsIPresContext* aPresContext, nsSize& aB
   NS_RELEASE(fontMet);
   NS_RELEASE(fontCache);
   NS_RELEASE(deviceContext);
-  NS_RELEASE(styleContext);
-  NS_RELEASE(content);
 }
 
 

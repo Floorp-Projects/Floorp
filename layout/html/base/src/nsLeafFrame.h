@@ -28,22 +28,25 @@
  */
 class nsLeafFrame : public nsFrame {
 public:
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize& aMaxSize,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext* aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize& aMaxSize,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize& aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus& aStatus);
 
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
 
 protected:
   nsLeafFrame(nsIContent* aContent,

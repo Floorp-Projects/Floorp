@@ -56,7 +56,7 @@ nsInputFrame::~nsInputFrame()
 
 // XXX it would be cool if form element used our rendering sw, then
 // they could be blended, and bordered, and so on...
-void 
+NS_METHOD
 nsInputFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect)
@@ -64,11 +64,13 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
   static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
   nsPoint offset;
-  nsIView *parent = GetOffsetFromView(offset);
+  nsIView *parent;
+  GetOffsetFromView(offset, parent);
   if (nsnull == parent) {  // a problem
 	  NS_ASSERTION(0, "parent view was null\n");
   } else {
-	  nsIView* view = GetView();
+	  nsIView* view;
+	  GetView(view);
 	  float t2p = aPresContext.GetTwipsToPixels();
 	  //nsIWidget *widget = view->GetWindow();
 	  nsIWidget* widget;
@@ -90,6 +92,7 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
 	  NS_RELEASE(view);
     NS_RELEASE(parent);
   }
+  return NS_OK;
 }
 
 PRBool 
@@ -125,16 +128,18 @@ nsInputFrame::PreInitializeWidget(nsIPresContext* aPresContext,
   aBounds.height = (int)(10 * p2t);
 }
 
-nsIFrame::ReflowStatus
+NS_METHOD
 nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
                           nsReflowMetrics& aDesiredSize,
                           const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize)
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus)
 {
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 
-  nsIView* view = GetView();  
+  nsIView* view;
+  GetView(view);
   if (nsnull == view) {
 
     static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -144,7 +149,8 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  NSRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);// need to release
 	  if (NS_OK != result) {
 	    NS_ASSERTION(0, "Could not create view for button"); 
-      return frNotComplete;
+      aStatus = frNotComplete;
+      return NS_OK;
 	  }
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
@@ -153,7 +159,11 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  //float t2p = aPresContext->GetTwipsToPixels();
 	  nsRect boundBox(0, 0, mCacheBounds.width, mCacheBounds.height); 
 
-	  nsIView *parView = GetParentWithView()->GetView();
+    nsIFrame* parWithView;
+	  nsIView *parView;
+
+    GetParentWithView(parWithView);
+	  parWithView->GetView(parView);
 
 	  const nsIID id = GetCID();
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
@@ -161,17 +171,17 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 		                1.0f, nsViewVisibility_kHide);
     if (NS_OK != result) {
 	    NS_ASSERTION(0, "widget initialization failed"); 
-      return frNotComplete;
+      aStatus = frNotComplete;
+      return NS_OK;
 	  }
 
 	  // set the content's widget, so it can get content modified by the widget
 	  nsIWidget *widget;
 	  result = GetWidget(view, &widget);
 	  if (NS_OK == result) {
-      nsInput* content = (nsInput *)GetContent(); // change this cast to QueryInterface 
+      nsInput* content = (nsInput *)mContent; // change this cast to QueryInterface 
       content->SetWidget(widget);
 	    NS_IF_RELEASE(widget);
-	    NS_RELEASE(content);
 	  } else {
 	    NS_ASSERTION(0, "could not get widget");
 	  }
@@ -195,8 +205,8 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  aMaxElementSize->height = aDesiredSize.height;
   }
     
-  return frComplete;
-
+  aStatus = frComplete;
+  return NS_OK;
 }
 
 nsresult
@@ -225,13 +235,15 @@ nsInputFrame::GetCID()
   return kButtonCID;
 }
 
-nsEventStatus nsInputFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                        nsGUIEvent* aEvent)
+NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                    nsGUIEvent* aEvent,
+                                    nsEventStatus& aEventStatus)
 {
 	// make sure that the widget in the event is this
   static NS_DEFINE_IID(kSupportsIID, NS_ISUPPORTS_IID);
   nsIWidget* thisWidget;
-  nsIView*   view = GetView();
+  nsIView*   view;
+  GetView(view);
   nsresult result = GetWidget(view, &thisWidget);
   nsISupports* thisWidgetSup;
   result = thisWidget->QueryInterface(kSupportsIID, (void **)&thisWidgetSup);
@@ -246,7 +258,8 @@ nsEventStatus nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
   NS_IF_RELEASE(thisWidget);
 
 	if (!isOurEvent) {
-		return nsEventStatus_eIgnore;
+		aEventStatus = nsEventStatus_eIgnore;
+    return NS_OK;
 	}
 
   switch (aEvent->message) {
@@ -273,7 +286,8 @@ nsEventStatus nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 	    mLastMouseState = eMouseNone;
 	    break;
   }
-  return nsEventStatus_eIgnore;
+  aEventStatus = nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 

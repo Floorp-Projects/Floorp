@@ -59,9 +59,9 @@ public:
                            nsIFrame*   aParent);
 
   /** @see nsIFrame::Paint */
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
   /** inner tables are reflowed in two steps.
     * <pre>
@@ -81,20 +81,23 @@ public:
     * @see BalanceColumnWidths
     * @see nsIFrame::ResizeReflow 
     */
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize& aMaxSize,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
 
   /** @see nsIFrame::IncrementalReflow */
-  virtual ReflowStatus  IncrementalReflow(nsIPresContext* aPresContext,
-                                          nsReflowMetrics& aDesiredSize,
-                                          const nsSize&    aMaxSize,
-                                          nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus& aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
 
   /** resize myself and my children according to the arcane rules of cell height magic. 
     * By default, the height of a cell is the max (height of cells in its row)

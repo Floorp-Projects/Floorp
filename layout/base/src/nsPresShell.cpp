@@ -368,7 +368,9 @@ void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #ifdef NS_DEBUG
     mRootFrame->VerifyTree();
 #endif
-    mRootFrame->ResizeReflow(mPresContext, desiredSize, maxSize, nsnull);
+    nsIFrame::ReflowStatus  status;
+
+    mRootFrame->ResizeReflow(mPresContext, desiredSize, maxSize, nsnull, status);
     mRootFrame->SizeTo(desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
     mRootFrame->VerifyTree();
@@ -450,7 +452,9 @@ void PresShell::ProcessReflowCommands()
       mReflowCommands.RemoveElementAt(0);
 
       // Dispatch the reflow command
-      nsSize          maxSize(mRootFrame->GetWidth(), mRootFrame->GetHeight());
+      nsSize          maxSize;
+      
+      mRootFrame->GetSize(maxSize);
       rc->Dispatch(desiredSize, maxSize);
       delete rc;
     }
@@ -536,14 +540,16 @@ void PresShell::StyleSheetAdded(nsIStyleSheet* aStyleSheet)
 
 static nsIFrame* FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 {
-  nsIContent* frameContent = aFrame->GetContent();
+  nsIContent* frameContent;
+   
+  aFrame->GetContent(frameContent);
   if (frameContent == aContent) {
     NS_RELEASE(frameContent);
     return aFrame;
   }
   NS_RELEASE(frameContent);
 
-  aFrame = aFrame->FirstChild();
+  aFrame->FirstChild(aFrame);
   while (aFrame) {
     nsIFrame* result = FindFrameWithContent(aFrame, aContent);
 
@@ -551,7 +557,7 @@ static nsIFrame* FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
       return result;
     }
 
-    aFrame = aFrame->GetNextSibling();
+    aFrame->GetNextSibling(aFrame);
   }
 
   return nsnull;

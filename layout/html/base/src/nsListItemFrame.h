@@ -28,20 +28,23 @@ public:
                            PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
-  virtual ReflowStatus  ResizeReflow(nsIPresContext* aCX,
-                                     nsISpaceManager* aSpaceManager,
-                                     const nsSize& aMaxSize,
-                                     nsRect& aDesiredRect,
-                                     nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
+                          nsISpaceManager* aSpaceManager,
+                          const nsSize& aMaxSize,
+                          nsRect& aDesiredRect,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
 
-  virtual ReflowStatus  IncrementalReflow(nsIPresContext* aCX,
-                                          nsISpaceManager* aSpaceManager,
-                                          const nsSize& aMaxSize,
-                                          nsRect& aDesiredRect,
-                                          nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext* aCX,
+                               nsISpaceManager* aSpaceManager,
+                               const nsSize& aMaxSize,
+                               nsRect& aDesiredRect,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus& aStatus);
 
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aCX,
-                                          nsIFrame* aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aCX,
+                                   nsIFrame* aParent,
+                                   nsIFrame*& aContinuingFrame);
 
   /**
    * Return the reflow state for the list container that contains this

@@ -54,19 +54,21 @@ public:
               nsIFrame* aParentFrame);
   virtual ~BulletFrame();
 
-  virtual void Paint(nsIPresContext &aCX,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext &aCX,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aCX,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize& aMaxSize,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext* aCX,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize& aMaxSize,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext* aCX,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize& aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus& aStatus);
 
   void GetBulletSize(nsIPresContext* aCX,
                      nsReflowMetrics& aDesiredSize,
@@ -95,9 +97,9 @@ BulletFrame::~BulletFrame()
 // XXX padding for around the bullet; should come from style system
 #define PAD_DISC        NS_POINTS_TO_TWIPS_INT(1)
 
-void BulletFrame::Paint(nsIPresContext& aCX,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect)
+NS_METHOD BulletFrame::Paint(nsIPresContext& aCX,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect)
 {
   nsStyleFont* myFont =
     (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
@@ -135,13 +137,14 @@ void BulletFrame::Paint(nsIPresContext& aCX,
     break;
   }
   NS_RELEASE(fm);
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-BulletFrame::ResizeReflow(nsIPresContext* aCX,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize)
+NS_METHOD BulletFrame::ResizeReflow(nsIPresContext* aCX,
+                                    nsReflowMetrics& aDesiredSize,
+                                    const nsSize& aMaxSize,
+                                    nsSize* aMaxElementSize,
+                                    ReflowStatus& aStatus)
 {
   GetBulletSize(aCX, aDesiredSize, aMaxSize);
   if (nsnull != aMaxElementSize) {
@@ -154,22 +157,23 @@ BulletFrame::ResizeReflow(nsIPresContext* aCX,
   // the bullet must be mapping the second content object instead of
   // mapping the first content object.
   mLastContentIsComplete = PR_FALSE;
-
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-BulletFrame::IncrementalReflow(nsIPresContext* aCX,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize& aMaxSize,
-                               nsReflowCommand& aReflowCommand)
+NS_METHOD BulletFrame::IncrementalReflow(nsIPresContext* aCX,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize& aMaxSize,
+                                         nsReflowCommand& aReflowCommand,
+                                         ReflowStatus& aStatus)
 {
   // XXX Unless the reflow command is a style change, we should
   // just return the current size, otherwise we should invoke
   // GetBulletSize
   GetBulletSize(aCX, aDesiredSize, aMaxSize);
 
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
 PRInt32 BulletFrame::GetListItemOrdinal(nsIPresContext* aCX,
@@ -522,7 +526,9 @@ nsListItemFrame::GetListContainerReflowState(nsIPresContext* aCX)
         // The parent is a block. See if its content object is a list
         // container. Only UL, OL, MENU or DIR can be list containers.
         // XXX need something more flexible, say style?
-        nsIContent* parentContent = parent->GetContent();
+        nsIContent* parentContent;
+         
+        parent->GetContent(parentContent);
         nsIAtom* tag = parentContent->GetTag();
         NS_RELEASE(parentContent);
         if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
@@ -533,7 +539,7 @@ nsListItemFrame::GetListContainerReflowState(nsIPresContext* aCX)
         NS_RELEASE(tag);
       }
     }
-    parent = parent->GetGeometricParent();
+    parent->GetGeometricParent(parent);
   }
   if (nsnull != parent) {
     nsIPresShell* shell = aCX->GetShell();
@@ -550,12 +556,12 @@ nsListItemFrame::GetListContainerReflowState(nsIPresContext* aCX)
  */
 // XXX we may need to grow to accomodate the bullet
 // XXX check for compatability: <LI><H1>dah dah</H1> where is bullet?
-nsIFrame::ReflowStatus
-nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
-                              nsISpaceManager* aSpaceManager,
-                              const nsSize& aMaxSize,
-                              nsRect& aDesiredRect,
-                              nsSize* aMaxElementSize)
+NS_METHOD nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
+                                        nsISpaceManager* aSpaceManager,
+                                        const nsSize& aMaxSize,
+                                        nsRect& aDesiredRect,
+                                        nsSize* aMaxElementSize,
+                                        ReflowStatus& aStatus)
 {
   PRBool insideBullet = PR_FALSE;
 
@@ -586,7 +592,7 @@ nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
       } else {
         // Pull bullet off list (we'll put it back later)
         bullet = mFirstChild;
-        mFirstChild = bullet->GetNextSibling();
+        bullet->GetNextSibling(mFirstChild);
         mChildCount--;
       }
     }
@@ -596,7 +602,7 @@ nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
   nsBlockReflowState state;
   SetupState(aCX, state, aMaxSize, aMaxElementSize, aSpaceManager);
   state.firstChildIsInsideBullet = insideBullet;
-  ReflowStatus rv = DoResizeReflow(aCX, state, aDesiredRect);
+  DoResizeReflow(aCX, state, aDesiredRect, aStatus);
 
   // Now place the bullet and put it at the head of the list of children
   if (!insideBullet && (nsnull != bullet)) {
@@ -616,26 +622,29 @@ nsListItemFrame::ResizeReflow(nsIPresContext* aCX,
       mLines[0]++;
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 // XXX we may need to grow to accomodate the bullet
-nsIFrame::ReflowStatus
-nsListItemFrame::IncrementalReflow(nsIPresContext* aCX,
-                                   nsISpaceManager* aSpaceManager,
-                                   const nsSize& aMaxSize,
-                                   nsRect& aDesiredRect,
-                                   nsReflowCommand& aReflowCommand)
+NS_METHOD nsListItemFrame::IncrementalReflow(nsIPresContext* aCX,
+                                             nsISpaceManager* aSpaceManager,
+                                             const nsSize& aMaxSize,
+                                             nsRect& aDesiredRect,
+                                             nsReflowCommand& aReflowCommand,
+                                             ReflowStatus& aStatus)
 {
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
-nsIFrame* nsListItemFrame::CreateContinuingFrame(nsIPresContext* aCX,
-                                                 nsIFrame* aParent)
+NS_METHOD nsListItemFrame::CreateContinuingFrame(nsIPresContext* aCX,
+                                                 nsIFrame* aParent,
+                                                 nsIFrame*& aContinuingFrame)
 {
   nsListItemFrame* cf = new nsListItemFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aCX, aParent, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 // aDirtyRect is in our coordinate system
@@ -646,7 +655,9 @@ void nsListItemFrame::PaintChildren(nsIPresContext& aCX,
 {
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
-    nsIView *pView = kid->GetView();
+    nsIView *pView;
+     
+    kid->GetView(pView);
     if (nsnull == pView) {
       nsRect kidRect;
       kid->GetRect(kidRect);
@@ -668,9 +679,9 @@ void nsListItemFrame::PaintChildren(nsIPresContext& aCX,
         }
         aRenderingContext.PopState();
       }
-    }
-    else
+    } else {
       NS_RELEASE(pView);
-    kid = kid->GetNextSibling();
+    }
+    kid->GetNextSibling(kid);
   }
 }

@@ -37,12 +37,13 @@ public:
   BRFrame(nsIContent* aContent,
           PRInt32 aIndexInParent,
           nsIFrame* aParentFrame);
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize);
-  virtual void GetReflowMetrics(nsIPresContext*  aPresContext,
-                                nsReflowMetrics& aMetrics);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize& aMaxSize,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
+  NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
+                              nsReflowMetrics& aMetrics);
 
 protected:
   virtual ~BRFrame();
@@ -59,7 +60,7 @@ BRFrame::~BRFrame()
 {
 }
 
-void BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetrics& aMetrics)
+NS_METHOD BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetrics& aMetrics)
 {
   // We have no width, but we're the height of the default font
   nsStyleFont* font =
@@ -70,13 +71,14 @@ void BRFrame::GetReflowMetrics(nsIPresContext* aPresContext, nsReflowMetrics& aM
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
   NS_RELEASE(fm);
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-BRFrame::ResizeReflow(nsIPresContext* aPresContext,
-                      nsReflowMetrics& aDesiredSize,
-                      const nsSize& aMaxSize,
-                      nsSize* aMaxElementSize)
+NS_METHOD BRFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                nsReflowMetrics& aDesiredSize,
+                                const nsSize& aMaxSize,
+                                nsSize* aMaxElementSize,
+                                ReflowStatus& aStatus)
 {
   // Get cached state for containing block frame
   nsBlockReflowState* state = nsnull;
@@ -90,7 +92,7 @@ BRFrame::ResizeReflow(nsIPresContext* aPresContext,
         break;
       }
     }
-    parent = parent->GetGeometricParent();
+    parent->GetGeometricParent(parent);
   }
   if (nsnull != parent) {
     nsIPresShell* shell = aPresContext->GetShell();
@@ -103,7 +105,8 @@ BRFrame::ResizeReflow(nsIPresContext* aPresContext,
   }
 
   GetReflowMetrics(aPresContext, aDesiredSize);
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -51,9 +51,9 @@ nsTableCellFrame::~nsTableCellFrame()
 {
 }
 
-void nsTableCellFrame::Paint(nsIPresContext& aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect& aDirtyRect)
+NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  const nsRect& aDirtyRect)
 {
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
@@ -75,6 +75,7 @@ void nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
 }
 
 /**
@@ -98,7 +99,7 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
     bottomInset =mol->borderPadding.bottom;
     verticalAlign = mol->verticalAlign;
   }
-  nscoord       height = GetHeight();
+  nscoord       height = mRect.height;
 
   nsRect        kidRect;  
   mFirstChild->GetRect(kidRect);
@@ -135,11 +136,10 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
 PRInt32 nsTableCellFrame::GetRowSpan()
 {
   PRInt32 result = 0;
-  nsTableCell *cellContent = (nsTableCell *)GetContent();        // cellContent:  REFCNT++
+  nsTableCell *cellContent = (nsTableCell *)mContent;
   if (nsnull!=cellContent)
   {
     result = cellContent->GetRowSpan();
-    NS_RELEASE(cellContent);                                     // cellContent:  REFCNT--
   }
   return result;
 }
@@ -164,18 +164,18 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     NS_ASSERTION(prevFrame->ChildIsPseudoFrame(prevPseudoFrame), "bad previous pseudo-frame");
 
     // Create a continuing column
-    mFirstChild = prevPseudoFrame->CreateContinuingFrame(aPresContext, this);
+    prevPseudoFrame->CreateContinuingFrame(aPresContext, this, mFirstChild);
     mChildCount = 1;
   }
 }
 
 /**
   */
-nsIFrame::ReflowStatus
-nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&   aMaxSize,
-                               nsSize*         aMaxElementSize)
+NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize&   aMaxSize,
+                                         nsSize*         aMaxElementSize,
+                                         ReflowStatus&   aStatus)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
 
@@ -183,7 +183,7 @@ nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   //PreReflowCheck();
 #endif
 
-  ReflowStatus result = frComplete;
+  aStatus = frComplete;
   if (gsDebug==PR_TRUE)
     printf("nsTableCellFrame::ResizeReflow: maxSize=%d,%d\n",
            aMaxSize.width, aMaxSize.height);
@@ -233,7 +233,7 @@ nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (gsDebug==PR_TRUE)
     printf("  nsTableCellFrame::ResizeReflow calling ReflowChild with availSize=%d,%d\n",
            availSize.width, availSize.height);
-  result = ReflowChild(mFirstChild, aPresContext, kidSize, availSize, pMaxElementSize);
+  aStatus = ReflowChild(mFirstChild, aPresContext, kidSize, availSize, pMaxElementSize);
 
   if (gsDebug==PR_TRUE)
   {
@@ -258,7 +258,7 @@ nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
                            kidSize.width, kidSize.height));
   
     
-  if (frNotComplete == result) {
+  if (frNotComplete == aStatus) {
     // If the child didn't finish layout then it means that it used
     // up all of our available space (or needs us to split).
     mLastContentIsComplete = PR_FALSE;
@@ -289,28 +289,29 @@ nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   //PostReflowCheck(result);
 #endif
 
-  return result;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsTableCellFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsReflowCommand& aReflowCommand)
+NS_METHOD nsTableCellFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                              nsReflowMetrics& aDesiredSize,
+                                              const nsSize&    aMaxSize,
+                                              nsReflowCommand& aReflowCommand,
+                                              ReflowStatus&    aStatus)
 {
   if (gsDebug == PR_TRUE) printf("nsTableCellFrame::IncrementalReflow\n");
   // total hack for now, just some hard-coded values
-  ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull);
-
-  return frComplete;
+  ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
+  return NS_OK;
 }
 
-nsIFrame* nsTableCellFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                  nsIFrame*       aParent)
+NS_METHOD nsTableCellFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                                  nsIFrame*       aParent,
+                                                  nsIFrame*&      aContinuingFrame)
 {
   nsTableCellFrame* cf = new nsTableCellFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 

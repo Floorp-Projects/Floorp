@@ -39,38 +39,43 @@ class RootFrame : public nsContainerFrame {
 public:
   RootFrame(nsIContent* aContent);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsSize*          aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          ReflowStatus&    aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
-  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext, 
-                             nsGUIEvent*     aEvent);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
 };
 
 // Pseudo frame created by the root frame
 class RootContentFrame : public nsContainerFrame {
 public:
-  RootContentFrame(nsIContent* aContent, nsIFrame* aParent);
+  RootContentFrame(nsIContent* aContent, PRInt32 aIndexInParent, nsIFrame* aParent);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsSize*          aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          ReflowStatus&    aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
-  virtual void Paint(nsIPresContext&      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
 
 protected:
   void CreateFirstChild(nsIPresContext* aPresContext);
@@ -83,20 +88,21 @@ RootFrame::RootFrame(nsIContent* aContent)
 {
 }
 
-nsIFrame::ReflowStatus RootFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                               nsReflowMetrics& aDesiredSize,
-                                               const nsSize& aMaxSize,
-                                               nsSize* aMaxElementSize)
+NS_METHOD RootFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                  nsReflowMetrics& aDesiredSize,
+                                  const nsSize& aMaxSize,
+                                  nsSize* aMaxElementSize,
+                                  ReflowStatus& aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
-  nsIFrame::ReflowStatus  result = frComplete;
+  aStatus = frComplete;
 
   // Do we have any children?
   if (nsnull == mFirstChild) {
     // No. Create a pseudo frame
-    mFirstChild = new RootContentFrame(mContent, this);
+    mFirstChild = new RootContentFrame(mContent, mIndexInParent, this);
     mChildCount = 1;
     nsIStyleContext* style = aPresContext->ResolveStyleContextFor(mContent, this);
     mFirstChild->SetStyleContext(style);
@@ -107,7 +113,8 @@ nsIFrame::ReflowStatus RootFrame::ResizeReflow(nsIPresContext* aPresContext,
   // height its child frame wants...
   if (nsnull != mFirstChild) {
     nsReflowMetrics  desiredSize;
-    result = ReflowChild(mFirstChild, aPresContext, desiredSize, aMaxSize,
+
+    aStatus = ReflowChild(mFirstChild, aPresContext, desiredSize, aMaxSize,
                          aMaxElementSize);
 
     // Place and size the child
@@ -123,26 +130,25 @@ nsIFrame::ReflowStatus RootFrame::ResizeReflow(nsIPresContext* aPresContext,
   aDesiredSize.descent = 0;
 
 #ifdef NS_DEBUG
-  PostReflowCheck(result);
+  PostReflowCheck(aStatus);
 #endif
-  return result;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-RootFrame::IncrementalReflow(nsIPresContext* aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize& aMaxSize,
-                             nsReflowCommand& aReflowCommand)
+NS_METHOD RootFrame::IncrementalReflow(nsIPresContext* aPresContext,
+                                       nsReflowMetrics& aDesiredSize,
+                                       const nsSize& aMaxSize,
+                                       nsReflowCommand& aReflowCommand,
+                                       ReflowStatus& aStatus)
 {
   // We don't expect the target of the reflow command to be the root frame
   NS_ASSERTION(aReflowCommand.GetTarget() != this, "root frame is reflow command target");
 
   nsReflowMetrics  desiredSize;
   nsIFrame*        child;
-  ReflowStatus     status;
 
   // Dispatch the reflow command to our pseudo frame
-  status = aReflowCommand.Next(desiredSize, aMaxSize, child);
+  aStatus = aReflowCommand.Next(desiredSize, aMaxSize, child);
 
   // Place and size the child
   if (nsnull != child) {
@@ -157,18 +163,21 @@ RootFrame::IncrementalReflow(nsIPresContext* aPresContext,
   aDesiredSize.height = aMaxSize.height;
   aDesiredSize.ascent = aMaxSize.height;
   aDesiredSize.descent = 0;
-  return status;
+  return NS_OK;
 }
 
-nsEventStatus RootFrame::HandleEvent(nsIPresContext& aPresContext, 
-                              nsGUIEvent*     aEvent)
+NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                 nsGUIEvent* aEvent,
+                                 nsEventStatus& aEventStatus)
 {
   switch (aEvent->message) {
   case NS_MOUSE_MOVE:
   case NS_MOUSE_ENTER:
     {
       nsIFrame* target = this;
-      PRInt32 cursor = GetCursorAt(aPresContext, aEvent->point, &target);
+      PRInt32 cursor;
+       
+      GetCursorAt(aPresContext, aEvent->point, &target, cursor);
       if (cursor == NS_STYLE_CURSOR_INHERIT) {
         cursor = NS_STYLE_CURSOR_DEFAULT;
       }
@@ -185,26 +194,33 @@ nsEventStatus RootFrame::HandleEvent(nsIPresContext& aPresContext,
         c = eCursor_select;
         break;
       }
-      nsIWidget* window = target->GetWindow();
+      nsIWidget* window;
+      target->GetWindow(window);
       window->SetCursor(c);
     }
     break;
   }
 
-  return nsEventStatus_eIgnore;
+  aEventStatus = nsEventStatus_eIgnore;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
 
-RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent->GetIndexInParent(), aParent)
+RootContentFrame::RootContentFrame(nsIContent* aContent,
+                                   PRInt32 aIndexInParent,
+                                   nsIFrame* aParent)
+  : nsContainerFrame(aContent, aIndexInParent, aParent)
 {
   // Create a view
-  nsIFrame* parent = GetParentWithView();
+  nsIFrame* parent;
   nsIView*  view;
 
+  GetParentWithView(parent);
   NS_ASSERTION(parent, "GetParentWithView failed");
-  nsIView* parView = parent->GetView(); 
+  nsIView* parView;
+   
+  parent->GetView(parView);
   NS_ASSERTION(parView, "no parent with view");
 
   // Create a view
@@ -222,7 +238,7 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
     // Initialize the view
     NS_ASSERTION(nsnull != viewManager, "null view manager");
 
-    view->Init(viewManager, GetRect(), rootView);
+    view->Init(viewManager, mRect, rootView);
     viewManager->InsertChild(rootView, view, 0);
 
     NS_RELEASE(viewManager);
@@ -239,7 +255,7 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
   // Are we paginated?
   if (aPresContext->IsPaginated()) {
     // Yes. Create the first page frame
-    mFirstChild = new PageFrame(mContent, this);
+    mFirstChild = new PageFrame(mContent, mIndexInParent, this);
     mChildCount = 1;
     mLastContentOffset = mFirstContentOffset;
 
@@ -274,16 +290,16 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
 // XXX Hack
 #define PAGE_SPACING 100
 
-nsIFrame::ReflowStatus
-RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsSize*          aMaxElementSize)
+NS_METHOD RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize&    aMaxSize,
+                                         nsSize*          aMaxElementSize,
+                                         ReflowStatus&    aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
 #endif
-  nsIFrame::ReflowStatus  result = frComplete;
+  aStatus = frComplete;
 
   // Do we have any children?
   if (nsnull == mFirstChild) {
@@ -317,23 +333,31 @@ RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
         y += PAGE_SPACING;
 
         // Is the page complete?
-        nsIFrame* nextInFlow = kidFrame->GetNextInFlow();
-
+        nsIFrame* kidNextInFlow;
+         
+        kidFrame->GetNextInFlow(kidNextInFlow);
         if (frComplete == status) {
-          NS_ASSERTION(nsnull == kidFrame->GetNextInFlow(), "bad child flow list");
-        } else if (nsnull == nextInFlow) {
+          NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
+        } else if (nsnull == kidNextInFlow) {
           // The page isn't complete and it doesn't have a next-in-flow so
           // create a continuing page
-          nsIFrame*  continuingPage = kidFrame->CreateContinuingFrame(aPresContext, this);
+          nsIFrame*  continuingPage;
+           
+          kidFrame->CreateContinuingFrame(aPresContext, this, continuingPage);
 
           // Add it to our child list
-          NS_ASSERTION(nsnull == kidFrame->GetNextSibling(), "unexpected sibling");
+#ifdef NS_DEBUG
+          nsIFrame* kidNextSibling;
+
+          kidFrame->GetNextSibling(kidNextSibling);
+          NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
+#endif
           kidFrame->SetNextSibling(continuingPage);
           mChildCount++;
         }
 
         // Get the next page
-        kidFrame = kidFrame->GetNextSibling();
+        kidFrame->GetNextSibling(kidFrame);
       }
 
       // Return our desired size
@@ -347,9 +371,9 @@ RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
       // Get the child's desired size. Our child's desired height is our
       // desired size
-      result = ReflowChild(mFirstChild, aPresContext, aDesiredSize, maxSize,
-                           aMaxElementSize);
-      NS_ASSERTION(frComplete == result, "bad status");
+      aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, maxSize,
+                            aMaxElementSize);
+      NS_ASSERTION(frComplete == aStatus, "bad status");
 
       // Place and size the child. Make sure the child is at least as
       // tall as our max size (the containing window)
@@ -364,29 +388,28 @@ RootContentFrame::ResizeReflow(nsIPresContext*  aPresContext,
   }
 
 #ifdef NS_DEBUG
-  PostReflowCheck(result);
+  PostReflowCheck(aStatus);
 #endif
-  return result;
+  return NS_OK;
 }
 
 // XXX Do something sensible for page mode...
-nsIFrame::ReflowStatus
-RootContentFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsReflowCommand& aReflowCommand)
+NS_METHOD RootContentFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                              nsReflowMetrics& aDesiredSize,
+                                              const nsSize&    aMaxSize,
+                                              nsReflowCommand& aReflowCommand,
+                                              ReflowStatus&    aStatus)
 {
   // We don't expect the target of the reflow command to be the root
   // content frame
   NS_ASSERTION(aReflowCommand.GetTarget() != this, "root content frame is reflow command target");
 
   nsSize        maxSize(aMaxSize.width, NS_UNCONSTRAINEDSIZE);
-  ReflowStatus  status;
   nsIFrame*     child;
 
   // Dispatch the reflow command to our pseudo frame. Allow it to be as high
   // as it wants
-  status = aReflowCommand.Next(aDesiredSize, maxSize, child);
+  aStatus = aReflowCommand.Next(aDesiredSize, maxSize, child);
 
   // Place and size the child. Make sure the child is at least as
   // tall as our max size (the containing window)
@@ -400,12 +423,12 @@ RootContentFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     child->SetRect(rect);
   }
 
-  return status;
+  return NS_OK;
 }
 
-void RootContentFrame::Paint(nsIPresContext&      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect)
+NS_METHOD RootContentFrame::Paint(nsIPresContext&      aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  const nsRect&        aDirtyRect)
 {
   // If we're paginated then fill the dirty rect with white
   if (aPresContext.IsPaginated()) {
@@ -415,6 +438,7 @@ void RootContentFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

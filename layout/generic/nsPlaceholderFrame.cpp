@@ -52,16 +52,16 @@ PlaceholderFrame::~PlaceholderFrame()
 {
 }
 
-nsIFrame::ReflowStatus
-PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsSize*          aMaxElementSize)
+NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize&    aMaxSize,
+                                         nsSize*          aMaxElementSize,
+                                         ReflowStatus&    aStatus)
 {
   // Get the floater container in which we're inserted
   nsIFloaterContainer*  container = nsnull;
 
-  for (nsIFrame* parent = mGeometricParent; parent; parent = parent->GetGeometricParent()) {
+  for (nsIFrame* parent = mGeometricParent; parent; parent->GetGeometricParent(parent)) {
     if (NS_OK == parent->QueryInterface(kIFloaterContainerIID, (void**)&container)) {
       break;
     }
@@ -82,7 +82,7 @@ PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?
-    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull);
+    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
     mAnchoredItem->SizeTo(aDesiredSize.width, aDesiredSize.height);
 
     // Now notify our containing block that there's a new floater
@@ -91,11 +91,12 @@ PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
     container->PlaceFloater(aPresContext, mAnchoredItem, this);
   }
 
-  return nsFrame::ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize);
+  return nsFrame::ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
 }
 
-void PlaceholderFrame::ListTag(FILE* out) const
+NS_METHOD PlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);
   fprintf(out, "(%d)@%p", mIndexInParent, this);
+  return NS_OK;
 }

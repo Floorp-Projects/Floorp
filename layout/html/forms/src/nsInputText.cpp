@@ -81,7 +81,7 @@ void
 nsInputTextFrame::PreInitializeWidget(nsIPresContext* aPresContext, 
                                       nsSize& aBounds)
 {
-  nsInputText* content = (nsInputText *)GetContent(); // this must be an nsInputButton 
+  nsInputText* content = (nsInputText *)mContent; // this must be an nsInputButton 
 
   // get the value of the text
   if (nsnull != content->mValue) {
@@ -89,7 +89,6 @@ nsInputTextFrame::PreInitializeWidget(nsIPresContext* aPresContext,
   } else {
     mCacheValue = "";
   }
-  NS_RELEASE(content);
 
   float p2t = aPresContext->GetPixelsToTwips();
   aBounds.width  = (int)(120 * p2t);

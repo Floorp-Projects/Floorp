@@ -54,8 +54,11 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
   PRIntn kidCount = aChildCount;
   while (--kidCount >= 0) {
     nscoord kidAscent = *aAscents++;
-    nsIStyleContext* kidSC = kid->GetStyleContext(aCX);
-    nsIContent* kidContent = kid->GetContent();
+    nsIStyleContext* kidSC;
+    nsIContent* kidContent;
+
+    kid->GetStyleContext(aCX, kidSC);
+    kid->GetContent(kidContent);
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     PRIntn verticalAlign = kidMol->verticalAlign;
@@ -124,7 +127,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     y += kidRect.height;
     if (y > maxY) maxY = y;
 
-    kid = kid->GetNextSibling();
+    kid->GetNextSibling(kid);
   }
 
   nscoord lineHeight = maxY - minY;
@@ -135,8 +138,11 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     kid = aFirstChild;
     while (--kidCount >= 0) {
       // Get kid's vertical align style data
-      nsIStyleContext* kidSC = kid->GetStyleContext(aCX);
-      nsIContent* kidContent = kid->GetContent();
+      nsIStyleContext* kidSC;
+      nsIContent* kidContent;
+
+      kid->GetStyleContext(aCX, kidSC);
+      kid->GetContent(kidContent);
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       PRIntn verticalAlign = kidMol->verticalAlign;
@@ -154,7 +160,7 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
         }
       }
 
-      kid = kid->GetNextSibling();
+      kid->GetNextSibling(kid);
     }
   }
 
@@ -197,7 +203,7 @@ void nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
   while (--aChildCount >= 0) {
     kid->GetOrigin(origin);
     kid->MoveTo(origin.x + dx, origin.y);
-    kid = kid->GetNextSibling();
+    kid->GetNextSibling(kid);
   }
 }
 
@@ -213,8 +219,11 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   nsPoint origin;
   nsIFrame* kid = aFirstChild;
   while (--aChildCount >= 0) {
-    nsIContent* kidContent = kid->GetContent();
-    nsIStyleContext* kidSC = kid->GetStyleContext(aCX);
+    nsIContent* kidContent;
+    nsIStyleContext* kidSC;
+
+    kid->GetContent(kidContent);
+    kid->GetStyleContext(aCX, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     if (NS_STYLE_POSITION_RELATIVE == kidMol->positionFlags) {
       kid->GetOrigin(origin);
@@ -224,6 +233,6 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
     }
     NS_RELEASE(kidContent);
     NS_RELEASE(kidSC);
-    kid = kid->GetNextSibling();
+    kid->GetNextSibling(kid);
   }
 }

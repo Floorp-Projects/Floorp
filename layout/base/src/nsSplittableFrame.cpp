@@ -35,9 +35,10 @@ nsSplittableFrame::~nsSplittableFrame()
 
 // Flow member functions
 
-PRBool nsSplittableFrame::IsSplittable() const
+NS_METHOD nsSplittableFrame::IsSplittable(PRBool& aIsSplittable) const
 {
-  return PR_TRUE;
+  aIsSplittable = PR_TRUE;
+  return NS_OK;
 }
 
 /**
@@ -48,44 +49,50 @@ PRBool nsSplittableFrame::IsSplittable() const
  *            the receiver's geometric parent
  * @return  the continuing frame or null if unsuccessful
  */
-nsIFrame* nsSplittableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                   nsIFrame*       aParent)
+NS_METHOD nsSplittableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                                   nsIFrame*       aParent,
+                                                   nsIFrame*&      aContinuingFrame)
 {
   nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
-  nsIFrame*           continuingFrame =
-    contentDelegate->CreateFrame(aPresContext, mContent, mIndexInParent, aParent);
+
+  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent,
+                                                  mIndexInParent, aParent);
   NS_RELEASE(contentDelegate);
 
   // Append the continuing frame to the flow
-  continuingFrame->AppendToFlow(this);
+  aContinuingFrame->AppendToFlow(this);
 
   // Resolve style for the continuing frame and set its style context.
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);
-  continuingFrame->SetStyleContext(styleContext);
+  aContinuingFrame->SetStyleContext(styleContext);
   NS_RELEASE(styleContext);
 
-  return continuingFrame;
+  return NS_OK;
 }
 
-nsIFrame* nsSplittableFrame::GetPrevInFlow() const
+NS_METHOD nsSplittableFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
 {
-  return mPrevInFlow;
+  aPrevInFlow = mPrevInFlow;
+  return NS_OK;
 }
 
-void nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
+NS_METHOD nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
 {
   mPrevInFlow = aFrame;
+  return NS_OK;
 }
 
-nsIFrame* nsSplittableFrame::GetNextInFlow() const
+NS_METHOD nsSplittableFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
 {
-  return mNextInFlow;
+  aNextInFlow = mNextInFlow;
+  return NS_OK;
 }
 
-void nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
+NS_METHOD nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
 {
   mNextInFlow = aFrame;
+  return NS_OK;
 }
 
 nsIFrame* nsSplittableFrame::GetFirstInFlow() const
@@ -113,33 +120,35 @@ nsIFrame* nsSplittableFrame::GetLastInFlow() const
 }
 
 // Append this frame to flow after aAfterFrame
-void nsSplittableFrame::AppendToFlow(nsIFrame* aAfterFrame)
+NS_METHOD nsSplittableFrame::AppendToFlow(nsIFrame* aAfterFrame)
 {
   NS_PRECONDITION(aAfterFrame != nsnull, "null pointer");
 
   mPrevInFlow = aAfterFrame;
-  mNextInFlow = aAfterFrame->GetNextInFlow();
+  aAfterFrame->GetNextInFlow(mNextInFlow);
   mPrevInFlow->SetNextInFlow(this);
   if (mNextInFlow) {
     mNextInFlow->SetPrevInFlow(this);
   }
+  return NS_OK;
 }
 
 // Prepend this frame to flow before aBeforeFrame
-void nsSplittableFrame::PrependToFlow(nsIFrame* aBeforeFrame)
+NS_METHOD nsSplittableFrame::PrependToFlow(nsIFrame* aBeforeFrame)
 {
   NS_PRECONDITION(aBeforeFrame != nsnull, "null pointer");
 
-  mPrevInFlow = aBeforeFrame->GetPrevInFlow();
+  aBeforeFrame->GetPrevInFlow(mPrevInFlow);
   mNextInFlow = aBeforeFrame;
   mNextInFlow->SetPrevInFlow(this);
   if (mPrevInFlow) {
     mPrevInFlow->SetNextInFlow(this);
   }
+  return NS_OK;
 }
 
 // Remove this frame from the flow. Connects prev in flow and next in flow
-void nsSplittableFrame::RemoveFromFlow()
+NS_METHOD nsSplittableFrame::RemoveFromFlow()
 {
   if (mPrevInFlow) {
     mPrevInFlow->SetNextInFlow(mNextInFlow);
@@ -150,23 +159,26 @@ void nsSplittableFrame::RemoveFromFlow()
   }
 
   mPrevInFlow = mNextInFlow = nsnull;
+  return NS_OK;
 }
 
 // Detach from previous frame in flow
-void nsSplittableFrame::BreakFromPrevFlow()
+NS_METHOD nsSplittableFrame::BreakFromPrevFlow()
 {
   if (mPrevInFlow) {
     mPrevInFlow->SetNextInFlow(nsnull);
     mPrevInFlow = nsnull;
   }
+  return NS_OK;
 }
 
 // Detach from next frame in flow
-void nsSplittableFrame::BreakFromNextFlow()
+NS_METHOD nsSplittableFrame::BreakFromNextFlow()
 {
   if (mNextInFlow) {
     mNextInFlow->SetPrevInFlow(nsnull);
     mNextInFlow = nsnull;
   }
+  return NS_OK;
 }
 

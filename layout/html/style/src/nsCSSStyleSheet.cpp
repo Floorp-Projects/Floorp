@@ -215,11 +215,13 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       selector = selector->mNext;
       nsIFrame* frame = aParentFrame;
       while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
-        nsIContent* content = frame->GetContent();
+        nsIContent* content;
+         
+        frame->GetContent(content);
         if (SelectorMatches(selector, content)) {
           selector = selector->mNext;
         }
-        frame = frame->GetGeometricParent();
+        frame->GetGeometricParent(frame);
         NS_RELEASE(content);
       }
       if (nsnull == selector) { // ran out, it matched

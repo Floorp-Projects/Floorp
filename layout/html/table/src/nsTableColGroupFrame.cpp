@@ -35,20 +35,22 @@ nsTableColGroupFrame::~nsTableColGroupFrame()
 {
 }
 
-void nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect&        aDirtyRect)
+NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
+                                      nsIRenderingContext& aRenderingContext,
+                                      const nsRect&        aDirtyRect)
 {
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::Paint\n");
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
 }
 
 
-nsIFrame::ReflowStatus
+NS_METHOD
 nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
                         nsReflowMetrics& aDesiredSize,
                         const nsSize&   aMaxSize,
-                        nsSize*         aMaxElementSize)
+                        nsSize*         aMaxElementSize,
+                        ReflowStatus& aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::ResizeReflow\n");
@@ -59,21 +61,20 @@ nsTableColGroupFrame::ResizeReflow(nsIPresContext* aPresContext,
     aMaxElementSize->width=0;
     aMaxElementSize->height=0;
   }
-  return nsIFrame::frComplete;
+  aStatus = nsIFrame::frComplete;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
+NS_METHOD
 nsTableColGroupFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                         nsReflowMetrics& aDesiredSize,
                                         const nsSize&    aMaxSize,
-                                        nsReflowCommand& aReflowCommand)
+                                        nsReflowCommand& aReflowCommand,
+                                        ReflowStatus&    aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
-  ReflowStatus  status;
-
   if (gsDebug==PR_TRUE) printf("nsTableColGroupFrame::IncrementalReflow\n");
-
-  return status;
+  return NS_OK;
 }
 
 nsresult nsTableColGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,

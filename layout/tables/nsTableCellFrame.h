@@ -38,25 +38,28 @@ public:
                            PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
-  virtual void  Paint(nsIPresContext& aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
-  ReflowStatus  ResizeReflow(nsIPresContext* aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize&   aMaxSize,
-                             nsSize*         aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&   aMaxSize,
+                          nsSize*         aMaxElementSize,
+                          ReflowStatus&   aStatus);
 
-  ReflowStatus  IncrementalReflow(nsIPresContext*  aPresContext,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize&    aMaxSize,
-                                  nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
   /**
    * @see nsContainerFrame
    */
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
 
   void          VerticallyAlignChild(nsIPresContext* aPresContext);
 

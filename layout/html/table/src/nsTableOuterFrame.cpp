@@ -122,9 +122,9 @@ nsTableOuterFrame::~nsTableOuterFrame()
     delete mBottomCaptions;
 }
 
-void nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
-                               nsIRenderingContext& aRenderingContext,
-                               const nsRect& aDirtyRect)
+NS_METHOD nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   const nsRect& aDirtyRect)
 {
   // for debug...
   if (nsIFrame::GetShowFrameBorders()) {
@@ -133,6 +133,7 @@ void nsTableOuterFrame::Paint(nsIPresContext& aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
 }
 
 PRBool nsTableOuterFrame::NeedsReflow(const nsSize& aMaxSize)
@@ -163,10 +164,11 @@ void nsTableOuterFrame::SetFirstPassValid(PRBool aValidState)
   * NOTE: for breaking across pages, this method has to account for table content that is not laid out
   *       linearly vis a vis the frames.  That is, content hierarchy and the frame hierarchy do not match.
   */
-nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
-                                                       nsReflowMetrics& aDesiredSize,
-                                                       const nsSize& aMaxSize,
-                                                       nsSize* aMaxElementSize)
+NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                          nsReflowMetrics& aDesiredSize,
+                                          const nsSize& aMaxSize,
+                                          nsSize* aMaxElementSize,
+                                          ReflowStatus& aStatus)
 {
   if (PR_TRUE==gsDebug) 
     printf ("***table outer frame reflow \t\t%p\n", this);
@@ -185,8 +187,9 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
     aMaxElementSize->height = 0;
   }
 
-  PRBool        reflowMappedOK = PR_TRUE;
-  ReflowStatus  status = frComplete;
+  PRBool  reflowMappedOK = PR_TRUE;
+
+  aStatus = frComplete;
   nsSize innerTableMaxElementSize(0,0);
 
   // Set up our kids.  They're already present, on an overflow list, 
@@ -201,8 +204,11 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
   // at this point, we must have at least one child frame, and we must have an inner table frame
   NS_ASSERTION(nsnull!=mFirstChild, "no children");
   NS_ASSERTION(nsnull!=mInnerTableFrame, "no mInnerTableFrame");
-  if (nsnull==mFirstChild  ||  nsnull==mInnerTableFrame) //ERROR!
-    return frComplete;
+  if (nsnull==mFirstChild  ||  nsnull==mInnerTableFrame) {
+    //ERROR!
+    aStatus = frComplete;
+    return NS_OK;
+  }
 
   nsStyleMolecule* tableStyleMol =
     (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
@@ -213,7 +219,7 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
   if (PR_FALSE==IsFirstPassValid())
   {
     mFirstPassValid = PR_TRUE;
-    status = ResizeReflowCaptionsPass1(aPresContext, tableStyleMol);
+    aStatus = ResizeReflowCaptionsPass1(aPresContext, tableStyleMol);
 
   }
 
@@ -221,8 +227,8 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
   if (PR_FALSE==mInnerTableFrame->IsFirstPassValid())
   { // we treat the table as if we've never seen the layout data before
     mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
-    status = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, 
-                                                 &innerTableMaxElementSize, tableStyleMol);
+    aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, 
+                                                  &innerTableMaxElementSize, tableStyleMol);
   
 #ifdef NOISY_MARGINS
     nsIContent* content = mInnerTableFrame->GetContent();
@@ -237,7 +243,10 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
   }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_SECOND);
   // assign table width info only if the inner table frame is a first-in-flow
-  if (nsnull==mInnerTableFrame->GetPrevInFlow())
+  nsIFrame* prevInFlow;
+
+  mInnerTableFrame->GetPrevInFlow(prevInFlow);
+  if (nsnull==prevInFlow)
   {
     // assign column widths, and assign aMaxElementSize->width
     mInnerTableFrame->BalanceColumnWidths(aPresContext, tableStyleMol, aMaxSize, aMaxElementSize);
@@ -245,14 +254,17 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
     mInnerTableFrame->SetTableWidth(aPresContext, tableStyleMol);
   }
   // inner table max is now the computed width and assigned  height
-  state.innerTableMaxSize.width = mInnerTableFrame->GetWidth();
+  nsSize  innerTableSize;
+
+  mInnerTableFrame->GetSize(innerTableSize);
+  state.innerTableMaxSize.width = innerTableSize.width;
   state.innerTableMaxSize.height = aMaxSize.height; 
 
   // Reflow the child frames
   if (nsnull != mFirstChild) {
     reflowMappedOK = ReflowMappedChildren(aPresContext, state, aMaxElementSize);
     if (PR_FALSE == reflowMappedOK) {
-      status = frNotComplete;
+      aStatus = frNotComplete;
     }
   }
 
@@ -262,7 +274,7 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
     if (state.availSize.height <= 0) {
       // No space left. Don't try to pull-up children or reflow unmapped
       if (NextChildOffset() < mContent->ChildCount()) {
-        status = frNotComplete;
+        aStatus = frNotComplete;
       }
     } else if (NextChildOffset() < mContent->ChildCount()) {
       // Try and pull-up some children from a next-in-flow
@@ -271,12 +283,12 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
         NS_ABORT(); // huge error for tables!
       } else {
         // We were unable to pull-up all the existing frames from the next in flow
-        status = frNotComplete;
+        aStatus = frNotComplete;
       }
     }
   }
 
-  if (frComplete == status) {
+  if (frComplete == aStatus) {
     // Don't forget to add in the bottom margin from our last child.
     // Only add it in if there's room for it.
     nscoord margin = state.prevMaxPosBottomMargin -
@@ -320,7 +332,7 @@ nsIFrame::ReflowStatus nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresCont
   */
   // end REMOVE ME!
 
-  return status;
+  return NS_OK;
 
 }
 
@@ -442,7 +454,9 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
                                   kidFrame, aState.processingCaption?"caption":"inner");
 
     // Get top margin for this kid
-    nsIStyleContext* kidSC = kidFrame->GetStyleContext(aPresContext);
+    nsIStyleContext* kidSC;
+
+    kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
@@ -505,17 +519,22 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     mLastContentIsComplete = PRBool(status == frComplete);
     if (frNotComplete == status) {
       // No, the child isn't complete
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+      nsIFrame* kidNextInFlow;
+
+      kidFrame->GetNextInFlow(kidNextInFlow);
       PRBool lastContentIsComplete = mLastContentIsComplete;
       if (nsnull == kidNextInFlow) {
         // The child doesn't have a next-in-flow so create a continuing
         // frame. This hooks the child into the flow
-        nsIFrame* continuingFrame =
-          kidFrame->CreateContinuingFrame(aPresContext, this);
+        nsIFrame* continuingFrame;
+         
+        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to the sibling list
-        nsIFrame* nextSib = kidFrame->GetNextSibling();
+        nsIFrame* nextSib;
+         
+        kidFrame->GetNextSibling(nextSib);
         continuingFrame->SetNextSibling(nextSib);
         kidFrame->SetNextSibling(continuingFrame);
         if (nsnull == nextSib) {
@@ -528,7 +547,9 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
 
       // We've used up all of our available space so push the remaining
       // children to the next-in-flow
-      nsIFrame* nextSibling = kidFrame->GetNextSibling();
+      nsIFrame* nextSibling;
+       
+      kidFrame->GetNextSibling(nextSibling);
       if (nsnull != nextSibling) {
         PushChildren(nextSibling, kidFrame, lastContentIsComplete);
         SetLastContentOffset(prevKidFrame);
@@ -538,7 +559,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     }
 
     // Get the next child
-    kidFrame = kidFrame->GetNextSibling();
+    kidFrame->GetNextSibling(kidFrame);
 
     // XXX talk with troy about checking for available space here
   }
@@ -548,7 +569,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
   NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
 
   // Set the last content offset based on the last child we mapped.
-  NS_ASSERTION(LastChild() == prevKidFrame, "unexpected last child");
+  NS_ASSERTION(IsLastChild(prevKidFrame), "unexpected last child");
   SetLastContentOffset(prevKidFrame);
 
 #ifdef NS_DEBUG
@@ -615,7 +636,9 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
 #ifdef NS_DEBUG
   PRInt32        kidIndex = NextChildOffset();
 #endif
-  nsIFrame*      prevKidFrame = LastChild();
+  nsIFrame*      prevKidFrame;
+   
+  LastChild(prevKidFrame);
 
   // This will hold the prevKidFrame's mLastContentIsComplete
   // status. If we have to push the frame that follows prevKidFrame
@@ -644,7 +667,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
         kidFrame = nextInFlow->mFirstChild;
       } else {
         // We've pulled up all the children, so move to the next-in-flow.
-        nextInFlow = (nsTableOuterFrame*)nextInFlow->GetNextInFlow();
+        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
         continue;
       }
     }
@@ -652,8 +675,13 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
-    if ((kidFrame->GetWidth() > aState.availSize.height) &&
-        !kidFrame->IsSplittable()) {
+    nsSize  kidFrameSize;
+    PRBool  kidIsSplittable;
+
+    kidFrame->GetSize(kidFrameSize);
+    kidFrame->IsSplittable(kidIsSplittable);
+
+    if ((kidFrameSize.width  > aState.availSize.height) && !kidIsSplittable) {
       result = PR_FALSE;
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
@@ -678,7 +706,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
     PlaceChild(aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
     // Remove the frame from its current parent
-    nextInFlow->mFirstChild = kidFrame->GetNextSibling();
+    kidFrame->GetNextSibling(nextInFlow->mFirstChild);
     nextInFlow->mChildCount--;
     // Update the next-in-flows first content offset
     if (nsnull != nextInFlow->mFirstChild) {
@@ -687,7 +715,10 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
 
     // Link the frame into our list of children
     kidFrame->SetGeometricParent(this);
-    if (nextInFlow == kidFrame->GetContentParent()) {
+    nsIFrame* kidContentParent;
+
+    kidFrame->GetContentParent(kidContentParent);
+    if (nextInFlow == kidContentParent) {
       kidFrame->SetContentParent(this);
     }
     if (nsnull == prevKidFrame) {
@@ -707,13 +738,16 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
     mLastContentIsComplete = PRBool(status == frComplete);
     if (frNotComplete == status) {
       // No the child isn't complete
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+      nsIFrame* kidNextInFlow;
+       
+      kidFrame->GetNextInFlow(kidNextInFlow);
       if (nsnull == kidNextInFlow) {
         // The child doesn't have a next-in-flow so create a
         // continuing frame. The creation appends it to the flow and
         // prepares it for reflow.
-        nsIFrame* continuingFrame =
-          kidFrame->CreateContinuingFrame(aPresContext, this);
+        nsIFrame* continuingFrame;
+         
+        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -741,7 +775,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
 
   // Update our last content offset
   if (nsnull != prevKidFrame) {
-    NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
     SetLastContentOffset(prevKidFrame);
   }
 
@@ -761,7 +795,7 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
       // the next-in-flows must be empty. Do a sanity check
       while (nsnull != nextInFlow) {
         NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nextInFlow = (nsTableOuterFrame*)nextInFlow->GetNextInFlow();
+        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
       }
 #endif
     }
@@ -799,7 +833,9 @@ PRBool nsTableOuterFrame::PullUpChildren( nsIPresContext*      aPresContext,
   */
 void nsTableOuterFrame::SetReflowState(OuterTableReflowState& aState, nsIFrame* aKidFrame)
 {
-  nsIContent *kid = aKidFrame->GetContent();                             // kid: REFCNT++
+  nsIContent *kid;
+   
+  aKidFrame->GetContent(kid);                             // kid: REFCNT++
   nsITableContent *tableContentInterface = nsnull;
   kid->QueryInterface(kITableContentIID, (void**)&tableContentInterface);// tableContentInterface: REFCNT++
   if (nsnull!=tableContentInterface)
@@ -832,7 +868,9 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
   if (PR_TRUE==aState.processingCaption)
   { // it's a caption, find out if it's top or bottom
     // Resolve style
-    nsIStyleContext* captionStyleContext = aKidFrame->GetStyleContext(aPresContext);
+    nsIStyleContext* captionStyleContext;
+
+    aKidFrame->GetStyleContext(aPresContext, captionStyleContext);
     NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
     nsStyleMolecule* captionStyle =
       (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
@@ -852,13 +890,16 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
                                                            mMinCaptionWidth, mMaxCaptionWidth);
 
   if (frComplete == status) {
-    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
+    nsIFrame* kidNextInFlow;
+     
+    aKidFrame->GetNextInFlow(kidNextInFlow);
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
-      nsTableOuterFrame* parent = (nsTableOuterFrame*)
-        aKidFrame->GetGeometricParent();
+      nsTableOuterFrame* parent;
+       
+      aKidFrame->GetGeometricParent((nsIFrame*&)parent);
       parent->DeleteChildsNextInFlow(aKidFrame);
     }
   }
@@ -956,7 +997,8 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext, nsSty
       nsSize maxSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
       nsReflowMetrics desiredSize;
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
-      captionFrame->ResizeReflow(aPresContext, desiredSize, maxSize, &maxElementSize);
+      ReflowStatus  status;
+      captionFrame->ResizeReflow(aPresContext, desiredSize, maxSize, &maxElementSize, status);
       if (mMinCaptionWidth<maxElementSize.width)
         mMinCaptionWidth = maxElementSize.width;
       if (mMaxCaptionWidth<desiredSize.width)
@@ -986,7 +1028,9 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
 
       // Resolve style
-      nsIStyleContext* captionStyleContext = captionFrame->GetStyleContext(aPresContext);
+      nsIStyleContext* captionStyleContext;
+       
+      captionFrame->GetStyleContext(aPresContext, captionStyleContext);
       NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
       nsStyleMolecule* captionStyle =
         (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
@@ -1009,7 +1053,10 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
           else
             topCaptionY = NS_UNCONSTRAINEDSIZE;
           mInnerTableFrame->MoveTo(0, topCaptionY);
-          if (0==captionFrame->GetIndexInParent())
+          PRInt32 captionIndexInParent;
+
+          captionFrame->GetIndexInParent(captionIndexInParent);
+          if (0==captionIndexInParent)
           {
             SetFirstContentOffset(captionFrame);
             if (gsDebug) printf("OUTER: set first content offset to %d\n", GetFirstContentOffset()); //@@@
@@ -1061,7 +1108,9 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
       result = nsContainerFrame::ReflowChild(captionFrame, aPresContext, desiredSize, aMaxSize, nsnull);
 
       // place the caption
-      nsRect rect = captionFrame->GetRect();
+      nsRect rect;
+       
+      captionFrame->GetRect(rect);
       rect.y = bottomCaptionY;
       rect.width=desiredSize.width;
       rect.height=desiredSize.height;
@@ -1114,27 +1163,29 @@ void nsTableOuterFrame::SetLastContentOffset(const nsIFrame* aLastChild)
 }
 */
 
-nsIFrame::ReflowStatus
+NS_METHOD
 nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
                                     nsReflowMetrics& aDesiredSize,
                                     const nsSize&    aMaxSize,
-                                    nsReflowCommand& aReflowCommand)
+                                    nsReflowCommand& aReflowCommand,
+                                     ReflowStatus&   aStatus)
 {
   if (gsDebug == PR_TRUE) printf("nsTableOuterFrame::IncrementalReflow\n");
   // total hack for now, just some hard-coded values
-  ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull);
-
-  return frComplete;
+  ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
+  return NS_OK;
 }
 
-nsIFrame* nsTableOuterFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                   nsIFrame*       aParent)
+NS_METHOD nsTableOuterFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                                   nsIFrame*       aParent,
+                                                   nsIFrame*&      aContinuingFrame)
 {
   nsTableOuterFrame* cf = new nsTableOuterFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   cf->SetFirstPassValid(PR_TRUE);
   printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 void nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
@@ -1169,11 +1220,12 @@ void nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
   NS_RELEASE(styleContext);
 }
 
-void nsTableOuterFrame::VerifyTree() const
+NS_METHOD nsTableOuterFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
   
 #endif 
+  return NS_OK;
 }
 
 /**
@@ -1191,28 +1243,44 @@ void nsTableOuterFrame::VerifyTree() const
  */
 PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 {
-  NS_PRECONDITION(aChild->GetGeometricParent() == (nsIFrame*)this, "bad geometric parent");
-  NS_PRECONDITION(nsnull != aChild->GetNextInFlow(), "null next-in-flow");
+  NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
-  nsIFrame*         nextInFlow = aChild->GetNextInFlow();
-  nsTableOuterFrame* parent = (nsTableOuterFrame*)nextInFlow->GetGeometricParent();
+  nsIFrame* nextInFlow;
+   
+  aChild->GetNextInFlow(nextInFlow);
+
+  NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
+  nsTableOuterFrame* parent;
+   
+  nextInFlow->GetGeometricParent((nsIFrame*&)parent);
 
   // If the next-in-flow has a next-in-flow then delete it too (and
   // delete it first).
-  if (nsnull != nextInFlow->GetNextInFlow()) {
+  nsIFrame* nextNextInFlow;
+
+  nextInFlow->GetNextInFlow(nextNextInFlow);
+  if (nsnull != nextNextInFlow) {
     parent->DeleteChildsNextInFlow(nextInFlow);
   }
 
-  NS_ASSERTION((0 == nextInFlow->ChildCount()) &&
-               (nsnull == nextInFlow->FirstChild()),
-               "deleting !empty next-in-flow");
+#ifdef NS_DEBUG
+  PRInt32   childCount;
+  nsIFrame* firstChild;
+
+  nextInFlow->ChildCount(childCount);
+  nextInFlow->FirstChild(firstChild);
+
+  NS_ASSERTION(childCount == 0, "deleting !empty next-in-flow");
+
+  NS_ASSERTION((0 == childCount) && (nsnull == firstChild), "deleting !empty next-in-flow");
+#endif
 
   // Disconnect the next-in-flow from the flow list
   nextInFlow->BreakFromPrevFlow();
 
   // Take the next-in-flow out of the parent's child list
   if (parent->mFirstChild == nextInFlow) {
-    parent->mFirstChild = nextInFlow->GetNextSibling();
+    nextInFlow->GetNextSibling(parent->mFirstChild);
     if (nsnull != parent->mFirstChild) {
       parent->SetFirstContentOffset(parent->mFirstChild);
       if (parent->IsPseudoFrame()) {
@@ -1229,22 +1297,30 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
     // will be repaired.
 
   } else {
+    nsIFrame* nextSibling;
+
     // Because the next-in-flow is not the first child of the parent
     // we know that it shares a parent with aChild. Therefore, we need
     // to capture the next-in-flow's next sibling (in case the
     // next-in-flow is the last next-in-flow for aChild AND the
     // next-in-flow is not the last child in parent)
-    NS_ASSERTION(aChild->GetGeometricParent() == parent, "screwy flow");
-    NS_ASSERTION(aChild->GetNextSibling() == nextInFlow, "unexpected sibling");
+    NS_ASSERTION(parent->IsChild(aChild), "screwy flow");
+    aChild->GetNextSibling(nextSibling);
+    NS_ASSERTION(nextSibling == nextInFlow, "unexpected sibling");
 
-    aChild->SetNextSibling(nextInFlow->GetNextSibling());
+    nextInFlow->GetNextSibling(nextSibling);
+    aChild->SetNextSibling(nextSibling);
   }
 
   // Delete the next-in-flow frame and adjust it's parent's child count
   nextInFlow->DeleteFrame();
   parent->mChildCount--;
 
-  NS_POSTCONDITION(nsnull == aChild->GetNextInFlow(), "non null next-in-flow");
+#ifdef NS_DEBUG
+  aChild->GetNextInFlow(nextInFlow);
+  NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
+#endif
+
   return PR_TRUE;
 }
 
@@ -1268,10 +1344,13 @@ void nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext)
     nsIFrame* prevInnerTable = prevOuterTable->mInnerTableFrame;
 
     // Create a continuing column
-    mInnerTableFrame = (nsTableFrame *)prevInnerTable->GetNextInFlow();
+    prevInnerTable->GetNextInFlow((nsIFrame*&)mInnerTableFrame);
     if (nsnull==mInnerTableFrame)
     {
-      mInnerTableFrame = (nsTableFrame *)prevInnerTable->CreateContinuingFrame(aPresContext, this);
+      nsIFrame* continuingFrame;
+
+      prevInnerTable->CreateContinuingFrame(aPresContext, this, continuingFrame);
+      mInnerTableFrame = (nsTableFrame*)continuingFrame;
       mChildCount++;
     }
   }

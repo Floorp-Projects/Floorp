@@ -226,12 +226,12 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     nsIFrame::ReflowStatus  status;
 
     // Get top margin for this kid
-    nsIContent* kid = kidFrame->GetContent();
-    nsIStyleContext* kidSC = kidFrame->GetStyleContext(aPresContext);
+    nsIStyleContext* kidSC;
+
+    kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
-    NS_RELEASE(kid);
     NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
@@ -297,15 +297,20 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     if (frNotComplete == status) {
       // XXX It's good to assume that we might still have room
       // even if the child didn't complete (floaters will want this)
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+      nsIFrame* kidNextInFlow;
+       
+      kidFrame->GetNextInFlow(kidNextInFlow);
       if (nsnull == kidNextInFlow) {
         // No the child isn't complete, and it doesn't have a next in flow so
         // create a continuing frame. This hooks the child into the flow.
-        nsIFrame* continuingFrame =
-          kidFrame->CreateContinuingFrame(aPresContext, this);
+        nsIFrame* continuingFrame;
+         
+        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
 
         // Insert the frame. We'll reflow it next pass through the loop
-        nsIFrame* nextSib = kidFrame->GetNextSibling();
+        nsIFrame* nextSib;
+         
+        kidFrame->GetNextSibling(nextSib);
         continuingFrame->SetNextSibling(nextSib);
         kidFrame->SetNextSibling(continuingFrame);
         if (nsnull == nextSib) {
@@ -319,7 +324,7 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
 
     // Get the next child
     prevKidFrame = kidFrame;
-    kidFrame = kidFrame->GetNextSibling();
+    kidFrame->GetNextSibling(kidFrame);
 
     // XXX talk with troy about checking for available space here
   }
@@ -329,7 +334,7 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
   NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
 
   // Set the last content offset based on the last child we mapped.
-  NS_ASSERTION(LastChild() == prevKidFrame, "unexpected last child");
+  NS_ASSERTION(IsLastChild(prevKidFrame), "unexpected last child");
   SetLastContentOffset(prevKidFrame);
 
 #ifdef NS_DEBUG
@@ -397,7 +402,9 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
 
   // The frame previous to the current frame we are reflowing. This
   // starts out initially as our last frame.
-  nsIFrame*     prevKidFrame = LastChild();
+  nsIFrame*     prevKidFrame;
+   
+  LastChild(prevKidFrame);
 
   // This will hold the prevKidFrame's mLastContentIsComplete
   // status. If we have to push the frame that follows prevKidFrame
@@ -421,8 +428,9 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
     }
 
     // Get top margin for this kid
-    nsIContent* kid = kidFrame->GetContent();
-    nsIStyleContext* kidSC = kidFrame->GetStyleContext(aPresContext);
+    nsIStyleContext* kidSC;
+     
+    kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
     nscoord bottomMargin = kidMol->margin.bottom;
@@ -443,8 +451,8 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
       // out of space.
       if ((kidFrame == mFirstChild) || (kidAvailSize.height > 0)) {
         aState.spaceManager->Translate(kidMol->margin.left, topMargin);
-        status = ReflowChild(kidFrame, aPresContext, aState.spaceManager,
-                             kidAvailSize, kidRect, pKidMaxElementSize);
+        status = ReflowChild(kidFrame, aPresContext, aState.spaceManager, kidAvailSize,
+                             kidRect, pKidMaxElementSize);
         aState.spaceManager->Translate(-kidMol->margin.left, -topMargin);
       }
 
@@ -458,12 +466,14 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
         //
         // Note that if the width is too big that's okay and we allow the
         // child to extend horizontally outside of the reflow area
-        PRBool lastComplete = PRBool(nsnull == kidFrame->GetNextInFlow());
+        nsIFrame* kidNextInFlow;
+
+        kidFrame->GetNextInFlow(kidNextInFlow);
+        PRBool lastComplete = PRBool(nsnull == kidNextInFlow);
         PushChildren(kidFrame, prevKidFrame, lastComplete);
         mLastContentIsComplete = prevLastContentIsComplete;
         mChildCount--;
         result = PR_FALSE;
-        NS_RELEASE(kid);
         NS_RELEASE(kidSC);
         goto push_done;
       }
@@ -492,16 +502,22 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
       // Is the child we just pulled up complete?
       if (frNotComplete == status) {
         // No the child isn't complete.
-        nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+        nsIFrame* kidNextInFlow;
+         
+        kidFrame->GetNextInFlow(kidNextInFlow);
         if (nsnull == kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a
           // continuing frame. The creation appends it to the flow and
           // prepares it for reflow.
-          nsIFrame* continuingFrame =
-            kidFrame->CreateContinuingFrame(aPresContext, this);
+          nsIFrame* continuingFrame;
+
+          kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
 
           // Add the continuing frame to our sibling list.
-          continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
+          nsIFrame* kidNextSibling;
+
+          kidFrame->GetNextSibling(kidNextSibling);
+          continuingFrame->SetNextSibling(kidNextSibling);
           kidFrame->SetNextSibling(continuingFrame);
           prevKidFrame = kidFrame;
           prevLastContentIsComplete = mLastContentIsComplete;
@@ -511,13 +527,11 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
           // The child has a next-in-flow, but it's not one of ours.
           // It *must* be in one of our next-in-flows. Collect it
           // then.
-          NS_ASSERTION(kidNextInFlow->GetGeometricParent() != this,
-                       "busted kid next-in-flow");
+          NS_ASSERTION(!IsChild(kidNextInFlow), "busted kid next-in-flow");
           break;
         }
       }
     } while (frNotComplete == status);
-    NS_RELEASE(kid);
     NS_RELEASE(kidSC);
 
     prevKidFrame = kidFrame;
@@ -527,7 +541,7 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
  push_done:;
   // Update our last content index
   if (nsnull != prevKidFrame) {
-    NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
     SetLastContentOffset(prevKidFrame);
   }
 
@@ -547,7 +561,7 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
       // the next-in-flows must be empty. Do a sanity check
       while (nsnull != nextInFlow) {
         NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nextInFlow = (ColumnFrame*)nextInFlow->GetNextInFlow();
+        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
       }
 #endif
     }
@@ -609,7 +623,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     mFirstContentOffset = prev->NextChildOffset();
     if (!prev->mLastContentIsComplete) {
       // Our prev-in-flow's last child is not complete
-      kidPrevInFlow = prev->LastChild();
+      prev->LastChild(kidPrevInFlow);
     }
   }
 
@@ -619,7 +633,9 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRInt32   kidIndex = NextChildOffset();
-  nsIFrame* prevKidFrame = LastChild();  // XXX remember this...
+  nsIFrame* prevKidFrame;
+   
+  LastChild(prevKidFrame);  // XXX remember this...
 
   for (;;) {
     // Get the next content object
@@ -681,7 +697,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
       }
       kidFrame->SetStyleContext(kidStyleContext);
     } else {
-      kidFrame = kidPrevInFlow->CreateContinuingFrame(aPresContext, this);
+      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
       if (ChildIsPseudoFrame(kidFrame)) {
         pseudoFrame = (nsBlockFrame*) kidFrame;
       }
@@ -690,7 +706,12 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     // Link the child frame into the list of children and update the
     // child count
     if (nsnull != prevKidFrame) {
-      NS_ASSERTION(nsnull == prevKidFrame->GetNextSibling(), "bad append");
+#ifdef NS_DEBUG
+      nsIFrame* prevNextSibling;
+
+      prevKidFrame->GetNextSibling(prevNextSibling);
+      NS_ASSERTION(nsnull == prevNextSibling, "bad append");
+#endif
       prevKidFrame->SetNextSibling(kidFrame);
     } else {
       NS_ASSERTION(nsnull == mFirstChild, "bad create");
@@ -731,7 +752,12 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
         NS_ASSERTION(nsnull == mNextInFlow, "whoops");
 
         // Chop off the part of our child list that's being overflowed
-        NS_ASSERTION(prevKidFrame->GetNextSibling() == kidFrame, "bad list");
+#ifdef NS_DEBUG
+        nsIFrame* prevNextSibling;
+
+        prevKidFrame->GetNextSibling(prevNextSibling);
+        NS_ASSERTION(prevNextSibling == kidFrame, "bad list");
+#endif
         prevKidFrame->SetNextSibling(nsnull);
 
         // Create overflow list
@@ -743,7 +769,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
         nsIFrame* f = kidFrame;
         while (nsnull != f) {
           overflowKids++;
-          f = f->GetNextSibling();
+          f->GetNextSibling(f);
         }
         mChildCount -= overflowKids;
         NS_RELEASE(kidStyleContext);
@@ -774,11 +800,15 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
       if (frNotComplete == status) {
         // Child didn't complete so create a continuing frame
         kidPrevInFlow = kidFrame;
-        nsIFrame* continuingFrame =
-          kidFrame->CreateContinuingFrame(aPresContext, this);
+        nsIFrame* continuingFrame;
+
+        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
 
         // Add the continuing frame to the sibling list
-        continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
+        nsIFrame* kidNextSibling;
+
+        kidFrame->GetNextSibling(kidNextSibling);
+        continuingFrame->SetNextSibling(kidNextSibling);
         kidFrame->SetNextSibling(continuingFrame);
         prevKidFrame = kidFrame;
         kidFrame = continuingFrame;
@@ -810,7 +840,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
 
 done:
   // Update the content mapping
-  NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+  NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
   if (0 != mChildCount) {
     SetLastContentOffset(prevKidFrame);
   }
@@ -822,12 +852,12 @@ done:
   return result;
 }
 
-nsIFrame::ReflowStatus
-ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                          nsISpaceManager* aSpaceManager,
-                          const nsSize&    aMaxSize,
-                          nsRect&          aDesiredRect,
-                          nsSize*          aMaxElementSize)
+NS_METHOD ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                                    nsISpaceManager* aSpaceManager,
+                                    const nsSize&    aMaxSize,
+                                    nsRect&          aDesiredRect,
+                                    nsSize*          aMaxElementSize,
+                                    ReflowStatus&    aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
@@ -838,7 +868,8 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
   //XXX NS_PRECONDITION((aMaxSize.width > 0) && (aMaxSize.height > 0), "unexpected max size");
 
   PRBool        reflowMappedOK = PR_TRUE;
-  ReflowStatus  status = frComplete;
+
+  aStatus = frComplete;  // initialize out parameter
 
   // Initialize out parameter
   if (nsnull != aMaxElementSize) {
@@ -859,7 +890,7 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
     reflowMappedOK =
       ReflowMappedChildren(aPresContext, state, aMaxElementSize);
     if (PR_FALSE == reflowMappedOK) {
-      status = frNotComplete;
+      aStatus = frNotComplete;
     }
   }
 
@@ -869,7 +900,7 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
     if ((nsnull != mFirstChild) && (state.availSize.height <= 0)) {
       // No space left. Don't try to pull-up children or reflow unmapped
       if (NextChildOffset() < mContent->ChildCount()) {
-        status = frNotComplete;
+        aStatus = frNotComplete;
       }
     } else if (NextChildOffset() < mContent->ChildCount()) {
       // Try and pull-up some children from a next-in-flow
@@ -877,13 +908,13 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
           PullUpChildren(aPresContext, state, aMaxElementSize)) {
         // If we still have unmapped children then create some new frames
         if (NextChildOffset() < mContent->ChildCount()) {
-          status =
+          aStatus =
             ReflowUnmappedChildren(aPresContext, state, aMaxElementSize);
         }
       } else {
         // We were unable to pull-up all the existing frames from the
         // next in flow
-        status = frNotComplete;
+        aStatus = frNotComplete;
       }
     }
   }
@@ -891,7 +922,7 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // Restore the coordinate space
   aSpaceManager->Translate(0, -state.y);
 
-  if (frComplete == status) {
+  if (frComplete == aStatus) {
     // Don't forget to add in the bottom margin from our last child.
     // Only add it in if there's room for it.
     nscoord margin = state.prevMaxPosBottomMargin -
@@ -914,7 +945,7 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
   }
 
 #ifdef NS_DEBUG
-  PostReflowCheck(status);
+  PostReflowCheck(aStatus);
 
   // Verify we properly restored the coordinate space
   nscoord txOut, tyOut;
@@ -922,21 +953,20 @@ ColumnFrame::ResizeReflow(nsIPresContext*  aPresContext,
   aSpaceManager->GetTranslation(txOut, tyOut);
   NS_POSTCONDITION((txIn == txOut) && (tyIn == tyOut), "bad translation");
 #endif
-  return status;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsISpaceManager* aSpaceManager,
-                               const nsSize&    aMaxSize,
-                               nsRect&          aDesiredRect,
-                               nsReflowCommand& aReflowCommand)
+NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                         nsISpaceManager* aSpaceManager,
+                                         const nsSize&    aMaxSize,
+                                         nsRect&          aDesiredRect,
+                                         nsReflowCommand& aReflowCommand,
+                                         ReflowStatus&    aStatus)
 {
 #ifdef NS_DEBUG
   nscoord txIn, tyIn;
   aSpaceManager->GetTranslation(txIn, tyIn);
 #endif
-  ReflowStatus  status;
 
   // Who's the reflow command targeted for?
   if (aReflowCommand.GetTarget() == mGeometricParent) {
@@ -970,12 +1000,15 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
           break;
         }
       } else {
-        if (kidFrame->GetIndexInParent() == startOffset) {
+        PRInt32 kidIndexInParent;
+
+        kidFrame->GetIndexInParent(kidIndexInParent);
+        if (kidIndexInParent == startOffset) {
           break;
         }
       }
       prevKidFrame = kidFrame;
-      kidFrame = kidFrame->GetNextSibling();
+      kidFrame->GetNextSibling(kidFrame);
     }
 
     // Factor in the previous kid's bottom margin information
@@ -988,12 +1021,12 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       prevKidFrame->GetRect(startKidRect);
 
       // Get style info
-      nsIContent* kid = prevKidFrame->GetContent();
-      nsIStyleContext* kidSC = prevKidFrame->GetStyleContext(aPresContext);
+      nsIStyleContext* kidSC;
+
+      prevKidFrame->GetStyleContext(aPresContext, kidSC);
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       nscoord bottomMargin = kidMol->margin.bottom;
-      NS_RELEASE(kid);
       NS_RELEASE(kidSC);
 
       state.y = startKidRect.YMost();
@@ -1004,12 +1037,12 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       }
     } else {
       // Get style info
-      nsIContent* kid = kidFrame->GetContent();
-      nsIStyleContext* kidSC = kidFrame->GetStyleContext(aPresContext);
+      nsIStyleContext* kidSC;
+
+      kidFrame->GetStyleContext(aPresContext, kidSC);
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       nscoord topMargin = kidMol->margin.top;
-      NS_RELEASE(kid);
       NS_RELEASE(kidSC);
 
       // Initialize y to start after the top margin
@@ -1029,11 +1062,11 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
     // Now ResizeReflow the appended frames
     while (nsnull != kidFrame) {
-      nsIContent* kid = kidFrame->GetContent();
-      nsIStyleContext* kidSC = kidFrame->GetStyleContext(aPresContext);
+      nsIStyleContext* kidSC;
+
+      kidFrame->GetStyleContext(aPresContext, kidSC);
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-      NS_RELEASE(kid);
 
       nsRect kidRect;
       nsSize kidAvailSize(state.availSize);
@@ -1043,8 +1076,8 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
       // Reflow the child
       state.spaceManager->Translate(kidMol->margin.left, 0);
-      status = ReflowChild(kidFrame, aPresContext, state.spaceManager,
-                           kidAvailSize, kidRect, nsnull);
+      aStatus = ReflowChild(kidFrame, aPresContext, state.spaceManager,
+                            kidAvailSize, kidRect, nsnull);
       state.spaceManager->Translate(-kidMol->margin.left, 0);
 
       // Did it fit?
@@ -1074,13 +1107,13 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       NS_RELEASE(kidSC);
 
       // XXX Was it complete?
-      if (frNotComplete == status) {
+      if (frNotComplete == aStatus) {
         // XXX Need to push remaining frames and trigger a reflow there
         NS_ABORT();
       }
 
       prevKidFrame = kidFrame;
-      kidFrame = kidFrame->GetNextSibling();
+      kidFrame->GetNextSibling(kidFrame);
     }
     SetLastContentOffset(prevKidFrame);
 
@@ -1110,13 +1143,13 @@ ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   aSpaceManager->GetTranslation(txOut, tyOut);
   NS_POSTCONDITION((txIn == txOut) && (tyIn == tyOut), "bad translation");
 #endif
-  return status;
+  return NS_OK;
 }
 
 // XXX factor nicely with reflow-unmapped
-void ColumnFrame::ContentAppended(nsIPresShell* aShell,
-                                  nsIPresContext* aPresContext,
-                                  nsIContent* aContainer)
+NS_METHOD ColumnFrame::ContentAppended(nsIPresShell* aShell,
+                                       nsIPresContext* aPresContext,
+                                       nsIContent* aContainer)
 {
   // We must only be called by the body frame since we are a
   // pseudo-frame; the body frame makes sure that it's dealing with
@@ -1127,9 +1160,10 @@ void ColumnFrame::ContentAppended(nsIPresShell* aShell,
   // Get index of where the content has been appended
   PRInt32 kidIndex = NextChildOffset();
   PRInt32 startIndex = kidIndex;
-  nsIFrame* prevKidFrame = LastChild();
   nsIContent* content = mContent;
-
+  nsIFrame* prevKidFrame;
+   
+  LastChild(prevKidFrame);
   nsBlockFrame* pseudoFrame = nsnull;
   if ((nsnull != prevKidFrame) && ChildIsPseudoFrame(prevKidFrame)) {
     pseudoFrame = (nsBlockFrame*) prevKidFrame;
@@ -1249,14 +1283,17 @@ void ColumnFrame::ContentAppended(nsIPresShell* aShell,
   SetLastContentOffset(prevKidFrame);
   // Note: Column frames *never* directly generate reflow commands
   // because they are always pseudo-frames for bodies.
+  return NS_OK;
 }
 
-nsIFrame* ColumnFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aParent)
+NS_METHOD ColumnFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aParent,
+                                             nsIFrame*&      aContinuingFrame)
 {
   ColumnFrame* cf = new ColumnFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 PRIntn ColumnFrame::GetSkipSides() const
@@ -1266,8 +1303,9 @@ PRIntn ColumnFrame::GetSkipSides() const
   return 0x0F;
 }
 
-void ColumnFrame::ListTag(FILE* out) const
+NS_METHOD ColumnFrame::ListTag(FILE* out) const
 {
   fprintf(out, "*COLUMN@%p", this);
+  return NS_OK;
 }
 

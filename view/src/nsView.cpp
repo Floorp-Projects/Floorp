@@ -365,7 +365,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBo
     event->point.x += xoff;
     event->point.y += yoff;
 
-    retval = mFrame->HandleEvent(*cx, event);
+    mFrame->HandleEvent(*cx, event, retval);
 
     event->point.x -= xoff;
     event->point.y -= yoff;

@@ -44,10 +44,9 @@ nsHTMLContainerFrame::~nsHTMLContainerFrame()
 {
 }
 
-void
-nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
+                                      nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect)
 {
   // Do not paint ourselves if we are a pseudo-frame
   if (PR_FALSE == IsPseudoFrame()) {
@@ -68,6 +67,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
     aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+  return NS_OK;
 }
 
 void nsHTMLContainerFrame::TriggerLink(nsIPresContext& aPresContext,
@@ -96,14 +96,15 @@ void nsHTMLContainerFrame::TriggerLink(nsIPresContext& aPresContext,
   }
 }
 
-nsEventStatus nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
-                                                nsGUIEvent* aEvent)
+NS_METHOD nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
+                                            nsGUIEvent* aEvent,
+                                            nsEventStatus& aEventStatus)
 {
-  nsEventStatus rv = nsEventStatus_eIgnore; 
+  aEventStatus = nsEventStatus_eIgnore; 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
     if (nsEventStatus_eIgnore ==
-        nsContainerFrame::HandleEvent(aPresContext, aEvent)) { 
+        nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus)) { 
       // If our child didn't take the click then since we are an
       // anchor, we take the click.
       nsIAtom* tag = mContent->GetTag();
@@ -112,7 +113,7 @@ nsEventStatus nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
         mContent->GetAttribute("href", href);
         mContent->GetAttribute("target", target);
         TriggerLink(aPresContext, base, href, target);
-        rv = nsEventStatus_eConsumeNoDefault; 
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       NS_IF_RELEASE(tag);
     }
@@ -123,15 +124,16 @@ nsEventStatus nsHTMLContainerFrame::HandleEvent(nsIPresContext& aPresContext,
     break;
 
   default:
-    rv = nsContainerFrame::HandleEvent(aPresContext, aEvent);
+    nsContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     break;
   }
-  return rv;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
-                                          const nsPoint& aPoint,
-                                          nsIFrame** aFrame)
+NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
+                                            const nsPoint& aPoint,
+                                            nsIFrame** aFrame,
+                                            PRInt32& aCursor)
 {
   nsStyleMolecule* mol = (nsStyleMolecule*)
     mStyleContext->GetData(kStyleMoleculeSID);
@@ -139,9 +141,10 @@ PRInt32 nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
     // If this container has a particular cursor, use it, otherwise
     // let the child decide.
     *aFrame = this;
-    return (PRInt32) mol->cursor;
+    aCursor = (PRInt32)mol->cursor;
+    return NS_OK;
   }
-  return nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame);
+  return nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame, aCursor);
 }
 
 #if 0

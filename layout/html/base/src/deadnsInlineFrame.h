@@ -31,22 +31,24 @@ public:
                            PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsSize*          aMaxElementSize);
+  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
+                           nsReflowMetrics& aDesiredSize,
+                           const nsSize&    aMaxSize,
+                           nsSize*          aMaxElementSize,
+                           ReflowStatus&    aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD  IncrementalReflow(nsIPresContext*  aPresContext,
+                                nsReflowMetrics& aDesiredSize,
+                                const nsSize&    aMaxSize,
+                                nsReflowCommand& aReflowCommand,
+                                ReflowStatus&    aStatus);
 
-  virtual void ContentAppended(nsIPresShell* aShell,
-                               nsIPresContext* aPresContext,
-                               nsIContent* aContainer);
+  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer);
 
-  virtual void GetReflowMetrics(nsIPresContext*  aPresContext,
-                                nsReflowMetrics& aMetrics);
+  NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aMetrics);
 
 protected:
   nsInlineFrame(nsIContent* aContent,

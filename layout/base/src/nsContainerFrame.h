@@ -111,62 +111,65 @@ public:
    * set the content offsets, mLastContentOffset, and append the continuing
    * frame to the flow.
    */
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
 
   // Painting
-  virtual void Paint(nsIPresContext&      aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
 
   /**
    * Pass through the event to the correct child frame.
    * Return PR_TRUE if the event is consumed.
    */
-  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext,
-                             nsGUIEvent*     aEvent);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
 
-  virtual PRInt32 GetCursorAt(nsIPresContext& aPresContext,
-                              const nsPoint& aPoint,
-                              nsIFrame** aFrame);
+  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
+                         const nsPoint&  aPoint,
+                         nsIFrame**      aFrame,
+                         PRInt32&        aCursor);
 
   // Child frame enumeration.
   // ChildAt() retruns null if the index is not in the range 0 .. ChildCount() - 1.
   // IndexOf() returns -1 if the frame is not in the child list.
-  virtual PRInt32       ChildCount() const;
-  virtual nsIFrame*     ChildAt(PRInt32 aIndex) const;
-  virtual PRInt32       IndexOf(const nsIFrame* aChild) const;
-  virtual nsIFrame*     FirstChild() const;
-  virtual nsIFrame*     NextChild(const nsIFrame* aChild) const;
-  virtual nsIFrame*     PrevChild(const nsIFrame* aChild) const;
-  virtual nsIFrame*     LastChild() const;
+  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
+  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
+  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
+  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
+  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
+  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
+  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
 
   // Access functions for starting and end content offsets. These reflect the
   // range of content mapped by the frame.
   //
   // If the container is empty (has no children) the last content offset is
   // undefined
-  PRInt32       GetFirstContentOffset() const {return mFirstContentOffset;}
-  void          SetFirstContentOffset(PRInt32 aOffset) {mFirstContentOffset = aOffset;}
-  PRInt32       GetLastContentOffset() const {return mLastContentOffset;}
-  void          SetLastContentOffset(PRInt32 aOffset) {mLastContentOffset = aOffset;}
+  PRInt32     GetFirstContentOffset() const {return mFirstContentOffset;}
+  void        SetFirstContentOffset(PRInt32 aOffset) {mFirstContentOffset = aOffset;}
+  PRInt32     GetLastContentOffset() const {return mLastContentOffset;}
+  void        SetLastContentOffset(PRInt32 aOffset) {mLastContentOffset = aOffset;}
 
   /** return PR_TRUE if the last mapped child is complete */
-  PRBool        GetLastContentIsComplete() const {return mLastContentIsComplete;}
+  PRBool      GetLastContentIsComplete() const {return mLastContentIsComplete;}
   /** set the state indicating whether the last mapped child is complete */
-  void          SetLastContentIsComplete(PRBool aLIC) {mLastContentIsComplete = aLIC;}
+  void        SetLastContentIsComplete(PRBool aLIC) {mLastContentIsComplete = aLIC;}
 
   // Get the offset for the next child content, i.e. the child after the
   // last child that fit in us
-  PRInt32       NextChildOffset() const;
+  PRInt32     NextChildOffset() const;
 
   // Returns true if this frame is being used a pseudo frame
-  PRBool        IsPseudoFrame() const;
+  PRBool      IsPseudoFrame() const;
 
   // Debugging
-  virtual void  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  virtual void  ListTag(FILE* out = stdout) const;
-  virtual void  VerifyTree() const;
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  VerifyTree() const;
 
   /**
    * This is used to propagate this frame's mFirstContentOffset, mLastContentOffset,
@@ -341,6 +344,18 @@ protected:
    * Returns zero if aChild is nsnull.
    */
   static PRInt32 LengthOf(nsIFrame* aChild);
+
+  /**
+   * Returns PR_TRUE if aChild is a child of this frame.
+   */
+  PRBool IsChild(const nsIFrame* aChild) const;
+
+  /**
+   * Returns PR_TRUE if aChild is the last child of this frame.
+   */
+  PRBool IsLastChild(const nsIFrame* aChild) const;
+
+  void DumpTree() const;
 
   /**
    * Before reflow for this container has started we check that all

@@ -198,24 +198,27 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aPresContext,
-                                    nsISpaceManager* aSpaceManager,
-                                    const nsSize& aMaxSize,
-                                    nsRect& aDesiredRect,
-                                    nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsISpaceManager* aSpaceManager,
+                          const nsSize& aMaxSize,
+                          nsRect& aDesiredRect,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext* aPresContext,
-                                         nsISpaceManager* aSpaceManager,
-                                         const nsSize& aMaxSize,
-                                         nsRect& aDesiredRect,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext* aPresContext,
+                               nsISpaceManager* aSpaceManager,
+                               const nsSize& aMaxSize,
+                               nsRect& aDesiredRect,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus& aStatus);
 
-  virtual void ContentAppended(nsIPresShell* aShell,
-                               nsIPresContext* aPresContext,
-                               nsIContent* aContainer);
+  NS_IMETHOD ContentAppended(nsIPresShell* aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent* aContainer);
 
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame* aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame* aParent,
+                                   nsIFrame*& aContinuingFrame);
 
   virtual PRBool AddFloater(nsIPresContext* aCX,
                             nsIFrame* aFloater,
@@ -224,7 +227,7 @@ public:
                             nsIFrame* aFloater,
                             PlaceholderFrame* aPlaceholder);
 
-  virtual void ListTag(FILE* out = stdout) const;
+  NS_IMETHOD ListTag(FILE* out = stdout) const;
 
   virtual nsHTMLFrameType GetFrameType() const;
 
@@ -277,9 +280,10 @@ protected:
                   const nsSize& aMaxSize, nsSize* aMaxElementSize,
                   nsISpaceManager* aSpaceManager);
 
-  ReflowStatus DoResizeReflow(nsIPresContext* aPresContext,
-                              nsBlockReflowState& aState,
-                              nsRect& aDesiredRect);
+  nsresult DoResizeReflow(nsIPresContext* aPresContext,
+                          nsBlockReflowState& aState,
+                          nsRect& aDesiredRect,
+                          ReflowStatus& aStatus);
 
   PRBool ReflowMappedChildren(nsIPresContext* aPresContext,
                               nsBlockReflowState& aState);

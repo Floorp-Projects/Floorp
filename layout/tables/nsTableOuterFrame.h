@@ -56,9 +56,9 @@ public:
                            nsIFrame*   aParent);
 
   /** @see nsIFrame::Paint */
-  virtual void  Paint(nsIPresContext& aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
   /** outer tables are reflowed in two steps.
     * Step 1:, we lay out all of the captions and the inner table with
@@ -85,20 +85,23 @@ public:
     * @see nsTableFrame::BalanceColumnWidths
     * @see nsIFrame::ResizeReflow 
     */
-  ReflowStatus  ResizeReflow(nsIPresContext*  aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize&    aMaxSize,
-                             nsSize*          aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          ReflowStatus&    aStatus);
 
   /** @see nsIFrame::IncrementalReflow */
-  ReflowStatus  IncrementalReflow(nsIPresContext*  aPresContext,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize&    aMaxSize,
-                                  nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
   /** @see nsContainerFrame */
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
   /** destructor */
   virtual ~nsTableOuterFrame();
 
@@ -205,7 +208,7 @@ protected:
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::VerifyTree
     */
-  virtual void VerifyTree() const;
+  NS_IMETHOD VerifyTree() const;
 
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::PrepareContinuingFrame
