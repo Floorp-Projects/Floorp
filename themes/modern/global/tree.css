@@ -58,7 +58,8 @@ tree {
 
 treechildren:-moz-tree-row {
   border: 1px solid transparent;
-  height: 18px;
+  min-height: 18px;
+  height: 1.3em;
 }
 
 treechildren:-moz-tree-row(selected) {
