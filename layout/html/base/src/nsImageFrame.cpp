@@ -1256,7 +1256,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       // indicating the status (unless image is blocked, in which case we show nothing)
 #ifndef SUPPRESS_LOADING_ICON
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
-          !mImageBlocked) {
+          (!mImageBlocked || mIconLoad->mPrefAllImagesBlocked)) {
 #else
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
           mInitialLoadCompleted) {
@@ -2132,7 +2132,7 @@ void nsImageFrame::InvalidateIcon(nsIPresContext *aPresContext)
   Invalidate(aPresContext, rect, PR_FALSE);
 }
 
-void nsImageFrame::IconLoad::GetAltModePref(nsIPresContext *aPresContext)
+void nsImageFrame::IconLoad::GetPrefs(nsIPresContext *aPresContext)
 {
   NS_ASSERTION(aPresContext, "null presContext is not allowed in GetAltModePref");
   // NOTE: the presContext could be used to fetch a cached pref if needed, but is not for now
@@ -2140,10 +2140,16 @@ void nsImageFrame::IconLoad::GetAltModePref(nsIPresContext *aPresContext)
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
   if (prefs) {
     PRBool boolPref;
+    PRInt32 intPref;
     if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display.force_inline_alttext", &boolPref))) {
       mPrefForceInlineAltText = boolPref;
     } else {
       mPrefForceInlineAltText = PR_FALSE;
+    }
+    if (NS_SUCCEEDED(prefs->GetIntPref("network.image.imageBehavior", &intPref)) && intPref == 2) {
+      mPrefAllImagesBlocked = PR_TRUE;
+    } else {
+      mPrefAllImagesBlocked = PR_FALSE;
     }
   }
 }
