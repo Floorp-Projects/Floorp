@@ -367,7 +367,7 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     if (!isAbsolute) {
         // relative spec
         if (nsnull == aURL) {
-            delete cSpec;
+            delete [] cSpec;
 
             NS_UNLOCK_INSTANCE();
             return NS_ERROR_ILLEGAL_VALUE;
@@ -388,7 +388,7 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                 // Strip out old tail component and put in the new one
                 char* dp = PL_strrchr(uFile, '/');
                 if (!dp) {
-                    delete cSpec;
+                    delete [] cSpec;
                     NS_UNLOCK_INSTANCE();
                     return NS_ERROR_ILLEGAL_VALUE;
                 }
@@ -448,7 +448,9 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         // Now that we've resolved the relative URL, we need to reconstruct
         // a URL spec from the components.
         ReconstructSpec();
-    } else {
+    } 
+	else 
+	{
         // absolute spec
 
         PR_FREEIF(m_spec);
@@ -472,8 +474,10 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                     cp++;
                 }
             }
-        } else {
-            delete cSpec;
+        } 
+		else 
+		{
+            delete [] cSpec;
 
             NS_UNLOCK_INSTANCE();
             return NS_ERROR_ILLEGAL_VALUE;
@@ -555,7 +559,7 @@ nsresult nsPop3URL::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     }
 
 //printf("protocol='%s' host='%s' file='%s'\n", m_protocol, m_host, m_file);
-    delete cSpec;
+    delete [] cSpec;
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

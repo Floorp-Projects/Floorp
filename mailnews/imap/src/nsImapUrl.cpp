@@ -354,7 +354,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 	} 
 	else 
 	{
-		delete cSpec;
+		delete [] cSpec;
 		NS_UNLOCK_INSTANCE();
         return NS_ERROR_ILLEGAL_VALUE;
     }
@@ -393,7 +393,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         }
 	}
 
-    delete cSpec;
+    delete [] cSpec;
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

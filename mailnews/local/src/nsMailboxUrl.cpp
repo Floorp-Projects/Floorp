@@ -462,7 +462,7 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     } 
 	else 
 	{
-        delete cSpec;
+        delete [] cSpec;
 
         NS_UNLOCK_INSTANCE();
         return NS_ERROR_ILLEGAL_VALUE;
@@ -514,7 +514,7 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 		   m_file[1] = ':';
 #endif /* NS_WIN32 */
  
-	delete cSpec;
+	delete [] cSpec;
 
 	if (m_filePath)
 		delete m_filePath;
