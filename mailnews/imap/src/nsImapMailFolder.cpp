@@ -1133,9 +1133,8 @@ NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener,  nsIMsgWin
 NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                                            nsIUrlListener *aListener)
 {
-    nsresult rv;
     nsCOMPtr<nsIMsgFolder> trashFolder;
-    rv = GetTrashFolder(getter_AddRefs(trashFolder));
+    nsresult rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_SUCCEEDED(rv))
     {
        nsCOMPtr<nsIMsgAccountManager> accountManager = 

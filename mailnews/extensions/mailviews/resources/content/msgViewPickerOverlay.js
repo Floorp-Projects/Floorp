@@ -70,6 +70,9 @@ function viewChange(aMenuList)
      break;
   } //      
 
+  // store this, to persist across sessions
+  gPrefs.setIntPref("mailnews.view.last", parseInt(val));
+
   gQSViewIsDirty = true;
   onEnterInSearchBar();
 }
@@ -208,10 +211,15 @@ function refreshCustomMailViews(aDefaultSelectedIndex)
 
   if (aDefaultSelectedIndex >= 0)
   {
-    var viewPicker = document.getElementById('viewPicker');
-    viewPicker.selectedItem = document.getElementsByAttribute("value", kLastDefaultViewIndex + aDefaultSelectedIndex)[0];
-    viewChange(viewPicker);
+    ViewChangeByValue(kLastDefaultViewIndex + aDefaultSelectedIndex);
   }
+}
+
+function ViewChangeByValue(aValue)
+{
+  var viewPicker = document.getElementById('viewPicker');
+  viewPicker.selectedItem = document.getElementsByAttribute("value", aValue)[0];
+  viewChange(viewPicker);
 }
 
 function FillLabelValues()

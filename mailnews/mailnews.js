@@ -529,3 +529,5 @@ pref("mail.purge.timer_interval",5);
 // to reduce forking in the js / C++
 // overridden by stand alone mail
 pref("mail.standalone", false);
+
+pref("mailnews.view.last",0); // 0 == "all" view

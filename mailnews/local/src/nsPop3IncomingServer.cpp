@@ -266,7 +266,7 @@ NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlL
 NS_IMETHODIMP
 nsPop3IncomingServer::GetDownloadMessagesAtStartup(PRBool *getMessagesAtStartup)
 {
-    // GetMessagese is not automatically done for pop servers at startup.
+    // GetMessages is not automatically done for pop servers at startup.
     // We need to trigger that action. Return true.
     *getMessagesAtStartup = PR_TRUE;
     return NS_OK;

@@ -87,7 +87,7 @@ function searchOnLoad()
 
   // initialize globals, see abCommon.js, InitCommonJS()
   abList = document.getElementById("abPopup");
-  gAbResultsTree = document.getElementById('abResultsTree');
+  gAbResultsTree = document.getElementById("abResultsTree");
 
   onMore(null);
 }
