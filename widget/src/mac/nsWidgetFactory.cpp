@@ -85,7 +85,7 @@ static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
 // Drag and Drop/Clipboard
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCGenericTransferable,  NS_GENERICTRANSFERABLE_CID);
+static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 
@@ -260,8 +260,8 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCDataFlavor)) {
         inst = (nsISupports*)new nsDataFlavor();
     }
-    else if (mClassID.Equals(kCGenericTransferable)) {
-        inst = (nsISupports*)(nsIGenericTransferable *)new nsTransferable();
+    else if (mClassID.Equals(kCTransferable)) {
+        inst = (nsISupports*)new nsTransferable();
     }
     else if (mClassID.Equals(kCXIFFormatConverter)) {
         inst = (nsISupports*)new nsXIFFormatConverter();
