@@ -39,20 +39,10 @@
     border-top            : none;
   }
 
-#folderTree
-  {
-    border-right          : 1px solid ThreeDHighlight;
-    border-bottom         : 1px solid ThreeDHighlight;
-  }
-  
-#folderTree > treechildren
-  {
-    border-top            : 1px solid transparent;
-    border-right          : 1px solid ThreeDLightShadow;
-    border-bottom         : 1px solid ThreeDLightShadow;
-    border-left           : 1px solid transparent;
-  }
-  
+#folderOutliner {
+  border-right: none;
+}  
+
 #threadOutliner
   {
     border-bottom         : 1px solid ThreeDHighlight;
@@ -94,8 +84,8 @@
   {
     border-top          : 1px solid ThreeDShadow;
     border-left         : 1px solid ThreeDShadow;
-    border-right        : 1px solid ThreeDFace;
-    border-bottom       : 1px solid ThreeDFace;
+    border-right        : 1px solid ThreeDLightShadow;
+    border-bottom       : 1px solid ThreeDLightShadow;
   }
 
 #msgHeaderView 
@@ -108,10 +98,9 @@
     border-left          : none;
   }
 
-#accountCentralBox
-  {
-    background-color:#FFFFFF;
-  }
+#accountCentralBox {
+  background-color: #FFFFFF;
+}
 
 #status-bar 
 {

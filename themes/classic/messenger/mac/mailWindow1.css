@@ -57,16 +57,9 @@ splitter
    border-top            : none;
  }
 
-#folderTree
- {
-   border-right          : 1px solid #999999;
-   border-bottom         : 1px solid #999999;
- }
-
-#folderTree > treechildren
- {
-   border                : 1px solid transparent;
- }
+#folderOutliner {
+  border-right: none;
+}   
 
 #threadOutliner
  {
