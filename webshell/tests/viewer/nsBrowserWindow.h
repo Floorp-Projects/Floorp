@@ -208,7 +208,6 @@ public:
 #endif
   nsEventStatus DispatchStyleMenu(PRInt32 aID);
   void SetCompatibilityMode(PRBool aIsStandard);
-  void SetWidgetRenderingMode(PRBool aIsNative);
 
   nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);
 

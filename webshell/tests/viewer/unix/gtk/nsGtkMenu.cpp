@@ -132,9 +132,6 @@ GtkItemFactoryEntry menu_items[] =
   { "/Style/Compatibility Mode/Nav Quirks",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_NAV_QUIRKS_MODE,	nsnull },
   { "/Style/Compatibility Mode/Standard",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_STANDARD_MODE,	nsnull },
 
-  { "/Style/_Widget Render Mode",		nsnull,	nsnull,			0,			"<Branch>" },
-  { "/Style/Widget Render Mode/Native",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_NATIVE_WIDGET_MODE,	nsnull },
-  { "/Style/Widget Render Mode/Gfx",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_GFX_WIDGET_MODE,	nsnull },
 //#endif
 
   { "/_Tools",                                nsnull, nsnull,                 0,              "<Branch>" },
