@@ -110,6 +110,13 @@ typedef PRUint32 nsFrameState;
 // destroyed to allow these references to be cleared.
 #define NS_FRAME_EXTERNAL_REFERENCE 0x00000010
 
+// The low 16 bits of the frame state word are reserved by this API.
+#define NS_FRAME_RESERVED 0x0000FFFF
+
+// The upper 16 bits of the frame state word are reserved for frame
+// implementations.
+#define NS_FRAME_IMPL_RESERVED 0xFFFF0000
+
 //----------------------------------------------------------------------
 
 enum nsFramePaintLayer {
