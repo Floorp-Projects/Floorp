@@ -49,7 +49,7 @@
 #include "nsINameSpace.h"
 #include "nsJSUtils.h"
 #include "nsIJSRuntimeService.h"
-#include "nsIXBLService.h"
+#include "nsXBLService.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"
@@ -130,14 +130,6 @@ XBLBindingCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   return JS_FALSE;
 }
 
-static PRBool PR_CALLBACK DeleteClasses(nsHashKey* aKey, void* aValue, void* closure)
-{
-  JSClass* c = (JSClass*)aValue;
-  nsAllocator::Free(c->name);
-  delete c;
-  return PR_TRUE;
-}
-
 // *********************************************************************/
 // The XBLBinding class
 
@@ -183,8 +175,6 @@ public:
 // Static members
   static PRUint32 gRefCnt;
   
-  static nsHashtable* gClassTable;
-
   static nsIAtom* kContentAtom;
   static nsIAtom* kInterfaceAtom;
   static nsIAtom* kHandlersAtom;
@@ -254,9 +244,7 @@ protected:
 
 // Static initialization
 PRUint32 nsXBLBinding::gRefCnt = 0;
-  
-nsHashtable* nsXBLBinding::gClassTable = nsnull;
-
+ 
 nsIAtom* nsXBLBinding::kContentAtom = nsnull;
 nsIAtom* nsXBLBinding::kInterfaceAtom = nsnull;
 nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
@@ -370,8 +358,6 @@ nsXBLBinding::nsXBLBinding(void)
       entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
       ++entry;
     }
-
-    gClassTable = new nsHashtable();
   }
 }
 
@@ -412,11 +398,6 @@ nsXBLBinding::~nsXBLBinding(void)
       NS_IF_RELEASE(entry->mAttributeAtom);
       ++entry;
     }
-
-    // Walk the hashtable and delete the JSClasses
-    if (gClassTable)
-      gClassTable->Enumerate(DeleteClasses);
-    delete gClassTable;
   }
 }
 
@@ -1140,7 +1121,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
     JSClass* c;
     void* classObject;
     nsStringKey key(aClassName);
-    classObject = gClassTable->Get(&key);
+    classObject = (nsXBLService::gClassTable)->Get(&key);
 
     if (classObject)
       c = (JSClass*)classObject;
@@ -1162,7 +1143,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
       c->hasInstance = 0;
 
       // Add c to our table.
-      gClassTable->Put(&key, (void*)c);
+      (nsXBLService::gClassTable)->Put(&key, (void*)c);
     }
     
     // Retrieve the current prototype for the JS object.
