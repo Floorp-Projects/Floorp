@@ -148,7 +148,7 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
 {
     XPTState *state;
 
-    state = XPT_NEW(XPTState);
+    state = XPT_NEWZAP(XPTState);
 
     if (!state)
         return NULL;
