@@ -421,7 +421,7 @@ nsLocalFile::Normalize()
         resolved_path_ptr = be_p.Path();
     };
 #else
-    resolved_path_ptr = realpath(mPath, resolved_path);
+    resolved_path_ptr = realpath((const char *)mPath, resolved_path);
 #endif
     // if there is an error, the return is null.
     if (resolved_path_ptr == NULL) {
