@@ -488,7 +488,7 @@
       <method name="fillViewerList">
         <body><![CDATA[
           this.mListEl.pViewer = this;
-          this.mListEl.setAttribute("oncommand", "this.pViewer.onViewerListCommand(event.target)");
+          this.mListEl.setAttribute("oncommand", "this.pViewer.onViewerListCommand(event.originalTarget)");
       
           var mpp = document.createElement("menupopup");
           this.mListEl.appendChild(mpp);
