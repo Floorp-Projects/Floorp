@@ -23,7 +23,7 @@
 #ifndef nsPersistentProperties_h___
 #define nsPersistentProperties_h___
 
-#include "nsIPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 
 class nsIUnicharInputStream;
 
