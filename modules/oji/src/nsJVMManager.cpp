@@ -588,8 +588,9 @@ nsJVMManager::MaybeStartupLiveConnect(void)
 		if (!registeredLiveConnectFactory) {
             NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
             registeredLiveConnectFactory = 
-                (nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
-                                               PR_FALSE, PR_FALSE) == NS_OK);
+                (nsRepository::RegisterComponent(kCLiveconnectCID, NULL, NULL,
+                                               (const char *)JSJDLL, PR_FALSE,
+                                               PR_FALSE) == NS_OK);
         }
 #endif
         if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {

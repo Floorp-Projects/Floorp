@@ -1036,21 +1036,21 @@ np_RegisterPluginMgr(void)
         return NS_ERROR_OUT_OF_MEMORY;
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kPluginManagerCID,    pluginFact, PR_TRUE);
+    nsRepository::RegisterFactory(kPluginManagerCID,    NULL, NULL, pluginFact, PR_TRUE);
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kJNIEnvCID,           pluginFact, PR_TRUE);
+    nsRepository::RegisterFactory(kJNIEnvCID,           NULL, NULL, pluginFact, PR_TRUE);
 
 #if 0
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kJRIEnvCID,           pluginFact, PR_TRUE);
+    nsRepository::RegisterFactory(kJRIEnvCID,           NULL, NULL, pluginFact, PR_TRUE);
 #endif
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kMallocCID,           pluginFact, PR_TRUE);
+    nsRepository::RegisterFactory(kMallocCID,           NULL, NULL, pluginFact, PR_TRUE);
 
     pluginFact->AddRef();
-    nsRepository::RegisterFactory(kFileUtilitiesCID,    pluginFact, PR_TRUE);
+    nsRepository::RegisterFactory(kFileUtilitiesCID,    NULL, NULL, pluginFact, PR_TRUE);
 
     return NS_OK;
 }
