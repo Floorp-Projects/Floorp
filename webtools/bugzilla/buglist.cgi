@@ -328,12 +328,13 @@ Click the <B>Back</B> button and try again.";
 
 foreach my $f ("short_desc", "long_desc", "bug_file_loc") {
     if (defined $::FORM{$f}) {
-        my $s = SqlQuote(trim($::FORM{$f}));
+        my $s = trim($::FORM{$f});
         if ($s ne "") {
+            $s = SqlQuote($s);
             if ($::FORM{$f . "_type"} eq "regexp") {
-                $query .= "and $f regexp $s ";
+                $query .= "and $f regexp $s\n";
             } else {
-                $query .= "and instr($f, $s) ";
+                $query .= "and instr($f, $s)\n";
             }
         }
     }
