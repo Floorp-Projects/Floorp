@@ -222,14 +222,19 @@ InputTestConsumer::OnStartRequest(nsIRequest *request, nsISupports* context)
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (channel) {
+    nsresult status;
+    channel->GetStatus(&status);
+    if (NS_SUCCEEDED(status)) {
+      printf("Channel Info:\n");
+      channel->GetContentType(getter_Copies(value));
+      printf("\tContent-Type: %s\n", (const char*)value);
 
-    printf("Channel Info:\n");
-    channel->GetContentType(getter_Copies(value));
-    printf("\tContent-Type: %s\n", (const char*)value);
-
-    PRInt32 length = -1;
-    channel->GetContentLength(&length);
-    printf("\tContent-Length: %d\n", length);
+      PRInt32 length = -1;
+      if (NS_SUCCEEDED(channel->GetContentLength(&length)))
+        printf("\tContent-Length: %d\n", length);
+      else
+        printf("\tContent-Length: Unknown\n");
+    }
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
@@ -340,10 +345,11 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
      if (NS_ERROR_UNKNOWN_HOST == aStatus) {
          printf("\tDNS lookup failed.\n");
      }
-    printf("\tRead: %d bytes.\n", info->mBytesRead);
     printf("\tTime to connect: %.3f seconds\n", connectTime);
     printf("\tTime to read: %.3f seconds.\n", readTime);
-    if (readTime > 0.0) {
+    printf("\tRead: %d bytes.\n", info->mBytesRead);
+    if (!info->mBytesRead) {
+    } else if (readTime > 0.0) {
       printf("\tThroughput: %.0f bps.\n", (info->mBytesRead*8)/readTime);
     } else {
       printf("\tThroughput: REAL FAST!!\n");
