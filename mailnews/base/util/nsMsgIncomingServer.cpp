@@ -84,8 +84,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
-#define OFFLINE_STATUS_CHANGED_TOPIC "network:offline-status-changed"
-
 #define PORT_NOT_SET -1
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)

@@ -89,7 +89,7 @@
 #define ACCOUNT_PREFIX "account"
 #define SERVER_PREFIX "server"
 #define ID_PREFIX "id"
-#define OFFLINE_STATUS_CHANGED_TOPIC "network:offline-status-changed"
+#define ABOUT_TO_GO_OFFLINE_TOPIC "network:offline-about-to-go-offline"
 
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -164,7 +164,7 @@ nsMsgAccountManager::~nsMsgAccountManager()
       if (NS_SUCCEEDED(rv))
 	  {    
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      observerService->RemoveObserver(this, "network:offline-status-changed");
+      observerService->RemoveObserver(this, ABOUT_TO_GO_OFFLINE_TOPIC);
     }
   }
 }
@@ -187,7 +187,7 @@ nsresult nsMsgAccountManager::Init()
   {    
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     observerService->AddObserver(this, "quit-application" , PR_TRUE);
-    observerService->AddObserver(this, "network:offline-status-changed", PR_TRUE);
+    observerService->AddObserver(this, ABOUT_TO_GO_OFFLINE_TOPIC, PR_TRUE);
     observerService->AddObserver(this, "session-logout", PR_TRUE);
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
   }
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const char *aT
     return NS_OK;
   }
   
-  if (!nsCRT::strcmp(aTopic,"network:offline-status-changed"))
+  if (!nsCRT::strcmp(aTopic, ABOUT_TO_GO_OFFLINE_TOPIC))
   {
     nsAutoString dataString(NS_LITERAL_STRING("offline"));
     if (someData)
