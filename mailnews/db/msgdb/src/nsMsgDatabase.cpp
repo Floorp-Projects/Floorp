@@ -547,7 +547,11 @@ NS_IMETHODIMP nsMsgDatabase::NotifyParentChangedAll(nsMsgKey keyReparented, nsMs
     return NS_OK;
   PRUint32 count;
   m_ChangeListeners->Count(&count);
-  for (PRInt32 i = 0; i < count; i++)
+
+  if (!count)
+    return NS_OK;
+
+  for (PRUint32 i = 0; i < count; i++)
   {
     nsCOMPtr<nsIDBChangeListener> changeListener;
     m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
@@ -567,10 +571,14 @@ NS_IMETHODIMP nsMsgDatabase::NotifyAnnouncerGoingAway(void)
   // on this notification
   PRUint32 count;
   m_ChangeListeners->Count(&count);
-  for (PRUint32 i = count - 1; i >= 0 ; i--)
+
+  if (!count)
+    return NS_OK;
+
+  for (PRUint32 i = count; i != 0 ; i--)
   {
     nsCOMPtr<nsIDBChangeListener> changeListener;
-    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+    m_ChangeListeners->QueryElementAt(i - 1, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
     if (changeListener) {
       nsresult rv = changeListener->OnAnnouncerGoingAway(this); 
       NS_ENSURE_SUCCESS(rv,rv);
