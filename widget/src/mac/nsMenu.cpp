@@ -59,6 +59,7 @@ const PRInt16 kAppleMenuID = 1;
 PRInt16 gMenuDepth = 0;
 PRInt16 gCurrentMenuDepth = 1;
 
+extern nsIMenuBar * gMacMenubar;
 extern Handle gMDEF; // Our stub MDEF
 extern Handle gSystemMDEFHandle;
 PRInt16 mMacMenuIDCount = kMacMenuID;
@@ -127,6 +128,7 @@ nsMenu::nsMenu() : nsIMenu()
   mMacMenuID = 0;
   mMacMenuHandle = nsnull;
   mIsHelpMenu    = PR_FALSE;
+  mHelpMenuOSItemsCount = 0;
   mIsEnabled     = PR_TRUE;
   mListener      = nsnull;
   mConstructed   = nsnull;
@@ -199,7 +201,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
     aParent->QueryInterface(kIMenuBarIID, (void**) &menubar);
     if(menubar)
     {
-      mMenuBarParent = menubar;;
+      mMenuBarParent = menubar;
       NS_RELEASE(menubar); // Balance the QI
     }
     else
@@ -255,17 +257,24 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
     mMacMenuHandle = ::GetMenuHandle(mMacMenuID);
   } else {
     // Look at the label and figure out if it is the "Help" menu
-    if(mLabel == "Help"){
+
+    if(mDOMElement) {
+      nsString menuIDstring;
+      mDOMElement->GetAttribute(nsAutoString("id"), menuIDstring);
+      if(menuIDstring == "menu_Help") {
       mIsHelpMenu = PR_TRUE;
       ::HMGetHelpMenuHandle(&mMacMenuHandle);
       mMacMenuID = kHMHelpMenuID;
       
       int numHelpItems = ::CountMItems(mMacMenuHandle);
-      for(int i=0; i<numHelpItems; ++i) {
-        mMenuItemVoidArray.AppendElement(nsnull);
-      }
+        if ( mHelpMenuOSItemsCount == 0)
+          mHelpMenuOSItemsCount = numHelpItems;
+        for(int i=0; i<numHelpItems; ++i) {
+          mMenuItemVoidArray.AppendElement(nsnull);
+        }
      
       return NS_OK;
+      }
     }
   
     mMacMenuHandle = NSStringNewMenu(mMacMenuIDCount, mLabel);
@@ -467,6 +476,13 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
+#ifdef notdef
+  MenuHandle helpmh;
+  ::HMGetHelpMenuHandle(&helpmh);
+  if ( helpmh != mMacMenuHandle)
+    helpmh = nsnull;
+#endif
+
   while(mMenuItemVoidArray.Count())
   {
     --mNumMenuItems;
@@ -493,7 +509,11 @@ NS_METHOD nsMenu::RemoveAll()
 	    }
 	  }
 	}
+	  /* don't delete the actual Mac menu item if it's a MacOS item */
+	  if ( (mMenuItemVoidArray.Count() - mHelpMenuOSItemsCount) > 0)
+	  {
 	::DeleteMenuItem(mMacMenuHandle, mMenuItemVoidArray.Count());
+    }
 	mMenuItemVoidArray.RemoveElementAt(mMenuItemVoidArray.Count() - 1);
   }
   return NS_OK;
@@ -558,9 +578,62 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 #endif
 			eventStatus = nsEventStatus_eConsumeNoDefault;
 		}
+		else if (menuItemID == 1)
+		{
+		  /* handle about app here */
+		}
 	}
 	else
 #endif
+  if ((kHMHelpMenuID == menuID) && (menuID != mMacMenuID))
+  {
+    /* 'this' is not correct; we need to find the help nsMenu */
+	  nsIMenuBar *mb = mMenuBarParent;
+	  if ( mb == nsnull )
+	  {
+	    mb = gMacMenubar;
+	    if ( mb == nsnull )
+	    {
+        return nsEventStatus_eIgnore;
+      }
+    }
+	  
+    /* set up a default event to query with */
+    nsMenuEvent event;
+    MenuHandle handle;
+    ::HMGetHelpMenuHandle(&handle);
+    event.mCommand = (unsigned int) handle;
+
+    /* loop through the top-level menus in the menubar */
+	  PRUint32 numMenus = 0;
+	  mb->GetMenuCount(numMenus);
+	  numMenus--;
+	  for (PRInt32 i = numMenus; i >= 0; i--)
+	  {
+	    nsIMenu * menu = nsnull;
+	    mb->GetMenuAt(i, menu);
+	    if (menu)
+	    {
+        nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menu));
+        if (listener)
+        {
+  nsString label;
+  menu->GetLabel(label);
+          /* ask if this is the right menu */
+          eventStatus = listener->MenuSelected(event);
+          if(eventStatus != nsEventStatus_eIgnore)
+          {
+            /* call back into this method with the proper "this" */
+            eventStatus = listener->MenuItemSelected(aMenuEvent);
+	          NS_RELEASE(menu);
+	          return eventStatus;
+          }
+        }
+	      NS_RELEASE(menu);
+	    } 
+	  }
+  }
+  else
 
   if(mMacMenuID == menuID)
   {
@@ -613,16 +686,19 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 
   if(mMacMenuHandle == selectedMenuHandle)
   {
+    if (mIsHelpMenu && mConstructed){
+	    RemoveAll();
+	    mConstructed = false;
+	  }
+    
 	  if(!mConstructed) {
 	    if(mIsHelpMenu) {
-	      if( mConstructed )
-	        RemoveAll();
-	        
 	      HelpMenuConstruct(
 	        aMenuEvent,
 	        nsnull, //mParentWindow 
 	        mDOMNode,
 		    mWebShell);	      
+		    mConstructed = true;
 	    } else {
 	      MenuConstruct(
 	        aMenuEvent,

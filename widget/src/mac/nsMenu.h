@@ -172,6 +172,7 @@ protected:
   MenuHandle           mMacMenuHandle;
   nsIMenuListener *    mListener;
   UnicodeToTextRunInfo mUnicodeTextRunConverter;
+  PRInt16              mHelpMenuOSItemsCount;
   PRBool               mIsHelpMenu;
   PRBool               mIsEnabled;
 
