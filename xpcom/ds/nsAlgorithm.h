@@ -83,6 +83,8 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
   {
     while ( first != last )
       {
+        last.normalize_backward();
+        result.normalize_backward();
         PRUint32 lengthToCopy = PRUint32( NS_MIN(last.size_backward(), result.size_backward()) );
         if ( first.fragment().mStart == last.fragment().mStart )
           lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.get() - first.get()));
