@@ -339,7 +339,11 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
     if (NS_FAILED(rv) || numFolders != 1) return rv;
   }
 
-  SetPerformingBiff(PR_TRUE);
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  inbox->GetServer(getter_AddRefs(server));
+
+  server->SetPerformingBiff(PR_TRUE);
+
   urlListener = do_QueryInterface(inbox);
 
   PRBool downloadOnBiff = PR_FALSE;
