@@ -431,7 +431,7 @@ void nsImapUrl::ReconstructSpec(void)
 PRBool nsImapUrl::Equals(const nsIURL* aURL) const 
 {
     PRBool bIsEqual;
-    nsImapUrl* other;
+    nsImapUrl* other = nsnull;
     NS_LOCK_INSTANCE();
 	// are they both imap urls?? if yes...for now just compare the pointers until 
 	// I figure out if we need to check any of the guts for 
