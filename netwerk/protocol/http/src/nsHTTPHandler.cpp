@@ -838,13 +838,13 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                 // Update the proxy information on the channel
                 i_Channel->SetProxyHost(mProxy);
                 i_Channel->SetProxyPort(mProxyPort);
-                i_Channel->SetUsingProxy(PR_TRUE);
+                i_Channel->SetUsingProxy(PR_FALSE);
             }
             else
             {
                 rv = CreateTransport(mProxy, mProxyPort, host, 
                              bufferSegmentSize, bufferMaxSize, &trans);
-                i_Channel->SetUsingProxy(PR_FALSE);
+                i_Channel->SetUsingProxy(PR_TRUE);
             }
         }
         if (NS_FAILED(rv)) return rv;
