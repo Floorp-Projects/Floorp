@@ -89,6 +89,11 @@ DIRS		+= \
 		profile \
 		$(NULL)
 
+# This must preceed xpfe
+ifdef MOZ_JPROF
+DIRS        += tools/jprof
+endif
+
 ifdef MOZ_BUILD_XPFE
 DIRS		+= xpfe
 endif
@@ -105,10 +110,6 @@ endif
 
 ifdef MOZ_LEAKY
 DIRS        += tools/leaky
-endif
-
-ifdef MOZ_JPROF
-DIRS        += tools/jprof
 endif
 
 ifdef ENABLE_TESTS
