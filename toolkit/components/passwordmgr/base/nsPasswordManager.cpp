@@ -388,13 +388,25 @@ nsPasswordManager::GetRejectEnumerator(nsISimpleEnumerator** aEnumerator)
 
 struct findEntryContext {
   nsPasswordManager* manager;
-  const nsACString& aHostURI;
-  const nsAString&  aUsername;
-  const nsAString&  aPassword;
-  nsACString& aHostURIFound;
-  nsAString&  aUsernameFound;
-  nsAString&  aPasswordFound;
+  const nsACString& hostURI;
+  const nsAString&  username;
+  const nsAString&  password;
+  nsACString& hostURIFound;
+  nsAString&  usernameFound;
+  nsAString&  passwordFound;
   PRBool matched;
+
+  findEntryContext(nsPasswordManager* aManager,
+                   const nsACString& aHostURI,
+                   const nsAString&  aUsername,
+                   const nsAString&  aPassword,
+                   nsACString& aHostURIFound,
+                   nsAString&  aUsernameFound,
+                   nsAString&  aPasswordFound)
+    : manager(aManager), hostURI(aHostURI), username(aUsername),
+      password(aPassword), hostURIFound(aHostURIFound),
+      usernameFound(aUsernameFound), passwordFound(aPasswordFound),
+      matched(PR_FALSE) { }
 };
 
 /* static */ PLDHashOperator PR_CALLBACK
@@ -407,12 +419,12 @@ nsPasswordManager::FindEntryEnumerator(const nsACString& aKey,
   nsresult rv;
 
   rv = manager->FindPasswordEntryFromSignonData(aEntry,
-                                                context->aHostURI,
-                                                context->aUsername,
-                                                context->aPassword,
-                                                context->aHostURIFound,
-                                                context->aUsernameFound,
-                                                context->aPasswordFound);
+                                                context->hostURI,
+                                                context->username,
+                                                context->password,
+                                                context->hostURIFound,
+                                                context->usernameFound,
+                                                context->passwordFound);
   if (NS_SUCCEEDED(rv)) {
     context->matched = PR_TRUE;
     return PL_DHASH_STOP;
@@ -441,9 +453,8 @@ nsPasswordManager::FindPasswordEntry(const nsACString& aHostURI,
   }
 
   // No host given, so enumerate all entries in the hashtable
-  findEntryContext context = { this, aHostURI, aUsername, aPassword,
-                               aHostURIFound, aUsernameFound,
-                               aPasswordFound, PR_FALSE };
+  findEntryContext context(this, aHostURI, aUsername, aPassword,
+                           aHostURIFound, aUsernameFound, aPasswordFound);
 
   mSignonTable.EnumerateRead(FindEntryEnumerator, &context);
 
