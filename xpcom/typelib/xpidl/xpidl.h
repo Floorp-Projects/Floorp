@@ -57,7 +57,6 @@ typedef nodeHandler *(*nodeHandlerFactory)();
 extern nodeHandler *xpidl_header_dispatch(void);
 extern nodeHandler *xpidl_typelib_dispatch(void);
 extern nodeHandler *xpidl_doc_dispatch(void);
-extern nodeHandler *xpidl_java_dispatch(void);
 
 /*
  * nodeHandler that reports an error.
