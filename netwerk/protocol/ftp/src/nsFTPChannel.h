@@ -55,6 +55,9 @@ public:
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
+    NS_IMETHOD GetLoadQuiet(PRBool *aLoadQuiet);
+    NS_IMETHOD SetLoadQuiet(PRBool aLoadQuiet);
+    NS_IMETHOD GetContentType(char * *aContentType);
 
     // nsIFTPChannel methods:
     NS_IMETHOD Get(void);
@@ -88,8 +91,6 @@ public:
     nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
                   nsIEventQueue* queue);
 
-    NS_IMETHOD GetContentType(char* *contentType);
-
 protected:
     nsIURI*                 mUrl;
     nsIEventQueue*          mEventQueue;
@@ -97,6 +98,7 @@ protected:
 
     PRBool                  mConnected;
     nsIStreamListener*      mListener;
+    PRBool                  mLoadQuiet;
 };
 
 #endif /* nsFTPChannel_h___ */

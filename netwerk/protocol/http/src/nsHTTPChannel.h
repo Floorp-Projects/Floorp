@@ -74,7 +74,10 @@ public:
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
-	NS_IMETHOD	Open();
+    NS_IMETHOD GetLoadQuiet(PRBool *aLoadQuiet);
+    NS_IMETHOD SetLoadQuiet(PRBool aLoadQuiet);
+    NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD Open();
 
     // nsIHTTPChannel methods:
     NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
@@ -85,6 +88,10 @@ public:
     NS_IMETHOD GetResponseString(char * *aResponseString);
     NS_IMETHOD GetEventSink(nsIHTTPEventSink* *eventSink);
     NS_IMETHOD GetResponseDataListener(nsIStreamListener* *aListener);
+    NS_IMETHOD GetBypassCache(PRBool *aBypassCache);
+    NS_IMETHOD SetBypassCache(PRBool aBypassCache);
+    NS_IMETHOD GetBypassProxy(PRBool *aBypassProxy);
+    NS_IMETHOD SetBypassProxy(PRBool aBypassProxy);
 
     // nsHTTPChannel methods:
     nsresult            Init();
@@ -101,6 +108,9 @@ protected:
     nsHTTPRequest*              m_pRequest;
     nsHTTPResponse*             m_pResponse;
     nsIStreamListener*          m_pResponseDataListener;
+    PRBool                      mLoadQuiet;
+    PRBool                      mBypassCache;
+    PRBool                      mBypassProxy;
 };
 
 #endif /* _nsHTTPChannel_h_ */

@@ -417,6 +417,26 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsFileChannel::GetLoadQuiet(PRBool *aLoadQuiet)
+{
+    *aLoadQuiet = mLoadQuiet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetLoadQuiet(PRBool aLoadQuiet)
+{
+    mLoadQuiet = aLoadQuiet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::GetContentType(char * *aContentType)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable methods:
 ////////////////////////////////////////////////////////////////////////////////

@@ -187,6 +187,20 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
 }
 
 NS_IMETHODIMP
+nsFTPChannel::GetLoadQuiet(PRBool *aLoadQuiet)
+{
+    *aLoadQuiet = mLoadQuiet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetLoadQuiet(PRBool aLoadQuiet)
+{
+    mLoadQuiet = aLoadQuiet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFTPChannel::GetContentType(char* *contentType) {
     
     // XXX for ftp we need to do a file extension-to-type mapping lookup
