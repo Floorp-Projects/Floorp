@@ -457,7 +457,7 @@ nsresult nsMailboxTestDriver::OnDisplayMessage()
 		nsMsgKey msgKey = msgKeys[index];
 
 		// okay, we have the msgKey so let's get rid of our db state...
-		mailDb->Release();
+		mailDb->Close(PR_TRUE);
 
 		// now ask the mailbox service to parse this mailbox...
 		nsIMailboxService * mailboxService = nsnull;
