@@ -518,6 +518,9 @@
 #define NS_STYLE_UNICODE_BIDI_NORMAL            0
 #define NS_STYLE_UNICODE_BIDI_EMBED             1
 #define NS_STYLE_UNICODE_BIDI_OVERRIDE          2
+#ifdef IBMBIDI
+#define NS_STYLE_UNICODE_BIDI_INHERIT           3
+#endif
 
 // See nsStyleTable (here for HTML 4.0 for now, should probably change to side flags)
 #define NS_STYLE_TABLE_FRAME_NONE               0
