@@ -2372,8 +2372,10 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
 
-  if (gsDebug==PR_TRUE) printf ("SetTableWidth...");
-  PRInt32 tableWidth = 0;
+  nscoord cellSpacing = GetCellSpacing();
+  if (gsDebug==PR_TRUE) 
+    printf ("SetTableWidth with cellSpacing = %d ", cellSpacing);
+  PRInt32 tableWidth = cellSpacing;
   if (nsnull==mCellMap)
     return;  // no info, so nothing to do
 
@@ -2381,10 +2383,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   {
     nscoord totalColWidth = mColumnWidths[colIndex];
-    nsTableCellFrame * cellFrame = GetCellAt(0, colIndex);
-    nsMargin colMargin;
-    GetCellMarginData(cellFrame,colMargin);
-    totalColWidth += colMargin.left + colMargin.right;
+    totalColWidth += cellSpacing;
     if (gsDebug==PR_TRUE) 
       printf (" += %d ", totalColWidth);
     tableWidth += totalColWidth;

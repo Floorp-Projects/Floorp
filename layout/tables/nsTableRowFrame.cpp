@@ -34,12 +34,10 @@ NS_DEF_PTR(nsIStyleContext);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;
-static PRBool gsDebug2 = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
 #else
 static const PRBool gsDebug1 = PR_FALSE;
-static const PRBool gsDebug2 = PR_FALSE;
 #endif
 
 /* ----------- RowReflowState ---------- */
@@ -337,16 +335,11 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
                                      &kidMaxElementSize : nsnull;
   nscoord     maxCellTopMargin = 0;
   nscoord     maxCellBottomMargin = 0;
-
+  nscoord cellSpacing = aState.tableFrame->GetCellSpacing();
   if (PR_TRUE==gsDebug1) printf("%p: RR\n", this);
-
   // Reflow each of our existing cell frames
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
   {
-
-    nscoord cellSpacing = aState.tableFrame->GetCellSpacing();
-
-// just cellSpacing? QQQ
     nsMargin kidMargin;
     aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame,kidMargin);
     if (kidMargin.top > maxCellTopMargin)
@@ -485,8 +478,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
 
   // Return our desired size. Note that our desired width is just whatever width
   // we were given by the row group frame
-  aDesiredSize.width = aState.availSize.width;
-  aDesiredSize.height = aState.maxCellVertSpace;   
+  aDesiredSize.width = aState.x;
+  aDesiredSize.height = aState.maxCellVertSpace;  
 
   return NS_OK;
 }
