@@ -50,6 +50,8 @@ protected:
   void UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
                                    nsIFile* aPath);
 
+  void SetUserAgent();
+
   PRBool mInitialized;
 //  static nsIFactory* gFactory;
   static nsIScriptNameSetRegistry* gRegistry;

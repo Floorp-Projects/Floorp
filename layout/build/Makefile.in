@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+BUILD_DATE = gbdate.h
 
 MODULE		= layout
 LIBRARY_NAME	= raptorhtml
@@ -43,7 +44,7 @@ ifndef MKSHLIB_FORCE_ALL
 CPPSRCS		+= dlldeps.cpp
 endif
 
-EXPORTS		= nsLayoutCID.h
+EXPORTS		= nsLayoutCID.h $(BUILD_DATE)
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libraptorevents_s.a \
@@ -106,4 +107,8 @@ INCLUDES += -I$(srcdir)/../mathml/content/src
 endif
 
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+
+$(BUILD_DATE):	FORCE
+	$(RM) $@
+	$(PERL) gbdate.pl > $@
 

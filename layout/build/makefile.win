@@ -28,6 +28,8 @@ MODULE=raptor
 REQUIRES=xpcom raptor dom js
 IS_COMPONENT = 1
 
+BUILD_DATE=gbdate.h
+
 CPPSRCS=dlldeps.cpp nsLayoutDLF.cpp nsLayoutFactory.cpp
 
 CPP_OBJS=				\
@@ -37,7 +39,7 @@ CPP_OBJS=				\
 	.\$(OBJDIR)\nsLayoutModule.obj	\
 	$(NULL)
 
-EXPORTS=nsLayoutCID.h
+EXPORTS=nsLayoutCID.h $(BUILD_DATE)
 
 
 MAKE_OBJ_TYPE = DLL
@@ -108,3 +110,7 @@ install:: $(DLL)
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
+
+$(BUILD_DATE)::
+	rm -f $@
+	$(PERL) gbdate.pl > $@
