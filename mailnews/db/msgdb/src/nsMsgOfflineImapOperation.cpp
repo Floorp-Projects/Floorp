@@ -146,10 +146,12 @@ NS_IMETHODIMP nsMsgOfflineImapOperation::SetFlagOperation(imapMessageFlagsType a
 NS_IMETHODIMP nsMsgOfflineImapOperation::GetNewFlags(imapMessageFlagsType *aNewFlags)
 {
   NS_ENSURE_ARG(aNewFlags);
-  nsresult rv = m_mdb->GetUint32Property(m_mdbRow, PROP_NEW_FLAGS, (PRUint32 *) &m_newFlags, 0);
-  *aNewFlags = m_newFlags;
+  PRUint32 flags;
+  nsresult rv = m_mdb->GetUint32Property(m_mdbRow, PROP_NEW_FLAGS, &flags, 0);
+  *aNewFlags = m_newFlags = (imapMessageFlagsType) flags;
   return NS_OK;
 }
+
 NS_IMETHODIMP nsMsgOfflineImapOperation::SetNewFlags(imapMessageFlagsType aNewFlags)
 {
   m_newFlags = aNewFlags;
