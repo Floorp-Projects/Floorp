@@ -363,6 +363,39 @@ EditorAppCorePaste(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
 
 //
+// Native method SelectAll
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->SelectAll()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function selectAll requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method InsertText
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -597,6 +630,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"cut",          EditorAppCoreCut,     0},
   {"copy",          EditorAppCoreCopy,     0},
   {"paste",          EditorAppCorePaste,     0},
+  {"selectAll",          EditorAppCoreSelectAll,     0},
   {"insertText",          EditorAppCoreInsertText,     1},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},

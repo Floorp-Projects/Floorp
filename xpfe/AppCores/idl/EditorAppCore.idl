@@ -16,6 +16,8 @@ interface EditorAppCore : BaseAppCore
 	void copy();
 	void paste();
 	
+	void selectAll();
+	
 	void insertText(in wstring textToInsert);
 	
 	void exit();

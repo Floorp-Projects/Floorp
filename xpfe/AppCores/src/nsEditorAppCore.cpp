@@ -458,6 +458,16 @@ nsEditorAppCore::Paste()
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsEditorAppCore::SelectAll()
+{  
+  if (mEditor) {
+    mEditor->SelectAll();
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsEditorAppCore::InsertText(const nsString& textToInsert)
 {
