@@ -42,7 +42,6 @@
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
-#include "nsTextFormatter.h"
 
 #include "nsXPITriggerInfo.h"
 #include "nsXPInstallManager.h"
@@ -300,59 +299,58 @@ nsXPInstallManager::ConfirmInstall(nsIDOMWindow *aParent, const PRUnichar **aPac
 PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWindow, const PRUnichar **aPackage)
 {
     // get the dialog strings
-    nsresult rv;
     nsXPIDLString applyNowText;
-    nsXPIDLString confirmFormat;
-    PRUnichar*    confirmText = nsnull;
-    nsCOMPtr<nsIStringBundle> xpiBundle;
+    nsXPIDLString confirmText;
     nsCOMPtr<nsIStringBundleService> bundleSvc =
-             do_GetService( kStringBundleServiceCID, &rv );
-    if (NS_SUCCEEDED(rv) && bundleSvc)
+             do_GetService( kStringBundleServiceCID );
+    if (!bundleSvc)
+        return PR_FALSE;
+
+    nsCOMPtr<nsIStringBundle> xpiBundle;
+    bundleSvc->CreateBundle( XPINSTALL_BUNDLE_URL,
+                             getter_AddRefs(xpiBundle) );
+    if (!xpiBundle)
+        return PR_FALSE;
+
+    const PRUnichar *formatStrings[2] = { aPackage[0], aPackage[1] }; 
+    if ( mChromeType == CHROME_LOCALE )
     {
-        rv = bundleSvc->CreateBundle( XPINSTALL_BUNDLE_URL,
-                                      getter_AddRefs(xpiBundle) );
-        if (NS_SUCCEEDED(rv) && xpiBundle)
-        {
-            if ( mChromeType == CHROME_LOCALE )
-            {
-                xpiBundle->GetStringFromName(
-                    NS_LITERAL_STRING("ApplyNowLocale").get(),
-                    getter_Copies(applyNowText));
-                xpiBundle->GetStringFromName(
-                    NS_LITERAL_STRING("ConfirmLocale").get(),
-                    getter_Copies(confirmFormat));
-            }
-            else
-            {
-                xpiBundle->GetStringFromName(
-                    NS_LITERAL_STRING("ApplyNowSkin").get(),
-                    getter_Copies(applyNowText));
-                xpiBundle->GetStringFromName(
-                    NS_LITERAL_STRING("ConfirmSkin").get(),
-                    getter_Copies(confirmFormat));
-            }
-
-            confirmText = nsTextFormatter::smprintf(confirmFormat,
-                                                    aPackage[0],
-                                                    aPackage[1]);
-        }
+        xpiBundle->GetStringFromName(
+            NS_LITERAL_STRING("ApplyNowLocale").get(),
+            getter_Copies(applyNowText));
+        xpiBundle->FormatStringFromName(
+            NS_LITERAL_STRING("ConfirmLocale").get(),
+            formatStrings, 
+            2, 
+            getter_Copies(confirmText));
     }
-
+    else
+    {
+        xpiBundle->GetStringFromName(
+            NS_LITERAL_STRING("ApplyNowSkin").get(),
+            getter_Copies(applyNowText));
+        xpiBundle->FormatStringFromName(
+            NS_LITERAL_STRING("ConfirmSkin").get(),
+            formatStrings, 
+            2, 
+            getter_Copies(confirmText));
+    }
+    
+    if (confirmText.IsEmpty())
+        return PR_FALSE;
 
     // confirmation dialog
     PRBool bInstall = PR_FALSE;
-    if (confirmText)
+    nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dlgService)
     {
-        nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
-        if (dlgService)
-        {
-            rv = dlgService->ConfirmCheck( aParentWindow,
-                                           nsnull,
-                                           confirmText,
-                                           applyNowText,
-                                           &mSelectChrome,
-                                           &bInstall );
-        }
+        dlgService->ConfirmCheck(
+            aParentWindow,
+            nsnull,
+            confirmText,
+            applyNowText,
+            &mSelectChrome,
+            &bInstall );
     }
 
     return bInstall;
