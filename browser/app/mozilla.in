@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.1 2002/08/21 19:21:36 bryner%netscape.com Exp $
+## $Id: mozilla.in,v 1.2 2003/07/26 07:51:05 bryner%brianryner.com Exp $
 ## 
 ## Usage:
 ##
@@ -35,47 +35,42 @@
 moz_libdir=%MOZAPPDIR%
 MRE_HOME=%MREDIR%
 
-# honor MOZILLA_FIVE_HOME if it's there
-if [ -n "$MOZILLA_FIVE_HOME" ] ; then
-  dist_bin="$MOZILLA_FIVE_HOME"
+# Use run-mozilla.sh in the current dir if it exists
+# If not, then start resolving symlinks until we find run-mozilla.sh
+found=0
+progname=$0
+curdir=`dirname "$progname"`
+run_moz="$curdir/run-mozilla.sh"
+if test -x "$run_moz"; then
+  dist_bin=$curdir
+  found=1
 else
-  # Use run-mozilla.sh in the current dir if it exists
-  # If not, then start resolving symlinks until we find run-mozilla.sh
-  found=0
-  progname=$0
-  curdir=`dirname "$progname"`
-  run_moz="$curdir/run-mozilla.sh"
-  if test -x "$run_moz"; then
-    dist_bin=$curdir
-    found=1
-  else
-    here=`/bin/pwd`
-    while [ -h "$progname" ]; do
-      bn=`basename "$progname"`
-      cd `dirname "$progname"`
-      progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
-      if [ ! -x "$progname" ]; then
-        break
-      fi
-      curdir=`dirname "$progname"`
-      run_moz="$curdir/run-mozilla.sh"
-      if [ -x "$run_moz" ]; then
-        cd "$curdir"
-        dist_bin=`pwd`
-        found=1
-        break
-      fi
-    done
-    cd "$here"
-  fi
-  if [ $found = 0 ]; then
-    # Check default compile-time libdir
-    if [ -x "$moz_libdir/run-mozilla.sh" ]; then
-      dist_bin=$moz_libdir
-    else 
-      echo "Cannot find mozilla runtime directory. Exiting."
-      exit 1
+  here=`/bin/pwd`
+  while [ -h "$progname" ]; do
+    bn=`basename "$progname"`
+    cd `dirname "$progname"`
+    progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+    if [ ! -x "$progname" ]; then
+      break
     fi
+    curdir=`dirname "$progname"`
+    run_moz="$curdir/run-mozilla.sh"
+    if [ -x "$run_moz" ]; then
+      cd "$curdir"
+      dist_bin=`pwd`
+      found=1
+      break
+    fi
+  done
+  cd "$here"
+fi
+if [ $found = 0 ]; then
+  # Check default compile-time libdir
+  if [ -x "$moz_libdir/run-mozilla.sh" ]; then
+    dist_bin=$moz_libdir
+  else 
+    echo "Cannot find mozilla runtime directory. Exiting."
+    exit 1
   fi
 fi
 
