@@ -145,7 +145,7 @@ public class URLClassLoader extends ClassLoader {
    * to avoid two threads loading the same class at the same time.
    * Must be called with the actual class name.
    */
-  private synchronized Class findClass(String name)
+  protected synchronized Class findClass(String name)
     throws ClassNotFoundException
   {
     Class cl = (Class)classes.get(name);
