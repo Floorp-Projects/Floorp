@@ -165,13 +165,11 @@ nsCookieService::GetCookieString(nsIURI *aURL, nsString& aCookie) {
   if (nsnull != cookie) {
     aCookie.SetString(cookie);
     nsCRT::free(cookie);
-    result = NS_OK;
   } else {
     aCookie.SetString("");
-    result = NS_ERROR_FAILURE;
   }
   nsCRT::free(spec);
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
