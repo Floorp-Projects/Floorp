@@ -60,6 +60,10 @@ ifdef MOZ_MONOLITHIC_TOOLKIT
 XP_LIBS		+= $(TK_LIBS)
 endif
 
+ifdef NS_TRACE_MALLOC
+DEFINES		+= -DNS_TRACE_MALLOC
+endif
+
 ifeq ($(OS_ARCH),Rhapsody)
 DETECT_WEBSHELL_LEAKS=
 endif
