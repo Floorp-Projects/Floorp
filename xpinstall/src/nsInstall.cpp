@@ -1135,7 +1135,7 @@ nsInstall::GetQualifiedRegName(const nsString& name )
         qualifiedRegName = new nsString( name );
         qualifiedRegName->Cut( 0, usr.Length() );
     }
-    else if ( name[0] != '/' )
+    else if ( name.CharAt(0) != '/' )
     {
         if (mUIName != "")
         {
