@@ -84,8 +84,6 @@ function registerMainKeys(winreg)
   var value;   //the data in the value you want to look at.
   var err;
 
-  err     = winreg.setValueString(regRootKey, "CurrentVersion", "$UserAgent$");
-
   winreg.createKey(regRootKey + "\\$UserAgent$", "");
 
   subkey  = regRootKey + "\\$UserAgent$\\Main";
