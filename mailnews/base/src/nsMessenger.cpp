@@ -52,7 +52,7 @@
 #include "nsIFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsISupportsObsolete.h"
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsIAppleFileDecoder.h"
 #endif
 
@@ -651,7 +651,8 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
       nsCOMPtr<nsIStreamListener> convertedListener;
       saveListener->QueryInterface(NS_GET_IID(nsIStreamListener),
                                  getter_AddRefs(convertedListener));
-#ifndef XP_MAC
+
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
       // if the content type is bin hex we are going to do a hokey hack and make sure we decode the bin hex 
       // when saving an attachment to disk..
       if (contentType && !nsCRT::strcasecmp(APPLICATION_BINHEX, contentType))
