@@ -2143,18 +2143,6 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
       result = PR_FALSE;
       break;
     }
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
-                                 eReflowReason_Resize);
-    kidFrame->WillReflow(*aPresContext);
-    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
-
-    // Did the child fit?
-    if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
-      // The child is too wide to fit in the available space, and it's
-      // not our first child
-      result = PR_FALSE;
-      break;
-    }
     nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                       eReflowReason_Resize);
     nsIHTMLReflow* htmlReflow;
