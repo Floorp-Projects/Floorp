@@ -1818,13 +1818,14 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsISupports> native;
   wrapper->GetNative(getter_AddRefs(native));
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(native));
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(native));
 
   nsCOMPtr<nsIDocument> doc;
 
-  if  (content) {
-    // XXX: Use GetOwnerDocument here!
-    content->GetDocument(*getter_AddRefs(doc));
+  if  (node) {
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    node->GetOwnerDocument(getter_AddRefs(domdoc));
+    doc = do_QueryInterface(domdoc);
   }
 
   if (!doc) {
@@ -1832,6 +1833,7 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (doc) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
     doc->AddReference(content, wrapper);
   }
 
