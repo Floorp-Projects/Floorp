@@ -330,13 +330,19 @@ menupopup[menuactive="true"] {
 menupopup menu {
   max-width: 400px;
   min-width: 125px;
-  margin: 1px;
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 menupopup menuitem {
   max-width: 400px;
   min-width: 125px;
-  margin: 1px;
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 menuseparator {

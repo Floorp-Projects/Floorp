@@ -276,18 +276,18 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
       return NS_OK;
     }
 
-    // Let the menu parent know we're the new item.
-    mMenuParent->SetCurrentMenuItem(this);
-
     PRBool isMenuBar = PR_TRUE;
     mMenuParent->IsMenuBar(isMenuBar);
 
+    // Let the menu parent know we're the new item.
+    mMenuParent->SetCurrentMenuItem(this);
+    
     // If we're a menu (and not a menu item),
     // kick off the timer.
     if (!isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
-      // We're a menu, we're closed, and no timer has been kicked off.
-      NS_NewTimer(getter_AddRefs(mOpenTimer));
-      mOpenTimer->Init(this, 250);   // 250 ms delay
+        // We're a menu, we're closed, and no timer has been kicked off.
+        NS_NewTimer(getter_AddRefs(mOpenTimer));
+        mOpenTimer->Init(this, 125);   // 125 ms delay
     }
   }
   return NS_OK;
