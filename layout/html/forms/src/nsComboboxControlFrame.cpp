@@ -2526,13 +2526,16 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
   printf("%p paint layer %d at (%d, %d, %d, %d)\n", this, aWhichLayer, 
     aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
 #endif
-  nsAreaFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
-
-  //if (mGoodToGo) {
-  //  return NS_OK;
-  //}
-
+  // We paint everything in the foreground so that the form control's
+  // parents cannot paint over it in other passes (bug 95826).
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       NS_FRAME_PAINT_LAYER_BACKGROUND);
+    nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       NS_FRAME_PAINT_LAYER_FLOATERS);
+    nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       NS_FRAME_PAINT_LAYER_FOREGROUND);
+
     if (mDisplayFrame) {
       aRenderingContext.PushState();
       PRBool clipEmpty;
