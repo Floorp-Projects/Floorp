@@ -1,8 +1,8 @@
 <!-- extracted from content/pref-composer.xul -->
 
-<!--LOCALIZATION NOTE pref-composer.dtd 'Composer' prefs dialog. Similar to Communcator 4.x Document Properties/Colors and Background -->
+<!--LOCALIZATION NOTE pref-composer.dtd: 'Composer' prefs dialog. Similar to Communcator 4.x Document Properties/Colors and Background -->
 
-<!--LOCALIZATION NOTE title.label Never translate the term 'Composer' -->
+<!--LOCALIZATION NOTE title.label: DONT_TRANSLATE -->
 <!ENTITY  title.label "Composer">
 <!ENTITY  lHeader "Composer">
 <!ENTITY  rHeader "Set general preferences for authoring of Web pages">
@@ -23,5 +23,5 @@
 <!ENTITY  ActiveLinkText.label "Active Link Text">
 <!ENTITY  FollowedLinkText.label "Followed Link Text">
 <!ENTITY  BackgroundColor.label "Background">
-<!--LOCALIZATION NOTE colorPick Don't translate this term -->
+<!--LOCALIZATION NOTE colorPick: DONT_TRANSLATE -->
 <!ENTITY  colorPick "ColorPicker">

@@ -1,9 +1,9 @@
-<!--LOCALIZATION NOTE pref-smartupdate.dtd UI for Software Updates prefs -->
+<!--LOCALIZATION NOTE pref-smartupdate.dtd: UI for Software Updates prefs -->
 <!ENTITY title.label "Software Installation">
 <!ENTITY header "Software Installation">
 <!ENTITY enableSU.label "Enable software installations">
 <!ENTITY enableNotification.label "Enable notification of new and updated software">
 <!ENTITY requireConfirmation.label "Require manual confirmation of each install">
-<!--LOCALIZATION NOTE selectUninstall.label A large list box appears below this label -->
+<!--LOCALIZATION NOTE selectUninstall.label: A large list box appears below this label -->
 <!ENTITY selectUninstall.label "To uninstall, select from the following list and click the uninstall button">
 <!ENTITY uninstallButton.label "Uninstall">

@@ -1,14 +1,14 @@
 <!-- extracted from content/preftree.xul -->
 
-<!--LOCALIZATION NOTE preftree.dtd Lists preferences categories that appear on the left of the preferences dialog -->
+<!--LOCALIZATION NOTE preftree.dtd: Lists preferences categories that appear on the left of the preferences dialog -->
 <!ENTITY appear.label "Appearance">
 <!ENTITY fonts.label "Fonts">
 <!ENTITY colors.label "Colors">
-<!--LOCALIZATION NOTE navigator.label Don't translate the term 'Navigator' -->
+<!--LOCALIZATION NOTE navigator.label: DONT_TRANSLATE -->
 <!ENTITY navigator.label "Navigator">
 <!ENTITY languages.label "Languages">
 <!ENTITY applications.label "Applications">
-<!--LOCALIZATION NOTE smartBrowse.label Don't translate the term 'Smart Browsing' -->
+<!--LOCALIZATION NOTE smartBrowse.label: DONT_TRANSLATE -->
 <!ENTITY smartBrowse.label "Smart Browsing">
 <!ENTITY mail.label "Mail and Newsgroups">
 <!ENTITY address.label "Addressing">
