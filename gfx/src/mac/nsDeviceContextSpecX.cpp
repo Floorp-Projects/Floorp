@@ -312,6 +312,7 @@ LoadPrinterPlugin()
 Boolean     result=false;
 FSSpec      spec;
 
+#ifndef XP_MACOSX
   // get the relative path for the essential files folder.. then load the printer plugin
   nsCOMPtr<nsILocalFile> mozFile;
   nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
@@ -351,7 +352,7 @@ FSSpec      spec;
     }
 
   }
-
+#endif
   return result;
 }
 
