@@ -26,5 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/config/rules.mk
+
 libs:: ./mdn-service.js
 	$(INSTALL) $< $(DIST)/bin/components
