@@ -16,6 +16,14 @@ tree
     border-bottom         : 1px soild threedhighlight;
   }
   
+.tree-container-treerows
+  {
+    border-left           : 1px solid threeddarkshadow;
+    border-top            : 1px solid threeddarkshadow;
+    border-right          : 1px solid threedface;
+    border-bottom         : 1px solid threedface;
+  }  
+  
 tree.inset
   {
     margin                : 1px 5px 2px 5px;
@@ -37,8 +45,8 @@ treecell
 .treecell-inset-header 
   { 
     behavior              : url("chrome://global/skin/treeBindings.xml#treecell-header");
-    border-left           : 1px solid threedface !important;
-    border-top            : 1px solid threedface !important;
+    border-left           : 1px solid threedhighlight !important;
+    border-top            : 1px solid threedhighlight !important;
     border-right          : 1px solid threeddarkshadow !important;
     border-bottom         : 1px solid threeddarkshadow !important;
     background-color      : threedface;
@@ -47,8 +55,8 @@ treecell
 
 .treecell-header-box
   {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
+    border-left           : 1px solid threedface;
+    border-top            : 1px solid threedface;
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
     padding               : 2px 5px 2px 4px;
