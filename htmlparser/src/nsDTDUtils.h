@@ -77,7 +77,7 @@ public:
   void            PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
   void            Append(nsEntryStack *theStack);
   nsIParserNode*  Pop(void);
-  nsIParserNode*  Remove(eHTMLTags aTag);
+  nsIParserNode*  Remove(PRInt32 anIndex,eHTMLTags aTag);
   nsIParserNode*  NodeAt(PRInt32 anIndex) const;
   eHTMLTags       First() const;
   eHTMLTags       TagAt(PRInt32 anIndex) const;

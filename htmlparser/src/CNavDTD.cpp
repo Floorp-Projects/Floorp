@@ -361,7 +361,7 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
  *       storing the result in the main content model.
- * @update  gess6/24/98
+ * @update  gess 02/24/00
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
@@ -381,7 +381,7 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
     if(PR_TRUE==aContentType.Equals(kHTMLTextContentType)) {
       result=ePrimaryDetect;
     }
-    if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+    else if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
     else {
@@ -1017,7 +1017,9 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           if(theChildAgrees && theChildIsContainer) {
             if ((theParentTag!=aChildTag) && (!nsHTMLElement::IsResidualStyleTag(aChildTag))) { 
               
-              if(gHTMLElements[theParentTag].IsBlockEntity()) {
+              //trying is blockcloser to widen the set of elements that this effects, re: bug 27865...
+
+              if(nsHTMLElement::IsBlockCloser(theParentTag)) {
                 PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
               
                 if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
@@ -2374,8 +2376,6 @@ eHTMLTags CNavDTD::GetTopNode() const {
 nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
-  //later, change this so that transients only open in containers that get leaked in to.
-
   if(mStyleHandlingEnabled  && (eHTMLTag_newline!=aChildTag)) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
@@ -2399,17 +2399,27 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
         nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
         if(theStack){
 
-          PRUint32 scount=theStack->mCount;
-          PRUint32 sindex=0;
+          PRInt32 sindex=0;
 
           nsTagEntry *theEntry=theStack->mEntries;
-          for(sindex=0;sindex<scount;sindex++){            
+          for(sindex=0;sindex<theStack->mCount;sindex++){            
             nsCParserNode* theNode=(nsCParserNode*)theEntry->mNode;
-            if(1==theNode->mUseCount) {
-              theEntry->mParent=theStack;  //we do this too, because this entry differs from the new one we're pushing...              
-              result=OpenContainer(theNode,(eHTMLTags)theNode->GetNodeType(),PR_FALSE,theStack);
-            }
             theEntry++;
+            if(1==theNode->mUseCount) {
+              eHTMLTags theNodeTag=(eHTMLTags)theNode->GetNodeType();
+              if(gHTMLElements[theNodeTag].CanContain(aChildTag)) {
+                theEntry->mParent=theStack;  //we do this too, because this entry differs from the new one we're pushing...              
+                result=OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
+              }
+              else {
+                //if the node tag can't contain the child tag, then remove the child tag from the style stack
+                nsCParserNode* theRemovedNode=(nsCParserNode*)theStack->Remove(sindex,theNodeTag);
+                if(theRemovedNode) {
+                  RecycleNode(theRemovedNode);
+                }
+                theEntry--; //back up by one
+              }
+            } //if
           } //for
         } //if
       } //for
@@ -3040,6 +3050,14 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                 else mBodyContext->PushStyle(theNode);
               }
             } 
+            else if((theTag==aTarget) && (!gHTMLElements[aTarget].CanContainSelf())) {
+              //here's a case we missed:  <a><div>text<a>text</a></div>
+              //The <div> pushes the 1st <a> onto the rs-stack, then the 2nd <a>
+              //pops the 1st <a> from the rs-stack altogether.
+              mBodyContext->PopStyle(theTag);
+            }
+
+
             if(theChildStyleStack) {
               mBodyContext->PushStyles(theChildStyleStack);
             }
@@ -3086,10 +3104,11 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
             }
             else if (0==theNode->mUseCount) {
 
-              if(!theTargetTagIsStyle) {
+              //The old version of this only pushed if the targettag wasn't style.
+              //But that misses this case: <font><b>text</font>, where the b should leak
+              if(aTarget!=theTag) {
                 mBodyContext->PushStyle(theNode);
-              } //otherwise just let the node recycle, because it was explicty closed
-                //and does not live on a style stack.
+              }
             } 
             else {
               //Ah, at last, the final case. If you're here, then we just popped a 
