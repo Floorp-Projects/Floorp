@@ -397,7 +397,7 @@
 <!ENTITY listterm.accesskey "t">
 <!ENTITY listDefinitionCmd.label "Definition">
 <!ENTITY listdefinition.accesskey "d">
-<!ENTITY listProps.label "List Properties">
+<!ENTITY listProps.label "List Properties...">
 <!ENTITY listprops.accesskey "l">
 
 <!ENTITY ParagraphSelect.tooltip "Choose a paragraph format">
