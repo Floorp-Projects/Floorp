@@ -22,111 +22,123 @@
 */
 
 #include <stdio.h>
-#include <assert.h>
 
 #include "plstr.h"
-
-#include "nsIComponentManager.h"
-#include "nsINetService.h"
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
-
-// Do we still need these?
-#ifdef XP_PC
-#define NETLIB_DLL "netlib.dll"
-#define XPCOM_DLL  "xpcom32.dll"
-#else
-#ifdef XP_MAC
-#include "nsMacRepository.h"
-#else
-#define NETLIB_DLL "libnetlib.so"
-#define XPCOM_DLL  "libxpcom.so"
-#endif
-#endif
+#include "iostream.h"
 
 // Define CIDs...
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
-nsresult testURL(const char* pURL=0);
+int writeout(const char* i_pURL)
+{
+    if (i_pURL)
+    {
+	    cout << "Analyzing " << i_pURL << endl;
+	    nsCOMPtr<nsIURI> pURL;
+
+        nsresult result = NS_OK;
+        NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
+        if (NS_FAILED(result)) return result;
+
+        if (!pService)
+            return -1;
+	    pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+
+	    if (pURL)
+	    {
+		    char* temp;
+		    PRInt32 port;
+		    pURL->GetScheme(&temp);
+		    cout << "Got " << (temp ? temp : "") << ',';
+		    pURL->GetPreHost(&temp);
+		    cout << (temp ? temp : "") << ',';
+		    pURL->GetHost(&temp);
+		    cout << (temp ? temp : "") << ',';
+		    pURL->GetPort(&port);
+		    cout << port << ',';
+		    pURL->GetPath(&temp);
+		    cout << (temp ? temp : "") << endl;
+	    } else {
+		    cout << "Can not create URL" << endl; 
+	    }
+        return 0;
+    }
+    return -1;
+}
+
+nsresult testURL(const char* i_pURL)
+{
+	nsresult result = NS_OK;
+    const int tests = 8;
+
+	/* 
+		If you add a test case then make sure you also add the expected
+	   	result in the resultset as well. 
+	*/
+
+	if (i_pURL)
+	{
+        writeout(i_pURL);
+	}
+	else
+	{
+		const char* url[tests] = 
+		{
+			"http://username:password@hostname.com:80/pathname/./more/stuff/../path",
+			"username@host:8080/path",
+			"http://gagan/",
+			"host:port/netlib", //port should now be 0
+			"", //empty string
+			"mailbox:///foo", // No host specified path should be /foo
+			"user:pass@hostname.edu:80/pathname", //this is always user:pass and not http:user
+			"http://username:password@hostname:80/pathname"
+		};
+
+		const char* resultset[tests] =
+		{
+			"http,username:password,hostname.com,80,/pathname/more/path",
+			",username,host,8080,/path",
+			"http,,gagan,-1,/",
+			",,host,0,/netlib",
+			",,,-1,",
+			"mailbox,,,-1,/foo",
+			",username:pass,hostname.edu,80,/pathname",
+			"http,username:password,hostname,80,/pathname"
+		};
+
+		for (int i = 0; i< tests; ++i)
+		{
+            writeout(url[i]);
+		    cout << "Expect " << resultset[i] << endl << endl;
+		}
+	}
+	return 0;
+}
 
 int main(int argc, char **argv)
 {
     nsresult result = NS_OK;
 
     if (argc < 2) {
-        printf("urltest: <URL> \n");
+        printf("urltest <URL> \n");
         return 0;
     }
 
     result = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                          "components");
+                                              "components");
 	if (NS_FAILED(result)) return result;
 
-    //Create the nsINetService...
-    NS_WITH_SERVICE(nsINetService, pService, kNetServiceCID, &result);
-	if (NS_FAILED(result)) return result;
-
-    result = testURL(argv[1]);
-    return 0;
-}
-
-
-nsresult testURL(const char* i_pURL)
-{
-    const char* temp;
-	nsresult result = NS_OK;
-    const int tests = 8;
-	/* 
-		If you add a test case then make sure you also add the expected
-	   	result in the resultset as well. 
-	*/
-    const char* url[tests] = 
-    {
-        "http://username:password@hostname.com:80/pathname/./more/stuff/../path",
-        "username@host:8080/path",
-        "http://gagan/",
-        "host:port/netlib", //port should now be 0
-        "", //empty string
-        "mailbox:///foo", // No host specified path should be /foo
-        "user:pass@hostname.edu:80/pathname", //this is always user:pass and not http:user
-        "http://username:password@hostname:80/pathname"
-    };
-
-	const char* resultset[tests];
+	if (PL_strncasecmp(argv[1], "-all", 4) == 0)
 	{
-		"http,username:password,hostname.com,80,/pathname/more/path",
-		",username,host,8080,/path",
-		"http,,gagan,-1,/",
-		",,host,0,/netlib",
-		",,,-1,",
-		"mailbox,,,-1,/foo",
-		",username:pass,hostname.edu,80,/pathname",
-		"http,username:password,hostname,80,/pathname"
+		result = testURL(0);	
 	}
+	else
+		result = testURL(argv[1]);
 
-    for (int i = 0; i< tests; ++i)
-    {
-        nsCOMPtr<nsIURL> pURL;
-		
-		cout << "Analyzing " << url[i] << endl;
-		NS_NewURL(url[i], do_QueryInterface(pURL));
-		if (pURL)
-		{
-			char* temp;
-			PRInt32 port;
-			pURL->GetScheme(&temp);
-			cout << "Got " << temp << ',';
-			pURL->GetPreHost(&temp);
-			cout << temp << ',';
-			pURL->GetHost(&temp);
-			cout << temp << ',';
-			pURL->GetPort(&port);
-			cout << port << ',';
-			pURL->GetPath(&temp);
-			cout << temp << endl;
-		}
-		cout << "Expect " << resultset[i] << endl;
-    }
-  
-    return 0;
+    return result;
 }
+
