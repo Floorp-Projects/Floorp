@@ -99,7 +99,13 @@ nsresult nsCollationOS2::CompareString(const nsCollationStrength strength,
   if (ret != ULS_SUCCESS)
     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"en_US", &locObj);
 
-  *result = UniStrcoll(locObj, (UniChar *)stringNormalized1.get(), (UniChar *)stringNormalized2.get());
+  if (ret == ULS_SUCCESS) {
+    *result = UniStrcoll(locObj, (UniChar *)stringNormalized1.get(), (UniChar *)stringNormalized2.get());
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  UniFreeLocaleObject(locObj);
 
   return NS_OK;
 }
