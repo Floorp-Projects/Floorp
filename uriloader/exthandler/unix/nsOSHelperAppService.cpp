@@ -403,6 +403,16 @@ GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
                                            minorTypeStart, minorTypeEnd,
                                            extensions,
                                            descriptionStart, descriptionEnd);
+          if (NS_FAILED(rv)) {
+            // We sometimes get things like RealPlayer sticking
+            // "normal" entries in "Netscape" .mime.types files.  Try
+            // to handle that.  Bug 106381
+            rv = ParseNormalMIMETypesEntry(entry,
+                                           majorTypeStart, majorTypeEnd,
+                                           minorTypeStart, minorTypeEnd,
+                                           extensions,
+                                           descriptionStart, descriptionEnd);
+          }
         } else {
           rv = ParseNormalMIMETypesEntry(entry,
                                          majorTypeStart, majorTypeEnd,
@@ -1073,10 +1083,11 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   if (!localFile) return NS_ERROR_NOT_INITIALIZED;
   
   // first check if this is a full path
-  localFile->InitWithUnicodePath(platformAppPath);
-  PRBool exists;
-  localFile->Exists(&exists);
-  if (! exists) {
+  PRBool exists = PR_FALSE;
+  if (*platformAppPath == '/') {
+    localFile->InitWithUnicodePath(platformAppPath);
+    localFile->Exists(&exists);
+  } else {
     // ugly hack.  Walk the PATH variable...
     char* unixpath = PR_GetEnv("PATH");
     nsAutoString path;
@@ -1092,14 +1103,16 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
         ++colon_iter;
       }
       localFile->InitWithUnicodePath(PromiseFlatString(Substring(start_iter, colon_iter)).get());
-      localFile->AppendRelativeUnicodePath(platformAppPath);
-      localFile->Exists(&exists);
-      if (!exists) {
-        if (colon_iter == end_iter) {
-          break;
+      rv = localFile->AppendRelativeUnicodePath(platformAppPath);
+      if (NS_SUCCEEDED(rv)) {
+        localFile->Exists(&exists);
+        if (!exists) {
+          if (colon_iter == end_iter) {
+            break;
+          }
+          ++colon_iter;
+          start_iter = colon_iter;
         }
-        ++colon_iter;
-        start_iter = colon_iter;
       }
     }
   }
