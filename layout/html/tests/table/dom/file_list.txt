@@ -1,7 +1,7 @@
 file:///s:/mozilla/layout/html/tests/table/dom/appendCells1.html
 file:///s:/mozilla/layout/html/tests/table/dom/appendCols1.html
 file:///s:/mozilla/layout/html/tests/table/dom/appendCols2.html
-file:///s:/mozilla/layout/html/tests/table/dom/appendColGroups1.html
+file:///s:/mozilla/layout/html/tests/table/dom/appendColGroup1.html
 file:///s:/mozilla/layout/html/tests/table/dom/appendCellsRebuild1.html
 file:///s:/mozilla/layout/html/tests/table/dom/appendRowsExpand1.html
 file:///s:/mozilla/layout/html/tests/table/dom/appendTbodyExpand1.html
