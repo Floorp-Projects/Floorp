@@ -204,7 +204,7 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
 nsMsgDBView::~nsMsgDBView()
 {
   if (m_db)
-	  m_db->RemoveListener(this);
+    m_db->RemoveListener(this);
 
   gInstanceCount--;
   if (gInstanceCount <= 0) 
@@ -385,24 +385,24 @@ NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, co
 // helper function used to fetch strings from the messenger string bundle
 PRUnichar * nsMsgDBView::GetString(const PRUnichar *aStringName)
 {
-	nsresult    res = NS_OK;
-	PRUnichar   *ptrv = nsnull;
-
-	if (!mMessengerStringBundle)
-	{
-		static const char propertyURL[] = MESSENGER_STRING_URL;
+  nsresult    res = NS_OK;
+  PRUnichar   *ptrv = nsnull;
+  
+  if (!mMessengerStringBundle)
+  {
+    static const char propertyURL[] = MESSENGER_STRING_URL;
     nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
-		if (NS_SUCCEEDED(res) && sBundleService) 
-			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mMessengerStringBundle));
-	}
-
-	if (mMessengerStringBundle)
-		res = mMessengerStringBundle->GetStringFromName(aStringName, &ptrv);
-
-	if ( NS_SUCCEEDED(res) && (ptrv) )
-		return ptrv;
-	else
-		return nsCRT::strdup(aStringName);
+    if (NS_SUCCEEDED(res) && sBundleService) 
+      res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(mMessengerStringBundle));
+  }
+  
+  if (mMessengerStringBundle)
+    res = mMessengerStringBundle->GetStringFromName(aStringName, &ptrv);
+  
+  if ( NS_SUCCEEDED(res) && (ptrv) )
+    return ptrv;
+  else
+    return nsCRT::strdup(aStringName);
 }
 
 // helper function used to fetch localized strings from the prefs
@@ -557,7 +557,7 @@ nsresult nsMsgDBView::FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString)
   nsresult rv = aHdr->GetDate(&dateOfMsg);
 
   PRTime currentTime = PR_Now();
-	PRExplodedTime explodedCurrentTime;
+  PRExplodedTime explodedCurrentTime;
   PR_ExplodeTime(currentTime, PR_LocalTimeParameters, &explodedCurrentTime);
   PRExplodedTime explodedMsgTime;
   PR_ExplodeTime(dateOfMsg, PR_LocalTimeParameters, &explodedMsgTime);
@@ -632,21 +632,21 @@ nsresult nsMsgDBView::FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString)
 nsresult nsMsgDBView::FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString)
 {
   const PRUnichar * statusString = nsnull;
-
+  
   if(aFlags & MSG_FLAG_REPLIED)
     statusString = kRepliedString;
-	else if(aFlags & MSG_FLAG_FORWARDED)
-		statusString = kForwardedString;
-	else if(aFlags & MSG_FLAG_NEW)
-		statusString = kNewString;
-	else if(aFlags & MSG_FLAG_READ)
-		statusString = kReadString;
-
+  else if(aFlags & MSG_FLAG_FORWARDED)
+    statusString = kForwardedString;
+  else if(aFlags & MSG_FLAG_NEW)
+    statusString = kNewString;
+  else if(aFlags & MSG_FLAG_READ)
+    statusString = kReadString;
+  
   if (statusString)
     *aStatusString = nsCRT::strdup(statusString);
   else 
     *aStatusString = nsnull;
-
+  
   return NS_OK;
 }
 
@@ -654,25 +654,27 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
 {
   nsAutoString formattedSizeString;
   PRUint32 msgSize = 0;
-
+  
   // for news, show the line count not the size
-  if (mIsNews) {
+  if (mIsNews) 
+  {
     aHdr->GetLineCount(&msgSize);
     formattedSizeString.AppendInt(msgSize);
   }
-  else {
+  else 
+  {
     aHdr->GetMessageSize(&msgSize);
-
-	if(msgSize < 1024)
-		msgSize = 1024;
-	
+    
+    if(msgSize < 1024)
+      msgSize = 1024;
+    
     PRUint32 sizeInKB = msgSize/1024;
-  
+    
     formattedSizeString.AppendInt(sizeInKB);
     // XXX todo, fix this hard coded string?
     formattedSizeString.Append(NS_LITERAL_STRING("KB"));
   }
-
+  
   *aSizeString = ToNewUnicode(formattedSizeString);
   return NS_OK;
 }
@@ -937,7 +939,8 @@ nsresult nsMsgDBView::UpdateDisplayMessage(nsMsgKey aMsgKey)
 
       mCommandUpdater->DisplayMessageChanged(m_folder, subject, keywords);
 
-      if (m_folder) {
+      if (m_folder) 
+      {
         rv = m_folder->SetLastMessageLoaded(aMsgKey);
         NS_ENSURE_SUCCESS(rv,rv);
       }
@@ -1146,7 +1149,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
 
   rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
 
-  if (NS_FAILED(rv) || !msgHdr) {
+  if (NS_FAILED(rv) || !msgHdr) 
+  {
     ClearHdrCache();
     return NS_MSG_INVALID_DBVIEW_INDEX;
   }
@@ -1356,10 +1360,12 @@ NS_IMETHODIMP nsMsgDBView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
   GetLevel(rowIndex, &rowIndexLevel);
 
   PRInt32 i;
-  for(i = rowIndex; i >= 0; i--) {
+  for(i = rowIndex; i >= 0; i--) 
+  {
     PRInt32 l;
     GetLevel(i, &l);
-    if (l < rowIndexLevel) {
+    if (l < rowIndexLevel) 
+    {
       *_retval = i;
       break;
     }
@@ -1378,12 +1384,14 @@ NS_IMETHODIMP nsMsgDBView::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
   PRInt32 i;
   PRInt32 count;
   GetRowCount(&count);
-  for(i = afterIndex + 1; i < count; i++) {
+  for(i = afterIndex + 1; i < count; i++) 
+  {
     PRInt32 l;
     GetLevel(i, &l);
     if (l < rowIndexLevel)
       break;
-    if (l == rowIndexLevel) {
+    if (l == rowIndexLevel) 
+    {
       *_retval = PR_TRUE;
       break;
     }
@@ -2188,10 +2196,8 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
   nsMsgKeyArray imapUids;
 
   // if numIndices == 0, return quietly, just in case
-  //
-  if (numIndices == 0) {
+  if (numIndices == 0) 
       return NS_OK;
-  }
 
   NS_ASSERTION(numIndices >= 0, "nsMsgDBView::ApplyCommandToIndices(): "
                "numIndices is negative!");
