@@ -846,6 +846,10 @@ nsJVMMgr::GetJVMStatus(void)
     return fStatus;
 }
 
+#ifdef XP_MAC
+#define JSJDLL "LiveConnect"
+#endif
+
 PRBool
 nsJVMMgr::MaybeStartupLiveConnect()
 {
@@ -853,10 +857,14 @@ nsJVMMgr::MaybeStartupLiveConnect()
         return PR_TRUE;
 
 	do {
-	    if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
+		static XP_Bool registeredLiveConnectFactory = false;
+		if (!registeredLiveConnectFactory) {
             NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-            nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
-                                        PR_FALSE, PR_FALSE);
+			registeredLiveConnectFactory = 
+	            nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
+	                                        PR_FALSE, PR_FALSE);
+		}
+	    if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
 	        JSJ_Init(&jsj_callbacks);
 	        nsIJVMPlugin* plugin = GetJVMPlugin();
 	        if (plugin) {
