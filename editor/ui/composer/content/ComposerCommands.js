@@ -2353,10 +2353,11 @@ var nsPreviewCommand =
         var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
         var enumerator = windowManagerInterface.getEnumerator("navigator:browser");
 
+        var documentURI = GetDocumentUrl();
         while ( enumerator.hasMoreElements() )
         {
           browser = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
-          if ( browser && (window._content.location.href == browser._content.location.href))
+          if ( browser && (documentURI == browser.getBrowser().currentURI.spec))
             break;
 
           browser = null;
@@ -2367,7 +2368,7 @@ var nsPreviewCommand =
       // If none found, open a new browser
       if (!browser)
       {
-        browser = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", window._content.location);
+        browser = window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", documentURI);
       }
       else
       {
