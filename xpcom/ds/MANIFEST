@@ -1,6 +1,7 @@
 nsAlgorithm.h
 nsAVLTree.h
 nsAtomService.h
+nsBufferHandle.h
 nsCppSharedAllocator.h
 nsCRT.h
 nsDeque.h
@@ -15,12 +16,15 @@ nsISimpleEnumerator.h
 nsISizeOfHandler.h
 nsIUnicharBuffer.h
 nsInt64.h
+nsPrivateSharableString.h
 nsQuickSort.h
 nsCharTraits.h
 nsAReadableString.h
 nsAWritableString.h
 nsReadableUtils.h
+nsSharedBufferList.h
 nsSharedString.h
+nsSlidingString.h
 nsStaticNameTable.h
 nsStatistics.h
 nsStr.h
