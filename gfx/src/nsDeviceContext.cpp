@@ -701,3 +701,12 @@ nsresult nsFontCache :: Flush()
 
   return NS_OK;
 }
+
+#ifdef XP_PC
+// XXX I had to add this because I changed the link order on Windows
+void notCalled()
+{
+  nsCID cid;
+  (void)NSGetFactory(nsnull, cid, nsnull, nsnull, nsnull);
+}
+#endif
