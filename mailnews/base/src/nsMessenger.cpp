@@ -516,7 +516,10 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
             nsCOMPtr<nsIFilePicker> filePicker =
                 do_CreateInstance("@mozilla.org/filepicker;1", &rv);
             if (NS_FAILED(rv)) return rv;
-            filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveAttachment").get()), nsIFilePicker::modeSave);
+
+            filePicker->Init(nsnull,
+                             GetString(NS_LITERAL_STRING("SaveAttachment")).get(),
+                             nsIFilePicker::modeSave);
             filePicker->SetDefaultString(path.get());
             filePicker->AppendFilters(nsIFilePicker::filterAll);
             
@@ -537,7 +540,7 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
 
             nsCOMPtr<nsILocalFile> localFile;
             nsCAutoString filePath;
-            
+
             rv = filePicker->GetFile(getter_AddRefs(localFile));
             if (NS_FAILED(rv)) return rv;
 
@@ -806,11 +809,8 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   rv = ConvertAndSanitizeFileName(displayName, getter_Copies(defaultDisplayString), nsnull);
   if (NS_FAILED(rv)) goto done;
 
-  filePicker->Init(
-      nsnull, 
-      GetString(NS_LITERAL_STRING("SaveAttachment").get()),
-      nsIFilePicker::modeSave
-      );
+  filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveAttachment")).get(),
+                   nsIFilePicker::modeSave);
   filePicker->SetDefaultString(defaultDisplayString.get());
   filePicker->AppendFilters(nsIFilePicker::filterAll);
   
@@ -858,11 +858,10 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     PRInt16 dialogResult;
 
     if (NS_FAILED(rv)) goto done;
-    filePicker->Init(
-        nsnull, 
-        GetString(NS_LITERAL_STRING("SaveAllAttachments").get()),
-        nsIFilePicker::modeGetFolder
-        );
+
+    filePicker->Init(nsnull,
+                     GetString(NS_LITERAL_STRING("SaveAllAttachments")).get(),
+                     nsIFilePicker::modeGetFolder);
 
     rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
     if (NS_SUCCEEDED(rv) && lastSaveDir) {
@@ -949,20 +948,22 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
     nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
     if (NS_FAILED(rv)) 
       goto done;
-    
-    filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveMailAs").get()), nsIFilePicker::modeSave);
+
+    filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveMailAs")).get(),
+                     nsIFilePicker::modeSave);
 
     // if we have a non-null filename use it, otherwise use default save message one
     if (aMsgFilename)    
       filePicker->SetDefaultString(aMsgFilename);
-    else
-      filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName").get()));
-    
+    else {
+      filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName")).get());
+    }
+
     // because we will be using GetFilterIndex()
     // we must call AppendFilters() one at a time, 
     // in MESSENGER_SAVEAS_FILE_TYPE order
-    filePicker->AppendFilter(GetString(NS_LITERAL_STRING("EMLFiles").get()),
-      NS_LITERAL_STRING("*.eml").get());
+    filePicker->AppendFilter(GetString(NS_LITERAL_STRING("EMLFiles")).get(),
+                             NS_LITERAL_STRING("*.eml").get());
     filePicker->AppendFilters(nsIFilePicker::filterHTML);     
     filePicker->AppendFilters(nsIFilePicker::filterText);
     filePicker->AppendFilters(nsIFilePicker::filterAll);
@@ -1209,13 +1210,14 @@ nsresult
 nsMessenger::Alert(const char *stringName)
 {
     nsresult rv = NS_OK;
-    nsString errorMessage(GetString(NS_ConvertASCIItoUCS2(stringName).get()));
+
     if (mDocShell)
     {
         nsCOMPtr<nsIPrompt> dialog(do_GetInterface(mDocShell));
-        
+
         if (dialog) {
-            rv = dialog->Alert(nsnull, errorMessage.get());
+            rv = dialog->Alert(nsnull,
+                               GetString(NS_ConvertASCIItoUCS2(stringName)).get());
         }
     }
     return rv;
@@ -2071,22 +2073,22 @@ nsMessenger::InitStringBundle()
     return res;
 }
 
-PRUnichar *
-nsMessenger::GetString(const PRUnichar *aStringName)
+nsAdoptingString
+nsMessenger::GetString(const nsAFlatString& aStringName)
 {
-	nsresult    res = NS_OK;
-  PRUnichar   *ptrv = nsnull;
+    nsresult rv = NS_OK;
+    PRUnichar *ptrv = nsnull;
 
-	if (!mStringBundle)
-        res = InitStringBundle();
+    if (!mStringBundle)
+        rv = InitStringBundle();
 
-	if (mStringBundle)
-		res = mStringBundle->GetStringFromName(aStringName, &ptrv);
+    if (mStringBundle)
+        rv = mStringBundle->GetStringFromName(aStringName.get(), &ptrv);
 
-  if ( NS_SUCCEEDED(res) && (ptrv) )
-    return ptrv;
-  else
-    return nsCRT::strdup(aStringName);
+    if (NS_FAILED(rv) || !ptrv)
+        ptrv = ToNewUnicode(aStringName);
+
+    return nsAdoptingString(ptrv);
 }
 
 nsSaveAllAttachmentsState::nsSaveAllAttachmentsState(PRUint32 count,

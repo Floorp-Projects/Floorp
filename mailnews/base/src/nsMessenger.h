@@ -58,7 +58,7 @@ public:
 
   NS_DECL_ISUPPORTS  
   NS_DECL_NSIMESSENGER
-	NS_DECL_NSIOBSERVER
+  NS_DECL_NSIOBSERVER
     
   nsresult Alert(const char * stringName);
   nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
@@ -67,10 +67,11 @@ public:
   nsresult PromptIfFileExists(nsFileSpec &fileSpec);
 
 protected:
-  nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
-  nsresult DoCommand(nsIRDFCompositeDataSource *db, const nsACString& command, nsISupportsArray *srcArray, 
-					   nsISupportsArray *arguments);
-  PRUnichar *GetString(const PRUnichar *aStringName);
+  nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray,
+                    nsISupportsArray *deletedArray);
+  nsresult DoCommand(nsIRDFCompositeDataSource *db, const nsACString& command,
+                     nsISupportsArray *srcArray, nsISupportsArray *arguments);
+  nsAdoptingString GetString(const nsAFlatString& aStringName);
   nsresult InitStringBundle();
 
 private:
@@ -102,7 +103,7 @@ private:
 
 #define NS_MESSENGER_CID \
 { /* 3f181950-c14d-11d2-b7f2-00805f05ffa5 */      \
-  0x3f181950, 0xc14d, 0x11d2,											\
+  0x3f181950, 0xc14d, 0x11d2,                     \
     {0xb7, 0xf2, 0x0, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
 
 
