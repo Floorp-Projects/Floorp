@@ -1,6 +1,7 @@
 <!--LOCALIZATION NOTE : FILE UI for Software Updates prefs -->
 <!ENTITY title.label "Software Installation">
-<!ENTITY header "Software Installation">
+<!ENTITY lHeader "Software Installation">
+<!ENTITY rHeader "Manage Installed Software">
 <!ENTITY enableSU.label "Enable software installations">
 <!ENTITY enableNotification.label "Enable notification of new and updated software">
 <!ENTITY requireConfirmation.label "Require manual confirmation of each install">

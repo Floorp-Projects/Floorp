@@ -3,6 +3,7 @@ pref-appearance.dtd
 pref-applications.dtd
 pref-cache.dtd
 pref-colors.dtd
+pref-cookies.dtd
 pref-themes.dtd
 pref-composer.dtd
 pref-debug.dtd
@@ -19,4 +20,6 @@ pref-smart_browsing.dtd
 pref-smartupdate.dtd
 PrefsWindow.dtd
 preftree.dtd
+pref.dtd
+pref-wallet.dtd
 pref-mousewheel.dtd

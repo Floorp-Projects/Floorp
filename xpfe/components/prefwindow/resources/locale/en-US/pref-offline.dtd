@@ -3,8 +3,7 @@
 <!--LOCALIZATION NOTE : FILE The 'Offline' preferences dialog -->
 <!ENTITY title.label "Offline">
 <!ENTITY lHeader "Offline">
-<!ENTITY rHeader "Offline">
-<!ENTITY header1 "Startup State">
+<!ENTITY rHeader "Startup State">
 <!--LOCALIZATION NOTE (descipt1): Never translate the term 'Communicator' -->
 <!ENTITY descipt1 "Commucator can start in either online or offline modes. When online you have full 
 access to your network.  When offline you can only read messages that you have previously downloaded.">
