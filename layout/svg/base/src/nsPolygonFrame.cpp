@@ -94,7 +94,7 @@ nsPolygonFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString type;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
-  if (type.EqualsIgnoreCase("swatch") || type.Equals(""))
+  if (type.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("swatch")) || type.IsEmpty())
   {
     //mPolygon = new nsStdPolygon();
     //mPolygon->Init(mContent);
