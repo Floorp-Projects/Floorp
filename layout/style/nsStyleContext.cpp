@@ -580,7 +580,7 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
 {
   // These properties not inherited
   mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
-  mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
+  mVerticalAlign.Reset();
 
   if (nsnull != aParent) {
     mTextAlign = aParent->mTextAlign;
