@@ -651,7 +651,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
 /**
  * This method compresses duplicate runs of a given char from the given buffer 
  *
- * @update	gess 11/02/99
+ * @update	gess 12/20/99
  * @param   aString is the buffer to be manipulated
  * @param   aLength is the length of the buffer
  * @param   aSet tells us which chars to compress from given buffer
@@ -671,7 +671,7 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
       PRUnichar theChar = *from++;
-      if((255<theChar) || (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
+      if((theChar<256) && (kNotFound!=FindChar1(aSet,aSetLen,0,theChar,PR_FALSE))){
         *to++=theChar;
         while (from <= end) {
           theChar = *from++;
@@ -680,7 +680,8 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
             break;
           }
         }
-      } else {
+      } 
+      else {
         *to++ = theChar;
       }
     }
