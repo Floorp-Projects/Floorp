@@ -34,11 +34,17 @@
 #include "nsSSLSocketProvider.h"
 
 #include "nsSDR.h"
+#include "nsCrypto.h"
+
+//For the NS_CRYPTO_PROGID define
+#include "nsDOMCID.h"
 
 #include "nsCURILoader.h"
 
 // Define SDR object constructor
+
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCrypto, init)
 
 static nsModuleComponentInfo components[] =
 {
@@ -111,6 +117,13 @@ static nsModuleComponentInfo components[] =
         NS_SDR_CID,
         NS_SDR_PROGID,
         nsSecretDecoderRingConstructor
+    },
+    
+    {
+        NS_CRYPTO_CLASSNAME,
+        NS_CRYPTO_CID,
+        NS_CRYPTO_PROGID,
+        nsCryptoConstructor
     }
 };
 
