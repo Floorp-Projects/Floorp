@@ -877,11 +877,11 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
    appShell->Spinup();
    // Store locally so it doesn't die on us
    nsCOMPtr<nsIWidget> window = mWindow;
-   nsCOMPtr<nsIXULWindow> tempRef = this;  
-                                          
+   nsCOMPtr<nsIXULWindow> tempRef = this;
 
    window->SetModal(PR_TRUE);
    mContinueModalLoop = PR_TRUE;
+   EnableParent(PR_FALSE);
 
    nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
    nsresult rv = NS_OK;
@@ -918,6 +918,8 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
 
 NS_IMETHODIMP nsXULWindow::ExitModalLoop()
 {
+   if (mContinueModalLoop) // was a modal window
+     EnableParent(PR_TRUE);
    mContinueModalLoop = PR_FALSE;
    return NS_OK;
 }
@@ -1070,6 +1072,18 @@ NS_IMETHODIMP nsXULWindow::NotifyObservers(const PRUnichar* aTopic,
    NS_ENSURE_SUCCESS(service->Notify(removeme, topic.GetUnicode(), aData),
       NS_ERROR_FAILURE);
    return NS_OK;
+}
+
+void nsXULWindow::EnableParent(PRBool aEnable)
+{
+  nsCOMPtr<nsIBaseWindow> parentWindow;
+  nsCOMPtr<nsIWidget>     parentWidget;
+
+  parentWindow = do_QueryReferent(mParentWindow);
+  if (parentWindow)
+    parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
+  if (parentWidget)
+    parentWidget->Enable(aEnable);
 }
 
 //*****************************************************************************

@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
 
 // Interfaces needed
 #include "nsIBaseWindow.h"
@@ -44,7 +45,8 @@
 // nsXULWindow
 
 class nsXULWindow : public nsIXULWindow, public nsIBaseWindow, 
-   public nsIInterfaceRequestor
+   public nsIInterfaceRequestor,
+   public nsSupportsWeakReference
 {
 friend class nsChromeTreeOwner;
 friend class nsContentTreeOwner;
@@ -86,11 +88,14 @@ protected:
    NS_IMETHOD NotifyObservers(const PRUnichar* aTopic, const PRUnichar* aData);
 
 protected:
+   void EnableParent(PRBool aEnable);
+
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
    nsContentTreeOwner*     mPrimaryContentTreeOwner;
    nsCOMPtr<nsIWidget>     mWindow;
    nsCOMPtr<nsIDocShell>   mDocShell;
+   nsCOMPtr<nsIWeakReference> mParentWindow;
    nsVoidArray             mContentShells;
    PRBool                  mContinueModalLoop;
    PRBool                  mDebuting;       // being made visible right now
