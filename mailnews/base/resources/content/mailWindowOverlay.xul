@@ -275,7 +275,7 @@ Rights Reserved.
 </commandset>
 
 <keyset id="mailKeys">
-    <key id="space" key=" " oncommand="SpaceHit()"/>
+  <key id="space" key=" " oncommand="SpaceHit(event)"/>
 
   <!-- File Menu -->
   <key id="key_newNavigator"/>

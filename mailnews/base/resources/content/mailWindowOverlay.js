@@ -1625,16 +1625,28 @@ function MsgGoForward() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 
-function SpaceHit()
+function SpaceHit(event)
 {
   var contentWindow = window.top._content;
   var oldScrollY = contentWindow.scrollY;
 
-  contentWindow.scrollByPages(1);
+  var numPages;
+  var command;
 
-  // if at the end of the message, go to the next one
+  if (event && event.shiftKey) {
+    numPages = -1;
+    command = "cmd_previousUnreadMsg";
+  }
+  else {
+    numPages = 1;
+    command = "cmd_nextUnreadMsg";
+  }
+
+  contentWindow.scrollByPages(numPages);
+
+  // if at the end (or start) of the message, go to the next one
   if (oldScrollY == contentWindow.scrollY) {
-    goDoCommand('cmd_nextUnreadMsg');
+    goDoCommand(command);
   }
 }
 
