@@ -39,6 +39,15 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIURL* aURL,
                                       nsIWebWidget* aWebWidget);
 
+/**
+ * Create a new content object for the given tag.
+ * Returns NS_ERROR_NOT_AVAILABLE for an unknown/unhandled tag.
+ * Returns some other error on error.
+ * Returns NS_OK on success
+ */
+extern nsresult NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
+                                     const nsString& aTag);
+
 // Create an html root part
 extern nsresult
   NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
