@@ -3118,12 +3118,13 @@ MOZ_ARG_ENABLE_BOOL(ldap-experimental,
     MOZ_LDAP_XPCOM_EXPERIMENTAL=1)
 
 dnl ========================================================
-dnl MATHML
+dnl MATHML on by default
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(mathml,
-[  --enable-mathml         Enable MathML ],
-    MOZ_MATHML=1
-    AC_DEFINE(MOZ_MATHML))
+MOZ_MATHML=1
+MOZ_ARG_DISABLE_BOOL(mathml,
+[  --disable-mathml      Disable MathML],
+    MOZ_MATHML= )
+AC_SUBST(MOZ_MATHML)
 
 dnl ========================================================
 dnl SVG
