@@ -769,12 +769,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       if (relPath) {
         href.AppendWithConversion(relPath);
 
-        // If re-using the same URL, chop off old query string (bug 25330)
-        // Only do this for GET not POST (bug 41585)
-        PRInt32 queryStart = href.FindChar('?');
-        if ((kNotFound != queryStart) && !isPost) {
-          href.Truncate(queryStart);
-        }
       } else {
         result = NS_ERROR_OUT_OF_MEMORY;
       }
@@ -823,21 +817,22 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (!isPost) {
       if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
 
-        // Bug 42616: Trim off named anchor before query string
+        // Bug 42616: Trim off named anchor and save it to add later
         PRInt32 namedAnchorPos = href.FindChar('#', PR_FALSE, 0);
         nsAutoString namedAnchor;
         if (kNotFound != namedAnchorPos) {
-          href.Right(namedAnchor, namedAnchorPos);
+          href.Right(namedAnchor, (href.Length() - namedAnchorPos));
           href.Truncate(namedAnchorPos);
         }
 
-        if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
-          href.AppendWithConversion('?');
-        } else {                              // Adding to existing query string
-          if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
-            href.AppendWithConversion('&');
-          }
+        // Chop off old query string (bug 25330, 57333)
+        // Only do this for GET not POST (bug 41585)
+        PRInt32 queryStart = href.FindChar('?');
+        if (kNotFound != queryStart) {
+          href.Truncate(queryStart);
         }
+
+        href.Append(PRUnichar('?'));        
         href.Append(data);
 
         // Bug 42616: Add named anchor to end after query string
@@ -846,6 +841,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         }
       }
     }
+
     nsAutoString absURLSpec;
     result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
     if (NS_FAILED(result)) return result;
