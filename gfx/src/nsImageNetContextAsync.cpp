@@ -374,7 +374,7 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
   nsCOMPtr<nsIURI> uri;
 
   err = channel->GetURI(getter_AddRefs(uri));
-  if (NS_SUCCEEDED(err)) {
+  if (NS_SUCCEEDED(err) && uri) {
       err = uri->GetSpec(&uriStr);
       if (NS_FAILED(err)){
           /* if we can't get a file spec, it is bad, very bad.*/
