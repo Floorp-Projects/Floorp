@@ -70,7 +70,7 @@ nsDOMAttribute::~nsDOMAttribute()
 // QueryInterface implementation for nsDOMAttribute
 NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMAttributePrivate)
+  NS_INTERFACE_MAP_ENTRY(nsIAttribute)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
@@ -103,6 +103,15 @@ nsDOMAttribute::GetContent(nsIContent** aContent)
 {
   *aContent = mContent;
   NS_IF_ADDREF(*aContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMAttribute::GetNodeInfo(nsINodeInfo*& aNodeInfo)
+{
+  aNodeInfo = mNodeInfo;
+  NS_IF_ADDREF(aNodeInfo);
 
   return NS_OK;
 }

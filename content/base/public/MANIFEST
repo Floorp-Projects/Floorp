@@ -5,6 +5,7 @@ nsContentErrors.h
 nsContentPolicyUtils.h
 nsContentUtils.h
 nsIAnonymousContent.h
+nsIAttribute.h
 nsIContent.h
 nsIContentIterator.h
 nsIContentSerializer.h

@@ -33,6 +33,7 @@ GRE_MODULE	= 1
 EXPORTS		= \
 nsIContent.h \
 nsIAnonymousContent.h \
+nsIAttribute.h \
 nsIContentIterator.h \
 nsContentErrors.h \
 nsContentPolicyUtils.h \
