@@ -358,6 +358,7 @@ PlaceholderChannel::~PlaceholderChannel()
 
 nsXULDocument::nsXULDocument(void)
     : mParentDocument(nsnull),
+      mScriptGlobalObject(nsnull),
       mScriptObject(nsnull),
       mNextSrcLoadWaiter(nsnull),
       mCharSetID("UTF-8"),
@@ -1234,7 +1235,7 @@ nsXULDocument::GetCSSLoader(nsICSSLoader*& aLoader)
 NS_IMETHODIMP
 nsXULDocument::GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject)
 {
-   *aScriptGlobalObject = mScriptGlobalObject.get();
+   *aScriptGlobalObject = mScriptGlobalObject;
    NS_IF_ADDREF(*aScriptGlobalObject);
    return NS_OK;
 }
@@ -1242,13 +1243,21 @@ nsXULDocument::GetScriptGlobalObject(nsIScriptGlobalObject** aScriptGlobalObject
 NS_IMETHODIMP
 nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
-    // XXX HACK ALERT! If the script context owner is null, the document
-    // will soon be going away. So tell our content that to lose its
-    // reference to the document. This has to be done before we
-    // actually set the script context owner to null so that the
-    // content elements can remove references to their script objects.
-    if (!aScriptGlobalObject && mRootContent)
-        mRootContent->SetDocument(nsnull, PR_TRUE);
+    if (!aScriptGlobalObject) {
+        // XXX HACK ALERT! If the script context owner is null, the
+        // document will soon be going away. So tell our content that
+        // to lose its reference to the document. This has to be done
+        // before we actually set the script context owner to null so
+        // that the content elements can remove references to their
+        // script objects.
+        if (mRootContent)
+            mRootContent->SetDocument(nsnull, PR_TRUE);
+
+        // Break circular reference for the case where the currently
+        // focused window is ourself.
+        if (mCommandDispatcher)
+            mCommandDispatcher->SetFocusedWindow(nsnull);
+    }
 
     mScriptGlobalObject = aScriptGlobalObject;
     return NS_OK;
@@ -3253,7 +3262,6 @@ nsXULDocument::Init()
             AddEventListener("blur", CommandDispatcher, PR_TRUE);
         }
     }
-
     // Get the local store. Yeah, I know. I wish GetService() used a
     // 'void**', too.
     nsIRDFDataSource* localstore;
@@ -4921,7 +4929,7 @@ nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
     if (NS_SUCCEEDED(aStatus)) {
         rv = scriptProto->Compile(string, stringLen,
                                   scriptProto->mSrcURI, 1,
-                                  this);
+                                  this, mMasterPrototype);
         aStatus = rv;
         if (NS_SUCCEEDED(rv)) {
             rv = ExecuteScript(scriptProto->mScriptObject);

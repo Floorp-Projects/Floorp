@@ -234,7 +234,8 @@ public:
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRInt32 aLineNo,
-                     nsIDocument* aDocument);
+                     nsIDocument* aDocument,
+                     nsIXULPrototypeDocument* aPrototypeDocument);
 
     nsCOMPtr<nsIURI>         mSrcURI;
     PRBool                   mSrcLoading;

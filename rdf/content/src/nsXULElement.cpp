@@ -31,23 +31,19 @@
 
  */
 
+#include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
 #include "nsForwardReference.h"
-#include "nsXPIDLString.h"
-#include "nsXULAttributes.h"
-#include "nsIXULPopupListener.h"
-#include "nsIHTMLContentContainer.h"
+#include "nsHTMLValue.h"
 #include "nsHashtable.h"
-#include "nsIPresShell.h"
 #include "nsIAtom.h"
-#include "nsIXMLContent.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -55,42 +51,47 @@
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
+#include "nsIFocusableContent.h"
+#include "nsIHTMLContentContainer.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsIJSScriptObject.h"
+#include "nsIMutableStyleContext.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIServiceManager.h"
+#include "nsIStyleContext.h"
+#include "nsIStyleRule.h"
+#include "nsIStyleSheet.h"
+#include "nsIStyledContent.h"
 #include "nsISupportsArray.h"
+#include "nsIURL.h"
+#include "nsIXMLContent.h"
+#include "nsIXULContent.h"
+#include "nsIXULContentUtils.h"
+#include "nsIXULDocument.h"
+#include "nsIXULPopupListener.h"
+#include "nsIXULPrototypeDocument.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
-#include "nsIXULContentUtils.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsStyleConsts.h"
-#include "nsIStyleSheet.h"
-#include "nsIHTMLStyleSheet.h"
-#include "nsIScriptContext.h"
-#include "nsIStyledContent.h"
-#include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
-#include "nsIFocusableContent.h"
-#include "nsIStyleRule.h"
-#include "nsIURL.h"
-#include "nsIXULContent.h"
-#include "nsIXULDocument.h"
+#include "nsXPIDLString.h"
+#include "nsXULAttributes.h"
 #include "nsXULControllers.h"
-#include "nsXULTreeElement.h"
 #include "nsXULEditorElement.h"
-#include "rdfutil.h"
+#include "nsXULTreeElement.h"
 #include "prlog.h"
 #include "rdf.h"
-#include "nsHTMLValue.h"
-#include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
+#include "rdfutil.h"
 
 #include "nsIControllers.h"
 
@@ -3747,11 +3748,11 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
     MOZ_COUNT_DTOR(nsXULPrototypeScript);
 }
 
-
 nsresult
 nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
                               nsIURI* aURI, PRInt32 aLineNo,
-                              nsIDocument* aDocument)
+                              nsIDocument* aDocument,
+                              nsIXULPrototypeDocument* aPrototypeDocument)
 {
     nsresult rv;
 
@@ -3775,7 +3776,25 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText, PRInt32 aTextLength,
     nsXPIDLCString urlspec;
     aURI->GetSpec(getter_Copies(urlspec));
 
-    rv = context->CompileScript(aText, aTextLength, nsnull,
+    // We'll compile the script using the prototype document's special
+    // script object as the parent. This ensures that we won't end up
+    // with an uncollectable reference.
+    //
+    // Compiling it using (for example) the first document's global
+    // object would cause JS to keep a reference via the __proto__ or
+    // __parent__ pointer to the first document's global. If that
+    // happened, our script object would reference the first document,
+    // and the first document would indirectly reference the prototype
+    // document because it keeps the prototype cache
+    // alive. Circularity!
+    void * scopeObject;
+    nsCOMPtr<nsIScriptObjectOwner> owner= do_QueryInterface(aPrototypeDocument, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = owner->GetScriptObject(context, &scopeObject);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = context->CompileScript(aText, aTextLength, (JSObject *)scopeObject,
                                 principal, urlspec, aLineNo, mLangVersion,
                                 (void**) &mScriptObject);
     if (NS_FAILED(rv)) return rv;
