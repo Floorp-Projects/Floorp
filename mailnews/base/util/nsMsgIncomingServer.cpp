@@ -42,11 +42,15 @@
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
 #include "nsIMsgProtocolInfo.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
+#include "nsIXULWindow.h"
 #include "nsRDFCID.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
 
@@ -562,19 +566,33 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
     NS_ENSURE_ARG_POINTER(aPassword);
 
     if (m_password.IsEmpty()) {
+        nsCOMPtr<nsINetPrompt> dialog;
         // aMsgWindow is required if we need to prompt
-        NS_ENSURE_ARG_POINTER(aMsgWindow);
-        
-		// prompt the user for the password
-        nsCOMPtr<nsIWebShell> webShell;
-        rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
-        if (NS_FAILED(rv)) return rv;
-        // get top level window
-        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
-        rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
-		if (NS_SUCCEEDED(rv))
+        if (aMsgWindow)
+        {
+            // prompt the user for the password
+            nsCOMPtr<nsIWebShell> webShell;
+            rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+            if (NS_FAILED(rv)) return rv;
+            // get top level window
+            nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+            rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+            if (NS_FAILED(rv)) return rv;
+            dialog =  do_QueryInterface( topLevelWindow, &rv );
+        }
+        else
+        {
+            NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID,
+                            &rv);
+            if (NS_SUCCEEDED(rv))
+            {
+                nsCOMPtr<nsIXULWindow> hiddenWindow;
+                rv = appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+                if (NS_SUCCEEDED(rv))
+                    dialog = do_QueryInterface(hiddenWindow, &rv);
+            }
+        }
+		if (NS_SUCCEEDED(rv) && dialog)
 		{
             nsXPIDLString uniPassword;
 			PRBool okayValue = PR_TRUE;
