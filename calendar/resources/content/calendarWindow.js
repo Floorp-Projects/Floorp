@@ -358,7 +358,9 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
    
    this.selectedDate = new Date( date );
 
-   if( document.getElementById( "event-filter-menulist" ).selectedItem.value == "current" )
+   /* on some machines, we need to check for .selectedItem first */
+   if( document.getElementById( "event-filter-menulist" ).selectedItem &&
+       document.getElementById( "event-filter-menulist" ).selectedItem.value == "current" )
    {
       //redraw the top tree
       setTimeout( "refreshEventTree( getAndSetEventTable() );", 150 );
@@ -463,7 +465,7 @@ CalendarWindow.prototype.getLowestElementNotInArray = function calWin_getLowestE
    //CAUTION: Watch the scope here.  This function is called from inside a nested for loop.
    //You can't have the index variable named anything that is used in those for loops.
 
-   for ( Mike = 0; Mike < InputArray.length; Mike++ ) 
+   for ( var Mike = 0; Mike < InputArray.length; Mike++ ) 
    {
       
       if ( InputArray[Mike] > Temp ) 

@@ -161,7 +161,7 @@ WeekView.prototype.refreshEvents = function( )
       var TextNode = document.getElementById( "all-day-content-box-text-week-"+dayIndex );
       
       // get the events for the day and loop through them
-      dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+      var dayToGet = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
       
       var dayEventList = new Array();
       
@@ -188,9 +188,9 @@ WeekView.prototype.refreshEvents = function( )
          {
             //see if there's another event at the same start time.
             
-            for ( j = 0; j < dayEventList.length; j++ ) 
+            for ( var j = 0; j < dayEventList.length; j++ ) 
             {
-               thisCalendarEventDisplay = dayEventList[j];
+               var thisCalendarEventDisplay = dayEventList[j];
    
                //if this event overlaps with another event...
                if ( ( ( thisCalendarEventDisplay.displayDate >= calendarEventDisplay.displayDate &&
@@ -201,7 +201,7 @@ WeekView.prototype.refreshEvents = function( )
                     thisCalendarEventDisplay.event.allDay != true )
                {
                   //get the spot that this event will go in.
-                  var ThisSpot = thisCalendarEventDisplay.CurrentSpot;
+                  ThisSpot = thisCalendarEventDisplay.CurrentSpot;
                   
                   calendarEventDisplay.OtherSpotArray.push( ThisSpot );
                   ThisSpot++;
@@ -212,10 +212,10 @@ WeekView.prototype.refreshEvents = function( )
                   } 
                }
             }
-            SortedOtherSpotArray = new Array();
+            var SortedOtherSpotArray = new Array();
             //the sort must use the global variable gCalendarWindow, not this.calendarWindow
             SortedOtherSpotArray = calendarEventDisplay.OtherSpotArray.sort( gCalendarWindow.compareNumbers);
-            LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
+            var LowestNumber = this.calendarWindow.getLowestElementNotInArray( SortedOtherSpotArray );
             
             //this is the actual spot (0 -> n) that the event will go in on the day view.
             calendarEventDisplay.CurrentSpot = LowestNumber;
@@ -359,10 +359,10 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.setAttribute( "height", Height );
    eventBox.setAttribute( "width", Width );
       
-   top = eval( ( startHour*kWeekViewHourHeight ) + ( ( startMinutes/60 ) * kWeekViewHourHeight ) - kWeekViewHourHeightDifference );
+   var top = eval( ( startHour*kWeekViewHourHeight ) + ( ( startMinutes/60 ) * kWeekViewHourHeight ) - kWeekViewHourHeightDifference );
    eventBox.setAttribute( "top", top );
    
-   left = eval( boxLeftOffset + ( boxWidth * ( dayIndex - 1 ) ) + ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) ) ;
+   var left = eval( boxLeftOffset + ( boxWidth * ( dayIndex - 1 ) ) + ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) ) ;
    eventBox.setAttribute( "left", left );
    
    eventBox.setAttribute( "class", "week-view-event-class" );
@@ -634,8 +634,9 @@ WeekView.prototype.hiliteTodaysDate = function( )
 
    if ( Today.getTime() > FirstDay.getTime() && Today.getTime() < LastDay.getTime() ) 
    {
+      var ThisDate;
       //today is visible, get the day index for today
-      for ( dayIndex = 1; dayIndex <= 7; ++dayIndex )
+      for ( var dayIndex = 1; dayIndex <= 7; ++dayIndex )
       {
          ThisDate = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
          if ( ThisDate.getFullYear() == Today.getFullYear()
@@ -708,16 +709,16 @@ WeekView.prototype.clearSelectedDate = function( )
 WeekView.prototype.getWeekNumber = function()
 {
 	var today = new Date( this.calendarWindow.getSelectedDate() );
-	Year = today.getYear() + 1900;
-	Month = today.getMonth();
-	Day = today.getDate();
-   now = new Date(Year,Month,Day+1);
+	var Year = today.getYear() + 1900;
+	var Month = today.getMonth();
+	var Day = today.getDate();
+   var now = new Date(Year,Month,Day+1);
 	now = now.getTime();
    var Firstday = new Date( this.calendarWindow.getSelectedDate() );
 	Firstday.setYear(Year);
 	Firstday.setMonth(0);
 	Firstday.setDate(1);
-	then = new Date(Year,0,1);
+	var then = new Date(Year,0,1);
    then = then.getTime();
 	var Compensation = Firstday.getDay();
 	if (Compensation > 3) Compensation -= 4;

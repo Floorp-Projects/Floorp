@@ -144,9 +144,9 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
    //make the text node that will contain the text for the all day box.
    var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    
-   HtmlNode = document.createElement( "description" );
+   var HtmlNode = document.createElement( "description" );
    HtmlNode.setAttribute( "class", "all-day-content-box-text-title" );
-   TextNode = document.createTextNode( calendarStringBundle.GetStringFromName( "AllDayEvents" ) );
+   var TextNode = document.createTextNode( calendarStringBundle.GetStringFromName( "AllDayEvents" ) );
    HtmlNode.appendChild( TextNode );
    document.getElementById( "all-day-content-box" ).appendChild( HtmlNode );
       
@@ -327,7 +327,7 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    var topHeight = document.getElementById( "day-tree-item-"+startHour ).boxObject.y - document.getElementById( "day-tree-item-"+startHour ).parentNode.boxObject.y;
    var boxWidth = document.getElementById( "day-tree-item-"+startHour ).boxObject.width;
    
-   var topHeight = eval( topHeight + ( ( startMinutes/60 ) * boxHeight ) );
+   topHeight = eval( topHeight + ( ( startMinutes/60 ) * boxHeight ) );
    topHeight = Math.round( topHeight ) - 2;
    eventBox.setAttribute( "top", topHeight );
    
@@ -429,42 +429,49 @@ DayView.prototype.switchTo = function dayview_switchTo( )
 DayView.prototype.refreshDisplay = function dayview_refreshDisplay( )
 {
    // update the title
+   var dayNamePrev1;
+   var dayNamePrev2;
+
    var dayName = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() );
 	if (this.calendarWindow.getSelectedDate().getDay() < 2)
 	{
-		if (this.calendarWindow.getSelectedDate().getDay() == 0)
+      if (this.calendarWindow.getSelectedDate().getDay() == 0)
 		{
-			var dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 6 );
-			var dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 5 );
+			dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 6 );
+			dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 5 );
 		}
 		else
 		{
-			var dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 1 );
-			var dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 5 );
+			dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 1 );
+			dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 5 );
 		}
 	}
 	else
 	{
-		var dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 1 );
-		var dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 2 );
+		dayNamePrev1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 1 );
+		dayNamePrev2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 2 );
 	}
-	if (this.calendarWindow.getSelectedDate().getDay() > 4)
+	
+   var dayNameNext1;
+   var dayNameNext2;
+   
+   if (this.calendarWindow.getSelectedDate().getDay() > 4)
 	{
 		if (this.calendarWindow.getSelectedDate().getDay() == 6)
 		{
-			var dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 6);
-			var dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 5);
+			dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 6);
+			dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 5);
 		}
 		else
 		{
-			var dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
-			var dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 5);
+			dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
+			dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() - 5);
 		}
 	}
 	else
 	{
-		var dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
-		var dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 2);
+		dayNameNext1 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 1);
+		dayNameNext2 = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() + 2);
 	}
    var monthName = this.calendarWindow.dateFormater.getMonthName( this.calendarWindow.getSelectedDate().getMonth() );
    
@@ -510,14 +517,16 @@ DayView.prototype.getNewEventDate = function dayview_getNewEventDate( )
 
 DayView.prototype.goToNext = function dayview_goToNext(goDays)
 {
+   var nextDay;
+
    if (goDays)
 	{
-		var nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + goDays );
+		nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + goDays );
       this.goToDay( nextDay );
    }
 	else
 	{
-      var nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + 1 );
+      nextDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + 1 );
       this.goToDay( nextDay );
    }
 }
@@ -530,14 +539,16 @@ DayView.prototype.goToNext = function dayview_goToNext(goDays)
 
 DayView.prototype.goToPrevious = function dayview_goToPrevious( goDays )
 {
+   var prevDay;
+
    if (goDays)
 	{
-      var prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - goDays );
+      prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - goDays );
       this.goToDay( prevDay );
    }
 	else
 	{
-      var prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - 1 );
+      prevDay = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - 1 );
       this.goToDay( prevDay );
    }
 }

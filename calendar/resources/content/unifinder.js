@@ -407,26 +407,27 @@ function getAndSetEventTable( )
    var Today = new Date();
    //do this to allow all day events to show up all day long
    var StartDate = new Date( Today.getFullYear(), Today.getMonth(), Today.getDate(), 0, 0, 0 );
-   
+   var EndDate;
+
    switch( document.getElementById( "event-filter-menulist" ).selectedItem.value )
    {
       case "all":
          return( gEventSource.getAllEvents() );
          
       case "today":
-         var EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1 );
+         EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1 );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
       case "week":
-         var EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 8 ) );
+         EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 8 ) );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
       case "2weeks":
-         var EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 15 ) );
+         EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 15 ) );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
       case "month":
-         var EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 32 ) );
+         EndDate = new Date( StartDate.getTime() + ( 1000 * 60 * 60 * 24 * 32 ) );
          return( gEventSource.getEventsForRange( StartDate, EndDate ) );
          
       case "future":
@@ -435,7 +436,7 @@ function getAndSetEventTable( )
       case "current":
          var SelectedDate = gCalendarWindow.getSelectedDate();
          MidnightSelectedDate = new Date( SelectedDate.getFullYear(), SelectedDate.getMonth(), SelectedDate.getDate(), 0, 0, 0 );
-         var EndDate = new Date( MidnightSelectedDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1000 );
+         EndDate = new Date( MidnightSelectedDate.getTime() + ( 1000 * 60 * 60 * 24 ) - 1000 );
          return( gEventSource.getEventsForRange( MidnightSelectedDate, EndDate ) );
       
       default: 
@@ -572,7 +573,13 @@ var treeView =
                   return( calendarStringBundle.GetStringFromName( "Confirmed" ) );
                case calendarEvent.ICAL_STATUS_CANCELLED:
                   return( calendarStringBundle.GetStringFromName( "Cancelled" ) );
+               default: 
+                  return false;
             }
+            return false;
+
+         default: 
+            return false;
       }
    }
 }
@@ -584,14 +591,11 @@ function sortEvents( EventA, EventB )
 	{
 		modifier = -1;
 	}
-   //dump( "\nswitch on treeview.SelectedColumn which is "+treeView.selectedColumn );
+   
    switch(treeView.selectedColumn)
    {
       case "unifinder-search-results-tree-col-title":
-      {
-         //dump( "\nreturning "+EventA.title +" > "+EventB.title );
          return( ((EventA.title > EventB.title) ? 1 : -1) * modifier );
-      }
       
       case "unifinder-search-results-tree-col-startdate":
          return( ((EventA.start.getTime() > EventB.start.getTime()) ? 1 : -1) * modifier );
@@ -607,6 +611,9 @@ function sortEvents( EventA, EventB )
    
       case "unifinder-search-results-tree-col-status":
          return( ((EventA.status > EventB.status) ? 1 : -1) * modifier );
+
+      default:
+         return true;
    }
 }
 
@@ -687,13 +694,15 @@ function focusFirstItemIfNoSelection()
 
 function getNextOrPreviousRecurrence( calendarEvent )
 {
+   var isValid;
+
    if( calendarEvent.recur )
    {
       var now = new Date();
 
       var result = new Object();
 
-      var isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
+      isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
 
       if( isValid )
       {
@@ -711,6 +720,7 @@ function getNextOrPreviousRecurrence( calendarEvent )
    {
       return( new Date( calendarEvent.start.getTime() ) );
    }
+   return( false );
 }
 
 

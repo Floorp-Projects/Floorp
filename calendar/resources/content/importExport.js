@@ -111,7 +111,6 @@ function loadEventsFromFile()
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
   
   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-     
   fp.init(window, "Open", nsIFilePicker.modeOpenMultiple);
   fp.defaultExtension = "ics";
    
@@ -122,40 +121,39 @@ function loadEventsFromFile()
   var filesToAppend = fp.files;
 
   if (filesToAppend && filesToAppend.hasMoreElements()) 
-    {
+  {
       var calendarEventArray = new Array();
       var duplicateEventArray = new Array();
       var currentFile;
       var aDataStream;
       var i;
+      var tempEventArray;
 
       while (filesToAppend.hasMoreElements())
-        {
+      {
           currentFile = filesToAppend.getNext().QueryInterface(Components.interfaces.nsILocalFile);
           aDataStream = readDataFromFile( currentFile.path, "UTF-8" );
 
           switch (fp.filterIndex) {
           case 0 : // ics
-            var tempEventArray = parseIcalData( aDataStream );
+            tempEventArray = parseIcalData( aDataStream );
             for (i=0; i < tempEventArray.length; i++)
               calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
             break;
           case 1 : // xcs
-            var tempEventArray = parseXCSData( aDataStream );
+            tempEventArray = parseXCSData( aDataStream );
             for (i=0; i < tempEventArray.length; i++)
               calendarEventArray[calendarEventArray.length]  = tempEventArray[i];    
             break;
           case 2: // csv
             var ret = parseOutlookCSVData( aDataStream, dupResult.discard, dupResult.prompt );
             for (i=0; i < ret.calendarEventArray.length; i++)
-              calendarEventArray[calendarEventArray.length]  = ret.calendarEventArray[i];
+               calendarEventArray[calendarEventArray.length]  = ret.calendarEventArray[i];
             for (i=0; i < ret.calendarDuplicateArray.length; i++)
-	      duplicateEventArray[duplicateEventArray.length] = ret.calendarDuplicateArray[i];
+	            duplicateEventArray[duplicateEventArray.length] = ret.calendarDuplicateArray[i];
             break;
           }
-      
-        }
-
+      }
 
       // If there are no events to import, let the user know
       //
@@ -180,20 +178,20 @@ function loadEventsFromFile()
                                   null,null,null,null, result); 
 
         if(buttonPressed == 0) // YES
-          { 
+        { 
             addEventsToCalendar( calendarEventArray );
             return true;
-          }
+        }
         else if(buttonPressed == 1) // NO
-          { 
+        { 
             addEventsToCalendar( calendarEventArray, true );
             return true;
-          } 
+        } 
         else if(buttonPressed == 2) // CANCEL
-          { 
+        { 
             return false; 
-          } 
-      }
+        } 
+   }
 
 
       // Depending on how the user chose to deal with duplicates,

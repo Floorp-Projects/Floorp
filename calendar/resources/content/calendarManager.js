@@ -76,7 +76,7 @@ function calendarManager( CalendarWindow )
       this.rootContainer = this.rdf.addRootSeq( "urn:calendarcontainer" );
 
       //add the default calendar
-      var profileFile = this.getProfileDirectory();
+      profileFile = this.getProfileDirectory();
       profileFile.append("Calendar");
       profileFile.append("CalendarDataFile.ics");
                          
@@ -201,10 +201,12 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    node.setAttribute("http://home.netscape.com/NC-rdf#serverNumber", this.rootContainer.getSubNodes().length);
    node.setAttribute("http://home.netscape.com/NC-rdf#name", CalendarObject.name);
    
+   var profileFile;
+
    if( CalendarObject.path == "" )
    {
       //they didn't set a path in the box, that's OK, its not required.
-      var profileFile = this.getProfileDirectory();
+      profileFile = this.getProfileDirectory();
       profileFile.append("Calendar");
       profileFile.append("CalendarDataFile"+this.rootContainer.getSubNodes().length+".ics");
       CalendarObject.path = profileFile.path;
@@ -214,7 +216,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
 
    if( CalendarObject.path.indexOf( "http://" ) != -1 )
    {
-      var profileFile = this.getProfileDirectory();
+      profileFile = this.getProfileDirectory();
       profileFile.append( "Calendar" );
       profileFile.append("RemoteCalendar"+this.rootContainer.getSubNodes().length+".ics");
 
@@ -504,6 +506,7 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
          {
             onResponse( result );
          }
+         return true;
       }
    }
    
@@ -604,12 +607,12 @@ calendarManager.prototype.getAndConvertAllOldCalendars = function calMan_getAllC
 
       this.rdf.flush();
       //if the file CalendarDataFile.ics exists in the users profile directory, move it to Calendar/CalendarDataFile.ics
-      var newCalendarFile = this.getProfileDirectory();
+      newCalendarFile = this.getProfileDirectory();
       newCalendarFile.append( "Calendar" );
       newCalendarFile.append( "RemoteCalendar"+this.rootContainer.getSubNodes().length+".ics" );
    
-      var oldCalendarDataFile = new File( thisCalendar.path );
-      var newCalendarDataFile = new File( newCalendarFile.path );
+      oldCalendarDataFile = new File( thisCalendar.path );
+      newCalendarDataFile = new File( newCalendarFile.path );
    
       if( oldCalendarDataFile.exists() && thisCalendar.remote == true )
       {

@@ -555,6 +555,8 @@ function getNextOrPreviousRecurrence( calendarEvent )
 {
    var isValid = false;
 
+   var eventStartDate;
+
    if( calendarEvent.recur )
    {
       var now = new Date();
@@ -565,19 +567,19 @@ function getNextOrPreviousRecurrence( calendarEvent )
 
       if( isValid )
       {
-         var eventStartDate = new Date( result.value );
+         eventStartDate = new Date( result.value );
       }
       else
       {
          isValid = calendarEvent.getPreviousOccurrence( now.getTime(), result );
          
-         var eventStartDate = new Date( result.value );
+         eventStartDate = new Date( result.value );
       }
    }
    
    if( !isValid )
    {
-      var eventStartDate = new Date( calendarEvent.start.getTime() );
+      eventStartDate = new Date( calendarEvent.start.getTime() );
    }
       
    return eventStartDate;

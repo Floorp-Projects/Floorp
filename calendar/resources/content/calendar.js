@@ -457,12 +457,14 @@ var gNewDateVariable = null;
 
 function newEventCommand( event )
 {
+   var startDate;
+
    if( gNewDateVariable != null )
    {
-      var startDate = gNewDateVariable;
+      startDate = gNewDateVariable;
    }
    else
-      var startDate = gCalendarWindow.currentView.getNewEventDate();
+      startDate = gCalendarWindow.currentView.getNewEventDate();
 
    var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
    
@@ -768,6 +770,8 @@ function deleteEventCommand( DoNotConfirm )
 
       gICalLib.batchMode = true;
       
+      var ThisItem;
+
       if( !DoNotConfirm )
       {
          if( confirm( "Are you sure you want to delete all selected events?" ) )
@@ -776,7 +780,7 @@ function deleteEventCommand( DoNotConfirm )
             
             while( SelectedItems.length )
             {
-               var ThisItem = SelectedItems.pop();
+               ThisItem = SelectedItems.pop();
                
                gICalLib.deleteEvent( ThisItem.id );
             }
@@ -788,7 +792,7 @@ function deleteEventCommand( DoNotConfirm )
             
          while( SelectedItems.length )
          {
-            var ThisItem = SelectedItems.pop();
+            ThisItem = SelectedItems.pop();
             
             gICalLib.deleteEvent( ThisItem.id );
          }
@@ -897,16 +901,16 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 
    if( calendarEventDisplay.recur == true )
    {
-      var DateHtml = document.createElement( "description" );
-      var DateText = document.createTextNode( "This is a repeating event." );
+      DateHtml = document.createElement( "description" );
+      DateText = document.createTextNode( "This is a repeating event." );
       DateHtml.appendChild( DateText );
       HolderBox.appendChild( DateHtml );
    }
    else
    {
-      var DateHtml = document.createElement( "description" );
-      var startDate = new Date( calendarEventDisplay.event.end.getTime() );
-      var DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+      DateHtml = document.createElement( "description" );
+      startDate = new Date( calendarEventDisplay.event.end.getTime() );
+      DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
       DateHtml.appendChild( DateText );
       HolderBox.appendChild( DateHtml );
    }

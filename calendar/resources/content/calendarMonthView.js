@@ -424,7 +424,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    
    var Offset = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "week.start", 0 );
    
-   NewArrayOfDayNames = new Array();
+   var NewArrayOfDayNames = new Array();
    
    for( i = 0; i < ArrayOfDayNames.length; i++ )
    {
@@ -468,7 +468,8 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    {
       var dayNumberItem = this.dayNumberItemArray[ dayIndex ];
       var dayBoxItem = this.dayBoxItemArray[ dayIndex ];
-      
+      var thisDate;
+
       if( dayIndex < firstDayOfWeek || dayNumber > lastDayOfMonth )
       {
          // this day box is NOT in the month, 
@@ -479,7 +480,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
          
          if( dayIndex < firstDayOfWeek )
          {
-            var thisDate = new Date( newYear, newMonth, 1-(firstDayOfWeek - dayIndex ) );
+            thisDate = new Date( newYear, newMonth, 1-(firstDayOfWeek - dayIndex ) );
             
             dayBoxItem.date = thisDate;
             
@@ -488,7 +489,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
          }
          else
          {
-            var thisDate = new Date( newYear, newMonth, lastDayOfMonth+( dayIndex - lastDayOfMonth - firstDayOfWeek + 1 ) );
+            thisDate = new Date( newYear, newMonth, lastDayOfMonth+( dayIndex - lastDayOfMonth - firstDayOfWeek + 1 ) );
             
             dayBoxItem.date = thisDate;
             dayBoxItem.setAttribute( "date", thisDate );
@@ -501,7 +502,7 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
          dayNumberItem.setAttribute( "value" , dayNumber );
          
          dayBoxItem.removeAttribute( "empty" ); 
-         var thisDate = new Date( newYear, newMonth, dayNumber );
+         thisDate = new Date( newYear, newMonth, dayNumber );
          if( thisDate.getDay() == 0 | thisDate.getDay() == 6 )
          {
             dayBoxItem.setAttribute( "weekend", "true" );
@@ -558,7 +559,7 @@ MonthView.prototype.clearSelectedDate = function monthView_clearSelectedDate( )
 {
    var SelectedBoxes = document.getElementsByAttribute( "monthselected", "true" );
    
-   for( i = 0; i < SelectedBoxes.length; i++ )
+   for( var i = 0; i < SelectedBoxes.length; i++ )
    {
       SelectedBoxes[i].removeAttribute( "monthselected" );
    }
@@ -573,7 +574,7 @@ MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( 
 {
    var SelectedBoxes = document.getElementsByAttribute( "eventselected", "true" );
    
-   for( i = 0; i < SelectedBoxes.length; i++ )
+   for( var i = 0; i < SelectedBoxes.length; i++ )
    {
       SelectedBoxes[i].removeAttribute( "eventselected" );
    }
@@ -593,7 +594,7 @@ MonthView.prototype.hiliteTodaysDate = function monthView_hiliteTodaysDate( )
    // Clear the old selection if there was one
    var TodayBox = document.getElementsByAttribute( "today", "true" );
    
-   for( i = 0; i < TodayBox.length; i++ )
+   for( var i = 0; i < TodayBox.length; i++ )
    {
       TodayBox[i].removeAttribute( "today" );
    }
@@ -638,12 +639,14 @@ MonthView.prototype.getNewEventDate = function monthView_getNewEventDate( )
 
 MonthView.prototype.goToNext = function monthView_goToNext( goMonths )
 {  
+   var nextMonth;
+
    if(goMonths){
-      var nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + goMonths, 1 );
+      nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + goMonths, 1 );
       this.adjustNewMonth( nextMonth );  
       this.goToDay( nextMonth );
    }else{
-      var nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + 1, 1 );
+      nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + 1, 1 );
       this.adjustNewMonth( nextMonth );  
       this.goToDay( nextMonth );
    }
@@ -657,12 +660,14 @@ MonthView.prototype.goToNext = function monthView_goToNext( goMonths )
 
 MonthView.prototype.goToPrevious = function monthView_goToPrevious( goMonths )
 {
+   var prevMonth;
+
    if(goMonths){
-      var prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - goMonths, 1 );
+      prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - goMonths, 1 );
       this.adjustNewMonth( prevMonth );  
       this.goToDay( prevMonth );
    }else{
-      var prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - 1, 1 );
+      prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - 1, 1 );
       this.adjustNewMonth( prevMonth );  
       this.goToDay( prevMonth );
    }
@@ -847,7 +852,7 @@ MonthView.prototype.setCalendarSize = function monthView_setCalendarSize( height
 /*returns the height of the current view in pixels*/ 
 MonthView.prototype.getViewHeight = function monthView_getViewHeight( )
 {
-    toReturn = document.defaultView.getComputedStyle(document.getElementById("month-view-box"), "").getPropertyValue("height");
+    var toReturn = document.defaultView.getComputedStyle(document.getElementById("month-view-box"), "").getPropertyValue("height");
     toReturn = parseInt( toReturn ); //strip off the px at the end
     return toReturn;
 }
@@ -878,8 +883,8 @@ MonthView.prototype.setNumberOfEventsToShow = function monthView_getNumberOfEven
 /*
 drag and drop stuff 
 */
-gEventBeingDragged = false;
-gBoxBeingDroppedOn = false;
+var gEventBeingDragged = false;
+var gBoxBeingDroppedOn = false;
 
 var monthViewEventDragAndDropObserver  = {
   onDragStart: function (evt, transferData, action){

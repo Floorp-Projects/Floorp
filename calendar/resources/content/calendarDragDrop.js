@@ -106,7 +106,7 @@ var calendarViewDNDObserver = {
    },
 
 
-   onDragOver: function (aEvent, aFlavour, aDragSession)
+   onDragOver: function calendarViewOnDragOver(aEvent, aFlavour, aDragSession)
    {
       if (aDragSession.isDataFlavorSupported("text/calendar-interval")) 
       {
@@ -123,6 +123,7 @@ var calendarViewDNDObserver = {
          // if (aDragSession.isDataFlavorSupported("text/calendar-interval"))
          aEvent.target.setAttribute( "draggedover", "true" );
       }
+      return true;
    },
 
 

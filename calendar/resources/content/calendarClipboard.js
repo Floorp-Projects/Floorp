@@ -148,7 +148,7 @@ function copyToClipboard( calendarEventArray )
 {  
    if( !calendarEventArray)
    {
-      var calendarEventArray = new Array();
+      var calendarEventArray = new Array( 0 );
       calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
    }
 
@@ -195,6 +195,7 @@ function copyToClipboard( calendarEventArray )
          return true;         
       }
    }
+   return true;
 }
 
 
@@ -233,6 +234,8 @@ function pasteFromClipboard()
 	 //DEBUG alert("clipboard type: " + flavour.value);
     var calendarEventArray;
     var startDate;
+    var endDateTime;
+    var MinutesToAddOn;
 
 	 switch (flavour.value) {
 	 case "text/calendar":
@@ -241,9 +244,9 @@ function pasteFromClipboard()
             
             //change the date of all the events to now
             startDate = gCalendarWindow.currentView.getNewEventDate();
-            var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
+            MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
    
-            var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
+            endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    
             for( var i = 0; i < calendarEventArray.length; i++ )
             {
@@ -266,11 +269,11 @@ function pasteFromClipboard()
                calendarEventArray = parseIcalData( data );
                //change the date of all the events to now
                startDate = gCalendarWindow.currentView.getNewEventDate();
-               var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
+               MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );
       
-               var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
+               endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
       
-               for( var i = 0; i < calendarEventArray.length; i++ )
+               for( i = 0; i < calendarEventArray.length; i++ )
                {
                   calendarEventArray[i].start.setTime( startDate );
                   calendarEventArray[i].end.setTime( endDateTime );

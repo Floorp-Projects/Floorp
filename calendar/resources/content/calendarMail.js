@@ -202,10 +202,12 @@ function sendEvent()
       }
    }
    
+   var EmailSubject;
+
    if( gCalendarWindow.EventSelection.selectedEvents.length == 1 )
-      var EmailSubject = Event.title;
+      EmailSubject = Event.title;
    else
-      var EmailSubject = emailStringBundle.GetStringFromName( "EmailSubject" );
+      EmailSubject = emailStringBundle.GetStringFromName( "EmailSubject" );
 
    saveCalendarObject(CalendarDataFilePath, CalendarText);
 

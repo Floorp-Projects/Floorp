@@ -138,7 +138,7 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     var ioService = GetIOService();
     if (!ioService)
     {
-       return;
+       return null;
     }
 
     // create a channel for the destination location
@@ -147,7 +147,7 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     if (!destChannel)
     {
       dump("can't create dest channel\n");
-      return;
+      return null;
     }
     try {
     dump("about to set callbacks\n");

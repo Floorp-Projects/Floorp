@@ -42,7 +42,7 @@
 				if (val) this.value = val;
 				else this.value = new Date();
             
-            var val = this.getAttribute("ondatepick");
+            val = this.getAttribute("ondatepick");
             dump( "\ncallback is "+val );
 				if (val) this.callback = new Function( val );
             

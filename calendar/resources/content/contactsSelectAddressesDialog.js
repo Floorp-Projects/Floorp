@@ -523,8 +523,7 @@ ContactsTree.prototype =
     onDblClick: function( event )
     {
         addSelectedAddressesIntoBucket( DTD_toPrefix, kADDRESS_PREFIX_TO );
-    },
-
+    }
 };
 
 
@@ -1499,8 +1498,7 @@ EventContactsTree.prototype =
     onDblClick: function( event )
     {
         addSelectedAddressesIntoInviteBucket( '', '' );
-    },
-
+    }
 };
 
 

@@ -263,7 +263,7 @@ function loadCalendarEventDialog()
    while( oldMenulist.hasChildNodes() )
       oldMenulist.removeChild( oldMenulist.lastChild );
 
-   for (var i = 0; i < categoriesList.length ; i++)
+   for (i = 0; i < categoriesList.length ; i++)
    {
       document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
    }

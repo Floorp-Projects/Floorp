@@ -148,6 +148,7 @@ function getToDoFromEvent( event )
    { 
       return( tree.taskView.getCalendarTaskAtRow( row.value ) );
    }
+   return false;
 }
 
 function getSelectedToDo()
@@ -399,7 +400,7 @@ var toDoTreeView =
    {
       calendarToDo = gTaskArray[row];
       if( !calendarToDo )
-         return;
+         return false;
 
       switch( column )
       {
@@ -410,10 +411,11 @@ var toDoTreeView =
             return( " " );
 
          case "unifinder-todo-tree-col-title":
+            var titleText;
             if( calendarToDo.title == "" )
-               var titleText = "Untitled";
+               titleText = "Untitled";
             else  
-               var titleText = calendarToDo.title;
+               titleText = calendarToDo.title;
             return( titleText );
          case "unifinder-todo-tree-col-startdate":
             return( formatUnifinderEventDate( new Date( calendarToDo.start.getTime() ) ) );
@@ -425,6 +427,8 @@ var toDoTreeView =
             return( calendarToDo.percentcomplete );
          case "unifinder-todo-tree-col-categories":
             return( calendarToDo.categories );
+         default:
+            return false;
       }
    }
 }
@@ -439,29 +443,31 @@ function sortTasks( TaskA, TaskB )
 
    switch(toDoTreeView.selectedColumn)
    {
-   case "unifinder-todo-tree-col-completed":
-      return( ((TaskA.completed.getTime() > TaskB.completed.getTime()) ? 1 : -1) * modifier );
-   
-   case "unifinder-todo-tree-col-priority":
-      return( ((TaskA.priority > TaskB.priority) ? 1 : -1) * modifier );
-
-   case "unifinder-todo-tree-col-title":
-         return( ((TaskA.title > TaskB.title) ? 1 : -1) * modifier );
-
-   case "unifinder-todo-tree-col-startdate":
-         return( ((TaskA.start.getTime() > TaskB.start.getTime()) ? 1 : -1) * modifier );
-
-   case "unifinder-todo-tree-col-duedate":
-         return( ((TaskA.due.getTime() > TaskB.due.getTime()) ? 1 : -1) * modifier );
-
-   case "unifinder-todo-tree-col-completeddate":
+      case "unifinder-todo-tree-col-completed":
          return( ((TaskA.completed.getTime() > TaskB.completed.getTime()) ? 1 : -1) * modifier );
+      
+      case "unifinder-todo-tree-col-priority":
+         return( ((TaskA.priority > TaskB.priority) ? 1 : -1) * modifier );
    
-   case "unifinder-todo-tree-col-percentcomplete":
+      case "unifinder-todo-tree-col-title":
+         return( ((TaskA.title > TaskB.title) ? 1 : -1) * modifier );
+   
+      case "unifinder-todo-tree-col-startdate":
+         return( ((TaskA.start.getTime() > TaskB.start.getTime()) ? 1 : -1) * modifier );
+   
+      case "unifinder-todo-tree-col-duedate":
+         return( ((TaskA.due.getTime() > TaskB.due.getTime()) ? 1 : -1) * modifier );
+   
+      case "unifinder-todo-tree-col-completeddate":
+         return( ((TaskA.completed.getTime() > TaskB.completed.getTime()) ? 1 : -1) * modifier );
+      
+      case "unifinder-todo-tree-col-percentcomplete":
          return( ((TaskA.percentcomplete > TaskB.percentcomplete) ? 1 : -1) * modifier );
-
-   case "unifinder-todo-tree-col-categories":
-            return( ((TaskA.categories > TaskB.categories) ? 1 : -1) * modifier );
+   
+      case "unifinder-todo-tree-col-categories":
+         return( ((TaskA.categories > TaskB.categories) ? 1 : -1) * modifier );
+      default:
+         return true;
    }
 }
 
@@ -531,7 +537,7 @@ function getTaskTable( )
       gICalLib.filter.completed.setTime( now );
    }
 
-   var taskTable = gEventSource.getAllToDos();
+   taskTable = gEventSource.getAllToDos();
    
    return( taskTable );
 }
