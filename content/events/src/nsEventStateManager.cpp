@@ -81,16 +81,20 @@ nsEventStateManager::nsEventStateManager()
   NS_INIT_REFCNT();
 }
 
-nsEventStateManager::~nsEventStateManager() {
+nsEventStateManager::~nsEventStateManager()
+{
   NS_IF_RELEASE(mCurrentTargetContent);
+
+  NS_IF_RELEASE(mLastLeftMouseDownContent);
+  NS_IF_RELEASE(mLastMiddleMouseDownContent);
+  NS_IF_RELEASE(mLastRightMouseDownContent);
+
   NS_IF_RELEASE(mActiveContent);
   NS_IF_RELEASE(mHoverContent);
   NS_IF_RELEASE(mDragOverContent);
   NS_IF_RELEASE(mCurrentFocus);
+
   NS_IF_RELEASE(mDocument);
-  NS_IF_RELEASE(mLastLeftMouseDownContent);
-  NS_IF_RELEASE(mLastMiddleMouseDownContent);
-  NS_IF_RELEASE(mLastRightMouseDownContent);
 }
 
 NS_IMPL_ADDREF(nsEventStateManager)
@@ -325,10 +329,10 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext& aPresContext, nsGUI
 
 NS_IMETHODIMP
 nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext, 
-                                 nsGUIEvent *aEvent,
-                                 nsIFrame* aTargetFrame,
-                                 nsEventStatus& aStatus,
-                                 nsIView* aView)
+                                     nsGUIEvent *aEvent,
+                                     nsIFrame* aTargetFrame,
+                                     nsEventStatus& aStatus,
+                                     nsIView* aView)
 {
   mCurrentTarget = aTargetFrame;
   NS_IF_RELEASE(mCurrentTargetContent);  
@@ -810,40 +814,48 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
 {
   nsresult ret = NS_OK;
   nsMouseEvent event;
-  nsIContent* mouseContent;
+  nsCOMPtr<nsIContent> mouseContent;
   PRBool fireClick = PR_FALSE;
 
-  mCurrentTarget->GetContent(&mouseContent);
+  mCurrentTarget->GetContent(getter_AddRefs(mouseContent));
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
+    NS_IF_RELEASE(mLastLeftMouseDownContent);
     mLastLeftMouseDownContent = mouseContent;
     NS_IF_ADDREF(mLastLeftMouseDownContent);
     break;
+
   case NS_MOUSE_LEFT_BUTTON_UP:
-    if (mLastLeftMouseDownContent == mouseContent) {
+    if (mLastLeftMouseDownContent == mouseContent.get()) {
       fireClick = PR_TRUE;
       event.message = NS_MOUSE_LEFT_CLICK;
     }
     NS_IF_RELEASE(mLastLeftMouseDownContent);
     break;
+
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    NS_IF_RELEASE(mLastMiddleMouseDownContent);
     mLastMiddleMouseDownContent = mouseContent;
     NS_IF_ADDREF(mLastMiddleMouseDownContent);
     break;
+
   case NS_MOUSE_MIDDLE_BUTTON_UP:
-    if (mLastMiddleMouseDownContent == mouseContent) {
+    if (mLastMiddleMouseDownContent == mouseContent.get()) {
       fireClick = PR_TRUE;
       event.message = NS_MOUSE_MIDDLE_CLICK;
     }
     NS_IF_RELEASE(mLastMiddleMouseDownContent);
     break;
+
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
+    NS_IF_RELEASE(mLastRightMouseDownContent);
     mLastRightMouseDownContent = mouseContent;
     NS_IF_ADDREF(mLastRightMouseDownContent);
     break;
+
   case NS_MOUSE_RIGHT_BUTTON_UP:
-    if (mLastRightMouseDownContent == mouseContent) {
+    if (mLastRightMouseDownContent == mouseContent.get()) {
       fireClick = PR_TRUE;
       event.message = NS_MOUSE_RIGHT_CLICK;
     }
@@ -860,9 +872,9 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
     event.refPoint.x = aEvent->refPoint.x;
     event.refPoint.y = aEvent->refPoint.y;
 
-    if (nsnull != mouseContent) {
-      ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, aStatus); 
-      NS_RELEASE(mouseContent);
+    if (mouseContent) {
+      ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull,
+                                         NS_EVENT_FLAG_INIT, aStatus); 
     }
 
     if (nsnull != mCurrentTarget) {
