@@ -595,7 +595,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 #ifdef DEBUG_EVENTS
   if (isModifier) printf("isModifier\n");
 #endif
-  if (event->length && !isModifier) {
+  if (event->length) {
      InitKeyPressEvent(event,p,kevent);
      win->OnKey(kevent);
    }
