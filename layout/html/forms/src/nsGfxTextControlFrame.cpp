@@ -98,7 +98,6 @@ static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 //static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 
-
 #ifndef NECKO   // about:blank is broken in netlib
 #define EMPTY_DOCUMENT "resource:/res/html/empty_doc.html"
 #else           // but works great in the new necko lib
@@ -592,13 +591,31 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible) 
   {
-    const nsStyleSpacing* mySpacing =
-      (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsCompatibility mode;
+    aPresContext.GetCompatibilityMode(&mode);
+    const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     PRIntn skipSides = 0;
     nsRect rect(0, 0, mRect.width, mRect.height);
-    //PaintTextControl(aPresContext, aRenderingContext, text, mStyleContext, rect);
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
+    if (eCompatibility_NavQuirks == mode) {
+      nscoord borderTwips = 0;
+      nsILookAndFeel * lookAndFeel;
+      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+        PRInt32 tfBorder;
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, tfBorder);
+        NS_RELEASE(lookAndFeel);
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        borderTwips = NSIntPixelsToTwips(tfBorder, p2t);
+      }
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                             aDirtyRect, rect, *mySpacing, 
+                                             aStyleContext, skipSides, nsnull, borderTwips, PR_TRUE);
+
+    } else {
+      //PaintTextControl(aPresContext, aRenderingContext, text, mStyleContext, rect);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
+    }
   }
 }
 
@@ -854,6 +871,17 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
+  // add ourself as an nsIFormControlFrame
+  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  }
+
+  // Figure out if we are doing Quirks or Standard
+  nsCompatibility mode;
+  aPresContext.GetCompatibilityMode(&mode);
+
+  // calculate the the desired size for the text control
+  // use the suggested size if it has been set
   nsresult rv;
   nsHTMLReflowState suggestedReflowState(aReflowState);
   if ((kSuggestedNotSet != mSuggestedWidth) || 
@@ -869,10 +897,6 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       aMetrics.height = mSuggestedHeight;
     }
     rv = NS_OK;
-    if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-      nsFormFrame::AddFormControlFrame(aPresContext, *this);
-    }
-    // XXX PostCreateWidget is misnamed for GFX widgets
     if (!mDidInit) {
       PostCreateWidget(&aPresContext, aMetrics.width, aMetrics.height);
       mDidInit = PR_TRUE;
@@ -881,12 +905,24 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     aMetrics.ascent = aMetrics.height;
     aMetrics.descent = 0;
 
-    if (nsnull != aMetrics.maxElementSize) {
-      //XXX aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
-    }
     aStatus = NS_FRAME_COMPLETE;
   } else {
-    rv = Inherited::Reflow(aPresContext, aMetrics, suggestedReflowState, aStatus);
+    // Quirks mode will NOT obey CSS border and padding
+    // GetDesiredSize calculates the size without CSS borders
+    // the nsLeafFrame::Reflow will add in the borders
+    if (eCompatibility_NavQuirks == mode) {
+      GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+      aStatus = NS_FRAME_COMPLETE;
+    } else {
+      nsresult rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+    }
+    // Now resize the widget if there is one, in this case it is 
+    // the webshell for the editor
+    if (!mDidInit) {
+      PostCreateWidget(&aPresContext, aMetrics.width, aMetrics.height);
+      mDidInit = PR_TRUE;
+    }
+    //rv = Inherited::Reflow(aPresContext, aMetrics, suggestedReflowState, aStatus);
   }
 
     
@@ -897,25 +933,46 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 #endif
 
 
-  // resize the sub document
-  if (NS_SUCCEEDED(rv) && mWebShell) 
-  {
-    // get the border
-    const nsStyleSpacing* spacing;
-    GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);    nsMargin border;
-    spacing->CalcBorderFor(this, border);
+  // resize the sub document within the defined rect 
+  // the sub-document will fit inside the border
+  if (NS_SUCCEEDED(rv) && mWebShell) {
+    // Get the size of the border
+    // if in Quirks mode then it is a hard coded value from 
+    // the native look and feel
+    // otherwise it comes from style
+    nsMargin border;
+    if (eCompatibility_NavQuirks == mode) {
+      nsILookAndFeel * lookAndFeel;
+      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+        float p2t;
+        aPresContext.GetPixelsToTwips(&p2t);
+        PRInt32 borderSize;
+        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, borderSize);
+        nscoord borderTwips = NSIntPixelsToTwips(borderSize, p2t);
+        border.SizeTo(borderTwips, borderTwips, borderTwips, borderTwips);
+        NS_RELEASE(lookAndFeel);
+      }
+
+    } else {
+      // Get the CSS border
+      const nsStyleSpacing* spacing;
+      GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+      spacing->CalcBorderFor(this, border);
+    }
 
     float t2p;
     aPresContext.GetTwipsToPixels(&t2p);
+
     nsRect subBounds;
 
     // XXX: the point here is to make a single-line edit field as wide as it wants to be, 
     //      so it will scroll horizontally if the characters take up more space than the field
-    subBounds.x = NSToCoordRound(border.left * t2p);
-    subBounds.y = NSToCoordRound(border.top * t2p);
+    subBounds.x      = NSToCoordRound(border.left * t2p);
+    subBounds.y      = NSToCoordRound(border.top * t2p);
     subBounds.width  = NSToCoordRound((aMetrics.width - (border.left + border.right)) * t2p);
     subBounds.height = NSToCoordRound((aMetrics.height - (border.top + border.bottom)) * t2p);
     mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
+
 #ifdef NOISY
     printf("webshell set to (%d, %d, %d %d)\n", 
            border.left, border.top, 
