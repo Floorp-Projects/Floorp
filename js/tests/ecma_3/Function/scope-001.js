@@ -34,6 +34,7 @@
 var UBound = 0;
 var bug = '(none)';
 var summary = 'Testing that functions are scoped statically, not dynamically';
+var self = this;  // capture a reference to the global object
 var status = '';
 var statusitems = [ ];
 var actual = '';
@@ -163,6 +164,44 @@ with (obj)
   actual = f();
 }
 expect = 2;  // NOT 3 !!!
+addThis();
+
+
+/*
+ * Explicitly verify that f exists at global level, even though
+ * it was defined under the with(obj) block -
+ */
+status = 'Section G of test';
+var a = 1;
+var obj = {a:2};
+with (obj)
+{
+  function f()
+  {
+    return a;
+  }
+}
+actual = String([obj.hasOwnProperty('f'), self.hasOwnProperty('f')]);
+expect = String([false, true]);
+addThis();
+
+
+/*
+ * Explicitly verify that f exists at global level, even though
+ * it was defined under the with(obj) block -
+ */
+status = 'Section H of test';
+var a = 1;
+var obj = {a:2};
+with (obj)
+{
+  function f()
+  {
+    return a;
+  }
+}
+actual = String(['f' in obj, 'f' in self]);
+expect = String([false, true]);
 addThis();
 
 
