@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Rod Spears <rods@netscape.com>
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
 #include "nsISupports.idl"
@@ -36,9 +37,15 @@ interface nsIRollupListener : nsISupports
   void Rollup();
 
   /**
-   * Asks the RoolupListener if it should rollup on mousevents
+   * Asks the RollupListener if it should rollup on mousevents
    * @result NS_Ok if no errors
    */
   void ShouldRollupOnMouseWheelEvent(out PRBool aShould);
+
+  /**
+   * Asks the RollupListener if it should rollup on mouse activate, eg. X-Mouse
+   * @result NS_Ok if no errors
+   */
+  void ShouldRollupOnMouseActivate(out PRBool aShould);
 
 };
