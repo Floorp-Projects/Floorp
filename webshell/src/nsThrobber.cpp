@@ -274,7 +274,7 @@ HandleThrobberEvent(nsGUIEvent *aEvent)
         {
           cx->GetWidth(str, w);
           met->GetHeight(h);
-          cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
+          cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0, nsnull);
           NS_RELEASE(met);
         }
       }
