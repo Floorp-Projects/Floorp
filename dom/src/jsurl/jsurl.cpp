@@ -17,6 +17,9 @@
  */
 
 /* Code liberally stolen from mkmocha.h */
+#if defined(XP_MAC) && defined(NECKO)
+#include "nsJSProtocolHandler.cpp"
+#else
 
 #include "xp.h"
 #include "plstr.h"
@@ -450,3 +453,6 @@ NET_InitJavaScriptProtocol(void)
         NET_RegisterProtocolImplementation(&mocha_proto_impl, MOCHA_TYPE_URL);
 #endif
 }
+
+#endif /* XP_MAC && NECKO */
+
