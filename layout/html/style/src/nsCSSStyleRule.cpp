@@ -665,7 +665,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
 
         // cursor: enum
         if (ourColor->mCursor.GetUnit() == eCSSUnit_Enumerated) {
-          color->mCursor = ourColor->mCursor.GetColorValue();
+          color->mCursor = ourColor->mCursor.GetIntValue();
         }
 
         // cursor-image: string
