@@ -37,6 +37,7 @@
 PR_EXTERN(PRStatus)
 _PR_MD_CREATE_FILE_MAP(PRFileMap *fmap, PRInt64 size)
 {
+    PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
     return PR_FAILURE;
 }
 
@@ -57,11 +58,13 @@ _PR_MD_MEM_MAP(PRFileMap *fmap, PRInt64 offset, PRUint32 len)
 PR_EXTERN(PRStatus)
 _PR_MD_MEM_UNMAP(void *addr, PRUint32 size)
 {
+    PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
     return PR_FAILURE;
 }
 
 PR_EXTERN(PRStatus)
 _PR_MD_CLOSE_FILE_MAP(PRFileMap *fmap)
 {
+    PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
     return PR_FAILURE;
 }
