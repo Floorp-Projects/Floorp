@@ -257,9 +257,7 @@ static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
     ev = PR_GetEnv("NSPR_LOG_MODULES");
     if (ev && ev[0]) {
         char module[64];
-        PRBool isSync = PR_FALSE;
         PRIntn evlen = strlen(ev), pos = 0;
-        PRInt32 bufSize = DEFAULT_BUF_SIZE;
         while (pos < evlen) {
             PRIntn level = 1, count = 0, delta = 0;
             PRLogModuleInfo *lm = logModules;
