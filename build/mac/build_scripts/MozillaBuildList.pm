@@ -1761,6 +1761,8 @@ sub BuildExtensionsProjects()
     unless( $main::build{extensions} ) { return; }
     assertRightDirectory();
 
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::options{carbon} ? "Carbon" : "";
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
     # $S becomes the target suffix for the shared lib or static build.
@@ -1797,7 +1799,7 @@ sub BuildExtensionsProjects()
     {
         my($experi) = $main::options{ldap_experimental} ? " experi" : "";
 
-        BuildOneProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp", "LDAPClient$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+        BuildOneProjectWithOutput(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp", "LDAPClient$C$D.shlb", "LDAPClient$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
         BuildOneProjectWithOutput(":mozilla:directory:xpcom:macbuild:mozldap.mcp", "mozldap$D.$S$experi", "mozldap$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
         if ($main::options{ldap_experimental})
