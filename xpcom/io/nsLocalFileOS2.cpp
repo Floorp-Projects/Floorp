@@ -2307,10 +2307,6 @@ nsLocalFile::AppendRelativePath(const nsAString &node)
         return NS_OK;
 
     nsXPIDLCString tmp;
-
-    if (tmp.IsEmpty())
-        return NS_OK;
-
     nsresult rv = UCS2toFS(PromiseFlatString(node).get(), getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
