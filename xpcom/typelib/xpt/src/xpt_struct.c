@@ -128,6 +128,8 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     XPTHeader *header;
     PRUint32 ide_offset;
     int i;
+    XPTAnnotation *ann, *next, **annp;
+
     if (mode == XPT_DECODE) {
         header = XPT_NEWZAP(XPTHeader);
         if (!header)
@@ -184,8 +186,27 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
             goto error;
     }
 
-    if (!DoAnnotation(cursor, &header->annotations))
-        goto error;
+    /*
+     * Iterate through the annotations rather than recurring, to avoid blowing
+     * the stack on large xpt files.
+     */
+    ann = next = header->annotations;
+    annp = &header->annotations;
+    do {
+        ann = next;
+        if (!DoAnnotation(cursor, &ann))
+            goto error;
+        if (mode == XPT_DECODE) {
+            /*
+             * Make sure that we store the address of the newly allocated
+             * annotation in the previous annotation's ``next'' slot, or
+             * header->annotations for the first one.
+             */
+            *annp = ann;
+            annp = &ann->next;
+        }
+        next = ann->next;
+    } while (!XPT_ANN_IS_LAST(ann->flags));
 
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset); 
@@ -563,7 +584,7 @@ DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd)
         ok = XPT_Do32(cursor, &cd->value.ui32);
         break;
       case TD_UINT64:
-        ok = XPT_Do64(cursor, &cd->value.ui64);
+        ok = XPT_Do64(cursor, (PRInt64 *)&cd->value.ui64);
         break;
       case TD_CHAR:
         ok = XPT_Do8(cursor, (PRUint8*) &cd->value.ch);
@@ -736,20 +757,9 @@ DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
             !XPT_DoStringInline(cursor, &ann->private_data))
             goto error_2;
     }
-    
-    /*
-     * If a subsequent Annotation fails, what to do?
-     * - free all annotations, return PR_FALSE? (current behaviour)
-     * - free failed annotation only, return PR_FALSE (caller can check for
-     *   non-NULL *annp on PR_FALSE return to detect partial annotation
-     *   decoding)?
-     */
-    if (!XPT_ANN_IS_LAST(ann->flags) &&
-        !DoAnnotation(cursor, &ann->next))
-        goto error_2;
 
     return PR_TRUE;
-
+    
  error_2:
     if (ann && XPT_ANN_IS_PRIVATE(ann->flags)) {
         XPT_FREEIF(ann->creator);

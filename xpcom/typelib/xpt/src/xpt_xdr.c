@@ -61,7 +61,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
  /* if we're in the data area and we're about to exceed the allocation */     \
  (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ?     \
   /* then grow if we're in ENCODE mode */                                     \
-  (ENCODING(cursor) ? GrowPool((cursor)->state->pool)                         \
+  (ENCODING(cursor) ? GrowPool((cursor)->state->pool, 0)                      \
    /* and fail if we're in DECODE mode */                                     \
    : (DBG(("can't extend in DECODE")) && PR_FALSE))                           \
   /* otherwise we're OK */                                                    \
@@ -220,21 +220,28 @@ XPT_DataOffset(XPTState *state, PRUint32 *data_offsetp)
         *data_offsetp = state->data_offset;
 }
 
-XPT_PUBLIC_API(void)
-XPT_SetDataOffset(XPTState *state, PRUint32 data_offset)
-{
-   state->data_offset = data_offset;
-}
-
+/* if new_size is 0, just grow by the next chunk */
 static PRBool
-GrowPool(XPTDatapool *pool)
+GrowPool(XPTDatapool *pool, PRInt32 new_size)
 {
-    char *newdata = realloc(pool->data, pool->allocated + XPT_GROW_CHUNK);
+    char *newdata = realloc(pool->data, new_size ? new_size :
+                            pool->allocated + XPT_GROW_CHUNK);
     if (!newdata)
         return PR_FALSE;
     pool->data = newdata;
     pool->allocated += XPT_GROW_CHUNK;
     return PR_TRUE;
+}
+
+XPT_PUBLIC_API(void)
+XPT_SetDataOffset(XPTState *state, PRUint32 data_offset)
+{
+   state->data_offset = data_offset;
+   /* make sure we've allocated enough space for the header */
+   if (state->mode == XPT_ENCODE &&
+       data_offset > state->pool->allocated) {
+       (void)GrowPool(state->pool, data_offset);
+   }
 }
 
 XPT_PUBLIC_API(PRBool)
