@@ -2690,6 +2690,44 @@ SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
 }
 
 PUBLIC void
+SINGSIGN_ReencryptAll()
+{
+  /* force loading of the signons file */
+  si_RegisterSignonPrefCallbacks();
+
+  nsAutoString buffer;
+  int signonNum = 0;
+  si_SignonURLStruct *url;
+  si_SignonUserStruct * user;
+  si_SignonDataStruct* data = nsnull;
+
+  si_lock_signon_list();
+  PRInt32 urlCount = LIST_COUNT(si_signon_list);
+  for (PRInt32 i=0; i<urlCount; i++) {
+    url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
+    PRInt32 userCount = LIST_COUNT(url->signonUser_list);
+    for (PRInt32 j=0; j<userCount; j++) {
+      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(j));
+
+      PRInt32 dataCount = LIST_COUNT(user->signonData_list);
+      for (PRInt32 k=0; k<dataCount; k++) {
+        data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(k));
+        nsAutoString userName;
+        if (NS_FAILED(si_Decrypt(data->value, userName))) {
+          return;
+        }
+        if (NS_FAILED(si_Encrypt(userName, data->value))) {
+          return;
+        }
+      }
+    }
+  }
+  si_signon_list_changed = PR_TRUE;
+  si_SaveSignonDataLocked();
+  si_unlock_signon_list();
+}
+
+PUBLIC void
 SINGSIGN_GetRejectListForViewer(nsAutoString& aRejectList)
 {
   nsAutoString buffer;

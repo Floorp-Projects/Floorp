@@ -50,6 +50,7 @@ interface nsIWalletService : nsISupports {
   [noscript]void WALLET_PreEdit(in nsAutoStringRef walletList);
   [noscript]void WALLET_PostEdit(in nsAutoString walletList);
   void WALLET_ChangePassword();
+  void WALLET_ReencryptAll();
   void WALLET_RequestToCapture(in nsIPresShell shell);
   void WALLET_Prefill(in nsIPresShell shell, in boolean quick);
   [noscript]void WALLET_PrefillReturn(in nsAutoString results);

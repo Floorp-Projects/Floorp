@@ -2938,6 +2938,45 @@ WLLT_PreEdit(nsAutoString& walletList) {
   }
 }
 
+extern void
+SINGSIGN_ReencryptAll();
+
+PUBLIC void
+WLLT_ReencryptAll() {
+  wallet_Initialize(PR_FALSE);
+  wallet_MapElement * ptr;
+  nsAutoString value;
+  PRInt32 count = LIST_COUNT(wallet_SchemaToValue_list);
+  for (PRInt32 i=0; i<count; i++) {
+    ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_SchemaToValue_list->ElementAt(i));
+    if (!ptr->item2.IsEmpty()) {
+      if (NS_FAILED(Wallet_Decrypt(ptr->item2, value))) {
+        return;
+      }
+      if (NS_FAILED(Wallet_Encrypt(value, ptr->item2))) {
+        return;
+      }
+    } else {
+      wallet_Sublist * ptr1;
+      PRInt32 count2 = LIST_COUNT(ptr->itemList);
+      for (PRInt32 i2=0; i2<count2; i2++) {
+        ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
+        if (NS_FAILED(Wallet_Decrypt(ptr1->item, value))) {
+          return;
+        }
+        if (NS_FAILED(Wallet_Encrypt(value, ptr1->item))) {
+          return;
+        }
+      }
+    }
+  }
+  wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
+  SINGSIGN_ReencryptAll();
+  PRUnichar * message = Wallet_Localize("Converted");
+  Wallet_Alert(message);
+  Recycle(message);
+}
+
 /*
  * return after previewing a set of prefills
  */

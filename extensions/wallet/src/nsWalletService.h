@@ -48,6 +48,7 @@ public:
   NS_IMETHOD WALLET_PreEdit(nsAutoString& walletList);
   NS_IMETHOD WALLET_PostEdit(nsAutoString walletList);
   NS_IMETHOD WALLET_ChangePassword();
+  NS_IMETHOD WALLET_ReencryptAll();
   NS_IMETHOD WALLET_RequestToCapture(nsIPresShell* shell);
   NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick);
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results);

@@ -80,6 +80,11 @@ NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword() {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWalletlibService::WALLET_ReencryptAll() {
+  ::WLLT_ReencryptAll();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell) {
   ::WLLT_RequestToCapture(shell);
   return NS_OK;

@@ -59,6 +59,29 @@
       wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
       wallet.WALLET_ChangePassword();
     }
+
+    function convertStoredValues(encrypt)
+    {
+      try {
+        this.pref = Components.classes["component://netscape/preferences"].getService();
+        if(this.pref)
+          this.pref = this.pref.QueryInterface( Components.interfaces.nsIPref );
+      }
+      catch(e) {
+        dump("*** Failed to create prefs object\n");
+        return;
+      }
+      var oldpref = this.pref.GetBoolPref("wallet.crypto");
+      this.pref.SetBoolPref("wallet.crypto", encrypt);
+dump("\n##### pref="+ this.pref.GetBoolPref("wallet.crypto")+"\n");
+      wallet = Components.classes['component://netscape/wallet'];
+      wallet = wallet.getService();
+      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+      wallet.WALLET_ReencryptAll();
+      this.pref.SetBoolPref("wallet.crypto", oldpref);
+}
+
+
   ]]>
   </script>
         
@@ -107,6 +130,14 @@
               pref="true" preftype="bool" prefstring="wallet.crypto"
               prefattribute="checked"/>
 
+    <separator/>
+
+    <box autostretch="never" halign="center">
+      <button class="dialog" value="&convertEncrypted.label;" accesskey="&convertEncrypted.accesskey;"
+              oncommand="convertStoredValues(true);"/>
+      <button class="dialog" value="&convertObscurred.label;" accesskey="&convertObscurred.accesskey;"
+              oncommand="convertStoredValues(false);"/>
+    </box>
   </titledbox>
 
 </window>
