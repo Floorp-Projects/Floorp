@@ -62,7 +62,6 @@
 #include "nsIInputStream.h"
 #include "nsIBookmarksService.h"
 #include "nsIHTTPHeader.h"
-#include "nsIStringBundle.h"
 
 #ifdef	XP_MAC
 #include <Files.h>
@@ -80,9 +79,8 @@
 
 
 
-#define POSTHEADER_PREFIX "Content-type: application/x-www-form-urlencoded\r\nContent-Length: "
-#define POSTHEADER_SUFFIX "\r\n\r\n"
-#define SEARCH_PROPERTIES "chrome://communicator/locale/search/search-panel.properties"
+#define	POSTHEADER_PREFIX	"Content-type: application/x-www-form-urlencoded\r\nContent-Length: "
+#define	POSTHEADER_SUFFIX	"\r\n\r\n"
 
 
 
@@ -552,7 +550,7 @@ InternetSearchDataSource::GetSearchEngineToPing(nsIRDFResource **theEngine, nsCS
 	mUpdateArray->RemoveElementAt(0);
 	if (isupports)
 	{
-		nsCOMPtr<nsIRDFResource> aRes (do_QueryInterface(isupports));
+		nsCOMPtr<nsIRDFResource>	aRes = do_QueryInterface(isupports);
 		if (aRes)
 		{
 			if (isSearchCategoryEngineURI(aRes))
@@ -575,7 +573,7 @@ InternetSearchDataSource::GetSearchEngineToPing(nsIRDFResource **theEngine, nsCS
 			if (NS_SUCCEEDED(rv = mInner->GetTarget(aRes, kNC_Update, PR_TRUE, getter_AddRefs(aNode)))
 				&& (rv != NS_RDF_NO_VALUE))
 			{
-				nsCOMPtr<nsIRDFLiteral>	aLiteral (do_QueryInterface(aNode));
+				nsCOMPtr<nsIRDFLiteral>	aLiteral = do_QueryInterface(aNode);
 				if (aLiteral)
 				{
 					const PRUnichar	*updateUni = nsnull;
@@ -625,7 +623,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 
 		channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION | nsIChannel::VALIDATE_ALWAYS);
 
-		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 		if (!httpChannel)	return;
 
 		// rjc says: just check "HEAD" info for whether a search file has changed
@@ -739,7 +737,7 @@ InternetSearchDataSource::isSearchCategoryEngineBasenameURI(nsIRDFNode *r)
 {
 	PRBool		isSearchCategoryEngineBasenameURIFlag = PR_FALSE;
 
-	nsCOMPtr<nsIRDFResource> aRes (do_QueryInterface(r));
+	nsCOMPtr<nsIRDFResource>	aRes = do_QueryInterface(r);
 	if (aRes)
 	{
 		const char	*uri = nsnull;
@@ -752,7 +750,7 @@ InternetSearchDataSource::isSearchCategoryEngineBasenameURI(nsIRDFNode *r)
 	}
 	else
 	{
-		nsCOMPtr<nsIRDFLiteral>	aLit (do_QueryInterface(r));
+		nsCOMPtr<nsIRDFLiteral>	aLit = do_QueryInterface(r);
 		if (aLit)
 		{
 			const	PRUnichar	*uriUni = nsnull;
@@ -1040,41 +1038,28 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 
 	if (isSearchCommand(source) && (property == kNC_Name))
 	{
-    nsresult rv;
-    nsCOMPtr<nsIStringBundleService>
-    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+		// XXX localize: put static strings into a string bundle
+		nsAutoString	name;
+		if (source == kNC_SearchCommand_AddToBookmarks)
+			name.AssignWithConversion("Add to bookmarks");
+		else if (source == kNC_SearchCommand_FilterResult)
+			name.AssignWithConversion("Exclude this URL from future searches");
+		else if (source == kNC_SearchCommand_FilterSite)
+			name.AssignWithConversion("Exclude this domain from future searches");
+		else if (source == kNC_SearchCommand_ClearFilters)
+			name.AssignWithConversion("Clear all search filters");
 
-    if (NS_SUCCEEDED(rv) && stringService) {
-
-      nsCOMPtr<nsIStringBundle> bundle;
-      rv = stringService->CreateBundle(SEARCH_PROPERTIES, nsnull, getter_AddRefs(bundle));
-      if (NS_SUCCEEDED(rv) && bundle) {
-
-        nsXPIDLString valUni;
-        nsAutoString name;
-
-        if (source == kNC_SearchCommand_AddToBookmarks)
-          name = NS_LITERAL_STRING("addtobookmarks");
-        else if (source == kNC_SearchCommand_FilterResult)
-          name = NS_LITERAL_STRING("excludeurl");
-        else if (source == kNC_SearchCommand_FilterSite)
-          name = NS_LITERAL_STRING("excludedomain");
-        else if (source == kNC_SearchCommand_ClearFilters)
-          name = NS_LITERAL_STRING("clearfilters");
-
-        rv = bundle->GetStringFromName(name.GetUnicode(), getter_Copies(valUni));
-        if (NS_SUCCEEDED(rv) && valUni && *valUni) {
-          *target = nsnull;
-          nsCOMPtr<nsIRDFLiteral> literal;
-          if (NS_FAILED(rv = gRDFService->GetLiteral(valUni, getter_AddRefs(literal))))
-            return rv;
-          *target = literal;
-          NS_IF_ADDREF(*target);
-          return rv;
-        }
-      }
-    }
-  }
+		if (name.Length() > 0)
+		{
+			*target = nsnull;
+			nsCOMPtr<nsIRDFLiteral>	literal;
+			if (NS_FAILED(rv = gRDFService->GetLiteral(name.GetUnicode(), getter_AddRefs(literal))))
+				return(rv);
+			*target = literal;
+			NS_IF_ADDREF(*target);
+			return(rv);
+		}
+	}
 
 	if (isEngineURI(source))
 	{
@@ -1195,7 +1180,7 @@ InternetSearchDataSource::GetCategoryList()
 	ds = nsnull;
 	if (!categoryDataSource)	return(NS_ERROR_UNEXPECTED);
 
-	nsCOMPtr<nsIRDFRemoteDataSource> remoteCategoryDataSource (do_QueryInterface(categoryDataSource));
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteCategoryDataSource = do_QueryInterface(categoryDataSource);
 	if (!remoteCategoryDataSource)	return(NS_ERROR_UNEXPECTED);
 
 	// get search.rdf
@@ -1243,7 +1228,7 @@ InternetSearchDataSource::GetCategoryList()
 		rv = categoryDataSource->GetTarget(kNC_SearchCategoryRoot, aCategoryOrdinal,
 			PR_TRUE, getter_AddRefs(aCategoryNode));
 		if (NS_FAILED(rv))	break;
-		nsCOMPtr<nsIRDFResource> aCategoryRes (do_QueryInterface(aCategoryNode));
+		nsCOMPtr<nsIRDFResource>	aCategoryRes = do_QueryInterface(aCategoryNode);
 		if (!aCategoryRes)	break;
 		const	char			*catResURI = nsnull;
 		aCategoryRes->GetValueConst(&catResURI);
@@ -1281,7 +1266,7 @@ InternetSearchDataSource::GetCategoryList()
 			rv = categoryDataSource->GetTarget(searchCategoryRes, aEngineOrdinal,
 				PR_TRUE, getter_AddRefs(aEngineNode));
 			if (NS_FAILED(rv))	break;
-			nsCOMPtr<nsIRDFResource> aEngineRes (do_QueryInterface(aEngineNode));
+			nsCOMPtr<nsIRDFResource>	aEngineRes = do_QueryInterface(aEngineNode);
 			if (!aEngineRes)	break;
 
 			if (isSearchCategoryEngineURI(aEngineRes))
@@ -1695,7 +1680,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 		nsCOMPtr<nsIRDFDataSource>	datasource;
 		if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
 		{
-			nsCOMPtr<nsIBookmarksService> bookmarks (do_QueryInterface(datasource));
+			nsCOMPtr<nsIBookmarksService>	bookmarks = do_QueryInterface(datasource);
 			if (bookmarks)
 			{
 				char *uri = getSearchURI(source);
@@ -1774,7 +1759,7 @@ InternetSearchDataSource::getSearchURI(nsIRDFResource *src)
 		nsCOMPtr<nsIRDFNode>	srcNode;
 		if (NS_SUCCEEDED(rv = mInner->GetTarget(src, kNC_URL, PR_TRUE, getter_AddRefs(srcNode))))
 		{
-			nsCOMPtr<nsIRDFLiteral>	urlLiteral (do_QueryInterface(srcNode));
+			nsCOMPtr<nsIRDFLiteral>	urlLiteral = do_QueryInterface(srcNode);
 			if (urlLiteral)
 			{
 				const PRUnichar	*uriUni = nsnull;
@@ -1815,7 +1800,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
 	nsCOMPtr<nsIRDFDataSource>	datasource;
 	if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
 	{
-		nsCOMPtr<nsIBookmarksService> bookmarks (do_QueryInterface(datasource));
+		nsCOMPtr<nsIBookmarksService>	bookmarks = do_QueryInterface(datasource);
 		if (bookmarks)
 		{
 			char	*uri = getSearchURI(src);
@@ -1863,7 +1848,7 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 	mLocalstore->Assert(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral, PR_TRUE);
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource> remoteLocalStore (do_QueryInterface(mLocalstore));
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -1881,7 +1866,7 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 			nsCOMPtr<nsISupports>	anonArc;
 			if (NS_FAILED(anonArcs->GetNext(getter_AddRefs(anonArc))))
 				break;
-			nsCOMPtr<nsIRDFResource> anonChild (do_QueryInterface(anonArc));
+			nsCOMPtr<nsIRDFResource>	anonChild = do_QueryInterface(anonArc);
 			if (!anonChild)	continue;
 
 			PRBool	isSearchResult = PR_FALSE;
@@ -1940,7 +1925,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 	mLocalstore->Assert(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral, PR_TRUE);
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource> remoteLocalStore (do_QueryInterface(mLocalstore));
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -1984,7 +1969,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 	{
 		nsCOMPtr<nsISupports>	element = array->ElementAt(loop);
 		if (!element)	break;
-		nsCOMPtr<nsIRDFResource> aSearchRoot (do_QueryInterface(element));
+		nsCOMPtr<nsIRDFResource>	aSearchRoot = do_QueryInterface(element);
 		if (!aSearchRoot)	break;
 
 		if (NS_SUCCEEDED(rv = mInner->GetTargets(aSearchRoot, kNC_Child,
@@ -2050,7 +2035,7 @@ InternetSearchDataSource::clearFilters(void)
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
 
-			nsCOMPtr<nsIRDFLiteral>	filterURL (do_QueryInterface(arc));
+			nsCOMPtr<nsIRDFLiteral>	filterURL = do_QueryInterface(arc);
 			if (!filterURL)	continue;
 			
 			mLocalstore->Unassert(kNC_FilterSearchURLsRoot, kNC_Child, filterURL);
@@ -2069,7 +2054,7 @@ InternetSearchDataSource::clearFilters(void)
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
 
-			nsCOMPtr<nsIRDFLiteral>	filterSiteLiteral (do_QueryInterface(arc));
+			nsCOMPtr<nsIRDFLiteral>	filterSiteLiteral = do_QueryInterface(arc);
 			if (!filterSiteLiteral)	continue;
 			
 			mLocalstore->Unassert(kNC_FilterSearchSitesRoot, kNC_Child, filterSiteLiteral);
@@ -2077,7 +2062,7 @@ InternetSearchDataSource::clearFilters(void)
 	}
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource> remoteLocalStore (do_QueryInterface(mLocalstore));
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -2151,7 +2136,7 @@ InternetSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSourc
 	{
 		nsCOMPtr<nsISupports>	aSource = aSources->ElementAt(loop);
 		if (!aSource)	return(NS_ERROR_NULL_POINTER);
-		nsCOMPtr<nsIRDFResource> src (do_QueryInterface(aSource));
+		nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(aSource);
 		if (!src)	return(NS_ERROR_NO_INTERFACE);
 
 		if (aCommand == kNC_SearchCommand_AddToBookmarks)
@@ -2724,7 +2709,7 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 			nsCOMPtr<nsISupports>	arc;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
-			nsCOMPtr<nsIRDFResource> child (do_QueryInterface(arc));
+			nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(arc);
 			if (child)
 			{
 				mInner->Unassert(kNC_LastSearchRoot, kNC_Child, child);
@@ -2739,7 +2724,7 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref,
 			PR_TRUE, getter_AddRefs(lastTarget))) && (rv != NS_RDF_NO_VALUE))
 		{
-			nsCOMPtr<nsIRDFLiteral>	lastLiteral (do_QueryInterface(lastTarget));
+			nsCOMPtr<nsIRDFLiteral>	lastLiteral = do_QueryInterface(lastTarget);
 			if (lastLiteral)
 			{
 				rv = mInner->Unassert(kNC_LastSearchRoot, kNC_Ref, lastLiteral);
@@ -2771,7 +2756,7 @@ InternetSearchDataSource::ClearResultSearchSites(void)
 				nsCOMPtr<nsISupports>	arc;
 				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 					break;
-				nsCOMPtr<nsIRDFResource> child (do_QueryInterface(arc));
+				nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(arc);
 				if (child)
 				{
 					mInner->Unassert(kNC_SearchResultsSitesRoot, kNC_Child, child);
@@ -2826,7 +2811,7 @@ InternetSearchDataSource::Stop()
 				nsCOMPtr<nsISupports>	isupports;
 				if (NS_FAILED(rv = requests->GetNext(getter_AddRefs(isupports))))
 					break;
-				nsCOMPtr<nsIRequest> request (do_QueryInterface(isupports));
+				nsCOMPtr<nsIRequest>	request = do_QueryInterface(isupports);
 				if (!request)	continue;
 				request->Cancel(NS_BINDING_ABORTED);
 			}
@@ -2847,7 +2832,7 @@ InternetSearchDataSource::Stop()
 			nsCOMPtr<nsISupports>	arc;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
-			nsCOMPtr<nsIRDFResource> src (do_QueryInterface(arc));
+			nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(arc);
 			if (src)
 			{
 				mInner->Unassert(src, kNC_loading, kTrueLiteral);
@@ -3020,7 +3005,7 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 	if (NS_SUCCEEDED((rv = mInner->GetTarget(engine, kNC_Data, PR_TRUE,
 		getter_AddRefs(dataTarget)))) && (dataTarget))
 	{
-		nsCOMPtr<nsIRDFLiteral>	aLiteral (do_QueryInterface(dataTarget));
+		nsCOMPtr<nsIRDFLiteral>	aLiteral = do_QueryInterface(dataTarget);
 		if (!aLiteral)
 			return(NS_ERROR_UNEXPECTED);
 		*dataLit = aLiteral;
@@ -3330,7 +3315,7 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 	nsCOMPtr<nsIRDFNode>	updateCheckDaysNode;
 	rv = mInner->GetTarget(engine, kNC_UpdateCheckDays, PR_TRUE, getter_AddRefs(updateCheckDaysNode));
 	if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))	return(rv);
-	nsCOMPtr<nsIRDFInt> updateCheckDaysLiteral (do_QueryInterface(updateCheckDaysNode));
+	nsCOMPtr<nsIRDFInt>	updateCheckDaysLiteral = do_QueryInterface(updateCheckDaysNode);
 	PRInt32		updateCheckDays;
 	updateCheckDaysLiteral->GetValue(&updateCheckDays);
 	// convert updateCheckDays from days to seconds;
@@ -3366,7 +3351,7 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 	}
 
 	// get last validate date/time
-	nsCOMPtr<nsIRDFLiteral>	lastCheckLiteral (do_QueryInterface(aNode));
+	nsCOMPtr<nsIRDFLiteral>	lastCheckLiteral = do_QueryInterface(aNode);
 	if (!lastCheckLiteral)	return(NS_ERROR_UNEXPECTED);
 	const PRUnichar		*lastCheckUni = nsnull;
 	lastCheckLiteral->GetValueConst(&lastCheckUni);
@@ -3537,7 +3522,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		{
 
 			// send a "MultiSearch" header
-			nsCOMPtr<nsIHTTPChannel> httpMultiChannel (do_QueryInterface(channel));
+			nsCOMPtr<nsIHTTPChannel>	httpMultiChannel = do_QueryInterface(channel);
 			if (httpMultiChannel)
 			{
 				nsCOMPtr<nsIAtom>	multiSearchAtom = getter_AddRefs(NS_NewAtom("MultiSearch"));
@@ -3552,7 +3537,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 			if (methodStr.EqualsIgnoreCase("post"))
 			{
-				nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+				nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 				if (httpChannel)
 				{
 					nsCOMPtr<nsIAtom> postAtom = getter_AddRefs(NS_NewAtom("POST"));
@@ -4319,7 +4304,7 @@ InternetSearchDataSource::OnDataAvailable(nsIRequest *request, nsISupports *ctxt
 				nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
-	nsCOMPtr<nsIInternetSearchContext> context (do_QueryInterface(ctxt));
+	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
 	if (!context)	return(NS_ERROR_NO_INTERFACE);
 
 	nsresult	rv = NS_OK;
@@ -4413,8 +4398,9 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 {
 	if (!mInner)	return(NS_OK);
 
-  nsCOMPtr<nsIChannel> channel (do_QueryInterface(request));
-	nsCOMPtr<nsIInternetSearchContext> context (do_QueryInterface(ctxt));
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+
+	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
 	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
 
 	nsresult	rv;
@@ -4429,7 +4415,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 	else if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
 		 contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 	{
-		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
 
 		// check HTTP status to ensure success
@@ -4456,7 +4442,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		busyResource = nsnull;
 
 		// we only have HTTP "HEAD" information when doing updates
-		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
 
 		// check HTTP status to ensure success
@@ -4477,7 +4463,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		{
 			nsCOMPtr<nsISupports>   item;
 			enumerator->GetNext(getter_AddRefs(item));
-			nsCOMPtr<nsIHTTPHeader>	header (do_QueryInterface(item));
+			nsCOMPtr<nsIHTTPHeader>	header = do_QueryInterface(item);
 			NS_ASSERTION(header, "InternetSearchDataSource::OnStopRequest - Bad HTTP header.");
 			if (!header)	return(NS_ERROR_UNEXPECTED);
 
@@ -4586,7 +4572,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			if (NS_SUCCEEDED(rv = mInner->GetTarget(theEngine, kNC_Update, PR_TRUE, getter_AddRefs(aNode)))
 				&& (rv != NS_RDF_NO_VALUE))
 			{
-				nsCOMPtr<nsIRDFLiteral>	aLiteral (do_QueryInterface(aNode));
+				nsCOMPtr<nsIRDFLiteral>	aLiteral = do_QueryInterface(aNode);
 				if (aLiteral)
 				{
 					const PRUnichar	*updateUni = nsnull;
@@ -4603,7 +4589,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			if (NS_SUCCEEDED(rv = mInner->GetTarget(theEngine, kNC_UpdateIcon, PR_TRUE, getter_AddRefs(aNode)))
 				&& (rv != NS_RDF_NO_VALUE))
 			{
-				nsCOMPtr<nsIRDFLiteral>	aIconLiteral (do_QueryInterface(aNode));
+				nsCOMPtr<nsIRDFLiteral>	aIconLiteral = do_QueryInterface(aNode);
 				if (aIconLiteral)
 				{
 					const PRUnichar	*updateIconUni = nsnull;
@@ -4658,7 +4644,7 @@ InternetSearchDataSource::validateEngineNow(nsIRDFResource *engine)
 	updateAtom(mLocalstore, engine, kWEB_LastPingDate, nowLiteral, nsnull);
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource> remoteLocalStore (do_QueryInterface(mLocalstore));
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -4751,7 +4737,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	{
 		return(rv);
 	}
-	nsCOMPtr<nsIRDFLiteral>	dataLiteral (do_QueryInterface(dataNode));
+	nsCOMPtr<nsIRDFLiteral>	dataLiteral = do_QueryInterface(dataNode);
 	if (!dataLiteral)	return(NS_ERROR_NULL_POINTER);
 
 	const PRUnichar	*dataUni = nsnull;
