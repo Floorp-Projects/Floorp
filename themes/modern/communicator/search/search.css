@@ -1,5 +1,3 @@
-@import url(chrome://global/skin);
-
 box.sidebartitle {
   background-color: #505888;
   padding: 2px 3px 3px 3px;
@@ -101,38 +99,10 @@ titledbutton.panelbtn {
 	margin-right: 1em; 
 }
 
-tree[singleclick="true"] treeitem > treerow > treecell > titledbutton {
-	cursor: pointer;
-}
-
-tree[singleclick="true"] treeitem > treerow > treecell {
-	color: black;
-	text-decoration: none;
-}
-
-tree[singleclick="true"] treeitem > treerow > treecell:hover {
-	color: blue;
-	text-decoration: underline;
-}
-
-tree[singleclick="true"] treeitem > treerow > treecell:active {
-	color: red;
-	text-decoration: underline;
-}
-
-/*undo regular search tree selection look*/
-tree[singleclick="true"] treeitem[selected="true"] > treerow { 
-  background-color: transparent;
-}
-
-#sidebar-search-text {
-  border: 1px solid black;
-}
-
-#Tree, #searchengines {
-  border: 1px solid black;
-}
-
-titledbutton.push {
-  background-color: #CCCCCC;
-}
+#searchengines
+  {
+    margin-left           : 0px;
+    margin-right          : 0px;
+  }
+  
+  

@@ -129,3 +129,8 @@
     {
       list-style-image    : url("chrome://global/skin/scroll-down.gif");
     }
+    
+  .box-padded
+    {
+      padding             : 5px;
+    }    
