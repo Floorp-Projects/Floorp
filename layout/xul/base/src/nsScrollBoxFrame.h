@@ -124,6 +124,7 @@ private:
   PRPackedBool mVerticalOverflow;
   PRPackedBool mHorizontalOverflow;
   nsRect mRestoreRect;
+  nsPoint mLastPos;
   
 protected:
   virtual PRBool NeedsClipWidget();
