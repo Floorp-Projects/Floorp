@@ -72,6 +72,7 @@ private:
   nsVoidArray *mObservers;
   nsIDeviceContext *mDeviceContext;
   IL_ColorSpace *mColorSpace;
+  ilINetContext* mNetContext;
 };
 
 ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
@@ -106,9 +107,8 @@ ImageGroupImpl::~ImageGroupImpl()
     IL_ReleaseColorSpace(mColorSpace);
   }
 
-  if (mManager != nsnull) {
-    NS_RELEASE(mManager);
-  }
+  NS_IF_RELEASE(mManager);
+  NS_IF_RELEASE(mNetContext);
 }
 
 NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
@@ -120,20 +120,26 @@ ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext)
   nsresult result;
 
   if ((result = NS_NewImageRenderer(&renderer)) != NS_OK) {
-      return result;
+    return result;
   }
 
   mGroupContext = IL_NewGroupContext((void *)aDeviceContext,
                                      renderer);
-
   if (mGroupContext == nsnull) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Create an async net context
+  if ((result = NS_NewImageNetContext(&mNetContext)) != NS_OK) {
+    return result;
   }
 
   mDeviceContext = aDeviceContext;
   NS_ADDREF(mDeviceContext);
 
-  // Ask the device context to create a color space
+  // Ask the device context to create a color space.
+  // XXX We should ask the device context to get its color space
+  // rather than having it create a color space for us...
   mDeviceContext->CreateILColorSpace(mColorSpace);
 
   // Set the image group context display mode
@@ -196,15 +202,15 @@ ImageGroupImpl::GetImage(const char* aUrl,
 {
   NS_PRECONDITION(nsnull != aUrl, "null URL");
   
-  ImageRequestImpl *image_req = new ImageRequestImpl();
-  if (image_req != nsnull) {
-    ilINetContext* net_cx;
+  ImageRequestImpl *image_req = new ImageRequestImpl;
+  if (nsnull != image_req) {
+    nsresult  result;
 
-    // Create an async net context, and ask the image request object
-    // to get the image
-    if (NS_SUCCEEDED(NS_NewImageNetContext(&net_cx)) &&
-        NS_SUCCEEDED(image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
-                                     aWidth, aHeight, aFlags, net_cx))) {
+    // Ask the image request object to get the image.
+    result = image_req->Init(mGroupContext, aUrl, aObserver, aBackgroundColor,
+                             aWidth, aHeight, aFlags, mNetContext);
+
+    if (NS_SUCCEEDED(result)) {
       NS_ADDREF(image_req);
     } else {
       delete image_req;
