@@ -262,7 +262,6 @@ protected:
   nsCOMPtr<nsIURI>      mBaseURL;
 
   nsCompatibility       mCompatibilityMode;
-  PRPackedBool          mCompatibilityLocked;
   nsWidgetRendering     mWidgetRenderingMode;
   PRPackedBool          mImageAnimationStopped;   // image animation stopped
 

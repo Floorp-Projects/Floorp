@@ -1057,7 +1057,8 @@ public:
   NS_IMETHOD Init(nsIDocument* aDocument,
                   nsIPresContext* aPresContext,
                   nsIViewManager* aViewManager,
-                  nsIStyleSet* aStyleSet);
+                  nsIStyleSet* aStyleSet,
+                  PRBool aIsQuirksMode);
   NS_IMETHOD Destroy();
 
   NS_IMETHOD AllocateFrame(size_t aSize, void** aResult);
@@ -1678,7 +1679,8 @@ NS_IMETHODIMP
 PresShell::Init(nsIDocument* aDocument,
                 nsIPresContext* aPresContext,
                 nsIViewManager* aViewManager,
-                nsIStyleSet* aStyleSet)
+                nsIStyleSet* aStyleSet,
+                PRBool aIsQuirksMode)
 {
   NS_PRECONDITION(nsnull != aDocument, "null ptr");
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
@@ -1699,10 +1701,15 @@ PresShell::Init(nsIDocument* aDocument,
   mViewManager->SetViewObserver(this);
 
   // Bind the context to the presentation shell.
-  mPresContext = dont_QueryInterface(aPresContext);
+  mPresContext = aPresContext;
   aPresContext->SetShell(this);
 
   mStyleSet = aStyleSet;
+
+  // Set the compatibility mode after attaching the pres context and
+  // style set, but before creating any frames.
+  mPresContext->SetCompatibilityMode(aIsQuirksMode
+                         ? eCompatibility_NavQuirks : eCompatibility_Standard);
 
   mHistoryState = nsnull;
 

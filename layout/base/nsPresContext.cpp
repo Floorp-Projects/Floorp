@@ -150,7 +150,6 @@ nsPresContext::nsPresContext()
 {
   NS_INIT_REFCNT();
   mCompatibilityMode = eCompatibility_Standard;
-  mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = imgIContainer::kNormalAnimMode;
   mImageAnimationModePref = imgIContainer::kNormalAnimMode;
@@ -452,27 +451,6 @@ nsPresContext::GetUserPreferences()
 
   if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.base_font_scaler", &prefInt))) {
     mFontScaler = prefInt;
-  }
-
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt))) {
-    // XXX this should really be a state on the webshell instead of using prefs
-    switch (prefInt) {
-      case 1: 
-        mCompatibilityLocked = PR_TRUE;  
-        mCompatibilityMode = eCompatibility_Standard;   
-        break;
-      case 2: 
-        mCompatibilityLocked = PR_TRUE;  
-        mCompatibilityMode = eCompatibility_NavQuirks;  
-        break;
-      case 0:   // auto
-      default:
-        mCompatibilityLocked = PR_FALSE;  
-        break;
-    }
-  }
-  else {
-    mCompatibilityLocked = PR_FALSE;  // auto
   }
 
   if (NS_SUCCEEDED(mPrefs->GetIntPref("nglayout.widget.mode", &prefInt))) {
@@ -783,18 +761,15 @@ nsPresContext::GetCompatibilityMode(nsCompatibility* aResult)
 NS_IMETHODIMP
 nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 {
-  if (! mCompatibilityLocked) {
-    mCompatibilityMode = aMode;
-  }
+  mCompatibilityMode = aMode;
+
+  NS_ENSURE_TRUE(mShell, NS_OK);
 
   // enable/disable the QuirkSheet
-  NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::SetCompatibilityMode");
-  if (mShell) {
-    nsCOMPtr<nsIStyleSet> set;
-    nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-    if (NS_SUCCEEDED(rv) && set) {
-      set->EnableQuirkStyleSheet((mCompatibilityMode != eCompatibility_Standard) ? PR_TRUE : PR_FALSE);
-    }
+  nsCOMPtr<nsIStyleSet> set;
+  mShell->GetStyleSet(getter_AddRefs(set));
+  if (set) {
+    set->EnableQuirkStyleSheet(mCompatibilityMode != eCompatibility_Standard);
   }
   return NS_OK;
 }
@@ -1477,6 +1452,8 @@ nsPresContext::LoadImage(const nsString& aURL,
       rv = content->GetDocument(*getter_AddRefs(document));
 
       // If there is no document, skip the policy check
+      // XXXldb This really means the document is being destroyed, so
+      // perhaps we're better off skipping the load entirely.
       if (document) {
         nsCOMPtr<nsIScriptGlobalObject> globalScript;
         rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));

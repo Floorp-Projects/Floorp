@@ -125,7 +125,8 @@ public:
   NS_IMETHOD Init(nsIDocument* aDocument,
                   nsIPresContext* aPresContext,
                   nsIViewManager* aViewManager,
-                  nsIStyleSet* aStyleSet) = 0;
+                  nsIStyleSet* aStyleSet,
+                  PRBool aIsQuirksMode) = 0;
 
   /**
    * All callers are responsible for calling |Destroy| after calling

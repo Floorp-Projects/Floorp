@@ -495,17 +495,8 @@ nsHTMLDocument::CreateShell(nsIPresContext* aContext,
                             nsIStyleSet* aStyleSet,
                             nsIPresShell** aInstancePtrResult)
 {
-  nsresult result = nsMarkupDocument::CreateShell(aContext,
-                                                  aViewManager,
-                                                  aStyleSet,
-                                                  aInstancePtrResult);
-
-  if (NS_SUCCEEDED(result)) {
-    aContext->SetCompatibilityMode(((eDTDMode_strict== mDTDMode) ? 
-                                    eCompatibility_Standard : 
-                                    eCompatibility_NavQuirks));
-  }
-  return result;
+  return doCreateShell(aContext, aViewManager, aStyleSet,
+                       eDTDMode_strict != mDTDMode, aInstancePtrResult);
 }
 
 // The following Try*Charset will return PR_FALSE only if the charset source 

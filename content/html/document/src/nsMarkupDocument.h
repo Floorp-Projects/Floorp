@@ -62,6 +62,15 @@ public:
                          nsIViewManager* aViewManager,
                          nsIStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult);
+protected:
+  // To allow different implementations to choose the quirks mode
+  // differently for their |CreateShell| without overriding the whole
+  // thing.
+  nsresult doCreateShell(nsIPresContext* aContext,
+                         nsIViewManager* aViewManager,
+                         nsIStyleSet* aStyleSet,
+                         PRBool aIsQuirksMode,
+                         nsIPresShell** aInstancePtrResult);
 };
 
 #endif /* nsMarkupDocument_h___ */
