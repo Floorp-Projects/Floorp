@@ -38,12 +38,7 @@ function OnLoad()
     }
   	   		
     doSetOKCancel(syncOkButton, syncCancelButton);
-	var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-	gSyncMail = prefs.GetBoolPref("mailnews.offline_sync_mail");
-	gSyncNews = prefs.GetBoolPref("mailnews.offline_sync_news");
-	gSendMessage = prefs.GetBoolPref("mailnews.offline_sync_send_unsent");
-	gWorkOffline = prefs.GetBoolPref("mailnews.offline_sync_work_offline");
-    document.getElementById("syncMail").checked = gSyncMail;
+	document.getElementById("syncMail").checked = gSyncMail;
     document.getElementById("syncNews").checked = gSyncNews;
     document.getElementById("sendMessage").checked = gSendMessage;
     document.getElementById("workOffline").checked = gWorkOffline;
@@ -59,12 +54,7 @@ function syncOkButton()
     gSyncNews = document.getElementById("syncNews").checked;	
     gSendMessage = document.getElementById("sendMessage").checked;
     gWorkOffline = document.getElementById("workOffline").checked;
-    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-    prefs.SetBoolPref("mailnews.offline_sync_mail", gSyncMail);
-    prefs.SetBoolPref("mailnews.offline_sync_news", gSyncNews);
-    prefs.SetBoolPref("mailnews.offline_sync_send_unsent", gSendMessage);
-    prefs.SetBoolPref("mailnews.offline_sync_work_offline", gWorkOffline);
-
+    
     if( gSyncMail || gSyncNews || gSendMessage || gWorkOffline) {
 
         var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
@@ -86,7 +76,7 @@ function syncCancelButton()
 function OnSelect()
 {	  
 
-   top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "chrome,modal,titlebar,resizable=yes");
+   top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "chrome,titlebar,resizable=yes");
    return true;
 
 }
