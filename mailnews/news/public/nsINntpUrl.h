@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsINntpURL_h___
-#define nsINntpURL_h___
+#ifndef nsINntpUrl_h___
+#define nsINntpUrl_h___
 
 #include "nscore.h"
 #include "nsIURL.h"
@@ -37,18 +37,18 @@
 { 0xbdd12930, 0xa682, 0x11d2,                   \
     { 0x80, 0x4c, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
-class nsINntpURL : public nsIURL
+class nsINntpUrl : public nsIURL
 {
 public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the news specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SetNNTPHost (nsINNTPHost * newsHost) = 0;
-	NS_IMETHOD GetNNTPHost (nsINNTPHost ** newsHost) const = 0;
+	NS_IMETHOD SetNntpHost (nsINNTPHost * newsHost) = 0;
+	NS_IMETHOD GetNntpHost (nsINNTPHost ** newsHost) const = 0;
 
-	NS_IMETHOD SetNNTPArticleList (nsINNTPArticleList * articleList) = 0;
-	NS_IMETHOD GetNNTPArticleList (nsINNTPArticleList ** articleList) const = 0;
+	NS_IMETHOD SetNntpArticleList (nsINNTPArticleList * articleList) = 0;
+	NS_IMETHOD GetNntpArticleList (nsINNTPArticleList ** articleList) const = 0;
 
 	NS_IMETHOD SetNewsgroup (nsINNTPNewsgroup * newsgroup) = 0;
 	NS_IMETHOD GetNewsgroup (nsINNTPNewsgroup ** newsgroup) const = 0;
