@@ -1483,6 +1483,7 @@ Boolean MRJContext::handleEvent(EventRecord* event)
 
         case mouseDown:
             click(event, NULL);
+            eventHandled = mIsFocused;
             break;
 
         case nsPluginEventType_GetFocusEvent:
