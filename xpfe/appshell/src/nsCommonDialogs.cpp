@@ -418,9 +418,9 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
                     void *stackPtr;
                     jsval *argv = JS_PushArguments( jsContext,
                                                     &stackPtr,
-                                                    "svs%ip",
+                                                    "sss%ip",
                                                     inChromeURL,
-                                                    JSVAL_NULL,
+                                                    "_blank",
                                                     "chrome,modal",
                                                     (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                                     (nsISupports*)ioParamBlock
