@@ -27,6 +27,7 @@
 #include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
 #include "netCore.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -180,6 +181,19 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsStreamIOChannel,
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
+
+NS_IMETHODIMP
+nsStreamIOChannel::GetName(PRUnichar* *result)
+{
+    nsresult rv;
+    nsXPIDLCString urlStr;
+    rv = mURI->GetSpec(getter_Copies(urlStr));
+    if (NS_FAILED(rv)) return rv;
+    nsString name;
+    name.AppendWithConversion(urlStr);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 
 NS_IMETHODIMP
 nsStreamIOChannel::IsPending(PRBool *result)

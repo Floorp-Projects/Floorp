@@ -32,6 +32,8 @@
 #include "prlog.h"
 #include "nsCRT.h"
 #include "netCore.h"
+#include "nsXPIDLString.h"
+#include "nsString.h"
 
 #if defined(PR_LOGGING)
 //
@@ -149,6 +151,25 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
+
+NS_IMETHODIMP
+nsLoadGroup::GetName(PRUnichar* *result)
+{
+    // XXX is this the right "name" for a load group?
+    nsresult rv;
+    nsXPIDLCString urlStr;
+    if (mDefaultLoadChannel) {
+        nsCOMPtr<nsIURI> url;
+        rv = mDefaultLoadChannel->GetURI(getter_AddRefs(url));
+        if (NS_FAILED(rv)) return rv;
+        rv = url->GetSpec(getter_Copies(urlStr));
+        if (NS_FAILED(rv)) return rv;
+    }
+    nsString name;
+    name.AppendWithConversion(urlStr);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
 
 NS_IMETHODIMP
 nsLoadGroup::IsPending(PRBool *aResult)

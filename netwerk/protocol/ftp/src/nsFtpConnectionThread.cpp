@@ -1657,6 +1657,19 @@ nsFtpConnectionThread::Run() {
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsFtpConnectionThread::GetName(PRUnichar* *result)
+{
+    nsresult rv;
+    nsXPIDLCString urlStr;
+    rv = mURL->GetSpec(getter_Copies(urlStr));
+    if (NS_FAILED(rv)) return rv;
+    nsString name;
+    name.AppendWithConversion(urlStr);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
 nsFtpConnectionThread::IsPending(PRBool *result)
 {
     nsresult rv = NS_OK;

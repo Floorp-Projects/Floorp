@@ -284,6 +284,13 @@ nsDNSRequest::FireStop(nsresult status)
 }
 
 NS_IMETHODIMP
+nsDNSRequest::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsDNSRequest::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDNSRequest::IsPending(PRBool *result)
 {
     *result = !mLookup->IsComplete();

@@ -116,6 +116,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest
+    NS_IMETHOD GetName(PRUnichar* *result) { 
+        NS_NOTREACHED("nsCachedChromeChannel::GetName");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
     NS_IMETHOD GetStatus(nsresult *status) { *status = mStatus; return NS_OK; }
     NS_IMETHOD Cancel(nsresult status)  { mStatus = status; return NS_OK; }

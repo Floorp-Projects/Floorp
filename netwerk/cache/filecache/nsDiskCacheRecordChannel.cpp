@@ -180,6 +180,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsDiskCacheRecordChannel,
 
 // implement nsIRequest
 NS_IMETHODIMP
+nsDiskCacheRecordChannel::GetName(PRUnichar* *result)
+{
+  NS_NOTREACHED("nsDiskCacheRecordChannel::GetName");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDiskCacheRecordChannel::IsPending(PRBool *aIsPending) 
 {
   *aIsPending = PR_FALSE;

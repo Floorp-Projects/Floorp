@@ -340,6 +340,13 @@ nsMemCacheChannel::~nsMemCacheChannel()
 }
 
 NS_IMETHODIMP
+nsMemCacheChannel::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsMemCacheChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsMemCacheChannel::IsPending(PRBool* aIsPending)
 {
     *aIsPending = PR_FALSE;

@@ -26,6 +26,11 @@
 interface nsIRequest : nsISupports
 {
     /**
+     * Returns the name of the request. Often this is the URL of the request.
+     */
+    readonly attribute wstring name;
+
+    /**
      * Returns true if the request is pending (active). Returns false 
      * after completion or successful calling Cancel. Suspended requests
      * are still considered pending.

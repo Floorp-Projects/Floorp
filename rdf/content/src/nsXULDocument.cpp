@@ -319,6 +319,10 @@ public:
     NS_DECL_ISUPPORTS
 
 	// nsIRequest
+    NS_IMETHOD GetName(PRUnichar* *result) { 
+        NS_NOTREACHED("PlaceholderChannel::GetName");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
     NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
     NS_IMETHOD Cancel(nsresult status)  { return NS_OK; }

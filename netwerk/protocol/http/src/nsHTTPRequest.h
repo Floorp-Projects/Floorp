@@ -206,6 +206,7 @@ public:
     nsresult    AdvanceToNextRequest ();
     nsresult    RestartRequest (PRUint32 flags);
 
+    nsresult    GetName(PRUnichar* *result);
     nsresult    IsPending (PRBool *result);
     nsresult    Cancel  (nsresult status );
     nsresult    Suspend ();
