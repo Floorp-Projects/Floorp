@@ -36,19 +36,19 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
-#include "nsDirectoryViewer.h"
 #include "rdf.h"
 #include "nsLocalSearchService.h"
 #include "nsInternetSearchService.h"
-#include "nsRelatedLinksHandlerImpl.h"
 #include "nsXPIDLString.h"
 #include "nsCharsetMenu.h"
+#include "nsDirectoryViewer.h"
 #include "nsFontPackageHandler.h"
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
 #ifndef MOZ_PHOENIX
 #include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
+#include "nsRelatedLinksHandlerImpl.h"
 #include "nsGlobalHistory.h"
 #include "nsDocShellCID.h"
 #include "nsUrlbarHistory.h"
@@ -62,8 +62,8 @@
 #ifndef MOZ_PHOENIX
 #include "nsWindowsHooks.h"
 #include "nsAlertsService.h"
-#endif
 #include "nsUrlWidget.h"
+#endif
 #endif // Windows
 
 #include "nsBrowserStatusFilter.h"
@@ -82,10 +82,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 #ifndef MOZ_PHOENIX
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
@@ -101,8 +101,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #ifndef MOZ_PHOENIX
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
+#endif
 #endif // Windows
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
@@ -145,7 +145,7 @@ UnregisterProc(nsIComponentManager *aCompMgr,
 }
 
 static const nsModuleComponentInfo components[] = {
-  { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
+   { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       "@mozilla.org/xpfe/http-index-format-factory-constructor",
       nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
@@ -178,6 +178,8 @@ static const nsModuleComponentInfo components[] = {
 	  "@mozilla.org/autocompleteSession;1?type=ldap",
 	  nsLDAPAutoCompleteSessionConstructor },
 #endif
+    { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
+       RelatedLinksHandlerImplConstructor},
 #endif
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
       NS_LOCALSEARCH_SERVICE_CONTRACTID, LocalSearchDataSourceConstructor },
@@ -187,8 +189,6 @@ static const nsModuleComponentInfo components[] = {
       NS_INTERNETSEARCH_SERVICE_CONTRACTID, InternetSearchDataSourceConstructor },
     { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
       NS_INTERNETSEARCH_DATASOURCE_CONTRACTID, InternetSearchDataSourceConstructor },
-    { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
-	  RelatedLinksHandlerImplConstructor},
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
       NS_NewCharsetMenu },
@@ -200,9 +200,9 @@ static const nsModuleComponentInfo components[] = {
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
       nsWindowDataSourceConstructor },
 #if defined(XP_WIN)
+#ifndef MOZ_PHOENIX
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
       nsUrlWidgetConstructor },
-#ifndef MOZ_PHOENIX
     { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },

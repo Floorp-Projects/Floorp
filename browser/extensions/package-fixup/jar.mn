@@ -1,0 +1,14 @@
+classic.jar:
+        skin/classic/communicator/profile/migrate.gif                         (../../../themes/classic/communicator/profile/migrate.gif)
+        skin/classic/communicator/profile/profile.css                         (../../../themes/classic/communicator/profile/profile.css)
+        skin/classic/communicator/profile/profileManager.css                  (../../../themes/classic/communicator/profile/profileManager.css)
+        skin/classic/communicator/profile/profileicon-large.gif               (../../../themes/classic/communicator/profile/profileicon-large.gif)
+        skin/classic/communicator/communicator.css
+*       skin/classic/communicator/contents.rdf                                 (../../../themes/classic/communicator/contents.rdf)
+
+comm.jar:
+*       content/communicator/contents.rdf                                     (../../../xpfe/communicator/resources/content/contents.rdf)
+
+en-US.jar:
+*       locale/en-US/communicator/contents.rdf                                (../../../xpfe/communicator/resources/locale/en-US/contents.rdf)
+        

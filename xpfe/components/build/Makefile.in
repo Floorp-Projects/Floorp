@@ -91,9 +91,8 @@ EXTRA_DSO_LIBS	+= mozutil_s
 endif
 
 SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)search_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozbrwsr_s.$(LIB_SUFFIX) \
@@ -101,16 +100,18 @@ SHARED_LIBRARY_LIBS = \
 
 ifndef MOZ_PHOENIX
 SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
 endif
@@ -118,25 +119,26 @@ endif
 endif
 
 LOCAL_INCLUDES	= \
+	-I$(srcdir)/../../browser/src \
 	-I$(srcdir)/../directory         \
-	-I$(srcdir)/../related/src       \
 	-I$(srcdir)/../search/src        \
 	-I$(srcdir)/../windowds \
-	-I$(srcdir)/../../browser/src \
 	$(NULL)
 
 ifndef MOZ_PHOENIX
 LOCAL_INCLUDES += \
-  -I$(srcdir)/../bookmarks/src     \
   -I$(srcdir)/../autocomplete/src  \
-  -I$(srcdir)/../history/src       \
-	-I$(srcdir)/../urlbarhistory/src \
+  -I$(srcdir)/../bookmarks/src     \
   -I$(srcdir)/../download-manager/src \
+  -I$(srcdir)/../history/src       \
+	-I$(srcdir)/../related/src       \
+	-I$(srcdir)/../urlbarhistory/src \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../alerts/src \
+	-I$(srcdir)/../urlwidget \
   -I$(srcdir)/../winhooks \
   $(NULL)
 endif
@@ -144,17 +146,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-
-SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
-	$(NULL)
-
-
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
-
-LOCAL_INCLUDES	+= \
-	-I$(srcdir)/../urlwidget \
-	$(NULL)
 endif
 
 EXTRA_DSO_LDOPTS = \

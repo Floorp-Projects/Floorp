@@ -50,4 +50,6 @@ ifneq (,$(findstring layout-debug,$(MOZ_EXTENSIONS)))
 DIRS  += layout-debug
 endif
 
+DIRS  += package-fixup
+
 include $(topsrcdir)/config/rules.mk
