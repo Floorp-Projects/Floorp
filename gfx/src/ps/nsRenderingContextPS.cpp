@@ -1253,7 +1253,7 @@ NS_IMETHODIMP
 nsRenderingContextPS::GetBoundingMetrics(const PRUnichar*   aString,
                                          PRUint32           aLength,
                                          nsBoundingMetrics& aBoundingMetrics,
-                                         PRInt32*           aFontID = nsnull)
+                                         PRInt32*           aFontID)
 {
   // Fill me up 
   return NS_OK;
