@@ -267,22 +267,23 @@ nsTextFragment::SetTo(const char *aBuffer, PRInt32 aLength)
 }
 
 void
-nsTextFragment::AppendTo(nsString& aString) const
+nsTextFragment::AppendTo(nsAString& aString) const
 {
   if (mState.mIs2b) {
     aString.Append(m2b, mState.mLength);
   } else {
-    aString.AppendWithConversion((char *)m1b, mState.mLength);
+    AppendASCIItoUTF16(Substring((char *)m1b, ((char *)m1b) + mState.mLength),
+                       aString);
   }
 }
 
 void
-nsTextFragment::AppendTo(nsCString& aCString) const
+nsTextFragment::AppendTo(nsACString& aCString) const
 {
-  if (mState.mLength == 0) return;
-
   if (mState.mIs2b) {
-    aCString.AppendWithConversion((PRUnichar *)m2b, mState.mLength);
+    LossyAppendUTF16toASCII(Substring((PRUnichar *)m2b,
+                                      (PRUnichar *)m2b + mState.mLength),
+                            aCString);
   } else {
     aCString.Append((char *)m1b, mState.mLength);
   }

@@ -200,15 +200,13 @@ public:
   /**
    * Append the contents of this string fragment to aString
    */
-  void AppendTo(nsString& aString) const;
+  void AppendTo(nsAString& aString) const;
 
   /**
    * Append the contents of this string fragment to aCString. This
-   * method takes an nsCString& since the implementation relies on
-   * being able to call AppendWithConversion() for performance
-   * reasons.
+   * method will do a lossy conversion from UTF-16 to ASCII.
    */
-  void AppendTo(nsCString& aCString) const;
+  void AppendTo(nsACString& aCString) const;
 
   /**
    * Make a copy of the fragments contents starting at offset for
