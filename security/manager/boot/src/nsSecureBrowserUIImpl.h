@@ -101,7 +101,6 @@ protected:
   PRUint32 mNewToplevelSecurityState;
   nsXPIDLString mInfoTooltip;
   PRInt32 mDocumentRequestsInProgress;
-  PRBool mMultipleTopLevelRequestsSeen;
   PRInt32 mSubRequestsInProgress;
   PRInt32 mSubRequestsHighSecurity;
   PRInt32 mSubRequestsLowSecurity;

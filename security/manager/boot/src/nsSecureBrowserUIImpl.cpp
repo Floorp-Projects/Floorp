@@ -366,7 +366,6 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
 {
   mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
-  mMultipleTopLevelRequestsSeen = PR_FALSE;
   mSubRequestsHighSecurity = 0;
   mSubRequestsLowSecurity = 0;
   mSubRequestsBrokenSecurity = 0;
@@ -751,18 +750,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
       ResetStateTracking();
     }
-    else
-    {
-      // If there is starting another LOAD_DOCUMENT_URI while the previous
-      // one did not yet finish, we are seeing some kind of redirection.
-      // One consequence of that is: There has actually been data transfered
-      // for the new document.
-      // In that case, we must NOT rely on the "has transfered" flag of
-      // the latest executed toplevel request object to decide whether
-      // we can ignore the security state.
-
-      mMultipleTopLevelRequestsSeen = PR_TRUE;
-    }
 
     // By using a counter, this code also works when the toplevel
     // document get's redirected, but the STOP request for the 
@@ -801,14 +788,12 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       ObtainEventSink(channel);
     }
 
-    if (!--mDocumentRequestsInProgress)
-    {
-      // we are arriving at zero, all STOPs for toplevel documents
-      // have been received
+    --mDocumentRequestsInProgress;
 
+    {
       PRBool MustEvaluate = PR_TRUE;
 
-      if (!mMultipleTopLevelRequestsSeen && !requestHasTransferedData)
+      if (!requestHasTransferedData)
       {
         // No data has been transfered for the single toplevel request.
         MustEvaluate = PR_FALSE;
