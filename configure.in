@@ -1203,6 +1203,9 @@ alpha*-*-osf*)
 	AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
 	AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     fi
+    if test -z "$GNU_CXX"; then
+      COMPAQ_CXX=1
+    fi
     AC_DEFINE(NEED_USLEEP_PROTOTYPE)
     ;;
 
@@ -4032,8 +4035,9 @@ else
 fi
 _MOZ_CPP_EXCEPTIONS=1 ])
 
-# Irix CC doesn't like exception declarations when exceptions are disabled
-if test "$_MOZ_CPP_EXCEPTIONS" -o -n "$MIPSPRO_CXX"; then
+# Irix & OSF native compilers do not like exception declarations 
+# when exceptions are disabled
+if test "$_MOZ_CPP_EXCEPTIONS" -o -n "$MIPSPRO_CXX" -o -n "$COMPAQ_CXX"; then
     AC_DEFINE(CPP_THROW_NEW, [])
 else
     AC_DEFINE(CPP_THROW_NEW, [throw()])
