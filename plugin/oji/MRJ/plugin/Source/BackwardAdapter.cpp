@@ -1004,8 +1004,10 @@ protected:
 //
 // These two will be created on NPP_Initialize and destroyed on NPP_Shutdown.
 //
+#pragma export on
 nsIPluginManager* thePluginManager = NULL;
 nsIPlugin* thePlugin = NULL;
+#pragma export off
 
 //
 // Interface IDs
