@@ -60,7 +60,7 @@ static nsCharType cc2ucd[5] = {
     eCharType_RightToLeftOverride
 };
 
-//#define FULL_ARABIC_SHAPING 1
+#define FULL_ARABIC_SHAPING 1
 // the Array Index = FE_CHAR - FE_TO_06_OFFSET
 
 #define FE_TO_06_OFFSET 0xfe70
@@ -295,7 +295,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
       leftNoTrJ = thisJ;
 
     if(src-2 >= (aString)){
-      for(p=src-2; (eTr == leftNoTrJ) && (CHAR_IS_ARABIC(*(p+1))) /*&& (p >= (aString))*/; p--)  
+      for(p=src-2; (p >= (aString))&& (eTr == leftNoTrJ) && (CHAR_IS_ARABIC(*(p+1))) ; p--)  
         leftNoTrJ = GetJoiningClass(*(p)) ;
     }
 
@@ -303,7 +303,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
     rightJ = rightNoTrJ = GetJoiningClass(*(src+1)) ;
 
     if(src+2 <= (aString+aLen-1)){
-      for(p=src+2; (eTr == rightNoTrJ) && (CHAR_IS_ARABIC(*(src+1))); p++)
+      for(p=src+2; (p <= (aString+aLen-1))&&(eTr == rightNoTrJ) && (CHAR_IS_ARABIC(*(src+1))); p++)
         rightNoTrJ = GetJoiningClass(*(p)) ;
     }
 
@@ -317,7 +317,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
     leftNoTrJ = thisJ;
 
   if(src-2 >= (aString)){
-    for(p=src-2; (eTr == leftNoTrJ) && (CHAR_IS_ARABIC(*(p+1))); p--)
+    for(p=src-2; (src-2 >= (aString)) && (eTr == leftNoTrJ) && (CHAR_IS_ARABIC(*(p+1))); p--)
       leftNoTrJ = GetJoiningClass(*(p)) ;
   }
 
@@ -337,6 +337,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
       for(i=0;i<8;i++) {
         if(key == gArabicLigatureMap[i]) {
           done = PR_TRUE;
+          *lDest++ = 0x200B;//ZERO WIDTH SPACE
           *lDest++ = 0xFEF5 + i;
           lSrc+=2;
           break;
@@ -353,6 +354,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
     *lDest++ = *lSrc++; 
 
   *aBufLen = lDest - aBuf;
+
   return NS_OK;
 #else
   for(*aBufLen = 0;*aBufLen < aLen; (*aBufLen)++)
