@@ -100,6 +100,10 @@ private:
   MimeEncoderData *mCryptoEncoderData;
   PRBool mIsDraft;
 
+  enum {eBufferSize = 8192};
+  char *mBuffer;
+  PRUint32 mBufferedBytes;
+
   PRBool mErrorAlreadyReported;
   void SetError(nsIMsgSendReport *sendReport, const PRUnichar *bundle_string);
   void SetErrorWithParam(nsIMsgSendReport *sendReport, const PRUnichar *bundle_string, const char *param);

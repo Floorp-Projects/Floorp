@@ -242,12 +242,18 @@ nsMsgComposeSecure::nsMsgComposeSecure()
   mEncryptionCinfo = 0;
   mEncryptionContext = 0;
   mCryptoEncoderData = 0;
+  mBuffer = 0;
+  mBufferedBytes = 0;
 }
 
 nsMsgComposeSecure::~nsMsgComposeSecure()
 {
   /* destructor code */
   if (mEncryptionContext) {
+    if (mBufferedBytes) {
+      mEncryptionContext->Update(mBuffer, mBufferedBytes);
+      mBufferedBytes = 0;
+    }
     mEncryptionContext->Finish();
   }
 
@@ -257,6 +263,8 @@ nsMsgComposeSecure::~nsMsgComposeSecure()
   if (mCryptoEncoderData) {
 	  MIME_EncoderDestroy (mCryptoEncoderData, PR_TRUE);
   }
+
+  delete [] mBuffer;
 
   PR_FREEIF(mMultipartSignedBoundary);
 }
@@ -638,6 +646,14 @@ nsresult nsMsgComposeSecure::MimeInitEncryption(PRBool aSign, nsIMsgSendReport *
   mEncryptionContext = do_CreateInstance(NS_CMSENCODER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  if (!mBuffer) {
+    mBuffer = new char[eBufferSize];
+    if (!mBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  mBufferedBytes = 0;
+
   rv = mEncryptionContext->Start(mEncryptionCinfo, mime_crypto_write_base64, mCryptoEncoderData);
   if (NS_FAILED(rv)) {
     SetError(sendReport, NS_LITERAL_STRING("ErrorCanNotEncrypt").get());
@@ -822,6 +838,15 @@ nsresult nsMsgComposeSecure::MimeFinishEncryption (PRBool aSign, nsIMsgSendRepor
    */
   PR_ASSERT(mEncryptionContext);
 
+  if (mBufferedBytes) {
+    rv = mEncryptionContext->Update(mBuffer, mBufferedBytes);
+    mBufferedBytes = 0;
+    if (NS_FAILED(rv)) {
+      PR_ASSERT(PR_GetError() < 0);
+      goto FAIL;
+    }
+  }
+  
   rv = mEncryptionContext->Finish();
   if (NS_FAILED(rv)) {
     SetError(sendReport, NS_LITERAL_STRING("ErrorCanNotEncrypt").get());
@@ -1004,13 +1029,31 @@ NS_IMETHODIMP nsMsgComposeSecure::MimeCryptoWriteBlock (const char *buf, PRInt32
 	  /* If we're encrypting, or signing-and-encrypting, write this data
 		 by filtering it through the crypto library. */
 
-	  rv = mEncryptionContext->Update(buf, size);
-    if (NS_FAILED(rv)) {
-		  status = PR_GetError();
-		  PR_ASSERT(status < 0);
-		  if (status >= 0) status = -1;
-		  goto FAIL;
-		}
+    /* We want to create equally sized encryption strings */
+    char *inputBytesIterator = buf;
+    PRUint32 inputBytesLeft = size;
+
+    while (inputBytesLeft) {
+      const PRUint32 spaceLeftInBuffer = eBufferSize - mBufferedBytes;
+      const PRUint32 bytesToAppend = NS_MIN(inputBytesLeft, spaceLeftInBuffer);
+
+      memcpy(mBuffer+mBufferedBytes, inputBytesIterator, bytesToAppend);
+      mBufferedBytes += bytesToAppend;
+      
+      inputBytesIterator += bytesToAppend;
+      inputBytesLeft -= bytesToAppend;
+
+      if (eBufferSize == mBufferedBytes) {
+        rv = mEncryptionContext->Update(mBuffer, mBufferedBytes);
+        mBufferedBytes = 0;
+        if (NS_FAILED(rv)) {
+          status = PR_GetError();
+          PR_ASSERT(status < 0);
+          if (status >= 0) status = -1;
+          goto FAIL;
+        }
+      }
+    }
   } else {
 	  /* If we're not encrypting (presumably just signing) then write this
 		 data directly to the file. */
