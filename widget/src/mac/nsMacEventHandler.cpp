@@ -352,14 +352,12 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	// each Mac window
 	//
 	mTSMDocument = nsnull;
-#if !TARGET_CARBON
 	supportedServices[0] = kTextService;
 	err = ::NewTSMDocument(1,supportedServices,&mTSMDocument,(long)this);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
 
 #ifdef DEBUG_TSM
 	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
-#endif
 #endif
 
 	mIMEIsComposing = PR_FALSE;
