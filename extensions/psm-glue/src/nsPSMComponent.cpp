@@ -401,6 +401,19 @@ nsPSMComponent::PassPrefs()
     get_pack_bool_pref(prefManager, "security.warn_viewing_mixed",   (CMTSetPrefElement*)list, &prefs.n);
     get_pack_bool_pref(prefManager, "security.warn_submit_insecure", (CMTSetPrefElement*)list, &prefs.n);
 
+	// TLS (SSL 3.1) prefs
+    if (prefManager->GetBoolPref("security.enable_tls", &boolpref) == 0) {
+        if (boolpref) {
+             list[prefs.n].value = nsCRT::strdup("true");
+        } else {
+             list[prefs.n].value = nsCRT::strdup("false");
+        }
+        list[prefs.n].key = nsCRT::strdup("security.enable_tls");
+        list[prefs.n].type = BOOL_PREF;
+        ++prefs.n;
+    }
+
+
     // Add any other prefs here such as ldap or mail/news.
      
      CMT_SetSavePrefsCallback(mControl, (savePrefsCallback_fn)SaveAllPrefs);
