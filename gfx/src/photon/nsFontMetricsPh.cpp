@@ -222,9 +222,9 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	if(aFont.style & NS_FONT_STYLE_OBLIQUE)
 	   uiFlags |= PF_STYLE_ANTIALIAS;
 
-	if( PfGenerateFontName( (const uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName ) == NULL )
+	if( PfGenerateFontName( (uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName ) == NULL )
 	  {
-		  PfGenerateFontName( (const uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName );
+		  PfGenerateFontName( (uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName );
 	  }
 
 	/* Once the Photon Font String is built get the attributes */

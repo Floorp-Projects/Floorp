@@ -68,6 +68,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerPh)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorPh)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsPh)
 
 // our custom constructors
@@ -176,7 +177,12 @@ static nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     //"@mozilla.org/gfx/screenmanager/Ph;1",
-    nsScreenManagerPhConstructor }
+    nsScreenManagerPhConstructor },
+	{ "Ph Printer Enumerator",
+	  NS_PRINTER_ENUMERATOR_CID,
+	  //    "@mozilla.org/gfx/printer_enumerator/win;1",
+	"@mozilla.org/gfx/printerenumerator;1",
+	nsPrinterEnumeratorPhConstructor },
 };
 
 NS_IMPL_NSGETMODULE(nsGfxPhModule, components)
