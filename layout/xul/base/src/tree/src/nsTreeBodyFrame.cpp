@@ -1117,7 +1117,7 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
 NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
-  if (aCount == 0)
+  if (aCount == 0 || !mView)
     return NS_OK; // Nothing to do.
 
   PRInt32 count = aCount > 0 ? aCount : -aCount;
