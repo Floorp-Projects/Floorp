@@ -132,6 +132,10 @@ public:
 #endif
 
   NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
+#ifdef DEBUG
+  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
+#endif
+
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
 
   NS_IMETHOD GetNaturalImageSize(PRUint32* naturalWidth, 

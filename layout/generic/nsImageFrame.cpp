@@ -1517,6 +1517,39 @@ nsImageFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
+NS_IMETHODIMP
+nsImageFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
+{
+  IndentBy(out, aIndent);
+  ListTag(out);
+#ifdef DEBUG_waterson
+  fprintf(out, " [parent=%p]", mParent);
+#endif
+  nsIView*  view;
+  GetView(aPresContext, &view);
+  if (view) {
+    fprintf(out, " [view=%p]", view);
+  }
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, 
+mRect.height);
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fprintf(out, " [content=%p]", mContent);
+
+  // output the img src url
+  nsCOMPtr<nsIURI> uri;
+  mLoads[0].mRequest->GetURI(getter_AddRefs(uri));
+  nsXPIDLCString uristr;
+  uri->GetSpec(getter_Copies(uristr));
+  fprintf(out, " [src=%s]", uristr.get());
+
+  fputs("\n", out);
+  return NS_OK;
+}
+#endif
+
 NS_IMETHODIMP 
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
