@@ -179,8 +179,8 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
     }
 
     // Position the child
-    nsRect  rect(kidReflowState.computedOffsets.left,
-                 kidReflowState.computedOffsets.top,
+    nsRect  rect(kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
+                 kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
     aKidFrame->SetRect(rect);
     htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
