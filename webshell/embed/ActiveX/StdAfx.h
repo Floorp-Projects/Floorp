@@ -82,7 +82,6 @@ typedef long int32;
 #include "nsViewsCID.h"
 #include "nsString.h"
 
-#include "nsGlobalVariables.h"
 #include "nsIWebShell.h"
 #include "nsIContentViewer.h"
 #include "nsIPresContext.h"
