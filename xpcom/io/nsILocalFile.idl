@@ -27,6 +27,7 @@
 
 %{C++
 #include "prio.h"
+#include "prlink.h"
 %}
 
 [ptr] native PRFileDescStar(PRFileDesc);
