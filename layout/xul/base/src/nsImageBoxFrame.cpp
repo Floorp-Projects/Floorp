@@ -63,6 +63,7 @@
 #include "nsIImage.h"
 #include "nsIWidget.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsStyleConsts.h"
@@ -535,7 +536,7 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
 {
   // Fetch our subrect.
   const nsStyleList* myList = GetStyleList();
-  mSubRect = myList->mImageRegion;
+  mSubRect = myList->mImageRegion; // before |mSuppressStyleCheck| test!
 
   if (mUseSrcAttr || mSuppressStyleCheck)
     return NS_OK; // No more work required, since the image isn't specified by style.
@@ -642,6 +643,12 @@ nsImageBoxFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aCoord)
   GetPrefSize(aState, size);
   aCoord = size.height;
   return NS_OK;
+}
+
+nsIAtom*
+nsImageBoxFrame::GetType() const
+{
+  return nsLayoutAtoms::imageBoxFrame;
 }
 
 #ifdef DEBUG
