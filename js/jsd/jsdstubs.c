@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/* this is all going away... replaced by code in js/jsd/java */
+
+#if 0
+
 #ifndef XP_MAC
 #include "_stubs/netscape_jsdebug_Script.c"
 #include "_stubs/netscape_jsdebug_DebugController.c"
@@ -30,4 +34,6 @@
 #include "n_jsdebug_JSStackFrameInfo.c"
 #include "netscape_jsdebug_JSPC.c"
 #include "n_j_JSSourceTextProvider.c"
+#endif
+
 #endif

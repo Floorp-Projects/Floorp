@@ -1,0 +1,1 @@
+load('objects.js')

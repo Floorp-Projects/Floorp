@@ -1,35 +1,29 @@
-#!gmake
-#
-# The contents of this file are subject to the Netscape Public License
-# Version 1.0 (the "NPL"); you may not use this file except in
-# compliance with the NPL.  You may obtain a copy of the NPL at
-# http://www.mozilla.org/NPL/
-#
-# Software distributed under the NPL is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-# for the specific language governing rights and limitations under the
-# NPL.
-#
-# The Initial Developer of this code under the NPL is Netscape
-# Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-# Reserved.
+#// The contents of this file are subject to the Netscape Public License
+#// Version 1.0 (the "NPL"); you may not use this file except in
+#// compliance with the NPL.  You may obtain a copy of the NPL at
+#// http://www.mozilla.org/NPL/
+#//
+#// Software distributed under the NPL is distributed on an "AS IS" basis,
+#// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+#// for the specific language governing rights and limitations under the
+#// NPL.
+#//
+#// The Initial Developer of this code under the NPL is Netscape
+#// Communications Corporation.  Portions created by Netscape are
+#// Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+#// Reserved.
 
-IGNORE_MANIFEST=1
-
-# 
 #//------------------------------------------------------------------------
 #//
 #// Specify the depth of the current directory relative to the
 #// root of NS
 #//
 #//------------------------------------------------------------------------
+DEPTH=..\..
+include <$(DEPTH)\config\config.mak>
 
-DEPTH = ..\..
-
-# Turn on/off depending on
-!ifdef MOZ_JSD
-DIRS = classes
+!ifdef MOZ_OJI
+# DIRS = java classes
 !endif
 
 #//------------------------------------------------------------------------
@@ -41,86 +35,57 @@ DIRS = classes
 DLLNAME		= jsd$(MOZ_BITS)$(VERSION_NUMBER)
 PDBFILE		= $(DLLNAME).pdb
 MAPFILE		= $(DLLNAME).map
-RESFILE		= $(DLLNAME).res
+RESFILE		= jsd$(MOZ_BITS)40.res
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MAKE_OBJ_TYPE	= DLL
 
 !if "$(MOZ_BITS)" != "16"
-LINCS = -I$(PUBLIC)/java \
-        -I$(PUBLIC)/applet \
-        -I$(DEPTH)\include 
+LINCS = -I$(DEPTH)\include \
+        -I$(PUBLIC)\js
 !endif
 
 !if "$(MOZ_BITS)" == "16"
 DEFFILE		= $(DLLNAME).def
 !endif
 
+# LCFLAGS= $(LCFLAGS) -DEXPORT_JSD_API -DJSD_THREADSAFE
+
 LLIBS=	$(LIBNSPR) 										\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
-		$(DIST)\lib\jrt$(MOZ_BITS)$(VERSION_NUMBER).lib	
+!ifdef MOZ_OJI
+		$(DIST)\lib\oji$(MOZ_BITS).lib	
+!endif
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
 
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+OBJS =					\
+    .\$(OBJDIR)\jsdebug.obj  \
+    .\$(OBJDIR)\jsd_high.obj \
+    .\$(OBJDIR)\jsd_hook.obj \
+    .\$(OBJDIR)\jsd_lock.obj \
+    .\$(OBJDIR)\jsd_scpt.obj \
+    .\$(OBJDIR)\jsd_stak.obj \
+    .\$(OBJDIR)\jsd_step.obj \
+    .\$(OBJDIR)\jsd_text.obj \
+    .\$(OBJDIR)\jsd_val.obj  \
+    $(NULL)
 
 #//------------------------------------------------------------------------
 #//
 #// install headers
 #//
 #//------------------------------------------------------------------------
-
-INSTALL_DIR=$(PUBLIC)\jsdebug
-
+INSTALL_DIR=$(PUBLIC)\jsd
 INSTALL_FILE_LIST=	\
 	jsdebug.h		\
 	$(NULL)
-
-
-MODULE=jsdebug 
-
-REQUIRES=java js nspr 
-
-CSRCS=          \
-    jsdebug.c   \
-    jsd_high.c  \
-    jsd_hook.c  \
-!ifdef MOZ_JSD
-    jsdstubs.c  \
-    jsd_java.c  \
-!endif
-    jsd_scpt.c  \
-    jsd_stak.c  \
-    jsd_text.c 
-
-LIBRARY_NAME=jsd 
-
-!ifdef MOZ_JSD
-JDK_GEN=netscape.jsdebug.Script netscape.jsdebug.DebugController \
-    netscape.jsdebug.JSThreadState netscape.jsdebug.JSStackFrameInfo \
-    netscape.jsdebug.JSPC netscape.jsdebug.JSSourceTextProvider \
-    netscape.jsdebug.JSErrorReporter 
-!endif
-
-EXPORTS=jsdebug.h 
-
-C_OBJS=                      \
-    .\$(OBJDIR)\jsdebug.obj  \
-    .\$(OBJDIR)\jsd_high.obj \
-    .\$(OBJDIR)\jsd_hook.obj \
-!ifdef MOZ_JSD
-    .\$(OBJDIR)\jsdstubs.obj \
-    .\$(OBJDIR)\jsd_java.obj \
-!endif
-    .\$(OBJDIR)\jsd_scpt.obj \
-    .\$(OBJDIR)\jsd_stak.obj \
-    .\$(OBJDIR)\jsd_text.obj 
-
-
-!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\java -I$(XPDIST)\public\js \
-    -I$(XPDIST)\public\nspr 
-!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -132,18 +97,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-clobber::
-    $(RM_R) _gen
-    $(RM_R) _stubs
-
-.\$(OBJDIR)\jsdstubs.o:					 \
-	$(JDK_STUB_DIR)\netscape_jsdebug_Script.c			 	\
-	$(JDK_STUB_DIR)\netscape_jsdebug_DebugController.c		\
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSThreadState.c	 	\
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSStackFrameInfo.c		\
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSPC.c					\
-	$(JDK_STUB_DIR)\netscape_jsdebug_JSSourceTextProvider.c	
 
 export:: INSTALL_FILES
 
