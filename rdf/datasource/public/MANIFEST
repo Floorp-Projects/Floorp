@@ -6,4 +6,4 @@ nsIRDFFind.h
 nsIRDFFTP.h
 nsIRelatedLinksDataSource.h
 nsIXULContentSink.h
-
+nsIWindowMediator.h
