@@ -27,6 +27,7 @@
 
 // macfe
 #include "ulaunch.h"	// StartDocInApp
+#include "CColorCaption.h"	// for CChameleonCaption
 #include "macgui.h"		// StPrepareForDialog, UGraphics
 #include "resgui.h"		// msg_Help, msg_Apply, CLOSE_STR_RESID, EDITOR_PERCENT_PARENT_CELL
 #include "uerrmgr.h"
@@ -159,31 +160,6 @@ void CChameleonView::DrawSelf()
 	EraseRect(&frame);
 }
 
-
-void CChameleonCaption::SetColor(RGBColor textColor, RGBColor backColor)
-{
-	fTextColor.red = textColor.red;
-	fTextColor.green = textColor.green;
-	fTextColor.blue = textColor.blue;
-	
-	fBackColor.red = backColor.red;
-	fBackColor.green = backColor.green;
-	fBackColor.blue = backColor.blue;
-}
-
-
-void CChameleonCaption::DrawSelf()
-{
-	Rect	frame;
-	CalcLocalFrameRect(frame);
-	
-	Int16	just = UTextTraits::SetPortTextTraits(mTxtrID);
-	
-	::RGBForeColor(&fTextColor);
-	::RGBBackColor(&fBackColor);
-	
-	UTextDrawing::DrawWithJustification((Ptr)&mText[1], mText[0], frame, just);
-}
 
 
 void CEditorPrefContain::DrawSelf()

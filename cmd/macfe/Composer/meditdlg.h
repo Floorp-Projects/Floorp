@@ -49,21 +49,7 @@ protected:
 	
 };
 
-
-class CChameleonCaption: public LCaption
-{
-public:
-	enum				{class_ID = 'ccpt' };
-						CChameleonCaption(LStream * inStream) : LCaption(inStream) {};
-	virtual void		SetColor(RGBColor textColor, RGBColor backColor);
-	
-protected:
-
-	RGBColor			fTextColor;
-	RGBColor			fBackColor;
-	virtual void		DrawSelf();	
-};
-
+class CChameleonCaption;
 	
 // This class simply creates a dialog and extracts the context from the SuperCommand so
 // that we can set the values of the controls in the dialog based on the context which created it.
