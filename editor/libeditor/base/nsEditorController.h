@@ -86,11 +86,6 @@ public:
   
 protected:
 
-  /** return PR_TRUE if the editor associated with mContent is enabled */
-  PRBool   IsEnabled();
-
-protected:
-
    //if editor is null then look to mContent. this is for dual use of window and content
    //attached controller.
    nsISupports *mCommandRefCon;

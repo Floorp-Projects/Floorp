@@ -212,16 +212,6 @@ NS_IMETHODIMP nsEditorController::OnEvent(const nsAReadableString & aEventName)
   return NS_OK;
 }
 
-PRBool nsEditorController::IsEnabled()
-{
-  return PR_TRUE; // XXX: need to implement this
-  /*
-      PRUint32 flags=0;
-      NS_ENSURE_SUCCESS(mEditor->GetFlags(&flags), NS_ERROR_FAILURE);
-      check eEditorReadonlyBit and eEditorDisabledBit
-   */
-}
-
 
 nsWeakPtr nsEditorController::sEditorCommandManager = NULL;
 
