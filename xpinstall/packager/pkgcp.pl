@@ -153,7 +153,16 @@ LINE: while (<MANIFEST>) {
 	# if it has wildcards, do recursive copy.
 	/(?:\*|\?)/	&& do {
 		($debug >= 10) && print "wildcard copy.\n";
-		do_wildcard ("$srcdir$PD$line");
+		if ($os eq "MacOS") {
+			if (/:\*$/) {
+				($debug >= 4) && print "Mac and wildcard is \":*\" so strip and copy entire directory.\n";
+				$line =~ s/:\*$//;		# Mac doesn't like wildcards, so strip off any ":*" at the end of the line
+										# and copy the whole directory.
+				do_copydir ("$srcdir$PD$line");
+			}
+		} else {
+				do_wildcard ("$srcdir$PD$line");
+		}
 		next LINE;
 	};
 
@@ -323,7 +332,7 @@ sub do_copyfile
 				warn "Warning: chmod of $destpath$destname$destsuffix failed: $!.  Exiting...\n";
 		}
 	} else {
-		die "Error: file $srcpath$srcname$srcsuffix is not a file or is not readable ($package, $component, $lineno).\n";
+		warn "Error: file $srcpath$srcname$srcsuffix is not a file or is not readable ($package, $component, $lineno).\n";
 	}
 }
 
@@ -342,7 +351,12 @@ sub do_wildcard
 	($debug >= 2) && print "do_wildcard():\n";
 
 	if ( $entry =~ /(?:\*|\?)/ ) {		# it's a wildcard,
-		@list = glob($entry);			# expand it
+		if ($os eq "MacOS") {
+			warn "Warning: globbing on Mac not supported.\nWorkaround is to copy entire directory.\n";
+			@list = <$entry>;
+		} else {
+			@list = glob($entry);			# expand it
+		}
 		($debug >= 4) && print " glob: $entry => @list\n";
 
 		foreach $item ( @list ) {			# now copy each item in list
