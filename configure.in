@@ -1217,21 +1217,15 @@ case "$target" in
 
 
 *-os2*)
-    MOZ_BUILD_ROOT=`pwd -D`
+    AC_DEFINE(XP_OS2)
     USE_SHORT_LIBNAME=1
-    BIN_SUFFIX='.exe'
-    OBJ_SUFFIX=obj
+    LIB_PREFIX=
     LIB_SUFFIX=lib
-    DLL_SUFFIX=.dll
-    ASM_SUFFIX=asm
-    LD='$(CC)'
-    DSO_CFLAGS=''
-    DSO_PIC_CFLAGS=''
-    OS_ARCH=OS2
-    OS_TARGET=OS2
+    BIN_SUFFIX=".exe"
+    DLL_SUFFIX=".dll"
+    DSO_PIC_CFLAGS=
+    TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT=os2
-    MOZ_WIDGET_TOOLKIT_LDFLAGS='$(DIST)/lib/wdgt$(MOZ_WIDGET_TOOLKIT)'
-    MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
     WIDGET_DLL='\"wdgt$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
     GFXWIN_DLL='\"gfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
     MOZ_ENABLE_POSTSCRIPT=
@@ -1245,36 +1239,38 @@ case "$target" in
     fi
 
     # EMX/GCC build
-    if test "$GNU_CC"; then
-        _PEDANTIC=''
-        AR=emxomfar
-        AR_FLAGS='-p256 r $@'
-        CFLAGS="-Zmtd -Zomf $CFLAGS"
-        CXXFLAGS="-Zmtd -Zomf $CXXFLAGS"
-        DSO_LDOPTS='-Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
-        BIN_FLAGS='-Zlinker /PM:VIO -Zlinker /ST:0x30000'
-        IMPLIB='emximp -o'
-        FILTER='emxexp'
-        LIB_PREFIX=lib
+    if test -n "$GNU_CC"; then
+#        AC_DEFINE(USE_OS2_TOOLKIT_HEADERS)
         AC_DEFINE(OS2)
         AC_DEFINE(XP_OS2_EMX)
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
-        MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
-        MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
+        AR=emxomfar
+        AR_FLAGS='-p256 r $@'
+        CFLAGS="$CFLAGS -Zmtd -Zomf"
+        CXXFLAGS="$CXXFLAGS -Zmtd -Zomf"
+        DSO_LDOPTS='-Zdll'
+        BIN_FLAGS='-Zlinker /ST:0x30000'
+        IMPLIB='emximp -o'
+        FILTER='emxexp -o'
+        MOZ_DEBUG_FLAGS="-g -fno-inline"
+        MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
+        MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwdgt$(MOZ_WIDGET_TOOLKIT)'
+        MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT)'
         MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
-        XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
-        MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
-        MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
-        XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
-        MOZ_JPEG_LIBS='$(DIST)/lib/libmozjpeg.$(LIB_SUFFIX)'
-        MOZ_ZLIB_LIBS='$(DIST)/lib/libmozz.$(LIB_SUFFIX)'
-        MOZ_PNG_LIBS='$(DIST)/lib/libmozpng.$(LIB_SUFFIX)'
-        MOZ_MNG_LIBS='$(DIST)/lib/libmozmng.$(LIB_SUFFIX)'
-    fi
+
+        if test -z "$EMXOMFLD_LINKER"; then
+          # using LINK386.EXE
+          DSO_LDOPTS="$DSO_LDOPTS -Zlinker /NOO"
+        fi
+
+        # GCC for OS/2 currently predefines these, but we don't want them
+        _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
+        _DEFINES_CXXFLAGS="$_DEFINES_CXXFLAGS -Uunix -U__unix -U__unix__"
 
     # Visual Age C++ build
-    if test "$VACPP" = "yes"; then
-#        MOZ_BUILD_ROOT="$ROOT"`pwd -D`
+    elif test "$VACPP" = "yes"; then
+        MOZ_BUILD_ROOT=`pwd -D`
+        OBJ_SUFFIX=obj
         AR=-ilib
         AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
         AR_LIST='/L'
@@ -1283,8 +1279,8 @@ case "$target" in
         AS=alp
         ASFLAGS='-Mb'
         AS_DASH_C_FLAG=''
+        ASM_SUFFIX=asm
         LD='-ilink'
-        TARGET_MD_ARCH=os2
         CFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9"
         CXXFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9 /Gx+"
         MOZ_DEBUG_FLAGS="/Ti+"
@@ -1293,9 +1289,9 @@ case "$target" in
         MOZ_DEBUG_LDFLAGS="/DE"
         MOZ_OPTIMIZE_LDFLAGS="/OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
         DSO_LDOPTS=''
+        DSO_PIC_CFLAGS=
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
-        LIB_PREFIX=
         AC_DEFINE(NO_ANSI_KEYWORDS)
         AC_DEFINE(OS2,4)
         AC_DEFINE(_X86_)
@@ -1314,6 +1310,8 @@ case "$target" in
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
         MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
         MOZ_MNG_LIBS='$(DIST)/lib/mozmng.$(LIB_SUFFIX)'
+        MOZ_WIDGET_TOOLKIT_LDFLAGS='$(DIST)/lib/wdgt$(MOZ_WIDGET_TOOLKIT)'
+        MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
     fi
     ;;
 
@@ -1422,6 +1420,10 @@ dnl the qsort routine under solaris is faulty
 	NSPR_LIBS="-lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION -L/usr/ccs/lib -lcrt"
     ;;
 
+*-os2*)
+    HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
+    ;;
+
 esac
 
 dnl Only one oddball right now (QNX), but this gives us flexibility
@@ -1442,7 +1444,7 @@ if test -z "$MKSHLIB_FORCE_ALL" || test -z "$MKSHLIB_UNFORCE_ALL"; then
     NO_LD_ARCHIVE_FLAGS=1
 fi
 case "$target" in
-*-*-os2*)
+*-os2*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
 *-aix4.3*|*-aix5*)
@@ -2063,11 +2065,6 @@ then
 	    *-hpux11.*)
 			AC_DEFINE(_REENTRANT) 
 			;;
-
-	    *-*-os2*)
-	    USE_PTHREADS=
-	    _PTHREAD_LDFLAGS=
-	    ;;
 
 	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
@@ -3774,7 +3771,7 @@ MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
         ;;
-    msvc*|mksnt*|cygwin*|mingw*)
+    msvc*|mksnt*|cygwin*|mingw*|os2*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -5022,6 +5019,17 @@ if test "$USING_HCC"; then
    AC_SUBST(CXX)
 fi
 
+dnl Need to specify location of the weak symbols file whenever compiling
+dnl  C++ files.  The only way to do this is to export the environment
+dnl  variable on the same line that we call g++.
+if test "$OS_ARCH" = "OS2" -a -n "$GNU_CC"; then
+   _OLDCXX=$CXX
+   CXX='export GCC_WEAKSYMS=$(DEPTH)/build/weaksyms.omf;'
+   CXX="$CXX $_OLDCXX"
+   AC_SUBST(CXX)
+fi
+
+
 dnl Check for missing components
 if test "$no_x" != "yes"; then
 if test ! -z "$MISSING_X"; then
@@ -5035,7 +5043,6 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "OS2"; then
   AC_DEFINE(XP_PC)
-  AC_DEFINE(XP_OS2)
   if test "$VACPP" = "yes"; then
       LIBS='so32dll.lib tcp32dll.lib'
   fi

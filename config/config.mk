@@ -600,7 +600,7 @@ COMPILE_CXXFLAGS = $(DEFINES) $(INCLUDES) $(XCFLAGS) $(PROFILER_CFLAGS) $(DSO_CF
 # put on the link line for binaries, and should
 # we link statically or dynamic?  Assuming dynamic for now.
 
-ifneq (,$(filter-out OS2, $(OS_ARCH)))
+ifneq ($(MOZ_OS2_TOOLS),VACPP)
 ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 endif
