@@ -78,6 +78,21 @@ NS_IMETHODIMP nsTextWidget::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData) 
 {
+	if (aInitData)
+	{
+		nsTextWidgetInitData* initData = (nsTextWidgetInitData*)aInitData;
+		if (initData->mIsPassword)
+		{
+			SetControlType(kControlEditTextPasswordProc);
+			mIsPassword = PR_TRUE;
+		}
+		else if (mIsReadOnly)
+		{
+			SetControlType(kControlStaticTextProc);
+			mIsReadOnly = PR_TRUE;
+		}
+	}
+
 	Inherited::Create(aParent, aRect, aHandleEventFunction,
 						aContext, aAppShell, aToolkit, aInitData);
 
