@@ -205,9 +205,15 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 				if (parser)
 					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
 											m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
-				nsString searchResult(fullAddress);
+				
+				/* We need to convert back the result from UTF-8 to Unicode */
+				PRUnichar* searchResult;
+				PRInt32 searchResultLen;
+				INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&searchResult, &searchResultLen);
+
 				// iterate over the table looking for a match
-				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult.GetUnicode());
+				rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult);
+				PR_Free(searchResult);
 				break;
 			}
 		}
