@@ -60,6 +60,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWindowWatcher.h"
 #include "jsapi.h"
 #include "nsReadableUtils.h"
+#include "nsICloseAllWindows.h"
 
 #include "nsAEEventHandling.h"
 
@@ -339,6 +340,17 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
 //----------------------------------------------------------------------------------------
 {
 	nsresult rv;
+	
+	nsCOMPtr<nsICloseAllWindows> closer =
+	         do_CreateInstance("@mozilla.org/appshell/closeallwindows;1", &rv);
+	if (NS_FAILED(rv))
+		return errAEEventNotHandled;
+
+    PRBool doQuit;
+    rv = closer->CloseAll(askSave != eSaveNo, &doQuit);
+    if (NS_FAILED(rv) || !doQuit)
+        return errAEEventNotHandled;
+        	
 	nsCOMPtr<nsIAppShellService> appShellService = 
 	         do_GetService(kAppShellServiceCID, &rv);
 	if (NS_FAILED(rv))
