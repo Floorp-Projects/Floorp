@@ -412,6 +412,7 @@ function onDownloadRetry(aEvent)
 // This is called by the progress listener. We don't actually use the event
 // system here to minimize time wastage. 
 var gLastComputedMean = -1;
+var gLastActiveDownloads = 0;
 function onUpdateProgress()
 {
   var numActiveDownloads = gActiveDownloads.length;
@@ -445,8 +446,10 @@ function onUpdateProgress()
     mean = Math.floor((mean / base) * 100);
   }
 
-  if (gLastComputedMean == -1 || mean != gLastComputedMean) {
+  if (mean != gLastComputedMean || gLastActiveDownloads != numActiveDownloads) {
     gLastComputedMean = mean;
+    gLastActiveDownloads = numActiveDownloads;
+    
     var strings = document.getElementById("downloadStrings");
     
     var title;
