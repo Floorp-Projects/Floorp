@@ -249,7 +249,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
         aMetric = 0.25f;
         break;
     case eMetricFloat_TextFieldHorizontalInsidePadding:
-        aMetric = 0.95f;
+        aMetric = 1.025f;
         break;
     case eMetricFloat_TextAreaVerticalInsidePadding:
         aMetric = 0.40f;
