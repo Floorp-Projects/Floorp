@@ -229,7 +229,7 @@ a {
 
 .msg-data[msgtype="QUIT"] {
 
-    background: lightgrey;
+    background: #222222;
     color: brown;
 
 }

@@ -53,6 +53,7 @@ CONTENTFILES = \
     .\xul\content\handlers.js \
     .\xul\content\readprefs.js \
     .\xul\content\static.js \
+    .\xul\content\rdf.js \
     $(NULL)
 
 SKINFILES = \

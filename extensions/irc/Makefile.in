@@ -56,6 +56,7 @@ CONTENTFILES = \
 		$(srcdir)/xul/content/handlers.js \
 		$(srcdir)/xul/content/readprefs.js \
 		$(srcdir)/xul/content/static.js \
+		$(srcdir)/xul/content/rdf.js \
 		$(NULL)
 
 SKINFILES = \

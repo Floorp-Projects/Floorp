@@ -65,7 +65,11 @@ function cmgr_list (partialName)
     for (var i in this.commands)
     {
         if (this.commands[i].name.indexOf(partialName) == 0)
-            ary.push (this.commands[i]);
+            if (partialName.length == this.commands[i].name.length)
+                /* exact match */
+                return [this.commands[i]];
+            else
+                ary.push (this.commands[i]);
     }
 
     return ary;

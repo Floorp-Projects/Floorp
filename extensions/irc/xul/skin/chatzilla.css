@@ -106,6 +106,14 @@ window {
 
 }
 
+.status-box {
+
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-right: 10px;
+
+}
+
 .status-label {
     
     text-align: right;
@@ -135,37 +143,29 @@ window {
 
 }
 
-/* Listbox on left of UI (aka QuickList) */
+/* op image column */
+.op-image[state="true"] {
 
-.quick-list {
-
-	border: thin silver inset;
-	background: #dddddd;
-	overflow: auto;
+    list-style-image: url(chrome://chatzilla/skin/images/is-op.gif)
 
 }
 
+.op-image[state="false"] {
 
-/* common container for individual quicklist items */
-.list-option {
-
-    margin: 2px;
+    list-style-image: url(chrome://chatzilla/skin/images/isnt-op.gif)
 
 }
 
-/* JG: Selection colors, in accord with standard mozilla chrome colors */
-.list-option[selected="true"] {
-    background: rgb(51,102,153);
-    font-weight: bold;
-    color: white;
-} 
+/* voice image column */
+.voice-image[state="true"] {
 
-/* text in the quicklist */
-.option-text {
-    font-weight: bold;
-    align: right;
+    list-style-image: url(chrome://chatzilla/skin/images/is-voice.gif)
+
 }
 
-/* graphic in the quicklist */
-.option-graphic {
+.voice-image[state="false"] {
+
+    list-style-image: url(chrome://chatzilla/skin/images/isnt-voice.gif)
+
 }
+<
