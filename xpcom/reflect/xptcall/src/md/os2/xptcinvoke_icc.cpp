@@ -196,7 +196,7 @@ invoke_copy_to_stack(PRUint32* d, uint32 paramCount, nsXPTCVariant* s)
     }
 }
 
-extern void _Optlink CallMethodFromVTable__FPvUiPUiT1T2iT6T3( void*, PRUint32, 
+extern int _Optlink CallMethodFromVTable__FPvUiPUiT1T2iT6T3( void*, PRUint32, 
         nsXPTCVariant*,nsISupports*, PRUint32, int, int, uint32*, int, double* );
 
 XPTC_PUBLIC_API(nsresult)
@@ -212,7 +212,7 @@ XPTC_InvokeByIndex(nsISupports *that, PRUint32 index,
 
    // XXXX DO REST FROM xptcall_vacpp.asm
    // pStack = get_stack() + ibytes;
-   CallMethodFromVTable__FPvUiPUiT1T2iT6T3(      
+   result = CallMethodFromVTable__FPvUiPUiT1T2iT6T3(      
                                                 0,        /*pStack*/ 
                                                 paramcount,
                                                 params,
