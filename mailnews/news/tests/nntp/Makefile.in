@@ -53,19 +53,22 @@ LIBS = \
 	-lmozdbm	\
 	-lxp	\
 	-lpref	\
-	-ljs	\
+	-lmozjs	\
 	-lraptorbase \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	-lraptorhtml \
 	-lraptorhtmlpars	\
-	-lraptorgfx	\
+	-lexpat \
+	-lxmltok \
+	-lraptorgfx \
 	-ljsdom	\
 	-ljsurl	\
 	-limg	\
 	-lpng	\
 	-ljpeg	\
 	-lmozutil	\
+	-lmsgbaseutil \
 	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \

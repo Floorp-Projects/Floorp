@@ -62,12 +62,14 @@
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
+#define NEWS_DLL   "msgnews.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
+#define NEWS_DLL   "libmsgnews.so"
 #endif
 #endif
 
@@ -77,6 +79,7 @@
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -218,8 +221,14 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 
 void nsNntpTestDriver::InitializeProtocol(const char * urlString)
 {
+    nsresult rv = NS_OK;
+
 	// this is called when we don't have a url nor a protocol instance yet...
-	NS_NewNntpUrl(&m_url, urlString);
+    rv = nsServiceManager::GetService(kNntpUrlCID,
+                                      nsINntpUrl::GetIID(),
+                                      (nsISupports**)&m_url);
+	if (NS_FAILED(rv)) return rv;
+
 	// now create a protocl instance...
 	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
 	m_protocolInitialized = PR_TRUE;
@@ -655,6 +664,7 @@ int main()
 
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNntpUrlCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
