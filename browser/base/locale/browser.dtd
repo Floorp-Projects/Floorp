@@ -149,7 +149,7 @@
 <!ENTITY cutCmd.accesskey         "t"> 
 <!ENTITY copyCmd.label            "Copy">  
 <!ENTITY copyCmd.key            "C">  
-<!ENTITY copyCmd.accesskey          "c"> 
+<!ENTITY copyCmd.accesskey          "C"> 
 <!ENTITY pasteCmd.label           "Paste">  
 <!ENTITY pasteCmd.key           "V">  
 <!ENTITY pasteCmd.accesskey         "P"> 
@@ -206,9 +206,9 @@
 <!ENTITY viewPartialSourceForMathMLCmd.label    "View MathML Source">
 <!ENTITY viewPartialSourceCmd.accesskey "e">
 <!ENTITY viewPageSourceCmd.label      "View Page Source">
-<!ENTITY viewPageSourceCmd.accesskey  "v">
+<!ENTITY viewPageSourceCmd.accesskey  "V">
 <!ENTITY viewFrameSourceCmd.label     "View Frame Source">
-<!ENTITY viewFrameSourceCmd.accesskey "v">
+<!ENTITY viewFrameSourceCmd.accesskey "V">
 <!ENTITY viewPageInfoCmd.label        "View Page Info">
 <!ENTITY viewPageInfoCmd.accesskey    "I">
 <!ENTITY viewFrameInfoCmd.label       "View Frame Info">
