@@ -525,11 +525,12 @@ static int cvt_s(SprintfState *ss, const char *s, int width, int prec,
   PRUnichar buf[256];
   PRUnichar *retbuf = nsnull;
 
-  retbuf = UTF8ToUCS2(s, nsCRT::strlen(s), buf, 256);
+  if (s) {
+    retbuf = UTF8ToUCS2(s, nsCRT::strlen(s), buf, 256);
   
-  if(nsnull == retbuf)
-    return -1;
-
+    if(nsnull == retbuf)
+      return -1;
+  }
   int ret = cvt_S(ss, retbuf, width, prec, flags);
 
   if(retbuf != buf)
