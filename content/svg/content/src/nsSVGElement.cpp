@@ -158,9 +158,8 @@ nsSVGElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+  
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
@@ -188,9 +187,7 @@ nsSVGElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
       }
     }
   }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
+  
   return NS_OK;
 }
 
@@ -201,9 +198,8 @@ nsSVGElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != mDocument)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   nsRange::OwnerChildReplaced(this, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
@@ -220,9 +216,6 @@ nsSVGElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
-  if (aNotify && (nsnull != mDocument)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
   return NS_OK;
 }
 
@@ -232,9 +225,8 @@ nsSVGElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 {
   NS_PRECONDITION(nsnull != aKid && this != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
@@ -262,9 +254,7 @@ nsSVGElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
       }
     }
   }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
+  
   return NS_OK;
 }
 
@@ -272,11 +262,10 @@ NS_IMETHODIMP
 nsSVGElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
+    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
     if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
@@ -305,9 +294,6 @@ nsSVGElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
-  }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;  

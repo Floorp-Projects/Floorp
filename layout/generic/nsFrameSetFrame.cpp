@@ -284,9 +284,9 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
 {
   nsAutoString prefName(aPrefName);
   if (prefName.Equals(NS_LITERAL_STRING(kFrameResizePref))) {
-    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
+    nsIDocument* doc = mContent->GetDocument();
+    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
     if (doc) {
-      doc->BeginUpdate(UPDATE_CONTENT_MODEL);
       doc->AttributeWillChange(mContent,
                                kNameSpaceID_None,
                                nsHTMLAtoms::frameborder);
@@ -301,7 +301,6 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
                             kNameSpaceID_None,
                             nsHTMLAtoms::frameborder,
                             nsIDOMMutationEvent::MODIFICATION);
-      doc->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
   return NS_OK;

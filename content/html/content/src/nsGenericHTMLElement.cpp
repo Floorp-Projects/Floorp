@@ -1676,45 +1676,43 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     // string value was mapped to nsHTMLValue, set it that way
     return SetHTMLAttribute(aAttribute, val, aNotify);
   }
-  else {
-    if (ParseCommonAttribute(aAttribute, aValue, val)) {
-      // string value was mapped to nsHTMLValue, set it that way
-      return SetHTMLAttribute(aAttribute, val, aNotify);
-    }
 
-    if (aValue.IsEmpty()) { // if empty string
-      val.SetEmptyValue();
-      return SetHTMLAttribute(aAttribute, val, aNotify);
-    }
-
-    // don't do any update if old == new
-    result = GetAttr(aNameSpaceID, aAttribute, strValue);
-    if ((NS_CONTENT_ATTR_NOT_THERE != result) && aValue.Equals(strValue)) {
-      return NS_OK;
-    }
-
-    modification = (result != NS_CONTENT_ATTR_NOT_THERE);
-
-    if (aNotify && (nsnull != mDocument)) {
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-
-      mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
-    }
-
-    // set as string value to avoid another string copy
-    PRBool mapped = HasAttributeDependentStyle(aAttribute);
-
-    nsCOMPtr<nsIHTMLStyleSheet> sheet =
-      dont_AddRef(GetAttrStyleSheet(mDocument));
-
-    if (!mAttributes) {
-      result = NS_NewHTMLAttributes(&mAttributes);
-      NS_ENSURE_SUCCESS(result, result);
-    }
-    result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
-                                          this, sheet);
+  if (ParseCommonAttribute(aAttribute, aValue, val)) {
+    // string value was mapped to nsHTMLValue, set it that way
+    return SetHTMLAttribute(aAttribute, val, aNotify);
   }
 
+  if (aValue.IsEmpty()) { // if empty string
+    val.SetEmptyValue();
+    return SetHTMLAttribute(aAttribute, val, aNotify);
+  }
+
+  // don't do any update if old == new
+  result = GetAttr(aNameSpaceID, aAttribute, strValue);
+  if ((NS_CONTENT_ATTR_NOT_THERE != result) && aValue.Equals(strValue)) {
+    return NS_OK;
+  }
+
+  modification = (result != NS_CONTENT_ATTR_NOT_THERE);
+
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+      
+  if (aNotify && mDocument) {
+    mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
+  }
+
+  // set as string value to avoid another string copy
+  PRBool mapped = HasAttributeDependentStyle(aAttribute);
+
+  nsCOMPtr<nsIHTMLStyleSheet> sheet =
+    dont_AddRef(GetAttrStyleSheet(mDocument));
+
+  if (!mAttributes) {
+    result = NS_NewHTMLAttributes(&mAttributes);
+    NS_ENSURE_SUCCESS(result, result);
+  }
+  result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
+                                          this, sheet);
   if (mDocument) {
     nsCOMPtr<nsIBindingManager> bindingManager;
     mDocument->GetBindingManager(getter_AddRefs(bindingManager));
@@ -1757,7 +1755,6 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
                        PRInt32(nsIDOMMutationEvent::ADDITION);
 
       mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, modHint);
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -1795,8 +1792,9 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 
   PRBool modification = (rv != NS_CONTENT_ATTR_NOT_THERE);
 
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+  
   if (aNotify && mDocument) {
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
     mDocument->AttributeWillChange(this, namespaceID, localName);
   }
 
@@ -1851,7 +1849,6 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
         modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                      : PRInt32(nsIDOMMutationEvent::ADDITION);
       mDocument->AttributeChanged(this, namespaceID, localName, modHint);
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -1945,9 +1942,10 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
         (NS_CONTENT_ATTR_NOT_THERE !=
          GetAttr(kNameSpaceID_None, aAttribute, oldValueStr));
     }
-    if (aNotify) {
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
 
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+    
+    if (aNotify) {
       mDocument->AttributeWillChange(this, kNameSpaceID_None, aAttribute);
     }
     sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
@@ -2004,7 +2002,6 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 
     if (aNotify) {
       mDocument->AttributeChanged(this, kNameSpaceID_None, aAttribute, nsIDOMMutationEvent::MODIFICATION);
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
   if (!sheet) {  // manage this ourselves and re-sync when we connect to doc
@@ -2041,10 +2038,9 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
   }
 
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
   if (mDocument) {
     if (aNotify) {
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-
       mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
     }
 
@@ -2098,7 +2094,6 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     if (aNotify) {
       mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
                                   nsIDOMMutationEvent::REMOVAL);
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -3700,9 +3695,9 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(nsnull != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+  
   PRBool rv = mChildren.InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
   if (rv) {
     NS_ADDREF(aKid);
@@ -3729,9 +3724,6 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
       }
     }
   }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
   return NS_OK;
 }
 
@@ -3745,9 +3737,8 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
   nsIContent* oldKid = NS_STATIC_CAST(nsIContent *,
                                       mChildren.SafeElementAt(aIndex));
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+
   nsRange::OwnerChildReplaced(this, aIndex, oldKid);
   PRBool rv = mChildren.ReplaceElementAt(aKid, aIndex);
   if (rv) {
@@ -3777,9 +3768,7 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
       NS_RELEASE(oldKid);
     }
   }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
+  
   return NS_OK;
 }
 
@@ -3789,9 +3778,8 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 {
   NS_PRECONDITION(nsnull != aKid && this != aKid, "null ptr");
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+  
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);
@@ -3818,9 +3806,6 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
       }
     }
   }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
-  }
   return NS_OK;
 }
 
@@ -3828,9 +3813,8 @@ NS_IMETHODIMP
 nsGenericHTMLContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
   nsIDocument* doc = mDocument;
-  if (aNotify && (nsnull != doc)) {
-    doc->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
+  
   nsIContent* oldKid = NS_STATIC_CAST(nsIContent *,
                                       mChildren.SafeElementAt(aIndex));
   if (nsnull != oldKid ) {
@@ -3861,9 +3845,6 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
-  }
-  if (aNotify && (nsnull != doc)) {
-    doc->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;

@@ -607,8 +607,8 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
   nsCOMPtr<nsIAtom> name = aNodeInfo->GetNameAtom();
 
   // Send the notification before making any updates
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   if (aNotify && document) {
-    document->BeginUpdate(UPDATE_CONTENT_MODEL);
     document->AttributeWillChange(mContent, nameSpaceID, name);
   }
 
@@ -671,7 +671,6 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
                                      : PRInt32(nsIDOMMutationEvent::ADDITION);
       document->AttributeChanged(mContent, nameSpaceID, name,
                                  modHint);
-      document->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
 
@@ -687,8 +686,6 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     return NS_ERROR_NULL_POINTER;
   }
   
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsIDocument> document;
   if (mContent)
     document = mContent->GetDocument();
@@ -696,47 +693,54 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   PRInt32 count = Count();
   PRInt32 index;
   PRBool  found = PR_FALSE;
+  nsSVGAttribute* attr = nsnull;
   for (index = 0; index < count; index++) {
-    nsSVGAttribute* attr = ElementAt(index);
+    attr = ElementAt(index);
     if ((aNameSpaceID == kNameSpaceID_Unknown ||
          attr->GetNodeInfo()->NamespaceEquals(aNameSpaceID)) &&
         attr->GetNodeInfo()->Equals(aName) &&
         !attr->IsRequired() &&
         !attr->IsFixed()) {
-      if (aNotify && document) {
-        document->BeginUpdate(UPDATE_CONTENT_MODEL);
-      }
-      
-      if (mContent && nsGenericElement::HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
-        nsMutationEvent mutation;
-        mutation.eventStructType = NS_MUTATION_EVENT;
-        mutation.message = NS_MUTATION_ATTRMODIFIED;
-        mutation.mTarget = node;
-        
-        CallQueryInterface(attr,
-                           NS_STATIC_CAST(nsIDOMNode**,
-                                          getter_AddRefs(mutation.mRelatedNode)));
-        mutation.mAttrName = aName;
-        nsAutoString str;
-        attr->GetValue()->GetValueString(str);
-        if (!str.IsEmpty())
-          mutation.mPrevAttrValue = do_GetAtom(str);
-        mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
-        
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIDOMEvent> domEvent;
-        mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
-                             NS_EVENT_FLAG_INIT, &status);
-      }
-      
-      RemoveElementAt(index);
       found = PR_TRUE;
       break;
     }
   }
+
+  if (!found) {
+    return NS_OK;
+  }
+
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+  if (document && aNotify) {
+    document->AttributeWillChange(mContent, aNameSpaceID, aName);
+  }
   
-  if (NS_SUCCEEDED(rv) && found && document) {
+  if (mContent && nsGenericElement::HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+    nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+    nsMutationEvent mutation;
+    mutation.eventStructType = NS_MUTATION_EVENT;
+    mutation.message = NS_MUTATION_ATTRMODIFIED;
+    mutation.mTarget = node;
+        
+    CallQueryInterface(attr,
+                       NS_STATIC_CAST(nsIDOMNode**,
+                                      getter_AddRefs(mutation.mRelatedNode)));
+    mutation.mAttrName = aName;
+    nsAutoString str;
+    attr->GetValue()->GetValueString(str);
+    if (!str.IsEmpty())
+      mutation.mPrevAttrValue = do_GetAtom(str);
+    mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+        
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsCOMPtr<nsIDOMEvent> domEvent;
+    mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                             NS_EVENT_FLAG_INIT, &status);
+  }
+      
+  RemoveElementAt(index);
+  
+  if (document) {
     nsCOMPtr<nsIBindingManager> bindingManager;
     document->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
@@ -747,11 +751,10 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aNotify) {
       document->AttributeChanged(mContent, aNameSpaceID, aName,
                                  nsIDOMMutationEvent::REMOVAL);
-      document->EndUpdate(UPDATE_CONTENT_MODEL);
     }
   }
   
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(PRBool)

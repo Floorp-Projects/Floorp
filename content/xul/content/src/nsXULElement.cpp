@@ -1950,6 +1950,8 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     // freak out.
     NS_ASSERTION(mChildren.IndexOf(aKid) < 0, "element is already a child");
 
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+
     if (!mChildren.InsertElementAt(aKid, aIndex))
         return NS_ERROR_FAILURE;
 
@@ -2001,6 +2003,9 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     if (oldKid == aKid)
         return NS_OK;
 
+    //XXXbz should this fire DOMSubtreeModified?
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+    
     PRBool replaceOk = mChildren.ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
         NS_ADDREF(aKid);
@@ -2032,6 +2037,8 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify, PRBool aDeepSetDoc
         return rv;
 
     NS_PRECONDITION((nsnull != aKid) && (aKid != NS_STATIC_CAST(nsIStyledContent*, this)), "null ptr");
+
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
     PRBool appendOk = mChildren.AppendElement(aKid);
     if (appendOk) {
@@ -2073,6 +2080,8 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     nsIContent* oldKid = NS_STATIC_CAST(nsIContent*, mChildren[aIndex]);
     if (! oldKid)
         return NS_ERROR_FAILURE;
+
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
     if (HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this), NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
       nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
@@ -2334,8 +2343,8 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     }
 
     // Send the update notification _before_ changing anything
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
     if (mDocument && aNotify) {
-        mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
         mDocument->AttributeWillChange(this, attrns, attrName);
     }
 
@@ -2433,7 +2442,6 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
             : PRInt32(nsIDOMMutationEvent::ADDITION);
 
         mDocument->AttributeChanged(this, attrns, attrName, modHint);
-        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
       }
     }
 
@@ -2620,17 +2628,20 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
     // Deal with modification of magical attributes that side-effect
     // other things.
     //
-    // XXXwaterson if aNotify == PR_TRUE, do we want to call
-    // nsIDocument::BeginUpdate() now?
+    mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
+    if (mDocument && aNotify) {
+        mDocument->AttributeWillChange(this, aNameSpaceID, aName);
+    }
+    
     if (aNameSpaceID == kNameSpaceID_None) {
         if (aName == nsXULAtoms::clazz) {
             // If CLASS is being unset, delete our class list.
-            Attributes()->UpdateClassList(nsAutoString());
+            Attributes()->UpdateClassList(NS_LITERAL_STRING(""));
         } else if (aName == nsXULAtoms::style) {
             nsCOMPtr <nsIURI> baseURL;
             GetBaseURL(getter_AddRefs(baseURL));
-            Attributes()->UpdateStyleRule(baseURL, nsAutoString());
-            // XXX Some kind of special document update might need to happen here.
+            Attributes()->UpdateStyleRule(baseURL, NS_LITERAL_STRING(""));
+            // AttributeChanged() will handle the style reresolution
         }
     }
 
@@ -2710,8 +2721,6 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
         if (aNotify) {
             mDocument->AttributeChanged(this, aNameSpaceID, aName,
                                         nsIDOMMutationEvent::REMOVAL);
-
-            // XXXwaterson do we need to mDocument->EndUpdate() here?
         }
     }
 

@@ -1175,9 +1175,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aNotify && mDocument) {
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
   mText.SetTo(aBuffer, aLength);
 
@@ -1202,7 +1200,6 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
   // Trigger a reflow
   if (aNotify && mDocument) {
     mDocument->ContentChanged(this, nsnull);
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   return NS_OK;
 }
@@ -1219,9 +1216,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aNotify && mDocument) {
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
   mText.SetTo(aBuffer, aLength);
 
@@ -1244,7 +1239,6 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
   // Trigger a reflow
   if (aNotify && mDocument) {
     mDocument->ContentChanged(this, nsnull);
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;
@@ -1254,9 +1248,7 @@ NS_IMETHODIMP
 nsGenericDOMDataNode::SetText(const nsAString& aStr,
                               PRBool aNotify)
 {
-  if (aNotify && mDocument) {
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-  }
+  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
   mText = aStr;
 
@@ -1281,7 +1273,6 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
   // Trigger a reflow
   if (aNotify && mDocument) {
     mDocument->ContentChanged(this, nsnull);
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
   return NS_OK;
