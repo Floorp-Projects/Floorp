@@ -145,9 +145,11 @@ LPCTSTR nsTextAreaWidget::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsTextAreaWidget::WindowStyle()
 {
-  DWORD style = nsTextHelper::WindowStyle();
-    //style = style | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL;
-    style = style | ES_MULTILINE | ES_WANTRETURN | WS_HSCROLL | WS_VSCROLL;
+   DWORD style = WS_BORDER | WS_CHILD | WS_CLIPSIBLINGS | ES_NOHIDESEL | ES_MULTILINE | WS_VSCROLL;
+  
+   if (mIsReadOnly)
+      style = style | ES_READONLY;
+
     return style; 
 }
 
