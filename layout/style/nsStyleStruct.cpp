@@ -897,12 +897,10 @@ PRInt32 nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       (mOverflow == aOther.mOverflow)) {
     if ((mBreakType == aOther.mBreakType) &&
         (mBreakBefore == aOther.mBreakBefore) &&
-        (mBreakAfter == aOther.mBreakAfter)) {
-      if ((mClipFlags == aOther.mClipFlags) &&
-          (mClip == aOther.mClip)) {
-        return NS_STYLE_HINT_NONE;
-      }
-      return NS_STYLE_HINT_VISUAL;
+        (mBreakAfter == aOther.mBreakAfter) &&
+        (mClipFlags == aOther.mClipFlags) &&
+        (mClip == aOther.mClip)) {
+      return NS_STYLE_HINT_NONE;
     }
     return NS_STYLE_HINT_REFLOW;
   }

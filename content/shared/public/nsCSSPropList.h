@@ -131,11 +131,11 @@ CSS_PROP(-moz-box-sizing, box_sizing, REFLOW) // XXX bug 3935
 CSS_PROP(-moz-box-ordinal-group, box_ordinal_group, FRAMECHANGE)
 CSS_PROP(caption-side, caption_side, REFLOW)
 CSS_PROP(clear, clear, REFLOW)
-CSS_PROP(clip, clip, VISUAL)
-CSS_PROP(-x-clip-bottom, clip_bottom, VISUAL) // XXX bug 3935
-CSS_PROP(-x-clip-left, clip_left, VISUAL) // XXX bug 3935
-CSS_PROP(-x-clip-right, clip_right, VISUAL) // XXX bug 3935
-CSS_PROP(-x-clip-top, clip_top, VISUAL) // XXX bug 3935
+CSS_PROP(clip, clip, REFLOW)
+CSS_PROP(-x-clip-bottom, clip_bottom, REFLOW) // XXX bug 3935
+CSS_PROP(-x-clip-left, clip_left, REFLOW) // XXX bug 3935
+CSS_PROP(-x-clip-right, clip_right, REFLOW) // XXX bug 3935
+CSS_PROP(-x-clip-top, clip_top, REFLOW) // XXX bug 3935
 CSS_PROP(color, color, VISUAL)
 CSS_PROP(content, content, FRAMECHANGE)
 CSS_PROP(counter-increment, counter_increment, REFLOW)
