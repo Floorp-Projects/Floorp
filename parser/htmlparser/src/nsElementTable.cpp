@@ -155,7 +155,7 @@ CTagList  gTRParents(4,0,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_t
 
 CTagList  gContainsText(4,0,eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity);
 CTagList  gContainsHTML(1,0,eHTMLTag_html);
-CTagList  gContainsOpts(2,0,eHTMLTag_option,eHTMLTag_optgroup);
+CTagList  gContainsOpts(3,0,eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script);
 CTagList  gContainsParam(1,0,eHTMLTag_param);
 CTagList  gColgroupKids(1,0,eHTMLTag_col); 
 CTagList  gAddressKids(1,0,eHTMLTag_p);
