@@ -508,6 +508,14 @@ net_initialize_http_access(void)
 	HG21522
 }
 
+/* forward declaration */
+PUBLIC XP_Bool 
+stub_PromptUsernameAndPassword(MWContext *context,
+                               const char *msg,
+                               char **username,
+                               char **password,
+                               void *closure);
+
 /* returns false if the user wishes to cancel authorization
  * and TRUE if the user wants to continue with a new authorization
  * string
