@@ -153,4 +153,4 @@ private:
     PRPackedBool                      mCachedContentIsValid;
 };
 
-#endif
+#endif // nsHttpChannel_h__
