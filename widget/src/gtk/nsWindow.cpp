@@ -107,6 +107,8 @@ extern "C" int usleep(unsigned int);
 #undef DEBUG_ICONS
 #define MODAL_TIMERS_BROKEN
 
+#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
 #define CAPS_LOCK_IS_ON \
 (nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
 
