@@ -1,0 +1,67 @@
+<!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Roaming code.
+   -
+   - The Initial Developer of the Original Code is
+   -   Ben Bucksch <http://www.bucksch.org> of
+   -   Beonex <http://www.beonex.com>
+   - Portions created by the Initial Developer are Copyright (C) 2002-2004
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY sroaming-header.label    "Roaming User">
+<!ENTITY sroamingTop-header.label "Server"> <!-- for Firefox -->
+<!ENTITY sroamingFiles-header.label "Item Selection">
+<!ENTITY descr.label              "Roaming Access allows you to retrieve and store your user profile information from/on a Roaming Access server. Your profile information will then be retrieved from the server on startup and transferred to it on shutdown.">
+<!ENTITY descrFiles.label         "If Roaming Access is enabled (in the Roaming User pane), the following parts of your profile will be transferred to and from the Roaming Access server.">
+<!ENTITY enabled.label            "Enable remote profile storage">
+<!ENTITY enabled.accesskey        "e">
+<!ENTITY method.label             "Server Information">
+<!ENTITY methodSelect.label       "Transfer Method">
+<!ENTITY methodSelect.accesskey   "m">
+<!ENTITY files.label              "Item Selection">
+<!ENTITY filesDescr.label         "User profile items selected below will be transferred to/from the server.">
+<!ENTITY filesList.accesskey      "i">
+
+
+<!ENTITY methodCopy.label         "File copy">
+<!ENTITY methodStream.label       "HTTP / FTP">
+
+<!ENTITY streamURL.label          "Base URL">
+<!ENTITY streamURL.accesskey      "u">
+<!ENTITY streamUsername.label     "Username">
+<!ENTITY streamUsername.accesskey "Username">
+<!ENTITY streamSavePW.label       "Save password">
+<!ENTITY streamSavePW.accesskey   "s">
+<!ENTITY streamPassword.label     "Password">
+<!ENTITY streamPassword.accesskey "p">
+
+<!ENTITY copyDir.label            "Copy to/from directory">
+<!ENTITY copyDir.accesskey        "d">

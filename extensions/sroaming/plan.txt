@@ -1,0 +1,58 @@
+todo:
+- firefox: doesn't start up after the roaming dialog closed - bug 209880
+
+don't care (for now):
+- conflict
+  - some files failed, see XXX - update: eh, where was that?
+- world gone
+  - problem: ddump, xpcom not defined after files done and dialog closed
+    solution: close dialog only when done with processing.
+    workaround: gTimeout
+  - problem: cancel by user in progress dialog: xpconnect errors
+    solution: prevent dialog closure (even if cancel pressed) until we're done.
+- listing progressmeter doesn't work
+- If one file is missing on both server and client and we didn't upload, but
+  there is no conflict, we still show one. That's due to that commented-out
+  check in compareFiles(). Mind the warning there and fix it.
+- no preselection in conflict dialog
+- not using statusText for FTP errors (reason 'file not readable' in this case)
+
+Enhance
+- better error dialog
+- protocols
+  - HTTPS
+  - LDAP (already done by Sun?)
+  - IMAP
+- password encrypt?
+- no upload at switch profile
+
+roaming urls
+ <ftp://user@ftp-server//path/to/dir/>
+ <http://user@http-server/path/to/dir/>
+ Mind the number of slashes.
+ Servers used: wu-FTPd and Apache with mod_roaming.
+
+
+Feedback
+- why do I need to implement nsIDocShellTreeItem for a http xml file *download*?
+- onStopRequest (e.g. Request: http://ben:pgpben@http.server.bucksch.org/roaming/ben/listing.xml, StatusCode: NS_OK, HTTPResponse 200) called *before*  the file finished. ftp and http: onStopRequest *before* onStatus(SENDING_TO), but only for the first file
+
+clipboard
+
+undefined.message=Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIURI.password]
+undefined.result=2147500037
+undefined.name=NS_ERROR_FAILURE
+undefined.filename=chrome://sroaming/content/transfer/transfer.js
+undefined.lineNumber=225
+undefined.columnNumber=4294967295
+
+WARNING: NS_ENSURE_TRUE(!aQualifiedName.IsEmpty()) failed, file ../../../../mozilla/content/base/src/nsNodeInfoManager.cpp, line 287
+
+[4]
+onStatus:
+  Request: ftp://...
+  StatusCode: NET_STATUS_SENDING_TO
+  StatusArg: ftp.server.bucksch.org
+request to change listing.xml from done (NS_OK) to busy (NET_STATUS_SENDING_TO)
+SetProgressStatus(1): listing.xml, busy, NET_STATUS_SENDING_TO
+  Setting listing.xml from done to busy

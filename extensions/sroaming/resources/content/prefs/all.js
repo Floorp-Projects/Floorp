@@ -15,9 +15,9 @@
  * The Original Code is Mozilla Roaming code.
  *
  * The Initial Developer of the Original Code is 
- * Ben Bucksch <http://www.bucksch.org> of
- * Beonex <http://www.beonex.com>
- * Portions created by the Initial Developer are Copyright (C) 2002-2003
+ *   Ben Bucksch <http://www.bucksch.org> of
+ *   Beonex <http://www.beonex.com>
+ * Portions created by the Initial Developer are Copyright (C) 2002-2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -395,11 +395,8 @@ RoamingPrefs.prototype =
   {
     try
     {
-      var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                  .getService()
-                  .QueryInterface(Components.interfaces.nsIStringBundleService)
-                  .createBundle("chrome://sroaming/locale/prefs.properties");
-      var dialogTitle = bundle.GetStringFromName("RoamingErrorTitle");
+      var bundle = document.getElementById("bundle_roaming_prefs");
+      var dialogTitle = bundle.getString("RoamingErrorTitle");
       var text = dialogTitle + "\n";
       if (val)
         text += bundle.formatStringFromName(prop, [val], 1);

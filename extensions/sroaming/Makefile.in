@@ -11,12 +11,12 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Roaming code.
+# The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is 
+# The Initial Developer of the Original Code is
 #   Ben Bucksch <http://www.bucksch.org> of
-#   Beonex <http://www.beonex.com>
-# Portions created by the Initial Developer are Copyright (C) 2002-2004
+#   Beonex <http://www.beonex.com>.
+# Portions created by the Initial Developer are Copyright (C) 2003-2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,27 +35,13 @@
 #
 # ***** END LICENSE BLOCK *****
 
-bookmarks.html=Bookmarks
-abook.mab=Personal Addressbook
-history.mab=Collected Addressbook
-cookies.txt=Cookies
-cookperm.txt=Cookie Permissions
-history.dat=Browsing history
-mimeTypes.rdf=Helper App Settings
-panels.rdf=Sidebar panel list
-localstore.rdf=Window settings
-user.js=Manual user preferences
-# XXX confirm the next 4 and find more understandable wording
-mailViews.dat=Message views
-cert7.db=Client Certificates
-key3.db=Private Keys
-secmod.db=Security module database
+DEPTH=../..
+topsrcdir=@top_srcdir@
+srcdir=@srcdir@
+VPATH=@srcdir@
 
-#changing filename, use ID
-passwords=Passwords (dangerous)
-wallet=Fill Form data
-filters=Mail filters
-newsrc=Newsgroup subscriptions
+include $(DEPTH)/config/autoconf.mk
 
-#internal
-listing.xml=File metadata
+DIRS=src
+
+include $(topsrcdir)/config/rules.mk
