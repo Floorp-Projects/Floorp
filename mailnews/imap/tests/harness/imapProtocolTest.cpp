@@ -43,6 +43,7 @@
 #include "nsIImapProtocol.h"
 #include "nsIImapLog.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsIImapIncomingServer.h"
 #include "nsIImapService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIImapLog.h"
@@ -169,7 +170,6 @@ protected:
 
     nsIMsgFolder* m_inbox;
 	nsIImapUrl * m_url; 
-	nsIImapProtocol * m_IMAP4Protocol; // running protocol instance
 	nsParseMailMessageState *m_msgParser ;
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
@@ -182,8 +182,6 @@ protected:
 	PRFileDesc* m_tempArticleFile;
 
 
-	nsresult InitializeProtocol(const char * urlSpec);
-	PRBool m_protocolInitialized; 
     nsIEventQueue *m_eventQueue;
 };
 
@@ -194,13 +192,11 @@ nsIMAP4TestDriver::nsIMAP4TestDriver(nsIEventQueue *queue)
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_url = nsnull;
-	m_protocolInitialized = PR_FALSE;
 	m_runTestHarness = PR_TRUE;
 	m_runningURL = PR_FALSE;
     m_eventQueue = queue;
 		NS_IF_ADDREF(queue);
 
-	m_IMAP4Protocol = nsnull; // we can't create it until we have a url...
 	m_msgParser = nsnull;
 	m_mailDB = nsnull;
 	m_curMsgUid = nsMsgKey_None;
@@ -242,32 +238,10 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 
-nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
-{
-	nsresult rv = NS_OK;
-
-	// we used to create an imap url here...but I don't think we need to.
-	// we should create the url before we run each unique imap command...
-
-	// now create a protocol instance using the imap service! 
-
-	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
-
-	if (NS_SUCCEEDED(rv) && imapService)
-	{
-		imapService->CreateImapConnection(m_eventQueue, nsnull, &m_IMAP4Protocol);
-        if (m_IMAP4Protocol)
-            m_protocolInitialized = PR_TRUE;
-	}
-
-	return rv;
-}
-
 nsIMAP4TestDriver::~nsIMAP4TestDriver()
 {
 	NS_IF_RELEASE(m_eventQueue);
 	NS_IF_RELEASE(m_url);
-	NS_IF_RELEASE(m_IMAP4Protocol);
 	if (m_mailDB)
 		m_mailDB->Commit(kLargeCommit);
 	NS_IF_RELEASE(m_mailDB);
@@ -520,8 +494,6 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	PL_strcat(m_urlString, "?");
 	PL_strcat(m_urlString, m_command);
 
-	if (m_protocolInitialized == PR_FALSE)
-		rv = InitializeProtocol(m_urlString);
 
 	// create a url to process the request.
     rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
@@ -533,12 +505,25 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 
 		rv = m_url->SetSpec(m_urlString); // reset spec
 		m_url->RegisterListener(this);
+
     }
 	
 	if (NS_SUCCEEDED(rv))
 	{
-		rv = m_IMAP4Protocol->LoadUrl(m_url, nsnull /* probably need a consumer... */);
-		m_runningURL = PR_TRUE; // we are now running a url...
+        nsCOMPtr<nsIMsgIncomingServer> aServer;
+        rv = m_url->GetServer(getter_AddRefs(aServer));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIImapIncomingServer>
+                aImapServer(do_QueryInterface(aServer, &rv));
+            if (NS_SUCCEEDED(rv))
+
+                rv = aImapServer->GetImapConnectionAndLoadUrl(m_eventQueue,
+                                                              m_url, nsnull,
+                                                              nsnull,
+                                                              nsnull); 
+            m_runningURL = PR_TRUE; // we are now running a url...
+        }
 	} // if user provided the data...
 
 	return rv;
