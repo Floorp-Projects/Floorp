@@ -80,6 +80,7 @@ toolbarbutton[checked="true"] {
 
 .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.png");
+  -moz-image-region: auto; /* cut off inheritance */
   padding-left: 2px;
 }
 
