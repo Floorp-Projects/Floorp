@@ -35,7 +35,7 @@ TOOLKIT_CXXFLAGS := \
 CPPSRCS = \
 	main.cpp	 \
 	nsWidgetTest.cpp \
-	$(topsrcdir)/webshell/tests/viewer/nsStubs.cpp \
+	$(DEPTH)/webshell/tests/viewer/nsStubs.cpp \
 	$(NULL)
 
 LIBS := \
