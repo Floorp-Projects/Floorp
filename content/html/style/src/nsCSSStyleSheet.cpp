@@ -2372,15 +2372,15 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 #ifdef NECKO
   char* buffer;
   nsresult rv = mInner->mURL->GetSpec(&buffer);
-  nsAutoString as(buffer,0);
+  fputs(buffer, out);
   nsCRT::free(buffer);
 #else
   PRUnichar* buffer;
   mInner->mURL->ToString(&buffer);
-  nsAutoString as(buffer,0);
+  nsAutoString as(buffer);
   delete [] buffer;
-#endif
   fputs(as, out);
+#endif
 
   if (mMedia) {
     fputs(" media: ", out);
