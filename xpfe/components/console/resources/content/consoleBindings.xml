@@ -394,7 +394,7 @@
           var line = getAttribute("line");  
           window.openDialog(
             "chrome://navigator/content/viewSource.xul", "_blank", 
-            "scrollbars,resizable,chrome,dialog=no", url, null, null, line);
+            "all,dialog=no", url, null, null, line);
       ]]></handler>
     </handlers>
   </binding>
