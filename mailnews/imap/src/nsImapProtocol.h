@@ -618,6 +618,8 @@ protected:
   nsCOMPtr<nsIRequest> mCacheRequest; // the request associated with a read from the cache
   nsCString m_ContentType;
 
+  PRBool mChannelClosed;
+
   // cache related helper methods
   nsresult OpenCacheEntry(); // makes a request to the cache service for a cache entry for a url
   PRBool ReadFromLocalCache(); // attempts to read the url out of our local (offline) cache....

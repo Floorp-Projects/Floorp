@@ -1840,8 +1840,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
               if (urlOKToFetchByParts &&
                 allowedToBreakApart && 
                 !GetShouldFetchAllParts() &&
-                GetServerStateParser().ServerHasIMAP4Rev1Capability() &&
-                  !mimePartSelectorDetected)  // if a ?part=, don't do BS.
+                GetServerStateParser().ServerHasIMAP4Rev1Capability()  &&
+                  !mimePartSelectorDetected )  // if a ?part=, don't do BS.
               {
                 // OK, we're doing bodystructure
 
@@ -6837,6 +6837,7 @@ nsImapMockChannel::nsImapMockChannel()
   m_channelContext = nsnull;
   m_cancelStatus = NS_OK;
   mLoadFlags = 0;
+  mChannelClosed = PR_FALSE;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
@@ -6848,6 +6849,8 @@ NS_IMETHODIMP nsImapMockChannel::Close()
   m_channelListener = null_nsCOMPtr();
   mCacheRequest = null_nsCOMPtr();
   m_url = null_nsCOMPtr();
+
+  mChannelClosed = PR_TRUE;
   return NS_OK;
 }
 
@@ -6949,6 +6952,13 @@ NS_IMETHODIMP
 nsImapMockChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry, nsCacheAccessMode access, nsresult status)
 {
   nsresult rv = NS_OK;
+
+  // make sure we didn't close the channel before the async call back came in...
+  // hmmm....if we had write access and we canceled this mock channel then I wonder if we should
+  // be invalidating the cache entry before kicking out...
+  if (mChannelClosed) return NS_OK;
+
+  NS_ENSURE_ARG(m_url); // kick out if m_url is null for some reason. 
 
   if (NS_SUCCEEDED(status)) 
   {
