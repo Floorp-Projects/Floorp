@@ -34,6 +34,7 @@ public class bcJavaSample implements bcIJavaSample {
         } else {
             result = null;
         }
+        System.out.println("--[java]bcJavaSample::queryInterface result=null"+(result==null));
     }
     public void test0() {
         System.out.println("--[java]bcJavaSample.test0 ");

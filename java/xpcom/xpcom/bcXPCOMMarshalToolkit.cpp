@@ -360,7 +360,7 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
                     printf("%d oid",(int) oid);
                     nsIID iid;
                     um->ReadSimple(&iid,bc_T_IID);
-                    nsISupports *proxy;
+                    nsISupports *proxy = NULL;
                     if (oid != 0) {
                         NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
                         if (NS_FAILED(r)) {

@@ -89,7 +89,7 @@ nsrefcnt bcXPCOMProxy::AddRef(void) {
 
 nsrefcnt bcXPCOMProxy::Release(void) {
     nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
-    printf("--[c++] bcXPCOMProxy::AddRef %d\n",(unsigned)cnt);
+    printf("--[c++] bcXPCOMProxy::Release %d\n",(unsigned)cnt);
     if(0 == cnt) {  
         delete this;
     }
