@@ -32,6 +32,8 @@
 
 #include "Xm/Xm.h"
 
+#include "nsXtManageWidget.h"
+
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
@@ -46,6 +48,7 @@ class nsWindow : public nsIWidget
 public:
                             nsWindow(nsISupports *aOuter);
     virtual                 ~nsWindow();
+    virtual PRBool IsChild() { return(PR_FALSE); };
 
     NS_DECL_ISUPPORTS
 
@@ -233,8 +236,9 @@ private:
 class ChildWindow : public nsWindow {
 
 public:
-                            ChildWindow(nsISupports *aOuter) : nsWindow(aOuter) {}
+                            ChildWindow(nsISupports *aOuter) : nsWindow(aOuter) {};
 
+ virtual PRBool IsChild() { return(PR_TRUE); };
 };
 
 #define AGGREGATE_METHOD_DEF \

@@ -44,9 +44,14 @@
 #include "Xm/RowColumn.h"
 #include "Xm/Form.h"
 
+
 #define DBG 0
 
 #define SET_VALUES 1
+
+nsWindow* gMainWindow; //REMOVE Kludge
+nsWindow* gChildren[5];
+int gChildCount = 0;
 
 //#if defined(LINUX)
 //#undef SET_VALUES
@@ -319,6 +324,7 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  gMainWindow = this;
   Widget mainWindow = 0, frame = 0;
   mBounds = aRect;
   mAppShell = aAppShell;
@@ -351,19 +357,23 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 				 shell, 
          nsnull);
     XtVaSetValues(mainWindow, 
+                                 XmNallowShellResize, 1,
          XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
   }
 
   frame = ::XtVaCreateManagedWidget("frame",
-				    xmDrawingAreaWidgetClass,
+//				    xmDrawingAreaWidgetClass,
+				    newManageClass,
 				    mainWindow,
 				    XmNwidth, aRect.width,
 				    XmNheight, aRect.height,
 				    XmNmarginHeight, 0,
 				    XmNmarginWidth, 0,
                                     XmNrecomputeSize, False,
+                                    XmNuserData, this,
 				    nsnull);
 
+printf("main %d\n", frame);
 
   mWidget = frame ;
 
@@ -377,10 +387,12 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 
   InitCallbacks();
 
-  XtAddCallback(mWidget,
+#if 0
+  XtAddCallback(mainWindow,
                 XmNresizeCallback,
                 nsXtWidget_Resize_Callback,
                 this);
+#endif
 
 
 }
@@ -397,6 +409,9 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 {
   mBounds = aRect;
   mAppShell = aAppShell;
+ 
+  gChildren[gChildCount] = this;
+  gChildCount++;
 
   InitToolkit(aToolkit, aWidgetParent);
   
@@ -406,14 +421,18 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
   InitDeviceContext(aContext, (Widget)aNativeParent);
 
   mWidget = ::XtVaCreateManagedWidget("frame",
-				    xmDrawingAreaWidgetClass,
+				 //   xmDrawingAreaWidgetClass,
+                                    newManageClass,
 				    (Widget)aNativeParent,
 				    XmNwidth, aRect.width,
 				    XmNheight, aRect.height,
 				    XmNmarginHeight, 0,
 				    XmNmarginWidth, 0,
                                     XmNrecomputeSize, False,
+                                    XmNuserData, this,
 				    nsnull);
+
+printf("child %d\n", mWidget);
 
 
   if (aWidgetParent) {
@@ -426,10 +445,12 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 
   InitCallbacks();
 
+#if 0
   XtAddCallback(mWidget,
                 XmNresizeCallback,
                 nsXtWidget_Resize_Callback,
                 this);
+#endif
 
 
   CreateGC();
@@ -694,6 +715,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+printf("RESIZE %d w %d h %d\n",this, aWidth, aHeight);
   if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
@@ -718,6 +740,8 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+printf("RESIZE 2 %d w %d h %d\n",this, aWidth, aHeight);
+
   mBounds.x      = aX;
   mBounds.y      = aY;
   mBounds.width  = aWidth;
@@ -725,9 +749,11 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
 #ifdef SET_VALUES
+printf("SET_VAL\n");
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 #else
+printf("CONFIGURE\n");
   XtConfigureWidget(mWidget, aX, GetYCoord(aY), aWidth, aHeight, 0);
 #endif
 }
@@ -1377,6 +1403,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   }*/
 
   if (mEventCallback && !mIgnoreResize) {
+printf("DISPATCHGIN FOR %d\n", this);
     return(DispatchEvent(&aEvent));
   }
   return FALSE;
@@ -1484,5 +1511,37 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
     return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
   }
   return(aNewY);
+}
+
+
+extern "C" void ResizeWidget(Widget w)
+{
+  int width = 0;
+  int height = 0;
+  nsWindow *win = 0;
+
+  XtVaGetValues(w, XmNuserData, &win, XmNwidth, &width, XmNheight, &height, nsnull);
+
+  printf("raw width win %d %d height %d\n",win, width, height);
+  
+  nsRect bounds;
+  bounds.width = width;
+  bounds.height = height;
+  bounds.x = 0;
+  bounds.y = 0;
+  win->SetResizeRect(bounds); 
+
+extern XtAppContext gAppContext;
+
+  if (! win->GetResized()) {
+    if (win->IsChild()) {
+      XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, win);
+    }
+    else {
+      nsXtWidget_Refresh_Callback(win);
+    }
+  }
+
+  win->SetResized(PR_TRUE);
 }
 
