@@ -295,7 +295,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our desired size. Take into account any floaters when computing the
   // height
-  nscoord floaterYMost = mSpaceManager->YMost();
+  nscoord floaterYMost;
+  mSpaceManager->YMost(floaterYMost);
   if (floaterYMost > 0) {
     // What we need to check for is if the bottom most floater extends below
     // the content area of the desired size

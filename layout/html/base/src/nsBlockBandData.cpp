@@ -230,7 +230,7 @@ nscoord
 nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
 {
   nsIFrame* spaceFrame;
-  spaceFrame = mSpaceManager->GetFrame();
+  mSpaceManager->GetFrame(spaceFrame);
 
   nsRect r;
   nsPoint p;

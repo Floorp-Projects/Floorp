@@ -35,25 +35,26 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsISpaceManager
-  virtual nsIFrame* GetFrame() const;
+  NS_IMETHOD GetFrame(nsIFrame*& aFrame) const;
 
-  virtual void    Translate(nscoord aDx, nscoord aDy);
-  virtual void    GetTranslation(nscoord& aX, nscoord& aY) const;
-  virtual nscoord YMost() const;
+  NS_IMETHOD Translate(nscoord aDx, nscoord aDy);
+  NS_IMETHOD GetTranslation(nscoord& aX, nscoord& aY) const;
+  NS_IMETHOD YMost(nscoord& aYMost) const;
 
-  virtual PRInt32 GetBandData(nscoord       aYOffset,
-                              const nsSize& aMaxSize,
-                              nsBandData&   aBandData) const;
+  NS_IMETHOD GetBandData(nscoord       aYOffset,
+                         const nsSize& aMaxSize,
+                         nsBandData&   aBandData) const;
 
-  virtual PRBool AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace);
-  virtual PRBool ResizeRectRegion(nsIFrame*    aFrame,
-                                  nscoord      aDeltaWidth,
-                                  nscoord      aDeltaHeight,
-                                  AffectedEdge aEdge);
-  virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy);
-  virtual PRBool RemoveRegion(nsIFrame* aFrame);
+  NS_IMETHOD AddRectRegion(nsIFrame*     aFrame,
+                           const nsRect& aUnavailableSpace);
+  NS_IMETHOD ResizeRectRegion(nsIFrame*    aFrame,
+                              nscoord      aDeltaWidth,
+                              nscoord      aDeltaHeight,
+                              AffectedEdge aEdge);
+  NS_IMETHOD OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy);
+  NS_IMETHOD RemoveRegion(nsIFrame* aFrame);
 
-  virtual void   ClearRegions();
+  NS_IMETHOD ClearRegions();
 
 protected:
   // Structure that maintains information about the region associated
@@ -109,6 +110,7 @@ protected:
     void    AddFrame(const nsIFrame*);
     void    RemoveFrame(const nsIFrame*);
     PRBool  HasSameFrameList(const BandRect* aBandRect) const;
+    PRInt32 Length() const;
   };
 
   // Circular linked list of band rects
@@ -147,7 +149,7 @@ protected:
   void       AddRectToBand(BandRect* aBand, BandRect* aBandRect);
   void       InsertBandRect(BandRect* aBandRect);
 
-  PRInt32    GetBandAvailableSpace(const BandRect* aBand,
+  nsresult   GetBandAvailableSpace(const BandRect* aBand,
                                    nscoord         aY,
                                    const nsSize&   aMaxSize,
                                    nsBandData&     aAvailableSpace) const;
