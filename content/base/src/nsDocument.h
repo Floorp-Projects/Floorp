@@ -563,6 +563,8 @@ protected:
                          nsCompatibility aCompatMode,
                          nsIPresShell** aInstancePtrResult);
 
+  nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
+
   nsDocument();
   virtual ~nsDocument();
 

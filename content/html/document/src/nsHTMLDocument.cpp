@@ -1487,26 +1487,7 @@ nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                               getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 namespaceID = nodeInfo->NamespaceID();
-
-  nsCOMPtr<nsIElementFactory> elementFactory;
-  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
-                                                           getter_AddRefs(elementFactory));
-
-  nsCOMPtr<nsIContent> content;
-
-  if (elementFactory) {
-    rv = elementFactory->CreateInstanceByTag(nodeInfo,
-                                             getter_AddRefs(content));
-  } else {
-    rv = NS_NewXMLElement(getter_AddRefs(content), nodeInfo);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  content->SetContentID(mNextContentID++);
-
-  return CallQueryInterface(content, aReturn);
+  return nsDocument::CreateElement(nodeInfo, aReturn);
 }
 
 

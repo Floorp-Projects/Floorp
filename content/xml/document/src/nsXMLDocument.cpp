@@ -51,7 +51,6 @@
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
@@ -842,7 +841,7 @@ nsXMLDocument::CreateElement(const nsAString& aTagName,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CreateElement(nodeInfo, aReturn);
+  return nsDocument::CreateElement(nodeInfo, aReturn);
 }
 
 NS_IMETHODIMP    
@@ -957,7 +956,7 @@ nsXMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CreateElement(nodeInfo, aReturn);
+  return nsDocument::CreateElement(nodeInfo, aReturn);
 }
 
 // Id attribute matching function used by nsXMLDocument and
@@ -1083,33 +1082,4 @@ nsXMLDocument::GetCSSLoader()
   }
 
   return mCSSLoader;
-}
-
-nsresult
-nsXMLDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
-{
-  *aResult = nsnull;
-  
-  nsresult rv;
-  
-  nsCOMPtr<nsIContent> content;
-
-  PRInt32 namespaceID = aNodeInfo->NamespaceID();
-
-  nsCOMPtr<nsIElementFactory> elementFactory;
-  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
-                                                           getter_AddRefs(elementFactory));
-
-  if (elementFactory) {
-    rv = elementFactory->CreateInstanceByTag(aNodeInfo,
-                                             getter_AddRefs(content));
-  } else {
-    rv = NS_NewXMLElement(getter_AddRefs(content), aNodeInfo);
-  }
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  content->SetContentID(mNextContentID++);
-
-  return CallQueryInterface(content, aResult);
 }
