@@ -803,7 +803,7 @@ nsresult nsMsgViewNavigationService::FindNextInChildrenResources(nsIRDFResource 
 		return rv;
 
 	nsCOMPtr<nsISimpleEnumerator> childrenEnumerator;
-	rv = db->GetTargets(parentResource, childrenResource, true, getter_AddRefs(childrenEnumerator));
+	rv = db->GetTargets(parentResource, childrenResource, PR_TRUE, getter_AddRefs(childrenEnumerator));
 	if(NS_FAILED(rv))
 		return rv;
 
