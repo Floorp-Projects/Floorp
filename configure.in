@@ -4559,6 +4559,11 @@ COMPILE_CXXFLAGS=`echo \
 	$_DEPEND_CFLAGS \
     $COMPILE_CXXFLAGS`
 
+if test "$TX_EXE"; then
+  COMPILE_CFLAGS=`echo $COMPILE_CFLAGS | sed 's/MOZILLA_CLIENT/XML_UNICODE/'`
+  COMPILE_CXXFLAGS=`echo $COMPILE_CXXFLAGS | sed 's/MOZILLA_CLIENT/XML_UNICODE/'`
+fi
+
 dnl 
 dnl It is perfectly legal to build with both -O and -g even though
 dnl some compilers/platforms might not support this.

@@ -41,6 +41,8 @@
 #ifndef TX_EXE
 #include "nsSyncLoader.h"
 #include "nsNetUtil.h"
+#else
+#include "xmlparse.h"
 #endif
 
 /**
@@ -53,9 +55,6 @@
 **/
 XMLParser::XMLParser()
 {
-#ifdef TX_EXE
-  errorState = MB_FALSE;
-#endif
 } //-- XMLParser
 
 
@@ -104,6 +103,17 @@ Document* XMLParser::getDocumentFromURI(const String& href,
 }
 
 #ifdef TX_EXE
+/*-------------------------------------
+ * Sax related methods for XML parsers
+ * ------------------------------------*/
+extern "C" {
+void charData(void* userData, const XML_Char* s, int len);
+int startElement(void *userData, const XML_Char* name, const XML_Char** atts);
+int endElement(void *userData, const XML_Char* name);
+int piHandler(void *userData, const XML_Char *target, const XML_Char *data);
+void commentHandler(void *userData, const XML_Char *s);
+}
+
 /**
  *  Parses the given input stream and returns a DOM Document.
  *  A NULL pointer will be returned if errors occurred
@@ -114,7 +124,6 @@ Document* XMLParser::parse(istream& inputStream, const String& uri)
 
   char buf[bufferSize];
   int done;
-  errorState = MB_FALSE;
   errorString.clear();
   if ( !inputStream ) {
     errorString.append("unable to parse xml: invalid or unopen stream encountered.");
@@ -142,7 +151,6 @@ Document* XMLParser::parse(istream& inputStream, const String& uri)
           errorString.append(" at line ");
           errorString.append(XML_GetCurrentLineNumber(parser));
           done = MB_TRUE;
-          errorState = MB_TRUE;
           delete ps.document;
           ps.document = NULL;
         }
@@ -164,7 +172,7 @@ const String& XMLParser::getErrorString()
 }
 
 
-void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
+int startElement(void *userData, const XML_Char *name, const XML_Char **atts)
 {
   ParserState* ps = (ParserState*)userData;
   Element* newElement;
@@ -183,13 +191,15 @@ void startElement(void *userData, const XML_Char *name, const XML_Char **atts)
     ps->currentNode->appendChild(newElement);
     ps->currentNode = newElement;
 
+  return XML_ERROR_NONE;
 } //-- startElement
 
-void endElement(void *userData, const XML_Char* name)
+int endElement(void *userData, const XML_Char* name)
 {
     ParserState* ps = (ParserState*)userData;
     if (ps->currentNode->getParentNode())
         ps->currentNode = ps->currentNode->getParentNode();
+    return XML_ERROR_NONE;
 } //-- endElement
 
 void charData(void* userData, const XML_Char* s, int len)
@@ -214,7 +224,7 @@ void commentHandler(void* userData, const XML_Char* s)
 /**
  * Handles ProcessingInstructions
 **/
-void piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
+int piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
     ParserState* ps = (ParserState*)userData;
     String targetStr((UNICODE_CHAR *)target);
     String dataStr((UNICODE_CHAR *)data);
@@ -222,6 +232,7 @@ void piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
     ps->currentNode->appendChild(
         ps->document->createProcessingInstruction(targetStr, dataStr));
 
+    return XML_ERROR_NONE;
 } //-- piHandler
 
 #endif
