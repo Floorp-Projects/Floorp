@@ -161,14 +161,12 @@ sub print_page_head {
   # Get the message of the day only on the first pageful
   do "$tree/mod.pl" if $nowdate eq $maxdate;
 
-  $treename = $tree . ($tree2 ne '' ? " and $tree2" : '');
-
   use POSIX;
   # Print time in format, "HH:MM timezone"
   my $now = strftime("%H:%M %Z", localtime);
 
-  EmitHtmlTitleAndHeader("tinderbox: $treename", "tinderbox",
-                         "tree: $treename ($now)");
+  EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
+                         "tree: $tree ($now)");
 
   &print_javascript;
 
@@ -231,7 +229,7 @@ sub print_table_row {
 
   ($hour) = $pretty_time =~ /(\d\d):/;
 
-  if ($tree2 eq '' and ($lasthour != $hour or &has_who_list($tt))) {
+  if ($lasthour != $hour or &has_who_list($tt)) {
     $query_link = &query_ref($td1, $build_time_times->[$tt]);
     $end_query  = '</a>';
   }
@@ -243,18 +241,12 @@ sub print_table_row {
 
   my $hour_color = '';
   $hour_color = ' bgcolor=#e7e7e7' if $build_time_times->[$tt] % 7200 <= 3600;
-  print "<tr align=center><td align=right $hour_color>",
+  print "<tr align=center><td align=right$hour_color>",
         "$query_link\n$pretty_time$end_query</td>\n";
-
-  if ($tree2 ne '') {
-    print "<td align=center bgcolor=beige>\n";
-    $query_link = &query_ref( $td1, $build_time_times->[$tt]);
-    print "$query_link</a></td>\n";
-  }
 
   # Guilty
   #
-  print '<td align=center>';
+  print '<td>';
   for $who (sort keys %{$who_list->[$tt]} ){
     $qr = &who_menu($td1, $build_time_times->[$tt],
                     $build_time_times->[$tt-1],$who);
@@ -263,21 +255,6 @@ sub print_table_row {
   }
   print '</td>';
 
-  if ($tree2 ne '') {
-    print "<td align=center bgcolor=beige >\n";
-    $qr = &query_ref( $td2, $build_time_times->[$tt]);
-    print "${qr}</a></td>\n";
-    
-    print "<td align=center>\n";
-    
-    for $who (sort keys %{$who_list2->[$tt]} ){
-      $qr = &who_menu($td2, $build_time_times->[$tt],
-                      $build_time_times->[$tt-1],$who);
-      print "  ${qr}$who</a>\n";
-    }
-    print '</td>';
-  }
-    
   # Build Status
   #
   for ($bn=1; $bn <= $name_count; $bn++) {
@@ -295,14 +272,11 @@ sub print_table_row {
       if $tt + $rowspan - 1 > $mindate_time_count;
     $color = $colormap{$br->{buildstatus}};
     $status = $br->{buildstatus};
-    print "<td align=center rowspan=$rowspan bgcolor=${color}>\n";
+    print "<td rowspan=$rowspan bgcolor=${color}>\n";
       
     $logfile = $br->{logfile};
     $errorparser = $br->{errorparser};
     $buildname = $br->{buildname};
-    if( $tree2 ne "" ){
-      $buildname =~ s/^[^ ]* //;
-    }
     $buildtime = $br->{buildtime};
     $buildtree = $br->{td}->{name};
       
@@ -315,14 +289,14 @@ sub print_table_row {
 
     if ($hasnote) {
       print "<a href='$logurl' onClick=\"return ",
-            "comment_popup(event,$noteid,$bn,'$logfile','$buildtime');\">",
+            "note(event,$noteid,'$logfile');\">",
             "<img src='$images{star}' border=0></a>\n";
     }
         
     # Build Log
     # 
     print "<A HREF='$logurl' ",
-      "onClick=\"return log_popup(event,$bn,'$logfile','$buildtime');\">";
+      "onClick=\"return log(event,$bn,'$logfile');\">";
     print "L</a>";
       
     # What Changed
@@ -358,8 +332,7 @@ sub print_table_header {
   print "<tr align=center>\n";
   print "<td rowspan=1><font size=-1>Click time to <br>see changes <br>",
         "since time</font></td>";
-  $nspan = ($tree2 ne '' ? 4 : 1);
-  print "<td colspan=$nspan><font size=-1>",
+  print "<td><font size=-1>",
         "Click name to see what they did</font>";
   print "<br><font size=-2>", 
         &open_showbuilds_href(rebuildguilty=>'1'),
@@ -394,14 +367,7 @@ sub print_table_header {
   }
   print "</tr><tr>\n";
   print "<b><TH>Build Time</th>\n";
-
-  if ($tree2 ne '') {
-    print "<TH colspan=2>$td1->{name}</th>\n";
-    print "<TH colspan=2>$td2->{name}</th>\n";
-  }
-  else {
-    print "<TH>Guilty</th>\n";
-  }
+  print "<TH>Guilty</th>\n";
   print "</b></tr>\n";
 }
 
@@ -517,24 +483,21 @@ sub tree_open {
 }
 
 sub print_javascript {
-
-  print <<"__ENDJS";
+  my $script;
+  ($script = <<"__ENDJS") =~ s/^    //gm;
     <script>
-
     if (parseInt(navigator.appVersion) < 4) {
       window.event = 0;
     }
 
     function who(d) {
-
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
         return true;
       }
-
-      var l = document.layers['popup'];
-      l.src = d.target.href;
-      l.top = d.target.y - 6;
+      var l  = document.layers['popup'];
+      l.src  = d.target.href;
+      l.top  = d.target.y - 6;
       l.left = d.target.x - 6;
       if (l.left + l.clipWidth > window.width) {
         l.left = window.width - l.clipWidth;
@@ -542,34 +505,15 @@ sub print_javascript {
       l.visibility="show";
       return false;
     }
-
-    function log_params(buildindex,logfile,buildtime) {
-      var tree = trees[buildindex];
-      var buildname = build[buildindex];
-      var errorparser = error[buildindex];
-
-      return "tree=" + tree
-             + "&errorparser=" + errorparser
-             + "&buildname="   + escape(buildname)
-             + "&buildtime="   + buildtime
-             + "&logfile="     + logfile;
+    function log_url(logfile) {
+      return "showlog.cgi?log=" + buildtree + "/" + logfile;
     }
-
-    function log_url(buildindex,logfile,buildtime) {
-      return "showlog.cgi?" + log_params(buildindex,logfile,buildtime);
-    }
-
-    function comment_url (buildindex,logfile,buildtime) {
-      return "addnote.cgi?" + log_params(buildindex,logfile,buildtime);
-    }
-
-    function comment_popup(d,noteid,buildindex,logfile,buildtime) {
+    function note(d,noteid,logfile) {
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
-        document.location = log_url(buildindex,logfile,buildtime);
+        document.location = log_url(logfile);
         return false;
       }
-
       var l = document.layers['popup'];
       l.document.write("<table border=1 cellspacing=1><tr><td>"
                        + note[noteid] + "</tr></table>");
@@ -579,24 +523,16 @@ sub print_javascript {
       var zz = d.x;
       if (zz + l.clip.right > window.innerWidth) {
         zz = (window.innerWidth-30) - l.clip.right;
-        if (zz < 0) {
-          zz = 0;
-        }
+        if (zz < 0) { zz = 0; }
       }
       l.left = zz;
       l.visibility="show";
       return false;
     }
-
-    note = new Array();
-    trees = new Array();
-    build = new Array();
-    error = new Array();
-
-    function log_popup(e,buildindex,logfile,buildtime)
+    function log(e,buildindex,logfile)
     {
-      var logurl = log_url(buildindex,logfile,buildtime);
-      var commenturl = comment_url(buildindex,logfile,buildtime);
+      var logurl = log_url(logfile);
+      var commenturl = "addnote.cgi?log=" + buildtree + "/" + logfile;
       var version = parseInt(navigator.appVersion);
 
       if (version < 4 || version >= 5) {
@@ -609,9 +545,7 @@ sub print_javascript {
       var yy = e.target.x;
       if ( yy + q.clip.right > window.innerWidth) {
         yy = (window.innerWidth-30) - q.clip.right;
-        if (yy < 0) {
-          yy = 0;
-        }
+        if (yy < 0) { yy = 0; }
       }
       q.left = yy;
       q.visibility="show"; 
@@ -625,45 +559,12 @@ sub print_javascript {
       return false;
     }
 
-    function js_qr(tree,mindate, maxdate, who) {
-      if (tree == 0) {
-        return '../bonsai/cvsquery.cgi?module=${cvs_module}'
-               + '&branch=${cvs_branch}&cvsroot=${cvs_root}&date=explicit'
-               + '&mindate=' + mindate + '&maxdate=' +maxdate + '&who=' + who;
-      }
+    note = new Array();
+    build = new Array();
+
 __ENDJS
-
-  print <<"__ENDJS" if $tree2 ne '';
-      else {
-        return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}'
-             + '&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}'
-             + '&date=explicit'
-             + '&mindate=' + mindate + '&maxdate=' +maxdate + '&who=' + who;
-      }
-__ENDJS
-
-  print <<"__ENDJS";
-    }
-
-    function js_qr24(tree,who) {
-      if (tree == 0 ){
-        return '../bonsai/cvsquery.cgi?module=${cvs_module}'
-             + '&branch=${cvs_branch}&cvsroot=${cvs_root}&date=day&who=' + who;
-      }
-__ENDJS
-
-  print <<"__ENDJS" if $tree2 ne '';
-      else {
-        return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}'
-               + '&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}'
-               + '&date=day&who=' +who;
-      }
-__ENDJS
-
-  print <<'__ENDJS';
-    }
-__ENDJS
-
+  print $script;
+  
   $ii = 0;
   while ($ii < @note_array) {
     $ss = $note_array[$ii];
@@ -676,18 +577,17 @@ __ENDJS
     $ss =~ s/\n/\\n/g;
     print "\"$ss\";\n";
   }
-
   for ($ii=1; $ii <= $name_count; $ii++) {
     if (defined($br = $build_table->[1][$ii]) and $br != -1) {
-      $bn = $build_name_names->[$ii];
-      print "trees[$ii]='$br->{td}{name}';\n";
+      my $bn = $build_name_names->[$ii];
       print "build[$ii]='$bn';\n";
-      print "error[$ii]='$br->{errorparser}';\n";
     }
   }
+  print "buildtree = '$form{tree}';\n";
 
-  print <<'__ENDJS';
+  ($script = <<'__ENDJS') =~ s/^    //gm;
     </script>
+
     <layer name="popup" onMouseOut="this.visibility='hide';" 
            left=0 top=0 bgcolor="#ffffff" visibility="hide">
     </layer>
@@ -696,6 +596,7 @@ __ENDJS
            left=0 top=0 bgcolor="#ffffff" visibility="hide">
     </layer>
 __ENDJS
+  print $script;
 }
 
 sub do_express {
