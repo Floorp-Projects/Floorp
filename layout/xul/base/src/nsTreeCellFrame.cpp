@@ -287,21 +287,25 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
 	nsCOMPtr<nsIAtom> kHoverCellAtom(dont_AddRef(NS_NewAtom("hovercell")));
   nsCOMPtr<nsIAtom> kHoverAtom(dont_AddRef(NS_NewAtom("hover")));
 
-  nsIContent* pParentContent;
+  nsIContent* pParentContent = nsnull;
   mContent->GetParent(pParentContent);
 
   if (isHover)
 	{
 		// We're hovering over the node.
 		mContent->SetAttribute(kNameSpaceID_None, kHoverCellAtom, "true", notifyForReflow);
-    pParentContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
+    if(pParentContent) {
+      pParentContent->SetAttribute(kNameSpaceID_None, kHoverAtom, "true", notifyForReflow);
+    }
 	}
 	else
 	{
 		// We're deselecting the node.
 		mContent->UnsetAttribute(kNameSpaceID_None, kHoverCellAtom, notifyForReflow);
-    pParentContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
-	}
+    if(pParentContent) {
+      pParentContent->UnsetAttribute(kNameSpaceID_None, kHoverAtom, notifyForReflow);
+    }
+  }
 
   NS_IF_RELEASE(pParentContent);
 }
