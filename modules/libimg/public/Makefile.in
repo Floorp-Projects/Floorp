@@ -41,6 +41,7 @@ EXPORTS		= \
 		ilIImageRenderer.h \
 		ilISystemServices.h \
 		dummy_nc.h \
+		xpcompat.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
