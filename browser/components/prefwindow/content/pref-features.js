@@ -93,6 +93,19 @@ function javascriptEnabledChange()
 }
 
 function AddPermission() {
+  var host = enterNewSite(null);
+  if (!host)
+    return;
+  permissions[permissions.length] = new Permission(permissions.length, host,
+                                                   (host.charAt(0)==".") ? host.substring(1,host.length) : host,
+                                                   "popup",
+                                                   "");
+  permissionsTreeView.rowCount = permissions.length;
+  permissionsTree.treeBoxObject.rowCountChanged(permissions.length-1, 1);
+  permissionsTree.treeBoxObject.ensureRowIsVisible(permissions.length-1);
+}
+
+function enterNewSite(site) {
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                               .getService(Components.interfaces.nsIPromptService);
 
@@ -100,18 +113,24 @@ function AddPermission() {
   var message = stringBundle.getString("enterSiteName");
   var title = stringBundle.getString("enterSiteTitle");
 
-  var name = {};
+  var name = (!site ? {} : site);
   if (!promptService.prompt(window, title, message, name, null, {}))
       return;
-  
-  var host = name.value.replace(/ /g, "");
-  permissions[permissions.length] = new Permission(permissions.length, host,
-                                                   (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                                                   "popup",
-                                                   "");
-  permissionsTreeView.rowCount = permissions.length;
-  permissionsTree.treeBoxObject.rowCountChanged(permissions.length-1, 1);
-  permissionsTree.treeBoxObject.ensureRowIsVisible(permissions.length-1)
+  var host = name.value.replace(/^\s*([-\w]*:\/+)?/, ""); // trim any leading space and scheme
+  try {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                              .getService(Components.interfaces.nsIIOService);
+    var uri = ioService.newURI("http://"+host, null, null);
+    host = uri.host;
+    return host;
+  } catch(ex) {
+    // if we get here, the user has managed to enter something that couldn't get parsed to a real URI
+    // call this function again, with the string originally entered pre-populated
+    var alertTitle = stringBundle.getString("addSiteFailedTitle");
+    var alertMsg = stringBundle.getFormattedString("addSiteFailedMessage",[host]);
+    promptService.alert(window, alertTitle, alertMsg);
+    enterNewSite(name);
+  }
 }
 
 function onPopupPrefsOK()
