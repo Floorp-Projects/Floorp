@@ -249,14 +249,13 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
       status->mKeyLength = keyLength;
       status->mSecretKeyLength = encryptBits;
-      status->mCipherName = cipherName;
+      status->mCipherName.Adopt(cipherName);
 
       infoObject->SetSSLStatus(status);
 
       if (caName != signer)
         PR_Free(caName);
       PR_Free(signer);
-      PR_Free(cipherName);
     }
 }
 
