@@ -18,5 +18,8 @@ call rtest.bat %1
 cd ..\dom
 call rtest.bat %1
 
+cd ..\printing
+call rtest.bat %1
+
 cd ..
 
