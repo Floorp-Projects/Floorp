@@ -39,7 +39,7 @@ foreach my $arg (@ARGV) {
   ++$ddindex;
   last if ($arg eq "--");
 }
-my $defines = @ARGV[ $ddindex .. $#ARGV ];
+my $defines = join(' ', @ARGV[ $ddindex .. $#ARGV ]);
 
 getopts("d:s:f:avlD:o:p:xz:");
 
