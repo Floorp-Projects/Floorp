@@ -50,15 +50,6 @@ JAVAH_PROG = $(JAVA) netscape.tools.jric.Main
 #//
 #//------------------------------------------------------------------------
 
-!ifdef MOZ_PROF
-
-#
-# compile with debug symbols, but without DEBUG code and ASSERTs
-#
-OPTIMIZER=-Z7 -O1 -UDEBUG -DNDEBUG -U_DEBUG
-OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE
-
-!else
 !ifdef MOZ_DEBUG
 #
 # Uncomment for MSVC debug malloc logging...
@@ -91,8 +82,6 @@ OS_LFLAGS=
 
 !endif
 # MOZ_DEBUG
-!endif
-# MOZ_PROF
 
 # Replace optimizer and pdb related flags to use our own conventions
 !ifdef LIBRARY_NAME
