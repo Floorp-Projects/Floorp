@@ -1480,7 +1480,7 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
   {
     if(mActivePluginList[i].mInstance)
     {
-  	  mActivePluginList[i].mInstance->Destroy();
+      mActivePluginList[i].mInstance->Destroy();
       NS_RELEASE(mActivePluginList[i].mInstance);
       NS_RELEASE(mActivePluginList[i].mPeer);
       PL_strfree(mActivePluginList[i].mURL);
@@ -1520,6 +1520,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 	  aOwner->GetInstance(instance);
     if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
 	    rv = NewEmbededPluginStream(aURL, nsnull, instance);
+    NS_IF_RELEASE(instance);
     return NS_OK;
   }
 
@@ -1605,6 +1606,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 	  aOwner->GetInstance(instance);
     if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
 	    rv = NewFullPagePluginStream(aStreamListener, instance);
+    NS_IF_RELEASE(instance);
     return NS_OK;
   }  
 
