@@ -61,12 +61,6 @@
 			path = ../dist/Embed/libxpcom_compat.dylib;
 			refType = 2;
 		};
-		0FA8EF990423B1A500A80166 = {
-			fileRef = 0FA8EF970423B1A500A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		0FA8EF9A0423B1F500A80166 = {
 			isa = PBXFileReference;
 			name = libxpcom_compat_c.dylib;
@@ -212,6 +206,18 @@
 			isa = PBXGroup;
 			name = "XPT files";
 			refType = 4;
+		};
+		0FA8EFCA0423EAAD00A80166 = {
+			isa = PBXFileReference;
+			name = libxpcom_compat_c.a;
+			path = ../xpcom/obsolete/component/libxpcom_compat_c.a;
+			refType = 2;
+		};
+		0FA8EFCB0423EAAD00A80166 = {
+			fileRef = 0FA8EFCA0423EAAD00A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 //0F0
 //0F1
@@ -4923,6 +4929,7 @@
 		};
 		F56F242202AC6F7101A967F3 = {
 			children = (
+				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
 				F56F242B02AC706801A967F3,
@@ -4949,7 +4956,6 @@
 				F56F248C02AC729901A967F3,
 				F56F248F02AC729901A967F3,
 				F56F249002AC729901A967F3,
-				F56F249302AC729901A967F3,
 				F56F249402AC729901A967F3,
 				F507423C02AD808201A967F3,
 				F524EF6702AD8B9301A967F3,
@@ -5250,12 +5256,6 @@
 			path = ../security/manager/ssl/src/libpipnss.a;
 			refType = 2;
 		};
-		F56F249302AC729901A967F3 = {
-			isa = PBXFileReference;
-			name = libshistory.a;
-			path = ../xpfe/components/shistory/src/libshistory.a;
-			refType = 2;
-		};
 		F56F249402AC729901A967F3 = {
 			isa = PBXFileReference;
 			name = libxmlextras.a;
@@ -5282,12 +5282,6 @@
 		};
 		F56F249A02AC729901A967F3 = {
 			fileRef = F56F249002AC729901A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F56F249D02AC729901A967F3 = {
-			fileRef = F56F249302AC729901A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7555,6 +7549,7 @@
 		F5BAAB1D02AC45D301A967F3 = {
 			buildActionMask = 2147483647;
 			files = (
+				0FA8EFCB0423EAAD00A80166,
 				F5BAAB9C02AC4AA701A967F3,
 				F5BAAB9D02AC4AA701A967F3,
 				F56F243702AC706801A967F3,
@@ -7583,7 +7578,6 @@
 				F56F249602AC729901A967F3,
 				F56F249902AC729901A967F3,
 				F56F249A02AC729901A967F3,
-				F56F249D02AC729901A967F3,
 				F56F249E02AC729901A967F3,
 				F507423D02AD808301A967F3,
 				F524EF6802AD8B9401A967F3,
@@ -7599,7 +7593,6 @@
 				F5BAABA102AC4AA701A967F3,
 				F5BAABA202AC4AA701A967F3,
 				F55A4DF50380705A01A80166,
-				0FA8EF990423B1A500A80166,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
