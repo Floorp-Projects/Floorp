@@ -25,7 +25,7 @@
 
 #include "nsUnitConverters.h"
 
-NS_IMPL_ISUPPORTS1(nsImage, nsIImage)
+NS_IMPL_ISUPPORTS1(nsImage, nsIImage2)
 
 nsImage::nsImage() :
   mBits(nsnull)

@@ -21,7 +21,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsIImage.h"
+#include "nsIImage2.h"
 
 #include "nsSize2.h"
 
@@ -29,11 +29,11 @@
   {0x73c72e6c, 0x1dd2, 0x11b2, \
     { 0x98, 0xb7, 0xae, 0x59, 0x35, 0xee, 0x63, 0xf5 }}
 
-class nsImage : public nsIImage
+class nsImage : public nsIImage2
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGE
+  NS_DECL_NSIIMAGE2
 
   nsImage();
   virtual ~nsImage();
