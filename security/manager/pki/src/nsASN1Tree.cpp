@@ -31,33 +31,33 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#include "nsASN1Outliner.h"
+#include "nsASN1Tree.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Outliner, nsIASN1Outliner, 
-                                                 nsIOutlinerView);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsNSSASN1Tree, nsIASN1Tree, 
+                                                 nsITreeView);
 
-nsNSSASN1Outliner::nsNSSASN1Outliner() 
+nsNSSASN1Tree::nsNSSASN1Tree() 
 {
   NS_INIT_ISUPPORTS();
 }
 
-nsNSSASN1Outliner::~nsNSSASN1Outliner()
+nsNSSASN1Tree::~nsNSSASN1Tree()
 {
 }
 
 /* void loadASN1Structure (in nsIASN1Object asn1Object); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::LoadASN1Structure(nsIASN1Object *asn1Object)
+nsNSSASN1Tree::LoadASN1Structure(nsIASN1Object *asn1Object)
 {
   //
-  // The outliner won't automatically re-draw if the contents
+  // The tree won't automatically re-draw if the contents
   // have been changed.  So I do a quick test here to let
-  // me know if I should forced the outliner to redraw itself
+  // me know if I should forced the tree to redraw itself
   // by calling RowCountChanged on it.
   //
-  PRBool redraw = (mASN1Object && mOutliner);
+  PRBool redraw = (mASN1Object && mTree);
   PRInt32 rowsToDelete;
 
   if (redraw) {
@@ -70,16 +70,16 @@ nsNSSASN1Outliner::LoadASN1Structure(nsIASN1Object *asn1Object)
     // The number of rows in the new content.
     PRInt32 newRows = CountNumberOfVisibleRows(mASN1Object);
     // Erase all of the old rows.
-    mOutliner->RowCountChanged(0, rowsToDelete);
+    mTree->RowCountChanged(0, rowsToDelete);
     // Replace them with the new contents
-    mOutliner->RowCountChanged(0, newRows);
+    mTree->RowCountChanged(0, newRows);
   }
   return NS_OK;
 }
 
 /* wstring getDisplayData (in unsigned long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetDisplayData(PRUint32 index, PRUnichar **_retval)
+nsNSSASN1Tree::GetDisplayData(PRUint32 index, PRUnichar **_retval)
 {
   nsCOMPtr<nsIASN1Object> object;
   GetASN1ObjectAtIndex(index, mASN1Object, getter_AddRefs(object));
@@ -92,7 +92,7 @@ nsNSSASN1Outliner::GetDisplayData(PRUint32 index, PRUnichar **_retval)
 }
 
 nsresult
-nsNSSASN1Outliner::GetASN1ObjectAtIndex(PRUint32 index, 
+nsNSSASN1Tree::GetASN1ObjectAtIndex(PRUint32 index, 
                                         nsIASN1Object *sourceObject,
                                         nsIASN1Object **retval)
 {
@@ -145,7 +145,7 @@ nsNSSASN1Outliner::GetASN1ObjectAtIndex(PRUint32 index,
 }
 
 PRUint32
-nsNSSASN1Outliner::CountNumberOfVisibleRows(nsIASN1Object *asn1Object)
+nsNSSASN1Tree::CountNumberOfVisibleRows(nsIASN1Object *asn1Object)
 {
   nsCOMPtr<nsIASN1Sequence> sequence;
   PRUint32 count = 1;
@@ -174,7 +174,7 @@ nsNSSASN1Outliner::CountNumberOfVisibleRows(nsIASN1Object *asn1Object)
 
 /* readonly attribute long rowCount; */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetRowCount(PRInt32 *aRowCount)
+nsNSSASN1Tree::GetRowCount(PRInt32 *aRowCount)
 {
   if (mASN1Object) {
     *aRowCount = CountNumberOfVisibleRows(mASN1Object);
@@ -184,9 +184,9 @@ nsNSSASN1Outliner::GetRowCount(PRInt32 *aRowCount)
   return NS_OK;
 }
 
-/* attribute nsIOutlinerSelection selection; */
+/* attribute nsITreeSelection selection; */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetSelection(nsIOutlinerSelection * *aSelection)
+nsNSSASN1Tree::GetSelection(nsITreeSelection * *aSelection)
 {
   *aSelection = mSelection;
   NS_IF_ADDREF(*aSelection);
@@ -194,7 +194,7 @@ nsNSSASN1Outliner::GetSelection(nsIOutlinerSelection * *aSelection)
 }
 
 NS_IMETHODIMP 
-nsNSSASN1Outliner::SetSelection(nsIOutlinerSelection * aSelection)
+nsNSSASN1Tree::SetSelection(nsITreeSelection * aSelection)
 {
   mSelection = aSelection;
   return NS_OK;
@@ -202,7 +202,7 @@ nsNSSASN1Outliner::SetSelection(nsIOutlinerSelection * aSelection)
 
 /* void getRowProperties (in long index, in nsISupportsArray properties); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
+nsNSSASN1Tree::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 {
   return NS_OK;
 }
@@ -210,7 +210,7 @@ nsNSSASN1Outliner::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 /* void getCellProperties (in long row, in wstring colID, 
                            in nsISupportsArray properties); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetCellProperties(PRInt32 row, const PRUnichar *colID, 
+nsNSSASN1Tree::GetCellProperties(PRInt32 row, const PRUnichar *colID, 
                                      nsISupportsArray *properties)
 {
   return NS_OK;
@@ -219,7 +219,7 @@ nsNSSASN1Outliner::GetCellProperties(PRInt32 row, const PRUnichar *colID,
 /* void getColumnProperties (in wstring colID, in nsIDOMElement colElt, 
                              in nsISupportsArray properties); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetColumnProperties(const PRUnichar *colID, 
+nsNSSASN1Tree::GetColumnProperties(const PRUnichar *colID, 
                                        nsIDOMElement *colElt, 
                                        nsISupportsArray *properties)
 {
@@ -228,7 +228,7 @@ nsNSSASN1Outliner::GetColumnProperties(const PRUnichar *colID,
 
 /* boolean isContainer (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::IsContainer(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsContainer(PRInt32 index, PRBool *_retval)
 {
   nsCOMPtr<nsIASN1Object> object;
   nsCOMPtr<nsIASN1Sequence> sequence;
@@ -249,7 +249,7 @@ nsNSSASN1Outliner::IsContainer(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerOpen (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::IsContainerOpen(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 {
   nsCOMPtr<nsIASN1Object> object;
   nsCOMPtr<nsIASN1Sequence> sequence;
@@ -270,7 +270,7 @@ nsNSSASN1Outliner::IsContainerOpen(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerEmpty (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::IsContainerEmpty(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -278,14 +278,14 @@ nsNSSASN1Outliner::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 
 /* boolean isSeparator (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::IsSeparator(PRInt32 index, PRBool *_retval)
+nsNSSASN1Tree::IsSeparator(PRInt32 index, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK; 
 }
 
 PRInt32
-nsNSSASN1Outliner::GetParentOfObjectAtIndex(PRUint32 index,
+nsNSSASN1Tree::GetParentOfObjectAtIndex(PRUint32 index,
                                             nsIASN1Object *sourceObject)
 {
   if (index == 0) {
@@ -334,7 +334,7 @@ nsNSSASN1Outliner::GetParentOfObjectAtIndex(PRUint32 index,
 
 /* long getParentIndex (in long rowIndex); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
+nsNSSASN1Tree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
   *_retval = GetParentOfObjectAtIndex(rowIndex, mASN1Object);
   return NS_OK;
@@ -342,7 +342,7 @@ nsNSSASN1Outliner::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 
 /* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
+nsNSSASN1Tree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
                                   PRBool *_retval)
 {
   *_retval = PR_FALSE;
@@ -350,7 +350,7 @@ nsNSSASN1Outliner::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex,
 }
 
 PRInt32
-nsNSSASN1Outliner::GetLevelsTilIndex(PRUint32 index, 
+nsNSSASN1Tree::GetLevelsTilIndex(PRUint32 index, 
                                      nsIASN1Object *sourceObject)
 {
   if (index == 0) {
@@ -390,15 +390,38 @@ nsNSSASN1Outliner::GetLevelsTilIndex(PRUint32 index,
 
 /* long getLevel (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetLevel(PRInt32 index, PRInt32 *_retval)
+nsNSSASN1Tree::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
   *_retval = GetLevelsTilIndex(index, mASN1Object);
   return NS_OK;
 }
 
-/* wstring getCellText (in long row, in wstring colID); */
+/* Astring getImageSrc (in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::GetCellText(PRInt32 row, const PRUnichar *colID, 
+nsNSSASN1Tree::GetImageSrc(PRInt32 row, const PRUnichar *colID, 
+                           nsAString& _retval)
+{
+  return NS_OK;
+}
+
+/* long getProgressMode (in long row, in wstring colID); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+{
+  return NS_OK;
+}
+
+/* Astring getCellValue (in long row, in wstring colID); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::GetCellValue(PRInt32 row, const PRUnichar *colID, 
+                            nsAString& _retval)
+{
+  return NS_OK;
+}
+
+/* Astring getCellText (in long row, in wstring colID); */
+NS_IMETHODIMP 
+nsNSSASN1Tree::GetCellText(PRInt32 row, const PRUnichar *colID, 
                                nsAString& _retval)
 {
   nsCOMPtr<nsIASN1Object> object;
@@ -421,17 +444,17 @@ nsNSSASN1Outliner::GetCellText(PRInt32 row, const PRUnichar *colID,
   return rv;
 }
 
-/* void setOutliner (in nsIOutlinerBoxObject outliner); */
+/* void setTree (in nsITreeBoxObject tree); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::SetOutliner(nsIOutlinerBoxObject *outliner)
+nsNSSASN1Tree::SetTree(nsITreeBoxObject *tree)
 {
-  mOutliner = outliner;
+  mTree = tree;
   return NS_OK;
 }
 
 /* void toggleOpenState (in long index); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::ToggleOpenState(PRInt32 index)
+nsNSSASN1Tree::ToggleOpenState(PRInt32 index)
 {
   nsCOMPtr<nsIASN1Object> object;
 
@@ -454,35 +477,35 @@ nsNSSASN1Outliner::ToggleOpenState(PRInt32 index)
     sequence->SetShowObjects(PR_TRUE);
     rowCountChange = CountNumberOfVisibleRows(object)-1;
   }
-  if (mOutliner)
-    mOutliner->RowCountChanged(index, rowCountChange);
+  if (mTree)
+    mTree->RowCountChanged(index, rowCountChange);
   return NS_OK;
 }
 
 /* void cycleHeader (in wstring colID, in nsIDOMElement elt); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+nsNSSASN1Tree::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
 {
   return NS_OK;
 }
 
 /* void selectionChanged (); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::SelectionChanged()
+nsNSSASN1Tree::SelectionChanged()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void cycleCell (in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::CycleCell(PRInt32 row, const PRUnichar *colID)
+nsNSSASN1Tree::CycleCell(PRInt32 row, const PRUnichar *colID)
 {
   return NS_OK;
 }
 
 /* boolean isEditable (in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::IsEditable(PRInt32 row, const PRUnichar *colID, 
+nsNSSASN1Tree::IsEditable(PRInt32 row, const PRUnichar *colID, 
                               PRBool *_retval)
 {
   *_retval = PR_FALSE;
@@ -491,7 +514,7 @@ nsNSSASN1Outliner::IsEditable(PRInt32 row, const PRUnichar *colID,
 
 /* void setCellText (in long row, in wstring colID, in wstring value); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::SetCellText(PRInt32 row, const PRUnichar *colID, 
+nsNSSASN1Tree::SetCellText(PRInt32 row, const PRUnichar *colID, 
                                const PRUnichar *value)
 {
   return NS_OK;
@@ -499,21 +522,21 @@ nsNSSASN1Outliner::SetCellText(PRInt32 row, const PRUnichar *colID,
 
 /* void performAction (in wstring action); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::PerformAction(const PRUnichar *action)
+nsNSSASN1Tree::PerformAction(const PRUnichar *action)
 {
   return NS_OK;
 }
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
+nsNSSASN1Tree::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 {
   return NS_OK;
 }
 
 /* void performActionOnCell (in wstring action, in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsNSSASN1Outliner::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
+nsNSSASN1Tree::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
                                        const PRUnichar *colID)
 {
   return NS_OK;
@@ -524,7 +547,7 @@ nsNSSASN1Outliner::PerformActionOnCell(const PRUnichar *action, PRInt32 row,
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsNSSASN1Outliner::CanDropOn(PRInt32 index, PRBool *_retval)
+NS_IMETHODIMP nsNSSASN1Tree::CanDropOn(PRInt32 index, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -537,7 +560,7 @@ NS_IMETHODIMP nsNSSASN1Outliner::CanDropOn(PRInt32 index, PRBool *_retval)
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsNSSASN1Outliner::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+NS_IMETHODIMP nsNSSASN1Tree::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -551,7 +574,7 @@ NS_IMETHODIMP nsNSSASN1Outliner::CanDropBeforeAfter(PRInt32 index, PRBool before
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsNSSASN1Outliner::Drop(PRInt32 row, PRInt32 orient)
+NS_IMETHODIMP nsNSSASN1Tree::Drop(PRInt32 row, PRInt32 orient)
 {
   return NS_OK;
 }
@@ -562,7 +585,7 @@ NS_IMETHODIMP nsNSSASN1Outliner::Drop(PRInt32 row, PRInt32 orient)
 //
 // ...
 //
-NS_IMETHODIMP nsNSSASN1Outliner::IsSorted(PRBool *_retval)
+NS_IMETHODIMP nsNSSASN1Tree::IsSorted(PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;

@@ -68,9 +68,10 @@ function Startup()
   
   // SET FOCUS TO FIRST CONTROL
   SetTextboxFocus(gDialog.TitleInput);
+  
   LoadAvailableCharSets();
   initDone = true;
-
+  
   SetWindowLocation();
 }
 
@@ -144,11 +145,12 @@ function LoadAvailableCharSets()
 
     if(selectedItem) 
 	{
-      gDialog.charsetTree.selectItem(selectedItem);
-      gDialog.charsetTree.ensureElementIsVisible(selectedItem);
+	    var index = gDialog.charsetTree.contentView.getIndexOfItem(selectedItem);
+      gDialog.charsetTree.treeBoxObject.selection.select(index);
+      gDialog.charsetTree.treeBoxObject.ensureRowIsVisible(index);
     }
   }
-  catch(e) {}
+  catch(e) { }
 }
 
 

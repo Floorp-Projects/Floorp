@@ -254,7 +254,7 @@ protected:
                                   nsCSSProperty aPropID);
 
 #ifdef INCLUDE_XUL
-  PRBool ParseOutlinerPseudoElement(PRInt32& aErrorCode, nsCSSSelector& aSelector);
+  PRBool ParseTreePseudoElement(PRInt32& aErrorCode, nsCSSSelector& aSelector);
 #endif
 
   // Property specific parsing routines
@@ -1575,16 +1575,16 @@ static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
 }
 
 #ifdef INCLUDE_XUL
-static PRBool IsOutlinerPseudoElement(const nsString& aPseudo)
+static PRBool IsTreePseudoElement(const nsString& aPseudo)
 {
-  return Substring(aPseudo, 0, 14).Equals(NS_LITERAL_STRING("-moz-outliner-"));
+  return Substring(aPseudo, 0, 10).Equals(NS_LITERAL_STRING("-moz-tree-"));
 }
 
-static PRBool IsOutlinerPseudoElement(nsIAtom* aPseudo)
+static PRBool IsTreePseudoElement(nsIAtom* aPseudo)
 {
   nsAutoString str;
   aPseudo->ToString(str);
-  return Substring(str, 0, 15).Equals(NS_LITERAL_STRING(":-moz-outliner-"));
+  return Substring(str, 0, 11).Equals(NS_LITERAL_STRING(":-moz-tree-"));
 }
 #endif
 
@@ -1632,9 +1632,9 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
           selector.Reset();
           selector.mTag = pseudoClassList->mAtom; // steal ref count
 #ifdef INCLUDE_XUL
-          if (IsOutlinerPseudoElement(selector.mTag)) {
+          if (IsTreePseudoElement(selector.mTag)) {
             // Take the remaining "pseudoclasses" that we parsed
-            // inside the outliner pseudoelement's ()-list, and
+            // inside the tree pseudoelement's ()-list, and
             // make our new selector have these pseudoclasses
             // in its pseudoclass list.
             selector.mPseudoClassList = pseudoClassList->mNext;
@@ -2180,8 +2180,8 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     if (eCSSToken_Function != mToken.mType ||
         !(
 #ifdef INCLUDE_XUL
-          // -moz-outliner is a pseudo-element and therefore cannot be negated
-          (!aIsNegated && IsOutlinerPseudoElement(mToken.mIdent)) ||
+          // -moz-tree is a pseudo-element and therefore cannot be negated
+          (!aIsNegated && IsTreePseudoElement(mToken.mIdent)) ||
 #endif
           // the negation pseudo-class is a function
           (nsCSSAtoms::notPseudo == pseudo))) {
@@ -2227,12 +2227,12 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
 
 #ifdef INCLUDE_XUL
       if (eCSSToken_Function == mToken.mType && 
-          IsOutlinerPseudoElement(mToken.mIdent)) {
+          IsTreePseudoElement(mToken.mIdent)) {
         // We have encountered a pseudoelement of the form
-        // -moz-outliner-xxxx(a,b,c).  We parse (a,b,c) and add each
+        // -moz-tree-xxxx(a,b,c).  We parse (a,b,c) and add each
         // item in the list to the pseudoclass list.  They will be pulled
         // from the list later along with the pseudoelement.
-        if (!ParseOutlinerPseudoElement(aErrorCode, aSelector))
+        if (!ParseTreePseudoElement(aErrorCode, aSelector))
           aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
           return;
       }
@@ -2577,7 +2577,7 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32& aErrorCode,
 }
 
 #ifdef INCLUDE_XUL
-PRBool CSSParserImpl::ParseOutlinerPseudoElement(PRInt32& aErrorCode,
+PRBool CSSParserImpl::ParseTreePseudoElement(PRInt32& aErrorCode,
                                                  nsCSSSelector& aSelector)
 {
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {

@@ -66,20 +66,20 @@
 <!ENTITY menuitem.personaltoolbarfolder.label       "Set as Personal Toolbar Folder">
 <!ENTITY menuitem.personaltoolbarfolder.accesskey   "p">
 
-<!ENTITY outlinercol.name.label             "Name">
-<!ENTITY outlinercol.name.accesskey         "n">
-<!ENTITY outlinercol.url.label              "Location">
-<!ENTITY outlinercol.url.accesskey          "l">
-<!ENTITY outlinercol.shortcut.label         "Keyword">
-<!ENTITY outlinercol.shortcut.accesskey     "k">
-<!ENTITY outlinercol.addedon.label          "Added">
-<!ENTITY outlinercol.addedon.accesskey      "a">
-<!ENTITY outlinercol.lastmod.label          "Last Modified">
-<!ENTITY outlinercol.lastmod.accesskey      "m">
-<!ENTITY outlinercol.lastvisit.label        "Last Visited">
-<!ENTITY outlinercol.lastvisit.accesskey    "b">
-<!ENTITY outlinercol.description.label      "Description">
-<!ENTITY outlinercol.description.accesskey  "d">
+<!ENTITY treecol.name.label             "Name">
+<!ENTITY treecol.name.accesskey         "n">
+<!ENTITY treecol.url.label              "Location">
+<!ENTITY treecol.url.accesskey          "l">
+<!ENTITY treecol.shortcut.label         "Keyword">
+<!ENTITY treecol.shortcut.accesskey     "k">
+<!ENTITY treecol.addedon.label          "Added">
+<!ENTITY treecol.addedon.accesskey      "a">
+<!ENTITY treecol.lastmod.label          "Last Modified">
+<!ENTITY treecol.lastmod.accesskey      "m">
+<!ENTITY treecol.lastvisit.label        "Last Visited">
+<!ENTITY treecol.lastvisit.accesskey    "b">
+<!ENTITY treecol.description.label      "Description">
+<!ENTITY treecol.description.accesskey  "d">
 
 <!ENTITY bookmarksWindowTitle.label     "Bookmarks">
 

@@ -110,7 +110,7 @@ static int PR_CALLBACK compare(const void* aElement1,
     // Because that is _slow_. Using TestProtocols to list file:///dev/
     // goes from 3 seconds to 22. (This may be why nsXULSortService is
     // so slow as well).
-    // Does this have bad effects? Probably, but since nsXULOutliner appears
+    // Does this have bad effects? Probably, but since nsXULTree appears
     // to use the raw RDF literal value as the sort key (which ammounts to an
     // strcmp), it won't be any worse, I think.
     // This could be made faster, by creating the keys once,

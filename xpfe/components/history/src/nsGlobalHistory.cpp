@@ -2224,7 +2224,7 @@ nsGlobalHistory::StartBatchUpdate()
   
   // we could call mObservers->EnumerateForwards() here
   // to save the addref/release on each observer, but
-  // it's unlikely that anyone but the outliner builder
+  // it's unlikely that anyone but the tree builder
   // is observing us
   if (mObservers) {
     PRUint32 count;
@@ -2254,7 +2254,7 @@ nsGlobalHistory::EndBatchUpdate()
 
   // we could call mObservers->EnumerateForwards() here
   // to save the addref/release on each observer, but
-  // it's unlikely that anyone but the outliner builder
+  // it's unlikely that anyone but the tree builder
   // is observing us
   if (mObservers) {
     PRUint32 count;

@@ -56,7 +56,7 @@
 
   <hbox flex="1">
     <!-- tree sidebar -->
-    <outliner id="prefsTree" style="width: 13em;"/>
+    <tree id="prefsTree" style="width: 13em;"/>
     <vbox flex="1">
       <dialogheader id="header"/>
       <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>

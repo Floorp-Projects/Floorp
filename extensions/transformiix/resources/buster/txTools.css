@@ -26,23 +26,23 @@ text.head {
   font-weight: bold;
 }
 
-outlinerchildren:-moz-outliner-row(success)
+treechildren:-moz-tree-row(success)
 {
   background-color: green;
 }
 
-outlinerchildren:-moz-outliner-row(fail)
+treechildren:-moz-tree-row(fail)
 {
   background-color: red;
 }
 
-outlinerchildren:-moz-outliner-row(selected)
+treechildren:-moz-tree-row(selected)
 {
   border: 1px solid blue;
   background-color: white ;
 }
 
-outlinerchildren:-moz-outliner-cell-text(selected)
+treechildren:-moz-tree-cell-text(selected)
 {
   color: black;  
 }

@@ -53,24 +53,24 @@
 
 <hbox flex="1">
   <deck id="errorShower" flex="1">
-    <outliner id="directoryOutliner" flex="1" seltype="single"
+    <tree id="directoryTree" flex="1" seltype="single"
               onclick="onClick(event);"
               ondblclick="onDblClick(event);"
               onkeypress="onKeypress(event);"
-              onfocus="onOutlinerFocus(event);"
+              onfocus="onTreeFocus(event);"
               onselect="onSelect(event);">
-      <outlinercols>
-        <outlinercol id="FilenameColumn" label="&name.label;" flex="1"
+      <treecols>
+        <treecol id="FilenameColumn" label="&name.label;" flex="1"
                      class="sortDirectionIndicator"/>
         <splitter class="tree-splitter"/>
-        <outlinercol id="FileSizeColumn" label="&size.label;" flex="1"
+        <treecol id="FileSizeColumn" label="&size.label;" flex="1"
                      class="sortDirectionIndicator"/>
         <splitter class="tree-splitter"/>
-        <outlinercol id="LastModifiedColumn" label="&lastModified.label;" flex="1"
+        <treecol id="LastModifiedColumn" label="&lastModified.label;" flex="1"
                      class="sortDirectionIndicator"/>
-      </outlinercols>
-      <outlinerchildren/>
-    </outliner>
+      </treecols>
+      <treechildren/>
+    </tree>
     <label>&noPermissionError.label;</label>
   </deck>
 </hbox>

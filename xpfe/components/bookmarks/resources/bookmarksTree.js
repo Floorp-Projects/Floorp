@@ -122,7 +122,7 @@ BookmarksTree.prototype = {
     editCell: function (aSelectedItem, aCell)
     {
       // XXX throw up properties dialog with name selected so user can rename
-      //     that way, until Outliner conversion allows us to use IL again. 
+      //     that way, until tree conversion allows us to use IL again. 
       goDoCommand("cmd_properties");
       return; // Disable inline edit for now.
 
@@ -496,7 +496,7 @@ BookmarksTree.prototype = {
   treeClicked: function (aEvent)
   {
     // We are disabling Inline Edit for now. It's too buggy in the old XUL tree widget.
-    // A more solid implementation will follow the conversion to outliner. 
+    // A more solid implementation will follow the conversion to tree
 /*
     if (this.tree.selectedItems.length > 1 || aEvent.detail > 1 || aEvent.button != 0) {
       gSelectionTracker.clickCount = 0;

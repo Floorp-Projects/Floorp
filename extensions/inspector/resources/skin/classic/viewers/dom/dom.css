@@ -40,37 +40,37 @@
 
 /* :::::::: node type color coding :::::::: */
 
-outlinerchildren:-moz-outliner-cell-text(ELEMENT_NODE) {
+treechildren:-moz-tree-cell-text(ELEMENT_NODE) {
   color: #000000;
 }
 
-outlinerchildren:-moz-outliner-cell-text(ATTRIBUTE_NODE) {
+treechildren:-moz-tree-cell-text(ATTRIBUTE_NODE) {
   color: #556b2f;
 }
 
-outlinerchildren:-moz-outliner-cell-text(CDATA_SECTION_NODE),
-outlinerchildren:-moz-outliner-cell-text(TEXT_NODE) {
+treechildren:-moz-tree-cell-text(CDATA_SECTION_NODE),
+treechildren:-moz-tree-cell-text(TEXT_NODE) {
   color: #0000AA;
 }
 
-outlinerchildren:-moz-outliner-cell-text(COMMENT_NODE) {
+treechildren:-moz-tree-cell-text(COMMENT_NODE) {
   color: #228b22;
 }
 
-outlinerchildren:-moz-outliner-cell-text(anonymous) {
+treechildren:-moz-tree-cell-text(anonymous) {
   color: #ff0000;
 }
 
-outlinerchildren:-moz-outliner-cell-text(selected, focus) {
+treechildren:-moz-tree-cell-text(selected, focus) {
   color: #FFFFFF;
 }
 
 /* :::::::: drag and drop insertion indicators :::::::: */
 
-outlinerchildren:-moz-outliner-column(dnd-insert-before) {
+treechildren:-moz-tree-column(dnd-insert-before) {
   border-left: 2px solid #000000;
 }
 
-outlinerchildren:-moz-outliner-column(dnd-insert-after) {
+treechildren:-moz-tree-column(dnd-insert-after) {
   border-right: 2px solid #000000;
 }

@@ -41,12 +41,9 @@
     <label value="&fileTypes.label;"/>
     <hbox flex="1">
       <vbox flex="1">
-        <tree id="appTree" flex="1"
+        <listbox id="appList" flex="1"
               datasources="rdf:null" ref="urn:mimetypes"
               onselect="selectApplication();">
-          <treecolgroup>
-            <treecol flex="1"/>
-          </treecolgroup>
           <template>
             <rule>
               <conditions>
@@ -63,17 +60,12 @@
                         predicate="http://home.netscape.com/NC-rdf#editable"/>
               </conditions>
               <action> 
-                <treechildren flex="1">
-                  <treeitem uri="?type">
-                    <treerow>
-                      <treecell label="?value"/>
-                    </treerow>
-                  </treeitem>
-                </treechildren>
+                <listitem uri="?type" label="?value"/>
               </action>
             </rule>        
           </template>
-        </tree>
+        </listbox>
+        
         <hbox>
           <vbox><image id="contentTypeImage"/></vbox>
           <grid orient="horizontal">

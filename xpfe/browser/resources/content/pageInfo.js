@@ -152,10 +152,10 @@ function makeGeneralTab()
   
   // get the meta tags
   var metaNodes = theDocument.getElementsByTagName("meta");
-  var metaOutliner = document.getElementById("metaoutliner");
-  var metaView = new pageInfoOutlinerView(["meta-name","meta-content"]);
+  var metaTree = document.getElementById("metatree");
+  var metaView = new pageInfoTreeView(["meta-name","meta-content"]);
 
-  metaOutliner.outlinerBoxObject.view = metaView;
+  metaTree.treeBoxObject.view = metaView;
 
   var length = metaNodes.length;
   for (var i = 0; i < length; i++)
@@ -246,13 +246,13 @@ function makeGeneralTab()
 //******** Form Stuff
 function makeFormTab()
 {
-  var formOutliner = document.getElementById("formoutliner");
+  var formTree = document.getElementById("formtree");
   var formPreview = document.getElementById("formpreview");
   
-  var formView = new pageInfoOutlinerView(["form-number","form-name","form-action","form-method"]);
-  var fieldView = new pageInfoOutlinerView(["field-number","field-label","field-field","field-type","field-value"]);
-  formOutliner.outlinerBoxObject.view = formView;
-  formPreview.outlinerBoxObject.view = fieldView;
+  var formView = new pageInfoTreeView(["form-number","form-name","form-action","form-method"]);
+  var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"]);
+  formTree.treeBoxObject.view = formView;
+  formPreview.treeBoxObject.view = fieldView;
 
   formList = grabAllForms(theWindow, theDocument);
   formIndex = 0;
@@ -291,15 +291,15 @@ function grabAllForms(aWindow, aDocument)
 function onFormSelect()
 {
   var theBundle = document.getElementById("pageinfobundle");
-  var formOutliner = document.getElementById("formoutliner");
-  var formView = formOutliner.outlinerBoxObject.view;
+  var formTree = document.getElementById("formtree");
+  var formView = formTree.treeBoxObject.view;
   if (!formView.rowCount) return;
 
   if (formView.selection.count == 1)
   {
     var formPreview = document.getElementById("formpreview");
-    var fieldView = new pageInfoOutlinerView(["field-number","field-label","field-field","field-type","field-value"]);
-    formPreview.outlinerBoxObject.view = fieldView;
+    var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"]);
+    formPreview.treeBoxObject.view = fieldView;
 
     var clickedRow = formView.selection.currentIndex;
     var formnum = formView.getCellText(clickedRow, "form-number");
@@ -386,10 +386,10 @@ function makeLinkTab()
 {
   //var start = new Date();
   var theBundle = document.getElementById("pageinfobundle");
-  var linkOutliner = document.getElementById("linkoutliner");
+  var linkTree = document.getElementById("linktree");
 
-  var linkView = new pageInfoOutlinerView(["link-number","link-name","link-address","link-type"]);
-  linkOutliner.outlinerBoxObject.view = linkView;
+  var linkView = new pageInfoTreeView(["link-number","link-name","link-address","link-type"]);
+  linkTree.treeBoxObject.view = linkView;
 
   linkList = grabAllLinks(theWindow, theDocument);
 
@@ -482,10 +482,10 @@ function openURL(target)
 function makeMediaTab()
 {
   var theBundle = document.getElementById("pageinfobundle");
-  var imageOutliner = document.getElementById("imageoutliner");
+  var imageTree = document.getElementById("imagetree");
 
-  var imageView = new pageInfoOutlinerView(["image-number","image-address","image-type"]);
-  imageOutliner.outlinerBoxObject.view = imageView;
+  var imageView = new pageInfoTreeView(["image-number","image-address","image-type"]);
+  imageTree.treeBoxObject.view = imageView;
 
   imageList = grabAllMedia(theWindow, theDocument);
 
@@ -578,21 +578,21 @@ function getSource( item )
   return null;
 }
 
-function getSelectedItem(outliner)
+function getSelectedItem(tree)
 {
-  var view = outliner.outlinerBoxObject.view;
+  var view = tree.treeBoxObject.view;
   if (!view.rowCount) return null;
 
   // Only works if only one item is selected
-  var clickedRow = outliner.outlinerBoxObject.selection.currentIndex;
+  var clickedRow = tree.treeBoxObject.selection.currentIndex;
   var lineNum = view.getCellText(clickedRow, "image-number");
   return imageList[lineNum - 1];
 }
 
 function saveMedia()
 {
-  var outliner = document.getElementById("imageoutliner");
-  var item = getSelectedItem(outliner);
+  var tree = document.getElementById("imagetree");
+  var item = getSelectedItem(tree);
   var url = getAbsoluteURL(getSource(item), item);
 
   if (url) {
@@ -602,12 +602,12 @@ function saveMedia()
 
 function onImageSelect()
 {
-  var outliner = document.getElementById("imageoutliner");
+  var tree = document.getElementById("imagetree");
   var saveAsButton = document.getElementById("imagesaveasbutton");
 
-  if (outliner.outlinerBoxObject.selection.count == 1)
+  if (tree.treeBoxObject.selection.count == 1)
   {
-    makePreview(getSelectedItem(outliner));
+    makePreview(getSelectedItem(tree));
     saveAsButton.setAttribute("disabled", "false");
   } else {
     saveAsButton.setAttribute("disabled", "true");
@@ -849,25 +849,25 @@ function getAbsoluteURL(url, node)
   return URL.spec;
 }
 
-//******** define a js object to implement nsIOutlinerView
-function pageInfoOutlinerView(columnids)
+//******** define a js object to implement nsITreeView
+function pageInfoTreeView(columnids)
 {
   // columnids is an array of strings indicating the names of the columns, in order
   this.columnids = columnids;
   this.colcount = columnids.length
   this.rows = 0;
-  this.outliner = null;
+  this.tree = null;
   this.data = new Array;
   this.selection = null;
 }
 
-pageInfoOutlinerView.prototype = {
+pageInfoTreeView.prototype = {
   set rowCount(c) { throw "rowCount is a readonly property"; },
   get rowCount() { return this.rows; },
 
-  setOutliner: function(outliner) 
+  setTree: function(tree) 
   {
-    this.outliner = outliner;
+    this.tree = tree;
   },
 
   getCellText: function(row, column)
@@ -905,12 +905,12 @@ pageInfoOutlinerView.prototype = {
 
   rowCountChanged: function(index, count)
   {
-    this.outliner.rowCountChanged(index, count);
+    this.tree.rowCountChanged(index, count);
   },
 
   invalidate: function()
   {
-    this.outliner.invalidate();
+    this.tree.invalidate();
   },
 
   clear: function()
@@ -931,6 +931,9 @@ pageInfoOutlinerView.prototype = {
   getParentIndex: function(index) { return 0; },
   hasNextSibling: function(index, after) { return false; },
   getLevel: function(index) { return 0; },
+  getImageSrc: function(row, column) { },
+  getProgressMode: function(row, column) { },
+  getCellValue: function(row, column) { },
   toggleOpenState: function(index) { },
   cycleHeader: function(col, elem) { },
   selectionChanged: function() { },

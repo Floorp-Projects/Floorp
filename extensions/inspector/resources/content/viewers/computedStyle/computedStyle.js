@@ -68,8 +68,8 @@ function ComputedStyleViewer()
   this.mObsMan = new ObserverManager(this);
   this.mURL = window.location;
   
-  this.mOutliner = document.getElementById("olStyles");
-  this.mOlBox = this.mOutliner.outlinerBoxObject;
+  this.mTree = document.getElementById("olStyles");
+  this.mOlBox = this.mTree.treeBoxObject;
 }
 
 ComputedStyleViewer.prototype = 
@@ -141,7 +141,7 @@ function ComputedStyleView(aObject)
   this.mRowCount = this.mStyleList.length;
 }
 
-ComputedStyleView.prototype = new inBaseOutlinerView();
+ComputedStyleView.prototype = new inBaseTreeView();
 
 ComputedStyleView.prototype.getCellText = 
 function(aRow, aColId) 

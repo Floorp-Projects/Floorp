@@ -36,36 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIOutlinerBoxObject.idl"
+#include "nsITreeBoxObject.idl"
 #include "nsISupportsArray.idl"
 #include "domstubs.idl"
 
-interface nsIOutlinerSelection;
+interface nsITreeSelection;
 
 [scriptable, uuid(7660811D-3CB8-441f-8E58-466DE4F3FA9A)]
-interface nsIOutlinerView : nsISupports
+interface nsITreeView : nsISupports
 {
   /** 
-   * The total number of rows in the outliner (including the offscreen rows).
+   * The total number of rows in the tree (including the offscreen rows).
    */
   readonly attribute long rowCount;
 
   /**
    * The selection for this view.
    */
-  attribute nsIOutlinerSelection selection;
+  attribute nsITreeSelection selection;
 
   /** 
    * An atomized list of properties for a given row.  Each property, x, that
-   * the view gives back will cause the pseudoclass :moz-outliner-row-x
-   * to be matched on the pseudoelement ::moz-outliner-row.
+   * the view gives back will cause the pseudoclass :moz-tree-row-x
+   * to be matched on the pseudoelement ::moz-tree-row.
    */
   void getRowProperties(in long index, in nsISupportsArray properties);
 
   /** 
    * An atomized list of properties for a given cell.  Each property, x, that
-   * the view gives back will cause the pseudoclass :moz-outliner-cell-x
-   * to be matched on the ::moz-outliner-cell pseudoelement.
+   * the view gives back will cause the pseudoclass :moz-tree-cell-x
+   * to be matched on the ::moz-tree-cell pseudoelement.
    */
   void getCellProperties(in long row, in wstring colID, in nsISupportsArray properties);
   
@@ -85,8 +85,8 @@ interface nsIOutlinerView : nsISupports
  
   /** 
    * isSeparator is used to determine if the row at index is a separator.
-   * A value of true will result in the outliner drawing a horizontal line.
-   * The outliner uses the border properties on the ::moz-outliner-separator
+   * A value of true will result in the tree drawing a horizontal line.
+   * The tree uses the border properties on the ::moz-tree-separator
    * pseudoclass to draw the separator.
    */
   boolean isSeparator(in long index);
@@ -112,10 +112,10 @@ interface nsIOutlinerView : nsISupports
   const short inDropBefore = 0;
   const short inDropOn = 1;
   const short inDropAfter = 2;
-  void drop (in long row, in long orientation); 
+  void drop(in long row, in long orientation); 
   
   /** 
-   * Methods used by the outliner to draw vertical lines in the tree.
+   * Methods used by the tree to draw vertical lines in the tree.
    * GetParentIndex is used to obtain the index of a parent row.
    */
   long getParentIndex(in long rowIndex);
@@ -131,20 +131,42 @@ interface nsIOutlinerView : nsISupports
   /** 
    * The level is an integer value that represents
    * the level of indentation.  It is multiplied by the width specified in the 
-   * :moz-outliner-indentation pseudoelement to compute the exact indendation.
+   * :moz-tree-indentation pseudoelement to compute the exact indendation.
    */
   long getLevel(in long index);
+
+  /** 
+   * The image path for a given cell. For defining an icon for a cell.
+   * If the empty string is returned, the :moz-tree-image pseudoelement
+   * will be used.
+   */
+  AString getImageSrc(in long row, in wstring colID);
+
+  /**
+   * The progress mode for a given cell. This method is only called for
+   * columns of type |progressmeter|.
+   */
+  const short progressNormal = 1;
+  const short progressUndetermined = 2;
+  const short progressNone = 3;
+  long getProgressMode(in long row, in wstring colID);
+
+  /** 
+   * The value for a given cell. This method is only called for columns
+   * of type other than |text|.
+   */
+  AString getCellValue(in long row, in wstring colID);
 
   /** 
    * The text for a given cell.  If a column consists only of an image, then
    * the empty string is returned.  
    */
   AString getCellText(in long row, in wstring colID);
-  
+
   /**
    * Called during initialization to link the view to the front end box object.
    */
-  void setOutliner(in nsIOutlinerBoxObject outliner);
+  void setTree(in nsITreeBoxObject tree);
   
   /** 
    * Called on the view when an item is opened or closed.
@@ -169,7 +191,7 @@ interface nsIOutlinerView : nsISupports
   
   /** 
    * isEditable is called to ask the view if the cell contents are editable.  
-   * A value of true will result in the outliner popping up a text field when 
+   * A value of true will result in the tree popping up a text field when 
    * the user tries to inline edit the cell.
    */
   boolean isEditable(in long row, in wstring colID);
@@ -180,7 +202,7 @@ interface nsIOutlinerView : nsISupports
   void setCellText(in long row, in wstring colID, in wstring value);
 
   /** 
-   * A command API that can be used to invoke commands on the selection.  The outliner
+   * A command API that can be used to invoke commands on the selection.  The tree
    * will automatically invoke this method when certain keys are pressed.  For example,
    * when the DEL key is pressed, performAction will be called with the "delete" string.
    */

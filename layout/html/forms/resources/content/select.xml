@@ -40,7 +40,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="select-outlinerbody">
+  <binding id="select-treebody">
     <implementation>
       <field name="_lastSelectedRow">
         -1
@@ -56,7 +56,7 @@
            var col = {};
            var obj = {};
            var select = this.parentNode.parentNode.parentNode;
-           var box = select.outlinerBoxObject;
+           var box = select.treeBoxObject;
            var selection = box.selection;
            box.getCellAt(event.clientX, event.clientY, row, col, obj);
 
@@ -86,7 +86,7 @@
          var col = {};
          var obj = {};
          var select = this.parentNode.parentNode.parentNode;
-         var box = select.outlinerBoxObject;
+         var box = select.treeBoxObject;
          select = select.selectElement;
          var selection = box.selection;
          box.getCellAt(event.clientX, event.clientY, row, col, obj);
@@ -135,31 +135,31 @@
     </handlers>
   </binding>
 
-  <binding id="select-size" extends="xul:outliner">
+  <binding id="select-size" extends="xul:tree">
     <content>
       <xul:hbox>
-        <xul:outlinercol class="select-outlinercol" flex="1"/>
+        <xul:treecol class="select-treecol" flex="1"/>
       </xul:hbox>
-      <xul:outlinerrows class="select-outlinerrows outliner-rows" flex="1">
-        <xul:hbox flex="1" class="outliner-bodybox">
-          <xul:outlinerchildren class="select-outlinerbody">
+      <xul:treerows class="select-treerows tree-rows" flex="1">
+        <xul:hbox flex="1" class="tree-bodybox">
+          <xul:treechildren class="select-treebody">
             <children/>
-          </xul:outlinerchildren>
+          </xul:treechildren>
         </xul:hbox>
         <xul:scrollbar orient="vertical" class="select-scrollbar" disabled="true"/>
-      </xul:outlinerrows>
+      </xul:treerows>
     </content>
 
     <implementation>
-      <property name="outlinerBoxObject"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
+      <property name="treeBoxObject"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
       <property name="selectElement"
                 onget="return this.QueryInterface(Components.interfaces.nsISelectElement);"
                 readonly="true"/>
       <property name="currentIndex"
-                onget="return this.outlinerBoxObject.selection.currentIndex;"
-                onset="return this.outlinerBoxObject.selection.currentIndex=val;"/>
+                onget="return this.treeBoxObject.selection.currentIndex;"
+                onset="return this.treeBoxObject.selection.currentIndex=val;"/>
       <property name="singleSelection"
                 onget="return this.getAttribute('seltype') == 'single'"
                 readonly="true"/>
@@ -172,8 +172,8 @@
     </implementation>
 
     <handlers>
-      <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
-      <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
+      <handler event="focus" action="this.treeBoxObject.focused = true;"/>
+      <handler event="blur" action="this.treeBoxObject.focused = false;"/>
 
       <handler event="keypress" keycode="vk_up">
         <![CDATA[
@@ -183,8 +183,8 @@
             return;
           this.selectionHead = -1;
           this.selectionTail = -1;
-          this.outlinerBoxObject.selection.timedSelect(c-1, 500);
-          this.outlinerBoxObject.ensureRowIsVisible(c-1);
+          this.treeBoxObject.selection.timedSelect(c-1, 500);
+          this.treeBoxObject.ensureRowIsVisible(c-1);
           this.selectElement.setOptionsSelectedByIndex(c-1, c-1, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
@@ -194,13 +194,13 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          try { if (c+1 == this.outlinerBoxObject.view.rowCount)
+          try { if (c+1 == this.treeBoxObject.view.rowCount)
             return;
           } catch (e) {}
           this.selectionHead = -1;
           this.selectionTail = -1;
-          this.outlinerBoxObject.selection.timedSelect(c+1, 500);
-          this.outlinerBoxObject.ensureRowIsVisible(c+1);
+          this.treeBoxObject.selection.timedSelect(c+1, 500);
+          this.treeBoxObject.ensureRowIsVisible(c+1);
           this.selectElement.setOptionsSelectedByIndex(c+1, c+1, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
@@ -214,7 +214,7 @@
           var c = this.currentIndex;
           if (c == -1 || c == 0)
             return;
-          var selection = this.outlinerBoxObject.selection;
+          var selection = this.treeBoxObject.selection;
           var select = this.selectElement;
           if (c == this.selectionTail) {
             if (this.selectionHead < this.selectionTail) {
@@ -235,7 +235,7 @@
             select.setOptionsSelectedByIndex(c, c-1, true, true, false, false);
           }
           this.selectionTail = c - 1;
-          this.outlinerBoxObject.ensureRowIsVisible(c - 1);
+          this.treeBoxObject.ensureRowIsVisible(c - 1);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -246,10 +246,10 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          try { if (c+1 == this.outlinerBoxObject.view.rowCount)
+          try { if (c+1 == this.treeBoxObject.view.rowCount)
             return;
           } catch (e) {}
-          var selection = this.outlinerBoxObject.selection;
+          var selection = this.treeBoxObject.selection;
           var select = this.selectElement;
           if (c == this.selectionTail) {
             if (this.selectionHead > this.selectionTail) {
@@ -269,7 +269,7 @@
             select.setOptionsSelectedByIndex(c, c+1, true, true, false, false);
           }
           this.selectionTail = c + 1;
-          this.outlinerBoxObject.ensureRowIsVisible(c + 1);
+          this.treeBoxObject.ensureRowIsVisible(c + 1);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -281,18 +281,18 @@
           if (c == -1 || c == 0)
             return;
           this.currentIndex = c-1;
-          this.outlinerBoxObject.ensureRowIsVisible(c-1);
+          this.treeBoxObject.ensureRowIsVisible(c-1);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          try { if (c+1 == this.outlinerBoxObject.view.rowCount)
+          try { if (c+1 == this.treeBoxObject.view.rowCount)
             return;
           } catch (e) {}
           this.currentIndex = c+1;
-          this.outlinerBoxObject.ensureRowIsVisible(c+1);
+          this.treeBoxObject.ensureRowIsVisible(c+1);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up">
@@ -303,17 +303,17 @@
             return;
           this.selectionHead = -1;
           this.selectionTail = -1;
-          var f = this.outlinerBoxObject.getFirstVisibleRow();
+          var f = this.treeBoxObject.getFirstVisibleRow();
           var i = 0;
           if (f > 0) {
-            var p = this.outlinerBoxObject.getPageCount();
+            var p = this.treeBoxObject.getPageCount();
             if (f - p >= 0)
               i = c - p;
             else
               i = c - f;
-            this.outlinerBoxObject.scrollByPages(-1);
+            this.treeBoxObject.scrollByPages(-1);
           }
-          this.outlinerBoxObject.selection.timedSelect(i, 500);
+          this.treeBoxObject.selection.timedSelect(i, 500);
           this.selectElement.setOptionsSelectedByIndex(i, i, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
@@ -323,13 +323,13 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          var l = this.outlinerBoxObject.view.rowCount - 1;
+          var l = this.treeBoxObject.view.rowCount - 1;
           if (c == l)
             return;
           this.selectionHead = -1;
           this.selectionTail = -1;
-          var f = this.outlinerBoxObject.getFirstVisibleRow();
-          var p = this.outlinerBoxObject.getPageCount();
+          var f = this.treeBoxObject.getFirstVisibleRow();
+          var p = this.treeBoxObject.getPageCount();
           var i = l;
           var lastTopRowIndex = l - p;
           if (f <= lastTopRowIndex) {
@@ -337,9 +337,9 @@
               i = c + p;
             else
               i = lastTopRowIndex + c - f + 1;
-            this.outlinerBoxObject.scrollByPages(1);
+            this.treeBoxObject.scrollByPages(1);
           }
-          this.outlinerBoxObject.selection.timedSelect(i, 500);
+          this.treeBoxObject.selection.timedSelect(i, 500);
           this.selectElement.setOptionsSelectdByIndex(i, i, true, true, false, false);
           if ("onchange" in this)
             this.onchange();
@@ -353,7 +353,7 @@
           var c = this.currentIndex;
           if (c == 0)
             return;
-          var box = this.outlinerBoxObject;
+          var box = this.treeBoxObject;
           var selection = box.selection;
           var select = this.selectElement;
           var f = box.getFirstVisibleRow();
@@ -402,7 +402,7 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          var box = this.outlinerBoxObject;
+          var box = this.treeBoxObject;
           var l = box.view.rowCount - 1;
           if (c == l)
             return;
@@ -455,15 +455,15 @@
           var c = this.currentIndex;
           if (c == 0)
             return;
-          var f = this.outlinerBoxObject.getFirstVisibleRow();
+          var f = this.treeBoxObject.getFirstVisibleRow();
           var i = 0;
           if (f > 0) {
-            var p = this.outlinerBoxObject.getPageCount();
+            var p = this.treeBoxObject.getPageCount();
             if (f - p >= 0)
               i = c - p;
             else
               i = c - f;
-            this.outlinerBoxObject.scrollByPages(-1);
+            this.treeBoxObject.scrollByPages(-1);
           }
           this.currentIndex = i;
          ]]>
@@ -472,11 +472,11 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          var l = this.outlinerBoxObject.view.rowCount - 1;
+          var l = this.treeBoxObject.view.rowCount - 1;
           if (c == l)
             return;
-          var f = this.outlinerBoxObject.getFirstVisibleRow();
-          var p = this.outlinerBoxObject.getPageCount();
+          var f = this.treeBoxObject.getFirstVisibleRow();
+          var p = this.treeBoxObject.getPageCount();
           var i = l;
           var lastTopRowIndex = l - p;
           if (f <= lastTopRowIndex) {
@@ -484,7 +484,7 @@
               i = c + p;
             else
               i = lastTopRowIndex + c - f + 1;
-            this.outlinerBoxObject.scrollByPages(1);
+            this.treeBoxObject.scrollByPages(1);
           }
           this.currentIndex = i;
          ]]>
@@ -496,7 +496,7 @@
             return;
           this.selectionHead = -1;
           this.selectionTail = -1;
-          var box = this.outlinerBoxObject;
+          var box = this.treeBoxObject;
           box.selection.timedSelect(0, 500);
           this.selectElement.setOptionsSelectedByIndex(0, 0, true, true, false, false);
           box.ensureRowIsVisible(0);
@@ -507,7 +507,7 @@
       <handler event="keypress" keycode="vk_end">
         <![CDATA[
           event.preventDefault();
-          var box = this.outlinerBoxObject;
+          var box = this.treeBoxObject;
           var l = box.view.rowCount - 1;
           if (this.currentIndex == l)
             return;
@@ -528,7 +528,7 @@
           var c = this.currentIndex;
           if (c == 0)
             return;
-          var box = this.outlinerBoxObject;
+          var box = this.treeBoxObject;
           var selection = box.selection;
           var select = this.selectElement;
           if (c != this.selectionTail) {
@@ -550,7 +550,7 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          var box = this.outlinerBoxObject;
+          var box = this.treeBoxObject;
           var l = box.view.rowCount - 1;
           if (c == l)
             return;
@@ -575,17 +575,17 @@
           if (this.currentIndex == 0)
             return;
           this.currentIndex = 0;
-          this.outlinerBoxObject.ensureRowIsVisible(0);
+          this.treeBoxObject.ensureRowIsVisible(0);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="control">
         <![CDATA[
           event.preventDefault();
-          var l = this.outlinerBoxObject.view.rowCount - 1;
+          var l = this.treeBoxObject.view.rowCount - 1;
           if (this.currentIndex == l)
             return;
           this.currentIndex = l;
-          this.outlinerBoxObject.ensureRowIsVisible(l);
+          this.treeBoxObject.ensureRowIsVisible(l);
          ]]>
       </handler>
       <handler event="keypress">
@@ -593,7 +593,7 @@
           if (event.keyCode == ' '.charCodeAt(0)) {
             event.preventDefault();
             var c = this.currentIndex;
-            var selection = this.outlinerBoxObject.selection;
+            var selection = this.treeBoxObject.selection;
             if (event.ctrlKey || !selection.isSelected(c)) {
               selection.toggleSelect(c);
               this.selectElement.setOptionsSelectedByIndex(c, c,
@@ -610,7 +610,7 @@
 
   </binding>
 
-  <binding id="select-outlinerrows">
+  <binding id="select-treerows">
     <handlers>
       <handler event="underflow">
         <![CDATA[

@@ -55,6 +55,13 @@ public:
                                       PRBool aIsRoot,
                                       nsIBoxLayout* aLayoutManager);
 
+  // overridden so that children of listitems don't handle mouse events,
+  // unless allowevents="true" is specified on the listitem
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame**     aFrame);
+
   // nsIBox
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize);
   

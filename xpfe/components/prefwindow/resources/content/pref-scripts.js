@@ -40,38 +40,6 @@ const pref = Components.classes["@mozilla.org/preferences;1"].getService(Compone
 // need it globally, but can only set it in startup()
 var data;
 
-function doAllowWindowOpen(){
-  data.scriptData["allowWindowOpenChanged"].value = !data.scriptData["allowWindowOpenChanged"].value;
-}
-
-function doAllowTargetNew(){
-  data.scriptData["allowTargetNewChanged"].value = !data.scriptData["allowTargetNewChanged"].value;
-}
-
-function doWindowMoveResize(){
-  data.scriptData["allowWindowMoveResizeChanged"].value = !data.scriptData["allowWindowMoveResizeChanged"].value;
-}
-
-function doWindowStatusChange(){
-  data.scriptData["allowWindowStatusChangeChanged"].value = !data.scriptData["allowWindowStatusChangeChanged"].value;
-}
-
-function doWindowFlipChange(){
-  data.scriptData["allowWindowFlipChanged"].value = !data.scriptData["allowWindowFlipChanged"].value;
-}
-
-function doAllowCookieSet(){
-  data.scriptData["allowDocumentCookieSetChanged"].value = !data.scriptData["allowDocumentCookieSetChanged"].value;
-}
-
-function doAllowCookieGet(){
-  data.scriptData["allowDocumentCookieGetChanged"].value = !data.scriptData["allowDocumentCookieGetChanged"].value;
-}
-
-function doAllowImageSrcChange(){
-  data.scriptData["allowImageSrcChangeChanged"].value = !data.scriptData["allowImageSrcChangeChanged"].value;
-}
-
 function changeDisabledState(state){
   //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
   document.getElementById("allowScripts").disabled = state;
@@ -201,6 +169,8 @@ function Startup(){
 
   javascriptEnabledChange();
 
+  document.getElementById("AllowList").addEventListener("CheckboxStateChange", onCheckboxCheck, false);
+
   parent.hPrefWindow.registerOKCallbackFunc(doOnOk);
 }
 
@@ -214,7 +184,7 @@ function doOnOk(){
   //The nested functions are needed because doOnOk cannot access anything outside of its scope
   //when it is called 
   function getCheckboxValue(name){
-    if ("doAllowWindowOpen" in window)
+    if ("onCheckboxCheck" in window)
       return document.getElementById(name).checked;
 
     return data[name].checked;
@@ -288,4 +258,9 @@ function doOnOk(){
     setCapabilityPolicy("capability.policy.default.HTMLImageElement.src", 
       getCheckboxValue("allowImageSrcChange"));
   }
+}
+
+function onCheckboxCheck(event)
+{
+  data.scriptData[event.target.id+"Changed"].value = !data.scriptData[event.target.id+"Changed"].value;
 }

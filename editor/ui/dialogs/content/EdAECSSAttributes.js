@@ -79,7 +79,7 @@ function onChangeCSSAttribute()
 
 function ClearCSSInputWidgets()
 {
-  gDialog.AddCSSAttributeTree.clearSelection();
+  gDialog.AddCSSAttributeTree.treeBoxObject.selection.clearSelection();
   gDialog.AddCSSAttributeNameInput.value ="";
   gDialog.AddCSSAttributeValueInput.value = "";
   SetTextboxFocus(gDialog.AddCSSAttributeNameInput);
@@ -91,10 +91,10 @@ function onSelectCSSTreeItem()
     return;
 
   var tree = gDialog.AddCSSAttributeTree;
-  if (tree && tree.selectedItems && tree.selectedItems.length)
+  if (tree && tree.treeBoxObject.selection.count)
   {
-    gDialog.AddCSSAttributeNameInput.value = GetTreeItemAttributeStr(tree.selectedItems[0]);
-    gDialog.AddCSSAttributeValueInput.value = GetTreeItemValueStr(tree.selectedItems[0]);
+    gDialog.AddCSSAttributeNameInput.value = GetTreeItemAttributeStr(getSelectedItem(tree));
+    gDialog.AddCSSAttributeValueInput.value = GetTreeItemValueStr(getSelectedItem(tree));
   }
 }
 
@@ -152,9 +152,9 @@ function RemoveCSSAttribute()
   var treechildren = gDialog.AddCSSAttributeTree.lastChild;
 
   // We only allow 1 selected item
-  if (gDialog.AddCSSAttributeTree.selectedItems.length)
+  if (gDialog.AddCSSAttributeTree.treeBoxObject.selection.count)
   {
-    var item = gDialog.AddCSSAttributeTree.selectedItems[0];
+    var item = getSelectedItem(gDialog.AddCSSAttributeTree);
 
     // Remove the item from the tree
     // We always rebuild complete "style" string,

@@ -49,37 +49,21 @@
   <separator class="thin"/>
   <tree id="crltree" style="height: 10em;"
    seltype="multiple" onclick="EnableCrlActions()" flex="1">
-    <treecolgroup>
-      <treecol flex="3" width="0"/>
+    <treecols>
+      <treecol flex="3" label="&certmgr.certdetail.o;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="5" width="0"/>
+      <treecol flex="5" label="&certmgr.certdetail.ou;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="2" width="0"/>
+      <treecol flex="2" label="&validation.crllastupdate.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="2" width="0"/>
+      <treecol flex="2" label="&validation.crlnextupdate.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="2" width="0"/>
+      <treecol flex="2" label="&validation.crlautoupdateenabled.label;"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="3" width="0"/>
-    </treecolgroup>
-    <treehead>
-      <treerow>
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&certmgr.certdetail.o;"/>
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&certmgr.certdetail.ou;"/>
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&validation.crllastupdate.label;"/>
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&validation.crlnextupdate.label;"/>
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&validation.crlautoupdateenabled.label;"/>
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&validation.crlautoupdatestatus.label;"/>
+      <treecol flex="3" label="&validation.crlautoupdatestatus.label;"/>
+    </treecols>
 
-      </treerow>          
-    </treehead>
-    <treechildren id="crlList" flex="1"/>
+    <treechildren id="crlList"/>
   </tree>
   <hbox>
     <button id="deleteCrl" disabled="true"

@@ -26,11 +26,11 @@
 
 #include "nsNSSDialogs.h"
 #include "nsPKIParamBlock.h"
-#include "nsASN1Outliner.h"
+#include "nsASN1Tree.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPKIParamBlock, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSASN1Outliner)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSASN1Tree)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -42,10 +42,10 @@ static const nsModuleComponentInfo components[] =
   },
 
   {
-    "ASN1 Outliner",
+    "ASN1 Tree",
     NS_NSSASN1OUTINER_CID,
-    NS_ASN1OUTLINER_CONTRACTID,
-    nsNSSASN1OutlinerConstructor
+    NS_ASN1TREE_CONTRACTID,
+    nsNSSASN1TreeConstructor
   },
 
   { "PKI Parm Block", 

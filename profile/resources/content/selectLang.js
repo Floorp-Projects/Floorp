@@ -1,14 +1,14 @@
 function Startup()
 {
   var selectedLanguage = window.arguments.length ? window.arguments[0] : null;
-  var tree = document.getElementById("langList");
+  var listbox = document.getElementById("langList");
   if (selectedLanguage) {
-    var elements = tree.getElementsByAttribute("value", selectedLanguage);
+    var elements = listbox.getElementsByAttribute("value", selectedLanguage);
     if (elements.length)
-      tree.selectItem(elements[0].parentNode.parentNode);
+      listbox.selectItem(elements[0]);
   }
   else {
-      tree.selectedIndex = 0;
+      listbox.selectedIndex = 0;
   }
 
   var selectedRegion = window.arguments.length ? window.arguments[1] : null;
@@ -28,7 +28,7 @@ function onAccept()
   var tree = document.getElementById("langList");
   var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
   if (selectedItem) {
-    var langName = selectedItem.firstChild.firstChild.getAttribute("value");
+    var langName = selectedItem.getAttribute("value");
     var langStore = opener.document.getElementById("ProfileLanguage");
     if (langStore)
       langStore.setAttribute("data", langName);

@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsOutlinerRows.h"
+#include "nsTreeRows.h"
 #include "nsTemplateMatch.h"
 #include "nsTemplateRule.h"
 
-nsOutlinerRows::Subtree*
-nsOutlinerRows::EnsureSubtreeFor(Subtree* aParent,
+nsTreeRows::Subtree*
+nsTreeRows::EnsureSubtreeFor(Subtree* aParent,
                                  PRInt32 aChildIndex)
 {
     Subtree* subtree = GetSubtreeFor(aParent, aChildIndex);
@@ -55,8 +55,8 @@ nsOutlinerRows::EnsureSubtreeFor(Subtree* aParent,
     return subtree;
 }
 
-nsOutlinerRows::Subtree*
-nsOutlinerRows::GetSubtreeFor(const Subtree* aParent,
+nsTreeRows::Subtree*
+nsTreeRows::GetSubtreeFor(const Subtree* aParent,
                               PRInt32 aChildIndex,
                               PRInt32* aSubtreeSize)
 {
@@ -75,7 +75,7 @@ nsOutlinerRows::GetSubtreeFor(const Subtree* aParent,
 }
 
 void
-nsOutlinerRows::RemoveSubtreeFor(Subtree* aParent, PRInt32 aChildIndex)
+nsTreeRows::RemoveSubtreeFor(Subtree* aParent, PRInt32 aChildIndex)
 {
     NS_PRECONDITION(aParent, "no parent");
     NS_PRECONDITION(aChildIndex >= 0 && aChildIndex < aParent->mCount, "bad child index");
@@ -95,8 +95,8 @@ nsOutlinerRows::RemoveSubtreeFor(Subtree* aParent, PRInt32 aChildIndex)
     InvalidateCachedRow();
 }
 
-nsOutlinerRows::iterator
-nsOutlinerRows::First()
+nsTreeRows::iterator
+nsTreeRows::First()
 {
     iterator result;
     result.Append(&mRoot, 0);
@@ -104,8 +104,8 @@ nsOutlinerRows::First()
     return result;
 }
 
-nsOutlinerRows::iterator
-nsOutlinerRows::Last()
+nsTreeRows::iterator
+nsTreeRows::Last()
 {
     iterator result;
 
@@ -127,8 +127,8 @@ nsOutlinerRows::Last()
     return result;
 }
 
-nsOutlinerRows::iterator
-nsOutlinerRows::operator[](PRInt32 aRow)
+nsTreeRows::iterator
+nsTreeRows::operator[](PRInt32 aRow)
 {
     // See if we're just lucky, and end up with something
     // nearby. (This tends to happen a lot due to the way that we get
@@ -174,8 +174,8 @@ nsOutlinerRows::operator[](PRInt32 aRow)
     return result;
 }
 
-nsOutlinerRows::iterator
-nsOutlinerRows::Find(nsConflictSet& aConflictSet, nsIRDFResource* aMember)
+nsTreeRows::iterator
+nsTreeRows::Find(nsConflictSet& aConflictSet, nsIRDFResource* aMember)
 {
     // XXX Mmm, scan through the rows one-by-one...
     iterator last = Last();
@@ -195,7 +195,7 @@ nsOutlinerRows::Find(nsConflictSet& aConflictSet, nsIRDFResource* aMember)
 }
 
 void
-nsOutlinerRows::Clear()
+nsTreeRows::Clear()
 {
     mRoot.Clear();
     InvalidateCachedRow();
@@ -203,16 +203,16 @@ nsOutlinerRows::Clear()
 
 //----------------------------------------------------------------------
 //
-// nsOutlinerRows::Subtree
+// nsTreeRows::Subtree
 //
 
-nsOutlinerRows::Subtree::~Subtree()
+nsTreeRows::Subtree::~Subtree()
 {
     Clear();
 }
 
 void
-nsOutlinerRows::Subtree::Clear()
+nsTreeRows::Subtree::Clear()
 {
     for (PRInt32 i = mCount - 1; i >= 0; --i)
         delete mRows[i].mSubtree;
@@ -223,8 +223,8 @@ nsOutlinerRows::Subtree::Clear()
     mCount = mCapacity = mSubtreeSize = 0;
 }
 
-nsOutlinerRows::iterator
-nsOutlinerRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
+nsTreeRows::iterator
+nsTreeRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
 {
     if (mCount >= mCapacity || aIndex >= mCapacity) {
         PRInt32 newCapacity = NS_MAX(mCapacity * 2, aIndex + 1);
@@ -294,7 +294,7 @@ nsOutlinerRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
 }
 
 void
-nsOutlinerRows::Subtree::RemoveRowAt(PRInt32 aIndex)
+nsTreeRows::Subtree::RemoveRowAt(PRInt32 aIndex)
 {
     NS_PRECONDITION(aIndex >= 0 && aIndex < Count(), "bad index");
     if (aIndex < 0 || aIndex >= Count())
@@ -320,10 +320,10 @@ nsOutlinerRows::Subtree::RemoveRowAt(PRInt32 aIndex)
 
 //----------------------------------------------------------------------
 //
-// nsOutlinerRows::iterator
+// nsTreeRows::iterator
 //
 
-nsOutlinerRows::iterator::iterator(const iterator& aIterator)
+nsTreeRows::iterator::iterator(const iterator& aIterator)
     : mTop(aIterator.mTop),
       mRowIndex(aIterator.mRowIndex)
 {
@@ -331,8 +331,8 @@ nsOutlinerRows::iterator::iterator(const iterator& aIterator)
         mLink[i] = aIterator.mLink[i];
 }
 
-nsOutlinerRows::iterator&
-nsOutlinerRows::iterator::operator=(const iterator& aIterator)
+nsTreeRows::iterator&
+nsTreeRows::iterator::operator=(const iterator& aIterator)
 {
     mTop = aIterator.mTop;
     mRowIndex = aIterator.mRowIndex;
@@ -342,7 +342,7 @@ nsOutlinerRows::iterator::operator=(const iterator& aIterator)
 }
 
 void
-nsOutlinerRows::iterator::Append(Subtree* aParent, PRInt32 aChildIndex)
+nsTreeRows::iterator::Append(Subtree* aParent, PRInt32 aChildIndex)
 {
     if (mTop < kMaxDepth - 1) {
         ++mTop;
@@ -354,7 +354,7 @@ nsOutlinerRows::iterator::Append(Subtree* aParent, PRInt32 aChildIndex)
 }
 
 void
-nsOutlinerRows::iterator::Push(Subtree *aParent, PRInt32 aChildIndex)
+nsTreeRows::iterator::Push(Subtree *aParent, PRInt32 aChildIndex)
 {
     if (mTop < kMaxDepth - 1) {
         for (PRInt32 i = mTop; i >= 0; --i)
@@ -369,7 +369,7 @@ nsOutlinerRows::iterator::Push(Subtree *aParent, PRInt32 aChildIndex)
 }
 
 PRBool
-nsOutlinerRows::iterator::operator==(const iterator& aIterator) const
+nsTreeRows::iterator::operator==(const iterator& aIterator) const
 {
     if (mTop != aIterator.mTop)
         return PR_FALSE;
@@ -381,7 +381,7 @@ nsOutlinerRows::iterator::operator==(const iterator& aIterator) const
 }
 
 void
-nsOutlinerRows::iterator::Next()
+nsTreeRows::iterator::Next()
 {
     NS_PRECONDITION(mTop >= 0, "cannot increment an uninitialized iterator");
 
@@ -429,7 +429,7 @@ nsOutlinerRows::iterator::Next()
 }
 
 void
-nsOutlinerRows::iterator::Prev()
+nsTreeRows::iterator::Prev()
 {
     NS_PRECONDITION(mTop >= 0, "cannot increment an uninitialized iterator");
 

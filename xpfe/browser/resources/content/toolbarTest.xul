@@ -277,11 +277,11 @@
       </rule>
     </template>
     
-    <treecolgroup>
+    <treecols>
       <treecol/>
       <splitter class="tree-splitter"/>
       <treecol flex="1"/>
-    </treecolgroup>
+    </treecols>
     
     <treechildren flex="1"/>
   </tree>

@@ -22,10 +22,11 @@
   Contributor(s):
     Ben Goodger <ben@netscape.com> (Original Author)
     Blake Ross  <blaker@netscape.com>
+    Jan Varga   <varga@utcru.sk>
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-<?xml-stylesheet href="chrome://communicator/content/downloadmanager/downloadmanager.css"?>
+
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
@@ -46,29 +47,27 @@
         onload="Startup();">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
 
   <stringbundle id="dlMgrBundle"
                 src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
 
- <data id="strings.confirmCancel">&confirmCancel;</data>
- <data id="strings.progressMsgNoRate">&progressMsgNoRate;</data>
- <data id="strings.rateMsg">&rateMsg;</data>
- <data id="strings.completeMsg">&completeMsg;</data>
- <data id="strings.percentMsg">&percentMsg;</data>
- <data id="strings.shortTimeFormat">&shortTimeFormat;</data>
- <data id="strings.longTimeFormat">&longTimeFormat;</data>
- <data id="strings.unknownTime">&unknownTime;</data>
- <data id="strings.pausedMsg">&pausedMsg;</data>
+  <data id="strings.confirmCancel">&confirmCancel;</data>
+  <data id="strings.progressMsgNoRate">&progressMsgNoRate;</data>
+  <data id="strings.rateMsg">&rateMsg;</data>
+  <data id="strings.completeMsg">&completeMsg;</data>
+  <data id="strings.percentMsg">&percentMsg;</data>
+  <data id="strings.shortTimeFormat">&shortTimeFormat;</data>
+  <data id="strings.longTimeFormat">&longTimeFormat;</data>
+  <data id="strings.unknownTime">&unknownTime;</data>
+  <data id="strings.pausedMsg">&pausedMsg;</data>
 
- <commands id="commands">
-   <commandset id="commandUpdate_Downloads"
-               commandupdater="true"
-               events="focus,tree-select"
-               oncommandupdate="downloadViewController.onCommandUpdate()"/>
+  <commands id="commands">
+    <commandset id="commandUpdate_Downloads"
+                commandupdater="true"
+                events="focus,tree-select"
+                oncommandupdate="downloadViewController.onCommandUpdate()"/>
 
     <commandset id="downloadCommands">
       <command id="cmd_properties"
@@ -123,74 +122,62 @@
       <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
     </toolbar>
   </toolbox>
-  <tree id="downloadView" ref="NC:DownloadsRoot"
-        datasources="rdf:null"
-        seltype="multiple" flags="dont-test-empty"
-        ondblclick="return goDoCommand('cmd_properties');"
-        onselect="onSelect(event);"
-        style="height: 0px; width: 0px;" flex="1">
 
-    <treehead>
-      <treerow id="headRow">
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.name.label;"
-                  onclick="return TriStateColumnSort('Name');"
-                  observes="Name" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.progress.label;"
-                  onclick="return TriStateColumnSort('Progress');"
-                  observes="Progress" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.progresstext.label;"
-                  onclick="return TriStateColumnSort('ProgressPercent');"
-                  observes="ProgressText" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.timeremaining.label;"
-                  onclick="return TriStateColumnSort('TimeRemaining');"
-                  observes="TimeRemaining" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.transferred.label;"
-                  onclick="return TriStateColumnSort('Transferred');"
-                  observes="Transferred" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.transferrate.label;"
-                  onclick="return TriStateColumnSort('TransferRate');"
-                  observes="TransferRate" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.timeelapsed.label;"
-                  onclick="return TriStateColumnSort('TimeElapsed');"
-                  observes="TimeElapsed" />
-        <treecell class="treecell-header sortDirectionIndicator"
-                  label="&view.header.source.label;"
-                  onclick="return TriStateColumnSort('Source');"
-                  observes="Source" />
-        <treecell class="treecell-header treecell-popup-icon" allowevents="true" id="popupCell">
-          <menu align="center" pack="center">
-            <menupopup popupanchor="bottomright" popupalign="topright"
-                      onpopupshowing="BuildTreePopup(document.getElementById('theColumns'),
-                                               document.getElementById('headRow'), this,
-                                               document.getElementById('popupCell'))"/>
-          </menu>
-        </treecell>
-      </treerow>
-    </treehead>
-
+  <tree id="downloadView" flex="1" class="plain"
+            datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
+            ondblclick="return goDoCommand('cmd_properties');"
+            onselect="onSelect(event);">
+    <treecols>
+      <treecol id="Name" primary="true"
+                   label="&view.header.name.label;"
+                   class="sortDirectionIndicator" width="4*" flex="4"
+                   persist="width sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Progress" type="progressmeter"
+                   label="&view.header.progress.label;"
+                   class="sortDirectionIndicator" width="4*" flex="4"
+                   persist="width hidden sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="ProgressPercent" hidden="true"
+                   label="&view.header.progresstext.label;"
+                   class="sortDirectionIndicator" width="4*" flex="4"
+                   persist="width hidden sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="TimeRemaining"
+                   label="&view.header.timeremaining.label;"
+                   class="sortDirectionIndicator" width="1*" flex="1"
+                   persist="width hidden sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Transferred"
+                   label="&view.header.transferred.label;"
+                   class="sortDirectionIndicator" width="1*" flex="1"
+                   persist="width hidden sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="TransferRate"
+                   label="&view.header.transferrate.label;"
+                   class="sortDirectionIndicator" width="1*" flex="1"
+                   persist="width hidden sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="TimeElapsed" hidden="true"
+                   label="&view.header.timeelapsed.label;"
+                   class="sortDirectionIndicator" width="1*" flex="1"
+                   persist="width hidden sortActive sortDirection"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="Source" hidden="true"
+                   label="&view.header.source.label;"
+                   class="sortDirectionIndicator" width="1*" flex="1"
+                   persist="width hidden sortActive sortDirection"/>
+    </treecols>
     <template>
       <rule>
         <treechildren>
-          <treeitem uri="rdf:*" persist="open" class="download-item"
-                    rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+          <treeitem uri="rdf:*">
             <treerow>
-              <treecell class="treecell-indent"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
-                        rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
-              <treecell>
-                <downloadstatus state="rdf:http://home.netscape.com/NC-rdf#DownloadState"
-                                value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"
-                                statustext="rdf:http://home.netscape.com/NC-rdf#StatusText"
-                                mode="normal"/>
-              </treecell>
+              <treecell src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell mode="rdf:http://home.netscape.com/NC-rdf#ProgressMode"
+                            value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"
+                            label="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Transferred"/>
@@ -202,59 +189,8 @@
         </treechildren>
       </rule>
     </template>
-
-    <treechildren flex="1" id="downloadViewChildren" context="dlContext"/>
-
-    <treecolgroup id="theColumns">
-      <treecol id="Name"
-               sortSeparators="true" width="4*" flex="4"
-               persist="width sortActive sortDirection"
-               resource="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="Progress"
-               sortSeparators="true" width="4*" flex="4"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#Progress"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="ProgressPercent"  hidden="true"
-               sortSeparators="true" width="4*" flex="4"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#ProgressPercent"
-               resourc2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="TimeRemaining"
-               sortSeparators="true" width="1*" flex="1"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#TimeRemaining"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="Transferred"
-               sortSeparators="true" width="1*" flex="1"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#Transferred"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="TransferRate"
-               sortSeparators="true" width="1*" flex="1"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#TransferRate"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="TimeElapsed"
-               sortSeparators="true" width="1*" flex="1" hidden="true"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#TimeElapsed"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="Source"
-               sortSeparators="true" width="1*" flex="1" hidden="true"
-               persist="width sortActive sortDirection hidden"
-               resource="http://home.netscape.com/NC-rdf#Source"
-               resource2="http://home.netscape.com/NC-rdf#Name"/>
-      <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
-    </treecolgroup>
   </tree>
+
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusbar-text" label="" flex="1"/>
   </statusbar>

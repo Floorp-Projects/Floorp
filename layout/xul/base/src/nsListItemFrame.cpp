@@ -37,8 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
 #include "nsListItemFrame.h"
+
+#include "nsCOMPtr.h"
+#include "nsINameSpaceManager.h" 
+#include "nsXULAtoms.h"
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsListItemFrame::AddRef(void)
@@ -74,6 +77,28 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   // listbox row height
   aSize.height = PR_MAX(mRect.height, aSize.height);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsListItemFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                     const nsPoint& aPoint, 
+                                     nsFramePaintLayer aWhichLayer,
+                                     nsIFrame**     aFrame)
+{
+  nsAutoString value;
+  mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
+  if (value.Equals(NS_LITERAL_STRING("true"))) {
+    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  }
+  else if (mRect.Contains(aPoint)) {
+    const nsStyleVisibility* vis = 
+    (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis->IsVisible()) {
+      *aFrame = this; // Capture all events so that we can perform selection and expand/collapse.
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

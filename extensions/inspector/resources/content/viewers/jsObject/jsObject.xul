@@ -32,21 +32,13 @@
   </popupset>
   
   <tree id="treeJSObject" flex="1" context="popupContext">
-    
-    <treecolgroup>
-      <treecol flex="1"/>
+    <treecols>
+      <treecol id="colProp" flex="1" primary="true" label="Property"/>
       <splitter class="tree-splitter"/>
-      <treecol flex="1"/>
-    </treecolgroup>
+      <treecol id="colVal" flex="1" label="Value"/>
+    </treecols>
       
-    <treehead>
-      <treerow>
-        <treecell class="treecell-header" label="Property"/>
-        <treecell class="treecell-header" label="Value"/>
-      </treerow>
-    </treehead>
-    
-    <treechildren id="trchJSObject" flex="1"/>
+    <treechildren id="trchJSObject"/>
   </tree>
 
 </page>

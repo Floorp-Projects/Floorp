@@ -33,13 +33,9 @@ var prefLangBundle;
 //dictionary of all supported locales
 var availLanguageDict;
 
-//XUL tree handles
+//XUL listbox handles
 var available_languages;
-var available_languages_treeroot;
-
-//XUL tree handles
 var active_languages;
-var active_languages_treeroot;
 
 //XUL window pref window interface object
 var pref_string = new String();
@@ -73,7 +69,6 @@ function Init()
 
     try {
       active_languages              = document.getElementById('active_languages');
-      active_languages_treeroot     = document.getElementById('active_languages_root');
     } //try
 
     catch(ex) {
@@ -98,9 +93,7 @@ function Init()
 
       //add language popup
       available_languages           = document.getElementById('available_languages');
-      available_languages_treeroot  = document.getElementById('available_languages_root');
       active_languages              = window.opener.document.getElementById('active_languages');
-      active_languages_treeroot     = window.opener.document.getElementById('active_languages_root');
       pref_string                   = window.opener.document.getElementById('intlAcceptLanguages').label;
 
     } //try
@@ -214,7 +207,7 @@ function LoadAvailableLanguages()
 
     if (availLanguageDict[i][2] == 'true') {
 
-        AddTreeItem(document, available_languages_treeroot, availLanguageDict[i][1], availLanguageDict[i][0]);
+        AddListItem(document, available_languages, availLanguageDict[i][1], availLanguageDict[i][0]);
 
       } //if
 
@@ -234,7 +227,7 @@ function LoadActiveLanguages()
       if (str) {
         if (!tit)
            tit = '[' + str + ']';
-        AddTreeItem(document, active_languages_treeroot, str, tit);
+        AddListItem(document, active_languages, str, tit);
 
       } //if
     } //for
@@ -345,15 +338,13 @@ function AddAvailableLanguage()
   for (var nodeIndex=0; nodeIndex < available_languages.selectedItems.length; nodeIndex++) {
 
     var selItem =  available_languages.selectedItems[nodeIndex];
-    var selRow  =  selItem.firstChild;
-    var selCell =  selRow.firstChild;
 
-    Languagename    = selCell.getAttribute('label');
-    Languageid      = selCell.getAttribute('id');
+    Languagename    = selItem.getAttribute('label');
+    Languageid      = selItem.getAttribute('id');
 
     if (!LangAlreadyActive(Languageid)) {
 
-      AddTreeItem(window.opener.document, active_languages_treeroot, Languageid, Languagename);
+      AddListItem(window.opener.document, active_languages, Languageid, Languagename);
 
     }//if
 
@@ -381,7 +372,7 @@ function AddAvailableLanguage()
 
     if (!LangAlreadyActive(Languageid)) {
 
-      AddTreeItem(window.opener.document, active_languages_treeroot, Languageid, Languagename);
+      AddListItem(window.opener.document, active_languages, Languageid, Languagename);
 
     }//if
   }
@@ -398,7 +389,7 @@ function HandleDoubleClick(node)
   if (languageName && languageName.length > 0)
   {
     if (!LangAlreadyActive(languageId)) {
-      AddTreeItem(window.opener.document, active_languages_treeroot, languageId, languageName);
+      AddListItem(window.opener.document, active_languages, languageId, languageName);
     }
     window.close();
   }//if
@@ -421,13 +412,7 @@ function RemoveActiveLanguage()
     if (selectedNode.previousSibling)
     nextNode = selectedNode.previousSibling;
 
-    var row  =  selectedNode.firstChild;
-    var cell =  row.firstChild;
-
-    row.removeChild(cell);
-    selectedNode.removeChild(row);
-    active_languages_treeroot.removeChild(selectedNode);
-
+    active_languages.removeChild(selectedNode);
    } //while
 
   if (nextNode) {
@@ -456,24 +441,18 @@ function GetLanguageTitle(id)
 }
 
 
-function AddTreeItem(doc, treeRoot, langID, langTitle)
+function AddListItem(doc, listbox, langID, langTitle)
 {
   try {  //let's beef up our error handling for languages without label / title
 
-      // Create a treerow for the new Language
-      var item = doc.createElement('treeitem');
-      var row  = doc.createElement('treerow');
-      var cell = doc.createElement('treecell');
+      // Create a listitem for the new Language
+      var item = doc.createElement('listitem');
 
       // Copy over the attributes
-      cell.setAttribute('label', langTitle);
-      cell.setAttribute('id', langID);
+      item.setAttribute('label', langTitle);
+      item.setAttribute('id', langID);
 
-      // Add it to the active languages tree
-      item.appendChild(row);
-      row.appendChild(cell);
-
-      treeRoot.appendChild(item);
+      listbox.appendChild(item);
 
   } //try
 
@@ -488,11 +467,9 @@ function UpdateSavePrefString()
   var num_languages = 0;
   pref_string = "";
 
-  for (var item = active_languages_treeroot.firstChild; item != null; item = item.nextSibling) {
+  for (var item = active_languages.firstChild; item != null; item = item.nextSibling) {
 
-    var row  =  item.firstChild;
-    var cell =  row.firstChild;
-    var languageid = cell.getAttribute('id');
+    var languageid = item.getAttribute('id');
 
     if (languageid.length > 1) {
 
@@ -530,7 +507,7 @@ function MoveUp() {
     moveUp.disabled = true;
   }
 
-  if (active_languages_treeroot.childNodes.length > 1)
+  if (active_languages.childNodes.length > 1)
   {
     // more than one item so we can move selected item back down
     var moveDown = document.getElementById("down");
@@ -548,24 +525,23 @@ function MoveDown() {
     var selected = active_languages.selectedItems[0];
     if (selected.nextSibling) {
       if (selected.nextSibling.nextSibling) {
-        selected.parentNode.insertBefore(selected, selected.nextSibling.nextSibling);
+        active_languages.insertBefore(selected, selected.nextSibling.nextSibling);
       }
       else {
-        selected.parentNode.appendChild(selected);
+        active_languages.appendChild(selected);
       }
       active_languages.selectItem(selected);
     }
   }
 
-  if (active_languages.selectedIndex == 
-      (active_languages_treeroot.childNodes.length - 1))
+  if (active_languages.selectedIndex == active_languages.childNodes.length - 1)
   {
     // selected item is last
     var moveDown = document.getElementById("down");
     moveDown.disabled = true;
   }
 
-  if (active_languages_treeroot.childNodes.length > 1)
+  if (active_languages.childNodes.length > 1)
   {
     // more than one item so we can move selected item back up 
     var moveUp = document.getElementById("up");

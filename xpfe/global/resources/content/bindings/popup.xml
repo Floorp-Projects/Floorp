@@ -213,8 +213,8 @@
             this.label = ttNode.getAttribute("tooltiptext");
         }
 
-        // This is a special consideration for outliner titletips. There is a
-        // case where the user moves the mouse from over the outlinerbody to
+        // This is a special consideration for tree titletips. There is a
+        // case where the user moves the mouse from over the treebody to
         // completely outside of the window, while passing over a cell that
         // displays a titletip.  This causes the titletip to show, even though
         // the mouse is not over the corresponding cell, so we need to check

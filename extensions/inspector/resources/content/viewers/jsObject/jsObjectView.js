@@ -38,7 +38,7 @@
 
 /***************************************************************
 * JSObjectView --------------------------------------------
-*  The Outliner View class for the JS Object Viewer.
+*  The Tree View class for the JS Object Viewer.
 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 * REQUIRED IMPORTS:
 *   chrome://inspector/content/jsutil/xpcom/XPCU.js
@@ -62,9 +62,9 @@ JSObjectView.prototype =
   //// Initialization
   
   ////////////////////////////////////////////////////////////////////////////
-  //// interface nsIOutlinerView
+  //// interface nsITreeView
 
-  mOutliner: null,
+  mTree: null,
   mProperties: [],
   mLevels: [],
   mOrder: [],
@@ -129,6 +129,18 @@ JSObjectView.prototype =
   {
   },
 
+  getImageSrc: function(aRow, aColId)
+  {
+  },
+
+  getProgressMode: function(aRow, aColId)
+  {
+  },
+
+  getCellValue: function(aRow, aColId)
+  {
+  },
+
   getCellText: function(aRow, aColId)
   {
     var object = null;
@@ -143,9 +155,9 @@ JSObjectView.prototype =
     };
   },
   
-  setOutliner: function(aOutliner)
+  setTree: function(aTree)
   {
-    this.mOutliner = aOutliner;
+    this.mTree = aTree;
   },
   
   toggleOpenState: function(aIndex)

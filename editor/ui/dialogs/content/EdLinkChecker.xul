@@ -46,12 +46,13 @@
 
   <label value="&urlsNotFound.label;"/>
   <label value="&notFoundKey.label;"/>
-  <tree rows="8" class="list" id="NamedAnchorList"
+  <tree id="NamedAnchorList" hidecolumnpicker="true"
         style="min-height: 8em; min-width: 20em">
-    <treecolgroup>
-      <treecol/>
-      <treecol flex="1"/>
-    </treecolgroup>
+    <treecols>
+      <treecol id="AnchorCol1" hideheader="true"/>
+      <treecol id="AnchorCol2" flex="1" hideheader="true"/>
+    </treecols>
+    <treechildren/>
   </tree>
   <spacer class="spacer"/>
   <button id="ChangeURL" label="&changeUrlButton.label;" oncommand="ChangeUrl();"/>

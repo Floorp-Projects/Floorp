@@ -80,13 +80,13 @@ interface nsIXULTemplateBuilder : nsISupports
 };
 
 /**
- * nsIXULOutlinerBuilderObserver
- *  This interface allows clients of the XULOutlinerBuilder to define domain 
- *  specific handling of specific nsIOutlinerView methods that 
- *  XULOutlinerBuilder does not implement.
+ * nsIXULTreeBuilderObserver
+ *  This interface allows clients of the XULTreeBuilder to define domain 
+ *  specific handling of specific nsITreeView methods that 
+ *  XULTreeBuilder does not implement.
  */
 [scriptable, uuid(f6ed69be-1dd1-11b2-adfc-9db02ac57d88)]
-interface nsIXULOutlinerBuilderObserver : nsISupports
+interface nsIXULTreeBuilderObserver : nsISupports
 {
     /**
      * Methods used by the drag feedback code to determine if a drag is allowable at
@@ -122,14 +122,14 @@ interface nsIXULOutlinerBuilderObserver : nsISupports
     void onCycleCell(in long row, in wstring colID);
 
     /** 
-     * Called when selection in the outliner changes
+     * Called when selection in the tree changes
      */
     void onSelectionChanged();
 
     /** 
      * APIs for inline editing.  isEditable is called to ask the view if the 
      * cell contents are editable.  A value of true will result in the 
-     * outliner popping up a text field when the user tries to inline edit 
+     * tree popping up a text field when the user tries to inline edit 
      * the cell. 
      */
     boolean isEditable(in long row, in wstring colID);
@@ -141,7 +141,7 @@ interface nsIXULOutlinerBuilderObserver : nsISupports
 
     /**
      * A command API that can be used to invoke commands on the selection.  
-     * The outliner will automatically invoke this method when certain keys 
+     * The tree will automatically invoke this method when certain keys 
      * are pressed.  For example, when the DEL key is pressed, performAction 
      * will be called with the "delete" string. 
      */
@@ -159,7 +159,7 @@ interface nsIXULOutlinerBuilderObserver : nsISupports
 };
 
 [scriptable, uuid(06b31b15-ebf5-4e74-a0e2-6bc0a18a3969)]
-interface nsIXULOutlinerBuilder : nsISupports
+interface nsIXULTreeBuilder : nsISupports
 {
     /**
      * Retrieve the RDF resource associated with the specified row.
@@ -172,18 +172,18 @@ interface nsIXULOutlinerBuilder : nsISupports
     long getIndexOfResource(in nsIRDFResource resource);
 
     /** 
-     * Add a Outliner Builder Observer to handle Outliner View 
+     * Add a Tree Builder Observer to handle Tree View 
      * methods that the base builder does not implement. 
      */
-    void addObserver(in nsIXULOutlinerBuilderObserver aObserver);
+    void addObserver(in nsIXULTreeBuilderObserver aObserver);
 
     /** 
-     * Remove an Outliner Builder Observer.
+     * Remove an Tree Builder Observer.
      */
-    void removeObserver(in nsIXULOutlinerBuilderObserver aObserver);
+    void removeObserver(in nsIXULTreeBuilderObserver aObserver);
 
     /** 
-     * Sort the contents of the outliner using the specified column.
+     * Sort the contents of the tree using the specified column.
      */
     void sort(in nsIDOMElement aColumnElement);
 };

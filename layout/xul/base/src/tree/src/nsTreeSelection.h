@@ -21,25 +21,25 @@
  *   Brian Ryner <bryner@netscape.com>
  */
 
-#ifndef nsOutlinerSelection_h__
-#define nsOutlinerSelection_h__
+#ifndef nsTreeSelection_h__
+#define nsTreeSelection_h__
 
-#include "nsIOutlinerSelection.h"
+#include "nsITreeSelection.h"
 #include "nsITimer.h"
 
-class nsIOutlinerBoxObject;
-struct nsOutlinerRange;
+class nsITreeBoxObject;
+struct nsTreeRange;
 
-class nsOutlinerSelection : public nsIOutlinerSelection
+class nsTreeSelection : public nsITreeSelection
 {
 public:
-  nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner);
-  virtual ~nsOutlinerSelection();
+  nsTreeSelection(nsITreeBoxObject* aTree);
+  virtual ~nsTreeSelection();
    
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOUTLINERSELECTION
+  NS_DECL_NSITREESELECTION
 
-  friend struct nsOutlinerRange;
+  friend struct nsTreeRange;
 
 protected:
   nsresult FireOnSelectHandler();
@@ -48,19 +48,19 @@ protected:
 
 protected:
   // Members
-  nsIOutlinerBoxObject* mOutliner; // [Weak]. The outliner will hold on to us through the view and let go when it dies.
+  nsITreeBoxObject* mTree; // [Weak]. The tree will hold on to us through the view and let go when it dies.
 
   PRBool mSuppressed; // Whether or not we should be firing onselect events.
   PRInt32 mCurrentIndex; // The item to draw the rect around. The last one clicked, etc.
   PRInt32 mShiftSelectPivot; // Used when multiple SHIFT+selects are performed to pivot on.
 
-  nsOutlinerRange* mFirstRange; // Our list of ranges.
+  nsTreeRange* mFirstRange; // Our list of ranges.
 
   nsCOMPtr<nsITimer> mSelectTimer;
 };
 
 extern nsresult
-NS_NewOutlinerSelection(nsIOutlinerBoxObject* aOutliner,
-                        nsIOutlinerSelection** aResult);
+NS_NewTreeSelection(nsITreeBoxObject* aTree,
+                        nsITreeSelection** aResult);
 
 #endif

@@ -50,14 +50,9 @@
 
     <description>&languages.customize.active.label;</description>
     <hbox flex="1">
-      <tree id="active_languages" flex="1" style="width: 0px; height: 0px;"
+      <listbox id="active_languages" flex="1" style="width: 0px; height: 0px;"
             preftype="localizedstring" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
-            datasources="rdf:null" seltype="multiple" onselect="SelectLanguage();">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="active_languages_root" flex="1"/>
-      </tree>
+            seltype="multiple" onselect="SelectLanguage();"/>
       <vbox>
         <button oncommand="MoveUp();" id="up" class="up" disabled="true"
                 label="&languages.customize.moveUp.label;"

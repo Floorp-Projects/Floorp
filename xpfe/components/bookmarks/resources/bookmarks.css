@@ -1,14 +1,14 @@
-bookmarks-outliner, bookmarks-outliner[type="multi-column"]
+bookmarks-tree, bookmarks-tree[type="multi-column"]
   {
-    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner-full");
+    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree-full");
   }
   
-bookmarks-outliner[type="single-column"]
+bookmarks-tree[type="single-column"]
   {
-    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner-name");
+    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree-name");
   }
 
-bookmarks-outliner[type="folders"]
+bookmarks-tree[type="folders"]
   {
-    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner-folders");
+    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree-folders");
   }

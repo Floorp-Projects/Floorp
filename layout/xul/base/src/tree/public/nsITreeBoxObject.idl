@@ -40,19 +40,19 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsIOutlinerView;
-interface nsIOutlinerSelection;
+interface nsITreeView;
+interface nsITreeSelection;
 interface nsIDOMEvent;
 
 [scriptable, uuid(8398C757-6387-480c-82B2-C914E15CE00D)]
-interface nsIOutlinerBoxObject : nsISupports
+interface nsITreeBoxObject : nsISupports
 {
   /**
-   * The view that backs the outliner and that supplies it with its data.
+   * The view that backs the tree and that supplies it with its data.
    * It is dynamically settable, either using a view attribute on the
-   * outliner tag or by setting this attribute to a new value.
+   * tree tag or by setting this attribute to a new value.
    */
-  attribute nsIOutlinerView view;
+  attribute nsITreeView view;
 
   /**
    * Whether or not we are currently focused.
@@ -60,14 +60,14 @@ interface nsIOutlinerBoxObject : nsISupports
   attribute boolean focused;
 
   /**
-   * Obtain the outlinerbody content node
+   * Obtain the treebody content node
    */
-  readonly attribute nsIDOMElement outlinerBody;
+  readonly attribute nsIDOMElement treeBody;
 
   /**
    * Obtains the selection from the view.
    */
-  readonly attribute nsIOutlinerSelection selection;
+  readonly attribute nsITreeSelection selection;
 
   /**
    * Obtain the height of a row.
@@ -105,17 +105,17 @@ interface nsIOutlinerBoxObject : nsISupports
   void scrollToRow(in long index);
 
   /**
-   * Scroll the outliner up or down by numLines lines. Positive
-   * values move down in the outliner. Prevents scrolling off the
-   * end of the outliner. 
+   * Scroll the tree up or down by numLines lines. Positive
+   * values move down in the tree. Prevents scrolling off the
+   * end of the tree. 
    */
   void scrollByLines(in long numLines);
 
   /**
-   * Scroll the outliner up or down by numPages pages. A page
-   * is considered to be the amount displayed by the outliner.
-   * Positive values move down in the outliner. Prevents scrolling
-   * off the end of the outliner.
+   * Scroll the tree up or down by numPages pages. A page
+   * is considered to be the amount displayed by the tree.
+   * Positive values move down in the tree. Prevents scrolling
+   * off the end of the tree.
    */
   void scrollByPages(in long numPages);
   
@@ -166,7 +166,7 @@ interface nsIOutlinerBoxObject : nsISupports
   void onDragDrop ( in nsIDOMEvent event ) ;
   
   /**
-   * Called on a theme switch to flush out the outliner's style and image caches.
+   * Called on a theme switch to flush out the tree's style and image caches.
    */
   void clearStyleAndImageCaches();
 };

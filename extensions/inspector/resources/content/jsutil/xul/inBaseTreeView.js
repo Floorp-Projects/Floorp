@@ -37,21 +37,21 @@
  * ***** END LICENSE BLOCK ***** */
 
 /***************************************************************
-* inBaseOutlinerView -------------------------------------------------
-*  Simple outliner view object meant to be extended.
+* inBaseTreeView -------------------------------------------------
+*  Simple tree view object meant to be extended.
 *  
-* Usage example: MyView.prototype = new inBaseOutlinerView();
+* Usage example: MyView.prototype = new inBaseTreeView();
 ****************************************************************/
 
-function inBaseOutlinerView() { }
+function inBaseTreeView() { }
 
-inBaseOutlinerView.prototype = 
+inBaseTreeView.prototype = 
 {
   mRowCount: 0,
-  mOutliner: null,
+  mTree: null,
   
   get rowCount() { return this.mRowCount; },
-  setOutliner: function(aOutliner) { this.mOutliner = aOutliner; },
+  setTree: function(aTree) { this.mTree = aTree; },
   getCellText: function(aRow, aColId) { return ""; },
   getRowProperties: function(aIndex, aProperties) {},
   getCellProperties: function(aIndex, aColId, aProperties) {},
@@ -59,6 +59,9 @@ inBaseOutlinerView.prototype =
   getParentIndex: function(aRowIndex) { },
   hasNextSibling: function(aRowIndex, aAfterIndex) { },
   getLevel: function(aIndex) {},
+  getImageSrc: function(aRow, aColId) {},
+  getProgressMode: function(aRow, aColId) {},
+  getCellValue: function(aRow, aColId) {},
   isContainer: function(aIndex) {},
   isContainerOpen: function(aIndex) {},
   isContainerEmpty: function(aIndex) {},

@@ -37,10 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIFileView.h"
-#include "nsIOutlinerView.h"
+#include "nsITreeView.h"
 #include "nsIGenericFactory.h"
-#include "nsIOutlinerSelection.h"
-#include "nsIOutlinerBoxObject.h"
+#include "nsITreeSelection.h"
+#include "nsITreeBoxObject.h"
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -59,7 +59,7 @@
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 class nsFileView : public nsIFileView,
-                   public nsIOutlinerView
+                   public nsITreeView
 {
 public:
   nsFileView();
@@ -67,7 +67,7 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFILEVIEW
-  NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSITREEVIEW
   
 protected:
   virtual ~nsFileView();
@@ -82,8 +82,8 @@ protected:
   nsCOMPtr<nsISupportsArray> mFilteredFiles;
 
   nsCOMPtr<nsIFile> mDirectoryPath;
-  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
-  nsCOMPtr<nsIOutlinerSelection> mSelection;
+  nsCOMPtr<nsITreeBoxObject> mTree;
+  nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<nsIAtom> mDirectoryAtom;
   nsCOMPtr<nsIAtom> mFileAtom;
   nsCOMPtr<nsIDateTimeFormat> mDateFormatter;
@@ -142,7 +142,7 @@ nsFileView::Init()
 
 // nsISupports implementation
 
-NS_IMPL_ISUPPORTS2(nsFileView, nsIOutlinerView, nsIFileView);
+NS_IMPL_ISUPPORTS2(nsFileView, nsITreeView, nsIFileView);
 
 // nsIFileView implementation
 
@@ -181,13 +181,13 @@ nsFileView::SetShowOnlyDirectories(PRBool aOnlyDirs)
 
     mFilteredFiles->Clear();
     mTotalRows = dirCount;
-    if (mOutliner)
-      mOutliner->RowCountChanged(mTotalRows, -rowDiff);
+    if (mTree)
+      mTree->RowCountChanged(mTotalRows, -rowDiff);
   } else {
     // Run the filter again to get the file list back
     PRInt32 rowsAdded = FilterFiles();
     if (rowsAdded)
-      mOutliner->RowCountChanged(dirCount, rowsAdded);
+      mTree->RowCountChanged(dirCount, rowsAdded);
   }
 
   return NS_OK;
@@ -230,8 +230,8 @@ nsFileView::Sort(PRInt16 aSortType, PRBool aReverseSort)
     SortInternal();
   }
 
-  if (mOutliner)
-    mOutliner->Invalidate();
+  if (mTree)
+    mTree->Invalidate();
 
   return NS_OK;
 }
@@ -282,10 +282,10 @@ nsFileView::SetDirectory(nsIFile* aDirectory)
   FilterFiles();
   SortInternal();
 
-  if (mOutliner) {
-    mOutliner->RowCountChanged(0, -oldRows);
-    mOutliner->RowCountChanged(0, mTotalRows);
-    mOutliner->ScrollToRow(0);
+  if (mTree) {
+    mTree->RowCountChanged(0, -oldRows);
+    mTree->RowCountChanged(0, mTotalRows);
+    mTree->ScrollToRow(0);
   }
 
   return NS_OK;
@@ -327,12 +327,12 @@ nsFileView::SetFilter(const PRUnichar* aFilterString)
   if (mReverseSort)
     ReverseArray(mFilteredFiles);
 
-  if (mOutliner) {
-    mOutliner->RowCountChanged(dirCount, newFileRows - oldFileRows);
+  if (mTree) {
+    mTree->RowCountChanged(dirCount, newFileRows - oldFileRows);
 
     PRInt32 commonRange = PR_MIN(newFileRows, oldFileRows);
     if (commonRange)
-      mOutliner->InvalidateRange(dirCount, dirCount + commonRange);
+      mTree->InvalidateRange(dirCount, dirCount + commonRange);
   }
 
   return NS_OK;
@@ -363,7 +363,7 @@ nsFileView::GetSelectedFile(nsIFile** aFile)
 }
 
 
-// nsIOutlinerView implementation
+// nsITreeView implementation
 
 NS_IMETHODIMP
 nsFileView::GetRowCount(PRInt32* aRowCount)
@@ -373,7 +373,7 @@ nsFileView::GetRowCount(PRInt32* aRowCount)
 }
 
 NS_IMETHODIMP
-nsFileView::GetSelection(nsIOutlinerSelection** aSelection)
+nsFileView::GetSelection(nsITreeSelection** aSelection)
 {
   *aSelection = mSelection;
   NS_IF_ADDREF(*aSelection);
@@ -381,7 +381,7 @@ nsFileView::GetSelection(nsIOutlinerSelection** aSelection)
 }
 
 NS_IMETHODIMP
-nsFileView::SetSelection(nsIOutlinerSelection* aSelection)
+nsFileView::SetSelection(nsITreeSelection* aSelection)
 {
   mSelection = aSelection;
   return NS_OK;
@@ -496,6 +496,27 @@ nsFileView::GetLevel(PRInt32 aIndex, PRInt32* aLevel)
 }
 
 NS_IMETHODIMP
+nsFileView::GetImageSrc(PRInt32 aRow, const PRUnichar* aColID,
+                        nsAString& aImageSrc)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileView::GetProgressMode(PRInt32 aRow, const PRUnichar* aColID,
+                            PRInt32* aProgressMode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileView::GetCellValue(PRInt32 aRow, const PRUnichar* aColID,
+                         nsAString& aCellValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
                         nsAString& aCellText)
 {
@@ -546,9 +567,9 @@ nsFileView::GetCellText(PRInt32 aRow, const PRUnichar* aColID,
 }
 
 NS_IMETHODIMP
-nsFileView::SetOutliner(nsIOutlinerBoxObject* aOutliner)
+nsFileView::SetTree(nsITreeBoxObject* aTree)
 {
-  mOutliner = aOutliner;
+  mTree = aTree;
   return NS_OK;
 }
 

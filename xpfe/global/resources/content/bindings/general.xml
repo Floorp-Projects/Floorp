@@ -36,12 +36,12 @@
     - buttons. 
     - TODO: investigate creating extensions to the wrapper widgets (tree, toolbar)
     -       to make them provide some object implementing an interface similar to
-    -       outliner's so we can build in some of the ILE behavior (such as going
+    -       tree's so we can build in some of the ILE behavior (such as going
     -       in and out of the mode, asking isEditable etc) so as to remove some of
     -       the burden from the implementor. 
     -
     - Note that this widget will be no longer used in the bookmarks window once 
-    - outliner is extended to have this functionality built in. 
+    - tree is extended to have this functionality built in. 
     -->
   <binding id="inline-edit-base" extends="chrome://global/content/bindings/general.xml#basetext">
     <implementation>

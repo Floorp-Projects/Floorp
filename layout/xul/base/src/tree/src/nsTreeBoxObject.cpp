@@ -39,38 +39,38 @@
 #include "nsCOMPtr.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIOutlinerBoxObject.h"
+#include "nsITreeBoxObject.h"
 #include "nsBoxObject.h"
 #include "nsIFrame.h"
-#include "nsOutlinerBodyFrame.h"
+#include "nsTreeBodyFrame.h"
 #include "nsIAtom.h"
 #include "nsXULAtoms.h"
 #include "nsChildIterator.h"
 
-class nsOutlinerBoxObject : public nsIOutlinerBoxObject, public nsBoxObject
+class nsTreeBoxObject : public nsITreeBoxObject, public nsBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIOUTLINERBOXOBJECT
+  NS_DECL_NSITREEBOXOBJECT
 
-  nsOutlinerBoxObject();
-  virtual ~nsOutlinerBoxObject();
+  nsTreeBoxObject();
+  virtual ~nsTreeBoxObject();
 
-  nsIOutlinerBoxObject* GetOutlinerBody();
+  nsITreeBoxObject* GetTreeBody();
 
   //NS_PIBOXOBJECT interfaces
   NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
   NS_IMETHOD SetDocument(nsIDocument* aDocument);
 
-  nsIOutlinerBoxObject* mOutlinerBody;
+  nsITreeBoxObject* mTreeBody;
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS_INHERITED1(nsOutlinerBoxObject, nsBoxObject, nsIOutlinerBoxObject)
+NS_IMPL_ISUPPORTS_INHERITED1(nsTreeBoxObject, nsBoxObject, nsITreeBoxObject)
 
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
+nsTreeBoxObject::SetDocument(nsIDocument* aDocument)
 {
   // this should only be called with a null document, which indicates
   // that we're being torn down.
@@ -79,29 +79,29 @@ nsOutlinerBoxObject::SetDocument(nsIDocument* aDocument)
   // Drop the view's ref to us.
   nsCOMPtr<nsISupports> suppView;
   GetPropertyAsSupports(NS_LITERAL_STRING("view").get(), getter_AddRefs(suppView));
-  nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
-  if (outlinerView)
-    outlinerView->SetOutliner(nsnull); // Break the circular ref between the view and us.
+  nsCOMPtr<nsITreeView> treeView(do_QueryInterface(suppView));
+  if (treeView)
+    treeView->SetTree(nsnull); // Break the circular ref between the view and us.
 
-  mOutlinerBody = nsnull;
+  mTreeBody = nsnull;
 
   return nsBoxObject::SetDocument(aDocument);
 }
 
   
-nsOutlinerBoxObject::nsOutlinerBoxObject()
-:mOutlinerBody(nsnull)
+nsTreeBoxObject::nsTreeBoxObject()
+:mTreeBody(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
 
-nsOutlinerBoxObject::~nsOutlinerBoxObject()
+nsTreeBoxObject::~nsTreeBoxObject()
 {
   /* destructor code */
 }
 
 
-NS_IMETHODIMP nsOutlinerBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresShell)
+NS_IMETHODIMP nsTreeBoxObject::Init(nsIContent* aContent, nsIPresShell* aPresShell)
 {
   nsresult rv = nsBoxObject::Init(aContent, aPresShell);
   if (NS_FAILED(rv)) return rv;
@@ -116,7 +116,7 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
     nsCOMPtr<nsIContent> content = *iter;
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::outlinerchildren) {
+    if (tag.get() == nsXULAtoms::treechildren) {
       *aResult = content;
       NS_ADDREF(*aResult);
       break;
@@ -129,14 +129,14 @@ static void FindBodyElement(nsIContent* aParent, nsIContent** aResult)
   }
 }
 
-inline nsIOutlinerBoxObject*
-nsOutlinerBoxObject::GetOutlinerBody()
+inline nsITreeBoxObject*
+nsTreeBoxObject::GetTreeBody()
 {
   nsCOMPtr<nsISupports> supp;
-  GetPropertyAsSupports(NS_LITERAL_STRING("outlinerbody").get(), getter_AddRefs(supp));
+  GetPropertyAsSupports(NS_LITERAL_STRING("treebody").get(), getter_AddRefs(supp));
 
   if (supp) {
-    nsCOMPtr<nsIOutlinerBoxObject> body(do_QueryInterface(supp));
+    nsCOMPtr<nsITreeBoxObject> body(do_QueryInterface(supp));
     return body;
   }
 
@@ -156,29 +156,29 @@ nsOutlinerBoxObject::GetOutlinerBody()
      return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
-  nsCOMPtr<nsIOutlinerBoxObject> body;
-  frame->QueryInterface(NS_GET_IID(nsIOutlinerBoxObject), getter_AddRefs(body));
-  SetPropertyAsSupports(NS_LITERAL_STRING("outlinerbody").get(), body);
+  nsCOMPtr<nsITreeBoxObject> body;
+  frame->QueryInterface(NS_GET_IID(nsITreeBoxObject), getter_AddRefs(body));
+  SetPropertyAsSupports(NS_LITERAL_STRING("treebody").get(), body);
   return body;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetView(nsIOutlinerView * *aView)
+NS_IMETHODIMP nsTreeBoxObject::GetView(nsITreeView * *aView)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetView(aView);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
+NS_IMETHODIMP nsTreeBoxObject::SetView(nsITreeView * aView)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body) {
     body->SetView(aView);
   
     // only return if the body frame was able to store the view,
     // else we need to cache the property below
-    nsCOMPtr<nsIOutlinerView> view;
+    nsCOMPtr<nsITreeView> view;
     body->GetView(getter_AddRefs(view));
     if (view)
       return NS_OK;
@@ -193,242 +193,242 @@ NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetFocused(PRBool* aFocused)
+NS_IMETHODIMP nsTreeBoxObject::GetFocused(PRBool* aFocused)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetFocused(aFocused);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::SetFocused(PRBool aFocused)
+NS_IMETHODIMP nsTreeBoxObject::SetFocused(PRBool aFocused)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->SetFocused(aFocused);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetOutlinerBody(nsIDOMElement** aElement)
+NS_IMETHODIMP nsTreeBoxObject::GetTreeBody(nsIDOMElement** aElement)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body) 
-    return body->GetOutlinerBody(aElement);
+    return body->GetTreeBody(aElement);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetSelection(nsIOutlinerSelection * *aSelection)
+NS_IMETHODIMP nsTreeBoxObject::GetSelection(nsITreeSelection * *aSelection)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetSelection(aSelection);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetRowHeight(PRInt32* _retval)
+NS_IMETHODIMP nsTreeBoxObject::GetRowHeight(PRInt32* _retval)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body) 
     return body->GetRowHeight(_retval);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetColumnIndex(const PRUnichar *aColID, PRInt32 *_retval)
+NS_IMETHODIMP nsTreeBoxObject::GetColumnIndex(const PRUnichar *aColID, PRInt32 *_retval)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetColumnIndex(aColID, _retval);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetFirstVisibleRow(PRInt32 *_retval)
+NS_IMETHODIMP nsTreeBoxObject::GetFirstVisibleRow(PRInt32 *_retval)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetFirstVisibleRow(_retval);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetLastVisibleRow(PRInt32 *_retval)
+NS_IMETHODIMP nsTreeBoxObject::GetLastVisibleRow(PRInt32 *_retval)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetLastVisibleRow(_retval);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetPageCount(PRInt32 *_retval)
+NS_IMETHODIMP nsTreeBoxObject::GetPageCount(PRInt32 *_retval)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetPageCount(_retval);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::EnsureRowIsVisible(PRInt32 aRow)
+nsTreeBoxObject::EnsureRowIsVisible(PRInt32 aRow)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->EnsureRowIsVisible(aRow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::ScrollToRow(PRInt32 aRow)
+nsTreeBoxObject::ScrollToRow(PRInt32 aRow)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->ScrollToRow(aRow);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::ScrollByLines(PRInt32 aNumLines)
+nsTreeBoxObject::ScrollByLines(PRInt32 aNumLines)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->ScrollByLines(aNumLines);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::ScrollByPages(PRInt32 aNumPages)
+nsTreeBoxObject::ScrollByPages(PRInt32 aNumPages)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->ScrollByPages(aNumPages);
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsOutlinerBoxObject::Invalidate()
+NS_IMETHODIMP nsTreeBoxObject::Invalidate()
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->Invalidate();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::InvalidateColumn(const PRUnichar *aColID)
+NS_IMETHODIMP nsTreeBoxObject::InvalidateColumn(const PRUnichar *aColID)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->InvalidateColumn(aColID);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::InvalidateRow(PRInt32 aIndex)
+NS_IMETHODIMP nsTreeBoxObject::InvalidateRow(PRInt32 aIndex)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->InvalidateRow(aIndex);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::InvalidateCell(PRInt32 aRow, const PRUnichar *aColID)
+NS_IMETHODIMP nsTreeBoxObject::InvalidateCell(PRInt32 aRow, const PRUnichar *aColID)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->InvalidateCell(aRow, aColID);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::InvalidatePrimaryCell(PRInt32 aIndex)
+NS_IMETHODIMP nsTreeBoxObject::InvalidatePrimaryCell(PRInt32 aIndex)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->InvalidatePrimaryCell(aIndex);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
+NS_IMETHODIMP nsTreeBoxObject::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->InvalidateRange(aStart, aEnd);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::InvalidateScrollbar()
+NS_IMETHODIMP nsTreeBoxObject::InvalidateScrollbar()
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->InvalidateScrollbar();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row, PRUnichar **colID,
+NS_IMETHODIMP nsTreeBoxObject::GetCellAt(PRInt32 x, PRInt32 y, PRInt32 *row, PRUnichar **colID,
                                              PRUnichar** childElt)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetCellAt(x, y, row, colID, childElt);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, const PRUnichar *aCellItem, 
+nsTreeBoxObject::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, const PRUnichar *aCellItem, 
                                           PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->GetCoordsForCellItem(aRow, aColID, aCellItem, aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerBoxObject::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_retval)
+nsTreeBoxObject::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_retval)
 {  
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->IsCellCropped(aRow, aColID, _retval);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
+NS_IMETHODIMP nsTreeBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->RowCountChanged(aIndex, aDelta);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::OnDragEnter(nsIDOMEvent* inEvent)
+NS_IMETHODIMP nsTreeBoxObject::OnDragEnter(nsIDOMEvent* inEvent)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->OnDragEnter(inEvent);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::OnDragExit(nsIDOMEvent* inEvent)
+NS_IMETHODIMP nsTreeBoxObject::OnDragExit(nsIDOMEvent* inEvent)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->OnDragExit(inEvent);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::OnDragOver(nsIDOMEvent* inEvent)
+NS_IMETHODIMP nsTreeBoxObject::OnDragOver(nsIDOMEvent* inEvent)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->OnDragOver(inEvent);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::OnDragDrop(nsIDOMEvent* inEvent)
+NS_IMETHODIMP nsTreeBoxObject::OnDragDrop(nsIDOMEvent* inEvent)
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->OnDragDrop(inEvent);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerBoxObject::ClearStyleAndImageCaches()
+NS_IMETHODIMP nsTreeBoxObject::ClearStyleAndImageCaches()
 {
-  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  nsITreeBoxObject* body = GetTreeBody();
   if (body)
     return body->ClearStyleAndImageCaches();
   return NS_OK;
@@ -437,9 +437,9 @@ NS_IMETHODIMP nsOutlinerBoxObject::ClearStyleAndImageCaches()
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewOutlinerBoxObject(nsIBoxObject** aResult)
+NS_NewTreeBoxObject(nsIBoxObject** aResult)
 {
-  *aResult = new nsOutlinerBoxObject;
+  *aResult = new nsTreeBoxObject;
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

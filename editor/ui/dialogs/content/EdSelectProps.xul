@@ -58,28 +58,19 @@
 
   <!-- Setting rows="7" on tree isn't working, equalsize vbox sets tree height. -->
   <vbox equalsize="always">
-    <tree id="SelectTree" class="inset" height="0" onselect="onTreeSelect(event);" onkeyup="onTreeKeyUp(event);">
-      <treecolgroup id="SelectCols" flex="1">
-        <treecol flex="3"/>
-        <treecol flex="2"/>
-        <treecol flex="1"/>
-      </treecolgroup>
+    <tree id="SelectTree" onselect="onTreeSelect(event);" onkeyup="onTreeKeyUp(event);">
+      <treecols id="SelectCols">
+        <treecol id="SelectTextCol" flex="3" label="&TextHeader.label;" primary="true"/>
+        <treecol id="SelectValCol" flex="2" label="&ValueHeader.label;"/>
+        <treecol id="SelectSelCol" flex="1" label="&SelectedHeader.label;"/>
+      </treecols>
 
-      <treehead>
-        <treerow>
-          <treecell class="treecell-header treecell-inset-header" label="&TextHeader.label;"/>
-          <treecell class="treecell-header treecell-inset-header" label="&ValueHeader.label;"/>
-          <treecell class="treecell-header treecell-inset-header" label="&SelectedHeader.label;"/>
-        </treerow>
-      </treehead>
-
-      <treechildren flex="1" onclick="onTreeClicked(event);">
+      <treechildren id="SelectTreeChildren" onclick="onTreeClicked(event);">
         <treeitem id="SelectItem" container="true" empty="true" open="true" index="0">
           <treerow>
             <treecell id="SelectCell"/>
-            <treecell style="visibility: hidden;">
-              <checkbox/>
-            </treecell>
+            <treecell/>
+            <treecell/>
           </treerow>
           <treechildren id="SelectChildren"/>
         </treeitem>
@@ -88,7 +79,7 @@
 
     <hbox flex="1">
       <deck orient="vertical" flex="1" id="SelectDeck" index="0">
-        <groupbox orient="vertical" flex="1"><caption label="&Select.label;"/>
+        <groupbox flex="1"><caption label="&Select.label;"/>
           <grid flex="1"><columns><column flex="1"/><column/></columns>
             <rows>
               <row align="center">

@@ -40,7 +40,7 @@
 #include "nsIDOMElement.idl"
 
 [scriptable, uuid(F066F69A-6FFE-4117-A85C-ABE9D15C6BBC)]
-interface nsIOutlinerContentView : nsISupports
+interface nsITreeContentView : nsISupports
 {
   /**
    * The element in the DOM which this view uses as root content.

@@ -73,11 +73,11 @@ function XBLBindings()
   this.mObsMan = new ObserverManager(this);
   this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
-  this.mContentOutliner = document.getElementById("olContent");
-  this.mMethodOutliner = document.getElementById("olMethods");
-  this.mPropOutliner = document.getElementById("olProps");
-  this.mHandlerOutliner = document.getElementById("olHandlers");
-  this.mResourceOutliner = document.getElementById("olResources");
+  this.mContentTree = document.getElementById("olContent");
+  this.mMethodTree = document.getElementById("olMethods");
+  this.mPropTree = document.getElementById("olProps");
+  this.mHandlerTree = document.getElementById("olHandlers");
+  this.mResourceTree = document.getElementById("olResources");
   this.mFunctionTextbox = document.getElementById("txbFunction");
   
   if (gInitContent)
@@ -127,11 +127,11 @@ XBLBindings.prototype =
       InsUtil.persistAll(panes[i].id);
     }
 
-    this.mContentOutliner.outlinerBoxObject.view = null;
-    this.mMethodOutliner.outlinerBoxObject.view = null;
-    this.mPropOutliner.outlinerBoxObject.view = null;
-    this.mHandlerOutliner.outlinerBoxObject.view = null;
-    this.mResourceOutliner.outlinerBoxObject.view = null;    
+    this.mContentTree.treeBoxObject.view = null;
+    this.mMethodTree.treeBoxObject.view = null;
+    this.mPropTree.treeBoxObject.view = null;
+    this.mHandlerTree.treeBoxObject.view = null;
+    this.mResourceTree.treeBoxObject.view = null;    
   },
   
   isCommandEnabled: function(aCommand)
@@ -161,7 +161,7 @@ XBLBindings.prototype =
       // prepare and attach the content DOM datasource
       me.mContentView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
       me.mContentView.removeFilterByType(Node.TEXT_NODE);
-      me.mContentOutliner.outlinerBoxObject.view = me.mContentView;
+      me.mContentTree.treeBoxObject.view = me.mContentView;
 
       me.mContentInit = true;
       if (me.mBinding)
@@ -259,8 +259,8 @@ XBLBindings.prototype =
   
   displayMethods: function()
   {
-    var bx = this.getBoxObject(this.mMethodOutliner);
-    bx.view = this.mBinding ? new MethodOutlinerView(this.mBinding) : null;
+    var bx = this.getBoxObject(this.mMethodTree);
+    bx.view = this.mBinding ? new MethodTreeView(this.mBinding) : null;
 
     var active = this.mBinding && this.mBinding.getElementsByTagName("method").length > 0;
     document.getElementById("bxMethods").setAttribute("disabled", !active);
@@ -268,8 +268,8 @@ XBLBindings.prototype =
   
   displayProperties: function()
   {
-    var bx = this.getBoxObject(this.mPropOutliner);
-    bx.view = this.mBinding ? new PropOutlinerView(this.mBinding) : null;
+    var bx = this.getBoxObject(this.mPropTree);
+    bx.view = this.mBinding ? new PropTreeView(this.mBinding) : null;
 
     var active = this.mBinding && this.mBinding.getElementsByTagName("property").length > 0;
     document.getElementById("bxProps").setAttribute("disabled", !active);
@@ -279,8 +279,8 @@ XBLBindings.prototype =
 
   displayHandlers: function()
   {
-    var bx = this.getBoxObject(this.mHandlerOutliner);
-    bx.view = this.mBinding ? new HandlerOutlinerView(this.mBinding) : null;
+    var bx = this.getBoxObject(this.mHandlerTree);
+    bx.view = this.mBinding ? new HandlerTreeView(this.mBinding) : null;
 
     var active = this.mBinding && this.mBinding.getElementsByTagName("handler").length > 0;
     document.getElementById("bxHandlers").setAttribute("disabled", !active);
@@ -289,8 +289,8 @@ XBLBindings.prototype =
 
   displayResources: function()
   {
-    var bx = this.getBoxObject(this.mResourceOutliner);
-    bx.view = this.mBinding ? new ResourceOutlinerView(this.mBinding) : null;
+    var bx = this.getBoxObject(this.mResourceTree);
+    bx.view = this.mBinding ? new ResourceTreeView(this.mBinding) : null;
 
     var active = this.mBinding && this.mBinding.getElementsByTagName("resources").length > 0;
     document.getElementById("bxResources").setAttribute("disabled", !active);
@@ -359,7 +359,7 @@ XBLBindings.prototype =
   
   onMethodSelected: function()
   {
-    var idx = this.mMethodOutliner.currentIndex;
+    var idx = this.mMethodTree.currentIndex;
     var methods = this.mBinding.getElementsByTagNameNS(kXBLNSURI, "method");
     var method = methods[idx];
     this.displayMethod(method);
@@ -367,7 +367,7 @@ XBLBindings.prototype =
     
   onPropSelected: function()
   {
-    var idx = this.mPropOutliner.currentIndex;
+    var idx = this.mPropTree.currentIndex;
     var props = this.mBinding.getElementsByTagNameNS(kXBLNSURI, "property");
     var prop = props[idx];
     this.displayProperty(prop);
@@ -375,7 +375,7 @@ XBLBindings.prototype =
     
   onHandlerSelected: function()
   {
-    var idx = this.mHandlerOutliner.currentIndex;
+    var idx = this.mHandlerTree.currentIndex;
     var handlers = this.mBinding.getElementsByTagNameNS(kXBLNSURI, "handler");
     var handler = handlers[idx];
     this.displayHandler(handler);
@@ -400,25 +400,25 @@ XBLBindings.prototype =
     return text;
   },
 
-  getBoxObject: function(aOutliner)
+  getBoxObject: function(aTree)
   {
-    return aOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+    return aTree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
   }
   
 };
 
 ////////////////////////////////////////////////////////////////////////////
-//// MethodOutlinerView
+//// MethodTreeView
 
-function MethodOutlinerView(aBinding)
+function MethodTreeView(aBinding)
 {
   this.mMethods = aBinding.getElementsByTagNameNS(kXBLNSURI, "method");
   this.mRowCount = this.mMethods ? this.mMethods.length : 0;
 }
 
-MethodOutlinerView.prototype = new inBaseOutlinerView();
+MethodTreeView.prototype = new inBaseTreeView();
 
-MethodOutlinerView.prototype.getCellText = 
+MethodTreeView.prototype.getCellText = 
 function(aRow, aColId) 
 {
   var method = this.mMethods[aRow];
@@ -435,17 +435,17 @@ function(aRow, aColId)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-//// PropOutlinerView
+//// PropTreeView
 
-function PropOutlinerView(aBinding)
+function PropTreeView(aBinding)
 {
   this.mProps = aBinding.getElementsByTagNameNS(kXBLNSURI, "property");
   this.mRowCount = this.mProps ? this.mProps.length : 0;
 }
 
-PropOutlinerView.prototype = new inBaseOutlinerView();
+PropTreeView.prototype = new inBaseTreeView();
 
-PropOutlinerView.prototype.getCellText = 
+PropTreeView.prototype.getCellText = 
 function(aRow, aColId) 
 {
   var prop = this.mProps[aRow];
@@ -457,17 +457,17 @@ function(aRow, aColId)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-//// HandlerOutlinerView
+//// HandlerTreeView
 
-function HandlerOutlinerView(aBinding)
+function HandlerTreeView(aBinding)
 {
   this.mHandlers = aBinding.getElementsByTagNameNS(kXBLNSURI, "handler");
   this.mRowCount = this.mHandlers ? this.mHandlers.length : 0;
 }
 
-HandlerOutlinerView.prototype = new inBaseOutlinerView();
+HandlerTreeView.prototype = new inBaseTreeView();
 
-HandlerOutlinerView.prototype.getCellText = 
+HandlerTreeView.prototype.getCellText = 
 function(aRow, aColId) 
 {
   var handler = this.mHandlers[aRow];
@@ -481,9 +481,9 @@ function(aRow, aColId)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-//// ResourceOutlinerView
+//// ResourceTreeView
 
-function ResourceOutlinerView(aBinding)
+function ResourceTreeView(aBinding)
 {
   var res = aBinding.getElementsByTagNameNS(kXBLNSURI, "resources");
   var list = [];
@@ -498,9 +498,9 @@ function ResourceOutlinerView(aBinding)
   this.mRowCount = this.mResources ? this.mResources.length : 0;
 }
 
-ResourceOutlinerView.prototype = new inBaseOutlinerView();
+ResourceTreeView.prototype = new inBaseTreeView();
 
-ResourceOutlinerView.prototype.getCellText = 
+ResourceTreeView.prototype.getCellText = 
 function(aRow, aColId) 
 {
   var resource = this.mResources[aRow];

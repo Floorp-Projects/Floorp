@@ -55,7 +55,7 @@ CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \
 	nsPKIParamBlock.cpp \
-        nsASN1Outliner.cpp \
+        nsASN1Tree.cpp \
 	$(NULL)
 
 REQUIRES	= nspr \

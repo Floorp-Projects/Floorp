@@ -1,4 +1,4 @@
-/*
+ /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -104,10 +104,7 @@ function AddModule(module, slots)
   var item  = document.createElement("treeitem");
   var row  = document.createElement("treerow");
   var cell = document.createElement("treecell");
-  cell.setAttribute("class", "propertylist");
   cell.setAttribute("label", module);
-  cell.setAttribute("style", "font-weight: bold");
-  cell.setAttribute("crop", "never");
   row.appendChild(cell);
   item.appendChild(row);
   var parent = document.createElement("treechildren");
@@ -116,7 +113,6 @@ function AddModule(module, slots)
     var child_row = document.createElement("treerow");
     var child_cell = document.createElement("treecell");
     child_cell.setAttribute("label", slots[i]);
-    child_cell.setAttribute("class", "treecell-indent");
     child_row.appendChild(child_cell);
     child_item.appendChild(child_row);
     child_item.setAttribute("pk11kind", "slot");
@@ -136,24 +132,25 @@ var selected_module;
 function getSelectedItem()
 {
   var tree = document.getElementById('device_tree');
-  var items = tree.selectedItems;
+  if (tree.currentIndex < 0) return;
+  var item = tree.contentView.getItemAtIndex(tree.currentIndex);
   selected_slot = null;
   selected_module = null;
-  if (items.length > 0) {
-    var kind = items[0].getAttribute("pk11kind");
+  if (item) {
+    var kind = item.getAttribute("pk11kind");
     var module_name;
     if (kind == "slot") {
       // get the module cell for this slot cell
-      var cell = items[0].parentNode.parentNode.firstChild.firstChild;
+      var cell = item.parentNode.parentNode.firstChild.firstChild;
       module_name = cell.getAttribute("label");
       var module = secmoddb.findModuleByName(module_name);
       // get the cell for the selected row (the slot to display)
-      cell = items[0].firstChild.firstChild;
+      cell = item.firstChild.firstChild;
       var slot_name = cell.getAttribute("label");
       selected_slot = module.findSlotByName(slot_name);
     } else { // (kind == "module")
       // get the cell for the selected row (the module to display)
-      cell = items[0].firstChild.firstChild;
+      cell = item.firstChild.firstChild;
       module_name = cell.getAttribute("label");
       selected_module = secmoddb.findModuleByName(module_name);
     }

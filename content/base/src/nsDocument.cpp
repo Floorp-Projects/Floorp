@@ -2658,12 +2658,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     else if (tag.get() == nsXULAtoms::popup || tag.get() == nsXULAtoms::menupopup ||
              tag.get() == nsXULAtoms::tooltip)
       contractID += "-popup";
-    else if (tag.get() == nsXULAtoms::tree)
-      contractID += "-tree";
     else if (tag.get() == nsXULAtoms::scrollbox)
       contractID += "-scrollbox";
-    else if (tag.get() == nsXULAtoms::outliner)
-      contractID += "-outliner";
+    else if (tag.get() == nsXULAtoms::tree)
+      contractID += "-tree";
   }
   contractID += ";1";
   

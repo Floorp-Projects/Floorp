@@ -45,14 +45,14 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMDocument.h"
 #include "nsIBoxObject.h"
-#include "nsOutlinerUtils.h"
-#include "nsOutlinerContentView.h"
+#include "nsTreeUtils.h"
+#include "nsTreeContentView.h"
 #include "nsChildIterator.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMClassInfo.h"
 
 
-// A content model view implementation for the outliner.
+// A content model view implementation for the tree.
 
 
 #define ROW_FLAG_CONTAINER      0x01
@@ -153,7 +153,7 @@ class Row
 // If we go away first, we'll get rid of ourselves from the
 // document's observer list.
 
-nsOutlinerContentView::nsOutlinerContentView(void) :
+nsTreeContentView::nsTreeContentView(void) :
   mBoxObject(nsnull), mSelection(nsnull), mRoot(nsnull), mDocument(nsnull),
   mUpdateSelection(PR_FALSE)
 {
@@ -165,10 +165,10 @@ nsOutlinerContentView::nsOutlinerContentView(void) :
   static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
   static const PRInt32 kInitialSize = 16;
 
-  mAllocator.Init("nsOutlinerContentView", kBucketSizes, kNumBuckets, kInitialSize);
+  mAllocator.Init("nsTreeContentView", kBucketSizes, kNumBuckets, kInitialSize);
 }
 
-nsOutlinerContentView::~nsOutlinerContentView(void)
+nsTreeContentView::~nsTreeContentView(void)
 {
   // Remove ourselfs from document's observers.
   if (mDocument)
@@ -176,28 +176,28 @@ nsOutlinerContentView::~nsOutlinerContentView(void)
 }
 
 nsresult
-NS_NewOutlinerContentView(nsIOutlinerContentView** aResult)
+NS_NewTreeContentView(nsITreeContentView** aResult)
 {
-  *aResult = new nsOutlinerContentView;
+  *aResult = new nsTreeContentView;
   if (! *aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);
   return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsOutlinerContentView)
-NS_IMPL_RELEASE(nsOutlinerContentView)
+NS_IMPL_ADDREF(nsTreeContentView)
+NS_IMPL_RELEASE(nsTreeContentView)
 
-NS_INTERFACE_MAP_BEGIN(nsOutlinerContentView)
-  NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
-  NS_INTERFACE_MAP_ENTRY(nsIOutlinerContentView)
+NS_INTERFACE_MAP_BEGIN(nsTreeContentView)
+  NS_INTERFACE_MAP_ENTRY(nsITreeView)
+  NS_INTERFACE_MAP_ENTRY(nsITreeContentView)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutlinerContentView)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(OutlinerContentView)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITreeContentView)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeContentView)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetRowCount(PRInt32* aRowCount)
+nsTreeContentView::GetRowCount(PRInt32* aRowCount)
 {
   *aRowCount = mRows.Count();
 
@@ -205,7 +205,7 @@ nsOutlinerContentView::GetRowCount(PRInt32* aRowCount)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetSelection(nsIOutlinerSelection** aSelection)
+nsTreeContentView::GetSelection(nsITreeSelection** aSelection)
 {
   NS_IF_ADDREF(*aSelection = mSelection);
 
@@ -213,7 +213,7 @@ nsOutlinerContentView::GetSelection(nsIOutlinerSelection** aSelection)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::SetSelection(nsIOutlinerSelection* aSelection)
+nsTreeContentView::SetSelection(nsITreeSelection* aSelection)
 {
   mSelection = aSelection;
   if (mUpdateSelection) {
@@ -237,7 +237,7 @@ nsOutlinerContentView::SetSelection(nsIOutlinerSelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProperties)
+nsTreeContentView::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aProperties)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -254,7 +254,7 @@ nsOutlinerContentView::GetRowProperties(PRInt32 aIndex, nsISupportsArray* aPrope
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, nsISupportsArray* aProperties)
+nsTreeContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, nsISupportsArray* aProperties)
 {
   NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
   if (aRow < 0 || aRow >= mRows.Count())
@@ -262,7 +262,7 @@ nsOutlinerContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, 
 
   Row* row = (Row*)mRows[aRow];
   nsCOMPtr<nsIContent> realRow;
-  nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
   if (realRow) {
     nsCOMPtr<nsIContent> cell;
     GetNamedCell(realRow, aColID, getter_AddRefs(cell));
@@ -270,7 +270,7 @@ nsOutlinerContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, 
       nsAutoString properties;
       cell->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, properties);
       if (properties.Length())
-        nsOutlinerUtils::TokenizeProperties(properties, aProperties);
+        nsTreeUtils::TokenizeProperties(properties, aProperties);
     }
   }
 
@@ -278,18 +278,18 @@ nsOutlinerContentView::GetCellProperties(PRInt32 aRow, const PRUnichar* aColID, 
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetColumnProperties(const PRUnichar* aColID, nsIDOMElement* aColElt, nsISupportsArray* aProperties)
+nsTreeContentView::GetColumnProperties(const PRUnichar* aColID, nsIDOMElement* aColElt, nsISupportsArray* aProperties)
 {
   nsAutoString properties;
   aColElt->GetAttribute(NS_LITERAL_STRING("properties"), properties);
   if (properties.Length())
-    nsOutlinerUtils::TokenizeProperties(properties, aProperties);
+    nsTreeUtils::TokenizeProperties(properties, aProperties);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::IsContainer(PRInt32 aIndex, PRBool* _retval)
+nsTreeContentView::IsContainer(PRInt32 aIndex, PRBool* _retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -301,7 +301,7 @@ nsOutlinerContentView::IsContainer(PRInt32 aIndex, PRBool* _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::IsContainerOpen(PRInt32 aIndex, PRBool* _retval)
+nsTreeContentView::IsContainerOpen(PRInt32 aIndex, PRBool* _retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -313,7 +313,7 @@ nsOutlinerContentView::IsContainerOpen(PRInt32 aIndex, PRBool* _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::IsContainerEmpty(PRInt32 aIndex, PRBool* _retval)
+nsTreeContentView::IsContainerEmpty(PRInt32 aIndex, PRBool* _retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -325,7 +325,7 @@ nsOutlinerContentView::IsContainerEmpty(PRInt32 aIndex, PRBool* _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::IsSeparator(PRInt32 aIndex, PRBool *_retval)
+nsTreeContentView::IsSeparator(PRInt32 aIndex, PRBool *_retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -337,7 +337,7 @@ nsOutlinerContentView::IsSeparator(PRInt32 aIndex, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::IsSorted(PRBool *_retval)
+nsTreeContentView::IsSorted(PRBool *_retval)
 {
   *_retval = PR_FALSE;
 
@@ -345,19 +345,7 @@ nsOutlinerContentView::IsSorted(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::CanDropOn(PRInt32 aIndex, PRBool *_retval)
-{
-  NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
-  if (aIndex < 0 || aIndex >= mRows.Count())
-    return NS_ERROR_INVALID_ARG;   
-
-  *_retval = PR_FALSE;
- 
-  return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsOutlinerContentView::CanDropBeforeAfter(PRInt32 aIndex, PRBool aBefore, PRBool* _retval)
+nsTreeContentView::CanDropOn(PRInt32 aIndex, PRBool *_retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -367,9 +355,21 @@ nsOutlinerContentView::CanDropBeforeAfter(PRInt32 aIndex, PRBool aBefore, PRBool
  
   return NS_OK;
 }
+ 
+NS_IMETHODIMP
+nsTreeContentView::CanDropBeforeAfter(PRInt32 aIndex, PRBool aBefore, PRBool* _retval)
+{
+  NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
+  if (aIndex < 0 || aIndex >= mRows.Count())
+    return NS_ERROR_INVALID_ARG;   
+
+  *_retval = PR_FALSE;
+ 
+  return NS_OK;
+}
 
 NS_IMETHODIMP
-nsOutlinerContentView::Drop(PRInt32 aRow, PRInt32 aOrientation)
+nsTreeContentView::Drop(PRInt32 aRow, PRInt32 aOrientation)
 {
   NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
   if (aRow < 0 || aRow >= mRows.Count())
@@ -379,7 +379,7 @@ nsOutlinerContentView::Drop(PRInt32 aRow, PRInt32 aOrientation)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetParentIndex(PRInt32 aRowIndex, PRInt32* _retval)
+nsTreeContentView::GetParentIndex(PRInt32 aRowIndex, PRInt32* _retval)
 {
   NS_PRECONDITION(aRowIndex >= 0 && aRowIndex < mRows.Count(), "bad row index");
   if (aRowIndex < 0 || aRowIndex >= mRows.Count())
@@ -391,7 +391,7 @@ nsOutlinerContentView::GetParentIndex(PRInt32 aRowIndex, PRInt32* _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex, PRBool* _retval)
+nsTreeContentView::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex, PRBool* _retval)
 {
   NS_PRECONDITION(aRowIndex >= 0 && aRowIndex < mRows.Count(), "bad row index");
   if (aRowIndex < 0 || aRowIndex >= mRows.Count())
@@ -417,7 +417,7 @@ nsOutlinerContentView::HasNextSibling(PRInt32 aRowIndex, PRInt32 aAfterIndex, PR
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetLevel(PRInt32 aIndex, PRInt32* _retval)
+nsTreeContentView::GetLevel(PRInt32 aIndex, PRInt32* _retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -434,8 +434,8 @@ nsOutlinerContentView::GetLevel(PRInt32 aIndex, PRInt32* _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAString& _retval)
+ NS_IMETHODIMP
+nsTreeContentView::GetImageSrc(PRInt32 aRow, const PRUnichar* aColID, nsAString& _retval)
 {
   NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
   if (aRow < 0 || aRow >= mRows.Count())
@@ -445,7 +445,82 @@ nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAStr
 
   Row* row = (Row*)mRows[aRow];
 
-  // Check for a "label" attribute - this is valid on an <outlineritem>
+  nsCOMPtr<nsIContent> realRow;
+  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
+  if (realRow) {
+    nsCOMPtr<nsIContent> cell;
+    GetNamedCell(realRow, aColID, getter_AddRefs(cell));
+    if (cell)
+      cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, _retval);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeContentView::GetProgressMode(PRInt32 aRow, const PRUnichar* aColID, PRInt32* _retval)
+{
+  NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
+  if (aRow < 0 || aRow >= mRows.Count())
+    return NS_ERROR_INVALID_ARG;   
+
+  *_retval = nsITreeView::progressNone;
+
+  Row* row = (Row*)mRows[aRow];
+
+  nsCOMPtr<nsIContent> realRow;
+  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
+  if (realRow) {
+    nsCOMPtr<nsIContent> cell;
+    GetNamedCell(realRow, aColID, getter_AddRefs(cell));
+    if (cell) {
+      nsAutoString state;
+      cell->GetAttr(kNameSpaceID_None, nsXULAtoms::mode, state);
+      if (state.Equals(NS_LITERAL_STRING("normal")))
+        *_retval = nsITreeView::progressNormal;
+      else if (state.Equals(NS_LITERAL_STRING("undetermined")))
+        *_retval = nsITreeView::progressUndetermined;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeContentView::GetCellValue(PRInt32 aRow, const PRUnichar* aColID, nsAString& _retval)
+{
+  NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
+  if (aRow < 0 || aRow >= mRows.Count())
+    return NS_ERROR_INVALID_ARG;   
+
+  _retval.SetCapacity(0);
+
+  Row* row = (Row*)mRows[aRow];
+
+  nsCOMPtr<nsIContent> realRow;
+  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
+  if (realRow) {
+    nsCOMPtr<nsIContent> cell;
+    GetNamedCell(realRow, aColID, getter_AddRefs(cell));
+    if (cell)
+      cell->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, _retval);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTreeContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAString& _retval)
+{
+  NS_PRECONDITION(aRow >= 0 && aRow < mRows.Count(), "bad row");
+  if (aRow < 0 || aRow >= mRows.Count())
+    return NS_ERROR_INVALID_ARG;   
+
+  _retval.SetCapacity(0);
+
+  Row* row = (Row*)mRows[aRow];
+
+  // Check for a "label" attribute - this is valid on an <treeitem>
   // or an <option>, with a single implied column.
   if (NS_SUCCEEDED(row->mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::label, _retval))
       && !_retval.IsEmpty())
@@ -458,9 +533,9 @@ nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAStr
     nsCOMPtr<nsIDOMHTMLOptionElement> elem = do_QueryInterface(row->mContent);
     elem->GetText(_retval);
     return NS_OK;
-  } else if (rowTag == nsXULAtoms::outlineritem) {
+  } else if (rowTag == nsXULAtoms::treeitem) {
     nsCOMPtr<nsIContent> realRow;
-    nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+    nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
     if (realRow) {
       nsCOMPtr<nsIContent> cell;
       GetNamedCell(realRow, aColID, getter_AddRefs(cell));
@@ -473,11 +548,11 @@ nsOutlinerContentView::GetCellText(PRInt32 aRow, const PRUnichar* aColID, nsAStr
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::SetOutliner(nsIOutlinerBoxObject* aOutliner)
+nsTreeContentView::SetTree(nsITreeBoxObject* aTree)
 {
-  mBoxObject = aOutliner;
+  mBoxObject = aTree;
 
-  if (!mRoot) {
+  if (aTree && !mRoot) {
     // Get our root element
     nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mBoxObject);
     nsCOMPtr<nsIDOMElement> element;
@@ -494,7 +569,7 @@ nsOutlinerContentView::SetOutliner(nsIOutlinerBoxObject* aOutliner)
     }
 
     nsCOMPtr<nsIDOMElement> bodyElement;
-    mBoxObject->GetOutlinerBody(getter_AddRefs(bodyElement));
+    mBoxObject->GetTreeBody(getter_AddRefs(bodyElement));
     if (bodyElement) {
       nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyElement);
       PRInt32 index = 0;
@@ -506,7 +581,7 @@ nsOutlinerContentView::SetOutliner(nsIOutlinerBoxObject* aOutliner)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ToggleOpenState(PRInt32 aIndex)
+nsTreeContentView::ToggleOpenState(PRInt32 aIndex)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -524,25 +599,25 @@ nsOutlinerContentView::ToggleOpenState(PRInt32 aIndex)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::CycleHeader(const PRUnichar* aColID, nsIDOMElement *aColElt)
+nsTreeContentView::CycleHeader(const PRUnichar* aColID, nsIDOMElement *aColElt)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::SelectionChanged()
+nsTreeContentView::SelectionChanged()
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::CycleCell(PRInt32 aRow, const PRUnichar* aColID)
+nsTreeContentView::CycleCell(PRInt32 aRow, const PRUnichar* aColID)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::IsEditable(PRInt32 aRow, const PRUnichar* aColID, PRBool* _retval)
+nsTreeContentView::IsEditable(PRInt32 aRow, const PRUnichar* aColID, PRBool* _retval)
 {
   *_retval = PR_FALSE;
 
@@ -550,32 +625,32 @@ nsOutlinerContentView::IsEditable(PRInt32 aRow, const PRUnichar* aColID, PRBool*
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::SetCellText(PRInt32 aRow, const PRUnichar* aColID, const PRUnichar* aValue)
+nsTreeContentView::SetCellText(PRInt32 aRow, const PRUnichar* aColID, const PRUnichar* aValue)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::PerformAction(const PRUnichar* aAction)
+nsTreeContentView::PerformAction(const PRUnichar* aAction)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::PerformActionOnRow(const PRUnichar* aAction, PRInt32 aRow)
+nsTreeContentView::PerformActionOnRow(const PRUnichar* aAction, PRInt32 aRow)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRowconst, const PRUnichar* aColID)
+nsTreeContentView::PerformActionOnCell(const PRUnichar* aAction, PRInt32 aRowconst, const PRUnichar* aColID)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetRoot(nsIDOMElement** aRoot)
+nsTreeContentView::GetRoot(nsIDOMElement** aRoot)
 {
   if (mRoot)
     mRoot->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aRoot);
@@ -586,7 +661,7 @@ nsOutlinerContentView::GetRoot(nsIDOMElement** aRoot)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** _retval)
+nsTreeContentView::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** _retval)
 {
   NS_PRECONDITION(aIndex >= 0 && aIndex < mRows.Count(), "bad index");
   if (aIndex < 0 || aIndex >= mRows.Count())
@@ -599,7 +674,7 @@ nsOutlinerContentView::GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
+nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aItem);
   *_retval = FindContent(content);
@@ -608,43 +683,43 @@ nsOutlinerContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::BeginUpdate(nsIDocument *aDocument)
+nsTreeContentView::BeginUpdate(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::EndUpdate(nsIDocument *aDocument)
+nsTreeContentView::EndUpdate(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::BeginLoad(nsIDocument *aDocument)
+nsTreeContentView::BeginLoad(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::EndLoad(nsIDocument *aDocument)
+nsTreeContentView::EndLoad(nsIDocument *aDocument)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
+nsTreeContentView::BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
+nsTreeContentView::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ContentChanged(nsIDocument *aDocument,
+nsTreeContentView::ContentChanged(nsIDocument *aDocument,
                                      nsIContent* aContent,
                                      nsISupports* aSubContent)
 {
@@ -652,7 +727,7 @@ nsOutlinerContentView::ContentChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ContentStatesChanged(nsIDocument* aDocument,
+nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,
                                            nsIContent* aContent2,
                                            nsIAtom* aChangedPseudoClass)
@@ -674,7 +749,7 @@ nsOutlinerContentView::ContentStatesChanged(nsIDocument* aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
+nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
                                        nsIContent*  aContent,
                                        PRInt32      aNameSpaceID,
                                        nsIAtom*     aAttribute,
@@ -690,18 +765,27 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
-  if (tag == nsXULAtoms::outlinercol) {
+  if (tag == nsXULAtoms::treecol) {
     if (aAttribute == nsXULAtoms::properties) {
       nsAutoString id;
       aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
       mBoxObject->InvalidateColumn(id.get());
     }
   }
-  else if (tag == nsXULAtoms::outlineritem) {
-    if (aAttribute == nsXULAtoms::open) {
-      PRInt32 index = FindContent(aContent);
+  else if (tag == nsXULAtoms::treeitem) {
+    PRInt32 index = FindContent(aContent);
+    Row* row = (Row*)mRows[index];
+    if (aAttribute == nsXULAtoms::container) {
       if (index >= 0) {
-        Row* row = (Row*)mRows[index];
+        nsAutoString container;
+        aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
+        PRBool isContainer = container.Equals(NS_LITERAL_STRING("true"));
+        row->SetContainer(isContainer);
+        mBoxObject->InvalidateRow(index);
+     }
+    }
+    else if (aAttribute == nsXULAtoms::open) {
+      if (index >= 0) {
         nsAutoString open;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
         PRBool isOpen = open.Equals(NS_LITERAL_STRING("true"));
@@ -713,7 +797,7 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
       }
     }
   }
-  else if (tag == nsXULAtoms::outlinerseparator) {
+  else if (tag == nsXULAtoms::treeseparator) {
     if (aAttribute == nsXULAtoms::properties) {
       PRInt32 index = FindContent(aContent);
       if (index >= 0) {
@@ -724,7 +808,7 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
       }
     }
   }
-  else if (tag == nsXULAtoms::outlinerrow) {
+  else if (tag == nsXULAtoms::treerow) {
     if (aAttribute == nsXULAtoms::properties) {
       nsCOMPtr<nsIContent> parent;
       aContent->GetParent(*getter_AddRefs(parent));
@@ -739,10 +823,12 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
       }
     }
   }
-  else if (tag == nsXULAtoms::outlinercell) {
+  else if (tag == nsXULAtoms::treecell) {
     if (aAttribute == nsXULAtoms::ref ||
-        aAttribute == nsHTMLAtoms::label ||
-        aAttribute == nsXULAtoms::properties) {
+        aAttribute == nsXULAtoms::properties ||
+        aAttribute == nsXULAtoms::mode ||
+        aAttribute == nsHTMLAtoms::value ||
+        aAttribute == nsHTMLAtoms::label) {
       nsCOMPtr<nsIContent> parent;
       aContent->GetParent(*getter_AddRefs(parent));
       if (parent) {
@@ -763,7 +849,7 @@ nsOutlinerContentView::AttributeChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ContentAppended(nsIDocument *aDocument,
+nsTreeContentView::ContentAppended(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       PRInt32     aNewIndexInContainer)
 {
@@ -775,7 +861,7 @@ nsOutlinerContentView::ContentAppended(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
+nsTreeContentView::ContentInserted(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aChild,
                                       PRInt32 aIndexInContainer)
@@ -789,23 +875,23 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
     if (childTag != nsHTMLAtoms::option)
       return NS_OK;
   } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
-    if (childTag != nsXULAtoms::outlineritem &&
-        childTag != nsXULAtoms::outlinerseparator &&
-        childTag != nsXULAtoms::outlinerchildren &&
-        childTag != nsXULAtoms::outlinerrow &&
-        childTag != nsXULAtoms::outlinercell)
+    if (childTag != nsXULAtoms::treeitem &&
+        childTag != nsXULAtoms::treeseparator &&
+        childTag != nsXULAtoms::treechildren &&
+        childTag != nsXULAtoms::treerow &&
+        childTag != nsXULAtoms::treecell)
       return NS_OK;
   } else
     return NS_OK;
 
-  // If we have a legal tag, go up to the outliner/select and make sure
+  // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
   nsCOMPtr<nsIContent> element = aContainer;
   nsCOMPtr<nsIAtom> parentTag;
   
   while (element) {
     element->GetTag(*getter_AddRefs(parentTag));
-    if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::outliner) ||
+    if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) ||
         (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
       if (element == mRoot) // this is for us, stop looking
         break;
@@ -815,15 +901,15 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
     temp->GetParent(*getter_AddRefs(element));
   }
 
-  if (childTag == nsXULAtoms::outlineritem ||
-      childTag == nsXULAtoms::outlinerseparator) {
+  if (childTag == nsXULAtoms::treeitem ||
+      childTag == nsXULAtoms::treeseparator) {
     PRInt32 parentIndex = -1;
 
     nsCOMPtr<nsIContent> parent;
     aContainer->GetParent(*getter_AddRefs(parent));
     nsCOMPtr<nsIAtom> parentTag;
     parent->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag != nsXULAtoms::outliner)
+    if (parentTag != nsXULAtoms::tree)
       parentIndex = FindContent(parent);
 
     PRInt32 index = 0;
@@ -839,7 +925,7 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
     InsertRow(parentIndex, aIndexInContainer, aChild, &count);
     mBoxObject->RowCountChanged(parentIndex + aIndexInContainer + 1, count);
   }
-  else if (childTag == nsXULAtoms::outlinerchildren) {
+  else if (childTag == nsXULAtoms::treechildren) {
     PRInt32 index = FindContent(aContainer);
     if (index >= 0) {
       Row* row = (Row*)mRows[index];
@@ -852,12 +938,12 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
       }
     }
   }
-  else if (childTag == nsXULAtoms::outlinerrow) {
+  else if (childTag == nsXULAtoms::treerow) {
     PRInt32 index = FindContent(aContainer);
     if (index >= 0)
       mBoxObject->InvalidateRow(index);
   }
-  else if (childTag == nsXULAtoms::outlinercell) {
+  else if (childTag == nsXULAtoms::treecell) {
     nsCOMPtr<nsIContent> parent;
     aContainer->GetParent(*getter_AddRefs(parent));
     if (parent) {
@@ -871,7 +957,7 @@ nsOutlinerContentView::ContentInserted(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ContentReplaced(nsIDocument *aDocument,
+nsTreeContentView::ContentReplaced(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       nsIContent* aOldChild,
                                       nsIContent* aNewChild,
@@ -884,7 +970,7 @@ nsOutlinerContentView::ContentReplaced(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
+nsTreeContentView::ContentRemoved(nsIDocument *aDocument,
                                      nsIContent* aContainer,
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer)
@@ -898,23 +984,23 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
     if (tag != nsHTMLAtoms::option)
       return NS_OK;
   } else if (aChild->IsContentOfType(nsIContent::eXUL)) {
-    if (tag != nsXULAtoms::outlineritem &&
-        tag != nsXULAtoms::outlinerseparator &&
-        tag != nsXULAtoms::outlinerchildren &&
-        tag != nsXULAtoms::outlinerrow &&
-        tag != nsXULAtoms::outlinercell)
+    if (tag != nsXULAtoms::treeitem &&
+        tag != nsXULAtoms::treeseparator &&
+        tag != nsXULAtoms::treechildren &&
+        tag != nsXULAtoms::treerow &&
+        tag != nsXULAtoms::treecell)
       return NS_OK;
   } else
     return NS_OK;
 
-  // If we have a legal tag, go up to the outliner/select and make sure
+  // If we have a legal tag, go up to the tree/select and make sure
   // that it's ours.
   nsCOMPtr<nsIContent> element = aContainer;
   nsCOMPtr<nsIAtom> parentTag;
   
   while (element) {
     element->GetTag(*getter_AddRefs(parentTag));
-    if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::outliner) || 
+    if ((element->IsContentOfType(nsIContent::eXUL) && parentTag == nsXULAtoms::tree) || 
         (element->IsContentOfType(nsIContent::eHTML) && parentTag == nsHTMLAtoms::select))
       if (element == mRoot) // this is for us, stop looking
         break;
@@ -924,8 +1010,8 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
     temp->GetParent(*getter_AddRefs(element));
   }
 
-  if (tag == nsXULAtoms::outlineritem ||
-      tag == nsXULAtoms::outlinerseparator ||
+  if (tag == nsXULAtoms::treeitem ||
+      tag == nsXULAtoms::treeseparator ||
       tag == nsHTMLAtoms::option) {
     PRInt32 index = FindContent(aChild);
     if (index >= 0) {
@@ -934,7 +1020,7 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
       mBoxObject->RowCountChanged(index, -count);
     }
   }
-  else if (tag == nsXULAtoms::outlinerchildren) {
+  else if (tag == nsXULAtoms::treechildren) {
     PRInt32 index = FindContent(aContainer);
     if (index >= 0) {
       Row* row = (Row*)mRows[index];
@@ -944,14 +1030,21 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
       // Invalidate also the row to update twisty.
       mBoxObject->InvalidateRow(index);
       mBoxObject->RowCountChanged(index + 1, -count);
+    } else {
+      nsCOMPtr<nsIAtom> containerTag;
+      aContainer->GetTag(*getter_AddRefs(containerTag));
+      if (containerTag == nsXULAtoms::tree ) {
+        ClearRows();
+        mBoxObject->Invalidate();
+      }
     }
   }
-  else if (tag == nsXULAtoms::outlinerrow) {
+  else if (tag == nsXULAtoms::treerow) {
     PRInt32 index = FindContent(aContainer);
     if (index >= 0)
       mBoxObject->InvalidateRow(index);
   }
-  else if (tag == nsXULAtoms::outlinercell) {
+  else if (tag == nsXULAtoms::treecell) {
     nsCOMPtr<nsIContent> parent;
     aContainer->GetParent(*getter_AddRefs(parent));
     if (parent) {
@@ -965,21 +1058,21 @@ nsOutlinerContentView::ContentRemoved(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::StyleSheetAdded(nsIDocument *aDocument,
+nsTreeContentView::StyleSheetAdded(nsIDocument *aDocument,
                                       nsIStyleSheet* aStyleSheet)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::StyleSheetRemoved(nsIDocument *aDocument,
+nsTreeContentView::StyleSheetRemoved(nsIDocument *aDocument,
                                         nsIStyleSheet* aStyleSheet)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+nsTreeContentView::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                                      nsIStyleSheet* aStyleSheet,
                                                      PRBool aDisabled)
 {
@@ -987,7 +1080,7 @@ nsOutlinerContentView::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::StyleRuleChanged(nsIDocument *aDocument,
+nsTreeContentView::StyleRuleChanged(nsIDocument *aDocument,
                                        nsIStyleSheet* aStyleSheet,
                                        nsIStyleRule* aStyleRule,
                                        PRInt32 aHint)
@@ -996,7 +1089,7 @@ nsOutlinerContentView::StyleRuleChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::StyleRuleAdded(nsIDocument *aDocument,
+nsTreeContentView::StyleRuleAdded(nsIDocument *aDocument,
                                      nsIStyleSheet* aStyleSheet,
                                      nsIStyleRule* aStyleRule)
 {
@@ -1004,7 +1097,7 @@ nsOutlinerContentView::StyleRuleAdded(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::StyleRuleRemoved(nsIDocument *aDocument,
+nsTreeContentView::StyleRuleRemoved(nsIDocument *aDocument,
                                        nsIStyleSheet* aStyleSheet,
                                        nsIStyleRule* aStyleRule)
 {
@@ -1012,7 +1105,7 @@ nsOutlinerContentView::StyleRuleRemoved(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsOutlinerContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
+nsTreeContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   // Remove ourselfs from document's observers.
   if (mDocument) {
@@ -1028,7 +1121,7 @@ nsOutlinerContentView::DocumentWillBeDestroyed(nsIDocument *aDocument)
 
 // Recursively serialize content, starting with aContent.
 void
-nsOutlinerContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
+nsTreeContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
   ChildIterator iter, last;
   for (ChildIterator::Init(aContent, &iter, &last); iter != last; ++iter) {
@@ -1037,9 +1130,9 @@ nsOutlinerContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRI
     content->GetTag(*getter_AddRefs(tag));
     PRInt32 count = aRows.Count();
     if (content->IsContentOfType(nsIContent::eXUL)) {
-      if (tag == nsXULAtoms::outlineritem)
+      if (tag == nsXULAtoms::treeitem)
         SerializeItem(content, aParentIndex, aIndex, aRows);
-      else if (tag == nsXULAtoms::outlinerseparator)
+      else if (tag == nsXULAtoms::treeseparator)
         SerializeSeparator(content, aParentIndex, aIndex, aRows);
     } else if (content->IsContentOfType(nsIContent::eHTML)) {
       if (tag == nsHTMLAtoms::option)
@@ -1050,13 +1143,13 @@ nsOutlinerContentView::Serialize(nsIContent* aContent, PRInt32 aParentIndex, PRI
 }
 
 void
-nsOutlinerContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
+nsTreeContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   aRows.AppendElement(row);
 
   nsCOMPtr<nsIContent> realRow;
-  nsOutlinerUtils::GetImmediateChild(aContent, nsXULAtoms::outlinerrow, getter_AddRefs(realRow));
+  nsTreeUtils::GetImmediateChild(aContent, nsXULAtoms::treerow, getter_AddRefs(realRow));
   if (realRow)
     ParseProperties(realRow, &row->mProperty);
 
@@ -1069,7 +1162,7 @@ nsOutlinerContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex,
     if (open.Equals(NS_LITERAL_STRING("true"))) {
       row->SetOpen(PR_TRUE);
       nsCOMPtr<nsIContent> child;
-      nsOutlinerUtils::GetImmediateChild(aContent, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+      nsTreeUtils::GetImmediateChild(aContent, nsXULAtoms::treechildren, getter_AddRefs(child));
       if (child) {
         // Now, recursively serialize our child.
         PRInt32 count = aRows.Count();
@@ -1079,12 +1172,17 @@ nsOutlinerContentView::SerializeItem(nsIContent* aContent, PRInt32 aParentIndex,
       }
       else
         row->SetEmpty(PR_TRUE);
+    } else {
+      nsAutoString empty;
+      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::empty, empty);
+      if (empty.Equals(NS_LITERAL_STRING("true")))
+        row->SetEmpty(PR_TRUE);
     }
   } 
 }
 
 void
-nsOutlinerContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
+nsTreeContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentIndex, PRInt32* aIndex, nsVoidArray& aRows)
 {
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   row->SetSeparator(PR_TRUE);
@@ -1094,13 +1192,13 @@ nsOutlinerContentView::SerializeSeparator(nsIContent* aContent, PRInt32 aParentI
 }
 
 void
-nsOutlinerContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentIndex,
+nsTreeContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentIndex,
                                        PRInt32* aIndex, nsVoidArray& aRows)
 {
   Row* row = Row::Create(mAllocator, aContent, aParentIndex);
   aRows.AppendElement(row);
 
-  // This will happen before the OutlinerSelection is hooked up.  So, cache the selected
+  // This will happen before the TreeSelection is hooked up.  So, cache the selected
   // state in the row properties and update the selection when it is attached.
 
   nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(aContent);
@@ -1111,7 +1209,7 @@ nsOutlinerContentView::SerializeOption(nsIContent* aContent, PRInt32 aParentInde
 }
 
 void
-nsOutlinerContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aIndex)
+nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aContent, PRInt32* aIndex)
 {
   ChildIterator iter, last;
   for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {
@@ -1121,7 +1219,7 @@ nsOutlinerContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aCo
 
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*getter_AddRefs(tag));
-    if (tag == nsXULAtoms::outlineritem) {
+    if (tag == nsXULAtoms::treeitem) {
       (*aIndex)++;
       nsAutoString container;
       content->GetAttr(kNameSpaceID_None, nsXULAtoms::container, container);
@@ -1130,23 +1228,23 @@ nsOutlinerContentView::GetIndexInSubtree(nsIContent* aContainer, nsIContent* aCo
         content->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
         if (open.Equals(NS_LITERAL_STRING("true"))) {
           nsCOMPtr<nsIContent> child;
-          nsOutlinerUtils::GetImmediateChild(content, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+          nsTreeUtils::GetImmediateChild(content, nsXULAtoms::treechildren, getter_AddRefs(child));
           if (child)
             GetIndexInSubtree(child, aContent, aIndex);
         }
       }
     }
-    else if (tag == nsXULAtoms::outlinerseparator)
+    else if (tag == nsXULAtoms::treeseparator)
       (*aIndex)++;
   }
 }
 
 void
-nsOutlinerContentView::EnsureSubtree(PRInt32 aIndex, PRInt32* aCount)
+nsTreeContentView::EnsureSubtree(PRInt32 aIndex, PRInt32* aCount)
 {
   Row* row = (Row*)mRows[aIndex];
   nsCOMPtr<nsIContent> child;
-  nsOutlinerUtils::GetImmediateChild(row->mContent, nsXULAtoms::outlinerchildren, getter_AddRefs(child));
+  nsTreeUtils::GetImmediateChild(row->mContent, nsXULAtoms::treechildren, getter_AddRefs(child));
   if (! child) {
     *aCount = 0;
     return;
@@ -1169,7 +1267,7 @@ nsOutlinerContentView::EnsureSubtree(PRInt32 aIndex, PRInt32* aCount)
 }
 
 void
-nsOutlinerContentView::RemoveSubtree(PRInt32 aIndex, PRInt32* aCount)
+nsTreeContentView::RemoveSubtree(PRInt32 aIndex, PRInt32* aCount)
 {
   Row* row = (Row*)mRows[aIndex];
   PRInt32 count = row->mSubtreeSize;
@@ -1189,14 +1287,14 @@ nsOutlinerContentView::RemoveSubtree(PRInt32 aIndex, PRInt32* aCount)
 }
 
 void
-nsOutlinerContentView::InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* aContent, PRInt32* aCount)
+nsTreeContentView::InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* aContent, PRInt32* aCount)
 {
   nsAutoVoidArray rows;
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
-  if (tag == nsXULAtoms::outlineritem)
+  if (tag == nsXULAtoms::treeitem)
     SerializeItem(aContent, aParentIndex, &aIndex, rows);
-  else if (tag == nsXULAtoms::outlinerseparator)
+  else if (tag == nsXULAtoms::treeseparator)
     SerializeSeparator(aContent, aParentIndex, &aIndex, rows);
   else if (tag == nsHTMLAtoms::option)
     SerializeOption(aContent, aParentIndex, &aIndex, rows);
@@ -1213,7 +1311,7 @@ nsOutlinerContentView::InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIConten
 }
 
 void
-nsOutlinerContentView::RemoveRow(PRInt32 aIndex, PRInt32* aCount)
+nsTreeContentView::RemoveRow(PRInt32 aIndex, PRInt32* aCount)
 {
   Row* row = (Row*)mRows[aIndex];
   PRInt32 count = row->mSubtreeSize + 1;
@@ -1234,7 +1332,7 @@ nsOutlinerContentView::RemoveRow(PRInt32 aIndex, PRInt32* aCount)
 }
 
 void
-nsOutlinerContentView::ClearRows()
+nsTreeContentView::ClearRows()
 {
   for (PRInt32 i = 0; i < mRows.Count(); i++)
     Row::Destroy(mAllocator, (Row*)mRows[i]);
@@ -1243,7 +1341,7 @@ nsOutlinerContentView::ClearRows()
 } 
 
 void
-nsOutlinerContentView::OpenContainer(PRInt32 aIndex)
+nsTreeContentView::OpenContainer(PRInt32 aIndex)
 {
   Row* row = (Row*)mRows[aIndex];
   row->SetOpen(PR_TRUE);
@@ -1256,7 +1354,7 @@ nsOutlinerContentView::OpenContainer(PRInt32 aIndex)
 
 
 void
-nsOutlinerContentView::CloseContainer(PRInt32 aIndex)
+nsTreeContentView::CloseContainer(PRInt32 aIndex)
 {
   Row* row = (Row*)mRows[aIndex];
   row->SetOpen(PR_FALSE);
@@ -1268,7 +1366,7 @@ nsOutlinerContentView::CloseContainer(PRInt32 aIndex)
 }
 
 PRInt32
-nsOutlinerContentView::FindContent(nsIContent* aContent)
+nsTreeContentView::FindContent(nsIContent* aContent)
 {
   for (PRInt32 i = 0; i < mRows.Count(); i++)
     if (((Row*)mRows[i])->mContent == aContent)
@@ -1278,7 +1376,7 @@ nsOutlinerContentView::FindContent(nsIContent* aContent)
 }
 
 void
-nsOutlinerContentView::UpdateSubtreeSizes(PRInt32 aParentIndex, PRInt32 count)
+nsTreeContentView::UpdateSubtreeSizes(PRInt32 aParentIndex, PRInt32 count)
 {
   while (aParentIndex >= 0) {
     Row* row = (Row*)mRows[aParentIndex];
@@ -1288,7 +1386,7 @@ nsOutlinerContentView::UpdateSubtreeSizes(PRInt32 aParentIndex, PRInt32 count)
 }
 
 void
-nsOutlinerContentView::UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt32 aCount)
+nsTreeContentView::UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt32 aCount)
 {
   PRInt32 count = mRows.Count();
   for (PRInt32 i = aIndex + aSkip; i < count; i++) {
@@ -1299,7 +1397,7 @@ nsOutlinerContentView::UpdateParentIndexes(PRInt32 aIndex, PRInt32 aSkip, PRInt3
 }
 
 nsresult
-nsOutlinerContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult)
+nsTreeContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult)
 {
   PRInt32 colIndex;
   mBoxObject->GetColumnIndex(aColID, &colIndex);
@@ -1313,7 +1411,7 @@ nsOutlinerContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aCo
     nsCOMPtr<nsIContent> cell = *iter;
     nsCOMPtr<nsIAtom> tag;
     cell->GetTag(*getter_AddRefs(tag));
-    if (tag == nsXULAtoms::outlinercell) {
+    if (tag == nsXULAtoms::treecell) {
       nsAutoString ref;
       cell->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, ref);
       if (!ref.IsEmpty() && ref.Equals(aColID)) {
@@ -1331,7 +1429,7 @@ nsOutlinerContentView::GetNamedCell(nsIContent* aContainer, const PRUnichar* aCo
 }
 
 nsresult
-nsOutlinerContentView::ParseProperties(nsIContent* aContent, Property** aProperty)
+nsTreeContentView::ParseProperties(nsIContent* aContent, Property** aProperty)
 {
   nsAutoString properties;
   aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::properties, properties);

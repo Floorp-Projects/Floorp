@@ -131,9 +131,9 @@ function onSelectJSEAttribute()
 function onSelectJSETreeItem()
 {
   var tree = gDialog.AddJSEAttributeTree;
-  if (tree && tree.selectedItems && tree.selectedItems.length)
+  if (tree && tree.treeBoxObject.selection.count)
   {
-    var name = GetTreeItemAttributeStr(tree.selectedItems[0]);
+    var name = GetTreeItemAttributeStr(getSelectedItem(tree));
 
     // Select attribute name in list
     if (gDialog.AddJSEAttributeNameList.firstChild)
@@ -144,7 +144,7 @@ function onSelectJSETreeItem()
 
       // Set value input to that in tree (no need to update this in the tree)
       gUpdateTreeValue = false;
-      gDialog.AddJSEAttributeValueInput.value =  GetTreeItemValueStr(tree.selectedItems[0]);
+      gDialog.AddJSEAttributeValueInput.value =  GetTreeItemValueStr(getSelectedItem(tree));
       gUpdateTreeValue = true;
     }
   }
@@ -206,9 +206,9 @@ function RemoveJSEAttribute()
   var newIndex = gDialog.AddJSEAttributeTree.selectedIndex;
 
   // We only allow 1 selected item
-  if (gDialog.AddJSEAttributeTree.selectedItems.length)
+  if (gDialog.AddJSEAttributeTree.treeBoxObject.selection.count)
   {
-    var item = gDialog.AddJSEAttributeTree.selectedItems[0];
+    var item = getSelectedItem(gDialog.AddJSEAttributeTree);
 
     // Name is the text of the treecell
     var attr = GetTreeItemAttributeStr(item);

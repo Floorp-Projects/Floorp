@@ -67,12 +67,12 @@ function DOMNodeViewer()  // implements inIViewer
   this.mObsMan = new ObserverManager(this);
 
   this.mURL = window.location;
-  this.mAttrOutliner = document.getElementById("olAttr");
+  this.mAttrTree = document.getElementById("olAttr");
 
   // prepare and attach the DOM DataSource
   this.mDOMView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
   this.mDOMView.addFilterByType(2, true);
-  this.mAttrOutliner.outlinerBoxObject.view = this.mDOMView;
+  this.mAttrTree.treeBoxObject.view = this.mDOMView;
 }
 
 DOMNodeViewer.prototype = 
@@ -86,7 +86,7 @@ DOMNodeViewer.prototype =
 
   get selectedIndex()
   {
-    return this.mAttrOutliner.currentIndex;
+    return this.mAttrTree.currentIndex;
   },
 
   get selectedAttribute()
@@ -121,8 +121,8 @@ DOMNodeViewer.prototype =
 
       if (aObject != this.mDOMView.rootNode) {
         this.mDOMView.rootNode = aObject;
-        this.mAttrOutliner.outlinerBoxObject.selection.select(-1);
-        this.mAttrOutliner.outlinerBoxObject.invalidate();
+        this.mAttrTree.treeBoxObject.selection.select(-1);
+        this.mAttrTree.treeBoxObject.invalidate();
       }
     } else {
       deck.setAttribute("selectedIndex", 1);

@@ -264,9 +264,9 @@
 #include "nsIControllers.h"
 #include "nsISelection.h"
 #include "nsIBoxObject.h"
-#include "nsIOutlinerSelection.h"
-#include "nsIOutlinerContentView.h"
-#include "nsIOutlinerView.h"
+#include "nsITreeSelection.h"
+#include "nsITreeContentView.h"
+#include "nsITreeView.h"
 
 #ifdef MOZ_SVG
 #include "nsIDOMSVGAnimatedLength.h"
@@ -640,9 +640,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(OutlinerSelection, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(TreeSelection, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(OutlinerContentView, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(TreeContentView, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
 
   // Crypto classes
@@ -1793,13 +1793,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIBoxObject)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(OutlinerSelection, nsIOutlinerSelection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerSelection)
+  DOM_CLASSINFO_MAP_BEGIN(TreeSelection, nsITreeSelection)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeSelection)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(OutlinerContentView, nsIOutlinerContentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerContentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIOutlinerView)
+  DOM_CLASSINFO_MAP_BEGIN(TreeContentView, nsITreeContentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeContentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Crypto, nsIDOMCrypto)

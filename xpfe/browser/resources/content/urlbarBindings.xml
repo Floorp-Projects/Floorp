@@ -54,10 +54,10 @@
   
   <binding id="autocomplete-result-popup" extends="chrome://global/content/autocomplete.xml#autocomplete-result-popup">
     <content>
-      <xul:outliner anonid="outliner" class="autocomplete-outliner plain" flex="1">
-        <xul:outlinercols anonid="outlinercols"/>
-        <xul:outlinerchildren anonid="outlinerbody" class="autocomplete-outlinerbody" flex="1"/>
-      </xul:outliner>
+      <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
+        <xul:treecols anonid="treecols"/>
+        <xul:treechildren anonid="treebody" class="autocomplete-treebody" flex="1"/>
+      </xul:tree>
       <xul:box role="search-box" class="autocomplete-search-box"/>
     </content>
     
@@ -282,7 +282,7 @@
         <parameter name="aDir"/>
         <parameter name="aAmount"/>
         <body><![CDATA[
-          var bx = this.outliner.outlinerBoxObject;
+          var bx = this.tree.treeBoxObject;
           var view = bx.view;
           var sel;
           if (this.selectedIndex == null && aDir < 0) {

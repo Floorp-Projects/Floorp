@@ -338,7 +338,7 @@ function ClearListbox(listbox)
 /* These help using a <tree> for simple lists
   Assumes this simple structure:
   <tree>
-    <treecolgroup><treecol flex="1"/></treecolgroup>
+    <treecols><treecol flex="1"/></treecols>
     <treechildren>
       <treeitem>
         <treerow>
@@ -357,7 +357,7 @@ function AppendStringToTreelist(tree, string)
     var treecols = tree.firstChild;
     if (!treecols)
     {
-      dump("Bad XUL: Must have <treecolgroup> as first child\n");
+      dump("Bad XUL: Must have <treecols> as first child\n");
     }
     var treechildren = treecols.nextSibling;
     if (!treechildren)
@@ -396,8 +396,8 @@ function ClearTreelist(tree)
 {
   if (tree)
   {
-    tree.clearSelection();
-    // Skip over the first <treecolgroup> child
+    tree.treeBoxObject.selection.clearSelection();
+    // Skip over the first <treecols> child
     if (tree.firstChild)
     {
       var nextChild = tree.firstChild.nextSibling;
@@ -417,13 +417,14 @@ function GetSelectedTreelistAttribute(tree, attr)
 {
   if (tree)
   {
-    if (tree.selectedIndex >= 0 &&
-        tree.selectedItems.length > 0 &&
-        tree.selectedItems[0] &&
-        tree.selectedItems[0].firstChild &&
-        tree.selectedItems[0].firstChild.firstChild)
-    {
-      return tree.selectedItems[0].firstChild.firstChild.getAttribute(attr);
+    if (tree.treeBoxObject.selection.count > 0) {
+      var selectedItem = tree.contentView.getItemAtIndex(tree.currentIndex);
+      if (selectedItem &&
+          selectedItem.firstChild &&
+          selectedItem.firstChild.firstChild)
+      {
+        return selectedItem.firstChild.firstChild.getAttribute(attr);
+      }
     }
   }
   return "";
@@ -438,14 +439,13 @@ function RemoveSelectedTreelistItem(tree)
 {
   if (tree)
   {
-    if (tree.selectedIndex >= 0 &&
-        tree.selectedItems.length > 0)
+    if (tree.treeBoxObject.selection.count > 0)
     {
       // Get the node to delete
-      var treeItem = tree.selectedItems[0];
+      var treeItem = tree.contentView.getItemAtIndex(tree.currentIndex);
       if (treeItem)
       {
-        tree.cleaclearSelection
+        tree.treeBoxObject.selection.clearSelection();
         var parent = treeItem.parentNode;
         if (parent)
         {

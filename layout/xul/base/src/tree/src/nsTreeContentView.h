@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsOutlinerContentView_h__
-#define nsOutlinerContentView_h__
+#ifndef nsTreeContentView_h__
+#define nsTreeContentView_h__
 
 #include "nsCOMPtr.h"
 #include "nsFixedSizeAllocator.h"
@@ -46,31 +46,31 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerSelection.h"
-#include "nsIOutlinerContentView.h"
+#include "nsITreeView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeSelection.h"
+#include "nsITreeContentView.h"
 
 class Property;
 
-nsresult NS_NewOutlinerContentView(nsIOutlinerContentView** aResult);
+nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
-class nsOutlinerContentView : public nsIOutlinerView,
-                              public nsIOutlinerContentView,
+class nsTreeContentView : public nsITreeView,
+                              public nsITreeContentView,
                               public nsIDocumentObserver
 {
   public:
-    nsOutlinerContentView(void);
+    nsTreeContentView(void);
 
-    virtual ~nsOutlinerContentView(void);
+    virtual ~nsTreeContentView(void);
 
-    friend nsresult NS_NewOutlinerContentView(nsIOutlinerContentView** aResult);
+    friend nsresult NS_NewTreeContentView(nsITreeContentView** aResult);
 
     NS_DECL_ISUPPORTS
 
-    NS_DECL_NSIOUTLINERVIEW
+    NS_DECL_NSITREEVIEW
 
-    NS_DECL_NSIOUTLINERCONTENTVIEW
+    NS_DECL_NSITREECONTENTVIEW
 
     // nsIDocumentObserver
     NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
@@ -186,8 +186,8 @@ class nsOutlinerContentView : public nsIOutlinerView,
     nsresult ParseProperties(nsIContent* aContent, Property** aProperty);
 
   private:
-    nsCOMPtr<nsIOutlinerBoxObject>      mBoxObject;
-    nsCOMPtr<nsIOutlinerSelection>      mSelection;
+    nsCOMPtr<nsITreeBoxObject>      mBoxObject;
+    nsCOMPtr<nsITreeSelection>      mSelection;
     nsCOMPtr<nsIContent>                mRoot;
     nsIDocument*                        mDocument;      // WEAK
     nsFixedSizeAllocator                mAllocator;
@@ -196,4 +196,4 @@ class nsOutlinerContentView : public nsIOutlinerView,
     PRPackedBool                        mUpdateSelection;
 };
 
-#endif // nsOutlinerContentView_h__
+#endif // nsTreeContentView_h__

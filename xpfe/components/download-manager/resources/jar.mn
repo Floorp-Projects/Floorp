@@ -1,8 +1,6 @@
 comm.jar:
   content/communicator/downloadmanager/downloadmanager.xul
   content/communicator/downloadmanager/downloadmanager.js
-  content/communicator/downloadmanager/downloadmanager.css
-  content/communicator/downloadmanager/downloadmanager.xml
 
 en-US.jar:
   locale/en-US/communicator/downloadmanager/downloadmanager.ent        (locale/en-US/downloadmanager.ent)

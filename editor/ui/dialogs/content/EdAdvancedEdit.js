@@ -197,7 +197,7 @@ function UpdateExistingAttribute( attName, attValue, treeChildrenId )
       //  but don't trigger the tree's onSelect handler
       gDoOnSelectTree = false;
       try {
-        treeChildren.parentNode.selectItem(item);
+        selectTreeItem(treeChildren, item);
       } catch (e) {}
       gDoOnSelectTree = true;
 
@@ -231,7 +231,7 @@ function GetAndSelectExistingAttributeValue( attName, treeChildrenId )
       //  but don't trigger the tree's onSelect handler
       gDoOnSelectTree = false;
       try {
-        treeChildren.parentNode.selectItem(item);
+        selectTreeItem(treeChildren, item);
       } catch (e) {}
       gDoOnSelectTree = true;
 
@@ -243,7 +243,7 @@ function GetAndSelectExistingAttributeValue( attName, treeChildrenId )
   // Attribute doesn't exist in tree, so remove selection
   gDoOnSelectTree = false;
   try {
-    treeChildren.parentNode.clearSelection();
+    treeChildren.parentNode.treeBoxObject.selection.clearSelection();
   } catch (e) {}
   gDoOnSelectTree = true;
 
@@ -324,7 +324,7 @@ function AddTreeItem ( name, value, treeChildrenId, attArray )
   //  but suppress calling the onSelect handler
   gDoOnSelectTree = false;
   try {
-    treeChildren.parentNode.selectItem(treeitem);
+    selectTreeItem(treeChildren, item);
   } catch (e) {}
   gDoOnSelectTree = true;
 
@@ -335,4 +335,18 @@ function doHelpButton()
 {
   openHelp("advanced_property_editor");
   return true;
+}
+
+function selectTreeItem(treeChildren, item)
+{
+  var index = treeChildren.parentNode.contentView.getIndexOfItem(item);
+  treeChildren.parentNode.treeBoxObject.selection.select(index);
+}
+
+function getSelectedItem(tree)
+{
+  if (tree.treeBoxObject.selection.count == 1)
+    return tree.contentView.getItemAtIndex(tree.currentIndex);
+  else
+    return null;
 }

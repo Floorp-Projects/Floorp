@@ -22,7 +22,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/customize.css"
   type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % customizeDTD SYSTEM "chrome://communicator/locale/sidebar/customize.dtd" >
@@ -31,70 +30,59 @@
 %brandDTD;
 ]>
 
-<window
+<dialog
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="main-window"
-  class="dialog"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
   width="450" height="400"
-  persist="screenX screenY width height">
+  persist="screenX screenY width height"
+  ondialogaccept="return Save();">
 
   <script type="application/x-javascript"
     src="chrome://communicator/content/sidebar/customize.js"/>
 
-  <keyset id="dialogKeys"/>
-
   <hbox flex="1">
     <vbox flex="1">
-      <label value="&sidebar.customize.additional.label;"
-        crop="right"/>
-      <tree id="other-panels" flex="1"
-        datasources="rdf:null"
+      <label value="&sidebar.customize.additional.label;" crop="right"/>
+
+      <tree id="other-panels" flex="1" seltype="multiple"
+        datasources="rdf:null" hidecolumnpicker="true"
         containment="http://home.netscape.com/NC-rdf#panel-list"
-        indent="true" seltype="multiple"
-        onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode)"
-  onclick="if (event.detail == 2) { AddPanel(); }"
-   >
+        onselect="SelectChangeForOtherPanels(event, event.target.parentNode.parentNode);"
+        onclick="if (event.detail == 2) { AddPanel(); } ClickOnOtherPanels(event);">
+
         <template>
           <rule>
             <conditions>
               <content uri="?uri"/>
               <triple subject="?uri" object="?panel-list"
-                predicate="http://home.netscape.com/NC-rdf#panel-list" />
+                predicate="http://home.netscape.com/NC-rdf#panel-list"/>
               <member container="?panel-list" child="?panel"/>
             </conditions>
+            
             <bindings>
               <binding subject="?panel" object="?title" 
-                predicate="http://home.netscape.com/NC-rdf#title" />
-              <binding subject="?panel" object="?content"
-                predicate="http://home.netscape.com/NC-rdf#content" />
-              <binding subject="?panel" object="?link"
-                predicate="http://home.netscape.com/NC-rdf#link" />
-              <binding subject="?panel" object="?open"
-                predicate="http://home.netscape.com/NC-rdf#open" />
-              <binding subject="?panel" object="?exclude"
-                predicate="http://home.netscape.com/NC-rdf#exclude" />
+                predicate="http://home.netscape.com/NC-rdf#title"/>
+              <binding subject="?panel" object="?link" 
+                predicate="http://home.netscape.com/NC-rdf#link"/>
             </bindings>
+            
             <action>
               <treechildren>
-                <treeitem uri="?panel" title="?title" content="?content"
-                  link="?link" open="?open"
-                  exclude="?exclude">
+                <treeitem uri="?panel" link="?link">
                   <treerow>
-                    <treecell class="treecell-indent treecell-panel"
-                      label="?title"/>
+                    <treecell label="?title"/>
                   </treerow>
                 </treeitem>
               </treechildren>
             </action>
           </rule>
         </template>
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren onclick="ClickOnOtherPanels(event)"
-          flex="1"/>
+        
+        <treecols>
+          <treecol id="AvailNameCol" flex="1" primary="true" hideheader="true"/>
+        </treecols>
       </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
@@ -115,8 +103,9 @@
     <vbox flex="1">
       <label value="&sidebar.customize.current.label;"
         crop="right"/>
-      <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
-        datasources="rdf:null" flex="1" seltype="multiple">
+      <tree id="current-panels" flex="1" seltype="multiple"
+            datasources="rdf:null" hidecolumnpicker="true"
+            onclick="SelectChangeForCurrentPanels();">
         <template>
           <rule>
             <conditions>
@@ -124,35 +113,32 @@
               <triple subject="?uri" object="?panel-list"
                 predicate="http://home.netscape.com/NC-rdf#panel-list"/>
               <member container="?panel-list" child="?panel"/>
-              <triple subject="?panel" object="?title"
-                predicate="http://home.netscape.com/NC-rdf#title"/>
-              <triple subject="?panel" object="?content"
-                predicate="http://home.netscape.com/NC-rdf#content"/>
             </conditions>
+            
             <bindings>
+              <binding subject="?panel" object="?title"
+                predicate="http://home.netscape.com/NC-rdf#title"/>
               <binding subject="?panel" object="?customize"
-                predicate="http://home.netscape.com/NC-rdf#customize" />
+                predicate="http://home.netscape.com/NC-rdf#customize"/>
             </bindings>
+            
             <action>
               <treechildren>
-                <treeitem uri="?panel" title="?title" customize="?customize"
-                  content="?content">
+                <treeitem uri="?panel" customize="?customize">
                   <treerow>
-                    <treecell class="treecell-indent treecell-panel"
-                      label="?title" />
+                    <treecell label="?title"/>
                   </treerow>
                 </treeitem>
               </treechildren>
             </action>
           </rule>
         </template>
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-         <!-- We explicitly create a 'treechildren' so we can refer
-              to it from the script -->
-        <treechildren id="current-panels-root"/> 
+        
+        <treecols>
+          <treecol id="CurrentNameCol" flex="1" hideheader="true"/>
+        </treecols>
       </tree>
+      
       <hbox class="button-group">
         <button id="customize-button"
           oncommand="CustomizePanel();" 
@@ -181,8 +167,9 @@
   <hbox>
     <button id="more-panels-link" label="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
     <spacer flex="1"/>
-    <hbox id="okCancelButtonsRight" />
+    <button dlgtype="accept"/>
+    <button dlgtype="cancel"/>
   </hbox>
 
-</window>
+</dialog>
 

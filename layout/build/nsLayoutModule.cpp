@@ -176,7 +176,6 @@ extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
 
 extern nsresult NS_NewBoxObject(nsIBoxObject** aResult);
-extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
@@ -184,7 +183,7 @@ extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
-extern nsresult NS_NewOutlinerBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 extern nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
 extern nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
@@ -220,7 +219,6 @@ MAKE_CTOR(CreateNewGalleyContext,       nsIPresContext,         NS_NewGalleyCont
 MAKE_CTOR(CreateNewPrintContext,        nsIPrintContext,        NS_NewPrintContext)
 MAKE_CTOR(CreateNewPrintPreviewContext, nsIPrintPreviewContext, NS_NewPrintPreviewContext)
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
-MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
 MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
@@ -228,7 +226,7 @@ MAKE_CTOR(CreateNewBrowserBoxObject,    nsIBoxObject,           NS_NewBrowserBox
 MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxObject)
 MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
-MAKE_CTOR(CreateNewOutlinerBoxObject,   nsIBoxObject,           NS_NewOutlinerBoxObject)
+MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 
 // The list of components we register
@@ -292,11 +290,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/layout/xul-boxobject;1",
     CreateNewBoxObject },
 
-  { "XUL Tree Box Object",
-    NS_TREEBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-tree;1",
-    CreateNewTreeBoxObject },
-
   { "XUL Listbox Box Object",
     NS_LISTBOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject-listbox;1",
@@ -332,10 +325,10 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/layout/xul-boxobject-scrollbox;1",
     CreateNewScrollBoxObject },
 
-  { "XUL Outliner Box Object",
-    NS_OUTLINERBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-outliner;1",
-    CreateNewOutlinerBoxObject  },
+  { "XUL Tree Box Object",
+    NS_TREEBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-tree;1",
+    CreateNewTreeBoxObject  },
 
   { "AutoCopy Service",
     NS_AUTOCOPYSERVICE_CID,

@@ -125,8 +125,8 @@ function Startup()
       if (window.arguments[2])
         folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
       if (folderItem) {
-        var ind = bookmarkView.outlinerBuilder.getIndexOfResource(folderItem);
-        bookmarkView.outlinerBoxObject.selection.select(ind);
+        var ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
+        bookmarkView.treeBoxObject.selection.select(ind);
       }
       break;
     case "newBookmark":
@@ -147,8 +147,8 @@ function Startup()
         gCreateInFolder = window.arguments[2];
         folderItem = bookmarkView.rdf.GetResource(gCreateInFolder);
         if (folderItem) {
-          var ind = bookmarkView.outlinerBuilder.getIndexOfResource(folderItem);
-          bookmarkView.outlinerBoxObject.selection.select(ind);
+          var ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
+          bookmarkView.treeBoxObject.selection.select(ind);
         }
       }
     }
@@ -157,9 +157,9 @@ function Startup()
   if (shouldSetOKButton)
     onFieldInput();
   if (document.getElementById("bookmarknamegrid").hasAttribute("hidden")) {
-    bookmarkView.outliner.focus();
+    bookmarkView.tree.focus();
     if (bookmarkView.currentIndex == -1)
-      bookmarkView.outlinerBoxObject.selection.select(0);
+      bookmarkView.treeBoxObject.selection.select(0);
   }
   else {
     gFld_Name.select();
@@ -190,7 +190,7 @@ function onOK()
     var bookmarkView = document.getElementById("bookmarks-view");
     var currentIndex = bookmarkView.currentIndex;
     if (currentIndex != -1)
-      gCreateInFolder = bookmarkView.outlinerBuilder.getResourceAtIndex(currentIndex).Value;
+      gCreateInFolder = bookmarkView.treeBuilder.getResourceAtIndex(currentIndex).Value;
   }
   // In Select Folder Mode, do nothing but tell our caller what
   // folder was selected. 
@@ -254,14 +254,14 @@ function useDefaultFolder ()
   if (sources.hasMoreElements()) {
     folder = sources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
   }
-  var ind = bookmarkView.outlinerBuilder.getIndexOfResource(folder);
+  var ind = bookmarkView.treeBuilder.getIndexOfResource(folder);
   if (ind != -1) {
-    bookmarkView.outliner.focus();
-    bookmarkView.outlinerBoxObject.selection.select(ind);
+    bookmarkView.tree.focus();
+    bookmarkView.treeBoxObject.selection.select(ind);
     gCreateInFolder = folder.Value;
   }
   else {
-    bookmarkView.outlinerBoxObject.selection.clearSelection();
+    bookmarkView.treeBoxObject.selection.clearSelection();
     gCreateInFolder = "NC:BookmarksRoot";
   }
 }

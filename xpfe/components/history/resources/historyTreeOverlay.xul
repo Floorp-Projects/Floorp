@@ -30,8 +30,8 @@
 <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
 %contentAreaCommandsDTD;
 ]>
-<?xml-stylesheet href="chrome://global/skin/outliner.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <overlay id="historyTreeOverlay"
@@ -41,8 +41,8 @@
 
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsOutlinerController.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsOutlinerSorting.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeController.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeSorting.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
@@ -72,74 +72,74 @@
     <data id="multipleBookmarks" label="&addToBookmarksCmd.label;" accesskey="&addToBookmarksCmd.accesskey;"/>
     <data id="oneBookmark" label="&bookmarkLinkCmd.label;" accesskey="&bookmarkLinkCmd.accesskey;"/>
   </popupset>
-  <outliner id="historyOutliner" flex="1" enableColumnDrag="true" class="plain"
+  <tree id="historyTree" flex="1" enableColumnDrag="true" class="plain"
             context="historyMenu"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
             onkeypress="if (event.keyCode == 13) OpenURL(event.ctrlKey || event.metaKey);" 
-            onselect="this.outlinerBoxObject.view.selectionChanged();
+            onselect="this.treeBoxObject.view.selectionChanged();
                       historyOnSelect();"
             onclick="historyOnClick(event);"
-            ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
+            ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, historyDNDObserver);"
             ondblclick="if (validClickConditions(event)) OpenURL(event.ctrlKey || event.metaKey);">
     <template>
       <rule>
-        <outlinerchildren>
-          <outlineritem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <outlinerrow>
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Date"/>
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate"/>
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Hostname" />
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Referrer"/>
-              <outlinercell label="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
-            </outlinerrow>
-          </outlineritem>
-        </outlinerchildren>
+        <treechildren>
+          <treeitem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+            <treerow>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#URL"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Date"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Hostname" />
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Referrer"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
       </rule>
     </template>
-    <outlinercols id="historyOutlinerCols">
-      <outlinercol flex="4" id="Name" persist="hidden width sortActive sortDirection ordinal" 
+    <treecols id="historyTreeCols">
+      <treecol flex="4" id="Name" persist="hidden width sortActive sortDirection ordinal" 
                    label="&tree.header.name.label;" primary="true"
                    sort="rdf:http://home.netscape.com/NC-rdf#Name"
                    accesskey="&tree.header.name.akey;"
                    class="sortDirectionIndicator"/>
       <splitter class="tree-splitter" id="pre-URL-splitter"/>
-      <outlinercol flex="4" id="URL"
+      <treecol flex="4" id="URL"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.url.label;" class="sortDirectionIndicator"
                    accesskey="&tree.header.url.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#URL"/>
       <splitter class="tree-splitter" id="pre-Date-splitter"/>
-      <outlinercol flex="1" id="Date"
+      <treecol flex="1" id="Date"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.date.label;" class="sortDirectionIndicator"
                    accesskey="&tree.header.date.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#Date"/>
       <splitter class="tree-splitter" id="pre-FirstVisitDate-splitter"/>
-      <outlinercol flex="1" id="FirstVisitDate" hidden="true"
+      <treecol flex="1" id="FirstVisitDate" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.firstvisitdate.label;" class="sortDirectionIndicator"
                    accesskey="&tree.header.firstvisitdate.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate"/>
       <splitter class="tree-splitter" id="pre-Hostname-splitter"/>
-      <outlinercol flex="1" id="Hostname" hidden="true"
+      <treecol flex="1" id="Hostname" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.hostname.label;" class="sortDirectionIndicator"
                    accesskey="&tree.header.hostname.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#Hostname"/>
       <splitter class="tree-splitter" id="pre-Referrer-splitter"/>
-      <outlinercol flex="1" id="Referrer" hidden="true"
+      <treecol flex="1" id="Referrer" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.referrer.label;" class="sortDirectionIndicator"
                    accesskey="&tree.header.referrer.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#Referrer"/>
       <splitter class="tree-splitter" id="pre-VisitCount-splitter"/>
-      <outlinercol flex="1" id="VisitCount" hidden="true"
+      <treecol flex="1" id="VisitCount" hidden="true"
                    persist="hidden width sortActive sortDirection ordinal"
                    label="&tree.header.visitcount.label;" class="sortDirectionIndicator"
                    accesskey="&tree.header.visitcount.akey;"
                    sort="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
-    </outlinercols>
-  </outliner>
+    </treecols>
+  </tree>
 </overlay>

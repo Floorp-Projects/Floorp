@@ -60,9 +60,10 @@
     </rule>
   </template>
 
-  <treecolgroup>
+  <treecols>
     <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-  </treecolgroup>
+    <treechildren/>
+  </treecols>
 </tree>
 
 </window>

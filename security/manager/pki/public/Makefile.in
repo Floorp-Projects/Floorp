@@ -43,7 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS = \
     nsIPKIParamBlock.idl \
-    nsIASN1Outliner.idl \
+    nsIASN1Tree.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

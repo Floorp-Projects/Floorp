@@ -26,8 +26,8 @@ const nsFilePicker = "@mozilla.org/filepicker;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
-const nsICertOutliner = Components.interfaces.nsICertOutliner;
-const nsCertOutliner = "@mozilla.org/security/nsCertOutliner;1";
+const nsICertTree = Components.interfaces.nsICertTree;
+const nsCertTree = "@mozilla.org/security/nsCertTree;1";
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
@@ -39,40 +39,40 @@ var key;
 var selected_certs = [];
 var certdb;
 
-var caOutlinerView;
-var serverOutlinerView;
-var emailOutlinerView;
-var userOutlinerView;
+var caTreeView;
+var serverTreeView;
+var emailTreeView;
+var userTreeView;
 
 function LoadCerts()
 {
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
 
-  caOutlinerView = Components.classes[nsCertOutliner]
-                    .createInstance(nsICertOutliner);
-  caOutlinerView.loadCerts(nsIX509Cert.CA_CERT);
-  document.getElementById('ca-outliner')
-   .outlinerBoxObject.view = caOutlinerView;
+  caTreeView = Components.classes[nsCertTree]
+                    .createInstance(nsICertTree);
+  caTreeView.loadCerts(nsIX509Cert.CA_CERT);
+  document.getElementById('ca-tree')
+   .treeBoxObject.view = caTreeView;
 
-  serverOutlinerView = Components.classes[nsCertOutliner]
-                        .createInstance(nsICertOutliner);
-  serverOutlinerView.loadCerts(nsIX509Cert.SERVER_CERT);
-  document.getElementById('server-outliner')
-   .outlinerBoxObject.view = serverOutlinerView;
+  serverTreeView = Components.classes[nsCertTree]
+                        .createInstance(nsICertTree);
+  serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
+  document.getElementById('server-tree')
+   .treeBoxObject.view = serverTreeView;
 
-  emailOutlinerView = Components.classes[nsCertOutliner]
-                       .createInstance(nsICertOutliner);
-  emailOutlinerView.loadCerts(nsIX509Cert.EMAIL_CERT);
-  document.getElementById('email-outliner')
-   .outlinerBoxObject.view = emailOutlinerView; 
+  emailTreeView = Components.classes[nsCertTree]
+                       .createInstance(nsICertTree);
+  emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
+  document.getElementById('email-tree')
+   .treeBoxObject.view = emailTreeView; 
 
-  userOutlinerView = Components.classes[nsCertOutliner]
-                      .createInstance(nsICertOutliner);
-  userOutlinerView.loadCerts(nsIX509Cert.USER_CERT);
-  document.getElementById('user-outliner')
-   .outlinerBoxObject.view = userOutlinerView;
+  userTreeView = Components.classes[nsCertTree]
+                      .createInstance(nsICertTree);
+  userTreeView.loadCerts(nsIX509Cert.USER_CERT);
+  document.getElementById('user-tree')
+   .treeBoxObject.view = userTreeView;
 
-  var rowCnt = userOutlinerView.rowCount;
+  var rowCnt = userTreeView.rowCount;
   var enableBackupAllButton=document.getElementById('mine_backupAllButton');
   if(rowCnt < 1) {
     enableBackupAllButton.setAttribute("disabled",true);
@@ -94,10 +94,10 @@ function LoadCerts()
 
 function ReloadCerts()
 {
-  caOutlinerView.loadCerts(nsIX509Cert.CA_CERT);
-  serverOutlinerView.loadCerts(nsIX509Cert.SERVER_CERT);
-  emailOutlinerView.loadCerts(nsIX509Cert.EMAIL_CERT);
-  userOutlinerView.loadCerts(nsIX509Cert.USER_CERT);
+  caTreeView.loadCerts(nsIX509Cert.CA_CERT);
+  serverTreeView.loadCerts(nsIX509Cert.SERVER_CERT);
+  emailTreeView.loadCerts(nsIX509Cert.EMAIL_CERT);
+  userTreeView.loadCerts(nsIX509Cert.USER_CERT);
 }
 
 function getSelectedTab()
@@ -131,13 +131,13 @@ function getSelectedCerts()
   var websites_tab = document.getElementById("websites_tab");
   var items = null;
   if (ca_tab.selected) {
-    items = caOutlinerView.selection;
+    items = caTreeView.selection;
   } else if (mine_tab.selected) {
-    items = userOutlinerView.selection;
+    items = userTreeView.selection;
   } else if (others_tab.selected) {
-    items = emailOutlinerView.selection;
+    items = emailTreeView.selection;
   } else if (websites_tab.selected) {
-    items = serverOutlinerView.selection;
+    items = serverTreeView.selection;
   }
   selected_certs = [];
   var cert = null;
@@ -152,13 +152,13 @@ function getSelectedCerts()
       var max = o2.value;
       for (var j=min; j<=max; j++) {
         if (ca_tab.selected) {
-          cert = caOutlinerView.getCert(j);
+          cert = caTreeView.getCert(j);
         } else if (mine_tab.selected) {
-          cert = userOutlinerView.getCert(j);
+          cert = userTreeView.getCert(j);
         } else if (others_tab.selected) {
-          cert = emailOutlinerView.getCert(j);
+          cert = emailTreeView.getCert(j);
         } else if (websites_tab.selected) {
-          cert = serverOutlinerView.getCert(j);
+          cert = serverTreeView.getCert(j);
         }
         if (cert)
           selected_certs[selected_certs.length] = cert;
@@ -169,7 +169,7 @@ function getSelectedCerts()
 
 function ca_enableButtons()
 {
-  var items = caOutlinerView.selection;
+  var items = caTreeView.selection;
   var nr = items.getRangeCount();
   var toggle="false";
   if (nr == 0) {
@@ -187,7 +187,7 @@ function ca_enableButtons()
       var max = o2.value;
       var stop = false;
       for (var j=min; j<=max; j++) {
-        var tokenName = items.outliner.view.getCellText(j, "tokencol");
+        var tokenName = items.tree.view.getCellText(j, "tokencol");
 	if (tokenName == "Builtin Object Token") { stop = true; } break;
       }
       if (stop) break;
@@ -207,7 +207,7 @@ function ca_enableButtons()
 
 function mine_enableButtons()
 {
-  var items = userOutlinerView.selection;
+  var items = userTreeView.selection;
   var toggle="false";
   if (items.getRangeCount() == 0) {
     toggle="true";
@@ -222,7 +222,7 @@ function mine_enableButtons()
 
 function websites_enableButtons()
 {
-  var items = serverOutlinerView.selection;
+  var items = serverTreeView.selection;
   var toggle="false";
   if (items.getRangeCount() == 0) {
     toggle="true";
@@ -237,7 +237,7 @@ function websites_enableButtons()
 
 function email_enableButtons()
 {
-  var items = emailOutlinerView.selection;
+  var items = emailTreeView.selection;
   var toggle="false";
   if (items.getRangeCount() == 0) {
     toggle="true";
@@ -269,7 +269,7 @@ function backupCerts()
 function backupAllCerts()
 {
   // Select all rows, then call doBackup()
-  var items = userOutlinerView.selection.selectAll();
+  var items = userTreeView.selection.selectAll();
   backupCerts();
 }
 
@@ -304,7 +304,7 @@ function restoreCerts()
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     certdb.importPKCS12File(null, fp.file);
   }
-  userOutlinerView.loadCerts(nsIX509Cert.USER_CERT);
+  userTreeView.loadCerts(nsIX509Cert.USER_CERT);
 }
 
 function deleteCerts()

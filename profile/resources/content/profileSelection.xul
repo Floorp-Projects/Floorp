@@ -84,20 +84,14 @@
     <separator class="thin" orient="vertical"/>
     
     <vbox flex="1">
-      <tree id="profiles" class="inset" flex="1" style="height: 0px;"
+      <listbox id="profiles" flex="1" style="height: 0px;" seltype="single"
             onclick="HandleClickEvent( event );"
             onselect="DoEnabling();"
             onkeypress="HandleKeyEvent( event );">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treehead>
-          <treerow>
-            <treecell class="treecell-header outset" label="&availprofiles.label;"/>
-          </treerow>
-        </treehead>
-        <treechildren id="profilekids" flex="1"/>
-      </tree>    
+        <listhead>
+          <listheader label="&availprofiles.label;"/>
+        </listhead>
+      </listbox>
       <hbox align="start">
         <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
       </hbox>

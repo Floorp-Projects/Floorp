@@ -108,14 +108,14 @@ var nsDragAndDrop = {
                                  .createInstance(Components.interfaces.nsISupportsArray);
 
       var region = null;
-      if (aEvent.originalTarget.localName == "outlinerchildren") {
+      if (aEvent.originalTarget.localName == "treechildren") {
         // let's build the drag region
-        var outliner = aEvent.originalTarget.parentNode;
+        var tree = aEvent.originalTarget.parentNode;
         try {
           region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
           region.init();
-          var obo = outliner.outlinerBoxObject;
-          var bo = obo.outlinerBody.boxObject;
+          var obo = tree.treeBoxObject;
+          var bo = obo.treeBody.boxObject;
           var obosel= obo.selection;
 
           var rowX = bo.x;

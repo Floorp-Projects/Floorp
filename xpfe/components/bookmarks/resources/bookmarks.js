@@ -22,16 +22,18 @@
  */
 
 ////////////////////////////////////////////////////////////////////////////////
-// Initialize the command controllers, set focus, outliner root, 
+// Initialize the command controllers, set focus, tree root, 
 // window title state, etc. 
 function Startup()
 {
   var bookmarksView = document.getElementById("bookmarks-view");
+
   const windowNode = document.getElementById("bookmark-window");
-  // If we've been opened with a parameter, root the outliner on it.
+  // If we've been opened with a parameter, root the tree on it.
   if ("arguments" in window && window.arguments[0]) {
     var uri = window.arguments[0];
-    bookmarksView.outliner.setAttribute("ref", uri);
+
+    bookmarksView.tree.setAttribute("ref", uri);
 
     var title = "";
     if (uri.substring(0,5) == "find:") {
@@ -58,8 +60,8 @@ function Startup()
     windowNode.setAttribute("title", rootfoldername);
   }
  
-  bookmarksView.outlinerBoxObject.selection.select(0);
-  bookmarksView.outliner.focus();
+  bookmarksView.treeBoxObject.selection.select(0);
+  bookmarksView.tree.focus();
 }
 
 function Shutdown ()
@@ -77,10 +79,10 @@ function Shutdown ()
 
 function updateSendLinkItem()                                                   
 {                                                                               
-  var outliner = document.getElementById("bookmarks-view");
+  var tree = document.getElementById("bookmarks-view");
   var command = document.getElementById("Browser:SendLink");
   if (command) {
-    if (outliner.canSendLink())
+    if (tree.canSendLink())
       command.removeAttribute("disabled");
     else
       command.setAttribute("disabled", "true");
@@ -89,8 +91,8 @@ function updateSendLinkItem()
 
 function sendBookmarksLink()
 {
-  var outliner = document.getElementById("bookmarks-view");
-  outliner.sendLink();
+  var tree = document.getElementById("bookmarks-view");
+  tree.sendLink();
 }
 
 var gConstructedViewMenuSortItems = false;

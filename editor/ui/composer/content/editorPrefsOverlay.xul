@@ -33,26 +33,26 @@
   </groupbox>
 
   <!-- category tree entries for editor -->
-  <outlinerchildren id="panelChildren">
-    <outlineritem container="true" id="editor" position="3">
-      <outlinerrow>       
-        <outlinercell url="chrome://editor/content/pref-composer.xul" label="&compose.label;" /> 
-      </outlinerrow>
-      <outlinerchildren>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://editor/content/pref-editing.xul" label="&editing.label;"/> 
-          </outlinerrow>
-        </outlineritem>
+  <treechildren id="panelChildren">
+    <treeitem container="true" id="editor" position="3">
+      <treerow>       
+        <treecell url="chrome://editor/content/pref-composer.xul" label="&compose.label;" /> 
+      </treerow>
+      <treechildren>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://editor/content/pref-editing.xul" label="&editing.label;"/> 
+          </treerow>
+        </treeitem>
         <!--     
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://editor/content/pref-publish.xul" label="&publish.label;"/> 
-          </outlinerrow>
-        </outlineritem>  
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://editor/content/pref-publish.xul" label="&publish.label;"/> 
+          </treerow>
+        </treeitem>  
         -->
-      </outlinerchildren>
-    </outlineritem>
-  </outlinerchildren>
+      </treechildren>
+    </treeitem>
+  </treechildren>
            
 </overlay>         

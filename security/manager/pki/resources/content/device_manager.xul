@@ -31,8 +31,8 @@
 %pippkiDTD;
 ]>
 
-<window id="devicemanager" 
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+<window id="devicemanager"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&devmgr.title;"
         persist="screenX screenY width height"
         onload="LoadModules();">
@@ -45,45 +45,30 @@
   <columns>
     <column flex="1"/> 
     <column flex="1"/> 
-    <column flex="1"/> 
+    <column/>
   </columns>
   <rows>
-    <row>
-      <hbox flex="1"> <!-- List of devices -->
-        <tree id="device_tree" rows="12" seltype="false"
-              onselect="enableButtons();"
-              flex="1" style="min-width:15em">
-          <treecolgroup> 
-            <treecol flex="1"/> 
-          </treecolgroup>
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header" 
-                        label="&devmgr.devlist.label;"
-                        flex="1"/>
-            </treerow>
-          </treehead>
+    <row flex="1">
+      <vbox> <!-- List of devices -->
+        <tree id="device_tree" seltype="single"
+              onselect="enableButtons();" hidecolumnpicker="true"
+              flex="1" style="min-width: 15em">
+          <treecols> 
+            <treecol id="deviceCol" flex="1" primary="true" label="&devmgr.devlist.label;"/>
+          </treecols>
           <treechildren id="device_list"/>
         </tree>
-      </hbox> <!-- / List of devices -->
-      <hbox flex="1"> <!-- Device status -->
-        <tree id="info_tree" rows="12" seltype="false" 
-              class="list" flex="1" style="min-width:10em">
-          <treecolgroup> 
-            <treecol flex="5"/> 
-            <treecol flex="7"/> 
-          </treecolgroup>
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header"
-                        label="&devmgr.details.title;" flex="2"/>
-              <treecell class="treecell-header"
-                        label="&devmgr.details.title2;" flex="7"/>
-            </treerow>
-          </treehead>
+      </vbox> <!-- / List of devices -->
+      <vbox> <!-- Device status -->
+        <tree id="info_tree" seltype="single" hidecolumnpicker="true"
+              flex="1" style="min-width: 10em">
+          <treecols> 
+            <treecol id="title1Col" flex="5" primary="true" label="&devmgr.details.title;"/> 
+            <treecol id="title2Col" flex="7" label="&devmgr.details.title2;"/> 
+          </treecols>
           <treechildren id="info_list"/>
         </tree>
-      </hbox> <!-- / Device status -->
+      </vbox> <!-- / Device status -->
       <vbox> <!-- Buttons for manipulating devices -->
         <button id="login_button" 
                 label="&devmgr.button.login.label;"
@@ -105,16 +90,16 @@
                 oncommand="toggleFIPS();"/>
       </vbox> <!-- / Buttons for manipulating devices -->
     </row>
-    <row>
-      <hbox>
-        <button id="help_button" 
-                label="&help.label;" 
-                oncommand="openHelp('sec_devices');"/> 
-        <button id="ok_button" 
-                label="&ok.label;" 
-                oncommand="window.close();"/> 
-      </hbox>
-    </row>
   </rows>
 </grid>
+
+<hbox>
+  <button id="help_button" 
+          label="&help.label;" 
+          oncommand="openHelp('sec_devices');"/> 
+  <button id="ok_button" 
+          label="&ok.label;" 
+          oncommand="window.close();"/> 
+</hbox>
+
 </window>

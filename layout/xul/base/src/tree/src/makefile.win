@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\..\..\.. 
 
-LIBRARY_NAME=raptorxuloutliner_s 
+LIBRARY_NAME=raptorxultree_s 
 MODULE=layout_xul
 REQUIRES	= xpcom \
 		  string \
@@ -43,16 +43,16 @@ REQUIRES	= xpcom \
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS=		\
-    .\$(OBJDIR)\nsOutlinerBoxObject.obj \
-    .\$(OBJDIR)\nsOutlinerBodyFrame.obj \
-    .\$(OBJDIR)\nsOutlinerColFrame.obj \
-    .\$(OBJDIR)\nsOutlinerSelection.obj \
-    .\$(OBJDIR)\nsOutlinerUtils.obj \
-    .\$(OBJDIR)\nsOutlinerContentView.obj \
+    .\$(OBJDIR)\nsTreeBoxObject.obj \
+    .\$(OBJDIR)\nsTreeBodyFrame.obj \
+    .\$(OBJDIR)\nsTreeColFrame.obj \
+    .\$(OBJDIR)\nsTreeSelection.obj \
+    .\$(OBJDIR)\nsTreeUtils.obj \
+    .\$(OBJDIR)\nsTreeContentView.obj \
     $(NULL)
 
-EXPORTS = nsOutlinerColFrame.h	\
-	nsOutlinerUtils.h \
+EXPORTS = nsTreeColFrame.h	\
+	nsTreeUtils.h \
 	$(NULL)
 
 LINCS= \

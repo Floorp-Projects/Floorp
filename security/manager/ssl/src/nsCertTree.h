@@ -33,28 +33,28 @@
  *
  */
 
-#ifndef _NS_CERTOUTLINER_H_
-#define _NS_CERTOUTLINER_H_
+#ifndef _NS_CERTTREE_H_
+#define _NS_CERTTREE_H_
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsICertOutliner.h"
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerSelection.h"
+#include "nsICertTree.h"
+#include "nsITreeView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
 
-typedef struct outlinerArrayElStr outlinerArrayEl;
+typedef struct treeArrayElStr treeArrayEl;
 
-class nsCertOutliner : public nsICertOutliner
+class nsCertTree : public nsICertTree
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICERTOUTLINER
-  NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSICERTTREE
+  NS_DECL_NSITREEVIEW
 
-  nsCertOutliner();
-  virtual ~nsCertOutliner();
+  nsCertTree();
+  virtual ~nsCertTree();
 
 protected:
   static PRInt32 CmpByToken(nsIX509Cert *a, nsIX509Cert *b);
@@ -65,22 +65,22 @@ protected:
 
 private:
   nsCOMPtr<nsISupportsArray>      mCertArray;
-  nsCOMPtr<nsIOutlinerBoxObject>  mOutliner;
-  nsCOMPtr<nsIOutlinerSelection>  mSelection;
-  outlinerArrayEl                *mOutlinerArray;
+  nsCOMPtr<nsITreeBoxObject>  mTree;
+  nsCOMPtr<nsITreeSelection>  mSelection;
+  treeArrayEl                *mTreeArray;
   PRInt32                         mNumOrgs;
   PRInt32                         mNumRows;
 
-  outlinerArrayEl *GetThreadDescAtIndex(PRInt32 _index);
+  treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
   nsIX509Cert *GetCertAtIndex(PRInt32 _index);
 
   void FreeCertArray();
 
-#ifdef DEBUG_CERT_OUTLINER
+#ifdef DEBUG_CERT_TREE
   /* for debugging purposes */
   void dumpMap();
 #endif
 };
 
-#endif /* _NS_CERTOUTLINER_H_ */
+#endif /* _NS_CERTTREE_H_ */
 

@@ -52,8 +52,8 @@ CPP_OBJS=					        \
         .\$(OBJDIR)\nsContentTagTestNode.obj            \
         .\$(OBJDIR)\nsContentTestNode.obj               \
         .\$(OBJDIR)\nsInstantiationNode.obj             \
-        .\$(OBJDIR)\nsOutlinerRowTestNode.obj           \
-        .\$(OBJDIR)\nsOutlinerRows.obj                  \
+        .\$(OBJDIR)\nsTreeRowTestNode.obj           \
+        .\$(OBJDIR)\nsTreeRows.obj                  \
         .\$(OBJDIR)\nsRDFConInstanceTestNode.obj        \
         .\$(OBJDIR)\nsRDFConMemberTestNode.obj          \
         .\$(OBJDIR)\nsRDFPropertyTestNode.obj           \
@@ -64,7 +64,7 @@ CPP_OBJS=					        \
         .\$(OBJDIR)\nsTemplateRule.obj                  \
         .\$(OBJDIR)\nsXULContentBuilder.obj             \
         .\$(OBJDIR)\nsXULContentUtils.obj               \
-        .\$(OBJDIR)\nsXULOutlinerBuilder.obj            \
+        .\$(OBJDIR)\nsXULTreeBuilder.obj            \
         .\$(OBJDIR)\nsXULSortService.obj                \
         .\$(OBJDIR)\nsXULTemplateBuilder.obj            \
 	$(NULL)

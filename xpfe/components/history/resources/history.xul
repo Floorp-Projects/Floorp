@@ -40,7 +40,7 @@
 
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>
-  <stringbundle id="sortBundle" src="chrome://global/locale/nsOutlinerSorting.properties"/>
+  <stringbundle id="sortBundle" src="chrome://global/locale/nsTreeSorting.properties"/>
 
 <commandset id="tasksCommands">
   <commandset id="selectEditMenuItems"/>
@@ -138,7 +138,7 @@
 </menubar>
 </toolbox>
 
-  <outliner id="historyOutliner"/>
+  <tree id="historyTree"/>
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusbar-display" flex="1"/>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>

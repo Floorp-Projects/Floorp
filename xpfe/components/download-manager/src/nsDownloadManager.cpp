@@ -70,6 +70,7 @@ nsIRDFResource* gNC_DownloadsRoot;
 nsIRDFResource* gNC_File;
 nsIRDFResource* gNC_URL;
 nsIRDFResource* gNC_Name;
+nsIRDFResource* gNC_ProgressMode;
 nsIRDFResource* gNC_ProgressPercent;
 nsIRDFResource* gNC_Transferred;
 nsIRDFResource* gNC_DownloadState;
@@ -95,6 +96,7 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_File);                                                      
   NS_IF_RELEASE(gNC_URL);                                                       
   NS_IF_RELEASE(gNC_Name);                                                      
+  NS_IF_RELEASE(gNC_ProgressMode);
   NS_IF_RELEASE(gNC_ProgressPercent);
   NS_IF_RELEASE(gNC_Transferred);
   NS_IF_RELEASE(gNC_DownloadState);
@@ -122,6 +124,7 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "File", &gNC_File);
   gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
   gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
+  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressMode", &gNC_ProgressMode);
   gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", &gNC_ProgressPercent);
   gRDFService->GetResource(NC_NAMESPACE_URI "Transferred", &gNC_Transferred);
   gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
@@ -274,22 +277,27 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPath)
 
   gRDFService->GetResource(aPath, getter_AddRefs(res));
 
-  // update percentage
-  download->GetPercentComplete(&percentComplete);
-
-  mDataSource->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
-  gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(intLiteral));
-
-  if (oldTarget)
-    rv = mDataSource->Change(res, gNC_ProgressPercent, oldTarget, intLiteral);
-  else
-    rv = mDataSource->Assert(res, gNC_ProgressPercent, intLiteral, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
-  // update download state (not started, downloading, queued, finished, etc...)
   DownloadState state;
   internalDownload->GetDownloadState(&state);
  
+  // update progress mode
+  nsAutoString progressMode;
+  if (state == DOWNLOADING)
+    progressMode.Assign(NS_LITERAL_STRING("normal"));
+  else
+    progressMode.Assign(NS_LITERAL_STRING("none"));
+
+  gRDFService->GetLiteral(progressMode.get(), getter_AddRefs(literal));
+
+  rv = mDataSource->GetTarget(res, gNC_ProgressMode, PR_TRUE, getter_AddRefs(oldTarget));
+  
+  if (oldTarget)
+    rv = mDataSource->Change(res, gNC_ProgressMode, oldTarget, literal);
+  else
+    rv = mDataSource->Assert(res, gNC_ProgressMode, literal, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // update download state (not started, downloading, queued, finished, etc...)
   gRDFService->GetIntLiteral(state, getter_AddRefs(intLiteral));
 
   mDataSource->GetTarget(res, gNC_DownloadState, PR_TRUE, getter_AddRefs(oldTarget));
@@ -328,6 +336,18 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPath)
     if (NS_FAILED(rv)) return rv;
   }
   
+  // update percentage
+  download->GetPercentComplete(&percentComplete);
+
+  mDataSource->GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
+  gRDFService->GetIntLiteral(percentComplete, getter_AddRefs(intLiteral));
+
+  if (oldTarget)
+    rv = mDataSource->Change(res, gNC_ProgressPercent, oldTarget, intLiteral);
+  else
+    rv = mDataSource->Assert(res, gNC_ProgressPercent, intLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
   // update transferred
   PRInt32 current = 0;
   PRInt32 max = 0;

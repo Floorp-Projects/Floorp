@@ -1223,7 +1223,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIBox* aBox, PRInt32 aOffset, PRBool* aCreat
     prevContent->GetParent(*getter_AddRefs(parentContent));
     parentContent->IndexOf(prevContent, i);
     parentContent->ChildCount(childCount);
-    if (i+1 < childCount) {
+    if (i+aOffset+1 < childCount) {
       // There is a content node that wants a frame.
       nsCOMPtr<nsIContent> nextContent;
       parentContent->ChildAt(i+aOffset+1, *getter_AddRefs(nextContent));

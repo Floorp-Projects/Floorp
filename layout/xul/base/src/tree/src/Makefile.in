@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= gkxuloutliner_s
+LIBRARY_NAME	= gkxultree_s
 REQUIRES	= xpcom \
 		  string \
 		  dom \
@@ -47,20 +47,20 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS	= \
- nsOutlinerBodyFrame.cpp \
- nsOutlinerBoxObject.cpp \
- nsOutlinerColFrame.cpp \
- nsOutlinerSelection.cpp \
- nsOutlinerUtils.cpp \
- nsOutlinerContentView.cpp \
+ nsTreeBodyFrame.cpp \
+ nsTreeBoxObject.cpp \
+ nsTreeColFrame.cpp \
+ nsTreeSelection.cpp \
+ nsTreeUtils.cpp \
+ nsTreeContentView.cpp \
  $(NULL)
 
 EXPORTS = \
- nsOutlinerBodyFrame.h \
- nsOutlinerColFrame.h \
- nsOutlinerSelection.h \
- nsOutlinerUtils.h \
- nsOutlinerContentView.h \
+ nsTreeBodyFrame.h \
+ nsTreeColFrame.h \
+ nsTreeSelection.h \
+ nsTreeUtils.h \
+ nsTreeContentView.h \
  $(NULL)
 
 DEFINES += -D_IMPL_NS_HTML

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author)
  *   Blake Ross <blakeross@telocity.com>
+ *   Jan Varga <varga@utcru.sk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,7 +41,6 @@
 const NC_NS = "http://home.netscape.com/NC-rdf#";
 
 var gDownloadView = null;
-var gDownloadViewChildren = null;
 var gDownloadManager = null;
 var gRDFService = null;
 var gNC_File = null;
@@ -63,9 +63,7 @@ function Startup()
   gNC_File = gRDFService.GetResource(NC_NS + "File");
 
   gDownloadView = document.getElementById("downloadView");
-  gDownloadViewChildren = document.getElementById("downloadViewChildren");
   
-  gDownloadView.controllers.appendController(downloadViewController);
   const dlmgrContractID = "@mozilla.org/download-manager;1";
   const dlmgrIID = Components.interfaces.nsIDownloadManager;
   gDownloadManager = Components.classes[dlmgrContractID].getService(dlmgrIID);
@@ -73,10 +71,7 @@ function Startup()
   var ds = window.arguments[0];
   gDownloadView.database.AddDataSource(ds);
   gDownloadView.builder.rebuild();
-  gDownloadView.focus();
-  // Select the first item in the view, if any. 
-  if (gDownloadViewChildren.hasChildNodes()) 
-    gDownloadView.selectItem(gDownloadViewChildren.firstChild);
+  window.setTimeout(onRebuild, 0);
   
   var key;
   if (navigator.platform.indexOf("Win") != -1)
@@ -96,17 +91,19 @@ function Startup()
   showBtn.setAttribute("accesskey", accesskey);
 }
 
-function openPropertiesDialog()
-{
-  var selection = gDownloadView.selectedItems;
-  gDownloadManager.openProgressDialogFor(selection[0].id, window);
+function onRebuild() {
+  gDownloadView.controllers.appendController(downloadViewController);
+  gDownloadView.focus();
+  // Select the first item in the view, if any.
+  if (gDownloadView.view.rowCount) 
+    gDownloadView.treeBoxObject.selection.select(0);
 }
 
 function onSelect(aEvent) {
   if (!gStatusBar)
     gStatusBar = document.getElementById("statusbar-text");
-  if (gDownloadView.getRowCount() && gDownloadView.selectedItems.length)
-    gStatusBar.label = gDownloadView.selectedItems[0].id;
+  if (gDownloadView.currentIndex >= 0)
+    gStatusBar.label = getSelectedItem().id;
   else
     gStatusBar.label = "";
 
@@ -131,15 +128,14 @@ var downloadViewController = {
   
   isCommandEnabled: function dVC_isCommandEnabled (aCommand)
   {
-    var cmds = ["cmd_properties", "cmd_pause", "cmd_cancel",
-                "cmd_openfile", "cmd_showinshell"];
-    var selectionCount = gDownloadView.selectedItems.length;
-    if (!selectionCount || !gDownloadView.getRowCount()) return false;
+    var selectionCount = gDownloadView.treeBoxObject.selection.count;
+    if (!selectionCount) return false;
 
-    var isDownloading = gDownloadManager.getDownload(gDownloadView.selectedItems[0].id);
+    var selectedItem = getSelectedItem();
+    var isDownloading = gDownloadManager.getDownload(selectedItem.id);
     switch (aCommand) {
     case "cmd_openfile":
-      if (!isDownloading && getFileForItem(gDownloadView.selectedItems[0]).isExecutable())
+      if (!isDownloading && getFileForItem(selectedItem).isExecutable())
         return false;
 
     case "cmd_showinshell":
@@ -159,7 +155,7 @@ var downloadViewController = {
       //     and how to handle multiple selection?
       return !isDownloading;
     case "cmd_selectAll":
-      return gDownloadViewChildren.childNodes.length != selectionCount;
+      return gDownloadView.view.rowCount != selectionCount;
     default:
       return false;
     }
@@ -167,18 +163,22 @@ var downloadViewController = {
   
   doCommand: function dVC_doCommand (aCommand)
   {
-    var selection = gDownloadView.selectedItems;
-    var i, file;
+    var selectedItem, selectedItems;
+    var file, i;
+
     switch (aCommand) {
     case "cmd_properties":
-      openPropertiesDialog();
+      selectedItem = getSelectedItem();
+      gDownloadManager.openProgressDialogFor(selectedItem.id, window);
       break;
     case "cmd_openfile":
-      file = getFileForItem(selection[0]);
+      selectedItem = getSelectedItem();
+      file = getFileForItem(selectedItem);
       file.launch();
       break;
     case "cmd_showinshell":
-      file = getFileForItem(selection[0]);
+      selectedItem = getSelectedItem();
+      file = getFileForItem(selectedItem);
       
       // on unix, open a browser window rooted at the parent
       if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
@@ -197,17 +197,19 @@ var downloadViewController = {
       break;
     case "cmd_cancel":
       // XXX we should probably prompt the user
-      for (i = 0; i < selection.length; ++i)
-        gDownloadManager.cancelDownload(selection[i].id);
+      selectedItems = getSelectedItems();
+      for (i = 0; i < selectedItems.length; i++)
+        gDownloadManager.cancelDownload(selectedItems[i].id);
       window.updateCommands("tree-select");
       break;
     case "cmd_remove":
-      for (i = 0; i < selection.length; ++i)
-        gDownloadManager.removeDownload(selection[i].id);
+      selectedItems = getSelectedItems();
+      for (i = 0; i < selectedItems.length; i++)
+        gDownloadManager.removeDownload(selectedItems[i].id);
       window.updateCommands("tree-select");
       break;
     case "cmd_selectAll":
-      gDownloadView.selectAll();
+      gDownloadView.treeBoxObject.selection.selectAll();
       break;
     default:
     }
@@ -230,6 +232,29 @@ var downloadViewController = {
   }
 };
 
+function getSelectedItem()
+{
+  return gDownloadView.contentView.getItemAtIndex(gDownloadView.currentIndex);
+}
+
+function getSelectedItems()
+{
+  var items = [];
+  var k = 0;
+
+  var selection = gDownloadView.treeBoxObject.selection;
+  var rangeCount = selection.getRangeCount();
+  for (var i = 0; i < rangeCount; i++) {
+    var startIndex = {};
+    var endIndex = {};
+    selection.getRangeAt(i, startIndex, endIndex);
+    for (var j = startIndex.value; j <= endIndex.value; j++)
+      items[k++] = gDownloadView.contentView.getItemAtIndex(j);
+  }
+
+  return items;
+}
+
 function getFileForItem(aElement)
 {
   var itemResource = gRDFService.GetResource(NODE_ID(aElement));
@@ -246,4 +271,3 @@ function createLocalFile(aFilePath)
   lf.initWithPath(aFilePath);
   return lf;
 }
-

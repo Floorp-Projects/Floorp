@@ -38,13 +38,8 @@
   <separator class="thin"/>
   <description>&languages.customize.available.label;</description>
 
-  <tree id="available_languages" flex="1"
-        datasources="rdf:null" seltype="multiple" ondblclick="HandleDoubleClick(event.target)">
-    <treecolgroup>
-      <treecol flex="1"/>
-    </treecolgroup>
-    <treechildren id="available_languages_root" flex="1"/>
-  </tree>
+  <listbox id="available_languages" flex="1" seltype="multiple"
+           ondblclick="HandleDoubleClick(event.target)"/>
 
   <hbox align="center">
     <label value="&languages.customize.others.label;" control="languages.other"/>

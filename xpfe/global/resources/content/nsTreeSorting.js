@@ -65,13 +65,13 @@ function SortInNewDirection(direction)
 function SortColumn(columnID)
 {
   var column = document.getElementById(columnID);
-  column.parentNode.parentNode.outlinerBoxObject.view.cycleHeader(columnID, column);
+  column.parentNode.parentNode.treeBoxObject.view.cycleHeader(columnID, column);
 }
 
 // search over the columns to find the first one with an active sort
 function find_sort_column()
 {
-  var columns = document.getElementsByTagName('outlinercol');
+  var columns = document.getElementsByTagName('treecol');
   for (var i = 0; i < columns.length; ++i) {
     if (columns[i].getAttribute('sortDirection'))
       return columns[i];
@@ -118,7 +118,7 @@ function update_sort_menuitems(column, direction)
       sort_descending.setAttribute('checked','true');
     }
 
-    var columns = document.getElementsByTagName('outlinercol');
+    var columns = document.getElementsByTagName('treecol');
     var i = 0;
     var column_node = columns[i];
     var column_name = column.id;
@@ -143,7 +143,7 @@ function update_sort_menuitems(column, direction)
 
 function enable_sort_menuitems()
 {
-  var columns = document.getElementsByTagName('outlinercol');
+  var columns = document.getElementsByTagName('treecol');
   var menuitem = document.getElementById('fill_after_this_node');
   menuitem = menuitem.nextSibling
   for (var i = 0; (i < columns.length) && menuitem; ++i) {
@@ -160,7 +160,7 @@ function fillViewMenu(popup)
 {
   var fill_after = document.getElementById('fill_after_this_node');
   var fill_before = document.getElementById('fill_before_this_node');
-  var columns = document.getElementsByTagName('outlinercol');
+  var columns = document.getElementsByTagName('treecol');
   var strBundle = document.getElementById('sortBundle');
   var sortString;
   if (strBundle)

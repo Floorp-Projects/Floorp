@@ -50,50 +50,50 @@ select[size] {
 /*  -moz-appearance: treeview; */
 }
   
-xul|*.select-outlinerbody:-moz-outliner-row {
+xul|*.select-treebody:-moz-tree-row {
 /*  -moz-apperance: treeitem; */
   border: 1px solid transparent;
 }
 
-xul|*.select-outlinercol {
+xul|*.select-treecol {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
 }
 
-/* ::::: outliner rows ::::: */
+/* ::::: tree rows ::::: */
 
-xul|*.select-outlinerbody:-moz-outliner-row {
+xul|*.select-treebody:-moz-tree-row {
   border: 1px solid transparent;
   height: 18px;
 }
 
-xul|*.select-outlinerbody:-moz-outliner-row(selected) {
+xul|*.select-treebody:-moz-tree-row(selected) {
   background-color: -moz-Dialog;
 }
 
-xul|*.select-outlinerbody:-moz-outliner-row(selected, focus) {
+xul|*.select-treebody:-moz-tree-row(selected, focus) {
   background-color: Highlight;
 }
 
-xul|*.select-outlinerbody:-moz-outliner-row(current, focus) {
+xul|*.select-treebody:-moz-tree-row(current, focus) {
   border: 1px dotted #F5DB95;
 }
 
-/* ::::: outliner cells ::::: */
+/* ::::: tree cells ::::: */
 
-xul|*.select-outlinerbody:-moz-outliner-cell {
+xul|*.select-treebody:-moz-tree-cell {
   padding: 0px 0px 0px 2px;
 }
 
-xul|*.select-outlinerbody:-moz-outliner-cell-text {
+xul|*.select-treebody:-moz-tree-cell-text {
   color: inherit;
 }
 
-xul|*.select-outlinerbody:-moz-outliner-cell-text(selected) {
+xul|*.select-treebody:-moz-tree-cell-text(selected) {
   color: -moz-DialogText;
 }
 
-xul|*.select-outlinerbody:-moz-outliner-cell-text(selected, focus) {
+xul|*.select-treebody:-moz-tree-cell-text(selected, focus) {
   color: HighlightText;
 }

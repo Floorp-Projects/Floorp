@@ -95,7 +95,7 @@ ColumnsDialog.prototype =
     // bug 56270 - dragSession.sourceDocument is null --
     // causes me to code this very temporary, very nasty hack
     // to make sure I get notified when a column is dropped
-    opener.viewer.mDOMOutliner.onClientDrop = ColumnsDialogDragDropOut;
+    opener.viewer.mDOMTree.onClientDrop = ColumnsDialogDragDropOut;
     
     this.buildContents();
     
@@ -195,7 +195,7 @@ ColumnsDialog.prototype =
     var column = this.getColumnValue(box);
     if (!column) return false;
     
-    DNDUtils.invokeSession(aEvent.target, ["OutlinerBuilder/column-add"], [column]);
+    DNDUtils.invokeSession(aEvent.target, ["TreeBuilder/column-add"], [column]);
     
     return false;
   },
@@ -210,7 +210,7 @@ ColumnsDialog.prototype =
   
   onDragDropIn: function(aEvent)
   {
-    var data = DNDUtils.getData("OutlinerBuilder/column-remove", 0);
+    var data = DNDUtils.getData("TreeBuilder/column-remove", 0);
     var string = XPCU.QI(data, "nsISupportsWString");
     this.addItem(string.data);
   },

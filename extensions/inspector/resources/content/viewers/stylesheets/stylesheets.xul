@@ -10,18 +10,18 @@
 <page id="winStylesheets"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/stylesheets/stylesheets.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
 
-  <outliner id="olStyleSheets" class="plain" flex="1"
+  <tree id="olStyleSheets" class="plain" flex="1"
             onselect="viewer.onItemSelected()">
-    <outlinercols>
-      <outlinercol id="olcHref" label="Stylesheet" primary="true" persist="width,hidden,ordinal" flex="1"/>
+    <treecols>
+      <treecol id="olcHref" label="Stylesheet" primary="true" persist="width,hidden,ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcRules" label="Rules" persist="width,hidden,ordinal" style="width: 4em"/>
-    </outlinercols>
-    <outlinerchildren id="olbStyleSheets"/>
-  </outliner>
+      <treecol id="olcRules" label="Rules" persist="width,hidden,ordinal" style="width: 4em"/>
+    </treecols>
+    <treechildren id="olbStyleSheets"/>
+  </tree>
 </page>

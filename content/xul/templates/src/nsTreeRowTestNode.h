@@ -37,24 +37,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsOutlinerRowTestNode_h__
-#define nsOutlinerRowTestNode_h__
+#ifndef nsTreeRowTestNode_h__
+#define nsTreeRowTestNode_h__
 
 #include "nscore.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRuleNetwork.h"
 #include "nsIRDFResource.h"
 class nsConflictSet;
-class nsOutlinerRows;
+class nsTreeRows;
 
-class nsOutlinerRowTestNode : public TestNode
+class nsTreeRowTestNode : public TestNode
 {
 public:
     enum { kRoot = -1 };
 
-    nsOutlinerRowTestNode(InnerNode* aParent,
+    nsTreeRowTestNode(InnerNode* aParent,
                           nsConflictSet& aConflictSet,
-                          nsOutlinerRows& aRows,
+                          nsTreeRows& aRows,
                           PRInt32 aIdVariable);
 
     virtual nsresult
@@ -73,9 +73,9 @@ public:
     public:
         Element(nsIRDFResource* aResource)
             : mResource(aResource) {
-            MOZ_COUNT_CTOR(nsOutlinerRowTestNode::Element); }
+            MOZ_COUNT_CTOR(nsTreeRowTestNode::Element); }
 
-        virtual ~Element() { MOZ_COUNT_DTOR(nsOutlinerRowTestNode::Element); }
+        virtual ~Element() { MOZ_COUNT_DTOR(nsTreeRowTestNode::Element); }
 
         static Element*
         Create(nsFixedSizeAllocator& aPool, nsIRDFResource* aResource) {
@@ -88,7 +88,7 @@ public:
             aPool.Free(aElement, sizeof(*aElement)); }
 
         virtual const char* Type() const {
-            return "nsOutlinerRowTestNode::Element"; }
+            return "nsTreeRowTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
             return PLHashNumber(NS_PTR_TO_INT32(mResource.get())) >> 2; }
@@ -109,8 +109,8 @@ public:
 
 protected:
     nsConflictSet& mConflictSet;
-    nsOutlinerRows& mRows;
+    nsTreeRows& mRows;
     PRInt32 mIdVariable;
 };
 
-#endif // nsOutlinerRowTestNode_h__
+#endif // nsTreeRowTestNode_h__

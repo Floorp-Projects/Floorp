@@ -24,14 +24,12 @@ DEPTH=..\..\..\..
 EXPORTS =				\
 	nsIMenuFrame.h      \
 	nsIPopupSetFrame.h	\
-	nsITreeFrame.h	\
   nsPIBoxObject.h \
     $(NULL)
 
 XPIDLSRCS=      .\nsIBoxObject.idl                  \
                 .\nsIBoxLayoutManager.idl              \
                 .\nsIBoxPaintManager.idl               \
-                .\nsITreeBoxObject.idl \
                 .\nsIScrollBoxObject.idl \
                 .\nsIPopupBoxObject.idl \
                 .\nsIMenuBoxObject.idl \

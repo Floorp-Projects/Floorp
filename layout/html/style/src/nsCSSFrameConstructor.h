@@ -177,15 +177,6 @@ public:
                                nsIFrame**    aInsertionPoint,
                                PRBool*       aMultiple = nsnull);
 
-  NS_IMETHOD CreateTreeWidgetContent(nsIPresContext*           aPresContext,
-                                        nsIFrame*              aParentFrame,
-                                        nsIFrame*              aPrevFrame,
-                                        nsIContent*            aChild,
-                                        nsIFrame**             aResult,
-                                        PRBool                 aIsAppend,
-                                        PRBool                 aIsScrollbar,
-                                        nsILayoutHistoryState* aFrameState);
-
   NS_IMETHOD CreateListBoxContent(nsIPresContext* aPresContext,
                                   nsIFrame*       aParentFrame,
                                   nsIFrame*       aPrevFrame,

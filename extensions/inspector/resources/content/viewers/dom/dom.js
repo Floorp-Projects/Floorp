@@ -67,14 +67,14 @@ function DOMViewer() // implements inIViewer
 {
   this.mObsMan = new ObserverManager(this);
     
-  this.mDOMOutliner = document.getElementById("trDOMOutliner");
-  this.mDOMOutlinerBody = document.getElementById("trDOMOutlinerBody");
+  this.mDOMTree = document.getElementById("trDOMTree");
+  this.mDOMTreeBody = document.getElementById("trDOMTreeBody");
 
   // prepare and attach the DOM DataSource
   this.mDOMView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
   this.mDOMView.showSubDocuments = true;
   this.mDOMView.removeFilterByType(Node.ATTRIBUTE_NODE); // hide attribute nodes
-  this.mDOMOutliner.outlinerBoxObject.view = this.mDOMView;
+  this.mDOMTree.treeBoxObject.view = this.mDOMView;
 
   PrefUtils.addObserver("inspector", PrefChangeObserver);
 }
@@ -130,7 +130,7 @@ DOMViewer.prototype =
   
   destroy: function()
   {
-    this.mDOMOutliner.outlinerBoxObject.view = null;
+    this.mDOMTree.treeBoxObject.view = null;
   },
 
   isCommandEnabled: function(aCommand)
@@ -217,7 +217,7 @@ DOMViewer.prototype =
 
   cmdShowPseudoClasses: function()
   {
-    var idx = this.mDOMOutliner.currentIndex;
+    var idx = this.mDOMTree.currentIndex;
     var node = this.getNodeFromRowIndex(idx);
     
     if (node)
@@ -237,7 +237,7 @@ DOMViewer.prototype =
     
   onItemSelected: function()
   {
-    var idx = this.mDOMOutliner.currentIndex;
+    var idx = this.mDOMTree.currentIndex;
     this.mSelection = this.getNodeFromRowIndex(idx);
     this.mObsMan.dispatchEvent("selectionChange", { selection: this.mSelection } );
   
@@ -249,12 +249,12 @@ DOMViewer.prototype =
   
   setInitialSelection: function(aObject)
   {
-    var fireSelected = this.mDOMOutliner.currentIndex == 0;
+    var fireSelected = this.mDOMTree.currentIndex == 0;
   
     if (this.mPanel.params)
-      this.selectElementInOutliner(this.mPanel.params);
+      this.selectElementInTree(this.mPanel.params);
     else
-      this.selectElementInOutliner(aObject.documentElement, true);
+      this.selectElementInTree(aObject.documentElement, true);
   
     if (fireSelected)
       this.onItemSelected();
@@ -425,7 +425,7 @@ DOMViewer.prototype =
       aTarget = aTarget.parentNode;
       
     this.stopSelectByClick();
-    this.selectElementInOutliner(aTarget);
+    this.selectElementInTree(aTarget);
   },
 
   stopSelectByClick: function()
@@ -483,8 +483,8 @@ DOMViewer.prototype =
       }
       
       if (result) {
-        this.selectElementInOutliner(result);
-        this.mDOMOutliner.focus();
+        this.selectElementInTree(result);
+        this.mDOMTree.focus();
       } else {
         alert("End of document reached."); // XXX localize
       }
@@ -521,9 +521,9 @@ DOMViewer.prototype =
   // @param aEl - element from the document being inspected
   ///////////////////////////////////////////////////////////////////////////
 
-  selectElementInOutliner: function(aEl, aExpand, aQuickie)
+  selectElementInTree: function(aEl, aExpand, aQuickie)
   {
-    var bx = this.mDOMOutliner.outlinerBoxObject;
+    var bx = this.mDOMTree.treeBoxObject;
 
     if (!aEl) {
       bx.selection.select(null);
@@ -570,13 +570,13 @@ DOMViewer.prototype =
   },
   
   ///////////////////////////////////////////////////////////////////////////
-  // Remember which rows are open, and which row is selected. Then rebuild outliner,
+  // Remember which rows are open, and which row is selected. Then rebuild tree,
   // re-open previously opened rows, and re-select previously selected row
   ///////////////////////////////////////////////////////////////////////////
   rebuild: function()
   {
-    var selNode = this.getNodeFromRowIndex(this.mDOMOutliner.currentIndex);
-    this.mDOMOutliner.outlinerBoxObject.selection.select(null);
+    var selNode = this.getNodeFromRowIndex(this.mDOMTree.currentIndex);
+    this.mDOMTree.treeBoxObject.selection.select(null);
     
     var opened = [];
     var i;
@@ -588,9 +588,9 @@ DOMViewer.prototype =
     this.mDOMView.rebuild();
     
     for (i = 0; i < opened.length; ++i)
-      this.selectElementInOutliner(opened[i], true, true);
+      this.selectElementInTree(opened[i], true, true);
     
-    this.selectElementInOutliner(selNode);
+    this.selectElementInTree(selNode);
   },
   
   createDOMWalker: function(aRoot)
@@ -730,7 +730,7 @@ DOMViewer.prototype =
   
   get selectedNode()
   {
-    var index = this.mDOMOutliner.currentIndex;
+    var index = this.mDOMTree.currentIndex;
     return index >= 0 ? this.getNodeFromRowIndex(index) : null;
   },
 

@@ -31,15 +31,15 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#ifndef _NSSASNOUTLINER_H_
-#define _NSSASNOUTLINER_H_
+#ifndef _NSSASNTREE_H_
+#define _NSSASNTREE_H_
 
 #include "nscore.h"
 #include "nsIX509Cert.h"
-#include "nsIASN1Outliner.h"
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerSelection.h"
+#include "nsIASN1Tree.h"
+#include "nsITreeView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeSelection.h"
 #include "nsCOMPtr.h"
 
 //4bfaa9f0-1dd2-11b2-afae-a82cbaa0b606
@@ -51,15 +51,15 @@
   }
   
 
-class nsNSSASN1Outliner : public nsIASN1Outliner
+class nsNSSASN1Tree : public nsIASN1Tree
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIASN1OUTLINER
-  NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSIASN1TREE
+  NS_DECL_NSITREEVIEW
   
-  nsNSSASN1Outliner();
-  virtual ~nsNSSASN1Outliner();
+  nsNSSASN1Tree();
+  virtual ~nsNSSASN1Tree();
 protected:
   PRUint32 CountNumberOfVisibleRows(nsIASN1Object *asn1Object);
   nsresult GetASN1ObjectAtIndex(PRUint32 index, nsIASN1Object *sourceObject,
@@ -67,7 +67,7 @@ protected:
   PRInt32 GetParentOfObjectAtIndex(PRUint32 index, nsIASN1Object *sourceObject);
   PRInt32 GetLevelsTilIndex(PRUint32 index, nsIASN1Object *sourceObject);
   nsCOMPtr<nsIASN1Object> mASN1Object;
-  nsCOMPtr<nsIOutlinerSelection> mSelection;
-  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
+  nsCOMPtr<nsITreeSelection> mSelection;
+  nsCOMPtr<nsITreeBoxObject> mTree;
 };
-#endif //_NSSASNOUTLINER_H_
+#endif //_NSSASNTREE_H_

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsOutlinerColFrame.h"
+#include "nsTreeColFrame.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsIContent.h"
@@ -47,38 +47,38 @@
 #include "nsIDocument.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
-#include "nsOutlinerBodyFrame.h"
+#include "nsTreeBodyFrame.h"
 
 //
-// NS_NewOutlinerColFrame
+// NS_NewTreeColFrame
 //
 // Creates a new col frame
 //
 nsresult
-NS_NewOutlinerColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
+NS_NewTreeColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
                         nsIBoxLayout* aLayoutManager)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsOutlinerColFrame* it = new (aPresShell) nsOutlinerColFrame(aPresShell, aIsRoot, aLayoutManager);
+  nsTreeColFrame* it = new (aPresShell) nsTreeColFrame(aPresShell, aIsRoot, aLayoutManager);
   if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aNewFrame = it;
   return NS_OK;
   
-} // NS_NewOutlinerColFrame
+} // NS_NewTreeColFrame
 
 NS_IMETHODIMP_(nsrefcnt) 
-nsOutlinerColFrame::AddRef(void)
+nsTreeColFrame::AddRef(void)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
-nsOutlinerColFrame::Release(void)
+nsTreeColFrame::Release(void)
 {
   return NS_OK;
 }
@@ -86,21 +86,21 @@ nsOutlinerColFrame::Release(void)
 //
 // QueryInterface
 //
-NS_INTERFACE_MAP_BEGIN(nsOutlinerColFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIOutlinerColFrame)
+NS_INTERFACE_MAP_BEGIN(nsTreeColFrame)
+  NS_INTERFACE_MAP_ENTRY(nsITreeColFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // Constructor
-nsOutlinerColFrame::nsOutlinerColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+nsTreeColFrame::nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 :nsBoxFrame(aPresShell, aIsRoot, aLayoutManager) 
 {}
 
 // Destructor
-nsOutlinerColFrame::~nsOutlinerColFrame()
+nsTreeColFrame::~nsTreeColFrame()
 {
 }
 
 NS_IMETHODIMP
-nsOutlinerColFrame::Init(nsIPresContext*  aPresContext,
+nsTreeColFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
@@ -112,7 +112,7 @@ nsOutlinerColFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsOutlinerColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      const nsPoint& aPoint, 
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
@@ -177,7 +177,7 @@ nsOutlinerColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsOutlinerColFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsTreeColFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent* aChild,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
@@ -188,10 +188,10 @@ nsOutlinerColFrame::AttributeChanged(nsIPresContext* aPresContext,
                                                aNameSpaceID, aAttribute, aModType, aHint);
 
   if (aAttribute == nsHTMLAtoms::width || aAttribute == nsHTMLAtoms::hidden) {
-    // Invalidate the outliner.
-    EnsureOutliner();
-    if (mOutliner)
-      mOutliner->Invalidate();
+    // Invalidate the tree.
+    EnsureTree();
+    if (mTree)
+      mTree->Invalidate();
   } else if (aAttribute == nsXULAtoms::ordinal) {
     InvalidateColumnCache(aPresContext);
   }
@@ -200,9 +200,9 @@ nsOutlinerColFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 void
-nsOutlinerColFrame::EnsureOutliner()
+nsTreeColFrame::EnsureTree()
 {
-  if (!mOutliner && mContent) {
+  if (!mTree && mContent) {
     // Get our parent node.
     nsCOMPtr<nsIContent> parent;
     mContent->GetParent(*getter_AddRefs(parent));
@@ -217,18 +217,18 @@ nsOutlinerColFrame::EnsureOutliner()
       nsCOMPtr<nsIBoxObject> boxObject;
       nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
 
-      mOutliner = do_QueryInterface(boxObject);
+      mTree = do_QueryInterface(boxObject);
     }
   }
 }
 
 void
-nsOutlinerColFrame::InvalidateColumnCache(nsIPresContext* aPresContext)
+nsTreeColFrame::InvalidateColumnCache(nsIPresContext* aPresContext)
 {
-  EnsureOutliner();  
-  if (mOutliner) {
+  EnsureTree();  
+  if (mTree) {
     nsCOMPtr<nsIDOMElement> bodyEl;
-    mOutliner->GetOutlinerBody(getter_AddRefs(bodyEl));
+    mTree->GetTreeBody(getter_AddRefs(bodyEl));
     nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyEl);
     if (bodyContent) {
       nsCOMPtr<nsIPresShell> shell;
@@ -236,7 +236,7 @@ nsOutlinerColFrame::InvalidateColumnCache(nsIPresContext* aPresContext)
       nsIFrame* frame;
       shell->GetPrimaryFrameFor(bodyContent, &frame);
       if (frame) {
-        nsOutlinerBodyFrame* oframe = NS_STATIC_CAST(nsOutlinerBodyFrame*, frame);
+        nsTreeBodyFrame* oframe = NS_STATIC_CAST(nsTreeBodyFrame*, frame);
         oframe->InvalidateColumnCache();
       }
     }

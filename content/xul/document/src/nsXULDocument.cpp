@@ -6365,25 +6365,25 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     if (xblService)
         xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
 
-    // By default, we build content for an outliner and then we attach
-    // the outliner content view. However, if the `dont-build-content'
-    // flag is set, then we we'll attach an outliner builder which
-    // directly implements the outliner view.
+    // By default, we build content for an tree and then we attach
+    // the tree content view. However, if the `dont-build-content'
+    // flag is set, then we we'll attach an tree builder which
+    // directly implements the tree view.
     // XXXwaterson maybe we should do the latter by default: it ought
     // to reduce the footprint a great deal.
-    if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::outliner)) {
+    if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::tree)) {
         nsAutoString flags;
         aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
         if (flags.Find(NS_LITERAL_STRING("dont-build-content")) >= 0) {
             nsCOMPtr<nsIXULTemplateBuilder> builder =
-                do_CreateInstance("@mozilla.org/xul/xul-outliner-builder;1");
+                do_CreateInstance("@mozilla.org/xul/xul-tree-builder;1");
 
             if (! builder)
                 return NS_ERROR_FAILURE;
 
             builder->Init(aElement);
 
-            // Because the outliner box object won't be created until the
+            // Because the tree box object won't be created until the
             // frame is available, we need to tuck the template builder
             // away in the binding manager so there's at least one
             // reference to it.
@@ -6391,19 +6391,19 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             if (xuldoc)
                 xuldoc->SetTemplateBuilderFor(aElement, builder);
 
-            // Force an <outlinerchildren> to be created if one isn't
+            // Force an <treechildren> to be created if one isn't
             // there already: this is the only way to create an
-            // <outlinerbody> for the rdfliner.
+            // <treebody> for the rdfliner.
             nsCOMPtr<nsIContent> bodyContent;
             nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
-                                              nsXULAtoms::outlinerchildren,
+                                              nsXULAtoms::treechildren,
                                               getter_AddRefs(bodyContent));
 
             if (! bodyContent) {
                 nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc);
                 if (domdoc) {
                     nsCOMPtr<nsIDOMElement> bodyElement;
-                    domdoc->CreateElement(NS_LITERAL_STRING("outlinerchildren"),
+                    domdoc->CreateElement(NS_LITERAL_STRING("treechildren"),
                                           getter_AddRefs(bodyElement));
 
                     bodyContent = do_QueryInterface(bodyElement);
@@ -7097,8 +7097,8 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-listbox";
     else if (tag.get() == nsXULAtoms::scrollbox)
       contractID += "-scrollbox";
-    else if (tag.get() == nsXULAtoms::outliner)
-      contractID += "-outliner";
+    else if (tag.get() == nsXULAtoms::tree)
+      contractID += "-tree";
   }
   contractID += ";1";
 

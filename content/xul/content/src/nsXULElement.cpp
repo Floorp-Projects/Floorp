@@ -126,7 +126,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsXULAtoms.h"
-#include "nsITreeBoxObject.h"
+#include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsGenericElement.h"
 
@@ -2375,7 +2375,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     // are selected (and therefore need to be deselected). We need to account for this.
     nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsIDOMXULMultiSelectControlElement> controlElement;
-    nsCOMPtr<nsITreeBoxObject> treeBox;
+    nsCOMPtr<nsIListBoxObject> listBox;
     PRBool fireSelectionHandler = PR_FALSE;
 
     // -1 = do nothing, -2 = null out current item
@@ -2383,8 +2383,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     PRInt32 newCurrentIndex = -1;
 
     oldKid->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag == nsXULAtoms::treechildren || tag == nsXULAtoms::treeitem ||
-                tag == nsXULAtoms::treecell || tag == nsXULAtoms::listitem)) {
+    if (tag == nsXULAtoms::listitem) {
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
@@ -2403,8 +2402,8 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         for (PRInt32 i = 0; i < length; i++) {
           nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
           controlElement->GetSelectedItem(i, getter_AddRefs(node));
-          if (IsAncestor(parentKid, node)) {
-            controlElement->RemoveItemFromSelection(node);
+          nsCOMPtr<nsIDOMNode> selNode(do_QueryInterface(node));
+          if (selNode == parentKid && NS_SUCCEEDED(rv = controlElement->RemoveItemFromSelection(node))) {
             length--;
             i--;
             fireSelectionHandler = PR_TRUE;
@@ -2418,11 +2417,11 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
             // Current item going away
             nsCOMPtr<nsIBoxObject> box;
             controlElement->GetBoxObject(getter_AddRefs(box));
-            treeBox = do_QueryInterface(box);
-            if (treeBox) {
+            listBox = do_QueryInterface(box);
+            if (listBox) {
                 nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parentKid);
                 if (domElem)
-                    treeBox->GetIndexOfItem(domElem, &newCurrentIndex);
+                    listBox->GetIndexOfItem(domElem, &newCurrentIndex);
             }
 
             // If any of this fails, we'll just set the current item to null
@@ -2445,11 +2444,11 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         else if (newCurrentIndex > -1) {
             // Make sure the index is still valid
             PRInt32 treeRows;
-            treeBox->GetRowCount(&treeRows);
+            listBox->GetRowCount(&treeRows);
             if (treeRows > 0) {
                 newCurrentIndex = PR_MIN((treeRows - 1), newCurrentIndex);
                 nsCOMPtr<nsIDOMElement> newCurrentItem;
-                treeBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
+                listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
                 if (newCurrentItem) {
                     nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
                     if (xulCurItem)
@@ -4423,7 +4422,7 @@ nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
   while (current) {
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag == nsXULAtoms::tree || tag == nsXULAtoms::listbox)) {
+    if (tag == nsXULAtoms::listbox) {
       nsCOMPtr<nsIDOMXULMultiSelectControlElement> element = do_QueryInterface(current);
       *aTreeElement = element;
       NS_IF_ADDREF(*aTreeElement);
