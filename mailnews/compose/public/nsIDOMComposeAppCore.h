@@ -7,16 +7,23 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
-#include "nsID.h" /* interface nsID */
-#include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
+#include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "nsIDOMXULElement.h" /* interface nsIDOMXULElement */
+#include "nsICollection.h" /* interface nsICollection */
+#include "nsRDFInterfaces.h" /* interface nsRDFInterfaces */
 #include "nsIDOMEditorAppCore.h" /* interface nsIDOMEditorAppCore */
-#include "nsIDOMMsgAppCore.h" /* interface nsIDOMEditorAppCore */
+#include "nsIEnumerator.h" /* interface nsIEnumerator */
+#include "nsID.h" /* interface nsID */
+#include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
+#include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
+#include "nsIDOMMsgAppCore.h" /* interface nsIDOMMsgAppCore */
+#include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIDOMComposeAppCore */
+/* starting interface:    nsIDOMComposeAppCore */
 
 /* {D4779C9A-CAA6-11d2-A6F2-0060B0EB39B5} */
 #define NS_IDOMCOMPOSEAPPCORE_IID_STR "D4779C9A-CAA6-11d2-A6F2-0060B0EB39B5"
@@ -26,43 +33,33 @@
 
 class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IDOMCOMPOSEAPPCORE_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCOMPOSEAPPCORE_IID)
 
   /* void SetWindow (in nsIDOMWindow ptr); */
   NS_IMETHOD SetWindow(nsIDOMWindow *ptr) = 0;
 
-  /* void SetEditor (in nsIDOMWindow ptr); */
+  /* void SetEditor (in nsIDOMEditorAppCore ptr); */
   NS_IMETHOD SetEditor(nsIDOMEditorAppCore *ptr) = 0;
 
   /* void CompleteCallback (in nsAutoString script); */
   NS_IMETHOD CompleteCallback(nsAutoString& script) = 0;
 
-  /* void NewMessage (in nsAutoString url); */
-  NS_IMETHOD NewMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-												nsIDOMNodeList *nodeList, nsIDOMMsgAppCore *
-												msgAppCore, const PRInt32 messageType) = 0;
+  /* void NewMessage (in nsAutoString url, in nsIDOMXULTreeElement tree, in nsIDOMNodeList node, in nsIDOMMsgAppCore msgAppCore, in long messageType); */
+  NS_IMETHOD NewMessage(nsAutoString& url, nsIDOMXULTreeElement *tree, nsIDOMNodeList *node, nsIDOMMsgAppCore *msgAppCore, PRInt32 messageType) = 0;
 
-	/* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in
-		 nsAutoString addrBcc, in nsAutoString subject, in nsAutoString msg); */ 
-  NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc,
-												 nsAutoString& addrBcc, nsAutoString& subject,
-												 nsAutoString& msg) = 0;
+  /* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString newsgroup, in nsAutoString subject, in nsAutoString msg); */
+  NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc, nsAutoString& addrBcc, nsAutoString& newsgroup, nsAutoString& subject, nsAutoString& msg) = 0;
 
-  /* void SendMessage2 (); */
+  /* long SendMessage2 (); */
   NS_IMETHOD SendMessage2(PRInt32 *_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx,
-																						nsIDOMComposeAppCore *priv);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMComposeAppCore *priv);
 #endif
 };
 extern "C" 
-nsresult NS_InitComposeAppCoreClass(nsIScriptContext *aContext, void
-																		**aPrototype);
+nsresult NS_InitComposeAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
  
 
 

@@ -41,7 +41,8 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 			in long messageType);
     void SendMessage(in nsAutoString addrTo, 
 			in nsAutoString addrCc, 
-			in nsAutoString addrBcc, 
+			in nsAutoString addrBcc,
+            in nsAutoString newsgroup,
 			in nsAutoString subject, 
 			in nsAutoString msg);
     long SendMessage2();
