@@ -41,16 +41,19 @@
 
   <!-- List all the skins being supplied by this theme -->
   <RDF:Seq about="urn:mozilla:skin:root">
-    <RDF:li resource="urn:mozilla:skin:modern/1.2" />
+    <RDF:li resource="urn:mozilla:skin:modern/1.0" />
   </RDF:Seq>
 
   <!-- Modern Information -->
-  <RDF:Description about="urn:mozilla:skin:modern/1.2">
+  <RDF:Description about="urn:mozilla:skin:modern/1.0">
     <chrome:packages>
-      <RDF:Seq about="urn:mozilla:skin:modern/1.2:packages">
-        <RDF:li resource="urn:mozilla:skin:modern/1.2:calendar"/>
+      <RDF:Seq about="urn:mozilla:skin:modern/1.0:packages">
+        <RDF:li resource="urn:mozilla:skin:modern/1.0:calendar"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+  
+   <RDF:Description about="urn:mozilla:skin:modern/1.0:calendar"
+      chrome:skinVersion="1.2"/>
 </RDF:RDF>
 

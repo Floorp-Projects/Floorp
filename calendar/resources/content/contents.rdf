@@ -45,7 +45,8 @@
 <RDF:Description about="urn:mozilla:package:calendar"
         chrome:displayName="Calendar"
         chrome:author="OEone Corp."
-        chrome:name="calendar">
+        chrome:name="calendar"
+        chrome:skinVersion="1.2">
 </RDF:Description>
 
   <!-- overlay information -->
