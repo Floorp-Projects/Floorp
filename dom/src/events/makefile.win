@@ -29,7 +29,6 @@ CPPSRCS =				\
 	nsJSDOMEventListener.cpp		\
 	nsJSEvent.cpp			\
 	nsJSUIEvent.cpp			\
-	nsJSTextRange.cpp		\
 	$(NULL)
 
 CPP_OBJS= \
