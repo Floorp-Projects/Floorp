@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2001/10/09 15:30:16 $ 
+# $Revision: 1.13 $ 
+# $Date: 2001/10/10 15:09:06 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -98,7 +98,7 @@ $GLOBAL_INDEX_FILE = "index.html";
 
 # Error log filename:
 
-$ERROR_LOG = "/var/log/tinderbox2/log";
+$ERROR_LOG = "/var/log/tinderbox2/tinderbox2.log";
   
 # Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
