@@ -25,9 +25,13 @@
 #ifndef nsClipboard_h__
 #define nsClipboard_h__
 
-#include "nsBaseClipboard.h"
 #include <gtk/gtk.h>
 #include <gtk/gtkinvisible.h>
+
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+#include "nsIClipboardOwner.h"
+#include <nsCOMPtr.h>
 
 class nsITransferable;
 class nsIClipboardOwner;
@@ -37,18 +41,18 @@ class nsIWidget;
  * Native Gtk Clipboard wrapper
  */
 
-class nsClipboard : public nsBaseClipboard
+class nsClipboard : public nsIClipboard
 {
 
 public:
   nsClipboard();
   virtual ~nsClipboard();
 
-  // nsIClipboard  
-  NS_IMETHOD ForceDataToClipboard ( PRInt32 aWhichClipboard );
-  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray* aFlavorList, 
-                                      PRInt32 aWhichClipboard, 
-                                      PRBool * outResult);
+  //nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIClipboard
+  NS_DECL_NSICLIPBOARD
 
 protected:
   void Init(void);
@@ -57,21 +61,28 @@ protected:
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, 
                                     PRInt32 aWhichClipboard );
 
+  inline nsITransferable *GetTransferable(PRInt32 aWhichClipboard);
+
+
   PRBool  mIgnoreEmptyNotification;
 
-
 private:
-  inline void SetWhichClipboard(PRInt32 aWhichClipboard);
+  inline GdkAtom GetSelectionAtom(PRInt32 aWhichClipboard);
   inline void AddTarget(GdkAtom aAtom, GdkAtom aSelectionAtom);
   void RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom);
-  PRBool DoRealConvert(GdkAtom type);
-  PRBool DoConvert(const char *aMimeStr);
+  PRBool DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom);
+  PRBool DoConvert(const char *aMimeStr, GdkAtom aSelectionAtom);
+
+  nsCOMPtr<nsIClipboardOwner> mSelectionOwner;
+  nsCOMPtr<nsIClipboardOwner> mGlobalOwner;
+  nsCOMPtr<nsITransferable>   mSelectionTransferable;
+  nsCOMPtr<nsITransferable>   mGlobalTransferable;
+
 
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:
   GtkSelectionData mSelectionData;
   PRBool mBlocking;
-  GdkAtom mSelectionAtom;
 
   // invisible widget.  also used by dragndrop
   static GtkWidget *sWidget;

@@ -28,11 +28,8 @@
 #include "nsFileSpec.h"
 
 #include "nsISupportsArray.h"
-#include "nsIClipboardOwner.h"
-#include "nsITransferable.h"   // kTextMime
 #include "nsISupportsPrimitives.h"
 
-#include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -53,24 +50,27 @@ GtkWidget* nsClipboard::sWidget = 0;
 
 static GdkAtom GDK_SELECTION_CLIPBOARD;
 
+NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
+
 //-------------------------------------------------------------------------
 //
 // nsClipboard constructor
 //
 //-------------------------------------------------------------------------
-nsClipboard::nsClipboard() : nsBaseClipboard()
+nsClipboard::nsClipboard()
 {
 #ifdef DEBUG_CLIPBOARD
   g_print("nsClipboard::nsClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
-  //NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
   mIgnoreEmptyNotification = PR_FALSE;
-  mClipboardOwner = nsnull;
-  mTransferable   = nsnull;
+  mGlobalTransferable = nsnull;
+  mSelectionTransferable = nsnull;
+  mGlobalOwner = nsnull;
+  mSelectionOwner = nsnull;
   mSelectionData.data = nsnull;
   mSelectionData.length = 0;
-  mSelectionAtom = GDK_SELECTION_PRIMARY;
 
   // initialize the widget, etc we're binding to
   Init();
@@ -146,29 +146,6 @@ nsClipboard::~nsClipboard()
 }
 
 
-// 
-// GTK Weirdness!
-// This is here in the hope of being able to call
-//  gtk_selection_add_targets(w, GDK_SELECTION_PRIMARY,
-//                            targets,
-//                            1);
-// instead of
-//   gtk_selection_add_target(sWidget, 
-//                            GDK_SELECTION_PRIMARY,
-//                            GDK_SELECTION_TYPE_STRING,
-//                            GDK_SELECTION_TYPE_STRING);
-// but it turns out that this changes the whole gtk selection model;
-// when calling add_targets copy uses selection_clear_event and the
-// data structure needs to be filled in in a way that we haven't
-// figured out; when using add_target copy uses selection_get and
-// the data structure is already filled in as much as it needs to be.
-// Some gtk internals wizard will need to solve this mystery before
-// we can use add_targets().
-//static GtkTargetEntry targets[] = {
-//  { "strings n stuff", GDK_SELECTION_TYPE_STRING, GDK_SELECTION_TYPE_STRING }
-//};
-//
-
 //-------------------------------------------------------------------------
 void nsClipboard::Init(void)
 {
@@ -176,7 +153,7 @@ void nsClipboard::Init(void)
   g_print("nsClipboard::Init\n");
 #endif
 
-  GDK_SELECTION_CLIPBOARD         = gdk_atom_intern("CLIPBOARD", FALSE);
+  GDK_SELECTION_CLIPBOARD = gdk_atom_intern("CLIPBOARD", FALSE);
 
   // create invisible widget to use for the clipboard
   sWidget = gtk_invisible_new();
@@ -201,34 +178,126 @@ void nsClipboard::Init(void)
 }
 
 
+
+
+/**
+  * Sets the transferable object
+  *
+  */
+NS_IMETHODIMP nsClipboard::SetData(nsITransferable * aTransferable,
+                                   nsIClipboardOwner * anOwner,
+                                   PRInt32 aWhichClipboard)
+{
+
+  if ((aTransferable == mGlobalTransferable.get() &&
+       anOwner == mGlobalOwner.get() &&
+       aWhichClipboard == kGlobalClipboard ) ||
+      (aTransferable == mSelectionTransferable.get() &&
+       anOwner == mSelectionOwner.get() &&
+       aWhichClipboard == kSelectionClipboard)
+      )
+  {
+    return NS_OK;
+  }
+
+  EmptyClipboard(aWhichClipboard);
+
+  switch(aWhichClipboard) {
+  case kSelectionClipboard:
+    mSelectionOwner = anOwner;
+    mSelectionTransferable = aTransferable;
+    break;
+  case kGlobalClipboard:
+    mGlobalOwner = anOwner;
+    mGlobalTransferable = aTransferable;
+    break;
+  }
+
+  return SetNativeClipboardData(aWhichClipboard);
+}
+
+/**
+  * Gets the transferable object
+  *
+  */
+NS_IMETHODIMP nsClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhichClipboard)
+{
+  if (nsnull != aTransferable) {
+    return GetNativeClipboardData(aTransferable, aWhichClipboard);
+  } else {
+    printf("  nsClipboard::GetData(), aTransferable is NULL.\n");
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
+{
+  if (mIgnoreEmptyNotification) {
+    return NS_OK;
+  }
+
+  switch(aWhichClipboard) {
+  case kSelectionClipboard:
+    if (mSelectionOwner) {
+      mSelectionOwner->LosingOwnership(mSelectionTransferable);
+      mSelectionOwner = nsnull;
+    }
+    mSelectionTransferable = nsnull;
+    break;
+  case kGlobalClipboard:
+    if (mGlobalOwner) {
+      mGlobalOwner->LosingOwnership(mGlobalTransferable);
+      mGlobalOwner = nsnull;
+    }
+    mGlobalTransferable = nsnull;
+    break;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsClipboard::SupportsSelectionClipboard(PRBool *_retval)
+{
+  *_retval = PR_TRUE;   // we don't suport the selection clipboard by default.
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {
-  SetWhichClipboard(aWhichClipboard);
-
   mIgnoreEmptyNotification = PR_TRUE;
 
 #ifdef DEBUG_CLIPBOARD
   g_print("  nsClipboard::SetNativeClipboardData(%i)\n", aWhichClipboard);
 #endif /* DEBUG_CLIPBOARD */
 
+
+  GdkAtom selectionAtom = GetSelectionAtom(aWhichClipboard);
+  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+
   // make sure we have a good transferable
-  if (nsnull == mTransferable) {
+  if (nsnull == transferable) {
     printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
     return NS_ERROR_FAILURE;
   }
 
   // are we already the owner?
-  if (gdk_selection_owner_get(mSelectionAtom) == sWidget->window)
+  if (gdk_selection_owner_get(selectionAtom) == sWidget->window)
   {
     // if so, clear all the targets
-    __gtk_selection_target_list_remove(sWidget, mSelectionAtom);
+    __gtk_selection_target_list_remove(sWidget, selectionAtom);
     //    gtk_selection_remove_all(sWidget);
   }
 
   // we arn't already the owner, so we will become it
   gint have_selection = gtk_selection_owner_set(sWidget,
-                                                mSelectionAtom,
+                                                selectionAtom,
                                                 GDK_CURRENT_TIME);
   if (have_selection == 0)
     return NS_ERROR_FAILURE;
@@ -236,7 +305,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   // get flavor list that includes all flavors that can be written (including ones 
   // obtained through conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
-  nsresult errCode = mTransferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
+  nsresult errCode = transferable->FlavorsTransferableCanExport ( getter_AddRefs(flavorList) );
   if ( NS_FAILED(errCode) )
     return NS_ERROR_FAILURE;
 
@@ -252,7 +321,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
       currentFlavor->ToString(getter_Copies(flavorStr));
 
       // add these types as selection targets
-      RegisterFormat(flavorStr, mSelectionAtom);
+      RegisterFormat(flavorStr, selectionAtom);
     }
   }
 
@@ -262,7 +331,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 }
 
 
-PRBool nsClipboard::DoRealConvert(GdkAtom type)
+PRBool nsClipboard::DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom)
 {
 #ifdef DEBUG_CLIPBOARD
   g_print("    nsClipboard::DoRealConvert(%li)\n    {\n", type);
@@ -278,7 +347,7 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type)
   g_print("     Doing real conversion of atom type '%s'\n", gdk_atom_name(type));
 #endif
   gtk_selection_convert(sWidget,
-                        mSelectionAtom,
+                        aSelectionAtom,
                         type,
                         GDK_CURRENT_TIME);
 
@@ -316,7 +385,7 @@ NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, 
                                     PRInt32 aWhichClipboard)
 {
-  SetWhichClipboard(aWhichClipboard);
+  GdkAtom selectionAtom = GetSelectionAtom(aWhichClipboard);
 
 #ifdef DEBUG_CLIPBOARD
   g_print("nsClipboard::GetNativeClipboardData(%i)\n", aWhichClipboard);
@@ -347,7 +416,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
-      if (DoConvert(flavorStr)) {
+      if (DoConvert(flavorStr, selectionAtom)) {
         foundFlavor = flavorStr;
         foundData = PR_TRUE;
         break;
@@ -357,7 +426,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
   if ( !foundData ) {
     // if we still haven't found anything yet and we're asked to find text/unicode, then
     // try to give them text plain if it's there.
-    if (DoConvert(kTextMime)) {
+    if (DoConvert(kTextMime, selectionAtom)) {
        const char* castedText = NS_REINTERPRET_CAST(char*, mSelectionData.data);          
        PRUnichar* convertedText = nsnull;
        PRInt32 convertedTextLen = 0;
@@ -505,8 +574,6 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
   }
 }
 
-
-
 /**
  * Some platforms support deferred notification for putting data on the clipboard
  * This method forces the data onto the clipboard in its various formats
@@ -516,13 +583,15 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
  */
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 {
-  SetWhichClipboard(aWhichClipboard);
 #ifdef DEBUG_CLIPBOARD
   g_print("  nsClipboard::ForceDataToClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
-  if (nsnull == mTransferable) {
+
+  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
+
+  if (nsnull == transferable) {
     return NS_ERROR_FAILURE;
   }
 
@@ -542,7 +611,6 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   // check for plain text. If it's there, say "yes" as we will do the conversion
   // in GetNativeClipboardData(). From this point on, no client will
   // ever ask for text/plain explicitly. If they do, you must ASSERT!
-  SetWhichClipboard(aWhichClipboard);
 
 #if 0
   *outResult = PR_FALSE;
@@ -557,7 +625,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
       flavorWrapper->ToString ( getter_Copies(flavor) );
       
       gint format = GetFormat(flavor);
-      if (DoConvert(format)) {
+      if (DoConvert(format, aWhichClipboard)) {
         *outResult = PR_TRUE;
         break;
       }
@@ -570,11 +638,10 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
 #else
   *outResult = PR_TRUE;
 #endif
-
+  
   return NS_OK;
 
 }
-
 
 /**
  * This is the callback which is called when another app
@@ -600,13 +667,25 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   PRUint32 dataLength;
   nsresult rv;
 
+  PRInt32 whichClipboard = -1;
+
+  if (aSelectionData->selection == GDK_SELECTION_PRIMARY)
+    whichClipboard = kSelectionClipboard;
+  else if (aSelectionData->selection == GDK_SELECTION_CLIPBOARD)
+    whichClipboard = kGlobalClipboard;
+
+#ifdef DEBUG_CLIPBOARD
+  g_print("  whichClipboard = %d\n", whichClipboard);
+#endif
+  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(cb->GetTransferable(whichClipboard)));
+
   // Make sure we have a transferable:
-  if (!cb->mTransferable) {
+  if (!transferable) {
     g_print("Clipboard has no transferable!\n");
     return;
   }
 #ifdef DEBUG_CLIPBOARD
-  g_print("  aInfo == %d -", aInfo);
+  g_print("  aInfo == %s\n  transferable == %p\n", gdk_atom_name(aInfo), transferable.get());
 #endif
   char* dataFlavor = nsnull;
   nsCAutoString type(gdk_atom_name(aInfo));
@@ -623,14 +702,12 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   } else {
     dataFlavor = type;
   }
-#ifdef DEBUG_CLIPBOARD
-  g_print("- aInfo is for %s\n", gdk_atom_name(aInfo));
-#endif
+
   // Get data out of transferable.
   nsCOMPtr<nsISupports> genericDataWrapper;
-  rv = cb->mTransferable->GetTransferData(dataFlavor,
-                                          getter_AddRefs(genericDataWrapper),
-                                          &dataLength);
+  rv = transferable->GetTransferData(dataFlavor,
+                                     getter_AddRefs(genericDataWrapper),
+                                     &dataLength);
   nsPrimitiveHelpers::CreateDataFromPrimitive ( dataFlavor, genericDataWrapper, &clipboardData, dataLength );
   if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
     size_t size = 1;
@@ -727,22 +804,36 @@ nsClipboard::SelectionNotifyCB (GtkWidget *aWidget,
 #endif /* DEBUG_CLIPBOARD */
 }
 
-
-
 /* helper functions*/
 
 /* inline */
-void nsClipboard::SetWhichClipboard(PRInt32 aWhichClipboard)
+GdkAtom nsClipboard::GetSelectionAtom(PRInt32 aWhichClipboard)
 {
   switch (aWhichClipboard)
   {
   case kGlobalClipboard:
-    mSelectionAtom = GDK_SELECTION_CLIPBOARD;
+    return GDK_SELECTION_CLIPBOARD;
+  case kSelectionClipboard:
+  default:
+    return GDK_SELECTION_PRIMARY;
+  }
+}
+
+/* inline */
+nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
+{
+  nsITransferable *transferable = nsnull;
+  switch (aWhichClipboard)
+  {
+  case kGlobalClipboard:
+    transferable = mGlobalTransferable;
     break;
   case kSelectionClipboard:
-    mSelectionAtom = GDK_SELECTION_PRIMARY;
+    transferable = mSelectionTransferable;
     break;
   }
+  NS_IF_ADDREF(transferable);
+  return transferable;
 }
 
 /* inline */
@@ -772,10 +863,10 @@ void nsClipboard::RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom)
 }
 
 /* return PR_TRUE if we have converted or PR_FALSE if we havn't and need to keep being called */
-PRBool nsClipboard::DoConvert(const char *aMimeStr)
+PRBool nsClipboard::DoConvert(const char *aMimeStr, GdkAtom aSelectionAtom)
 {
 #ifdef DEBUG_CLIPBOARD
-  g_print("  nsClipboard::DoConvert(%s)\n", aMimeStr);
+  g_print("  nsClipboard::DoConvert(%s, %s)\n", aMimeStr, gdk_atom_name(aSelectionAtom));
 #endif
   /* when doing the selection_add_target, each case should have the same last parameter
      which matches the case match */
@@ -784,15 +875,15 @@ PRBool nsClipboard::DoConvert(const char *aMimeStr)
   nsCAutoString mimeStr(aMimeStr);
 
   if (mimeStr.Equals(kTextMime)) {
-    r = DoRealConvert(GDK_SELECTION_TYPE_STRING);
+    r = DoRealConvert(GDK_SELECTION_TYPE_STRING, aSelectionAtom);
     if (r) return r;
   } else if (mimeStr.Equals(kUnicodeMime)) {
-    r = DoRealConvert(gdk_atom_intern("UTF_STRING", FALSE));
+    r = DoRealConvert(gdk_atom_intern("UTF_STRING", FALSE), aSelectionAtom);
     if (r) return r;
   }
 
   GdkAtom atom = gdk_atom_intern(aMimeStr, FALSE);
-  r = DoRealConvert(atom);
+  r = DoRealConvert(atom, aSelectionAtom);
   if (r) return r;
 
   return r;
