@@ -478,6 +478,10 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
         PR_ASSERT(rv == 0 && result == NULL);
         if (0 == rv)
         {
+#ifdef _PR_DCETHREADS
+            rv = pthread_detach(&id);
+            PR_ASSERT(0 == rv);
+#endif
             _pt_thread_death(thred);
         }
         else
