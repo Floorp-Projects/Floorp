@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Kathleen Brade <brade@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -39,12 +40,18 @@
 #include "nsString.h"
 
 #include "nsIController.h"
+#include "nsIControllers.h"
 #include "nsIObserver.h"
 
 #include "nsIComponentManager.h"
 
+#include "nsIServiceManagerUtils.h"
+#include "nsIScriptSecurityManager.h"
+
+#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIFocusController.h"
 
 #include "nsSupportsArray.h"
@@ -173,28 +180,34 @@ nsCommandManager::RemoveCommandObserver(nsIObserver *aCommandObserver, const cha
 	return (removed) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-/* boolean isCommandSupported (in wstring aCommandName); */
+/* boolean isCommandSupported(in string aCommandName,
+                              in nsIDOMWindow aTargetWindow); */
 NS_IMETHODIMP
-nsCommandManager::IsCommandSupported(const char *aCommandName, PRBool *outCommandSupported)
+nsCommandManager::IsCommandSupported(const char *aCommandName,
+                                     nsIDOMWindow *aTargetWindow,
+                                     PRBool *outCommandSupported)
 {
   NS_ENSURE_ARG_POINTER(outCommandSupported);
 
   nsCOMPtr<nsIController> controller;
-  nsresult rv = GetControllerForCommand(aCommandName, getter_AddRefs(controller)); 
+  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
   *outCommandSupported = (controller.get() != nsnull);
   return NS_OK;
 }
 
-/* boolean isCommandEnabled (in wstring aCommandName); */
+/* boolean isCommandEnabled(in string aCommandName,
+                            in nsIDOMWindow aTargetWindow); */
 NS_IMETHODIMP
-nsCommandManager::IsCommandEnabled(const char *aCommandName, PRBool *outCommandEnabled)
+nsCommandManager::IsCommandEnabled(const char *aCommandName,
+                                   nsIDOMWindow *aTargetWindow,
+                                   PRBool *outCommandEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCommandEnabled);
   
   PRBool  commandEnabled = PR_FALSE;
   
   nsCOMPtr<nsIController> controller;
-  nsresult rv = GetControllerForCommand(aCommandName, getter_AddRefs(controller)); 
+  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
   if (controller)
   {
     controller->IsCommandEnabled(aCommandName, &commandEnabled);
@@ -203,14 +216,17 @@ nsCommandManager::IsCommandEnabled(const char *aCommandName, PRBool *outCommandE
   return NS_OK;
 }
 
-
-/* void getCommandState (in DOMString aCommandName, inout nsICommandParams aCommandParams); */
+/* void getCommandState (in DOMString aCommandName,
+                         in nsIDOMWindow aTargetWindow,
+                         inout nsICommandParams aCommandParams); */
 NS_IMETHODIMP
-nsCommandManager::GetCommandState(const char *aCommandName, nsICommandParams *aCommandParams)
+nsCommandManager::GetCommandState(const char *aCommandName,
+                                  nsIDOMWindow *aTargetWindow,
+                                  nsICommandParams *aCommandParams)
 {
   nsCOMPtr<nsIController> controller;
   nsAutoString tValue;
-  nsresult rv = GetControllerForCommand(aCommandName, getter_AddRefs(controller)); 
+  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
   if (!controller)
     return NS_ERROR_FAILURE;
 
@@ -222,13 +238,16 @@ nsCommandManager::GetCommandState(const char *aCommandName, nsICommandParams *aC
   return rv;
 }
 
-/* void doCommand (nsICommandParams aCommandParams); */
-
+/* void doCommand(in string aCommandName,
+                  in nsICommandParams aCommandParams,
+                  in nsIDOMWindow aTargetWindow); */
 NS_IMETHODIMP
-nsCommandManager::DoCommand(const char *aCommandName, nsICommandParams *aCommandParams)
+nsCommandManager::DoCommand(const char *aCommandName,
+                            nsICommandParams *aCommandParams,
+                            nsIDOMWindow *aTargetWindow)
 {
   nsCOMPtr<nsIController> controller;
-  nsresult rv = GetControllerForCommand(aCommandName, getter_AddRefs(controller)); 
+  nsresult rv = GetControllerForCommand(aCommandName, aTargetWindow, getter_AddRefs(controller)); 
   if (!controller)
 	  return NS_ERROR_FAILURE;
 
@@ -245,19 +264,85 @@ nsCommandManager::DoCommand(const char *aCommandName, nsICommandParams *aCommand
 #endif
 
 nsresult
-nsCommandManager::GetControllerForCommand(const char *aCommand, nsIController** outController)
+nsCommandManager::IsCallerChrome(PRBool *is_caller_chrome)
+{
+  *is_caller_chrome = PR_FALSE;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  if (!secMan)
+    return NS_ERROR_FAILURE;
+
+  rv = secMan->SubjectPrincipalIsSystem(is_caller_chrome);
+  return rv;
+}
+
+nsresult
+nsCommandManager::GetControllerForCommand(const char *aCommand, 
+                                          nsIDOMWindow *aTargetWindow,
+                                          nsIController** outController)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  
+  *outController = nsnull;
+
+  // check if we're in content or chrome
+  // if we're not chrome we must have a target window or we bail
+  PRBool isChrome = PR_FALSE;
+  rv = IsCallerChrome(&isChrome);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!isChrome) {
+    if (!aTargetWindow)
+      return rv;
+
+    // if a target window is specified, it must be the window we expect
+    if (aTargetWindow != mWindow)
+        return NS_ERROR_FAILURE;
+  }
+
+  if (aTargetWindow)
+  {
+    // get the controller for this particular window
+    nsCOMPtr<nsIDOMWindowInternal> domWindowInternal = do_QueryInterface(aTargetWindow);
+    if (!domWindowInternal)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIControllers> controllers;
+    rv = domWindowInternal->GetControllers(getter_AddRefs(controllers));
+    if (NS_FAILED(rv))
+      return rv;
+    if (!controllers)
+      return NS_ERROR_FAILURE;
+
+    // dispatch the command
+    return controllers->GetControllerForCommand(aCommand, outController);
+  }
+
+
+  // else we're not targeted to a particular window so use focus
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mWindow);
   if (!window)
     return NS_ERROR_FAILURE;
-    
+
   nsCOMPtr<nsIFocusController> focusController;
   rv = window->GetRootFocusController(getter_AddRefs(focusController));
   if (!focusController)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMWindowInternal> focusWindowInternal;
+  rv = focusController->GetFocusedWindow(getter_AddRefs(focusWindowInternal));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // get the destination window so we can check if it's in content or chrome
+  nsCOMPtr<nsIDOMWindow> destWindow = do_QueryInterface(focusWindowInternal);
+  if (!destWindow)
+    return NS_ERROR_FAILURE;
+
+  // no target window; send command to focus controller
   return focusController->GetControllerForCommand(aCommand, outController);
 }
 
