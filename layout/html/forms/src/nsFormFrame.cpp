@@ -543,9 +543,10 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
         result = inst->QueryInterface(nsIFormSubmitObserver::GetIID(),(void**)&formSubmitObserver);
         if (NS_SUCCEEDED(result) && formSubmitObserver) {
           formSubmitObserver->Notify(mContent);
-	}
+        }
       }
     }
+    NS_RELEASE(theEnum);
   }
 
   nsIFileSpec* multipartDataFile = nsnull;
