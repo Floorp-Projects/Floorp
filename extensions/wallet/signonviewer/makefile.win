@@ -55,13 +55,11 @@ clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
         rm -f $(DIST)\bin\chrome\communicator\content\wallet\SignonViewer.xul
         rm -f $(DIST)\bin\chrome\communicator\content\wallet\SignonViewer.js
-        rm -f $(DIST)\bin\chrome\communicator\skin\wallet\SignonViewer.css
         rm -f $(DIST)\bin\chrome\communicator\locale\wallet\SignonViewer.properties
         rm -f $(DIST)\bin\chrome\communicator\locale\wallet\SignonViewer.dtd
 
 install:: $(DLL)
         $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\communicator\content\wallet
         $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\communicator\content\wallet
-        $(MAKE_INSTALL) SignonViewer.css $(DIST)\bin\chrome\communicator\skin\wallet
         $(MAKE_INSTALL) SignonViewer.properties $(DIST)\bin\chrome\communicator\locale\wallet
         $(MAKE_INSTALL) SignonViewer.dtd $(DIST)\bin\chrome\communicator\locale\wallet

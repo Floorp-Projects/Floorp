@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\..
 
-DIRS=content locale skin
+DIRS=content locale 
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -45,5 +45,3 @@ include $(topsrcdir)/config/rules.mk
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/WalletEditor.xul $(srcdir)/WalletEditor.js $(DIST)/bin/chrome/communicator/content/wallet
 	$(INSTALL) $(srcdir)/WalletEditor.properties  $(srcdir)/WalletEditor.dtd $(DIST)/bin/chrome/communicator/locale/wallet
-	$(INSTALL) $(srcdir)/WalletEditor.css $(DIST)/bin/chrome/communicator/skin/wallet
-	$(INSTALL) $(srcdir)/wallet.css $(DIST)/bin/chrome/communicator/skin/wallet
