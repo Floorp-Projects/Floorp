@@ -247,7 +247,7 @@ public:
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUint32 aChar);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUint32 aChar);
 
-  virtual nsFontWin* LoadFont(HDC aDC, const nsString& aName);
+  virtual nsFontWin* LoadFont(HDC aDC, const nsString& aName, PRBool aNameQuirks=PR_FALSE);
   virtual nsFontWin* LoadGenericFont(HDC aDC, PRUint32 aChar, const nsString& aName);
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
   virtual nsFontWin* LoadSubstituteFont(HDC aDC, const nsString& aName);
@@ -280,8 +280,10 @@ public:
   static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
   static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
 
-  static PRUint16* GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFontType, PRUint8& aCharset);
-  static PRUint16* GetCCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset);
+  static PRUint16* GetFontCCMAP(HDC aDC, const char* aShortName, 
+    PRBool aNameQuirks, eFontType& aFontType, PRUint8& aCharset);
+  static PRUint16* GetCCMAP(HDC aDC, const char* aShortName,
+    PRBool* aNameQuirks, eFontType* aFontType, PRUint8* aCharset);
 
   static int SameAsPreviousMap(int aIndex);
 
@@ -412,7 +414,7 @@ public:
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUint32 aChar);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUint32 aChar);
 
-  virtual nsFontWin* LoadFont(HDC aDC, const nsString& aName);
+  virtual nsFontWin* LoadFont(HDC aDC, const nsString& aName, PRBool aNameQuirks=PR_FALSE);
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
   virtual nsFontWin* LoadSubstituteFont(HDC aDC, const nsString& aName);
 
