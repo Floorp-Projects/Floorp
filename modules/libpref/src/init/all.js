@@ -451,10 +451,6 @@ pref("javascript.allow.mailnews",           false);
 pref("javascript.options.strict",           false);
 pref("javascript.options.showInConsole",    true);
 
-// popups.policy 1=allow,2=reject
-pref("privacy.popups.policy",               1);
-pref("privacy.popups.usecustom",            false);
-
 // advanced prefs
 pref("advanced.always_load_images",         true);
 pref("security.enable_java",                true);
