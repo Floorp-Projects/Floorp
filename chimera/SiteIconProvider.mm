@@ -279,11 +279,20 @@ static nsresult MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& o
   [inURI assignTo_nsAString:uriString];
 
   BOOL loadOK = NS_SUCCEEDED(status) && (data != nil);
+
   // it's hard to tell if the favicon load succeeded or not. Even if the file
   // does not exist, servers will send back a 404 page with a 0 status.
   // So we just go ahead and try to make the image; it will return nil on
   // failure.
-  NSImage*	faviconImage = [[NSImage alloc] initWithData:data];
+  NSImage*	faviconImage = nil;
+  
+  NS_DURING
+    faviconImage = [[NSImage alloc] initWithData:data];
+  NS_HANDLER
+    NSLog(@"Exception \"%@ making\" favicon image for %@", localException, inURI);
+    faviconImage = nil;
+  NS_ENDHANDLER
+
   BOOL gotImageData = loadOK && (faviconImage != nil);
   if (!gotImageData)
     [self addToMissedIconsCache:uriString withExpirationSeconds:SITE_ICON_EXPIRATION_SECONDS];
