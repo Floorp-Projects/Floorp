@@ -41,7 +41,7 @@ var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImagePref",
 var gImagesPref, gImagesEnabled, gImagesRestricted;
 var policyButton = null;
 var manageTree = null;
-var persissionsExist = null;
+var permissionsExist = null;
 
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 
@@ -104,7 +104,7 @@ function togglePermissionEnabling()
   var remove2 = document.getElementById("removeAllPermissions");
   var description = document.getElementById("popupDescription");
   add.disabled = !enabled;
-  if (enabled && persissionsExist) {
+  if (enabled && permissionsExist) {
     remove1.disabled = false;
     remove2.disabled = false;
   } else {
@@ -176,7 +176,7 @@ function DeleteAllFromTree
 
 
   // disable buttons
-  persissionsExist = false;
+  permissionsExist = false;
   togglePermissionEnabling();
 }
 
@@ -229,7 +229,7 @@ function DeleteSelectedItemFromTree
 
     // clear out selections
     tree.treeBoxObject.view.selection.select(-1); 
-    persissionsExist = false;
+    permissionsExist = false;
     togglePermissionEnabling();
   }
 }
@@ -281,9 +281,9 @@ function loadPermissions() {
   permissionsTree.treeBoxObject.view = permissionsTreeView;
   
   if (permissions.length == 0)
-    persissionsExist = false;
+    permissionsExist = false;
   else
-    persissionsExist = true;
+    permissionsExist = true;
     
   togglePermissionEnabling();
 }
