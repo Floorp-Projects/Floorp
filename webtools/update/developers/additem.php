@@ -10,6 +10,7 @@ $function = $_GET["function"];
 <?php
 include"$page_header";
 include"inc_sidebar.php";
+include"parse_install_manifest.php";
 ?>
 
 <?php
@@ -93,60 +94,45 @@ if ($manifest_exists=="TRUE" or $_POST["legacy"]=="TRUE") {
 
 //------------------
 //  Construct $manifestdata[] array from install.rdf info.
-//  Thanks to Chewie[] with the Perl-Compatable RegExps Help. :-)
 //-------------------
+$manifestdata = parse_install_manifest($buf);
 
-// em:id
-preg_match("/<em:id>(.*?)<\/em:id>/", $buf, $matches);
-$manifestdata["id"]=$matches[1];
+if(is_null($manifestdata)) {
+  echo"Errors were encountered during install.rdf parsing...<br>\n";
+  die("Aborting...");
+}
 
-//	em:version
-preg_match("/<em:version>(.*?)<\/em:version>/", $buf, $matches);
-$manifestdata["version"]=$matches[1];
-
-//em:targetApplication
-preg_match_all("/<em:targetApplication>(.*?)<\/em:targetApplication>/s", $buf, $matches);
-//echo"<pre>";
-//print_r($buf);
-//print_r($matches);
-//echo"</pre>";
-  foreach ($matches[0] as $targetapp ) {
-  //em:targetApplication --> em:id
-    preg_match("/<em:id>(.*?)<\/em:id>/", $targetapp, $matches);
-    $i = $matches[1];
-    $manifestdata["targetapplication"][$i]["id"]=$matches[1];
-
-  //em:targetApplication --> em:minVersion
-    preg_match("/<em:minVersion>(.*?)<\/em:minVersion>/", $targetapp, $matches);
-    $manifestdata["targetapplication"][$i]["minversion"]=$matches[1];
-
-  //em:targetApplication --> em:maxVersion
-    preg_match("/<em:maxVersion>(.*?)<\/em:maxVersion>/", $targetapp, $matches);
-    $manifestdata["targetapplication"][$i]["maxversion"]=$matches[1];
+// this is a temporary function
+// until we support multiple locales for
+// name / description
+function default_l10n($array)
+{
+  if($array["en-US"]) {
+    return $array["en-US"];
+  }
+  else {
+    foreach($array as $val) {
+      return $val;
+    }
   }
 
-//em:name
-preg_match("/<em:name>(.*?)<\/em:name>/", $buf, $matches);
-$manifestdata["name"]=$matches[1];
-
-//em:description
-preg_match("/<em:description>(.*?)<\/em:description>/", $buf, $matches);
-$manifestdata["description"]=$matches[1];
-
-//em:homepageURL
-preg_match("/<em:homepageURL>(.*?)<\/em:homepageURL>/", $buf, $matches);
-$manifestdata["homepageurl"]=$matches[1];
-
+  return "";
+}
 
 //echo"<h1>Adding Extension... Checking file...</h1>\n";
 //echo"<pre>"; print_r($manifestdata); echo"</pre>\n";
 //Populate Form Variables from manifestdata.
-$id = $manifestdata[id];
-$name = $manifestdata[name];
-$version = $manifestdata[version];
-$homepage = $manifestdata[homepageurl];
-$description = $manifestdata[description];
+$id = $manifestdata["id"];
+$version = $manifestdata["version"];
+$homepage = $manifestdata["homepageURL"];
 
+// $names, $descriptions are arrays keyed by locale
+$names = $manifestdata["name"];
+$descriptions = $manifestdata["description"];
+//TODO: support multiple locale names/descriptions
+// right now we just use en-US or the first one
+$name = default_l10n($names);
+$description = default_l10n($descriptions);
 
 //Check GUID for validity/existance, if it exists, check the logged in author for permission
 $sql = "SELECT ID, GUID from `main` WHERE `GUID` = '".escape_string($manifestdata[id])."' LIMIT 1";
@@ -179,37 +165,36 @@ if ($_POST["legacy"]=="TRUE") {
   }
 
 //Verify MinAppVer and MaxAppVer per app for validity, if they're invalid, reject the file.
-if ($_POST["legacy"]=="TRUE" AND !$manifestdata[targetapplication]) {$manifestdata[targetapplication]=array(); }
-foreach ($manifestdata[targetapplication] as $key=>$val) {
-//echo"$key -- $val[minversion] $val[maxversion]<br>\n";
-
+if ($_POST["legacy"]=="TRUE" AND !$manifestdata["targetApplication"]) {$manifestdata["targetApplication"]=array(); }
+foreach ($manifestdata["targetApplication"] as $key=>$val) {
+$esckey = escape_string($key);
 $i=0;
-  $sql = "SELECT `AppName`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `GUID`='$key' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+  $sql = "SELECT `AppName`, `major`, `minor`, `release`, `SubVer` FROM `applications` WHERE `GUID`='$esckey' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
     $i++;
     $appname = $row["AppName"];
     $subver = $row["SubVer"];
-    $release = "$row[major].$row[minor]";
-    if ($row["release"]) {$release = "$release.$row[release]";}
+    $release = $row["major"] . "." . $row["minor"];
+    if ($row["release"]) {$release = "$release." . $row["release"];}
     if ($subver !=="final") {$release="$release$subver";}
-      if ($release == $val[minversion]) { $versioncheck[$key][minversion_valid] = "true"; }
-      if ($release == $val[maxversion]) { $versioncheck[$key][maxversion_valid] = "true"; }
+      if ($release == $val["minVersion"]) { $versioncheck[$key]["minVersion_valid"] = "true"; }
+      if ($release == $val["maxVersion"]) { $versioncheck[$key]["maxVersion_valid"] = "true"; }
 
     }
-  if (!$versioncheck[$key][minversion_valid]) {
-    $versioncheck[$key][minversion_valid]="false";
-    echo"Error! The MinAppVer for $appname of $val[minversion] in install.rdf is invalid.<br>\n";
-    $versioncheck[errors]="true";
+  if (!$versioncheck[$key]["minVersion_valid"]) {
+    $versioncheck[$key]["minVersion_valid"]="false";
+    echo"Error! The MinAppVer for $appname of " . $val["minVersion"] . " in install.rdf is invalid.<br>\n";
+    $versioncheck["errors"]="true";
   }
-  if (!$versioncheck[$key][maxversion_valid]) {
-    $versioncheck[$key][maxversion_valid]="false";
-    echo"Error! The MaxAppVer for $appname of $val[maxversion] in install.rdf is invalid.<br>\n";
-    $versioncheck[errors]="true";
+  if (!$versioncheck[$key]["maxVersion_valid"]) {
+    $versioncheck[$key]["maxVersion_valid"]="false";
+    echo"Error! The MaxAppVer for $appname of ". $val["maxVersion"] . " in install.rdf is invalid.<br>\n";
+    $versioncheck["errors"]="true";
   }
 }
 
-if ($versioncheck[errors]=="true") {
+if ($versioncheck["errors"]=="true") {
   echo"Errors were encountered during install.rdf checking...<br>\n";
   die("Aborting...");
 } else { 
@@ -310,7 +295,6 @@ if (!$categories) {$categories = array(); }
 <INPUT NAME="type" TYPE="HIDDEN" VALUE="<?php echo"$type"; ?>">
 <TR><TD><SPAN class="global">Name*</SPAN></TD> <TD><INPUT NAME="name" TYPE="TEXT" VALUE="<?php echo"$name"; ?>" SIZE=45 MAXLENGTH=100></TD>
 
-
 <?php
 //Get the Category Table Data for the Select Box
  $sql = "SELECT  `CategoryID`, `CatName` FROM  `categories` WHERE `CatType` = '$type' GROUP BY `Catname` ORDER  BY  `CatName` ASC";
@@ -360,11 +344,11 @@ echo"<TR><TD COLSPAN=2><SPAN class=\"file\">Target Application(s):</SPAN></TD></
    $appname = $row2["AppName"];
    $guid = $row2["GUID"];
    if ($appname == "Mozilla") { $mozguid = $guid; }
-   $minappver = $manifestdata["targetapplication"]["$guid"]['minversion'];
-   $maxappver = $manifestdata["targetapplication"]["$guid"]['maxversion'];
+   $minappver = $manifestdata["targetApplication"]["$guid"]["minVersion"];
+   $maxappver = $manifestdata["targetApplication"]["$guid"]["maxVersion"];
     echo"<TR><TD></TD><TD>$appname ";
 
-if (($mode=="new" or $mode=="update") and (strtolower($appname) !="mozilla" or $manifestdata["targetapplication"]["$mozguid"])) {
+if (($mode=="new" or $mode=="update") and (strtolower($appname) !="mozilla" or $manifestdata["targetApplication"]["$mozguid"])) {
  //Based on Extension Manifest (New Mode)
     if ($minappver and $maxappver) {
       echo"$minappver - $maxappver\n";
