@@ -83,7 +83,7 @@ int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
     else
     {
       // doomedFile is gone move new file into place
-      if (!rename(replacementFile, doomedFile))
+      if (rename(replacementFile, doomedFile) != 0)
           return TRY_LATER; // this shouldn't happen
     }
 
