@@ -1767,17 +1767,20 @@ function FillInHTMLTooltip(tipElement)
 
   var titleText = null;
   var XLinkTitleText = null;
+  var direction = "inherit";
   
   while (!titleText && !XLinkTitleText && tipElement) {
     if (tipElement.nodeType == Node.ELEMENT_NODE) {
       titleText = tipElement.getAttribute("title");
       XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
+      direction = tipElement.ownerDocument.defaultView.getComputedStyle(tipElement, "").getPropertyValue("direction");
     }
     tipElement = tipElement.parentNode;
   }
 
   var texts = [titleText, XLinkTitleText];
   var tipNode = document.getElementById("aHTMLTooltip");
+  tipNode.style.direction = direction;
 
   for (var i = 0; i < texts.length; ++i) {
     var t = texts[i];
