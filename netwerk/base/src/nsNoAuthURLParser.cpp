@@ -24,7 +24,7 @@
 #include "prprf.h"
 #include "prnetdb.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsNoAuthURLParser, NS_GET_IID(nsIURLParser))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNoAuthURLParser, nsIURLParser)
 
 nsNoAuthURLParser::~nsNoAuthURLParser()
 {

@@ -41,7 +41,7 @@ nsDateTimeHandler::nsDateTimeHandler() {
 nsDateTimeHandler::~nsDateTimeHandler() {
 }
 
-NS_IMPL_ISUPPORTS(nsDateTimeHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsDateTimeHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsDateTimeHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {

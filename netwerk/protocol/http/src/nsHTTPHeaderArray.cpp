@@ -40,7 +40,7 @@ nsHeaderEntry::~nsHeaderEntry()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsHeaderEntry, NS_GET_IID(nsIHTTPHeader))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsHeaderEntry, nsIHTTPHeader)
 
 
 NS_IMETHODIMP
@@ -295,8 +295,8 @@ nsHTTPHeaderEnumerator::~nsHTTPHeaderEnumerator()
 //
 // Implement nsISupports methods
 //
-NS_IMPL_ISUPPORTS(nsHTTPHeaderEnumerator, 
-                  NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsHTTPHeaderEnumerator, 
+                   nsISimpleEnumerator)
 
 
 //

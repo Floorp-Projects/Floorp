@@ -28,7 +28,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(mzAboutMozilla, NS_GET_IID(nsIAboutModule));
+NS_IMPL_ISUPPORTS1(mzAboutMozilla, nsIAboutModule)
 
 static const char kCreditsPage[] = "chrome://global/content/mozilla.html";
 

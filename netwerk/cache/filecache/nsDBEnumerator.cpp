@@ -51,7 +51,7 @@ nsDBEnumerator::~nsDBEnumerator()
 //
 // Implement nsISupports methods
 //
-NS_IMPL_ISUPPORTS(nsDBEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsDBEnumerator, nsISimpleEnumerator)
 
 /////////////////////////////////////////////////////////////////
 // nsISimpleEnumerator methods

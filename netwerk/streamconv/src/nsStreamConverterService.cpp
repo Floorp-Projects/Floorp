@@ -48,7 +48,7 @@
 
 ////////////////////////////////////////////////////////////
 // nsISupports methods
-NS_IMPL_THREADSAFE_ISUPPORTS(nsStreamConverterService, NS_GET_IID(nsIStreamConverterService));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterService);
 
 
 ////////////////////////////////////////////////////////////

@@ -41,7 +41,7 @@ nsFingerHandler::nsFingerHandler() {
 nsFingerHandler::~nsFingerHandler() {
 }
 
-NS_IMPL_ISUPPORTS(nsFingerHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsFingerHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsFingerHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
