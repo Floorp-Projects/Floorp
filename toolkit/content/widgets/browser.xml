@@ -471,7 +471,6 @@
         </body>
       </method>
 
-#ifdef XP_WIN
       <field name="_AUTOSCROLL_SPEED">3</field>
       <field name="_AUTOSCROLL_SNAP">10</field>
       <field name="_clientFrameDoc">null</field>
@@ -577,7 +576,6 @@
          ]]>
        </body>
      </method>
-#endif
     </implementation>
 
     <handlers>
