@@ -165,7 +165,10 @@ NS_IMETHODIMP CBrowserImpl::GetInterface(const nsIID &aIID, void** aInstancePtr)
 //
 NS_IMETHODIMP CBrowserImpl::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 {
-//  QAOutput("nsIWebBrowserChrome::SetStatus().", 1);
+    QAOutput("\n", 1);
+    QAOutput("inside nsIWebBrowserChrome::SetStatus().", 1);
+	FormatAndPrintOutput("SetStatus() type = ", aType, 1);
+	FormatAndPrintOutput("SetStatus() aStatus = ", *aStatus, 1);
 
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
@@ -177,7 +180,7 @@ NS_IMETHODIMP CBrowserImpl::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 
 NS_IMETHODIMP CBrowserImpl::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 {
-   QAOutput("nsIWebBrowserChrome::GetWebBrowser().", 1);
+   QAOutput("inside nsIWebBrowserChrome::GetWebBrowser().", 1);
 
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
@@ -195,7 +198,7 @@ NS_IMETHODIMP CBrowserImpl::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 //
 NS_IMETHODIMP CBrowserImpl::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 {
-   QAOutput("nsIWebBrowserChrome::SetWebBrowser().", 1);
+   QAOutput("inside nsIWebBrowserChrome::SetWebBrowser().", 1);
 
    NS_ENSURE_ARG_POINTER(aWebBrowser);
 
@@ -209,11 +212,10 @@ NS_IMETHODIMP CBrowserImpl::SetWebBrowser(nsIWebBrowser* aWebBrowser)
 
 NS_IMETHODIMP CBrowserImpl::GetChromeFlags(PRUint32* aChromeMask)
 {
-    QAOutput("nsIWebBrowserChrome::GetChromeFlags().", 1);
+    QAOutput("inside nsIWebBrowserChrome::GetChromeFlags().", 1);
 
 	*aChromeMask = nsIWebBrowserChrome::CHROME_ALL;
-    if (!aChromeMask)
-      QAOutput("aChromeMask is null", 1);
+	FormatAndPrintOutput("GetChromeFlags() chromeMask = ", *aChromeMask, 1);
 
 	return NS_OK;
 }
@@ -222,8 +224,7 @@ NS_IMETHODIMP CBrowserImpl::SetChromeFlags(PRUint32 aChromeMask)
 {
     QAOutput("nsIWebBrowserChrome::SetChromeFlags().", 1);
 
-    if (!aChromeMask)
-      QAOutput("aChromeMask is null", 1);
+	FormatAndPrintOutput("SetChromeFlags() chromeMask = ", aChromeMask, 1);
 
 	mChromeMask = aChromeMask;
 
@@ -262,7 +263,7 @@ NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()
 {
 	if(! m_pBrowserFrameGlue)
 	{
-		QAOutput("nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window not destroyed.", 1);
+		QAOutput("inside nsIWebBrowserChrome::DestroyBrowserWindow(): Browser Window not destroyed.", 1);
 		return NS_ERROR_FAILURE;
 	}
 
@@ -283,10 +284,14 @@ NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()
 //
 NS_IMETHODIMP CBrowserImpl::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-	QAOutput("nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
+    QAOutput("\n", 1);
+	QAOutput("inside nsIWebBrowserChrome::SizeBrowserTo(): Browser sized.", 1);
 
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
+
+	FormatAndPrintOutput("SizeBrowserTo() x coordinate = ", aCX, 1);
+	FormatAndPrintOutput("SizeBrowserTo() y coordinate = ", aCY, 1);
 
 	m_pBrowserFrameGlue->SetBrowserFrameSize(aCX, aCY);
 
@@ -313,6 +318,7 @@ NS_IMETHODIMP CBrowserImpl::IsWindowModal(PRBool *retval)
 NS_IMETHODIMP CBrowserImpl::ExitModalEventLoop(nsresult aStatus)
 {
   QAOutput("inside nsIWebBrowserChrome::ExitModalEventLoop()", 1);
+  RvTestResult(aStatus, "ExitModalEventLoop status test", 1);
 
   return NS_OK;
 }
@@ -341,7 +347,14 @@ NS_IMETHODIMP CBrowserImpl::FocusPrevElement()
 
 NS_IMETHODIMP CBrowserImpl::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
+    QAOutput("\n", 1);
 	QAOutput("inside nsIEmbeddingSiteWindow::SetDimensions()", 1);
+
+	FormatAndPrintOutput("SetDimensions() flags = ", aFlags, 1);
+	FormatAndPrintOutput("SetDimensions() x1 coordinate = ", x, 1);
+	FormatAndPrintOutput("SetDimensions() y1 coordinate = ", y, 1);
+	FormatAndPrintOutput("SetDimensions() x2 coordinate = ", cx, 1);
+	FormatAndPrintOutput("SetDimensions() y2 coordinate = ", cy, 1);
 
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
@@ -370,7 +383,14 @@ NS_IMETHODIMP CBrowserImpl::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y,
 
 NS_IMETHODIMP CBrowserImpl::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
+    QAOutput("\n", 1);
 	QAOutput("inside nsIEmbeddingSiteWindow::GetDimensions()", 1);
+
+	FormatAndPrintOutput("GetDimensions() flags = ", aFlags, 1);
+	FormatAndPrintOutput("GetDimensions() x1 coordinate = ", *x, 1);
+	FormatAndPrintOutput("GetDimensions() y1 coordinate = ", *y, 1);
+	FormatAndPrintOutput("GetDimensions() x2 coordinate = ", *cx, 1);
+	FormatAndPrintOutput("GetDimensions() y2 coordinate = ", *cy, 1);
 
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
@@ -392,8 +412,10 @@ NS_IMETHODIMP CBrowserImpl::GetSiteWindow(void** aSiteWindow)
 {
   QAOutput("inside nsIEmbeddingSiteWindow::GetSiteWindow()", 1);
 
-  if (!aSiteWindow)
+  if (!aSiteWindow) {
+	QAOutput("GetSiteWindow: Didn't get siteWindow.");
     return NS_ERROR_NULL_POINTER;
+  }
 
   *aSiteWindow = 0;
   if (m_pBrowserFrameGlue) {
@@ -423,6 +445,7 @@ NS_IMETHODIMP CBrowserImpl::GetTitle(PRUnichar** aTitle)
 		return NS_ERROR_FAILURE;
 
 	m_pBrowserFrameGlue->GetBrowserFrameTitle(aTitle);
+	FormatAndPrintOutput("GetTitle() title = ", **aTitle, 1);
 	
 	return NS_OK;
 }
@@ -430,6 +453,7 @@ NS_IMETHODIMP CBrowserImpl::GetTitle(PRUnichar** aTitle)
 NS_IMETHODIMP CBrowserImpl::SetTitle(const PRUnichar* aTitle)
 {
     QAOutput("inside nsIEmbeddingSiteWindow::SetTitle()", 1);
+	FormatAndPrintOutput("SetTitle() title = ", *aTitle, 1);
 
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
@@ -447,6 +471,7 @@ NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool *aVisibility)
 		return NS_ERROR_FAILURE;
 
     m_pBrowserFrameGlue->GetBrowserFrameVisibility(aVisibility);
+	FormatAndPrintOutput("GetVisibility() boolean = ", *aVisibility, 1);
 
 	return NS_OK;
 }
@@ -454,6 +479,7 @@ NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool *aVisibility)
 NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
 {
     QAOutput("inside nsIEmbeddingSiteWindow::SetVisibility()", 1);
+	FormatAndPrintOutput("SetVisibility() boolean = ", aVisibility, 1);
 
     if(! m_pBrowserFrameGlue)
         return NS_ERROR_FAILURE;
