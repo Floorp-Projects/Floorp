@@ -1694,6 +1694,10 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   }
   
+  // The button is getting the hover events so...
+  // This ifdef makes it so none of the children frame of the combobox get
+  // the events. (like the button frame), that way all event based style rules 
+  // affect the combobox and not the any of the child frames.
 #if 0
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
     nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
@@ -1701,7 +1705,7 @@ nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE, aFrame);
   }
   return NS_ERROR_FAILURE;
-#else
+#else  
   *aFrame = this;
   return NS_OK;
 #endif
