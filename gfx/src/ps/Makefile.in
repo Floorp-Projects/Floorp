@@ -30,7 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= gfxps
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS = img_s mozutil_s
-REQUIRES	= xpcom string img widget util pref uconv dom view
+REQUIRES	= xpcom string img widget util pref uconv dom view gfx2
 EXTRA_DSO_LIBS += gkgfx
 
 CSRCS		= font_metrics.c

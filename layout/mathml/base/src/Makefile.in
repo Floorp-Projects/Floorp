@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = layout
 LIBRARY_NAME = gkmathmlbase_s
-REQUIRES = xpcom string dom widget webshell locale view necko docshell webbrwsr
+REQUIRES = xpcom string dom widget webshell locale view necko docshell webbrwsr gfx2
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../../../html/style/src \

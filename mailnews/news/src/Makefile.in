@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgnews
 LIBRARY_NAME	= msgnews_s
-REQUIRES	= xpcom string mailnews msgbase msgbaseutil necko msgdb locale mork dom js rdf docshell layout widget pref uriloader appshell mime intl timer webshell wallet rdfutil nkcache
+REQUIRES	= xpcom string mailnews msgbase msgbaseutil necko msgdb locale mork dom js rdf docshell layout widget pref uriloader appshell mime intl timer webshell wallet rdfutil nkcache gfx2
 
 CPPSRCS		= \
 		nsNNTPArticleList.cpp \

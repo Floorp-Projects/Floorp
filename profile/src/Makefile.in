@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= profile
 LIBRARY_NAME	= profile
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string chrome docshell webbrwsr dom js layout widget necko uriloader locale cookie intl pref prefmigr appshell rdf uconv appcomps
+REQUIRES	= xpcom string chrome docshell webbrwsr dom js layout widget necko uriloader locale cookie intl pref prefmigr appshell rdf uconv appcomps gfx2
 
 CPPSRCS		= 	nsProfile.cpp	\
 			nsProfileFactory.cpp	\

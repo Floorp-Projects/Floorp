@@ -25,7 +25,7 @@ VPATH		= @srcdir@
 
 MODULE		= docshell
 LIBRARY_NAME	= basedocshell_s
-REQUIRES	= xpcom string caps necko layout dom js uriloader exthandler htmlparser view pref locale webbrwsr xpconnect timer widget shistory intl plugin webshell chardet uconv appcomps xuldoc
+REQUIRES	= xpcom string caps necko layout dom js uriloader exthandler htmlparser view pref locale webbrwsr xpconnect timer widget shistory intl plugin webshell chardet uconv appcomps xuldoc gfx2
 
 include $(DEPTH)/config/autoconf.mk
 

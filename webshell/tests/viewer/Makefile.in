@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS			:= public
 
-REQUIRES		= xpcom string webshell widget layout dom webbrwsr docshell util uriloader locale necko htmlparser view timer unicharutil pref intl editor chardet cookie
+REQUIRES		= xpcom string webshell widget layout dom webbrwsr docshell util uriloader locale necko htmlparser view timer unicharutil pref intl editor chardet cookie gfx2
 
 PROGRAM			:= viewer$(BIN_SUFFIX)
 

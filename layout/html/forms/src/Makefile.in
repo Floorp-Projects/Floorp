@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmlforms_s
-REQUIRES	= xpcom string locale widget view dom js htmlparser necko webshell caps editor intl uconv exthandler mimetype txmgr xuldoc
+REQUIRES	= xpcom string locale widget view dom js htmlparser necko webshell caps editor intl uconv exthandler mimetype txmgr xuldoc gfx2 imglib2
 
 CPPSRCS		= \
 		nsButtonFrameRenderer.cpp \

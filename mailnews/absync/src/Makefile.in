@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= absyncsvc
 XPIDL_MODULE	= absync
 LIBRARY_NAME	= absync_s
-REQUIRES	= xpcom string necko mime cookie docshell locale uriloader pref layout widget msgbase msgbaseutil dom rdf addrbook intl locale appshell mork mimetype
+REQUIRES	= xpcom string necko mime cookie docshell locale uriloader pref layout widget msgbase msgbaseutil dom rdf addrbook intl locale appshell mork mimetype gfx2
 
 CPPSRCS		= \
 		nsAbSyncPostEngine.cpp \

@@ -30,7 +30,7 @@ MODULE		= absyncsvc
 LIBRARY_NAME	= absyncsvc
 IS_COMPONENT	= 1
 SHORT_LIBNAME	= absyncsv
-REQUIRES	= xpcom string necko docshell uriloader msgbase intl locale layout widget addrbook dom mork
+REQUIRES	= xpcom string necko docshell uriloader msgbase intl locale layout widget addrbook dom mork gfx2
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS	= msgbsutl

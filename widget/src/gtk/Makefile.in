@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= widget
 LIBRARY_NAME	= widget_gtk
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string layout pref js dom appshell timer uconv necko img view util rdf uriloader docshell msgcompose msgbase editor locale txmgr
+REQUIRES	= xpcom string layout pref js dom appshell timer uconv necko img view util rdf uriloader docshell msgcompose msgbase editor locale txmgr gfx2
 
 CSRCS		= \
 		keysym2ucs.c

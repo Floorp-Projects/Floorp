@@ -30,6 +30,8 @@ MODULE		= imglib2
 LIBRARY_NAME	= imglib2
 IS_COMPONENT	= 1
 
+REQUIRES	= xpcom string necko nkcache layout timer gfx2
+
 CPPSRCS		= \
 			DummyChannel.cpp \
 			ImageCache.cpp   \

@@ -33,7 +33,7 @@ MODULE		= xpinstall
 LIBRARY_NAME	= xpinstall
 SHORT_LIBNAME	= xpinstal
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string jar chrome necko intl locale libreg js pref appshell widget layout uriloader xpconnect docshell dom
+REQUIRES	= xpcom string jar chrome necko intl locale libreg js pref appshell widget layout uriloader xpconnect docshell dom gfx2
 
 # XXX shouldn't need to export this
 EXPORTS		= nsXPITriggerInfo.h

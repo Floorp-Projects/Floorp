@@ -30,6 +30,8 @@ MODULE		= imgjpeg
 LIBRARY_NAME	= imgjpeg
 IS_COMPONENT	= 1
 
+REQUIRES	= xpcom string necko layout jpeg gfx2 imglib2
+
 CPPSRCS		= nsJPEGDecoder.cpp nsJPEGFactory.cpp
 
 EXTRA_DSO_LDOPTS = $(JPEG_LIBS) $(ZLIB_LIBS) \
