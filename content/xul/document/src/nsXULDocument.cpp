@@ -139,6 +139,7 @@ static NS_DEFINE_CID(kPresShellCID,              NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
@@ -188,144 +189,172 @@ private:
     }
 
     static PRIntn
-    ReleaseContentList(PLHashEntry* he, PRIntn index, void* closure)
-    {
-        ContentListItem* head =
-            (ContentListItem*) he->value;
-
-        while (head) {
-            ContentListItem* doomed = head;
-            head = head->mNext;
-            delete doomed;
-        }
-
-        return HT_ENUMERATE_NEXT;
-    }
+    ReleaseContentList(PLHashEntry* he, PRIntn index, void* closure);
 
 public:
-    nsElementMap(void)
-    {
-        // Create a table for mapping RDF resources to elements in the
-        // content tree.
-        static PRInt32 kInitialResourceTableSize = 1023;
-        if ((mResources = PL_NewHashTable(kInitialResourceTableSize,
-                                          HashPointer,
-                                          PL_CompareValues,
-                                          PL_CompareValues,
-                                          nsnull,
-                                          nsnull)) == nsnull) {
-            NS_ERROR("could not create hash table for resources");
-        }
-    }
-
-    virtual ~nsElementMap()
-    {
-        if (mResources) {
-            PL_HashTableEnumerateEntries(mResources, ReleaseContentList, nsnull);
-            PL_HashTableDestroy(mResources);
-        }
-    }
+    nsElementMap(void);
+    virtual ~nsElementMap();
 
     nsresult
-    Add(nsIRDFResource* aResource, nsIContent* aContent)
-    {
-        NS_PRECONDITION(mResources != nsnull, "not initialized");
-        if (! mResources)
-            return NS_ERROR_NOT_INITIALIZED;
-
-        ContentListItem* head =
-            (ContentListItem*) PL_HashTableLookup(mResources, aResource);
-
-        if (! head) {
-            head = new ContentListItem(aContent);
-            if (! head)
-                return NS_ERROR_OUT_OF_MEMORY;
-
-            PL_HashTableAdd(mResources, aResource, head);
-        }
-        else {
-            while (1) {
-                if (head->mContent == aContent) {
-                    NS_ERROR("attempt to add same element twice");
-                    return NS_ERROR_ILLEGAL_VALUE;
-                }
-                if (! head->mNext)
-                    break;
-
-                head = head->mNext;
-            }
-
-            head->mNext = new ContentListItem(aContent);
-            if (! head->mNext)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return NS_OK;
-    }
+    Add(nsIRDFResource* aResource, nsIContent* aContent);
 
     nsresult
-    Remove(nsIRDFResource* aResource, nsIContent* aContent)
-    {
-        NS_PRECONDITION(mResources != nsnull, "not initialized");
-        if (! mResources)
-            return NS_ERROR_NOT_INITIALIZED;
-
-        ContentListItem* head =
-            (ContentListItem*) PL_HashTableLookup(mResources, aResource);
-
-        if (head) {
-            if (head->mContent == aContent) {
-                ContentListItem* newHead = head->mNext;
-                if (newHead) {
-                    PL_HashTableAdd(mResources, aResource, newHead);
-                }
-                else {
-                    PL_HashTableRemove(mResources, aResource);
-                }
-                delete head;
-                return NS_OK;
-            }
-            else {
-                ContentListItem* doomed = head->mNext;
-                while (doomed) {
-                    if (doomed->mContent == aContent) {
-                        head->mNext = doomed->mNext;
-                        delete doomed;
-                        return NS_OK;
-                    }
-                    head = doomed;
-                    doomed = doomed->mNext;
-                }
-            }
-        }
-
-        // XXX Don't comment out this assert: if you get here,
-        // something has gone dreadfully, horribly
-        // wrong. Curse. Scream. File a bug against
-        // waterson@netscape.com.
-        NS_ERROR("attempt to remove an element that was never added");
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
+    Remove(nsIRDFResource* aResource, nsIContent* aContent);
 
     nsresult
-    Find(nsIRDFResource* aResource, nsISupportsArray* aResults)
-    {
-        NS_PRECONDITION(mResources != nsnull, "not initialized");
-        if (! mResources)
-            return NS_ERROR_NOT_INITIALIZED;
-
-        aResults->Clear();
-        ContentListItem* head =
-            (ContentListItem*) PL_HashTableLookup(mResources, aResource);
-
-        while (head) {
-            aResults->AppendElement(head->mContent);
-            head = head->mNext;
-        }
-        return NS_OK;
-    }
+    Find(nsIRDFResource* aResource, nsISupportsArray* aResults);
 };
 
+
+nsElementMap::nsElementMap()
+{
+    // Create a table for mapping RDF resources to elements in the
+    // content tree.
+    static PRInt32 kInitialResourceTableSize = 1023;
+    if ((mResources = PL_NewHashTable(kInitialResourceTableSize,
+                                      HashPointer,
+                                      PL_CompareValues,
+                                      PL_CompareValues,
+                                      nsnull,
+                                      nsnull)) == nsnull) {
+        NS_ERROR("could not create hash table for resources");
+    }
+}
+
+nsElementMap::~nsElementMap()
+{
+    if (mResources) {
+        PL_HashTableEnumerateEntries(mResources, ReleaseContentList, nsnull);
+        PL_HashTableDestroy(mResources);
+    }
+}
+
+
+PRIntn
+nsElementMap::ReleaseContentList(PLHashEntry* he, PRIntn index, void* closure)
+{
+    nsIRDFResource* resource =
+        NS_REINTERPRET_CAST(nsIRDFResource*, NS_CONST_CAST(void*, he->key));
+
+    NS_RELEASE(resource);
+        
+    ContentListItem* head =
+        (ContentListItem*) he->value;
+
+    while (head) {
+        ContentListItem* doomed = head;
+        head = head->mNext;
+        delete doomed;
+    }
+
+    return HT_ENUMERATE_NEXT;
+}
+
+
+nsresult
+nsElementMap::Add(nsIRDFResource* aResource, nsIContent* aContent)
+{
+    NS_PRECONDITION(mResources != nsnull, "not initialized");
+    if (! mResources)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    ContentListItem* head =
+        (ContentListItem*) PL_HashTableLookup(mResources, aResource);
+
+    if (! head) {
+        head = new ContentListItem(aContent);
+        if (! head)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        PL_HashTableAdd(mResources, aResource, head);
+        NS_ADDREF(aResource);
+    }
+    else {
+        while (1) {
+            if (head->mContent == aContent) {
+                NS_ERROR("attempt to add same element twice");
+                return NS_ERROR_ILLEGAL_VALUE;
+            }
+            if (! head->mNext)
+                break;
+
+            head = head->mNext;
+        }
+
+        head->mNext = new ContentListItem(aContent);
+        if (! head->mNext)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+nsElementMap::Remove(nsIRDFResource* aResource, nsIContent* aContent)
+{
+    NS_PRECONDITION(mResources != nsnull, "not initialized");
+    if (! mResources)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    ContentListItem* head =
+        (ContentListItem*) PL_HashTableLookup(mResources, aResource);
+
+    if (head) {
+        if (head->mContent == aContent) {
+            ContentListItem* newHead = head->mNext;
+            if (newHead) {
+                PL_HashTableAdd(mResources, aResource, newHead);
+            }
+            else {
+                // It was the last reference in the table
+                PL_HashTableRemove(mResources, aResource);
+                NS_RELEASE(aResource);
+            }
+            delete head;
+            return NS_OK;
+        }
+        else {
+            ContentListItem* doomed = head->mNext;
+            while (doomed) {
+                if (doomed->mContent == aContent) {
+                    head->mNext = doomed->mNext;
+                    delete doomed;
+                    return NS_OK;
+                }
+                head = doomed;
+                doomed = doomed->mNext;
+            }
+        }
+    }
+
+    // XXX Don't comment out this assert: if you get here,
+    // something has gone dreadfully, horribly
+    // wrong. Curse. Scream. File a bug against
+    // waterson@netscape.com.
+    NS_ERROR("attempt to remove an element that was never added");
+    return NS_ERROR_ILLEGAL_VALUE;
+}
+
+
+
+nsresult
+nsElementMap::Find(nsIRDFResource* aResource, nsISupportsArray* aResults)
+{
+    NS_PRECONDITION(mResources != nsnull, "not initialized");
+    if (! mResources)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    aResults->Clear();
+    ContentListItem* head =
+        (ContentListItem*) PL_HashTableLookup(mResources, aResource);
+
+    while (head) {
+        aResults->AppendElement(head->mContent);
+        head = head->mNext;
+    }
+    return NS_OK;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -2434,9 +2463,14 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
     NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
     if (NS_FAILED(rv)) return rv;
 
-    rv = rdf_MakeSeq(mDocumentDataSource, resource);
-    NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
-    if (NS_FAILED(rv)) return rv;
+    {
+        NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = rdfc->MakeSeq(mDocumentDataSource, resource, nsnull);
+        NS_ASSERTION(rv == NS_OK, "unable to mark as XUL element");
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // `this' will be its document
     rv = result->SetDocument(this, PR_FALSE);
