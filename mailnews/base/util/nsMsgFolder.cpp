@@ -705,7 +705,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 		folder = do_QueryInterface(supports, &rv);
 		if(NS_SUCCEEDED(rv))
 		{
-			PRUnichar *folderName;
+			PRUnichar *folderName = nsnull;
 
 			folder->GetName(&folderName);
 			// case-insensitive compare is probably LCD across OS filesystems
@@ -741,7 +741,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
 		if(folderResource  && folder)
 		{
-			char *folderURI;
+			char *folderURI =nsnull;
 			rv = folderResource->GetValue(&folderURI);
 			if(NS_FAILED(rv)) return rv;
 
