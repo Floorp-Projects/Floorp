@@ -388,12 +388,13 @@ public:
     /**
      * Remove the specified row from the view
      */
-    void
+    PRInt32
     RemoveRowAt(iterator& aIterator) {
-        iterator temp = aIterator++;
+        iterator temp = aIterator--;
         Subtree* parent = temp.GetParent();
         parent->RemoveRowAt(temp.GetChildIndex());
-        InvalidateCachedRow(); }
+        InvalidateCachedRow();
+        return parent->Count(); }
 
     /**
      * Insert a new match into the view
