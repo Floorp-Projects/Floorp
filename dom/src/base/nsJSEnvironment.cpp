@@ -409,7 +409,7 @@ nsJSContext::~nsJSContext()
   }
 }
 
-NS_IMPL_ISUPPORTS1(nsJSContext, nsIScriptContext)
+NS_IMPL_ISUPPORTS2(nsJSContext, nsIScriptContext, nsIXPCScriptNotify)
 
 NS_IMETHODIMP
 nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
@@ -1477,6 +1477,12 @@ nsJSContext::SetProcessingScriptTag(PRBool aFlag)
 {
   mProcessingScriptTag = aFlag;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::ScriptExecuted()
+{
+  return ScriptEvaluated(PR_FALSE);
 }
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
