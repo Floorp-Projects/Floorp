@@ -123,6 +123,8 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
+
     // nsIScrollableFrame
   NS_IMETHOD  SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame);
   NS_IMETHOD  GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
@@ -146,7 +148,6 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
-
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

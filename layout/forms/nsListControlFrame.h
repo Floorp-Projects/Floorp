@@ -223,6 +223,8 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
+
 #ifdef DEBUG
     // nsIFrameDebug
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
