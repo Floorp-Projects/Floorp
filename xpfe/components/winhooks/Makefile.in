@@ -42,6 +42,13 @@ REQUIRES	= \
 		  intl \
 		  appshell \
 		  necko \
+		  layout \
+		  content \
+		  widget \
+		  imglib2 \
+		  gfx \
+		  gfx2 \
+		  locale \
 		  $(NULL)
 
 FORCE_STATIC_LIB = 1
