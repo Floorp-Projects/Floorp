@@ -526,7 +526,7 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
 		if (connection)
-    	rv = connection->IsBusy(&isBusy);
+    	rv = connection->GetIsBusy(&isBusy);
     if (NS_FAILED(rv)) 
     {
         connection = nsnull;

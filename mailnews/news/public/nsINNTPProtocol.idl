@@ -33,10 +33,10 @@ interface nsIMsgWindow;
 interface nsINNTPProtocol : nsISupports {
 
 	///////////////////////////////////////////////////////////////////////// 
-	// IsBusy returns true if the connection is currently processing a url
+	// isBusy is true if the connection is currently processing a url
 	// and false otherwise.
 	/////////////////////////////////////////////////////////////////////////
-	void IsBusy(out boolean aIsConnectionBusy);
+	attribute boolean isBusy;
 
 	void LoadNewsUrl(in nsIURI aUri, in nsISupports aConsumer);
 	void Initialize(in nsIURI aURL, in nsIMsgWindow aMsgWindow);

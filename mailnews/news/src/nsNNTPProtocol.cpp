@@ -572,11 +572,16 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	return NS_OK;
 }
 
-/* void IsBusy (out boolean aIsConnectionBusy); */
-NS_IMETHODIMP nsNNTPProtocol::IsBusy(PRBool *aIsConnectionBusy)
+NS_IMETHODIMP nsNNTPProtocol::GetIsBusy(PRBool *aIsBusy)
 {
-  NS_ENSURE_ARG_POINTER(aIsConnectionBusy);
-  *aIsConnectionBusy = m_connectionBusy;
+  NS_ENSURE_ARG_POINTER(aIsBusy);
+  *aIsBusy = m_connectionBusy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNNTPProtocol::SetIsBusy(PRBool aIsBusy)
+{
+  m_connectionBusy = aIsBusy;
   return NS_OK;
 }
 
@@ -691,6 +696,11 @@ nsNntpCacheStreamListener::OnStopRequest(nsIRequest *request, nsISupports * aCtx
     mRunningUrl->SetMemCacheEntry(nsnull);
 
   mListener = nsnull;
+  nsCOMPtr <nsINNTPProtocol> nntpProtocol = do_QueryInterface(mChannelToUse);
+  if (nntpProtocol) {
+    rv = nntpProtocol->SetIsBusy(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
   mChannelToUse = nsnull;
   return rv;
 }
