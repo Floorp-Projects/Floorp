@@ -26,6 +26,11 @@
 #include "nsINetPlugin.h"
 #include "nsIComponentManager.h"
 #include "plugin_inst.h"
+
+/* net.h includes xp_core.h which has trouble with "Bool" */
+#ifdef XP_UNIX
+#undef Bool
+#endif
 #include "net.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);

@@ -21,6 +21,10 @@
 #include "plugin_inst.h"
 #include "rebuffer.h"
 
+/* net.h includes xp_core.h which has trouble with "Bool" */
+#ifdef XP_UNIX
+#undef Bool
+#endif
 #include "net.h"
 
 static NS_DEFINE_IID(kINetPluginInstanceIID,  NS_INETPLUGININSTANCE_IID);

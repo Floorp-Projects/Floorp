@@ -23,7 +23,7 @@
 #include "nsINetPluginInstance.h"
 
 // The ProgID for message/rfc822 messages
-#define	PROGRAM_ID	        MESSAGE_RFC822
+#define	PROGRAM_ID	        "message/rfc822"
 
 // {B21EDB21-D10C-11d2-B373-525400E2D63A}
 #define NS_INET_PLUGIN_MIME_CID          \
