@@ -58,6 +58,8 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_WIDGET    3
 #define NS_NATIVE_DISPLAY   4
 #define NS_NATIVE_REGION		5
+#define NS_NATIVE_OFFSETX		6
+#define NS_NATIVE_OFFSETY		7
 
 // {18032AD5-B265-11d1-AA2A-000000000000}
 #define NS_IWIDGET_IID \
