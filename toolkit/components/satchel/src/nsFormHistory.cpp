@@ -54,6 +54,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsVoidArray.h"
 
 static const char *kFormHistoryFileName = "formhistory.dat";
 

@@ -33,8 +33,7 @@ XPIDLSRCS	= nsIAutoCompleteController.idl \
             nsIAutoCompletePopup.idl \
             nsIAutoCompleteSearch.idl \
             nsIAutoCompleteResult.idl \
+            nsIAutoCompleteResultTypes.idl \
             $(NULL)
-
-EXPORTS = nsIAutoCompleteResultTypes.h
 
 include $(topsrcdir)/config/rules.mk

@@ -39,7 +39,15 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 
-NS_IMPL_ISUPPORTS1(nsAutoCompleteMdbResult, nsIAutoCompleteResult)
+NS_INTERFACE_MAP_BEGIN(nsAutoCompleteMdbResult)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteResult)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteBaseResult)
+  NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteMdbResult)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAutoCompleteResult)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsAutoCompleteMdbResult)
+NS_IMPL_RELEASE(nsAutoCompleteMdbResult)
 
 nsAutoCompleteMdbResult::nsAutoCompleteMdbResult() :
   mDefaultIndex(-1),
@@ -102,7 +110,7 @@ nsAutoCompleteMdbResult::GetValueAt(PRInt32 aIndex, nsAString & _retval)
     GetRowValue(row, mValueToken, _retval);
   } else if (mValueType == kCharType) {
     nsCAutoString value;
-    GetRowValue(row, mValueToken, value);
+    GetUTF8RowValue(row, mValueToken, value);
     _retval = NS_ConvertUTF8toUCS2(value);
   }
   
@@ -129,7 +137,7 @@ nsAutoCompleteMdbResult::GetCommentAt(PRInt32 aIndex, nsAString & _retval)
     GetRowValue(row, mCommentToken, _retval);
   } else if (mCommentType == kCharType) {
     nsCAutoString value;
-    GetRowValue(row, mCommentToken, value);
+    GetUTF8RowValue(row, mCommentToken, value);
     _retval = NS_ConvertUTF8toUCS2(value);
   }
 
@@ -185,7 +193,7 @@ nsAutoCompleteMdbResult::Init(nsIMdbEnv *aEnv, nsIMdbTable *aTable)
 }
 
 NS_IMETHODIMP
-nsAutoCompleteMdbResult::SetTokens(mdb_scope aValueToken, eDataType aValueType, mdb_scope aCommentToken, eDataType aCommentType)
+nsAutoCompleteMdbResult::SetTokens(mdb_scope aValueToken, PRInt16 aValueType, mdb_scope aCommentToken, PRInt16 aCommentType)
 {
   mValueToken = aValueToken;
   mValueType = aValueType;
@@ -243,7 +251,8 @@ nsAutoCompleteMdbResult::GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString
 
 
 nsresult
-nsAutoCompleteMdbResult::GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACString& aValue)
+nsAutoCompleteMdbResult::GetUTF8RowValue(nsIMdbRow *aRow, mdb_column aCol,
+					 nsACString& aValue)
 {
   mdb_err err;
   
@@ -261,7 +270,8 @@ nsAutoCompleteMdbResult::GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACStrin
 }
 
 nsresult
-nsAutoCompleteMdbResult::GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 *aValue)
+nsAutoCompleteMdbResult::GetIntRowValue(nsIMdbRow *aRow, mdb_column aCol,
+					PRInt32 *aValue)
 {
   mdb_err err;
   

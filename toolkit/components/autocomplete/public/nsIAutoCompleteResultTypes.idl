@@ -35,40 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsIAutoCompleteResultTypes__
-#define __nsIAutoCompleteResultTypes__
+#include "nsIAutoCompleteResult.idl"
 
-#include "nsIAutoCompleteResult.h"
-#include "nsString.h"
-#include "nsVoidArray.h"
+interface nsIMdbTable;
+interface nsIMdbEnv;
+interface nsIMdbRow;
+
+%{ C++
 #include "mdb.h"
+%}
 
-class nsIAutoCompleteBaseResult : public nsIAutoCompleteResult
+native mdb_scope(mdb_scope);
+native mdb_column(mdb_column);
+
+/* noscript */
+[uuid(c5257f44-b4d0-41aa-a50b-5b7bcefcc235)]
+interface nsIAutoCompleteBaseResult : nsIAutoCompleteResult
 {
-public:
-  NS_IMETHOD SetSearchString(const nsAString &aSearchString) = 0;
-  NS_IMETHOD SetErrorDescription(const nsAString &aErrorDescription) = 0;
-  NS_IMETHOD SetDefaultIndex(PRInt32 aDefaultIndex) = 0;
-  NS_IMETHOD SetSearchResult(PRUint32 aSearchResult) = 0;
+  void setSearchString(in AString searchString);
+  void setErrorDescription(in AString errorDescription);
+  void setDefaultIndex(in long defaultIndex);
+  void setSearchResult(in unsigned long searchResult);
 };
 
-class nsIAutoCompleteMdbResult : public nsIAutoCompleteBaseResult
+/* noscript */
+[uuid(f7e7b341-2d5c-4d04-9f51-496cb2ce178c)]
+interface nsIAutoCompleteMdbResult : nsIAutoCompleteBaseResult
 {
-public:
-  enum eDataType {
-    kUnicharType,
-    kCharType,
-    kIntType
-  };
+  const short kUnicharType = 0;
+  const short kCharType    = 1;
+  const short kIntType     = 2;
 
-  NS_IMETHOD Init(nsIMdbEnv *aEnv, nsIMdbTable *aTable) = 0;
-  NS_IMETHOD SetTokens(mdb_scope aValueToken, eDataType aValueType, mdb_scope aCommentToken, eDataType aCommentType) = 0;
-  NS_IMETHOD AddRow(nsIMdbRow *aRow) = 0;
-  NS_IMETHOD RemoveRowAt(PRUint32 aRowIndex) = 0;
-  NS_IMETHOD GetRowAt(PRUint32 aRowIndex, nsIMdbRow **aRow) = 0;
-  NS_IMETHOD GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString &aValue) = 0;
-  NS_IMETHOD GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACString &aValue) = 0;
-  NS_IMETHOD GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 *aValue) = 0;
+  void init(in nsIMdbEnv env, in nsIMdbTable table);
+
+  void setTokens(in mdb_scope valueToken, in short valueType,
+		 in mdb_scope commentToken, in short commentType);
+
+  void addRow(in nsIMdbRow row);
+
+  void removeRowAt(in unsigned long rowIndex);
+
+  nsIMdbRow getRowAt(in unsigned long rowIndex);
+
+  AString getRowValue(in nsIMdbRow row, in mdb_column col);
+
+  AUTF8String getUTF8RowValue(in nsIMdbRow row, in mdb_column col);
+
+  long getIntRowValue(in nsIMdbRow row, in mdb_column col);
 };
-
-#endif // __nsIAutoCompleteResultTypes__
