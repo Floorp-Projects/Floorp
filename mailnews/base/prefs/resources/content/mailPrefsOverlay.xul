@@ -30,7 +30,7 @@
     <checkbox id="javascriptAllowMailNews"
               label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
               pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
-              prefattribute="checked" oncommand="javascriptEnabledChange();" position="3"/>
+              prefattribute="checked" oncommand="javascriptEnabledChange();" insertafter="javascriptAllowNavigator"/>
   </page>
   <!-- mail startup toggle -->
   <groupbox id="generalStartupPreferences">           
