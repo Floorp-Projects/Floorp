@@ -81,7 +81,8 @@ class nsPrintfCString
       virtual PRUint32 Length() const;
 
     protected:
-      virtual PRBool GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest ) const;
+      virtual const char* GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const;
+//    virtual PRBool GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest ) const;
 
     private:
       char*     mStart;
