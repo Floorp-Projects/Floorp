@@ -148,20 +148,6 @@ sub init {
         }
     }
 
-    if ($params->param('product')) {
-        push(@supptables, "products products_");
-        push(@wherepart, "products_.id = bugs.product_id");
-        push(@specialchart, ["products_.name", "anyexact",
-                             join(',',$params->param('product'))]);
-    }
-
-    if ($params->param('component')) {
-        push(@supptables, "components components_");
-        push(@wherepart, "components_.id = bugs.component_id");
-        push(@specialchart, ["components_.name", "anyexact",
-                             join(',',$params->param('component'))]);
-    }
-
     if ($params->param('keywords')) {
         my $t = $params->param('keywords_type');
         if (!$t || $t eq "or") {
