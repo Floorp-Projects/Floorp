@@ -426,15 +426,15 @@
 
 <!-- Shared among Heading, Paragraph, and List submenus, and in toolbar menulist -->
 <!ENTITY ParagraphSelect.tooltip "Choose a paragraph format">
-<!ENTITY normalCmd.label "Normal">
-<!ENTITY normal.accesskey "n">
+<!ENTITY normalCmd.label "Body Text">
+<!ENTITY normal.accesskey "t">
 <!ENTITY noneCmd.label "None">
 <!ENTITY none.accesskey "n">
 <!-- isn't used in menu now, but may be added in future -->
 <!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
 <!ENTITY advancedproperties.accesskey "v">
 
-<!ENTITY NormalAbbr.label "Norm.">
+<!ENTITY NormalAbbr.label "Text">
 <!ENTITY ParagraphAbbr.label "P">  
 <!ENTITY Heading1Abbr.label "H1">
 <!ENTITY Heading2Abbr.label "H2">
@@ -589,8 +589,8 @@
 <!ENTITY boldToolbarCmd.tooltip "Bold">
 <!ENTITY italicToolbarCmd.tooltip "Italic">
 <!ENTITY underlineToolbarCmd.tooltip "Underline">
-<!ENTITY bulletListToolbarCmd.tooltip "Apply bulleted list format">
-<!ENTITY numberListToolbarCmd.tooltip "Apply numbered list format">
+<!ENTITY bulletListToolbarCmd.tooltip "Apply or remove bulleted list">
+<!ENTITY numberListToolbarCmd.tooltip "Apply or remove numbered list">
 <!ENTITY outdentToolbarCmd.tooltip "Outdent text (move left)">
 <!ENTITY indentToolbarCmd.tooltip "Indent text (move right)">
 <!ENTITY AlignPopupButton.tooltip "Choose text alignment">
