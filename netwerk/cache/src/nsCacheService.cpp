@@ -104,7 +104,8 @@ nsCacheService::Init()
     }
     rv = mMemoryDevice->Init();
     if (NS_FAILED(rv)) goto error;
-    
+
+#if EAGER_DISK_INIT
     // create disk cache
     mDiskDevice = new nsDiskCacheDevice;
     if (!mDiskDevice) {
@@ -113,6 +114,7 @@ nsCacheService::Init()
     }
     rv = mDiskDevice->Init();
     if (NS_FAILED(rv)) goto error;
+#endif
 
     // observer XPCOM shutdown.
     {
@@ -212,12 +214,39 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
     nsresult rv = mMemoryDevice->Visit(visitor);
     if (NS_FAILED(rv)) return rv;
 
+
+    if (!mDiskDevice) {
+        rv = CreateDiskDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
     rv = mDiskDevice->Visit(visitor);
     if (NS_FAILED(rv)) return rv;
     
     // XXX notify any shutdown process that visitation is complete for THIS visitor.
 
     return NS_OK;
+}
+
+
+nsresult
+nsCacheService::CreateDiskDevice()
+{
+    nsresult rv = NS_OK;
+    if (!mDiskDevice) {
+        // create disk cache lazily
+        mDiskDevice = new nsDiskCacheDevice;
+        if (mDiskDevice) {
+            rv = mDiskDevice->Init();
+            if (NS_FAILED(rv)) {
+                delete mDiskDevice;
+                mDiskDevice = nsnull;
+            }
+        } else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    return rv;
 }
 
 
@@ -470,6 +499,13 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
 
     if (!entry && 
         ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_ON_DISK))) {
+
+        if (!mDiskDevice) {
+            nsresult rv = CreateDiskDevice();
+            if (NS_FAILED(rv))
+                return nsnull;
+        }
+
         entry = mDiskDevice->FindEntry(key);
     }
 
@@ -485,6 +521,12 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 
     if (entry->IsStreamData() && entry->IsAllowedOnDisk()) {
         // this is the default
+        if (!mDiskDevice) {
+            nsresult rv = CreateDiskDevice();
+            if (NS_FAILED(rv))
+                return nsnull;
+        }
+
         device = mDiskDevice;
     } else {
         NS_ASSERTION(entry->IsAllowedInMemory(), "oops.. bad flags");
