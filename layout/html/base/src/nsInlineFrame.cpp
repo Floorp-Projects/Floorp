@@ -1483,6 +1483,11 @@ nsInlineFrame::ReflowInlineFrames(nsIPresContext& aPresContext,
     }
     aMetrics.height = bbox.height + aReflowState.mComputedBorderPadding.top +
       aReflowState.mComputedBorderPadding.bottom;
+#ifdef NOISY_FINAL_SIZE
+    ListTag(stdout);
+    printf(": metrics=%d,%d ascent=%d descent=%d\n",
+           aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent);
+#endif
     aMetrics.mCarriedOutTopMargin = 0;
     aMetrics.mCarriedOutBottomMargin = 0;
     if (nsnull != aMetrics.maxElementSize) {
