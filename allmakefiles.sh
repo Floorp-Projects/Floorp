@@ -144,8 +144,10 @@ intl/lwbrk/src/Makefile
 intl/lwbrk/public/Makefile
 intl/lwbrk/tests/Makefile
 intl/unicharutil/Makefile
+intl/unicharutil/idl/Makefile
 intl/unicharutil/src/Makefile
 intl/unicharutil/public/Makefile
+intl/unicharutil/tables/Makefile
 intl/unicharutil/tests/Makefile
 intl/unicharutil/tools/Makefile
 intl/strres/Makefile
