@@ -444,7 +444,7 @@ nsresult nsCommonDialogs::Select(nsIDOMWindow *inParent, const PRUnichar *inDial
                                                     "sss%ip",
                                                     inChromeURL,
                                                     "_blank",
-                                                    "chrome,modal",
+                                                    "centerscreen,chrome,modal",
                                                     (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)),
                                                     (nsISupports*)ioParamBlock
                                                   );
