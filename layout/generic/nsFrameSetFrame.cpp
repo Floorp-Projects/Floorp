@@ -693,7 +693,11 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   
     // Place and size the child
     nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
-    aChild->SetFrameState(0);
+    // XXX We shouldn't just whack the frame set bits. Clear just the bits
+    // we need to clear...
+#if 0
+    aChild->SetFrameState(NS_FRAME_SYNC_FRAME_AND_VIEW);
+#endif
     aChild->SetRect(rect);
     htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // XXX do we need this
   }
