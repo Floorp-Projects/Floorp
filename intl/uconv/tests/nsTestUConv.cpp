@@ -748,6 +748,44 @@ nsresult testSJISDecoder()
   }
 }
 
+/**
+ * Test the UTF8 decoder.
+ */
+nsresult testUTF8Decoder()
+{
+  char * testName = "T106";
+  printf("\n[%s] UTF8ToUnicode\n", testName);
+
+  // create converter
+  CREATE_DECODER("utf-8");
+
+#ifdef NOPE // XXX decomment this when I have test data
+  // test data
+  char src[] = {};
+  PRUnichar exp[] = {};
+
+  // test converter - normal operation
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+#endif
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 //----------------------------------------------------------------------
 // Encoders testing functions
 
@@ -918,6 +956,7 @@ nsresult testAll()
   testEUCJPDecoder();
   testISO88597Decoder();
   testSJISDecoder();
+  testUTF8Decoder();
 
   // test encoders
   testLatin1Encoder();
