@@ -31,7 +31,7 @@ function selectLocale(event)
       chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
     }
     var node = event.target;
-    var langcode = node.getAttribute('data');
+    var langcode = node.getAttribute('value');
     //var old_lang = chromeRegistry.getSelectedLocale("navigator");
     //dump("\n-->old_lang=" + old_lang + "--");
     chromeRegistry.selectLocale(langcode, true);
