@@ -499,7 +499,7 @@ void WriteFromStringstream(stringstream& aIn, nsIOutputStream* aOut)
       for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
         if (*ptr == '\n')
           *ptr = '\r';
-      aOut->Write(ptr, 0, len, &outCount); 
+      aOut->Write(ptr, len, &outCount); 
     }
   }
 }
@@ -514,7 +514,7 @@ void WriteFromOstrstream(ostrstream& aIn, nsIOutputStream* aOut)
     PRUint32 outCount = 0;
     if (str != nsnull)
     {
-      aOut->Write(str, 0, inCount, &outCount); 
+      aOut->Write(str, inCount, &outCount); 
       // in ostrstreams if you call the str() function
       // then you are responsible for deleting the string
       delete str;
