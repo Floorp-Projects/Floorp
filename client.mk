@@ -344,6 +344,9 @@ endif
 ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
   CVSCO_IMGLIB2 :=
 endif
+ifeq (,$(filter ipc, $(BUILD_MODULE_CVS)))
+  CVSCO_IPC :=
+endif
 ifeq (,$(filter calendar other-licenses/libical, $(BUILD_MODULE_CVS)))
   CVSCO_CALENDAR :=
 endif
