@@ -403,7 +403,7 @@
       <toolbaritem id="go-container" align="center" class="chromeclass-location">
         <button id="go-button" class="button-toolbar"
                 label="&goButton.label;"
-                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
+                oncommand="handleURLBarCommand(event);"
                 ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                 ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
