@@ -30,6 +30,9 @@ static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 // to pass an interface which can be queried for the app context.
 extern XtAppContext gAppContext;
 
+extern void nsTimerExpired(XtPointer aCallData);
+
+
 /*
  * Implementation of timers using Xt timer facility 
  */
@@ -77,12 +80,10 @@ void TimerImpl::FireTimeout()
   else if (mCallback != NULL) {
     mCallback->Notify(this); // Fire the timer
   }
-}
 
-void nsTimerExpired(XtPointer aCallData)
-{
-  TimerImpl* timer = (TimerImpl *)aCallData;
-  timer->FireTimeout();
+// Always repeating here
+
+  mTimerId = XtAppAddTimeOut(gAppContext, GetDelay(),(XtTimerCallbackProc)nsTimerExpired, this);
 }
 
 
@@ -158,4 +159,11 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
     }
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+}
+
+
+void nsTimerExpired(XtPointer aCallData)
+{
+  TimerImpl* timer = (TimerImpl *)aCallData;
+  timer->FireTimeout();
 }
