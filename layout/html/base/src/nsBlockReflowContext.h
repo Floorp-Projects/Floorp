@@ -28,8 +28,6 @@ class nsLineLayout;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
-#undef SPECULATIVE_TOP_MARGIN
-
 /**
  * An encapsulation of the state and algorithm for reflowing block frames.
  */
@@ -54,34 +52,29 @@ public:
 
   nsresult ReflowBlock(nsIFrame* aFrame,
                        const nsRect& aSpace,
-#ifdef SPECULATIVE_TOP_MARGIN
                        PRBool aApplyTopMargin,
                        nscoord aPrevBottomMargin,
-#endif
                        PRBool aIsAdjacentWithTop,
                        nsMargin& aComputedOffsets,
                        nsReflowStatus& aReflowStatus);
 
   PRBool PlaceBlock(PRBool aForceFit,
-#ifndef SPECULATIVE_TOP_MARGIN
-                    PRBool aApplyTopMargin,
-                    nscoord aPrevBottomMargin,
-#endif
                     const nsMargin& aComputedOffsets,
+                    nscoord* aBottomMarginResult,
                     nsRect& aInFlowBounds,
                     nsRect& aCombinedRect);
 
-  nscoord GetCollapsedTopMargin() const {
-    return mTopMargin;
-  }
+//XXX  nscoord GetCollapsedTopMargin() const {
+//XXX    return mTopMargin;
+//XXX  }
 
-  nscoord GetCollapsedBottomMargin() const {
-    return mBottomMargin;
-  }
+//XXX  nscoord GetCollapsedBottomMargin() const {
+//XXX    return mBottomMargin;
+//XXX  }
 
-  nscoord GetCarriedOutTopMargin() const {
-    return mMetrics.mCarriedOutTopMargin;
-  }
+//XXX  nscoord GetCarriedOutTopMargin() const {
+//XXX    return mMetrics.mCarriedOutTopMargin;
+//XXX  }
 
   nscoord GetCarriedOutBottomMargin() const {
     return mMetrics.mCarriedOutBottomMargin;
@@ -138,11 +131,17 @@ protected:
   nsMargin mMargin;
   nscoord mX, mY;
   nsHTMLReflowMetrics mMetrics;
-  nscoord mSpeculativeTopMargin;
-  nscoord mTopMargin;
-  nscoord mBottomMargin;
+//XXX  nscoord mSpeculativeTopMargin;
+//XXX  nscoord mTopMargin;
+//XXX  nscoord mBottomMargin;
   nsSize mMaxElementSize;
   PRBool mIsTable;
+
+#ifdef DEBUG
+  PRInt32 mIndent;
+#endif
+
+  nscoord ComputeCollapsedTopMargin(nsHTMLReflowState& aRS);
 };
 
 #endif /* nsBlockReflowContext_h___ */
