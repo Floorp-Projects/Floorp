@@ -330,7 +330,7 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
       eventBox.setAttribute( calendarEventDisplay.event.categories, "true" );
    }
 
-   var eventHTMLElement = document.createElement( "description" );
+   var eventHTMLElement = document.createElement( "label" );
    eventHTMLElement.setAttribute( "value", calendarEventDisplay.event.title );
    eventHTMLElement.setAttribute( "flex", "1" );
    eventHTMLElement.setAttribute( "crop", "end" );
