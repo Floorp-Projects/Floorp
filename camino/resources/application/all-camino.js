@@ -69,8 +69,10 @@ pref("browser.download.autoDispatch", false);
 
 pref("chimera.enable_rendezvous", true);
 
-// set typeahead find to search all text by default
+// set typeahead find to search all text by default, but not invoke
+// unless you type '/'
 pref("accessibility.typeaheadfind.linksonly", false);
+pref("accessibility.typeaheadfind.autostart", false);
 
 // image resizing
 pref("browser.enable_automatic_image_resizing", true);
