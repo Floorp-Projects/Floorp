@@ -2719,7 +2719,7 @@ NS_IMETHODIMP nsWebShellWindow::GetContentBounds(nsRect& aResult)
  
 NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)
 {
-   mWindow->GetBounds(aResult);
+   mWindow->GetScreenBounds(aResult);
    return NS_OK;
 }
  
