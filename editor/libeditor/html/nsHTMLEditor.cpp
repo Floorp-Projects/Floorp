@@ -171,34 +171,39 @@ nsHTMLEditor::~nsHTMLEditor()
       selection->RemoveSelectionListener(listener); 
     }
   }
-  nsCOMPtr<nsIDOMDocument> doc;
-  nsEditor::GetDocument(getter_AddRefs(doc));
-  if (doc)
+  // Don't use getDocument here, because we have no way of knowing if
+  // Init() was ever called.  So we need to get the document ourselves,
+  // if it exists.
+  if (mDocWeak)
   {
-    nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(doc, &result);
-    if (NS_SUCCEEDED(result) && erP) 
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
+    if (doc)
     {
-      if (mKeyListenerP) {
-        erP->RemoveEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
+      nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(doc, &result);
+      if (NS_SUCCEEDED(result) && erP) 
+      {
+        if (mKeyListenerP) {
+          erP->RemoveEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
+        }
+        if (mMouseListenerP) {
+          erP->RemoveEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
+        }
+	      if (mTextListenerP) {
+          erP->RemoveEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
+	      }
+ 	      if (mCompositionListenerP) {
+		      erP->RemoveEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
+	      }
+        if (mFocusListenerP) {
+          erP->RemoveEventListenerByIID(mFocusListenerP, nsIDOMFocusListener::GetIID());
+        }
+	      if (mDragListenerP) {
+            erP->RemoveEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
+        }
       }
-      if (mMouseListenerP) {
-        erP->RemoveEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
-      }
-	    if (mTextListenerP) {
-        erP->RemoveEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
-	    }
- 	    if (mCompositionListenerP) {
-		    erP->RemoveEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
-	    }
-      if (mFocusListenerP) {
-        erP->RemoveEventListenerByIID(mFocusListenerP, nsIDOMFocusListener::GetIID());
-      }
-	    if (mDragListenerP) {
-          erP->RemoveEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
-      }
+      else
+        NS_NOTREACHED("~nsTextEditor");
     }
-    else
-      NS_NOTREACHED("~nsTextEditor");
   }
 
   // deleting a null pointer is safe
@@ -1048,7 +1053,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   }
   if (placeholderTxn)
     placeholderTxn->SetAbsorb(PR_FALSE);  // this ends the merging of txns into placeholderTxn
-
   return result;
 }
 
