@@ -253,12 +253,15 @@ NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *a
 
 NS_IMETHODIMP nsDocAccessible::Destroy()
 {
+  NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
+  if (gGlobalDocAccessibleCache) {
 #ifdef OLD_HASH
-  nsVoidKey key(NS_STATIC_CAST(void*, mWeakShell));
-  gGlobalDocAccessibleCache->Remove(&key);
+    nsVoidKey key(NS_STATIC_CAST(void*, mWeakShell));
+    gGlobalDocAccessibleCache->Remove(&key);
 #else
-  gGlobalDocAccessibleCache->Remove(NS_STATIC_CAST(void*, mWeakShell));
+    gGlobalDocAccessibleCache->Remove(NS_STATIC_CAST(void*, mWeakShell));
 #endif
+  }
   return Shutdown();
 }
 
