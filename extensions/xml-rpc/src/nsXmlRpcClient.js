@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.11 $
+ *  Version: $Revision: 1.12 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.11 2000/09/13 23:51:27 rayw%netscape.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.12 2000/09/15 09:15:30 mj%digicool.com Exp $
  */
 
 /*
@@ -95,7 +95,7 @@ nsXmlRpcClient.prototype = {
     get serverUrl() { return this._serverUrl; },
 
     // BROKEN. Bug 37913
-    call: function(methodName) {
+    call: function(methodName, methodArgs, count) {
         debug('call');
         // Check for call in progress.
         if (this._inProgress)
@@ -111,8 +111,6 @@ nsXmlRpcClient.prototype = {
         this._status = null;
         this._errorMsg = null;
 
-        var methodArgs = [].concat(arguments);
-        methodArgs.shift();
         debug('Arguments: ' + methodArgs);
 
         // Generate request body
@@ -135,8 +133,10 @@ nsXmlRpcClient.prototype = {
         // yes, if we use asyncCall on ourselves, we still don't
         // work. Valeski calls this an event pump blocking problem.
         while (!input.available()) { // Wait for data
-            if (new Date() - now > 1 * 60 * 1000)
+            if (new Date() - now > 1 * 60 * 1000) {
+                this._inProgress = false;
                 throw Components.Exception('Connection timed out');
+            }
         }
         
         this._reponseStatus = channel.responseStatus;
@@ -186,8 +186,10 @@ nsXmlRpcClient.prototype = {
     // caller.
     _status: null,
     _errorMsg: null,
+    _listener: null,
+    _seenStart: false,
 
-    asyncCall: function(listener, context, methodName) {
+    asyncCall: function(listener, context, methodName, methodArgs, count) {
         debug('asyncCall');
         // Check for call in progress.
         if (this._inProgress)
@@ -202,15 +204,9 @@ nsXmlRpcClient.prototype = {
         // Clear state.
         this._status = null;
         this._errorMsg = null;
-
-        var internalContext = {
-            listener: listener,
-            context: context,
-            seenStart: false,
-        }
-
-        var methodArgs = [].concat(arguments);
-        methodArgs = methodArgs.slice(3);
+        this._listener = listener;
+        this._seenStart = false;
+        
         debug('Arguments: ' + methodArgs);
 
         // Generate request body
@@ -224,7 +220,7 @@ nsXmlRpcClient.prototype = {
         var chann = this._getChannel(requestBody);
 
         // And...... call!
-        chann.asyncRead(this, internalContext);
+        chann.asyncRead(this, context);
     },
 
     // Return a HTTP channel ready for POSTing.
@@ -278,8 +274,10 @@ nsXmlRpcClient.prototype = {
             debug('Non-zero status: (' + status.toString(16) + ') ' + errorMsg);
             this._status = status;
             this._errorMsg = errorMsg;
-            try { ctxt.listener.onError(this, ctxt.context, status, errorMsg); }
-            catch (ex) {}
+            try { this._listener.onError(this, ctxt, status, errorMsg); }
+            catch (ex) {
+                debug('Exception in listener.onError: ' + ex);
+            }
             return;
         }
 
@@ -297,20 +295,26 @@ nsXmlRpcClient.prototype = {
                 this._result = null;
                 throw Components.Exception('Could not parse response');
                 try { 
-                    ctxt.listener.onError(this, ctxt.context, 
+                    this._listener.onError(this, ctxt, 
                         Components.results.NS_ERROR_FAIL, 
                         'Server returned invalid Fault');
                 }
-                catch(ex) {}
+                catch(ex) {
+                    debug('Exception in listener.onError: ' + ex);
+                }
             }
             debug('Fault: ' + this._fault);
-            try { ctxt.listener.onFault(this, ctxt.context, this._fault); }
-            catch(ex) {}
+            try { this._listener.onFault(this, ctxt, this._fault); }
+            catch(ex) {
+                debug('Exception in listener.onFault: ' + ex);
+            }
         } else {
             debug('Result: ' + this._result);
             try { 
-                ctxt.listener.onResult(this, ctxt.context, this._result);
-            } catch (ex) {}
+                this._listener.onResult(this, ctxt, this._result);
+            } catch (ex) {
+                debug('Exception in listener.onResult: ' + ex);
+            }
         }
     },
 
@@ -322,9 +326,9 @@ nsXmlRpcClient.prototype = {
         debug('Data available (' + sourceOffset + ', ' + count + ')');
         if (!this._inProgress) return; // No longer interested.
 
-        if (!ctxt.seenStart) {
+        if (!this._seenStart) {
             // First time round
-            ctxt.seenStart = true;
+            this._seenStart = true;
 
             // Store request status and message.
             channel = channel
@@ -339,11 +343,13 @@ nsXmlRpcClient.prototype = {
                     channel.responseStatus;
                 this._inProgress = false;
                 try {
-                    ctxt.listener.onError(this, ctxt.context,
+                    this._listener.onError(this, ctxt,
                         Components.results.NS_ERROR_FAILURE,
                         'Server returned unexpected status ' +
                             channel.responseStatus);
-                } catch (ex) {}
+                } catch (ex) {
+                    debug('Exception in listener.onError: ' + ex);
+                }
                 return;
             }
 
@@ -354,11 +360,13 @@ nsXmlRpcClient.prototype = {
                     channel.contentType;
                 this._inProgress = false;
                 try {
-                    ctxt.listener.onError(this, ctxt.context,
+                    this._listener.onError(this, ctxt,
                         Components.results.NS_ERROR_FAILURE,
                         'Server returned unexpected content-type ' +
                             channel.contentType);
-                } catch (ex) {}
+                } catch (ex) {
+                    debug('Exception in listener.onError: ' + ex);
+                }
                 return;
             }
 
@@ -383,7 +391,11 @@ nsXmlRpcClient.prototype = {
             debug('Parser exception: ' + ex);
             this._status = ex.result;
             this._errorMsg = ex.message;
-            ctxt.listener.onError(this, ctxt.context, ex.result, ex.message);
+            try {
+                this._listener.onError(this, ctxt, ex.result, ex.message);
+            } catch(ex) {
+                debug('Exception in listener.onError: ' + ex);
+            }
             this._inProgress = false;
             this._parser = null;
         }
@@ -409,34 +421,42 @@ nsXmlRpcClient.prototype = {
     ARRAY:    6,
     STRUCT:   7,
     BASE64:   8, // Not part of nsIXmlRpcClient interface, internal use.
-    createType: function(type) {
-        const SUPPORTSID = '@mozilla.org/supports-;1';
+    createType: function(type, uuid) {
+        const SUPPORTSID = '@mozilla.org/supports-';
         switch(type) {
             case this.INT:
-                return createInstance(SUPPORTSID + 'PRInt32',
+                uuid.value = Components.interfaces.nsISupportsPRInt32
+                return createInstance(SUPPORTSID + 'PRInt32;1',
                     'nsISupportsPRInt32');
 
             case this.BOOLEAN:
-                return createInstance(SUPPORTSID + 'PRBool',
+                uuid.value = Components.interfaces.nsISupportsPRBool
+                return createInstance(SUPPORTSID + 'PRBool;1',
                     'nsISupportsPRBool');
 
             case this.STRING:
-                return createInstance(SUPPORTSID + 'string',
+                uuid.value = Components.interfaces.nsISupportsString
+                return createInstance(SUPPORTSID + 'string;1',
                     'nsISupportsString');
 
             case this.DOUBLE:
-                return createInstance(SUPPORTSID + 'double',
+                uuid.value = Components.interfaces.nsISupportsDouble
+                return createInstance(SUPPORTSID + 'double;1',
                     'nsISupportsDouble');
 
             case this.DATETIME:
-                return createInstance(SUPPORTSID + 'PRTime',
+                uuid.value = Components.interfaces.nsISupportsPRTime
+                return createInstance(SUPPORTSID + 'PRTime;1',
                     'nsISupportsPRTime');
 
             case this.ARRAY:
-                return createInstance(SUPPORTSID + 'array', 'nsISupportsArray');
+                uuid.value = Components.interfaces.nsISupportsArray
+                return createInstance(SUPPORTSID + 'array;1',
+                    'nsISupportsArray');
 
             case this.STRUCT:
-                return createInstance('@mozilla.org/dictionary;1', '@mozilla.org/js/xpc/ID;1ictionary');
+                return createInstance('@mozilla.org/dictionary;1', 
+                    'nsIDictionary');
 
             default: throw Components.Exception('Unsupported type');
         }
@@ -867,7 +887,7 @@ Value.prototype = {
                 break;
 
             case this.BASE64:
-                this._value = base64ToString(val);
+                this._value.data = base64ToString(val);
                 break;
 
             default:
@@ -879,8 +899,9 @@ Value.prototype = {
     get type() { return this._type; },
     set type(type) { 
         this._type = type;
-        if (type == this.BASE64) this._value = this._createType(this.STRING);
-        else this._value = this._createType(type);
+        if (type == this.BASE64) 
+            this._value = this._createType(this.STRING, {});
+        else this._value = this._createType(type, {});
     },
 
     appendValue: function(val) {

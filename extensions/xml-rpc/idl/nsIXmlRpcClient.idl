@@ -18,9 +18,9 @@
 
 /*
  *  XPCOM XML-RPC Client, interface definition.
- *  Version: $Revision: 1.1 $
+ *  Version: $Revision: 1.2 $
  *
- *  $Id: nsIXmlRpcClient.idl,v 1.1 2000/05/05 06:06:31 mj%digicool.com Exp $
+ *  $Id: nsIXmlRpcClient.idl,v 1.2 2000/09/15 09:15:29 mj%digicool.com Exp $
  */
 
 #include "nsISupports.idl"
@@ -128,11 +128,16 @@ interface nsIXmlRpcClient: nsISupports {
     /**
      * Convenience: return the correct nsISupportsPrimitive for a given XML-RPC
      * type, or nsISupportsArray or nsIDictionary.  'base64' isn't supported.
+     * No QueryInterface call is needed, the object has been QueryInterfaced to
+     * the correct interface.
      *
-     * @param type      One of the listed constants.
-     * @return          Return an appropriate XPCOM object.
+     * @param type              One of the listed constants.
+     * @param uuid              The uuid of the returned object. No QI call 
+     *                          needed.
+     * @param nsQIResult        The apropriate XPCOM object.
      */
-    nsISupports createType(in unsigned long type);
+    void createType(in unsigned long type, out nsIIDRef uuid, 
+        [iid_is(uuid),retval] out nsQIResult result);
     const unsigned long INT      = 1; // nsISupportsPRInt32
     const unsigned long BOOLEAN  = 2; // nsISupportsPRBool
     const unsigned long STRING   = 3; // nsISupportsString

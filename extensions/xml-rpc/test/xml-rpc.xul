@@ -22,14 +22,28 @@ function callAsync() {
     dump('Call Async\n');
     var xmlRpc = getXmlRpc();
     xmlRpc.init('http://betty.userland.com/RPC2');
-    var stateCode = xmlRpc.createType(xmlRpc.INT);
+    var stateCode = xmlRpc.createType(xmlRpc.INT, {});
     stateCode.data = document.getElementById('statecode').value;
 
-    xmlRpc.asyncCall(Listener, null, 'examples.getStateName', stateCode);
+    xmlRpc.asyncCall(Listener, null, 'examples.getStateName', [stateCode], 1);
+}
+
+// Broken still. :(
+function callSync() {
+    dump('Call Sync\n');
+    var xmlRpc = getXmlRpc();
+    xmlRpc.init('http://betty.userland.com/RPC2');
+    var stateCode = xmlRpc.createType(xmlRpc.INT, {});
+    stateCode.data = document.getElementById('statecode').value;
+
+    result = xmlRpc.call('examples.getStateName', [stateCode], 1);
+    result = result.QueryInterface(Components.interfaces.nsISupportsString);
+    document.getElementById('statename').setAttribute('value', result.data);
 }
 
 var Listener = {
     onResult: function(client, ctxt, result) {
+        result = result.QueryInterface(Components.interfaces.nsISupportsString);
         document.getElementById('statename').setAttribute('value', result.data);
     },
 
@@ -55,6 +69,7 @@ var Listener = {
 <box orient="vertical">
 <spring flex="1"/>
 <button value="Call Async." onclick="callAsync()"/>
+<button value="Call Sync." onclick="callSync()"/>
 <spring flex="1"/>
 </box>
 </window>
