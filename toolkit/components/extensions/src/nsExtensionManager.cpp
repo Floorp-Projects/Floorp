@@ -195,7 +195,7 @@ nsExtensionManager::StartExtensions(PRBool aIsProfile)
   while (1);
 
   return NS_OK;
-#if 0
+/*
   walk the extensions list {
     if extension is to be uninstalled {
       locate install log
@@ -225,14 +225,12 @@ nsExtensionManager::StartExtensions(PRBool aIsProfile)
       mark as being incompatible 
       disable extension
     }
-#endif
+*/
 }
 
 nsresult
 nsExtensionManager::Init()
 {
-  return NS_OK;
-
   // Register the profile extension launcher...
   nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
   os->AddObserver(this, "profile-after-change", PR_FALSE);
