@@ -1,0 +1,69 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Terry Hayes <thayes@netscape.com>
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIInterfaceRequestor;
+
+/**
+ * nsISecurityWarningDialogs - functions that
+ *   display warnings for transitions between secure
+ *   and insecure pages, posts to insecure servers etc.
+ */
+[scriptable, uuid(1c399d06-1dd2-11b2-bc58-c87cbcacdb78)]
+interface nsISecurityWarningDialogs : nsISupports
+{
+  /**
+   * alertEnteringSecure
+   */
+  void alertEnteringSecure(in nsIInterfaceRequestor ctx);
+
+  /**
+   * alertEnteringWeak
+   */
+  void alertEnteringWeak(in nsIInterfaceRequestor ctx);
+
+  /**
+   * alertLeavingSecure
+   */
+  void alertLeavingSecure(in nsIInterfaceRequestor ctx);
+
+  /**
+   * alertMixedMode
+   */
+  void alertMixedMode(in nsIInterfaceRequestor ctx);
+
+  /**
+   * confirmPostToInsecure
+   */
+  boolean confirmPostToInsecure(in nsIInterfaceRequestor ctx);
+
+  /**
+   * confirmPostToInsecureFromSecure
+   */
+  boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
+};
+
