@@ -26,7 +26,6 @@
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 
-static NS_DEFINE_IID(kIMETextTxnIID, IME_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 
 nsIAtom *IMETextTxn::gIMETextTxnName = nsnull;
@@ -204,7 +203,7 @@ IMETextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIMETextTxnIID)) {
+  if (aIID.Equals(IMETextTxn::GetCID())) {
     *aInstancePtr = (void*)(IMETextTxn*)this;
     NS_ADDREF_THIS();
     return NS_OK;

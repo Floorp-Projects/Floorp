@@ -41,8 +41,6 @@ class nsIFrame;
 //const static char* kMOZEditorBogusNodeValue="TRUE";
 const unsigned char nbsp = 160;
 
-static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
-// static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 enum
@@ -430,6 +428,10 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
   nsCOMPtr<nsIDOMNode> endNode;
   PRInt32 endOffset;
   res = mEditor->GetEndNodeAndOffset(aSelection, &endNode, &endOffset);
+  if (NS_FAILED(res)) 
+  { 
+    return res; 
+  }
   if (endNode.get() != node.get())
   {
     // block parents the same?  use default deletion

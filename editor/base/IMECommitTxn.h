@@ -24,7 +24,7 @@
 #include "nsCOMPtr.h"
 
 // {9C4994A1-281C-11d3-9EA3-0060089FE59B}
-#define IME_COMMIT_TXN_IID					\
+#define IME_COMMIT_TXN_CID					\
 { 0x9c4994a1, 0x281c, 0x11d3, 				\
 { 0x9e, 0xa3, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
 
@@ -35,6 +35,8 @@
 class IMECommitTxn : public EditTxn
 {
 public:
+  static const nsIID& GetCID() { static nsIID iid = IME_COMMIT_TXN_CID; return iid; }
+
   virtual ~IMECommitTxn();
 
   static nsIAtom *gIMECommitTxnName;
@@ -65,8 +67,6 @@ public:
 
   // override QueryInterface to handle IMECommitTxn request
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  static const nsIID& GetIID() { static nsIID iid = IME_COMMIT_TXN_IID; return iid; }
 
   /** must be called before any IMECommitTxn is instantiated */
   static nsresult ClassInit();

@@ -62,17 +62,6 @@
 #include "nsHTMLEditor.h"
 
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
-static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
-
-static NS_DEFINE_IID(kInsertTableTxnIID,       INSERT_TABLE_TXN_IID);
-static NS_DEFINE_IID(kInsertTableCellTxnIID,   INSERT_CELL_TXN_IID);
-static NS_DEFINE_IID(kInsertTableColumnTxnIID, INSERT_COLUMN_TXN_IID);
-static NS_DEFINE_IID(kInsertTableRowTxnIID,    INSERT_ROW_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableTxnIID,       DELETE_TABLE_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableCellTxnIID,   DELETE_CELL_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableColumnTxnIID, DELETE_COLUMN_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableRowTxnIID,    DELETE_ROW_TXN_IID);
-static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
 
 // Table Editing methods -- for testing, hooked up to Tool Menu items
 // Modeled after nsEditor::InsertText()

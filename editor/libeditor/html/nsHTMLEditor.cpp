@@ -56,7 +56,6 @@ const unsigned char nbsp = 160;
 #include "nsJSEditorLog.h"
 #endif // ENABLE_JS_EDITOR_LOG
 
-static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);

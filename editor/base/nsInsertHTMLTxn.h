@@ -24,7 +24,7 @@
 #include "nsIDOMRange.h"
 #include "nsCOMPtr.h"
 
-#define NS_INSERT_HTML_TXN_IID \
+#define NS_INSERT_HTML_TXN_CID \
 {/* a6cf90fd-15b3-11d2-932e-00805f8add3 */ \
 0xa6cf90fc, 0x15b3, 0x11d2, \
 {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
@@ -35,6 +35,8 @@
 class nsInsertHTMLTxn : public EditTxn
 {
 public:
+
+  static const nsIID& GetCID() { static nsIID iid = NS_INSERT_HTML_TXN_CID; return iid; }
 
   /** initialize the transaction.
     * @param aSrc     the source for the HTML to insert

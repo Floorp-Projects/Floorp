@@ -43,32 +43,6 @@
 #include "IMETextTxn.h"
 #include "IMECommitTxn.h"
 
-static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
-static NS_DEFINE_IID(kPlaceholderTxnIID,    PLACEHOLDER_TXN_IID);
-static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
-static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
-static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kInsertElementTxnIID,  INSERT_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kInsertHTMLTxnIID,     NS_INSERT_HTML_TXN_IID);
-static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
-static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
-static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kInsertTableTxnIID,       INSERT_TABLE_TXN_IID);
-static NS_DEFINE_IID(kInsertTableCellTxnIID,   INSERT_CELL_TXN_IID);
-static NS_DEFINE_IID(kInsertTableColumnTxnIID, INSERT_COLUMN_TXN_IID);
-static NS_DEFINE_IID(kInsertTableRowTxnIID,    INSERT_ROW_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableTxnIID,       DELETE_TABLE_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableCellTxnIID,   DELETE_CELL_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableColumnTxnIID, DELETE_COLUMN_TXN_IID);
-static NS_DEFINE_IID(kDeleteTableRowTxnIID,    DELETE_ROW_TXN_IID);
-static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
-static NS_DEFINE_IID(kIMETextTxnIID,			     IME_TEXT_TXN_IID);
-static NS_DEFINE_IID(kIMECommitTxnIID,			   IME_COMMIT_TXN_IID);
-static NS_DEFINE_IID(kAddStyleSheetTxnIID,		 ADD_STYLESHEET_TXN_IID);
-static NS_DEFINE_IID(kRemoveStyleSheetTxnIID,	 REMOVE_STYLESHEET_TXN_IID);
-
 TransactionFactory::TransactionFactory()
 {
 }
@@ -82,37 +56,37 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
 {
   nsresult result = NS_OK;
   *aResult = nsnull;
-  if (aTxnType.Equals(kInsertTextTxnIID))
+  if (aTxnType.Equals(InsertTextTxn::GetCID()))
     *aResult = new InsertTextTxn();
-  else if (aTxnType.Equals(kDeleteTextTxnIID))
+  else if (aTxnType.Equals(DeleteTextTxn::GetCID()))
     *aResult = new DeleteTextTxn();
-  else if (aTxnType.Equals(kCreateElementTxnIID))
+  else if (aTxnType.Equals(CreateElementTxn::GetCID()))
     *aResult = new CreateElementTxn();
-  else if (aTxnType.Equals(kInsertElementTxnIID))
+  else if (aTxnType.Equals(InsertElementTxn::GetCID()))
     *aResult = new InsertElementTxn();
-  else if (aTxnType.Equals(kInsertHTMLTxnIID))
+  else if (aTxnType.Equals(nsInsertHTMLTxn::GetCID()))
     *aResult = new nsInsertHTMLTxn();
-  else if (aTxnType.Equals(kDeleteElementTxnIID))
+  else if (aTxnType.Equals(DeleteElementTxn::GetCID()))
     *aResult = new DeleteElementTxn();
-  else if (aTxnType.Equals(kDeleteRangeTxnIID))
+  else if (aTxnType.Equals(DeleteRangeTxn::GetCID()))
     *aResult = new DeleteRangeTxn();
-  else if (aTxnType.Equals(kChangeAttributeTxnIID))
+  else if (aTxnType.Equals(ChangeAttributeTxn::GetCID()))
     *aResult = new ChangeAttributeTxn();
-  else if (aTxnType.Equals(kSplitElementTxnIID))
+  else if (aTxnType.Equals(SplitElementTxn::GetCID()))
     *aResult = new SplitElementTxn();
-  else if (aTxnType.Equals(kJoinElementTxnIID))
+  else if (aTxnType.Equals(JoinElementTxn::GetCID()))
     *aResult = new JoinElementTxn();
-  else if (aTxnType.Equals(kEditAggregateTxnIID))
+  else if (aTxnType.Equals(EditAggregateTxn::GetCID()))
     *aResult = new EditAggregateTxn();
-  else if (aTxnType.Equals(kIMETextTxnIID))
+  else if (aTxnType.Equals(IMETextTxn::GetCID()))
     *aResult = new IMETextTxn();
-  else if (aTxnType.Equals(kIMECommitTxnIID))
+  else if (aTxnType.Equals(IMECommitTxn::GetCID()))
     *aResult = new IMECommitTxn();
-  else if (aTxnType.Equals(kAddStyleSheetTxnIID))
+  else if (aTxnType.Equals(AddStyleSheetTxn::GetCID()))
     *aResult = new AddStyleSheetTxn();
-  else if (aTxnType.Equals(kRemoveStyleSheetTxnIID))
+  else if (aTxnType.Equals(RemoveStyleSheetTxn::GetCID()))
     *aResult = new RemoveStyleSheetTxn();
-  else if (aTxnType.Equals(kPlaceholderTxnIID))
+  else if (aTxnType.Equals(PlaceholderTxn::GetCID()))
     *aResult = new PlaceholderTxn();
   else
     result = NS_ERROR_NO_INTERFACE;

@@ -24,7 +24,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsCOMPtr.h"
 
-#define DELETE_TEXT_TXN_IID \
+#define DELETE_TEXT_TXN_CID \
 {/* 4d3a2720-ac49-11d2-86d8-000064657374 */ \
 0x4d3a2720, 0xac49, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
@@ -35,6 +35,8 @@
 class DeleteTextTxn : public EditTxn
 {
 public:
+
+  static const nsIID& GetCID() { static nsIID iid = DELETE_TEXT_TXN_CID; return iid; }
 
   /** initialize the transaction.
     * @param aEditor  the provider of basic editing operations

@@ -24,11 +24,11 @@
 #include "nsIEditor.h"
 #include "nsICSSStyleSheet.h"
 
-#define ADD_STYLESHEET_TXN_IID \
+#define ADD_STYLESHEET_TXN_CID \
 {/* d05e2980-2fbe-11d3-9ce4-e8393835307c */ \
 0xd05e2980, 0x2fbe, 0x11d3, { 0x9c, 0xe4, 0xe8, 0x39, 0x38, 0x35, 0x30, 0x7c } }
 
-#define REMOVE_STYLESHEET_TXN_IID \
+#define REMOVE_STYLESHEET_TXN_CID \
 {/* d05e2981-2fbe-11d3-9ce4-e8393835307c */ \
 0xd05e2981, 0x2fbe, 0x11d3, { 0x9c, 0xe4, 0xe8, 0x39, 0x38, 0x35, 0x30, 0x7c } }
 
@@ -38,6 +38,8 @@ class AddStyleSheetTxn : public EditTxn
   friend class TransactionFactory;
 
 public:
+
+  static const nsIID& GetCID() { static nsIID iid = ADD_STYLESHEET_TXN_CID; return iid; }
 
   virtual ~AddStyleSheetTxn();
 
@@ -80,6 +82,9 @@ class RemoveStyleSheetTxn : public EditTxn
   friend class TransactionFactory;
 
 public:
+
+  static const nsIID& GetCID() { static nsIID iid = REMOVE_STYLESHEET_TXN_CID; return iid; }
+
 	virtual ~RemoveStyleSheetTxn();
 	
   /** Initialize the transaction.
