@@ -1228,6 +1228,22 @@ nsImageFrame::GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget)
   return status;
 }
 
+NS_IMETHODIMP
+nsImageFrame::CanContinueTextRun(PRBool& aContinueTextRun) const
+{
+  NS_ASSERTION(mStyleContext, "null style context is really really bad");
+
+  // check for block element: 
+  // we only contine a text run if we are NOT acting as a block
+  const nsStyleDisplay* display =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  NS_ASSERTION(display, "null display style struct - how?");
+
+  aContinueTextRun = !(display->IsBlockLevel());
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP  
 nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,

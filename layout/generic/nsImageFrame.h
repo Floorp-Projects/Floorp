@@ -82,6 +82,10 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+  
+  NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
+
+
   NS_IMETHOD  GetContentForEvent(nsIPresContext* aPresContext,
                                  nsEvent* aEvent,
                                  nsIContent** aContent);

@@ -71,11 +71,42 @@
 
 //----------------------------------------------------------------------
 
-
 #define FIX_BUG_50257
 
 #define PLACED_LEFT  0x1
 #define PLACED_RIGHT 0x2
+
+#define HACK_MEW
+#ifdef HACK_MEW
+static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFrame, PRBool& inChild)
+{
+  nscoord sizes = 0;
+
+  // see if aFrame is an image frame first
+  nsCOMPtr<nsIAtom> type;
+  aFrame.GetFrameType(getter_AddRefs(type));
+  if(type.get() == nsLayoutAtoms::imageFrame) {
+    nsSize size;
+    aFrame.GetSize(size);
+    sizes += NS_STATIC_CAST(nscoord,size.width);
+  } else {
+    // see if there are children to process
+    nsIFrame* child = nsnull;
+    // XXX: process alternate child lists?
+    aFrame.FirstChild(&aPresContext,nsnull,&child);
+    while(child) {
+      PRBool dummy;
+      inChild = PR_TRUE;
+      // recurse: note that we already know we are in a child frame, so no need to track further
+      sizes += AccumulateImageSizes(aPresContext, *child, dummy);
+      // now next sibling
+      child->GetNextSibling(&child);
+    }
+  }
+
+  return sizes;
+}
+#endif
 
 MOZ_DECL_CTOR_COUNTER(nsLineLayout)
 
@@ -1828,19 +1859,60 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
   PerFrameData* pfd = psd->mFirstFrame;
   nscoord maxElementWidth = 0;
   nscoord maxElementHeight = 0;
+  PRBool prevFrameAccumulates = PR_FALSE;
+  nscoord accumulatedWidth = 0;
+
   while (nsnull != pfd) {
+
     // Compute max-element-size if necessary
     if (mComputeMaxElementSize) {
+
       nscoord mw = pfd->mMaxElementSize.width +
         pfd->mMargin.left + pfd->mMargin.right;
       if (psd->mNoWrap) {
         maxElementWidth += mw;
       }
       else {
+
+#ifdef HACK_MEW
+        // accumulate the widths of any image frames in the current frame
+        // if there are images, accumulate the widths of the frames containing the images
+        // - this is to handle images in a text run
+        // - see bugs 54565, 32191, and their many dups
+        // XXX - reconsider how textFrame text measurement happens and have it take into account
+        //       image frames as well, thus eliminating the need for this code
+        PRBool inChild = PR_FALSE;
+        nscoord imgSizes = AccumulateImageSizes(*mPresContext, *pfd->mFrame, inChild);
+        // NOTE: the imgSizes do not need to be added into the width of the frame, we just
+        //       need to accumualte adjacent frames
+        PRBool curFrameAccumulates = (imgSizes > 0);
+
+        if (prevFrameAccumulates && curFrameAccumulates) {
+
+ #ifdef NOISY_MAX_ELEMENT_SIZE
+          printf("Contiguous continuable frames: MEW being coalessed...\n");
+          printf("last frame's MEW=%d | Accumulated MEW=%d\n", mw, accumulatedWidth+mw);
+ #endif
+          // accumulate the MEW
+          accumulatedWidth += mw;
+          if (accumulatedWidth > mw)
+            mw = accumulatedWidth;
+        } else if(curFrameAccumulates) {
+          // start the accumulation (first continuable frame in potential sequence)
+          accumulatedWidth = mw;
+        } else {
+          // clear the accumulation
+          accumulatedWidth = 0;
+        }
+        // now update the prevFrame
+        prevFrameAccumulates = curFrameAccumulates;
+#endif
+        // and finally reset the max element width
         if (maxElementWidth < mw) {
           maxElementWidth = mw;
         }
       }
+
       nscoord mh = pfd->mMaxElementSize.height +
         pfd->mMargin.top + pfd->mMargin.bottom;
       if (maxElementHeight < mh) {
