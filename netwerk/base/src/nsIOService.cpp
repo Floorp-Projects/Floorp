@@ -236,6 +236,13 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
+    // mURLParsers is a voidarray; we must release ourselves
+    for (PRInt32 i = 0; i < mURLParsers.Count(); i++)
+    {
+        nsISupports *temp;
+        temp = NS_STATIC_CAST(nsISupports*, mURLParsers[i]);
+        NS_IF_RELEASE(temp);
+    }
     (void)SetOffline(PR_TRUE);
     if (mFileTransportService)
         (void)mFileTransportService->Shutdown();
@@ -346,11 +353,23 @@ nsIOService::GetCachedProtocolHandler(const char *scheme, nsIProtocolHandler **r
 NS_IMETHODIMP
 nsIOService::CacheURLParser(const char *scheme, nsIURLParser *parser)
 {
+    NS_ENSURE_ARG_POINTER(scheme);
+    NS_ENSURE_ARG_POINTER(parser);
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
         if (!nsCRT::strcasecmp(scheme, gScheme[i]))
         {
-            mURLParsers.SetElementAt(i, parser);
+            // we're going to store this in an nsVoidArray, which extends,
+            // unlike nsSupportsArray, which doesn't.  We must release
+            // them on delete!
+            // grab this before overwriting it
+            nsIURLParser *old_parser = NS_STATIC_CAST(nsIURLParser*,
+                                                      mURLParsers[i]);
+            NS_ADDREF(parser);
+            mURLParsers.ReplaceElementAt(parser, i);
+            // release any old entry, if any, AFTER adding new entry in
+            // case they were the same (paranoia)
+            NS_IF_RELEASE(old_parser);
             return NS_OK;
         }
     }
@@ -364,7 +383,11 @@ nsIOService::GetCachedURLParser(const char *scheme, nsIURLParser **result)
     for (unsigned int i=0; i<NS_N(gScheme); i++)
     {
         if (!nsCRT::strcasecmp(scheme, gScheme[i]))
-            return mURLParsers.GetElementAt(i, (nsISupports **)result);
+        {
+            *result = NS_STATIC_CAST(nsIURLParser*, mURLParsers[i]);
+            NS_IF_ADDREF(*result);
+            return *result ? NS_OK : NS_ERROR_FAILURE;
+        }
     }
     return NS_ERROR_FAILURE;
 }
@@ -462,8 +485,12 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
             rv = catmgr->GetCategoryEntry(NS_IURLPARSER_KEY,(const char *)entryString, getter_Copies(contractID));
             if (NS_FAILED(rv)) break;
 
-            CacheURLParser(scheme, *_retval);
-            return nsServiceManager::GetService(contractID, NS_GET_IID(nsIURLParser), (nsISupports **)_retval);
+            rv = nsServiceManager::GetService(contractID, NS_GET_IID(nsIURLParser), (nsISupports **)_retval);
+            if (NS_FAILED(rv))
+                return rv;
+            if (*_retval)
+                CacheURLParser(scheme, *_retval);
+            return *_retval ? NS_OK : NS_ERROR_FAILURE
         }
     }
 
