@@ -131,6 +131,9 @@ class String : public TxObject
     virtual PRInt32 lastIndexOf(const String& data) const;
     virtual PRInt32 lastIndexOf(const String& data, PRInt32 offset) const;
 
+    //Checks whether the string is empty
+    virtual MBool isEmpty() const;
+
     virtual PRInt32 length() const;               //Returns the length
 
     /**

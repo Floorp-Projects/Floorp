@@ -95,7 +95,8 @@ ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
  * context Node, and ContextState.
 **/
 double UnionExpr::getDefaultPriority(Node* node, Node* context,
-				     ContextState* cs) {
+                                     ContextState* cs)
+{
     //-- find highest priority
     double priority = Double::NEGATIVE_INFINITY;
     ListIterator iter(&expressions);

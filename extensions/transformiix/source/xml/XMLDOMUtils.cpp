@@ -187,7 +187,7 @@ MBool XMLDOMUtils::getNameSpace
     (const String& prefix, Element* element, String& dest)
 {
     String attName("xmlns");
-    if (prefix.length() > 0) {
+    if (!prefix.isEmpty()) {
         attName.append(':');
         attName.append(prefix);
     }

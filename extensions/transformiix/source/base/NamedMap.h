@@ -97,24 +97,6 @@ public:
     void clear(MBool doObjectDeletion);
 
     /**
-     * Returns true if the specified Node is contained in the set.
-     * if the specfied Node is null, then if the NodeSet contains a null
-     * value, true will be returned.
-     * @param node the element to search the NodeSet for
-     * @return true if specified Node is contained in the NodeSet
-    **/
-    //MBool contains(Node* node);
-
-    /**
-     * Compares the specified object with this NamedMap for equality.
-     * Returns true if and only if the specified Object is a NamedMap
-     * that hashes to the same value as this NamedMap
-     * @return true if and only if the specified Object is a NamedMap
-     * that hashes to the same value as this NamedMap
-    **/
-    MBool equals(NamedMap* namedMap);
-
-    /**
      * Returns true if there are no Nodes in the NodeSet.
      * @return true if there are no Nodes in the NodeSet.
     **/

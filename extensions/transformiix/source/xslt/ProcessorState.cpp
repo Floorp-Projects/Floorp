@@ -129,7 +129,7 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
         return;
 
     const String& name = aAttributeSet->getAttribute(NAME_ATTR);
-    if (name.length() == 0) {
+    if (name.isEmpty()) {
         String err("missing required name attribute for xsl:attribute-set");
         recieveError(err);
         return;
@@ -176,7 +176,7 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
     NS_ASSERTION(aXslTemplate, "missing template");
     
     const String& name = aXslTemplate->getAttribute(NAME_ATTR);
-    if (name.length() > 0) {
+    if (!name.isEmpty()) {
         // check for duplicates
         Element* tmp = (Element*)aImportFrame->mNamedTemplates.get(name);
         if (tmp) {
@@ -189,7 +189,7 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
     }
 
     const String& match = aXslTemplate->getAttribute(MATCH_ATTR);
-    if (match.length() > 0) {
+    if (!match.isEmpty()) {
         // get the txList for the right mode
         const String& mode = aXslTemplate->getAttribute(MODE_ATTR);
         txList* templates =
@@ -374,7 +374,7 @@ Node* ProcessorState::retrieveDocument(const String& uri, const String& baseUri)
     }
 
     // return element with supplied id if supplied
-    if (frag.length())
+    if (!frag.isEmpty())
         return xmlDoc->getElementById(frag);
 
     return xmlDoc;
@@ -426,7 +426,7 @@ Element* ProcessorState::findTemplate(Node* aNode,
                     templ->mTemplate->getAttribute(PRIORITY_ATTR);
 
                 double tmpPriority;
-                if (priorityAttr.length() > 0) {
+                if (!priorityAttr.isEmpty()) {
                     Double dbl(priorityAttr);
                     tmpPriority = dbl.doubleValue();
                 }
@@ -495,7 +495,7 @@ Expr* ProcessorState::getExpr(const String& pattern) {
     if ( !expr ) {
         expr = exprParser.createExpr(pattern);
         if ( !expr ) {
-            String err = "invalid expression: ";
+            String err = "Error in parsing XPath expression: ";
             err.append(pattern);
             expr = new ErrorFunctionCall(err);
         }
@@ -592,7 +592,7 @@ Document* ProcessorState::getResultDocument() {
 void ProcessorState::getResultNameSpaceURI(const String& name, String& nameSpaceURI) {
     String prefix;
     XMLUtils::getNameSpace(name, prefix);
-    if (prefix.length() == 0) {
+    if (prefix.isEmpty()) {
         nameSpaceURI.clear();
         nameSpaceURI.append(*(String*)defaultNameSpaceURIStack.peek());
     }
@@ -815,57 +815,57 @@ MBool ProcessorState::addDecimalFormat(Element* element)
     attValue = element->getAttribute(DECIMAL_SEPARATOR_ATTR);
     if (attValue.length() == 1)
         format->mDecimalSeparator = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(GROUPING_SEPARATOR_ATTR);
     if (attValue.length() == 1)
         format->mGroupingSeparator = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(INFINITY_ATTR);
-    if (attValue.length() > 0)
+    if (!attValue.isEmpty())
         format->mInfinity=attValue;
 
     attValue = element->getAttribute(MINUS_SIGN_ATTR);
     if (attValue.length() == 1)
         format->mMinusSign = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(NAN_ATTR);
-    if (attValue.length() > 0)
+    if (!attValue.isEmpty())
         format->mNaN=attValue;
         
     attValue = element->getAttribute(PERCENT_ATTR);
     if (attValue.length() == 1)
         format->mPercent = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(PER_MILLE_ATTR);
     if (attValue.length() == 1)
         format->mPerMille = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(ZERO_DIGIT_ATTR);
     if (attValue.length() == 1)
         format->mZeroDigit = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(DIGIT_ATTR);
     if (attValue.length() == 1)
         format->mDigit = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     attValue = element->getAttribute(PATTERN_SEPARATOR_ATTR);
     if (attValue.length() == 1)
         format->mPatternSeparator = attValue.charAt(0);
-    else if (attValue.length() > 1)
+    else if (!attValue.isEmpty())
         success = MB_FALSE;
 
     if (!success) {
@@ -878,7 +878,7 @@ MBool ProcessorState::addDecimalFormat(Element* element)
     
     txDecimalFormat* existing = NULL;
 
-    if (defaultDecimalFormatSet || formatName.length() > 0) {
+    if (defaultDecimalFormatSet || !formatName.isEmpty()) {
         existing = (txDecimalFormat*)decimalFormats.get(formatName);
     }
     else {
@@ -1205,7 +1205,7 @@ void ProcessorState::initialize() {
 	                }
 	            }
 	            else if ( attName.isEqual(RESULT_NS_ATTR) ) {
-	                if (attValue.length() > 0) {
+	                if (!attValue.isEmpty()) {
 	                    if ( attValue.indexOf(HTML_NS) == 0 ) {
 	                        setOutputMethod("html");
 	                    }
@@ -1213,7 +1213,7 @@ void ProcessorState::initialize() {
 	                }
 	            }
 	            else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
-	                if ( attValue.length() > 0 ) {
+	                if (!attValue.isEmpty()) {
 	                    format.setIndent(attValue.isEqual(YES_VALUE));
 	                }
 	            }

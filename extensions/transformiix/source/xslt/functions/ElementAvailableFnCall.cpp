@@ -75,7 +75,7 @@ ExprResult* ElementAvailableFunctionCall::evaluate(Node* context, ContextState* 
             if (XMLUtils::isValidQName(property)) {
                 String prefix, propertyNsURI;
                 XMLUtils::getNameSpace(property, prefix);
-                if (prefix.length() > 0) {
+                if (!prefix.isEmpty()) {
                     cs->getNameSpaceURIFromPrefix(property, propertyNsURI);
                 }
                 if (propertyNsURI.isEqual(XSLT_NS)) {

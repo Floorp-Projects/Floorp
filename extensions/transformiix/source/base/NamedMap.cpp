@@ -144,18 +144,6 @@ void NamedMap::dumpMap() {
 } //-- dumpMap
 
 /**
- * Compares the specified object with this NamedMap for equality.
- * Returns true if and only if the specified Object is a NamedMap
- * that hashes to the same value as this NamedMap
- * @return true if and only if the specified Object is a NamedMap
- * that hashes to the same value as this NamedMap
-**/
-MBool NamedMap::equals(NamedMap* namedMap) {
-    //-- currently does nothing
-    return MB_FALSE;
-} //-- equals
-
-/**
  *  Returns the object reference in this Map associated with the given name
  * @return the object reference in this Map associated with the given name
 **/

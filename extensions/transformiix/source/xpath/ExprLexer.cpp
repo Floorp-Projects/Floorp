@@ -233,13 +233,14 @@ MBool ExprLexer::nextIsOperatorToken(Token* token)
 **/
 void ExprLexer::parse(const String& pattern)
 {
+  if (pattern.isEmpty())
+    return;
+
   String tokenBuffer;
   PRInt32 iter = 0, start;
   PRInt32 size = pattern.length();
   short defType;
   UNICODE_CHAR ch;
-  if (size==0)
-    return;
 
   //-- initialize previous token, this will automatically get
   //-- deleted when it goes out of scope

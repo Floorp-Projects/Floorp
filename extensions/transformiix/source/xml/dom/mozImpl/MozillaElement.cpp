@@ -71,11 +71,10 @@ const String& Element::getTagName()
  */
 const String& Element::getAttribute(const String& aName)
 {
-  Node* tempNode = getAttributeNode(aName);
+    Node* tempNode = getAttributeNode(aName);
 
-  if (tempNode)
-    return tempNode->getNodeValue();
-  else
+    if (tempNode)
+        return tempNode->getNodeValue();
     return NULL_STRING;
 }
 
@@ -156,10 +155,9 @@ Attr* Element::getAttributeNode(const String& aName)
     nsCOMPtr<nsIDOMAttr> attr;
 
     if (NS_SUCCEEDED(nsElement->GetAttributeNode(aName.getConstNSString(),
-            getter_AddRefs(attr))))
+                                                 getter_AddRefs(attr))) && attr)
         return (Attr*)ownerDocument->createWrapper(attr);
-    else
-        return NULL;
+    return NULL;
 }
 
 /**
@@ -179,8 +177,7 @@ Attr* Element::setAttributeNode(Attr* aNewAttr)
     if (NS_SUCCEEDED(nsElement->SetAttributeNode(newAttr,
             getter_AddRefs(returnAttr))))
         return (Attr*)ownerDocument->createWrapper(returnAttr);
-    else
-        return NULL;
+    return NULL;
 }
 
 /**
@@ -207,8 +204,7 @@ Attr* Element::removeAttributeNode(Attr* aOldAttr)
             attrWrapper =  new Attr(removedAttr, ownerDocument);
         return attrWrapper;
     }
-    else
-        return NULL;
+    return NULL;
 }
 
 /**
@@ -227,8 +223,7 @@ NodeList* Element::getElementsByTagName(const String& aName)
     if (NS_SUCCEEDED(nsElement->GetElementsByTagName(aName.getConstNSString(),
             getter_AddRefs(list))))
         return ownerDocument->createNodeList(list);
-    else
-        return NULL;
+    return NULL;
 }
 
 /**

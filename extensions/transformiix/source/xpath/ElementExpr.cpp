@@ -48,7 +48,7 @@ ElementExpr::ElementExpr(String& name)
 
     //-- set flags
     isNameWild = this->name.isEqual(WILD_CARD);
-    isNamespaceWild = (isNameWild && (prefix.length() == 0));
+    isNamespaceWild = (isNameWild && prefix.isEmpty());
 } //-- ElementExpr
 
   //------------------/
@@ -112,7 +112,7 @@ MBool ElementExpr::matches(Node* node, Node* context, ContextState* cs) {
         //-- compare namespaces
         String nsURI;
         // use context to get namespace for testing against
-        if (prefix.length())
+        if (!prefix.isEmpty())
             cs->getNameSpaceURIFromPrefix(prefix, nsURI);
 
         String nsURI2;

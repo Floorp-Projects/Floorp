@@ -34,10 +34,10 @@ void CommandLineUtils::getOptions
             arg.clear();
             arg.append(argv[i]);
 
-            if ((arg.length()>0) && (arg.charAt(0) == '-')) {
+            if (!arg.isEmpty() && (arg.charAt(0) == '-')) {
 
                 // clean up previous flag
-                if (flag.length()>0) {
+                if (!flag.isEmpty()) {
                     options.put(flag, new String(arg));
                     flag.clear();
                 }
@@ -68,11 +68,13 @@ void CommandLineUtils::getOptions
             }// if flag char '-'
             else {
                 // Store both flag key and number key
-                if (flag.length() > 0) options.put(flag, new String(arg));
+                if (!flag.isEmpty())
+                    options.put(flag, new String(arg));
                 flag.clear();
             }
 
         }// end for
-        if (flag.length()>0) options.put(flag, new String("no value"));
+        if (!flag.isEmpty())
+            options.put(flag, new String("no value"));
 } //-- getOptions
 
