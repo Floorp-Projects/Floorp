@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.26 $ $Date: 2002/07/02 15:11:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.27 $ $Date: 2002/08/09 18:48:31 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -397,7 +397,6 @@ find_objects
     PRUint32 arraySize, numHandles;
     void *epv = nssToken_GetCryptokiEPV(tok);
     nssCryptokiObject **objects;
-    NSSArena *arena;
     nssSession *session = (sessionOpt) ? sessionOpt : tok->defaultSession;
 
     /* the arena is only for the array of object handles */
@@ -444,9 +443,17 @@ find_objects
 	}
 	/* the array is filled, double it and continue */
 	arraySize *= 2;
-	objectHandles = nss_ZREALLOCARRAY(objectHandles, 
+	if (objectHandles == staticObjects) {
+	    objectHandles = nss_ZNEWARRAY(NULL,CK_OBJECT_HANDLE, arraySize);
+	    if (objectHandles) {
+		PORT_Memcpy(objectHandles, staticObjects, 
+			OBJECT_STACK_SIZE * sizeof(objectHandles[1]));
+	    }
+	} else {
+	    objectHandles = nss_ZREALLOCARRAY(objectHandles, 
 	                                  CK_OBJECT_HANDLE, 
 	                                  arraySize);
+	}
 	if (!objectHandles) {
 	    nssSession_ExitMonitor(session);
 	    goto loser;
@@ -1213,8 +1220,6 @@ nssToken_FindTrustForCertificate
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE tobj_template[5];
     CK_ULONG tobj_size;
-    PRUint8 sha1[20]; /* this is cheating... */
-    NSSItem sha1_result;
     nssSession *session = sessionOpt ? sessionOpt : token->defaultSession;
     nssCryptokiObject *object, **objects;
 
