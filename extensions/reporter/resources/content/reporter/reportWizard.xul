@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Reporter (r.m.o).
+   -
+   - The Initial Developer of the Original Code is
+   -      Robert Accettura <robert@accettura.com>.
+   -
+   - Portions created by the Initial Developer are Copyright (C) 2004
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://reporter/skin/reportWizard.css" type="text/css"?>
+
+<!DOCTYPE wizard SYSTEM "chrome://reporter/locale/reportWizard.dtd">
+
+<wizard id="reportWizard" title="&reportWizard.title;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://reporter/content/reportWizard.js"/>
+  <stringbundle id="strings" src="chrome://reporter/locale/reportWizard.properties"/>
+
+<!-- Privacy Notice -->
+  <wizardpage id="privacyNotice"
+              onpageshow="initPrivacyNotice()"
+              onpageadvanced="setPrivacyPref()"
+              label = "&privacyNotice.label;">
+    <description>&reportWizardPrivacy.description;</description>
+    <description id="mustagree">&reportWizardMustAgree.description;</description>
+    <vbox id="privacyFrame" flex="1">
+      <iframe id="privacyStatement" type="content" flex="1" src="" />
+    </vbox>
+    <vbox>
+      <checkbox id="dontShowPrivacyStatement" label="&dontShowPrivacyStatement.label;" oncommand="privacyPolicyCheckbox()" />
+    </vbox>
+  </wizardpage>
+
+<!-- Registration -->
+  <wizardpage id="registration"
+              onpageshow="initRegistration()"
+              label = "&registration.label;">
+    <description>&registration.description;</description>
+    <separator />
+    <description id="registrationProgressDescription"/>
+    <progressmeter id="registrationProgressIndicator" mode="undetermined" value="0%"/>
+    <separator />
+    <hbox>
+    <button
+      id="registerButton"
+      label="&registration.registerButton.label;"
+      default="true"
+      accesskey="&registration.registerButton.accesskey;"
+      oncommand="register()"/>
+    </hbox>
+  </wizardpage>
+
+<!-- Report Form -->
+  <wizardpage id="reportForm"
+              onpageshow="initForm()"
+              label="&reportForm.label;">
+    <description>&reportForm.description;</description>
+    <separator />
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row>
+          <label control="url" value="&reportForm.url.title;"/>
+          <textbox id="url" size="60" readonly="true" class="noborder"/>
+        </row>
+        <row>
+          <label control="problem_type" value="&reportForm.problem_type.title;" accesskey="T"/>
+          <!-- XXX: Perhaps this should eventually/maybe come from somewhere else?  Eh, not sure so lets just hardcode this for now. -->
+          <menulist label="problem_type" id="problem_type" oncommand="validateForm()">
+            <menupopup>
+              <!-- DO *NOT* Add/change/modify without consulting with r.m.o server first -->
+              <menuitem label="&reportForm.problem_type.chooseOne.title;" value="0_0"/>
+              <!--Crash -->
+              <menuitem label="&reportForm.problem_type.item1_1.title;" value="1_1"/>
+              <menuitem label="&reportForm.problem_type.item1_2.title;" value="1_2"/>
+              <!--Performance-->
+              <menuitem label="&reportForm.problem_type.item2_1.title;" value="2_1"/>
+              <!--Compatibility"-->
+              <menuitem label="&reportForm.problem_type.item3_1.title;" value="3_1"/>
+              <menuitem label="&reportForm.problem_type.item3_2.title;" value="3_2"/>
+              <menuitem label="&reportForm.problem_type.item3_3.title;" value="3_3"/>
+              <menuitem label="&reportForm.problem_type.item3_4.title;" value="3_4"/>
+              <menuitem label="&reportForm.problem_type.item3_5.title;" value="3_5"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row>
+          <label control="description" value="&reportForm.describe.title;"/>
+          <textbox id="description" value="" cols="40" rows="7" multiline="true" size="40" class="noborder"/>
+        </row>
+        <row>
+          <label control="email" value="&reportForm.email.title;"/>
+          <textbox id="email" size="60" class="noborder"/>
+        </row>
+        <row>
+          <spacer/>
+          <checkbox id="behind_login" label="&reportForm.behind_login.title;"/>
+        </row>
+      </rows>
+    </grid>
+  </wizardpage>
+
+<!-- Send Data -->
+  <wizardpage id="sendReport"
+              onpageshow="sendReport()"
+              label="&sendReport.label;">
+    <description>&sendReport.description;</description>
+    <separator />
+    <description id="sendReportProgressDescription"/>
+    <progressmeter id="sendReportProgressIndicator" mode="undetermined" value="0%"/>
+  </wizardpage>
+
+<!-- Finish -->
+  <wizardpage id="finish"
+              label="&finish.label;">
+    <textbox id="finishSummary" size="60" readonly="true"/>
+   <checkbox id="showDetail" label="&reportResults.showDetail.title;" oncommand="showdetail()"/>
+    <vbox id="finishExtendedFrame" flex="1">
+      <iframe id="finishExtendedSuccess" type="content" src="report.xhtml" flex="1"/>
+      <iframe id="finishExtendedFailed" type="content" src="error.xhtml" flex="1"/>
+    </vbox>
+  </wizardpage>
+
+</wizard>
