@@ -48,6 +48,7 @@ foreach $filename (@ARGV) {
 # remained the same.  This was confusing outofdate.pl
 #
     $classfilename =~ s/sun\/io\/extended.\//sun\/io\//;
+    $classfilename =~ s/\.\.\/\.\.\/sun-java\/classsrc\///;
     ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,
      $ctime,$blksize,$blocks) = stat($filename);
     ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$classmtime,
