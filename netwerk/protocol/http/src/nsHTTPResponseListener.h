@@ -29,6 +29,7 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsIInputStream.h"
 
 #ifndef NSPIPE2
 class nsIBuffer;
