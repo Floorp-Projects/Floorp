@@ -301,7 +301,7 @@ function AddPermission() {
   var nameToURI = name.value.replace(" ", "");    
   var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
   uri.spec = nameToURI;
-  permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.ALLOW_ACTION);
+  permissionmanager.add(uri, "popup", nsIPermissionManager.ALLOW_ACTION);
   loadPermissions();
 }
 
