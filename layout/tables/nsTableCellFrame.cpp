@@ -431,7 +431,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
                                 nsClipCombine_kIntersect, clipState);
   }
   else{
-    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
       const nsStylePadding* myPadding =
         (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Padding);
       nsMargin padding;
@@ -449,7 +449,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.PopState(clipState);
   }
   else { 
-    if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    if ((NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) || HasPctOverHeight()) {
       aRenderingContext.PopState(clipState);         
     }
   } 
@@ -806,8 +806,10 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
     DISPLAY_REFLOW_CHANGE();
   }
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid,
-                                   availSize);
+  else {
+    SetHasPctOverHeight(PR_FALSE);
+  }
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, firstKid, availSize);
 
   // If it was a style change targeted at us, then reflow the child using
   // the special reflow reason
@@ -846,6 +848,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (isStyleChanged) {
     Invalidate(aPresContext, mRect);
   }
+
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState, &kidSize, aStatus);
 #endif
@@ -986,13 +989,31 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
       aDesiredSize.maxElementSize->width = nsTableFrame::RoundToPixel(aDesiredSize.maxElementSize->width, p2t);
     }
   }
-  // remember my desired size for this reflow
-  SetDesiredSize(aDesiredSize);
 
   if (aReflowState.mFlags.mSpecialTableReflow) {
+    if (aDesiredSize.height > mRect.height) {
+      // set a bit and frame property indicating that the pct height contents exceeded 
+      // the height that they could honor in the pass 2 reflow
+      SetHasPctOverHeight(PR_TRUE);
+      SetPctOverHeightValue(aPresContext, aDesiredSize.height);
+    }
     aDesiredSize.height = mRect.height;
     SetNeedSpecialReflow(PR_FALSE);
   }
+  else if ((eReflowReason_Incremental == aReflowState.reason) && HasPctOverHeight()) {
+    nscoord overValue;
+    GetPctOverHeightValue(aPresContext, overValue);
+    // if the pct over height value hasn't changed, use the last height of the cell, otherwise ignore it
+    if (aDesiredSize.height == overValue) {
+      aDesiredSize.height = mRect.height;
+    }
+    else {
+      SetHasPctOverHeight(PR_FALSE);
+    }
+  }
+
+  // remember the desired size for this reflow
+  SetDesiredSize(aDesiredSize);
 
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
@@ -1322,6 +1343,16 @@ nsTableCellFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
+// Destructor function for the pct over height frame property
+static void
+DestroyCoordFunc(nsIPresContext* aPresContext,
+                 nsIFrame*       aFrame,
+                 nsIAtom*        aPropertyName,
+                 void*           aPropertyValue)
+{
+  delete (nscoord*)aPropertyValue;
+}
+
 // Destructor function for the collapse offset frame property
 static void
 DestroyPointFunc(nsIPresContext* aPresContext,
@@ -1332,10 +1363,11 @@ DestroyPointFunc(nsIPresContext* aPresContext,
   delete (nsPoint*)aPropertyValue;
 }
 
-static nsPoint*
-GetCollapseOffsetProperty(nsIPresContext* aPresContext,
-                          nsIFrame*       aFrame,
-                          PRBool          aCreateIfNecessary = PR_FALSE)
+static void*
+GetCellProperty(nsIPresContext*      aPresContext,
+                nsIFrame*            aFrame,
+                nsIAtom*             aPropertyName,
+                PRBool               aCreateIfNecessary = PR_FALSE)
 {
   nsCOMPtr<nsIPresShell>     presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
@@ -1347,20 +1379,27 @@ GetCollapseOffsetProperty(nsIPresContext* aPresContext,
     if (frameManager) {
       void* value;
   
-      frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::collapseOffsetProperty,
-                                     0, &value);
+      frameManager->GetFrameProperty(aFrame, aPropertyName, 0, &value);
       if (value) {
         return (nsPoint*)value;  // the property already exists
 
       } else if (aCreateIfNecessary) {
-        // The property isn't set yet, so allocate a new point, set the property,
-        // and return the newly allocated point
-        nsPoint*  offset = new nsPoint(0, 0);
-        if (!offset) return nsnull;
+        // The property isn't set yet, so allocate a new value, set the property,
+        // and return the newly allocated value
+        void* value;
+        NSFMPropertyDtorFunc dtorFunc;
+        if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
+          value = new nsPoint(0, 0);
+          dtorFunc = DestroyPointFunc;
+        }
+        else if (aPropertyName == nsLayoutAtoms::cellPctOverHeightProperty) {
+          value = new nscoord;
+          dtorFunc = DestroyCoordFunc;
+        }
+        if (!value) return nsnull;
 
-        frameManager->SetFrameProperty(aFrame, nsLayoutAtoms::collapseOffsetProperty,
-                                       offset, DestroyPointFunc);
-        return offset;
+        frameManager->SetFrameProperty(aFrame, aPropertyName, value, dtorFunc);
+        return value;
       }
     }
   }
@@ -1372,7 +1411,7 @@ void nsTableCellFrame::SetCollapseOffsetX(nsIPresContext* aPresContext,
                                           nscoord         aXOffset)
 {
   // Get the frame property (creating a point struct if necessary)
-  nsPoint*  offset = ::GetCollapseOffsetProperty(aPresContext, this, PR_TRUE);
+  nsPoint* offset = (nsPoint*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
 
   if (offset) {
     offset->x = aXOffset;
@@ -1383,7 +1422,7 @@ void nsTableCellFrame::SetCollapseOffsetY(nsIPresContext* aPresContext,
                                           nscoord         aYOffset)
 {
   // Get the property (creating a point struct if necessary)
-  nsPoint*  offset = ::GetCollapseOffsetProperty(aPresContext, this, PR_TRUE);
+  nsPoint* offset = (nsPoint*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty, PR_TRUE);
 
   if (offset) {
     offset->y = aYOffset;
@@ -1394,12 +1433,33 @@ void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
                                          nsPoint&        aOffset)
 {
   // See if the property is set
-  nsPoint*  offset = ::GetCollapseOffsetProperty(aPresContext, this);
+  nsPoint* offset = (nsPoint*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::collapseOffsetProperty);
 
   if (offset) {
     aOffset = *offset;
   } else {
     aOffset.MoveTo(0, 0);
+  }
+}
+
+void nsTableCellFrame::SetPctOverHeightValue(nsIPresContext* aPresContext,
+                                             nscoord         aValue)
+{
+  // Get the property 
+  nscoord* value = (nscoord*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty, PR_TRUE);
+  if (value) {
+    *value = aValue;
+  }
+}
+
+void nsTableCellFrame::GetPctOverHeightValue(nsIPresContext* aPresContext,
+                                             nscoord&        aValue)
+{
+  aValue = 0;
+  // See if the property is set
+  nscoord* value = (nscoord*)::GetCellProperty(aPresContext, this, nsLayoutAtoms::cellPctOverHeightProperty);
+  if (value) {
+    aValue = *value;
   }
 }
 

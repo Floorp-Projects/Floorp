@@ -51,6 +51,7 @@ class nsHTMLValue;
  */
 #define NS_TABLE_CELL_CONTENT_EMPTY       0x80000000
 #define NS_TABLE_CELL_NEED_SPECIAL_REFLOW 0x40000000
+#define NS_TABLE_CELL_PCT_OVER_HEIGHT     0x20000000
 
 /**
  * nsTableCellFrame
@@ -243,10 +244,16 @@ public:
   PRBool NeedSpecialReflow();
   void SetNeedSpecialReflow(PRBool aContentEmpty);
 
+  PRBool HasPctOverHeight();
+  void SetHasPctOverHeight(PRBool aValue);
+
   // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
   void    SetCollapseOffsetX(nsIPresContext* aPresContext, nscoord aXOffset);
   void    SetCollapseOffsetY(nsIPresContext* aPresContext, nscoord aYOffset);
   void    GetCollapseOffset(nsIPresContext* aPresContext, nsPoint& aOffset);
+
+  void    SetPctOverHeightValue(nsIPresContext* aPresContext, nscoord aValue);
+  void    GetPctOverHeightValue(nsIPresContext* aPresContext, nscoord& aValue);
 
   nsTableCellFrame* GetNextCell() const;
 
@@ -365,6 +372,22 @@ inline void nsTableCellFrame::SetNeedSpecialReflow(PRBool aValue)
     mState &= ~NS_TABLE_CELL_NEED_SPECIAL_REFLOW;
   }
 }
+
+inline PRBool nsTableCellFrame::HasPctOverHeight()
+{
+  return (mState & NS_TABLE_CELL_PCT_OVER_HEIGHT) ==
+         NS_TABLE_CELL_PCT_OVER_HEIGHT;
+}
+
+inline void nsTableCellFrame::SetHasPctOverHeight(PRBool aValue)
+{
+  if (aValue) {
+    mState |= NS_TABLE_CELL_PCT_OVER_HEIGHT;
+  } else {
+    mState &= ~NS_TABLE_CELL_PCT_OVER_HEIGHT;
+  }
+}
+
 #endif
 
 
