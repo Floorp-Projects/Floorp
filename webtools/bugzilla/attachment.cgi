@@ -436,12 +436,12 @@ sub view
     my ($contenttype, $filename, $thedata) = FetchSQLData();
    
     # Bug 111522: allow overriding content-type manually in the posted $::FORM.
-    if ($::FORM{'ctype'})
+    if ($::FORM{'content_type'})
     {
         $::FORM{'contenttypemethod'} = 'manual';
-        $::FORM{'contenttypeentry'} = $::FORM{'ctype'};
+        $::FORM{'contenttypeentry'} = $::FORM{'content_type'};
         validateContentType();
-        $contenttype = $::FORM{'ctype'};
+        $contenttype = $::FORM{'content_type'};
     }
 
     # Return the appropriate HTTP response headers.
