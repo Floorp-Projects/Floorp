@@ -215,7 +215,12 @@ fi
 
 if test "$GNU_CXX"; then
     # Turn on GNU specific features
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth"
+
+	dnl The following warning breaks Qt
+	if ! test "$QTDIR"; then
+    	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wshadow"
+	fi
 
     _DEFINES_CXXFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
@@ -524,8 +529,6 @@ if test -z "$MKSHLIB_FORCE_ALL"; then
 fi
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
-
-
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
 
@@ -571,13 +574,14 @@ AC_ARG_ENABLE(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
   [if test "$enableval" = "motif" \
         -o "$enableval" = "gtk" \
+        -o "$enableval" = "qt" \
         -o "$enableval" = "xlib" \
         -o "$useRhapsody" ; then
      dnl nglayout only supports building with one toolkit,
      dnl so ignore everything after the first comma (",").
      MOZ_WIDGET_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
    else
-     AC_MSG_ERROR(Toolkit must be Xlib, GTK or Motif.)
+     AC_MSG_ERROR(Toolkit must be Xlib, GTK, Qt, or Motif.)
    fi], 
   [if test "$useRhapsody" ; then
      MOZ_WIDGET_TOOLKIT="rhapsody"
@@ -710,6 +714,35 @@ if echo ":$MOZ_WIDGET_TOOLKIT" | grep "gtk" >/dev/null; then
     TK_CFLAGS=$GTK_CFLAGS
 fi
 
+if echo ":$MOZ_WIDGET_TOOLKIT" | grep "qt" >/dev/null; then
+    QT_CFLAGS="-I${QTDIR}/include"
+    QT_LIBS="-L/usr/X11R6/lib -lqt -lXext -lX11"
+dnl    AM_PATH_QT($QT_VERSION,,
+dnl      AC_MSG_ERROR(Test for QT failed.))
+
+    AC_ARG_WITH(static-qt,
+    [  --with-static-qt       link qt statically if possible],
+	sysstaticqt=$withval)
+
+    if test "$sysstaticqt" != "yes"; then
+       TK_LIBS=$QT_LIBS
+    else
+       changequote(,)
+
+       QT_LIBS_LOC=`echo $QT_LIBS | sed 's/\(.*\)\(-lqt.*\)/\1/'`
+
+       QT_STATIC_LOC=`echo $QT_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
+       QT_STATIC=`echo $QT_LIBS | sed 's/^.*-l\(qt[^ ]*\) .*/\1/'`
+
+       changequote([,])
+
+       TK_LIBS="$QT_STATIC_LOC/lib${QT_STATIC}.a"
+       TK_LIBS="$TK_LIBS $QT_STATIC_LOC/lib${QT_STATIC}.a"
+       TK_LIBS="$TK_LIBS $QT_LIBS_LOC"
+    fi
+    TK_CFLAGS=$QT_CFLAGS
+fi 
+
 # tk=xlib build.
 if echo ":$MOZ_WIDGET_TOOLKIT" | grep "xlib" >/dev/null; then
     TK_CFLAGS='$(XCFLAGS)'
@@ -787,7 +820,7 @@ dnl ========================================================
 if test "$no_x" != "yes"
 then
 	AC_ARG_WITH(gtk,
-	[  --with-gtk         Enable gtk support ],
+	[  --with-gtk         Enable GTK+ support ],
 	[
 		if test "$withval" = "yes"
 		then
@@ -855,7 +888,7 @@ dnl ========================================================
 if test "$no_x" != "yes"
 then
 	AC_ARG_WITH(motif,
-	[  --with-motif         Enable motif support ],
+	[  --with-motif         Enable Motif support ],
 	[
 		if test "$withval" = "yes"
 		then
@@ -972,7 +1005,7 @@ dnl ========================================================
 dnl =													   =
 dnl = --with-xlib										   =
 dnl = 													   =
-dnl = Xlib support hackery                                =
+dnl = Xlib support hackery                                 =
 dnl = 													   =
 dnl ========================================================
 if test "$no_x" != "yes"
@@ -1004,6 +1037,67 @@ dnl = End Xlib support hackery                             =
 dnl = 													   =
 dnl ========================================================
 
+
+dnl ========================================================
+dnl =													   =
+dnl = --with-qt  										   =
+dnl = 													   =
+dnl = Qt support hackery                                   =
+dnl = 													   =
+dnl ========================================================
+if test "$no_x" != "yes"
+then
+	AC_ARG_WITH(qt,
+	[  --with-qt            Enable Qt support ],
+	[
+		if test "$withval" = "yes"
+		then
+			MOZ_ENABLE_QT=1
+    	else
+			MOZ_ENABLE_QT=
+    	fi
+	])
+fi
+
+if test "$MOZ_ENABLE_QT"
+then
+	AC_MSG_CHECKING(for Qt insanity)
+
+
+    QT_CFLAGS="-I${QTDIR}/include"
+    QT_LIBS="-L/usr/X11R6/lib -lqt -lXext -lX11"
+dnl    AM_PATH_QT($QT_VERSION,,
+dnl      AC_MSG_ERROR(Test for QT failed.))
+
+    AC_ARG_WITH(static-qt,
+    [  --with-static-qt       link qt statically if possible],
+	sysstaticqt=$withval)
+
+    if test "$sysstaticqt" != "yes"; then
+       MOZ_QT_LDFLAGS=$QT_LIBS
+    else
+       changequote(,)
+
+       QT_LIBS_LOC=`echo $QT_LIBS | sed 's/\(.*\)\(-lqt.*\)/\1/'`
+
+       QT_STATIC_LOC=`echo $QT_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
+       QT_STATIC=`echo $QT_LIBS | sed 's/^.*-l\(qt[^ ]*\) .*/\1/'`
+
+       changequote([,])
+
+       MOZ_QT_LDFLAGS="$QT_STATIC_LOC/lib${QT_STATIC}.a"
+       MOZ_QT_LDFLAGS="$MOZ_QT_LDFLAGS $QT_STATIC_LOC/lib${QT_STATIC}.a"
+       MOZ_QT_LDFLAGS="$MOZ_QT_LDFLAGS $QT_LIBS_LOC"
+    fi
+
+    MOZ_QT_CFLAGS=$QT_CFLAGS
+fi
+dnl ========================================================
+dnl = 													   =
+dnl = End Qt support hackery                               =
+dnl = 													   =
+dnl ========================================================
+
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
@@ -1014,12 +1108,15 @@ AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_MOTIF)
 AC_SUBST(MOZ_ENABLE_XLIB)
+AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)
 AC_SUBST(MOZ_MOTIF_CFLAGS)
 AC_SUBST(MOZ_MOTIF_LDFLAGS)
 AC_SUBST(MOZ_XLIB_CFLAGS)
 AC_SUBST(MOZ_XLIB_LDFLAGS)
+AC_SUBST(MOZ_QT_CFLAGS)
+AC_SUBST(MOZ_QT_LDFLAGS)
 AC_SUBST(MOZ_SINGLE_TOOLKIT)
 
 XCFLAGS="$X_CFLAGS"
