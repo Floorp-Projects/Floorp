@@ -776,7 +776,25 @@ date_getYear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return js_NewNumberValue(cx, result, rval);
 
     result = YearFromTime(LocalTime(result));
-    result -= 1900;
+
+    /*
+     * During the great date rewrite of 1.3, we tried to track the evolving ECMA
+     * standard, which then had a definition of getYear which always subtracted
+     * 1900.  Which we implemented, not realizing that it was incompatible with
+     * the old behavior...  now, rather than thrash the behavior yet again,
+     * we've decided to leave it with the - 1900 behavior and point people to
+     * the getFullYear method.  But we try to protect existing scripts that
+     * have specified a version...
+     */
+    if (cx->version == JSVERSION_1_0 ||
+        cx->version == JSVERSION_1_1 ||
+        cx->version == JSVERSION_1_2)
+    {
+        if (result >= 1900 && result < 2000)
+            result -= 1900;
+    } else {
+        result -= 1900;
+    }
     return js_NewNumberValue(cx, result, rval);
 }
 
