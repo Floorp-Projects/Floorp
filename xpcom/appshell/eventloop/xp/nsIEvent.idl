@@ -1,0 +1,11 @@
+#include "nsISupports.idl"
+
+/**
+ * The nsIEvent serves as a base interface for the platform specific 
+ * interfaces that define what an event looks like.    
+ */
+
+[scriptable, uuid(2EFB5004-4508-11d3-AEDA-00A024FFC08C)]
+interface nsIEvent : nsISupports
+{
+};
