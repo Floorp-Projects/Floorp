@@ -85,6 +85,13 @@ ifeq ($(OS_SUB),878)
 OS_RELEASE	:= V4.0D
 endif
 endif
+ifneq (,$(findstring OpenVMS,$(OS_ARCH)))
+OS_ARCH		:= OpenVMS
+OS_RELEASE	:= $(shell uname -v)
+CPU_ARCH	:= $(shell uname -Wh)
+CPU_ARCH_TAG	:= _$(CPU_ARCH)
+PERL		:= perl
+endif
 ifeq ($(OS_ARCH),QNX)
 OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
 endif
@@ -247,6 +254,11 @@ TAR		= tar
 EMACS		= xemacs
 WHOAMI		= /usr/bin/whoami
 endif
+endif
+
+# Temporary?
+ifeq ($(OS_ARCH),OpenVMS)
+include $(topsrcdir)/config/$(OS_ARCH).mk
 endif
 
 ifdef USE_AUTOCONF
