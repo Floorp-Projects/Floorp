@@ -528,7 +528,7 @@ nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
                 if (ver == HTTP_ONE_ZERO)
                 {
                     if (NS_SUCCEEDED (rv) && connectionHeader && !PL_strcmp (connectionHeader, "keep-alive"))
-                        capabilities = (usingProxy ? nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE : nsIHTTPProtocolHandler::ALLOW_KEEPALIVE);
+                        capabilities = (usingProxy ? NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_PROXY_KEEPALIVE) : NS_STATIC_CAST (unsigned long, nsIHTTPProtocolHandler::ALLOW_KEEPALIVE));
                 }
             }
         }
