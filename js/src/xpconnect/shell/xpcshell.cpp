@@ -411,7 +411,7 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
         char *linep;
         if ((linep = readline(prompt)) == NULL)
             return JS_FALSE;
-        if (strlen(linep) > 0)
+        if (*linep)
             add_history(linep);
         strcpy(bufp, linep);
         JS_free(cx, linep);

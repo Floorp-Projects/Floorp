@@ -228,7 +228,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     // get name and description of this plugin
     version_info vinfo;
     if (appinfo.GetVersionInfo(&vinfo, B_APP_VERSION_KIND) == B_OK
-        && strlen(vinfo.short_info) > 0) {
+        && *vinfo.short_info) {
         // XXX convert UTF-8 2byte chars to 1 byte chars, to avoid string corruption
         info.fName = ToNewCString(NS_ConvertUTF8toUCS2(vinfo.short_info));
         info.fDescription = ToNewCString(NS_ConvertUTF8toUCS2(vinfo.long_info));

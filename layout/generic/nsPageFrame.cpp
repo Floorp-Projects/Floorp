@@ -334,7 +334,7 @@ SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUS
     uKeyStr = ToNewUnicode(newKey);
   }
 
-  if (nsCRT::strlen(aUStr) == 0) {
+  if (!aUStr || !*aUStr) {
     aStr.SetLength(0);
   } else {
     aStr.ReplaceSubstring(uKeyStr, aUStr);
@@ -346,7 +346,7 @@ SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUS
   }
 #else
 
-  if (nsCRT::strlen(aUStr) == 0) {
+  if (!aUStr || !*aUStr) {
     aStr.SetLength(0);
   } else {
     aStr.ReplaceSubstring(aUKey, aUStr);

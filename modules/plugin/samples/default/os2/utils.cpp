@@ -100,7 +100,7 @@ static int getWindowStringLength(HWND hWnd, PSZ lpsz)
 void SetDlgItemTextWrapped(HWND hWnd, int iID, PSZ szText)
 {
   HWND hWndStatic = WinWindowFromID(hWnd, iID);
-  if((szText == NULL) || (strlen(szText) == 0))
+  if(!szText || !*szText)
   {
     WinSetDlgItemText(hWnd, iID, "");
     return;

@@ -630,7 +630,7 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, 
     else if (strncmp(URL, kFTP, strlen(kFTP)) == 0)
     {
         rv = ParseFTPURL(URL, &ftpHost, &ftpPath);
-        if ((0 == strlen(ftpHost)) || (0 == strlen(ftpPath)))
+        if (!*ftpHost || !*ftpPath)
         {
             rv = nsHTTPConn::E_MALFORMED_URL;
         }

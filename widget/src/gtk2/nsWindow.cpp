@@ -3501,7 +3501,7 @@ IM_preedit_changed_cb(GtkIMContext *context,
     LOGIM(("preedit string is: %s   length is: %d\n",
            preedit_string, strlen(preedit_string)));
 
-    if ((preedit_string == NULL) || (0 == strlen(preedit_string))) {
+    if (!preedit_string || !*preedit_string) {
         window->IMEComposeStart();
         window->IMEComposeText(NULL, 0, NULL, NULL);
         return;

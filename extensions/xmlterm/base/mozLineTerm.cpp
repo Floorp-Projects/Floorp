@@ -94,7 +94,7 @@ mozLineTerm::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     mLoggingInitialized = PR_TRUE;
 
     char* logStr = (char*) PR_GetEnv("LTERM_LOG");
-    if (logStr && (strlen(logStr) > 0)) {
+    if (logStr && *logStr) {
       // Enable LineTerm logging
       mozLineTerm::mLoggingEnabled = PR_TRUE;
     }
@@ -308,7 +308,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   if (NS_FAILED(result))
     return NS_ERROR_FAILURE;
 
-  if (strlen(securePrincipal) == 0) {
+  if (!*securePrincipal) {
     nsMemory::Free(securePrincipal);
     XMLT_ERROR("mozLineTerm::OpenAux: Error - "
                "Failed to create LineTerm for insecure document principal\n");

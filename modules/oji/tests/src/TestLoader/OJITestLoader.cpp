@@ -149,7 +149,7 @@ char** OJITestLoader::loadTestList() {
 	pos = content;
 	while((pos1 = PL_strchr(pos, '\n'))) {
 		*pos1 = 0;
-		if(PL_strlen(pos) > 0 && *pos != '#') {
+		if(*pos && *pos != '#') {
 		  //printf("First char: %c\n", *pos);
 			testList[count++] = PL_strdup(pos);
 		}
@@ -162,7 +162,7 @@ char** OJITestLoader::loadTestList() {
 		}
 	}
 	//If there is no \n after last line
-	if (PL_strlen(pos) > 0 && *pos != '#') {
+	if (*pos && *pos != '#') {
 		testList[count++] = PL_strdup(pos);
 		testList[count] = 0;
 	}

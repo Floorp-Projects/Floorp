@@ -1234,8 +1234,8 @@ nsPrefMigration::CreateNewUser5Tree(nsIFileSpec * oldProfilePath, nsIFileSpec * 
   nsresult rv;
   PRBool exists;
   
-  NS_ASSERTION((PL_strlen(PREF_FILE_NAME_IN_4x) > 0), "don't know how to migrate your platform");
-  if (PL_strlen(PREF_FILE_NAME_IN_4x) == 0) {
+  NS_ASSERTION(*PREF_FILE_NAME_IN_4x, "don't know how to migrate your platform");
+  if (!*PREF_FILE_NAME_IN_4x) {
     return NS_ERROR_UNEXPECTED;
   }
       
@@ -1320,7 +1320,7 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
   
   // the default on the mac was "".  doing GetFileXPref on that would return
   // the current working directory, like viewer_debug.  yikes!
-  if (!(const char*)oldPrefPathStr || (PL_strlen(oldPrefPathStr) == 0)) {
+  if (oldPrefPathStr.IsEmpty()) {
   	rv = NS_ERROR_FAILURE;
   }
   if (NS_FAILED(rv)) return rv;
@@ -2322,7 +2322,7 @@ ConvertPrefToUTF8(const char *prefname, nsIPref *prefs, nsAutoString &charSet)
     rv = prefs->CopyCharPref(prefname, getter_Copies(prefval));
     if (NS_FAILED(rv)) return rv;
 
-    if (!((const char *)prefval) || (PL_strlen((const char *)prefval) == 0)) {
+    if (prefval.IsEmpty()) {
         // no need to convert ""
         return NS_OK;
     }

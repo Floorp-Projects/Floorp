@@ -598,7 +598,7 @@ nsIMEStatus::repaint_filter(Display *aDisplay, Window aWindow,
   if (thiswindow && thiswindow->mAttachedWindow) {
     nsIMEGtkIC *xic = thiswindow->mAttachedWindow->IMEGetInputContext(PR_FALSE);
     if (xic && xic->mStatusText) {
-      if(nsCRT::strlen(xic->mStatusText) == 0) {
+      if(!*xic->mStatusText) {
         thiswindow->hide();
       } else {
         thiswindow->setText(xic->mStatusText);

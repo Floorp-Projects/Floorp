@@ -1184,7 +1184,7 @@ FindKeyValue(const char *cfg, const char *inSectionName, const char *inKey, char
 			/* find next key   [sectionPtr moved past next key per iteration] */
             while(GetNextKeyVal(sectionPtr, key, outValue))
 			{
-				if (0<strlen(key) && strncmp(key, inKey, strlen(inKey)) == 0)
+				if (*key && strncmp(key, inKey, strlen(inKey)) == 0)
 				{
 					if(key) 
                         DisposePtr(key);

@@ -1302,7 +1302,7 @@ Boolean CBrowserShell::CanFindNext()
     
     nsXPIDLString searchStr;
     rv = finder->GetSearchString(getter_Copies(searchStr));
-    return (NS_SUCCEEDED(rv) && nsCRT::strlen(searchStr) != 0);
+    return (NS_SUCCEEDED(rv) && !searchStr.IsEmpty());
 }
 
 

@@ -325,10 +325,12 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   	
   char* valueInUTF8 = nsnull;
   Self->mPref->CopyCharPref(aName, &valueInUTF8);
-  if((nsnull == valueInUTF8) || (PL_strlen(valueInUTF8) == 0))
+  if(!valueInUTF8)
+    return;
+  if(!*valueInUTF8)
   {
-	  Recycle(valueInUTF8);
-  	return;
+    Recycle(valueInUTF8);
+    return;
   }
   PRUnichar valueInUCS2[FACESIZE]= { 0 };
   PRUnichar format[] = { '%', 's', 0 };
@@ -352,7 +354,8 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
 #ifdef DEBUG_ftang_font
   char* utf8 = ToNewUTF8String(*fontname);
   printf("font %d %d %s= %s\n",script , type, aName,utf8);
-  Recycle(utf8); 
+  if (utf8)
+    Recycle(utf8); 
 #endif
 }
 void nsUnicodeMappingUtil::InitFromPref()
@@ -388,27 +391,30 @@ void nsUnicodeMappingUtil::InitScriptFontMapping()
 
 			mPref->CopyCharPref (theNeededPreference,&valueInUTF8);
 
-			if ((nsnull == valueInUTF8) || (PL_strlen (valueInUTF8) == 0))
-				Recycle (valueInUTF8);
-			else
+			if (valueInUTF8)
 			{
-				PRUnichar	valueInUCS2[FACESIZE]= { 0 };
-				PRUnichar	format[] = { '%', 's', 0 };
-				PRUint32	n = nsTextFormatter::snprintf(valueInUCS2, FACESIZE, format, valueInUTF8);
-
-				Recycle (valueInUTF8);
-				if (n != 0)
+				if (!*valueInUTF8)
+					Recycle (valueInUTF8);
+				else
 				{
-					nsString	*fontname = new nsAutoString (valueInUCS2);
+					PRUnichar	valueInUCS2[FACESIZE]= { 0 };
+					PRUnichar	format[] = { '%', 's', 0 };
+					PRUint32	n = nsTextFormatter::snprintf(valueInUCS2, FACESIZE, format, valueInUTF8);
 
-					if (nsnull != fontname)
+					Recycle (valueInUTF8);
+					if (n != 0)
 					{
-						short	fontID = 0;
+						nsString	*fontname = new nsAutoString (valueInUCS2);
 
-						if (nsDeviceContextMac::GetMacFontNumber (*fontname,fontID))
-							mScriptFontMapping[script] = fontID;
+						if (nsnull != fontname)
+						{
+							short	fontID = 0;
 
-						delete fontname;
+							if (nsDeviceContextMac::GetMacFontNumber (*fontname,fontID))
+								mScriptFontMapping[script] = fontID;
+
+							delete fontname;
+						}
 					}
 				}
 			}
