@@ -586,7 +586,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       data.mResults = list1;
       mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
       data.mResults = list2;
-      mWeightedRules->EnumerateForwards(ContentEnumWrap, &data);
+      mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
       NS_ASSERTION(list1->Equals(list2), "lists not equal");
       NS_RELEASE(list1);
       NS_RELEASE(list2);
@@ -692,7 +692,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     data.mResults = list1;
     mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
     data.mResults = list2;
-    mWeightedRules->EnumerateForwards(PseudoEnumWrap, &data);
+    mWeightedRules->EnumerateBackwards(PseudoEnumWrap, &data);
     NS_ASSERTION(list1->Equals(list2), "lists not equal");
     NS_RELEASE(list1);
     NS_RELEASE(list2);
@@ -866,7 +866,7 @@ void CSSStyleSheetImpl::BuildHash(void)
 
   mRuleHash = new RuleHash();
   if ((nsnull != mRuleHash) && mWeightedRules.IsNotNull()) {
-    mWeightedRules->EnumerateForwards(BuildHashEnum, mRuleHash);
+    mWeightedRules->EnumerateBackwards(BuildHashEnum, mRuleHash);
   }
 }
 
