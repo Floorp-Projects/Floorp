@@ -5372,7 +5372,7 @@ NavigatorImpl::GetPlatform(nsAString& aPlatform)
     // here (bug 47080)
 #if defined(WIN32)
     aPlatform = NS_LITERAL_STRING("Win32");
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
     // XXX not sure what to do about Mac OS X on non-PPC, but since Comm 4.x
     // doesn't know about it this will actually be backward compatible
     aPlatform = NS_LITERAL_STRING("MacPPC");
