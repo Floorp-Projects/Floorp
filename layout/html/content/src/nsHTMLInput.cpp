@@ -161,278 +161,34 @@ nsHTMLInput::CloneNode(nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLInput::GetDefaultValue(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::defaultvalue, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetDefaultValue(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::defaultvalue, aValue,
-                        eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetDefaultChecked(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::defaultchecked, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetDefaultChecked(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::defaultchecked, empty,
-                          eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::defaultchecked);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
 nsHTMLInput::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   *aForm = nsnull;/* XXX */
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLInput::GetAccept(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::accept, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetAccept(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::accept, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetAccessKey(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::accesskey, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetAccessKey(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::accesskey, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetAlign(nsString& aValue)
-{
-  return NS_OK;/* XXX */
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetAlign(const nsString& aValue)
-{
-  return NS_OK;/* XXX */
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetAlt(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::alt, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetAlt(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::alt, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetChecked(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::checked, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetChecked(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::checked, empty, eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::checked);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetDisabled(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::disabled, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetDisabled(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::disabled, empty, eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::disabled);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetMaxLength(PRInt32* aValue)
-{
-  nsHTMLValue value;
-  *aValue = -1;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(nsHTMLAtoms::maxlength, value)) {
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      *aValue = value.GetIntValue();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetMaxLength(PRInt32 aValue)
-{
-  nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  return mInner.SetAttr(nsHTMLAtoms::maxlength, value, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetName(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::name, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetName(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::name, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetReadOnly(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::readonly, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetReadOnly(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::readonly, empty, eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::readonly);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetSize(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::size, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetSize(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::size, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetSrc(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::src, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetSrc(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::src, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetTabIndex(PRInt32* aValue)
-{
-  nsHTMLValue value;
-  *aValue = -1;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(nsHTMLAtoms::tabindex, value)) {
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      *aValue = value.GetIntValue();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetTabIndex(PRInt32 aValue)
-{
-  nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  return mInner.SetAttr(nsHTMLAtoms::tabindex, value, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLInput, DefaultValue, defaultvalue, eSetAttrNotify_None)
+NS_IMPL_BOOL_ATTR(nsHTMLInput, DefaultChecked, defaultchecked, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Accept, accept, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLInput, AccessKey, accesskey, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Alt, alt, eSetAttrNotify_None)
+NS_IMPL_BOOL_ATTR(nsHTMLInput, Checked, checked, eSetAttrNotify_Render)
+NS_IMPL_BOOL_ATTR(nsHTMLInput, Disabled, disabled, eSetAttrNotify_Render)
+NS_IMPL_INT_ATTR(nsHTMLInput, MaxLength, maxlength, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Name, name, eSetAttrNotify_Restart)
+NS_IMPL_BOOL_ATTR(nsHTMLInput, ReadOnly, readonly, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Size, size, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Src, src, eSetAttrNotify_Render)
+NS_IMPL_INT_ATTR(nsHTMLInput, TabIndex, tabindex, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLInput, UseMap, usemap, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLInput, Value, value, eSetAttrNotify_Render)
 
 NS_IMETHODIMP
 nsHTMLInput::GetType(nsString& aValue)
 {
   mInner.GetAttribute(nsHTMLAtoms::type, aValue);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetUseMap(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::usemap, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetUseMap(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::usemap, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLInput::GetValue(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::value, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInput::SetValue(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::value, aValue, eSetAttrNotify_Render);
 }
 
 NS_IMETHODIMP
@@ -485,6 +241,7 @@ NS_IMETHODIMP
 nsHTMLInput::MapAttributesInto(nsIStyleContext* aContext,
                                nsIPresContext* aPresContext)
 {
+  // XXX align
   return NS_OK;
 }
 

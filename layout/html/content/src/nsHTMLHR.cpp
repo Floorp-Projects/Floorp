@@ -128,66 +128,10 @@ nsHTMLHR::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLHR::GetAlign(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::align, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLHR::SetAlign(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::align, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLHR::GetNoShade(PRBool* aValue)
-{
-  nsHTMLValue val;
-  nsresult rv = mInner.GetAttribute(nsHTMLAtoms::noshade, val);
-  *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLHR::SetNoShade(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::noshade);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLHR::GetSize(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::size, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLHR::SetSize(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::size, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLHR::GetWidth(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::width, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLHR::SetWidth(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::width, aValue, eSetAttrNotify_Reflow);
-}
+NS_IMPL_STRING_ATTR(nsHTMLHR, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_BOOL_ATTR(nsHTMLHR, NoShade, noshade, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLHR, Size, size, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLHR, Width, width, eSetAttrNotify_Reflow)
 
 static nsHTMLGenericContent::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },

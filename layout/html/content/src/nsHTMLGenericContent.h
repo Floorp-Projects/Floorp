@@ -740,4 +740,75 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
     return NS_OK;                                               \
   }
 
+/**
+ * A macro to implement the getter and setter for a given string
+ * valued content property. The method uses the generic SetAttr and
+ * GetAttribute methods.
+ */
+#define NS_IMPL_STRING_ATTR(_class, _method, _atom, _notify)    \
+  NS_IMETHODIMP                                                 \
+  _class::Get##_method(nsString& aValue)                        \
+  {                                                             \
+    mInner.GetAttribute(nsHTMLAtoms::_atom, aValue);            \
+    return NS_OK;                                               \
+  }                                                             \
+  NS_IMETHODIMP                                                 \
+  _class::Set##_method(const nsString& aValue)                  \
+  {                                                             \
+    return mInner.SetAttr(nsHTMLAtoms::_atom, aValue, _notify); \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given boolean
+ * valued content property. The method uses the generic SetAttr and
+ * GetAttribute methods.
+ */
+#define NS_IMPL_BOOL_ATTR(_class, _method, _atom, _notify)       \
+  NS_IMETHODIMP                                                  \
+  _class::Get##_method(PRBool* aValue)                           \
+  {                                                              \
+    nsHTMLValue val;                                             \
+    nsresult rv = mInner.GetAttribute(nsHTMLAtoms::_atom, val);  \
+    *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                   \
+    return NS_OK;                                                \
+  }                                                              \
+  NS_IMETHODIMP                                                  \
+  _class::Set##_method(PRBool aValue)                            \
+  {                                                              \
+    nsAutoString empty;                                          \
+    if (aValue) {                                                \
+      return mInner.SetAttr(nsHTMLAtoms::_atom, empty, _notify); \
+    }                                                            \
+    else {                                                       \
+      mInner.UnsetAttribute(nsHTMLAtoms::_atom);                 \
+      return NS_OK;                                              \
+    }                                                            \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given integer
+ * valued content property. The method uses the generic SetAttr and
+ * GetAttribute methods.
+ */
+#define NS_IMPL_INT_ATTR(_class, _method, _atom, _notify)      \
+  NS_IMETHODIMP                                                \
+  _class::Get##_method(PRInt32* aValue)                        \
+  {                                                            \
+    nsHTMLValue value;                                         \
+    *aValue = -1;                                              \
+    if (NS_CONTENT_ATTR_HAS_VALUE ==                           \
+        mInner.GetAttribute(nsHTMLAtoms::_atom, value)) {      \
+      if (value.GetUnit() == eHTMLUnit_Integer) {              \
+        *aValue = value.GetIntValue();                         \
+      }                                                        \
+    }                                                          \
+    return NS_OK;                                              \
+  }                                                            \
+  NS_IMETHODIMP                                                \
+  _class::Set##_method(PRInt32 aValue)                         \
+  {                                                            \
+    nsHTMLValue value(aValue, eHTMLUnit_Integer);              \
+    return mInner.SetAttr(nsHTMLAtoms::_atom, value, _notify); \
+  }
+
 #endif /* nsHTMLLeafContent_h___ */

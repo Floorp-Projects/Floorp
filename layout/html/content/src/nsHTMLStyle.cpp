@@ -128,53 +128,9 @@ nsHTMLStyle::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLStyle::GetDisabled(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::disabled, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLStyle::SetDisabled(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::disabled, empty, eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::disabled);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLStyle::GetMedia(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::media, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLStyle::SetMedia(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::media, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLStyle::GetType(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::type, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLStyle::SetType(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::type, aValue, eSetAttrNotify_Restart);
-}
+NS_IMPL_BOOL_ATTR(nsHTMLStyle, Disabled, disabled, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLStyle, Media, media, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLStyle, Type, type, eSetAttrNotify_Restart)
 
 NS_IMETHODIMP
 nsHTMLStyle::StringToAttribute(nsIAtom* aAttribute,

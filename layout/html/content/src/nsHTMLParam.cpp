@@ -128,63 +128,17 @@ nsHTMLParam::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLParam::GetName(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::name, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLParam::SetName(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::name, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLParam::GetType(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::type, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLParam::SetType(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::type, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLParam::GetValue(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::value, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLParam::SetValue(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::value, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLParam::GetValueType(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::valuetype, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLParam::SetValueType(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::valuetype, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLParam, Name, name, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLParam, Type, type, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLParam, Value, value, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLParam, ValueType, valuetype, eSetAttrNotify_Restart)
 
 NS_IMETHODIMP
 nsHTMLParam::StringToAttribute(nsIAtom* aAttribute,
                                const nsString& aValue,
                                nsHTMLValue& aResult)
 {
+  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -193,6 +147,7 @@ nsHTMLParam::AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,
                                nsString& aResult) const
 {
+  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -200,6 +155,7 @@ NS_IMETHODIMP
 nsHTMLParam::MapAttributesInto(nsIStyleContext* aContext,
                                nsIPresContext* aPresContext)
 {
+  // XXX write me
   return NS_OK;
 }
 

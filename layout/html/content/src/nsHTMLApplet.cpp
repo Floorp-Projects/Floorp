@@ -142,148 +142,17 @@ nsHTMLApplet::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLApplet::GetAlign(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::align, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetAlign(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::align, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetAlt(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::alt, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetAlt(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::alt, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetArchive(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::archive, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetArchive(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::archive, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetCode(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::code, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetCode(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::code, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetCodeBase(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::codebase, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetCodeBase(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::codebase, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetHeight(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::height, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetHeight(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::height, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetHspace(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::hspace, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetHspace(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::hspace, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetName(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::name, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetName(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::name, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetObject(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::object, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetObject(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::object, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetVspace(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::vspace, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetVspace(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::vspace, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::GetWidth(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::width, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLApplet::SetWidth(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::width, aValue, eSetAttrNotify_Reflow);
-}
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Align, align, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Alt, alt, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Archive, archive, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Code, code, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, CodeBase, codebase, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Height, height, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Hspace, hspace, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Name, name, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Object, object, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Vspace, vspace, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLApplet, Width, width, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLApplet::StringToAttribute(nsIAtom* aAttribute,

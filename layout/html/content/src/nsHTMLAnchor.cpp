@@ -149,169 +149,18 @@ nsHTMLAnchor::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLAnchor::GetAccessKey(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::accesskey, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetAccessKey(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::accesskey, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetCharset(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetCharset(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::charset, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetCoords(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::coords, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetCoords(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::coords, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetHref(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::href, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetHref(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::href, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetHreflang(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::hreflang, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetHreflang(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::hreflang, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetName(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::name, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetName(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::name, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetRel(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::rel, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetRel(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::rel, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetRev(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::rev, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetRev(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::rev, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetShape(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::shape, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetShape(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::shape, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetTabIndex(PRInt32* aValue)
-{
-  nsHTMLValue value;
-  *aValue = -1;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(nsHTMLAtoms::tabindex, value)) {
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      *aValue = value.GetIntValue();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetTabIndex(PRInt32 aValue)
-{
-  nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  return mInner.SetAttr(nsHTMLAtoms::tabindex, value, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetTarget(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::target, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetTarget(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::target, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::GetType(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::type, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLAnchor::SetType(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::type, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, AccessKey, accesskey, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Charset, charset, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Coords, coords, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Href, href, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Hreflang, hreflang, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Name, name, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Rel, rel, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Rev, rev, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Shape, shape, eSetAttrNotify_None)
+NS_IMPL_INT_ATTR(nsHTMLAnchor, TabIndex, tabindex, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Target, target, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLAnchor, Type, type, eSetAttrNotify_None)
 
 NS_IMETHODIMP
 nsHTMLAnchor::Blur()

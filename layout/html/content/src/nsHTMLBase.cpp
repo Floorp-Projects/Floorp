@@ -124,31 +124,8 @@ nsHTMLBase::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLBase::GetHref(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::href, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBase::SetHref(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::href, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLBase::GetTarget(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::target, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBase::SetTarget(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::target, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLBase, Href, href, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLBase, Target, target, eSetAttrNotify_None)
 
 NS_IMETHODIMP
 nsHTMLBase::StringToAttribute(nsIAtom* aAttribute,

@@ -122,33 +122,14 @@ nsHTMLDirectory::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLDirectory::GetCompact(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::compact, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDirectory::SetCompact(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::compact, empty, eSetAttrNotify_Reflow);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::compact);
-    return NS_OK;
-  }
-}
+NS_IMPL_BOOL_ATTR(nsHTMLDirectory, Compact, compact, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLDirectory::StringToAttribute(nsIAtom* aAttribute,
                                    const nsString& aValue,
                                    nsHTMLValue& aResult)
 {
+  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -157,6 +138,7 @@ nsHTMLDirectory::AttributeToString(nsIAtom* aAttribute,
                                    nsHTMLValue& aValue,
                                    nsString& aResult) const
 {
+  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -164,6 +146,7 @@ NS_IMETHODIMP
 nsHTMLDirectory::MapAttributesInto(nsIStyleContext* aContext,
                                    nsIPresContext* aPresContext)
 {
+  // XXX write me
   return NS_OK;
 }
 

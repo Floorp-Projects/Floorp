@@ -132,90 +132,19 @@ nsHTMLBody::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLBody::GetALink(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::alink, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBody::SetALink(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::alink, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLBody::GetBackground(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::background, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBody::SetBackground(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::background, aValue,
-                        eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLBody::GetBgColor(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::bgcolor, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBody::SetBgColor(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::bgcolor, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLBody::GetLink(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::link, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBody::SetLink(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::link, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLBody::GetText(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::text, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBody::SetText(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::text, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLBody::GetVLink(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::vlink, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBody::SetVLink(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::vlink, aValue, eSetAttrNotify_Render);
-}
+NS_IMPL_STRING_ATTR(nsHTMLBody, ALink, alink, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBody, Background, background, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBody, BgColor, bgcolor, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBody, Link, link, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBody, Text, text, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBody, VLink, vlink, eSetAttrNotify_Render)
 
 NS_IMETHODIMP
 nsHTMLBody::StringToAttribute(nsIAtom* aAttribute,
                               const nsString& aValue,
                               nsHTMLValue& aResult)
 {
+  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -224,6 +153,7 @@ nsHTMLBody::AttributeToString(nsIAtom* aAttribute,
                               nsHTMLValue& aValue,
                               nsString& aResult) const
 {
+  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -231,6 +161,7 @@ NS_IMETHODIMP
 nsHTMLBody::MapAttributesInto(nsIStyleContext* aContext,
                               nsIPresContext* aPresContext)
 {
+  // XXX write me
   return NS_OK;
 }
 

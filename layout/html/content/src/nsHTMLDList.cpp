@@ -30,9 +30,9 @@
 static NS_DEFINE_IID(kIDOMHTMLDListElementIID, NS_IDOMHTMLDLISTELEMENT_IID);
 
 class nsHTMLDList : public nsIDOMHTMLDListElement,
-                     public nsIScriptObjectOwner,
-                     public nsIDOMEventReceiver,
-                     public nsIHTMLContent
+                    public nsIScriptObjectOwner,
+                    public nsIDOMEventReceiver,
+                    public nsIHTMLContent
 {
 public:
   nsHTMLDList(nsIAtom* aTag);
@@ -122,48 +122,31 @@ nsHTMLDList::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLDList::GetCompact(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::compact, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDList::SetCompact(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::compact, empty, eSetAttrNotify_Reflow);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::compact);
-    return NS_OK;
-  }
-}
+NS_IMPL_BOOL_ATTR(nsHTMLDList, Compact, compact, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLDList::StringToAttribute(nsIAtom* aAttribute,
-                                const nsString& aValue,
-                                nsHTMLValue& aResult)
+                               const nsString& aValue,
+                               nsHTMLValue& aResult)
 {
+  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLDList::AttributeToString(nsIAtom* aAttribute,
-                                nsHTMLValue& aValue,
-                                nsString& aResult) const
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const
 {
+  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLDList::MapAttributesInto(nsIStyleContext* aContext,
-                                nsIPresContext* aPresContext)
+                               nsIPresContext* aPresContext)
 {
+  // XXX write me
   return NS_OK;
 }
 

@@ -122,16 +122,7 @@ nsHTMLBR::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLBR::GetClear(nsString& aValue) {
-  mInner.GetAttribute(nsHTMLAtoms::clear, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBR::SetClear(const nsString& aValue) {
-  return mInner.SetAttr(nsHTMLAtoms::clear, aValue, eSetAttrNotify_Reflow);
-}
+NS_IMPL_STRING_ATTR(nsHTMLBR, Clear, clear, eSetAttrNotify_Reflow)
 
 static nsHTMLGenericContent::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
