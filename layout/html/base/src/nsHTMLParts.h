@@ -218,8 +218,10 @@ extern nsresult
 NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
 extern nsresult
-NS_NewCommentNode(nsIHTMLContent** aResult, nsIAtom* aTag,
-                  const nsString& aComment);
+NS_NewTextNode(nsIHTMLContent** aResult);
+
+extern nsresult
+NS_NewCommentNode(nsIHTMLContent** aResult);
 
 /**
  * Create a new content object for the given tag.
@@ -234,6 +236,18 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 // Factory methods for creating html layout objects
 
 extern nsresult
+NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+              nsIFrame*& aNewFrame);
+
+extern nsresult
+NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                   nsIFrame*& aFrameResult);
+
+extern nsresult
+NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+              nsIFrame*& aNewFrame);
+
+extern nsresult
 NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                  nsIFrame*& aFrameResult);
 
@@ -244,6 +258,10 @@ NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 nsresult
 NS_NewSpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                   nsIFrame*& aResult);
+
+nsresult
+NS_NewTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                nsIFrame*& aResult);
 
 nsresult
 NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
@@ -265,47 +283,8 @@ extern nsresult
   NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
                  nsIDocument* aDocument);
 
-// Create a new generic html container (e.g. P, DIV, SPAN, B, I, etc).
-// Not used for tables or framesets (see below).
-extern nsresult
-  NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
-                      nsIAtom* aTag);
-extern nsresult
-  NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
-                      nsIArena* aArena, nsIAtom* aTag);
-
-extern nsresult
-  NS_NewHTMLBreak(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
-
-extern nsresult
-  NS_NewHTMLWordBreak(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
-
 extern nsresult
   NS_NewHTMLBullet(nsIHTMLContent** aInstancePtrResult);
-
-// Create a new text content object. The memory for the unicode string
-// will be allocated from the heap. The object returned will support
-// the nsIHTMLContent interface as well as the nsITextContent
-// interface
-extern nsresult
-  NS_NewHTMLText(nsIHTMLContent** aInstancePtrResult,
-                 const PRUnichar* us, PRInt32 uslen = 0);
-extern nsresult
-  NS_NewHTMLText(nsIHTMLContent** aInstancePtrResult,
-                 nsIArena* aArena, const PRUnichar* us, PRInt32 uslen = 0);
-
-// Create a new text content object. The memory for the unicode string
-// is allocated by the caller. The caller is responsible for
-// deallocating the memory (e.g. use an nsIArena). The object returned
-// will support the nsIHTMLContent interface as well as the
-// nsITextContent interface
-extern nsresult
-  NS_NewSharedHTMLText(nsIHTMLContent** aInstancePtrResult,
-                       PRUnichar* us, PRInt32 uslen = 0);
-extern nsresult
-  NS_NewSharedHTMLText(nsIHTMLContent** aInstancePtrResult,
-                       nsIArena* aArena, PRUnichar* us, PRInt32 uslen = 0);
-
 
 /** Create a new table content object <TABLE> */
 extern nsresult
