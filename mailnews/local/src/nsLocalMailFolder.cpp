@@ -928,6 +928,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     trashFolder->SetParent(nsnull);
                     parentFolder->PropagateDelete(trashFolder, PR_TRUE);
                     parentFolder->CreateSubfolder(folderName.GetUnicode(),nsnull);
+                    nsCOMPtr<nsIMsgFolder> newTrashFolder;
+                    rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
+                    if (NS_SUCCEEDED(rv) && newTrashFolder)
+                      newTrashFolder->UpdateFolder(msgWindow);
+                    CompactAll(aListener, msgWindow);
                 }
             }
         }
