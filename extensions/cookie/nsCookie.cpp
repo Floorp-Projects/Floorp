@@ -1066,6 +1066,9 @@ permission_Check
   }
 }
 
+PRIVATE int
+cookie_SameDomain(char * currentHost, char * firstHost);
+
 PUBLIC nsresult
 Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permission) {
 
@@ -1083,7 +1086,8 @@ Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permissi
   /* try to make a decision based on pref settings */
   if ((image_GetBehaviorPref() == COOKIE_DontUse)  ||
       (image_GetBehaviorPref() == COOKIE_DontAcceptForeign &&
-        PL_strcmp(hostname, firstHostname))) {
+//      PL_strcmp(hostname, firstHostname))) {
+        !cookie_SameDomain(hostname, firstHostname))) {
     permission = PR_FALSE;
     return NS_OK;
   }
