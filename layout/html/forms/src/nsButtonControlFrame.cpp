@@ -330,7 +330,8 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 #ifdef NS_GFX_RENDER_FORM_ELEMENTS
 	nsCOMPtr<nsIStyleContext> outlineStyle(mStyleContext);
 	nsCOMPtr<nsIAtom> sbAtom (NS_NewAtom(":button-outline"));
-	outlineStyle = aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+  aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
+
 	const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
  
 	nsMargin outlineBorder;
