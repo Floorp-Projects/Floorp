@@ -807,7 +807,7 @@ nsXULTemplateBuilder::LoadDataSources()
 nsresult
 nsXULTemplateBuilder::InitHTMLTemplateRoot()
 {
-    // Use XPConnect and the JS APIs to whack aDatabase as the
+    // Use XPConnect and the JS APIs to whack mDB and this as the
     // 'database' and 'builder' properties onto aElement.
     nsresult rv;
 
