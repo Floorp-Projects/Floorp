@@ -70,7 +70,6 @@ public class XMLMenuBuilder {
   static final String type_attr = "type";
   static final int ELEMENT_TYPE = 1;
 
-  Hashtable widget_parents;
   Hashtable button_group;
   Hashtable actions;
   Properties properties;
@@ -84,7 +83,6 @@ public class XMLMenuBuilder {
    * @param actionList array of UIAction objects to map to
    */
   public XMLMenuBuilder(JFrame frame, UIAction[] actionList) {
-    widget_parents = new Hashtable();
     button_group = new Hashtable();
     actions = new Hashtable();
 
@@ -144,7 +142,7 @@ public class XMLMenuBuilder {
 	  && config.getTagName().equals("link")) {
 	linkURL = reference.getClass().getResource(config.getAttribute("href"));
 	properties = new Properties();
-	properties.load(linkURL.openStream());
+	if (linkURL != null) properties.load(linkURL.openStream());
       }
     } catch (IOException io) {
       io.printStackTrace();
@@ -161,16 +159,18 @@ public class XMLMenuBuilder {
     Node node;
 
     // skip to the "menubar" tag
-    current = (Element)tree.getNextElement("menubar");
+    node = tree.getNextElement("menubar");
+    current = (Element)node;
     component = new JMenuBar();
-    // store its "id" so we can use it for lookups as we add its children
-    widget_parents.put(current.getAttribute(id_attr), component);
     
     // iterate through every node
-    node = tree.getNext();
+    node = node.getFirstChild();
+    node = node.getNextSibling();
+    
+    // at the very first menu tag
     while (node != null) {
-      processNode(node);
-      node = tree.getNext();
+      processNode(node, component);
+      node = node.getNextSibling();
     }
   }
 
@@ -187,35 +187,30 @@ public class XMLMenuBuilder {
   public void associateClass(Class c, Object o) {
   }
 
-  protected void processNode(Node node) {
+  protected void processNode(Node node, JComponent parent) {
     JComponent container = null;
     JComponent item = null;
 
     if (node.getNodeType() == ELEMENT_TYPE) {
-      item = buildComponent((Element)node);
+      // things will recurse through here
+      item = buildComponent((Element)node, parent);
 
       // find out where we stash the item
       if (item != null) {
 	Element current = (Element)node;
-	Element parent = (Element)current.getParentNode();
-	String label;
-
-	// look up the parent container and add it there
-	container = 
-	  (JComponent)widget_parents.get(parent.getAttribute(id_attr));
-	// label = getReferencedLabel(current, label_attr);
-	container.add(item);
+	parent.add(item);
       }
     }
   }
 
-  protected JComponent buildComponent(Element current) {
+  protected JComponent buildComponent(Element current, JComponent parent) {
     String tag = current.getTagName();
     JComponent comp = null;
     String label = null;;
     
     // menu tag
     if (tag.equals(menu_tag)) {
+      Node node;
       JMenu menu = new JMenu();
       String my_id = current.getAttribute(id_attr);
       comp = menu;
@@ -223,8 +218,13 @@ public class XMLMenuBuilder {
       label = getReferencedLabel(current, label_attr);
       if (label != null) ((JMenuItem)comp).setText(label);
       menu.setActionCommand(my_id);
+      node = current.getFirstChild().getNextSibling();
 
-      widget_parents.put(my_id, menu);
+      // loop through all its children
+      while (node != null) {
+	processNode(node, menu);
+	node = node.getNextSibling();
+      }
     } else if (tag.equals(menuitem_tag)) { // menuitem tag
       String type = current.getAttribute(type_attr);
       UIAction action;
@@ -239,14 +239,14 @@ public class XMLMenuBuilder {
       } else if (type.equals(radio_attr)) { // radio
 	comp = buildRadioMenuItem(current);
       }
+
       label = getReferencedLabel(current, label_attr);
       if (label != null) {
 	((JMenuItem)comp).setText(label);
       }
-
       label = current.getAttribute("action");
-      if (label != null && (action = (UIAction)actions.get(label)) != null) {
-	// ((JMenuItem)comp).setActionCommand(label);
+      if (label != null 
+	  && (action = (UIAction)actions.get(label)) != null) {
 	((JMenuItem)comp).addActionListener(action);
       }
     }
@@ -307,7 +307,7 @@ public class XMLMenuBuilder {
 
   public static void main(String[] args) throws Exception {
     javax.swing.JFrame frame = new javax.swing.JFrame("Foo bar");
-    XMLMenuBuilder builder = new XMLMenuBuilder(frame, null);
+    XMLMenuBuilder builder = new XMLMenuBuilder(frame, new UIAction[0]);
     URL url = builder.getClass().getResource("menus.xml");
     builder.buildFrom(url.openStream());
     frame.setJMenuBar((JMenuBar)builder.getComponent());
