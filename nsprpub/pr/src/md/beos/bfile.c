@@ -673,6 +673,10 @@ _MD_pr_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 				}
 			}
 		}
+		else
+		{
+			pd->out_flags = 0;
+		}
 	}
 
 	if (0 != ready) return ready;  /* no need to block */
