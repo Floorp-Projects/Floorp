@@ -50,18 +50,19 @@ const char * XFE_Component::logoStartAnimation = "XFE_Component::logoStartAnimat
 const char * XFE_Component::logoStopAnimation = "XFE_Component::logoStopAnimation";
 
 
+//////////////////////////////////////////////////////////////////////////
 XFE_Component::XFE_Component(XFE_Component *toplevel_component)
 {
   m_widget = 0;
   m_toplevel = toplevel_component;
 }
-
+//////////////////////////////////////////////////////////////////////////
 XFE_Component::XFE_Component(Widget w, XFE_Component *toplevel_component)
 {
   m_widget = w;
   m_toplevel = toplevel_component;
 }
-
+//////////////////////////////////////////////////////////////////////////
 XFE_Component::~XFE_Component()
 {
 	//
@@ -81,14 +82,13 @@ XFE_Component::~XFE_Component()
 		m_widget = 0;
     }
 }
-
-
+//////////////////////////////////////////////////////////////////////////
 const char* 
 XFE_Component::getClassName()
 {
 	return myClassName;
 }
-
+//////////////////////////////////////////////////////////////////////////
 XP_Bool 
 XFE_Component::isClassOf(char *name)
 {
@@ -106,13 +106,13 @@ XFE_Component::isClassOf(char *name)
 	}/* if */
 	return ans;
 }
-
+//////////////////////////////////////////////////////////////////////////
 Widget
 XFE_Component::getBaseWidget()
 {
   return m_widget;
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::setBaseWidget(Widget w)
 {
@@ -121,51 +121,50 @@ XFE_Component::setBaseWidget(Widget w)
 
   m_widget = w;
 }
-
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::setSensitive(Boolean sensitive)
 {
   XtSetSensitive(m_widget, sensitive);
 }
-
+//////////////////////////////////////////////////////////////////////////
 Boolean
 XFE_Component::isSensitive()
 {
   return XtIsSensitive(m_widget);
 }
-
+//////////////////////////////////////////////////////////////////////////
 XFE_Component *
 XFE_Component::getToplevel()
 {
   return m_toplevel;
 }
-
+//////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_Component::isShown()
 {
   return XtIsManaged(m_widget);
 }
-
+//////////////////////////////////////////////////////////////////////////
 XP_Bool
 XFE_Component::isAlive()
 {
   return XfeIsAlive(m_widget);
 }
-
+//////////////////////////////////////////////////////////////////////////
 
 void
 XFE_Component::show()
 {
   XtManageChild(m_widget);
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::hide()
 {
   XtUnmanageChild(m_widget);
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::setShowingState(XP_Bool showing)
 {
@@ -178,7 +177,7 @@ XFE_Component::setShowingState(XP_Bool showing)
     hide();
   }
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::toggleShowingState()
 {
@@ -191,14 +190,14 @@ XFE_Component::toggleShowingState()
     show();
   }
 }
-
+//////////////////////////////////////////////////////////////////////////
 fe_colormap *
 XFE_Component::getColormap()
 {
   XP_ASSERT(0);
   return NULL;
 }
-
+//////////////////////////////////////////////////////////////////////////
 
 void
 XFE_Component::translateFromRootCoords(int x_root, int y_root, 
@@ -211,7 +210,7 @@ XFE_Component::translateFromRootCoords(int x_root, int y_root,
   *x = x_root - my_xroot;
   *y = y_root - my_yroot;
 }
-
+//////////////////////////////////////////////////////////////////////////
 Boolean 
 XFE_Component::isWidgetInside(Widget w)
 {
@@ -232,31 +231,39 @@ XFE_Component::isWidgetInside(Widget w)
       return False;
     }
 }
-
+//////////////////////////////////////////////////////////////////////////
 Pixel
 XFE_Component::getFGPixel()
 {
+  XP_ASSERT( m_toplevel != NULL );
+
   return m_toplevel->getFGPixel();
 }
-
+//////////////////////////////////////////////////////////////////////////
 Pixel
 XFE_Component::getBGPixel()
 {
+  XP_ASSERT( m_toplevel != NULL );
+
   return m_toplevel->getFGPixel();
 }
-
+//////////////////////////////////////////////////////////////////////////
 Pixel
 XFE_Component::getTopShadowPixel()
 {
+  XP_ASSERT( m_toplevel != NULL );
+
   return m_toplevel->getFGPixel();
 }
-
+//////////////////////////////////////////////////////////////////////////
 Pixel
 XFE_Component::getBottomShadowPixel()
 {
+  XP_ASSERT( m_toplevel != NULL );
+
   return m_toplevel->getFGPixel();
 }
-
+//////////////////////////////////////////////////////////////////////////
 char *
 XFE_Component::stringFromResource(char *command_string)
 {
@@ -264,7 +271,7 @@ XFE_Component::stringFromResource(char *command_string)
 											command_string, 
 											command_string /* XXX */);
 }
-
+//////////////////////////////////////////////////////////////////////////
 // use this method to get 'cmd.labelString' resources
 // for the specified widget (default is the base widget)
 char *
@@ -275,7 +282,7 @@ XFE_Component::getLabelString(char* cmd, Widget widget)
 		if (!widget)
 			return NULL;
 	}
-
+//////////////////////////////////////////////////////////////////////////
 	return XfeSubResourceGetStringValue(widget,
 										cmd,
 										XfeClassNameForWidget(widget),
@@ -283,7 +290,7 @@ XFE_Component::getLabelString(char* cmd, Widget widget)
 										XmCLabelString,
 										NULL);
 }
-
+//////////////////////////////////////////////////////////////////////////
 // use this method to get 'cmd.[show|hide]LabelString' resources
 // for the specified widget (default is the base widget)
 char*
@@ -309,13 +316,13 @@ XFE_Component::getShowHideLabelString(char* cmd, Boolean show, Widget widget)
 										XmCLabelString,
 										NULL);
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::installDestroyHandler()
 {
   XtAddCallback(m_widget, XmNdestroyCallback, destroy_cb, this);
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Component::destroy_cb(Widget, XtPointer cd, XtPointer)
 {
@@ -323,17 +330,17 @@ XFE_Component::destroy_cb(Widget, XtPointer cd, XtPointer)
 
   delete obj;
 }
-
+//////////////////////////////////////////////////////////////////////////
 char *
 XFE_Component::getDocString(CommandType /* cmd */)
 {
    return NULL;
 }
-
+//////////////////////////////////////////////////////////////////////////
 char *
 XFE_Component::getTipString(CommandType /* cmd */)
 {
    return NULL;
 }
-
+//////////////////////////////////////////////////////////////////////////
 
