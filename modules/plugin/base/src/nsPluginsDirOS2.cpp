@@ -194,9 +194,7 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
    {
       info.fPluginInfoSize = sizeof( nsPluginInfo);
 
-      char *leaf = GetLeafName();
-      info.fName = PL_strdup( leaf);
-      delete [] leaf;
+      info.fName = LoadRCDATAString( hPlug, NS_INFO_ProductName);
 
       // get description (doesn't matter if it's missing)...
       info.fDescription = LoadRCDATAString( hPlug, NS_INFO_FileDescription);
