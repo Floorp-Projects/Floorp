@@ -291,7 +291,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          var eventBoxText = document.createElement( "label" );
          eventBoxText.setAttribute( "crop", "end" );
          eventBoxText.setAttribute( "class", "month-day-event-text-class" );
-         eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
+         eventBoxText.setAttribute( "value", this.calendarWindow.dateFormater.getFormatedTime( new Date( calendarEventDisplay.event.start.getTime() ) )+" "+calendarEventDisplay.event.title );
          //you need this flex in order for text to crop
          eventBoxText.setAttribute( "flex", "1" );
          eventBoxText.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
