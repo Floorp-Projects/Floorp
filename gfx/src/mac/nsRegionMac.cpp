@@ -25,7 +25,6 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 nsRegionMac :: nsRegionMac()
 {
   NS_INIT_REFCNT();
-
 	mRegion = nsnull;
   mRegionType = eRegionComplexity_empty;
 }
@@ -49,7 +48,6 @@ nsresult nsRegionMac :: Init(void)
 {
 	mRegion = ::NewRgn();
   mRegionType = eRegionComplexity_empty;
-
   return NS_OK;
 }
 
@@ -57,10 +55,8 @@ nsresult nsRegionMac :: Init(void)
 
 void nsRegionMac :: SetTo(const nsIRegion &aRegion)
 {
-
-	nsRegionMac * pRegion = (nsRegionMac *)&aRegion;
-  SetRegionEmpty();
-	::UnionRgn(mRegion,pRegion->mRegion,mRegion);
+	nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
+	::CopyRgn(pRegion->mRegion, mRegion);
   SetRegionType();
 }
 
@@ -68,17 +64,7 @@ void nsRegionMac :: SetTo(const nsIRegion &aRegion)
 
 void nsRegionMac :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-RgnHandle	thergn;
-
-  SetRegionEmpty();
-  
-  
-	thergn = ::NewRgn();
-	::SetRectRgn(thergn,aX,aY,aX+aWidth,aY+aHeight);
-	
-	::UnionRgn(mRegion,thergn,mRegion);
-  ::DisposeRgn(thergn);
-
+	::SetRectRgn(mRegion, aX, aY, aX + aWidth, aY + aHeight);
   SetRegionType();
 }
 
@@ -86,7 +72,7 @@ RgnHandle	thergn;
 
 void nsRegionMac :: Intersect(const nsIRegion &aRegion)
 {
-  nsRegionMac * pRegion = (nsRegionMac *)&aRegion;
+  nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   ::SectRgn(mRegion, pRegion->mRegion, mRegion);
   SetRegionType();
 }
@@ -95,73 +81,51 @@ void nsRegionMac :: Intersect(const nsIRegion &aRegion)
 
 void nsRegionMac :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-RgnHandle	thergn;
-
-	thergn = NewRgn();
-	::SetRectRgn(thergn,aX,aY,aX+aWidth,aY+aHeight);
-  ::SectRgn(mRegion, thergn, mRegion);
-  ::DisposeRgn(thergn);
+	RgnHandle rectRgn = ::NewRgn();
+	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
+  ::SectRgn(mRegion, rectRgn, mRegion);
+  ::DisposeRgn(rectRgn);
   SetRegionType();
-
 }
 
 //---------------------------------------------------------------------
 
 void nsRegionMac :: Union(const nsIRegion &aRegion)
 {
-
-	nsRegionMac * pRegion = (nsRegionMac *)&aRegion;
-
+	nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   ::UnionRgn(mRegion, pRegion->mRegion, mRegion);
-
   SetRegionType();
-
 }
 
 //---------------------------------------------------------------------
 
 void nsRegionMac :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-RgnHandle	thergn;
-
-	thergn = ::NewRgn();
-	::SetRectRgn(thergn,aX,aY,aX+aWidth,aY+aHeight);
-
-  ::UnionRgn(mRegion, thergn, mRegion);
-
-  ::DisposeRgn(thergn);
-
+	RgnHandle rectRgn = ::NewRgn();
+	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
+  ::UnionRgn(mRegion, rectRgn, mRegion);
+  ::DisposeRgn(rectRgn);
   SetRegionType();
-
 }
 
 //---------------------------------------------------------------------
 
 void nsRegionMac :: Subtract(const nsIRegion &aRegion)
 {
-nsRegionMac * pRegion = (nsRegionMac *)&aRegion;
-
-  DiffRgn(mRegion, pRegion->mRegion, mRegion);
-
+	nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
+  ::DiffRgn(mRegion, pRegion->mRegion, mRegion);
   SetRegionType();
-
 }
 
 //---------------------------------------------------------------------
 
 void nsRegionMac :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-RgnHandle	thergn;
-
-	thergn = ::NewRgn();
-	::SetRectRgn(thergn,aX,aY,aX+aWidth,aY+aHeight);
-  
-  ::DiffRgn(mRegion, thergn, mRegion);
-
-  ::DisposeRgn(thergn);
-
+	RgnHandle rectRgn = ::NewRgn();
+	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
+  ::DiffRgn(mRegion, rectRgn, mRegion);
+  ::DisposeRgn(rectRgn);
   SetRegionType();
-
 }
 
 //---------------------------------------------------------------------
@@ -178,24 +142,20 @@ PRBool nsRegionMac :: IsEmpty(void)
 
 PRBool nsRegionMac :: IsEqual(const nsIRegion &aRegion)
 {
-  nsRegionMac * pRegion = (nsRegionMac *)&aRegion;
-
+  nsRegionMac* pRegion = (nsRegionMac*)&aRegion;
   return(::EqualRgn(mRegion, pRegion->mRegion));
-
 }
 
 //---------------------------------------------------------------------
 
 void nsRegionMac :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-Rect rect;
+  Rect macRect = (**mRegion).rgnBBox;
 
-  rect = (**mRegion).rgnBBox;
-
-  *aX = rect.left;
-  *aY = rect.top;
-  *aWidth = rect.right - rect.left;
-  *aHeight = rect.bottom-rect.top;
+  *aX = macRect.left;
+  *aY = macRect.top;
+  *aWidth  = macRect.right - macRect.left;
+  *aHeight = macRect.bottom - macRect.top;
 }
 
 //---------------------------------------------------------------------
@@ -209,12 +169,9 @@ void nsRegionMac :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 
 PRBool nsRegionMac :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-PRBool	containment;
-Rect		therect;
-
-	::SetRect(&therect,aX,aY,aX+aWidth,aY+aHeight);
-  containment = ::RectInRgn(&therect,mRegion);
-	return(containment);
+	Rect macRect;
+	::SetRect(&macRect, aX, aY, aX + aWidth, aY + aHeight);
+	return(::RectInRgn(&macRect, mRegion));
 }
 
 //---------------------------------------------------------------------
@@ -249,7 +206,7 @@ void nsRegionMac :: SetRegionType()
   if (::EmptyRgn(mRegion) == PR_TRUE)
     mRegionType = eRegionComplexity_empty;
   else
-    mRegionType = eRegionComplexity_rect ;
+    mRegionType = eRegionComplexity_rect;
 }
 
 
@@ -258,8 +215,7 @@ void nsRegionMac :: SetRegionType()
 
 void nsRegionMac :: SetRegionEmpty()
 {
-  ::DisposeRgn(mRegion);
-  mRegion = ::NewRgn();
+  ::SetEmptyRgn(mRegion);
 }
 
 //---------------------------------------------------------------------
@@ -267,10 +223,9 @@ void nsRegionMac :: SetRegionEmpty()
 
 RgnHandle nsRegionMac :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-RgnHandle r = ::NewRgn();
-
-	SetRectRgn(r,aX,aY,aX+aWidth,aY+aHeight);
-  return (r);
+	RgnHandle rectRgn = ::NewRgn();
+	::SetRectRgn(rectRgn, aX, aY, aX + aWidth, aY + aHeight);
+  return rectRgn;
 }
 
 
