@@ -493,6 +493,7 @@ sub BuildClientDist()
 	#LAYOUT
     _InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:base:public:MANIFEST",					"$distdirectory:layout:");
+    _InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",				"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",			"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",			"$distdirectory:layout:");
@@ -860,6 +861,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp", "profileservices");
 	BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",	"prefm");
 		
+	BuildIDLProject(":mozilla:layout:macbuild:layoutIDL.mcp",						"layout");
+
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");
 	BuildIDLProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSourceIDL.mcp",		"domds");
 
