@@ -183,6 +183,7 @@ void nsMacMessagePump::DoMessagePump()
 								mInBackground = PR_FALSE;		// resume message
 							else
 								mInBackground = PR_TRUE;		// suspend message
+							DoMouseMove(theEvent);
 							break;
 
 						case mouseMovedMessage:
