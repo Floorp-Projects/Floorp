@@ -40,33 +40,21 @@
 
 1 24 "thunderbird.exe.manifest" 
 
-// Splash screen dialog ID.
-#define IDD_SPLASH  100
- 
-// Splash screen bitmap ID.
-#define IDB_SPLASH  101
- 
-// DDE application name
-#define ID_DDE_APPLICATION_NAME 102
-
 // Program icon.
 IDI_APPLICATION ICON THUNDERBIRD_ICO
 
-// Splash screen dialog.
-IDD_SPLASH DIALOGEX
-	DISCARDABLE
-	0,0,0,0
-	STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP
-    EXSTYLE WS_EX_TOOLWINDOW
-	FONT 8, "MS Sans Serif"
-	BEGIN
-		CONTROL
-            IDB_SPLASH,
-			IDB_SPLASH,
-			"Static",
-			SS_BITMAP,
-			0,0,0,0
-	END
+#define ID_DDE_APPLICATION_NAME 102
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifdef DEBUG
+    ID_DDE_APPLICATION_NAME,            "Thunderbird Debug"
+    IDS_STARTMENU_APPNAME,              "Thunderbird Debug"
+#else
+    ID_DDE_APPLICATION_NAME,            "Thunderbird"
+    IDS_STARTMENU_APPNAME,              "Thunderbird"
+#endif
+END
 
 #ifdef MOZ_STATIC_BUILD
 
@@ -88,13 +76,11 @@ IDC_ZOOMIN       CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_in.cu
 IDC_ZOOMOUT      CURSOR DISCARDABLE "..\\..\\widget\\src\\build\\res\\zoom_out.cur"
 
 // For some reason IDI_MAILBIFF needs to be larger than the value of IDI_APPLICATION for static builds
-#define IDI_MAILBIFF 32520
+#define IDI_MAILBIFF 101
 IDI_MAILBIFF  ICON  "..\\..\\mailnews\\build\\newmail.ico"
+
+#define IDI_APPICON 100
+IDI_APPICON  ICON  THUNDERBIRD_ICO
 
 #endif
 
-STRINGTABLE DISCARDABLE
-BEGIN
-    ID_DDE_APPLICATION_NAME,            "Thunderbird"
-    IDS_STARTMENU_APPNAME,              "Thunderbird"
-END

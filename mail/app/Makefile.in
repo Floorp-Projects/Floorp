@@ -75,8 +75,9 @@ LIBS = \
 	$(EXTRA_DSO_LIBS) \
 	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
 	$(TK_LIBS) \
+	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 ifdef MOZ_JPROF
