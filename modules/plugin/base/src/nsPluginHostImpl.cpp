@@ -807,7 +807,7 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   // XXX This is a hack to keep Java around, see bug 76936
   nsCOMPtr<nsIJVMPlugin> isJava = do_QueryInterface(mEntryPoint);
 
-  if (isJava && !aForceShutdown) return;
+  if (isJava) return;
 
   if (mEntryPoint)
   {
@@ -3556,6 +3556,31 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
                             // the rest is optional
  
 #ifdef XP_WIN
+  // Checks the installation path of Sun's JRE in scanning for plugins if the prefs are enabled
+
+  nsCOMPtr<nsIPref> theprefs = do_GetService(NS_PREF_CONTRACTID);
+  if (theprefs)     // we got the pref service
+  {
+    PRBool javaEnabled = PR_FALSE;         // don't bother the scan if java is OFF
+    PRBool doJREPluginScan = PR_FALSE;
+    
+    if (NS_SUCCEEDED(theprefs->GetBoolPref("security.enable_java",&javaEnabled)) &&
+        NS_SUCCEEDED(theprefs->GetBoolPref("plugin.do_JRE_Plugin_Scan",&doJREPluginScan)) &&
+        javaEnabled && doJREPluginScan)
+    {
+      nsPluginsDir pluginsDirJavaJRE(PLUGINS_DIR_LOCATION_JAVA_JRE);
+
+      if (pluginsDirJavaJRE.Valid())
+      {
+        nsCOMPtr<nsIFile> lpath = nsnull;
+        if(isLayoutPath)
+          lpath = path;
+        ScanPluginsDirectory(pluginsDirJavaJRE, compManager, lpath);
+      }
+    }
+  }
+  
+  
   // Check the windows registry for extra paths to scan for plugins
   //
   // We are going to get this registry key location from the pref:
