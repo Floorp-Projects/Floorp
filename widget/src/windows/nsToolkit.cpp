@@ -288,6 +288,8 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
     ConvertAtoW(ofnA.lpstrFile, MAX_PATH, aFileNameW->lpstrFile);
   }
 
+  aFileNameW->nFilterIndex = ofnA.nFilterIndex;
+
   return rtn;
 }
 
