@@ -175,8 +175,8 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   // Compress whitespace out of label if needed.
   if (!GetStyleText()->WhiteSpaceIsSignificant()) {
     value.CompressWhitespace();
-  } else if (value.Length() > 2 && value[0] == ' ' &&
-             value[value.Length() - 1] == ' '){
+  } else if (value.Length() > 2 && value.First() == ' ' &&
+             value.CharAt(value.Length() - 1) == ' ') {
     // This is a bit of a hack.  The reason this is here is as follows: we now
     // have default padding on our buttons to make them non-ugly.
     // Unfortunately, IE-windows does not have such padding, so people will
