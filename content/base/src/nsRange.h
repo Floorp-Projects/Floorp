@@ -123,7 +123,7 @@ public:
   // helper routines
   
   static PRBool        InSameDoc(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2);
-  static PRInt32       IndexOf(nsCOMPtr<nsIDOMNode> aNode);
+  static PRInt32       IndexOf(nsIDOMNode* aNode);
   static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsCOMPtr<nsIDOMNode> aNode);
   static nsCOMPtr<nsIDOMNode>   CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2);
   static nsresult      GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);

@@ -240,11 +240,8 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   }
   else
   {
-    nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
-    if (!cN || NS_FAILED(cN->IndexOf(aNode, indx)))
-      return PR_FALSE;
-    *outStartOffset = indx;
-    *outEndOffset = indx+1;
+    *outStartOffset = nsRange::IndexOf(theDOMNode);
+    *outEndOffset = *outStartOffset+1;
   }
   return PR_TRUE;
 }
@@ -588,7 +585,7 @@ nsresult nsRange::ComparePointToRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOff
   return NS_OK;
 }
   
-PRInt32 nsRange::IndexOf(nsCOMPtr<nsIDOMNode> aChildNode)
+PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
 {
   nsCOMPtr<nsIDOMNode> parentNode;
   nsCOMPtr<nsIContent> contentChild;
