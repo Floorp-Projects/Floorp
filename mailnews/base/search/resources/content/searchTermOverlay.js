@@ -481,3 +481,19 @@ function convertStringToPRTime(str)
   return (time.getTime() * 1000);
 }
 
+// this is a helper routine used by our search term xbl widget
+var gLabelStrings = new Array;
+function GetLabelStrings()
+{
+  if (!gLabelStrings.length)
+  {
+    var prefString;
+    for (var index = 0; index < 6; index++)
+    {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+      prefString = pref.getComplexValue("mailnews.labels.description." + index,  Components.interfaces.nsIPrefLocalizedString);
+      gLabelStrings[index] = prefString;
+    }
+  }
+  return gLabelStrings;
+}

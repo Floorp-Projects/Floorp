@@ -656,6 +656,16 @@
           </xul:template>
         </xul:menupopup>
       </xul:menulist>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="0" class="search-value-menuitem"/>
+          <xul:menuitem value="1" class="search-value-menuitem"/>
+          <xul:menuitem value="2" class="search-value-menuitem"/>
+          <xul:menuitem value="3" class="search-value-menuitem"/>
+          <xul:menuitem value="4" class="search-value-menuitem"/>
+          <xul:menuitem value="5" class="search-value-menuitem"/>
+        </xul:menupopup>
+      </xul:menulist>
     </content>
     <implementation>
 
@@ -685,6 +695,14 @@
               if (abs.length > 0) 
                 children[4].selectedItem = abs[0];   
               this.setAttribute("selectedIndex", "4");              
+            }
+            else if (val == Components.interfaces.nsMsgSearchAttrib.Label)
+            {
+              var children = document.getAnonymousNodes(this);
+              var abs = children[5].getElementsByAttribute("value", "1");
+              if (abs.length > 0) 
+                children[5].selectedItem = abs[0];                 
+              this.setAttribute("selectedIndex", "5");
             }
             else
               this.setAttribute("selectedIndex", "0");
@@ -723,6 +741,12 @@
             if (abs.length > 0) 
               children[4].selectedItem = abs[0];    
           }
+          else if (attrib == nsMsgSearchAttrib.Label)
+          {
+            var labelVal = children[5].getElementsByAttribute("value", val.label);
+            if (labelVal.length > 0)
+              children[5].selectedItem = labelVal[0];
+          }
           else            
             children[0].value = val.str;
           return val;
@@ -749,6 +773,8 @@
                searchValue.date = convertStringToPRTime(children[3].value);
             else if (searchAttribute == nsMsgSearchAttrib.SenderInAddressBook)
               searchValue.str = children[4].selectedItem.value;
+            else if (searchAttribute == nsMsgSearchAttrib.Label)
+              searchValue.label = children[5].selectedItem.value;
             else
                searchValue.str = children[0].value;
           ]]>
@@ -808,6 +834,13 @@
 
         // initialize the address book picker
         this.initialize(document.getAnonymousNodes(this)[4], bundle);
+
+        // initialize the label picker....
+        var labelStrings = GetLabelStrings();
+        var children = document.getAnonymousNodes(this)[5].firstChild.childNodes;
+        // set the label string on each label element...
+        for (var index = 0; index < 6; index++)
+          children[index].setAttribute('label', labelStrings[index]);
 
         var datePicker = document.getAnonymousNodes(this)[3];
         var searchAttribute = this.searchAttribute;
