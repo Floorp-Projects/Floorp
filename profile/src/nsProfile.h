@@ -90,6 +90,7 @@ private:
     PRBool mOutofDiskSpace;
     PRBool mDiskSpaceErrorQuitCalled;
     PRBool mProfileChangeVetoed;
+    PRBool mProfileChangeFailed;
 
     nsString mCurrentProfileName;
     PRBool mCurrentProfileAvailable;
