@@ -21,11 +21,11 @@ calendarPrefObserver.prototype =
      switch( prefName )
      {
         case "calendar.week.start":
-         this.CalendarPreferences.calendarWindow.currentView.refreshDisplay();
+         this.CalendarPreferences.calendarWindow.currentView.refresh();
         break
 
         case "calendar.date.format":
-         this.CalendarPreferences.calendarWindow.currentView.refreshDisplay();
+         this.CalendarPreferences.calendarWindow.currentView.refresh();
          unifinderRefesh();
         default:
         break;
