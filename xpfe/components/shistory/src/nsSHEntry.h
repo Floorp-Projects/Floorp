@@ -80,6 +80,7 @@ private:
   nsCOMArray<nsISHEntry>          mChildren;
   PRUint32                        mLoadType;  
   PRUint32                        mID;
+  PRUint32                        mPageIdentifier;
   PRInt32                         mScrollPositionX;
   PRInt32                         mScrollPositionY;
   PRPackedBool                    mIsFrameNavigation;
