@@ -299,7 +299,7 @@ nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
   if(NS_FAILED(rv)) return rv;
    // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(mSpec, PR_WRONLY, 0,
+  rv = fts->CreateTransport(mSpec, PR_WRONLY | PR_CREATE_FILE, 0,
                             getter_AddRefs(mFileTransport));
   if(NS_FAILED(rv))
     return rv;
@@ -504,15 +504,19 @@ nsDiskCacheRecordChannel::SetContentLength(PRInt32 aContentLength)
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::GetTransferOffset(PRUint32 *aTransferOffset)
 {
-  NS_NOTREACHED("nsDiskCacheRecordChannel::GetTransferOffset");
-  return NS_ERROR_NOT_IMPLEMENTED;
+ nsresult rv = NS_ERROR_FAILURE;
+ if ( mFileTransport )
+ 	 rv = mFileTransport->GetTransferOffset( aTransferOffset );
+ return rv;
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::SetTransferOffset(PRUint32 aTransferOffset)
 {
-  NS_NOTREACHED("nsDiskCacheRecordChannel::SetTransferOffset");
-  return NS_ERROR_NOT_IMPLEMENTED;
+   nsresult rv = NS_OK;
+ if ( mFileTransport )
+ 	 rv = mFileTransport->SetTransferOffset( aTransferOffset );
+ return rv;
 }
 
 NS_IMETHODIMP
