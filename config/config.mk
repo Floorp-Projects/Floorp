@@ -545,7 +545,9 @@ DEFINES		+= -DNSPR
 endif
 
 ifndef MOZ_JAVA
+ifndef USE_AUTOCONF
 MOZ_OJI = 1             # on by default now
+endif
 endif
 
 ifdef MOZ_JAVA
