@@ -28,31 +28,32 @@
 #include "uninstall.h"
 
 /* external global variables */
-extern LHANDLE        hInst;
-extern LHANDLE           hAccelTable;
-
 extern HWND             hDlgUninstall;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
 
-extern PSZ            szEGlobalAlloc;
-extern PSZ            szEStringLoad;
-extern PSZ            szEDllLoad;
-extern PSZ            szEStringNull;
-extern PSZ            szTempSetupPath;
+extern PSZ              szEGlobalAlloc;
+extern PSZ              szEStringLoad;
+extern PSZ              szEDllLoad;
+extern PSZ              szEStringNull;
+extern PSZ              szTempSetupPath;
 
-extern PSZ            szClassName;
-extern PSZ            szUninstallDir;
-extern PSZ            szTempDir;
-extern PSZ            szOSTempDir;
-extern PSZ            szFileIniUninstall;
-extern PSZ            gszSharedFilename;
+extern PSZ              szClassName;
+extern PSZ              szUninstallDir;
+extern PSZ              szTempDir;
+extern PSZ              szOSTempDir;
+extern PSZ              szFileIniUninstall;
+extern PSZ              szFileIniDefaultsInfo;
+extern PSZ              gszSharedFilename;
 
 extern ULONG            ulOSType;
-extern ULONG            dwScreenX;
-extern ULONG            dwScreenY;
+extern ULONG            ulScreenX;
+extern ULONG            ulScreenY;
+extern ULONG            ulDlgFrameX;
+extern ULONG            ulDlgFrameY;
+extern ULONG            ulTitleBarY;
 
-extern ULONG            gdwWhatToDo;
+extern ULONG            gulWhatToDo;
 
 extern uninstallGen     ugUninstall;
 extern diU              diUninstall;

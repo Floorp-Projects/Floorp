@@ -38,14 +38,20 @@
 typedef unsigned int PRUint32;
 typedef int PRInt32;
 
+#define INCL_PM
+#define INCL_DOS
+#define INCL_DOSERRORS
 #include <os2.h>
+#include "nsINIParser.h"
+
+typedef long HRESULT;
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <direct.h>
 #include <tchar.h>
-//#include <commctrl.h>
 #include "resource.h"
 
 #define CLASS_NAME                      "Uninstall"
@@ -75,6 +81,12 @@ typedef int PRInt32;
 /* WIZ: WIZARD defines */
 #define WIZ_OK                          0
 #define WIZ_MEMORY_ALLOC_FAILED         1
+#define WIZ_ERROR_UNDEFINED             2
+#define WIZ_FILE_NOT_FOUND              3
+
+/* CMI: Cleanup Mail Integration */
+#define CMI_OK                          0
+#define CMI_APP_PATHNAME_NOT_FOUND      1
 
 /* FO: File Operation */
 #define FO_OK                           0
@@ -89,45 +101,50 @@ typedef int PRInt32;
 #define AUTO                            2
 
 /* OS: Operating System */
-#define OS_WIN9x                        1
-#define OS_WIN95_DEBUTE                 2
-#define OS_WIN95                        4
-#define OS_WIN98                        8
-#define OS_NT                          16
-#define OS_NT3                         32
-#define OS_NT4                         64
-#define OS_NT5                        128
+#define OS_WIN9x                        0x00000001
+#define OS_WIN95_DEBUTE                 0x00000002
+#define OS_WIN95                        0x00000004
+#define OS_WIN98                        0x00000008
+#define OS_NT                           0x00000010
+#define OS_NT3                          0x00000020
+#define OS_NT4                          0x00000040
+#define OS_NT5                          0x00000080
+#define OS_NT50                         0x00000100
+#define OS_NT51                         0x00000200
 
 typedef struct dlgUninstall
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
+  PSZ   szTitle;
+  PSZ   szMessage0;
 } diU;
 
 typedef struct uninstallStruct
 {
-  ULONG     dwMode;
-  PSZ     szLogPath;
-  PSZ     szLogFilename;
-  PSZ     szCompanyName;
-  PSZ     szProductName;
-  PSZ     szDescription;
-  PSZ     szUninstallKeyDescription;
-  PSZ     szUninstallFilename;
-  HINI      hWrMainRoot;
-  PSZ     szWrMainKey;
-  HINI      hWrRoot;
-  PSZ     szWrKey;
-  PSZ     szUserAgent;
+  ULONG     ulMode;
+  PSZ       szAppPath;
+  PSZ       szLogPath;
+  PSZ       szLogFilename;
+  PSZ       szCompanyName;
+  PSZ       szProductName;
+  PSZ       szDescription;
+  PSZ       szUninstallKeyDescription;
+  PSZ       szUninstallFilename;
+  PSZ       szOIMainApp;
+  PSZ       szOIKey;
+  PSZ       szUserAgent;
+  PSZ       szDefaultComponent;
+  PSZ       szAppID;
+  BOOL      bVerbose;
+  BOOL      bUninstallFiles;
+  PSZ       szDefinedFont[MAX_BUF];
 } uninstallGen;
 
-typedef __int64 ULONGLONG;
 typedef struct sInfoLine sil;
 struct sInfoLine
 {
-  ULONGLONG       ullLineNumber;
-  PSZ           szLine;
+  unsigned long long       ullLineNumber;
+  PSZ             szLine;
   sil             *Next;
   sil             *Prev;
 };

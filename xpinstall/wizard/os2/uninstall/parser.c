@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #include "extern.h"
@@ -31,7 +30,6 @@
 #include "dialogs.h"
 
 #define KEY_SHARED_DLLS "Software\\Microsoft\\Windows\\CurrentVersion\\SharedDlls"
-
 
 BOOL DeleteOrDelayUntilReboot(PSZ szFile)
 {
@@ -45,31 +43,28 @@ BOOL DeleteOrDelayUntilReboot(PSZ szFile)
   if(FileExists(szFile))
   {
     bDelayDelete = TRUE;
-    if(ulOSType & OS_NT)
-      MoveFileEx(szFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+#ifdef OLDCODE
+    if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
+      return(FALSE);
+#endif
+
+    strcpy(szWininitFile, szWinDir);
+    AppendBackSlash(szWininitFile, sizeof(szWininitFile));
+    strcat(szWininitFile, "wininit.ini");
+
+    if(FileExists(szWininitFile) == FALSE)
+      bWriteRenameSection = TRUE;
     else
-    {
-      if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
-        return(FALSE);
+      bWriteRenameSection = FALSE;
 
-      strcpy(szWininitFile, szWinDir);
-      AppendBackSlash(szWininitFile, sizeof(szWininitFile));
-      strcat(szWininitFile, "wininit.ini");
+    if((ofp = fopen(szWininitFile, "a+")) == NULL)
+      return(FALSE);
 
-      if(FileExists(szWininitFile) == FALSE)
-        bWriteRenameSection = TRUE;
-      else
-        bWriteRenameSection = FALSE;
+    if(bWriteRenameSection == TRUE)
+      fprintf(ofp, "[RENAME]\n");
 
-      if((ofp = fopen(szWininitFile, "a+")) == NULL)
-        return(FALSE);
-
-      if(bWriteRenameSection == TRUE)
-        fprintf(ofp, "[RENAME]\n");
-
-      fprintf(ofp, "NUL=%s\n", szFile);
-      fclose(ofp);
-    }
+    fprintf(ofp, "NUL=%s\n", szFile);
+    fclose(ofp);
   }
   else
     bDelayDelete = FALSE;
@@ -79,6 +74,7 @@ BOOL DeleteOrDelayUntilReboot(PSZ szFile)
 
 void RemoveUninstaller(PSZ szUninstallFilename)
 {
+#ifdef OLDCODE
   char      szBuf[MAX_BUF];
   char      szWinDir[MAX_BUF];
   char      szUninstallFile[MAX_BUF];
@@ -96,6 +92,7 @@ void RemoveUninstaller(PSZ szUninstallFilename)
   strcat(szBuf, szUninstallFilename);
   GetShortPathName(szBuf, szUninstallFile, sizeof(szUninstallFile));
   DeleteOrDelayUntilReboot(szUninstallFile);
+#endif
 }
 
 sil *InitSilNodes(char *szInFile)
@@ -104,7 +101,7 @@ sil *InitSilNodes(char *szInFile)
   char      szLineRead[MAX_BUF];
   sil       *silTemp;
   sil       *silHead;
-  ULONGLONG ullLineCount;
+  unsigned long long ullLineCount;
 
   if(FileExists(szInFile) == FALSE)
     return(NULL);
@@ -163,76 +160,10 @@ void DeInitSilNodes(sil **silHead)
   SilNodeDelete(silTemp);
 }
 
-void DeleteWinRegKey(HINI hkRootKey, PSZ szKey, BOOL bAbsoluteDelete)
-{
-  HINI      hkResult;
-  ULONG     dwErr;
-  ULONG     dwTotalSubKeys;
-  ULONG     dwTotalValues;
-  ULONG     dwSubKeySize;
-  FILETIME  ftLastWriteFileTime;
-  char      szSubKey[MAX_BUF];
-  char      szNewKey[MAX_BUF];
-  long      lRv;
-
-  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_QUERY_VALUE, &hkResult);
-  if(dwErr == ERROR_SUCCESS)
-  {
-    dwTotalSubKeys = 0;
-    dwTotalValues  = 0;
-    RegQueryInfoKey(hkResult, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
-    RegCloseKey(hkResult);
-
-    if(((dwTotalSubKeys == 0) && (dwTotalValues == 0)) || bAbsoluteDelete)
-    {
-      if(dwTotalSubKeys && bAbsoluteDelete)
-      {
-        do
-        {
-          dwSubKeySize = sizeof(szSubKey);
-          lRv = 0;
-          if(RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult) == ERROR_SUCCESS)
-          {
-            if((lRv = RegEnumKeyEx(hkResult, 0, szSubKey, &dwSubKeySize, NULL, NULL, NULL, &ftLastWriteFileTime)) == ERROR_SUCCESS)
-            {
-              RegCloseKey(hkResult);
-              strcpy(szNewKey, szKey);
-              AppendBackSlash(szNewKey, sizeof(szNewKey));
-              strcat(szNewKey, szSubKey);
-              DeleteWinRegKey(hkRootKey, szNewKey, bAbsoluteDelete);
-            }
-            else
-              RegCloseKey(hkResult);
-          }
-        } while(lRv != ERROR_NO_MORE_ITEMS);
-      }
-
-      dwErr = RegDeleteKey(hkRootKey, szKey);
-    }
-  }
-}
-
-void DeleteWinRegValue(HINI hkRootKey, PSZ szKey, PSZ szName)
-{
-  HINI    hkResult;
-  ULONG   dwErr;
-
-  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
-  if(dwErr == ERROR_SUCCESS)
-  {
-    if(*szName == '\0')
-      dwErr = RegDeleteValue(hkResult, NULL);
-    else
-      dwErr = RegDeleteValue(hkResult, szName);
-
-    RegCloseKey(hkResult);
-  }
-}
-
-void ParseForFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG dwShortFilenameBufSize)
+void ParseForFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG ulShortFilenameBufSize)
 {
   int     iLen;
-  PSZ   szFirstNonSpace;
+  PSZ     szFirstNonSpace;
   char    szBuf[MAX_BUF];
 
   if((szFirstNonSpace = GetFirstNonSpace(&(szString[strlen(szKeyStr)]))) != NULL)
@@ -241,22 +172,15 @@ void ParseForFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG dwShortFilenameB
     if(szFirstNonSpace[iLen - 1] == '\n')
       szFirstNonSpace[iLen -1] = '\0';
 
-    if(strcmpi(szKeyStr, KEY_WINDOWS_SHORTCUT) == 0)
-    {
-      strcpy(szBuf, szFirstNonSpace);
-      strcat(szBuf, ".lnk");
-      szFirstNonSpace = szBuf;
-    }
-
     strcpy(szFile, szFirstNonSpace);
   }
 }
 
-void ParseForCopyFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG dwShortFilenameBufSize)
+void ParseForCopyFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG ulShortFilenameBufSize)
 {
   int     iLen;
-  PSZ   szFirstNonSpace;
-  PSZ   szSubStr = NULL;
+  PSZ     szFirstNonSpace;
+  PSZ     szSubStr = NULL;
   char    szBuf[MAX_BUF];
 
   if((szSubStr = strstr(szString, " to ")) != NULL)
@@ -267,26 +191,19 @@ void ParseForCopyFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG dwShortFilen
       if(szFirstNonSpace[iLen - 1] == '\n')
         szFirstNonSpace[iLen -1] = '\0';
 
-      if(strcmpi(szKeyStr, KEY_WINDOWS_SHORTCUT) == 0)
-      {
-        strcpy(szBuf, szFirstNonSpace);
-        strcat(szBuf, ".lnk");
-        szFirstNonSpace = szBuf;
-      }
-
     strcpy(szFile, szFirstNonSpace);
     }
   }
 }
 
-void ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG dwRootKeyBufSize, PSZ szKey, ULONG dwKeyBufSize, PSZ szName, ULONG dwNameBufSize)
+void ParseForOS2INIInfo(PSZ szString, PSZ szKeyStr, PSZ szApp, ULONG ulAppBufSize, PSZ szKey, ULONG ulKeyBufSize)
 {
   int     i;
   int     iLen;
   int     iBrackets;
   char    szStrCopy[MAX_BUF];
-  PSZ   szFirstNonSpace;
-  PSZ   szFirstBackSlash;
+  PSZ     szFirstNonSpace;
+  PSZ     szFirstBackSlash;
   BOOL    bFoundOpenBracket;
   BOOL    bFoundName;
 
@@ -299,10 +216,6 @@ void ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG dwRootK
       szFirstNonSpace[--iLen] = '\0';
     }
 
-    szFirstBackSlash = strstr(szFirstNonSpace, "\\");
-    szFirstBackSlash[0] = '\0';
-    strcpy(szRootKey, szFirstNonSpace);
-    szFirstNonSpace = &(szFirstBackSlash[1]);
     iLen = strlen(szFirstNonSpace);
 
     iBrackets         = 0;
@@ -332,7 +245,7 @@ void ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG dwRootK
 
         if((bFoundOpenBracket) && (iBrackets == 0))
         {
-          strcpy(szName, &(szFirstNonSpace[i + 1]));
+          strcpy(szKey, &(szFirstNonSpace[i + 1]));
           bFoundName = TRUE;
         }
       }
@@ -342,7 +255,7 @@ void ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG dwRootK
         if(!isspace(szFirstNonSpace[i]))
         {
           szFirstNonSpace[i + 1] = '\0';
-          strcpy(szKey, szFirstNonSpace);
+          strcpy(szApp, szFirstNonSpace);
           break;
         }
       }
@@ -350,157 +263,14 @@ void ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG dwRootK
   }
 }
 
-ULONG DecrementSharedFileCounter(char *file)
-{
-  HINI     keyHandle = 0;
-  LONG     result;
-  ULONG    type      = REG_ULONG;
-  ULONG    valbuf    = 0;
-  ULONG    valbufsize;
-  ULONG    rv        = 0;
-
-  valbufsize = sizeof(ULONG);
-  result     = RegOpenKeyEx(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, 0, KEY_READ | KEY_WRITE, &keyHandle);
-  if(ERROR_SUCCESS == result)
-  {
-    result = RegQueryValueEx(keyHandle, file, NULL, &type, (LPBYTE)&valbuf, (LPULONG)&valbufsize);
-    if((ERROR_SUCCESS == result) && (type == REG_ULONG))
-    {
-      rv = --valbuf;
-    }
-
-    RegSetValueEx(keyHandle, file, 0, REG_ULONG, (LPBYTE)&valbuf, valbufsize);
-    RegCloseKey(keyHandle);
-  }
-
-  return(rv);
-}
-
-int GetSharedFileCount(char *file)
-{
-  HINI     keyHandle = 0;
-  LONG     result;
-  ULONG    type      = REG_ULONG;
-  ULONG    valbuf    = 0;
-  ULONG    valbufsize;
-  int      rv        = -999;
-
-  valbufsize = sizeof(ULONG);
-  result     = RegOpenKeyEx(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, 0, KEY_READ, &keyHandle);
-  if(ERROR_SUCCESS == result)
-  {
-    result = RegQueryValueEx(keyHandle, file, NULL, &type, (LPBYTE)&valbuf, (LPULONG)&valbufsize);
-    if((ERROR_SUCCESS == result) && (type == REG_ULONG))
-      rv = valbuf;
-
-    RegCloseKey(keyHandle);
-  }
-
-  return(rv);
-}
-
-BOOL UnregisterServer(char *file)
-{
-  PFNWP   DllUnReg;
-  HOBJECT hLib;
-  BOOL      bFailed = FALSE;
-
-  if(file != NULL)
-  {
-    if((hLib = LoadLibraryEx(file, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
-    {
-      if((DllUnReg = GetProcAddress(hLib, "DllUnregisterServer")) != NULL)
-        DllUnReg();
-      else
-        bFailed = TRUE;
-
-      FreeLibrary(hLib);
-    }
-    else
-      bFailed = TRUE;
-  }
-  else
-    bFailed = TRUE;
-
-  return(bFailed);
-}
-
-BOOL DetermineUnRegisterServer(sil *silInstallLogHead, PSZ szFile)
-{
-  sil   *silInstallLogTemp;
-  int   iSharedFileCount;
-  char  szLCLine[MAX_BUF];
-  char  szLCFile[MAX_BUF];
-  BOOL  bRv;
-
-  bRv = FALSE;
-  if(silInstallLogHead != NULL)
-  {
-    silInstallLogTemp = silInstallLogHead;
-    iSharedFileCount  = GetSharedFileCount(szFile);
-    strcpy(szLCFile, szFile);
-    _strlwr(szLCFile);
-
-    do
-    {
-      silInstallLogTemp = silInstallLogTemp->Prev;
-      strcpy(szLCLine, silInstallLogTemp->szLine);
-      _strlwr(szLCLine);
-
-      if((strstr(szLCLine, szLCFile) != NULL) &&
-         (strstr(szLCLine, KEY_INSTALLING_SHARED_FILE) != NULL) &&
-         (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        --iSharedFileCount;
-      }
-      else if((strstr(szLCLine, szLCFile) != NULL) &&
-              (strstr(szLCLine, KEY_INSTALLING) != NULL) &&
-              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        bRv = TRUE;
-        break;
-      }
-      else if((strstr(szLCLine, szLCFile) != NULL) &&
-              (strstr(szLCLine, KEY_REPLACING_SHARED_FILE) != NULL) &&
-              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        --iSharedFileCount;
-      }
-      else if((strstr(szLCLine, szLCFile) != NULL) &&
-              (strstr(szLCLine, KEY_REPLACING) != NULL) &&
-              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        bRv = TRUE;
-        break;
-      }
-      else if((strstr(szLCLine, szLCFile) != NULL) &&
-              (strstr(szLCLine, KEY_COPY_FILE) != NULL) &&
-              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        bRv = TRUE;
-        break;
-      }
-
-      ProcessWindowsMessages();
-    } while(silInstallLogTemp != silInstallLogHead);
-  }
-
-  if((iSharedFileCount <= 0) && (iSharedFileCount != -999))
-    bRv = TRUE;
-
-  return(bRv);
-}
-
 ULONG Uninstall(sil* silInstallLogHead)
 {
   sil   *silInstallLogTemp;
-  PSZ szSubStr;
+  PSZ   szSubStr;
   char  szLCLine[MAX_BUF];
+  char  szApp[MAX_BUF];
   char  szKey[MAX_BUF];
-  char  szRootKey[MAX_BUF];
-  char  szName[MAX_BUF];
   char  szFile[MAX_BUF];
-  HINI  hkRootKey;
 
   if(silInstallLogHead != NULL)
   {
@@ -509,62 +279,14 @@ ULONG Uninstall(sil* silInstallLogHead)
     {
       silInstallLogTemp = silInstallLogTemp->Prev;
       strcpy(szLCLine, silInstallLogTemp->szLine);
-      _strlwr(szLCLine);
+      strlwr(szLCLine);
 
-      if(((szSubStr = strstr(szLCLine, KEY_WINDOWS_REGISTER_SERVER)) != NULL) &&
-          (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        ParseForFile(szSubStr, KEY_WINDOWS_REGISTER_SERVER, szFile, sizeof(szFile));
-        if(DetermineUnRegisterServer(silInstallLogHead, szFile) == TRUE)
-          UnregisterServer(szFile);
-      }
-      else if(((szSubStr = strstr(szLCLine, KEY_INSTALLING_SHARED_FILE)) != NULL) &&
-               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        /* check for "Installing Shared File: " string and delete the file */
-        ParseForFile(szSubStr, KEY_INSTALLING_SHARED_FILE, szFile, sizeof(szFile));
-        if(DecrementSharedFileCounter(szFile) == 0)
-        {
-          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-          {
-            MessageBeep(MB_ICONEXCLAMATION);
-            gdwWhatToDo = DialogBoxParam(hInst, MAKEINTRESOURCE(DLG_WHAT_TO_DO), hDlgUninstall, DlgProcWhatToDo, (LPARAM)szFile);
-          }
-
-          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
-          {
-            DeleteWinRegValue(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, szFile);
-            DeleteOrDelayUntilReboot(szFile);
-          }
-          else if(gdwWhatToDo == WTD_CANCEL)
-            return(WTD_CANCEL);
-        }
-      }
-      else if(((szSubStr = strstr(szLCLine, KEY_INSTALLING)) != NULL) &&
+      if(((szSubStr = strstr(szLCLine, KEY_INSTALLING)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "Installing: " string and delete the file */
         ParseForFile(szSubStr, KEY_INSTALLING, szFile, sizeof(szFile));
         DeleteOrDelayUntilReboot(szFile);
-      }
-      else if(((szSubStr = strstr(szLCLine, KEY_REPLACING_SHARED_FILE)) != NULL) &&
-               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        /* check for "Replacing Shared File: " string and delete the file */
-        ParseForFile(szSubStr, KEY_REPLACING_SHARED_FILE, szFile, sizeof(szFile));
-        if(DecrementSharedFileCounter(szFile) == 0)
-        {
-          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
-            gdwWhatToDo = DialogBoxParam(hInst, MAKEINTRESOURCE(DLG_WHAT_TO_DO), hDlgUninstall, DlgProcWhatToDo, (LPARAM)szFile);
-
-          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
-          {
-            DeleteWinRegValue(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, szFile);
-            DeleteOrDelayUntilReboot(szFile);
-          }
-          else if(gdwWhatToDo == WTD_CANCEL)
-            return(WTD_CANCEL);
-        }
       }
       else if(((szSubStr = strstr(szLCLine, KEY_REPLACING)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
@@ -573,40 +295,29 @@ ULONG Uninstall(sil* silInstallLogHead)
         ParseForFile(szSubStr, KEY_REPLACING, szFile, sizeof(szFile));
         DeleteOrDelayUntilReboot(szFile);
       }
-      else if(((szSubStr = strstr(szLCLine, KEY_STORE_REG_STRING)) != NULL) &&
+      else if(((szSubStr = strstr(silInstallLogTemp->szLine, KEY_STORE_INI_ENTRY)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
-        /* check for "Store Registry Value String: " string and remove the key */
-        ParseForWinRegInfo(szSubStr, KEY_STORE_REG_STRING, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
-        hkRootKey = ParseRootKey(szRootKey);
-        DeleteWinRegValue(hkRootKey, szKey, szName);
+        /* check for "Store INI Entry: " string and get the app/key pair */
+        ParseForOS2INIInfo(szSubStr, KEY_STORE_INI_ENTRY, szApp, sizeof(szKey), szKey, sizeof(szKey));
+        PrfWriteProfileString(HINI_USER, szApp, szKey, NULL);
       }
-      else if(((szSubStr = strstr(szLCLine, KEY_STORE_REG_NUMBER)) != NULL) &&
+      else if(((szSubStr = strstr(silInstallLogTemp->szLine, KEY_OS2_OBJECT)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
-        /* check for "Store Registry Value Number: " string and remove the key */
-        ParseForWinRegInfo(szSubStr, KEY_STORE_REG_NUMBER, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
-        hkRootKey = ParseRootKey(szRootKey);
-        DeleteWinRegValue(hkRootKey, szKey, szName);
-      }
-      else if(((szSubStr = strstr(szLCLine, KEY_CREATE_REG_KEY)) != NULL) &&
-               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        ParseForWinRegInfo(szSubStr, KEY_CREATE_REG_KEY, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
-        hkRootKey = ParseRootKey(szRootKey);
-        DeleteWinRegKey(hkRootKey, szKey, FALSE);
+        /* check for "OS2 object" string and delete the object */
+        HOBJECT hObj = NULLHANDLE;
+        ParseForFile(szSubStr, KEY_OS2_OBJECT, szFile, sizeof(szFile));
+        hObj = WinQueryObject(szFile);
+        if (hObj) {
+           WinDestroyObject(hObj);
+        }
       }
       else if(((szSubStr = strstr(szLCLine, KEY_CREATE_FOLDER)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         ParseForFile(szSubStr, KEY_CREATE_FOLDER, szFile, sizeof(szFile));
         DirectoryRemove(szFile, FALSE);
-      }
-      else if(((szSubStr = strstr(szLCLine, KEY_WINDOWS_SHORTCUT)) != NULL) &&
-               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
-      {
-        ParseForFile(szSubStr, KEY_WINDOWS_SHORTCUT, szFile, sizeof(szFile));
-        DeleteOrDelayUntilReboot(szFile);
       }
       else if(((szSubStr = strstr(szLCLine, KEY_COPY_FILE)) != NULL) &&
                (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
@@ -631,20 +342,22 @@ ULONG GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBu
   char            szFilenameOnly[MAX_BUF];
   char            szFilenameExtensionOnly[MAX_BUF];
   char            szNumber[MAX_BUF];
-  long            dwNumber;
-  long            dwMaxNumber;
-  PSZ           szDotPtr;
-  LHANDLE          hFile;
-  WIN32_FIND_DATA fdFile;
+  long            ulNumber;
+  long            ulMaxNumber;
+  PSZ             szDotPtr;
+  HDIR            hFile;
+  FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
+  ULONG           ulAttrs;
   BOOL            bFound;
 
   if(FileExists(szTargetPath))
   {
     /* zero out the memory */
-    ZeroMemory(szOutBuf,                dwOutBufSize);
-    ZeroMemory(szSearchFilename,        sizeof(szSearchFilename));
-    ZeroMemory(szFilenameOnly,          sizeof(szFilenameOnly));
-    ZeroMemory(szFilenameExtensionOnly, sizeof(szFilenameExtensionOnly));
+    memset(szOutBuf,                0, dwOutBufSize);
+    memset(szSearchFilename,        0, sizeof(szSearchFilename));
+    memset(szFilenameOnly,          0, sizeof(szFilenameOnly));
+    memset(szFilenameExtensionOnly, 0, sizeof(szFilenameExtensionOnly));
 
     /* parse for the filename w/o extention and also only the extension */
     if((szDotPtr = strstr(szInFilename, ".")) != NULL)
@@ -668,35 +381,43 @@ ULONG GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBu
     strcat(szSearchTargetFullFilename, szSearchFilename);
 
     iFilenameOnlyLen = strlen(szFilenameOnly);
-    dwNumber         = 0;
-    dwMaxNumber      = -1;
+    ulNumber         = 0;
+    ulMaxNumber      = -1;
 
     /* find the largest numbered filename in the szTargetPath */
-    if((hFile = FindFirstFile(szSearchTargetFullFilename, &fdFile)) == ERROR_INVALID_HANDLE)
+    ulFindCount = 1;
+    hFile = HDIR_CREATE;
+    ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+    if((DosFindFirst(szSearchTargetFullFilename, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
       bFound = FALSE;
     else
       bFound = TRUE;
 
     while(bFound)
     {
-       ZeroMemory(szNumber, sizeof(szNumber));
-      if((strcmpi(fdFile.cFileName, ".") != 0) && (strcmpi(fdFile.cFileName, "..") != 0))
+       memset(szNumber, 0, sizeof(szNumber));
+      if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
       {
-        strcpy(szNumber, &fdFile.cFileName[iFilenameOnlyLen]);
-        dwNumber = atoi(szNumber);
-        if(dwNumber > dwMaxNumber)
-          dwMaxNumber = dwNumber;
+        strcpy(szNumber, &fdFile.achName[iFilenameOnlyLen]);
+        ulNumber = atoi(szNumber);
+        if(ulNumber > ulMaxNumber)
+          ulMaxNumber = ulNumber;
       }
 
-      bFound = FindNextFile(hFile, &fdFile);
+      ulFindCount = 1;
+      if (DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount) == NO_ERROR) {
+        bFound = TRUE;
+      } else {
+        bFound = FALSE;
+      }
     }
 
-    FindClose(hFile);
+    DosFindClose(hFile);
 
     strcpy(szOutBuf, szTargetPath);
     AppendBackSlash(szOutBuf, dwOutBufSize);
     strcat(szOutBuf, szFilenameOnly);
-    itoa(dwMaxNumber, szNumber, 10);
+    itoa(ulMaxNumber, szNumber, 10);
     strcat(szOutBuf, szNumber);
 
     if(*szFilenameExtensionOnly != '\0')
@@ -707,7 +428,6 @@ ULONG GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBu
   }
   else
     return(0);
-
   return(FileExists(szOutBuf));
 }
 

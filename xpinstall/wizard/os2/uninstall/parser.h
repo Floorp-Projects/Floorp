@@ -27,15 +27,13 @@
 
 sil         *InitSilNodes(char *szFileIni);
 void        DeInitSilNodes(sil **silHead);
-void        ParseCommandLine(PSZ lpszCmdLine);
-APIRET     FileExists(PSZ szFile);
+ULONG       ParseCommandLine(int argc, char *argv[]);
+HRESULT     FileExists(PSZ szFile);
 ULONG       Uninstall(sil* silFile);
-void        ParseForFile(PSZ szString, PSZ szKey, PSZ szFile, ULONG dwShortFilenameBufSize);
-void        ParseForCopyFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG dwShortFilenameBufSize);
-void        ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG dwRootKeyBufSize, PSZ szKey, ULONG dwKeyBufSize, PSZ szName, ULONG dwNameBufSize);
-void        DeleteWinRegKey(HINI hkRootKey, PSZ szKey, BOOL bAbsoluteDelete);
-void        DeleteWinRegValue(HINI hkRootKey, PSZ szKey, PSZ szName);
-ULONG       GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBufSize);
+void        ParseForFile(PSZ szString, PSZ szKey, PSZ szFile, ULONG ulShortFilenameBufSize);
+void        ParseForCopyFile(PSZ szString, PSZ szKeyStr, PSZ szFile, ULONG ulShortFilenameBufSize);
+void        ParseForWinRegInfo(PSZ szString, PSZ szKeyStr, PSZ szRootKey, ULONG ulRootKeyBufSize, PSZ szKey, ULONG ulKeyBufSize, PSZ szName, ULONG ulNameBufSize);
+ULONG       GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG ulOutBufSize);
 void        RemoveUninstaller(PSZ szUninstallFilename);
 ULONG       DecrementSharedFileCounter(char *file);
 BOOL        DeleteOrDelayUntilReboot(PSZ szFile);

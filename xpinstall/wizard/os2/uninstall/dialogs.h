@@ -25,12 +25,12 @@
 #ifndef _DIALOGS_H_
 #define _DIALOGS_H_
 
-MRESULT EXPENTRY  DlgProcUninstall(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam);
-MRESULT EXPENTRY  DlgProcWhatToDo(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam);
-MRESULT EXPENTRY  DlgProcMessage(HWND hDlg, UINT msg, MPARAM wParam, LONG lParam);
+MRESULT APIENTRY  DlgProcUninstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
+MRESULT APIENTRY  DlgProcWhatToDo(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
+MRESULT APIENTRY  DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2);
 
 void              ParseAllUninstallLogs();
-HWND              InstantiateDialog(HWND hParent, ULONG dwDlgID, PSZ szTitle, PFNWP wpDlgProc);
+HWND              InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgProc);
 void              ShowMessage(PSZ szMessage, BOOL bShow);
 void              ProcessWindowsMessages(void);
 

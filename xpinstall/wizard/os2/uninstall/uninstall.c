@@ -20,105 +20,92 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.
  */
 
-#define INCL_WIN
-#define INCL_PM
-
-#include <os2.h>
 #include "uninstall.h"
 #include "extra.h"
 #include "dialogs.h"
 #include "ifuncns.h"
 
 /* global variables */
-HAB				hab;
-
-LHANDLE      hInst;
-
-LHANDLE          hAccelTable;
-
 HWND            hDlgUninstall;
 HWND            hDlgMessage;
 HWND            hWndMain;
 
-PSZ           szEGlobalAlloc;
-PSZ           szEStringLoad;
-PSZ           szEDllLoad;
-PSZ           szEStringNull;
-PSZ           szTempSetupPath;
+PSZ             szEGlobalAlloc;
+PSZ             szEStringLoad;
+PSZ             szEDllLoad;
+PSZ             szEStringNull;
+PSZ             szTempSetupPath;
 
-PSZ           szClassName;
-PSZ           szUninstallDir;
-PSZ           szTempDir;
-PSZ           szOSTempDir;
-PSZ           szFileIniUninstall;
-PSZ           gszSharedFilename;
+PSZ             szClassName;
+PSZ             szUninstallDir;
+PSZ             szTempDir;
+PSZ             szOSTempDir;
+PSZ             szFileIniUninstall;
+PSZ             szFileIniDefaultsInfo;
+PSZ             gszSharedFilename;
 
 ULONG           ulOSType;
-ULONG           dwScreenX;
-ULONG           dwScreenY;
+ULONG           ulScreenX;
+ULONG           ulScreenY;
+ULONG           ulDlgFrameX;
+ULONG           ulDlgFrameY;
+ULONG           ulTitleBarY;
 
-ULONG           gdwWhatToDo;
+ULONG           gulWhatToDo;
 
 uninstallGen    ugUninstall;
 diU             diUninstall;
 
-//HINSTANCE hInstance, HINSTANCE hPrevInstance, PSZ lpszCmdLine, int nCmdShow
-int APIENTRY main(int argc, PSZ lpszCmdLine)
+main(int argc, char *argv[], char *envp[])
 {
-  /***********************************************************************/
-  /* HANDLE hInstance;       handle for this instance                    */
-  /* HANDLE hPrevInstance;   handle for possible previous instances      */
-  /* PSZ  lpszCmdLine;     long pointer to exec command line           */
-  /* int    nCmdShow;        Show code for main window display           */
-  /***********************************************************************/
-
-  PQMSG   qmsg;
+  HAB hab;
+  HMQ hmq;
+  QMSG qmsg;
   char  szBuf[MAX_BUF];
 
-  hab = WinInitialize(0);
+  hab = WinInitialize( 0 );
+  hmq = WinCreateMsgQueue( hab, 0 );
 
-//  if(!hPrevInstance)
-//  {
-    hInst = GetModuleHandle(NULL);
-    if(Initialize(hInst))
-    {
-      PostQuitMessage(1);
-    }
-    else if(!InitApplication(hInst))
-    {
-      char szEFailed[MAX_BUF];
+  if(Initialize(0, argv[0]))
+  {
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(!InitApplication(0))
+  {
+    char szEFailed[MAX_BUF];
 
-      if(NS_LoadString(hInst, IDS_ERROR_FAILED, szEFailed, MAX_BUF) == WIZ_OK)
-      {
-        wsprintf(szBuf, szEFailed, "InitApplication().");
-        PrintError(szBuf, ERROR_CODE_SHOW);
-      }
-      PostQuitMessage(1);
-    }
-    else if(ParseUninstallIni(lpszCmdLine))
+    if(NS_LoadString(0, IDS_ERROR_FAILED, szEFailed, MAX_BUF) == WIZ_OK)
     {
-      PostQuitMessage(1);
+      sprintf(szBuf, szEFailed, "InitApplication().");
+      PrintError(szBuf, ERROR_CODE_SHOW);
     }
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(ParseUninstallIni(argc, argv))
+  {
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(ugUninstall.bUninstallFiles == TRUE)
+  {
+    if(diUninstall.bShowDialog == TRUE)
+      hDlgUninstall = InstantiateDialog(hWndMain, DLG_UNINSTALL, diUninstall.szTitle, DlgProcUninstall);
     else
-    {
-      if(diUninstall.bShowDialog == TRUE)
-        hDlgUninstall = InstantiateDialog(hWndMain, DLG_UNINSTALL, diUninstall.szTitle, DlgProcUninstall);
-      else
-        ParseAllUninstallLogs();
-    }
-//  }
+      ParseAllUninstallLogs();
+  }
 
-    while(WinGetMessage(hab, &qmsg, 0, 0, 0))
-          WinDispatchMessage(hab, &qmsg);
-
+  if((ugUninstall.bUninstallFiles == TRUE) && (diUninstall.bShowDialog == TRUE))
+  {
+    while ( WinGetMsg( hab, &qmsg, NULLHANDLE, 0, 0 ) )
+      WinDispatchMsg( hab, &qmsg );
+  }
 
   /* Do clean up before exiting from the application */
   DeInitialize();
 
-  //return(qmsg.mp1);
-  return 1;
-} /*  End of main */
+  WinDestroyMsgQueue( hmq );
+  WinTerminate( hab ); 
+
+}
 
