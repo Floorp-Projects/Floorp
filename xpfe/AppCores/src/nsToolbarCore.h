@@ -45,7 +45,7 @@ class nsToolbarCore : public nsBaseAppCore,
   public:
   
     nsToolbarCore();
-    ~nsToolbarCore();
+    virtual ~nsToolbarCore();
                  
 
     NS_DECL_ISUPPORTS

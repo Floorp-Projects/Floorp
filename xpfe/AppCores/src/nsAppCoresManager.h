@@ -45,7 +45,7 @@ class nsAppCoresManager : public nsIScriptObjectOwner, public nsIDOMAppCores
   public:
 
     nsAppCoresManager();
-    ~nsAppCoresManager();
+    virtual ~nsAppCoresManager();
        
     NS_DECL_ISUPPORTS
 

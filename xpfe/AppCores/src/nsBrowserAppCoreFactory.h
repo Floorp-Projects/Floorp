@@ -32,7 +32,7 @@ class nsBrowserAppCoreFactory : public nsIFactory
     public:
         
         nsBrowserAppCoreFactory();
-        ~nsBrowserAppCoreFactory();
+        virtual ~nsBrowserAppCoreFactory();
         
         PRBool CanUnload(void);
 

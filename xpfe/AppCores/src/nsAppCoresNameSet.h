@@ -31,7 +31,7 @@ class nsAppCoresNameSet : public nsIScriptExternalNameSet
 {
     public:
         nsAppCoresNameSet();
-        ~nsAppCoresNameSet();
+        virtual ~nsAppCoresNameSet();
 
         NS_DECL_ISUPPORTS
         NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);

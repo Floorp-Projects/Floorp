@@ -32,7 +32,7 @@ class nsMailCoreFactory : public nsIFactory
     public:
         
         nsMailCoreFactory();
-        ~nsMailCoreFactory();
+        virtual ~nsMailCoreFactory();
         
         PRBool CanUnload(void);
 

@@ -42,7 +42,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
   public:
 
     nsBrowserAppCore();
-    ~nsBrowserAppCore();
+    virtual ~nsBrowserAppCore();
                  
 
     NS_DECL_ISUPPORTS
