@@ -52,10 +52,12 @@ static void BuildLexTable()
   lt[CSS_ESCAPE] = START_IDENT;
   lt['-'] |= IS_IDENT;
   // XXX add in other whitespace chars
-  lt[' '] |= IS_WHITESPACE;
-  lt['\t'] |= IS_WHITESPACE;
-  lt['\r'] |= IS_WHITESPACE;
-  lt['\n'] |= IS_WHITESPACE;
+  lt[' '] |= IS_WHITESPACE;   // space
+  lt['\t'] |= IS_WHITESPACE;  // horizontal tab
+  lt['\v'] |= IS_WHITESPACE;  // vertical tab
+  lt['\r'] |= IS_WHITESPACE;  // carriage return
+  lt['\n'] |= IS_WHITESPACE;  // line feed
+  lt['\f'] |= IS_WHITESPACE;  // form feed
   for (i = 161; i <= 255; i++) {
     lt[i] |= IS_LATIN1 | IS_IDENT | START_IDENT;
   }
@@ -539,7 +541,7 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
   }
   if ((ch <= 255) && ((lexTable[ch] & IS_HEX_DIGIT) != 0)) {
     PRInt32 rv = 0;
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 6; i++) { // up to six digits
       ch = Read(aErrorCode);
       if (ch < 0) {
         // Whoops: error or premature eof
@@ -552,11 +554,22 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
           // Note: c&7 just keeps the low three bits which causes
           // upper and lower case alphabetics to both yield their
           // "relative to 10" value for computing the hex value.
-          rv = rv * 16 + (ch & 0x7) + 10;
+          rv = rv * 16 + ((ch & 0x7) + 9);
         }
-      } else {
+      }
+      else if ((lexTable[ch] & IS_WHITESPACE) != 0) {  // single space ends escape
+        break;
+      }
+      else {
         Unread();
         break;
+      }
+    }
+    if (6 == i) { // look for trailing whitespace and eat it
+      ch = Peek(aErrorCode);
+      if ((0 <= ch) && (ch <= 255) && 
+          ((lexTable[ch] & IS_WHITESPACE) != 0)) {
+        ch = Read(aErrorCode);
       }
     }
     return rv;
@@ -587,6 +600,9 @@ PRBool nsCSSScanner::GatherIdent(PRInt32& aErrorCode, PRInt32 aChar,
   if (aChar == CSS_ESCAPE) {
     aChar = ParseEscape(aErrorCode);
   }
+  if (0 < aChar) {
+    aIdent.Append(PRUnichar(aChar));
+  }
   for (;;) {
     aChar = Read(aErrorCode);
     if (aChar < 0) break;
@@ -611,7 +627,7 @@ PRBool nsCSSScanner::ParseID(PRInt32& aErrorCode,
 {
   aToken.mIdent.SetLength(0);
   aToken.mType = eCSSToken_ID;
-  return GatherIdent(aErrorCode, aChar, aToken.mIdent);
+  return GatherIdent(aErrorCode, 0, aToken.mIdent);
 }
 
 PRBool nsCSSScanner::ParseIdent(PRInt32& aErrorCode,
@@ -620,7 +636,6 @@ PRBool nsCSSScanner::ParseIdent(PRInt32& aErrorCode,
 {
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
-  ident.Append(PRUnichar(aChar));
   if (!GatherIdent(aErrorCode, aChar, ident)) {
     return PR_FALSE;
   }
@@ -640,7 +655,7 @@ PRBool nsCSSScanner::ParseAtKeyword(PRInt32& aErrorCode, PRInt32 aChar,
 {
   aToken.mIdent.SetLength(0);
   aToken.mType = eCSSToken_AtKeyword;
-  return GatherIdent(aErrorCode, aChar, aToken.mIdent);
+  return GatherIdent(aErrorCode, 0, aToken.mIdent);
 }
 
 PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
@@ -676,7 +691,6 @@ PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
   if (c >= 0) {
     if ((c <= 255) && ((lexTable[c] & START_IDENT) != 0)) {
       ident.SetLength(0);
-      ident.Append(PRUnichar(c));
       if (!GatherIdent(aErrorCode, c, ident)) {
         return PR_FALSE;
       }
