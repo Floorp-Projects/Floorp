@@ -252,7 +252,7 @@ function MsgSortByThread()
   var dbview = GetDBView();
   if(dbview && !dbview.supportsThreading)
     return;
-  dbview.flags |= nsMsgViewFlagsType.kThreadedDisplay;
+  dbview.viewFlags |= nsMsgViewFlagsType.kThreadedDisplay;
   MsgSortThreadPane(nsMsgViewSortType.byId);
 }
 
