@@ -1,5 +1,7 @@
 1998-08-13  Leif Hedstrom  <leif@netscape.com>
 
+	* Conn.pm (update): Fixed narly bug with ldap_modify()...
+
 	* All: Cleaned up some hash indexes, to make sure they are
 	properly quoted, and there are no conflicts to resolve.
 	
