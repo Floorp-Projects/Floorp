@@ -368,6 +368,34 @@ sub GenerateSQL {
              push(@wherepart, "$table.bug_id = bugs.bug_id");
              $f = "$table.thetext";
          },
+         "^attachments\..*," => sub {
+             my $table = "attachments_$chartid";
+             push(@supptables, "LEFT JOIN attachments $table ON bugs.bug_id = $table.bug_id");
+             $f =~ m/^attachments\.(.*)$/;
+             my $field = $1;
+             if ($t eq "changedby") {
+                 $v = DBNameToIdAndCheck($v);
+                 $q = SqlQuote($v);
+                 $field = "submitter_id";
+                 $t = "equals";
+             } elsif ($t eq "changedbefore") {
+                 $v = SqlifyDate($v);
+                 $q = SqlQuote($v);
+                 $field = "creation_ts";
+                 $t = "lessthan";
+             } elsif ($t eq "changedafter") {
+                 $v = SqlifyDate($v);
+                 $q = SqlQuote($v);
+                 $field = "creation_ts";
+                 $t = "greaterthan";
+             }
+             if ($field eq "ispatch") {
+                 if ($v ne "0" && $v ne "1") {
+                     return Error("The only legal values for the 'Attachment is patch' field is 0 or 1.");
+                 }
+             }
+             $f = "$table.$field";
+         },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
          },
@@ -826,7 +854,6 @@ query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
         exit;
     }
     my @list = split(/:/, $::COOKIE{'BUGLIST'});
-    $::MFORM{'bug_id'} = \@list;
     $::FORM{'bug_id'} = join(',', @list);
     if (!$::FORM{'order'}) {
         $::FORM{'order'} = 'reuse last sort';

@@ -898,6 +898,10 @@ AddFDef("qa_contact", "QAContact", 0);
 AddFDef("cc", "CC", 0);
 AddFDef("dependson", "BugsThisDependsOn", 0);
 AddFDef("blocked", "OtherBugsDependingOnThis", 0);
+AddFDef("attachments.description", "Attachment description", 0);
+AddFDef("attachments.thedata", "Attachment data", 0);
+AddFDef("attachments.mimetype", "Attachment mime type", 0);
+AddFDef("attachments.ispatch", "Attachment is patch", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
 AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
