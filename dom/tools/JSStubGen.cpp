@@ -244,6 +244,15 @@ static const char *kPropFuncEndStr =
 "      }\n"
 "    }\n"
 "  }\n"
+"  else {\n"
+"    nsIJSScriptObject *object;\n"
+"    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {\n"
+"      PRBool rval;\n"
+"      rval =  object->%sProperty(cx, id, vp);\n"
+"      NS_RELEASE(object);\n"
+"      return rval;\n"
+"    }\n"
+"  }\n"
 "\n"
 "  return PR_TRUE;\n"
 "}\n";
@@ -252,7 +261,7 @@ static const char *kPropFuncEndStr =
      sprintf(buffer, kPropFuncBeginStr, className, op, op, className, className, className)
 
 #define JSGEN_GENERATE_PROPFUNCEND(buffer, op)   \
-     sprintf(buffer, kPropFuncEndStr, op)
+     sprintf(buffer, kPropFuncEndStr, op, op)
 
 static const char *kPropCaseBeginStr = 
 "      case %s_%s:\n"
