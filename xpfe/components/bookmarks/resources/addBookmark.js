@@ -129,10 +129,9 @@ function Startup()
     switch (arg) {
     case "selectFolder":
       // If we're being opened as a folder selection window
-      document.getElementById("bookmarknamegrid").setAttribute("hidden", "true");
-      document.getElementById("createinseparator").setAttribute("hidden", "true");
-      document.getElementById("nameseparator").setAttribute("hidden", "true");
-      sizeToContent();
+      document.getElementById("bookmarknamegrid").hidden = true;
+      document.getElementById("createinseparator").hidden = true;
+      document.getElementById("nameseparator").hidden = true;
       dialogElement.setAttribute("title", dialogElement.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
       if (window.arguments[2])
@@ -143,26 +142,23 @@ function Startup()
       }
       break;
     case "newBookmark":
+      document.getElementById("showaddgroup").hidden = true;
       setupFields();
       if (window.arguments[2])
         gCreateInFolder = window.arguments[2];
-      document.getElementById("folderbox").setAttribute("hidden", "true");
-      sizeToFit();
+      document.getElementById("folderbox").hidden = true;
       break;
     case "addGroup":
-      document.getElementById("showaddgroup").setAttribute("hidden", "false");
       setupFields();
-      sizeToFit();
       break;
     case "addGroup,group":
-      document.getElementById("showaddgroup").setAttribute("hidden", "false");
-      gCB_AddGroup.setAttribute("checked", "true");
+      gCB_AddGroup.checked = true;
       setupFields();
       toggleGroup();
-      sizeToFit();
       break;
     default:
       // Regular Add Bookmark
+      document.getElementById("showaddgroup").hidden = true;
       setupFields();
       if (window.arguments[2]) {
         gCreateInFolder = window.arguments[2];
@@ -177,7 +173,7 @@ function Startup()
   
   if (shouldSetOKButton)
     onFieldInput();
-  if (document.getElementById("bookmarknamegrid").hasAttribute("hidden")) {
+  if (document.getElementById("bookmarknamegrid").hidden) {
     bookmarkView.tree.focus();
     if (bookmarkView.currentIndex == -1)
       bookmarkView.treeBoxObject.selection.select(0);
@@ -186,15 +182,10 @@ function Startup()
     gFld_Name.select();
     gFld_Name.focus();
   }
-} 
 
-function sizeToFit()
-{
-  var dialogElement = document.documentElement;
-  dialogElement.removeAttribute("persist");
+  // XXX fix old profiles
   dialogElement.removeAttribute("height");
   dialogElement.removeAttribute("width");
-  dialogElement.setAttribute("style", dialogElement.getAttribute("style"));
   sizeToContent();
 }
 
@@ -212,13 +203,13 @@ function setupFields()
 function onFieldInput()
 {
   const ok = document.documentElement.getButton("accept");
-  ok.disabled = gFld_URL.value == "" && !addingGroup() ||
+  ok.disabled = gFld_URL.value == "" && !gCB_AddGroup.checked ||
                 gFld_Name.value == "";
 }    
 
 function onOK()
 {
-  if (!document.getElementById("folderbox").hasAttribute("hidden")) {
+  if (!document.getElementById("folderbox").hidden) {
     var bookmarkView = document.getElementById("bookmarks-view");
     var currentIndex = bookmarkView.currentIndex;
     if (currentIndex != -1)
@@ -248,12 +239,8 @@ function onOK()
       kRDFC.Init(kBMDS, rFolder);
     }
 
-    // if no URL was provided and we're not filing as a group, do nothing
-    if (!gFld_URL.value && !addingGroup())
-      return;
-
     var url;
-    if (addingGroup()) {
+    if (gCB_AddGroup.checked) {
       const group = kBMS.createGroupInContainer(gFld_Name.value, rFolder, -1);
       const groups = window.arguments[5];
       for (var i = 0; i < groups.length; ++i) {
@@ -261,7 +248,7 @@ function onOK()
         kBMS.createBookmarkInContainer(groups[i].name, url,
                                        groups[i].charset, group, -1);
       }
-    } else {
+    } else if (gFld_URL.value) {
       url = getNormalizedURL(gFld_URL.value);
       var newBookmark = kBMS.createBookmarkInContainer(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
       if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
@@ -329,15 +316,20 @@ function toggleGroup()
   temp = gOldURLValue;
   gOldURLValue = gFld_URL.value;
   gFld_URL.value = temp;
-  gFld_URL.disabled = gCB_AddGroup.getAttribute("checked") == "true";
+  gFld_URL.disabled = gCB_AddGroup.checked;
 
   gFld_Name.select();
   gFld_Name.focus();
   onFieldInput();
 }
 
-function addingGroup()
+function persistTreeSize()
 {
-  const showAddGroup = document.getElementById("showaddgroup");
-  return showAddGroup.getAttribute("hidden") != "true" && gCB_AddGroup.getAttribute("checked") == "true";
+  if (!document.getElementById("folderbox").hidden) {
+    var bookmarkView = document.getElementById("bookmarks-view");
+    bookmarkView.setAttribute("height", bookmarkView.boxObject.height);
+    document.persist("bookmarks-view", "height");
+    bookmarkView.setAttribute("width", bookmarkView.boxObject.width);
+    document.persist("bookmarks-view", "width");
+  }
 }

@@ -36,12 +36,13 @@
 %addBookmarkDTD;
 ]>
 
-<dialog id="newBookmarkDialog" style="width: 36em;"
+<dialog id="newBookmarkDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         ondialogaccept="return onOK(event)"
         title="&newBookmark.title;" title-selectFolder="&selectFolder.label;"
         onload="Startup();"
-        persist="screenX screenY width height"
+        onunload="persistTreeSize();"
+        persist="screenX screenY"
         screenX="24" screenY="24">
    
   
@@ -52,7 +53,7 @@
   <stringbundle id="bookmarksbundle"
                 src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
 
-  <broadcaster id="showaddgroup" hidden="true"/>
+  <broadcaster id="showaddgroup"/>
 
   <separator id="nameseparator" class="thin"/>
   
@@ -113,6 +114,6 @@
     </hbox>
   </vbox>
 
-  <separator/>
+  <separator style="width: 36em;"/>
 
 </dialog>
