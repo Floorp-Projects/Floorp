@@ -44,10 +44,16 @@
 #include <X11/Xutil.h>
 #include <gdk/gdk.h>
 #include "nsRegion.h"
+#include "nsIGdkPixbufImage.h"
 
 class nsDrawingSurfaceGTK;
 
-class nsImageGTK : public nsIImage
+class nsImageGTK :
+#ifdef MOZ_WIDGET_GTK2
+                   public nsIGdkPixbufImage
+#else
+                   public nsIImage
+#endif
 {
 public:
   nsImageGTK();
@@ -98,7 +104,7 @@ public:
 
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
 
-  virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull; }        
+  virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull || mAlphaPixmap != nsnull; }
   virtual PRUint8*    GetAlphaBits();
   virtual PRInt32     GetAlphaLineStride();
 
@@ -117,6 +123,9 @@ public:
   NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
   NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
 
+#ifdef MOZ_WIDGET_GTK2
+  NS_IMETHOD_(GdkPixbuf*) GetGdkPixbuf();
+#endif
 
 private:
   /**

@@ -145,6 +145,10 @@ endif
 endif
 
 ifdef MOZ_ENABLE_GTK2
+EXPORTS = \
+		nsIGdkPixbufImage.h \
+		$(NULL)
+
 CPPSRCS		+= \
 		nsRegionGTK2.cpp \
 		$(NULL)
