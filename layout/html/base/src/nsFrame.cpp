@@ -1756,7 +1756,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
     PRInt32 contentOffset(aContentOffset); //temp to hold old value in case of failure
     
     result = (*aNewContent)->IndexOf(mContent, contentOffset);
-    if (NS_FAILED(result) || aContentOffset < 0) 
+    if (NS_FAILED(result) || contentOffset < 0) 
     {
       return (result?result:NS_ERROR_FAILURE);
     }
