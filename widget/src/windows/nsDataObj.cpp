@@ -75,13 +75,13 @@ nsDataObj::~nsDataObj()
   NS_IF_RELEASE(mTransferable);
   PRInt32 i;
   for (i=0;i<mDataFlavors->Count();i++) {
-    nsString * df = (nsString *)mDataFlavors->ElementAt(i);
+    nsCAutoString* df = NS_REINTERPRET_CAST(nsCAutoString *, mDataFlavors->ElementAt(i));
     delete df;
   }
 
   delete mDataFlavors;
 
-	m_cRef = 0;
+  m_cRef = 0;
   m_enumFE->Release();
 
 }
@@ -157,13 +157,14 @@ STDMETHODIMP nsDataObj::GetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
   FORMATETC fe;
   m_enumFE->Reset();
   while (NOERROR == m_enumFE->Next(1, &fe, &count)) {
-    nsString * df = (nsString *)mDataFlavors->ElementAt(dfInx);
-    if (nsnull != df) {
+    nsCAutoString * df = NS_REINTERPRET_CAST(nsCAutoString*, mDataFlavors->ElementAt(dfInx));
+    if ( df ) {
 		  if (FormatsMatch(fe, *pFE)) {
 			  pSTM->pUnkForRelease = NULL;
 			  CLIPFORMAT format = pFE->cfFormat;
 			  switch(format) {
 				  case CF_TEXT:
+				  case CF_UNICODETEXT:
 					  return GetText(df, *pFE, *pSTM);
 				  //case CF_BITMAP:
 				  //	return GetBitmap(*pFE, *pSTM);
@@ -332,21 +333,24 @@ HRESULT nsDataObj::GetDib(FORMATETC&, STGMEDIUM&)
 }
 
 //-----------------------------------------------------
-HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
+HRESULT nsDataObj::GetText(nsCAutoString * aDataFlavor, FORMATETC& aFE, STGMEDIUM& aSTG)
 {
   void* data;
   PRUint32   len;
   
-  char* flavorStr = aDF->ToNewCString();
+  // if someone asks for text/plain, look up text/unicode instead in the transferable.
+  char* flavorStr;
+  if ( aDataFlavor->Equals("text/plain") )
+    flavorStr = kUnicodeMime;
+  else
+    flavorStr = *aDataFlavor;
 
   // NOTE: CreateDataFromPrimitive creates new memory, that needs to be deleted
   nsCOMPtr<nsISupports> genericDataWrapper;
   mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &len);
-  if (0 == len) {
-	  return ResultFromScode(E_FAIL);
-  }
+  if ( !len )
+    return ResultFromScode(E_FAIL);
   nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
-  nsAllocator::Free(flavorStr);
 
   HGLOBAL     hGlobalMemory = NULL;
   PSTR        pGlobalMemory = NULL;
@@ -354,33 +358,50 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
 
+  // If someone is asking for text/plain, we need to convert unicode (assuming it's present)
+  // to text with the correct platform encoding.
+  //
   // The transferable gives us data that is null-terminated, but this isn't reflected in
   // the |len| parameter. Windoze apps expect this null to be there so bump our data buffer
   // by the appropriate size to account for the null (one char for CF_TEXT, one PRUnichar for
   // CF_UNICODETEXT).
   DWORD allocLen = (DWORD)len;
-  if ( CF_TEXT == aFE.cfFormat )
-    allocLen += sizeof(char);
-  else if ( CF_UNICODETEXT == aFE.cfFormat)
+  if ( aFE.cfFormat == CF_TEXT ) {
+    char* plainTextData = nsnull;
+    PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+    PRInt32 plainTextLen = 0;
+    nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, len / 2, &plainTextData, &plainTextLen );
+   
+    // replace the unicode data with our plaintext data. Recall that |plainTextLen| doesn't include
+    // the null in the length.
+    nsAllocator::Free(data);
+    if ( plainTextData ) {
+      data = plainTextData;
+      allocLen = plainTextLen + sizeof(char);
+    }
+    else {
+      NS_WARNING ( "Oh no, couldn't convert unicode to plain text" );
+      return ResultFromScode(S_OK);
+    }
+  }
+  else if ( aFE.cfFormat == CF_UNICODETEXT )
     allocLen += sizeof(PRUnichar);
-
-  // GHND zeroes the memory
-  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, allocLen); 
+    
+  hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, allocLen);      // GHND zeroes the memory
 
   // Copy text to Global Memory Area
-  if (hGlobalMemory != NULL) {
+  if ( hGlobalMemory ) {
     char* dest = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
     char* source = NS_REINTERPRET_CAST(char*, data);
-    memcpy ( dest, source, allocLen );                    // copies the null as well
+    memcpy ( dest, source, allocLen );                         // copies the null as well
     BOOL status = ::GlobalUnlock(hGlobalMemory);
   }
-
   aSTG.hGlobal = hGlobalMemory;
 
-  // Now, delete the memory that was created by CreateDataFromPrimitive
+  // Now, delete the memory that was created by CreateDataFromPrimitive (or our text/plain data)
   nsAllocator::Free(data);
 
-	return ResultFromScode(S_OK);
+  return ResultFromScode(S_OK);
 }
 
 //-----------------------------------------------------
@@ -447,7 +468,6 @@ void nsDataObj::AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE)
   // and then ask the transferable for that type of data
   mDataFlavors->AppendElement(new nsCAutoString(aDataFlavor));
   m_enumFE->AddFE(aFE);
-
 }
 
 //-----------------------------------------------------

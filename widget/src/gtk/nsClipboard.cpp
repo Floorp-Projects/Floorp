@@ -274,6 +274,13 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 
       // add these types as selection targets
       RegisterFormat(format);
+      
+      // if text/unicode is present, also add text/plain to the list of flavors we 
+      // export as we will do the conversion by hand.
+      if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+        gint textFormat = GetFormat(kTextMime);
+        RegisterFormat(textFormat);
+      }
     }
   }
 
@@ -292,7 +299,7 @@ void nsClipboard::AddTarget(GdkAtom aAtom)
 gint nsClipboard::GetFormat(const char* aMimeStr)
 {
   gint type = TARGET_NONE;
-  nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
+  nsCAutoString mimeStr ( CBufDescriptor(aMimeStr, PR_TRUE, PL_strlen(aMimeStr)+1) );
 #ifdef DEBUG_CLIPBOARD
   g_print("  nsClipboard::GetFormat(%s)\n", aMimeStr);
 #endif
@@ -785,11 +792,14 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     }
   }
 
+  PRBool needToDoConversionToPlainText = PR_FALSE;
   switch(type)
     {
     case GDK_TARGET_STRING:
     case TARGET_TEXT_PLAIN:
-      dataFlavor = kTextMime;
+      // if someone was asking for text/plain, lookup unicode instead so we can convert it.
+      dataFlavor = kUnicodeMime;
+      needToDoConversionToPlainText = PR_TRUE;
       break;
     case TARGET_TEXT_XIF:
       dataFlavor = kXIFMime;
@@ -821,7 +831,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 #ifdef DEBUG_CLIPBOARD
   g_print("- aInfo is for %s\n", gdk_atom_name(aInfo));
 #endif
-
+      
   // Get data out of transferable.
   nsCOMPtr<nsISupports> genericDataWrapper;
   rv = cb->mTransferable->GetTransferData(dataFlavor, 
@@ -833,11 +843,26 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     // find the number of bytes in the data for the below thing
     //    size_t size = sizeof((void*)((unsigned char)clipboardData[0]));
     //    g_print("************  *****************      ******************* %i\n", size);
+    
+    // if required, do the extra work to convert unicode to plain text and replace the output
+    // values with the plain text.
+    if ( needToDoConversionToPlainText ) {
+      char* plainTextData = nsnull;
+      PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
+      PRInt32 plainTextLen = 0;
+      nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataLength / 2, &plainTextData, &plainTextLen );
+      if ( clipboardData ) {
+        nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+        clipboardData = plainTextData;
+        dataLength = plainTextLen;
+      }
+    }
 
-    gtk_selection_data_set(aSelectionData,
-                           aInfo, size*8,
-                           (unsigned char *)clipboardData,
-                           dataLength);
+    if ( clipboardData )
+      gtk_selection_data_set(aSelectionData,
+                             aInfo, size*8,
+                             NS_REINTERPRET_CAST(unsigned char *, clipboardData),
+                             dataLength);
     nsCRT::free ( NS_REINTERPRET_CAST(char*, clipboardData) );
   }
   else

@@ -225,6 +225,13 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
 	        currentFlavor->ToString ( getter_Copies(flavorStr) );
 	        FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
 	        ::AddDragItemFlavor ( mDragRef, itemIndex, macOSFlavor, NULL, 0, flags );
+	        
+	        // If we advertise text/unicode, then make sure we add 'TEXT' to the list
+	        // of flavors supported since we will do the conversion ourselves in GetDataForFlavor()
+	        if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
+	          theMapper.MapMimeTypeToMacOSType(kTextMime);
+	          ::AddDragItemFlavor ( mDragRef, itemIndex, 'TEXT', NULL, 0, flags );	        
+	        }
 	      }
           
         } // foreach flavor in item              
@@ -479,6 +486,13 @@ nsDragService :: DragSendDataProc ( FlavorType inFlavor, void* inRefCon, ItemRef
 //
 // Given a MacOS flavor and an index for which drag item to lookup, get the information from the
 // drag item corresponding to this flavor.
+// 
+// This routine also handles the conversions between text/plain and text/unicode to take platform
+// charset encodings into account. If someone asks for text/plain, we convert the unicode (we assume
+// it is present because that's how we knew to advertise text/plain in the first place) and give it
+// to them. If someone asks for text/unicode, and it isn't there, we need to convert text/plain and
+// hand them back the unicode. Again, we can assume that text/plain is there because otherwise we
+// wouldn't have been allowed to look for unicode.
 //
 OSErr
 nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference inDragRef, unsigned int inItemIndex, 
@@ -489,24 +503,50 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
     
   OSErr retVal = noErr;
   
-    // (assumes that the items were placed into the transferable as nsITranferable*'s, not
-    // nsISupports*'s.  Don't forget ElementAt() addRefs for us.)
+  // (assumes that the items were placed into the transferable as nsITranferable*'s, not nsISupports*'s.)
   nsCOMPtr<nsISupports> genericItem;
   inDragItems->GetElementAt ( inItemIndex, getter_AddRefs(genericItem) );
   nsCOMPtr<nsITransferable> item ( do_QueryInterface(genericItem) );
   if ( item ) {
     nsCAutoString mimeFlavor;
-
+    
     // create a mime mapper to help us out based on data in a special flavor for this item.
     char* mappings = LookupMimeMappingsForItem(inDragRef, inItemIndex) ;
     nsMimeMapperMac theMapper ( mappings );
     theMapper.MapMacOSTypeToMimeType ( inFlavor, mimeFlavor );
-    nsCRT::free ( mappings );
+    nsAllocator::Free ( mappings );
     
+    // if someone was asking for text/plain, lookup unicode instead so we can convert it.
+    PRBool needToDoConversionToPlainText = PR_FALSE;
+    char* actualFlavor = mimeFlavor;
+    if ( strcmp(mimeFlavor,kTextMime) == 0 ) {
+      actualFlavor = kUnicodeMime;
+      needToDoConversionToPlainText = PR_TRUE;
+    }
+    else
+      actualFlavor = mimeFlavor;
+      
     *outDataSize = 0;
     nsCOMPtr<nsISupports> data;
-    if ( NS_SUCCEEDED(item->GetTransferData(mimeFlavor.GetBuffer(), getter_AddRefs(data), outDataSize)) )
-      nsPrimitiveHelpers::CreateDataFromPrimitive ( mimeFlavor.GetBuffer(), data, outData, *outDataSize );
+    if ( NS_SUCCEEDED(item->GetTransferData(actualFlavor, getter_AddRefs(data), outDataSize)) ) {
+      nsPrimitiveHelpers::CreateDataFromPrimitive ( actualFlavor, data, outData, *outDataSize );
+      
+      // if required, do the extra work to convert unicode to plain text and replace the output
+      // values with the plain text.
+      if ( needToDoConversionToPlainText ) {
+        char* plainTextData = nsnull;
+        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, *outData);
+        PRInt32 plainTextLen = 0;
+        nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, *outDataSize / 2, &plainTextData, &plainTextLen );
+        if ( *outData ) {
+          nsAllocator::Free(*outData);
+          *outData = plainTextData;
+          *outDataSize = plainTextLen;
+        }
+        else
+          retVal = cantGetFlavorErr;
+      }
+    }
     else
       retVal = cantGetFlavorErr;
   } // if valid item

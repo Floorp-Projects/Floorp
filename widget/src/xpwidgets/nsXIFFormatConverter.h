@@ -49,7 +49,6 @@ protected:
   
   NS_IMETHOD ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAutoString & aToStr);
   NS_IMETHOD ConvertFromXIFToUnicode(const nsAutoString & aFromStr, nsAutoString & aToStr);
-  NS_IMETHOD ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAutoString & aToStr);
   NS_IMETHOD ConvertFromXIFToAOLMail(const nsAutoString & aFromStr, nsAutoString & aToStr);
 
 };

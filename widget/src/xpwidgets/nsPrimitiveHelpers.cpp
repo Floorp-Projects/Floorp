@@ -43,14 +43,22 @@
 #include "nsIComponentManager.h"
 #include "nsLinebreakConverter.h"
 
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+// unicode conversion
+#define NS_IMPL_IDS
+#  include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
+#include "nsISaveAsCharset.h"
+
 
 //
 // CreatePrimitiveForData
 //
 // Given some data and the flavor it corresponds to, creates the appropriate
 // nsISupports* wrapper for passing across IDL boundaries. Right now, everything
-// creates a two-byte |nsISupportsWString| unless the flavor is "text/plain", in which
-// case it creates a one-byte |nsISupportsString|.
+// creates a two-byte |nsISupportsWString|, even "text/plain" since it is decoded
+// from the native platform charset into unicode.
 //
 void
 nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, 
@@ -112,6 +120,61 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
   }
 
 }
+
+
+//
+// ConvertUnicodeToPlatformPlainText
+//
+// Given a unicode buffer (flavor text/unicode), this converts it to plain text using
+// the appropriate platform charset encoding. |inUnicodeLen| is the length of the input
+// string, not the # of bytes in the buffer. The |outPlainTextData| is null terminated, 
+// but its length parameter, |outPlainTextLen|, does not reflect that.
+//
+void
+nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, PRInt32 inUnicodeLen, 
+                                                            char** outPlainTextData, PRInt32* outPlainTextLen )
+{
+  if ( !outPlainTextData || !outPlainTextLen )
+    return;
+
+  // Get the appropriate unicode encoder. We're guaranteed that this won't change
+  // through the life of the app so we can cache it.
+  nsresult rv;
+  static nsCOMPtr<nsIUnicodeEncoder> encoder;
+  static PRBool hasConverter = PR_FALSE;
+  if ( !hasConverter ) {
+    // get the charset
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService;
+    nsAutoString platformCharset;
+    nsresult res = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+                                                       NS_GET_IID(nsIPlatformCharset), 
+                                                       getter_AddRefs(platformCharsetService));
+    if (NS_SUCCEEDED(res))
+      res = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
+    if (NS_FAILED(res))
+      platformCharset.SetString("ISO-8859-1");
+      
+    // get the encoder
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+    rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+
+    hasConverter = PR_TRUE;
+  }
+  
+  // Estimate out length and allocate the buffer based on a worst-case estimate, then do
+  // the conversion.
+  encoder->GetMaxLength(inUnicode, inUnicodeLen, outPlainTextLen);
+  if ( *outPlainTextLen ) {
+    *outPlainTextData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(*outPlainTextLen + 1));
+    if ( *outPlainTextData ) {
+      rv = encoder->Convert(inUnicode, &inUnicodeLen, *outPlainTextData, outPlainTextLen);
+      (*outPlainTextData)[*outPlainTextLen] = '\0';          // null terminate. Convert() doesn't do it for us
+    }
+  } // if valid length
+
+  NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
+  
+} // ConvertUnicodeToPlatformPlainText
 
 
 #ifdef XP_MAC

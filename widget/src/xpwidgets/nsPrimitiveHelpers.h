@@ -25,6 +25,7 @@
 
 #include "prtypes.h"
 #include "nsError.h"
+#include "nscore.h"
 
 class nsISupports;
 
@@ -44,6 +45,13 @@ public:
     // parameter does not reflect that.
   static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 
                                          void** aDataBuff, PRUint32 aDataLen ) ;
+
+    // Given a unicode buffer (flavor text/unicode), this converts it to plain text using
+    // the appropriate platform charset encoding. |inUnicodeLen| is the length of the input
+    // string, not the # of bytes in the buffer. The |outPlainTextData| is null terminated, 
+    // but its length parameter, |outPlainTextLen|, does not reflect that.
+  static void ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, PRInt32 inUnicodeLen, 
+                                                    char** outPlainTextData, PRInt32* outPlainTextLen ) ;
 
 }; // class nsPrimitiveHelpers
 
