@@ -182,6 +182,7 @@ DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
 DefCol("votes", "bugs.votes", "Votes", "bugs.votes desc");
+DefCol("keywords", "bugs.keywords", "Keywords", "bugs.keywords");
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
@@ -570,8 +571,6 @@ foreach my $c (@collist) {
         } else {
             $tablestart .= $::title{$c};
         }
-    } elsif ($c eq "keywords") {
-        $tablestart .= "<TH valign=left>Keywords</TH>";
     }
 }
 
@@ -657,19 +656,6 @@ while (@row = FetchSQLData()) {
                     $value = "<nobr>$value</nobr>";
                 }
                 pnl "<td class=$c>$value";
-            } elsif ($c eq "keywords") {
-                my $query =
-                    $::db->query("SELECT keyworddefs.name
-                                  FROM keyworddefs, keywords
-                                  WHERE keywords.bug_id = $bug_id
-                                    AND keyworddefs.id = keywords.keywordid
-                                  ORDER BY keyworddefs.name");
-                my @list;
-                my @row;
-                while (@row= $query->fetchrow()) {
-                    push(@list, $row[0]);
-                }
-                pnl("<td>" . join(", ", @list) . "</td>");
             }
         }
         if ($dotweak) {
