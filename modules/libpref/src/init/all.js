@@ -49,7 +49,7 @@ pref("general.fullcircle_collect_ns_data",  false);
 
 pref("browser.enable_style_sheets",         true);
 pref("browser.startup.page",                1);     // 0 = blank, 1 = home, 2 = last
-pref("browser.startup.homepage",            "http://home.netscape.com/");
+pref("browser.startup.homepage",            "http://www.mozilla.org/");
 pref("browser.startup.homepage_override",   true);
 pref("browser.startup.autoload_homepage",   true);
 pref("browser.startup.agreed_to_licence",   false);
