@@ -244,11 +244,11 @@ function onLockPreference()
 
     finalPrefString = initPrefString + "." + gIncomingServer.key + ".";
     var pref = prefService.getBranch(finalPrefString);
-    isDownloadLocked = pref.PrefIsLocked("offline_download");
+    isDownloadLocked = pref.prefIsLocked("offline_download");
     if(isDownloadLocked) 
         document.getElementById("offline.newFolder").disabled = true;
     
-    isGetNewLocked = pref.PrefIsLocked("download_bodies_on_get_new_mail");
+    isGetNewLocked = pref.prefIsLocked("download_bodies_on_get_new_mail");
     if(isGetNewLocked)
         document.getElementById("offline.downloadBodiesOnGetNewMail").disabled = true;        
       
