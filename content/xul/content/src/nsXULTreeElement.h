@@ -50,10 +50,13 @@ public:
 
     // nsIDOMXULTreeElement interface
     NS_DECL_IDOMXULTREEELEMENT
-
+   
+    static nsIAtom*             kSelectedAtom;
+    static int gRefCnt;
+    
 protected:
-    nsIDOMNodeList* mSelectedItems;
-    nsIDOMNodeList* mSelectedCells;
+    nsRDFDOMNodeList* mSelectedItems;
+    nsRDFDOMNodeList* mSelectedCells;
 };
 
 
