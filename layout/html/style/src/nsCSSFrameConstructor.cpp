@@ -7271,7 +7271,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
                                                 docElementFrame);
           if (NS_SUCCEEDED(rv)) {
             // Remove any existing fixed items: they are always on the FixedContainingBlock
-            rv = RemoveFixedItems(*aPresContext, *shell);
+            rv = RemoveFixedItems(aPresContext, shell, state.mFrameManager);
             if (NS_SUCCEEDED(rv)) {
               // Create the new document element hierarchy
               nsIFrame*                 newChild;
@@ -8414,6 +8414,13 @@ nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
   return NS_ERROR_FAILURE;
 }
 
+// defined below
+static nsresult
+DeletingFrameSubtree(nsIPresContext*  aPresContext,
+                     nsIPresShell*    aPresShell,
+                     nsIFrameManager* aFrameManager,
+                     nsIFrame*        aFrame);
+
 nsresult
 nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
                                                   nsIPresShell *  aPresShell,
@@ -8445,6 +8452,8 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
 
           nsCOMPtr<nsIFrameManager> frameManager;
           aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+          DeletingFrameSubtree(aPresContext, aPresShell, frameManager,
+                               dummyFrame);
           frameManager->RemoveFrame(aPresContext, *aPresShell,
                                     parentFrame, nsnull, dummyFrame);
           return NS_OK;
@@ -9291,6 +9300,9 @@ RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *
 
   if (beforeFrame &&
       IsGeneratedContentFor(content, beforeFrame, nsCSSAtoms::beforePseudo)) {
+    // Do we need to call something like |DeletingFrameSubtree| here?
+    // (Do we create content nodes for images specified in
+    // ::before/::after?  Even if they're 'display: none'?)
     aFrameManager->RemoveFrame(aPresContext, *aPresShell,
                                aInsertionPoint, nsnull,
                                beforeFrame);
@@ -9318,6 +9330,9 @@ RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *
 
   if (afterFrame &&
       IsGeneratedContentFor(content, afterFrame, nsCSSAtoms::afterPseudo)) {
+    // Do we need to call something like |DeletingFrameSubtree| here?
+    // (Do we create content nodes for images specified in
+    // ::before/::after?  Even if they're 'display: none'?)
     aFrameManager->RemoveFrame(aPresContext, *aPresShell,
                                aInsertionPoint, nsnull,
                                afterFrame);
@@ -10986,6 +11001,9 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       presShell->GetFrameManager(getter_AddRefs(frameManager));
 
       // Replace the old frame with the new frame
+
+      DeletingFrameSubtree(aPresContext, presShell, frameManager, aFrame);
+
       // Reset the primary frame mapping
       frameManager->SetPrimaryFrameFor(content, newFrame);
 
@@ -11127,6 +11145,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
         newFrame = state.mFloatedItems.childList;
         state.mFloatedItems.childList = nsnull;
       }
+      DeletingFrameSubtree(aPresContext, presShell,
+                           state.mFrameManager, aFrame);
       state.mFrameManager->ReplaceFrame(aPresContext, *presShell, parentFrame,
                                         listName, aFrame, newFrame);
 
@@ -12750,6 +12770,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
     }
     else {
       // Take the old textFrame out of the inline parents child list
+      DeletingFrameSubtree(aPresContext, aState.mPresShell, 
+                           aState.mFrameManager, textFrame);
       parentFrame->RemoveFrame(aPresContext, *aState.mPresShell.get(),
                                nsnull, textFrame);
 
@@ -12896,9 +12918,8 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
     return NS_OK;
   }
   nsCOMPtr<nsIStyleContext> newSC;
-  aPresContext->ResolveStyleContextFor(textContent, parentSC,
-                                       PR_FALSE,
-                                       getter_AddRefs(newSC));
+  aPresContext->ResolveStyleContextForNonElement(parentSC, PR_FALSE,
+                                                 getter_AddRefs(newSC));
   if (!newSC) {
     return NS_OK;
   }
@@ -12918,6 +12939,8 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
     nextTextFrame->GetParent(&nextTextParent);
     if (nextTextParent) {
       nsSplittableFrame::BreakFromPrevFlow(nextTextFrame);
+      DeletingFrameSubtree(aPresContext, aPresShell, 
+                           aFrameManager, nextTextFrame);
       aFrameManager->RemoveFrame(aPresContext, *aPresShell, nextTextParent,
                                  nsnull, nextTextFrame);
     }
@@ -12940,10 +12963,12 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
          textContent.get(), textFrame, newTextFrame);
 #endif
+  // Should we call DeletingFrameSubtree on the placeholder instead
+  // and skip this call?
   aFrameManager->UnregisterPlaceholderFrame(placeholderFrame);
-  aFrameManager->SetPrimaryFrameFor(textContent, nsnull);
 
   // Remove the floater frame
+  DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager, floater);
   aFrameManager->RemoveFrame(aPresContext, *aPresShell,
                              aBlockFrame, nsLayoutAtoms::floaterList,
                              floater);
@@ -13003,7 +13028,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresContext* aPresContext,
 
       // Next rip out the kid and replace it with the text frame
       nsIFrameManager* frameManager = aFrameManager;
-      frameManager->SetPrimaryFrameFor(textContent, nsnull);
+      DeletingFrameSubtree(aPresContext, aPresShell, frameManager, kid);
       frameManager->RemoveFrame(aPresContext, *aPresShell,
                                 aFrame, nsnull, kid);
 
@@ -13071,6 +13096,8 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIPresShell* aPresShell, nsIPresCont
   }
   if (parentFrame) {
     // Take the old textFrame out of the parents child list
+    DeletingFrameSubtree(aPresContext, aState.mPresShell,
+                         aState.mFrameManager, textFrame);
     parentFrame->RemoveFrame(aPresContext, *aState.mPresShell.get(),
                              nsnull, textFrame);
 
@@ -13815,6 +13842,10 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
 
       // Destroy the frames. As we do make sure any content to frame mappings
       // or entries in the undisplayed content map are removed
+      nsCOMPtr<nsIContent> parentContent;
+      aFrame->GetContent(getter_AddRefs(parentContent));
+      frameManager->ClearAllUndisplayedContentIn(parentContent);
+
       CleanupFrameReferences(aPresContext, frameManager, aFrameList);
       nsFrameList tmp(aFrameList);
       tmp.DestroyFrames(aPresContext);
@@ -14211,22 +14242,25 @@ nsCSSFrameConstructor::RecreateEntireFrameTree(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext& aPresContext,
-                                                 nsIPresShell&   aPresShell)
+nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext*  aPresContext,
+                                                 nsIPresShell*    aPresShell,
+                                                 nsIFrameManager* aFrameManager)
 {
   nsresult rv=NS_OK;
 
   if (mFixedContainingBlock) {
     nsIFrame *fixedChild = nsnull;
     do {
-      mFixedContainingBlock->FirstChild(&aPresContext,
+      mFixedContainingBlock->FirstChild(aPresContext,
                                         nsLayoutAtoms::fixedList,
                                         &fixedChild);
       if (fixedChild) {
-        rv = mFixedContainingBlock->RemoveFrame(&aPresContext,
-                                                aPresShell,
-                                                nsLayoutAtoms::fixedList,
-                                                fixedChild);
+        DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
+                             fixedChild);
+        rv = aFrameManager->RemoveFrame(aPresContext, *aPresShell,
+                                        mFixedContainingBlock,
+                                        nsLayoutAtoms::fixedList,
+                                        fixedChild);
         if (NS_FAILED(rv)) {
           NS_WARNING("Error removing frame from fixed containing block in RemoveFixedItems");
           break;
