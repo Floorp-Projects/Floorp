@@ -46,6 +46,7 @@ public:
 
 protected:
   NS_METHOD CreateNative(GtkWidget *parentWindow);
+  virtual void InitCallbacks(char * aName = nsnull);
 };
 
 #endif // nsButton_h__

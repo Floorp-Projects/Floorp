@@ -18,6 +18,8 @@
 
 #include <gtk/gtk.h>
 
+#include "nsGtkEventHandler.h"
+
 #include "nsButton.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
@@ -58,6 +60,20 @@ nsButton::~nsButton()
 {
 }
 
+void nsButton::InitCallbacks(char * aName)
+{
+  nsWidget::InitCallbacks();
+  /* FIXME: we need to unconnect the signals connected from
+   * nsWidget::InitCallbacks that we provide here */
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                       "button_press_event",
+                        GTK_SIGNAL_FUNC(handle_button_press_event),
+	                this);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                       "button_release_event",
+                        GTK_SIGNAL_FUNC(handle_button_release_event),
+                        this);
+}
 
 /**
  * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
