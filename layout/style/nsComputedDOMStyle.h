@@ -292,7 +292,7 @@ private:
 
   static const ComputedStyleMapEntry* GetQueryablePropertyMap(PRUint32* aLength);
 
-  nsCOMPtr<nsISupports> mInner; // CSS2Properties
+  CSS2PropertiesTearoff mInner;
 
   nsWeakPtr mPresShellWeak;
   nsCOMPtr<nsIContent> mContent;

@@ -50,7 +50,7 @@
 
 
 nsDOMCSSDeclaration::nsDOMCSSDeclaration()
-  : mInner(nsnull)
+  : mInner(this)
 {
 }
 
@@ -59,54 +59,14 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 }
 
 
-NS_IMETHODIMP
-nsDOMCSSDeclaration::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) {
-    NS_ERROR("QueryInterface requires a non-NULL destination!");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsISupports* inst;
-
-  if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleDeclaration))) {
-    inst = NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMCSS2Properties))) {
-    if (!mInner) {
-      mInner = new CSS2PropertiesTearoff(this);
-      NS_ENSURE_TRUE(mInner, NS_ERROR_OUT_OF_MEMORY);
-    }
-    inst = NS_STATIC_CAST(nsIDOMCSS2Properties*,
-                          NS_STATIC_CAST(nsISupports*, mInner));
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMNSCSS2Properties))) {
-    if (!mInner) {
-      mInner = new CSS2PropertiesTearoff(this);
-      NS_ENSURE_TRUE(mInner, NS_ERROR_OUT_OF_MEMORY);
-    }
-    inst = NS_STATIC_CAST(nsIDOMNSCSS2Properties*,
-                          NS_STATIC_CAST(nsISupports*, mInner));
-  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    inst = NS_STATIC_CAST(nsISupports*,
-                          NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, this));
-  } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_CSSStyleDeclaration_id);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    inst = nsnull;
-  }
-
-  nsresult rv;
-  if (!inst) {
-    rv = NS_NOINTERFACE;
-  } else {
-    NS_ADDREF(inst);
-    rv = NS_OK;
-  }
-
-  *aInstancePtr = inst;
-  return rv;
-}
-
+// QueryInterface implementation for nsDOMCSSDeclaration
+NS_INTERFACE_MAP_BEGIN(nsDOMCSSDeclaration)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties, &mInner)
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties, &mInner)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSStyleDeclaration)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDOMCSSDeclaration);
 NS_IMPL_RELEASE(nsDOMCSSDeclaration);
@@ -338,22 +298,33 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
 
 //////////////////////////////////////////////////////////////////////////////
 
-CSS2PropertiesTearoff::CSS2PropertiesTearoff(nsISupports *aOuter)
+CSS2PropertiesTearoff::CSS2PropertiesTearoff(nsIDOMCSSStyleDeclaration *aOuter)
+  : mOuter(aOuter)
 {
-  NS_INIT_AGGREGATED(aOuter);
+  NS_ASSERTION(mOuter, "must have outer");
 }
 
 CSS2PropertiesTearoff::~CSS2PropertiesTearoff()
 {
 }
 
-NS_IMPL_AGGREGATED(CSS2PropertiesTearoff);
+NS_IMETHODIMP_(nsrefcnt)
+CSS2PropertiesTearoff::AddRef(void)
+{
+  return mOuter->AddRef();
+}
 
-NS_INTERFACE_MAP_BEGIN_AGGREGATED(CSS2PropertiesTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSS2Properties)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSCSS2Properties)
-NS_INTERFACE_MAP_END_AGGREGATED(fOuter)
+NS_IMETHODIMP_(nsrefcnt)
+CSS2PropertiesTearoff::Release(void)
+{
+  return mOuter->Release();
+}
 
+NS_IMETHODIMP
+CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  return mOuter->QueryInterface(aIID, aInstancePtr);
+}
 
 // nsIDOMCSS2Properties
 // nsIDOMNSCSS2Properties
@@ -362,16 +333,14 @@ NS_INTERFACE_MAP_END_AGGREGATED(fOuter)
   NS_IMETHODIMP                                                         \
   CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                \
   {                                                                     \
-    return NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, fOuter)->         \
-      GetPropertyValue(NS_LITERAL_STRING(#name_), aValue);              \
+    return mOuter->GetPropertyValue(NS_LITERAL_STRING(#name_), aValue); \
   }                                                                     \
                                                                         \
   NS_IMETHODIMP                                                         \
   CSS2PropertiesTearoff::Set##method_(const nsAString& aValue)          \
   {                                                                     \
-    return NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, fOuter)->         \
-      SetProperty(NS_LITERAL_STRING(#name_), aValue,                    \
-                  NS_LITERAL_STRING(""));                               \
+    return mOuter->SetProperty(NS_LITERAL_STRING(#name_), aValue,       \
+                               NS_LITERAL_STRING(""));                  \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
