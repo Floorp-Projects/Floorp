@@ -44,8 +44,16 @@ nsInterfaceInfo::nsInterfaceInfo(REFNSIID aIID, const char* aName,
     mMethodCount = 0;
     mMethods = NULL;
 
-    mConstantCount = 0;
-    mConstants = NULL;
+    // XXX completely bogus hardcoded stuff...
+
+    mConstantCount = 2;
+    mConstants = new nsXPCConstant[2];
+    nsXPCVarient v;
+    v.type = nsXPCType::T_I32;
+    v.val.i32 = 5;
+    mConstants[0] = nsXPCConstant("five", v);
+    v.val.i32 = 6;
+    mConstants[1] = nsXPCConstant("six", v);
 
     if(mParent)
         NS_ADDREF(mParent);
@@ -57,6 +65,10 @@ nsInterfaceInfo::~nsInterfaceInfo()
         free(mName);
     if(mParent)
         NS_RELEASE(mParent);
+    if(mMethods)
+        delete [] mMethods;
+    if(mConstants)
+        delete [] mConstants;
 }
 
 nsresult
@@ -114,7 +126,7 @@ nsInterfaceInfo::GetMethodInfo(unsigned index, const nsXPCMethodInfo** info)
     }
 
     // else...
-    *info = mMethods[mMethodBaseIndex-index];
+    *info = &mMethods[mMethodBaseIndex+index];
     return NS_OK;
 }
 
@@ -133,7 +145,7 @@ nsInterfaceInfo::GetConstant(unsigned index, const nsXPCConstant** constant)
     }
 
     // else...
-    *constant = mConstants[mConstantBaseIndex-index];
+    *constant = &mConstants[mConstantBaseIndex+index];
     return NS_OK;
 }
 
