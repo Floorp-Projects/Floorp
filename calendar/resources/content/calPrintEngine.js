@@ -96,7 +96,7 @@ function BrowserPrintPreview()
   var ifreq;
   var webBrowserPrint;  
   try {
-    ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     gPrintSettings = GetPrintSettings();
 
@@ -120,7 +120,7 @@ function BrowserPrintPreview()
 function FinishPrintPreview()
 {
   try {
-    var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    var ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
       gPrintSettings = GetPrintSettings();
@@ -128,7 +128,7 @@ function FinishPrintPreview()
     }
     showPrintPreviewToolbar();
 
-    _content.focus();
+    content.focus();
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.
@@ -156,7 +156,7 @@ function OnLoadPrintEngine(){
     prevWeeksInView=gArgs.prevWeeksInView;
     startOfWeek=gArgs.startOfWeek;
 
-    gHtmlDocument = window._content.document ;
+    gHtmlDocument = window.content.document ;
     initHTMLView();
     eval(HTMLViewFunction)(HTMLFunctionArgs);
     finishHTMLView() ;

@@ -38,6 +38,6 @@
 function openCascadesDialog()
 {
   window.openDialog("chrome://cascades/content/EdCssProps.xul","_blank", "chrome,close,modal,titlebar");
-  window._content.focus();
+  window.content.focus();
 }
 

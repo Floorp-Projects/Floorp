@@ -300,7 +300,7 @@ function goHome() {
 function print()
 {
   try {
-    _content.print();
+    content.print();
   } catch (e) {
   }
 }

@@ -82,7 +82,7 @@
     }
 
     function addEndDocumentLoadListener() {
-      if (window._content) {
+      if (window.content) {
         var observerService = Components.classes["@mozilla.org/observer-service;1"].getService();
         observerService = observerService.QueryInterface(Components.interfaces.nsIObserverService);
         var observer = new navObserver();
