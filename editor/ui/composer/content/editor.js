@@ -1006,7 +1006,11 @@ function initFontFaceMenu(menuPopup)
     // Fixed width (second menu item) is special case: old TT ("teletype") attribute
     EditorGetTextProperty("tt", "", "", firstHas, anyHas, allHas);
     children[1].setAttribute("checked", allHas.value);
-    var fontWasFound = anyHas.value;
+
+    if (!anyHas.value)
+      EditorGetTextProperty("font", "face", "", firstHas, anyHas, allHas);
+
+    children[0].setAttribute("checked", !anyHas.value);
 
     // Skip over default, TT, and separator
     for (var i = 3; i < children.length; i++)
@@ -1017,9 +1021,6 @@ function initFontFaceMenu(menuPopup)
       if (faceType)
       {
         EditorGetTextProperty("font", "face", faceType, firstHas, anyHas, allHas);
-
-        // Remember if ANY part of the selection has the face
-        fontWasFound |= anyHas.value;
 
         // Check the menuitem only if all of selection has the face
         if (allHas.value)
@@ -1032,9 +1033,6 @@ function initFontFaceMenu(menuPopup)
         menuItem.removeAttribute("checked");
       }
     }
-    // Check the default item if no other item was checked
-    // note that no item is checked in the case of "mixed" selection
-    children[0].setAttribute("checked", !fontWasFound);
   }
 }
 

@@ -1147,7 +1147,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     if (NS_FAILED(res)) return res;
 
     // early way out if we can
-    if (valueString.Equals(NS_LITERAL_STRING(""))) return NS_OK;
+    if (valueString.IsEmpty()) return NS_OK;
 
     if (nsEditProperty::b == aHTMLProperty) {
       if (valueString.Equals(NS_LITERAL_STRING("bold"))) {
@@ -1239,23 +1239,25 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
     
     else if ((nsEditProperty::font == aHTMLProperty) && aHTMLAttribute
              && aHTMLAttribute->Equals(NS_LITERAL_STRING("face"))) {
-      nsAutoString leftCSSValue;
-      leftCSSValue = Substring(valueString, 0, 5);
-      ToLowerCase(leftCSSValue);
-      if (!htmlValueString.Equals(NS_LITERAL_STRING(""))) {
-        nsAutoString leftHTMLValue;
-        htmlValueString.Left(leftHTMLValue, 5);
-        aIsSet = leftHTMLValue.Equals(leftCSSValue,
-                                      nsCaseInsensitiveStringComparator());
+      if (!htmlValueString.IsEmpty()) {
+        const PRUnichar commaSpace[] = { PRUnichar(','), PRUnichar(' '), 0 };
+        const PRUnichar comma[] = { PRUnichar(','), 0 };
+        htmlValueString.ReplaceSubstring(commaSpace, comma);
+        nsAutoString valueStringNorm(valueString);
+        valueStringNorm.ReplaceSubstring(commaSpace, comma);
+        aIsSet = htmlValueString.Equals(valueStringNorm,
+                                        nsCaseInsensitiveStringComparator());
       }
       else {
-        aIsSet = (leftCSSValue.Equals(NS_LITERAL_STRING("times")) ||
-                  leftCSSValue.Equals(NS_LITERAL_STRING("helve")) ||
-                  leftCSSValue.Equals(NS_LITERAL_STRING("couri")));
+        // ignore this, it's TT or our default
+        nsAutoString valueStringLower;
+        ToLowerCase(valueString, valueStringLower);
+        aIsSet = !valueStringLower.Equals(NS_LITERAL_STRING("monospace")) &&
+                 !valueStringLower.Equals(NS_LITERAL_STRING("serif"));
       }
       return NS_OK;
     }
-    else if (aHTMLAttribute && aHTMLAttribute
+    else if (aHTMLAttribute
              && aHTMLAttribute->Equals(NS_LITERAL_STRING("align"))) {
       aIsSet = PR_TRUE;
     }
@@ -1264,7 +1266,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       return NS_OK;
     }
 
-    if (!htmlValueString.Equals(NS_LITERAL_STRING(""))) {
+    if (!htmlValueString.IsEmpty()) {
       if (htmlValueString.Equals(valueString,
                                  nsCaseInsensitiveStringComparator())) {
         aIsSet = PR_TRUE;
