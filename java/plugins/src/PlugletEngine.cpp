@@ -18,6 +18,7 @@
 #include "nsIServiceManager.h"
 #include "prenv.h"
 #include "PlugletManager.h"
+#include "ProxyJNI.h"
 
 static NS_DEFINE_IID(kIPluginIID,NS_IPLUGIN_IID);
 static NS_DEFINE_CID(kPluginCID,NS_PLUGIN_CID);
@@ -41,6 +42,7 @@ PRInt32 PlugletEngine::lockCount = 0;
 PlugletEngine * PlugletEngine::engine = NULL;
 nsIPluginManager *PlugletEngine::pluginManager = NULL;
 jobject PlugletEngine::plugletManager = NULL;
+PlugletSecurityContext *PlugletEngine::securityContext = NULL;
 
 NS_IMPL_ISUPPORTS(PlugletEngine,kIPluginIID);
 NS_METHOD PlugletEngine::Initialize(void) {
@@ -169,6 +171,11 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
        return NULL;
    }
    jvmManager->CreateProxyJNI(NULL,&res);
+   if (!securityContext) {
+       securityContext = new PlugletSecurityContext();
+   }
+   ::SetSecurityContext(res,securityContext);
+
    //nb error handling
    //#endif
 #if 0

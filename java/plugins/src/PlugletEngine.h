@@ -20,6 +20,7 @@
 #include "nsJVMManager.h"
 #include "nsIPluginManager.h"
 #include "PlugletsDir.h"
+#include "PlugletSecurityContext.h"
 
 class PlugletEngine : public nsIPlugin {
  public:
@@ -49,6 +50,7 @@ class PlugletEngine : public nsIPlugin {
     static nsJVMManager * jvmManager;
     static  nsIPluginManager *pluginManager;
     static jobject plugletManager;
+    static PlugletSecurityContext * securityContext;
 };    
 
 #endif /* __PlugletEngine_h__ */

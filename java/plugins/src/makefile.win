@@ -58,6 +58,7 @@ OBJS =  \
 	.\$(OBJDIR)\PlugletManager.obj \
 	.\$(OBJDIR)\PlugletInputStream.obj \
 	.\$(OBJDIR)\PlugletInstanceView.obj \
+	.\$(OBJDIR)\PlugletSecurityContext.obj \
 	.\$(OBJDIR)\Registry.obj	
 
 MAKE_OBJ_TYPE = DLL
@@ -82,7 +83,7 @@ DLL = .\$(OBJDIR)\$(DLLNAME).dll
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib $(DIST)\lib\oji.lib $(JDKHOME)\lib\jvm.lib
+LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib $(DIST)\lib\oji.lib
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
