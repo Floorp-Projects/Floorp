@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.231 $ ';
+$::UtilsVersion = '$Revision: 1.232 $ ';
 
 package TinderUtils;
 
@@ -2490,7 +2490,7 @@ sub BloatTest2 {
     my ($binary, $build_dir, $timeout_secs) = @_;
     my $binary_basename = File::Basename::basename($binary);
     my $binary_dir = File::Basename::dirname($binary);
-    my $PERL = "";
+    my $PERL = $^X;
     if ($Settings::OS =~ /^WIN/ && $build_dir =~ m/^\/cygdrive\//) {
         $build_dir =~ s/^\/cygdrive\///;
         substr($build_dir,1,1,':/');
