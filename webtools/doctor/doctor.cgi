@@ -248,17 +248,7 @@ sub diff
   my $oldversion = $request->param('version');
   my $newversion = CheckOutFile($file);
   
-  # Throw an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
-    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
-      but version <em>$newversion</em> is in the repository.  Reload the edit 
-      page and make your changes again (and bother the authors of this script 
-      to implement change merging
-      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
-  }
+  ValidateVersions($oldversion, $newversion);
   
   # Replace the checked out file with the edited version, generate
   # a diff between the edited file, and display it to the user.
@@ -342,17 +332,7 @@ sub queue
     $oldversion = $request->param('version');
     $newversion = CheckOutFile($file);
     
-    # Throw an error if the version of the file that was edited
-    # does not match the version in the repository.  In the future
-    # we should try to merge the user's changes if possible.
-    if ($oldversion && $newversion && $oldversion != $newversion) 
-    {
-      ThrowCodeError("You edited version <em>$oldversion</em> of the file,
-        but version <em>$newversion</em> is in the repository.  Reload the edit 
-        page and make your changes again (and bother the authors of this script 
-        to implement change merging
-        (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
-    }
+    ValidateVersions();
     
     # Replace the checked out file with the edited version, and generate a patch
     # that patches the checked out file to make it look like the edited version.
@@ -485,17 +465,7 @@ sub commit
   my $oldversion = $request->param('version');
   my $newversion = CheckOutFile($file);
   
-  # Throw an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
-    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
-      but version <em>$newversion</em> is in the repository.  Reload the edit 
-      page and make your changes again (and bother the authors of this script 
-      to implement change merging
-      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
-  }
+  ValidateVersions();
   
   # Replace the checked out file with the edited version, generate
   # a diff between the edited file and the version in the repository,
@@ -636,13 +606,13 @@ sub ValidateID()
 
 sub ValidateVersions()
 {
+  # Throws an error if the version of the file that was edited
+  # does not match the version in the repository.  In the future
+  # we should try to merge the user's changes if possible.
+
   my ($oldversion, $newversion) = @_;
 
-  # Throw an error if the version of the file that was edited does not match
-  # the version in the repository.  In the future we should try to merge
-  # the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
+  if ($oldversion && $newversion && $oldversion != $newversion) {
     ThrowCodeError("You edited version <em>$oldversion</em> of the file,
       but version <em>$newversion</em> is in the repository.  Reload the edit 
       page and make your changes again (and bother the authors of this script 
