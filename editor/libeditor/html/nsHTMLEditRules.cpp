@@ -20,7 +20,6 @@
 #include "nsEditor.h"
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
-#include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
@@ -35,16 +34,110 @@ const static char* kMOZEditorBogusNodeValue="TRUE";
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
+nsIAtom *nsHTMLEditRules::sAAtom;
+nsIAtom *nsHTMLEditRules::sAddressAtom;
+nsIAtom *nsHTMLEditRules::sBigAtom;
+nsIAtom *nsHTMLEditRules::sBlinkAtom;
+nsIAtom *nsHTMLEditRules::sBAtom;
+nsIAtom *nsHTMLEditRules::sCiteAtom;
+nsIAtom *nsHTMLEditRules::sCodeAtom;
+nsIAtom *nsHTMLEditRules::sDfnAtom;
+nsIAtom *nsHTMLEditRules::sEmAtom;
+nsIAtom *nsHTMLEditRules::sFontAtom;
+nsIAtom *nsHTMLEditRules::sIAtom;
+nsIAtom *nsHTMLEditRules::sKbdAtom;
+nsIAtom *nsHTMLEditRules::sKeygenAtom;
+nsIAtom *nsHTMLEditRules::sNobrAtom;
+nsIAtom *nsHTMLEditRules::sSAtom;
+nsIAtom *nsHTMLEditRules::sSampAtom;
+nsIAtom *nsHTMLEditRules::sSmallAtom;
+nsIAtom *nsHTMLEditRules::sSpacerAtom;
+nsIAtom *nsHTMLEditRules::sSpanAtom;      
+nsIAtom *nsHTMLEditRules::sStrikeAtom;
+nsIAtom *nsHTMLEditRules::sStrongAtom;
+nsIAtom *nsHTMLEditRules::sSubAtom;
+nsIAtom *nsHTMLEditRules::sSupAtom;
+nsIAtom *nsHTMLEditRules::sTtAtom;
+nsIAtom *nsHTMLEditRules::sUAtom;
+nsIAtom *nsHTMLEditRules::sVarAtom;
+nsIAtom *nsHTMLEditRules::sWbrAtom;
+
+PRInt32 nsHTMLEditRules::sInstanceCount;
+
 /********************************************************
  *  Constructor/Destructor 
  ********************************************************/
 
 nsHTMLEditRules::nsHTMLEditRules()
 {
+  if (sInstanceCount <= 0)
+  {
+    sAAtom = NS_NewAtom("a");
+    sAddressAtom = NS_NewAtom("address");
+    sBigAtom = NS_NewAtom("big");
+    sBlinkAtom = NS_NewAtom("blink");
+    sBAtom = NS_NewAtom("b");
+    sCiteAtom = NS_NewAtom("cite");
+    sCodeAtom = NS_NewAtom("code");
+    sDfnAtom = NS_NewAtom("dfn");
+    sEmAtom = NS_NewAtom("em");
+    sFontAtom = NS_NewAtom("font");
+    sIAtom = NS_NewAtom("i");
+    sKbdAtom = NS_NewAtom("kbd");
+    sKeygenAtom = NS_NewAtom("keygen");
+    sNobrAtom = NS_NewAtom("nobr");
+    sSAtom = NS_NewAtom("s");
+    sSampAtom = NS_NewAtom("samp");
+    sSmallAtom = NS_NewAtom("small");
+    sSpacerAtom = NS_NewAtom("spacer");
+    sSpanAtom = NS_NewAtom("span");      
+    sStrikeAtom = NS_NewAtom("strike");
+    sStrongAtom = NS_NewAtom("strong");
+    sSubAtom = NS_NewAtom("sub");
+    sSupAtom = NS_NewAtom("sup");
+    sTtAtom = NS_NewAtom("tt");
+    sUAtom = NS_NewAtom("u");
+    sVarAtom = NS_NewAtom("var");
+    sWbrAtom = NS_NewAtom("wbr");
+  }
+
+  ++sInstanceCount;
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()
 {
+  if (sInstanceCount <= 1)
+  {
+    NS_IF_RELEASE(sAAtom);
+    NS_IF_RELEASE(sAddressAtom);
+    NS_IF_RELEASE(sBigAtom);
+    NS_IF_RELEASE(sBlinkAtom);
+    NS_IF_RELEASE(sBAtom);
+    NS_IF_RELEASE(sCiteAtom);
+    NS_IF_RELEASE(sCodeAtom);
+    NS_IF_RELEASE(sDfnAtom);
+    NS_IF_RELEASE(sEmAtom);
+    NS_IF_RELEASE(sFontAtom);
+    NS_IF_RELEASE(sIAtom);
+    NS_IF_RELEASE(sKbdAtom);
+    NS_IF_RELEASE(sKeygenAtom);
+    NS_IF_RELEASE(sNobrAtom);
+    NS_IF_RELEASE(sSAtom);
+    NS_IF_RELEASE(sSampAtom);
+    NS_IF_RELEASE(sSmallAtom);
+    NS_IF_RELEASE(sSpacerAtom);
+    NS_IF_RELEASE(sSpanAtom);      
+    NS_IF_RELEASE(sStrikeAtom);
+    NS_IF_RELEASE(sStrongAtom);
+    NS_IF_RELEASE(sSubAtom);
+    NS_IF_RELEASE(sSupAtom);
+    NS_IF_RELEASE(sTtAtom);
+    NS_IF_RELEASE(sUAtom);
+    NS_IF_RELEASE(sVarAtom);
+    NS_IF_RELEASE(sWbrAtom);
+  }
+
+  --sInstanceCount;
 }
 
 
@@ -53,40 +146,94 @@ nsHTMLEditRules::~nsHTMLEditRules()
  ********************************************************/
 
 NS_IMETHODIMP 
-nsHTMLEditRules::WillDoAction(int aAction, nsIDOMSelection *aSelection, 
-                              void **aOtherInfo, PRBool *aCancel)
+nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection, 
+                              nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection) 
+  if (!aSelection || !aInfo) 
     return NS_ERROR_NULL_POINTER;
     
-  switch (aAction)
+  // my kingdom for dynamic cast
+  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+    
+  switch (info->action)
   {
+    case kInsertText:
+      return WillInsertText(aSelection, 
+                            aCancel, 
+                            info->placeTxn, 
+                            info->inString,
+                            info->outString,
+                            info->typeInState);
     case kInsertBreak:
       return WillInsertBreak(aSelection, aCancel);
   }
-  return nsTextEditRules::WillDoAction(aAction, aSelection, aOtherInfo, aCancel);
+  return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel);
 }
   
 NS_IMETHODIMP 
-nsHTMLEditRules::DidDoAction(int aAction, nsIDOMSelection *aSelection,
-                             void **aOtherInfo, nsresult aResult)
+nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
+                             nsRulesInfo *aInfo, nsresult aResult)
 {
-  if (!aSelection) 
+  if (!aSelection || !aInfo) 
     return NS_ERROR_NULL_POINTER;
     
-  switch (aAction)
+  // my kingdom for dynamic cast
+  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+    
+  switch (info->action)
   {
+    case kInsertText:
+      return DidInsertText(aSelection, aResult);
     case kInsertBreak:
       return DidInsertBreak(aSelection, aResult);
   }
-  return nsTextEditRules::DidDoAction(aAction, aSelection, aOtherInfo, aResult);
+  return nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
 }
   
 
 /********************************************************
- *  Protected methods 
+ *  Protected rules methods 
  ********************************************************/
-NS_IMETHODIMP
+ 
+nsresult
+nsHTMLEditRules::WillInsertText(nsIDOMSelection  *aSelection, 
+                                PRBool          *aCancel,
+                                PlaceholderTxn **aTxn,
+                                const nsString *inString,
+                                nsString       *outString,
+                                TypeInState    typeInState)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+
+  // XXX - need to handle strings of length >1 with embedded tabs or spaces
+  
+  // is it a tab?
+  if (*inString == "\t" )
+    return InsertTab(aSelection,aCancel,aTxn,outString);
+  // is it a space?
+  if (*inString == " ")
+    return InsertSpace(aSelection,aCancel,aTxn,outString);
+  
+  // otherwise, return nsTextEditRules version
+  return nsTextEditRules::WillInsertText(aSelection, 
+                                         aCancel, 
+                                         aTxn,
+                                         inString,
+                                         outString,
+                                         typeInState);
+}
+
+nsresult
+nsHTMLEditRules::DidInsertText(nsIDOMSelection *aSelection, 
+                               nsresult aResult)
+{
+  // for now, return nsTextEditRules version
+  return nsTextEditRules::DidInsertText(aSelection, aResult);
+}
+
+nsresult
 nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
@@ -97,7 +244,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
 
 // XXX: this code is all experimental, and has no effect on the content model yet
 //      the point here is to collapse adjacent BR's into P's
-NS_IMETHODIMP
+nsresult
 nsHTMLEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 {
   nsresult result = aResult;  // if aResult is an error, we return it.
@@ -196,3 +343,153 @@ nsHTMLEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
   }
   return result;
 }
+
+
+
+/********************************************************
+ *  helper methods 
+ ********************************************************/
+ 
+PRBool
+nsHTMLEditRules::IsBlockNode(nsIContent *aContent)
+{
+  nsIAtom* atom = nsnull;
+  PRBool result;
+  
+  aContent->GetTag(atom);
+
+  if (!atom)
+    return PR_TRUE;
+
+  if (sAAtom != atom &&
+          sAddressAtom != atom &&
+          sBigAtom != atom &&
+          sBlinkAtom != atom &&
+          sBAtom != atom &&
+          sCiteAtom != atom &&
+          sCodeAtom != atom &&
+          sDfnAtom != atom &&
+          sEmAtom != atom &&
+          sFontAtom != atom &&
+          sIAtom != atom &&
+          sKbdAtom != atom &&
+          sKeygenAtom != atom &&
+          sNobrAtom != atom &&
+          sSAtom != atom &&
+          sSampAtom != atom &&
+          sSmallAtom != atom &&
+          sSpacerAtom != atom &&
+          sSpanAtom != atom &&
+          sStrikeAtom != atom &&
+          sStrongAtom != atom &&
+          sSubAtom != atom &&
+          sSupAtom != atom &&
+          sTtAtom != atom &&
+          sUAtom != atom &&
+          sVarAtom != atom &&
+          sWbrAtom != atom)
+   {
+     result = PR_TRUE;
+   }
+   else
+   {
+     result = PR_FALSE;
+   }
+   NS_RELEASE(atom);
+   return result;
+}
+
+nsCOMPtr<nsIContent>
+nsHTMLEditRules::GetBlockNodeParent(nsCOMPtr<nsIContent> aContent)
+{
+  nsCOMPtr<nsIContent> p;
+
+  if (NS_FAILED(aContent->GetParent(*getter_AddRefs(p))))  // no parent, ran off top of tree
+    return aContent;
+
+  nsCOMPtr<nsIContent> tmp;
+
+  while (p && !IsBlockNode(p))
+  {
+    if (NS_FAILED(p->GetParent(*getter_AddRefs(tmp)))) // no parent, ran off top of tree
+      return p;
+
+    p = tmp;
+  }
+  return p;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// GetStartNode: returns whatever the start parent is of the first range
+//               in the selection.
+nsCOMPtr<nsIDOMNode> 
+nsHTMLEditRules::GetStartNode(nsIDOMSelection *aSelection)
+{
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIEnumerator> enumerator;
+  enumerator = do_QueryInterface(aSelection);
+  if (!enumerator) 
+    return startNode;
+  enumerator->First(); 
+  nsISupports *currentItem;
+  if ((NS_FAILED(enumerator->CurrentItem(&currentItem))) || !currentItem)
+    return startNode;
+
+  nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+  if (!range)
+    return startNode;
+  range->GetStartParent(getter_AddRefs(startNode));
+  return startNode;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsPreformatted: checks the style info for the node for the preformatted
+//                 text style.
+nsresult 
+nsHTMLEditRules::IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult)
+{
+  return PR_TRUE;
+}
+
+
+nsresult 
+nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection, 
+                           PRBool *aCancel, 
+                           PlaceholderTxn **aTxn,
+                           nsString *outString)
+{
+  nsCOMPtr<nsIDOMNode> theNode;
+  PRBool isPRE;
+  theNode = GetStartNode(aSelection);
+  if (!theNode)
+    return NS_ERROR_UNEXPECTED;
+  nsresult result = IsPreformatted(theNode,&isPRE);
+  if (NS_FAILED(result))
+    return result;
+  if (isPRE)
+  {
+    outString += '\t';
+    // we're done - let everything fall through to the InsertText code 
+    // in nsTextEditor which will insert the tab as is.
+  }
+  else
+  {
+    
+  }
+  return NS_OK;
+}
+
+
+nsresult 
+nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection, 
+                             PRBool *aCancel, 
+                             PlaceholderTxn **aTxn,
+                             nsString *outString)
+{
+  return NS_OK;
+}
+
+
+
+

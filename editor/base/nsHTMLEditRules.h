@@ -20,6 +20,9 @@
 #define nsHTMLEditRules_h__
 
 #include "nsTextEditRules.h"
+#include "nsCOMPtr.h"
+
+class nsIContent;
 
 class nsHTMLEditRules : public nsTextEditRules
 {
@@ -29,8 +32,8 @@ public:
   virtual ~nsHTMLEditRules();
 
   // nsEditRules methods
-  NS_IMETHOD WillDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, PRBool *aCancel);
-  NS_IMETHOD DidDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, nsresult aResult);
+  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
+  NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
   // nsHTMLEditRules action id's
   enum 
@@ -40,9 +43,56 @@ public:
 protected:
 
   // nsHTMLEditRules implementation methods
-  NS_IMETHOD WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
-  NS_IMETHOD DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillInsertText(nsIDOMSelection  *aSelection, 
+                            PRBool          *aCancel,
+                            PlaceholderTxn **aTxn,
+                            const nsString *inString,
+                            nsString       *outString,
+                            TypeInState    typeInState);
+  nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
 
+  nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult);
+
+  nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
+  nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
+
+  // helper methods
+  PRBool IsBlockNode(nsIContent *aContent);
+  nsCOMPtr<nsIContent> GetBlockNodeParent(nsCOMPtr<nsIContent> aContent);
+  nsCOMPtr<nsIDOMNode> GetStartNode(nsIDOMSelection *aSelection);
+  nsresult IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult);
+
+  // data
+  static nsIAtom *sAAtom;
+  static nsIAtom *sAddressAtom;
+  static nsIAtom *sBigAtom;
+  static nsIAtom *sBlinkAtom;
+  static nsIAtom *sBAtom;
+  static nsIAtom *sCiteAtom;
+  static nsIAtom *sCodeAtom;
+  static nsIAtom *sDfnAtom;
+  static nsIAtom *sEmAtom;
+  static nsIAtom *sFontAtom;
+  static nsIAtom *sIAtom;
+  static nsIAtom *sKbdAtom;
+  static nsIAtom *sKeygenAtom;
+  static nsIAtom *sNobrAtom;
+  static nsIAtom *sSAtom;
+  static nsIAtom *sSampAtom;
+  static nsIAtom *sSmallAtom;
+  static nsIAtom *sSpacerAtom;
+  static nsIAtom *sSpanAtom;      
+  static nsIAtom *sStrikeAtom;
+  static nsIAtom *sStrongAtom;
+  static nsIAtom *sSubAtom;
+  static nsIAtom *sSupAtom;
+  static nsIAtom *sTtAtom;
+  static nsIAtom *sUAtom;
+  static nsIAtom *sVarAtom;
+  static nsIAtom *sWbrAtom;
+  
+  static PRInt32 sInstanceCount;
 };
 
 #endif //nsHTMLEditRules_h__

@@ -125,16 +125,24 @@ nsTextEditRules::Init(nsIEditor *aEditor)
 }
 
 NS_IMETHODIMP 
-nsTextEditRules::WillDoAction(int aAction, nsIDOMSelection *aSelection, 
-                              void **aOtherInfo, PRBool *aCancel)
+nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
+                              nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection) 
+  if (!aSelection || !aInfo) 
     return NS_ERROR_NULL_POINTER;
+
+  // my kingdom for dynamic cast
+  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
     
-  switch (aAction)
+  switch (info->action)
   {
     case kInsertText:
-      return WillInsertText(aSelection, aCancel, (PlaceholderTxn**)aOtherInfo);
+      return WillInsertText(aSelection, 
+                            aCancel, 
+                            info->placeTxn, 
+                            info->inString,
+                            info->outString,
+                            info->typeInState);
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, aCancel);
     case kUndo:
@@ -146,13 +154,16 @@ nsTextEditRules::WillDoAction(int aAction, nsIDOMSelection *aSelection,
 }
   
 NS_IMETHODIMP 
-nsTextEditRules::DidDoAction(int aAction, nsIDOMSelection *aSelection,
-                             void **aOtherInfo, nsresult aResult)
+nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
+                             nsRulesInfo *aInfo, nsresult aResult)
 {
-  if (!aSelection) 
+  if (!aSelection || !aInfo) 
     return NS_ERROR_NULL_POINTER;
     
-  switch (aAction)
+  // my kingdom for dynamic cast
+  nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
+
+  switch (info->action)
   {
     case kInsertText:
       return DidInsertText(aSelection, aResult);
@@ -172,7 +183,7 @@ nsTextEditRules::DidDoAction(int aAction, nsIDOMSelection *aSelection,
  ********************************************************/
 
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
@@ -191,21 +202,23 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
-                                PRBool *aCancel,
-                                PlaceholderTxn **aTxn)
+nsresult
+nsTextEditRules::WillInsertText(nsIDOMSelection  *aSelection, 
+                                PRBool          *aCancel,
+                                PlaceholderTxn **aTxn,
+                                const nsString *inString,
+                                nsString       *outString,
+                                TypeInState    typeInState)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
-  TypeInState typeInState = mEditor->GetTypeInState();
   if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
   {
     nsresult result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
@@ -225,14 +238,14 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection, 
                                nsresult aResult)
 {
   return DidInsert(aSelection, aResult);
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState)
 { 
   // private method, we know aSelection is not null, and that it is collapsed
@@ -356,7 +369,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelection *aSelection)
 {
   NS_ASSERTION(aNode && aTag, "bad args");
@@ -388,7 +401,7 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelecti
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTag, nsIDOMSelection *aSelection)
 {
   NS_ASSERTION(aParentNode && aTag, "bad args");
@@ -433,7 +446,7 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
 
 
 /*
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::GetInsertBreakTag(nsIAtom **aTag)
 {
   if (!aTag) { return NS_ERROR_NULL_POINTER; }
@@ -442,7 +455,7 @@ nsTextEditRules::GetInsertBreakTag(nsIAtom **aTag)
 }
 */
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
@@ -459,7 +472,7 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCance
 
 // if the document is empty, insert a bogus text node with a &nbsp;
 // if we ended up with consecutive text nodes, merge them
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult)
 {
   nsresult result = aResult;  // if aResult is an error, we just return it
@@ -600,7 +613,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
@@ -614,7 +627,7 @@ nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel)
  * There is a tradeoff between doing here and at redo, or doing it everywhere else that might care.
  * Since undo and redo are relatively rare, it makes sense to take the (small) performance hit here.
  */
-NS_IMETHODIMP
+nsresult
 nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
 {
   nsresult result = aResult;  // if aResult is an error, we return it.
@@ -651,7 +664,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
@@ -660,7 +673,7 @@ nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
 {
   nsresult result = aResult;  // if aResult is an error, we return it.
