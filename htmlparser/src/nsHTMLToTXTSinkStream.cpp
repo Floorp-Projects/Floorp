@@ -243,6 +243,11 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
     result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
   }
 
+  // If we're encoding only the selection, then we don't want to risk
+  // ignoring whitespace which might be significant:
+  if (mFlags | nsIDocumentEncoder::OutputSelectionOnly)
+    mInWhitespace = PR_FALSE;
+
   return result;
 }
 
@@ -841,6 +846,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     {
       EnsureVerticalSpace(mEmptyLines+1);
     }
+    else Write(" ");
   }
   else if (type == eHTMLTag_hr &&
            (mFlags & nsIDocumentEncoder::OutputFormatted))
