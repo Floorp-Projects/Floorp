@@ -19,19 +19,19 @@
 #ifndef nsToolbarManager_h___
 #define nsToolbarManager_h___
 
+#include "nsIImageRequest.h"
 #include "nsIToolbarManager.h"
+#include "nsIToolbarManagerListener.h"
 #include "nsIToolbarItem.h"
+#include "nsIToolbar.h"
 #include "nsIContentConnector.h"
 #include "nsWindow.h"
 #include "nsIImageButtonListener.h"
 
 #include "nsCOMPtr.h"
 
-class nsIToolbar;
 class nsIImageButton;
 class nsIWidget;
-class nsIToolbarManagerListener;
-class nsIImageRequest;
 
 struct nsRect;
 
