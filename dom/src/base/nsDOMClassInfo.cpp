@@ -2032,7 +2032,7 @@ nsDOMClassInfo::Init()
     }
 
     for (i = 0; i < eDOMClassInfoIDCount; i++) {
-      if (!sClassInfoData[i].mConstructorFptr ||
+      if (!sClassInfoData[i].u.mConstructorFptr ||
           sClassInfoData[i].mDebugID != i) {
         NS_ERROR("Class info data out of sync, you forgot to update "
                  "nsDOMClassInfo.h and nsDOMClassInfo.cpp! Fix this, "
@@ -2509,7 +2509,7 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoID aID)
   if (!sClassInfoData[aID].mCachedClassInfo) {
     nsDOMClassInfoData& data = sClassInfoData[aID];
 
-    data.mCachedClassInfo = data.mConstructorFptr(&data);
+    data.mCachedClassInfo = data.u.mConstructorFptr(&data);
     NS_ENSURE_TRUE(data.mCachedClassInfo, nsnull);
 
     NS_ADDREF(data.mCachedClassInfo);
@@ -2534,8 +2534,8 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
                "This is bad, external class marked as internal!");
 
   if (!aData->mCachedClassInfo) {
-    if (aData->mExternalConstructorFptr) {
-      aData->mCachedClassInfo = aData->mExternalConstructorFptr(aData->mName);
+    if (aData->u.mExternalConstructorFptr) {
+      aData->mCachedClassInfo = aData->u.mExternalConstructorFptr(aData->mName);
     } else {
       aData->mCachedClassInfo = nsDOMGenericSH::doCreate(aData);
     }
@@ -2556,7 +2556,7 @@ nsDOMClassInfo::GetClassInfoInstance(nsDOMClassInfoData* aData)
 void
 nsDOMClassInfo::ShutDown()
 {
-  if (sClassInfoData[0].mConstructorFptr) {
+  if (sClassInfoData[0].u.mConstructorFptr) {
     PRUint32 i;
 
     for (i = 0; i < eDOMClassInfoIDCount; i++) {

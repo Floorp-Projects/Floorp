@@ -61,7 +61,7 @@ struct nsDOMClassInfoData
   union {
     nsDOMClassInfoConstructorFnc mConstructorFptr;
     nsDOMClassInfoExternalConstructorFnc mExternalConstructorFptr;
-  };
+  } u;
   nsIClassInfo *mCachedClassInfo; // low bit is set to 1 if external,
                                   // so be sure to mask if necessary!
   const nsIID *mProtoChainInterface;
