@@ -705,35 +705,42 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       ycount = 0;
       break;
     case NS_STYLE_BG_REPEAT_X:
-      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aBounds.width / tileWidth);
+      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aDirtyRect.XMost() / tileWidth);
       ycount = 0;
       break;
     case NS_STYLE_BG_REPEAT_Y:
       xcount = 0;
-      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aBounds.height / tileHeight);
+      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aDirtyRect.YMost() / tileHeight);
       break;
     case NS_STYLE_BG_REPEAT_XY:
-      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aBounds.width / tileWidth);
-      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aBounds.height / tileHeight);
+      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aDirtyRect.XMost() / tileWidth);
+      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aDirtyRect.YMost() / tileHeight);
       break;
     }
 
     // Tile the background
-    nscoord xpos = aBounds.x, ypos = aBounds.y;
+    nscoord xpos, ypos, xpostart;
+    PRIntn x, y, xstart;
+
+    y = aDirtyRect.y / tileHeight;
+    ypos = aBounds.y + y * tileHeight;
+
+    xstart = aDirtyRect.x / tileWidth;
+    xpostart = aBounds.x + xstart * tileWidth;
+
 #if XXX
-    // XXX support offset positioning
+    // XXX support offset positioning. why is this disabled? MMP
     PRIntn xPos = aColor.mBackgroundXPosition;
     PRIntn yPos = aColor.mBackgroundXPosition;
 #endif
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
-    PRIntn x, y;
-    for (y = 0;  y <= ycount;  ++y, ypos += tileHeight) {
-      for (x = 0;  x <= xcount;  ++x, xpos += tileWidth) {
+    for (; y <= ycount; ++y, ypos += tileHeight) {
+      x = xstart;
+      xpos = xpostart;
+      for (; x <= xcount; ++x, xpos += tileWidth) {
         aRenderingContext.DrawImage(image, xpos, ypos);
       }
-
-      xpos = aBounds.x;
     }
     aRenderingContext.PopState();
   } else {
