@@ -5498,11 +5498,9 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
       // Check if the page has expired from cache 
       nsCOMPtr<nsICacheEntryDescriptor> cacheEntryDesc(do_QueryInterface(cacheToken));
       if (cacheEntryDesc) {        
-         PRUint32 expTime;
-         
+         PRUint32 expTime;         
          cacheEntryDesc->GetExpirationTime(&expTime);         
-         PRUint32 now = PRTimeToSeconds(PR_Now());         
-         printf("Exptime = %d, Now = %d\n", expTime, now);
+         PRUint32 now = PRTimeToSeconds(PR_Now());                  
          if (expTime <=  now)            
            expired = PR_TRUE;         
          
