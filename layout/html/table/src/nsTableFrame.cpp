@@ -3565,6 +3565,15 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
             GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
             DistributeSpaceToRows(aPresContext, aReflowState, childFrame, sumOfRowHeights, 
                                   excess, tableStyle, excessForGroup, rowGroupYPos);
+
+            // Make sure child views are properly positioned
+            nsIView*  view;
+            childFrame->GetView(aPresContext, &view);
+            if (view) {
+              nsContainerFrame::PositionFrameView(aPresContext, childFrame, view);
+            } else {
+              nsContainerFrame::PositionChildViews(aPresContext, childFrame);
+            }
           }
           else {
             nsRect rowGroupRect;
