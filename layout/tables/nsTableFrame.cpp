@@ -4490,6 +4490,8 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
                             PRInt32&       aStartColIndex, 
                             PRInt32&       aRowSpan, 
                             PRInt32&       aColSpan,
+                            PRInt32&       aActualRowSpan, 
+                            PRInt32&       aActualColSpan,
                             PRBool&        aIsSelected)
 {
   nsresult result;
@@ -4530,6 +4532,8 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
     cellFrame = cellMap->GetCellFrameOriginatingAt(row, col);
     if (cellFrame)
     {
+      //The nsTableFrame version returns actual value
+      // when nsTableCellFrame's return values are "HTML" (i.e., may = 0)
       rowSpan = GetRowSpan(*cellFrame);
       colSpan = GetColSpan(*cellFrame);
 
@@ -4540,8 +4544,10 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
 CELL_FOUND:
         aStartRowIndex = row;
         aStartColIndex = col;
-        aRowSpan = rowSpan;
-        aColSpan = colSpan;
+        aActualRowSpan = rowSpan;
+        aActualColSpan = colSpan;
+        aRowSpan = cellFrame->GetRowSpan();
+        aColSpan = cellFrame->GetColSpan();
         // I know jumps aren't cool, but it's efficient!
         goto TEST_IF_SELECTED;
       } else {
@@ -4574,8 +4580,11 @@ CELL_FOUND:
   if (NS_FAILED(result)) return result;
   result = cellFrame->GetColIndex(aStartColIndex);
   if (NS_FAILED(result)) return result;
-  aRowSpan = GetRowSpan(*cellFrame);
-  aColSpan = GetColSpan(*cellFrame);
+  //This returns HTML value, which may be 0
+  aRowSpan = cellFrame->GetRowSpan();
+  aColSpan = cellFrame->GetColSpan();
+  aActualRowSpan = GetRowSpan(*cellFrame);
+  aActualColSpan = GetColSpan(*cellFrame);
   result = cellFrame->GetSelected(&aIsSelected);
   if (NS_FAILED(result)) return result;
 

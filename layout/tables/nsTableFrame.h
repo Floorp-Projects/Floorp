@@ -811,6 +811,7 @@ public: /* ----- Cell Map public methods ----- */
                            nsIDOMElement* &aCell,   //out params
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
+                           PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
                            PRBool& aIsSelected);
 
   /** Get the number of rows and column for a table from the frame's cellmap 

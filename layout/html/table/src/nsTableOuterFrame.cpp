@@ -1062,6 +1062,7 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                                  nsIDOMElement* &aCell,   //out params
                                  PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                                  PRInt32& aRowSpan, PRInt32& aColSpan,
+                                 PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
                                  PRBool& aIsSelected)
 {
   if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
@@ -1071,7 +1072,8 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
   {
     return (inner->GetCellDataAt(aRowIndex, aColIndex, aCell,
                                  aStartRowIndex, aStartColIndex, 
-                                 aRowSpan, aColSpan, aIsSelected));
+                                 aRowSpan, aColSpan, aActualRowSpan, aActualColSpan, 
+                                 aIsSelected));
   }
   return NS_ERROR_NULL_POINTER;
 }

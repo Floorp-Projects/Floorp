@@ -58,8 +58,10 @@ public:
    *                           for searching through the table when a cell isn't found 
    *                           because of "holes" in the cellmap
    *                           when ROWSPAN and/or COLSPAN > 1
-   *  @param aRowSpan        [OUT] the number of rows aCell spans
-   *  @param aColSpan        [OUT] the number of cols aCell spans
+   *  @param aRowSpan        [OUT] the value of the ROWSPAN attribute (may be 0 or actual number)
+   *  @param aColSpan        [OUT] the value of the COLSPAN attribute (may be 0 or actual number)
+   *  @param aActualRowSpan  [OUT] the actual number of rows aCell spans
+   *  @param aActualColSpan  [OUT] the acutal number of cols aCell spans
    *  @param aIsSelected     [OUT] PR_TRUE if the frame that maps aCell is selected
    *                               in the presentation shell that owns this.
    */
@@ -67,6 +69,7 @@ public:
                            nsIDOMElement* &aCell,   //out params
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
+                           PRInt32& aActualRowSpan, PRInt32& aActualColSpan,
                            PRBool& aIsSelected)=0;
 
   /** Get the number of rows and column for a table from the frame's cellmap 
