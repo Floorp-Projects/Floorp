@@ -1,1 +1,0 @@
-TEMPLATE=winbuild.t
