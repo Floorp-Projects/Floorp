@@ -60,6 +60,9 @@ NSGetFactory(nsISupports* aServMgr,
     else if (aClass.Equals(kSocketTransportServiceCID)) {
         rv = NS_NewGenericFactory(&fact, nsSocketTransportService::Create);
     }
+    else if (aClass.Equals(kDNSServiceCID)) {
+        rv = NS_NewGenericFactory(&fact, nsDNSService::Create);
+    }
     else if (aClass.Equals(kStandardURLCID)) {
         rv = NS_NewGenericFactory(&fact, nsStandardURL::Create);
     }
@@ -104,6 +107,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
+    rv = compMgr->RegisterComponent(kDNSServiceCID, 
+                                    "DNS Service",
+                                    "component://netscape/network/dns-service",
+                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
     rv = compMgr->RegisterComponent(kStandardURLCID, 
                                     "Standard URL Implementation",
                                     "component://netscape/network/standard-url",
@@ -132,6 +141,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) return rv;
 #endif
     rv = compMgr->UnregisterComponent(kSocketTransportServiceCID, aPath);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->UnregisterComponent(kDNSServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kStandardURLCID, aPath);
