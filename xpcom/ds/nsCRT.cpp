@@ -33,6 +33,10 @@
 
 
 #include "nsCRT.h"
+#include "nsUnicharUtilCIID.h"
+#include "nsIServiceManager.h"
+#include "nsICaseConversion.h"
+
 
 // XXX Bug: These tables don't lowercase the upper 128 characters properly
 
@@ -109,21 +113,77 @@ static const PRUnichar kIsoLatin1ToUCS2[256] = {
 //----------------------------------------------------------------------
 
 #define TOLOWER(_ucs2) \
-  (((_ucs2) < 256) ? PRUnichar(kUpper2Lower[_ucs2]) : _ToLower(_ucs2))
+  (((_ucs2) < 128) ? PRUnichar(kUpper2Lower[_ucs2]) : _ToLower(_ucs2))
 
 #define TOUPPER(_ucs2) \
-  (((_ucs2) < 256) ? PRUnichar(kLower2Upper[_ucs2]) : _ToUpper(_ucs2))
+  (((_ucs2) < 128) ? PRUnichar(kLower2Upper[_ucs2]) : _ToUpper(_ucs2))
+
+class HandleCaseConversionShutdown : public nsIShutdownListener {
+public :
+   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
+   HandleCaseConversionShutdown(void) { NS_INIT_REFCNT(); }
+   virtual ~HandleCaseConversionShutdown(void) {}
+   NS_DECL_ISUPPORTS
+};
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
+
+static nsICaseConversion * gCaseConv = NULL; 
+
+static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
+NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown, kIShutdownListenerIID);
+
+nsresult
+HandleCaseConversionShutdown::OnShutdown(const nsCID& cid, nsISupports* service)
+{
+    if (cid.Equals(kUnicharUtilCID)) {
+        NS_ASSERTION(service == gCaseConv, "wrong service!");
+        nsrefcnt cnt = gCaseConv->Release();
+        gCaseConv = NULL;
+    }
+    return NS_OK;
+}
+
+static HandleCaseConversionShutdown* gListener = NULL;
+
+static void StartUpCaseConversion()
+{
+    nsresult err;
+
+    if ( NULL == gListener )
+    {
+      gListener = new HandleCaseConversionShutdown();
+      gListener->AddRef();
+    }
+    err = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+                                        (nsISupports**) &gCaseConv, gListener);
+}
+static void CheckCaseConversion()
+{
+    if(NULL == gCaseConv )
+      StartUpCaseConversion();
+
+    NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
+   
+}
 
 static PRUnichar _ToLower(PRUnichar aChar)
 {
-  // XXX need i18n code here
-  return aChar;
+  PRUnichar oLower;
+  CheckCaseConversion();
+  nsresult err = gCaseConv->ToLower(aChar, &oLower);
+  NS_ASSERTION( NS_SUCCEEDED(err),  "failed to communicate to UnicharUtil");
+  return ( NS_SUCCEEDED(err) ) ? oLower : aChar ;
 }
 
 static PRUnichar _ToUpper(PRUnichar aChar)
 {
-  // XXX need i18n code here
-  return aChar;
+  nsresult err;
+  PRUnichar oUpper;
+  CheckCaseConversion();
+  err = gCaseConv->ToUpper(aChar, &oUpper);
+  NS_ASSERTION( NS_SUCCEEDED(err),  "failed to communicate to UnicharUtil");
+  return ( NS_SUCCEEDED(err) ) ? oUpper : aChar ;
 }
 
 //----------------------------------------------------------------------

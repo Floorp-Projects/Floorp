@@ -27,6 +27,11 @@
 #include "prdtoa.h"
 #include "nsISizeOfHandler.h"
 
+
+#include "nsUnicharUtilCIID.h"
+#include "nsIServiceManager.h"
+#include "nsICaseConversion.h"
+
 const PRInt32 kGrowthDelta = 8;
 const PRInt32 kNotFound = -1;
 PRUnichar gBadChar = 0;
@@ -95,6 +100,57 @@ public:
   }
 };
 static CTableConstructor gTableConstructor;
+
+//---- XPCOM code to connect with UnicharUtil
+
+class HandleCaseConversionShutdown2 : public nsIShutdownListener {
+public :
+   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
+   HandleCaseConversionShutdown2(void) { NS_INIT_REFCNT(); }
+   virtual ~HandleCaseConversionShutdown2(void) {}
+   NS_DECL_ISUPPORTS
+};
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
+static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
+
+static nsICaseConversion * gCaseConv = NULL; 
+
+static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
+NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown2, kIShutdownListenerIID);
+
+nsresult
+HandleCaseConversionShutdown2::OnShutdown(const nsCID& cid, nsISupports* service)
+{
+    if (cid.Equals(kUnicharUtilCID)) {
+        NS_ASSERTION(service == gCaseConv, "wrong service!");
+        nsrefcnt cnt = gCaseConv->Release();
+        gCaseConv = NULL;
+    }
+    return NS_OK;
+}
+
+static HandleCaseConversionShutdown2* gListener = NULL;
+
+static void StartUpCaseConversion()
+{
+    nsresult err;
+
+    if ( NULL == gListener )
+    {
+      gListener = new HandleCaseConversionShutdown2();
+      gListener->AddRef();
+    }
+    err = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+                                        (nsISupports**) &gCaseConv, gListener);
+}
+static void CheckCaseConversion()
+{
+    if(NULL == gCaseConv )
+      StartUpCaseConversion();
+
+    NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
+   
+}
 
 /***********************************************************************
   IMPLEMENTATION NOTES:
@@ -431,6 +487,14 @@ nsString nsString::operator+(PRUnichar aChar) {
  */
 void nsString::ToLowerCase()
 {
+  // I18N code begin
+  CheckCaseConversion();
+  nsresult err = gCaseConv->ToLower(mStr, mStr, mLength);
+  if( NS_SUCCEEDED(err))
+    return;
+  // I18N code end
+
+  // somehow UnicharUtil return failed, fallback to the old ascii only code
   chartype* cp = mStr;
   chartype* end = cp + mLength;
   while (cp < end) {
@@ -448,6 +512,14 @@ void nsString::ToLowerCase()
  */
 void nsString::ToUpperCase()
 {
+  // I18N code begin
+  CheckCaseConversion();
+  nsresult err = gCaseConv->ToUpper(mStr, mStr, mLength);
+  if( NS_SUCCEEDED(err))
+    return;
+  // I18N code end
+
+  // somehow UnicharUtil return failed, fallback to the old ascii only code
   chartype* cp = mStr;
   chartype* end = cp + mLength;
   while (cp < end) {
@@ -487,6 +559,17 @@ void nsString::ToLowerCase(nsString& aOut) const
 {
   aOut.EnsureCapacityFor(mLength);
   aOut.mLength = mLength;
+
+  // I18N code begin
+  CheckCaseConversion();
+  nsresult err = gCaseConv->ToLower(mStr, aOut.mStr, mLength);
+  (*(aOut.mStr+mLength)) = 0;
+  if( NS_SUCCEEDED(err))
+    return;
+  // I18N code end
+
+  // somehow UnicharUtil return failed, fallback to the old ascii only code
+
   chartype* to = aOut.mStr;
   chartype* from = mStr;
   chartype* end = from + mLength;
@@ -510,6 +593,16 @@ void nsString::ToUpperCase(nsString& aOut) const
 {
   aOut.EnsureCapacityFor(mLength);
   aOut.mLength = mLength;
+
+  // I18N code begin
+  CheckCaseConversion();
+  nsresult err = gCaseConv->ToUpper(mStr, aOut.mStr, mLength);
+  (*(aOut.mStr+mLength)) = 0;
+  if( NS_SUCCEEDED(err))
+    return;
+  // I18N code end
+
+  // somehow UnicharUtil return failed, fallback to the old ascii only code
   chartype* to = aOut.mStr;
   chartype* from = mStr;
   chartype* end = from + mLength;
