@@ -43,7 +43,7 @@ class nsRulesInfo
 class nsEditRules
 {
 public:
-  NS_IMETHOD Init(nsHTMLEditor *aEditor)=0;
+  NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags)=0;
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel)=0;
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;
