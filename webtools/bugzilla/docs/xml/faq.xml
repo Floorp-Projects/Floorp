@@ -875,7 +875,7 @@ C:\mysql\bin\replace "#!/usr/bin/perl" "#!C:\perl\bin\perl" -- *.cgi *.pl
           <para>
             An updated (and much-expanded) version of this functionality is
             due to be released as part of Bugzilla 2.20; see 
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=6679">bug
+            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=185090">bug
             185090</ulink> for the discussion, and for more up-to-date patches
             if you just can't wait.
           </para>
