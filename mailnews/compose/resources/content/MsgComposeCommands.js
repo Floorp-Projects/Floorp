@@ -68,6 +68,9 @@ var gAutocompleteSession = null;
 var gSetupLdapAutocomplete = false;
 var gLDAPSession = null;
 var gComposeMsgsBundle;
+var gSavedSendNowKey;
+
+const DEBUG = false;
 
 var other_header = "";
 var sendFormat = msgCompSendFormat.AskUser;
@@ -225,6 +228,7 @@ var defaultController =
       case "cmd_saveAsTemplate":
       case "cmd_sendButton":
       case "cmd_sendNow":
+      case "cmd_sendWithCheck":
       case "cmd_sendLater":
 //      case "cmd_printSetup":
       case "cmd_print":
@@ -336,9 +340,10 @@ var defaultController =
       case "cmd_sendLater":
 //      case "cmd_printSetup":
       case "cmd_print":
+      case "cmd_sendWithCheck":
         return !gWindowLocked;
       case "cmd_sendNow":
-        return !(gWindowLocked || (ioService && ioService.offline))
+        return !(gWindowLocked || isOffline);
       case "cmd_quit":
         return true;
 
@@ -462,6 +467,7 @@ var defaultController =
         }
         break;
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
+      case "cmd_sendWithCheck"   : if (defaultController.isCommandEnabled(command)) SendMessageWithCheck();          break;
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
 //      case "cmd_printSetup"         : dump("PRINT SETUP\n");                                                   break;
       case "cmd_print"              : DoCommandPrint();                                                        break;
@@ -575,16 +581,28 @@ function MessageComposeOfflineStateChanged(goingOffline)
 {
   try {
     var sendButton = document.getElementById("button-send");
+    var sendNowMenuItem = document.getElementById("menu-item-send-now");
+
+    if (!gSavedSendNowKey) {
+      gSavedSendNowKey = sendNowMenuItem.getAttribute('key');
+    }
+
+    // don't use goUpdateCommand here ... the defaultController might not be installed yet
+    goSetCommandEnabled("cmd_sendNow", defaultController.isCommandEnabled("cmd_sendNow"));
 
     if (goingOffline)
     {
       sendButton.label = sendButton.getAttribute('later_label');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('later_tooltiptext'));
+      sendNowMenuItem.removeAttribute('key');
     }
     else
     {
       sendButton.label = sendButton.getAttribute('now_label');
       sendButton.setAttribute('tooltiptext', sendButton.getAttribute('now_tooltiptext'));
+      if (gSavedSendNowKey) {
+        sendNowMenuItem.setAttribute('key', gSavedSendNowKey);
+      }
     }
 
   } catch(e) {}
@@ -1446,18 +1464,49 @@ function GenericSendMessage( msgType )
 function SendMessage()
 {
 	dump("SendMessage from XUL\n");
-  // 0 = nsMsgDeliverNow
-  // RICHIE: We should really have a way of using constants and not
-  // hardcoded numbers for the first argument
 	GenericSendMessage(msgCompDeliverMode.Now);
+}
+
+function SendMessageWithCheck()
+{
+    var warn;
+    try {
+        warn = prefs.GetBoolPref("mail.warn_on_send_accel_key");
+    } catch (ex) {
+        warn = true;
+    }
+
+    if (warn) {
+        var buttonPressed = {value:1};
+        var checkValue = {value:false};
+        if (!gPromptService) {
+            gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+            gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+        }
+        gPromptService.confirmEx(window, 
+              gComposeMsgsBundle.getString('sendMessageCheckWindowTitle'), 
+              gComposeMsgsBundle.getString('sendMessageCheckLabel'),
+              (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
+              (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
+              gComposeMsgsBundle.getString('sendMessageCheckSendButtonLabel'),
+              null, null,
+              gComposeMsgsBundle.getString('CheckMsg'), 
+              checkValue, buttonPressed);
+        if (!buttonPressed || buttonPressed.value != 0) {
+            return;
+        }
+        if (checkValue.value) {
+            prefs.SetBoolPref("mail.warn_on_send_accel_key", false);
+        }
+    }
+
+	GenericSendMessage(isOffline ? msgCompDeliverMode.Later
+                                 : msgCompDeliverMode.Now);
 }
 
 function SendMessageLater()
 {
 	dump("SendMessageLater from XUL\n");
-  // 1 = nsMsgQueueForLater
-  // RICHIE: We should really have a way of using constants and not
-  // hardcoded numbers for the first argument
 	GenericSendMessage(msgCompDeliverMode.Later);
 }
 
@@ -1486,9 +1535,6 @@ function SaveAsDraft()
 {
 	dump("SaveAsDraft from XUL\n");
 
-  // 4 = nsMsgSaveAsDraft
-  // RICHIE: We should really have a way of using constants and not
-  // hardcoded numbers for the first argument
   GenericSendMessage(msgCompDeliverMode.SaveAsDraft);
   defaultSaveOperation = "draft";
 }
@@ -1497,9 +1543,6 @@ function SaveAsTemplate()
 {
 	dump("SaveAsTemplate from XUL\n");
 
-  // 5 = nsMsgSaveAsTemplate
-  // RICHIE: We should really have a way of using constants and not
-  // hardcoded numbers for the first argument
   GenericSendMessage(msgCompDeliverMode.SaveAsTemplate);
   defaultSaveOperation = "template";
 }

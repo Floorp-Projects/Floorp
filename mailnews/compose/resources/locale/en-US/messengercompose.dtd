@@ -29,10 +29,10 @@
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 	<!ENTITY attachPageCmd.accesskey "W">
 <!ENTITY sendNowCmd.label "Send Now">
-	<!ENTITY sendNowCmd.keycode "VK_ENTER">
+	<!ENTITY sendCmd.keycode "VK_RETURN">
 	<!ENTITY sendNowCmd.accesskey "d">
 <!ENTITY sendLaterCmd.label "Send Later">
-	<!ENTITY sendLaterCmd.keycode "VK_ENTER">
+	<!ENTITY sendLaterCmd.keycode "VK_RETURN">
 	<!ENTITY sendLaterCmd.accesskey "L">
 <!ENTITY printSetupCmd.label "Page Setup...">
 	<!ENTITY printSetupCmd.accesskey "u">

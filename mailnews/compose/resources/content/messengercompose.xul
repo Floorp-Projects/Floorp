@@ -107,6 +107,7 @@
   <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
   <command id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
   <command id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
+  <command id="cmd_sendWithCheck" oncommand="goDoCommand('cmd_sendWithCheck')"/>
   <command id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
 <!--NYI <command id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
   <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
@@ -147,8 +148,8 @@
   <key id="key_newBlankPage"/>
   <key id="key_close"/>
   <key id="key_save"  key="&saveCmd.key;" command="cmd_saveDefault" modifiers="accel"/>
-  <!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" command="cmd_sendNow"/ -->
-  <!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" command="cmd_sendLater"/ -->
+  <key id="key_send" keycode="&sendCmd.keycode;" observes="cmd_sendWithCheck" modifiers="accel"/>
+  <key id="key_sendLater" keycode="&sendLaterCmd.keycode;" observes="cmd_sendLater" modifiers="accel, shift"/>
   <key id="key_print"  key="&printCmd.key;" command="cmd_print" modifiers="accel"/>
   <key id="key_quit"/>
   
@@ -202,8 +203,8 @@
             </menupopup>
           </menu>
           <menuseparator/>
-          <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" command="cmd_sendNow"/>
-          <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" command="cmd_sendLater"/>
+          <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" key="key_send" command="cmd_sendNow" id="menu-item-send-now"/>
+          <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" key="key_sendLater" command="cmd_sendLater"/>
           <menuseparator/>
 <!--NYI          <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>   -->
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
