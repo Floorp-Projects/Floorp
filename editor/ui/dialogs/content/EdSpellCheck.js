@@ -120,23 +120,54 @@ function InitLanguageMenu(curLang)
   var dictList = o1.value;
   var count    = o2.value;
 
-  // Load the string bundle that will help us map
+  // Load the string bundles that will help us map
   // RFC 1766 strings to UI strings.
 
-  var bundle = srGetStrBundle("resource:/res/acceptlanguage.properties"); 
+  var languageBundle;
+  var regionBundle;
   var menuStr;
+  var menuStr2;
+  var isoStrArray;
   var defaultIndex = 0;
+
+  // Try to load the language string bundle.
+
+  try {
+    languageBundle = srGetStrBundle("chrome://global/locale/languageNames.properties");
+  } catch(ex) {
+    // dump(ex);
+    languageBundle = null;
+  }
+
+  // If we have a language string bundle, try to load the region string bundle.
+
+  if (languageBundle)
+  {
+    try {
+      regionBundle = srGetStrBundle("chrome://global/locale/regionNames.properties");
+    } catch(ex) {
+      // dump(ex);
+      regionBundle = null;
+    }
+  }
 
   for (var i = 0; i < dictList.length; i++)
   {
     try {
-      menuStr = bundle.GetStringFromName(dictList[i]+".title");
+      isoStrArray = dictList[i].split("-");
+
+      if (languageBundle && isoStrArray[0])
+        menuStr = languageBundle.GetStringFromName(isoStrArray[0].toLowerCase());
+
+      if (regionBundle && menuStr && isoStrArray.length > 1 && isoStrArray[1])
+      {
+        menuStr2 = regionBundle.GetStringFromName(isoStrArray[1].toLowerCase());
+        if (menuStr2)
+          menuStr = menuStr + "/" + menuStr2;
+      }
 
       if (!menuStr)
         menuStr = dictList[i];
-
-      if (curLang && dictList[i] == curLang)
-        defaultIndex = i;
     } catch (ex) {
       // GetStringFromName throws an exception when
       // a key is not found in the bundle. In that
@@ -144,6 +175,9 @@ function InitLanguageMenu(curLang)
 
       menuStr = dictList[i];
     }
+
+    if (curLang && dictList[i] == curLang)
+      defaultIndex = i;
 
     AppendValueAndDataToMenulist(dialog.LanguageMenulist, menuStr, dictList[i]);
   }
