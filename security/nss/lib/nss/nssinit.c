@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.2 2000/09/22 17:34:29 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.3 2000/10/06 21:37:25 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -95,7 +95,7 @@ nss_keydb_name_cb(void *arg, int dbVersion)
 }
 
 SECStatus 
-nss_OpenCertDB(const char * configdir)
+nss_OpenCertDB(const char * configdir, PRBool readOnly)
 {
     CERTCertDBHandle *certdb;
     SECStatus         status;
@@ -108,7 +108,7 @@ nss_OpenCertDB(const char * configdir)
     if (certdb == NULL) 
     	goto loser;
 
-    status = CERT_OpenCertDB(certdb, PR_TRUE, nss_certdb_name_cb, (void *)configdir);
+    status = CERT_OpenCertDB(certdb, readOnly, nss_certdb_name_cb, (void *)configdir);
     if (status == SECSuccess)
 	CERT_SetDefaultCertDB(certdb);
     else {
@@ -120,14 +120,14 @@ loser:
 }
 
 SECStatus
-nss_OpenKeyDB(const char * configdir)
+nss_OpenKeyDB(const char * configdir, PRBool readOnly)
 {
     SECKEYKeyDBHandle *keydb;
 
     keydb = SECKEY_GetDefaultKeyDB();
     if (keydb)
     	return SECSuccess;
-    keydb = SECKEY_OpenKeyDB(PR_TRUE, nss_keydb_name_cb, (void *)configdir);
+    keydb = SECKEY_OpenKeyDB(readOnly, nss_keydb_name_cb, (void *)configdir);
     if (keydb == NULL)
 	return SECFailure;
     SECKEY_SetDefaultKeyDB(keydb);
@@ -153,7 +153,7 @@ nss_OpenSecModDB(const char * configdir)
 }
 
 SECStatus
-NSS_Init(const char *configdir)
+nss_Init(const char *configdir, PRBool readOnly)
 {
     SECStatus status;
     SECStatus rv      = SECFailure;
@@ -161,11 +161,11 @@ NSS_Init(const char *configdir)
     RNG_RNGInit();     		/* initialize random number generator */
     RNG_SystemInfoForRNG();
 
-    status = nss_OpenCertDB(configdir);
+    status = nss_OpenCertDB(configdir, PR_TRUE);
     if (status != SECSuccess)
 	goto loser;
 
-    status = nss_OpenKeyDB(configdir);
+    status = nss_OpenKeyDB(configdir, PR_TRUE);
     if (status != SECSuccess)
 	goto loser;
 
@@ -179,6 +179,18 @@ loser:
     if (rv != SECSuccess) 
 	NSS_Shutdown();
     return rv;
+}
+
+SECStatus
+NSS_Init(const char *configdir)
+{
+    return nss_Init(configdir, PR_TRUE);
+}
+
+SECStatus
+NSS_InitReadWrite(const char *configdir)
+{
+    return nss_Init(configdir, PR_FALSE);
 }
 
 /*
