@@ -40,7 +40,7 @@
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup()" onunload="Shutdown()" onclose="return closeWindow(false);"
+        onload="Startup()" onunload="Shutdown()" onclose="return WindowIsClosing();"
         contenttitlesetting="true"
         title="&mainWindow.title;"
         titlemodifier="&mainWindow.title;"

@@ -586,11 +586,11 @@ function ctrlNumberTabSelection(event)
   if (index < 0 || index > 8)
     return;
 
-  if (index >= gBrowser.mTabContainer.childNodes.length)
+  if (index >= gBrowser.tabContainer.childNodes.length)
     return;
 
   var oldTab = gBrowser.selectedTab;
-  var newTab = gBrowser.mTabContainer.childNodes[index];
+  var newTab = gBrowser.tabContainer.childNodes[index];
   if (newTab != oldTab) {
     oldTab.selected = false;
     gBrowser.selectedTab = newTab;
@@ -916,7 +916,7 @@ function BrowserOpenFileWindow()
 
 function BrowserCloseTabOrWindow()
 {
-  if (gBrowser.localName == 'tabbrowser' && gBrowser.mTabContainer.childNodes.length > 1) {
+  if (gBrowser.localName == 'tabbrowser' && gBrowser.tabContainer.childNodes.length > 1) {
     // Just close up a tab.
     gBrowser.removeCurrentTab();
     return;
@@ -4185,3 +4185,48 @@ var BrowserOffline = {
   }
 };
 
+function WindowIsClosing()
+{
+  var browser = getBrowser();
+  var cn = browser.tabContainer.childNodes;
+  var numtabs = cn.length;
+  var reallyClose = true;
+
+  if (numtabs > 1) {
+    var shouldPrompt = gPrefService.getBoolPref("browser.tabs.warnOnClose");
+    if (shouldPrompt) {
+      var promptService =
+        Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                  .getService(Components.interfaces.nsIPromptService);
+      //default to true: if it were false, we wouldn't get this far
+      var warnOnClose = {value:true};
+
+       var buttonPressed = promptService.confirmEx(window, 
+         gNavigatorBundle.getString('tabs.closeWarningTitle'), 
+         gNavigatorBundle.getFormattedString("tabs.closeWarning", [numtabs]),
+         (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
+          + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+            gNavigatorBundle.getString('tabs.closeButton'),
+            null, null,
+            gNavigatorBundle.getString('tabs.closeWarningPromptMe'),
+            warnOnClose);
+      reallyClose = (buttonPressed == 0);
+      //don't set the pref unless they press OK and it's false
+      if (reallyClose && !warnOnClose.value) {
+        gPrefService.setBoolPref("browser.tabs.warnOnClose", false);
+      }
+    } //if the warn-me pref was true
+  } //if multiple tabs are open
+
+  for (var i = 0; reallyClose && i < numtabs; ++i) {
+    var ds = browser.getBrowserForTab(cn[i]).docShell;
+
+    if (ds.contentViewer && !ds.contentViewer.permitUnload())
+      reallyClose = false;
+  }
+
+  if (reallyClose)
+    return closeWindow(false);
+
+  return reallyClose;
+}

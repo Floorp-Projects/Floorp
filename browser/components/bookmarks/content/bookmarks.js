@@ -625,7 +625,7 @@ var BookmarksCommand = {
         return;
 
       // Select the first tab in the group.
-      var tabs = browser.mTabContainer.childNodes;
+      var tabs = browser.tabContainer.childNodes;
       browser.selectedTab = tabs[index0];
 
       // Close any remaining open tabs that are left over.
