@@ -3044,10 +3044,9 @@ rescan:
                 return argv[0];
             // need to reset the environment to the one in operation when eval was called so
             // that eval code can affect the apppropriate scopes.
-            Environment *e = meta->env;
-            meta->env = meta->engine->activationStackTop[-1].env;
+            meta->engine->jsr(meta->engine->phase, NULL, meta->engine->sp - meta->engine->execStack, JS2VAL_VOID, meta->engine->activationStackTop[-1].env);
             js2val result = meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
-            meta->env = e;
+            meta->engine->rts();
             return result;
         }
         else

@@ -343,6 +343,12 @@ js2val dumpAt(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], ui
     return JS2VAL_VOID;
 }
 
+js2val forceGC(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
+{
+    JS2Object::gc();
+    return JS2VAL_VOID;
+}
+
 #endif
 
 js2val load(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
@@ -395,6 +401,7 @@ int main(int argc, char **argv)
     metadata->addGlobalObjectFunction("dumpAt", dumpAt, 1);
     metadata->addGlobalObjectFunction("trees", trees, 0);
     metadata->addGlobalObjectFunction("trace", trace, 0);
+    metadata->addGlobalObjectFunction("gc", forceGC, 0);
 #endif
 
     try {

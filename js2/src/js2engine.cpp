@@ -905,7 +905,7 @@ namespace MetaData {
         // reset to previous env.
         meta->env = activationStackTop->env;
         sp = execStack + activationStackTop->execStackBase;
-        if (!JS2VAL_IS_VOID(activationStackTop->retval))    // XXX might need an actual 'returnValue' flag instead?
+        if (!JS2VAL_IS_VOID(activationStackTop->retval))               // XXX might need an actual 'returnValue' flag instead?
             // if the value being returned is a non-object, prefer it to the value
             // set in the activation frame. [This is the mechanism used to handle
             // the automatic return of a new object from an E3 constructor call]
