@@ -37,7 +37,9 @@ If you want to sign the CAB file with a certificate, type
 Where xx.* files are your certificate, key and your software publisher
 certificate.
 
+There is a sample verify.htm page where you may try and install the control from.
+
 STILL TO DO
 
-  o  Installation from CABs will probably fails until these scripts have been
-     sorted out
+  o  Installation from the CAB will probably fail until these scripts have been
+     sorted out properly.
