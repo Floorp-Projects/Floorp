@@ -3002,7 +3002,7 @@ nsMsgComposeAndSend::CreateAndSendMessage(
   SetListenerArray(aListenerArray);
 
   if (!attachment1_body || !*attachment1_body)
-		attachment1_type = attachment1_body = 0;
+		attachment1_body_length = attachment1_body = 0;
 
   // Set the editor for MHTML operations if necessary
   if (aEditor)
