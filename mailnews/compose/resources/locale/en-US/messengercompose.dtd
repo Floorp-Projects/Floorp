@@ -185,3 +185,17 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
+
+<!-- context menu items -->
+<!ENTITY undo.label "Undo">
+<!ENTITY undo.accesskey "U">
+<!ENTITY cut.label "Cut">
+<!ENTITY cut.accesskey "t">
+<!ENTITY copy.label "Copy">
+<!ENTITY copy.accesskey "C">
+<!ENTITY paste.label "Paste">
+<!ENTITY paste.accesskey "P">
+<!ENTITY delete.label "Delete">
+<!ENTITY delete.accesskey "D">
+<!ENTITY selectAll.label "Select All">
+<!ENTITY selectAll.accesskey "A">

@@ -164,6 +164,18 @@
 </keyset>
 <keyset id="editorKeys"/>
 
+<popup id="msgComposeContext">
+  <menuitem label="&undo.label;" accesskey="&undo.accesskey;" command="cmd_undo"/>
+  <menuseparator/>
+  <menuitem label="&cut.label;" accesskey="&cut.accesskey;" command="cmd_cut"/>
+  <menuitem label="&copy.label;" accesskey="&copy.accesskey;" command="cmd_copy"/>
+  <menuitem label="&paste.label;" accesskey="&paste.accesskey;" command="cmd_paste"/>
+  <menuitem id="menu_pasteQuote"/>
+  <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
+  <menuseparator/>
+  <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
+</popup>
+
   <toolbox class="toolbox-top">
     <menubar id="compose-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
@@ -446,7 +458,7 @@
   <!-- The mail message body frame -->
   <vbox id="appcontent" flex="1">
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
-            onkeypress="editorKeyPress(event);"/>
+            onkeypress="editorKeyPress(event);" context="msgComposeContext"/>
   </vbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
