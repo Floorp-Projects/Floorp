@@ -176,14 +176,16 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+//  nsIComponentManager* compMgr;
+  NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv); 
+
+//  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
+//  rv = servMgr->GetService(kComponentManagerCID, 
+//                           nsIComponentManager::GetIID(), 
+//                           (nsISupports**)&compMgr);
+//  if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kCMailDB, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
@@ -198,7 +200,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
   
   done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+//  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 

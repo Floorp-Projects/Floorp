@@ -19,7 +19,7 @@
 #include "msgCore.h"
 #include "nsMsgThread.h"
 #include "nsMsgDatabase.h"
-
+#include "nsCOMPtr.h"
 
 NS_IMPL_ISUPPORTS(nsMsgThread, nsMsgThread::GetIID())
 
@@ -182,7 +182,26 @@ NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 index, nsIMsgDBHdr **result)
 NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
+	mdb_bool	hasOid;
+	mdbOid		rowObjectId;
 
+
+	if (!result || !m_mdbTable)
+		return NS_ERROR_NULL_POINTER;
+
+	*result = NULL;
+	rowObjectId.mOid_Id = msgKey;
+	rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
+	ret = m_mdbTable->HasOid(m_mdbDB->GetEnv(), &rowObjectId, &hasOid);
+	if (NS_SUCCEEDED(ret) && hasOid && m_mdbDB && m_mdbDB->m_mdbStore)
+	{
+		nsIMdbRow *hdrRow = nsnull;
+		ret = m_mdbDB->m_mdbStore->GetRow(m_mdbDB->GetEnv(), &rowObjectId,  &hdrRow);
+		if (ret == NS_OK && hdrRow && m_mdbDB)
+		{
+			ret = m_mdbDB->CreateMsgHdr(hdrRow,  msgKey, result);
+		}
+	}
 	return ret;
 }
 
@@ -234,7 +253,10 @@ NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 index)
 NS_IMETHODIMP nsMsgThread::RemoveChild(nsMsgKey msgKey)
 {
 	nsresult ret = NS_OK;
-
+	mdbOid		rowObjectId;
+	rowObjectId.mOid_Id = msgKey;
+	rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
+	ret = m_mdbTable->CutOid(m_mdbDB->GetEnv(), &rowObjectId);
 	return ret;
 }
 

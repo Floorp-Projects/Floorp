@@ -90,17 +90,20 @@ nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *resul
 
 NS_IMETHODIMP nsMsgDatabase::AddListener(nsIDBChangeListener *listener)
 {
-    if (m_ChangeListeners == nsnull) {
-        nsresult rv = NS_NewISupportsArray(&m_ChangeListeners);
-        if (NS_FAILED(rv)) return rv;
+    if (m_ChangeListeners == nsnull) 
+	{
+        m_ChangeListeners = new nsVoidArray();
+        if (!m_ChangeListeners) 
+			return NS_ERROR_OUT_OF_MEMORY;
     }
 	return m_ChangeListeners->AppendElement(listener);
 }
 
 NS_IMETHODIMP nsMsgDatabase::RemoveListener(nsIDBChangeListener *listener)
 {
-    if (m_ChangeListeners == nsnull) return NS_OK;
-	for (PRUint32 i = 0; i < m_ChangeListeners->Count(); i++)
+    if (m_ChangeListeners == nsnull) 
+		return NS_OK;
+	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
 	{
 		if ((nsIDBChangeListener *) m_ChangeListeners->ElementAt(i) == listener)
 		{
@@ -115,14 +118,16 @@ NS_IMETHODIMP nsMsgDatabase::RemoveListener(nsIDBChangeListener *listener)
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull) return NS_OK;
-	for (PRUint32 i = 0; i < m_ChangeListeners->Count(); i++)
+    if (m_ChangeListeners == nsnull)
+		return NS_OK;
+	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
 	{
 		nsIDBChangeListener *changeListener =
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
 
 		nsresult rv = changeListener->OnKeyChange(keyChanged, flags, instigator); 
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) 
+			return rv;
 	}
     return NS_OK;
 }
@@ -130,8 +135,9 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 fla
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull) return NS_OK;
-	for (PRUint32 i = 0; i < m_ChangeListeners->Count(); i++)
+    if (m_ChangeListeners == nsnull)
+		return NS_OK;
+	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
 	{
 		nsIDBChangeListener *changeListener = 
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
@@ -145,8 +151,9 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 fl
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
-    if (m_ChangeListeners == nsnull) return NS_OK;
-	for (PRUint32 i = 0; i < m_ChangeListeners->Count(); i++)
+    if (m_ChangeListeners == nsnull) 
+		return NS_OK;
+	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
 	{
 		nsIDBChangeListener *changeListener =
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
@@ -159,36 +166,36 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags,
 
 NS_IMETHODIMP nsMsgDatabase::NotifyAnnouncerGoingAway(void)
 {
-    if (m_ChangeListeners == nsnull) return NS_OK;
+    if (m_ChangeListeners == nsnull)
+		return NS_OK;
 	// run loop backwards because listeners remove themselves from the list 
 	// on this notification
-	for (int i = m_ChangeListeners->Count() - 1; i >= 0 ; i--)
+	for (PRInt32 i = m_ChangeListeners->Count() - 1; i >= 0 ; i--)
 	{
 		nsIDBChangeListener *changeListener =
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
 
 		nsresult rv = changeListener->OnAnnouncerGoingAway(this); 
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) 
+			return rv;
 	}
     return NS_OK;
 }
 
 
 
-nsISupportsArray/*<nsMsgDatabase>*/ *nsMsgDatabase::m_dbCache = NULL;
+nsVoidArray *nsMsgDatabase::m_dbCache = NULL;
 
 //----------------------------------------------------------------------
 // GetDBCache
 //----------------------------------------------------------------------
 
-nsISupportsArray/*<nsMsgDatabase>*/*
+nsVoidArray/*<nsMsgDatabase>*/*
 nsMsgDatabase::GetDBCache()
 {
 	if (!m_dbCache)
-	{
-		nsresult rv = NS_NewISupportsArray(&m_dbCache);
-        NS_ASSERTION(rv == NS_OK, "fix the result type of GetDBCache");
-	}
+		m_dbCache = new nsVoidArray();
+
 	return m_dbCache;
 	
 }
@@ -198,7 +205,7 @@ nsMsgDatabase::CleanupCache()
 {
 	if (m_dbCache) // clean up memory leak
 	{
-		for (PRUint32 i = 0; i < GetDBCache()->Count(); i++)
+		for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
 		{
 			nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 			if (pMessageDB)
@@ -210,27 +217,26 @@ nsMsgDatabase::CleanupCache()
 		NS_ASSERTION(GetNumInCache() == 0, "some msg dbs left open");	// better not be any open db's.
 		delete m_dbCache;
 	}
-	m_dbCache = NULL; // Need to reset to NULL since it's a
+	m_dbCache = nsnull; // Need to reset to NULL since it's a
 			  // static global ptr and maybe referenced 
 			  // again in other places.
 }
 
 //----------------------------------------------------------------------
-// FindInCache
+// FindInCache - this addrefs the db it finds.
 //----------------------------------------------------------------------
 nsMsgDatabase* nsMsgDatabase::FindInCache(nsFileSpec &dbName)
 {
-	for (PRUint32 i = 0; i < GetDBCache()->Count(); i++)
+	for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
 	{
 		nsMsgDatabase* pMessageDB = NS_STATIC_CAST(nsMsgDatabase*, GetDBCache()->ElementAt(i));
 		if (pMessageDB->MatchDbName(dbName))
 		{
-			return(pMessageDB);
+			NS_ADDREF(pMessageDB);
+			return pMessageDB;
 		}
-		else
-			pMessageDB->Release();
 	}
-	return(NULL);
+	return nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -238,7 +244,7 @@ nsMsgDatabase* nsMsgDatabase::FindInCache(nsFileSpec &dbName)
 //----------------------------------------------------------------------
 int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
 {
-	for (PRUint32 i = 0; i < GetDBCache()->Count(); i++)
+	for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
 	{
 		if (GetDBCache()->ElementAt(i) == pMessageDB)
 		{
@@ -319,7 +325,7 @@ nsMsgDatabase::~nsMsgDatabase()
 	{
         // better not be any listeners, because we're going away.
         NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
-        NS_RELEASE(m_ChangeListeners);
+        delete m_ChangeListeners;
     }
 }
 
@@ -328,7 +334,7 @@ NS_IMPL_ADDREF(nsMsgDatabase)
 NS_IMETHODIMP nsMsgDatabase::Release(void)                    
 {                                                      
 	NS_PRECONDITION(0 != mRefCnt, "dup release");     
-	if (--mRefCnt == 1)	// OK, only the cache is holding onto this, so we really want to delete it, 
+	if (--mRefCnt == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
 	{						// after removing it from the cache.
 		RemoveFromCache(this);
 #ifdef DEBUG_bienvenu1
@@ -340,12 +346,9 @@ NS_IMETHODIMP nsMsgDatabase::Release(void)
 #endif
 		if (m_mdbStore)
 			m_mdbStore->CloseMdbObject(m_mdbEnv);
-	}
-	if (mRefCnt == 0) 
-	{ 
 		NS_DELETEXPCOM(this);                              
 		return 0;                                          
-	}                                                    
+	}
 	return mRefCnt;                                      
 }
 
@@ -508,6 +511,9 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
+			if (!nativeFileName)
+				return NS_ERROR_OUT_OF_MEMORY;
+
 			if (m_mdbEnv)
 				m_mdbEnv->SetAutoClear(PR_TRUE);
 #if defined(XP_MAC)
@@ -585,7 +591,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 					if (ret == NS_OK && m_mdbStore)
 						ret = InitExistingDB();
 				}
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 				DumpContents();
 #endif
 			}
@@ -622,9 +628,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	nsresult	err = NS_OK;
 
 	NotifyAnnouncerGoingAway();
-	// OK, remove from cache first, because now with the new cache that warren put it,
-	// removing from the cache releases an object. That explains why close was
-	// never getting called. ARGGGHHH!
+	// OK, remove from cache first and close the store.
 	RemoveFromCache(this);
 
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
@@ -724,6 +728,9 @@ nsresult nsMsgDatabase::InitNewDB()
 	err = InitMDBInfo();
 	if (err == NS_OK)
 	{
+		// why is this bad? dbFolderInfo is tightly tightly bound to nsMsgDatabase. It will
+		// never be provided by someone else. It could be strictly embedded inside nsMsgDatabase
+		// but I wanted to keep nsMsgDatabase a little bit smaller
 		nsDBFolderInfo *dbFolderInfo = new nsDBFolderInfo(this); // this is bad!! Should go through component manager
 		if (dbFolderInfo)
 		{
@@ -833,39 +840,12 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
 	if (err == NS_OK && m_mdbStore /* && hasOid */)
 	{
 		nsIMdbRow *hdrRow;
-#if 0
-        nsIMdbTableRowCursor* rowCursor;                                        
-        mdb_pos rowPos = -1;                                                            
-                                                                                                                                             
-        err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), rowPos, &rowCursor);
-                                                                                                                                             
-        if (err == NS_OK && rowCursor /*rowPos >= 0*/) // ### is rowP os > 0 the right thing to check?
-        {                                                                       
-            do                                                                  
-            {                                                                   
-				nsIMdbRow   *hdrRow;                                            
-				err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
-                if (!NS_SUCCEEDED(err) || rowPos < 0 || !hdrRow)             
-					break; 
-				mdbOid rowOid;
-				err = hdrRow->GetOid(GetEnv(), &rowOid);
-				if (NS_SUCCEEDED(err) && rowOid.mOid_Id == key)                                    
-                {                                                               
-                     err = CreateMsgHdr(hdrRow, key, pmsgHdr);         
-                     break;                                                      
-                 }                                                               
-             }                                                                   
-             while (TRUE);                                                       
-             NS_RELEASE(rowCursor);                                              
-		}
-#else
 		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &hdrRow);
 
 		if (err == NS_OK && hdrRow)
 		{
 			err = CreateMsgHdr(hdrRow,  key, pmsgHdr);
 		}
-#endif
 	}
 
 	return err;
@@ -939,7 +919,8 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 
 	}	
 
-	if (notify) {
+	if (notify) 
+	{
         PRUint32 flags;
         (void)msg->GetFlags(&flags);
 		NotifyKeyDeletedAll(key, flags, instigator); // tell listeners
@@ -965,7 +946,25 @@ nsMsgDatabase::UndoDelete(nsIMsgDBHdr *msgHdr)
 
 nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 {
+	if (!msgHdr)
+		return NS_ERROR_NULL_POINTER;
 	nsresult ret = NS_OK;
+	 // turn this on when Scottip has rdf stuff worked out.
+#if 0
+	nsCOMPtr <nsIMsgThread> thread ;
+	ret = GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
+	if (NS_SUCCEEDED(ret))
+	{
+		nsMsgKey msgKey;
+
+		ret = msgHdr->GetMessageKey(&msgKey);
+		if (NS_SUCCEEDED(ret))
+			ret = thread->RemoveChild(msgKey);
+	}
+	else
+		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
+#endif
+	// even if we couldn't find the thread,we should try to remove the header.
 	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
 	return ret;
 }
@@ -976,7 +975,8 @@ nsresult nsMsgDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 	nsIMsgDBHdr *msgHdr;
 
 	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv) || !msgHdr) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv) || !msgHdr) 
+		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
     rv = IsHeaderRead(msgHdr, pRead);
     NS_RELEASE(msgHdr);
     return rv;
@@ -1014,7 +1014,8 @@ NS_IMETHODIMP nsMsgDatabase::IsMarked(nsMsgKey key, PRBool *pMarked)
 	nsIMsgDBHdr *msgHdr;
 
 	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv))
+		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
     PRUint32 flags;
     (void)msgHdr->GetFlags(&flags);
@@ -1051,7 +1052,8 @@ nsresult nsMsgDatabase::HasAttachments(nsMsgKey key, PRBool *pHasThem)
 	nsIMsgDBHdr *msgHdr;
 
 	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+		return rv;
 
     PRUint32 flags;
     (void)msgHdr->GetFlags(&flags);
@@ -1088,7 +1090,8 @@ NS_IMETHODIMP nsMsgDatabase::MarkRead(nsMsgKey key, PRBool bRead,
 	nsIMsgDBHdr *msgHdr;
 	
 	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv)) 
+		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
 	rv = MarkHdrRead(msgHdr, bRead, instigator);
 	NS_RELEASE(msgHdr);
@@ -1160,10 +1163,11 @@ NS_IMETHODIMP nsMsgDatabase::MarkMDNNeeded(nsMsgKey key, PRBool bNeeded,
 NS_IMETHODIMP nsMsgDatabase::IsMDNNeeded(nsMsgKey key, PRBool *pNeeded)
 {
 	nsresult rv;
-	nsIMsgDBHdr *msgHdr;
+	nsIMsgDBHdr *msgHdr = nsnull;
 	
     rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv) || !msgHdr)
+		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
     PRUint32 flags;
     (void)msgHdr->GetFlags(&flags);
@@ -1183,10 +1187,11 @@ nsresult nsMsgDatabase::MarkMDNSent(nsMsgKey key, PRBool bSent,
 nsresult nsMsgDatabase::IsMDNSent(nsMsgKey key, PRBool *pSent)
 {
 	nsresult rv;
-	nsIMsgDBHdr *msgHdr;
+	nsIMsgDBHdr *msgHdr = nsnull;
 	
 	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv) || !msgHdr) 
+		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
     PRUint32 flags;
     (void)msgHdr->GetFlags(&flags);
@@ -1200,10 +1205,11 @@ nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
 							  nsIDBChangeListener *instigator)
 {
 	nsresult rv;
-	nsIMsgDBHdr *msgHdr;
+	nsIMsgDBHdr *msgHdr = nsnull;
 		
     rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+    if (NS_FAILED(rv) || !msgHdr) 
+		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
 	SetHdrFlag(msgHdr, set, flag);
 
@@ -1271,13 +1277,17 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 
     nsIEnumerator* hdrs;
     rv = EnumerateMessages(&hdrs);
-    if (NS_FAILED(rv)) return rv;
-	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) {
+    if (NS_FAILED(rv))
+		return rv;
+	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
+	{
         rv = hdrs->CurrentItem((nsISupports**)&pHeader);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) break;
+        if (NS_FAILED(rv)) 
+			break;
 
-		if (thoseMarked) {
+		if (thoseMarked) 
+		{
             nsMsgKey key;
             (void)pHeader->GetMessageKey(&key);
 			thoseMarked->Add(key);
@@ -1307,8 +1317,10 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (time_t startDate, time_t endDate, n
 
     nsIEnumerator* hdrs;
     rv = EnumerateMessages(&hdrs);
-    if (NS_FAILED(rv)) return rv;
-	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) {
+    if (NS_FAILED(rv)) 
+		return rv;
+	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
+	{
         rv = hdrs->CurrentItem((nsISupports**)&pHeader);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
         if (NS_FAILED(rv)) break;
@@ -1403,84 +1415,6 @@ NS_IMETHODIMP nsMsgDatabase::GetFirstNew(nsMsgKey *result)
 }
 
 
-#if 0
-// header iteration methods.
-
-class ListContext
-{
-public:
-	ListContext();
-	virtual ~ListContext();
-	nsIMdbTableRowCursor *m_rowCursor;
-};
-
-ListContext::ListContext()
-{
-	m_rowCursor = NULL;
-}
-
-ListContext::~ListContext()
-{
-	if (m_rowCursor)
-	{
-		NS_RELEASE(m_rowCursor);
-	}
-}
-
-nsresult	nsMsgDatabase::ListFirst(ListContext **ppContext, nsMsgHdr **pResultHdr)
-{
-	nsresult	err = NS_OK;
-
-	if (!pResultHdr || !ppContext)
-		return NS_ERROR_NULL_POINTER;
-
-	*pResultHdr = NULL;
-	*ppContext = NULL;
-
-	ListContext *pContext = new ListContext;
-	if (!pContext)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &pContext->m_rowCursor);
-	if (err == NS_OK)
-	{
-		*ppContext = pContext;
-
-		err = ListNext(pContext, pResultHdr);
-	}
-	return err;
-}
-
-nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
-{
-	nsresult	err = NS_OK;
-	nsIMdbRow	*hdrRow;
-	mdb_pos		rowPos;
-
-	if (!pResultHdr || !pContext)
-		return NS_ERROR_NULL_POINTER;
-
-	*pResultHdr = NULL;
-	err = pContext->m_rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
-    if (NS_FAILED(err)) return err;
-
-	//Get key from row
-	mdbOid outOid;
-	nsMsgKey key;
-	if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
-		key = outOid.mOid_Id;
-
-    err = CreateMsgHdr(hdrRow, key, pResultHdr);
-	return err;
-}
-
-nsresult	nsMsgDatabase::ListDone(ListContext *pContext)
-{
-	nsresult	err = NS_OK;
-	delete pContext;
-	return err;
-}
-#else
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsMsgDBEnumerator : public nsIEnumerator {
@@ -1596,7 +1530,6 @@ nsMsgDatabase::EnumerateMessages(nsIEnumerator* *result)
     return NS_OK;
 }
 
-#endif
 
 #if HAVE_INT_ENUMERATORS
 NS_IMETHODIMP nsMsgDatabase::EnumerateKeys(nsIEnumerator* *result)
@@ -1701,7 +1634,8 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::First(void)
 	mDB->m_mdbStore->GetPortTableCursor(mDB->GetEnv(),   mDB->m_hdrRowScopeToken, mDB->m_threadTableKindToken,
 	    &mTableCursor);
 
-	if (NS_FAILED(rv)) return rv;
+	if (NS_FAILED(rv)) 
+		return rv;
     return Next();
 }
 
@@ -1737,7 +1671,8 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
 
 NS_IMETHODIMP nsMsgDBThreadEnumerator::CurrentItem(nsISupports **aItem)
 {
-    if (mResultThread) {
+    if (mResultThread) 
+	{
         *aItem = mResultThread;
         NS_ADDREF(mResultThread);
         return NS_OK;
@@ -1805,7 +1740,8 @@ nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
     nsMsgDatabase* db = (nsMsgDatabase*)closure;
     PRBool wasRead;
     nsresult rv = db->IsHeaderRead(msg, &wasRead);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+		return rv;
     return !wasRead ? NS_OK : NS_COMFALSE;
 }
 
@@ -1835,7 +1771,8 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 
 	err  = GetStore()->NewRowWithOid(GetEnv(),
                                      &allMsgHdrsTableOID, &hdrRow);
-	if (NS_FAILED(err)) return err;
+	if (NS_FAILED(err)) 
+		return err;
     err = CreateMsgHdr(hdrRow, key, pnewHdr);
 	return err;
 }
@@ -1967,8 +1904,6 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 
 	if (existingHdr)
 	{
-#define MDB_DOES_CELL_CURSORS_OR_COPY_ROW
-#ifdef MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 	    nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
 		nsMsgHdr *destMsgHdr = nsnull;
 		CreateNewHdr(key, (nsIMsgDBHdr **) &destMsgHdr);
@@ -1978,33 +1913,6 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 		if (NS_SUCCEEDED(err))
 			err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
 
-//		{
-//			nsIMdbRowCellCursor* cellCursor = nsnull;
-//			mdb_err res = sourceRow->GetRowCellCursor(GetEnv(), -1, &cellCursor) ; // acquire new cursor instance
-//			if (res == 0 && cellCursor)
-//			{
-//				do
-//				{
-//					nsIMdbCell ioCell;
-//					mdb_column outColumn;
-//					mdb_pos outPos;
-
-//					res = cellCursor->NextCell(GetEnv(), &ioCell, &outColumn, &outPos);
-    
-//				}
-//				while (outPos >= 0 && res == 0);
-//			}
-//		}
-#else
-		nsMsgHdrStruct hdrStruct;
-		err = GetMsgHdrStructFromnsMsgHdr(existingHdr, &hdrStruct);
-		if (NS_SUCCEEDED(err))
-		{
-			PRBool newThread;
-			hdrStruct.m_messageKey = key;
-			err = CreateNewHdrAndAddToDB(&newThread, &hdrStruct, newHdr, PR_TRUE);
-		}
-#endif // MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 	}
 	return err;
 }
@@ -2034,7 +1942,6 @@ nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_to
 	err = RowCellColumnTonsString(row, columnToken, nakedString);
 	if (NS_SUCCEEDED(err) && nakedString.Length() > 0)
 	{
- 
 		// apply mime decode
 		nsIMimeConverter *converter;
 		err = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
@@ -2370,30 +2277,6 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 			key = outOid.mOid_Id;
 		nsresult rv = CreateMsgHdr(hdrRow, key, &msgHdr);
 	}
-#if 0
-    nsIEnumerator* hdrs;
-	nsIMsgDBHdr *pHeader = nsnull;
-
-    nsresult rv = EnumerateMessages(&hdrs);
-    if (NS_FAILED(rv)) 
-		return nsnull;
-	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
-	{
-        rv = hdrs->CurrentItem((nsISupports**)&pHeader);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) 
-			break;
-
-		nsString messageId;
-        (void)pHeader->GetMessageId(messageId);
-		if (msgID.Equals(messageId.GetUnicode(), PR_FALSE))
-			break;
-		NS_RELEASE(pHeader);
-		pHeader = nsnull;
-	}
-	nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, pHeader);      // closed system, cast ok
-
-#endif
 	return msgHdr;
 }
 
@@ -2454,33 +2337,6 @@ nsMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 				NS_ADDREF(pThread);
 		}
 	}
-#if 0
-	// Iterate over the thread tables...
-	nsresult		rv;
-	nsMsgThread		*pThread;
-
-    nsIEnumerator* threads;
-    rv = EnumerateThreads(&threads);
-    if (NS_FAILED(rv))
-		return nsnull;
-	for (threads->First(); threads->IsDone() != NS_OK; threads->Next()) 
-	{
-        rv = threads->CurrentItem((nsISupports**)&pThread);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) break;
-
-        nsMsgKey key = nsMsgKey_None;
-        (void)pThread->GetThreadKey(&key);
-		if (key == threadId)
-		{
-			NS_ADDREF(pThread);
-			break;
-		}
-//		NS_RELEASE(pThread);
-		pThread = nsnull;
-	}
-	NS_RELEASE(threads);
-#endif
 	return pThread;
 }
 

@@ -59,8 +59,12 @@ public:
   // nsIMsgDatabase methods:
   NS_IMETHOD Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading);
   NS_IMETHOD Close(PRBool forceCommit);
+
+  // argh, these two shouldn't be Interface methods, but I can't diddle the interfaces
+  // until the idl works on windows. grumble grumble.
   NS_IMETHOD OpenMDB(const char *dbName, PRBool create);
   NS_IMETHOD CloseMDB(PRBool commit);
+
   NS_IMETHOD Commit(nsMsgDBCommitType commitType);
   // Force closed is evil, and we should see if we can do without it.
   // In 4.x, it was mainly used to remove corrupted databases.
@@ -266,8 +270,8 @@ protected:
 	virtual nsresult		RemoveHeaderFromDB(nsMsgHdr *msgHdr);
 
 
-	static nsISupportsArray/*<nsMsgDatabase>*/* GetDBCache();
-	static nsISupportsArray/*<nsMsgDatabase>*/* m_dbCache;
+	static nsVoidArray/*<nsMsgDatabase>*/* GetDBCache();
+	static nsVoidArray/*<nsMsgDatabase>*/* m_dbCache;
 
 	// mdb bookkeeping stuff
 	nsresult			InitExistingDB();
@@ -281,7 +285,7 @@ protected:
 	nsFileSpec		    m_dbName;
 	nsNewsSet		    *m_newSet;		// new messages since last open.
 	PRBool				m_mdbTokensInitialized;
-    nsISupportsArray/*<nsIDBChangeListener>*/ *m_ChangeListeners;
+    nsVoidArray/*<nsIDBChangeListener>*/ *m_ChangeListeners;
 	mdb_token			m_hdrRowScopeToken;
 	mdb_token			m_hdrTableKindToken;
 	mdb_token			m_threadTableKindToken;

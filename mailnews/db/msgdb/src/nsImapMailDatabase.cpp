@@ -52,7 +52,6 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsFileSpec &folderName, PRBool create, ns
 	if (mailDB)
 	{
 		*pMessageDB = mailDB;
-		mailDB->AddRef();
 		return(NS_OK);
 	}
 
