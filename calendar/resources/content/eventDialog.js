@@ -538,7 +538,6 @@ function checkSetTimeDate()
    {
       setDateError(false);
       // start & end same
-      alert( "dates are same, check end time is "+CheckEndTime );
       setTimeError(CheckEndTime);
       return !CheckEndTime;
    }
