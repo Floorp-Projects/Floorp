@@ -32,7 +32,7 @@
 #include HG47233
 
 #include "prerror.h"
-#include "xp_hash.h"
+#include "plhash.h"
 #include "xpgetstr.h"
 
 /* A more guaranteed way of making sure that we never get duplicate messages
@@ -200,7 +200,7 @@ typedef struct Pop3AllocedString { /* Need this silliness as a place to
 typedef struct Pop3UidlHost {
     char* host;
     char* user;
-    XP_HashTable hash;
+    PLHashTable * hash;
     Pop3AllocedString* strings;
     struct Pop3UidlHost* next;
 } Pop3UidlHost;
@@ -265,7 +265,7 @@ typedef struct _Pop3ConData {
                                       messages instead.) */
     
     Pop3UidlHost *uidlinfo;
-    XP_HashTable newuidl;
+    PLHashTable *newuidl;
     char *only_uidl;            /* If non-NULL, then load only this UIDL. */
     
     /* the following three fields support the 
@@ -346,14 +346,14 @@ private:
      * sounds like the following do not need to be included in the protocol
      * instance 
     static PRInt8 uidl_cmp (const void* obj1, const void* obj2);
-    static void put_hash(Pop3UidlHost* host, XP_HashTable table, const char*
+    static void put_hash(Pop3UidlHost* host, PLHashTable* table, const char*
                          key, char value);
-    static PRBool hash_empty_mapper(XP_HashTable hash, const void* key, void*
+    static PRBool hash_empty_mapper(PLHashTable* hash, const void* key, void*
                                     value, void* closure);
-    static PRBool hash_empty(XP_HashTable hash);
+    static PRBool hash_empty(PLHashTable* hash);
 
     Pop3UidlHost* net_pop3_load_state(const char* host, const char* user);
-    PRBool net_pop3_write_mapper(XP_HashTable hash, const void* key, void*
+    PRBool net_pop3_write_mapper(PLHashTable* hash, const void* key, void*
                                  value, void* closure);
 
     void net_pop3_write_state(Pop3UidlHost* host);

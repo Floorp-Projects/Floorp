@@ -98,20 +98,19 @@ char * NET_SACopy (char **destination, const char *source)
    
    A pointer to this function is passed to XP_Maphash     -km */
 
-static PRBool
-net_pop3_check_for_hash_messages_marked_delete(XP_HashTable table,
-				       						   const void *key, 
-				       						   void *value, 
-				       						   void *closure)
+static PR_CALLBACK PRIntn
+net_pop3_check_for_hash_messages_marked_delete(PLHashEntry* he,
+				       						   PRIntn index, 
+				       						   void *arg)
 {
-	char valueChar = (char) (int) value;
+	char valueChar = (char) (int) he->value;
 	if (valueChar == DELETE_CHAR)
 	{
-		((Pop3ConData *) closure)->delete_server_message_during_top_traversal = PR_TRUE;
-		return PR_FALSE;	/* XP_Maphash will stop traversing hash table now */
+		((Pop3ConData *) arg)->delete_server_message_during_top_traversal = PR_TRUE;
+		return HT_ENUMERATE_STOP;	/* XP_Maphash will stop traversing hash table now */
 	}
 	
-	return PR_TRUE;		/* XP_Maphash will continue traversing the hash */
+	return HT_ENUMERATE_NEXT;		/* XP_Maphash will continue traversing the hash */
 }
 
 static int
@@ -123,7 +122,7 @@ uidl_cmp (const void *obj1, const void *obj2)
 
 
 static void
-put_hash(Pop3UidlHost* host, XP_HashTable table, const char* key, char value)
+put_hash(Pop3UidlHost* host, PLHashTable* table, const char* key, char value)
 {
   Pop3AllocedString* tmp;
   int v = value;
@@ -134,7 +133,7 @@ put_hash(Pop3UidlHost* host, XP_HashTable table, const char* key, char value)
 	if (tmp->str) {
 	  tmp->next = host->strings;
 	  host->strings = tmp;
-	  XP_Puthash(table, tmp->str, (void*) v);
+	  PL_HashTableAdd(table, (const void *)tmp->str, (void*) v);
 	} else {
 	  PR_Free(tmp);
 	}
@@ -159,11 +158,12 @@ net_pop3_load_state(const char* searchhost,
   if (!result) return NULL;
   result->host = PL_strdup(searchhost);
   result->user = PL_strdup(searchuser);
-  result->hash = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
+  result->hash = PL_NewHashTable(20, PL_HashString, uidl_cmp, nsnull, nsnull, nsnull);
+
   if (!result->host || !result->user || !result->hash) {
     PR_FREEIF(result->host);
 	PR_FREEIF(result->user);
-	if (result->hash) XP_HashTableDestroy(result->hash);
+	if (result->hash) PL_HashTableDestroy(result->hash);
 	PR_Free(result);
 	return NULL;
   }
@@ -199,11 +199,11 @@ net_pop3_load_state(const char* searchhost,
             if (current) {
                 current->host = PL_strdup(host);
                 current->user = PL_strdup(user);
-                current->hash = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
+                current->hash = PL_NewHashTable(20, PL_HashString, uidl_cmp, nsnull, nsnull, nsnull);
                 if (!current->host || !current->user || !current->hash) {
                     PR_FREEIF(current->host);
                     PR_FREEIF(current->user);
-                    if (current->hash) XP_HashTableDestroy(current->hash);
+                    if (current->hash) PL_HashTableDestroy(current->hash);
                     PR_Free(current);
                 } else {
                     current->next = result->next;
@@ -234,38 +234,44 @@ net_pop3_load_state(const char* searchhost,
   return result;
 }
 
-static PRBool
-hash_empty_mapper(XP_HashTable hash, const void* key, void* value,
-				  void* closure)
+static PR_CALLBACK PRIntn
+hash_clear_mapper(PLHashEntry* he, PRIntn index, void* arg)
 {
-  *((PRBool*) closure) = PR_FALSE;
-  return PR_FALSE;
+#ifdef UNREADY_CODE   // mscott: the compiler won't take this line and I can't figure out why..=(
+  PR_FREEIF( (char *)he->key );
+#endif
+  return HT_ENUMERATE_REMOVE;
+}
+
+static PR_CALLBACK PRIntn
+hash_empty_mapper(PLHashEntry* he, PRIntn index, void* arg)
+{
+  *((PRBool*) arg) = PR_FALSE;
+  return HT_ENUMERATE_STOP;
 }
 
 static PRBool
-hash_empty(XP_HashTable hash)
+hash_empty(PLHashTable* hash)
 {
   PRBool result = PR_TRUE;
-  XP_Maphash(hash, (XP_Bool (*) (xp_HashTable *, const void *, void*, void *))
-             hash_empty_mapper, &result);
+  PL_HashTableEnumerateEntries(hash, hash_empty_mapper, (void *)&result);
   return result;
 }
 
 
-static PRBool
-net_pop3_write_mapper(XP_HashTable hash, const void* key, void* value,
-					  void* closure)
+static PR_CALLBACK PRIntn
+net_pop3_write_mapper(PLHashEntry* he, PRIntn index, void* arg)
 {
-  nsOutputFileStream* file = (nsOutputFileStream*) closure;
-  PR_ASSERT((value == ((void *) (int) KEEP)) ||
-			(value == ((void *) (int) DELETE_CHAR)) ||
-			(value == ((void *) (int) TOO_BIG)));
-	char* tmpBuffer = PR_smprintf("%c %s" LINEBREAK, (char)(long)value, (char*)
-																key);
+  nsOutputFileStream* file = (nsOutputFileStream*) arg;
+  PR_ASSERT((he->value == ((void *) (int) KEEP)) ||
+			(he->value == ((void *) (int) DELETE_CHAR)) ||
+			(he->value == ((void *) (int) TOO_BIG)));
+	char* tmpBuffer = PR_smprintf("%c %s" LINEBREAK, (char)(long)he->value, (char*)
+																he->key);
 	PR_ASSERT(tmpBuffer);
   *file << tmpBuffer;
 	PR_Free(tmpBuffer);
-  return PR_TRUE;
+  return HT_ENUMERATE_NEXT;
 }
 
 static void
@@ -295,9 +301,7 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
         outFileStream << " ";
         outFileStream << host->user;
         outFileStream << LINEBREAK;
-        XP_Maphash(host->hash,
-                   (XP_Bool (*) (xp_HashTable *, const void *, void*, void *)) 
-                   net_pop3_write_mapper, &outFileStream);
+        PL_HashTableEnumerateEntries(host->hash, net_pop3_write_mapper, (void *)&outFileStream);
     }
   }
 }
@@ -348,9 +352,9 @@ void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed)
 	
 	if (!host)
 		return;
-	if (XP_Gethash (host->hash, (const void*) uidl, 0))
+	if (PL_HashTableLookup (host->hash, (const void*) uidl))
 	{
-		XP_Puthash(host->hash, uidl, (void*) DELETE_CHAR);
+		PL_HashTableAdd(host->hash, uidl, (void*) DELETE_CHAR);
 		*changed = PR_TRUE;
 	}
 }
@@ -365,7 +369,7 @@ net_pop3_free_state(Pop3UidlHost* host)
 	h = host->next;
 	PR_Free(host->host);
 	PR_Free(host->user);
-	XP_HashTableDestroy(host->hash);
+	PL_HashTableDestroy(host->hash);
 	tmp = host->strings;
 	while (tmp) {
 	  next = tmp->next;
@@ -492,7 +496,7 @@ void nsPop3Protocol::Initialize(nsIURL * aURL)
 
 nsPop3Protocol::~nsPop3Protocol()
 {
-		if (m_pop3ConData->newuidl) XP_HashTableDestroy(m_pop3ConData->newuidl);
+		if (m_pop3ConData->newuidl) PL_HashTableDestroy(m_pop3ConData->newuidl);
 		net_pop3_free_state(m_pop3ConData->uidlinfo);
 
 #if 0
@@ -523,7 +527,8 @@ nsPop3Protocol::SetUsername(const char* name)
 {
     PR_ASSERT(name);
     PR_FREEIF(m_username);
-    m_username = PL_strdup(name);
+	if (name)
+		m_username = PL_strdup(name);
 }
 
 void
@@ -531,6 +536,7 @@ nsPop3Protocol::SetPassword(const char* passwd)
 {
     PR_ASSERT(passwd);
     PR_FREEIF(m_password);
+	if (passwd)
     m_password = PL_strdup(passwd);
 }
 
@@ -1188,7 +1194,7 @@ nsPop3Protocol::GetStat()
     if(m_pop3ConData->number_of_messages <= 0) {
         /* We're all done.  We know we have no mail. */
         m_pop3ConData->next_state = POP3_SEND_QUIT;
-        XP_Clrhash(m_pop3ConData->uidlinfo->hash);
+        PL_HashTableEnumerateEntries(m_pop3ConData->uidlinfo->hash, hash_clear_mapper, nsnull);
         return(0);
     }
 
@@ -1365,9 +1371,9 @@ nsPop3Protocol::StartUseTopForFakeUidl()
     m_pop3ConData->delete_server_message_during_top_traversal = PR_FALSE;
 	
     /* may set delete_server_message_during_top_traversal to true */
-    XP_Maphash(m_pop3ConData->uidlinfo->hash,
-               (XP_Bool (*)(xp_HashTable *, const void *, void *, void *))
-               net_pop3_check_for_hash_messages_marked_delete, m_pop3ConData);
+    PL_HashTableEnumerateEntries(m_pop3ConData->uidlinfo->hash, 
+    								net_pop3_check_for_hash_messages_marked_delete,
+    								(void *)m_pop3ConData);
 	
     return (SendFakeUidlTop());
 }
@@ -1443,7 +1449,7 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
             /* if all of the messages are new, toss all hash table entries */
             if (!m_pop3ConData->current_msg_to_top &&
                 !m_pop3ConData->found_new_message_boundary)
-                XP_Clrhash(m_pop3ConData->uidlinfo->hash);
+                PL_HashTableEnumerateEntries(m_pop3ConData->uidlinfo->hash, hash_clear_mapper, nsnull);
         }
         else
         {
@@ -1462,7 +1468,7 @@ nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
         if (firstToken && !PL_strcasecmp(firstToken, "MESSAGE-ID:") )
         {
             char *message_id_token = strtok(NULL, " ");
-            state = (int) XP_Gethash(m_pop3ConData->uidlinfo->hash, message_id_token, 0);
+            state = (int)PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, message_id_token);
             
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
             {	/* we have not seen this message before */
@@ -1814,16 +1820,19 @@ nsPop3Protocol::GetMsg()
                     continue;
                 }
                 if (m_pop3ConData->msg_info[i].uidl)
-                    c = (char) (int) XP_Gethash(m_pop3ConData->uidlinfo->hash,
-                                                m_pop3ConData->msg_info[i].uidl, 0);
+                    c = (char) (int) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash,
+                                                m_pop3ConData->msg_info[i].uidl);
                 if ((c == KEEP) && !m_pop3ConData->leave_on_server)
                 {		/* This message has been downloaded but kept on server, we
                      * no longer want to keep it there */ 
                     if (m_pop3ConData->newuidl == NULL)
                     {
-                        m_pop3ConData->newuidl = XP_HashTableNew(20,
-                                                                 XP_StringHash, 
-                                                                 uidl_cmp);
+                        m_pop3ConData->newuidl = PL_NewHashTable(20,
+                                                                 PL_HashString, 
+                                                                 uidl_cmp,
+                                                                 nsnull,
+                                                                 nsnull,
+                                                                 nsnull);
                         if (!m_pop3ConData->newuidl)
                             return MK_OUT_OF_MEMORY;
                     }
@@ -1906,13 +1915,13 @@ nsPop3Protocol::GetMsg()
         } else {
             c = 0;
             if (m_pop3ConData->newuidl == NULL) {
-                m_pop3ConData->newuidl = XP_HashTableNew(20, XP_StringHash, uidl_cmp);
+                m_pop3ConData->newuidl = PL_NewHashTable(20, PL_HashString, uidl_cmp, nsnull, nsnull, nsnull);
                 if (!m_pop3ConData->newuidl)
                     return MK_OUT_OF_MEMORY;
             }
             if (info->uidl) {
-                c = (char) (int) XP_Gethash(m_pop3ConData->uidlinfo->hash,
-                                            info->uidl, 0);
+                c = (char) (int) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash,
+                                            info->uidl);
             }
             m_pop3ConData->truncating_cur_msg = PR_FALSE;
             if (c == DELETE_CHAR) {
@@ -1936,7 +1945,7 @@ nsPop3Protocol::GetMsg()
                                            message, we have the header. */
                 if ((m_pop3ConData->size_limit > 0) && (info->size <=
                                                         m_pop3ConData->size_limit)) 
-                    XP_Remhash (m_pop3ConData->uidlinfo->hash, (void*)
+                    PL_HashTableRemove (m_pop3ConData->uidlinfo->hash, (void*)
                                 info->uidl);
                 /* remove from our table, and download */
                 else
@@ -2437,11 +2446,11 @@ nsPop3Protocol::DeleResponse()
             m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg-1].uidl)
         { 
             if (m_pop3ConData->newuidl)
-                XP_Remhash(m_pop3ConData->newuidl, (void*)
+                PL_HashTableRemove(m_pop3ConData->newuidl, (void*)
                   m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg-1].uidl); 
                 /* kill message in new hash table */
             else
-                XP_Remhash(host->hash, 
+                PL_HashTableRemove(host->hash, 
               (void*) m_pop3ConData->msg_info[m_pop3ConData->last_accessed_msg-1].uidl);
         }
     }
@@ -2467,14 +2476,14 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
                 m_pop3ConData->last_accessed_msg; 
             if (info && info->uidl && (m_pop3ConData->only_uidl == NULL) &&
                 m_pop3ConData->newuidl) { 
-                PRBool val = XP_Remhash (m_pop3ConData->newuidl, info->uidl);
+                PRBool val = PL_HashTableRemove (m_pop3ConData->newuidl, info->uidl);
                 PR_ASSERT(val);
             }
         }
     }
     
     if (m_pop3ConData->newuidl) {
-        XP_HashTableDestroy(m_pop3ConData->uidlinfo->hash);
+        PL_HashTableDestroy(m_pop3ConData->uidlinfo->hash);
         m_pop3ConData->uidlinfo->hash = m_pop3ConData->newuidl;
         m_pop3ConData->newuidl = NULL;
     }
@@ -2951,7 +2960,7 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
         case POP3_FREE:
             m_isRunning = PR_FALSE;
             /*************** done by destructor
-              if (m_pop3ConData->newuidl) XP_HashTableDestroy(m_pop3ConData->newuidl);
+              if (m_pop3ConData->newuidl) PL_HashTableDestroy(m_pop3ConData->newuidl);
               net_pop3_free_state(m_pop3ConData->uidlinfo);
               ***************/
 #if 0
