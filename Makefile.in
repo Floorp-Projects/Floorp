@@ -42,15 +42,15 @@ default: $(SUBMAKEFILES)
 	$(MAKE) tier_1
 	$(MAKE) tier_2
 	$(MAKE) tier_9
+ifdef MOZ_PSM
+	$(MAKE) tier_40
+endif
 	$(MAKE) tier_50
 ifdef MOZ_JSDEBUGGER
 	$(MAKE) tier_93
 endif
 ifdef MOZ_EXTENSIONS
 	$(MAKE) tier_94
-endif
-ifdef MOZ_PSM
-	$(MAKE) tier_95
 endif
 ifdef MOZ_MAIL_NEWS
 	$(MAKE) tier_97
@@ -66,6 +66,7 @@ DIRS = \
 	$(tier_1_dirs) \
 	$(tier_2_dirs) \
 	$(tier_9_dirs) \
+	$(tier_40_dirs) \
 	$(tier_50_dirs) \
 	$(NULL)
 
@@ -78,9 +79,6 @@ DIRS += $(tier_93_dirs)
 endif
 ifdef MOZ_EXTENSIONS
 DIRS += $(tier_94_dirs)
-endif
-ifdef MOZ_PSM
-DIRS += $(tier_95_dirs)
 endif
 ifdef MOZ_MAIL_NEWS
 DIRS += $(tier_97_dirs)
@@ -227,6 +225,13 @@ ifdef MOZ_LDAP_XPCOM
 tier_9_dirs	+= directory/xpcom
 endif
 
+#
+# tier 40 - security
+#
+ifdef MOZ_PSM
+tier_40_dirs	+= security/manager
+endif
+
 # 
 # tier 50 - xpfe & toolkit
 #
@@ -278,10 +283,6 @@ endif
 
 ifdef MOZ_EXTENSIONS
 tier_94_dirs	+= extensions
-endif
-
-ifdef MOZ_PSM
-tier_95_dirs	+= security/manager
 endif
 
 ifdef MOZ_MAIL_NEWS
