@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.33 2002/11/04 19:31:58 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.34 2002/11/11 22:00:03 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3903,20 +3903,22 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
     certDBEntryVersion *versionEntry = NULL;
     DB *updatedb = NULL;
     char *tmpname;
+    int status = RDB_FAIL;
 
     if (appName) {
-	handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE);
+	handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE, &status);
     } else {
 	handle->permCertDB=dbsopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
     }
 
     /* if create fails then we lose */
     if ( handle->permCertDB == 0 ) {
-	return SECFailure;
+	return status == RDB_RETRY ? SECWouldBlock : SECFailure;
     }
 
     rv = db_BeginTransaction(handle->permCertDB);
     if (rv != SECSuccess) {
+	db_InitComplete(handle->permCertDB);
 	return SECFailure;
     }
 
@@ -3927,6 +3929,7 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
 	if (updatedb) {
 	    rv = UpdateV8DB(handle, updatedb);
 	    db_FinishTransaction(handle->permCertDB,PR_FALSE);
+	    db_InitComplete(handle->permCertDB);
 	    return(rv);
 	}
     }
@@ -3965,6 +3968,7 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
 
 loser:
     db_FinishTransaction(handle->permCertDB,rv != SECSuccess);
+    db_InitComplete(handle->permCertDB);
     return rv;
 }
 
@@ -4008,7 +4012,7 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
      * first open the permanent file based database.
      */
     if (appName) {
-	handle->permCertDB = rdbopen( appName, prefix, "cert", openflags);
+	handle->permCertDB = rdbopen( appName, prefix, "cert", openflags, NULL);
     } else {
 	handle->permCertDB = dbsopen( certdbname, openflags, 0600, DB_HASH, 0 );
     }
@@ -4033,7 +4037,21 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
     } else {
         /* if first open fails, try to create a new DB */
 	rv = openNewCertDB(appName,prefix,certdbname,handle,namecb,cbarg);
-	if (rv != SECSuccess) {
+	if (rv == SECWouldBlock) {
+	    /* only the rdb version can fail with wouldblock */
+	    handle->permCertDB = 
+			rdbopen( appName, prefix, "cert", openflags, NULL);
+
+	    /* check for correct version number */
+	    if ( !handle->permCertDB ) {
+		goto loser;
+	    }
+	    version = nsslowcert_GetVersionNumber(handle);
+	    if ((version != CERT_DB_FILE_VERSION) &&
+		!(appName && version == CERT_DB_V7_FILE_VERSION)) {
+		goto loser;
+	    }
+	} else if (rv != SECSuccess) {
 	    goto loser;
 	}
     }

@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.31 2002/09/27 17:46:35 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.32 2002/11/11 22:00:03 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -830,23 +830,25 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
 	NSSLOWKEYDBHandle *handle, NSSLOWKEYDBNameFunc namecb, void *cbarg)
 {
     SECStatus rv = SECFailure;
+    int status = RDB_FAIL;
     char *updname = NULL;
     DB *updatedb = NULL;
     PRBool updated = PR_FALSE;
     int ret;
 
     if (appName) {
-	handle->db = rdbopen( appName, prefix, "key", NO_CREATE);
+	handle->db = rdbopen( appName, prefix, "key", NO_CREATE, &status);
     } else {
 	handle->db = dbopen( dbname, NO_CREATE, 0600, DB_HASH, 0 );
     }
     /* if create fails then we lose */
     if ( handle->db == NULL ) {
-	return SECFailure;
+	return (status == RDB_RETRY) ? SECWouldBlock: SECFailure;
     }
 
     rv = db_BeginTransaction(handle->db);
     if (rv != SECSuccess) {
+	db_InitComplete(handle->db);
 	return rv;
     }
 
@@ -855,6 +857,7 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
     if (nsslowkey_version(handle->db) == NSSLOWKEY_DB_FILE_VERSION) {
 	/* someone else has already updated the database for us */
 	db_FinishTransaction(handle->db, PR_FALSE);
+	db_InitComplete(handle->db);
 	return SECSuccess;
     }
 
@@ -872,6 +875,7 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
 		db_Copy(handle->db, updatedb);
 		(updatedb->close)(updatedb);
 		db_FinishTransaction(handle->db,PR_FALSE);
+		db_InitComplete(handle->db);
 		return SECSuccess;
 	    }
 	}
@@ -924,7 +928,32 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
 
 loser:
     db_FinishTransaction(handle->db, rv != SECSuccess);
+    db_InitComplete(handle->db);
     return rv;
+}
+
+
+static DB *
+openOldDB(const char *appName, const char *prefix, const char *dbname, 
+					PRBool openflags, int *version) {
+    DB *db = NULL;
+
+    if (appName) {
+	db = rdbopen( appName, prefix, "key", openflags, NULL);
+    } else {
+	db = dbopen( dbname, openflags, 0600, DB_HASH, 0 );
+    }
+
+    /* check for correct version number */
+    if (db != NULL) {
+	*version = nsslowkey_version(db);
+	if (*version != NSSLOWKEY_DB_FILE_VERSION ) {
+	    /* bogus version number record, reset the database */
+	    (* db->close)( db );
+	    db = NULL;
+	}
+    }
+    return db;
 }
 
 NSSLOWKEYDBHandle *
@@ -953,25 +982,14 @@ nsslowkey_OpenKeyDB(PRBool readOnly, const char *appName, const char *prefix,
     handle->dbname = (appName == NULL) ? PORT_Strdup(dbname) : 
 			(prefix ? PORT_Strdup(prefix) : NULL);
     handle->readOnly = readOnly;
-   
-    if (appName) {
-	handle->db = rdbopen( appName, prefix, "key", openflags);
-    } else {
-	handle->db = dbopen( dbname, openflags, 0600, DB_HASH, 0 );
-    }
 
-    /* check for correct version number */
-    if (handle->db != NULL) {
-	handle->version = nsslowkey_version(handle->db);
-	if (handle->version == 255) {
-	    goto loser;
-	}
-	if (handle->version != NSSLOWKEY_DB_FILE_VERSION ) {
-	    /* bogus version number record, reset the database */
-	    (* handle->db->close)( handle->db );
-	    handle->db = NULL;
-	}
+
+    handle->db = openOldDB(appName, prefix, dbname, openflags, 
+							&handle->version);
+    if (handle->version == 255) {
+	goto loser;
     }
+  
 
     /* if first open fails, try to create a new DB */
     if ( handle->db == NULL ) {
@@ -980,7 +998,16 @@ nsslowkey_OpenKeyDB(PRBool readOnly, const char *appName, const char *prefix,
 	}
 
 	rv = openNewDB(appName, prefix, dbname, handle, namecb, cbarg);
-	if (rv != SECSuccess) {
+	/* two processes started to initialize the database at the same time.
+	 * The multiprocess code blocked the second one, then had it retry to
+	 * see if it can just open the database normally */
+	if (rv == SECWouldBlock) {
+	    handle->db = openOldDB(appName,prefix,dbname, 
+						openflags, &handle->version);
+	    if (handle->db == NULL) {
+		goto loser;
+	    }
+	} else if (rv != SECSuccess) {
 	    goto loser;
 	}
 	
@@ -2453,7 +2480,8 @@ nsslowkey_ResetKeyDB(NSSLOWKEYDBHandle *handle)
 
     (* handle->db->close)(handle->db);
     if (handle->appname) {
-	handle->db=rdbopen(handle->appname, handle->dbname, "key", NO_CREATE);
+	handle->db= 
+	    rdbopen(handle->appname, handle->dbname, "key", NO_CREATE, NULL);
     } else {
 	handle->db = dbopen( handle->dbname, NO_CREATE, 0600, DB_HASH, 0 );
     }

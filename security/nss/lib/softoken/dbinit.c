@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.18 2002/11/04 19:31:57 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.19 2002/11/11 22:00:02 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -275,19 +275,23 @@ pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle,
 }
 
 static int rdbmapflags(int flags);
-static rdbfunc pk11_rdbfunc;
+static rdbfunc pk11_rdbfunc = NULL;
+static rdbstatusfunc pk11_rdbstatusfunc = NULL;
 
 /* NOTE: SHLIB_SUFFIX is defined on the command line */
 #define RDBLIB SHLIB_PREFIX"rdb."SHLIB_SUFFIX
 
 DB * rdbopen(const char *appName, const char *prefix, 
-				const char *type, int flags)
+			const char *type, int flags, int *status)
 {
     PRLibrary *lib;
     DB *db;
 
     if (pk11_rdbfunc) {
 	db = (*pk11_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
+	if (!db && status && pk11_rdbstatusfunc) {
+	    *status = (*pk11_rdbstatusfunc)();
+	}
 	return db;
     }
 
@@ -300,10 +304,14 @@ DB * rdbopen(const char *appName, const char *prefix,
 	return NULL;
     }
 
-    /* get the entry point */
+    /* get the entry points */
+    pk11_rdbstatusfunc = (rdbstatusfunc) PR_FindSymbol(lib,"rdbstatus");
     pk11_rdbfunc = (rdbfunc) PR_FindSymbol(lib,"rdbopen");
     if (pk11_rdbfunc) {
 	db = (*pk11_rdbfunc)(appName,prefix,type,rdbmapflags(flags));
+	if (!db && status && pk11_rdbstatusfunc) {
+	    *status = (*pk11_rdbstatusfunc)();
+	}
 	return db;
     }
 
@@ -319,6 +327,8 @@ struct RDBStr {
     DB	db;
     int (*xactstart)(DB *db);
     int (*xactdone)(DB *db, PRBool abort);
+    int version;
+    int (*dbinitcomplete)(DB *db);
 };
 
 #define DB_RDB ((DBTYPE) 0xff)
@@ -368,6 +378,23 @@ db_FinishTransaction(DB *db, PRBool abort)
     }
 
     return rdb->xactdone(db, abort);
+}
+
+int
+db_InitComplete(DB *db)
+{
+    struct RDBStr *rdb = (struct RDBStr *)db;
+    if (db->type != DB_RDB) {
+	return 0;
+    }
+    /* we should have addes a version number to the RDBS structure. Since we
+     * didn't, we detect that we have and 'extended' structure if the rdbstatus
+     * func exists */
+    if (!pk11_rdbstatusfunc) {
+	return 0;
+    }
+
+    return rdb->dbinitcomplete(db);
 }
 
 
