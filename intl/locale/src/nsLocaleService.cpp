@@ -254,13 +254,14 @@ nsLocaleService::nsLocaleService(void)
 #endif // XP_PC
 #ifdef XP_MAC
 	long script = GetScriptManagerVariable(smSysScript);
+	long lang = GetScriptVariable(smSystemScript,smScriptLang);
 	long region = GetScriptManagerVariable(smRegionCode);
 	nsIMacLocale*	macConverter;
 	nsresult result = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,
 						NULL,kIMacLocaleIID,(void**)&macConverter);
 	if (result==NS_OK && macConverter!=nsnull) {
 		nsString xpLocale;
-		result = macConverter->GetXPLocale((short)script,(short)region,&xpLocale);
+		result = macConverter->GetXPLocale((short)script,(short)lang,(short)region,&xpLocale);
 		if (result!=NS_OK) { macConverter->Release(); return; }
 		result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
 		if (result!=NS_OK) { macConverter->Release(); return; }

@@ -28,16 +28,16 @@
 NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
 NS_DEFINE_IID(kMacLocaleCID, NS_MACLOCALE_CID);
 
-struct iso_map
+struct iso_lang_map
 {
 	char*	iso_code;
 	short	mac_lang_code;
 	short	mac_script_code;
 
 };
-typedef struct iso_map iso_map;
+typedef struct iso_lang_map iso_lang_map;
 
-iso_map lang_list[] = {
+iso_lang_map lang_list[] = {
 	{ "sq", langAlbanian, smRoman },
 	{ "am", langAmharic, smEthiopic	},
 	{ "ar", langArabic, smArabic },
@@ -138,6 +138,63 @@ iso_map lang_list[] = {
 	{ "", 0, 0}
 };
 
+struct iso_country_map
+{
+	char*	iso_code;
+	short	mac_region_code;
+};
+
+typedef struct iso_country_map iso_country_map;
+
+iso_country_map country_list[] = {
+	{ "US", verUS},
+	{ "EG", verArabic},
+	{ "DZ", verArabic},
+	{ "AU", verAustralia},
+	{ "BE", verFrBelgium },
+	{ "CA", verEngCanada },
+	{ "CN", verChina },
+	{ "HR", verYugoCroatian },
+	{ "CY", verCyprus },
+	{ "DK", verDenmark },
+	{ "EE", verEstonia },
+	{ "FI", verFinland },
+	{ "FR", verFrance },
+	{ "DE", verGermany },
+	{ "EL", verGreece },
+	{ "HU", verHungary },
+	{ "IS", verIceland },
+	{ "IN", verIndiaHindi},
+	{ "IR", verIran },
+	{ "IQ", verArabic },
+	{ "IE", verIreland },
+	{ "IL", verIsrael },
+	{ "IT", verItaly },
+	{ "JP", verJapan },
+	{ "KP", verKorea },
+	{ "LV", verLatvia },
+	{ "LY", verArabic },
+	{ "LT", verLithuania },
+	{ "LU", verFrBelgiumLux },
+	{ "MT", verMalta },
+	{ "MA", verArabic },
+	{ "NL", verNetherlands },
+	{ "NO", verNorway },
+	{ "PK", verPakistan },
+	{ "PL", verPoland },
+	{ "PT", verPortugal },
+	{ "RU", verRussia },
+	{ "SA", verArabic },
+	{ "ES", verSpain },
+	{ "SE", verSweden },
+	{ "CH", verFrSwiss },
+	{ "TW", verTaiwan},
+	{ "TH", verThailand },
+	{ "TN", verArabic},
+	{ "TR", verTurkey },
+	{ "GB", verBritain },
+	{ "", 0 }
+};
 	
 
 /* nsMacLocale ISupports */
@@ -154,22 +211,43 @@ nsMacLocale::~nsMacLocale(void)
 }
 
 NS_IMETHODIMP 
-nsMacLocale::GetPlatformLocale(const nsString* locale,short* scriptCode, short* langCode)
+nsMacLocale::GetPlatformLocale(const nsString* locale,short* scriptCode, short* langCode, short* regionCode)
 {
   	char  country_code[3];
   	char  lang_code[3];
   	char  region_code[3];
 	char* xp_locale = locale->ToNewCString();
+	bool  validCountryFound;
 	int	i;
 	
 	if (xp_locale != nsnull) {
     	if (!ParseLocaleString(xp_locale,lang_code,country_code,region_code,'-')) {
       		*scriptCode = smRoman;
       		*langCode = langEnglish;
+      		*regionCode = verUS;
       		delete [] xp_locale;
       		return NS_ERROR_FAILURE;
    		}
 	
+		if (country_code[0]!=0) 
+		{
+			validCountryFound=false;
+			for(i=0;strlen(country_list[i].iso_code)!=0;i++) {
+				if (strcmp(country_list[i].iso_code,country_code)==0) {
+					*regionCode = country_list[i].mac_region_code;
+					validCountryFound=true;
+					break;
+				}
+			}
+			if (!validCountryFound) {
+      			*scriptCode = smRoman;
+      			*langCode = langEnglish;
+      			*regionCode = verUS;
+      			delete [] xp_locale;
+      			return NS_ERROR_FAILURE;
+      		}
+		}
+		
 		for(i=0;strlen(lang_list[i].iso_code)!=0;i++) {
 			if (strcmp(lang_list[i].iso_code,lang_code)==0) {
 				*scriptCode = lang_list[i].mac_script_code;
@@ -184,20 +262,41 @@ nsMacLocale::GetPlatformLocale(const nsString* locale,short* scriptCode, short* 
 }
 
 NS_IMETHODIMP
-nsMacLocale::GetXPLocale(short scriptCode, short langCode, nsString* locale)
+nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsString* locale)
 {
 
 	int i;
-	nsString* temp;
+	bool validResultFound = false;
+	nsString temp;
 	
+	//
+	// parse language
+	//
 	for(i=0;strlen(lang_list[i].iso_code)!=0;i++) {
-		if (langCode==lang_list[i].mac_lang_code) {
-			temp = new nsString(lang_list[i].iso_code);
-			*locale = *temp;
-			delete temp;
-			return NS_OK;
+		if (langCode==lang_list[i].mac_lang_code && scriptCode==lang_list[i].mac_script_code) {
+			temp = lang_list[i].iso_code;
+			validResultFound = true;
+			break;
 		}
 	}
+	
+	//
+	// parse region
+	//
+	for(i=0;strlen(country_list[i].iso_code)!=0;i++) {
+		if (regionCode==country_list[i].mac_region_code) {
+			temp += '-';
+			temp += country_list[i].iso_code;
+			validResultFound = true;
+			break;
+		}
+	}
+	
+	if (validResultFound) {
+		*locale = temp;
+		return NS_OK;
+	}
+	
 	return NS_ERROR_FAILURE;
 
 }
