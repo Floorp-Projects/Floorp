@@ -1480,6 +1480,15 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     shell->ResizeReflow(mTopLevelFrameset->mRect.width, mTopLevelFrameset->mRect.height);
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
+    if (vm) {
+      nsIView* root;
+      vm->GetRootView(root);
+      if (root) {
+        vm->UpdateView(root, NS_VMREFRESH_IMMEDIATE | NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
+      }
+    }
   }
 }  
 
