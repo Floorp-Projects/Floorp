@@ -52,7 +52,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
                          //     public nsIStreamObserver,
                          public nsIDocumentLoaderObserver,
                          public nsIObserver,
-						 public nsISessionHistory
+					            	 public nsISessionHistory
 {
   public:
 
@@ -166,20 +166,20 @@ class nsBrowserAppCore : public nsBaseAppCore,
     void BeginObserving();
     void EndObserving();
 
-    nsIScriptContext   *mToolbarScriptContext;
-    nsIScriptContext   *mContentScriptContext;
+    nsIScriptContext   *mToolbarScriptContext;			// weak reference
+    nsIScriptContext   *mContentScriptContext;			// weak reference
 
-    nsIDOMWindow       *mToolbarWindow;
-    nsIDOMWindow       *mContentWindow;
+    nsIDOMWindow       *mToolbarWindow;							// weak reference
+    nsIDOMWindow       *mContentWindow;							// weak reference
 
-    nsIWebShellWindow  *mWebShellWin;
-    nsIWebShell *       mWebShell;
-    nsIWebShell *       mContentAreaWebShell;
+    nsIWebShellWindow  *mWebShellWin;								// weak reference
+    nsIWebShell *       mWebShell;									// weak reference
+    nsIWebShell *       mContentAreaWebShell;				// weak reference
 
-    nsIGlobalHistory*   mGHistory;
-	  nsISessionHistory * mSHistory;
+    nsIGlobalHistory*   mGHistory;			           // this is a service
+	  nsISessionHistory*  mSHistory;			           // this is a service
 
-    nsISupports *       mSearchContext;
+    nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
 };
 
 #endif // nsBrowserAppCore_h___
