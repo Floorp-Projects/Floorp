@@ -91,12 +91,18 @@ function ListFields() {
 }
 
 function BoxClick( item)
-{
+{	
+	body = document.getElementById("fieldBody");
+	try {
+		dump( "Value: " + body.childNodes[item].firstChild.firstChild.firstChild.checked + "\n");
+	}
+	catch( ex) {}
+
 	return( true);
 }
 
 
-function CreateField( name, index, on)
+function CreateField( name, index, on, cBoxIndex)
 {
 	var item = document.createElement('treeitem');
 	var row = document.createElement('treerow');
@@ -109,7 +115,7 @@ function CreateField( name, index, on)
 	cBox.setAttribute( 'type', "checkbox");
 	if (on == true)
 		cBox.setAttribute( 'checked', "true");
-	/* cBox.setAttribute( 'onclick', "return BoxClick( event.target);"); */
+	cBox.onclick = new Function( "return BoxClick( " + cBoxIndex + ")");
 
 	cCell.appendChild( cBox);
 	cCell.setAttribute( 'allowevents', "true");	
@@ -127,12 +133,14 @@ function CreateField( name, index, on)
 
 	item.appendChild(row);
 
+	// cBox.setAttribute( 'onclick', "return BoxClick( event.target);");
+
 	return( item);
 }
 
 function AddFieldToList(body, name, index, on)
 {
-	var item = CreateField( name, index, on);
+	var item = CreateField( name, index, on, body.childNodes.length);
 	body.appendChild(item);
 }
 
