@@ -433,6 +433,13 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
+  // let's make sure the window doesn't get deleted out from under us
+  // while we are trying to close....this can happen if the webshell
+  // we close ends up being the last owning reference to this webshell
+  // window.
+
+  nsCOMPtr<nsIWebShellWindow> placeHolder = this;
+
   ExitModalLoop();
   if (mWebShell) {
     mWebShell->Destroy();
