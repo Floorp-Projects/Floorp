@@ -7,11 +7,7 @@ nsError.h
 nsID.h 
 nsIID.h
 nsISupportsBase.h
-nsISupportsImpl.h
-nsISupportsUtils.h
 nsISupportsObsolete.h
-nsIWeakReferenceUtils.h
 nsTraceRefcnt.h
 nsWeakPtr.h
 nscore.h
-nsIInterfaceRequestorUtils.h

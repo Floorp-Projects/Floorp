@@ -43,10 +43,7 @@ EXPORTS =                  \
         nsID.h             \
         nsIID.h            \
         nsISupportsBase.h  \
-	nsISupportsImpl.h  \
         nsISupportsObsolete.h  \
-        nsISupportsUtils.h \
-        nsIWeakReferenceUtils.h  \
         nsTraceRefcnt.h    \
         nsWeakPtr.h        \
         nscore.h           \
@@ -54,7 +51,6 @@ EXPORTS =                  \
 !ifdef MOZ_TRACE_MALLOC
 	nsTraceMalloc.h    \
 !endif
-	nsIInterfaceRequestorUtils.h \
         $(NULL)			
 
 XPIDL_MODULE = xpcom_base

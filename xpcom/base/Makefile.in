@@ -60,13 +60,9 @@ EXPORTS		= \
 		nsCWeakReference.h \
 		nsError.h \
 		nsIID.h \
-		nsISupportsImpl.h \
-		nsISupportsUtils.h \
 		nsISupportsObsolete.h \
-		nsIWeakReferenceUtils.h \
 		nsTraceRefcnt.h \
 		nsWeakPtr.h \
-		nsIInterfaceRequestorUtils.h \
 		$(NULL)
 
 ifdef NS_TRACE_MALLOC

@@ -35,7 +35,6 @@ EXPORTS =                         \
         nsComponentManagerObsolete.h \
 	nsComponentManagerUtils.h \
         nsIComponentManagerUtils.h \
-        nsIGenericFactory.h       \
         nsIRegistryUtils.h        \
         nsIServiceManagerObsolete.h \
         nsIServiceManagerUtils.h  \
@@ -80,7 +79,6 @@ LCFLAGS = $(LCFLAGS) -DENABLE_STATIC_COMPONENT_LOADER
 CPP_OBJS =                                 \
         .\$(OBJDIR)\nsComponentManager.obj \
         .\$(OBJDIR)\nsComponentManagerObsolete.obj \
-        .\$(OBJDIR)\nsGenericFactory.obj   \
         .\$(OBJDIR)\nsNativeComponentLoader.obj \
         .\$(OBJDIR)\nsServiceManagerObsolete.obj \
         .\$(OBJDIR)\nsStaticComponentLoader.obj \
