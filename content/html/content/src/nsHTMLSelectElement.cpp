@@ -294,6 +294,14 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
 
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
+    return mInner.GetBindingParent(aContent);
+  }
+
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
+    return mInner.SetBindingParent(aParent);
+  }  
+
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 

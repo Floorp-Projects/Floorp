@@ -389,6 +389,9 @@ public:
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
+    NS_IMETHOD GetBindingParent(nsIContent** aContent);
+    NS_IMETHOD SetBindingParent(nsIContent* aParent);
+  
     // nsIStyledContent
     NS_IMETHOD GetID(nsIAtom*& aResult) const;
     NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
@@ -408,8 +411,6 @@ public:
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;
-    NS_IMETHOD SetAnonymousState(PRBool aState);
-    NS_IMETHOD GetAnonymousState(PRBool& aState);
     NS_IMETHOD SetLazyState(PRInt32 aFlags);
     NS_IMETHOD ClearLazyState(PRInt32 aFlags);
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
@@ -520,11 +521,12 @@ protected:
     // RDF; see nsIXULContent and nsRDFGenericBuilder.
     PRInt32                             mLazyState;
 
-    // Whether or not we're anonymous
-    PRBool                              mIsAnonymous;
-
     // Our primary layout object (a wrapper for the Gecko "frame" object)
     nsCOMPtr<nsIBoxObject>              mBoxObject;          // [OWNER]
+
+    // The nearest enclosing content node with a binding
+    // that created us. [Weak]
+    nsIContent*                         mBindingParent;
 
     // Lazily instantiated if/when object is mutated. Instantiating
     // the mSlots makes an nsXULElement 'heavyweight'.

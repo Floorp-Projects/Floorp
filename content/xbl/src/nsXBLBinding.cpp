@@ -24,6 +24,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIXBLBinding.h"
+#include "nsIXBLDocumentInfo.h"
 #include "nsIInputStream.h"
 #include "nsINameSpaceManager.h"
 #include "nsHashtable.h"
@@ -183,9 +184,11 @@ nsIAtom* nsXBLBinding::kGetterAtom = nsnull;
 nsIAtom* nsXBLBinding::kSetterAtom = nsnull;
 nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
-nsIAtom* nsXBLBinding::kURIAtom = nsnull;
 nsIAtom* nsXBLBinding::kAttachToAtom = nsnull;
 nsIAtom* nsXBLBinding::kBindingAttachedAtom = nsnull;
+nsIAtom* nsXBLBinding::kInheritStyleAtom = nsnull;
+
+nsIXBLService* nsXBLBinding::gXBLService = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -244,9 +247,11 @@ nsXBLBinding::kEventHandlerMap[] = {
 NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 
 // Constructors/Destructors
-nsXBLBinding::nsXBLBinding(void)
-: mFirstHandler(nsnull),
+nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
+: mDocURI(aDocURI), mID(aID), mFirstHandler(nsnull),
   mIsStyleBinding(PR_TRUE),
+  mAllowScripts(PR_TRUE),
+  mInheritStyle(PR_TRUE),
   mAttributeTable(nsnull),
   mInsertionPointTable(nsnull)
 {
@@ -275,10 +280,14 @@ nsXBLBinding::nsXBLBinding(void)
     kSetterAtom = NS_NewAtom("setter");    
     kNameAtom = NS_NewAtom("name");
     kReadOnlyAtom = NS_NewAtom("readonly");
-    kURIAtom = NS_NewAtom("uri");
     kAttachToAtom = NS_NewAtom("attachto");
     kBindingAttachedAtom = NS_NewAtom("bindingattached");
+    kInheritStyleAtom = NS_NewAtom("inheritstyle");
 
+    nsServiceManager::GetService("component://netscape/xbl",
+                                   NS_GET_IID(nsIXBLService),
+                                   (nsISupports**) &gXBLService);
+    
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
       entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
@@ -317,9 +326,12 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kSetterAtom);
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kReadOnlyAtom);
-    NS_RELEASE(kURIAtom);
     NS_RELEASE(kAttachToAtom);
     NS_RELEASE(kBindingAttachedAtom);
+    NS_RELEASE(kInheritStyleAtom);
+
+    nsServiceManager::ReleaseService("component://netscape/xbl", gXBLService);
+    gXBLService = nsnull;
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -354,6 +366,18 @@ nsXBLBinding::GetAnonymousContent(nsIContent** aResult)
   return NS_OK;
 }
 
+static void UpdateBindingParent(nsIContent* aContent, nsIContent* aBindingParent)
+{
+  aContent->SetBindingParent(aBindingParent);
+  PRInt32 count;
+  aContent->ChildCount(count);
+  for (PRInt32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(i, *getter_AddRefs(child));
+    UpdateBindingParent(child, aBindingParent);
+  }
+}
+
 NS_IMETHODIMP
 nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
 {
@@ -376,6 +400,7 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
     nsCOMPtr<nsIContent> child;
     mContent->ChildAt(i, *getter_AddRefs(child));
     child->SetParent(mBoundElement);
+    UpdateBindingParent(child, mBoundElement);
   }
 
   // (3) We need to insert entries into our attribute table for any elements
@@ -398,6 +423,11 @@ NS_IMETHODIMP
 nsXBLBinding::SetBindingElement(nsIContent* aElement)
 {
   mBinding = aElement;
+  nsAutoString inheritStyle;
+  mBinding->GetAttribute(kNameSpaceID_None, kInheritStyleAtom, inheritStyle);
+  if (inheritStyle.EqualsWithConversion("false"))
+    mInheritStyle = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -675,14 +705,14 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 
     // Init our class and insert it into the prototype chain.
     nsAutoString className;
+    nsCAutoString classStr; 
     interfaceElement->GetAttribute(kNameSpaceID_None, kNameAtom, className);
-    if (className.IsEmpty()) {
-      mBinding->GetAttribute(kNameSpaceID_None, kURIAtom, className);
-      if (className.IsEmpty())
-        return NS_ERROR_FAILURE;
+    if (!className.IsEmpty()) {
+      classStr.AssignWithConversion(className);
     }
-
-    nsCAutoString classStr; classStr.AssignWithConversion(className);
+    else {
+      GetBindingURI(classStr);
+    }
 
     JSObject* scriptObject;
     JSObject* classObject;
@@ -1113,9 +1143,52 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
 }
 
 NS_IMETHODIMP 
-nsXBLBinding::GetBindingURI(nsString& aResult)
+nsXBLBinding::GetBindingURI(nsCString& aResult)
 {
-  return mBinding->GetAttribute(kNameSpaceID_None, kURIAtom, aResult);
+  aResult = mDocURI;
+  aResult += "#";
+  aResult += mID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXBLBinding::GetDocURI(nsCString& aResult)
+{
+  aResult = mDocURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXBLBinding::GetID(nsCString& aResult)
+{
+  aResult = mID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::InheritsStyle(PRBool* aResult)
+{
+  *aResult = mInheritStyle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
+{
+  if (mContent) {
+    nsCOMPtr<nsIXBLDocumentInfo> info;
+    gXBLService->GetXBLDocumentInfo(mDocURI, mBoundElement, getter_AddRefs(info));
+    if (!info)
+      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsISupportsArray> rules;
+    info->GetRuleProcessors(getter_AddRefs(rules));
+    if (rules)
+      rules->EnumerateForwards(aFunc, aData);
+  }
+  else if (mNextBinding)
+    return mNextBinding->WalkRules(aFunc, aData);
+
+  return NS_OK;
 }
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
@@ -1603,15 +1676,7 @@ nsXBLBinding::GetTextData(nsIContent *aParent, nsString& aResult)
 PRBool
 nsXBLBinding::AllowScripts()
 {
-  nsresult rv;
-  nsCOMPtr<nsIXBLService> xblService(do_GetService("component://netscape/xbl", &rv));
-  if (xblService) {
-    PRBool allowScripts;
-    xblService->AllowScripts(mBinding, &allowScripts);
-    return allowScripts;
-  }
-
-  return PR_FALSE;
+  return mAllowScripts;
 }
 
 NS_IMETHODIMP
@@ -1685,9 +1750,9 @@ nsXBLBinding::GetFirstStyleBinding(nsIXBLBinding** aResult)
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLBinding(nsIXBLBinding** aResult)
+NS_NewXBLBinding(const nsCString& aDocURI, const nsCString& aRef, nsIXBLBinding** aResult)
 {
-  *aResult = new nsXBLBinding;
+  *aResult = new nsXBLBinding(aDocURI, aRef);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

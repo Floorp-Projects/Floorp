@@ -320,6 +320,14 @@ public:
    */
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) = 0;
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) = 0;
+
+  /**
+   * APIs for setting and obtaining the content node
+   * with the binding responsible for our construction (and existence)
+   * Used by anonymous content (XBL-generated). null for all explicit content.
+   */
+  NS_IMETHOD SetBindingParent(nsIContent* aContent) = 0;
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) = 0;
 };
 
 // nsresult codes for GetAttribute

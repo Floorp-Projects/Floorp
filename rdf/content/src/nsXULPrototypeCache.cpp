@@ -38,7 +38,7 @@
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "nsIDocument.h"
-
+#include "nsIXBLDocumentInfo.h"
 
 class nsXULPrototypeCache : public nsIXULPrototypeCache
 {
@@ -54,11 +54,8 @@ public:
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
     NS_IMETHOD FlushStyleSheets();
 
-    NS_IMETHOD GetXBLDocument(const nsCString& aString, nsIDocument** _result);
-    NS_IMETHOD PutXBLDocument(nsIDocument* aDocument);
-
-    NS_IMETHOD GetXBLDocScriptAccess(const nsCString& aString, nsIDocument** _result);
-    NS_IMETHOD PutXBLDocScriptAccess(nsIDocument* aDocument);
+    NS_IMETHOD GetXBLDocumentInfo(const nsCString& aString, nsIXBLDocumentInfo** _result);
+    NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
 
     NS_IMETHOD FlushXBLInformation();
 
@@ -74,8 +71,7 @@ protected:
     nsSupportsHashtable mPrototypeTable;
     nsSupportsHashtable mStyleSheetTable;
     nsSupportsHashtable mXBLDocTable;
-    nsSupportsHashtable mScriptAccessTable;
-
+    
     class nsIURIKey : public nsHashKey {
     protected:
         nsCOMPtr<nsIURI> mKey;
@@ -197,47 +193,29 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsXULPrototypeCache::GetXBLDocument(const nsCString& aString, nsIDocument** _result)
+nsXULPrototypeCache::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
 {
-    nsCStringKey key(aString);
-    *_result = NS_STATIC_CAST(nsIDocument*, mXBLDocTable.Get(&key));
-    return NS_OK;
+  nsCStringKey key(aURL);
+  *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)); // Addref happens here.
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULPrototypeCache::PutXBLDocument(nsIDocument *aDocument)
+nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-    nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
-    nsXPIDLCString str;
-    uri->GetSpec(getter_Copies(str));
+  nsCOMPtr<nsIDocument> doc;
+  aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-    nsCStringKey key((const char*)str);
-    mXBLDocTable.Put(&key, aDocument);
+  nsCOMPtr<nsIURI> uri(doc->GetDocumentURL());
 
-    return NS_OK;
-}
+  nsXPIDLCString str;
+  uri->GetSpec(getter_Copies(str));
+  
+  nsCStringKey key((const char*)str);
+  mXBLDocTable.Put(&key, aDocumentInfo);
 
-NS_IMETHODIMP
-nsXULPrototypeCache::GetXBLDocScriptAccess(const nsCString& aString, nsIDocument** _result)
-{
-    nsCStringKey key(aString);
-    *_result = NS_STATIC_CAST(nsIDocument*, mScriptAccessTable.Get(&key));
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULPrototypeCache::PutXBLDocScriptAccess(nsIDocument *aDocument)
-{
-    nsCOMPtr<nsIURI> uri(aDocument->GetDocumentURL());
-    nsXPIDLCString str;
-    uri->GetSpec(getter_Copies(str));
-
-    nsCStringKey key((const char*)str);
-    mScriptAccessTable.Put(&key, aDocument);
-
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -252,7 +230,6 @@ NS_IMETHODIMP
 nsXULPrototypeCache::FlushXBLInformation()
 {
     mXBLDocTable.Reset();
-    mScriptAccessTable.Reset();
     return NS_OK;
 }
 

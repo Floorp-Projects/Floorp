@@ -47,6 +47,7 @@ nsIStyledContent.h
 nsIStyleContext.h
 nsIMutableStyleContext.h
 nsIStyleRule.h
+nsIStyleRuleSupplier.h
 nsIStyleSet.h
 nsIStyleSheet.h
 nsIStyleSheetLinkingElement.h

@@ -190,6 +190,14 @@ public:
     return mInner.RemoveFocus(aPresContext);
   }
 
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
+    return mInner.GetBindingParent(aContent);
+  }
+
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
+    return mInner.SetBindingParent(aParent);
+  }  
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;

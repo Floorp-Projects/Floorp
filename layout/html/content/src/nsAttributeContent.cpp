@@ -130,6 +130,14 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) { return NS_OK; }
 
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
+    return NS_OK;
+  }
+
+  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
+    return NS_OK;
+  }
+
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
