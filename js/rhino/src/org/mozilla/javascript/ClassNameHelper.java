@@ -45,14 +45,15 @@ public abstract class ClassNameHelper {
     public static ClassNameHelper get(Context cx) {
         ClassNameHelper helper = savedNameHelper;
         if (helper == null && !helperNotAvailable) {
-            try {
-                Class nameHelperClass = Class.forName(
-                    "org.mozilla.javascript.optimizer.OptClassNameHelper");
-                helper = (ClassNameHelper)nameHelperClass.newInstance();
-            } catch (ClassNotFoundException x) {
-                // ...must be running lite, that's ok
-            } catch (IllegalAccessException x) {
-            } catch (InstantiationException x) {
+            Class nameHelperClass = ScriptRuntime.getClassOrNull(
+                "org.mozilla.javascript.optimizer.OptClassNameHelper");
+            // nameHelperClass == null if running lite
+            if (nameHelperClass != null) {
+                try {
+                    helper = (ClassNameHelper)nameHelperClass.newInstance();
+                } catch (IllegalAccessException x) {
+                } catch (InstantiationException x) {
+                }
             }
             if (helper != null) {
                 savedNameHelper = helper;

@@ -274,23 +274,15 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     private static Class findNestedClass(Class parentClass, String name) {
         String nestedClassName = parentClass.getName() + '$' + name;
         ClassLoader loader = parentClass.getClassLoader();
-        try {
-            if (loader != null) {
-                return loader.loadClass(nestedClassName);
-            } else {
-                // ALERT: if loader is null, nested class should be loaded
-                // via system class loader which can be different from the
-                // loader that brought Rhino classes that Class.forName() would
-                // use, but ClassLoader.getSystemClassLoader() is Java 2 only
-                return Class.forName(nestedClassName);
-            }
-        } catch (ClassNotFoundException ex) {
-        } catch (SecurityException ex) {
-        } catch (IllegalArgumentException e) {
-            // Can be thrown if name has characters that a class name
-            // can not contain
+        if (loader == null) {
+            // ALERT: if loader is null, nested class should be loaded
+            // via system class loader which can be different from the
+            // loader that brought Rhino classes that Class.forName() would
+            // use, but ClassLoader.getSystemClassLoader() is Java 2 only
+            return ScriptRuntime.getClassOrNull(nestedClassName);
+        } else {
+            return ScriptRuntime.getClassOrNull(loader, nestedClassName);
         }
-        return null;
     }
 
     private Hashtable staticFieldAndMethods;

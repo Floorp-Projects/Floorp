@@ -78,12 +78,10 @@ public final class LazilyLoadedCtor {
                 //  java.util.PropertyPermission
                 //        org.mozilla.javascript.JavaAdapter read
 
-                Class cl = null;
-                try { cl = Class.forName(className); }
-                catch (ClassNotFoundException ex) { removeOnError = true; }
-                catch (SecurityException ex) { removeOnError = true; }
-
-                if (cl != null) {
+                Class cl = ScriptRuntime.getClassOrNull(className);
+                if (cl == null) {
+                    removeOnError = true;
+                } else {
                     try {
                         ScriptableObject.defineClass(obj, cl, sealed);
                         isReplaced = true;

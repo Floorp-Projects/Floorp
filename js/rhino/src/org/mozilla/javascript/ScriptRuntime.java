@@ -1801,22 +1801,22 @@ public class ScriptRuntime {
         "org.mozilla.javascript.tools.shell.Global";
 
     private static ScriptableObject getGlobal(Context cx) {
-        try {
-            Class globalClass = Class.forName(GLOBAL_CLASS);
-            Class[] parm = { Context.class };
-            Constructor globalClassCtor = globalClass.getConstructor(parm);
-            Object[] arg = { cx };
-            return (ScriptableObject) globalClassCtor.newInstance(arg);
-        } catch (ClassNotFoundException e) {
-            // fall through...
-        } catch (NoSuchMethodException e) {
-            // fall through...
-        } catch (InvocationTargetException e) {
-            // fall through...
-        } catch (IllegalAccessException e) {
-            // fall through...
-        } catch (InstantiationException e) {
-            // fall through...
+        Class globalClass = getClassOrNull(GLOBAL_CLASS);
+        if (globalClass != null) {
+            try {
+                Class[] parm = { Context.class };
+                Constructor globalClassCtor = globalClass.getConstructor(parm);
+                Object[] arg = { cx };
+                return (ScriptableObject) globalClassCtor.newInstance(arg);
+            } catch (NoSuchMethodException e) {
+                // fall through...
+            } catch (InvocationTargetException e) {
+                // fall through...
+            } catch (IllegalAccessException e) {
+                // fall through...
+            } catch (InstantiationException e) {
+                // fall through...
+            }
         }
         return new ImporterTopLevel(cx);
     }
@@ -2005,11 +2005,28 @@ public class ScriptRuntime {
         cx.currentActivation = activation;
     }
 
-    private static Class getClassOrNull(String className) {
+    static Class getClassOrNull(String className)
+    {
         try {
             return Class.forName(className);
         } catch  (ClassNotFoundException ex) {
         } catch  (SecurityException ex) {
+        } catch (IllegalArgumentException e) {
+            // Can be thrown if name has characters that a class name
+            // can not contain
+        }
+        return null;
+    }
+
+    static Class getClassOrNull(ClassLoader loader, String className)
+    {
+        try {
+            return loader.loadClass(className);
+        } catch (ClassNotFoundException ex) {
+        } catch (SecurityException ex) {
+        } catch (IllegalArgumentException e) {
+            // Can be thrown if name has characters that a class name
+            // can not contain
         }
         return null;
     }

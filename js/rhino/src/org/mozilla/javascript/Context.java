@@ -2027,16 +2027,8 @@ public class Context {
         return errorCount == 0 ? result : null;
     }
 
-    private static Class codegenClass;
-    static {
-        try {
-            codegenClass = Class.forName(
-                "org.mozilla.javascript.optimizer.Codegen");
-        } catch (ClassNotFoundException x) {
-            // ...must be running lite, that's ok
-            codegenClass = null;
-        }
-    }
+    private static Class codegenClass = ScriptRuntime.getClassOrNull(
+                             "org.mozilla.javascript.optimizer.Codegen");
 
     private Interpreter createCompiler() {
         if (optimizationLevel >= 0 && codegenClass != null) {
@@ -2114,14 +2106,15 @@ public class Context {
 
     RegExpProxy getRegExpProxy() {
         if (regExpProxy == null) {
-            try {
-                Class c = Class.forName(
-                            "org.mozilla.javascript.regexp.RegExpImpl");
-                regExpProxy = (RegExpProxy) c.newInstance();
-                return regExpProxy;
-            } catch (ClassNotFoundException e) {
-            } catch (InstantiationException e) {
-            } catch (IllegalAccessException e) {
+            Class cl = ScriptRuntime.getClassOrNull(
+                          "org.mozilla.javascript.regexp.RegExpImpl");
+            if (cl != null) {
+                try {
+                    regExpProxy = (RegExpProxy) cl.newInstance();
+                    return regExpProxy;
+                } catch (InstantiationException e) {
+                } catch (IllegalAccessException e) {
+                }
             }
         }
         return regExpProxy;
@@ -2203,13 +2196,15 @@ public class Context {
     private static Method threadLocalSet;
 
     static {
-        try {
-            Class cl = Class.forName("java.lang.ThreadLocal");
-            threadLocalGet = cl.getMethod("get", null);
-            threadLocalSet = cl.getMethod("set",
-                new Class[] { ScriptRuntime.ObjectClass });
-            threadLocalCx = cl.newInstance();
-        } catch (Exception ex) { }
+        Class cl = ScriptRuntime.getClassOrNull("java.lang.ThreadLocal");
+        if (cl != null) {
+            try {
+                threadLocalGet = cl.getMethod("get", null);
+                threadLocalSet = cl.getMethod("set",
+                    new Class[] { ScriptRuntime.ObjectClass });
+                threadLocalCx = cl.newInstance();
+            } catch (Exception ex) { }
+        }
     }
 
     private static final Object contextListenersLock = new Object();

@@ -279,13 +279,9 @@ public class NativeJavaPackage extends ScriptableObject {
     private static Class findClass(ClassLoader loader, String className) {
         Class cl = null;
         if (loader != null) {
-            try { cl = loader.loadClass(className); }
-            catch (ClassNotFoundException ex) { }
-            catch (SecurityException ex) { }
+            cl = ScriptRuntime.getClassOrNull(loader, className);
         } else {
-            try { cl = Class.forName(className); }
-            catch (ClassNotFoundException ex) { }
-            catch (SecurityException ex) { }
+            cl = ScriptRuntime.getClassOrNull(className);
         }
         return cl;
     }

@@ -128,17 +128,18 @@ public class DefiningClassLoader extends ClassLoader
     private static Method method_getContextClassLoader;
 
     static {
-        try {
-            // Don't use "Thread.class": that performs the lookup
-            // in the class initializer, which doesn't allow us to
-            // catch possible security exceptions.
-            Class threadClass = Class.forName("java.lang.Thread");
-            method_getContextClassLoader =
-                threadClass.getDeclaredMethod("getContextClassLoader",
-                                               new Class[0]);
-        } catch (ClassNotFoundException e) {
-        } catch (NoSuchMethodException e) {
-        } catch (SecurityException e) {
+        // Don't use "Thread.class": that performs the lookup
+        // in the class initializer, which doesn't allow us to
+        // catch possible security exceptions.
+        Class threadClass = ScriptRuntime.getClassOrNull("java.lang.Thread");
+        if (threadClass != null) {
+            try {
+                method_getContextClassLoader =
+                    threadClass.getDeclaredMethod("getContextClassLoader",
+                                                   new Class[0]);
+            } catch (NoSuchMethodException e) {
+            } catch (SecurityException e) {
+            }
         }
     }
 }
