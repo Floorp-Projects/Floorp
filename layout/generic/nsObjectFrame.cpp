@@ -2410,35 +2410,33 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
   switch(variable)
   {
     case nsPluginInstancePeerVariable_NetscapeWindow:
-    {
-      //no reference count on view
-      nsIView* view;
-      rv = mOwner->GetView(mContext, &view);
+    {      
+      // get the document's widget from the view manager
+      // get the view manager from the pres shell, not from the view!
+      // we may not have a view if we are hidden
+      if (mContext) {
+        nsCOMPtr<nsIPresShell> shell;
+        mContext->GetShell(getter_AddRefs(shell));
+        if (shell) {
+          nsCOMPtr<nsIViewManager> vm;
+          shell->GetViewManager(getter_AddRefs(vm));
+          if (vm) {
+            nsCOMPtr<nsIWidget> widget;
+            rv = vm->GetWidget(getter_AddRefs(widget));            
+            if(widget) {
 
-      if((rv == NS_OK) && view)
-      {
-        nsIViewManager* manager;
-        rv = view->GetViewManager(manager);
+              void** pvalue = (void**)value;
+              *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
 
-        if((rv == NS_OK) && manager)
-        {
-          nsIWidget* widget;
-          rv = manager->GetWidget(&widget);
-
-          if((rv == NS_OK) && widget)
-          {
-            void** pvalue = (void**)value;
-            *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
-            
-            NS_RELEASE(widget);
-          }
-          NS_RELEASE(manager);
-        }
-      }
+            } else NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
+          } else NS_ASSERTION(vm, "couldn't get view manager in getting doc's window handle");
+        } else NS_ASSERTION(shell, "couldn't get pres shell in getting doc's window handle");
+      } else NS_ASSERTION(mContext, "plugin owner has no pres context in getting doc's window handle");
 
       break;
     }
   }
+
   return rv;
 }
 
@@ -3751,7 +3749,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       }
     }
   }
-
   return rv;
 }
 
