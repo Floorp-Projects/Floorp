@@ -75,7 +75,7 @@
 #elif defined(IRIX) || (defined(AIX) && !defined(AIX4_1)) \
     || defined(OSF1) || defined(SOLARIS) \
     || defined(HPUX10_30) || defined(HPUX11) || defined(LINUX) \
-    || defined(FREEBSD)
+    || defined(FREEBSD) || defined(NETBSD)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -2506,7 +2506,7 @@ static PRIOMethods _pr_udp_methods = {
 #endif
 
 #if defined(HPUX) || defined(OSF1) || defined(SOLARIS) || defined (IRIX) \
-    || defined(AIX) || defined(LINUX) || defined(FREEBSD)
+    || defined(AIX) || defined(LINUX) || defined(FREEBSD) || defined(NETBSD)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"

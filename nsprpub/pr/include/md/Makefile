@@ -55,6 +55,10 @@ ifeq ($(OS_ARCH),FreeBSD)
 MDCPUCFG_H = _freebsd.cfg
 endif
 
+ifeq ($(OS_ARCH),NetBSD)
+MDCPUCFG_H = _netbsd.cfg
+endif
+
 ifeq ($(OS_ARCH),HP-UX)
 MDCPUCFG_H = _hpux.cfg
 endif
