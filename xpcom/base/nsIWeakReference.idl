@@ -19,7 +19,8 @@ interface nsISupportsWeakReference : nsISupports
 // typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
 	// ...this definition had to be moved to nsWeakPtr.h to avoid circular includes, sorry
 
-nsIWeakReference* NS_GetWeakReference( nsISupports* , nsresult* aResult = 0);
+extern NS_COM nsIWeakReference*
+NS_GetWeakReference( nsISupports* , nsresult* aResult = 0);
 	// ...convenience.  Get a weak reference (if possible) without doing the query yourself
 
 template <class T>

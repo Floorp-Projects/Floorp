@@ -5,7 +5,7 @@
 
 #include "nsIWeakReference.h"
 
-class nsSupportsWeakReference : public nsISupportsWeakReference
+class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
 	{
 		public:
 			nsSupportsWeakReference()
@@ -31,7 +31,7 @@ class nsSupportsWeakReference : public nsISupportsWeakReference
 			nsWeakReference* mProxy;
 	};
 
-class nsWeakReference : public nsIWeakReference
+class NS_COM nsWeakReference : public nsIWeakReference
 	{
 		public:
 		// nsISupports...
@@ -72,8 +72,7 @@ class nsWeakReference : public nsIWeakReference
 			nsSupportsWeakReference*	mReferent;
 	};
 
-inline
-nsSupportsWeakReference::~nsSupportsWeakReference()
+inline nsSupportsWeakReference::~nsSupportsWeakReference()
 	{
 		if ( mProxy )
 			mProxy->NoticeReferentDestruction();
