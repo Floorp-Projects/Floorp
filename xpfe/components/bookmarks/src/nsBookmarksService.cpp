@@ -5021,6 +5021,8 @@ nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource*
   nsFileSpec tempFile(*aBookmarksFile);
   tempFile.MakeUnique();
 
+  PRBool succeeded = PR_TRUE;
+
   // Scope the stream so that it closes when we're done with it. 
   {
     nsOutputFileStream	strm(tempFile);
@@ -5042,13 +5044,13 @@ nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource*
 
     // If WriteBookmarksContainer failed for some reason, return that value. 
     // Otherwise,  report the status of the stream operation. 
-    rv = NS_FAILED(rv) ? rv : strm.error();
+    succeeded = NS_FAILED(rv) ? PR_FALSE : NS_SUCCEEDED(strm.lastWriteStatus());
   }
 
   // If we wrote to the file successfully (i.e. if the disk wasn't full) 
   // then trash the old bookmarks file and rename the temp file so it takes
   // its place. 
-  if (NS_SUCCEEDED(rv)) {
+  if (succeeded) {
     char* bookmarksFileName = aBookmarksFile->GetLeafName();
     aBookmarksFile->Delete(PR_FALSE);
 
