@@ -976,6 +976,8 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     char *propname;
     JSScopeProperty *sprop;
     JSBool magic;
+    jsid propid;
+    JSAtom *atom;
     uintN i;
     uint32 type;
 #ifdef DEBUG
@@ -1021,7 +1023,9 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		    continue;
 		}
 		propname = ATOM_BYTES(sym_atom(sprop->symbols));
+                propid = sprop->id;
 		if (!JS_XDRUint32(xdr, &type) ||
+                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
 		    !JS_XDRCString(xdr, &propname))
 		    return JS_FALSE;
 	    }
@@ -1031,6 +1035,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 	    i = fun->nvars + fun->nargs;
 	    while (i--) {
 		if (!JS_XDRUint32(xdr, &type) ||
+                    !JS_XDRUint32(xdr, (uint32 *)&propid) ||
 		    !JS_XDRCString(xdr, &propname))
 		    return JS_FALSE;
 		PR_ASSERT(type == JSXDR_FUNARG || type == JSXDR_FUNVAR);
@@ -1043,12 +1048,17 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		    setter = js_SetLocalVariable;
 		    PR_ASSERT(nvars++ <= fun->nvars);
 		}
-		if (!JS_DefineProperty(xdr->cx, fun->object, propname,
-				       JSVAL_VOID, getter, setter,
-				       JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
+                atom = js_Atomize(xdr->cx, propname, strlen(propname), 0);
+		if (!atom ||
+                    !OBJ_DEFINE_PROPERTY(xdr->cx, fun->object, (jsid)atom,
+                                         JSVAL_VOID, getter, setter,
+                                         JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                         (JSProperty **)&sprop) ||
+                    !sprop){
 		    JS_free(xdr->cx, propname);
 		    return JS_FALSE;
 		}
+                sprop->id = propid;
 		JS_free(xdr->cx, propname);
 	    }
 	}
@@ -1064,6 +1074,11 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 		return JS_FALSE;
 	}
 	*objp = fun->object;
+        if (!OBJ_DEFINE_PROPERTY(xdr->cx, xdr->cx->globalObject,
+                                 (jsid)fun->atom, OBJECT_TO_JSVAL(*objp),
+                                 NULL, NULL, JSPROP_ENUMERATE,
+                                 (JSProperty **)&sprop))
+            return JS_FALSE;
     }
 
     return JS_TRUE;
