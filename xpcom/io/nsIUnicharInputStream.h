@@ -32,6 +32,8 @@ class nsString;
  */
 class nsIUnicharInputStream : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICHAR_INPUT_STREAM_IID)
+
   NS_IMETHOD Read(PRUnichar* aBuf,
                   PRUint32 aOffset,
                   PRUint32 aCount,

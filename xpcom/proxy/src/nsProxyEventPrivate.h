@@ -44,9 +44,10 @@ class nsProxyEventClass;
 { 0xeea90d45, 0xb059, 0x11d2,                       \
   { 0x91, 0x5e, 0xc1, 0x2b, 0x69, 0x6c, 0x93, 0x33 } }
 
-
 class nsProxyEventClass : public nsISupports
 {
+		NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_CLASS_IID)
+
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
 
