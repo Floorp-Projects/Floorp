@@ -1585,6 +1585,10 @@ NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow,
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMWindow> thisDOMWin;
+  PRBool silent = PR_FALSE;
+  aThePrintOptions->GetPrintSilent (&silent);
+  
+
   // XXX this next line may need to be changed
   // it is unclear what the correct way is to get the document.
   GetContentDOMWindow(getter_AddRefs(thisDOMWin));
@@ -1594,7 +1598,7 @@ NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow,
      if (contentViewer) {
        nsCOMPtr<nsIContentViewerFile> contentViewerFile(do_QueryInterface(contentViewer));
        if (contentViewerFile) {
-         rv = contentViewerFile->Print(PR_FALSE, nsnull, aPrintListener);
+         rv = contentViewerFile->Print(silent, nsnull, aPrintListener);
        }
      }
   }
