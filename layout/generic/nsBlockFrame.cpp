@@ -1359,7 +1359,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     if (gNoisyMaxElementWidth) {
       IndentBy(stdout, gNoiseIndent);
       printf ("nsBlockFrame::CFS: %p returning MEW %d\n", 
-              this, aMetrics.mMaxElementWidth);
+              NS_STATIC_CAST(void*, this), aMetrics.mMaxElementWidth);
     }
 #endif
   }
@@ -2063,11 +2063,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   }
 #endif
 
-  // Check whether this is an incremental reflow
-  PRBool  incrementalReflow = aState.mReflowState.reason ==
-                              eReflowReason_Incremental ||
-                              aState.mReflowState.reason ==
-                              eReflowReason_Dirty;
+  // Check whether we need to do invalidation for the child block
+  PRBool doInvalidate =
+    aState.mReflowState.reason == eReflowReason_Incremental ||
+    aState.mReflowState.reason == eReflowReason_Dirty ||
+    aState.mReflowState.reason == eReflowReason_Resize;
   
     // the amount by which we will slide the current line if it is not
     // dirty
@@ -2177,8 +2177,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       // Reflow the dirty line. If it's an incremental reflow, then force
       // it to invalidate the dirty area if necessary
-      PRBool forceInvalidate = incrementalReflow && !aState.GetFlag(BRS_DAMAGECONSTRAINED);
-      rv = ReflowLine(aState, line, &keepGoing, forceInvalidate);
+      rv = ReflowLine(aState, line, &keepGoing, doInvalidate);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -2311,8 +2310,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // line to be created; see SplitLine's callers for examples of
     // when this happens).
     while (line != end_lines()) {
-      rv = ReflowLine(aState, line, &keepGoing,
-                      incrementalReflow /* force invalidate */);
+      rv = ReflowLine(aState, line, &keepGoing, doInvalidate);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -2549,7 +2547,8 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           if (gNoisyMaxElementWidth) {
             IndentBy(stdout, gNoiseIndent);
             printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
-                   this, NS_STATIC_CAST(void*, aLine.get()), aLine->mMaxElementWidth);
+                   NS_STATIC_CAST(void*, this), NS_STATIC_CAST(void*, aLine.get()),
+                   aLine->mMaxElementWidth);
           }
 #endif
           aState.UpdateMaxElementWidth(aLine->mMaxElementWidth);
@@ -3189,10 +3188,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   rv = brc.ReflowBlock(availSpace, applyTopMargin, aState.mPrevBottomMargin,
                        aState.IsAdjacentWithTop(), computedOffsets, 
                        blockHtmlRS, frameReflowStatus);
-
-  if (brc.BlockShouldInvalidateItself() && !mRect.IsEmpty()) {
-    Invalidate(aState.mPresContext, mRect);
-  }
 
   // Remove the frame from the reflow tree.
   if (aState.mReflowState.path)
@@ -4221,7 +4216,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       if (gNoisyMaxElementWidth) {
         IndentBy(stdout, gNoiseIndent);
         printf ("nsBlockFrame::PlaceLine: %p setting MEW for line %p to %d\n", 
-                this, NS_STATIC_CAST(void*, aLine.get()), maxElementWidth);
+                NS_STATIC_CAST(void*, this), NS_STATIC_CAST(void*, aLine.get()),
+                maxElementWidth);
       }
 #endif
     }
@@ -4318,7 +4314,8 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     if (gNoisyMaxElementWidth) {
       IndentBy(stdout, gNoiseIndent);
       printf ("nsBlockFrame::PostPlaceLine: %p setting line %p MEW %d\n", 
-              this, aLine, aMaxElementWidth);
+              NS_STATIC_CAST(void*, this), NS_STATIC_CAST(void*, aLine),
+              aMaxElementWidth);
     }
 #endif
   }
@@ -4329,7 +4326,8 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
 #ifdef NOISY_MAXIMUM_WIDTH
     printf("nsBlockFrame::PostPlaceLine during UC Reflow of block %p line %p caching max width %d\n", 
-           this, aLine, aLine->mBounds.XMost());
+           NS_STATIC_CAST(void*, this), NS_STATIC_CAST(void*, aLine),
+           aLine->mBounds.XMost());
 #endif
     aLine->mMaximumWidth = aLine->mBounds.XMost();
   }
@@ -5174,10 +5172,6 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                            aFloaterCache->mOffsets, redoFloaterRS,
                            aReflowStatus);
     }
-  }
-
-  if (brc.BlockShouldInvalidateItself() && !mRect.IsEmpty()) {
-    Invalidate(aState.mPresContext, mRect);
   }
 
   // Remove the floater from the reflow tree.

@@ -70,8 +70,7 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
     mOuterReflowState(aParentRS),
     mMetrics(aComputeMaxElementWidth),
     mIsTable(PR_FALSE),
-    mComputeMaximumWidth(aComputeMaximumWidth),
-    mBlockShouldInvalidateItself(PR_FALSE)
+    mComputeMaximumWidth(aComputeMaximumWidth)
 {
   mStyleBorder = nsnull;
   mStyleMargin = nsnull;
