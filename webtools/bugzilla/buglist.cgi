@@ -404,7 +404,7 @@ sub GenerateSQL {
                  if ($value eq '') {
                      next;
                  }
-                 my $id = GetKeywordIdFromName($name);
+                 my $id = GetKeywordIdFromName($value);
                  if ($id) {
                      push(@list, "$table.keywordid = $id");
                  } else {
