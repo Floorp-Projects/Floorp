@@ -36,6 +36,9 @@ public:
   virtual ~nsPrintOptionsWin();
 
   NS_IMETHOD CreatePrintSettings(nsIPrintSettings **_retval);
+  NS_IMETHOD GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSettings);
+  NS_IMETHOD GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings);
+  NS_IMETHOD InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings);
 
 };
 

@@ -40,6 +40,8 @@
 
 var gDialog;
 var paramBlock;
+var gPrefs         = null;
+var gPrintService  = null;
 var gPrintSettings = null;
 var gStringBundle  = null;
 
@@ -91,6 +93,19 @@ function initDialog()
   gDialog.strings[ "customPrompt.title" ]  = document.getElementById("customPrompt.title").childNodes[0].nodeValue;
   gDialog.strings[ "customPrompt.prompt" ] = document.getElementById("customPrompt.prompt").childNodes[0].nodeValue;
 
+}
+
+//---------------------------------------------------
+function isListOfPrinterFeaturesAvailable()
+{
+  var has_printerfeatures = false;
+  
+  try {
+    has_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
+  } catch(ex) {
+  }
+  
+  return has_printerfeatures;
 }
 
 //---------------------------------------------------
@@ -261,6 +276,23 @@ function hfIdToValue(node)
   return result;
 }
 
+function setPrinterDefaultsForSelectedPrinter()
+{
+  if (gPrintSettings.printerName == "") {
+    gPrintSettings.printerName = gPrintService.defaultPrinterName;
+  }
+  
+  // First get any defaults from the printer 
+  gPrintService.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
+
+  // now augment them with any values from last time
+  gPrintService.initPrintSettingsFromPrefs(gPrintSettings, true, gPrintSettingsInterface.kInitSaveAll);
+  
+  if (gDoDebug) {
+    dump("pagesetup/setPrinterDefaultsForSelectedPrinter: printerName='"+gPrintSettings.printerName+"', orientation='"+gPrintSettings.orientation+"'\n");
+  }
+}
+
 //---------------------------------------------------
 function loadDialog()
 {
@@ -270,14 +302,27 @@ function loadDialog()
   var print_margin_bottom = 0.5;
   var print_margin_right  = 0.5;
 
-  if (gPrintSettings) {
-    print_orientation  = gPrintSettings.orientation;
-
-    print_margin_top    = gPrintSettings.marginTop;
-    print_margin_left   = gPrintSettings.marginLeft;
-    print_margin_right  = gPrintSettings.marginRight;
-    print_margin_bottom = gPrintSettings.marginBottom;
+  try {
+    gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+  
+    gPrintService = Components.classes["@mozilla.org/gfx/printsettings-service;1"];
+    if (gPrintService) {
+      gPrintService = gPrintService.getService();
+      if (gPrintService) {
+        gPrintService = gPrintService.QueryInterface(Components.interfaces.nsIPrintSettingsService);
+      }
+    }
+  } catch(ex) {
+    dump("loadDialog: ex="+ex+"\n");
   }
+
+  setPrinterDefaultsForSelectedPrinter();
+
+  print_orientation   = gPrintSettings.orientation;
+  print_margin_top    = gPrintSettings.marginTop;
+  print_margin_left   = gPrintSettings.marginLeft;
+  print_margin_right  = gPrintSettings.marginRight;
+  print_margin_bottom = gPrintSettings.marginBottom;
 
   if (gDoDebug) {
     dump("print_orientation   "+print_orientation+"\n");
@@ -331,6 +376,15 @@ function loadDialog()
   setHeaderFooter( gDialog.fRightOption, gPrintSettings.footerStrRight );
 
   gDialog.scalingInput.value  = getDoubleStr(gPrintSettings.scaling * 100.0, 3);
+
+  // Enable/disable widgets based in the information whether the selected
+  // printer supports the matching feature or not
+  if (isListOfPrinterFeaturesAvailable()) {
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_orientation"))
+      gDialog.orientation.removeAttribute("disabled");
+    else
+      gDialog.orientation.setAttribute("disabled","true");
+  }
 
   // Give initial focus to the orientation radio group.
   // Done on a timeout due to to bug 103197.
@@ -415,6 +469,22 @@ function onAccept()
   } else {
     dump("*** FATAL ERROR: No paramBlock\n");
   }
+
+  var flags = gPrintSettingsInterface.kInitSaveMargins |
+              gPrintSettingsInterface.kInitSaveHeaderLeft |
+              gPrintSettingsInterface.kInitSaveHeaderCenter |
+              gPrintSettingsInterface.kInitSaveHeaderRight |
+              gPrintSettingsInterface.kInitSaveFooterLeft |
+              gPrintSettingsInterface.kInitSaveFooterCenter |
+              gPrintSettingsInterface.kInitSaveFooterRight |
+              gPrintSettingsInterface.kInitSaveBGColors |
+              gPrintSettingsInterface.kInitSaveBGImages |
+              gPrintSettingsInterface.kInitSaveInColor |
+              gPrintSettingsInterface.kInitSaveReversed |
+              gPrintSettingsInterface.kInitSaveOrientation |
+              gPrintSettingsInterface.kInitSaveOddEvenPages;
+
+  gPrintService.savePrintSettingsToPrefs(gPrintSettings, true, flags);
 
   return true;
 }
