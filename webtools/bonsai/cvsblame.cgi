@@ -37,9 +37,8 @@
 #    mark - highlight a line
 #
 
-require 'lloydcgi.pl';
+require 'CGI.pl';
 require 'cvsblame.pl';
-require 'utils.pl';
 use SourceChecker;
 
 $| = 1;
@@ -48,9 +47,9 @@ $| = 1;
 # any errors result, they will show up for the user.
 
 print "Content-Type:text/html\n";
-if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'set_line'})) {
+if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($::FORM{'set_line'})) {
     # Expire the cookie 5 months from now
-    print "Set-Cookie: line_nums=$form{'set_line'}; expires="
+    print "Set-Cookie: line_nums=$::FORM{'set_line'}; expires="
         . toGMTString(time + 86400 * 152) . "; path=/\n";
 }     
 print "\n";
@@ -58,6 +57,8 @@ print "\n";
 
 # Some Globals
 #
+$Head = 'CVS Blame';
+$SubHead = '';
 
 @src_roots = getRepositoryList();
 
@@ -70,7 +71,7 @@ if (not $user_agent =~ m@^Mozilla/4.@ or $user_agent =~ /MSIE/) {
 
 # Init sanitiazation source checker
 #
-$sanitization_dictionary = $form{'sanitize'};
+$sanitization_dictionary = $::FORM{'sanitize'};
 $opt_sanitize = defined $sanitization_dictionary;
 if ( $opt_sanitize )
 {
@@ -85,7 +86,7 @@ $opt_html_comments = &html_comments_init();
 # Handle the "file" argument
 #
 $filename = '';
-$filename = $form{'file'} if defined($form{'file'});
+$filename = $::FORM{'file'} if defined($::FORM{'file'});
 if ($filename eq '') 
 {
     &print_usage;
@@ -95,7 +96,8 @@ if ($filename eq '')
 
 # Handle the "rev" argument
 #
-$opt_rev = $form{rev} if defined($form{rev} && $form{rev} ne 'HEAD');
+$opt_rev = '';
+$opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
 $browse_revtag = "HEAD";
 $browse_revtag = $opt_rev if ($opt_rev =~ /[A-Za-z]/);
 $revision = '';
@@ -103,7 +105,7 @@ $revision = '';
 
 # Handle the "root" argument
 #
-if (defined($root = $form{'root'}) && $root ne '') {
+if (defined($root = $::FORM{'root'}) && $root ne '') {
     $root =~ s|/$||;
     validateRepository($root);
     if (-d $root) {
@@ -123,13 +125,14 @@ if (defined($root = $form{'root'}) && $root ne '') {
 foreach (@src_roots) {
     $root = $_;
     $rcs_filename = "$root/$filename,v";
+    $rcs_filename = Fix_BonsaiLink($rcs_filename);
     goto found_file if -r $rcs_filename;
     $rcs_filename = "$root/${file_head}Attic/$file_tail,v";
     goto found_file if -r $rcs_filename;
 }
 # File not found
 &print_top;
-print "Rcs file, $filename, does not exist.<BR><BR>\n";
+print "Rcs file, $filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
 print "</BODY></HTML>\n";
 &print_bottom;
 exit;
@@ -149,13 +152,18 @@ $file_rev = $revision;
 # Handle the "line_nums" argument
 #
 $opt_line_nums = 1;
-$opt_line_nums = 1 if $cookie_jar{'line_nums'} eq 'on';
-$opt_line_nums = 0 if $form{'line_nums'} =~ /off|no|0/i;
-$opt_line_nums = 1 if $form{'line_nums'} =~ /on|yes|1/i;
+if (exists($::COOKIE{'line_nums'})) {
+$opt_line_nums = 1 if $::COOKIE{'line_nums'} eq 'on';
+}
+if (exists($::FORM{'line_nums'})) {
+     $opt_line_nums = 0 if $::FORM{'line_nums'} =~ /off|no|0/i;
+     $opt_line_nums = 1 if $::FORM{'line_nums'} =~ /on|yes|1/i;
+}
 
 # Option to make links to included files
 $opt_includes = 0;
-$opt_includes = 1 if $form{'includes'} =~ /on|yes|1/i;
+$opt_includes = 1 if (exists($::FORM{'includes'}) && 
+                      $::FORM{'includes'} =~ /on|yes|1/i);
 $opt_includes = 1 if $opt_includes && $file_tail =~ /(.c|.h|.cpp)$/;
 
 @text = &extract_revision($revision);
@@ -165,7 +173,7 @@ die "$progname: Internal consistency error" if ($#text != $#revision_map);
 # Handle the "mark" argument
 #
 $mark_arg = '';
-$mark_arg = $form{'mark'} if defined($form{'mark'});
+$mark_arg = $::FORM{'mark'} if defined($::FORM{'mark'});
 foreach $mark (split(',',$mark_arg)) {
     if (($begin, $end) = $mark =~ /(\d*)\-(\d*)/) {
         $begin = 1 if $begin eq '';
@@ -181,9 +189,7 @@ foreach $mark (split(',',$mark_arg)) {
 # Start printing out the page
 #
 &print_top;
-
-open(BANNER, "<data/banner.html");
-print while <BANNER>;
+print Param('bannerhtml', 1);
 
 # Print link at top for directory browsing
 #
@@ -200,10 +206,11 @@ print q(
 foreach $path (split('/',$rcs_path)) {
 
 # Customize this translation
-    $link_path .= url_encode2($path).'/' if $path ne 'mozilla';
-    print "<A HREF='$lxr_base/$link_path'>$path</a>/ ";
+    $link_path .= url_encode2($path).'/';
+    $lxr_path = Fix_LxrLink($link_path);
+    print "<A HREF='$lxr_path'>$path</a>/ ";
 }
-print "<A HREF='$lxr_base/$link_path$file_tail'>$file_tail</a> ";
+print "<A HREF='$link_path$file_tail'>$file_tail</a> ";
 
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
 print " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
@@ -212,6 +219,7 @@ print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
 print "</A>)";
 
+$lxr_path = Fix_LxrLink("$link_path$file_tail");
 print qq(
 </B>
   </TD>
@@ -222,7 +230,7 @@ print qq(
       <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
        <TR>
         <TD NOWRAP>
-         <A HREF="$lxr_base/$link_path$file_tail">LXR: Cross Reference</A>
+         <A HREF="$lxr_path">LXR: Cross Reference</A>
         </TD>
        </TR><TR>
         <TD NOWRAP>
@@ -316,6 +324,7 @@ foreach $revision (@revision_map)
 	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$prev_revision{$revision}\"";
 	} else {
 	  $output .= "<A HREF=\"cvsview2.cgi?root=$root&subdir=$rcs_path&command=DIRECTORY&files=$file_tail\"";
+          $prev_revision{$revision} = '';
 	}
 	$output .= " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
         $output .= ">";
@@ -361,15 +370,16 @@ if ($useLayers) {
     
     $log = $revision_log{$revision};
     $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
-    eval ('$log =~ s@\d{4,6}@' . $BUGSYSTEMEXPR . '@g;');
+    $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
     $log =~ s/"/\\"/g;
     
     # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
     $author = $revision_author{$revision};
     $author =~ tr/%/@/;
+    $author_email = EmailFromUsername($author);
     print "log$revisionName = \""
-      ."<b>$revision</b> &lt;<a href='mailto:$author'>$author</a>&gt;"
+      ."<b>$revision</b> &lt;<a href='mailto:$author_email'>$author</a>&gt;"
 	." <b>$revision_ctime{$revision}</b><BR>"
 	  ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
   }
@@ -477,15 +487,15 @@ sub print_usage {
     my ($new_linenum, $src_roots_list);
     my ($title_text) = "Usage";
 
-    if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'set_line'})) {
+    if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($::FORM{'set_line'})) {
   
         # Expire the cookie 5 months from now
-        $set_cookie = "Set-Cookie: line_nums=$form{'set_line'}; expires="
+        $set_cookie = "Set-Cookie: line_nums=$::FORM{'set_line'}; expires="
             .&toGMTString(time + 86400 * 152)."; path=/";
     }
-    if (!defined($cookie_jar{'line_nums'}) && !defined($form{'set_line'})) {
+    if (!defined($cookie_jar{'line_nums'}) && !defined($::FORM{'set_line'})) {
         $new_linenum = 'on';
-    } elsif ($cookie_jar{'line_nums'} eq 'off' || $form{'set_line'} eq 'off') {
+    } elsif ($cookie_jar{'line_nums'} eq 'off' || $::FORM{'set_line'} eq 'off') {
         $linenum_message = 'Line numbers are currently <b>off</b>.';
         $new_linenum = 'on';
     } else {
@@ -578,11 +588,13 @@ __USAGE__
 } # sub print_usage
 
 sub print_bottom {
-    print <<__BOTTOM__;
+     my $maintainer = Param('maintainer');
+
+     print <<__BOTTOM__;
 <HR WIDTH="100%">
 <FONT SIZE=-1>
 <A HREF="cvsblame.cgi">Page configuration and help</A>.
-Mail feedback to <A HREF="mailto:slamm?subject=About the cvsblame script">&lt;slamm\@netscape.com></A>. 
+Mail feedback to <A HREF="mailto:$maintainer?subject=About the cvsblame script">&lt;$maintainer&gt;</A>. 
 </FONT></BODY>
 </HTML>
 __BOTTOM__
@@ -607,7 +619,7 @@ sub link_includes {
 }
 
 sub html_comments_init {
-    return 0 unless defined($form{'use_html'}) && $form{'use_html'};
+    return 0 unless defined($::FORM{'use_html'}) && $::FORM{'use_html'};
                                                       
     # Initialization for C comment context switching
     $in_comments = 0;

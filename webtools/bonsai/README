@@ -30,42 +30,43 @@ ought to be split into different directories, but that hasn't happened
 yet.
 
 Some of these files are:
+treeconfig.pl: 	some Perl source that defines @::TreeList, a list of trees you
+		want to track, and %::TreeInfo, information about each of those
+		trees.  A sample treeconfig.pl:
 
-configdata: 	some TCL source that defines treelist, a list of trees you want
-		to track, and treedata, information about each of those trees.
-		A sample configdata:
+	@::TreeList = ('default', 'other');
 
-	set treelist {default newlayout}
+	%::TreeInfo = (
+	     default => {
+		  branch       => '',
+		  description  => 'My CVS repository',
+		  module       => 'All',
+		  repository   => '/d2/cvsroot',
+		  shortdesc    => 'Mine',
+			},
+	     other => {
+		  branch       => '',
+		  description  => 'Other CVS repository',
+		  module       => 'All',
+		  repository   => '/d2/otherroot',
+		  shortdesc    => 'Other',
+			},
+		
 
-	set treeinfo(default,module) MozillaSource
-	set treeinfo(default,branch) {}
-	set treeinfo(default,repository) {/cvsroot}
-	set treeinfo(default,description) {Mozilla Source Code}
-	set treeinfo(default,shortdesc) {Mozilla}
+		       );
 
-	set treeinfo(newlayout,module) Raptor
-	set treeinfo(newlayout,branch) {}
-	set treeinfo(newlayout,repository) {/cvsroot}
-	set treeinfo(newlayout,description) {New Layout -- Main Line}
-	set treeinfo(newlayout,shortdesc) {New Layout}
+	1;
 
-		Also, you can specify where Bonsai will look for some utilities
-		on your system, and a couple other behaviors.  You will
-		probably have to override many of these; the default values are
-		not that reasonable.
 
-		The default values are:
 
-	set cvscommand /tools/ns/bin/cvs
-	set rlogcommand /tools/ns/bin/rlog
-	set rcsdiffcommand /tools/ns/bin/rcsdiff
-	set cocommand /tools/ns/bin/co
-	set sendmailcommand /usr/lib/sendmail
-	set lxr_base http://cvs-mirror.mozilla.org/webtools/lxr/source
-	set mozilla_lxr_kludge TRUE
+params:	This file contains many operating parameters.  This can be 
+	edited using the editparams.cgi webpage; you should probably
+	not edit it directory.
 
-	The ./configure script will make a guess on these commands from
-	your PATH, so if it complains, add the directories in which these
+	The ./configure script will make a guess on the paramaters
+	that control paths for scripts to execute, and create an
+	initial params file for you.  It looks for things on your
+	PATH, so if it complains, add the directories in which these
 	commands reside to your PATH, or override the path check, for
 	example:
 
@@ -88,6 +89,9 @@ hidelist:	A list of regexps that define filenames that we don't want
 This is a rough first pass at cataloging and documenting the Bonsai
 sources.  Many hands have been in this code over the years, and it has
 accreted wildly.  There is probably quite a lot of dead code in here.
+
+THIS LIST IS PRETTY OLD AND OUT OF DATE.  In particular, we don't have
+any more TCL code; it's all either gone or ported to Perl.
 
 
 CGI.tcl			???

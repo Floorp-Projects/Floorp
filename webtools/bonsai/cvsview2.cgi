@@ -45,12 +45,15 @@ if ($bonsaidir eq '') {
 }
 
 chdir $bonsaidir || die "Couldn't chdir to $bonsaidir";
-require 'utils.pl';
+require 'CGI.pl';
 
-loadConfigData();
+$cocommand = Param('cocommand');
+$rcsdiffcommand = Param('rcsdiffcommand');
 
-NEXTTREE: foreach $i (@treelist) {
-    $r = $treeinfo{$i}->{'repository'};
+LoadTreeConfig();
+
+NEXTTREE: foreach $i (@::TreeList) {
+    $r = $::TreeInfo{$i}->{'repository'};
     foreach $j (@SRCROOTS) {
         if ($r eq $j) {
             next NEXTTREE;
@@ -59,8 +62,17 @@ NEXTTREE: foreach $i (@treelist) {
     push @SRCROOTS, $r;
 }
 
+$opt_rev1 = '';
+$opt_rev2 = '';
+$opt_root = '';
+$opt_files = '';
+$opt_branch = '';
+$opt_skip = 0;
+$debug = 0;
+
 
 $MAX_REVS = 8;
+
 
 #
 # Make sure both kinds of standard output go to STDOUT.
@@ -335,7 +347,8 @@ print "Content-type: text/html\n\n";
 
 $request_method = $ENV{'REQUEST_METHOD'};       # e.g., "GET", "POST", etc.
 $script_name = $ENV{'SCRIPT_NAME'};
-$prefix = $script_name . $ENV{PATH_INFO} . '?'; # prefix for HREF= entries
+$prefix = $script_name . '?'; # prefix for HREF= entries
+$prefix = $script_name . $ENV{PATH_INFO} . '?' if (exists($ENV{PATH_INFO}));
 $query_string = $ENV{QUERY_STRING};
 
 # Undo % URL-encoding
@@ -360,7 +373,7 @@ foreach $option (split(/&/, $query_string)) {
     eval('$opt_' . $1 . '="' . $2 . '";');
 }
 
-if( $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
+if (defined($opt_branch) && $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
 
 # Configuration colors for diff output.
 
@@ -472,14 +485,8 @@ sub do_diff_links {
     my $diff_base = "cvsview2.cgi";
     my $blame_base = "cvsblame.cgi";
 
-    # total kludge!!  lxr omits the top-level "mozilla" directory...
     my $lxr_path = "$opt_subdir/$opt_file";
-    if ($mozilla_lxr_kludge eq 'TRUE') {
-      $lxr_path =~ s@^ns/@@;
-      $lxr_path =~ s@^mozilla/@@;
-    }
-
-    my $lxr_link = "$lxr_base/$lxr_path";
+    my $lxr_link = Fix_LxrLink($lxr_path);
     my $blame_link = "$blame_base?root=$CVS_ROOT\&file=$opt_subdir/$opt_file";
     my $diff_link = "$magic_url&command=DIRECTORY&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2";
     $diff_link .= "&root=$opt_root" if defined($opt_root);
@@ -645,7 +652,7 @@ sub do_directory {
     }
     $output .= "</DIV>";
 
-    EmitHtmlHeader("CVS Differences", $output);
+    PutsHeader("CVS Differences", $output);
 
     CheckHidden($dir);
     chdir($dir);
@@ -659,14 +666,8 @@ sub do_directory {
         $path = "$dir/Attic/$file,v" if (! -r $path);
         &parse_rcs_file($path);
 
-        # total kludge!!  lxr omits the top-level "mozilla" directory...
         my $lxr_path = "$opt_subdir/$file";
-        if (mozilla_lxr_kludge) {
-          $lxr_path =~ s@^ns/@@;
-          $lxr_path =~ s@^mozilla/@@;
-        }
-
-        my $lxr_link = "$lxr_base/$lxr_path";
+        my $lxr_link = Fix_LxrLink($lxr_path);
 
         print "<TR><TD NOWRAP><B>";
         print "<A HREF=\"$lxr_link\">$file</A><BR>";
@@ -948,13 +949,15 @@ sub print_row {
 }
 
 sub print_bottom {
-    print <<__BOTTOM__;
+     my $maintainer = Param('maintainer');
+
+     print <<__BOTTOM__;
 <P>
 <TABLE BORDER=0 CELLSPACING=0 CELLPADDING=0><TR><TD>
 <HR>
 <TR><TD>
 <FONT SIZE=-1>
-&nbsp;&nbsp;Mail feedback and feature requests to <A HREF="mailto:slamm\@netscape.com?subject=About the cvs differences script">slamm</A>.&nbsp;&nbsp; 
+&nbsp;&nbsp;Mail feedback and feature requests to <A HREF="mailto:$maintainer?subject=About the cvs differences script">$maintainer</A>.&nbsp;&nbsp; 
 </TABLE>
 </BODY>
 </HTML>

@@ -21,11 +21,11 @@
 #
 $|=1;
 
+require 'CGI.pl';
+
 print "Content-type: text/html
 
 <HTML>";
-
-require 'modules.pl';
 
 
 print "

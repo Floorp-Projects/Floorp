@@ -1,5 +1,4 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,370 +16,242 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
-source myglobrecur.tcl
+use File::Basename;
 
-if {[llength $argv] == 5} {
-    lassign $argv treeid FORM(startfrom) FORM(firstfile) FORM(subdir) FORM(modules)
-} else {
-    puts "Content-type: text/plain
+require "CGI.pl";
 
-<HTML>"
+sub ProcessOneFile {
+     my ($filename) = @_;
+     my $rlog = Param('rlogcommand') . " $filename |";
+     my $doingtags = 0;
+     my $filehead = dirname($filename);
+     my (%branchname, $filerealname, $filetail, $line, $trimmed);
+     my ($tag, $version, $branchid, $dirid, $fileid, $indesc, $desc);
+     my ($author, $revision, $datestr, $date, $pluscount, $minuscount);
+     my ($branch);
 
-    CheckPassword $FORM(password)
-}
+     print "$filename\n";
 
-set startfrom [ParseTimeAndCheck [FormData startfrom]]
+     die "Unable to run rlog command '$rlog': $!\n" 
+          unless (open(RLOG_PROC, "$rlog"));
+     undef (%branchname);
 
-set firstfile [string trim [FormData firstfile]]
+     ($filerealname = $filename) =~ s/,v$//g;
+     $filehead =~ s!^$::Repository/*!!;
+     $filehead = '.'
+          unless ($filehead);
+     $filetail = basename($filerealname);
 
-set subdir [string trim [FormData subdir]]
+     while (<RLOG_PROC>) {
+          chop;
+          $line = $_;
+          $trimmed = trim($line);
 
-Lock
-LoadTreeConfig
-Unlock
+          if ($doingtags) {
+               if ($line !~ /^\t/) {
+                    $doingtags = 0;
+               } else {
+                    $trimmed =~ /^([^:]*):([^:]*)/;
+                    $tag = trim($1);
+                    $version = trim($2);
 
-ConnectToDatabase
+                    next
+                         unless (length($tag) && length($version));
 
-set repository $treeinfo($treeid,repository)
-regsub -all -- / $repository _ mungedname
-
-puts "Rebuilding entire checkin history in $treeinfo($treeid,description) ..."
-flush stdout
-
-
-
-# cmdtrace on
-
-set repositoryid [GetId repositories repository $repository]
-
-proc ProcessOneFile {filename} {
-    global repository startfrom rlogcommand
-
-    puts "$filename"
-    flush stdout
-    set fid [open "|$rlogcommand $filename" r]
-    set doingtags 0
-    catch {unset branchname}
-    regsub -- {,v$} $filename {} filerealname
-    set filehead [file dirname $filerealname]
-    regsub -- "^$repository" $filehead {} filehead
-    regsub -- {^/} $filehead {} filehead
-    if {[clength $filehead] == 0} {
-        set filehead "."
-    }
-    set filetail [file tail $filerealname]
-    while {1} {
-        if {[gets $fid line] < 0} {
-            break
-        }
-        set trimmed [string trim $line]
-        if {$doingtags} {
-            if {![cequal "\t" [crange $line 0 0]]} {
-                set doingtags 0
-            } else {
-                lassign [split $trimmed ":"] tag version
-                if {[clength $tag] == 0 || [clength $version] == 0} {
-                    continue
-                }
-                set version [string trim $version]
-
-                set branchid [GetId branches branch $tag]
-                set dirid [GetId dirs dir $filehead]
-                set fileid [GetId files file $filetail]
+                    $branchid = GetId('branches', 'branch', $tag);
+                    $dirid    = GetId('dirs', 'dir', $filehead);
+                    $fileid   = GetId('files', 'file', $filetail);
+#
 # Don't touch the tags database for now.  Nothing uses it, and it just takes
 # up too much damn space.
-#                SendSQL "replace into tags (branchid, repositoryid, dirid, fileid, revision) values ($branchid, $repositoryid, $dirid, $fileid, '$version')"
+#
+#                SendSQL "replace into tags (branchid, repositoryid,
+#                dirid, fileid, revision) values ($branchid,
+#                $repositoryid, $dirid, $fileid, '$version')"
+#
 
-                set vlist [split $version '.']
-                set sub [expr [llength $vlist] - 2]
-                if {[cequal "0" [lindex $vlist $sub]]} {
                     # Aha!  Second-to-last being a zero is CVS's special way
                     # of remembering a branch tag.
-                    set bnum [join [lreplace $vlist $sub $sub] "."]
-                    set branchname($bnum) $tag
-                }
-                continue
-            }
-        }
-        switch -regexp -- $line {
-            {^symbolic names}  {
-                set doingtags 1
-            }
-            {^revision ([0-9.]*)$} {
-                set indesc 0
-                while {1} {
-                    if {$indesc} {
-                        if {[cequal $line "----------------------------"] ||
-                            [cequal $line "============================================================================="]} {
-                            # OK, we're done.  Write it out.
-                            if {[info exists revision] &&
-                                [info exists datestr] &&
-                                [info exists author]} {
-                                if {[regexp -- {^([0-9]*)/([0-9]*)/([0-9]*) ([0-9]*):([0-9]*):([0-9]*)$} $datestr foo year month day hours mins secs]} {
-                                    set date [convertclock "$month/$day/$year $hours:$mins:$secs" GMT]
-                                    
-                                    if {$date >= $startfrom} {
-                                        set tbranch "T$branch"
-                                        if {[cequal $tbranch "T"]} {
-                                            set tbranch ""
-                                        }
-                                        set entrystr "C|$date|$author|$repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount"
-                                        AddToDatabase $entrystr $desc
-                                    }
-                                }
-                            }
-                            set indesc 0
-                        } else {
-                            append desc $line
-                            append desc "\n"
-                        }
-                    } else {
-                        switch -regexp -- $line {
-                            {^revision ([0-9.]*)$} {                        
-                                if {[regexp -- {^revision ([0-9.]*)$} $line foo new]} {
-                                    set revision $new
-                                    catch {unset datestr}
-                                    catch {unset author}
-                                    set pluscount 0
-                                    set minuscount 0
-                                    set desc {}
+                    $version =~ /(.*)\.(\d+)(\.\d+)$/;
+                    $branchname{"$1$3"} = $tag
+                         if ($2 eq '0');
+                    next;
+               }
+          }
 
-                                    regsub -- {.[0-9]*$} $revision {} bnum
-                                    if {[info exists branchname($bnum)]} {
-                                        set branch "$branchname($bnum)"
-                                    } else {
-                                        set branch ""
-                                    }
-                                }
-                            }
-                            {^date:} {
-                                regexp -- {^date: ([0-9 /:]*);  author: ([^;]*);} $line foo datestr author
-                                regexp -- {lines: \+([0-9]*) -([0-9]*)} $line foo pluscount minuscount
-                            }
-                            {^branches: [0-9 .;]*$} {
-                                # Ignore these lines; make sure they don't
-                                # become part of the desciption.
-                            }
-                            default {
-                                set indesc 1
-                                set desc "$line\n"
-                                
-                            }
-                        }
+          if ($line =~ /^symbolic names/) {
+               $doingtags = 1;
+               next;
+          } elsif ($line =~ /^revision ([0-9.]*)$/) {
+               $pluscount = ($minuscount = ($date = ($indesc = 0)));
+               $desc = ($branch = ($author = ($datestr = ($revision = ''))));
+
+               while (1) {
+                    # Dealing with descriptions in rlog output for a
+                    # revision...
+                    if ($indesc) {
+                         if (($line =~ /^-{27,30}$/) ||
+                             ($line =~ /^={75,80}$/)) {
+                              # OK, we're done.  Write it out.
+                              if ($author && $datestr && $revision) {
+                                   $datestr =~ s!^(\d+)/(\d+/\d+)!$2/$1!;
+                                   $date = str2time($datestr);
+                                   if ($date >= $::StartFrom) {
+                                        AddToDatabase("C|$date|$author|$Repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount", $desc);
+                                   }
+                              }
+                              $indesc = 0;
+                         } else {
+                              $desc .= $line . "\n";
+                         }
                     }
-                    if {[gets $fid line] < 0} {
-                        break
+
+                    # Dealing with revision information for a specific
+                    # revision...
+                    else {
+                         if ($line =~ /^revision ([0-9.]*)$/) {
+                              $pluscount = ($minuscount = 0);
+                              $date = ($indesc = 0);
+                              $datestr = ($desc = ($branch = ($author = "")));
+                              $revision = $1;
+
+                              $revision =~ /(.*)\.\d*$/;
+                              $branch = $branchname{$1}
+                                   if (exists($branchname{$1}));
+                         }
+
+                         elsif ($line =~ /^date:/) {
+                              $line =~ s!^date: ([0-9 /:]*);\s+!!;
+                              $datestr = $1;
+
+                              $line =~ s!^author: ([^;]*);\s+!!;
+                              $author = $1;
+
+                              if ($line =~ /lines: \+(\d+) -(\d+)/) {
+                                   $pluscount = $1;
+                                   $minuscount = $2;
+                              }
+                         }
+
+                         elsif ($line =~ /^branches: [0-9 .;]*$/) {
+                              # Ignore these lines; make sure they don't
+                              # become part of the desciption.
+                         }
+
+                         else {
+                              $indesc = 1;
+                              $desc = "$line\n";
+                         }
                     }
-                }
-            }
-        }
-    }
-    catch {close $fid}
+
+                    last
+                         unless ($line = <RLOG_PROC>);
+                    chop($line);
+               }
+          }
+     }
+
+     close(RLOG_PROC);
 }
 
 
-proc ProcessDirectory {dir} {
-    global firstfile
-    my_for_recursive_glob filename $dir "*,v" {
-        if {![cequal $firstfile ""]} {
-            if {![cequal $filename $firstfile]} {
-                puts "Skipping $filename"
-                flush stdout
-                continue
-            }
-            set firstfile ""
-        }
-        ProcessOneFile $filename
-    }
+sub ProcessDirectory {
+     my ($dir) = @_;
+     my ($file, @files);
+
+     die "$dir: not a directory" unless (-d $dir);
+     die "$dir: Couldn't open for reading: $!"
+          unless (opendir(DIR, $dir));
+     @files = readdir(DIR);
+     closedir (DIR);
+
+     foreach $file (@files) {
+          next if $file eq '.';
+          next if $file eq '..';
+
+          $file = "$dir/$file";
+          if (-d $file) {
+               &ProcessDirectory($file);
+          } else {
+               next unless ($file =~ /,v$/);
+
+               if ($FirstFile && ($FirstFile ne $file)) {
+                    print "Skipping $file...\n";
+                    next;
+               }
+               $FirstFile = 0;
+               ProcessOneFile($file);
+          }
+     }
 }
 
 
+$| = 1;
 
-proc digest {str} {
-    global array
-    set key [lvarpop str]
-    if {[cequal [cindex [lindex $str 0] 0] "-"]} {
-        lvarpop str
-    }
-    set array($key) $str
+if ($#ARGV == 4) {
+     $::TreeID                   = $ARGV[0];
+     $::FORM{'startfrom'}        = $ARGV[1];
+     $::FORM{'firstfile'}        = $ARGV[2];
+     $::FORM{'subdir'}           = $ARGV[3];
+     $::FORM{'modules'}          = $ARGV[4];
+} else {
+     print "Content-type: text/html
+
+<HTML>";
+     CheckPassword(FormData('password'));
+     print "
+<title>Rebuilding CVS history database... please be patient...</title>
+<body>
+<pre>\n";
 }
 
+$::StartFrom   = ParseTimeAndCheck(FormData('startfrom'));
+$::FirstFile   = trim(FormData('firstfile'));
+$::SubDir      = trim(FormData('subdir'));
+$::Modules     = '';
 
-
-set env(CVSROOT) $treeinfo($treeid,repository)
-set origdir [pwd]
-cd /
-set fid [open "|$cvscommand checkout -c" r]
-cd $origdir
-
-set curline ""
-while {[gets $fid line] >= 0} {
-    if {[ctype space [cindex $line 0]]} {
-        append curline $line
-    } else {
-        digest $curline
-        set curline $line
-    }
-}
-digest $curline
-close $fid
-
-
-set startingdir $repository/$subdir
-
-regsub -- {/\.$} $startingdir {} startingdir
-regsub -- {/$} $startingdir {} startingdir
-
-
-set oldlist {}
-
-set list {}
-
-if {[info exists FORM(modules)]} {
-    set list [split $FORM(modules) ","]
+if (defined($::FORM{'modules'})) {
+     $::Modules = trim(FormData('modules'));
 }
 
-if {[lempty $list]} {
-    set list $treeinfo($treeid,module)
+Lock();
+LoadTreeConfig();
+Unlock();
+
+ConnectToDatabase();
+
+$::Repository    = $::TreeInfo{$::TreeID}{'repository'};
+$::Description   = $::TreeInfo{$::TreeID}{'description'};
+$::RepositoryID  = GetId('repositories', 'repository', $::Repository);
+$::StartingDir   = 0;
+
+print "
+Rebuilding entire checkin history in $::Description, (`$::TreeID' tree) ...
+";
+
+Log("Rebuilding cvs history in $::Description, (`$::TreeID' tree)...");
+
+LoadDirList();
+@Dirs = grep(!/\*$/, @::LegalDirs);
+@Dirs = split(/,\s*/, $::Modules) if $::Modules;
+($StartingDir = "$::Repository/$::SubDir") =~ s!/.?$!! if $::SubDir;
+
+
+print "Doing directories: @Dirs ...\n";
+foreach $Dir (@Dirs) {
+     my $dir = "$::Repository/$Dir";
+
+     unless (grep $Dir, @::LegalDirs) {
+          print "$Dir: is invalid, skipping...\n";
+     }
+
+     if (-f $dir) {
+          ProcessOneFile($dir);
+     } elsif (-d $dir) {
+          ProcessDirectory($dir);
+     } else {
+          print "$Dir: not a file or directory, skipping...\n";
+     }
 }
 
-
-while {![cequal $list $oldlist]} {
-    set oldlist $list
-    set list {}
-    foreach i $oldlist {
-        if {[info exists array($i)]} {
-            set list [concat $list $array($i)]
-            # Do an unset to prevent infinite recursion.
-            unset array($i)
-        } else {
-            lappend list $i
-        }
-    }
-}
-
-
-set tlist {}
-catch {unset present}
-foreach i $list {
-    if {![info exists present($i)]} {
-        lappend tlist $i
-        set present($i) 1
-    }
-}
-catch {unset present}
-
-
-set list {}
-
-foreach i $tlist {
-    set d $repository/$i
-    regsub -- {/\.$} $d {} d
-    regsub -- {/$} $d {} d
-    lappend list $d
-}
-
-if {[lempty $list]} {
-    set $list $startingdir
-}
-
-set slen [expr [clength $startingdir] - 1]
-
-puts "Doing directories: $list"
-
-foreach dir $list {
-    if {![cequal [crange $dir 0 $slen] $startingdir]} {
-        puts "*** Skipping $dir ***"
-        continue
-    }
-    if {![file isdirectory $dir]} {
-        if {[file isfile $dir]} {
-            ProcessOneFile $dir
-        }
-    } else {
-        ProcessDirectory $dir
-    }
-}
-
-
-
-
-# puts "<HR>Putting entries ($count unique descriptions) into database...<P>"
-# flush stdout
-
-# set infid [open data/checkinlog$mungedname "r"]
-
-# ConnectToDatabase
-
-# set buffer {}
-# set desc {}
-# set indesc 0
-# set done 0
-# while {[gets $infid line] >= 0} {
-#     if {$indesc} {
-#       if {[cequal $line ":ENDLOGCOMMENT"]} {
-#           AddToDatabase $buffer $desc
-#           set buffer {}
-#           set desc {}
-#           set indesc 0
-#           incr done
-#           if {$done % 5 == 0} {
-#               puts "$done done.<BR>"
-#               flush stdout
-#           }
-#       } else {
-#           append desc $line
-#           append desc "\n"
-#       }
-#     } else {
-#       if {[cequal $line "LOGCOMMENT"]} {
-#           set indesc 1
-#       } else {
-#           append buffer $line
-#           append buffer "\n"
-#       }
-#     }
-# }
-# close $infid
-
-
-        
-
-
-
-# puts "<HR>"
-# flush stdout
-
-# set dir data/taginfo
-# catch {mkdir $dir}
-# catch {chmod 0777 $dir}
-# append dir /tmp_[set mungedname]_[id process]
-# catch {mkdir $dir}
-# catch {chmod 0777 $dir}
-
-# set numtags 0
-
-# foreach n [lsort [info var tag_*]] {
-#     upvar #0 $n t
-#     set tagname [crange $n 4 end]
-#     puts "Dumping tag $tagname<br>"
-#     flush stdout
-#     set filename $dir/[MungeTagName $tagname]
-#     set fid [open "$filename" "w"]
-#     foreach f [lsort [array names t]] {
-#         puts $fid "0|add|$f|$t($f)"
-#     }
-#     close $fid
-#     incr numtags
-# }
-
-
-# Lock
-# set newdir data/taginfo/$mungedname
-# catch {exec rm -rf $newdir}
-# frename $dir $newdir
-# Unlock
-
-# puts "<HR><P>Done.  $numfiles files checked; $numtags tags created.<P>"
-
+exit 0;

@@ -54,7 +54,10 @@ $MYSQL << OK_ALL_DONE
 use bonsai;
 create table descs (
     id mediumint not null auto_increment primary key,
-    description text
+    description text,
+    hash bigint not null,
+
+    index(hash)
 );
 
 show columns from descs;

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,235 +17,170 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-Lock
-LoadCheckins
-LoadMOTD
-LoadWhiteboard
-LoadTreeConfig
-Unlock
+print "Content-type: text/html\nRefresh: 300\n\n";
+
+PutsHeader("Bonsai -- the art of effectively controlling trees",
+           "Bonsai", "CVS Tree Control");
+
+print "<IMG ALIGN=right SRC=bonsai.gif>";
 
 
-if {$treeopen} {
-    set openword Open
+Lock();
+LoadCheckins();
+LoadMOTD();
+LoadWhiteboard();
+LoadTreeConfig();
+Unlock();
+
+
+if ($::TreeOpen) {
+    $openword = '<b><FONT SIZE=+2>OPEN</FONT></B>';
 } else {
-    set openword Closed
+    $openword = '<b><FONT SIZE=+3 COLOR=RED>CLOSED</FONT></B>';
 }
 
-puts "Content-type: text/html
-Refresh: 300
 
-<HTML>
-<TITLE>($openword) Bonsai -- the art of effectively controlling trees</TITLE>
-
-<IMG ALIGN=right SRC=bonsai.gif>
-<H1>Bonsai -- Tree Control</H1>
+print "
 
 <FORM name=treeform>
 <H3>
 <SELECT name=treeid size=1 onchange='submit();'>
-"
+";
 
-# <SELECT name=treeid size=1 onchange='window.location =\"toplevel.cgi?treeid=\" + treeform.treeid.value;'>
 
-foreach t $treelist {
-    if {![info exists treeinfo($t,nobonsai)]} {
-        if {[cequal $t $treeid]} {
-            set c "SELECTED"
-        } else {
-            set c ""
-        }
-        puts "<OPTION VALUE=$t $c>$treeinfo($t,description)"
+foreach $tree (@::TreeList) {
+     unless (exists $::TreeInfo{$tree}{nobonsai}) {
+          $c = '';
+          $c = "SELECTED" if ($tree eq $::TreeID);
+          print "<OPTION VALUE=\"$tree\" $c>$::TreeInfo{$tree}{description}\n";
     }
 }
 
-puts "</SELECT></H3></FORM>"
+print "</SELECT></H3></FORM>\n";
 
 
-
-if {$readonly} {
-    puts "<h2><font color=red>Be aware that you are looking at an old hook!</font></h2>"
+if (Param('readonly')) {
+    print "<h2><font color=red>
+Be aware that you are looking at an old hook!</font></h2>\n";
 }
 
-puts "<tt>[fmtclock [getclock] "%R"]</tt>: The tree is currently <B>"
+print "<tt>" . time2str("%D %T %Z", time()) .
+      "</tt>: The tree is currently $openword<br>\n";
+unless ($::TreeOpen) {
+    print "The tree has been closed since <tt>" .
+         MyFmtClock($::CloseTimeStamp) . "</tt>.<BR>\n";
+}
 
-if {$treeopen} {
-    puts "<FONT SIZE=+2>OPEN</FONT></B><BR>"
+print "The last known good tree had a timestamp of <tt>";
+print time2str("%D %T %Z", $::LastGoodTimeStamp) . "</tt>.<br>";
+print "<hr><pre variable>$::MOTD</pre><hr>";
+print "<br clear=all>";
+
+$bid_part = BatchIdPart('?');
+print "<b><a href=editwhiteboard.cgi$bid_part>
+Free-for-all whiteboard:</a></b>
+<pre>" . html_quote($::WhiteBoard) . "</pre><hr>\n";
+
+
+foreach $checkin (@::CheckInList) {
+     my $info = eval("\\\%$checkin");
+     my $addr = EmailFromUsername($$info{'person'});
+     
+     $username{$addr} = $$info{'person'};
+     $people{$addr} .= " " if $people{$addr};
+     $people{$addr} .= "$checkin";
+     $closedcheckin{$addr} .= " $checkin" unless $$info{'treeopen'};
+}
+
+
+$ldaperror = 0;
+
+if (%people) {
+     my (@peoplelist, @list, $p, $i, $end, $checkins);
+     my $ldapserver = Param('ldapserver');
+     my $ldapport = Param('ldapport');
+
+     print  "
+The following people are on \"the hook\", since they have made
+checkins to the tree since it last opened: <p>\n";
+
+     @peoplelist = sort(keys %people);
+     
+     @list = @peoplelist;
+     while (1) {
+          last if ($#list < 0);
+          $end = 19;
+          $end = $#list if ($end >= $#list);
+          GetInfoForPeople(splice(@list, 0, $end + 1));
+     }
+
+     print "<font color=red>
+Can't contact the directory server at $ldapserver:$ldapport -- $errvar
+</font>\n" if ($ldaperror);
+
+     print "
+<table border cellspacing=2>
+<th colspan=2>Who</th><th>What</th>\n";
+     print "<th>How to contact</th>\n" if $ldapserver;
+
+     foreach $p (@peoplelist) {
+          my ($uname, $namepart, $extra) = ('', '', '');
+
+          if (exists($closedcheckin{$p})) {
+               my $n = split(/\s+/, $closedcheckin{$p});
+               $extra = " <font color=red>($n while tree closed!)</font>";
+          }
+
+          $uname = $username{$p};
+          ($namepart = $p) =~ s/\@.*//;
+          $checkins = split(/\s+/, $people{$p});
+
+          print "<tr>\n";
+          print "<td>$fullname{$p}</td>\n";
+          print "<td>" . GenerateUserLookUp($uname, $namepart, $p) . "</td>\n";
+          print "<td><a href=\"showcheckins.cgi?person=" . url_quote($uname);
+          print BatchIdPart() . "\"> $checkins ";
+          print Pluralize('change', $checkins) . "</a>$extra</td>\n";
+          print "<td>$curcontact{$p}\n" if $ldapserver;
+          print "</tr>\n\n";
+     }
+
+     print "</table>\n\n";
+
+     
+     $checkins = @::CheckInList;
+     print Pluralize("$checkins checkin", $checkins) . ".<p>\n";
+
+     $mailaddr = join(',', @peoplelist) . "?subject=Hook%3a%20Build%20Problem";
+     $mailaddr .= "&cc=$::TreeInfo{$::TreeID}{cchookmail}"
+          if (exists($::TreeInfo{$::TreeID}{cchookmail}));
+
+
+     print "
+<a href=showcheckins.cgi" . BatchIdPart('?') . ">Show all checkins.</a><br>
+<a href=\"mailto:$mailaddr\">Send mail to \"the hook\".</a><br>\n";
+
 } else {
-    puts "<FONT SIZE=+3 COLOR=RED>CLOSED</FONT></B><BR>"
-}
-
-if {!$treeopen} {
-    puts "The tree has been closed since <tt>[MyFmtClock $closetimestamp]</tt>."
-}
-puts "<BR>"
-puts "The last known good tree had a timestamp "
-puts "of <tt>[fmtclock $lastgoodtimestamp "%D %T %Z"]</tt>.<br>"
-
-puts "<hr><pre variable>$motd</pre><hr>"
-
-
-puts "<br clear=all>"
-
-# if {[info exists FORM(whitedelta)]} {
-#     set delta $FORM(whitedelta)
-# } else {
-#     set delta [expr 24 * 60 * 60]
-# }
-# 
-# set fileok 0
-# set filename [DataDir]/whitedelta-$delta
-# if {[file exists $filename]} {
-#     if {[file mtime $filename] > [file mtime [DataDir]/whiteboard]} {
-#       set fileok 1
-#     }
-# }
-# 
-# if {!$fileok} {
-#     set tmp [DataDir]/tmpwhite.[id process]
-#     Lock
-#     set date [fmtclock [expr [getclock] - $delta] "%a %b %d %H:%M:%S LT %Y"]
-#     catch {exec co -q -d$date -p [DataDir]/whiteboard > $tmp 2> /dev/null}
-#     catch {chmod 0666 $tmp}
-#     exec ./changebar.tcl $tmp [DataDir]/whiteboard > $filename
-#     unlink $tmp
-#     catch {chmod 0666 $filename}
-#     Unlock
-# }
-    
-
-#puts "<b><a href=editwhiteboard.cgi[BatchIdPart ?]>Free-for-all whiteboard:</a></b> (Changebars indicate changes within last [PrettyDelta $delta])<pre>[html_quote [read_file $filename]]</pre><hr>"
-
-puts "<b><a href=editwhiteboard.cgi[BatchIdPart ?]>Free-for-all whiteboard:</a></b><pre>[html_quote $whiteboard]</pre><hr>"
-
-
-foreach c $checkinlist {
-    upvar #0 $c info
-    set addr [EmailFromUsername $info(person)]
-    set username($addr) $info(person)
-    lappend people($addr) $c
-    if {!$info(treeopen)} {
-        lappend closedcheckin($addr) $c
-    }
+   print "Nobody seems to have made any changes since the tree opened.";
 }
 
 
-proc GetInfoForPeople {peoplelist} {
-    global ldaperror fullname curcontact errvar ldapserver ldapport
-    set query "(| "
-    set isempty 1
-    foreach p $peoplelist {
-        append query "(mail=$p) "
-        set fullname($p) ""
-        set curcontact($p) ""
-    }
-    append query ")"
-    if {$ldaperror} {
-        return
-    }
-    if {[cequal $ldapserver ""]} {
-        return
-    }
-    if {[catch {set fid [open "|./data/ldapsearch -b \"dc=netscape,dc=com\" -h $ldapserver -p $ldapport -s sub -S mail \"$query\" mail cn nscpcurcontactinfo" r]} errvar]} {
-        set ldaperror 1
-    } else {
-        set doingcontactinfo 0
-        while {[gets $fid line] >= 0} {
-            if {$doingcontactinfo} {
-                if {[regexp -- {^ (.*)$} $line foo n]} {
-                    append curcontact($curperson) $n
-                    continue
-                }
-                set doingcontactinfo 0
-            }
-            if {[regexp -- {^mail: (.*@.*)$} $line foo n]} {
-                set curperson $n
-            } elseif {[regexp -- {^cn: (.*)$} $line foo n]} {
-                set fullname($curperson) $n
-            } elseif {[regexp -- {^nscpcurcontactinfo: (.*)$} $line foo n]} {
-                set curcontact($curperson) $n
-                set doingcontactinfo 1
-            }
-        }
-        if {[catch {close $fid} errvar]} {
-            set ldaperror 1
-        }
-    }
-}
+$cvsqueryurl = "cvsqueryform.cgi?" .
+               "cvsroot=$::TreeInfo{$::TreeID}{repository}" .
+               "&module=$::TreeID";
+$cvsqueryurl.= "&branch=$::TreeInfo{$::TreeID}{branch}"
+     if ($::TreeInfo{$::TreeID}{branch});
+$bip = BatchIdPart('?');
+$tinderboxbase = Param('tinderboxbase');
+$tinderboxlink = '';
+$tinderboxlink = "<a href=\"$tinderbox_base/showbuilds.cgi\">Tinderbox
+        continuous builds</a><br>" if ($tinderboxbase);
 
+$otherrefs = Param('other_ref_urls');
 
-set ldaperror 0 
-
-if {[info exists people]} {
-    
-    puts "The following people are on \"the hook\", since they have made"
-    puts "checkins to the tree since it last opened: "
-    puts "<p>"
-
-    set peoplelist [lsort [array names people]]
-
-    set list $peoplelist
-    while {![lempty $list]} {
-        GetInfoForPeople [lrange $list 0 19]
-        set list [lrange $list 20 end]
-    }
-
-    if {$ldaperror} {
-        puts "<font color=red>Can't contact the directory server at $ldapserver:$ldapport -- $errvar</font>"
-    }
-
-    puts "<table border cellspacing=2>"
-    puts "<th colspan=2>Who</th><th>What</th>"
-    if {![cequal $ldapserver ""]} {
-        puts "<th>How to contact</th>"
-    }
-
-    foreach p $peoplelist {
-        if {[info exists closedcheckin($p)]} {
-            set extra " <font color=red>([llength $closedcheckin($p)] while tree closed!)</font>"
-        } else {
-            set extra ""
-        }
-
-        set uname $username($p)
-        set namepart $p
-        regsub {@.*$} $namepart {} namepart
-        puts "
-<tr>
-<td>$fullname($p)</a></td>
-<td><a href=\"http://phonebook/ds/dosearch/phonebook/uid=[url_quote "$namepart,ou=People,o= Netscape Communications Corp.,c=US"]\">
-$uname</td>
-<td><a href=\"showcheckins.cgi?person=[url_quote $uname][BatchIdPart]\">[llength $people($p)]
-[Pluralize change [llength $people($p)]]</a>$extra</td>"
-        puts "
-<td>$curcontact($p)
-</tr>"
-    }
-
-    puts "</table>"
-    puts "[llength $checkinlist] checkins."
-
-    set mailaddr [join $peoplelist ","]
-    append mailaddr "?subject=Hook%3a%20Build%20Problem"
-    if {[info exists treeinfo($treeid,cchookmail)]} {
-        append mailaddr "&cc=$treeinfo($treeid,cchookmail)"
-    }
-    puts "<p>"
-    puts "<a href=showcheckins.cgi[BatchIdPart ?]>Show all checkins.</a><br>"
-    puts "<a href=\"mailto:[set mailaddr]\">"
-    puts "Send mail to \"the hook\".</a><br>"
-} else {
-    puts "Nobody seems to have made any changes since the tree opened."
-}
-
-
-set cvsqueryurl "cvsqueryform.cgi?cvsroot=$treeinfo($treeid,repository)&module=$treeinfo($treeid,module)"
-if {[clength $treeinfo($treeid,branch)] > 0} {
-    append cvsqueryurl "&branch=$treeinfo($treeid,branch)"
-}
-
-puts "
+print "
 <hr>
 <table>
 <tr>
@@ -253,19 +188,69 @@ puts "
 </tr>
 <tr>
 <td valign=top>
-<a href=$cvsqueryurl><b>CVS Query Tool</b></a><br>
-<a href=$tinderbox_base/showbuilds.cgi>Tinderbox continuous builds</a><br>
-<a href=\"switchtree.cgi[BatchIdPart ?]\">Switch to look at a different tree or branch</a><br>
-<a href=viewold.cgi[BatchIdPart ?]>Time warp -- view a different day's hook.</a><br>
-<a href=countcheckins.cgi[BatchIdPart ?]>See some stupid statistics about recent checkins.</a><br>
-<a href=admin.cgi[BatchIdPart ?]>Administration menu.</a><br>
+<a href=\"$cvsqueryurl\"><b>CVS Query Tool</b></a><br>
+<a href=\"switchtree.cgi$bip\">Switch to look at a different tree or branch</a><br>
+$tinderboxlink
+<a href=\"viewold.cgi$bip\">Time warp -- view a different day's hook.</a><br>
+<a href=\"countcheckins.cgi$bip\">See some stupid statistics about recent checkins.</a><br>
+<a href=\"admin.cgi$bip\">Administration menu.</a><br>
 </td><td>
 </td><td valign=top>
-<a href=http://www.mozilla.org/hacking/bonsai.html>Introduction to Bonsai.</a><br>
-<a href=http://www.mozilla.org/docs/>Mozilla Documentation and Build Instructions</a>
+$otherrefs
 </td>
 </tr></table>
-"
+" ;
+
+exit 0;
 
 
-exit
+
+sub GetInfoForPeople {
+     my (@peoplelist) = @_;
+     my ($p, $query, $isempty);
+     my $ldapserver = Param('ldapserver');
+     my $ldapport = Param('ldapport');
+     my $ldapcmd;
+
+     $query = "(| ";
+     $isempty = 1;
+
+     foreach $p (@peoplelist) {
+          $query .= "(mail=$p) ";
+          $fullname{$p} = "";
+          $curcontact{$p} = "";
+     }
+
+     $query .= ")";
+     return if ($ldaperror || ($ldapserver eq ''));
+
+     $ldapcmd = "./data/ldapsearch -b \"dc=netscape,dc=com\" " .
+                "-h $ldapserver -p $ldapport -s sub " .
+                "-S mail \"$query\" mail cn nscpcurcontactinfo";
+     unless (open(LDAP, "$ldapcmd |")) {
+          $ldaperror = 1;
+     } else {
+          my $doingcontactinfo = 0;
+          my $curperson;
+          while (<LDAP>) {
+               chop;
+               if ($doingcontactinfo) {
+                    if (/^ (.*)$/) {
+                         $curcontact{$curperson} .= "$1\n";
+                         next;
+                    }
+                    $doingcontactinfo = 0;
+               }
+               if (/^mail: (.*\@.*)$/) {
+                    $curperson = $1;
+               } elsif (/^cn: (.*)$/) {
+                    $fullname{$curperson} = $1;
+               } elsif (/^nscpcurcontactinfo: (.*)$/) {
+                    $curcontact{$curperson} = "$1\n";
+                    $doingcontactinfo = 1;
+               }
+          }
+          close(LDAP);
+     }
+}
+

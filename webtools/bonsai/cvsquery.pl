@@ -16,7 +16,7 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-require 'utils.pl';
+require 'globals.pl';
 
 #
 # Constants
@@ -37,8 +37,8 @@ $CI_LOG=11;
 $NOT_LOCAL = 1;
 $IS_LOCAL = 2;
 
-chomp($CVS_ROOT);
-if( $CVS_ROOT eq "" ){
+chomp($CVS_ROOT) if defined($CVS_ROOT);
+if (!defined($CVS_ROOT) || $CVS_ROOT eq "" ){
     $CVS_ROOT = pickDefaultRepository();
 }
 
@@ -47,37 +47,22 @@ if( $CVS_ROOT eq "" ){
 $lines_added = 0;
 $lines_removed = 0;
 
-$modules = {};
-
-if( $ENV{"OS"} eq "Windows_NT" ){
-    # for debugging purposes
-    $CVS_MODULES='k:/warp/projects/bonsai/modules';
-}
-else {
-    $CVS_MODULES="${CVS_ROOT}/CVSROOT/modules";
-    #$CVS_MODULES='data/modules';
-}
-
-open( MOD, "<$CVS_MODULES") || die "can't open ${CVS_MODULES}";
-&parse_modules;
-close( MOD );
-
 1;
 
 #
 # Actually do the query
 #
 sub query_checkins {
-    local($mod_map) = @_;
-    local($ci,$result,$lastlog,$rev,$begin_tag,$end_tag);
+    my (%mod_map) = @_;
+    my ($ci,$result,$lastlog,$rev,$begin_tag,$end_tag);
 
     if( $query_module ne 'all' && $query_module ne 'allrepositories' && @query_dirs == 0 ){
         $have_mod_map = 1;
-        $mod_map = &get_module_map( $query_module );
+        %mod_map = &get_module_map( $query_module );
     }
     else {
         $have_mod_map = 0;
-        $mod_map = {};
+        %mod_map = ();
     }
 
     for $i (@query_dirs ){
@@ -85,10 +70,10 @@ sub query_checkins {
         $i =~ s:/$::;           # Strip trailing slash.
 
         if( !$have_mod_map ){
-            $mod_map = {};
+            %mod_map = ();
             $have_mod_map = 1;
         }
-        $mod_map->{$i} = $NOT_LOCAL;
+        $mod_map{$i} = $NOT_LOCAL;
     }
 
     if( $query_branch =~ /^[ ]*HEAD[ ]*$/i ){
@@ -98,18 +83,18 @@ sub query_checkins {
     $begin_tag = "";
     $end_tag = "";
 
-    if ( $query_begin_tag ne '') {
+    if (defined($query_begin_tag) && $query_begin_tag ne '') {
         $begin_tag = load_tag($query_begin_tag);
     }
 
-    if ( $query_end_tag ne '') {
+    if (defined($query_end_tag) &&  $query_end_tag ne '') {
         $end_tag = load_tag($query_end_tag);
     }
 
 
     $result = [];
 
-    my $db = ConnectToDatabase();
+    ConnectToDatabase();
 
     my $qstring = "select type, UNIX_TIMESTAMP(when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid";
 
@@ -131,58 +116,58 @@ sub query_checkins {
         my $q = SqlQuote($query_branch);
         if ($query_branchtype eq 'regexp') {
             $qstring .=
-                " and branches.branch regexp '$q'";
+                " and branches.branch regexp $q";
         } elsif ($query_branchtype eq 'notregexp') {
             $qstring .=
-                " and not (branches.branch regexp '$q') ";
+                " and not (branches.branch regexp $q) ";
         } else {
             $qstring .=
-                " and (branches.branch = '$q' or branches.branch = 'T$q')";
+                " and (branches.branch = $q or branches.branch = ";
+            $qstring .= SqlQuote("T$query_branch") . ")";
         }
     }
 
     if( $query_file ne '') {
         my $q = SqlQuote($query_file);
         if ($query_filetype eq 'regexp') {
-            $qstring .= " and files.file regexp '$q'";
+            $qstring .= " and files.file regexp $q";
         } else {
-            $qstring .= " and files.file = '$q'";
+            $qstring .= " and files.file = $q";
         }
     }
     if ($query_who ne '') {
         my $q = SqlQuote($query_who);
         if ($query_whotype eq 'regexp') {
-            $qstring .= " and people.who regexp '$q'";
+            $qstring .= " and people.who regexp $q";
         }
         elsif ($query_whotype eq 'notregexp') {
-            $qstring .= " and not (people.who regexp '$q')";
+            $qstring .= " and not (people.who regexp $q)";
 
         } else {
-            $qstring .= " and people.who = '$q'";
+            $qstring .= " and people.who = $q";
         }
     }
 
-    if ($query_logexpr ne '') {
+    if (defined($query_logexpr) && $query_logexpr ne '') {
         my $q = SqlQuote($query_logexpr);
-        $qstring .= " and descs.description regexp '$q'";
+        $qstring .= " and descs.description regexp $q";
     }
     
     if ($query_debug) {
         print "<pre wrap> Query: $qstring</PRE>";
     }
 
-    $query = $db->prepare($qstring) || die $DBD::mysql::db_errstr;
-    $query->execute;
+    SendSQL($qstring);
 
     $lastlog = 0;
-    while(@row = $query->fetchrow_array) {
-# print "<pre>";
+    while (@row = FetchSQLData()) {
+#print "<pre>";
         $ci = [];
         for ($i=0 ; $i<=$CI_LOG ; $i++) {
             $ci->[$i] = $row[$i];
-# print "$row[$i] ";
+#print "$row[$i] ";
         }
-# print "</pre>";
+#print "</pre>";
 
 
         $key = "$ci->[$CI_DIR]/$ci->[$CI_FILE]";
@@ -190,10 +175,8 @@ sub query_checkins {
             next;
         }
 
-
-
         if( $have_mod_map &&
-           !&in_module( $mod_map, $ci->[$CI_DIR], $ci->[$CI_FILE] ) ){
+           !&in_module(\%mod_map, $ci->[$CI_DIR], $ci->[$CI_FILE] ) ){
             next;
         }
 
@@ -213,7 +196,9 @@ sub query_checkins {
             }
         }
 
-        if( $query_logexpr ne '' && !($ci->[$CI_LOG] =~ /$query_logexpr/i) ){
+        if (defined($query_logexpr) && 
+            $query_logexpr ne '' &&
+            !($ci->[$CI_LOG] =~ /$query_logexpr/i) ){
             next;
         }
 
@@ -229,7 +214,7 @@ sub query_checkins {
 }
 
 sub load_tag {
-    my $tagname = @_[0];
+    my ($tagname) = @_;
 
     my $tagfile;
     my $cvssuffix;
@@ -325,8 +310,11 @@ sub find_date_offset {
         return 0;
     }
     $i = 0;
-    while( ($line = <IDX>) && !$done){
+    while(<IDX>) {
+        last if $done;
+        $line = $_;
         chop($line);
+
         ($o,$d) = split(/\|/,$line);
         if( $d && $query_date_min > $d ){
             $done = 1;
@@ -350,10 +338,9 @@ sub in_module {
     #
     #quick check if it is already in there.
     #
-    if( $mod_map{$dirname} ){
+    if( $$mod_map{$dirname} ){
         return 1;
     }
-
 
     @path = split(/\//, $dirname);
 
@@ -363,7 +350,7 @@ sub in_module {
 
         $fp .= ($fp ne '' ? '/' : '') . $path[$i];
 
-        if( $local = $mod_map->{$fp} ){
+        if( $local = $$mod_map{$fp} ){
             if( $local == $IS_LOCAL ){
                 if( $i == (@path-1) ){
                     return 1;
@@ -372,14 +359,15 @@ sub in_module {
             else {
                 # Add directories to the map as we encounter them so we go
                 #  faster
-                if( $mod_map{$dirname} == 0 ){
-                    $mod_map{$dirname} = $IS_LOCAL;
+                 if (!exists($$mod_map{$dirname}) || 
+                     $$mod_map{$dirname} == 0) {
+                   $$mod_map{$dirname} = $IS_LOCAL;
                 }
                 return 1;
             }
         }
     }
-    if( $mod_map->{ $fp . '/' .  $filename} ) {
+    if( $$mod_map{ $fp . '/' .  $filename} ) {
         return 1;
     }
     else {
@@ -389,77 +377,21 @@ sub in_module {
 
 
 sub get_module_map {
-    local($name) = @_;
-    local($mod_map);
-    $mod_map = {};
-    &build_map( $name, $mod_map );
-    return $mod_map;
+     my ($name) = @_;
+     my ($mod, $onlyone, %modules);
+     
+     $onlyone = 0;
+     %modules = ();
+     LoadDirList();
+     for $mod  (sort( grep(!/\*$/, @::LegalDirs))) {
+          $modules{$mod} = $NOT_LOCAL;
+          $onlyone = 1 if ($mod eq $name);
+     }
+     
+     if ($onlyone) {
+          %modules = ();
+          $modules{$name} = $NOT_LOCAL;
+     }
+     
+     return %modules;
 }
-
-
-sub parse_modules {
-    while( $l = &get_line ){
-        ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
-
-        if ( $#params eq -1 ) {
-            @params = $flag;
-            $flag = "";
-        }
-	elsif( $flag eq '-d' ){
-	    ($mod_name, $dummy, $dummy, @params) = split(/[ \t]+/,$l);
-	}
-        elsif( $flag ne '-a' ){
-            next;
-        }
-        $modules->{$mod_name} = [@params];
-    }
-}
-
-
-sub build_map {
-    local($name,$mod_map) = @_;
-    local($bFound, $local);
-
-    $local = $NOT_LOCAL;
-    $bFound = 0;
-
-    for $i ( @{$modules->{$name}} ){
-        $bFound = 1;
-        if( $i eq '-l' ){
-            $local = $IS_LOCAL;
-        }
-        elsif( !build_map($i, $mod_map )){
-            $mod_map->{$i} = $local;   
-        }
-    }
-    return $bFound;
-}
-
-
-
-sub get_line {
-    local($l, $save);
-    
-    $bContinue = 1;
-
-    while( $bContinue && ($l = <MOD>) ){
-        chop($l);
-        if( $l =~ /^[ \t]*\#/ 
-                || $l =~ /^[ \t]*$/ ){
-            $l='';
-        }
-        elsif( $l =~ /\\[ \t]*$/ ){
-            chop ($l);
-            $save .= $l . ' ';
-        }
-        elsif( $l eq '' && $save eq ''){
-            # ignore blank lines
-        }
-        else {
-            $bContinue = 0;
-        }
-    }
-    return $save . $l;
-}
-
-

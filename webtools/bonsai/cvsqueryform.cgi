@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -19,26 +19,28 @@
 
 # Query the CVS database.
 #
-require 'lloydcgi.pl';
-require 'cvsmenu.pl';
-require 'utils.pl';
 
+require 'CGI.pl';
+
+use vars qw(@LegalDirs);
 
 $|=1;
 
-$CVS_ROOT = $form{"cvsroot"};
-
 print "Content-type: text/html\n\n";
 
-require 'modules.pl';
+LoadTreeConfig();
+$CVS_ROOT = $::FORM{'cvsroot'};
+$CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+$::TreeID = $::FORM{'module'} 
+     if (exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
 
-
-EmitHtmlHeader("CVS Query Form", $CVS_ROOT);
-
+PutsHeader("Bonsai - CVS Query Form", "CVS Query Form",
+           "$CVS_ROOT - $::TreeInfo{$::TreeID}{shortdesc}");
 
 print "
 <p>
 <FORM METHOD=GET ACTION='cvsquery.cgi'>
+<INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
 <p>
 <TABLE BORDER CELLPADDING=8 CELLSPACING=0>
 ";
@@ -63,31 +65,34 @@ $bMultiRepos = (@reposList > 1);
 #
 # This code sucks, I should rewrite it to be shorter
 #
-if( $form{module} eq 'all' || $form{module} eq '' ){
+$Module = 'default';
+if( $::FORM{module} eq 'all' || $::FORM{module} eq '' ){
     print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
     if( $bMultiRepos ){
         print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
     }
 }
-elsif( $form{module} eq 'allrepositories' ){
+elsif( $::FORM{module} eq 'allrepositories' ){
     print "<OPTION VALUE='all'>All Files in the Repository\n";
     if( $bMultiRepos ){
         print "<OPTION SELECTED VALUE='allrepositories'>All Files in all Repositories\n";
     }
 }
 else {
+    $Module = $::FORM{module};
     print "<OPTION VALUE='all'>All Files in the Repository\n";
     if( $bMultiRepos ){
         print "<OPTION VALUE='allrepositories'>All Files in all Repositories\n";
     }
-    print "<OPTION SELECTED VALUE='$form{module}'>$form{module}\n";
+    print "<OPTION SELECTED VALUE='$::FORM{module}'>$::FORM{module}\n";
 }
 
 #
 # Print out all the Different Modules
 #
-for $k  (sort( keys( %$modules ) ) ){
-    print "<OPTION value='$k'>$k\n";
+LoadDirList();
+for $k  (sort( grep(!/\*$/, @::LegalDirs) ) ){
+    print "<OPTION value='$k'>$k\n" if ($k ne $Module);
 }
 
 print "</SELECT></td>\n";
@@ -98,8 +103,8 @@ print "</td></tr>";
 #
 # Branch
 #
-if( defined $form{branch} ){
-    $b = $form{branch};
+if( defined $::FORM{branch} ){
+    $b = $::FORM{branch};
 }
 else {
     $b = "HEAD";
@@ -119,7 +124,7 @@ print "
 <tr>
 <th align=right>Directory:</th>
 <td colspan=2>
-<input type=text name=dir value='$form{dir}' size=45><br>
+<input type=text name=dir value='$::FORM{dir}' size=45><br>
 (you can list multiple directories)
 </td>
 </tr>
@@ -129,7 +134,7 @@ print "
 <tr>
 <th align=right>File:</th>
 <td colspan=2>
-<input type=text name=file value='$form{file}' size=45><br>" .
+<input type=text name=file value='$::FORM{file}' size=45><br>" .
 regexpradio('filetype') . "
 </td>
 </tr>
@@ -142,7 +147,7 @@ regexpradio('filetype') . "
 print "
 <tr>
 <th align=right>Who:</th>
-<td colspan=2> <input type=text name=who value='$form{who}' size=45><br>" .
+<td colspan=2> <input type=text name=who value='$::FORM{who}' size=45><br>" .
 regexpradio('whotype') . "
 </td>
 </tr>";
@@ -183,9 +188,12 @@ $CVS_REPOS_SUFFIX =~ s:/:_:g;
 
 $startdate = fetchCachedStartDate($CVS_ROOT);
 
-if ($form{date} eq "") {
-    $form{date} = "hours";
+if (!defined($::FORM{date}) || $::FORM{date} eq "") {
+    $::FORM{date} = "hours";
 }
+
+$::FORM{mindate} = '' unless defined($::FORM{mindate});
+$::FORM{maxdate} = '' unless defined($::FORM{maxdate});
 
 print "
 <tr>
@@ -212,7 +220,7 @@ print "
 <td><table BORDER=0 CELLPADDING=0 CELLPSPACING=0>
 <tr>
 <TD VALIGN=TOP ALIGN=RIGHT NOWRAP>
-Between <input type=text name=mindate value='$form{mindate}' size=25></td>
+Between <input type=text name=mindate value='$::FORM{mindate}' size=25></td>
 <td valign=top rowspan=2>You can use the form
 <B><TT><NOBR>mm/dd/yy hh:mm:ss</NOBR></TT></B> or a Unix <TT>time_t</TT>
 (seconds since the Epoch.)
@@ -220,7 +228,7 @@ Between <input type=text name=mindate value='$form{mindate}' size=25></td>
 </tr>
 <tr>
 <td VALIGN=TOP ALIGN=RIGHT NOWRAP>
- and <input type=text name=maxdate '$form{maxdate}' size=25></td>
+ and <input type=text name=maxdate '$::FORM{maxdate}' size=25></td>
 </tr>
 </table>
 </td>
@@ -240,19 +248,21 @@ print "
 </table>
 </FORM>";
 
+
+PutsTrailer();
+
 sub sortTest {
-    if( $_[0] eq $form{sortby} ){
-        return " SELECTED";
-    }
-    else {
-        return "";
-    }
+     return ""
+          unless (exists($::FORM{sortby}) && defined($_[0]) &&
+                 ($_[0] ne $::FORM{sortby}));
+
+     return " SELECTED";
 }
 
 refigureStartDateIfNecessary($CVS_ROOT);
 
 sub dateTest {
-    if( $_[0] eq $form{date} ){
+    if( $_[0] eq $::FORM{date} ){
         return " CHECKED value=$_[0]";
     }
     else {
@@ -261,13 +271,14 @@ sub dateTest {
 }
 
 sub regexpradio {
-    my($name) = @_;
-    my $c1,$c2,$c3;
+    my ($name) = @_;
+    my ($c1, $c2, $c3);
+
     $c1 = $c2 = $c3 = "";
-    if( $form{$name} eq 'regexp'){
+    if( $::FORM{$name} eq 'regexp'){
         $c2 = "checked";
     }
-    elsif( $form{$name} eq 'notregexp'){
+    elsif( $::FORM{$name} eq 'notregexp'){
         $c3 = "checked";
     }
     else {
@@ -305,12 +316,13 @@ sub refigureStartDateIfNecessary {
         return;
     }
 
-    my $db = ConnectToDatabase();
+    ConnectToDatabase();
+    SendSQL("select min(when) 
+               from checkins,repositories 
+               where repositories.id = repositoryid and 
+                     repository = '$CVS_ROOT'");
 
-    my $query = $db->prepare( "select min(when) from checkins,repositories where repositories.id = repositoryid and repository = '$CVS_ROOT'") || die $DBD::mysql::db_errstr;
-
-    my @row = $query->fetchrow();
-    my $startdate = $row[0];
+    my $startdate = FetchOneColumn();
     if ($startdate eq "") {
         $startdate = "nonexistant";
     }

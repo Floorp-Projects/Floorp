@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,72 +17,71 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-set maxsize 400
+use vars qw($CloseTimeStamp);
 
-LoadCheckins
+print "Content-type: text/html\n\n";
+LoadCheckins();
 
-puts "Content-type: text/html
+my $maxsize = 400;
 
-<HTML>
-<TITLE>Beancounter central.</TITLE>
+PutsHeader("Beancounter central", "Meaningless checkin statistics");
 
-<H1>Meaningless checkin statistics</H1>
-
+print "
 <TABLE BORDER CELLSPACING=2><TR>
 <TH>Tree closed</TH>
 <TH>Number<BR>of<BR>people<BR>making<BR>changes</TH>
 <TH COLSPAN=2>Number of checkins</TH>
-</TR>
-"
+</TR>\n";
 
-set list {}
+my @list = ();
+my $globstr = DataDir() . '/batch-*[0-9].pl';
 
-
-foreach i [glob "[DataDir]/batch-*\[0-9\]"] {
-    regexp -- {[0-9]*$} $i n
-    lappend list $n
+foreach my $i (glob($globstr )) {
+     if ($i =~ /(\d+)/) {
+          push @list, $1;
+     }
 }
 
-set list [lsort -integer -decreasing $list]
+@list = sort { $b <=> $a } @list;
+my $first = 1;
+my $biggest = 1;
+my %minfo;  # meaninglesss info
 
-set first 1
+foreach my $i (@list) {
+     my $batch = DataDir() . "/batch-$i.pl";
+     require $batch;
 
-set biggest 1
+     $minfo{$i}{num} = scalar @::CheckInList;
+     $biggest = $minfo{$i}{num} if ($minfo{$i}{num} > $biggest);
+     if ($first) {
+          $minfo{$i}{donetime} = "Current hook";
+          $first = 0;
+     } else {
+          $minfo{$i}{donetime} = MyFmtClock($::CloseTimeStamp);
+     }
 
-foreach i $list {
-    source [DataDir]/batch-$i
-    set num($i) [llength $checkinlist]
-    if {$num($i) > $biggest} {
-        set biggest $num($i)
-    }
-    if {$first} {
-        set donetime($i) "Current hook"
-        set first 0
-    } else {
-        set donetime($i) [MyFmtClock $closetimestamp]
-    }
-    catch {unset people}
-    set people(zzz) 1
-    unset people(zzz)
-    foreach c $checkinlist {
-        upvar #0 $c info
-        set people($info(person)) 1
-    }
-    set numpeople($i) [array size people]
+     my %people = ();
+     foreach my $checkin (@::CheckInList) {
+          my $info = eval("\\\%$checkin");
+          $people{$$info{'person'}} = 1;
+     }
+     $minfo{$i}{numpeople} = scalar keys(%people);
 }
 
-foreach i $list {
-    puts "<TR>"
-    puts "<TD>$donetime($i)</TD>"
-    puts "<TD ALIGN=RIGHT>$numpeople($i)</TD>"
-    puts "<TD ALIGN=RIGHT>$num($i)</TD>"
-    puts "<TD><table WIDTH=[expr $num($i) * $maxsize / $biggest] bgcolor=green><tr><td>&nbsp;</td></tr></table></TD>"
-    puts "</TR>" 
+
+foreach my $i (@list) {
+     print "<tr>\n";
+     print "<TD>$minfo{$i}{donetime}</TD>\n";
+     print "<TD ALIGN=RIGHT>$minfo{$i}{numpeople}</TD>\n";
+     print "<TD ALIGN=RIGHT>$minfo{$i}{num}</TD>\n";
+     printf "<TD><table WIDTH=%d bgcolor=green>\n",
+           ($minfo{$i}{num} * $maxsize) / $biggest;
+     print "<tr><td>&nbsp;</td></tr></table></TD>\n";
+     print "</TR>\n";
 }
-puts "</TABLE>"
 
-PutsTrailer
-
-exit
+print "</table>\n";
+PutsTrailer();
+exit;

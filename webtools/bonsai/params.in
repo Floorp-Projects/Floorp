@@ -1,0 +1,5 @@
+$::param{'cocommand'} = '_CO_';
+$::param{'cvscommand'} = '_CVS_';
+$::param{'rcsdiffcommand'} = '_RCSDIFF_';
+$::param{'rlogcommand'} = '_RLOG_';
+1;

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,13 +17,13 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-LoadCheckins
+LoadCheckins();
 
-upvar #0 $FORM(id) info
+my $info = eval("\\%" . $::FORM{'id'});
 
-puts "Content-type: text/html
+print "Content-type: text/html
 
 <HTML>
 <TITLE>Say the magic word.</TITLE>
@@ -41,51 +41,59 @@ you need to know the magic word to do anything from here.
 <td><INPUT NAME=password TYPE=password></td>
 </tr><tr>
 <td align=right><B>When:</B></td>
-<td><INPUT NAME=datestring VALUE=\"[value_quote [MyFmtClock $info(date)]]\">
+<td><INPUT NAME=datestring VALUE=\"" .
+value_quote(MyFmtClock($info->{'date'})) . "\">
 </td></tr>
-"
+";
 
-if {![info exists info(notes)]} {
-    set info(notes) ""
+if (!exists $info->{'notes'}) {
+    $info->{'notes'} = "";
 }
 
-foreach i {person dir files notes} {
-    puts "<tr><td align=right><B>$i:</B></td>"
-    puts "<td><INPUT NAME=$i VALUE=\"[value_quote $info($i)]\"></td></tr>"
+foreach my $i ('person', 'dir', 'files', 'notes') {
+    print "<tr><td align=right><B>$i:</B></td>";
+    print "<td><INPUT NAME=$i VALUE=\"" . value_quote($info->{$i}) .
+    "\"></td></tr>";
 }
 
-proc CheckString {value} {
-    if {$value} {
-        return "CHECKED"
+sub CheckString {
+    my ($value) = (@_);
+    if ($value) {
+        return "CHECKED";
     } else {
-        return ""
+        return "";
     }
 }
 
-puts "
+my $isopen = CheckString($info->{'treeopen'});
+my $isclosed = CheckString(!$info->{'treeopen'});
+
+print qq{
 <tr><td align=right><b>Tree state:</b></td>
-<td><INPUT TYPE=radio NAME=treeopen VALUE=1 [CheckString $info(treeopen)]>Open
+<td><INPUT TYPE=radio NAME=treeopen VALUE=1 $isopen>Open
 </td></tr><tr><td></td>
-<td><INPUT TYPE=radio NAME=treeopen VALUE=0 [CheckString [expr !$info(treeopen)]]>Closed
+<td><INPUT TYPE=radio NAME=treeopen VALUE=0 $isclosed>Closed
 </td></tr><tr>
 <td align=right valign=top><B>Log message:</B></td>
-<td><TEXTAREA NAME=log ROWS=10 COLS=80>$info(log)</TEXTAREA></td></tr>
+<td><TEXTAREA NAME=log ROWS=10 COLS=80>$info->{'log'}</TEXTAREA></td></tr>
 </table>
 <INPUT TYPE=CHECKBOX NAME=nukeit>Check this box to blow away this checkin entirely.<br>
 
-<INPUT TYPE=SUBMIT VALUE=Submit>"
+<INPUT TYPE=SUBMIT VALUE=Submit>
+};
 
-foreach i [lsort [array names info]] {
-    puts "<INPUT TYPE=HIDDEN NAME=orig$i VALUE=\"[value_quote $info($i)]\">"
+foreach my $i (sort(keys(%$info))) {
+    my $q = value_quote($info->{$i});
+    print qq{<INPUT TYPE=HIDDEN NAME=orig$i VALUE="$q">\n};
 }
-puts "<INPUT TYPE=HIDDEN NAME=id VALUE=\"[value_quote $FORM(id)]\">"
 
-puts "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"[value_quote $treeid]\">"
+print "<INPUT TYPE=HIDDEN NAME=id VALUE=\"$::FORM{'id'}\">";
+
+print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"" . value_quote($treeid) . "\">";
 
 
 
-puts "</TABLE></FORM>"
+print "</TABLE></FORM>";
 
-PutsTrailer
+PutsTrailer();
 
-exit

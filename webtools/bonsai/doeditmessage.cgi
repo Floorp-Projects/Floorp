@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,58 +17,42 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-puts "Content-type: text/html
+print "Content-type: text/html\n\n";
 
-"
+CheckPassword(FormData('password'));
+my $Filename = FormData('msgname');
+my $RealFilename = DataDir() . "/$Filename";
+Lock();
 
-CheckPassword $FORM(password)
+my $Text = '';
+$Text = `cat $RealFilename` if -f $RealFilename;
 
-
-set filename $FORM(msgname)
-
-set fullfilename [DataDir]/$filename
-
-Lock
-
-if {[file exists $fullfilename]} {
-    set text [read_file $fullfilename]
-} else {
-    set text {}
-}
-
-if {![cequal [FormData origtext] $text]} {
-    puts "
-<TITLE>Oops!</TITLE>
-<H1>Someone else has been here!</H1>
-
+unless (FormData('origtext') eq $Text) {
+     PutsHeader("Oops!", "Oops!", "Someone else has been here!");
+     print "
 It looks like somebody else has changed this message while you were editing it.
 Terry was too lazy to implement anything beyond detecting this
 condition.  You'd best go start over -- go back to the top of Bonsai,
 work your way back to editing the message, and decide if you still
-want to make your edits."
-    PutsTrailer
-    exit
+want to make your edits.";
+
+     PutsTrailer();
+     exit 0;
 }
 
+$Text = FormData('text');
+open(FILE, "> $RealFilename")
+     or warn "Unable to open: $RealFilename: $!\n";
+print FILE $Text;
+chmod(0666, $RealFilename);
+close(FILE);
+Log("$RealFilename set to $text");
+Unlock();
 
-set text [FormData text]
-set fid [open $fullfilename "w"]
-puts $fid $text
-catch {chmod 0666 $fullfilename }
-close $fid
-
-
-Log "$filename set to $text"
-
-Unlock
-
-        puts "
-<TITLE>New $filename</TITLE>
-<H1>The file <b>$filename</b> has been changed.</H1>
-"
-
-PutsTrailer
-
-exit
+LoadTreeConfig();
+PutsHeader("New $Filename", "New $Filename",
+           "$Filename - $::TreeInfo{$::TreeID}{shortdesc}");
+print "The file <b>$filename</b> has been changed.";
+PutsTrailer();

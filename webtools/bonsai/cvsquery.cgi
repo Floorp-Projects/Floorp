@@ -17,22 +17,28 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-require 'lloydcgi.pl';
-require 'utils.pl';
-use Date::Parse;
-
-loadConfigData();
-$CVS_ROOT = $form{"cvsroot"};
-
-require 'timelocal.pl';
+require 'CGI.pl';
 require 'cvsquery.pl';
 
+$CVS_ROOT = $::FORM{'cvsroot'};
+$CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+$::TreeID = $::FORM{'module'} 
+     if (!exists($::FORM{'treeid'}) && 
+         exists($::FORM{'module'}) &&
+         exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
+$::TreeID = 'default'
+     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
+         exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+
+LoadTreeConfig();
+
+my $userdomain = Param('userdomain');
 $| = 1;
 
 $sm_font_tag = "<font face='Arial,Helvetica' size=-2>";
 
 my $generateBackoutCVSCommands = 0;
-if (defined $form{'generateBackoutCVSCommands'}) {
+if (defined $::FORM{'generateBackoutCVSCommands'}) {
     $generateBackoutCVSCommands = 1;
 }
 
@@ -61,42 +67,40 @@ $SORT_HEAD="bgcolor=\"#DDDDDD\"";
 
 #
 # Log the query
-open( LOG, ">>data/querylog.txt");
-$t = time;
-print LOG "$ENV{'REMOTE_ADDR'} $t $ENV{'QUERY_STRING'}\n";
-close(LOG);
+Log("Query [$ENV{'REMOTE_ADDR'}]: $ENV{'QUERY_STRING'}");
 
 #
 # build a module map
 #
-$query_module = $form{'module'};
+$query_module = $::FORM{'module'};
 
 #
 # allow ?file=/a/b/c/foo.c to be synonymous with ?dir=/a/b/c&file=foo.c
 #
-if ( $form{'dir'} eq '' ) {
-    if ($form{'file'} =~ m@(.*?/)([^/]*)$@) {
-        $form{'dir'} = $1;
-        $form{'file'} = $2;
+if ( $::FORM{'dir'} eq '' ) {
+    $::FORM{'file'} = Fix_BonsaiLink($::FORM{'file'});
+    if ($::FORM{'file'} =~ m@(.*?/)([^/]*)$@) {
+        $::FORM{'dir'} = $1;
+        $::FORM{'file'} = $2;
     }
 }
 
 #
 # build a directory map
 #
-@query_dirs = split(/[;, \t]+/, $form{'dir'});
+@query_dirs = split(/[;, \t]+/, $::FORM{'dir'});
 
-$query_file = $form{'file'};
-$query_filetype = $form{'filetype'};
-$query_logexpr = $form{'logexpr'};
+$query_file = $::FORM{'file'};
+$query_filetype = $::FORM{'filetype'};
+$query_logexpr = $::FORM{'logexpr'};
 
 #
 # date
 #
-$query_date_type = $form{'date'};
+$query_date_type = $::FORM{'date'};
 if( $query_date_type eq 'hours' ){
-    $query_date_min = time - $form{'hours'}*60*60;
-} 
+    $query_date_min = time - $::FORM{'hours'}*60*60;
+}
 elsif( $query_date_type eq 'day' ){
     $query_date_min = time - 24*60*60;
 }
@@ -110,12 +114,12 @@ elsif( $query_date_type eq 'all' ){
     $query_date_min = 0;
 }
 elsif( $query_date_type eq 'explicit' ){
-    if ($form{'mindate'} ne "") {
-        $query_date_min = parse_date($form{'mindate'});
+    if ($::FORM{'mindate'} ne "") {
+        $query_date_min = parse_date($::FORM{'mindate'});
     }
 
-    if ($form{'maxdate'} ne "") {
-        $query_date_max = parse_date($form{'maxdate'});
+    if ($::FORM{'maxdate'} ne "") {
+        $query_date_max = parse_date($::FORM{'maxdate'});
     }
 }
 else {
@@ -125,27 +129,29 @@ else {
 #
 # who
 #
-$query_who = $form{'who'};
-$query_whotype = $form{'whotype'};
+$query_who = $::FORM{'who'};
+$query_whotype = $::FORM{'whotype'};
 
 
-$show_raw = $form{'raw'} ne '';
+$show_raw = 0;
+$show_raw = $::FORM{'raw'} ne ''
+     if $::FORM{'raw'};
 
 #
 # branch
 #
-$query_branch = $form{'branch'};
+$query_branch = $::FORM{'branch'};
 if (!defined $query_branch) {
     $query_branch = 'HEAD';
 }
-$query_branchtype = $form{'branchtype'};
+$query_branchtype = $::FORM{'branchtype'};
 
 
 #
 # tags
 #
-$query_begin_tag = $form{'begin_tag'};
-$query_end_tag = $form{'end_tag'};
+$query_begin_tag = $::FORM{'begin_tag'};
+$query_end_tag = $::FORM{'end_tag'};
 
 
 #
@@ -154,9 +160,10 @@ $query_end_tag = $form{'end_tag'};
 $t = $e = &query_to_english;
 $t =~ s/<[^>]*>//g;
 
-$query_debug = $form{'debug'};
+$query_debug = $::FORM{'debug'};
 
-$result= &query_checkins( $mod_map );
+my %mod_map = ();
+$result= &query_checkins( %mod_map );
 
 for $i (@{$result}) {
     $w{"$i->[$CI_WHO]\@$userdomain"} = 1;
@@ -177,11 +184,11 @@ my $menu = "
 <br><a href=cvsquery.cgi?$ENV{QUERY_STRING}&generateBackoutCVSCommands=1>I want to back out these changes</a>
 ";
 
-if (defined $form{'generateBackoutCVSCommands'}) {
+if (defined $::FORM{'generateBackoutCVSCommands'}) {
     print "Content-type: text/plain
 
-# This page can be saved as a shell script and executed.  It should be 
-# run at the top of your CVS work area.  It will update your workarea to 
+# This page can be saved as a shell script and executed.  It should be
+# run at the top of your CVS work area.  It will update your workarea to
 # backout the changes selected by your query.
 
 ";
@@ -195,9 +202,9 @@ if (defined $form{'generateBackoutCVSCommands'}) {
     }
     exit;
 }
-        
 
-EmitHtmlTitleAndHeader($t, "CVS Checkins", "$menu");
+
+PutsHeader($t, "CVS Checkins", "$menu");
 
 #
 # Test code to print the results
@@ -205,16 +212,22 @@ EmitHtmlTitleAndHeader($t, "CVS Checkins", "$menu");
 
 $|=1;
 
+$head_who = '';
+$head_file = '';
+$head_directory = '';
+$head_delta = '';
+$head_date = '';
+
 if( !$show_raw ) {
 
-    if( $form{"sortby"} eq "Who" ){
+    if( $::FORM{"sortby"} eq "Who" ){
         $result = [sort {
                    $a->[$CI_WHO] cmp $b->[$CI_WHO]
                 || $b->[$CI_DATE] <=> $a->[$CI_DATE]
             } @{$result}] ;
         $head_who = $SORT_HEAD;
     }
-    elsif( $form{"sortby"} eq "File" ){
+    elsif( $::FORM{"sortby"} eq "File" ){
         $result = [sort {
                    $a->[$CI_FILE] cmp $b->[$CI_FILE]
                 || $b->[$CI_DATE] <=> $a->[$CI_DATE]
@@ -222,7 +235,7 @@ if( !$show_raw ) {
             } @{$result}] ;
         $head_file = $SORT_HEAD;
     }
-    elsif( $form{"sortby"} eq "Directory" ){
+    elsif( $::FORM{"sortby"} eq "Directory" ){
         $result = [sort {
                    $a->[$CI_DIRECTORY] cmp $b->[$CI_DIRECTORY]
                 || $a->[$CI_FILE] cmp $b->[$CI_FILE]
@@ -230,10 +243,10 @@ if( !$show_raw ) {
             } @{$result}] ;
         $head_directory = $SORT_HEAD;
     }
-    elsif( $form{"sortby"} eq "Change Size" ){
+    elsif( $::FORM{"sortby"} eq "Change Size" ){
         $result = [sort {
 
-                        ($b->[$CI_LINES_ADDED]- $b->[$CI_LINES_REMOVED])  
+                        ($b->[$CI_LINES_ADDED]- $b->[$CI_LINES_REMOVED])
                     <=> ($a->[$CI_LINES_ADDED]- $a->[$CI_LINES_REMOVED])
                 #|| $b->[$CI_DATE] <=> $a->[$CI_DATE]
             } @{$result}] ;
@@ -255,89 +268,6 @@ else {
     }
 }
 
-
-#
-# code to debug the modules_map
-#
-#print "<PRE>\n";
-#while( ($k,$v) = each(%{$mod_map})) {
-#    print "$k=$v\n";
-#}
-
-#
-#
-#
-sub print_tcl {
-    local($result) = @_;
-    local($t, $count,$first,$i, $k, $files);
-
-    $t = time;
-    print TCLOUT "set treeopen 0\n" .
-                 "set lastgoodtimestamp $t\n" .
-                 "set closetimestamp $t\n";
-    $count = 0;
-    $first = 0;
-    $i = 1;
-
-
-    $max = @{$result}+1;
-
-    while( $i < $max ){
-        $c1 = $result->[$first];
-        $c2 = $result->[$i];
-        if( $i == $max-1
-                || $c1->[$CI_DATE] != $c2->[$CI_DATE]
-                || $c1->[$CI_DIR] ne $c2->[$CI_DIR]
-                || $c1->[$CI_WHO] ne $c2->[$CI_WHO]
-        ) {
-            $files = '{';
-            $fu = '{';
-            $k = $first;
-            while( $k < $i ){
-                $files .= $result->[$k][$CI_FILE] . " ";
-                $fu .= &make_fullinfo( $result->[$k] );
-                $k++;
-            }
-            $files .= '}';
-            $fu .= '}';
-            print TCLOUT "set ci-${count}(date) $c1->[$CI_DATE]\n" .
-                      "set ci-${count}(dir) $c1->[$CI_DIR]\n" .
-                      "set ci-${count}(person) $c1->[$CI_WHO]\n" .
-                      "set ci-${count}(files) $files\n" .
-                      "set ci-${count}(fullinfo) $fu\n" .
-                      "set ci-${count}(log) \{$c1->[$CI_LOG]\}\n" .
-                      "set ci-${count}(treeopen) 1\n";
-            $count++;
-            $first = $i;
-        }
-        $i++;
-    }
-}
-
-sub make_fullinfo{
-    local( $ci ) = @_;
-    local( $s );
-
-    $a = &tcl_value( $ci->[$CI_FILE] );
-    $b = &tcl_value( $ci->[$CI_REV] );
-    $c = &tcl_value( $ci->[$CI_LINES_ADDED] );
-    $d = &tcl_value( $ci->[$CI_LINES_REMOVED] );
-    $e = &tcl_value( $ci->[$CI_STICKY] );
-
-    return "{$a $b $c $d $e}";
-}
-
-sub tcl_value {
-    local( $a ) = @_;
-
-    if( $a eq '' ){
-        return '{}';
-    }
-    else {
-        return $a;
-    }
-}
-
 #
 #
 #
@@ -355,8 +285,8 @@ sub print_result {
         $ci = $result->[$k];
         $span = 1;
         if( ($l = $ci->[$CI_LOG]) ne '' ){
-            # 
-            # Calculate the number of consequitive logs that are 
+            #
+            # Calculate the number of consequitive logs that are
             #  the same and nuke them
             #
             $j = $k+1;
@@ -365,7 +295,7 @@ sub print_result {
                 $j++;
             }
 
-            # 
+            #
             # Make sure we don't break over a description block
             #
             $span = $j-$k;
@@ -375,7 +305,7 @@ sub print_result {
         }
 
         &print_ci( $ci, $span );
-        
+
 
         if( $i <= 0 ){
             $i = 20;
@@ -394,7 +324,7 @@ sub print_ci {
     local($ci, $span) = @_;
     local($sec,$minute,$hour,$mday,$mon,$year,$t);
     local($log);
-    
+
     ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $ci->[$CI_DATE] );
     $t = sprintf("%02d/%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$year,$hour,$minute);
 
@@ -402,12 +332,11 @@ sub print_ci {
     $rev = $ci->[$CI_REV];
 
     print "<tr>\n";
-
-    print "<TD>${sm_font_tag}$t</font>";
-    print "<TD><a href='../registry/who.cgi?email=$ci->[$CI_WHO]' "
+    print "<TD width=2%>${sm_font_tag}$t</font>";
+    print "<TD width=2%><a href='../registry/who.cgi?email=$ci->[$CI_WHO]' "
           . "onClick=\"return js_who_menu('$ci->[$CI_WHO]','',event);\" >"
           . "$ci->[$CI_WHO]</a>\n";
-    print "<TD><a href='cvsview2.cgi?subdir=$ci->[$CI_DIR]&files=$ci->[$CI_FILE]\&command=DIRECTORY&branch=$query_branch&root=$CVS_ROOT'\n"
+    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$CI_DIR]&files=$ci->[$CI_FILE]\&command=DIRECTORY&branch=$query_branch&root=$CVS_ROOT'\n"
           . " onclick=\"return js_file_menu('$CVS_ROOT', '$ci->[$CI_DIR]','$ci->[$CI_FILE]','$ci->[$CI_REV]','$query_branch',event)\">\n";
 #     if( (length $ci->[$CI_FILE]) + (length $ci->[$CI_DIR])  > 30 ){
 #         $d = $ci->[$CI_DIR];
@@ -429,32 +358,32 @@ sub print_ci {
 
     if( $rev ne '' ){
         $prevrev = &PrevRev( $rev );
-        print "<TD>${sm_font_tag}<a href='cvsview2.cgi?diff_mode=".
+        print "<TD width=2%>${sm_font_tag}<a href='cvsview2.cgi?diff_mode=".
               "context\&whitespace_mode=show\&subdir=".
               $ci->[$CI_DIR] . "\&command=DIFF_FRAMESET\&file=" .
               $ci->[$CI_FILE] . "\&rev1=$prevrev&rev2=$rev&root=$CVS_ROOT'>$rev</a></font>\n";
     }
     else {
-        print "<TD>\&nbsp;\n";
+        print "<TD width=2%>\&nbsp;\n";
     }
 
-    if( !$query_branch_head ){    
-        print "<TD><TT><FONT SIZE=-1>$ci->[$CI_BRANCH]&nbsp</FONT></TT>\n";
+    if( !$query_branch_head ){
+        print "<TD width=2%><TT><FONT SIZE=-1>$ci->[$CI_BRANCH]&nbsp</FONT></TT>\n";
     }
-    print "<TD>${sm_font_tag}$ci->[$CI_LINES_ADDED]/$ci->[$CI_LINES_REMOVED]</font>&nbsp\n";
+
+    print "<TD width=2%>${sm_font_tag}$ci->[$CI_LINES_ADDED]/$ci->[$CI_LINES_REMOVED]</font>&nbsp\n";
     if( $log ne '' ){
-        eval ('$log =~ s@\d{4,6}@' . $BUGSYSTEMEXPR . '@g;');
-        $log =~ s/([ #\t])([0-9][0-9][0-9][0-9][0-9])([^0-9])/$1<a href='http:\/\/scopus.mcom.com\/bugsplat\/show_bug.cgi?id=$2'>$2<\/a>$3/g;
+        $log = MarkUpText($log);
                     # Makes numbers into links to bugsplat.
 
         $log =~ s/\n/<BR>/g;
                     # Makes newlines into <BR>'s
-                    
+
         if( $span > 1 ){
-            print "<TD VALIGN=TOP ROWSPAN=$span>$log\n";
+            print "<TD WIDTH=$descwidth% VALIGN=TOP ROWSPAN=$span>$log\n";
         }
         else {
-            print "<TD VALIGN=TOP>$log\n";
+            print "<TD WIDTH=$descwidth% VALIGN=TOP>$log\n";
         }
     }
     print "</tr>\n";
@@ -475,26 +404,22 @@ $anchor = $ENV{QUERY_STRING};
 $anchor =~ s/\&sortby\=[A-Za-z\ \+]*//g;
 $anchor = "<a href=cvsquery.cgi?$anchor";
 
-print "    
-<TABLE border cellspacing=2>
-<b><TR ALIGN=LEFT>
-<TH width=2% $head_date>$anchor>When</a>
-<TH width=2% $head_who>${anchor}&sortby=Who>Who</a>
-<TH width=45% $head_file>${anchor}&sortby=File>File</a>
-<TH width=2%>Rev
-";
+print "<TABLE border cellspacing=2>\n";
+print "<b><TR ALIGN=LEFT>\n";
+print "<TH width=2% $head_date>$anchor>When</a>\n";
+print "<TH width=2% $head_who>${anchor}&sortby=Who>Who</a>\n";
+print "<TH width=45% $head_file>${anchor}&sortby=File>File</a>\n";
+print "<TH width=2%>Rev\n";
 
 $descwidth = 47;
-if( !$query_branch_head ){    
+if( !$query_branch_head ){
     print "<TH width=2%>Branch\n";
     $descwidth -= 2;
 }
 
-print "    
-<TH width=2% $head_delta>${anchor}&sortby=Change+Size>+/-</a>
-<TH WIDTH=$descwidth%>Description
-</TR></b>
-";
+print "<TH width=2% $head_delta>${anchor}&sortby=Change+Size>+/-</a>\n";
+print "<TH WIDTH=$descwidth%>Description\n";
+print "</TR></b>\n";
 }
 
 
@@ -517,7 +442,7 @@ sub PrevRev {
     @r = split( /\./, $rev );
 
     $i = @r-1;
-    
+
     $r[$i]--;
     if( $r[$i] == 0 ){
         $i -= 2;
@@ -559,7 +484,7 @@ function js_who_menu(n,extra,d) {
     l = document.layers['popup'];
     l.src="../registry/who.cgi?email="+n+extra;
 
-    if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
+    if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) {
          l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
     } else {
          l.top = d.target.y - 6;
@@ -615,12 +540,12 @@ sub query_to_english {
     elsif( $query_module ne 'all' && @query_dirs == 0 ){
         $english .= "to module <i>$query_module</i> ";
     }
-    elsif( $form{dir} ne "" ) {
+    elsif( $::FORM{dir} ne "" ) {
         my $word = "directory";
         if (@query_dirs > 1) {
             $word = "directories";
         }
-        $english .= "to $word <i>$form{dir}</i> ";
+        $english .= "to $word <i>$::FORM{dir}</i> ";
     }
 
     if ($query_file ne "") {
@@ -643,10 +568,10 @@ sub query_to_english {
         $english .= "by $query_who ";
     }
 
-    $query_date_type = $form{'date'};
+    $query_date_type = $::FORM{'date'};
     if( $query_date_type eq 'hours' ){
-        $english .="in the last $form{hours} hours";
-    } 
+        $english .="in the last $::FORM{hours} hours";
+    }
     elsif( $query_date_type eq 'day' ){
         $english .="in the last day";
     }
@@ -660,7 +585,7 @@ sub query_to_english {
         $english .="since the beginning of time";
     }
     elsif( $query_date_type eq 'explicit' ){
-        if ( $form{mindate} ne "" && $form{maxdate} ne "" ) {
+        if ( $::FORM{mindate} ne "" && $::FORM{maxdate} ne "" ) {
             $w1 = "between";
             $w2 = "and" ;
         }
@@ -669,15 +594,15 @@ sub query_to_english {
             $w2 = "before";
         }
 
-        if( $form{'mindate'} ne "" ){
-            $dd = &parse_date($form{'mindate'});
+        if( $::FORM{'mindate'} ne "" ){
+            $dd = &parse_date($::FORM{'mindate'});
             ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
             $t = sprintf("%02d/%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$year,$hour,$minute);
             $english .= "$w1 <i>$t</i> ";
         }
 
-        if( $form{'maxdate'} ne "" ){
-            $dd = &parse_date($form{'maxdate'});
+        if( $::FORM{'maxdate'} ne "" ){
+            $dd = &parse_date($::FORM{'maxdate'});
             ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
             $t = sprintf("%02d/%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$year,$hour,$minute);
             $english .= "$w2 <i>$t</i> ";
@@ -685,3 +610,5 @@ sub query_to_english {
     }
     return $english . ":";
 }
+
+PutsTrailer();

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -18,114 +18,145 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 
-source CGI.tcl
-source adminfuncs.tcl
+require 'CGI.pl';
 
-puts "Content-type: text/html
+print "Content-type: text/html\n\n";
 
-"
+CheckPassword(FormData('password'));
 
-CheckPassword $FORM(password)
+Lock();
+LoadCheckins();
 
-Lock
-LoadCheckins
+$cmd = FormData('command');
+
+if ($cmd eq 'close') {
+     close_tree();
+} elsif ($cmd eq 'open') {
+     open_tree();
+} elsif ($cmd eq 'tweaktimes') {
+     edit_tree();
+} elsif ($cmd eq 'editmotd') {
+     edit_motd();
+} elsif ($cmd eq 'changepassword') {
+     change_passwd();
+} else {
+     error_screen('Invalid Command',
+                  "<b>Invalid Command '<tt>$cmd</tt>'</b>");
+}
+
+PutsTrailer();
+WriteCheckins();
+Unlock();
+exit 0;
 
 
 
-switch -exact -- $FORM(command) {
-    close {
-        AdminCloseTree [ParseTimeAndCheck [FormData closetimestamp]]
+sub error_screen {
+     my ($title, $err_str) = @_;
 
-        puts "
-<TITLE>Clang!</TITLE>
-<H1>The tree is now closed.</H1>
-Mail has been sent notifying \"the hook\" and anyone subscribed to
-bonsai-treeinterest.
-<P>
-<a href=\"mailto:clienteng?subject=The tree is now closed.\">Click here</a>
-to send e-mail about it to clienteng.
-"
+     PutsHeader($title);
+     print "\n<hr>\n$err_str\n\n";
+     PutsTrailer();
+     exit 0;
+}
 
-    }
-    open {
-        AdminOpenTree [ParseTimeAndCheck [FormData lastgood]] \
-            [info exists FORM(doclear)]
-        puts "
-<TITLE>The floodgates are open.</TITLE>
-<H1>The tree is now open.</H1>
-Mail has been sent notifying \"the hook\" and anyone subscribed to
-bonsai-treeinterest.
-<a href=\"mailto:clienteng?subject=The tree is now opened.\">Click here</a>
-to send e-mail about it to clienteng.
-"
-    }
-    tweaktimes {
-        set lastgoodtimestamp [ParseTimeAndCheck [FormData lastgood]]
-        set closetimestamp [ParseTimeAndCheck [FormData lastclose]]
-        puts "
-<TITLE>Let's do the time warp again...</TITLE>
-<H1>Times have been tweaked.</H1>
-"
-        Log "Times tweaked: lastgood is [MyFmtClock $lastgoodtimestamp], closetime is [MyFmtClock $closetimestamp]"
-    }
-    editmotd {
-        LoadMOTD
-        if {![cequal [FormData origmotd] $motd]} {
-            puts "
-<TITLE>Oops!</TITLE>
-<H1>Someone else has been here!</H1>
+
+sub close_tree {
+     my $sw = Param("software", 1);
+     my $ti = Param("bonsai-treeinterest", 1);
+     my $href = ConstructMailTo(EmailFromUsername($sw),
+                                "The tree is now closed.");
+
+     AdminCloseTree(ParseTimeAndCheck(FormData('closetimestamp')));
+
+     PutsHeader("Clang!", "Clang!", "The tree is now closed.");
+     print "
+Mail has been sent notifying \"the hook\" and anyone subscribed to $ti.<p>
+
+$href about the closure.<p>
+";
+}
+
+sub open_tree {
+     my $sw = Param("software", 1);
+     my $ti = Param("bonsai-treeinterest", 1);
+     my $href = ConstructMailTo(EmailFromUsername($sw),
+                                "The tree is now open.");
+
+     AdminOpenTree(ParseTimeAndCheck(FormData('lastgood')),
+                   exists($::FORM{'doclear'}));
+
+     PutsHeader("The floodgates are open.", "The floodgates are open.");
+     print "
+Mail has been sent notifying \"the hook\" and anyone subscribed to $ti.<p>
+
+$href about the new status of the tree.<p>
+";
+}
+
+sub edit_tree {
+     $::LastGoodTimeStamp = ParseTimeAndCheck(FormData('lastgood'));
+     $::CloseTimeStamp = ParseTimeAndCheck(FormData('lastclose'));
+
+     PutsHeader("Let's do the time warp again...",
+                "Times have been tweaked.");
+
+     Log("Times tweaked: \$::LastGoodTimeStamp is " .
+         MyFmtClock($::LastGoodTimeStamp) .
+         ", closetime is " .
+         MyFmtClock($::CloseTimeStamp));
+}
+
+
+sub edit_motd {
+     LoadMOTD();
+
+     unless (FormData('origmotd') eq $::MOTD) {
+          error_screen("Oops!",
+"<H1>Someone else has been here!</H1>
 
 It looks like somebody else has changed the message-of-the-day.
 Terry was too lazy to implement anything beyond detecting this
 condition.  You'd best go start over -- go back to the top of Bonsai,
 look at the current message-of-the-day, and decide if you still
-want to make your edits."
-            PutsTrailer
-            exit
-        }
+want to make your edits.");
+     }
 
-        MailDiffs "message-of-the-day" $motd [FormData motd]
-        set motd [FormData motd]
-        puts "
-<TITLE>New MOTD</TITLE>
-<H1>The message-of-the-day has been changed.</H1>
-"
-        WriteMOTD
-        Log "New motd: $motd"
-    }
-    changepassword {
-        if {![cequal $FORM(newpassword) $FORM(newpassword2)]} {
-            puts "
-<TITLE>Oops!</TITLE>
-<H1>Mismatch!</H1>
-The two passwords you typed didn't match.  Click <b>Back</b> and try again."
-            PutsTrailer
-            exit
-        }
-        if {$FORM(doglobal)} {
-            CheckGlobalPassword $FORM(password)
-            set outfile data/passwd
-        } else {
-            set outfile "[DataDir]/treepasswd"
-        }
-        set encoded [string trim [exec ./data/trapdoor $FORM(newpassword)]]
-        set fid [open $outfile "w"]
-        puts $fid $encoded
-        close $fid
-        catch {chmod 0777 $outfile}
-        puts "
-<TITLE>Locksmithing complete.</TITLE>
-<H1>Password changed.</H1>
-The new password is now in effect."
-        PutsTrailer
-        exit
-    }
+     MailDiffs("message-of-the-day", $::MOTD, FormData('motd'));
+     $::MOTD = FormData('motd');
+     PutsHeader("New MOTD", "New MOTD",
+                "The Message Of The Day has been changed.");
+     WriteMOTD();
+     Log("New motd: $::MOTD");
 }
 
+sub change_passwd {
+     my ($outfile, $encoded);
+     local *PASSWD;
 
-PutsTrailer
+     unless (FormData('newpassword') eq FormData('newpassword2')) {
+          error_screen("Oops -- Mismatch!",
+"The two passwords you typed didn't match.  Click <b>Back</b> and try again.");
+     }
 
-WriteCheckins
-Unlock
+     if ($::FORM{'doglobal'}) {
+          CheckGlobalPassword($::FORM{'password'});
+          $outfile = 'data/passwd';
+     } else {
+          $outfile = DataDir() . '/treepasswd';
+     }
 
-exit
+     $encoded = trim(`./data/trapdoor $::FORM{'newpassword'}`);
+     unless (open(PASSWD, ">$outfile")) {
+          error_screen("Oops -- Couldn't write password file!",
+                       "Couldn't open `<tt>$outfile</tt>': $!.");
+     }
+     print PASSWD "$encoded\n";
+     close(PASSWD);
+     chmod(0777, $outfile);
+
+     PutsHeader('Locksmithing complete.', 'Password Changed.',
+                'The new password is now in effect.');
+     PutsTrailer();
+     exit 0;
+}

@@ -720,76 +720,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-  for ac_prog in mysqltclsh mysqltcl
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:729: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_MYSQLTCL'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$MYSQLTCL" in
-  /*)
-  ac_cv_path_MYSQLTCL="$MYSQLTCL" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_MYSQLTCL="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-MYSQLTCL="$ac_cv_path_MYSQLTCL"
-if test -n "$MYSQLTCL"; then
-  echo "$ac_t""$MYSQLTCL" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$MYSQLTCL" && break
-done
-test -n "$MYSQLTCL" || MYSQLTCL="no"
-
-  echo $ac_n "checking for tclX flock in mysqltclsh""... $ac_c" 1>&6
-echo "configure:762: checking for tclX flock in mysqltclsh" >&5
-  no_mysqltclsh=""
-
-  if test "$MYSQLTCL" = "no" ; then
-    no_mysqltclsh=yes
-  else
-    
-    have_flock=`echo "echo [infox have_flock]" | $MYSQLTCL 2>/dev/null`
-    
-    if test "x$have_flock" != "x1" ; then
-      no_mysqltclsh=yes
-    fi
-  fi
-  if test "x$no_mysqltclsh" = x ; then
-     echo "$ac_t""yes" 1>&6
-     :
-  else
-     echo "$ac_t""no" 1>&6
-     if test "$MYSQLTCL" = "no" ; then
-       echo "*** mysqltclsh could not be found"
-       echo "*** make sure it is installed and in your PATH, then try again"
-     else
-	echo "*** mysqltclsh is not compiled with tclX support"
-	echo "*** see the file INSTALL for additional information"
-     fi
-     :
-  fi
-  
-
 
   echo $ac_n "checking for perl DBD::mysql module""... $ac_c" 1>&6
-echo "configure:793: checking for perl DBD::mysql module" >&5
+echo "configure:726: checking for perl DBD::mysql module" >&5
   $PERL -w -c -e 'use DBD::mysql' 2>/dev/null; has_dbd=$?
   if test "x$has_dbd" = "x0" ; then
      echo "$ac_t""yes" 1>&6
@@ -802,7 +735,7 @@ echo "configure:793: checking for perl DBD::mysql module" >&5
 
 
   echo $ac_n "checking for perl Date::Parse module""... $ac_c" 1>&6
-echo "configure:806: checking for perl Date::Parse module" >&5
+echo "configure:739: checking for perl Date::Parse module" >&5
   $PERL -w -c -e 'use Date::Parse' 2>/dev/null; has_dateparse=$?
   if test "x$has_dateparse" = "x0" ; then
      echo "$ac_t""yes" 1>&6
@@ -817,7 +750,7 @@ echo "configure:806: checking for perl Date::Parse module" >&5
 # Extract the first word of "co", so it can be a program name with args.
 set dummy co; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:821: checking for $ac_word" >&5
+echo "configure:754: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_CO'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -848,7 +781,7 @@ fi
 # Extract the first word of "cvs", so it can be a program name with args.
 set dummy cvs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:852: checking for $ac_word" >&5
+echo "configure:785: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_CVS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -879,7 +812,7 @@ fi
 # Extract the first word of "rlog", so it can be a program name with args.
 set dummy rlog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:883: checking for $ac_word" >&5
+echo "configure:816: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_RLOG'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -910,7 +843,7 @@ fi
 # Extract the first word of "rcsdiff", so it can be a program name with args.
 set dummy rcsdiff; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:914: checking for $ac_word" >&5
+echo "configure:847: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_RCSDIFF'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -938,41 +871,10 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-# Extract the first word of "sendmail", so it can be a program name with args.
-set dummy sendmail; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:945: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_SENDMAIL'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$SENDMAIL" in
-  /*)
-  ac_cv_path_SENDMAIL="$SENDMAIL" # Let the user override the test with a path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
-  for ac_dir in $PATH; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_SENDMAIL="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-SENDMAIL="$ac_cv_path_SENDMAIL"
-if test -n "$SENDMAIL"; then
-  echo "$ac_t""$SENDMAIL" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
 
 
 echo $ac_n "checking for crypt in -lcrypt""... $ac_c" 1>&6
-echo "configure:976: checking for crypt in -lcrypt" >&5
+echo "configure:878: checking for crypt in -lcrypt" >&5
 ac_lib_var=`echo crypt'_'crypt | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -980,7 +882,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lcrypt  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 984 "configure"
+#line 886 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -991,7 +893,7 @@ int main() {
 crypt()
 ; return 0; }
 EOF
-if { (eval echo configure:995: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:897: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -1166,12 +1068,10 @@ s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
 s%@CC@%$CC%g
 s%@PERL@%$PERL%g
-s%@MYSQLTCL@%$MYSQLTCL%g
 s%@CO@%$CO%g
 s%@CVS@%$CVS%g
 s%@RLOG@%$RLOG%g
 s%@RCSDIFF@%$RCSDIFF%g
-s%@SENDMAIL@%$SENDMAIL%g
 
 CEOF
 EOF

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,18 +17,17 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
+print "Content-type: text/html\n\n";
 
-Lock
-LoadWhiteboard
+Lock();
+LoadWhiteboard();
 
-set oldvalue [FormData origwhite]
+my $oldvalue = FormData('origwhite');
+unless ($oldvalue eq $::WhiteBoard) {
+     Unlock();
 
-
-if {![cequal $oldvalue $whiteboard]} {
-    Unlock
-    puts "Content-type: text/html
-
+     print "
 <TITLE>Error -- pen stolen.</TITLE>
 <H1>Someone else just changed the whiteboard.</H1>
 
@@ -37,48 +36,41 @@ stomp over theirs.
 <P>
 The whiteboard now reads:
 <hr>
-<PRE VARIABLE>$whiteboard</PRE>
+<PRE VARIABLE>$::WhiteBoard</PRE>
 <hr>
 If you really want to change the whiteboard to your text, click the button
 below.  Or maybe you want to tweak your text first.  Or you can forget it and
 go back to the beginning.
 
 <FORM method=get action=\"doeditwhiteboard.cgi\">
-<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"[value_quote $whiteboard]\">
+<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"" . value_quote($::WhiteBoard). "\">
 
 Change the free-for-all whiteboard:<br>
-<TEXTAREA NAME=whiteboard ROWS=10 COLS=70>[FormData whiteboard]</TEXTAREA><BR>
+<TEXTAREA NAME=whiteboard ROWS=10 COLS=70>" . FormData('whiteboard') .
+"</TEXTAREA><BR>
 <INPUT TYPE=SUBMIT VALUE=\"Change the Whiteboard\">
 </FORM>
-"
-    PutsTrailer
-    exit
+";
+    PutsTrailer();
+    exit;
 }
 
 
-set newwhiteboard [string trimright [FormData whiteboard]]
+my $newwhiteboard = trim(FormData('whiteboard'));
 
-MailDiffs "whiteboard" $whiteboard $newwhiteboard
+MailDiffs("whiteboard", $whiteboard, $newwhiteboard);
 
-set whiteboard $newwhiteboard
-WriteWhiteboard
+$::WhiteBoard = $newwhiteboard;
+WriteWhiteboard();
+Unlock();
 
-Unlock
-
-puts "Content-type: text/html
-
-<TITLE>Where's my blue marker?</TITLE>
+print "<TITLE>Where's my blue marker?</TITLE>
 <H1>The whiteboard has been changed.</H1>
 The whiteboard now reads:
 <hr>
-<PRE VARIABLE>$whiteboard</PRE>
-"
+<PRE VARIABLE>$::WhiteBoard</PRE>
+";
 
-
-
-
-Log "Whiteboard changed to be: $whiteboard"
-
-PutsTrailer
-
-exit
+Log("Whiteboard changed to be: $::WhiteBoard");
+PutsTrailer();
+exit;

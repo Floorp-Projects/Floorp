@@ -17,7 +17,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 
-# This Makefile helps you install Bonsai.  Define PERL and MYSQLTCL to
+# This Makefile helps you install Bonsai.  Define PERL to
 # the full pathnames of where you have these utilities.  Define PREFIX
 # to where you will install the running Bonsai.  Then "make install" should
 # copy things for you.
@@ -28,8 +28,6 @@ CFLAGS = @CFLAGS@
 LDFLAGS = @LIBS@
 # /usr/bin/perl
 PERL = @PERL@
-# /usr/local/src/mysqltcl-1.53/mysqltclsh
-MYSQLTCL = @MYSQLTCL@
 # /var/www/bonsai
 PREFIX = @prefix@/bonsai
 
@@ -37,22 +35,19 @@ CVS=@CVS@
 RLOG=@RLOG@
 CO=@CO@
 RCSDIFF=@RCSDIFF@
-SENDMAIL=@SENDMAIL@
 
-FILES = CGI.tcl			\
+FILES = CGI.pl			\
 	SourceChecker.cgi	\
 	SourceChecker.pm	\
-	addcheckin.tcl		\
+	addcheckin.pl		\
 	admin.cgi		\
-	adminfuncs.tcl		\
-	adminmail.tcl		\
+	adminfuncs.pl		\
 	branchspam.cgi		\
 	branchspammer.cgi	\
-	changebar.tcl		\
 	closemessage		\
 	contacthelp.html	\
 	countcheckins.cgi	\
-	createlegaldirs.tcl	\
+	createlegaldirs.pl	\
 	cvsblame.cgi		\
 	cvsblame.pl		\
 	cvsguess.cgi		\
@@ -67,34 +62,26 @@ FILES = CGI.tcl			\
 	doadmin.cgi		\
 	doeditcheckin.cgi	\
 	doeditmessage.cgi	\
-	doeditprofile.cgi	\
 	doeditwhiteboard.cgi	\
 	dolog.pl		\
 	dotweak.cgi		\
 	editcheckin.cgi		\
 	editmessage.cgi		\
-	editprofile.cgi		\
 	editwhiteboard.cgi	\
-	globals.tcl		\
-	handleAdminMail.tcl	\
-	handleCheckinMail.tcl	\
+	globals.pl		\
+	handleAdminMail.pl	\
+	handleCheckinMail.pl	\
 	header.pl		\
 	index.html		\
 	indextest.pl		\
 	lloydcgi.pl		\
-	localprofile.cgi	\
 	maketables.sh		\
 	moduleanalyse.cgi	\
 	modules.pl		\
 	multidiff.cgi		\
-	myglobrecur.tcl		\
 	openmessage		\
-	perlifyconfig.tcl	\
 	processqueue.pl		\
-	profile.cgi		\
 	rebuildcvshistory.cgi	\
-	rebuilddatabase.tcl	\
-	rebuildtaginfo.cgi	\
 	repophook.cgi		\
 	reposfiles.pl		\
 	rview.cgi		\
@@ -106,26 +93,26 @@ FILES = CGI.tcl			\
 	utils.pl		\
 	viewold.cgi
 
-all: trapdoor configdata
+all: trapdoor treeconfig.pl params
 
 trapdoor: trapdoor.o
 	$(CC) -o trapdoor trapdoor.o $(LDFLAGS)
 
-configdata: configdata.in
+treeconfig.pl: treeconfig.pl.in
+	cp treeconfig.pl.in treeconfig.pl
+
+params: params.in
 	sed -e s#_CVS_#$(CVS)#g \
 	    -e s#_RLOG_#$(RLOG)#g \
 	    -e s#_CO_#$(CO)#g \
 	    -e s#_RCSDIFF_#$(RCSDIFF)#g \
-	    -e s#_SENDMAIL_#$(SENDMAIL)#g \
 	    $< >$@
 
-install: trapdoor configdata
+install: all
 	-mkdir -p $(PREFIX)
 	@for I in $(FILES); do \
 	  echo Installing $$I && \
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
-              -e s#/usr/bonsaitools/bin/mysqltcl#$(MYSQLTCL)#g \
-              -e s#/usr/lib/sendmail#$(SENDMAIL)#g \
               -e s#/tools/ns/bin/perl5#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
 	chmod 755 $(PREFIX)/$$I; done
@@ -133,20 +120,25 @@ install: trapdoor configdata
 	cp trapdoor $(PREFIX)/data
 	cp bonsai.gif $(PREFIX)
 	chmod 755 $(PREFIX)/bonsai.gif
-	@if test ! -r $(PREFIX)/data/configdata ; then \
-	echo "Installing configdata" && \
-	cp configdata $(PREFIX)/data ; \
+	@if test ! -r $(PREFIX)/data/treeconfig.pl ; then \
+	echo "Installing treeconfig.pl" && \
+	cp treeconfig.pl $(PREFIX)/data ; \
 	else \
 	echo ; \
-	echo "Not replacing existing configdata" ;  \
-	echo "Check configdata in build directory for new features" ; \
+	echo "Not replacing existing treeconfig.pl" ;  \
+	echo "Check treeconfig.pl in build directory for new features" ; \
+	fi
+	@if test ! -r $(PREFIX)/data/params ; then \
+	echo "Installing params" && \
+	cp params $(PREFIX)/data ; \
+	else \
+	echo ; \
+	echo "Not replacing existing params" ;  \
 	fi
 	@echo
 	@echo "If you are installing a new Bonsai (not upgrading), you should"
 	@echo "run maketables.sh to create database tables, then customize the"
-	@echo "Bonsai configuration in $(PREFIX)/data/configdata"
+	@echo "Bonsai configuration in $(PREFIX)/data/treeconfig.pl"
 
 clean:
-	rm -f trapdoor trapdoor.o configdata
-
-
+	rm -f trapdoor trapdoor.o treeconfig.pl params

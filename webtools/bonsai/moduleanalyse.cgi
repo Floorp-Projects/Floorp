@@ -21,28 +21,20 @@
 #
 # Unroll a module
 #
-require 'lloydcgi.pl';
-require 'cvsmenu.pl';
+require 'CGI.pl';
 
 $|=1;
 
-$CVS_ROOT = $form{"cvsroot"};
+print "Content-type: text/html\n\n";
 
-print "Content-type: text/html
+$CVS_ROOT = $::FORM{'cvsroot'};
+$CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
 
-<HTML>";
-
-require 'modules.pl';
-
-print "
-<HEAD>
-<TITLE>CVS Module Analyzer</TITLE>
-</HEAD>";
+PutsHeader("CVS Module Analyzer", $CVS_ROOT);
 
 cvsmenu("align=right width=20%");
 
 print "
-<H1>CVS Module Analyzer</H1>
 <p><b>This tool will show you the directories and files that make up a given
 cvs module.</b>
 ";
@@ -63,19 +55,23 @@ print "
 <SELECT name='module' size=5>
 ";
 
-if( $form{module} eq 'all' || $form{module} eq '' ){
+$Module = 'default';
+if( $::FORM{module} eq 'all' || $::FORM{module} eq '' ){
     print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
 }
 else {
     print "<OPTION VALUE='all'>All Files in the Repository\n";
-    print "<OPTION SELECTED VALUE='$form{module}'>$form{module}\n";
+    print "<OPTION SELECTED VALUE='$::FORM{module}'>$::FORM{module}\n";
+    $Module = $::FORM{module};
 }
 
 #
 # Print out all the Different Modules
 #
-for $k  (sort( keys( %$modules ) ) ){
-    print "<OPTION value='$k'>$k\n";
+$::TreeID = $Module if (exists($::TreeInfo{$Module}{'repository'}));
+LoadDirList();
+for $k  (sort( grep(!/\*$/, @::LegalDirs) ) ){
+    print "<OPTION value='$k'>$k\n" if ($k ne $Module);
 }
 
 print "</SELECT></NOBR>\n";
@@ -89,11 +85,11 @@ print "
 </FORM>";
 
 
-if( $form{module} ne ''  ){
-    $mod = $form{module};
+if( $::FORM{module} ne ''  ){
+    $mod = $::FORM{module};
     print "<h1>Examining Module '$mod'</h1>\n\n";
-    $mod_map = &get_module_map( $mod );
-    for $i (sort keys %$mod_map) {
+
+    for $i (sort( grep(!/\*$/, @::LegalDirs) ) ){
         if( -d "$CVS_ROOT/$i"){
             print "<dt><tt>Dir:&nbsp;&nbsp;&nbsp;</tt>";
             print "<a href=rview.cgi?dir=$i&cvsroot=$CVS_ROOT>$i</a>";
@@ -116,7 +112,7 @@ if( $form{module} ne ''  ){
 
 
 sub sortTest {
-    if( $_[0] eq $form{sortby} ){
+    if( $_[0] eq $::FORM{sortby} ){
         return " SELECTED";
     }
     else {
@@ -125,7 +121,7 @@ sub sortTest {
 }
 
 sub dateTest {
-    if( $_[0] eq $form{date} ){
+    if( $_[0] eq $::FORM{date} ){
         return " CHECKED value=$_[0]";
     }
     else {

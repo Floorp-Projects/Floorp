@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,83 +17,68 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
+print "Content-type: text/html\n\n";
 
-puts "Content-type: text/html
+my $Filename = FormData('msgname');
+my $RealFilename = DataDir() . "/$Filename";
 
+my $Text = '';
+$Text = `cat $RealFilename` if -f $RealFilename;
 
-<html>
-<head>
-<title>We don't need no stinkin' HTML compose window</title>
-</head>
+LoadTreeConfig();
+PutsHeader("Message Editor", "Message Editor",
+           "$Filename - $::TreeInfo{$::TreeID}{shortdesc}");
 
-<body>
-<h1>Message editor</h1>"
-
-set filename $FORM(msgname)
-
-set fullfilename [DataDir]/$filename
-
-if {[file exists $fullfilename]} {
-    set text [read_file $fullfilename]
-} else {
-    set text {}
-}
-
-puts "
-Below is the template for the <b>$filename</b> message.  Type the
+print "
+Below is the template for the <b>$Filename</b> message.  Type the
 magic word and edit at will, but be careful to not break anything,
 especially around the headers.
 
 The following magic symbols exist:
 
-<table>"
+<table>
+";
 
-proc PutDoc {name desc} {
-    puts "<tr>"
-    puts "<td align=right><tt><b>%$name%</b></tt></td>"
-    puts "<td>Replaced by the $desc</td>"
-    puts "</tr>"
+
+sub PutDoc {
+     my ($name, $desc) = @_;
+
+     print "\n<tr>\n<td align=right><tt><b>%$name%</b></tt></td>
+<td>Replaced by the $desc</td>\n</tr>\n";
 }
 
-
-switch -exact -- $filename {
-    openmessage -
-    closemessage {
-        PutDoc name "username of the person getting mail"
-        PutDoc dir "directory for this checkin"
-        PutDoc files "list of files for this checkin"
-        PutDoc log "log message for this checkin"
-        PutDoc profile "profile for this user"
-    }
-    treeopened -
-    treeopenedsamehook -
-    treeclosed {
-        PutDoc "hooklist" "comma-separated list of e-mail address of people on the hook"
-    }
-    default {
-        puts "</table><P><font color=red>Uh, hey, this isn't a legal file for"
-        puts "you to be editing here!</font>"
-        PutsTrailer
-        exit
-    }
+if (($Filename eq 'openmessage') || ($Filename eq 'closemessage')) {
+     PutDoc('name', "username of the person getting mail");
+     PutDoc('dir', "directory for this checkin");
+     PutDoc('files', "list of files for this checkin");
+     PutDoc('log', "log message for this checkin");
+     PutDoc('profile', "profile for this user");
+} elsif (($Filename eq 'treeopened') || ($Filename eq 'treeopenedsamehook') ||
+         ($Filename eq 'treeclosed')) {
+     PutDoc('hooklist', "comma-separated list of e-mail address of people on the hook");
+} else {
+     print "</table><P><font color=red>
+Uh, hey, this isn't a legal file for you to be editing here!</font>\n";
+     PutsTrailer();
+     exit 0;
 }
 
-puts "
+print "
 </TABLE>
 <FORM method=get action=\"doeditmessage.cgi\">
-<INPUT TYPE=HIDDEN NAME=treeid VALUE=$treeid>
+<INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
 <B>Password:</B> <INPUT NAME=password TYPE=password> <BR>
-<INPUT TYPE=HIDDEN NAME=msgname VALUE=$filename>
-<INPUT TYPE=HIDDEN NAME=origtext VALUE=\"[value_quote $text]\">
-<TEXTAREA NAME=text ROWS=40 COLS=80>$text</TEXTAREA><BR>
+<INPUT TYPE=HIDDEN NAME=msgname VALUE=$Filename>
+<INPUT TYPE=HIDDEN NAME=origtext VALUE=\"" . value_quote($Text) . "\">
+<TEXTAREA NAME=text ROWS=40 COLS=80>$Text</TEXTAREA><BR>
 <INPUT TYPE=SUBMIT VALUE=\"Change this message\">
 </FORM>
 
- "
+ ";
 
 
-PutsTrailer
+PutsTrailer();
+exit 0;
 
-exit

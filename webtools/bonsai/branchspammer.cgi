@@ -46,7 +46,7 @@ $query_branch = $form{'branch'};
 
 print "<h1>Running Query, this may take a while...</h1>";
 
-$result= &query_checkins( $mod_map );
+$result= &query_checkins( %mod_map );
 
 #
 # Test code to print the results

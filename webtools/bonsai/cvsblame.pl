@@ -32,9 +32,10 @@ use Time::Local qw(timegm);         # timestamps
 use POSIX qw(strftime);             # human-readable dates
 
 $debug = 0;
+$opt_m = 0 unless (defined($opt_m));
 
 # Extract base part of this script's name
-($progname) = $0 =~ /([^\/]+)$/;
+($progname = $0) =~ /([^\/]+)$/;
 
 &cvsblame_init;
 
@@ -102,6 +103,7 @@ sub traverse_cvs_tree {
 # Unescape string tokens, if necessary.
 sub get_token {
     # Erase all-whitespace lines.
+    $line_buffer = '' unless (defined($line_buffer));
     while ($line_buffer =~ /^$/) {
         die ("Unexpected EOF") if eof(RCSFILE);
         $line_buffer = <RCSFILE>;
@@ -515,7 +517,8 @@ sub parse_cvs_file {
 
     # The primordial revision is not always 1.1!  Go find it.
     my $primordial = $revision;
-    while ($prev_revision{$primordial} != "") {
+    while (exists($prev_revision{$primordial}) &&
+           $prev_revision{$primordial} ne "") {
         $primordial = $prev_revision{$primordial};
     }
 
@@ -526,7 +529,13 @@ sub parse_cvs_file {
     # Figure out how many lines were in the primordial, i.e. version 1.1,
     # check-in by moving backward in time from the head revision to the
     # first revision.
-    $line_count = split(/^/, $revision_deltatext{$head_revision});
+    $line_count = 0;
+    if (exists ($revision_deltatext{$head_revision}) && 
+        $revision_deltatext{$head_revision}) {
+         my @tmp_array =  split(/^/, $revision_deltatext{$head_revision});
+         $line_count = @tmp_array;
+    }
+    $skip = 0 unless (defined($skip));
     for ($rev = $prev_revision{$head_revision}; $rev;
          $rev = $prev_revision{$rev}) {
         @diffs = split(/^/, $revision_deltatext{$rev});

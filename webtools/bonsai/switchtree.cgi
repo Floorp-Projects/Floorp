@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,38 +17,32 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
+print "Content-type: text/html\n\n";
+LoadTreeConfig();
 
-LoadTreeConfig
+sub IsChecked {
+     my ($value) = @_;
+     my $rval = '';
 
-proc IsChecked {value} {
-    global treeid
-    if {[cequal $value $treeid]} {
-        return "CHECKED"
-    } else {
-        return ""
-    }
+     $rval = "CHECKED" if ($value eq $::TreeID);
+     return $rval;
 }
 
-puts "Content-type: text/html
+my $title = "George, George, George of the jungle...";
+PutsHeader($title, "Switch-o-Matic");
 
-<HTML>
-<TITLE>George, George, George of the jungle...</TITLE>
+print "
+<b>Which tree would you like to see?</b>
+<FORM method=get action=\"toplevel.cgi\">\n";
 
-Which tree would you like to see?
-"
+foreach my $i (@::TreeList) {
+     next if (exists($::TreeInfo{$i}{nobosai}));
 
-puts "<FORM method=get action=\"toplevel.cgi\">"
-
-foreach i $treelist {
-    if {![info exists treeinfo($i,nobonsai)]} {
-        puts "<INPUT TYPE=radio NAME=treeid VALUE=$i [IsChecked $i]>"
-        puts "$treeinfo($i,description)<BR>"
-    }
+     print "<INPUT TYPE=radio NAME=treeid VALUE=$i " . IsChecked($i) . ">\n";
+     print "$::TreeInfo{$i}{description}<BR>\n";
 }
 
-puts "<INPUT TYPE=SUBMIT Value=\"Submit\"></FORM>"
-
-PutsTrailer
-
-exit
+print "<INPUT TYPE=SUBMIT Value=\"Submit\"></FORM>\n";
+PutsTrailer();
+exit;

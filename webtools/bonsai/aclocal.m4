@@ -1,49 +1,6 @@
 dnl autoconf tests for bonsai
 dnl Pontus Lidman 99-05-04
 dnl
-dnl Check if mysqltclsh is compiled with tclX support
-dnl
-dnl AC_PROG_MYSQLTCL_TCLX([ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
-dnl Test for mysqltclsh compiled with tclX and define MYSQLTCL
-dnl
-AC_DEFUN(AC_PROG_MYSQLTCL_TCLX,
-[dnl 
-dnl Get the cflags and libraries from the gtk-config script
-dnl
-  AC_PATH_PROGS(MYSQLTCL, mysqltclsh mysqltcl, no)
-  AC_MSG_CHECKING(for tclX flock in mysqltclsh)
-  no_mysqltclsh=""
-
-  if test "$MYSQLTCL" = "no" ; then
-    no_mysqltclsh=yes
-  else
-dnl
-dnl Perform test
-dnl
-    changequote(<<,>>)
-    have_flock=`echo "echo [infox have_flock]" | $MYSQLTCL 2>/dev/null`
-    changequote([,])
-    if test "x$have_flock" != "x1" ; then
-      no_mysqltclsh=yes
-    fi
-  fi
-  if test "x$no_mysqltclsh" = x ; then
-     AC_MSG_RESULT(yes)
-     ifelse([$1], , :, [$1])
-  else
-     AC_MSG_RESULT(no)
-     if test "$MYSQLTCL" = "no" ; then
-       echo "*** mysqltclsh could not be found"
-       echo "*** make sure it is installed and in your PATH, then try again"
-     else
-	echo "*** mysqltclsh is not compiled with tclX support"
-	echo "*** see the file INSTALL for additional information"
-     fi
-     ifelse([$2], , :, [$2])
-  fi
-  AC_SUBST(MYSQLTCL)
-])
-dnl
 dnl check if Perl::DB is installed
 dnl
 AC_DEFUN(AC_PERL_DB,

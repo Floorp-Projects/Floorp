@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,16 +17,17 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-LoadWhiteboard
+print "Content-type: text/html\n\n";
+LoadWhiteboard();
 
-puts "Content-type: text/html
+PutsHeader("Scritch, scritch.", "Edit Whiteboard");
 
-<TITLE>Scritch, scritch.</TITLE>
+print "
 <FORM method=post action=\"doeditwhiteboard.cgi\">
-<INPUT TYPE=HIDDEN NAME=treeid VALUE=$treeid>
-<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"[value_quote $whiteboard]\">
+<INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>
+<INPUT TYPE=HIDDEN NAME=origwhite VALUE=\"" . value_quote($::WhiteBoard) . "\">
 
 The free-for-all whiteboard is a fine place to put notes of general
 and temporary interest about the tree.  (Like, \"I'm checking in a bunch
@@ -35,11 +36,10 @@ of nasty stuff; stay out of the tree until 3:30pm\".)
 <P>
 
 Change the free-for-all whiteboard:<br>
-<TEXTAREA NAME=whiteboard ROWS=10 COLS=70>$whiteboard</TEXTAREA><BR>
+<TEXTAREA NAME=whiteboard ROWS=10 COLS=70>$::WhiteBoard</TEXTAREA><BR>
 <INPUT TYPE=SUBMIT VALUE=\"Change the Whiteboard\">
 </FORM>
-"
+";
 
-PutsTrailer
-
-exit
+PutsTrailer();
+exit;

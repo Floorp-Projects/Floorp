@@ -17,38 +17,38 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-require 'lloydcgi.pl';
-require 'utils.pl';
+require 'CGI.pl';
 
-$file= $form{'file'};
-$mark= $form{'mark'};
-$ln = ($mark > 10 ? $mark-10 : 1 );
-$rev = $form{'rev'};
-$debug = $form{'debug'};
+my $file= $::FORM{'file'};
+my $mark= $::FORM{'mark'};
+my $ln = ($mark > 10 ? $mark-10 : 1 );
+my $rev = $::FORM{'rev'};
+my $debug = $::FORM{'debug'};
 
 print "Content-Type: text/html\n\n";
 
-$CVS_ROOT = $form{'root'};
+my $CVS_ROOT = $::FORM{'root'};
 if( $CVS_ROOT eq '' ){ 
     $CVS_ROOT = pickDefaultRepository();
 }
 validateRepository($CVS_ROOT);
 
-$CVS_REPOS_SUFIX = $CVS_ROOT;
+my $CVS_REPOS_SUFIX = $CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s/\//_/g;
     
-$db = ConnectToDatabase();
+ConnectToDatabase();
 
-$f = SqlQuote($file);
-$qstring = "select distinct dirs.dir from checkins,dirs,files,repositories where dirs.id=dirid and files.id=fileid and repositories.id=repositoryid and repositories.repository='$CVS_ROOT' and files.file='$f' order by dirs.dir";
+my $f = SqlQuote($file);
+$qstring = "select distinct dirs.dir from checkins,dirs,files,repositories where dirs.id=dirid and files.id=fileid and repositories.id=repositoryid and repositories.repository='$CVS_ROOT' and files.file=$f order by dirs.dir";
 
 if ($debug) {
     print "<pre wrap>$qstring</pre>\n";
 }
 
-$query = $db->Query($qstring) || die $Mysql::db_errstr;
+my (@row, $d, @fl, $s);
 
-while(@row = $query->fetchrow){
+SendSQL($qstring);
+while(@row = FetchSQLData()){
     $d = $row[0];
     push @fl, "$d/$file";
 }

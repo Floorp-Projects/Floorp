@@ -29,14 +29,12 @@
 #    author - filter based on author
 #
 
-require 'lloydcgi.pl';
+require 'CGI.pl';
 require 'cvsblame.pl';
-require 'utils.pl';
 use SourceChecker;
 
 # Some Globals
 #
-
 $| = 1;
 
 print "Content-Type:text/html\n\n";
@@ -47,7 +45,7 @@ print "Content-Type:text/html\n\n";
 # Handle the "file" argument
 #
 $filename = '';
-$filename = $form{'file'} if defined($form{'file'});
+$filename = $::FORM{'file'} if defined($::FORM{'file'});
 if ($filename eq '') 
 {
     &print_usage;
@@ -58,7 +56,7 @@ if ($filename eq '')
 
 # Handle the "rev" argument
 #
-$opt_rev = $form{'rev'} if defined($form{'rev'} && $form{'rev'} ne 'HEAD');
+$opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
 $browse_revtag = 'HEAD';
 $browse_revtag = $opt_rev if ($opt_rev =~ /[A-Za-z]/);
 $revision = '';
@@ -66,7 +64,7 @@ $revision = '';
 
 # Handle the "root" argument
 #
-if (defined($root = $form{'root'}) && $root ne '') {
+if (defined($root = $::FORM{'root'}) && $root ne '') {
     $root =~ s|/$||;
     validateRepository($root);
     if (-d $root) {
@@ -87,6 +85,7 @@ if (defined($root = $form{'root'}) && $root ne '') {
 foreach (@src_roots) {
     $root = $_;
     $rcs_filename = "$root/$filename,v";
+    $rcs_filename = Fix_BonsaiLink($rcs_filename);
     goto found_file if -r $rcs_filename;
     $rcs_filename = "$root/${file_head}Attic/$file_tail,v";
     goto found_file if -r $rcs_filename;
@@ -111,7 +110,7 @@ $file_rev = $revision;
 # Handle the "mark" argument
 #
 $mark_arg = '';
-$mark_arg = $form{'mark'} if defined($form{'mark'});
+$mark_arg = $::FORM{'mark'} if defined($::FORM{'mark'});
 foreach $rev (split(',',$mark_arg)) {
         $mark{$rev} = 1;
 }
@@ -120,7 +119,7 @@ foreach $rev (split(',',$mark_arg)) {
 # Handle the "author" argument
 #
 $author_arg = '';
-$author_arg = $form{'author'} if defined($form{'author'});
+$author_arg = $::FORM{'author'} if defined($::FORM{'author'});
 foreach $author (split(',',$author_arg)) {
     $use_author{$author} = 1;
 }
@@ -128,15 +127,14 @@ foreach $author (split(',',$author_arg)) {
 
 # Handle the "sort" argument
 $opt_sort = '';
-$opt_sort = $form{'sort'};
+$opt_sort = $::FORM{'sort'};
 
 
 # Start printing out the page
 #
 &print_top;
+print Param('bannerhtml', 1);
 
-open(BANNER, "<data/banner.html");
-print while <BANNER>;
 
 # Print link at top for directory browsing
 #
@@ -151,10 +149,12 @@ print q(
 );
 
 foreach $path (split('/',$rcs_path)) {
-    $link_path .= url_encode2($path).'/' if $path ne 'mozilla';
-    print "<A HREF='$lxr_base/$link_path'>$path</a>/ ";
+    $link_path .= url_encode2($path).'/';
+    $lxr_path = Fix_LxrLink($link_path);
+    print "<A HREF='$lxr_path'>$path</a>/ ";
 }
-print "<A HREF='$lxr_base/$link_path$file_tail'>$file_tail</a> ";
+$lxr_path = Fix_LxrLink("$link_path$file_tail");
+print "<A HREF='$lxr_path'>$file_tail</a> ";
 
 print " (";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
@@ -172,7 +172,7 @@ print qq(
       <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
        <TR>
         <TD>
-         <A HREF="$lxr_base/$link_path$file_tail">lxr</A>
+         <A HREF="$lxr_path">lxr</A>
         </TD><TD NOWRAP>
          Browse the source code as hypertext.
         </TD>
@@ -234,7 +234,7 @@ foreach $revision (@revisions)
     $log =~ s/&/&amp;/g;
     $log =~ s/</&lt;/g;
     $log =~ s/>/&gt;/g;
-    eval ('$log =~ s@\d{4,6}@' . $BUGSYSTEMEXPR . '@g;');
+    $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
 
     if ($bgcolor eq '') {
@@ -450,11 +450,13 @@ __USAGE__
 } # sub print_usage
 
 sub print_bottom {
-    print <<__BOTTOM__;
+     my $maintainer = Param('maintainer');
+
+     print <<__BOTTOM__;
 <HR WIDTH="100%">
 <FONT SIZE=-1>
 <A HREF="cvslog.cgi">Page configuration and help</A>.
-Mail feedback to <A HREF="mailto:slamm\@netscape.com?subject=About the cvslog script">&lt;slamm\@netscape.com></A>. 
+Mail feedback to <A HREF="mailto:$maintainer?subject=About the cvslog script">&lt;$maintainer&gt;</A>. 
 </FONT></BODY>
 </HTML>
 __BOTTOM__
@@ -468,14 +470,8 @@ sub print_useful_links {
     my $diff_base = "cvsview2.cgi";
     my $blame_base = "cvsblame.cgi";
 
-    # total kludge!!  lxr omits the top-level "mozilla" directory...
     my $lxr_path = $path;
-    if ($mozilla_lxr_kludge eq 'TRUE') {
-      $lxr_path =~ s@^ns/@@;
-      $lxr_path =~ s@^mozilla/@@;
-    }
-
-    my $lxr_link = "$lxr_base/$lxr_path";
+    my $lxr_link = Fix_LxrLink($lxr_path);
     my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file";
     my $blame_link = "$blame_base?root=$CVS_ROOT\&file=$path";
 

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,118 +17,118 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-puts "Content-type: text/html
+use diagnostics;
+use strict;
 
-<HTML>"
+print "Content-type: text/html
 
-CheckPassword $FORM(password)
+<HTML>";
 
-set startfrom [ParseTimeAndCheck [FormData startfrom]]
+CheckPassword($::FORM{'password'});
 
-Lock
-LoadTreeConfig
-LoadCheckins
-set checkinlist {}
-WriteCheckins
-Unlock
+my $startfrom = ParseTimeAndCheck(FormData('startfrom'));
+
+Lock();
+LoadTreeConfig();
+LoadCheckins();
+@::CheckInList = ();
+WriteCheckins();
+Unlock();
 
 
-puts "<TITLE> Rebooting, please wait...</TITLE>
+$| = 1;
+
+print "<TITLE> Rebooting, please wait...</TITLE>
 
 <H1>Recreating the hook</H1>
 
-<h3>$treeinfo($treeid,description)</h3>
+<h3>$::TreeInfo{$::TreeID}->{'description'}</h3>
 
 <p>
-Searching for first checkin after [MyFmtClock $startfrom]...<p>"
-
-flush stdout
-
-regsub -all -- / $treeinfo($treeid,repository) _ mungedname
-set filename "data/checkinlog$mungedname"
-
-set fid [open $filename "r"]
+Searching for first checkin after " . MyFmtClock($startfrom) . "...<p>\n";
 
 
-set foundfirst 0
+my $mungedname = $::TreeInfo{$::TreeID}->{'repository'};
+$mungedname =~ s@/@_@g;
+$mungedname =~ s/^_//;
 
-set buffer {}
+my $filename = "data/checkinlog/$mungedname";
+
+open(FID, "<$filename") || die "Can't open $filename";
+
+my $foundfirst = 0;
+
+my $buffer = "";
 
 
-set tempfile data/repophook.[id process]
+my $tempfile = "data/repophook.$$";
 
-proc FlushBuffer {} {
-    global buffer tempfile treeid foundfirst count
-    if {!$foundfirst || [cequal $buffer ""]} {
-        return
+my $count = 0;
+my $lastdate = 0;
+
+sub FlushBuffer {
+    if (!$foundfirst || $buffer eq "") {
+        return;
     }
-    write_file $tempfile "junkline\n\n$buffer"
-    exec ./addcheckin.tcl -treeid $treeid $tempfile
-    unlink $tempfile
-    set buffer {}
-    incr count
-    if {$count % 100 == 0} {
-        puts "$count scrutinized...<br>"
-        flush stdout
+    open(TMP, ">$tempfile") || die "Can't open $tempfile";
+    print TMP "junkline\n\n$buffer\n";
+    close(TMP);
+    system("./addcheckin.pl -treeid $::TreeID $tempfile");
+#    unlink($tempfile);
+    $buffer = "";
+    $count++;
+    if ($count % 100 == 0) {
+        print "$count scrutinized...<br>\n";
     }
 }
 
-set now [getclock]
-set count 0
-set lastdate 0
+my $now = time();
 
-while {[gets $fid line] >= 0} {
-    switch -glob -- $line {
-        {?|*} {
-            lassign [split $line "|"] chtype date
-            if {$date < $lastdate} {
-                puts "Ick; dates out of order!<br>"
-                puts "<pre>[value_quote $line]</pre><p>"
-            }
-            set $lastdate $date
-            if {$foundfirst} {
-                append buffer "$line\n"
-            } else {
-                if {$date >= $startfrom} {
-                    if {$date >= $now} {
-                        puts "Found a future date! (ignoring):<br>"
-                        puts "<pre>[value_quote $line]</pre><p>"
-                        flush stdout
-                    } else {
-                        set foundfirst 1
-                        puts "Found first line: <br><pre>[value_quote $line]</pre><p>"
-                        puts "OK, now processing checkins...<p>"
-                        flush stdout
-                        set buffer "$line\n"
-                        set count 0
-                    }
+while (<FID>) {
+    chomp();
+    my $line = $_;
+    if ($line =~ /^.\|/) {
+        my ($chtype, $date) = (split(/\|/, $line));
+        if ($date < $lastdate) {
+            print "Ick; dates out of order!<br>\n";
+            print "<pre>" . value_quote($line) . "</pre><p>\n";
+        }
+        $lastdate = $date;
+        if ($foundfirst) {
+            $buffer .= "$line\n";
+        } else {
+            if ($date >= $startfrom) {
+                if ($date >= $now) {
+                    print "Found a future date! (ignoring):<br>\n";
+                    print "<pre>" . value_quote($line) . "</pre><p>\n";
                 } else {
-                    incr count
-                    if {$count % 2000 == 0} {
-                        puts "Skipped $count lines...<p>"
-                        flush stdout
-                    }
+                    $foundfirst = 1;
+                    print "Found first line: <br>\n";
+                    print "<pre>" . value_quote($line) . "</pre><p>\n";
+                    print "OK, now processing checkins...<p>";
+                    $buffer = "$line\n";
+                    $count = 0;
+                }
+            } else {
+                $count++;
+                if ($count % 2000 == 0) {
+                    print "Skipped $count lines...<p>\n";
                 }
             }
         }
-        {:ENDLOGCOMMENT} {
-            append buffer "$line\n"
-            FlushBuffer
-        }
-        default {
-            append buffer "$line\n"
-        }
+    } elsif ($line =~ /^:ENDLOGCOMMENT$/) {
+        $buffer .= "$line\n";
+        FlushBuffer();
+    } else {
+        $buffer .= "$line\n";
     }
 }
 
-FlushBuffer
+FlushBuffer();
         
                 
-catch {unset checkinlist}
-LoadCheckins
+print "OK, done. \n";
 
-puts "Done.  [llength $checkinlist] relevant checkins were found."
-
-PutsTrailer
+PutsTrailer();

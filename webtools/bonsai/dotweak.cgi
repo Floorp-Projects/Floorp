@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,105 +17,111 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-puts "Content-type: text/html
+print "Content-type: text/html
 
-<HTML>"
+<HTML>";
 
-CheckPassword $FORM(password)
+CheckPassword($::FORM{'password'});
 
-Lock
-LoadCheckins
+Lock();
+LoadCheckins();
 
-if {![info exists FORM(command)]} {
-    set FORM(command) nocommand
+if (!exists $::FORM{'command'}) {
+    $::FORM{'command'} = 'nocommand';
 }
 
 
-set list {}
+my @list;
 
-foreach i [array names FORM] {
-    switch -glob -- $i {
-        {checkin-*} {
-            if {[lsearch -exact $checkinlist $i] >= 0} {
-                lappend list $i
-            }
+foreach my $i (keys %::FORM) {
+    my $j = url_decode($i);
+    if ($j =~ m/^\:\:checkin_/) {
+        if (lsearch(\@::CheckInList, $j) >= 0) {
+            push(@list, $j);
         }
     }
 }
 
 
-set origtree $treeid
+my $origtree = $::TreeID;
 
-switch -exact -- $FORM(command) {
-    nuke {
-        foreach i $list {
-            set w [lsearch -exact $checkinlist $i]
-            if {$w >= 0} {
-                set checkinlist [lreplace $checkinlist $w $w]
+my $what = "";
+
+my $i;
+
+SWITCH: for ($::FORM{'command'}) {
+    /^nuke$/ && do {
+        foreach $i (@list) {
+            my $w = lsearch(\@::CheckInList, $i);
+            if ($w >= 0) {
+                splice(@::CheckInList, $w, 1);
             }
         }
-        set what "deleted."
-    }
-    setopen {
-        foreach i $list {
-            upvar #0 $i info
-            set info(treeopen) 1
+        $what = "deleted.";
+        last SWITCH;
+    };
+    /^setopen$/ && do {
+        foreach $i (@list) {
+            my $info = eval("\\%" . $i);
+            $info->{'treeopen'} = 1;
         }
-        set what "modified to be open."
-    }
+        $what = "modified to be open.";
+        last SWITCH;
+    };
 
-    setclose {
-        foreach i $list {
-            upvar #0 $i info
-            set info(treeopen) 0
+    /^setclose$/ && do {
+        foreach $i (@list) {
+            my $info = eval("\\%" . $i);
+            $info->{'treeopen'} = 0;
         }
-        set what "modified to be closed."
-    }
-    movetree {
-        if {[cequal $treeid $FORM(desttree)]} {
-            puts "<H1>Pick a different tree</H1>"
-            puts "You attempted to move checkins into the tree that they're"
-            puts "already in.  Hit <b>Back</b> and try again."
-            PutsTrailer
-            exit
+        $what = "modified to be closed.";
+        last SWITCH;
+    };
+    /^movetree$/ && do {
+        if ($treeid eq  $::FORM{'desttree'}) {
+            print "<H1>Pick a different tree</H1>\n";
+            print "You attempted to move checkins into the tree that\n";
+            print "they're already in.  Hit <b>Back</b> and try again.\n";
+            PutsTrailer();
+            exit();
         }
-        foreach i $list {
-            set w [lsearch -exact $checkinlist $i]
-            if {$w >= 0} {
-                set checkinlist [lreplace $checkinlist $w $w]
+        foreach $i (@list) {
+            my $w = lsearch(\@::CheckInList, $i);
+            if ($w >= 0) {
+                splice(@::CheckInList, $w, 1);
             }
         }
-        WriteCheckins
-        unset checkinlist
-        set treeid $FORM(desttree)
-        unset batchid
-        LoadCheckins
-        LoadTreeConfig
-        foreach i $list {
-            lappend checkinlist $i
+        WriteCheckins();
+        undef @::CheckInList;
+        $::TreeID = $::FORM{'desttree'};
+        undef $::BatchID;
+        LoadCheckins();
+        LoadTreeConfig();
+        foreach $i (@list) {
+            push(@::CheckInList, $i);
         }
-        set what "moved to the $treeinfo($treeid,description) tree."
-    }
-    default {
-        puts "<h1>No command selected</h1>"
-        puts "You need to select one of the radio command buttons at the"
-        puts "bottom.  Hit <b>Back</b> and try again."
-        PutsTrailer
-        exit
-    }
+        $what = "moved to the $::TreeInfo{$::TreeID}->{'description'} tree.";
+        last SWITCH;
+    };
+    # DEFAULT
+    print "<h1>No command selected</h1>\n";
+    print "You need to select one of the radio command buttons at the\n";
+    print "bottom.  Hit <b>Back</b> and try again.\n";
+    PutsTrailer();
+    exit();
 }
 
-WriteCheckins
-Unlock
+WriteCheckins();
+Unlock();
 
-puts "
+print "
 <H1>OK, done.</H1>
-The selected checkins have been $what"
+The selected checkins have been $what
+";
 
-set treeid $origtree
+$::TreeInfo = $origtree;
 
-PutsTrailer
-exit
+PutsTrailer();
 

@@ -11,6 +11,30 @@ will tell you what has been changed in the last week.
 
 
 
+7/9/99 Ported completely to perl!  (Due to heroic efforts by Dieter
+Weber <dieter@Compatible.COM>).  Among the things you need to do to
+get this to work are:
+
+	- Realize that this installation will clear the "hook", and will
+	  prevent you from seeing any old hooks that were created by the old
+	  TCL code.
+	- Create a treeconfig.pl, based on the tree data in your old
+	  (now obsolete) configdata.
+	- Make sure your perl contains the MailDate and libnet CPAN modules
+	  (see INSTALL for how to get these)
+	- Add a new column to the descs table (Dieter added this to speedup
+	  database rebuilds).  Feed this to mysql:
+
+		alter table descs add column hash bigint not null;
+
+	- Go visit the new editparams.cgi page, and adjust everything.
+	- Change your mail alias to point to the new handleCheckinMail.pl
+	  script (instead of handleCheckinMail.tcl)
+	- If you use the "administrator mail" feature, change its mail alias to
+	  point to the new handleAdminMail.pl (instead of handleAdminMail.tcl).
+
+
+
 4/30/99 Now uses autoconf, and comes with a configure script.  A few
 new variables can be defined in your configdata file, and probably
 need to be.  See the file configdata.in for a list of the new parameters.

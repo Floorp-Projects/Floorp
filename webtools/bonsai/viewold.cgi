@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,57 +17,62 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-LoadCheckins
+use diagnostics;
+use strict;
 
-proc IsChecked {value} {
-    global batchid
-    if {[cequal $value $batchid]} {
+LoadCheckins();
+
+sub IsChecked {
+    my ($value) = (@_);
+    if ($value == $::BatchID) {
         return "CHECKED"
     } else {
         return ""
     }
 }
 
-puts "Content-type: text/html
+print "Content-type: text/html
 
 <HTML>
 <TITLE>Let's do the time warp again...</TITLE>
 
 Which hook would you like to see?
-"
+";
 
-set list {}
+my @list;
 
 
-foreach i [glob "[DataDir]/batch-*\[0-9\]"] {
-    regexp -- {[0-9]*$} $i num
-    lappend list $num
+foreach my $i (glob(DataDir() . "/batch-*\[0-9\].pl")) {
+    if ($i =~ /batch-([0-9]*)\.pl/) {
+        print "Pushing in $1 <br>\n";
+        push(@list, $1);
+    }
 }
 
-set list [lsort -integer -decreasing $list]
+@list = sort {$b <=> $a} @list;
 
-puts "<FORM method=get action=\"toplevel.cgi\">"
-puts "<INPUT TYPE=HIDDEN NAME=treeid VALUE=$treeid>"
-puts "<INPUT TYPE=SUBMIT Value=\"Submit\"><BR>"
+print "<FORM method=get action=\"toplevel.cgi\">\n";
+print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=$::TreeID>\n";
+print "<INPUT TYPE=SUBMIT Value=\"Submit\"><BR>\n";
 
-set value [lvarpop list]
+my $value = shift(@list);
 
-puts "<INPUT TYPE=radio NAME=batchid VALUE=$value [IsChecked $value]>"
-puts "The current hook.<BR>"
+print "<INPUT TYPE=radio NAME=batchid VALUE=$value " . IsChecked($value). ">";
+print "The current hook.<BR>\n";
 
-set count 1
-foreach i $list {
-    set value [lvarpop list]
-    puts "<INPUT TYPE=radio NAME=batchid VALUE=$value [IsChecked $value]>"
-    source [DataDir]/batch-$i
-    puts "Hook for tree that closed on [MyFmtClock $closetimestamp] <BR>"
+my $count = 1;
+foreach my $i (@list) {
+    print "<INPUT TYPE=radio NAME=batchid VALUE=$i " . IsChecked($i) .
+        ">\n";
+    my $name = DataDir() . "/batch-$i.pl";
+    require "$name";
+    print "Hook for tree that closed on " . MyFmtClock($::CloseTimeStamp) .
+        "<BR>\n";
 }
 
-puts "<INPUT TYPE=SUBMIT Value=\"Submit\">"
-puts "</FORM>"
+print "<INPUT TYPE=SUBMIT Value=\"Submit\">\n";
+print "</FORM>\n";
 
-PutsTrailer
-
-exit
+PutsTrailer();

@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -18,18 +18,32 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 
-if {[llength $argv] > 0} {
-    cd [lindex $argv 0]
+use strict;
+
+if (($#ARGV >= 0) && (-d $ARGV[0])) {
+     chdir($ARGV[0]);
 } else {
-    cd [file dirname $argv0]
+    my $bonsaidir = $0;
+    $bonsaidir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
+    if ($bonsaidir eq "") {
+        $bonsaidir = ".";
+    }
+    chdir($bonsaidir);
 }
 
-set filename data/admin.[id process]
+my $filename = "data/admin.$$";
+unlink($filename);
 
-catch {unlink $filename}
-exec cat >> $filename
-catch {chmod 0666 $filename}
-exec ./adminmail.tcl $filename
-# unlink $filename
+die "Cannot Open data file: $!\n"
+     unless (open(FILE, "> $filename"));
 
-exit
+while (<STDIN>) {
+     print FILE $_;
+}
+close(FILE);
+chmod(0666, $filename);
+system("./adminmail.pl $filename");
+
+# unlink($filename);
+
+exit;

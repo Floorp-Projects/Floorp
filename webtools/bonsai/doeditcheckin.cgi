@@ -1,5 +1,5 @@
-#!/usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -17,41 +17,41 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-source CGI.tcl
+require 'CGI.pl';
 
-puts "Content-type: text/html
+print "Content-type: text/html
 
-<HTML>"
+<HTML>";
 
-CheckPassword $FORM(password)
+CheckPassword($::FORM{'password'});
 
-Lock
-LoadCheckins
+Lock();
+LoadCheckins();
 
-set busted 0
+my $busted = 0;
 
-if {![info exists $FORM(id)]} {
+my $info;
+
+if (!exists $::FORM{'id'}) {
     set busted 1
 } else {
-
-    upvar #0 $FORM(id) info
+    $info = eval("\\%" . $::FORM{'id'});
     
-    if {![info exists info(notes)]} {
-        set info(notes) ""
+    if (!exists $info{'notes'}) {
+        $info{'notes'} = "";
     }
     
-    foreach i [lsort [array names info]] {
-        if {![cequal [FormData "orig$i"] $info($i)]} {
-            set busted 1
-            set text "Key $i -- orig is [FormData "orig$i"], new is $info($i)"
-            break
+    foreach $i (sort(keys(%$info))) {
+        if (FormData("orig$i") ne $info->{$i}) {
+            $busted = 1;
+            last;
         }
     }
 }
 
-if {$busted} {
-    Unlock
-    puts "
+if ($busted) {
+    Unlock();
+    print "
 <TITLE>Oops!</TITLE>
 <H1>Someone else has been here!</H1>
 
@@ -59,45 +59,33 @@ It looks like somebody else has changed or deleted this checkin.
 Terry was too lazy to implement anything beyond detecting this
 condition.  You'd best go start over -- go back to the list of
 checkins, look for this checkin again, and decide if you still want to
-make your edits."
+make your edits.";
 
-    PutsTrailer
-    exit
+    PutsTrailer();
+    exit();
 }
 
-proc ParseTimeAndCheck {timestr} {
-    if {[catch {set result [convertclock $timestr]}]} {
-        puts "
-<TITLE>Time trap</TITLE>
-<H1>Can't grok the time</H1>
-You entered a time of <tt>$timestr</tt>, and I can't understand it.  Please
-hit <B>Back</B> and try again."
-        exit
-    }
-    return $result
-}
-
-if {[info exists FORM(nukeit)]} {
-    Log "A checkin for $info(person) has been nuked."
+if (exists $::FORM{'nukeit'}) {
+    Log("A checkin for $info->{person} has been nuked.");
 } else {
-    Log "A checkin for $info(person) has been modified."
+    Log("A checkin for $info->{person} has been modified.");
 }
 
-set info(date) [ParseTimeAndCheck [FormData datestring]]
-foreach i {person dir files notes treeopen log} {
-    set info($i) [FormData $i]
+$info->{date} = ParseTimeAndCheck(FormData('datestring'));
+foreach my $i ('person', 'dir', 'files', 'notes', 'treeopen', 'log') {
+    $info->{$i} = FormData($i);
 }
 
-if {[info exists FORM(nukeit)]} {
-    set w [lsearch -exact $checkinlist $FORM(id)]
-    if {$w >= 0} {
-        set checkinlist [lreplace $checkinlist $w $w]
+if (exists $::FORM{'nukeit'}) {
+    my $w = lsearch(\@::CheckInList, $::FORM{'id'});
+    if ($w >= 0) {
+        splice(@::CheckInList, $w, 1);
     }
 }
 
-WriteCheckins
+WriteCheckins();
 
-puts "OK, the checkin has been changed."
+print "OK, the checkin has been changed.";
 
-PutsTrailer
-exit
+PutsTrailer();
+

@@ -21,28 +21,36 @@
 #
 # Query the CVS database.
 #
-require 'lloydcgi.pl';
-require 'cvsmenu.pl';
+require 'CGI.pl';
 
 $|=1;
 
-$CVS_ROOT = $form{"cvsroot"};
+$CVS_ROOT = $::FORM{"cvsroot"};
+$CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+
+LoadTreeConfig();
+$::TreeID = $::FORM{'module'} 
+     if (!exists($::FORM{'treeid'}) &&
+         exists($::FORM{'module'}) &&
+         exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
+$::TreeID = 'default'
+     if (!exists($::TreeInfo{$::TreeID}{'repository'}) ||
+         exists($::TreeInfo{$::TreeID}{'nobonsai'}));
+
 
 # get dir, remove leading and trailing slashes
 
-$dir = $form{"dir"};
+$dir = $::FORM{"dir"};
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
-$rev = $form{"rev"};
+$rev = $::FORM{"rev"};
 
-print "Content-type: text/html
-
-<HTML>";
+print "Content-type: text/html\n\n";
 
 
 &setup_script;
-print $script_str;
+$Setup_String = $script_str;
 
 
 if( $CVS_ROOT eq ""  ){
@@ -55,31 +63,48 @@ if( $rev ne "" ){
     $s = "for branch <i>$rev</i>";
 }
 
-print "
-<head><title>Repository Directory $CVS_ROOT/$dir $s</title></head>";
-
 CheckHidden("$CVS_ROOT/$dir");
 
+$revstr = '';
+$revstr = "&rev=$rev" unless $rev eq '';
+$rootstr = '';
+$rootstr .= "&cvsroot=$::FORM{'cvsroot'}" if defined $::FORM{'cvsroot'};
+$rootstr .= "&module=$::TreeID";
+$module = $::TreeInfo{$::TreeID}{'module'};
+
+$toplevel = Param('toplevel');
+
 $output = "<DIV ALIGN=LEFT>";
+$output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";
+
+$dir = $module unless ($dir);
 
 ($dir_head, $dir_tail) = $dir =~ m@(.*/)?(.+)@;
 foreach $path (split('/',$dir_head)) {
     $link_path .= $path;
-    $output .= "<A HREF='rview.cgi?dir=$link_path";
-    $output .= "&cvsroot=$form{'cvsroot'}" if defined $form{'cvsroot'};
-    $output .= "&rev=$rev" unless $rev eq '';
-    $output .= "'>$path</A>/ ";
+    $output .= "<A HREF='rview.cgi?dir=$link_path$rootstr$revstr'>$path</A>/ ";
     $link_path .= '/';
 }
 chop ($output);
 $output .= " $s";
 $output .= "</DIV>";
 
-EmitHtmlHeader("Repository Directory", $output);
+PutsHeader("Repository Directory $toplevel/$dir $s", $output);
 
-cvsmenu("align=right width=20%");
+cvsmenu("align=right width=30%");
 
-chdir "$CVS_ROOT/$dir";
+($other_dir = $dir) =~ s!^$module/?!!;
+$other_dir_used = 1;
+
+LoadDirList();
+if (-d "$CVS_ROOT/$dir") {
+     chdir "$CVS_ROOT/$dir";
+     $other_dir_used = 0;
+} elsif (-d "$CVS_ROOT/$other_dir") {
+     chdir "$CVS_ROOT/$other_dir";
+} else {
+     chdir "$CVS_ROOT";
+}
 
 print "
 <TABLE CELLPADDING=0 CELLSPACING=0>
@@ -87,6 +112,7 @@ print "
 Goto Directory:
 </TD><TD><INPUT name=dir value='$dir' size=30>
 <INPUT name=rev value='$rev' type=hidden>
+<INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='chdir'>
 </TD></TR></FORM>
@@ -94,20 +120,43 @@ Goto Directory:
 Branch:
 </TD><TD><INPUT name=rev value='$rev' size=30>
 <INPUT name=dir value='$dir' type=hidden>
+<INPUT name=module value='$::TreeID' type=hidden>
 <INPUT name=cvsroot value='$CVS_ROOT' type=hidden>
 <INPUT type=submit value='Set Branch'>
-</TR>
+</TR></FORM>
 </TABLE>
 
 ";
 
 @dirs = ();
 
+sub clean_dirpath {
+     my ($dirpath) = @_;
+
+     $dirpath =~ s!^/+!!;
+     $dirpath =~ s!/+!/!g;
+     return $dirpath;
+}
+
+
+DIR:
 while( <*> ){
     if( -d $_ ){
-        push @dirs, $_;
+LEGALDIR:
+        for my $testdir  (sort( grep(!/\*$/, @::LegalDirs) ) ) {
+             my $trial = clean_dirpath("$other_dir/$_");
+             my $trial2 = clean_dirpath("$dir/$_");
+
+             if (($other_dir_used && $trial =~ m!^$testdir(/|$)!) ||
+                     (!$other_dir_used && $trial2 =~ m!^$testdir(/|$)!)) {
+                  push @dirs, $_;
+                  next DIR;
+             }
+        }
     }
 }
+
+
 
 if( @dirs != 0 ){
     $j = 1;
@@ -116,7 +165,7 @@ if( @dirs != 0 ){
 
 
     for $i (@dirs){
-        $form{"dir"} = ($dir ne "" ? "$dir/$i" : $i);
+        $::FORM{"dir"} = ($dir ne "" ? "$dir/$i" : $i);
         $anchor = &make_cgi_args;
         print "<dt><a href=rview.cgi${anchor}>$i</a>\n";
         if( $j % $split == 0 ){
@@ -124,7 +173,7 @@ if( @dirs != 0 ){
         }
         $j++;
     }
-    $form{"dir"} = $dir;
+    $::FORM{"dir"} = $dir;
     print "\n</tr></table>\n";
 }
 
@@ -146,6 +195,8 @@ for $_ (@files){
     $j++;
 }
 print "\n</tr></table>\n";
+
+PutsTrailer();
 
 
 sub setup_script {
