@@ -687,6 +687,9 @@ nsHTMLInputElement::Select()
   if (NS_FORM_INPUT_PASSWORD == type ||
       NS_FORM_INPUT_TEXT == type) {
  
+    // XXX Bug?  We have to give the input focus before contents can be selected
+
+    // Just like SetFocus() but without the ScrollIntoView()!
     nsCOMPtr<nsIPresContext> presContext;
     nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext)); 
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -697,6 +700,22 @@ nsHTMLInputElement::Select()
     event.widget = nsnull;
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
+    // If the DOM event was not canceled (e.g. by a JS event handler returning false)
+    if (status == nsEventStatus_eIgnore) {
+      nsCOMPtr<nsIEventStateManager> esm;
+      if (NS_OK == presContext->GetEventStateManager(getter_AddRefs(esm))) {
+        esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+      }
+
+      nsIFormControlFrame* formControlFrame = nsnull;
+      rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+      if (NS_SUCCEEDED(rv)) {
+        formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+
+        // Now Select all the text!
+        SelectAll(presContext);
+      }
+    }
   }
   return rv;
 }
@@ -920,9 +939,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_FOCUS_CONTENT:
       {
-        nsIFormControlFrame* formControlFrame = nsnull;
-        rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-        if (NS_SUCCEEDED(rv)) {
+        if (formControlFrame) {
           mSkipFocusEvent = PR_TRUE;
           formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
           mSkipFocusEvent = PR_FALSE;
@@ -936,8 +953,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // For backwards compat, trigger checks/radios/buttons with space or enter (bug 25300)
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
         if (keyEvent->keyCode == NS_VK_RETURN || keyEvent->charCode == NS_VK_SPACE) {
-          PRInt32 type;
-          GetType(&type);
           switch(type) {
             case NS_FORM_INPUT_CHECKBOX:
             case NS_FORM_INPUT_RADIO:
@@ -968,8 +983,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_MOUSE_RIGHT_DOUBLECLICK:
       case NS_MOUSE_RIGHT_BUTTON_DOWN:
       case NS_MOUSE_RIGHT_BUTTON_UP: {
-          PRInt32 type;
-          GetType(&type);
           if (type == NS_FORM_INPUT_BUTTON || 
               type == NS_FORM_INPUT_RESET || 
               type == NS_FORM_INPUT_SUBMIT ) {
@@ -983,8 +996,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_MOUSE_LEFT_CLICK:
       {
-        PRInt32 type;
-        GetType(&type);
         switch(type) {
           case NS_FORM_INPUT_CHECKBOX:
             {
@@ -1003,9 +1014,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           case NS_FORM_INPUT_IMAGE:
             {
               // Tell the frame about the click
-              nsIFormControlFrame* formControlFrame = nsnull;
-              nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-              if (NS_SUCCEEDED(rv)) {
+              if (formControlFrame) {
                 formControlFrame->MouseClicked(aPresContext);
               }
             }
@@ -1014,29 +1023,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
         } //switch 
       } break;// NS_MOUSE_LEFT_BUTTON_DOWN
-
-      case NS_FORM_SELECTED:
-      {
-        // XXX Bug?  We have to give the input focus before contents can be selected
-
-        // Just like SetFocus() but without the ScrollIntoView()!
-        nsCOMPtr<nsIEventStateManager> esm;
-        if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
-          esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-        }
-
-        nsIFormControlFrame* formControlFrame = nsnull;
-        nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-        if (NS_SUCCEEDED(rv)) {
-          formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-        }
-
-        // Now Select all the text!
-        if (NS_SUCCEEDED(rv)) {
-          SelectAll(aPresContext);
-        }
-      } break; //NS_FORM_SELECTED
-
     } //switch 
 
   } // if
