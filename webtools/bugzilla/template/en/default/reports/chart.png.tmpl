@@ -39,8 +39,12 @@
             x_labels_vertical => 1,
             x_label_skip      => x_label_skip,
             legend_placement  => "RT",
-            line_width        => 2);
-  
+            line_width        => 2,
+            dclrs             => ["lred", "lgreen", "lblue", "lyellow",
+                                  "lpurple", "lorange", "black", "green",
+                                  "blue", "dpink", "lbrown", "gray", 
+                                  "red", "dpurple", "gold", "marine"]);
+   
   # Workaround for the fact that set_legend won't take chart.labels directly, 
   # because chart.labels is an array reference rather than an array.
   graph.set_legend(chart.labels.0, chart.labels.1, chart.labels.2,

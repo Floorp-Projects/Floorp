@@ -41,7 +41,11 @@
             x_label_position  => 0.5,
             x_labels_vertical => x_labels_vertical,
             legend_placement  => "RT",
-            line_width        => 2);
+            line_width        => 2,
+            dclrs             => ["lred", "lgreen", "lblue", "lyellow",
+                                  "lpurple", "lorange", "black", "green",
+                                  "blue", "dpink", "lbrown", "gray", 
+                                  "red", "dpurple", "gold", "marine"]);
 
   # Workaround for the fact that set_legend won't take row_names directly,
   # because row_names is an array reference rather than an array.
