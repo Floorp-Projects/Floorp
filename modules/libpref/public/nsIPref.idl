@@ -74,7 +74,6 @@ interface nsIPref : nsISupports {
   void ShutDown();
 
   // Config file input
-  void ReadUserJSFile(in nsIFileSpec filename);
   void SavePrefFileAs(in nsIFileSpec filename);
 
   /* Getters */

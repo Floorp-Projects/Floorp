@@ -352,20 +352,21 @@ nsresult nsPref::useLockPrefFile()
     nsresult rv = NS_OK;
     PrefResult result = PREF_NOERROR;
     nsCOMPtr<nsIFileSpec> lockPrefFile;
-    nsXPIDLString prefVal;
     nsXPIDLCString lockFileName;
     nsXPIDLCString lockVendor;
     char *return_error = nsnull;
     PRUint32 fileNameLen = 0;
     PRUint32 vendorLen = 0;
     nsXPIDLCString configFile;
+    
+#ifdef DEBUG_tao
+    nsXPIDLString prefVal;
     if (NS_SUCCEEDED(rv = GetLocalizedUnicharPref("browser.startup.homepage",
 			getter_Copies(prefVal)) && (prefVal))) 
     {
-#ifdef DEBUG_tao
         printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
-#endif
     }
+#endif
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
 			getter_Copies(lockFileName)) && (lockFileName)))
@@ -487,8 +488,8 @@ nsresult nsPref::useLockPrefFile()
                 JS_EndRequest(gMochaContext);
             }
         }
-    GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
 #ifdef DEBUG_tao
+    GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
     printf("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
 #endif
     }
@@ -559,6 +560,7 @@ NS_IMETHODIMP nsPref::ReadUserPrefs()
 #endif
 */
 
+    JS_MaybeGC(gMochaContext);
     return rv;
 }
 
@@ -627,22 +629,21 @@ NS_IMETHODIMP nsPref::ShutDown()
     return NS_OK;
 } // nsPref::ShutDown
 
-//----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPref::ReadUserJSFile(nsIFileSpec* fileSpec)
-//----------------------------------------------------------------------------------------
-{
-    return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
-}
 
 #ifdef MOZ_OLD_LI_STUFF
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::ReadLIJSFile(nsIFileSpec* fileSpec)
 //----------------------------------------------------------------------------------------
 {
+    nsresult rv;
     NS_IF_RELEASE(mLIFileSpec);
     mLIFileSpec = fileSpec;
     NS_IF_ADDREF(mLIFileSpec);
-    return pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+    rv = pref_OpenFileSpec(fileSpec, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+
+    JS_MaybeGC(gMochaContext);
+    
+    return rv;
 }
 #endif
 
@@ -1450,7 +1451,6 @@ PrefResult pref_OpenFileSpec(
         MessageBox(nsnull,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
 #endif
 
-    JS_GC(gMochaContext);
     return result;
 } // pref_OpenFile
 
@@ -1804,6 +1804,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		NS_ASSERTION(worked, "<platform>.js was not parsed successfully");
 	}
 done:
+    JS_MaybeGC(gMochaContext);
     return JS_TRUE;
 }
 
