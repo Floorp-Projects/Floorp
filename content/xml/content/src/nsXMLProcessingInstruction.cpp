@@ -154,7 +154,7 @@ nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrRes
 NS_IMETHODIMP    
 nsXMLProcessingInstruction::GetTarget(nsString& aTarget)
 {
-  aTarget.SetString(mTarget);
+  aTarget=aTarget;
 
   return NS_OK;
 }
@@ -216,7 +216,7 @@ nsXMLProcessingInstruction::GetTag(nsIAtom*& aResult) const
 NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.SetString(mTarget);
+  aNodeName=mTarget;
   return NS_OK;
 }
 

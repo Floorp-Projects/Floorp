@@ -206,7 +206,7 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
 
   if ((NS_OK == result) && (nsnull != decl)) {
-    declString.SetString(aPropertyName);
+    declString=aPropertyName;
     declString.Append(":");
     declString.Append(aValue);
     declString.Append(aPriority);
