@@ -1,14 +1,15 @@
 package org.mozilla.update.extensions;
 
-public class Extension
+public class ExtensionItem
 {
   private int row;
   private java.lang.String id;
   private java.lang.String version;
   private java.lang.String name;
   private java.lang.String xpiURL;
+  private int type;
 
-  public Extension() 
+  public ExtensionItem() 
   {
   }
 
@@ -61,12 +62,21 @@ public class Extension
   {
     this.xpiURL = xpiURL;
   }
+  
+  public int getType() 
+  {
+    return type;
+  }
 
+  public void setType(int type) 
+  {
+    this.type = type;
+  }
 }
 
-//public class Extension
+//public class ExtensionType
 //{
-//  public Extension()
+//  public ExtensionType()
 //  {
 //  }
 //
@@ -75,5 +85,6 @@ public class Extension
 //  public String version;
 //  public String name;
 //  public String xpiURL;
+//  public int type;
 //}
 

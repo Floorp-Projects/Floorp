@@ -42,7 +42,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = downloads extensions xpinstall
+DIRS = downloads extensions update xpinstall
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # XXXben this is temporary, until Thunderbird is converted to Pinstripe on MacOS X. For now, 

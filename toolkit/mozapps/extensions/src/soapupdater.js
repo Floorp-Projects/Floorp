@@ -106,3 +106,68 @@ nsExtensionUpdater2.prototype = {
 
 };
 
+
+// this will come back later when we do custom update urls
+  getUpdateURLs: function (aExtensionID)
+  {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var appID = pref.getCharPref(PREF_EM_APP_ID);
+  
+    var urls = [];
+    if (aExtensionID) {
+      var updateURL = this._getUpdateURLInternal(aExtensionID);
+      updateURL = updateURL.replace(/%APP%/g, escape(appID));
+      updateURL = updateURL.replace(/%ITEM%/g, escape(aExtensionID));
+      urls.push(updateURL);
+    }
+    else {
+      var ctr = Components.classes["@mozilla.org/rdf/container;1"]
+                          .createInstance(Components.interfaces.nsIRDFContainer);
+      ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
+      
+      var urlHash = { };
+      
+      var e = ctr.GetElements();
+      while (e.hasMoreElements()) {
+        var r = e.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var extensionID = r.Value.substr("urn:mozilla:extension:".length, r.Value.length);
+        var updateURL = this._getUpdateURLInternal(extensionID);
+        if (!(updateURL in urlHash))
+          urlHash[updateURL] = [];
+          
+        urlHash[updateURL].push(extensionID);
+      }
+      
+      for (var url in urlHash) {
+        var guidString = "";
+        var urlCount = urlHash[url].length;
+        for (var i = 0; i < urlCount; ++i)
+          guidString += escape(urlHash[url][i] + (i < urlCount - 1 ? "," : ""));
+        url = url.replace(/%APP%/g, appID);
+        url = url.replace(/%ITEM%/g, guidString);
+        urls.push(url);
+      }
+    }
+    return urls;
+  },
+  
+  _getUpdateURLInternal: function (aExtensionID)
+  {
+    var updateURL;
+    var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
+   
+    if (this.hasArcOut(extension, this._emR("updateURL"))) {
+      updateURL = this.GetTarget(extension, this._emR("updateURL"), true);
+      if (updateURL) 
+        updateURL = updateURL.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    }
+    
+    if (!updateURL) {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      updateURL = pref.getCharPref(PREF_EM_DEFAULTUPDATEURL);
+    }
+    return updateURL;
+  },
+  

@@ -38,46 +38,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIInputStream;
-interface nsIRDFDataSource;
-interface nsIVariant;
-
-[scriptable, uuid(37648f86-0f77-4007-929e-673a75d5438f)]
-interface nsIExtensionItem : nsISupports
+[scriptable, uuid(c8a2339e-770a-417d-ab9c-efde1f23ba24)]
+interface nsIBackgroundUpdateService : nsISupports
 {
-  readonly attribute string   id;
-  readonly attribute string   version;
-  readonly attribute wstring  name;
-  readonly attribute long     row;
-  readonly attribute wstring  xpiURL;
-
-  const unsigned short TYPE_EXTENSION   = 0x01;
-  const unsigned short TYPE_THEME       = 0x02;
-  const unsigned short TYPE_LOCALE      = 0x04;
-
-  readonly attribute long     type;
-
-  void init(in string aID, in string aVersion, in wstring aName, 
-            in long aRow, in wstring aXPIURL, in long aType);
-
-  nsIVariant toObject();
-};
-
-[scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
-interface nsIExtensionManager : nsISupports
-{
-  void installExtensionFromStream(in nsIInputStream aStream, in boolean aUseProfile);
-  void uninstallExtension(in string aExtensionID);
-  void enableExtension(in string aExtensionID);
-  void disableExtension(in string aExtensionID);
-
-  void installTheme(in string aThemeID);
-  void uninstallTheme(in string aThemeID);
-
-  void update([array, size_is(aItemCount)] in nsIExtensionItem aItems,
-              in unsigned long aItemCount,
-              in boolean aShowUI);
-
-  readonly attribute nsIRDFDataSource datasource;
+  void watchForUpdates();
 };
 
