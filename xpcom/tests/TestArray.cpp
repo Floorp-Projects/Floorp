@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
             AssertEqual(index, expectedIndex[count]));
     while (-1 != index) {
       count++;
-      index = array->IndexOf(foo, index + 1);
+      index = array->IndexOfStartingAt(foo, index + 1);
       if (-1 != index)
         fprintf(stdout, "IndexOf(foo): %d=%d %s\n", index, expectedIndex[count], 
                 AssertEqual(index, expectedIndex[count]));
