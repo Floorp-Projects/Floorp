@@ -52,6 +52,9 @@ OS_TEST		:= $(shell uname -m)
 #
 ifeq ($(HAVE_CCONF), 1)
 ifeq ($(OS_ARCH), Linux)
+ifeq (2.6,$(findstring 2.6,$(OS_RELEASE)))
+OS_RELEASE	:=2.6
+endif
 ifeq (2.4,$(findstring 2.4,$(OS_RELEASE)))
 OS_RELEASE	:=2.4
 endif
