@@ -68,6 +68,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) status.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) toolbar.xml $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) BrowserInitPage.html $(DIST)\bin\res\samples
+        $(MAKE_INSTALL) contentframe.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) sidebar.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator.css $(DIST)\bin\res\samples
@@ -87,6 +88,7 @@ clobber::
 	rm -f $(DIST)\res\samples\status.html
 	rm -f $(DIST)\res\samples\status.xul
 	rm -f $(DIST)\res\samples\BrowserInitPage.html
+        rm -f $(DIST)\res\samples\contentframe.html
 	rm -f $(DIST)\res\samples\sidebar.html
 	rm -f $(DIST)\res\samples\xul.css
 	rm -f $(DIST)\res\samples\navigator.xul
