@@ -125,8 +125,13 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
 
 function getState(status, pattern, string)
 {
+  /*
+   * Escape \n's to make them LITERAL \n's in the presentation string.
+   * We don't have to worry about this in |pattern|; such escaping is
+   * done automatically by pattern.toString(), invoked implicitly below.
+   */
+  string = string.replace(/\n/g, '\\n');
   return (status + MSG_PAT + pattern + MSG_STR + quote(string));
-
 }
 
 
