@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.15 2001/06/30 18:04:39 bryner%uiuc.edu Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.16 2001/07/25 00:37:28 bryner%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -485,8 +485,8 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
   nsresult rv;
   // use DirectoryService to find the system temp directory
   nsCOMPtr<nsILocalFile> tmpFile;
-  NS_WITH_SERVICE(nsIProperties, directoryService, 
-                                 NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIProperties> directoryService = 
+           do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return SECFailure;
   directoryService->Get(NS_OS_TEMP_DIR, 
                         NS_GET_IID(nsIFile),
