@@ -1261,7 +1261,6 @@ ifneq ($(EXPORTS),)
 ifndef NO_DIST_INSTALL
 export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) $(IFLAGS1) $^
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $(filter-out $(PUBLIC),$^))
 endif # NO_DIST_INSTALL
 endif 
 
@@ -1271,7 +1270,6 @@ export:: $(PUBLIC) $(SDK_PUBLIC)
 
 export:: $(SDK_HEADERS) 
 	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
 endif # NO_DIST_INSTALL
 endif 
@@ -1428,7 +1426,6 @@ endif
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) 
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 endif # NO_DIST_INSTALL
 
 
@@ -1483,7 +1480,6 @@ endif # NO_DIST_INSTALL
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(SDK_XPIDLSRCS))
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $^ $(PUBLIC)
-	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(notdir $^)
 	$(INSTALL) $(IFLAGS1) $^ $(SDK_PUBLIC)
 endif
 
