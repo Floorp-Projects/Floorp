@@ -22,7 +22,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "xp_core.h"
 #include "nscore.h"
 #include "nsQuickSort.h"
 #include "nsFontMetricsGTK.h"
@@ -50,7 +49,11 @@
 #define USER_DEFINED "x-user-def"
 
 #undef NS_FONT_DEBUG
+#undef NOISY_FONTS
+#undef REALLY_NOISY_FONTS
+
 #define NS_FONT_DEBUG 1
+
 #ifdef NS_FONT_DEBUG
 #define NS_FONT_DEBUG_LOAD_FONT   0x01
 #define NS_FONT_DEBUG_CALL_TRACE  0x02
@@ -58,6 +61,22 @@
 #define NS_FONT_DEBUG_SIZE_FONT   0x08
 #define NS_FONT_DEBUG_SCALED_FONT 0x10
 static PRUint32 gDebug = 0;
+
+#define DEBUG_PRINTF_MACRO(x, type) \
+            PR_BEGIN_MACRO \
+              if (gDebug & (type)) { \
+                printf x ; \
+                printf(", %s %d\n", __FILE__, __LINE__); \
+              } \
+            PR_END_MACRO 
+
+#else /* NS_FONT_DEBUG */
+
+#define DEBUG_PRINTF_MACRO(x, type) \
+            PR_BEGIN_MACRO \
+            PR_END_MACRO 
+
+#endif /* NS_FONT_DEBUG */
 
 #define DEBUG_PRINTF(x) \
          DEBUG_PRINTF_MACRO(x, 0xFFFF)
@@ -70,22 +89,6 @@ static PRUint32 gDebug = 0;
 
 #define SCALED_FONT_PRINTF(x) \
          DEBUG_PRINTF_MACRO(x, NS_FONT_DEBUG_SCALED_FONT)
-
-#define DEBUG_PRINTF_MACRO(x, type) \
-            PR_BEGIN_MACRO \
-              if (gDebug & (type)) { \
-                printf x ; \
-                printf(", %s %d\n", __FILE__, __LINE__); \
-              } \
-            PR_END_MACRO 
-#else
-#define FIND_FONT_PRINTF(x, type) \
-            PR_BEGIN_MACRO \
-            PR_END_MACRO 
-#endif
-
-#undef NOISY_FONTS
-#undef REALLY_NOISY_FONTS
 
 struct nsFontCharSetMap;
 struct nsFontFamilyName;
@@ -985,11 +988,9 @@ static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
 #ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
   printf("font = '");
   fputs(aFamily, stdout);
   printf("'\n");
-#endif
 #endif
 
   if (!IsASCIIFontName(aFamily)) {
@@ -1138,26 +1139,23 @@ void nsFontMetricsGTK::RealizeFont()
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  int lineSpacing = fontInfo->ascent + fontInfo->descent;
-  if (lineSpacing > mWesternFont->mSize) {
-    mLeading = nscoord((lineSpacing - mWesternFont->mSize) * f);
+  nscoord lineSpacing = (fontInfo->ascent + fontInfo->descent) * f;
+  // XXXldb Shouldn't we get mEmHeight from the metrics?
+  mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
+  if (lineSpacing > mEmHeight) {
+    mLeading = lineSpacing - mEmHeight;
   }
   else {
     mLeading = 0;
   }
-  mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
-  mEmAscent = nscoord(fontInfo->ascent * mWesternFont->mSize * f / lineSpacing);
+  mMaxHeight = nscoord((fontInfo->ascent + fontInfo->descent) * f);
+  mMaxAscent = nscoord(fontInfo->ascent * f);
+  mMaxDescent = nscoord(fontInfo->descent * f);
+
+  mEmAscent = nscoord(mMaxAscent * mEmHeight / lineSpacing);
   mEmDescent = mEmHeight - mEmAscent;
 
-  mMaxHeight = nscoord((fontInfo->max_bounds.ascent +
-                        fontInfo->max_bounds.descent) * f);
-  mMaxAscent = nscoord(fontInfo->max_bounds.ascent * f) ;
-  mMaxDescent = nscoord(fontInfo->max_bounds.descent * f);
-
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
-
-  // 56% of ascent, best guess for non-true type
-  mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
 
   gint rawWidth;
   if ((fontInfo->min_byte1 == 0) && (fontInfo->max_byte1 == 0)) {
@@ -1173,18 +1171,18 @@ void nsFontMetricsGTK::RealizeFont()
   mSpaceWidth = NSToCoordRound(rawWidth * f);
 
   unsigned long pr = 0;
-
-  if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr))
+  if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr) &&
+      pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
   {
-    if (pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
-    {
-      mXHeight = nscoord(pr * f);
+    mXHeight = nscoord(pr * f);
 #ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
-      printf("xHeight=%d\n", mXHeight);
+    printf("xHeight=%d\n", mXHeight);
 #endif
-#endif
-    }
+  }
+  else 
+  {
+    // 56% of ascent, best guess for non-true type
+    mXHeight = NSToCoordRound((float) fontInfo->ascent* f * 0.56f);
   }
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))
@@ -1193,9 +1191,7 @@ void nsFontMetricsGTK::RealizeFont()
      * fonts served by xfsft (not xfstt!) */
     mUnderlineOffset = -NSToIntRound(pr * f);
 #ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
     printf("underlineOffset=%d\n", mUnderlineOffset);
-#endif
 #endif
   }
   else
@@ -1211,9 +1207,7 @@ void nsFontMetricsGTK::RealizeFont()
     /* this will only be provided from adobe .afm fonts */
     mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
     printf("underlineSize=%d\n", mUnderlineSize);
-#endif
 #endif
   }
   else
@@ -1227,9 +1221,7 @@ void nsFontMetricsGTK::RealizeFont()
   {
     mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
     printf("superscriptOffset=%d\n", mSuperscriptOffset);
-#endif
 #endif
   }
   else
@@ -1241,9 +1233,7 @@ void nsFontMetricsGTK::RealizeFont()
   {
     mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
 #ifdef REALLY_NOISY_FONTS
-#ifdef DEBUG
     printf("subscriptOffset=%d\n", mSubscriptOffset);
-#endif
 #endif
   }
   else
@@ -2784,9 +2774,7 @@ SetCharsetLangGroup(nsFontCharSetInfo* aCharSetInfo)
     if (NS_FAILED(res)) {
       aCharSetInfo->mLangGroup = NS_NewAtom("");
 #ifdef NOISY_FONTS
-#ifdef DEBUG
       printf("=== cannot get lang group for %s\n", aCharSetInfo->mCharSet);
-#endif
 #endif
     }
   }
@@ -3107,9 +3095,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     }
     if (!charSetInfo) {
 #ifdef NOISY_FONTS
-#ifdef DEBUG
       printf("cannot find charset %s\n", charSetName);
-#endif
 #endif
       charSetInfo = &Unknown;
     }
@@ -3176,9 +3162,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     int weightNumber = NS_PTR_TO_INT32(gWeights->Get(&weightKey));
     if (!weightNumber) {
 #ifdef NOISY_FONTS
-#ifdef DEBUG
       printf("cannot find weight %s\n", weightName);
-#endif
 #endif
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
@@ -3196,9 +3180,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
     int stretchIndex = NS_PTR_TO_INT32(gStretches->Get(&setWidthKey));
     if (!stretchIndex) {
 #ifdef NOISY_FONTS
-#ifdef DEBUG
       printf("cannot find stretch %s\n", setWidth);
-#endif
 #endif
       stretchIndex = 5;
     }
@@ -4198,6 +4180,7 @@ nsFontEnumeratorGTK::EnumerateFonts(const char* aLangGroup,
   // XXX still need to implement aLangGroup and aGeneric
   return EnumFonts(langGroup, aGeneric, aCount, aResult);
 }
+
 NS_IMETHODIMP
 nsFontEnumeratorGTK::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 {
