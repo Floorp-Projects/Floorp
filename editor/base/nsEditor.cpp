@@ -1185,7 +1185,6 @@ nsEditor::EnableUndo(PRBool aEnable)
                                         nsnull,
                                         NS_GET_IID(nsITransactionManager), getter_AddRefs(mTxnMgr));
       if (NS_FAILED(result) || !mTxnMgr) {
-        printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
       }
     }
