@@ -1001,7 +1001,7 @@ nsXMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
 // Id attribute matching function used by nsXMLDocument and
 // nsHTMLDocument.
 nsIContent *
-MatchElementId(nsIContent *aContent, const nsAString& aId)
+MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString& aId)
 {
   if (aContent->IsContentOfType(nsIContent::eHTML)) {
     if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
@@ -1019,7 +1019,7 @@ MatchElementId(nsIContent *aContent, const nsAString& aId)
     if (xmlContent) {
       nsCOMPtr<nsIAtom> value;
       if (NS_SUCCEEDED(xmlContent->GetID(getter_AddRefs(value))) &&
-          value && value->Equals(aId)) {
+          value && value->EqualsUTF8(aUTF8Id)) {
         return aContent;
       }
     }
@@ -1032,7 +1032,7 @@ MatchElementId(nsIContent *aContent, const nsAString& aId)
   nsCOMPtr<nsIContent> child;
   for (i = 0; i < count && result == nsnull; i++) {
     aContent->ChildAt(i, getter_AddRefs(child));
-    result = MatchElementId(child, aId);
+    result = MatchElementId(child, aUTF8Id, aId);
   }  
 
   return result;
@@ -1058,7 +1058,9 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
   // Note that content is *not* refcounted here, so do *not* release it!
-  nsIContent *content = MatchElementId(mRootContent, aElementId);
+  nsIContent *content = MatchElementId(mRootContent,
+                                       NS_ConvertUCS2toUTF8(aElementId),
+                                       aElementId);
 
   if (!content) {
     return NS_OK;
