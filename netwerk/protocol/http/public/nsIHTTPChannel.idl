@@ -56,7 +56,7 @@ interface nsIHTTPChannel : nsIChannel
     void SetRequestHeader(in nsIAtom headerAtom, in string value);
     nsISimpleEnumerator GetRequestHeaderEnumerator();
 
-    void SetRequestMethod(in unsigned long method);
+    void SetRequestMethod(in nsIAtom methodAtom);
 //  NS_IMETHOD SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
 
     /* 
