@@ -188,7 +188,7 @@ XFE_RDFTreeView::createTree()
 	
 	XtAddCallback(_tree, XmNexpandCallback, expand_row_cb, this);
 	XtAddCallback(_tree, XmNcollapseCallback, collapse_row_cb, this);
-	XtAddCallback(_tree, XmNdeleteCallback, delete_cb, NULL);
+	XtAddCallback(_tree, XmNdeleteCallback, delete_cb, this);
 	XtAddCallback(_tree, XmNactivateCallback, activate_cb, this);
 	XtAddCallback(_tree, XmNresizeCallback, resize_cb, this);
 	XtAddCallback(_tree, XmNeditCallback, edit_cell_cb, this);
