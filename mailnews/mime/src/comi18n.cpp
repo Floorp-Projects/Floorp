@@ -1550,6 +1550,14 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted)
 {
+  static void *owningthread;
+
+  if (owningthread) {
+    NS_CheckThreadSafe(owningthread, "MIME_ConvertCharset() not thread-safe.  Please note in bug 70499.");
+ } else {
+    owningthread = NS_CurrentThread();
+ }
+
   if (!autoDetection && from_charset && to_charset &&
       (!nsCRT::strcasecmp(from_charset,to_charset) ||
        (!nsCRT::strcasecmp(from_charset,"us-ascii") && !nsCRT::strcasecmp(to_charset,"UTF-8")) ||
