@@ -1,0 +1,4 @@
+nsIDOMXULCommandDispatcher.idl
+nsIDOMXULDocument.idl
+nsIDOMXULElement.idl
+nsIDOMXULTreeElement.idl
