@@ -56,20 +56,11 @@ progressmeter {
   min-height: 15px;
 }
 
-progressmeter[mode="undetermined"] {
-  background: url("chrome://global/skin/progressmeter/progressmeter-busy.gif") repeat-x 0% 50%;
-}
-
 .progress-bar 
 {
   -moz-appearance: progresschunk;
   min-width: 0px;
   background-color: ThreeDShadow;
-}
-
-.progress-bar[mode="undetermined"],
-.progress-remainder[mode="undetermined"] {
-  visibility: collapse;
 }
 
 /* ::::: statusbar progressmeter ::::: */

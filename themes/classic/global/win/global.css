@@ -61,6 +61,10 @@ menulist > menupopup,
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
 }
 
+progressmeter[mode="undetermined"] {
+  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-undetermined");
+}
+
 /* ::::: root elements ::::: */
 
 window,
