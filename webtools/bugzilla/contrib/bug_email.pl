@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.2 2000/02/13 02:16:11 seth%cs.brandeis.edu Exp $
+# $Id: bug_email.pl,v 1.3 2000/02/13 14:39:47 seth%cs.brandeis.edu Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -45,16 +45,21 @@
 # - updated so that it works out of bugzilla/contrib
 # - initial checkin into the mozilla CVS tree (yay)
 
+# 02/13/2000 (SML)
+# - email transformation code.  
+#   EMAIL_TRANSFORM_NONE does exact email matches
+#   EMAIL_TRANSFORM_NAME_ONLY matches on the username 
+#   EMAIL_TRANSFORM_BASE_DOMAIN matches on the username and checks the domain of
+#    to see that the one in the database is a subset of the one in the sender address
+#    this is probably prone to false positives and probably needs more work.
+
 # Next round of revisions :
-# - canonical email transformation (i.e., seth@job.cs.brandeis.edu == seth@cs.brandeis.edu)
 # - default product and component (i.e., if you don't specify a product and component, it goes into a PENDING product)
 # - querying a bug over email
 # - appending a bug over email
 # - keywords over email
 # - use the globals.pl parameters functionality to edit and save this script's parameters
 # - integrate some setup in the checksetup.pl script
-
-# FWIW, the first two things are necessary for this to be useful in my setup, so they get an overwhelming bit of priority
 
 use diagnostics;
 use strict;
@@ -101,7 +106,22 @@ sub findUser($) {
     my $found_address = FetchOneColumn();
     return $found_address;
   } elsif ($email_transform eq $EMAIL_TRANSFORM_BASE_DOMAIN) {
-    
+    my ($username) = ($address =~ /(.+)@/);
+    my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
+    SendSQL($stmt);
+
+    my $domain;
+    my $found = undef;
+    my $found_address;
+    my $new_address = undef;
+    while ((!$found) && ($found_address = FetchOneColumn())) {
+      ($domain) = ($found_address =~ /.+@(.+)/);
+      if ($address =~ /$domain/) {
+        $found = 1;
+        $new_address = $found_address;
+      }
+    }
+    return $new_address;
   } elsif ($email_transform eq $EMAIL_TRANSFORM_NAME_ONLY) {
     my ($username) = ($address =~ /(.+)@/);
     my $stmt = "SELECT login_name FROM profiles WHERE profiles.login_name RLIKE \'$username\';";
@@ -770,12 +790,17 @@ die (" *** Cant find Sender-adress in sent mail ! ***\n" ) unless defined( $Send
 chomp( $Sender );
 chomp( $Message_ID );
 
+ConnectToDatabase();
 
 $SenderShort = $Sender;
 $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;
 
-# FIXME: run sender short via a method to get a canonical email address (SML)
-#print "Sender short is $SenderShort\n";
+$SenderShort = findUser($SenderShort);
+
+if ($SenderShort == undef) {
+  $SenderShort = $Sender;
+  $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;
+}
 
 my $Subject = "";
 $Subject = $entity->get( 'Subject' );
@@ -838,7 +863,6 @@ if ( $Body =~ /^\s*$/s ) {
 
 
 # umask 0;
-ConnectToDatabase();
 
 # Check Permissions ...
 if (! CheckPermissions("CreateBugs", $SenderShort ) ) {
@@ -1277,7 +1301,7 @@ END
 
     Reply( $SenderShort, $Message_ID, "Bugzilla Error", $errreply );
 
-print getErrorText();
+    # print getErrorText();
     # print getWarningText();
     # print generateTemplate();
 }
