@@ -43,6 +43,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLineBox.h"
 #include "nsReflowPath.h"
+#include "nsCSSPseudoElements.h"
 
 class nsBlockReflowState;
 class nsBulletFrame;
@@ -212,7 +213,12 @@ protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
 
-  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsIPresContext* aPresContext);
+  already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsIPresContext* aPresContext)
+  {
+    return aPresContext->ProbePseudoStyleContextFor(mContent,
+                                                    nsCSSPseudoElements::firstLetter,
+                                                    mStyleContext);
+  }
 
   /*
    * Overides member function of nsHTMLContainerFrame. Needed to handle the 
