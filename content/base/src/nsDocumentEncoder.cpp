@@ -793,7 +793,7 @@ nsDocumentEncoder::SerializeRangeToString(nsIDOMRange *aRange,
   if (!mCommonParent)
     return NS_OK;
     
-  AdjustCommonParent(&mCommonParent);
+  AdjustCommonParent(address_of(mCommonParent));
 
   aRange->GetStartContainer(getter_AddRefs(startParent));
   NS_ENSURE_TRUE(startParent, NS_ERROR_FAILURE);
@@ -1223,9 +1223,9 @@ nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
   PRInt32 opStartOffset, opEndOffset;
   nsCOMPtr<nsIDOMRange> opRange;
   
-  rv = GetPromotedPoint( kStart, startNode, startOffset, &opStartNode, &opStartOffset);
+  rv = GetPromotedPoint( kStart, startNode, startOffset, address_of(opStartNode), &opStartOffset);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = GetPromotedPoint( kEnd, endNode, endOffset, &opEndNode, &opEndOffset);
+  rv = GetPromotedPoint( kEnd, endNode, endOffset, address_of(opEndNode), &opEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = inRange->SetStart(opStartNode, opStartOffset);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1267,7 +1267,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
         bResetPromotion = PR_TRUE;
       }
       // else
-      rv = GetNodeLocation(aNode, &parent, &offset);
+      rv = GetNodeLocation(aNode, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else
@@ -1280,7 +1280,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
     // first node in the container, and as long as we haven't hit the body node.
     if (!IsRoot(node))
     {
-      rv = GetNodeLocation(node, &parent, &offset);
+      rv = GetNodeLocation(node, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == -1) return NS_OK; // we hit generated content; STOP
       while ((IsFirstNode(node)) && (!IsRoot(parent)))
@@ -1306,7 +1306,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
         }
          
         node = parent;
-        rv = GetNodeLocation(node, &parent, &offset);
+        rv = GetNodeLocation(node, address_of(parent), &offset);
         NS_ENSURE_SUCCESS(rv, rv);
         if (offset == -1)  // we hit generated content; STOP
         {
@@ -1351,7 +1351,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
           return NS_OK;
         bResetPromotion = PR_TRUE;
       }
-      rv = GetNodeLocation(aNode, &parent, &offset);
+      rv = GetNodeLocation(aNode, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else
@@ -1365,7 +1365,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
     // last node in the container, and as long as we haven't hit the body node.
     if (!IsRoot(node))
     {
-      rv = GetNodeLocation(node, &parent, &offset);
+      rv = GetNodeLocation(node, address_of(parent), &offset);
       NS_ENSURE_SUCCESS(rv, rv);
       if (offset == -1) return NS_OK; // we hit generated content; STOP
       while ((IsLastNode(node)) && (!IsRoot(parent)))
@@ -1391,7 +1391,7 @@ nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 
         }
           
         node = parent;
-        rv = GetNodeLocation(node, &parent, &offset);
+        rv = GetNodeLocation(node, address_of(parent), &offset);
         NS_ENSURE_SUCCESS(rv, rv);
         if (offset == -1)  // we hit generated content; STOP
         {
@@ -1495,7 +1495,7 @@ nsHTMLCopyEncoder::IsFirstNode(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset, j=0;
-  nsresult rv = GetNodeLocation(aNode, &parent, &offset);
+  nsresult rv = GetNodeLocation(aNode, address_of(parent), &offset);
   if (NS_FAILED(rv)) 
   {
     NS_NOTREACHED("failure in IsFirstNode");
@@ -1537,7 +1537,7 @@ nsHTMLCopyEncoder::IsLastNode(nsIDOMNode *aNode)
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset,j;
   PRUint32 numChildren;
-  nsresult rv = GetNodeLocation(aNode, &parent, &offset);
+  nsresult rv = GetNodeLocation(aNode, address_of(parent), &offset);
   if (NS_FAILED(rv)) 
   {
     NS_NOTREACHED("failure in IsLastNode");

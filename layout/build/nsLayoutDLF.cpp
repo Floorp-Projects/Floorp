@@ -454,7 +454,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
 {
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIDocumentViewer> docv;
-  nsresult rv = CreateRDFDocument(aExtraInfo, &doc, &docv);
+  nsresult rv = CreateRDFDocument(aExtraInfo, address_of(doc), address_of(docv));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -495,7 +495,7 @@ nsLayoutDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
   {
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIDocumentViewer> docv;
-    if ( NS_FAILED(status = CreateRDFDocument(aExtraInfo, &doc, &docv)) )
+    if ( NS_FAILED(status = CreateRDFDocument(aExtraInfo, address_of(doc), address_of(docv))) )
       break;
 
     if ( NS_FAILED(status = docv->BindToDocument(doc, aCommand)) )

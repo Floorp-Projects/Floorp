@@ -1096,7 +1096,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
     if ((!bookmark) && (isBookmarkFlag == PR_FALSE))
     {
 		// We've never seen this folder before. Assign it an anonymous ID
-		rv = CreateAnonymousResource(&bookmark);
+		rv = CreateAnonymousResource(address_of(bookmark));
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create anonymous resource for folder");
     }
     else if (bookmark.get() == kNC_PersonalToolbarFolder)
@@ -1482,7 +1482,7 @@ BookmarkParser::ParseBookmarkSeparator(const nsString &aLine, const nsCOMPtr<nsI
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	separator;
 
-	if (NS_SUCCEEDED(rv = CreateAnonymousResource(&separator)))
+	if (NS_SUCCEEDED(rv = CreateAnonymousResource(address_of(separator))))
 	{
 		nsAutoString		defaultSeparatorName;
 		defaultSeparatorName.AssignWithConversion("-----");
@@ -3525,7 +3525,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 
 	if (!newElement)
 	{
-		if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(&newElement)))
+		if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(address_of(newElement))))
 			return(rv);
 	}
 
@@ -3634,7 +3634,7 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
 	// else if setting a new Personal Toolbar Folder, we need to work some magic!
 
 	nsCOMPtr<nsIRDFResource>	newAnonURL;
-	if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(&newAnonURL)))
+	if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(address_of(newAnonURL))))
 		return(rv);
 	// Note: use our Change() method, not mInner->Change(), due to Bookmarks magical #URL handling
 	rv = Change(kNC_PersonalToolbarFolder, kNC_URL, kNC_PersonalToolbarFolder, newAnonURL);

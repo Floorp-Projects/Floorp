@@ -220,7 +220,7 @@ nsSelectionState::RestoreSelection(nsISelection *aSel)
     item = (nsRangeStore*)mArray.ElementAt(i);
     if (!item) return NS_ERROR_UNEXPECTED;
     nsCOMPtr<nsIDOMRange> range;
-    item->GetRange(&range);
+    item->GetRange(address_of(range));
     if (!range) return NS_ERROR_UNEXPECTED;
    
     res = aSel->AddRange(range);
@@ -238,7 +238,7 @@ nsSelectionState::IsCollapsed()
   item = (nsRangeStore*)mArray.ElementAt(0);
   if (!item) return PR_FALSE;
   nsCOMPtr<nsIDOMRange> range;
-  item->GetRange(&range);
+  item->GetRange(address_of(range));
   if (!range) return PR_FALSE;
   PRBool bIsCollapsed;
   range->GetCollapsed(&bIsCollapsed);
@@ -262,8 +262,8 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
     if (!myItem || !itsItem) return PR_FALSE;
     
     nsCOMPtr<nsIDOMRange> myRange, itsRange;
-    myItem->GetRange(&myRange);
-    itsItem->GetRange(&itsRange);
+    myItem->GetRange(address_of(myRange));
+    itsItem->GetRange(address_of(itsRange));
     if (!myRange || !itsRange) return PR_FALSE;
   
     PRInt32 compResult;
@@ -327,7 +327,7 @@ nsRangeUpdater::ReclaimRange(void *aCookie)
   nsRangeStore *item = NS_STATIC_CAST(nsRangeStore*,aCookie);
   if (!item) return nsnull;
   nsCOMPtr<nsIDOMRange> outRange;
-  item->GetRange(&outRange);
+  item->GetRange(address_of(outRange));
   mArray.RemoveElement(aCookie);
   delete item;
   return outRange;
@@ -460,7 +460,7 @@ nsRangeUpdater::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, nsID
 
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
-  nsresult result = nsEditor::GetNodeLocation(aOldRightNode, &parent, &offset);
+  nsresult result = nsEditor::GetNodeLocation(aOldRightNode, address_of(parent), &offset);
   if (NS_FAILED(result)) return result;
   
   // first part is same as inserting aNewLeftnode
@@ -1456,7 +1456,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
       {
         // Get the first child of the body node:
         nsCOMPtr<nsIDOMNode> firstNode;
-        result = GetFirstEditableNode(bodyNode, &firstNode);
+        result = GetFirstEditableNode(bodyNode, address_of(firstNode));
         if (firstNode)
         {
           // if firstNode is text, set selection to beginning of the text node
@@ -1896,7 +1896,7 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   nsAutoRules beginRulesSniffing(this, kOpCreateNode, nsIEditor::ePrevious);
 
   // save node location for selection updating code.
-  nsresult result = GetNodeLocation(aElement, &parent, &offset);
+  nsresult result = GetNodeLocation(aElement, address_of(parent), &offset);
   if (NS_FAILED(result)) return result;
 
   if (mActionListeners)
@@ -1951,7 +1951,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   nsresult res;
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
-  res = GetNodeLocation(inNode, &parent, &offset);
+  res = GetNodeLocation(inNode, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
 
   // get our doc
@@ -2023,7 +2023,7 @@ nsEditor::RemoveContainer(nsIDOMNode *inNode)
   PRInt32 offset;
   PRUint32 nodeOrigLen;
   
-  res = GetNodeLocation(inNode, &parent, &offset);
+  res = GetNodeLocation(inNode, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
   
   // loop through the child nodes of inNode and promote them
@@ -2072,7 +2072,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   nsresult res;
   nsCOMPtr<nsIDOMNode> parent;
   PRInt32 offset;
-  res = GetNodeLocation(inNode, &parent, &offset);
+  res = GetNodeLocation(inNode, address_of(parent), &offset);
   if (NS_FAILED(res)) return res;
   
   // get our doc
@@ -2123,7 +2123,7 @@ nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
   
   nsCOMPtr<nsIDOMNode> oldParent;
   PRInt32 oldOffset;
-  res = GetNodeLocation(aNode, &oldParent, &oldOffset);
+  res = GetNodeLocation(aNode, address_of(oldParent), &oldOffset);
   
   if (aOffset == -1)
   {
@@ -3275,9 +3275,9 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
     // remember some selection points
     nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
     PRInt32 selStartOffset, selEndOffset;
-    result = GetStartNodeAndOffset(selection, &selStartNode, &selStartOffset);
+    result = GetStartNodeAndOffset(selection, address_of(selStartNode), &selStartOffset);
     if (NS_FAILED(result)) selStartNode = nsnull;  // if selection is cleared, remember that
-    result = GetEndNodeAndOffset(selection, &selEndNode, &selEndOffset);
+    result = GetEndNodeAndOffset(selection, address_of(selEndNode), &selEndOffset);
     if (NS_FAILED(result)) selStartNode = nsnull;  // if selection is cleared, remember that
 
     nsCOMPtr<nsIDOMNode> resultNode;
@@ -3393,9 +3393,9 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     // remember some selection points
     nsCOMPtr<nsIDOMNode> selStartNode, selEndNode, parent;
     PRInt32 selStartOffset, selEndOffset, joinOffset, keepOffset;
-    result = GetStartNodeAndOffset(selection, &selStartNode, &selStartOffset);
+    result = GetStartNodeAndOffset(selection, address_of(selStartNode), &selStartOffset);
     if (NS_FAILED(result)) selStartNode = nsnull;
-    result = GetEndNodeAndOffset(selection, &selEndNode, &selEndOffset);
+    result = GetEndNodeAndOffset(selection, address_of(selEndNode), &selEndOffset);
     if (NS_FAILED(result)) selStartNode = nsnull;
     
     
@@ -3404,9 +3404,9 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     if (aNodeToKeepIsFirst) leftNode = aNodeToKeep;
     result = GetLengthOfDOMNode(leftNode, firstNodeLength);
     if (NS_FAILED(result)) return result;
-    result = GetNodeLocation(aNodeToJoin, &parent, &joinOffset);
+    result = GetNodeLocation(aNodeToJoin, address_of(parent), &joinOffset);
     if (NS_FAILED(result)) return result;
-    result = GetNodeLocation(aNodeToKeep, &parent, &keepOffset);
+    result = GetNodeLocation(aNodeToKeep, address_of(parent), &keepOffset);
     if (NS_FAILED(result)) return result;
     
     // if selection endpoint is between the nodes, remember it as being
@@ -3792,7 +3792,7 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   if (IsTextNode(aParentNode))
   {
     nsCOMPtr<nsIDOMNode> parent;
-    nsEditor::GetNodeLocation(aParentNode, &parent, &aOffset);
+    nsEditor::GetNodeLocation(aParentNode, address_of(parent), &aOffset);
     aParentNode = parent;
     aOffset++;  // _after_ the text node
   }
