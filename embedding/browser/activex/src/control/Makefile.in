@@ -31,30 +31,34 @@ EXPORT_LIBRARY	= 1
 FORCE_SHARED_LIB= 1
 
 
-REQUIRES	= xpcom \
-		  string \
-		  js \
-		  widget \
-		  gfx \
-		  view \
-		  necko \
-		  pref \
-		  webbrwsr \
-		  docshell \
-		  dom \
-		  uriloader \
-		  layout \
-		  content \
-		  editor \
-		  webshell \
-		  profile \
-		  embed_base \
-		  necko \
-		  windowwatcher \
-		  webbrowserpersist \
-		  $(NULL)
+REQUIRES = \
+    xpcom \
+    string \
+    js \
+    widget \
+    gfx \
+    view \
+    necko \
+    pref \
+    webbrwsr \
+    docshell \
+    dom \
+    uriloader \
+    layout \
+    content \
+    editor \
+    webshell \
+    profile \
+    embed_base \
+    necko \
+    windowwatcher \
+    webbrowserpersist \
+    helperAppDlg \
+    exthandler \
+    mimetype \
+    $(NULL)
 
-CPPSRCS =                              \
+CPPSRCS = \
     StdAfx.cpp             \
     ControlSite.cpp        \
     ControlSiteIPFrame.cpp \
@@ -70,6 +74,7 @@ CPPSRCS =                              \
     DropTarget.cpp         \
     PropertyDlg.cpp        \
     PromptService.cpp      \
+    HelperAppDlg.cpp       \
     WindowCreator.cpp      \
     guids.cpp              \
     $(NULL)
