@@ -49,6 +49,7 @@ public:
   virtual void*        GetNativeData(PRUint32 aDataType);
 
   NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD           ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy);
 
   NS_IMETHOD           SetTitle(const nsString& aTitle);
   NS_IMETHOD           Show(PRBool aShow);

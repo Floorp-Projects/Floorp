@@ -87,6 +87,7 @@ public:
   NS_IMETHOD              GetClientBounds(nsRect &aRect);
   NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
   NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+  NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
 #ifdef LOSER
   NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
 #endif

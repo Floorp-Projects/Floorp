@@ -64,7 +64,7 @@ class   nsIRollupListener;
 [ptr] native nsIMouseListener(nsIMouseListener);
 [ptr] native nsIEventListener(nsIEventListener);
 [ptr] native nsIMenuListener(nsIMenuListener);
-
+[ptr] native nsIRegion(nsIRegion);
 [ptr] native nsRect(nsRect);
 [ref] native nsRectRef(nsRect);
 [ptr] native nsFont(nsFont);
@@ -76,6 +76,7 @@ class   nsIRollupListener;
 native nscolor(nscolor);
 native nscoord(nscoord);
 native nsEventStatus(nsEventStatus);
+[ref] native nsEventStatusRef(nsEventStatus);
 native PR_CALLBACK(PR_CALLBACKK);
 native EVENT_CALLBACK(EVENT_CALLBACK);
 
@@ -303,7 +304,7 @@ interface nsIWidget : nsISupports
    * @return the parent widget or nsnull if it does not have a parent
    *
    */
-  void GetParent(out nsIWidget aParent);
+  readonly attribute nsIWidget Parent;
   
   /**
    * Show or hide this widget
@@ -312,6 +313,9 @@ interface nsIWidget : nsISupports
    *
    */
   attribute PRBool Visibility;
+
+
+  void GetNativeData(in PRUint32 aDataType, out voidStar aData);
 
   /**
    * Make the window modal 
@@ -402,6 +406,15 @@ interface nsIWidget : nsISupports
    */
   void GetBorderSize(out PRInt32 aWidth, out PRInt32 aHeight);
 
+  /**
+   * Get the nsIToolkit
+   */
+  readonly attribute nsIToolkit Toolkit;
+
+  /**
+   * Get and Set the widget's z-index.
+   */
+  attribute PRInt32 ZIndex;
 
   /**
    * Set/Get the foreground color for this widget
@@ -459,8 +472,8 @@ interface nsIWidget : nsISupports
    * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
    * @see #Update()
    */
-  void InvalidateRegion([const] in nsIScriptableRegion aRegion, in PRBool aIsSynchronous);
-
+  //  void InvalidateRegion([const] in nsIScriptableRegion aRegion, in PRBool aIsSynchronous);
+  void InvalidateRegion([const] in nsIRegion aRegion, in PRBool aIsSynchronous);
   /**
    * Force a synchronous repaint of the window if there are dirty rects.
    *
@@ -509,6 +522,16 @@ interface nsIWidget : nsISupports
    *
    */
   void Scroll(in PRInt32 aDx, in PRInt32 aDy, in nsRect aClipRect);
+
+  /**
+   * Scroll an area of this widget.
+   *
+   * @param aRect source rectangle to scroll in the widget
+   * @param aDx x offset from the source
+   * @param aDy y offset from the source
+   *
+   */
+  void ScrollRect(in nsRectRef aSrcRect, in PRInt32 aDx, in PRInt32 aDy);
 
   /**
    * Set the widget's title.
@@ -583,7 +606,7 @@ interface nsIWidget : nsISupports
    * Dispatches and event to the widget
    *
    */
-  void DispatchEvent(in nsGUIEvent event, in nsEventStatus aStatus);
+  void DispatchEvent(in nsGUIEvent event, in nsEventStatusRef aStatus);
 
   /**
    * For printing and lightweight widgets
@@ -596,7 +619,7 @@ interface nsIWidget : nsISupports
    * Enables the dropping of files to a widget (XXX this is temporary)
    *
    */
-  void EnableFileDrop(in PRBool aEnable);
+  void EnableDragDrop(in PRBool aEnable);
    
   void ConvertToDeviceCoordinates(inout nscoord aX, inout nscoord aY);
 

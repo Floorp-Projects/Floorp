@@ -42,6 +42,7 @@
 
 #include "stdio.h"
 
+//#define USE_GTK_FIXED
 
 //-------------------------------------------------------------------------
 //
@@ -216,7 +217,11 @@ gint nsWindow::ConvertBorderStyles(nsBorderStyle bs)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 {
+#ifndef USE_GTK_FIXED
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
+#else
+  mWidget = gtk_fixed_new();
+#endif
   GTK_WIDGET_SET_FLAGS(mWidget, GTK_CAN_FOCUS);
   gtk_widget_set_app_paintable(mWidget, PR_TRUE);
 
@@ -337,11 +342,21 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
     // The GTK layout widget uses a clip window to do scrolling.
     // All the action happens on that window - called the 'bin_window'
     if (mWidget)
+    {
+#ifndef USE_GTK_FIXED
       return (void *) GTK_LAYOUT(mWidget)->bin_window;
+#else
+      return (void *) mWidget->window;
+#endif
+    }
   }
 
   return nsWidget::GetNativeData(aDataType);
 }
+
+#ifdef DEBUG_pavlov
+#define OH_I_LOVE_SCROLLING_SMOOTHLY
+#endif
 
 //-------------------------------------------------------------------------
 //
@@ -350,6 +365,82 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+#ifdef OH_I_LOVE_SCROLLING_SMOOTHLY
+  // copy our off screen pixmap onto the window.
+  GdkWindow *window = nsnull;
+  GdkGC *gc = nsnull;
+
+#ifndef USE_GTK_FIXED
+  window = GTK_LAYOUT(mWidget)->bin_window;
+#else
+  window = mWidget->window;
+#endif
+
+  gc = gdk_gc_new(window);
+
+  printf("nsWindow::Scroll(%i, %i\n", aDx, aDy);
+
+  if (aDx > 0) {                        /* moving left */
+    if (abs(aDx) < mBounds.width) { /* only copy if we arn't moving further than our width */
+      gdk_window_copy_area(window, gc,
+                           aDx, aDy,                              // source coords
+                           window,                                // source window
+                           0, 0,                                  // dest coords
+                           mBounds.width - aDx,                   // width
+                           mBounds.height - aDy);                 // height
+
+      nsRect rect(0, 0, aDx, mBounds.height);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(PR_TRUE); /* redraw the widget if we are jumping more than our width */
+    }
+  } else if (aDx < 0) {                 /* moving right */
+    if (abs(aDx) < mBounds.width) { /* only copy if we arn't moving further than our width */
+      gdk_window_copy_area(window, gc,
+                           0, 0,                                  // source coords
+                           window,                                // source window
+                           -aDx, -aDy,                            // dest coords
+                           mBounds.width + aDx,                   // width
+                           mBounds.height + aDy);                 // height
+      nsRect rect(mBounds.width + aDx, 0, -aDx, mBounds.height);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(PR_TRUE); /* redraw the widget if we are jumping more than our width */
+    }
+  }
+  if (aDy > 0) {                        /* moving up */
+    if (abs(aDy) < mBounds.height) { /* only copy if we arn't moving further than our height */
+      gdk_window_copy_area(window, gc,
+                           aDx, aDy,                              // source coords
+                           window,                                // source window
+                           0, 0,                                  // dest coords
+                           mBounds.width - aDx,                   // width
+                           mBounds.height - aDy);                 // height
+      nsRect rect(0, 0, mBounds.width, aDy);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(PR_TRUE); /* redraw the widget if we are jumping more than our height */
+    }
+  } else if (aDy < 0) {                 /* moving down */
+    if (abs(aDy) < mBounds.height) { /* only copy if we arn't moving further than our height */
+      gdk_window_copy_area(window, gc,
+                           0, 0,                                  // source coords
+                           window,                                // source window
+                           -aDx, -aDy,                            // dest coords
+                           mBounds.width + aDx,                   // width
+                           mBounds.height + aDy);                 // height
+      nsRect rect(0, mBounds.height + aDy, mBounds.width, -aDy);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(PR_TRUE); /* redraw the widget if we are jumping more than our height */
+    }
+  }
+
+  gdk_gc_destroy(gc);
+
+#else
+
+#ifndef USE_GTK_FIXED
   if (GTK_IS_LAYOUT(mWidget)) {
     GtkAdjustment* horiz = gtk_layout_get_hadjustment(GTK_LAYOUT(mWidget));
     GtkAdjustment* vert = gtk_layout_get_vadjustment(GTK_LAYOUT(mWidget));
@@ -358,8 +449,101 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
     gtk_adjustment_value_changed(horiz);
     gtk_adjustment_value_changed(vert);
   }
+#else
+  printf("uhh, you don't use good scrolling and you arn't using gtklayouts.. no srcolling for you.\n");
+#endif
+
+#endif
+
   return NS_OK;
 }
+
+
+
+NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy)
+{
+#ifdef OH_I_LOVE_SCROLLING_SMOOTHLY
+  // copy our off screen pixmap onto the window.
+  GdkWindow *window = nsnull;
+  GdkGC *gc = nsnull;
+
+#ifndef USE_GTK_FIXED
+  window = GTK_LAYOUT(mWidget)->bin_window;
+#else
+  window = mWidget->window;
+#endif
+
+  gc = gdk_gc_new(window);
+
+  printf("nsWindow::Scroll(%i, %i\n", aDx, aDy);
+
+  if (aDx > 0) {                        /* moving left */
+    if (abs(aDx) < aSrcRect.width) { /* only copy if we arn't moving further than our width */
+      gdk_window_copy_area(window, gc,
+                           aDx, aDy,                              // source coords
+                           window,                                // source window
+                           aSrcRect.x, aSrcRect.y,                // dest coords
+                           aSrcRect.width - aDx,                  // width
+                           aSrcRect.height - aDy);                // height
+
+      nsRect rect(0, 0, aDx, aSrcRect.height);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our width */
+    }
+  } else if (aDx < 0) {                 /* moving right */
+    if (abs(aDx) < aSrcRect.width) { /* only copy if we arn't moving further than our width */
+      gdk_window_copy_area(window, gc,
+                           aSrcRect.x, aSrcRect.y,                // source coords
+                           window,                                // source window
+                           -aDx, -aDy,                            // dest coords
+                           aSrcRect.width + aDx,                  // width
+                           aSrcRect.height + aDy);                // height
+      nsRect rect(aSrcRect.width + aDx, 0, -aDx, aSrcRect.height);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our width */
+    }
+  }
+  if (aDy > 0) {                        /* moving up */
+    if (abs(aDy) < aSrcRect.height) { /* only copy if we arn't moving further than our height */
+      gdk_window_copy_area(window, gc,
+                           aDx, aDy,                              // source coords
+                           window,                                // source window
+                           aSrcRect.x, aSrcRect.y,                // dest coords
+                           aSrcRect.width - aDx,                  // width
+                           aSrcRect.height - aDy);                // height
+      nsRect rect(0, 0, aSrcRect.width, aDy);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our height */
+    }
+  } else if (aDy < 0) {                 /* moving down */
+    if (abs(aDy) < aSrcRect.height) { /* only copy if we arn't moving further than our height */
+      gdk_window_copy_area(window, gc,
+                           aSrcRect.x, aSrcRect.y,                // source coords
+                           window,                                // source window
+                           -aDx, -aDy,                            // dest coords
+                           aSrcRect.width + aDx,                  // width
+                           aSrcRect.height + aDy);                // height
+      nsRect rect(0, aSrcRect.height + aDy, aSrcRect.width, -aDy);
+      Invalidate(rect, PR_TRUE);
+    } else {
+      Invalidate(aSrcRect, PR_TRUE); /* redraw the area of the widget if we are jumping more than our height */
+    }
+  }
+
+  gdk_gc_destroy(gc);
+
+#else
+
+  printf("uhh, you don't use good scrolling and you want to scroll a rect?  too bad.\n");
+
+#endif
+
+  return NS_OK;
+}
+
 
 
 NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
@@ -371,7 +555,6 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
   return NS_OK;
 }
-
 
 // Just give the window a default icon, Mozilla.
 #include "mozicon50.xpm"
@@ -751,6 +934,7 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   }
   else if (mWidget) 
   {
+#ifndef USE_GTK_FIXED
     GtkWidget *    layout = mWidget->parent;
 
     GtkAdjustment* ha = gtk_layout_get_hadjustment(GTK_LAYOUT(layout));
@@ -764,6 +948,10 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
                       mWidget, 
                       aX + x_correction, 
                       aY + y_correction);
+#else
+    gtk_fixed_move(GTK_FIXED(mWidget->parent), mWidget, aX, aY);
+#endif
+    
   }
 
   return NS_OK;
