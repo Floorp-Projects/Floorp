@@ -57,8 +57,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
-#include "nsBoxLayoutState.h"
-#include "nsIBox.h"
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIScriptGlobalObject.h"
@@ -609,30 +607,11 @@ nsPresContext::ClearStyleDataAndReflow()
     mShell->GetStyleSet(getter_AddRefs(set));
     set->ClearStyleData(this, nsnull, nsnull);
 
-    // Have the root frame's style context remap its style based on the
-    // user preferences
-    nsIFrame* rootFrame;
-
-    mShell->GetRootFrame(&rootFrame);
-    if (rootFrame) {
-      // boxes know how to coelesce style changes. So if our root frame is a box
-      // then tell it to handle it. If its a block we are stuck with a full top to bottom
-      // reflow. -EDV
-      nsIFrame* child = nsnull;
-      rootFrame->FirstChild(this, nsnull, &child);
-      nsresult rv;
-      nsCOMPtr<nsIBox> box = do_QueryInterface(child, &rv);
-      if (NS_SUCCEEDED(rv) && box) {
-        nsBoxLayoutState state(this);
-        box->MarkStyleChange(state);
-      } else {
-        // Force a reflow of the root frame
-        // XXX We really should only do a reflow if a preference that affects
-        // formatting changed, e.g., a font change. If it's just a color change
-        // then we only need to repaint...
-        mShell->StyleChangeReflow();
-      }
-    }
+    // Force a reflow of the root frame
+    // XXX We really should only do a reflow if a preference that affects
+    // formatting changed, e.g., a font change. If it's just a color change
+    // then we only need to repaint...
+    mShell->StyleChangeReflow();
   }
 
   return NS_OK;
