@@ -2886,7 +2886,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
         return NULL;
     script = CompileTokenStream(cx, obj, ts, mark, NULL);
 #if JS_HAS_EXCEPTIONS
-    if (!script)
+    if (!script && !cx->fp)
         js_ReportUncaughtException(cx);
 #endif
     return script;
@@ -2953,7 +2953,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         return NULL;
     script = CompileTokenStream(cx, obj, ts, mark, NULL);
 #if JS_HAS_EXCEPTIONS
-    if (!script)
+    if (!script && !cx->fp)
         js_ReportUncaughtException(cx);
 #endif
     return script;
@@ -2988,7 +2988,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
     }
     script = CompileTokenStream(cx, obj, ts, mark, NULL);
 #if JS_HAS_EXCEPTIONS
-    if (!script)
+    if (!script && !cx->fp)
         js_ReportUncaughtException(cx);
 #endif
     return script;
@@ -3228,7 +3228,8 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
     CHECK_REQUEST(cx);
     if (!js_Execute(cx, obj, script, NULL, 0, rval)) {
 #if JS_HAS_EXCEPTIONS
-        js_ReportUncaughtException(cx);
+        if (!cx->fp)
+            js_ReportUncaughtException(cx);
 #endif
         return JS_FALSE;
     }
@@ -3332,7 +3333,7 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
         return JS_FALSE;
     ok = js_Execute(cx, obj, script, NULL, 0, rval);
 #if JS_HAS_EXCEPTIONS
-    if (!ok)
+    if (!ok && !cx->fp)
         js_ReportUncaughtException(cx);
 #endif
     JS_DestroyScript(cx, script);
@@ -3347,7 +3348,8 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
     if (!js_InternalCall(cx, obj, OBJECT_TO_JSVAL(fun->object), argc, argv,
                          rval)) {
 #if JS_HAS_EXCEPTIONS
-        js_ReportUncaughtException(cx);
+        if (!cx->fp)
+            js_ReportUncaughtException(cx);
 #endif
         return JS_FALSE;
     }
@@ -3365,7 +3367,8 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
         return JS_FALSE;
     if (!js_InternalCall(cx, obj, fval, argc, argv, rval)) {
 #if JS_HAS_EXCEPTIONS
-        js_ReportUncaughtException(cx);
+        if (!cx->fp)
+            js_ReportUncaughtException(cx);
 #endif
         return JS_FALSE;
     }
@@ -3379,7 +3382,8 @@ JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
     CHECK_REQUEST(cx);
     if (!js_InternalCall(cx, obj, fval, argc, argv, rval)) {
 #if JS_HAS_EXCEPTIONS
-        js_ReportUncaughtException(cx);
+        if (!cx->fp)
+            js_ReportUncaughtException(cx);
 #endif
         return JS_FALSE;
     }
