@@ -169,65 +169,78 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
  *  class for cells in grid-formatted property lists.
  **/
  
-treecell.propertylist {
-  border-right          : 1px solid ThreeDFace;
-  border-bottom         : 1px solid ThreeDFace;
-  padding-left          : 5px;
-}
+treecell.propertylist 
+  {
+    border-right          : 1px solid ThreeDFace;
+    border-bottom         : 1px solid ThreeDFace;
+    padding-left          : 5px;
+  }
 
-.tree-cell-primary-icon {
-  list-style-image: inherit;
-  padding-right: 2px;
-}
+.tree-cell-primary-icon 
+  {
+    list-style-image      : inherit;
+    padding-right         : 2px;
+  }
 
-.tree-cell-icon {
-  list-style-image: inherit;
-  padding-right: 2px;
-}
+.tree-cell-icon 
+  {
+    list-style-image      : inherit;
+    padding-right         : 2px;
+  }
 
-.tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/twisty-closed.gif");
-  -moz-user-focus:ignore;
-  padding-right: 2px;
-}
+.tree-cell-twisty 
+  {
+    list-style-image      : url("chrome://global/skin/twisty-closed.gif");
+    -moz-user-focus       : ignore;
+    padding-right         : 2px;
+  }
 
-.treecell-indent > .tree-cell-primary-icon {
-  padding-left: 14px;
- }
+.treecell-indent > .tree-cell-primary-icon 
+  {
+    padding-left          : 14px;
+  }
 
-treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon {
-  padding-left: 0px;
-}
+treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon 
+  {
+    padding-left          : 0px;
+  }
 
-treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/twisty-closed-selected.gif");
-}
+treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty 
+  {
+    list-style-image      : url("chrome://global/skin/twisty-closed-selected.gif");
+  }
 
-.tree-cell-twisty[disabled="true"] {
-  list-style-image: none;
-}
+.tree-cell-twisty[disabled="true"] 
+  {
+    list-style-image      : none;
+  }
 
-treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
- list-style-image: url("chrome://global/skin/twisty-open.gif");
-}
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty 
+  {
+    list-style-image      : url("chrome://global/skin/twisty-open.gif");
+  }
 
-treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
-  list-style-image: url("chrome://global/skin/twisty-open-selected.gif");
-}
+treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-cell-twisty 
+  {
+    list-style-image      : url("chrome://global/skin/twisty-open-selected.gif");
+  }
 
 /* tree header with sort direction indicators */
 
-.tree-header-sortdirection {
-  list-style-image: none;
-}
+.tree-header-sortdirection 
+  {
+    list-style-image      : none;
+  }
 
-.sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection {
-  list-style-image: url("chrome://global/skin/sortAscending.gif");
-}
+.sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection 
+  {
+    list-style-image      : url("chrome://global/skin/sortAscending.gif");
+  }
 
-.sortDirectionIndicator[sortDirection="descending"] > .treecell-header-box > .tree-header-sortdirection {
-  list-style-image: url("chrome://global/skin/sortDescending.gif");
-}
+.sortDirectionIndicator[sortDirection="descending"] > .treecell-header-box > .tree-header-sortdirection 
+  {
+    list-style-image      : url("chrome://global/skin/sortDescending.gif");
+  }
 
 /* column selection popup menu icon */
 
@@ -236,12 +249,15 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
     list-style-image       : url("chrome://global/skin/columnselect.gif");
   }
 
-
+.inline-edit-cell-box
+  {
+    margin-left           : 2px;
+  }
 
 /* Inline Editable Treecells */
 .textfield-inline-edit 
   {
-    border                : 1px solid black !important;
+    border                : 1px solid WindowFrame !important;
     margin                : 0px !important;
   }
 
