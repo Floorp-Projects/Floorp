@@ -77,6 +77,12 @@
 #endif
 #endif
 
+#if defined(__APPLE__)
+#ifndef RHAPSODY
+      error - RHAPSODY is not defined
+#endif
+#endif
+
 /************************************************************************/
 
 /* Generate cpucfg.h */
