@@ -102,10 +102,14 @@ NS_IMETHODIMP nsLatin1ToUnicode::Convert(PRUnichar * aDest,
                                          PRInt32 aSrcOffset, 
                                          PRInt32 * aSrcLength)
 {
-  if (aDest == NULL) return NS_ERROR_NULL_POINTER;
+  // XXX hello, this isn't ASCII! So do a table-driven mapping for Latin1
 
+  aSrc += aSrcOffset;
+  aDest += aDestOffset;
   PRInt32 len = PR_MIN(*aSrcLength, *aDestLength);
-  for (PRInt32 i=0; i<len; i++) *aDest++ = ((PRUint8)*aSrc++);
+  const char * srcEnd = aSrc+len;
+
+  for (;aSrc<srcEnd;) *aDest++ = ((PRUint8)*aSrc++);
 
   nsresult res = (*aSrcLength > len)? NS_PARTIAL_MORE_OUTPUT : NS_OK;
   *aSrcLength = *aDestLength = len;
@@ -118,6 +122,7 @@ NS_IMETHODIMP nsLatin1ToUnicode::Finish(PRUnichar * aDest,
                                         PRInt32 * aDestLength)
 {
   // it is really only a stateless converter...
+  *aDestLength = 0;
   return NS_OK;
 }
 
