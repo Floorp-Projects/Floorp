@@ -44,6 +44,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"
+#include "nsMsgBaseCID.h"
 
 #ifdef DEBUG_sspitzer_
 #define DEBUG_NEWS 1

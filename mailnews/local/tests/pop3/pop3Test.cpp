@@ -51,6 +51,8 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsMsgLocalCID.h"
+#include "nsMsgBaseCID.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
