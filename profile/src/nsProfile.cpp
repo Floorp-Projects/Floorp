@@ -37,7 +37,9 @@
 
 #include "nscore.h" 
 #include "nsProfile.h"
+#ifdef MOZ_PROFILELOCKING
 #include "nsProfileLock.h"
+#endif
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -499,12 +501,14 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
                 profileURLStr = PROFILE_MANAGER_URL; 
             if (exists)
             {
+#ifdef MOZ_PROFILELOCKING
                 // If the profile is locked, we need the UI
                 nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(curProfileDir));
                 nsProfileLock tempLock;
                 rv = tempLock.Lock(localFile);
                 if (NS_FAILED(rv))
                     profileURLStr = PROFILE_MANAGER_URL;
+#endif
             } 
         }
         else
@@ -1173,7 +1177,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
     }
     else
         isSwitch = PR_FALSE;
-    
+#ifdef MOZ_PROFILELOCKING    
     nsProfileLock localLock;
     nsCOMPtr<nsILocalFile> localProfileDir(do_QueryInterface(profileDir, &rv));
     if (NS_FAILED(rv)) return rv;
@@ -1183,7 +1187,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         NS_ERROR("Could not get profile directory lock.");
         return rv;
     }
-
+#endif
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
@@ -1237,8 +1241,10 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         UpdateCurrentProfileModTime(PR_FALSE);        
     }
 
+#ifdef MOZ_PROFILELOCKING    
     // Do the profile switch
     localLock.Unlock(); // gDirServiceProvider will get and hold its own lock
+#endif
     gDirServiceProvider->SetProfileDir(profileDir);  
     mCurrentProfileName.Assign(aCurrentProfile);    
     gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
