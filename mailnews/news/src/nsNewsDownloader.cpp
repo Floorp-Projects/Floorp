@@ -45,16 +45,16 @@ static NS_DEFINE_CID(kNntpServiceCID,	NS_NNTPSERVICE_CID);
 // or subclasses thereof. News can download marked objects, for example.
 nsresult nsNewsDownloader::DownloadArticles(nsIMsgWindow *window, nsIMsgFolder *folder, nsMsgKeyArray *pIds)
 {
-	if (pIds != nsnull)
-		m_keysToDownload.InsertAt(0, pIds);
-
-	if (m_keysToDownload.GetSize() > 0)
-		m_downloadFromKeys = PR_TRUE;
-
-	m_folder = folder;
+  if (pIds != nsnull)
+    m_keysToDownload.InsertAt(0, pIds);
+  
+  if (m_keysToDownload.GetSize() > 0)
+    m_downloadFromKeys = PR_TRUE;
+  
+  m_folder = folder;
   m_window = window;
-
-	PRBool headersToDownload = GetNextHdrToRetrieve();
+  
+  PRBool headersToDownload = GetNextHdrToRetrieve();
   // should we have a special error code for failure here?
   return (headersToDownload) ? DownloadNext(PR_TRUE) : NS_ERROR_FAILURE;
 }
@@ -66,10 +66,10 @@ NS_IMPL_ISUPPORTS2(nsNewsDownloader, nsIUrlListener, nsIMsgSearchNotify)
 
 nsNewsDownloader::nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *msgDB, nsIUrlListener *listener)
 {
-	m_numwrote = 0;
-	m_downloadFromKeys = PR_FALSE;
-	m_newsDB = msgDB;
-	m_abort = PR_FALSE;
+  m_numwrote = 0;
+  m_downloadFromKeys = PR_FALSE;
+  m_newsDB = msgDB;
+  m_abort = PR_FALSE;
   m_listener = listener;
   m_window = window;
   // not the perfect place for this, but I think it will work.
@@ -112,73 +112,55 @@ NS_IMETHODIMP nsNewsDownloader::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 nsresult nsNewsDownloader::DownloadNext(PRBool firstTimeP)
 {
   nsresult rv;
-  PRBool moreHeaders = GetNextHdrToRetrieve();
-  if (!moreHeaders)
+  if (!firstTimeP)
   {
-    if (m_listener)
-      m_listener->OnStopRunningUrl(nsnull, NS_OK);
-    return NS_OK;
+    PRBool moreHeaders = GetNextHdrToRetrieve();
+    if (!moreHeaders)
+    {
+      if (m_listener)
+        m_listener->OnStopRunningUrl(nsnull, NS_OK);
+      return NS_OK;
+    }
   }
-
   StartDownload();
   m_wroteAnyP = PR_FALSE;
   nsCOMPtr <nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID,&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return nntpService->FetchMessage(m_folder, m_keyToDownload, m_window, nsnull, this, nsnull);
-#ifdef DEBUG_bienvenu
-//	XP_Trace("downloading %s\n", url);
-#endif
-
-//	return NS_OK;
 }
 
 PRBool DownloadNewsArticlesToOfflineStore::GetNextHdrToRetrieve()
 {
-	nsresult rv;
+  nsresult rv;
 
-	if (m_downloadFromKeys)
-		return nsNewsDownloader::GetNextHdrToRetrieve();
+  if (m_downloadFromKeys)
+    return nsNewsDownloader::GetNextHdrToRetrieve();
 
-	if (m_headerEnumerator == nsnull)
-		rv = m_newsDB->EnumerateMessages(getter_AddRefs(m_headerEnumerator));
+  if (m_headerEnumerator == nsnull)
+    rv = m_newsDB->EnumerateMessages(getter_AddRefs(m_headerEnumerator));
 
-	PRBool hasMore = PR_FALSE;
+  PRBool hasMore = PR_FALSE;
 
-	while (NS_SUCCEEDED(rv = m_headerEnumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
-	{
+  while (NS_SUCCEEDED(rv = m_headerEnumerator->HasMoreElements(&hasMore)) && hasMore) 
+  {
     nsCOMPtr <nsISupports> supports;
     rv = m_headerEnumerator->GetNext(getter_AddRefs(supports));
     m_newsHeader = do_QueryInterface(supports);
     NS_ENSURE_SUCCESS(rv,rv);
     PRUint32 hdrFlags;
     m_newsHeader->GetFlags(&hdrFlags);
-		if (hdrFlags & MSG_FLAG_MARKED)
-		{
-			m_newsHeader->GetMessageKey(&m_keyToDownload);
-#ifdef HAVE_PORT
-			char *statusTemplate = XP_GetString (MK_MSG_RETRIEVING_ARTICLE);
-			char *statusString = PR_smprintf (statusTemplate,  m_numwrote);
-			if (statusString)
-			{
-				FE_Progress (m_context, statusString);
-				XP_FREE(statusString);
-			}
-#endif
-			break;
-		}
-		else
-		{
-			m_newsHeader = nsnull;
-		}
-	}
-#ifdef HAVE_PORT
-	if (m_newsHeader && m_dbWriteDocument)
-	{
-		m_dbWriteDocument->SetMessageHdr(m_newsHeader, m_newsDB);
-	}
-#endif
-	return hasMore;
+    if (hdrFlags & MSG_FLAG_MARKED)
+    {
+      m_newsHeader->GetMessageKey(&m_keyToDownload);
+      break;
+    }
+    else
+    {
+      m_newsHeader = nsnull;
+    }
+  }
+  return hasMore;
 }
 
 void nsNewsDownloader::Abort() {}
@@ -187,43 +169,43 @@ void nsNewsDownloader::Complete() {}
 PRBool nsNewsDownloader::GetNextHdrToRetrieve()
 {
   nsresult rv;
-	if (m_downloadFromKeys)
-	{
-		if (m_numwrote >= (PRInt32) m_keysToDownload.GetSize())
-			return PR_FALSE;
-		m_keyToDownload = m_keysToDownload.GetAt(m_numwrote++);
+  if (m_downloadFromKeys)
+  {
+    if (m_numwrote >= (PRInt32) m_keysToDownload.GetSize())
+      return PR_FALSE;
+    m_keyToDownload = m_keysToDownload.GetAt(m_numwrote++);
 #ifdef DEBUG_bienvenu
-//		XP_Trace("downloading %ld index = %ld\n", m_keyToDownload, m_numwrote);
+    //		XP_Trace("downloading %ld index = %ld\n", m_keyToDownload, m_numwrote);
 #endif
     nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(m_folder);
-//		PRInt32 stringID = (newsFolder ? MK_MSG_RETRIEVING_ARTICLE_OF : MK_MSG_RETRIEVING_MESSAGE_OF);
+    //		PRInt32 stringID = (newsFolder ? MK_MSG_RETRIEVING_ARTICLE_OF : MK_MSG_RETRIEVING_MESSAGE_OF);
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIStringBundle> bundle;
     rv = bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
-
+    
     nsAutoString firstStr;
     firstStr.AppendInt(m_numwrote);
     nsAutoString totalStr;
     totalStr.AppendInt(m_keysToDownload.GetSize());
     nsXPIDLString prettiestName;
     nsXPIDLString statusString;
-
+    
     m_folder->GetPrettiestName(getter_Copies(prettiestName));
-
+    
     const PRUnichar *formatStrings[3] = { firstStr.get(), totalStr.get(), (const PRUnichar *) prettiestName };
     rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticlesForOffline").get(), formatStrings, 3, getter_Copies(statusString));
     NS_ENSURE_SUCCESS(rv, rv);
     // ### TODO set status string on window?
-		PRInt32 percent;
-		percent = (100 * m_numwrote) / (PRInt32) m_keysToDownload.GetSize();
-		// FE_SetProgressBarPercent (m_context, percent);
+    PRInt32 percent;
+    percent = (100 * m_numwrote) / (PRInt32) m_keysToDownload.GetSize();
+    // FE_SetProgressBarPercent (m_context, percent);
     ShowProgress(statusString, percent);
-		return PR_TRUE;
-	}
-	NS_ASSERTION(PR_FALSE, "shouldn't get here if we're not downloading from keys.");
-	return PR_FALSE;	// shouldn't get here if we're not downloading from keys.
+    return PR_TRUE;
+  }
+  NS_ASSERTION(PR_FALSE, "shouldn't get here if we're not downloading from keys.");
+  return PR_FALSE;	// shouldn't get here if we're not downloading from keys.
 }
 
 nsresult nsNewsDownloader::ShowProgress(const PRUnichar *progressString, PRInt32 percent)

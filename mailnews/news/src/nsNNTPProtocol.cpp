@@ -2635,7 +2635,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 				   the local system will convert that to the local line
 				   terminator as it is read.
 				 */
-				// ** jt - in the case of save message to the stationary file if the
+				// ** jto - in the case of save message to the stationary file if the
 				// message is to be uploaded to the imap server we need to end the
 				// line with canonical line endings, i.e., CRLF
 				nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
