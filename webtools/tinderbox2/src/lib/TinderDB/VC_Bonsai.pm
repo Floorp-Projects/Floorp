@@ -37,16 +37,9 @@
 # Contributor(s): 
 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
-
-package TinderDB::VC_Bonsai;
-
 package TinderDB::VC;
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -233,7 +226,7 @@ sub load_who {
 
 
 sub html_row {
-"<tr align=center> @row </tr>\n";
+"<tr align=center> \@row </tr>\n";
 
   # Guilty
   #
