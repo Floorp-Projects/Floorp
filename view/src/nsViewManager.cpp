@@ -2233,6 +2233,11 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
 NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 {
+  nsView* rootParent = RootView()->GetParent();
+  if (rootParent) {
+    return rootParent->GetViewManager()->GrabMouseEvents(aView, aResult);
+  }
+
   // Along with nsView::SetVisibility, we enforce that the mouse grabber
   // can never be a hidden view.
   if (aView && NS_STATIC_CAST(nsView*, aView)->GetVisibility()
@@ -2262,6 +2267,11 @@ NS_IMETHODIMP nsViewManager::GrabKeyEvents(nsIView *aView, PRBool &aResult)
 
 NS_IMETHODIMP nsViewManager::GetMouseEventGrabber(nsIView *&aView)
 {
+  nsView* rootParent = RootView()->GetParent();
+  if (rootParent) {
+    return rootParent->GetViewManager()->GetMouseEventGrabber(aView);
+  }
+
   aView = mMouseGrabber;
   return NS_OK;
 }

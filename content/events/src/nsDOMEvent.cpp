@@ -620,162 +620,112 @@ nsDOMEvent::GetReconversionReply(nsReconversionEventReply** aReply)
   return NS_OK;
 }
 
-
-NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
-{
-  NS_ENSURE_ARG_POINTER(aScreenX);
+nsPoint nsDOMEvent::GetScreenPoint() {
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         !NS_IS_DRAG_EVENT(mEvent))) {
-    *aScreenX = 0;
-    return NS_OK;
+    return nsPoint(0, 0);
   }
 
   if (!((nsGUIEvent*)mEvent)->widget ) {
-    *aScreenX = mScreenPoint.x;
-    return NS_OK;
+    return mScreenPoint;
   }
     
-  nsRect bounds, offset;
-  bounds.x = mEvent->refPoint.x;
-  
+  nsRect bounds(mEvent->refPoint, nsSize(1, 1));
+  nsRect offset;
   ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
-  *aScreenX = offset.x;
-  
+  return offset.TopLeft();
+}
+
+NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
+{
+  NS_ENSURE_ARG_POINTER(aScreenX);
+  *aScreenX = GetScreenPoint().x;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
   NS_ENSURE_ARG_POINTER(aScreenY);
-  if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT &&
-        mEvent->eventStructType != NS_POPUP_EVENT &&
-        !NS_IS_DRAG_EVENT(mEvent))) {
-    *aScreenY = 0;
-    return NS_OK;
-  }
-
-  if (!((nsGUIEvent*)mEvent)->widget ) {
-    *aScreenY = mScreenPoint.y;    
-    return NS_OK;
-  }
-
-  nsRect bounds, offset;
-  bounds.y = mEvent->refPoint.y;
-  
-  ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
-  *aScreenY = offset.y;
-  
+  *aScreenY = GetScreenPoint().y;
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
-{
-  NS_ENSURE_ARG_POINTER(aClientX);
+nsPoint nsDOMEvent::GetClientPoint() {
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
         !NS_IS_DRAG_EVENT(mEvent)) ||
       !mPresContext) {
-    *aClientX = 0;
-    return NS_OK;
+    return nsPoint(0, 0);
   }
 
   if (!((nsGUIEvent*)mEvent)->widget ) {
-    *aClientX = mClientPoint.x;
-    return NS_OK;
+    return mClientPoint;
   }
 
   //My god, man, there *must* be a better way to do this.
-  nsIWidget* rootWidget = nsnull;
+  nsCOMPtr<nsIWidget> docWidget;
   nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {
     nsIViewManager* vm = presShell->GetViewManager();
     if (vm) {
-      vm->GetWidget(&rootWidget);
+      vm->GetWidget(getter_AddRefs(docWidget));
     }
   }
 
+  nsPoint pt = mEvent->refPoint;
 
-  nsRect bounds, offset;
-  offset.x = 0;
-
-  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
-  //Add extra ref since loop will free one.
-  NS_IF_ADDREF(parent);
-  nsIWidget* tmp;
-  while (rootWidget != parent && nsnull != parent) {
+  nsCOMPtr<nsIWidget> eventWidget = ((nsGUIEvent*)mEvent)->widget;
+  while (eventWidget && docWidget != eventWidget) {
     nsWindowType windowType;
-    parent->GetWindowType(windowType);
+    eventWidget->GetWindowType(windowType);
     if (windowType == eWindowType_popup)
       break;
 
-    parent->GetBounds(bounds);
-    offset.x += bounds.x;
-    tmp = parent;
-    parent = tmp->GetParent();
-    NS_RELEASE(tmp);
+    nsRect bounds;
+    eventWidget->GetBounds(bounds);
+    pt += bounds.TopLeft();
+    eventWidget = eventWidget->GetParent();
   }
-  NS_IF_RELEASE(parent);
-  NS_IF_RELEASE(rootWidget);
   
-  *aClientX = mEvent->refPoint.x + offset.x;
+  if (eventWidget != docWidget) {
+    // docWidget wasn't on the chain from the event widget to the root
+    // of the widget tree (or the nearest popup). OK, so now pt is
+    // relative to eventWidget; to get it relative to docWidget, we
+    // need to subtract docWidget's offset from eventWidget.
+    while (docWidget && docWidget != eventWidget) {
+      nsWindowType windowType;
+      docWidget->GetWindowType(windowType);
+      if (windowType == eWindowType_popup) {
+        // oh dear. the doc and the event were in different popups?
+        // That shouldn't happen.
+        NS_NOTREACHED("doc widget and event widget are in different popups. That's dumb.");
+        break;
+      }
+      
+      nsRect bounds;
+      docWidget->GetBounds(bounds);
+      pt -= bounds.TopLeft();
+      docWidget = docWidget->GetParent();
+    }
+  }
+  
+  return pt;
+}
+
+NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
+{
+  NS_ENSURE_ARG_POINTER(aClientX);
+  *aClientX = GetClientPoint().x;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
   NS_ENSURE_ARG_POINTER(aClientY);
-  if (!mEvent || 
-       (mEvent->eventStructType != NS_MOUSE_EVENT &&
-        mEvent->eventStructType != NS_POPUP_EVENT &&
-        !NS_IS_DRAG_EVENT(mEvent)) ||
-      !mPresContext) {
-    *aClientY = 0;
-    return NS_OK;
-  }
-
-  if (!((nsGUIEvent*)mEvent)->widget ) {
-    *aClientY = mClientPoint.y;
-    return NS_OK;
-  }
-
-  //My god, man, there *must* be a better way to do this.
-  nsIWidget* rootWidget = nsnull;
-  nsIPresShell *presShell = mPresContext->GetPresShell();
-  if (presShell) {
-    nsIViewManager* vm = presShell->GetViewManager();
-		if (vm) {
-      vm->GetWidget(&rootWidget);
-    }
-  }
-
-
-  nsRect bounds, offset;
-  offset.y = 0;
-
-  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
-  //Add extra ref since loop will free one.
-  NS_IF_ADDREF(parent);
-  nsIWidget* tmp;
-  while (rootWidget != parent && nsnull != parent) {
-    nsWindowType windowType;
-    parent->GetWindowType(windowType);
-    if (windowType == eWindowType_popup)
-      break;
-
-    parent->GetBounds(bounds);
-    offset.y += bounds.y;
-    tmp = parent;
-    parent = tmp->GetParent();
-    NS_RELEASE(tmp);
-  }
-  NS_IF_RELEASE(parent);
-  NS_IF_RELEASE(rootWidget);
-  
-  *aClientY = mEvent->refPoint.y + offset.y;
+  *aClientY = GetClientPoint().y;
   return NS_OK;
 }
 
