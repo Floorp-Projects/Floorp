@@ -20,6 +20,9 @@
 #endif // _AFX_NO_AFXCMN_SUPPORT
 #include <afxtempl.h>
 #include <afxmt.h>
+#include <afxpriv.h>
+
+#include <shlobj.h>
 
 // This macro is the same as IMPLEMENT_OLECREATE, except it passes TRUE
 //  for the bMultiInstance parameter to the COleObjectFactory constructor.

@@ -62,6 +62,49 @@ void CScanForFilesDlg::OnSelectFile()
 
 void CScanForFilesDlg::OnSelectFolder() 
 {
-	// TODO: Add your control notification handler code here
-	
+	BROWSEINFO bi;
+	TCHAR szFolder[MAX_PATH + 1];
+
+	memset(szFolder, 0, sizeof(szFolder));
+
+	memset(&bi, 0, sizeof(bi));
+	bi.hwndOwner = GetSafeHwnd();
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szFolder;
+	bi.lpszTitle = _T("Pick a folder to scan");
+
+	// Open the folder browser dialog
+	LPITEMIDLIST pItemList = SHBrowseForFolder(&bi);
+	if (pItemList)
+	{
+		IMalloc *pShellAllocator = NULL;
+		
+		SHGetMalloc(&pShellAllocator);
+		if (pShellAllocator)
+		{
+			char szPath[MAX_PATH + 1];
+
+			if (SHGetPathFromIDList(pItemList, szPath))
+			{
+				// Chop off the end path seperator
+				int nPathSize = strlen(szPath);
+				if (nPathSize > 0)
+				{
+					if (szPath[nPathSize - 1] == '\\')
+					{
+						szPath[nPathSize - 1] = '\0';
+					}
+				}
+
+				// Form the file pattern
+				USES_CONVERSION;
+				m_sFilePattern.Format(_T("%s\\*.*"), A2T(szPath));
+				UpdateData(FALSE);
+			}
+
+			pShellAllocator->Free(pItemList);
+			pShellAllocator->Release();
+		}
+
+	}
 }
