@@ -35,6 +35,7 @@
 /*
  * PR time code.
  */
+#include "jsstddef.h"
 #ifdef MOZILLA_CLIENT
 #include "platform.h"
 #endif

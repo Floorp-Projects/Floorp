@@ -37,6 +37,8 @@
  */
 #if JS_HAS_FILE_OBJECT
 
+#include "jsstddef.h"
+
 /* ----------------- Platform-specific includes and defines ----------------- */
 #ifdef XP_MAC
 #   define FILESEPARATOR         ':'

@@ -32,6 +32,7 @@
  * file under either the NPL or the GPL.
  */
 
+#include "jsstddef.h"
 #include "jstypes.h"
 #include "jslong.h"
 
