@@ -795,14 +795,11 @@ public:
 #endif
 
 
-#ifdef IBMBIDI
   /**
    * Let the device context know whether we want text reordered with
    * right-to-left base direction
    */
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL) = 0;
-#endif // IBMBIDI
-
 
   /* [noscript] void drawImage (in imgIContainer aImage, [const] in nsRect aSrcRect, [const] in nsPoint aDestPoint); */
   NS_IMETHOD DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint) = 0;

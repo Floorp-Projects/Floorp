@@ -492,7 +492,6 @@ void nsRenderingContextImpl::CalculateDiscreteSurfaceSize(const nsRect& aMaxBack
 
 
 
-#ifdef IBMBIDI
 /**
  * Let the device context know whether we want text reordered with
  * right-to-left base direction
@@ -502,7 +501,6 @@ nsRenderingContextImpl::SetRightToLeftText(PRBool aIsRTL)
 {
   return NS_OK;
 }
-#endif // IBMBIDI
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextImpl.h

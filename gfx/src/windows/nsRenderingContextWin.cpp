@@ -168,10 +168,8 @@ GraphicsState :: ~GraphicsState()
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95 = NOT_SETUP;
 
-#ifdef IBMBIDI
 #define DONT_INIT 0
 static DWORD gBidiInfo = NOT_SETUP;
-#endif // IBMBIDI
 
 // A few of the stock objects are needed all the time, so we just get them
 // once
@@ -194,7 +192,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
     else {
       gIsWIN95 = PR_TRUE;
 
-#ifdef IBMBIDI
       if ( (os.dwMajorVersion < 4)
            || ( (os.dwMajorVersion == 4) && (os.dwMinorVersion == 0) ) ) {
         // Windows 95 or earlier: assume it's not Bidi
@@ -210,7 +207,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
           gBidiInfo = GCP_REORDER;
         }
       }
-#endif // IBMBIDI
     }
   }
 
@@ -235,9 +231,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mMainSurface = nsnull;
 
   mStateCache = new nsVoidArray();
-#ifdef IBMBIDI
   mRightToLeftText = PR_FALSE;
-#endif
 
   //create an initial GraphicsState
 
@@ -643,7 +637,6 @@ nsRenderingContextWin :: GetHints(PRUint32& aResult)
   if (gIsWIN95)
     result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
 
-#ifdef IBMBIDI
   if (NOT_SETUP == gBidiInfo) {
     InitBidiInfo();
   }
@@ -651,7 +644,6 @@ nsRenderingContextWin :: GetHints(PRUint32& aResult)
     result |= NS_RENDERING_HINT_BIDI_REORDERING;
   if (GCP_GLYPHSHAPE == (gBidiInfo & GCP_GLYPHSHAPE) )
     result |= NS_RENDERING_HINT_ARABIC_SHAPING;
-#endif // IBMBIDI
   
   aResult = result;
 
@@ -2344,12 +2336,10 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
     mTranMatrix->TransformCoord(&data.mX, &data.mY);
   }
 
-#ifdef IBMBIDI
   if (mRightToLeftText) {
     metrics->ResolveBackwards(mDC, aString, aLength, do_DrawString, &data);
   }
   else
-#endif // IBMBIDI
   {
     metrics->ResolveForwards(mDC, aString, aLength, do_DrawString, &data);
   }
@@ -2950,7 +2940,6 @@ nsRenderingContextWin::ReleaseBackbuffer(void) {
   return DestroyCachedBackbuffer();
 }
 
-#ifdef IBMBIDI
 /**
  * Let the device context know whether we want text reordered with
  * right-to-left base direction. The Windows implementation does this
@@ -3026,7 +3015,6 @@ nsRenderingContextWin::InitBidiInfo()
     }
   }
 }
-#endif // IBMBIDI
 
 
 

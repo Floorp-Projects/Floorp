@@ -140,9 +140,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
   mCurrFillColor   = mColor + 1;
 
   mStateCache = new nsVoidArray();
-#ifdef IBMBIDI
   mRightToLeftText = PR_FALSE;
-#endif
 
   //create an initial GraphicsState
 
@@ -2283,12 +2281,10 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUi
     mTranMatrix->TransformCoord(&data.mX, &data.mY);
   }
 
-#ifdef IBMBIDI
   if (mRightToLeftText) {
     metrics->ResolveBackwards(mPS, aString, aLength, do_DrawString, &data);
   }
   else
-#endif // IBMBIDI
   {
     metrics->ResolveForwards(mPS, aString, aLength, do_DrawString, &data);
   }

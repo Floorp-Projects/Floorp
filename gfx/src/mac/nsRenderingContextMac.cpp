@@ -76,9 +76,7 @@ nsRenderingContextMac::nsRenderingContextMac()
 , mPort(nsnull)
 , mGS(nsnull)
 , mChanges(kEverythingChanged)
-#ifdef IBMBIDI
 , mRightToLeftText(PR_FALSE)
-#endif
 {
 	mFrontSurface				= new nsDrawingSurfaceMac();
 	NS_IF_ADDREF(mFrontSurface);
@@ -1259,11 +1257,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32
  	if (NS_FAILED(rv))
  		return rv;
 
-#ifdef IBMBIDI
   PRBool rtlText = mRightToLeftText;
-#else
-  PRBool rtlText = PR_FALSE;
-#endif
 
 	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
 	if (NS_SUCCEEDED(rv))
@@ -1297,11 +1291,7 @@ nsRenderingContextMac::GetTextDimensions(const PRUnichar* aString, PRUint32 aLen
   if (NS_FAILED(rv))
     return rv;
 
-#ifdef IBMBIDI
   PRBool rtlText = mRightToLeftText;
-#else
-  PRBool rtlText = PR_FALSE;
-#endif
 
   rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
 	if (NS_SUCCEEDED(rv))
@@ -1375,11 +1365,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint
 	if (nsnull == mGS->mFontMetrics)
 		return NS_ERROR_NULL_POINTER;
 
-#ifdef IBMBIDI
   PRBool rtlText = mRightToLeftText;
-#else
-  PRBool rtlText = PR_FALSE;
-#endif
 
 	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
 	if (NS_SUCCEEDED(rv))
@@ -1493,11 +1479,7 @@ nsRenderingContextMac::GetBoundingMetrics(const PRUnichar*   aString,
   if(NS_FAILED(rv))
     return rv;
   
-#ifdef IBMBIDI
   PRBool rtlText = mRightToLeftText;
-#else
-  PRBool rtlText = PR_FALSE;
-#endif
 
   rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS, mPort, rtlText);
   if(NS_SUCCEEDED(rv))
@@ -1510,14 +1492,12 @@ nsRenderingContextMac::GetBoundingMetrics(const PRUnichar*   aString,
 #endif /* MOZ_MATHML */
 
 
-#ifdef IBMBIDI
 NS_IMETHODIMP
 nsRenderingContextMac::SetRightToLeftText(PRBool aIsRTL)
 {
   mRightToLeftText = aIsRTL;
 	return NS_OK;
 }
-#endif
 
 #pragma mark -
 

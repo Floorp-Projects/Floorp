@@ -246,9 +246,7 @@ protected:
   nsIWidget           *mDCOwner;         // Parent widget
   FATTRS               mCurrFont;
 
-#ifdef IBMBIDI
   PRBool            mRightToLeftText;
-#endif // IBMBIDI
 };
 
 
