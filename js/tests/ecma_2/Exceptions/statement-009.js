@@ -8,6 +8,7 @@
 */
     var SECTION = "12.9-1-n";
     var VERSION = "ECMA_1";
+    var TITLE   = "The return statment";
 
     startTest();
     writeHeaderToLog( SECTION + " The return statement");

@@ -14,6 +14,7 @@
 */
     var SECTION = "number-003";
     var VERSION = "JS1_4";
+    var TITLE   = "Exceptions for Number.valueOf()";
 
     var tc = 0;
     var testcases = new Array();
