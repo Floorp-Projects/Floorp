@@ -519,6 +519,17 @@ EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 endif
 endif 
 
+#
+# MINGW32
+#
+ifeq ($(OS_ARCH),WINNT)
+ifdef GNU_CC
+ifndef IS_COMPONENT
+DSO_LDOPTS += -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY)
+endif
+endif
+endif
+
 ifeq ($(USE_TVFS),1)
 IFLAGS1 = -rb
 IFLAGS2 = -rb
