@@ -231,9 +231,7 @@ void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
       styleText->mWhiteSpace != NS_STYLE_WHITESPACE_NOWRAP &&
       styleText->mWhiteSpace != NS_STYLE_WHITESPACE_PRE) {
     // has fixed width, check the content for nowrap
-    nsAutoString nowrap;
-    nsresult result = GetContent()->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap, nowrap);
-    if(NS_CONTENT_ATTR_NOT_THERE != result) {
+    if (GetContent()->HasAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap)) {
       // content has nowrap (is not mapped to style be cause it has width)
       // set the max element size to the value of the fixed width (NAV/IE quirk)
       maxElemWidth = NS_MAX(maxElemWidth, stylePosition->mWidth.GetCoordValue());

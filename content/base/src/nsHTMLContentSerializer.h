@@ -68,7 +68,6 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
                                  nsAString& aStr);
  protected:
-  PRBool HasDirtyAttr(nsIContent* aContent);
   PRBool LineBreakBeforeOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
   PRBool LineBreakAfterOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
   PRBool LineBreakBeforeClose(nsIAtom* aName, PRBool aHasDirtyAttr);
