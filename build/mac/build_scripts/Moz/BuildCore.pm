@@ -84,6 +84,12 @@ sub SanityCheckBuildOptions()
         $bad_options = 1;
     }
 
+    if ($main::options{wsp} && !$main::options{iiextras})
+    {
+        print "Warning: \$options{wsp} is on but \$options{iiextras} is off. wsp will be built but won't be useable.\n";
+        $bad_options = 1;
+    }
+
     if ($bad_options) {
         print "Build will start in 5 seconds. Press command-. to stop\n";
         

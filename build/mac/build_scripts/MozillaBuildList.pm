@@ -1114,6 +1114,12 @@ sub BuildClientDist()
         InstallFromManifest(":mozilla:extensions:transformiix:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
+    #IIEXTRAS
+    if ($main::options{iiextras})
+    {
+        InstallFromManifest(":mozilla:extensions:interfaceinfo:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+
     #XMLEXTRAS
     if ($main::options{xmlextras})
     {
@@ -1439,6 +1445,11 @@ sub BuildIDLProjects()
         BuildIDLProject(":mozilla:extensions:transformiix:macbuild:transformiixIDL.xml", "transformiix");
     }
 
+    if ($main::options{iiextras})
+    {
+        BuildIDLProject(":mozilla:extensions:interfaceinfo:macbuild:iiextrasIDL.xml", "iiextras");
+    }
+
     if ($main::options{xmlextras})
     {
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.xml", "xmlextras");
@@ -1489,7 +1500,6 @@ sub BuildRuntimeProjects()
     # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
     my($C) = $main::options{carbon} ? "Carbon" : "";
     my($P) = $main::PROFILE ? "Profil" : "";
-    my($EssentialFiles) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Essential Files:" : ":mozilla:dist:viewer:Essential Files:";
 
     #//
     #// Shared libraries
@@ -1508,7 +1518,7 @@ sub BuildRuntimeProjects()
     #// Build all of the startup libraries, for Application, Component, and Shared Libraries. These are
     #// required for all subsequent libraries in the system.
     BuildProject(":mozilla:lib:mac:NSStartup:NSStartup.xml",                           "NSStartup.all");
-    
+
     BuildOneProjectWithOutput(":mozilla:lib:mac:NSRuntime:NSRuntime.xml", "NSRuntime$C$P$D.shlb", "NSRuntime$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
     BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.xml",          "MoreFiles$D.o");
@@ -2206,7 +2216,14 @@ sub BuildExtensionsProjects()
         # to link against. This is really only needed for the static build, but there is no harm in building it anyway.
         BuildOneProject(":mozilla:directory:xpcom:macbuild:LDAPClientDummyLib.xml", "LDAPClient$D.shlb", 1, 0, 0);
     }
-    
+
+    # InterfaceInfo Extras
+    if ($main::options{iiextras})
+    {
+        BuildOneProject(":mozilla:extensions:interfaceinfo:macbuild:iiextras.xml", "iiextras$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+        InstallResources(":mozilla:extensions:interfaceinfo:src:MANIFEST_COMPONENTS", "$components_dir");
+    }
+
     # XML Extras
     if ($main::options{xmlextras})
     {
