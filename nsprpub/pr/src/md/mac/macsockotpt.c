@@ -1702,19 +1702,13 @@ static PRBool GetState(PRFileDesc *fd, PRBool *readReady, PRBool *writeReady, PR
     return  *readReady || *writeReady || *exceptReady;
 }
 
-
-PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+// check to see if any of the poll descriptors have data available
+// for reading or writing.
+static PRInt32 CheckPollDescs(PRPollDesc *pds, PRIntn npds)
 {
     PRInt32 ready = 0;
     PRPollDesc *pd, *epd;
-    PRThread	*thread = _PR_MD_CURRENT_THREAD();
-    PRIntervalTime timein;
     
-    if (PR_INTERVAL_NO_TIMEOUT != timeout)
-        timein = PR_IntervalNow();
-
-    do
-    {
         for (pd = pds, epd = pd + npds; pd < epd; pd++)
         {
             PRInt16  in_flags_read = 0,  in_flags_write = 0;
@@ -1746,10 +1740,9 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                 pd->out_flags = 0;  /* pre-condition */
                 bottomFD = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
                 PR_ASSERT(NULL != bottomFD);
-                if ((NULL != bottomFD) && (_PR_FILEDESC_OPEN == bottomFD->secret->state))
-                {
-                    bottomFD->secret->md.poll.thread = thread;
                 	
+            if (bottomFD && (_PR_FILEDESC_OPEN == bottomFD->secret->state))
+            {
                     if (GetState(bottomFD, &readReady, &writeReady, &exceptReady))
                     {
                         if (readReady)
@@ -1773,7 +1766,7 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                         if (0 != pd->out_flags) ready++;
                     }
                 }
-                else
+            else    /* bad state */
                 {
                     ready += 1;  /* this will cause an abrupt return */
                     pd->out_flags = PR_POLL_NVAL;  /* bogii */
@@ -1781,17 +1774,69 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
             }
         }
 
-        if (ready > 0) return ready;
+    return ready;
+}
 
-        thread->io_pending       = PR_TRUE;
-        thread->io_fd            = NULL;
-        thread->md.osErrCode     = noErr;
+// set or clear md.poll.thread on the poll descriptors
+static void SetDescPollThread(PRPollDesc *pds, PRIntn npds, PRThread* thread)
+{
+    PRInt32     ready = 0;
+    PRPollDesc *pd, *epd;
+
+    for (pd = pds, epd = pd + npds; pd < epd; pd++)
+    {   
+        if (pd->fd)
+        { 
+            PRFileDesc *bottomFD = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
+            PR_ASSERT(NULL != bottomFD);
+            if (bottomFD && (_PR_FILEDESC_OPEN == bottomFD->secret->state))
+            {
+                bottomFD->secret->md.poll.thread = thread;
+            }
+        }        
+    }
+}
+
+PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
+{
+    PRThread    *thread = _PR_MD_CURRENT_THREAD();
+    intn is;
+    PRInt32 ready;
+    OSErr   result;
+    
+    if (timeout == PR_INTERVAL_NO_WAIT) {        
+        return CheckPollDescs(pds, npds);
+    }
+    
+    _PR_INTSOFF(is);
+    PR_Lock(thread->md.asyncIOLock);
+
+    // ensure that we don't miss the firing of the notifier while checking socket status
+    // need to set up the thread
+    PrepareForAsyncCompletion(thread, 0);
+
+    SetDescPollThread(pds, npds, thread);        
+    ready = CheckPollDescs(pds, npds);
+
+    PR_Unlock(thread->md.asyncIOLock);
+    _PR_FAST_INTSON(is);
+
+    if (ready == 0) {
         WaitOnThisThread(thread, timeout);
+        result = thread->md.osErrCode;
+        if (result != noErr && result != kETIMEDOUTErr) {
+            PR_ASSERT(0);   /* debug: catch unexpected errors */
+            ready = -1;
+        } else {
+            ready = CheckPollDescs(pds, npds);
+        }
+    } else {
+        thread->io_pending = PR_FALSE;
+    }
 
-    } while ((timeout == PR_INTERVAL_NO_TIMEOUT) ||
-           (((PRIntervalTime)(PR_IntervalNow() - timein)) < timeout));
+    SetDescPollThread(pds, npds, NULL);
 
-    return 0; /* timed out */
+    return ready;
 }
 
 
