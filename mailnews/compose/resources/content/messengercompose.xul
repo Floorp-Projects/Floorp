@@ -14,8 +14,6 @@
 <!ENTITY bccAddr.label  "Bcc:"> 
 <!ENTITY newsgroupsAddr.label   "Newsgroups:"> 
 <!ENTITY subject.label  "Subject:">
-<!-- *** AS I DON't KNOW HOW TO ACCESS THOSE ADDRESS VALUES FROM MsgComposeCommands.js, -->
-<!--     I HAVE HARDCODED THEM DIRECTLY IN THE SCRIPT *** --> 
 
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
