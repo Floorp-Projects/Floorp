@@ -31,7 +31,6 @@ CPPSRCS=                     \
 	nsIMessenger.cpp		 \
 	nsMessengerNameSet.cpp	 \
 	nsMsgKeyArray.cpp        \
-	nsMsgImapMailFolder.cpp  \
 	nsUrlListenerManager.cpp \
 	nsMsgMailSession.cpp	 \
 	nsJSMsgAppCore.cpp		\
@@ -52,7 +51,6 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsIMessenger.obj		\
 	.\$(OBJDIR)\nsMessengerNameSet.obj	\
 	.\$(OBJDIR)\nsMsgKeyArray.obj       \
-	.\$(OBJDIR)\nsMsgImapMailFolder.obj \
 	.\$(OBJDIR)\nsUrlListenerManager.obj \
 	.\$(OBJDIR)\nsMsgMailSession.obj	\
 	.\$(OBJDIR)\nsMsgAppCore.obj		\
