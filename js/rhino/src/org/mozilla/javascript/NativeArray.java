@@ -375,9 +375,9 @@ public class NativeArray extends IdScriptable {
 
     /* Support for generic Array-ish objects.  Most of the Array
      * functions try to be generic; anything that has a length
-     * property is assumed to be an array.  hasLengthProperty is
-     * needed in addition to getLengthProperty, because
-     * getLengthProperty always succeeds - tries to convert strings, etc.
+     * property is assumed to be an array.
+     * getLengthProperty returns 0 if obj does not have the length property
+     * or its value is not convertible to a number.
      */
     static long getLengthProperty(Scriptable obj) {
         // These will both give numeric lengths within Uint32 range.
@@ -390,22 +390,6 @@ public class NativeArray extends IdScriptable {
         }
         return ScriptRuntime.toUint32(ScriptRuntime
                                       .getProp(obj, "length", obj));
-    }
-
-    private static boolean hasLengthProperty(Object obj) {
-        if (obj instanceof NativeString || obj instanceof NativeArray) {
-            return true;
-        } else if (!(obj instanceof Scriptable) || obj == Undefined.instance) {
-            return false;
-        }
-        Scriptable sobj = (Scriptable)obj;
-
-        // XXX some confusion as to whether or not to walk to get the length
-        // property.  Pending review of js/[new ecma submission] treatment
-        // of 'arrayness'.
-
-        Object property = ScriptRuntime.getProp(sobj, "length", sobj);
-        return property instanceof Number;
     }
 
     /* Utility functions to encapsulate index > Integer.MAX_VALUE
@@ -999,22 +983,13 @@ public class NativeArray extends IdScriptable {
     }
 
     /*
-     * Python-esque sequence operations.
+     * See Ecma 262v3 15.4.4.4
      */
     private static Scriptable jsFunction_concat(Context cx, Scriptable scope,
                                                 Scriptable thisObj,
                                                 Object[] args)
         throws JavaScriptException
     {
-        /* Concat tries to keep the definition of an array as general
-         * as possible; if it finds that an object has a numeric
-         * 'length' property, then it treats that object as an array.
-         * This treats string atoms and string objects differently; as
-         * string objects have a length property and are accessible by
-         * index, they get exploded into arrays when added, while
-         * atomic strings are just added as strings.
-         */
-
         // create an empty Array to return.
         scope = getTopLevelScope(scope);
         Function ctor = ScriptRuntime.getExistingCtor(cx, scope, "Array");
@@ -1025,7 +1000,7 @@ public class NativeArray extends IdScriptable {
         /* Put the target in the result array; only add it as an array
          * if it looks like one.
          */
-        if (hasLengthProperty(thisObj)) {
+        if (ScriptRuntime.instanceOf(scope, thisObj, ctor)) {
             length = getLengthProperty(thisObj);
 
             // Copy from the target object into the result
@@ -1042,8 +1017,8 @@ public class NativeArray extends IdScriptable {
          * elements separately; otherwise, just copy the argument.
          */
         for (int i = 0; i < args.length; i++) {
-            if (hasLengthProperty(args[i])) {
-                // hasLengthProperty => instanceOf Scriptable.
+            if (ScriptRuntime.instanceOf(scope, args[i], ctor)) {
+                // ScriptRuntime.instanceOf => instanceof Scriptable
                 Scriptable arg = (Scriptable)args[i];
                 length = getLengthProperty(arg);
                 for (long j = 0; j < length; j++, slot++) {
