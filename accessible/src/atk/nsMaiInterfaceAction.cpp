@@ -140,7 +140,7 @@ getNameCB(AtkAction *aAction, gint aActionIndex)
     NS_ENSURE_TRUE(action, nsnull);
 
     const char *name = action->GetName();
-    if (!name) {
+    if (!name || !*name) {
         nsAutoString autoStr;
         nsresult rv = accWrap->GetActionName(aActionIndex, autoStr);
         NS_ENSURE_SUCCESS(rv, nsnull);
