@@ -26,9 +26,10 @@
 #include "resource.h"		// main symbols
 #include "WizardMachineDlg.h"
 
-#define MIN_SIZE 100
-#define MID_SIZE 500
-#define MAX_SIZE 1000
+#define MIN_SIZE 256
+#define MID_SIZE 512
+#define MAX_SIZE 1024
+#define EXTD_MAX_SIZE 10240
 
 // Some global structures
 typedef struct NVPAIR
