@@ -718,10 +718,7 @@ function loadStartFolder(initialUri)
         dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
     }
 
-    if (!initialUri) 
-    {
-        MsgGetMessagesForAllServers(null);
-    }
+    MsgGetMessagesForAllServers(defaultServer);
 }
 
 function TriggerGetMessages(server)
