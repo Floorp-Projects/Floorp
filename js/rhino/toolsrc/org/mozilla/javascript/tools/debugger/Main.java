@@ -1494,7 +1494,7 @@ class ContextWindow extends JPanel implements ActionListener {
             if (frameIndex >= frameCount) {
                 return;
             }
-            FrameHelper frame = contextData.getFrame(frameIndex);
+            StackFrame frame = contextData.getFrame(frameIndex);
             Scriptable scope = frame.scope();
             Scriptable thisObj = frame.thisObj();
             thisTable.resetTree(new VariableModel(thisObj));
@@ -1693,46 +1693,6 @@ class UpdateFileText implements Runnable {
     }
 }
 
-class UpdateContext implements Runnable {
-    Main db;
-    ContextData contextData;
-    UpdateContext(Main db, ContextData contextData) {
-        this.db = db;
-        this.contextData = contextData;
-    }
-
-    public void run() {
-        db.context.enable();
-        JComboBox ctx = db.context.context;
-        Vector toolTips = db.context.toolTips;
-        db.context.disableUpdate();
-        int frameCount = contextData.frameCount();
-        ctx.removeAllItems();
-        // workaround for JDK 1.4 bug that caches selected value even after
-        // removeAllItems() is called
-        ctx.setSelectedItem(null);
-        toolTips.removeAllElements();
-        for (int i = 0; i < frameCount; i++) {
-            FrameHelper frame = contextData.getFrame(i);
-            String url = frame.getUrl();
-            int lineNumber = frame.getLineNumber();
-            String shortName = url;
-            if (url.length() > 20) {
-                shortName = "..." + url.substring(url.length() - 17);
-            }
-            String location = "\"" + shortName + "\", line " + lineNumber;
-            ctx.insertItemAt(location, i);
-            location = "\"" + url + "\", line " + lineNumber;
-            toolTips.addElement(location);
-        }
-        db.context.enableUpdate();
-        if (frameCount != 0) {
-            ctx.setSelectedIndex(0);
-        }
-        ctx.setMinimumSize(new Dimension(50, ctx.getMinimumSize().height));
-    }
-};
-
 class Menubar extends JMenuBar implements ActionListener {
 
     JMenu getDebugMenu() {
@@ -1922,55 +1882,86 @@ class Menubar extends JMenuBar implements ActionListener {
     JCheckBoxMenuItem breakOnReturn;
 };
 
-class EnterInterrupt implements Runnable {
-    Main db;
-    EnterInterrupt(Main db) {
-        this.db = db;
+class EnterInterrupt implements Runnable
+{
+    Main main;
+    StackFrame lastFrame;
+    String threadTitle;
+
+    EnterInterrupt(Main main, StackFrame lastFrame, String threadTitle)
+    {
+        this.main = main;
+        this.lastFrame = lastFrame;
+        this.threadTitle = threadTitle;
     }
-    public void run() {
-        JMenu menu = db.getJMenuBar().getMenu(0);
+
+    public void run()
+    {
+        main.statusBar.setText("Thread: " + threadTitle);
+
+        String lastFrameUrl = lastFrame.getUrl();
+        int line = lastFrame.getLineNumber();
+        if (lastFrameUrl != null && !lastFrameUrl.equals("<stdin>")) {
+            FileWindow w = main.getFileWindow(lastFrameUrl);
+            if (w != null) {
+                new SetFilePosition(main, w, line).run();
+            } else {
+                SourceInfo si = lastFrame.sourceInfo();
+                CreateFileWindow.action(main, si, line).run();
+            }
+        } else {
+            if (main.console.isVisible()) {
+                main.console.show();
+            }
+        }
+
+        JMenu menu = main.getJMenuBar().getMenu(0);
         //menu.getItem(0).setEnabled(false); // File->Load
-        menu = db.getJMenuBar().getMenu(2);
+        menu = main.getJMenuBar().getMenu(2);
         menu.getItem(0).setEnabled(false); // Debug->Break
         int count = menu.getItemCount();
         for (int i = 1; i < count; ++i) {
             menu.getItem(i).setEnabled(true);
         }
         boolean b = false;
-        for (int ci = 0, cc = db.toolBar.getComponentCount(); ci < cc; ci++) {
-            db.toolBar.getComponent(ci).setEnabled(b);
+        for (int ci = 0, cc = main.toolBar.getComponentCount(); ci < cc; ci++) {
+            main.toolBar.getComponent(ci).setEnabled(b);
             b = true;
         }
-        db.toolBar.setEnabled(true);
+        main.toolBar.setEnabled(true);
         // raise the debugger window
-        db.toFront();
-    }
-};
+        main.toFront();
 
-class ExitInterrupt implements Runnable {
-    Main db;
-    ExitInterrupt(Main db) {
-        this.db = db;
-    }
-    public void run() {
-        JMenu menu = db.getJMenuBar().getMenu(0);
-        menu.getItem(0).setEnabled(true); // File->Load
-        menu = db.getJMenuBar().getMenu(2);
-        menu.getItem(0).setEnabled(true); // Debug->Break
-        int count = menu.getItemCount() - 1;
-        int i = 1;
-        for (; i < count; ++i) {
-            menu.getItem(i).setEnabled(false);
+        ContextData contextData = lastFrame.contextData();
+
+        main.context.enable();
+        JComboBox ctx = main.context.context;
+        Vector toolTips = main.context.toolTips;
+        main.context.disableUpdate();
+        int frameCount = contextData.frameCount();
+        ctx.removeAllItems();
+        // workaround for JDK 1.4 bug that caches selected value even after
+        // removeAllItems() is called
+        ctx.setSelectedItem(null);
+        toolTips.removeAllElements();
+        for (int i = 0; i < frameCount; i++) {
+            StackFrame frame = contextData.getFrame(i);
+            String url = frame.getUrl();
+            int lineNumber = frame.getLineNumber();
+            String shortName = url;
+            if (url.length() > 20) {
+                shortName = "..." + url.substring(url.length() - 17);
+            }
+            String location = "\"" + shortName + "\", line " + lineNumber;
+            ctx.insertItemAt(location, i);
+            location = "\"" + url + "\", line " + lineNumber;
+            toolTips.addElement(location);
         }
-        db.context.disable();
-        boolean b = true;
-        for (int ci = 0, cc = db.toolBar.getComponentCount(); ci < cc; ci++) {
-            db.toolBar.getComponent(ci).setEnabled(b);
-            b = false;
-        }
-        //db.console.consoleTextArea.requestFocus();
+        main.context.enableUpdate();
+        ctx.setSelectedIndex(0);
+        ctx.setMinimumSize(new Dimension(50, ctx.getMinimumSize().height));
     }
-};
+}
 
 class OpenFile implements Runnable
 {
@@ -2044,11 +2035,11 @@ class ContextData {
         return frameStack.size();
     }
 
-    FrameHelper getFrame(int frameNumber) {
-        return (FrameHelper) frameStack.get(frameStack.size() - frameNumber - 1);
+    StackFrame getFrame(int frameNumber) {
+        return (StackFrame) frameStack.get(frameStack.size() - frameNumber - 1);
     }
 
-    void pushFrame(FrameHelper frame) {
+    void pushFrame(StackFrame frame) {
         frameStack.push(frame);
     }
 
@@ -2062,9 +2053,9 @@ class ContextData {
     boolean eventThreadFlag;
 }
 
-class FrameHelper implements DebugFrame {
+class StackFrame implements DebugFrame {
 
-    FrameHelper(Context cx, Main db, DebuggableScript fnOrScript)
+    StackFrame(Context cx, Main db, DebuggableScript fnOrScript)
     {
         this.db = db;
         this.contextData = ContextData.get(cx);
@@ -2596,7 +2587,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return item;
     }
 
-    void handleBreakpointHit(FrameHelper frame, Context cx) {
+    void handleBreakpointHit(StackFrame frame, Context cx) {
         breakFlag = false;
         interrupted(frame, cx);
     }
@@ -2620,7 +2611,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return msg;
     }
 
-    void handleExceptionThrown(Context cx, Throwable ex, FrameHelper frame) {
+    void handleExceptionThrown(Context cx, Throwable ex, StackFrame frame) {
         if (breakOnExceptions) {
             String url = frame.getUrl();
             int lineNumber = frame.getLineNumber();
@@ -2634,15 +2625,12 @@ public class Main extends JFrame implements Debugger, ContextListener {
                                                    msg,
                                                    "Exception in Script",
                                                    JOptionPane.ERROR_MESSAGE);
-            //if (w != null) {
-            //swingInvoke(new SetFilePosition(this, w, -1));
-            //}
             interrupted(frame, cx);
         }
     }
 
     public DebugFrame getFrame(Context cx, DebuggableScript fnOrScript) {
-        return new FrameHelper(cx, this, fnOrScript);
+        return new StackFrame(cx, this, fnOrScript);
     }
 
     /* end Debugger interface */
@@ -2828,7 +2816,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     int frameIndex = -1;
 
-    void contextSwitch (FrameHelper frame, int frameIndex) {
+    void contextSwitch (StackFrame frame, int frameIndex) {
         this.frameIndex = frameIndex;
         String sourceName = frame.getUrl();
         if (sourceName == null || sourceName.equals("<stdin>")) {
@@ -2854,7 +2842,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return currentContextData;
     }
 
-    void interrupted(FrameHelper frame, Context cx)
+    void interrupted(StackFrame frame, Context cx)
     {
         boolean eventThreadFlag = SwingUtilities.isEventDispatchThread();
         ContextData contextData = frame.contextData();
@@ -2895,7 +2883,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
             currentContextData = contextData;
         }
         do {
-            statusBar.setText("Thread: " + Thread.currentThread().toString());
             if (runToCursorFile != null) {
                 if (url != null && url.equals(runToCursorFile)) {
                     if (line == runToCursorLine) {
@@ -2914,36 +2901,16 @@ public class Main extends JFrame implements Debugger, ContextListener {
             int frameCount = contextData.frameCount();
             this.frameIndex = frameCount -1;
 
-            if (url != null && !url.equals("<stdin>")) {
-                FileWindow w = (FileWindow)getFileWindow(url);
-                if (w != null) {
-                    SetFilePosition action =
-                        new SetFilePosition(this, w, line);
-                    swingInvoke(action);
-                } else {
-                    SourceInfo si = frame.sourceInfo();
-                    swingInvoke(CreateFileWindow.action(this, si, line));
-                }
-            } else {
-                if (console.isVisible()) {
-                    final JSInternalConsole finalConsole = console;
-                    swingInvoke(new Runnable() {
-                            public void run() {
-                                finalConsole.show();
-                            }
-                        });
-                }
-            }
-            swingInvoke(new EnterInterrupt(this));
+            String threadTitle = Thread.currentThread().toString();
+            Runnable enterAction = new EnterInterrupt(this, frame, threadTitle);
             int returnValue = -1;
-            Runnable update = new UpdateContext(this, contextData);
             if (!eventThreadFlag) {
                 synchronized (monitor) {
                     if (insideInterruptLoop) Kit.codeBug();
                     this.insideInterruptLoop = true;
                     this.evalRequest = null;
                     this.returnValue = -1;
-                    swingInvokeLater(update);
+                    swingInvokeLater(enterAction);
                     try {
                         for (;;) {
                             try {
@@ -2973,8 +2940,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     }
                 }
             } else {
-                update.run();
                 this.returnValue = -1;
+                enterAction.run();
                 while (this.returnValue == -1) {
                     try {
                         dispatchNextAwtEvent();
@@ -2983,7 +2950,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 }
                 returnValue = this.returnValue;
             }
-            swingInvoke(new ExitInterrupt(this));
             switch (returnValue) {
             case STEP_OVER:
                 contextData.breakNextLine = true;
@@ -3184,12 +3150,33 @@ public class Main extends JFrame implements Debugger, ContextListener {
             }
         }
         if (returnValue != -1) {
-            if (currentWindow != null) currentWindow.setPosition(-1);
+            disableInterruptOnlyGui();
             synchronized (monitor) {
                 this.returnValue = returnValue;
                 monitor.notify();
             }
         }
+    }
+
+    private void disableInterruptOnlyGui()
+    {
+        if (currentWindow != null) currentWindow.setPosition(-1);
+        JMenu menu = getJMenuBar().getMenu(0);
+        menu.getItem(0).setEnabled(true); // File->Load
+        menu = getJMenuBar().getMenu(2);
+        menu.getItem(0).setEnabled(true); // Debug->Break
+        int count = menu.getItemCount() - 1;
+        int i = 1;
+        for (; i < count; ++i) {
+            menu.getItem(i).setEnabled(false);
+        }
+        context.disable();
+        boolean b = true;
+        for (int ci = 0, cc = toolBar.getComponentCount(); ci < cc; ci++) {
+            toolBar.getComponent(ci).setEnabled(b);
+            b = false;
+        }
+        //console.consoleTextArea.requestFocus();
     }
 
     void runToCursor(String fileName,
@@ -3281,7 +3268,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         if (contextData == null || frameIndex >= contextData.frameCount()) {
             return result;
         }
-        FrameHelper frame = contextData.getFrame(frameIndex);
+        StackFrame frame = contextData.getFrame(frameIndex);
         if (contextData.eventThreadFlag) {
             Context cx = Context.getCurrentContext();
             result = do_eval(cx, frame, expr);
@@ -3306,7 +3293,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return result;
     }
 
-    private static String do_eval(Context cx, FrameHelper frame, String expr)
+    private static String do_eval(Context cx, StackFrame frame, String expr)
     {
         String resultString;
         Debugger saved_debugger = cx.getDebugger();
@@ -3354,7 +3341,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
     private int returnValue = -1;
     private boolean insideInterruptLoop;
     private String evalRequest;
-    private FrameHelper evalFrame;
+    private StackFrame evalFrame;
     private String evalResult;
 
     boolean breakOnExceptions;
@@ -3523,35 +3510,31 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return console.getErr();
     }
 
-    public static void main(String[] args) {
-        try {
-            final Main sdb = new Main("Rhino JavaScript Debugger");
-            sdb.breakFlag = true;
-            swingInvoke(new Runnable() {
-                    public void run() {
-                        sdb.pack();
-                        sdb.setSize(600, 460);
-                        sdb.setVisible(true);
-                    }
-                });
-            sdb.setExitAction(new Runnable() {
-                    public void run() {
-                        System.exit(0);
-                    }
-                });
-            System.setIn(sdb.getIn());
-            System.setOut(sdb.getOut());
-            System.setErr(sdb.getErr());
-            Context.addContextListener(sdb);
-            sdb.setScopeProvider(new ScopeProvider() {
-                    public Scriptable getScope() {
-                        return org.mozilla.javascript.tools.shell.Main.getScope();
-                    }
-                });
-            org.mozilla.javascript.tools.shell.Main.exec(args);
-        } catch (Exception exc) {
-            exc.printStackTrace();
-        }
+    public static void main(String[] args)
+        throws Exception
+    {
+        Main sdb = new Main("Rhino JavaScript Debugger");
+        sdb.breakFlag = true;
+        sdb.setExitAction(new Runnable() {
+                public void run() {
+                    System.exit(0);
+                }
+            });
+        System.setIn(sdb.getIn());
+        System.setOut(sdb.getOut());
+        System.setErr(sdb.getErr());
+        Context.addContextListener(sdb);
+        sdb.setScopeProvider(new ScopeProvider() {
+                public Scriptable getScope() {
+                    return org.mozilla.javascript.tools.shell.Main.getScope();
+                }
+            });
+
+        sdb.pack();
+        sdb.setSize(600, 460);
+        sdb.setVisible(true);
+
+        org.mozilla.javascript.tools.shell.Main.exec(args);
     }
 
 }
