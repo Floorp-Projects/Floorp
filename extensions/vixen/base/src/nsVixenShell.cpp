@@ -33,17 +33,6 @@
 #include "VxRemoveElementTxn.h"
 */
 
-// Transaction Manager DLL
-#ifdef XP_PC
-#define TRANSACTION_MANAGER_DLL "txmgr.dll"
-#else
-#ifdef XP_MAC
-#define TRANSACTION_MANAGER_DLL "TRANSACTION_MANAGER_DLL"
-#else // XP_UNIX || XP_BEOS
-#define TRANSACTION_MANAGER_DLL "libtxmgr"MOZ_DLL_SUFFIX
-#endif
-#endif
-
 nsVixenShell::nsVixenShell()
 {
     NS_INIT_REFCNT();
@@ -60,14 +49,6 @@ nsVixenShell::SetAttribute(nsIDOMElement *aElement,
                            const PRUnichar *aAttribute, 
                            const PRUnichar *aValue)
 {
-/*
-    VxChangeAttributeTxn *txn;
-    nsresult rv = CreateTxnForSetAttribute(aElement, aAttribute, aValue, &txn);
-    if (NS_SUCCEEDED(rv))
-        rv = Do(txn);
-    NS_IF_RELEASE(txn);
-    return rv;
-*/
     return NS_OK;
 }
 
@@ -75,14 +56,6 @@ NS_IMETHODIMP
 nsVixenShell::RemoveAttribute(nsIDOMElement *aElement, 
                               const PRUnichar *aAttribute)
 {
-/*
-    VxRemoveAttributeTxn *txn;
-    nsresult rv = CreateTxnForRemoveAttribute(aElement, aAttribute, &txn);
-    if (NS_SUCCEEDED(rv))
-        rv = Do(txn);
-    NS_IF_RELEASE(txn);
-    return rv;
-*/
     return NS_OK;
 }
 
@@ -91,28 +64,12 @@ nsVixenShell::InsertElement(nsIDOMElement *aElement,
                             nsIDOMElement *aParent, 
                             PRInt32 aPos)
 {
-/*
-    VxInsertElementTxn *txn;
-    nsresult rv = CreateTxnForInsertElement(aElement, aParent, aPos, &txn);
-    if (NS_SUCCEEDED(rv))
-        rv = Do(txn);
-    NS_IF_RELEASE(txn);
-    return rv;
-*/
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsVixenShell::RemoveElement(nsIDOMElement *aElement)
 {
-/*
-    VxRemoveElementTxn *txn;
-    nsresult rv = CreateTxnForRemoveElement(aElement, &txn);
-    if (NS_SUCCEEDED(rv))
-        rv = Do(txn);
-    NS_IF_RELEASE(txn);
-    return rv;
-*/
     return NS_OK;
 }
 
