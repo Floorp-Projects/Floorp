@@ -49,16 +49,10 @@
   <!-- Should Java compilations set the 'optimize' compiler option? -->
   <property name="compile.optimize" value="false"/>
 
-  <!-- The base directory for compilation targets -->
-  <property name="dist.home" value="${myenv.MOZILLA_FIVE_HOME}/.."/>
-
-  <!-- The base directory for compilation targets -->
-  <property name="build.home" value="${myenv.MOZILLA_FIVE_HOME}/../classes"/>
-
 <!-- ************ Where are we building into? ***************************** -->
 
   <target name="main" 
-          depends="external,util"/>
+          depends="external,util,dom,webclient"/>
 
   <target name="external">
 
@@ -75,11 +69,39 @@
 
   </target>
 
+  <target name="dom">
+
+    <exec os="Linux" dir="${basedir}/dom" executable="make" 
+                     failonerror="yes">
+    </exec>
+
+  </target>
+
+  <target name="webclient">
+
+    <ant dir="${basedir}/webclient"/>
+
+  </target>
+
   <target name="clean">
 
     <delete dir="${build.home}/org/w3c"/>
 
     <ant dir="${basedir}/util" target="clean"/>
+
+    <exec os="Linux" dir="${basedir}/dom" executable="make" 
+                     failonerror="yes">
+      <arg line="clean"/>
+    </exec>
+
+    <ant dir="${basedir}/webclient" target="clean"/>
+
+  </target>
+
+    <ant dir="${basedir}/dist"/>
+
+  <target name="dist">
+
 
   </target>
 

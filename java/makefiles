@@ -1,17 +1,8 @@
-java/Makefile
-java/util/Makefile
-java/util/classes/Makefile
 java/build/Makefile
 java/dom/Makefile
 java/dom/classes/Makefile
 java/dom/jni/Makefile
 java/dom/src/Makefile
-java/xpcom/Makefile
-java/webclient/Makefile
-java/webclient/classes_spec/Makefile
 java/webclient/src_share/Makefile
 java/webclient/src_moz/Makefile
 java/webclient/src_moz/motif/Makefile
-java/pluggable-jvm/wf_moz6/Makefile
-java/pluggable-jvm/wf_moz6/public/Makefile
-java/pluggable-jvm/wf_moz6/src/Makefile

@@ -52,12 +52,6 @@
 
 <!-- ************ Where are we building into? ***************************** -->
 
-  <!-- The base directory for compilation targets -->
-  <property name="dist.home" value="${myenv.MOZILLA_FIVE_HOME}/.."/>
-
-  <!-- The base directory for compilation targets -->
-  <property name="build.home" value="${myenv.MOZILLA_FIVE_HOME}/../classes"/>
-
   <!-- The base directory for component sources -->
   <property name="source.home" value="${basedir}/classes"/>
 

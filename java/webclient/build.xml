@@ -52,15 +52,12 @@
 
 <!-- ************ Where are we building into? ***************************** -->
 
-  <!-- The base directory for compilation targets -->
-  <property name="build.home" value="${myenv.MOZILLA_FIVE_HOME}/.."/>
-
   <!-- The base directory for component sources -->
   <property name="source.home" value="${basedir}/classes_spec"/>
 
   <!-- Construct compile classpath -->
   <path id="compile.classpath">
-    <pathelement location="${build.home}/classes"/>
+    <pathelement location="${build.home}"/>
   </path>
 
   <target name="main" 
@@ -68,7 +65,7 @@
 
   <target name="compile.classes_spec">
 
-    <javac destdir="${build.home}/classes"
+    <javac destdir="${build.home}"
              debug="${compile.debug}"
        deprecation="${compile.deprecation}"
           optimize="${compile.optimize}">
@@ -215,7 +212,7 @@
     <delete file="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"/>
 
 
-    <delete dir="${build.home}/classes/org/mozilla/webclient"/>
+    <delete dir="${build.home}/org/mozilla/webclient"/>
 
   </target>
 
