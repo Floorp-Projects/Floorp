@@ -299,8 +299,10 @@ SSM_RegisterThread(char *threadName, SSMResource *ptr)
     */
     { 
       PRUintn threadIndex = GetThreadIndex();
-      if (threadIndex > 0)
-      	PR_SetThreadPrivate(threadIndex, PR_GetCurrentThread());
+      if (threadIndex > 0) {
+      	if (PR_GetThreadPrivate(threadIndex) != thr)
+	      	PR_SetThreadPrivate(threadIndex, thr);
+      }
     }
 #endif
 
