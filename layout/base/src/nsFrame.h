@@ -170,6 +170,36 @@ public:
   NS_IMETHOD  VerifyTree() const;
 
 protected:
+
+  // Selection Methods
+  NS_METHOD HandlePress(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus,
+                   nsFrame  *      aFrame);
+
+  NS_METHOD HandleDrag(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus,
+                   nsFrame  *      aFrame);
+
+  NS_METHOD HandleRelease(nsIPresContext& aPresContext,
+                   nsGUIEvent *    aEvent,
+                   nsEventStatus&  aEventStatus,
+                   nsFrame  *      aFrame);
+
+  void NewContentIsBefore(nsIPresContext& aPresContext,
+                          nsGUIEvent * aEvent,
+                          nsIContent * aNewContent,
+                          nsIContent * aCurrentContent,
+                          nsIFrame   * aNewFrame);
+
+  void NewContentIsAfter(nsIPresContext& aPresContext,
+                         nsGUIEvent * aEvent,
+                         nsIContent * aNewContent,
+                         nsIContent * aCurrentContent,
+                         nsIFrame   * aNewFrame);
+
+
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
   nsFrame(nsIContent* aContent,
