@@ -51,3 +51,5 @@
 #define STANDALONE_IMAGE_LIB /* libimg */
 #define MODULAR_NETLIB /* network */
 #define MOZILLA_CLIENT
+#define NETSCAPE /* Needed by zlib */
+#define MOCHA /* Required by mkautocnf.c in modular netlib */
