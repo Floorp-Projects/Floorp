@@ -161,10 +161,9 @@ protected:
   /**
    * Called for incremental reflow
    */
-  nsresult IncrementalReflow(nsIPresContext*      aPresContext,
-                             RowReflowState&      aState,
-                             const nsReflowState& aReflowState,
-                             nsSize*              aMaxElementSize);
+  nsresult IncrementalReflow(nsIPresContext*  aPresContext,
+                             RowReflowState&  aState,
+                             nsReflowMetrics& aDesiredSize);
 
 private:
   PRInt32  mRowIndex;
