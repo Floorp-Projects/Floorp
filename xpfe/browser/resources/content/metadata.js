@@ -517,29 +517,22 @@ function convertLanguageCode(abbr)
 {
     if (!abbr) return "";
     var result;
-    var language = "";
-    var region;
-    var is_region_set = false;
+    var region = "";
     var tokens = abbr.split("-");
+    var language = tokens.shift();
 
-    if (tokens[0] === "x" || tokens[0] === "i")
+    if (language == "x" || language == "i")
     {
-        // x and i prefixes mean unofficial ones. So we upper-case the first
+        // x and i prefixes mean unofficial ones. So we proper-case the next
         // word and leave the rest.
-        tokens.shift();
-
-        if (tokens[0])
+        if (tokens.length > 0)
         {
             // Upper-case first letter
             language = tokens[0].substr(0, 1).toUpperCase() + tokens[0].substr(1);
             tokens.shift();
 
-            if (tokens[0])
-            {
-                // Add on the rest as space-separated strings inside the brackets
-                region = tokens.join(" ");
-                is_region_set = true;
-            }
+            // Add on the rest as space-separated strings inside the brackets
+            region = tokens.join(" ");
         }
     }
     else
@@ -548,43 +541,26 @@ function convertLanguageCode(abbr)
         // and the rest as strings.
         try
         {
-            language = gLangBundle.getString(tokens[0]);
+            language = gLangBundle.getString(language);
         }
         catch (e) 
         {
-            // Language not present in lang bundle
-            language = tokens[0]; 
         }
 
-        tokens.shift();
-
-        if (tokens[0])
+        if (tokens.length > 0)
         {
             try
             {
-                // We don't add it on to the result immediately
-                // because we want to get the spacing right.
-                region = gRegionBundle.getString(tokens[0].toLowerCase());
-
-                tokens.shift();
-
-                if (tokens[0])
-                {
-                    // Add on the rest as space-separated strings inside the brackets
-                    region += " " + tokens.join(" ");
-                }
+                tokens[0] = gRegionBundle.getString(tokens[0].toLowerCase());
             }
             catch (e) 
             {
-                // Region not present in region bundle
-                region = tokens.join(" ");
             }
-
-            is_region_set = true;
+            region = tokens.join(" ");
         }
     }
 
-    if (is_region_set) {
+    if (region) {
         result = gMetadataBundle.getFormattedString("languageRegionFormat",
                                                     [language, region]);
     } else {
