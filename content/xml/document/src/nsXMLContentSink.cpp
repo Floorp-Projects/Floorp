@@ -818,13 +818,19 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
     nsCOMPtr<nsIScriptSecurityManager> secMan = 
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
     rv = secMan->CheckLoadURI(mDocumentURL, url,
                               nsIScriptSecurityManager::ALLOW_CHROME);
-    if (NS_FAILED(rv))
-      return NS_OK;
-    rv = LoadXSLStyleSheet(url);
-  } else if (aType.Equals(NS_LITERAL_STRING("text/css"))) {
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    rv = secMan->CheckSameOriginURI(mDocumentURL, url);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    return LoadXSLStyleSheet(url);
+  }
+
+  if (aType.Equals(NS_LITERAL_STRING("text/css"))) {
     nsCOMPtr<nsIURI> url;
     rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
     if (NS_FAILED(rv)) {
