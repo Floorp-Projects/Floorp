@@ -3051,6 +3051,26 @@ nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
   return NS_OK;
 }
 
+// readonly attribute DOMString compatMode;
+// Returns "BackCompat" if we are in quirks mode,
+// "CSS1Compat" if we are in strict mode. See bug 105640.
+// This was implemented to match MSIE's compatMode property
+NS_IMETHODIMP
+nsHTMLDocument::GetCompatMode(nsAWritableString& aCompatMode)
+{
+  aCompatMode.Truncate();
+  NS_ASSERTION((mDTDMode == eDTDMode_quirks) || (mDTDMode == eDTDMode_strict),
+               "mDTDMode is neither quirks nor strict for this document");
+
+  if (mDTDMode == eDTDMode_quirks) {
+    aCompatMode.Assign(NS_LITERAL_STRING("BackCompat"));
+  } else {
+    aCompatMode.Assign(NS_LITERAL_STRING("CSS1Compat"));
+  }
+
+  return NS_OK;
+}
+
 static PRBool PR_CALLBACK
 NameHashCleanupEnumeratorCallback(nsHashKey *aKey, void *aData, void* closure)
 {

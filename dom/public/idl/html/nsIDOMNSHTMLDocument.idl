@@ -64,4 +64,6 @@ interface nsIDOMNSHTMLDocument : nsISupports
   void                      captureEvents(in long eventFlags);
   void                      releaseEvents(in long eventFlags);
   void                      routeEvent(in nsIDOMEvent evt);
+
+  readonly attribute DOMString            compatMode;
 };
