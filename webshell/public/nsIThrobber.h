@@ -35,6 +35,8 @@ struct nsRect;
 
 class nsIThrobber : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHROBBER_IID)
+
   NS_IMETHOD Init(nsIWidget* aParent, const nsRect& aBounds) = 0;
   NS_IMETHOD Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFileNameMask, PRInt32 aNumImages) = 0;
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;

@@ -32,6 +32,8 @@
 class nsIClipboardCommands : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPBOARDCOMMANDS_IID)
+
   /**
    * Returns whether there is a selection and it is not read-only.
    */
