@@ -92,7 +92,7 @@ interface oeIICalEvent : nsISupports
     readonly attribute oeIDateTime end;
     readonly attribute oeIDateTime stamp;
     attribute string id;
-    attribute string title;
+    attribute AUTF8String title;
     attribute string description;
     attribute string location;
     attribute string categories;

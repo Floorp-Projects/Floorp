@@ -43,6 +43,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsSupportsPrimitives.h"
 #include "nsISupportsArray.h"
+#include "nsString.h"
 #include <vector>
 
 extern "C" {
@@ -92,7 +93,7 @@ public:
 private:
     char *m_id;
     char *m_syncid;
-    char *m_title;
+    nsCString m_title;
     char *m_description;
     char *m_location;
     char *m_category;

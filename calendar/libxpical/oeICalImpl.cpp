@@ -2206,12 +2206,12 @@ NS_IMETHODIMP oeICalFilter::SetId(const char *aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::GetTitle(char **aRetVal)
+NS_IMETHODIMP oeICalFilter::GetTitle(nsACString& aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalFilter::SetTitle(const char * aNewVal)
+NS_IMETHODIMP oeICalFilter::SetTitle(const nsACString& aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

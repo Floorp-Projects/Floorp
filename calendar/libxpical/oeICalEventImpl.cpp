@@ -170,7 +170,7 @@ oeICalEventImpl::oeICalEventImpl()
         m_stamp->m_datetime = ConvertFromPrtime( nowinms );
     }
     m_id = nsnull;
-    m_title = nsnull;
+    // XXX m_title: should a nsACString be initialized???
     m_description = nsnull;
     m_location = nsnull;
     m_category = nsnull;
@@ -207,8 +207,6 @@ oeICalEventImpl::~oeICalEventImpl()
   /* destructor code */
   if( m_id )
         nsMemory::Free( m_id );
-  if( m_title )
-      nsMemory::Free( m_title );
   if( m_description )
       nsMemory::Free( m_description );
   if( m_location )
@@ -280,39 +278,28 @@ bool oeICalEventImpl::matchId( const char *id ) {
 }
 
 /* attribute string Title; */
-NS_IMETHODIMP oeICalEventImpl::GetTitle(char **aRetVal)
+NS_IMETHODIMP oeICalEventImpl::GetTitle(nsACString& aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetTitle() = " );
 #endif
     
-    if( m_title ) {
-        *aRetVal= (char*) nsMemory::Clone( m_title, strlen(m_title)+1);
-        if( *aRetVal == nsnull )
-            return  NS_ERROR_OUT_OF_MEMORY;
-    } else
-        *aRetVal= EmptyReturn();
+    aRetVal =  m_title ;
 
 #ifdef ICAL_DEBUG_ALL
-    printf( "\"%s\"\n", *aRetVal );
+//    printf( "\"%s\"\n", aRetVal);
+    printf( "\"??\"\n" )
 #endif
     return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::SetTitle(const char * aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetTitle(const nsACString& aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetTitle( %s )\n", aNewVal );
+//    printf( "SetTitle( %s )\n", aNewVal );
+      printf( "SetTitle( ?? )\n" );
 #endif
-    
-    if( m_title )
-        nsMemory::Free( m_title );
-    
-    if( aNewVal )
-        m_title= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
-    else
-        m_title = nsnull;
-
+    m_title = aNewVal;
     return NS_OK;
 }
 
@@ -1431,10 +1418,12 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
     if ( prop != 0) {
         tmpstr = icalproperty_get_summary( prop );
-        SetTitle( tmpstr );
-    } else if( m_title ) {
-        nsMemory::Free( m_title );
-        m_title = nsnull;
+	    nsCString tmpCString;
+        tmpCString = tmpstr;
+        SetTitle(  tmpCString );
+    } else if( !m_title.IsEmpty() ) {
+	    m_title.Truncate();
+	    //m_title.SetIsVoid(PR_TRUE);
     }
 
 //description
@@ -1854,8 +1843,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     icalcomponent_add_property( vevent, prop );
 
     //title
-    if( m_title && strlen( m_title ) != 0 ){
-        prop = icalproperty_new_summary( m_title );
+    if( !m_title.IsEmpty() ) {
+        prop = icalproperty_new_summary( m_title.get() );
         icalcomponent_add_property( vevent, prop );
     }
     //description
