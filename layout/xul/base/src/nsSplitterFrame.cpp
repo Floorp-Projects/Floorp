@@ -65,7 +65,6 @@
 #include "nsFrameNavigator.h"
 #include "nsHTMLParts.h"
 #include "nsILookAndFeel.h"
-#include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
