@@ -160,11 +160,11 @@ JSS_getOidTagFromAlg(JNIEnv *env, jobject alg)
  *      The index obtained from the algorithm, or -1 if an exception was
  *      thrown.
  */
-static jshort
+static jint
 getAlgIndex(JNIEnv *env, jobject alg)
 {
     jclass algClass;
-	jshort index=-1;
+	jint index=-1;
     jfieldID indexField;
 
     PR_ASSERT(env!=NULL && alg!=NULL);
@@ -189,7 +189,7 @@ getAlgIndex(JNIEnv *env, jobject alg)
         goto finish;
     }
 
-    index = (*env)->GetShortField(env, alg, indexField);
+    index = (*env)->GetIntField(env, alg, indexField);
 	PR_ASSERT( (index >= 0) && (index < NUM_ALGS) );
 
 finish:
@@ -213,7 +213,7 @@ finish:
 static PRStatus
 getAlgInfo(JNIEnv *env, jobject alg, JSS_AlgInfo *info)
 {
-    jshort index;
+    jint index;
     PRStatus status;
 
     PR_ASSERT(env!=NULL && alg!=NULL && info!=NULL);
