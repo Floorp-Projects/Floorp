@@ -26,7 +26,7 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
 
-<dialog id="selectBookmarkDialog" style="width: 22em"
+<dialog id="selectBookmarkDialog" style="width: 32em"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         ondialogaccept="return onOK(event)"
         title="&selectBookmark.title;"
@@ -36,10 +36,15 @@
    
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/selectBookmark.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  
+  <description>&selectBookmark.label;</description>
+  
+  <separator class="thin"/>
 
-  <bookmarks-tree id="bookmarks-view" style="height:15em;" flex="1" type="single-column"
+  <bookmarks-tree id="bookmarks-view" style="height:15em; margin: 0px 4px;" flex="1" type="single-column"
                   onpopupshowing="return false;"
                   onselect="clearTimeout(gTimer); gTimer=setTimeout(updateOK,100);"/>
-  <separator/>
+
+  <separator class="thin"/>
 
 </dialog>
