@@ -22,7 +22,11 @@
 
 #include "xpt_xdr.h"
 #include <stdio.h>
+#ifdef XP_MAC
+#include <stat.h>
+#else
 #include <sys/stat.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "prlong.h"
