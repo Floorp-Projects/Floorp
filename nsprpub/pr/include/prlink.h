@@ -182,7 +182,7 @@ NSPR_API(void*) PR_FindSymbol(PRLibrary *lib, const char *name);
 **
 ** This function does not modify the reference count of the library.
 */
-typedef void (*PRFuncPtr)(void);
+typedef void (*PRFuncPtr)();
 NSPR_API(PRFuncPtr) PR_FindFunctionSymbol(PRLibrary *lib, const char *name);
 
 /*
