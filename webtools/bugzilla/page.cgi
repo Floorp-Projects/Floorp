@@ -40,7 +40,7 @@ ConnectToDatabase();
 quietly_check_login();
 
 if (defined $::FORM{'id'}) {
-    $::FORM{'id'} =~ s/[^\w-\.]//g;
+    $::FORM{'id'} =~ s/[^\w\-\.]//g;
     $::FORM{'id'} =~ /(.*)(\.(.*))?/;
 
     my $format = GetFormat($1, undef, $3);
