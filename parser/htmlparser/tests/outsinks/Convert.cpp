@@ -82,7 +82,7 @@ nsresult HTML2text(int toHTML)
     rv = NS_New_HTML_ContentSinkStream(&sink, &outString, 0);
 
   else  // default to plaintext
-    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, 72, 0);
+    rv = NS_New_HTMLToTXT_SinkStream(&sink, &outString, 72, 2);
 
   if (NS_FAILED(rv))
   {
