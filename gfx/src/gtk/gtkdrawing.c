@@ -193,7 +193,7 @@ moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
                               GdkRectangle* rect, GdkRectangle* cliprect,
                               GtkWidgetState* state)
 {
-  GtkStateType state_type = state->inHover ? GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
+  GtkStateType state_type = (state->inHover || state->active) ? GTK_STATE_PRELIGHT : GTK_STATE_NORMAL;
   gtk_paint_box(style, window, state_type, GTK_SHADOW_OUT, cliprect,
                 gScrollbarWidget, "slider", rect->x, rect->y, rect->width, 
                 rect->height);
