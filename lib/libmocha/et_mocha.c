@@ -596,7 +596,13 @@ void
 ET_SetActiveForm(MWContext * pContext, lo_FormData * form)
 {
     LMWindowGroup *grp;
-    JSEvent      * pEvent = (JSEvent *) XP_NEW_ZAP(JSEvent);
+    JSEvent      * pEvent;
+
+    if(!lm_inited())  {
+	return;
+    }
+    
+    pEvent = (JSEvent *) XP_NEW_ZAP(JSEvent);
     if(!pEvent)
         return;
 
@@ -665,7 +671,11 @@ ET_SetActiveLayer(MWContext * pContext, int32 layer_id)
 JSBool
 ET_ContinueProcessing(MWContext * context)
 {
-    LMWindowGroup *grp = lm_MWContextToGroup(context);
+    LMWindowGroup *grp;
+    if(!lm_inited())  {
+	return;
+    }
+    grp = lm_MWContextToGroup(context);
     XP_ASSERT(grp != NULL);
     return (JSBool)(grp->interruptCurrentOp == JS_FALSE);
 }
@@ -947,9 +957,14 @@ ET_ReflectObject(MWContext * pContext, void * lo_ele, void * tag,
                  int32 layer_id, uint index, ReflectedObject type)
 {
     LMWindowGroup *grp;
+    Reflect_Event * pEvent;
+
+    if(!lm_inited())  {
+	return;
+    }
 
     /* create our event object */
-    Reflect_Event * pEvent = (Reflect_Event *) XP_NEW_ZAP(Reflect_Event);
+    pEvent = (Reflect_Event *) XP_NEW_ZAP(Reflect_Event);
     if(!pEvent)
         return;
 
@@ -1066,6 +1081,10 @@ ET_ReflectFormElement(MWContext * pContext, void * form,
 
     /* create our event object */
     ReflectForm_Event * pEvent;
+
+    if(!lm_inited())  {
+	return;
+    }
 
     if (!form || !form_element)
 	return;
@@ -1543,8 +1562,13 @@ void
 ET_DestroyLayer(MWContext * pContext, JSObject *layer_obj)
 {
     LMWindowGroup *grp;
+    DestroyLayerStruct * pEvent;
 
-    DestroyLayerStruct * pEvent = XP_NEW_ZAP(DestroyLayerStruct);
+    if(!lm_inited())  {
+	return;
+    }
+    
+    pEvent = XP_NEW_ZAP(DestroyLayerStruct);
     if(!pEvent)
         return;
 
@@ -1582,9 +1606,17 @@ void
 ET_ReleaseDocument(MWContext * pContext, JSBool resize_reload)
 {
     LMWindowGroup *grp;
+    ReleaseDocStruct * pEvent;
+
+    if(!lm_inited())  {
+	/*
+	 * Need this protection here before we call lm_MWContextToGroup()
+	 */
+	return;
+    }
 
     /* create our event object */
-    ReleaseDocStruct * pEvent = XP_NEW_ZAP(ReleaseDocStruct);
+    pEvent = XP_NEW_ZAP(ReleaseDocStruct);
     if(!pEvent)
         return;
 
@@ -1699,8 +1731,13 @@ void
 ET_SetNestingUrl(MWContext * pContext, char * url)
 {
     LMWindowGroup *grp;
+    NestingUrlEvent * pEvent;
 
-    NestingUrlEvent * pEvent = XP_NEW_ZAP(NestingUrlEvent);
+    if(!lm_inited())  {
+	return;
+    }
+    
+    pEvent = XP_NEW_ZAP(NestingUrlEvent);
     if(!pEvent)
         return;
 
@@ -2038,6 +2075,10 @@ ET_MochaStreamComplete(MWContext * pContext, void * buf, int len,
     LMWindowGroup *grp;
     StreamEvent * pEvent;
 
+    if(!lm_inited())  {  /* paranoia */
+	return;
+    }
+
     pEvent = XP_NEW_ZAP(StreamEvent);
     if(!pEvent) {
 	XP_FREE(buf);
@@ -2168,8 +2209,13 @@ ET_RestoreLayerState(MWContext *context, int32 layer_id,
                      void *data)
 {
     LMWindowGroup *grp;
+    RestoreStruct * pEvent;
 
-    RestoreStruct * pEvent = XP_NEW_ZAP(RestoreStruct);
+    if(!lm_inited())  {
+	return;
+    }
+
+    pEvent = XP_NEW_ZAP(RestoreStruct);
 
     if(!pEvent)
         return;
@@ -2320,8 +2366,13 @@ ET_ReflectWindow(MWContext * pContext,
                  int newline_count)
 {
     LMWindowGroup *grp;
+    ReflectWindowEvent * pEvent;
 
-    ReflectWindowEvent * pEvent = XP_NEW_ZAP(ReflectWindowEvent);
+    if(!lm_inited())  {
+	return;
+    }
+
+    pEvent = XP_NEW_ZAP(ReflectWindowEvent);
     if(!pEvent)
         return;
 
