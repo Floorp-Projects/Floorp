@@ -10,7 +10,7 @@
 	title="&window.title;"
 	class="dialog"> 
 
-  <script language="javascript" src="chrome://communicator/content/profile/profileMigrationProgress.js"/> 
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/profileMigrationProgress.js"/> 
 
   <keyset id="keyset"/>
 
@@ -29,4 +29,3 @@
    </box>
 
 </window>
-

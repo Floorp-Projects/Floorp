@@ -39,7 +39,7 @@ Contributor(s): ______________________________________. -->
   onload="MiniNavStartup()"
   onunload="MiniNavShutdown()">
 
-  <script language="javascript" src="chrome://embed/content/mini-nav.js"/>
+  <script type="application/x-javascript" src="chrome://embed/content/mini-nav.js"/>
 
   <!-- Context menu -->
   <popupset>

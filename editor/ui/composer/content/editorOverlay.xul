@@ -31,8 +31,8 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
-<script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
+<script type="application/x-javascript" src="chrome://editor/content/editorOverlay.js"/>
+<script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
 
   <!--keyset id="platformOverlayKeyset" /--> <!-- Don't do that, only one keyset per window! Anyway, this keyset is not defined! -->
 

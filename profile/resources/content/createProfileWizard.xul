@@ -26,12 +26,12 @@
                 src="chrome://communicator/locale/profile/profileManager.properties"/>
 
   <!-- XXX: strres.js is needed so that wizardManager.js will work -->
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
-  <script type="text/javascript" src="chrome://global/content/wizardOverlay.js"/>
-  <script type="text/javascript" src="chrome://global/content/wizardHandlerSet.js"/>
-  <script type="text/javascript" src="chrome://global/content/wizardManager.js"/>
-  <script type="text/javascript" src="chrome://global/content/widgetStateManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/wizardOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/wizardHandlerSet.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/widgetStateManager.js"/>
 
   <box class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
   <box class="wizard-box" flex="1">

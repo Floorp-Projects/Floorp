@@ -9,25 +9,25 @@
          xmlns:ins="&INS-rdf;"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="javascript" src="chrome://inspector/content/InspectorApp.js"/>
-  <script language="javascript" src="chrome://inspector/content/ViewerRegistry.js"/>
-  <script language="javascript" src="chrome://inspector/content/ViewerPane.js"/>
-  <script language="javascript" src="chrome://inspector/content/utils.js"/>
-  <script language="javascript" src="chrome://inspector/content/Flasher.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFArray.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xul/FrameExchange.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/system/ClipboardUtils.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/system/file.js"/>
-  <script language="javascript" src="chrome://inspector/content/search/inSearchService.js"/>
-  <script language="javascript" src="chrome://inspector/content/search/inSearchModule.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xul/inFormManager.js"/>
-  <script language="javascript" src="chrome://inspector/content/search/inSearchUtils.js"/>
-  <script language="javascript" src="chrome://inspector/content/search/inSearchTreeBuilder.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/InspectorApp.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/ViewerRegistry.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/ViewerPane.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/Flasher.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFArray.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/FrameExchange.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/ClipboardUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/file.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchService.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchModule.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inFormManager.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchTreeBuilder.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
 
   <box id="bxInspectorMain" orient="vertical">
 
@@ -73,8 +73,5 @@
       <!-- TEMPORARY UNTIL FIX FOR 54237 -->
       <browser id="inSearchServiceLoader" height="1"/>
     </box>
-
   </box>
-  
 </overlay>
-

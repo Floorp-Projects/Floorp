@@ -36,8 +36,8 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical" onload="onLoadTransformiix();">
 
-<script language="javascript" src="chrome://Transformiix/content/transformiix.js"/>
-<script language="javascript" src="resource:/res/samples/DumpDOM.js"/>
+<script type="application/x-javascript" src="chrome://Transformiix/content/transformiix.js"/>
+<script type="application/x-javascript" src="resource:/res/samples/DumpDOM.js"/>
 
 <box id="tool-box" flex="1" align="horizontal">
 </box>

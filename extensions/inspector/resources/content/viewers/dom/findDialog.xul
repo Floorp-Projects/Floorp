@@ -11,9 +11,9 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script language="javascript" src="chrome://inspector/content/viewers/dom/FindDialog.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/FindDialog.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
 
   <broadcasterset id="brsBroadcasters">
     <broadcaster id="cmdFind" oncommand="dialog.doFind()" onkeypress="if (event.keyCode == 13) dialog.doFind()"/>
@@ -65,5 +65,3 @@
     <button value="Close" observes="cmdClose"/>
   </box>
 </window>
-
-        

@@ -6,7 +6,7 @@
          xmlns:html="http://www.w3.org/1999/xhtml"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
     function displaySecurityAdvisor()
     {
       var psm = Components.classes["@mozilla.org/psm;1"].getService();

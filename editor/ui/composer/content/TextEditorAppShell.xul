@@ -46,10 +46,10 @@
         persist="screenX screenY width height"
         >
 
-  <script language="JavaScript" src="chrome://editor/content/editor.js"/>
-  <script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
-  <script language="javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <commands id="commands">
     <commandset id="globalEditMenuItems"/>

@@ -35,7 +35,7 @@
         align="vertical"
         onload="parent.initPanel('chrome://cookie/content/pref-cookies.xul');">
           
-  <script language="javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
   <script>
   <![CDATA[

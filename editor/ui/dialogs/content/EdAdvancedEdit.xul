@@ -44,16 +44,16 @@
   <popupset id="aTooltipSet" />
     
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <!-- global dialog functions -->
-  <script language="JavaScript" src="chrome://editor/content/EdAdvancedEdit.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdAdvancedEdit.js"/>
   <!-- element page functions -->
-  <script language="JavaScript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EdAECSSAttributes.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EdAEJSEAttributes.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdAECSSAttributes.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdAEJSEAttributes.js"/>
 
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
-	<script language="javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
   <broadcaster id="args" value=""/>
 

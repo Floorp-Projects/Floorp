@@ -21,7 +21,7 @@
   <stringbundle id="bundle_migration"
                 src="chrome://communicator/locale/profile/migration.properties"/>
 
-  <script type="text/javascript" src="chrome://communicator/content/profile/confirmMigration.js"/> 
+  <script type="application/x-javascript" src="chrome://communicator/content/profile/confirmMigration.js"/> 
     
   <keyset id="keyset"/>
   

@@ -39,22 +39,22 @@
         onload="Startup();">
 
   <!-- Generic Utilities -->
-  <script type="text/javascript" src="chrome://global/content/nsTreeUtils.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
   <!-- XXX - would like to cut this dependency out -->
-  <script type="text/javascript" src="chrome://global/content/strres.js"></script>
-  <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 
   <!-- Bookmarks Shell -->
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"></script>
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"></script>
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksPanel.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksPanel.js"/>
 
   <!-- Drag and Drop -->
-  <script src="chrome://global/content/nsJSComponentManager.js"></script>
-  <script src="chrome://global/content/nsJSSupportsUtils.js"></script>
-  <script src="chrome://global/content/nsDragAndDrop.js"></script>
-  <script src="chrome://global/content/nsTransferable.js"></script>
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
 
 
   <!-- context menu, tooltips, etc -->

@@ -10,7 +10,7 @@
 <overlay id="editorPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var panel;
     if (panel != undefined) {

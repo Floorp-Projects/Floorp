@@ -8,9 +8,9 @@
 <window id="winPref" orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="Javascript" src="chrome://inspector/content/extensions/wsm-colorpicker.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/extensions/wsm-colorpicker.js"/>
 
-  <script language="Javascript"><![CDATA[
+  <script type="application/x-javascript"><![CDATA[
     var _elementIDs = [
       "cprElBorderColor",
       "txfElBorderWidth",
@@ -26,7 +26,7 @@
 
     AddColorPicker(initFunction);
 
-  ]]></script>
+  ]]/>
 
   <box class="box-smallheader" title="&Inspector.label;"/>
 
@@ -80,7 +80,4 @@
       </box>
     </titledbox>
   </box>
-
 </window>
-
-        

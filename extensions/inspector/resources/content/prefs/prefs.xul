@@ -11,7 +11,7 @@
         width="550" height="400" orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="Javascript" src="chrome://inspector/content/prefs/InspectorPrefs.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/prefs/InspectorPrefs.js"/>
 
   <tabcontrol flex="1">
     <tabbox id="tbxPrefs"/>
@@ -19,7 +19,4 @@
   </tabcontrol>
 
   <box id="okCancelButtonsRight"/>
-
 </window>
-
-        

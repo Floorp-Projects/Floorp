@@ -14,13 +14,13 @@
         xmlns:ins="http://www.mozilla.org/inspector#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script language="javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script language="javascript" src="chrome://inspector/content/utils.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
-  <script language="javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
 
   <!--============================= COMMANDS ============================== -->
 
@@ -53,7 +53,4 @@
     containment="&INS-rdf;HasChildren" flags="dont-test-empty">
     <template/>
   </tree>
-
 </window>
-
-        
