@@ -707,7 +707,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         break;
     case ExprNode::This :
         {
-            ret = TypedRegister(0, &Any_Type);
+            ret = TypedRegister(0, mClass ? mClass : &Any_Type);
         }
         break;
     case ExprNode::identifier :
