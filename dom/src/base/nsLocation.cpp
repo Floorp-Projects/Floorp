@@ -253,7 +253,7 @@ LocationImpl::FindUsableBaseURI(nsIURI * aBaseURI, nsIDocShell * aParent, nsIURI
       return NS_ERROR_FAILURE;
   }  // while 
 
-    return rv;
+  return rv;
 }
 
 
@@ -534,10 +534,12 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
   nsresult result;
   nsCOMPtr<nsIURI> newUri, baseURI;
 
-  // Make sure the base url is something that will be useful. 
+  // Try to make sure the base url is something that will be useful. 
   result = FindUsableBaseURI(aBase,  mDocShell, getter_AddRefs(baseURI));
-  if (!baseURI)
-    return NS_ERROR_FAILURE;
+  if (!baseURI)  {
+    // If nothing useful was found, just use what you have.
+    baseURI = aBase;
+  }
 
   nsCAutoString docCharset;
   if (NS_SUCCEEDED(GetDocumentCharacterSetForURI(aHref, docCharset)))
