@@ -106,6 +106,7 @@ public:
     void              		MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
 
     void IsActive(PRBool* aActive);
+    void SetIsActive(PRBool aActive);
 protected:
 
 	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
@@ -120,6 +121,7 @@ protected:
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
+	PRBool                          mIsActive;
 };
 
 #endif // MacWindow_h__
