@@ -91,59 +91,66 @@ typedef PRUint32  nsCSSFrameType;
 #define NS_FRAME_GET_TYPE(_ft) \
   ((_ft) & ~NS_CSS_FRAME_TYPE_REPLACED)
 
-#define NS_INTRINSICSIZE  NS_UNCONSTRAINEDSIZE
-#define NS_AUTOHEIGHT     NS_UNCONSTRAINEDSIZE
-#define NS_AUTOMARGIN     NS_UNCONSTRAINEDSIZE
+#define NS_INTRINSICSIZE    NS_UNCONSTRAINEDSIZE
+#define NS_SHRINKWRAPWIDTH  NS_UNCONSTRAINEDSIZE
+#define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
+#define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
 
 /**
- * Reflow state passed to a frame during reflow. The reflow states are linked
- * together. The availableWidth and availableHeight represent the available
- * space in which to reflow your frame, and are computed based on the parent
- * frame's computed width and computed height. The available space is the total
- * space including margins, border, padding, and content area. A value of
- * NS_UNCONSTRAINEDSIZE means you can choose whatever size you want
+ * Reflow state passed to a frame during reflow.
  *
- * @see #Reflow()
+ * @see nsIFrame#Reflow()
  */
 struct nsHTMLReflowState {
-  // pointer to parent's reflow state
+  // the reflow states are linked together. this is the pointer to the
+  // parent's reflow state
   const nsHTMLReflowState* parentReflowState;
 
   // the frame being reflowed
-  nsIFrame*            frame;
+  nsIFrame*           frame;
 
   // the reason for the reflow
-  nsReflowReason       reason;
+  nsReflowReason      reason;
 
-  // the reflow command. only set for eReflowReason_Incremental
-  nsIReflowCommand*    reflowCommand;
+  // the reflow command. only set for a reflow reason of eReflowReason_Incremental
+  nsIReflowCommand*   reflowCommand;
 
-  // the available space in which to reflow
+  // the available space in which to reflow the frame. The space represents the
+  // amount of room for the frame's border, padding, and content area (not the
+  // margin area. The parent frame deals with the child frame's margins). The
+  // frame size you choose should fit within the available space.
+  // A value of NS_UNCONSTRAINEDSIZE for the available height means you can
+  // choose whatever size you want. In galley mode the available height is always
+  // NS_UNCONSTRAINEDSIZE, and only page mode involves a constrained height
   nscoord              availableWidth, availableHeight;
 
   // rendering context to use for measurement
   nsIRenderingContext* rendContext;
 
   // is the current context at the top of a page?
-  PRPackedBool         isTopOfPage;
+  PRPackedBool     isTopOfPage;
 
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
   nsCSSFrameType   mFrameType;
 
+  // pointer to the space manager associated with this area
   nsISpaceManager* mSpaceManager;
 
   // LineLayout object (only for inline reflow; set to NULL otherwise)
   nsLineLayout*    mLineLayout;
 
-  // The computed width specifies the frame's content width, and it does not
-  // apply to inline non-replaced elements
+  // The computed width specifies the frame's content area width, and it does
+  // not apply to inline non-replaced elements
   //
   // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
   // use your intrinsic width as the computed width
   //
   // For block-level frames, the computed width is based on the width of the
-  // containing block, the margin/border/padding areas, and the min/max width
+  // containing block, the margin/border/padding areas, and the min/max width.
+  // A value of NS_SHRINKWRAPWIDTH means that you should choose a width based
+  // on your content. The width may be as large as the specified maximum width
+  // (see mComputedMaxWidth).
   nscoord          mComputedWidth; 
 
   // The computed height specifies the frame's content height, and it does

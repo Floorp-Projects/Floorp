@@ -89,10 +89,13 @@ public:
 
   PRBool IsZeroHeight();
 
+  // Reflows the frame and returns the reflow status. aPushedFrame is PR_TRUE
+  // if the frame is pushed to the next line because it doesn't fit
   nsresult ReflowFrame(nsIFrame* aFrame,
                        nsIFrame** aNextRCFrame,
                        nsReflowStatus& aReflowStatus,
-                       nsHTMLReflowMetrics* aMetrics = nsnull);
+                       nsHTMLReflowMetrics* aMetrics,
+                       PRBool& aPushedFrame);
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -110,7 +113,9 @@ public:
 
   PRBool TrimTrailingWhiteSpace();
 
-  void HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify);
+  PRBool HorizontalAlignFrames(nsRect& aLineBounds,
+                               PRBool aAllowJustify,
+                               PRBool aShrinkWrapWidth);
 
   void RelativePositionFrames(nsRect& aCombinedArea);
 

@@ -238,8 +238,10 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
   else {
     // Pretend we are a span and reflow the child frame
     nsLineLayout* ll = aReflowState.mLineLayout;
+    PRBool        pushedFrame;
+
     ll->BeginSpan(this, &aReflowState, bp.left, availSize.width);
-    ll->ReflowFrame(kid, &nextRCFrame, aReflowStatus, &aMetrics);
+    ll->ReflowFrame(kid, &nextRCFrame, aReflowStatus, &aMetrics, pushedFrame);
     nsSize size;
     ll->EndSpan(this, size, aMetrics.maxElementSize);
   }

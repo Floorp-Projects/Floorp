@@ -358,6 +358,63 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     }
   }
 
+  // If the block is shrink wrapping its width, then see if we have percentage
+  // based margins. If so, we can calculate them now that we know the shrink
+  // wrap width
+  if (NS_SHRINKWRAPWIDTH == reflowState.mComputedWidth) {
+    nscoord boxWidth = mMetrics.width;
+    float   leftPct = 0.0;
+    float   rightPct = 0.0;
+    
+    if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
+      nsStyleCoord  leftCoord;
+      
+      reflowState.mStyleSpacing->mMargin.GetLeft(leftCoord);
+      leftPct = leftCoord.GetPercentValue();
+
+    } else {
+      boxWidth += mMargin.left;
+    }
+
+    if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetRightUnit()) {
+      nsStyleCoord  rightCoord;
+
+      reflowState.mStyleSpacing->mMargin.GetRight(rightCoord);
+      rightPct = rightCoord.GetPercentValue();
+
+    } else {
+      boxWidth += mMargin.right;
+    }
+
+    // The total shrink wrap width "sww" is calculated by the expression:
+    //   sww = bw + (mp * sww)
+    // where "bw" is the box width (frame width plus margins that aren't percentage
+    // based) and "mp" are the total margin percentages (i.e., the left percentage
+    // value plus the right percentage value)
+    // Solving for "sww" gives us:
+    //  sww = bw / (1 - mp)
+    // Note that this is only well defined for "mp" less than 100%
+    float marginPct = leftPct + rightPct;
+    if (marginPct >= 1.0) {
+      // Ignore the right percentage and just use the left percentage
+      // XXX Pay attention to direction property...
+      marginPct = leftPct;
+      rightPct = 0.0;
+    }
+
+    if ((marginPct > 0.0) && (marginPct < 1.0)) {
+      double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
+
+      if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
+        mMargin.left = NSToCoordFloor(shrinkWrapWidth * leftPct);
+        mX += mMargin.left;
+      }
+      if (eStyleUnit_Percent == reflowState.mStyleSpacing->mMargin.GetRightUnit()) {
+        mMargin.right = NSToCoordFloor(shrinkWrapWidth * rightPct);
+      }
+    }
+  }
+
   return rv;
 }
 
