@@ -34,7 +34,7 @@
 #ifndef nsIJRILiveConnectPlugin_h__
 #define nsIJRILiveConnectPlugin_h__
 
-#include "nsIPlugin.h"
+#include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // JRI-Based LiveConnect Classes
@@ -49,6 +49,14 @@
 
 #include "jri.h"
 
+#define NS_IJRILIVECONNECTPLUGIN_IID                 \
+{ /* c94058e0-f772-11d1-815b-006008119d7a */         \
+    0xc94058e0,                                      \
+    0xf772,                                          \
+    0x11d1,                                          \
+    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 /** 
  * The nsIJRILiveConnectPlugin interface defines additional entry points that a
  * plugin developer needs to implement in order for the plugin to support 
@@ -58,9 +66,10 @@
  * Plugin developers requiring this capability should implement this interface
  * in addition to the basic nsIPlugin interface.
  */
-class nsIJRILiveConnectPlugin : public nsIPlugin {
+class nsIJRILiveConnectPlugin : public nsISupports {
 public:
-
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJRILIVECONNECTPLUGIN_IID)
+	
     /**
      * Returns the class of the Java instance to be associated with the
      * plugin.
@@ -71,17 +80,8 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    GetJavaClass(jref *resultingClass) = 0;
-
+    GetJavaClass(JRIEnv* env, jref *resultingClass) = 0;
 };
-
-#define NS_IJRILIVECONNECTPLUGIN_IID                 \
-{ /* c94058e0-f772-11d1-815b-006008119d7a */         \
-    0xc94058e0,                                      \
-    0xf772,                                          \
-    0x11d1,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
