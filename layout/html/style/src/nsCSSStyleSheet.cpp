@@ -2370,16 +2370,20 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
   fputs("CSS Style Sheet: ", out);
 #ifdef NECKO
-  char* buffer;
-  nsresult rv = mInner->mURL->GetSpec(&buffer);
-  fputs(buffer, out);
-  nsCRT::free(buffer);
+  char* urlSpec = nsnull;
+  nsresult rv = mInner->mURL->GetSpec(&urlSpec);
+  if (urlSpec) {
+    fputs(urlSpec, out);
+    nsCRT::free(urlSpec);
+  }
 #else
-  PRUnichar* buffer;
-  mInner->mURL->ToString(&buffer);
-  nsAutoString as(buffer);
-  delete [] buffer;
-  fputs(as, out);
+  PRUnichar* urlSpec = nsnull;
+  mInner->mURL->ToString(&urlSpec);
+  if (urlSpec) {
+    nsAutoString buffer(urlSpec);
+    delete [] urlSpec;
+    fputs(buffer, out);
+  }
 #endif
 
   if (mMedia) {
@@ -2387,10 +2391,11 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     PRUint32 index = 0;
     PRUint32 count;
     mMedia->Count(&count);
+    nsAutoString  buffer;
     while (index < count) {
       nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
-      medium->ToString(as);
-      fputs(as, out);
+      medium->ToString(buffer);
+      fputs(buffer, out);
       if (index < count) {
         fputs(", ", out);
       }
@@ -2749,10 +2754,12 @@ CSSStyleSheetImpl::GetHref(nsString& aHref)
 {
   if (mInner && mInner->mURL) {
 #ifdef NECKO
-    char* str;
+    char* str = nsnull;
     mInner->mURL->GetSpec(&str);
     aHref = str;
-    nsCRT::free(str);
+    if (str) {
+      nsCRT::free(str);
+    }
 #else
     PRUnichar* str;
     mInner->mURL->ToString(&str);
