@@ -1297,7 +1297,7 @@ nsHTTPHandler::setCapabilities (nsIChannel* i_pTrans, PRUint32 aCapabilities)
 
             nsCString hStr (host);
             hStr.Append ( ':');
-            hStr.Append (port);
+            hStr.AppendInt (port);
 
             nsStringKey key (hStr);
             mCapTable.Put (&key, (void *) aCapabilities);
@@ -1312,7 +1312,7 @@ nsHTTPHandler::getCapabilities (const char *host, PRInt32 port, PRUint32 defCap)
 
     nsCString hStr (host);
     hStr.Append ( ':');
-    hStr.Append (port);
+    hStr.AppendInt (port);
 
     nsStringKey key (hStr);
     void * p = mCapTable.Get (&key);

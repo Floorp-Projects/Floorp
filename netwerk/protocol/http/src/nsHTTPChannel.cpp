@@ -1709,7 +1709,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         {
             nsAutoString temp(user);
             if (passwd) {
-                temp += ':';
+                temp.AppendWithConversion(':');
                 temp += passwd;
             }
             CRTFREEIF(newUserPass);
