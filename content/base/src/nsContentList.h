@@ -83,14 +83,10 @@ public:
                              nsIContent* aOldChild,
                              nsIContent* aNewChild,
                              PRInt32 aIndexInContainer);
-  NS_IMETHOD ContentWillBeRemoved(nsIDocument *aDocument,
-				                          nsIContent* aContainer,
-                                  nsIContent* aChild,
-                                  PRInt32 aIndexInContainer) { return NS_OK; }
-  NS_IMETHOD ContentHasBeenRemoved(nsIDocument *aDocument,
-				                           nsIContent* aContainer,
-                                   nsIContent* aChild,
-                                   PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
   NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
 			     nsIStyleSheet* aStyleSheet) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);

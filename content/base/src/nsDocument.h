@@ -137,28 +137,22 @@ public:
   // notifications to document observers.
   NS_IMETHOD BeginLoad();
   NS_IMETHOD EndLoad();
-  virtual void ContentChanged(nsIContent* aContent,
-                              nsISupports* aSubContent);
-
-  virtual void ContentAppended(nsIContent* aContainer,
-                               PRInt32     aNewIndexInContainer);
-
-  virtual void ContentInserted(nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-
-  virtual void ContentReplaced(nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer);
-
-  virtual void ContentWillBeRemoved(nsIContent* aContainer,
-                                    nsIContent* aChild,
-                                    PRInt32 aIndexInContainer);
-
-  virtual void ContentHasBeenRemoved(nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentChanged(nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD AttributeChanged(nsIContent* aChild,
+                              nsIAtom* aAttribute);
+  NS_IMETHOD ContentAppended(nsIContent* aContainer,
+                             PRInt32 aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
 
   /**
     * Returns the Selection Object

@@ -331,10 +331,10 @@ nsContentList::ContentReplaced(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
-nsContentList::ContentHasBeenRemoved(nsIDocument *aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer)
+nsContentList::ContentRemoved(nsIDocument *aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer)
 {
   if (MatchSelf(aChild)) {
     Reset();
