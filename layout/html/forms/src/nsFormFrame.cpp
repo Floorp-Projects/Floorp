@@ -74,6 +74,7 @@
 #include "prenv.h"
 
 #define SPECIFY_CHARSET_IN_CONTENT_TYPE
+#define FIX_NON_ASCII_MULTIPART
 
 #if defined(ClientWallet) || defined(SingleSignon) || defined(CookieManagement)
 #include "nsIServiceManager.h"
@@ -1009,6 +1010,9 @@ void nsFormFrame::Temp_GetContentType(char* aPathName, char* aContentType)
 
 void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFrame)
 {
+#ifdef FIX_NON_ASCII_MULTIPART
+  nsIUnicodeEncoder *encoder=nsnull;
+#endif
   aData.SetLength(0);
   char buffer[BUFSIZE];
   PRInt32 numChildren = mFormControls.Count();
@@ -1034,6 +1038,11 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
   if (len < 0) {
     return;
   }
+
+#ifdef FIX_NON_ASCII_MULTIPART
+  if(NS_FAILED( GetEncoder(&encoder) ) )
+     encoder = nsnull;
+#endif
 
   PRInt32 boundaryLen = PL_strlen(boundary);
 	PRInt32	contDispLen = PL_strlen(CONTENT_DISP);
@@ -1062,8 +1071,22 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
         contentLen += boundaryLen + crlfLen;
         contentLen += contDispLen;
 		    for (int valueX = 0; valueX < numValues; valueX++) {
-          char* name  = names[valueX].ToNewCString();
-          char* value = values[valueX].ToNewCString();
+
+          char* name = nsnull;
+          char* value = nsnull;
+
+#ifdef FIX_NON_ASCII_MULTIPART
+          if(encoder) {
+              name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
+              value  = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
+          }
+#endif
+
+          if(nsnull == name)
+              name  = names[valueX].ToNewCString();
+          if(nsnull == value)
+              value = values[valueX].ToNewCString();
+
           if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
             continue;
           }
@@ -1131,8 +1154,21 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
           continue;
         }
 		    for (int valueX = 0; valueX < numValues; valueX++) {
-          char* name  = names[valueX].ToNewCString();
-          char* value = values[valueX].ToNewCString();
+          char* name = nsnull;
+          char* value = nsnull;
+
+#ifdef FIX_NON_ASCII_MULTIPART
+          if(encoder) {
+              name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
+              value  = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
+          }
+#endif
+
+          if(nsnull == name)
+              name  = names[valueX].ToNewCString();
+          if(nsnull == value)
+              value = values[valueX].ToNewCString();
+
           if ((0 == names[valueX].Length()) || (0 == values[valueX].Length())) {
             continue;
           }
@@ -1184,8 +1220,12 @@ void nsFormFrame::ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFram
 
   PR_Close(tmpFile);
 	
+#ifdef FIX_NON_ASCII_MULTIPART
+  NS_IF_RELEASE(encoder);
+#endif
 	//StrAllocCopy(url_struct->post_data, tmpfilename);
 	//url_struct->post_data_is_file = TRUE;
+
 }
 
 // THE FOLLOWING WAS TAKEN FROM CMD/WINFE/FEGUI AND MODIFIED TO JUST 
