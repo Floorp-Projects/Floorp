@@ -37,10 +37,6 @@ public:
 
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTRINGCHARSETDETECTOR_IID)
   /*
-     Return the Charset the detector know about
-   */
-  NS_IMETHOD GetCandidates(PRInt32 aNum, const char* aCharsetArray[]) = 0;
-  /*
      Perform the charset detection
     
      aBytesArray- the bytes

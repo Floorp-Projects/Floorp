@@ -39,11 +39,6 @@ public:
   NS_IMETHOD Init(nsICharsetDetectionObserver* observer) = 0;
 
   /*
-     Return the charset the detector know about
-   */
-  NS_IMETHOD GetCandidates(PRInt32 aNum, const char* aCharsetArray[]) = 0;
-
-  /*
      Feed a block of bytes to the detector.
      It will call the Notify function of the nsICharsetObserver if it find out
      the answer. 
