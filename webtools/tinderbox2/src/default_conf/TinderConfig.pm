@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.25 $ 
-# $Date: 2002/05/01 01:56:23 $ 
+# $Revision: 1.26 $ 
+# $Date: 2002/05/01 02:54:12 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -166,7 +166,7 @@ $DB_LEGEND_BORDER = "";
 # Should the vector of times, which represent the rows use a uniform
 # spacing or should we put one row for each time we have data for.
 
-$UNIFORM_ROW_SPACING = 1;
+$UNIFORM_ROW_SPACING = 0;
 
 # Spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
