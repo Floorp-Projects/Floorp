@@ -77,6 +77,7 @@ Rights Reserved.
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY prefsCmd.label "Preferences...">
 <!ENTITY accountManagerCmd.label "Account Setup...">
+<!ENTITY accountWizardCmd.label "New Account Wizard...">
 
 <!-- View Menu -->
 <!ENTITY viewMenu.label "View"> 
@@ -346,6 +347,7 @@ Rights Reserved.
       <separator/>
       <menuitem name="&accountManagerCmd.label;" onclick="MsgAccountManager();"/>
       <menuitem name="&prefsCmd.label;" onclick="MsgPreferences();"/>
+      <menuitem name="&accountWizardCmd.label;" onclick="MsgAccountWizard();"/>
     </menu>
     <menu name="&viewMenu.label;">
       <menu name="&showToolbarMenu.label;">

@@ -235,6 +235,11 @@ function MsgSubscribe()
     window.openDialog("chrome://messenger/content/subscribe.xul", "subscribe", "chrome");
 }
 
+function MsgAccountWizard()
+{
+    window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome, modal");
+}
+
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
 function MsgSaveAsTemplate() {}
