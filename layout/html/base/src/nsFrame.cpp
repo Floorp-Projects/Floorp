@@ -4352,6 +4352,24 @@ nsFrame::StoreOverflow(nsIPresContext*      aPresContext,
   }   
 }
 
+void
+nsFrame::ConsiderChildOverflow(nsIPresContext* aPresContext,
+                               nsRect&         aOverflowArea,
+                               nsIFrame*       aChildFrame)
+{
+  if (GetStyleDisplay()->mOverflow != NS_STYLE_OVERFLOW_HIDDEN) {
+    nsRect* overflowArea = aChildFrame->GetOverflowAreaProperty(aPresContext);
+    if (overflowArea) {
+      nsRect childOverflow(*overflowArea);
+      childOverflow.MoveBy(aChildFrame->GetPosition());
+      aOverflowArea.UnionRect(aOverflowArea, childOverflow);
+    }
+    else {
+      aOverflowArea.UnionRect(aOverflowArea, aChildFrame->GetRect());
+    }
+  }
+}
+
 NS_IMETHODIMP 
 nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
                                     nsIFrame**      aProviderFrame,

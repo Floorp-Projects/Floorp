@@ -97,6 +97,7 @@ struct NS_GFX nsRect {
   void MoveTo(nscoord aX, nscoord aY) {x = aX; y = aY;}
   void MoveTo(const nsPoint& aPoint) {x = aPoint.x; y = aPoint.y;}
   void MoveBy(nscoord aDx, nscoord aDy) {x += aDx; y += aDy;}
+  void MoveBy(const nsPoint& aPoint) {x += aPoint.x; y += aPoint.y;}
   void SizeTo(nscoord aWidth, nscoord aHeight) {width = aWidth; height = aHeight;}
   void SizeTo(const nsSize& aSize) {SizeTo(aSize.width, aSize.height);}
   void SizeBy(nscoord aDeltaWidth, nscoord aDeltaHeight) {width += aDeltaWidth;
