@@ -52,12 +52,11 @@ char *
 getHref(char** attlist)
 {
 	char* ans = getAttributeValue(attlist, "rdf:href");
-	if (ans != NULL) {
-			return ans;
-	} else return getAttributeValue(attlist, "href");
+	if (!ans) ans = getAttributeValue(attlist, "RDF:href"); 
+	if (!ans) ans = getAttributeValue(attlist, "href");
+	return ans;
 }
-
-
+ 
 
 int
 parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size)
@@ -221,7 +220,8 @@ containerTagp (RDFFile f, char* elementName)
 	    (tagEquals(f, elementName, "RelatedLinks")));
 }
 
-
+#define DC_TITLE "http://purl.org/metadata/dublin_core/title"
+#define SM_CHILD "http://purl.org/metadata/sitemap/child"
 
 RDF_Resource
 ResourceFromElementName (RDFFile f, char* elementName)
@@ -238,12 +238,17 @@ ResourceFromElementName (RDFFile f, char* elementName)
         char* url = getMem(strlen(ns->url) + strlen(elementName)-asn);
         memcpy(url, ns->url, urln);
         strcat(url, &elementName[asn+1]);
-        ans = RDF_GetResource(NULL, url, 1);
+		if (strcmp(url, DC_TITLE) == 0) {
+          ans = gCoreVocab->RDF_name;
+        } else if (strcmp(url, SM_CHILD) == 0) {
+          ans = gCoreVocab->RDF_child;
+        } else  
+          ans = RDF_GetResource(NULL, url, 1);
         freeMem(url);
         return ans;
       }
       ns = ns->next;
-    }
+    }    
     return RDF_GetResource(NULL, elementName, 1);
   }
 }
