@@ -816,7 +816,12 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
   
   PRInt32 unread = mReadSet->CountMissingInRange(oldest, youngest);
   NS_ASSERTION(unread >= 0,"CountMissingInRange reported unread < 0");
-  if (unread < 0) return NS_ERROR_FAILURE;
+  if (unread < 0) {
+    // servers can send us stuff like "211 0 41 40 nz.netstatus"
+    // we should handle it gracefully.
+    unread = 0;
+  }
+  
   if (unread > total) {
     /* This can happen when the newsrc file shows more unread than exist in the group (total is not necessarily `end - start'.) */
     unread = total;
