@@ -139,7 +139,8 @@ function ThreadPaneDoubleClick()
 
 function ThreadPaneKeyPress(event)
 {
-  return;
+    if (event.keyCode == 13)
+      ThreadPaneDoubleClick();
 }
 
 function MsgSortByDate()
