@@ -233,6 +233,15 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, P
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDeviceContextBeOS::GetClientRect(nsRect &aRect)
+{
+  aRect.x = 0;
+  aRect.y = 0;
+  aRect.width = 0;
+  aRect.height = 0;
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {

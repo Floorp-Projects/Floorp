@@ -109,8 +109,19 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(aDC, SIZEPALETTE);
   mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(aDC, NUMRESERVED);
 
-  mWidthFloat = (float)::GetDeviceCaps(aDC, HORZRES);
-  mHeightFloat = (float)::GetDeviceCaps(aDC, VERTRES);
+  mClientRect.width = ::GetDeviceCaps(aDC, HORZRES);
+  mClientRect.height = ::GetDeviceCaps(aDC, VERTRES);
+  mWidthFloat = (float)mClientRect.width;
+  mHeightFloat = (float)mClientRect.height;
+  if (::GetDeviceCaps(aDC, TECHNOLOGY) == DT_RASDISPLAY)
+  {
+    RECT workArea;
+    ::SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+    mClientRect.x = workArea.left;
+    mClientRect.y = workArea.top;
+    mClientRect.width = workArea.right - workArea.left;
+    mClientRect.height = workArea.bottom - workArea.top;
+  }
 
   DeviceContextImpl::CommonInit();
 }
@@ -533,6 +544,12 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
   aWidth = mWidth;
   aHeight = mHeight;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextWin :: GetClientRect(nsRect &aRect)
+{
+  aRect = mClientRect;
   return NS_OK;
 }
 

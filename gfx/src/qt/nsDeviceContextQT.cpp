@@ -332,6 +332,16 @@ NS_IMETHODIMP nsDeviceContextQT::GetDeviceSurfaceDimensions(PRInt32 &aWidth,
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDeviceContextQT::GetClientRect(nsRect &aRect)
+{
+    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsDeviceContextQT::GetClientRect\n"));
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = 0;
+    aRect.height = 0;
+    return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP 
 nsDeviceContextQT::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                        nsIDeviceContext *&aContext)

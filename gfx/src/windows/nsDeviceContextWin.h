@@ -56,6 +56,8 @@ public:
 
   NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
 
+  NS_IMETHOD GetClientRect(nsRect &aRect);
+
   NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
 
@@ -78,6 +80,7 @@ protected:
   float                 mHeightFloat;
   PRInt32               mWidth;
   PRInt32               mHeight;
+  nsRect                mClientRect;
   nsIDeviceContextSpec  *mSpec;
 
 public:
