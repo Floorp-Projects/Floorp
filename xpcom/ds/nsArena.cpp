@@ -20,6 +20,7 @@
 #include "nsCRT.h"
 
 ArenaImpl::ArenaImpl(void)
+  : mInitialized(PR_FALSE)
 {
   NS_INIT_REFCNT();
   nsCRT::memset(&mPool, 0, sizeof(PLArenaPool));
@@ -33,6 +34,7 @@ ArenaImpl::Init(PRUint32 aBlockSize)
   }
   PL_INIT_ARENA_POOL(&mPool, "nsIArena", aBlockSize);
   mBlockSize = aBlockSize;
+  mInitialized = PR_TRUE;
   return NS_OK;
 }
 
@@ -40,7 +42,10 @@ NS_IMPL_ISUPPORTS(ArenaImpl, nsIArena::GetIID())
 
 ArenaImpl::~ArenaImpl()
 {
-  PL_FinishArenaPool(&mPool);
+  if (mInitialized)
+    PL_FinishArenaPool(&mPool);
+
+  mInitialized = PR_FALSE;
 }
 
 NS_IMETHODIMP_(void*)
