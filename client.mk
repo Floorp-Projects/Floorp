@@ -230,7 +230,14 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-$(OBJDIR)/Makefile $(OBJDIR)/config.status: $(TOPSRCDIR)/configure $(TOPSRCDIR)/allmakefiles.sh $(TOPSRCDIR)/.client-defs.mk
+CONFIG_STATUS_DEPS := \
+	$(TOPSRCDIR)/configure \
+	$(TOPSRCDIR)/allmakefiles.sh \
+	$(TOPSRCDIR)/.client-defs.mk \
+	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
+	$(NULL)
+
+$(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR); 
 	@echo ../configure
@@ -262,7 +269,7 @@ build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-clean realclean:
+clean realclean: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	cd $(OBJDIR); $(MAKE) $@
 	rm -fr $(ALL_TRASH)
 
