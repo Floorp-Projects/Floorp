@@ -744,6 +744,7 @@ nsImageFrame::TriggerLink(nsIPresContext& aPresContext,
     else {
       handler->OnOverLink(mContent, aURLSpec, aTargetSpec);
     }
+    NS_RELEASE(handler);
   }
 }
 
@@ -782,14 +783,6 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_MOVE:
     map = GetImageMap();
     if ((nsnull != map) || IsServerImageMap()) {
-      nsIURL* docURL = nsnull;
-      nsIDocument* doc = nsnull;
-      mContent->GetDocument(doc);
-      if (nsnull != doc) {
-        docURL = doc->GetDocumentURL();
-        NS_RELEASE(doc);
-      }
-
       // Ask map if the x,y coordinates are in a clickable area
       float t2p = aPresContext.GetTwipsToPixels();
       nsAutoString absURL, target, altText;
@@ -815,6 +808,13 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
         PRInt32 x = NSTwipsToIntPixels((aEvent->point.x - inner.x), t2p);
         PRInt32 y = NSTwipsToIntPixels((aEvent->point.y - inner.y), t2p);
+        nsIURL* docURL = nsnull;
+        nsIDocument* doc = nsnull;
+        mContent->GetDocument(doc);
+        if (nsnull != doc) {
+          docURL = doc->GetDocumentURL();
+          NS_RELEASE(doc);
+        }
         PRBool inside = map->IsInside(x, y, docURL, absURL, target, altText,
                                       &suppress);
         NS_IF_RELEASE(docURL);
