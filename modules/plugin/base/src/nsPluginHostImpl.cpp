@@ -1649,9 +1649,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   
   rv = pti2->GetTagType(&tagType);
 
-  // PENDING(edburns): do we need to check for nsPluginTagType_Object?
   if((rv != NS_OK) || !((tagType == nsPluginTagType_Embed)
-                   || (tagType == nsPluginTagType_Applet))) {
+                        || (tagType == nsPluginTagType_Applet)
+                        || (tagType == nsPluginTagType_Object)))
+  {
     return rv;
   }
 
@@ -1698,6 +1699,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     // for <embed> tag leaving <object> to play with its alt content.
     // but before we return an error let's see if this is an <embed>
     // tag and try to launch the default plugin
+
+    // but to comply with the spec don't do it for <object> tag
+    if(tagType == nsPluginTagType_Object)
+      return rv;
 
     nsresult result;
 
