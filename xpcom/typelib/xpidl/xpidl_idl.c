@@ -75,7 +75,7 @@ msg_callback(int level, int num, int line, const char *file,
     fputs(warning_message, stderr);
 #endif
 
-    free(warning_message);
+    g_free(warning_message);
     return 1;
 }
 
@@ -122,7 +122,7 @@ fopen_from_includes(const char *filename, const char *mode,
             if (!pathname)
                 return NULL;
             inputfile = fopen(pathname, mode);
-            free(pathname);
+            g_free(pathname);
             if (inputfile)
                 return inputfile;
             current_path = current_path->next;
@@ -385,7 +385,7 @@ NextIsInclude(input_callback_state *callback_state, char **startp,
                                 filename);
             msg_callback(IDL_ERROR, 0,
                          data->lineno, scratch, error_message);
-            free(error_message);
+            g_free(error_message);
             return -1;
         }
 
@@ -754,7 +754,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         if (!ok)
             unlink(real_outname);
 #endif
-        free(real_outname);
+        g_free(real_outname);
     }
 
     return ok;
@@ -785,6 +785,6 @@ xpidl_tree_warning(IDL_tree p, int level, const char *fmt, ...)
 
     /* call our message callback, like IDL_tree_warning would */
     msg_callback(level, 0, lineno, file, msg);
-
+    g_free(msg);
     va_end(ap);
 }
