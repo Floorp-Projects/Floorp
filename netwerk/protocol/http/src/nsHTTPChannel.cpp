@@ -43,11 +43,13 @@
 // Once other kinds of auth are up change TODO
 #include "nsBasicAuth.h" 
 // This will go away once the dialog box starts popping off the window that triggered the load. 
-#include "nsINetSupportDialogService.h" // TODO remove later
-#include "nsIPrompt.h"
+#include "nsAppShellCIDs.h" // TODO remove later
+#include "nsIAppShellService.h" // TODO remove later
+#include "nsIWebShellWindow.h" // TODO remove later
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+#include "nsINetPrompt.h"
 #include "nsProxiedService.h"
-// Remove TODO
-static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -922,18 +924,39 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
             HTTPEventSink and let that notify the window that
             triggered this load to throw the userpass dialog
         */
-        NS_WITH_PROXIED_SERVICE(nsIPrompt, authdialog, kNetSupportDialogCID, nsnull, &rv);
-        if (NS_FAILED(rv)) return rv;
+      nsresult rv;
+      NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
+      if(NS_FAILED(rv))
+          return rv;
+      nsCOMPtr<nsIWebShellWindow> webshellwindow;
+      appshellservice->GetHiddenWindow(getter_AddRefs( webshellwindow ) );
+      nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( webshellwindow ) );
+      
+      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+      if(NS_FAILED(rv))
+        return rv;
+      nsINetPrompt* proxyprompter = NULL;
+      rv = pIProxyObjectManager->GetProxyObject(nsnull, 
+                                                              nsINetPrompt::GetIID(), 
+                                                              prompter, PROXY_SYNC,
+                                                              (void**)&proxyprompter);
 
         PRUnichar *user, *passwd;
         PRBool retval;
 
         nsAutoString message = "Enter username for "; //TODO localize it!
 		message += iChallenge; // later on change to only show realm and then host's info. 
-		PRUnichar* msg = message.ToNewUnicode();
-		rv = authdialog->PromptUsernameAndPassword(
+		const PRUnichar* msg = message.GetUnicode();
+		
+		// Get url
+		 nsXPIDLCString urlCString; 
+        mURI->GetHost(getter_Copies(urlCString));
+		
+		rv = proxyprompter->PromptUsernameAndPassword(urlCString, NULL, 
             msg, &user, &passwd, &retval);
-        CRTFREEIF(msg);
+            
+   	 	proxyprompter->Release();  // Must be done as not managed for you.
+       
         if (retval)
         {
             nsAutoString temp(user);
