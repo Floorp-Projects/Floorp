@@ -117,7 +117,7 @@ SpacerFrame::Reflow(nsIPresContext&          aPresContext,
 
   case TYPE_LINE:
     if (0 != width) {
-      aStatus = NS_INLINE_LINE_BREAK_AFTER(0);
+      aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_COMPLETE);
       aMetrics.height = NSIntPixelsToTwips(width, p2t);
       aMetrics.ascent = aMetrics.height;
     }
