@@ -39,9 +39,8 @@
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=123002
 *
 * NOTE: Error.length should equal the length of FormalParameterList of the
-* Error constructor. In this test, we try to detect the length of this list.
+* Error constructor. This is currently 1 in Rhino, 3 in SpiderMonkey.
 *
-* NOTE: As of this writing, Rhino differs from SpiderMonkey in this respect.
 * The difference is due to http://bugzilla.mozilla.org/show_bug.cgi?id=50447.
 * As a result of that bug, SpiderMonkey has extended ECMA to allow two new
 * parameters to Error constructors:
@@ -49,12 +48,14 @@
 * Rhino:        new Error (message)
 * SpiderMonkey: new Error (message, fileName, lineNumber)
 *
+* NOTE: since we have hard-coded the length expectations, this testcase will
+* have to be changed if the Error FormalParameterList is ever changed again.
 *
-* Assuming we have written our function getFormalParameterCount() correctly,
-* this test should pass in both implementations -
-*
+* To do this, just change the two LENGTH constants below -
 */
 //-----------------------------------------------------------------------------
+var LENGTH_RHINO = 1;
+var LENGTH_SPIDERMONKEY = 3;
 var UBound = 0;
 var bug = 123002;
 var summary = 'Testing Error.length';
@@ -68,10 +69,17 @@ var expectedvalues = [];
 
 
 /*
+ * Are we in Rhino or SpiderMonkey?
+ */
+var java = eval('java');
+var inRhino = java? true : false;
+var LENGTH_EXPECTED = inRhino? LENGTH_RHINO : LENGTH_SPIDERMONKEY; 
+
+/*
  * The various NativeError objects; see ECMA-262 Edition 3, Section 15.11.6
  */
 var errObjects = [new Error(), new EvalError(), new RangeError(),
-new ReferenceError(), new SyntaxError(), new TypeError(), new URIError()]; 
+new ReferenceError(), new SyntaxError(), new TypeError(), new URIError()];
 
 
 for (var i in errObjects)
@@ -79,7 +87,7 @@ for (var i in errObjects)
   var err = errObjects[i];
   status = inSection(quoteThis(err.name));
   actual = Error.length;
-  expect = getFormalParameterCount(err);
+  expect = LENGTH_EXPECTED;
   addThis();
 }
 
@@ -89,21 +97,6 @@ for (var i in errObjects)
 test();
 //-----------------------------------------------------------------------------
 
-
-
-/*
- * The Error prototype object has a name property (ECMA Section 15.11.7.9)
- * All other properties of error objects derive from the FormalParameterList
- * of the NativeError constructor. So we can deduce this list's length...
- */ 
-function getFormalParameterCount(errObject)
-{
-  var i = 0;
-  for (var prop in errObject)
-    i++;
-
-  return i-1;
-}
 
 
 function addThis()
