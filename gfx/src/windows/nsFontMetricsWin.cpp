@@ -3217,8 +3217,30 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
         // previous fonts can represent these chars
         while (++currChar < lastChar) {
           j = 0;
-          if (!currFont->HasGlyph(*currChar)) 
+          if (!currFont->HasGlyph(*currChar)) {
+            // special handling of many missing chars at once - bug 104153
+            // we do this because when a char is not representable, it is
+            // very likely that the adjacent char will be missing too
+            if (currFont == mSubstituteFont) {
+              // first, make sure that none of _all_ the loaded fonts can represent the char
+              for (; j < count; ++j) {
+                prevFont = (nsFontWin*)mLoadedFonts[j];
+                if (prevFont->HasGlyph(*currChar)) {
+                  // Another font was found, we cannot use the current font for the char
+                  goto callback;
+                }
+              }
+              // secondly, find the upcoming font and check if it is still the substitute font
+              nsFontWin* nextFont = FindFont(aDC, *currChar);
+              count = mLoadedFonts.Count(); // update since FindFont() can change it
+              if (currFont == nextFont) {
+                // continue to collect more adjacent characters
+                continue;
+              }
+            }
+            // this font cannot be used for the current char, we should call back now
             break;
+          }
           for (; j < i-1; ++j) {
             prevFont = (nsFontWin*)mLoadedFonts[j];
             if (prevFont->HasGlyph(*currChar)) {
@@ -3249,12 +3271,6 @@ callback:
     // bail out if something weird happened, this error must never happen
     NS_ASSERTION(currFont && i >= 0, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
-
-#if 0
-    // XXX fix me - bug 104153
-    if (currFont == mSubstituteFont) {
-    }
-#endif
   }
 
   return NS_OK;
@@ -3290,8 +3306,30 @@ nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
         // previous fonts can represent these chars
         while (--currChar > lastChar) {
           j = 0;
-          if (!currFont->HasGlyph(*currChar))
+          if (!currFont->HasGlyph(*currChar)) {
+            // special handling of many missing chars at once - bug 104153
+            // we do this because when a char is not representable, it is
+            // very likely that the adjacent char will be missing too
+            if (currFont == mSubstituteFont) {
+              // first, make sure that none of _all_ the loaded fonts can represent the char
+              for (; j < count; ++j) {
+                prevFont = (nsFontWin*)mLoadedFonts[j];
+                if (prevFont->HasGlyph(*currChar)) {
+                  // Another font was found, we cannot use the current font for the char
+                  goto callback;
+                }
+              }
+              // secondly, find the upcoming font and check if it is still the substitute font
+              nsFontWin* nextFont = FindFont(aDC, *currChar);
+              count = mLoadedFonts.Count(); // update since FindFont() can change it
+              if (currFont == nextFont) {
+                // continue to collect more adjacent characters
+                continue;
+              }
+            }
+            // this font cannot be used for the current char, we should call back now
             break;
+          }
           for (; j < i-1; ++j) {
             prevFont = (nsFontWin*)mLoadedFonts[j];
             if (prevFont->HasGlyph(*currChar)) {
@@ -3322,12 +3360,6 @@ callback:
     // bail out if something weird happened, this error must never happen
     NS_ASSERTION(currFont && i >= 0, "Could not find a font");
     if (!currFont) return NS_ERROR_FAILURE;
-
-#if 0
-    // XXX fix me - bug 104153
-    if (currFont == mSubstituteFont) {
-    }
-#endif
   }
 
   return NS_OK;
@@ -4535,7 +4567,7 @@ nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
   if (mSubstituteFont) {
     //make the char representable so that we don't have to go over all font before fallback to 
     //subsituteFont.
-    ((nsFontWinSubstitute*)mSubstituteFont)->SetRepresentable(aChar);
+    ((nsFontWinSubstituteA*)mSubstituteFont)->SetRepresentable(aChar);
     return ((nsFontWinA*)mSubstituteFont)->mSubsets[0];
   }
 
@@ -4629,7 +4661,6 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
   nsFontWinA* currFont;
   nsFontWinA* prevFont;
   nsFontSubset* currSubset;
-  nsFontSubset* subset;
   PRInt32 i, j, count;
 
   i = 0;
@@ -4640,17 +4671,38 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
     while (i < count) {
       currFont = (nsFontWinA*)mLoadedFonts[i++];
       if (currFont->HasGlyph(*currChar)) {
-        subset = currFont->FindSubset(aDC, *currChar, this);
-        if (subset) {
-          currSubset = subset;
+        currSubset = currFont->FindSubset(aDC, *currChar, this);
+        if (currSubset) {
           // see if we can keep the same subset for adjacent characters. We
           // can do so only if the subset can represent these chars AND none
           // of the previous fonts can represent these chars
           while (++currChar < lastChar) {
             j = 0;
-            if (!currFont->HasGlyph(*currChar) || !currSubset->HasGlyph(*currChar))
+            if (!currFont->HasGlyph(*currChar) || !currSubset->HasGlyph(*currChar)) {
+              // special handling of many missing chars at once - bug 104153
+              // we do this because when a char is not representable, it is
+              // very likely that the adjacent char will be missing too
+              if (mSubstituteFont &&
+                 ((nsFontWinA*)mSubstituteFont)->mSubsets[0] == currSubset) {
+                // first, make sure that none of _all_ the loaded fonts can represent the char
+                for (; j < count; ++j) {
+                  prevFont = (nsFontWinA*)mLoadedFonts[j];
+                  if (prevFont->HasGlyph(*currChar)) {
+                    // Another font was found, we cannot use the current font for the char
+                    goto callback;
+                  }
+                }
+                // secondly, find the upcoming font and check if it is still the substitute font
+                nsFontSubset* nextSubset = (nsFontSubset*)FindFont(aDC, *currChar);
+                count = mLoadedFonts.Count(); // update since FindFont() can change it
+                if (currSubset == nextSubset) {
+                  // continue to collect more adjacent characters
+                  continue;
+                }
+              }
+              // this font cannot be used for the current char, we should call back now
               break;
-       
+            }
             for (; j < i-1; ++j) {
               prevFont = (nsFontWinA*)mLoadedFonts[j];
               if (prevFont->HasGlyph(*currChar)) {
@@ -4684,12 +4736,6 @@ callback:
     // bail out if something weird happened, this error must never happen
     NS_ASSERTION(currSubset, "Could not find a font");
     if (!currSubset) return NS_ERROR_FAILURE;
-
-#if 0
-    // XXX fix me - bug 104153
-    if (mSubstituteFont && mSubstituteFont->mSubsets[0] == currSubset) {
-    }
-#endif
   }
 
   return NS_OK;
