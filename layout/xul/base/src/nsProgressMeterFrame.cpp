@@ -21,7 +21,7 @@
  */
 
 //
-// Eric Vaughan
+// David Hyatt & Eric Vaughan
 // Netscape Communications
 //
 // See documentation in associated header file
@@ -47,7 +47,7 @@ NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsProgressMeterFrame* it = new (aPresShell) nsProgressMeterFrame;
+  nsProgressMeterFrame* it = new (aPresShell) nsProgressMeterFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -61,11 +61,9 @@ NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 //
 // Init, if necessary
 //
-nsProgressMeterFrame :: nsProgressMeterFrame ( )
+nsProgressMeterFrame :: nsProgressMeterFrame (nsIPresShell* aPresShell)
+:nsBoxFrame(aPresShell)
 {
-	mProgress = float(0.0);
-	mHorizontal = PR_TRUE;
-	mUndetermined = PR_FALSE;
 }
 
 //
@@ -78,229 +76,14 @@ nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 }
 
 NS_IMETHODIMP
-nsProgressMeterFrame::Init(nsIPresContext*  aPresContext,
-                   nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
-                   nsIFrame*        aPrevInFlow)
-{
- 
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,
-                                   aPrevInFlow);
-
-  // get the value
-  nsAutoString value;
-  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) &&
-      (value.Length() > 0)) {
-	  setProgress(value);
-  }
-
-
-   // get the alignment
-  nsAutoString align;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
-  setAlignment(align); 
-
-  // get the mode
-  nsAutoString mode;
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, mode);
-  setMode(mode); 
-
+nsProgressMeterFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
+{ 
+  // Set up our initial flexes.
+  nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  AttributeChanged(aPresContext, mContent, kNameSpaceID_None, nsHTMLAtoms::value, 0);
   return rv;
-}
-
-void
-nsProgressMeterFrame::setProgress(nsAutoString progress)
-{
-	// convert to and integer
-	PRInt32 error;
-	PRInt32 v = progress.ToInteger(&error);
- 
-	// adjust to 0 and 100
-	if (v < 0)
-		v = 0;
-	else if (v > 100)
-		v = 100;
-
-//	printf("ProgressMeter value=%d\n", v);
-    mProgress = float(v)/float(100);
-}
-
-void
-nsProgressMeterFrame::setAlignment(nsAutoString progress)
-{
-    if (progress.EqualsIgnoreCase("vertical"))
-		  mHorizontal = PR_FALSE;
-    else
-		  mHorizontal = PR_TRUE;
-}
-
-void
-nsProgressMeterFrame::setMode(nsAutoString mode)
-{
-    if (mode.EqualsIgnoreCase("undetermined"))
-		  mUndetermined = PR_TRUE;
-    else
-		  mUndetermined = PR_FALSE;
-}
-
-
-//
-// Paint
-//
-// Paint our background and border like normal frames, but before we draw the
-// children, draw our grippies for each toolbar.
-//
-NS_IMETHODIMP
-nsProgressMeterFrame :: Paint ( nsIPresContext* aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsFramePaintLayer aWhichLayer)
-{
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-  mStyleContext->GetStyleData(eStyleStruct_Display);
-
-  // if we aren't visible then we are done.
-  if (!disp->mVisible) 
-	   return NS_OK;  
-
-  // if we are visible then tell our superclass to paint
-  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       aWhichLayer);
-  
-    if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND)
-    {
-        if (!mUndetermined) {
-            // get our border
-            const nsStyleSpacing* spacing =
-            (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-            nsMargin border(0,0,0,0);
-            spacing->CalcBorderFor(this, border);
-
-            const nsStyleColor* colorStyle =
-            (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-
-            nscolor color = colorStyle->mColor;
-
-            // figure out our rectangle
-            nsRect rect(0,0,mRect.width, mRect.height);
-
-
-            //CalcSize(aPresContext,rect.width,rect.height);
-            rect.x = border.left;
-            rect.y = border.top;
-            rect.width -= border.left + border.right;
-            rect.height -= border.top + border.bottom;
-
-            // paint the current progress in blue
-            PaintBar(aPresContext, aRenderingContext, rect, mProgress, color);
-        }
-    }
-
-  return NS_OK;  
-} // Paint
-
-void
-nsProgressMeterFrame :: PaintBar ( nsIPresContext* aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& rect,
-							float progress,
-							nscolor color) {
-
-    nsRect bar(rect);
-
-    if (mHorizontal) 
-       bar.width = (nscoord)(bar.width*progress);
-    else 
-       bar.height = (nscoord)(bar.height*progress);
-    
-    aRenderingContext.SetColor(color);
-    aRenderingContext.FillRect(bar);
-}
-
-//
-// Reflow
-//
-// Handle moving children around.
-//
-NS_IMETHODIMP
-nsProgressMeterFrame :: Reflow ( nsIPresContext*          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus)
-{	
-
-  // handle dirty and incremental reflow
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-  
-    // See if it's targeted at us
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-    }
-  } else if (eReflowReason_Dirty == aReflowState.reason) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-  }
-
-  return nsLeafFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
-
-} // Reflow 
-
-void
-nsProgressMeterFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
-{
-
-  CalcSize(aPresContext,aDesiredSize.width,aDesiredSize.height);
-
-   // if the width is set use it
-	if (NS_INTRINSICSIZE != aReflowState.mComputedWidth) 
-	  aDesiredSize.width = aReflowState.mComputedWidth;
-
-	// if the height is set use it
- 	if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) 
-		aDesiredSize.height = aReflowState.mComputedHeight;
-}
-
-
-void
-nsProgressMeterFrame::CalcSize(nsIPresContext* aPresContext, int& width, int& height)
-{
-    // set up a default size for the progress meter.
-	float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-
-	if (mHorizontal) {
-		width = (int)(100 * p2t);
-		height = (int)(16 * p2t);
-	} else {
-		height = (int)(100 * p2t);
-		width = (int)(16 * p2t);
-	}
-}
-
-NS_IMETHODIMP
-nsProgressMeterFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
-{
-    CalcSize(aPresContext, aSize.prefSize.width, aSize.prefSize.height);
-    aSize.minSize = aSize.prefSize;
-    return NS_OK;
-}
-
-NS_INTERFACE_MAP_BEGIN(nsProgressMeterFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIBox)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
-NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)
-
-
-
-NS_IMETHODIMP
-nsProgressMeterFrame::InvalidateCache(nsIFrame* aChild)
-{
-    // we don't have any cached children
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -310,69 +93,40 @@ nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
-  nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aHint);
+  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
+                                             aNameSpaceID, aAttribute, aHint);
   if (NS_OK != rv) {
     return rv;
   }
 
   // did the progress change?
   if (nsHTMLAtoms::value == aAttribute) {
-    nsAutoString newValue;
+    PRInt32 childCount;
+    mContent->ChildCount(childCount);
 
-	// get attribute and set it
-    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, newValue);
-    setProgress(newValue);
+    if (childCount >= 2) {
+      nsCOMPtr<nsIContent> progressBar;
+      nsCOMPtr<nsIContent> progressRemainder;
 
-    Redraw(aPresContext);
+      mContent->ChildAt(0, *getter_AddRefs(progressBar));
+      mContent->ChildAt(1, *getter_AddRefs(progressRemainder));
 
-  } else if (nsXULAtoms::mode == aAttribute) {
-    nsAutoString newValue;
+      nsAutoString value;
+      mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
 
-    aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, newValue);
-    setMode(newValue);
+      PRInt32 error;
+      PRInt32 flex = value.ToInteger(&error);
+      if (flex < 0) flex = 0;
+      if (flex > 100) flex = 100;
 
-    // needs to reflow so we start the timer.
-   /// if (aHint != NS_STYLE_HINT_REFLOW)
-    //  Reflow(aPresContext);
-    aPresContext->StopAllLoadImagesFor(this);
+      PRInt32 remainder = 100 - flex;
 
-  } else if (nsHTMLAtoms::align == aAttribute) {
-    nsAutoString newValue;
-
-	// get attribute and set it
-    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, newValue);
-    setAlignment(newValue);
-
-    if (aHint != NS_STYLE_HINT_REFLOW)
-      Reflow(aPresContext);
+      nsAutoString leftFlex, rightFlex;
+      leftFlex.Append(flex);
+      rightFlex.Append(remainder);
+      progressBar->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, leftFlex, PR_TRUE);
+      progressRemainder->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, rightFlex, PR_TRUE);
+    }
   }
-
   return NS_OK;
 }
-
-void
-nsProgressMeterFrame::Reflow(nsIPresContext* aPresContext)
-{
-   nsCOMPtr<nsIPresShell> shell;
-   aPresContext->GetShell(getter_AddRefs(shell));
-
-   // reflow
-   mState |= NS_FRAME_IS_DIRTY;
-   mParent->ReflowDirtyChild(shell, this);
-}
-
-void
-nsProgressMeterFrame::Redraw(nsIPresContext* aPresContext)
-{
-   	nsRect frameRect;
-	GetRect(frameRect);
-	nsRect rect(0, 0, frameRect.width, frameRect.height);
-    Invalidate(aPresContext, rect, PR_TRUE);
-}
-
-
-
-
-
-
