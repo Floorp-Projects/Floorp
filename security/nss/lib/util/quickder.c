@@ -38,6 +38,7 @@
 
 #include "secerr.h"
 #include "secasn1.h" /* for SEC_ASN1GetSubtemplate */
+#include "secitem.h"
 
 /*
  * simple definite-length ASN.1 decoder
@@ -886,7 +887,17 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
         rv = SECFailure;
     }
 
+    /* temporarily copy the item until bug a new patch for 160805 is made */
+    if (SECSuccess != SECITEM_CopyItem(arena, &newsrc, src))
+    {
+        rv = SECFailure;
+    }
+#if 0
+    /*
+        we don't really want to copy the item. 
+    */
     newsrc = *src;
+#endif
 
     if (SECSuccess == rv)
     {
