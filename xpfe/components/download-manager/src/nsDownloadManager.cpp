@@ -54,6 +54,7 @@
 
 /* Outstanding issues/todo:
  * 1. Using the target path as an identifier is not sufficient because it's not unique on mac.
+ * 2. Implement pause/resume
  */
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -139,7 +140,7 @@ nsDownloadManager::Init()
 }
 
 nsresult
-nsDownloadManager::NotifyDownloadEnded(const char* aKey)
+nsDownloadManager::DownloadFinished(const char* aKey)
 {
   nsCStringKey key(aKey);
   if (mCurrDownloadItems->Exists(&key)) {
@@ -261,7 +262,7 @@ nsDownloadManager::AssertProgressInfo()
     nsCStringKey key(id);
     if (mCurrDownloadItems->Exists(&key)) {
       nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
-      if (!item) continue; // must be a finished download; don't need to update ui
+      if (!item) continue; // must be a finished download; don't need to update info
 
       // update percentage
       item->GetPercentComplete(&percentComplete);
@@ -365,6 +366,7 @@ nsDownloadManager::AddDownload(nsIDownloadItem* aDownloadItem)
   rv = remote->Flush();
   if (NS_FAILED(rv)) return rv;
   
+  // if a persist object was specified, set the download item as the progress listener
   nsCOMPtr<nsIWebBrowserPersist> persist;
   aDownloadItem->GetPersist(getter_AddRefs(persist));
   if (persist) {
@@ -438,13 +440,14 @@ nsDownloadManager::RemoveDownload(const char* aKey)
 
   PRInt32 itemIndex;
   downloads->IndexOf(res, &itemIndex);
-  if (itemIndex > 0) {
-    nsCOMPtr<nsIRDFNode> node;
-    rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    if (NS_FAILED(rv)) return rv;
-    return Flush(); // necessary?
-  }
-  return rv;
+  if (itemIndex <= 0)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIRDFNode> node;
+  rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
+  if (NS_FAILED(rv)) return rv;
+
+  return Flush(); // necessary?
 }  
 
 NS_IMETHODIMP
@@ -495,7 +498,7 @@ nsDownloadManager::OpenProgressDialogFor(const char* aKey, nsIDOMWindow* aParent
   // start time...
   PRInt64 startTime = 0;
   item->GetStartTime(&startTime);
-  if (startTime)
+  if (startTime) // possible not to have a start time yet if the dialog was requested immediately
     dialog->SetStartTime(startTime);
   
   // source...
@@ -894,12 +897,12 @@ DownloadItem::OnStateChange(nsIWebProgress* aWebProgress,
 {
   if (aStateFlags & STATE_START) {
     mStartTime = PR_Now();
-    mRequest = aRequest;
+    mRequest = aRequest; // used for pause/resume
   }
-  else if (aStateFlags & STATE_STOP) {    
+  else if (aStateFlags & STATE_STOP) {
     char* path;
     mTarget->GetPath(&path);
-    mDownloadManager->NotifyDownloadEnded(path);
+    mDownloadManager->DownloadFinished(path);
   }
 
   if (mListener)

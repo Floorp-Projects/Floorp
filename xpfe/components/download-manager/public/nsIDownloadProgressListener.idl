@@ -37,11 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* A minimally extended progress listener used by download manager
- * to update its default UI.  See nsIWebProgressListener for documentation,
- * and use its constants.  This isn't pretty, but the alternative is having
- * this extend nsIWebProgressListener and adding an |item| attribute, which
- * would mean a separate nsIDownloadProgressListener for every nsIDownloadItem,
- * which is a waste...
+ * to update its default UI.  This is implemented in nsDownloadProgressListener.js.
+ * See nsIWebProgressListener for documentation, and use its constants.  This isn't
+ * too pretty, but the alternative is having this extend nsIWebProgressListener and
+ * adding an |item| attribute, which would mean a separate nsIDownloadProgressListener
+ * for every nsIDownloadItem, which is a waste...
  */
 
 #include "nsISupports.idl"
@@ -54,9 +54,13 @@ interface nsIDOMDocument;
 
 [scriptable, uuid(09cddbea-1dd2-11b2-aa15-c41ffea19d79)]
 interface nsIDownloadProgressListener : nsISupports {
+
+ /**
+  * document
+  * The document of the download manager frontend.
+  */
   
   attribute nsIDOMDocument document;
-
 
   void onStateChange(in nsIWebProgress aWebProgress,
                      in nsIRequest aRequest,

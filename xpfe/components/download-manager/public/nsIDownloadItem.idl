@@ -38,14 +38,13 @@
 
 
  /*
-  * nsIDownloadItem acts as a "master listener" for the ongoing transfer.  It implements nsIWebProgressListener,
-  * If clients provide a persist object, the item will automatically be set as the persist's listener. Otherwise,
-  * clients should set this themselves on whatever download mechanism they're using.
-  * nsIDownloadItem's listener impl will forward progress notifications onto three possible
-  * listeners: the internal listener (an nsIDownloadProgressListener, used to update
-  * the main download manager UI), the properties listener (used to update the download manager
-  * properties dialog), and an optional listener set by the client via nsIDownloadItem's |listener|
-  * attribute (used to update client UI).
+  * nsIDownloadItem implements nsIWebProgressListener and acts as a "master
+  * listener" for the ongoing transfer. If clients provide a persist object,
+  * the item will automatically be set as the persist's listener. Otherwise,
+  * clients should set this themselves on whatever download mechanism they're
+  * using.  Clients may have their own UI for a download as well, in which case
+  * they may set the listener attribute.  nsIDownloadItem will forward
+  * notifications to that listener.
   */
   
 #include "nsIWebProgressListener.idl"
@@ -60,49 +59,48 @@ interface nsIDownloadItem : nsIWebProgressListener {
     
     /**
      * prettyName
-     * The user-readable description of a download
+     * The user-readable description of the download.
      */
     attribute wstring prettyName;
     
     /**
      * source
-     * The source of a download
+     * The source of the download.
      */
     attribute nsIURI source;
     
     /**
      * target
-     * The local file where the download is being saved
+     * The local file where the download is being saved.
      */
     attribute nsILocalFile target;
     
     /**
      * percentComplete
-     * The percentage complete of an item
+     * The percentage of completion of the download.
      */
     readonly attribute PRInt32 percentComplete;
 
     /**
      * startTime
-     * The time a download was started; necessary for more accurate
-     * measurements 
+     * The time a download was started; necessary for more accurate measurements.
      */
     readonly attribute long long startTime;
 
     /**
      * listener
-     * Optional; downloading information is
-     * passed to this listener and used to update client UI
+     * Optional; downloading information is passed to this listener and used to
+     * update client UI.
      */
     attribute nsIWebProgressListener listener;
    
     /**
      * persist
      * Optional. If set, it will be used for cancellation, and the download item
-     * will be set as its listener.  If not, observer should be set to listen and
-     * respond accordingly to topics like oncancel, and the client promises to set
-     * the download item (which implements nsIWebProgressListener) as the listener for
-     * whatever transfer component being used.
+     * will be set as its listener.  If not, |observer| should be set to listen
+     * and respond accordingly to topics like oncancel, and the client promises
+     * to set the download item as the listener for whatever transfer component
+     * being used.
      */
 
     attribute nsIWebBrowserPersist persist;
@@ -114,6 +112,7 @@ interface nsIDownloadItem : nsIWebProgressListener {
      */
 
     attribute nsIObserver observer;
+
 };
 
 %{C++

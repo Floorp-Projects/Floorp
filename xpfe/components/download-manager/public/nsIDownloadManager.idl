@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Keeps track of ongoing downloads, in the form of nsIDownloadItems. 
+
 #include "nsISupports.idl"
 #include "nsIWebProgressListener.idl"
 
@@ -96,7 +98,7 @@ interface nsIDownloadManager : nsISupports {
 
   /**
   * onClose
-  * Called when the download manager UI is closed.  Useful for
+  * Called when the download manager front end is closed.  Useful for
   * third party managers to let us know when they've closed.
   */
   void onClose();
