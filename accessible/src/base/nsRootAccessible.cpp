@@ -176,7 +176,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
 
   /*
   // Commenting this out for now.
-  // It was requested that we always use pane objects instead of client objects.
+  // It was requested that we always use MSAA ROLE_PANE objects instead of client objects.
   // However, it might be asked that we put client objects back.
 
   nsCOMPtr<nsIPresContext> context; 
@@ -278,21 +278,21 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     StartDocReadyTimer(); 
 
     // Set up web progress listener - we need to know when page loading is finished
-    // That way we can send the STATE_CHANGE events for the pane, and change the STATE_BUSY bit flag
+    // That way we can send the STATE_CHANGE events for the MSAA root "pane" object (ROLE_PANE),
+    // and change the STATE_BUSY bit flag
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
-    nsCOMPtr<nsIPresContext> context; 
-
-    if (presShell) 
+    if (presShell) {
+      nsCOMPtr<nsIPresContext> context; 
       presShell->GetPresContext(getter_AddRefs(context));
-
-    nsCOMPtr<nsISupports> container;
-    if (context) 
-      context->GetContainer(getter_AddRefs(container));
-
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-    if (docShell) 
-      mWebProgress = do_GetInterface(docShell);
-
+      if (context) { 
+        nsCOMPtr<nsISupports> container; context->GetContainer(getter_AddRefs(container));
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+        if (docShell) {
+          mWebProgress = do_GetInterface(docShell);
+          mWebProgress->AddProgressListener(this);
+        }
+      }
+    }
     NS_ASSERTION(mWebProgress, "Could not get nsIWebProgress for nsRootAccessible");
     mWebProgress->AddProgressListener(this);
   }
