@@ -1498,7 +1498,9 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
       statusWidget->Resize(0, aHeight - txtHeight,
 		      aWidth, txtHeight,
 		      PR_TRUE);
-      rr.height -= txtHeight;
+
+      //Since allowing a negative height is a bad idea, let's condition this...
+      rr.height = PR_MAX(0,rr.height-txtHeight);
       statusWidget->Show(PR_TRUE);
     }
     else {
@@ -1518,6 +1520,11 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   rr.y += WEBSHELL_TOP_INSET;
   rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
   rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
+
+  //Since allowing a negative height is a bad idea, let's condition this...
+  if(rr.height<0)
+    rr.height=0;
+
   if (mWebShell) {
     mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
   }
