@@ -361,12 +361,11 @@ public class JavaAdapter extends ScriptableObject {
         }
     }
 
-    public static Scriptable toObject(Object value, Scriptable scope,
-                                      Class staticType)
+    public static Scriptable toObject(Object value, Scriptable scope)
     {
         Context cx = Context.enter();
         try {
-            return ScriptRuntime.toObject(cx, scope, value, staticType);
+            return ScriptRuntime.toObject(cx, scope, value);
         } finally {
             Context.exit();
         }
@@ -674,19 +673,11 @@ public class JavaAdapter extends ScriptableObject {
                 }
                 cfw.add(ByteCode.ALOAD, scopeLocal);
 
-                // Get argument Class
-                cfw.addLoadConstant(parms[i].getName());
-                cfw.addInvoke(ByteCode.INVOKESTATIC,
-                              "java/lang/Class",
-                              "forName",
-                              "(Ljava/lang/String;)Ljava/lang/Class;");
-
                 cfw.addInvoke(ByteCode.INVOKESTATIC,
                               "org/mozilla/javascript/JavaAdapter",
                               "toObject",
                               "(Ljava/lang/Object;"
                               +"Lorg/mozilla/javascript/Scriptable;"
-                              +"Ljava/lang/Class;"
                               +")Lorg/mozilla/javascript/Scriptable;");
             }
             cfw.add(ByteCode.AASTORE);

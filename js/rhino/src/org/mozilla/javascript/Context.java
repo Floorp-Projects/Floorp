@@ -1228,34 +1228,16 @@ public class Context {
      * @return new JavaScript object
      */
     public static Scriptable toObject(Object value, Scriptable scope) {
-        return ScriptRuntime.toObject(scope, value, null);
+        return ScriptRuntime.toObject(scope, value);
     }
 
     /**
-     * Convert the value to an JavaScript object value.
-     * <p>
-     * Note that a scope must be provided to look up the constructors
-     * for Number, Boolean, and String.
-     * <p>
-     * See ECMA 9.9.
-     * <p>
-     * Additionally, arbitrary Java objects and classes will be
-     * wrapped in a Scriptable object with its Java fields and methods
-     * reflected as JavaScript properties of the object. If the
-     * "staticType" parameter is provided, it will be used as the static
-     * type of the Java value to create.
-     *
-     * @param value any Java object
-     * @param scope global scope containing constructors for Number,
-     *              Boolean, and String
-     * @param staticType the static type of the Java value to create
-     * @return new JavaScript object
+     * @deprecated Use {@link #toObject(Object, Scriptable)} instead.
      */
     public static Scriptable toObject(Object value, Scriptable scope,
-                                      Class staticType) {
-        if (value == null && staticType != null)
-            return null;
-        return ScriptRuntime.toObject(scope, value, staticType);
+                                      Class staticType)
+    {
+        return ScriptRuntime.toObject(scope, value);
     }
 
     /**

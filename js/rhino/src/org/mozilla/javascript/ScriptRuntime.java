@@ -489,14 +489,16 @@ public class ScriptRuntime {
         if (val instanceof Scriptable && val != Undefined.instance) {
             return (Scriptable)val;
         }
-        return toObject(Context.getContext(), scope, val, null);
+        return toObject(Context.getContext(), scope, val);
     }
 
-    // ALERT: should it be deprecated ?
+    /**
+     * @deprecated Use {@link #toObject(Scriptable, Object)} instead.
+     */
     public static Scriptable toObject(Scriptable scope, Object val,
                                       Class staticClass)
     {
-        return toObject(Context.getContext(), scope, val, staticClass);
+        return toObject(scope, val);
     }
 
     /**
@@ -506,39 +508,40 @@ public class ScriptRuntime {
      */
     public static Scriptable toObject(Context cx, Scriptable scope, Object val)
     {
-        return toObject(cx, scope, val, null);
-    }
-
-    public static Scriptable toObject(Context cx, Scriptable scope, Object val,
-                                      Class staticClass)
-    {
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
                 throw NativeGlobal.typeError0("msg.undef.to.object", scope);
             }
             return (Scriptable) val;
         }
-        if (val == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
-        }
+
         String className = val instanceof String ? "String" :
                            val instanceof Number ? "Number" :
                            val instanceof Boolean ? "Boolean" :
                            null;
-
-        if (className == null) {
-            // Extension: Wrap as a LiveConnect object.
-            Object wrapped = cx.getWrapFactory().
-                                wrap(cx, scope, val, staticClass);
-            if (wrapped instanceof Scriptable)
-                return (Scriptable) wrapped;
-            throw errorWithClassName("msg.invalid.type", val);
+        if (className != null) {
+            Object[] args = { val };
+            scope = ScriptableObject.getTopLevelScope(scope);
+            return newObject(cx, scope, className, args);
         }
 
-        Object[] args = { val };
-        scope = ScriptableObject.getTopLevelScope(scope);
-        Scriptable result = newObject(cx, scope, className, args);
-        return result;
+        // Extension: Wrap as a LiveConnect object.
+        Object wrapped = cx.getWrapFactory().wrap(cx, scope, val, null);
+        if (wrapped instanceof Scriptable)
+            return (Scriptable) wrapped;
+        if (wrapped == null) {
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
+        }
+        throw errorWithClassName("msg.invalid.type", val);
+    }
+
+    /**
+     * @deprecated Use {@link #toObject(Context, Scriptable, Object)} instead.
+     */
+    public static Scriptable toObject(Context cx, Scriptable scope, Object val,
+                                      Class staticClass)
+    {
+        return toObject(cx, scope, val);
     }
 
     public static Scriptable newObject(Context cx, Scriptable scope,
