@@ -32,9 +32,12 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 
+#define NS_TRANSFER_COUNT_UNKNOWN ((PRUint32) -1)
+
 #define NS_MEMORY_CACHE_SEGMENT_SIZE  1024
 #define NS_MEMORY_CACHE_BUFFER_SIZE   1024 * 1024
 
+class nsMemoryCacheReadRequest;
 class nsMemoryCacheIS;  // non-blocking input stream
 class nsMemoryCacheBS;  // blocking stream base class
 class nsMemoryCacheBIS; // blocking input stream
@@ -65,6 +68,12 @@ public:
 
     nsresult CloseOutputStream();
 
+    nsresult ReadRequestCompleted(nsMemoryCacheReadRequest *);
+
+    nsresult Available(PRUint32 aStartingFrom, PRUint32 *aCount);
+
+    PRBool HasWriter() { return (mOutputStream != nsnull); }
+
 private:
 
     struct nsSegment
@@ -78,18 +87,23 @@ private:
 
     nsresult AddWriteSegment();
     void AppendSegment(nsSegment *);
-    void DeleteSegments();
+    void DeleteSegments(nsSegment *);
+    void DeleteAllSegments() { TruncateTo(0); }
+    void TruncateTo(PRUint32 aOffset);
+    nsSegment *GetNthSegment(PRUint32 aIndex);
 
 private:
     nsMemoryCacheBOS  *mOutputStream; // weak ref
-    PRCList           *mInputStreams; // weak ref
-    PRCList           *mReadRequests; // weak ref
+    PRCList            mInputStreams; // weak ref to objects
+    PRCList            mReadRequests; // weak ref to objects
 
     PRUint32           mSegmentSize;
     PRUint32           mMaxSize;
-    PRUint32           mWriteCursor;
+
     nsSegment         *mSegments;
+
     nsSegment         *mWriteSegment;
+    PRUint32           mWriteCursor;
 };
 
 /**
@@ -97,42 +111,40 @@ private:
  */
 class nsMemoryCacheReadRequest : public PRCList
                                , public nsITransportRequest
+                               , public nsIStreamListener
+                               , public nsIInputStream
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSITRANSPORTREQUEST
     NS_DECL_NSIREQUEST
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIINPUTSTREAM
 
     nsMemoryCacheReadRequest();
     virtual ~nsMemoryCacheReadRequest();
 
     void SetTransport(nsMemoryCacheTransport *t) { mTransport = t; }
+    void SetTransferOffset(PRUint32 o) { mTransferOffset = o; }
+    void SetTransferCount(PRUint32 c) { mTransferCount = c; }
+
+    nsresult SetListener(nsIStreamListener *, nsISupports *);
+    nsresult Process();
+
+    PRBool IsWaitingForWrite() { return mWaitingForWrite; }
 
 private:
     nsMemoryCacheTransport     *mTransport;   // weak ref
-    nsMemoryCacheIS            *mInputStream; // strong ref
-    PRUint32                    mOffset;
-    PRUint32                    mCountRemaining;
+    PRUint32                    mTransferOffset;
+    PRUint32                    mTransferCount;
     nsresult                    mStatus;
+    nsCOMPtr<nsIStreamListener> mListenerProxy;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports>       mListenerContext;
     PRPackedBool                mCanceled;
-};
-
-/**
- * The non-blocking input stream passed through OnDataAvailable
- */
-class nsMemoryCacheIS : public nsIInputStream
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINPUTSTREAM
-
-    nsMemoryCacheIS();
-    virtual ~nsMemoryCacheIS();
-
-private:
-    nsMemoryCacheReadRequest *mRequest; // weak ref
+    PRPackedBool                mOnStartFired;
+    PRPackedBool                mWaitingForWrite;
 };
 
 /**
@@ -145,10 +157,11 @@ public:
     virtual ~nsMemoryCacheBS();
 
     void SetTransport(nsMemoryCacheTransport *t) { mTransport = t; }
+    void SetTransferCount(PRUint32 c) { mTransferCount = c; }
 
 protected:
     nsMemoryCacheTransport *mTransport; // weak ref
-    PRUint32                mCountRemaining;
+    PRUint32                mTransferCount;
 };
 
 /**
