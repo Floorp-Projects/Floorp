@@ -165,7 +165,7 @@ var gPermissionManager = {
     permissionsText.appendChild(document.createTextNode(introString));
 
     var titleString = this._bundle.getString(this._type + "permissionstitle");
-    document.documentElement.setAttribute("title", titleString);
+    document.title = titleString;
     
     document.getElementById("btnBlock").hidden = !window.arguments[0].blockVisible;
     document.getElementById("btnSession").hidden = !window.arguments[0].sessionVisible;
