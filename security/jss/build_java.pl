@@ -164,9 +164,11 @@ sub build {
     #
     # build the java sources
     #
-    ensure_dir_exists($class_dir);
-    print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
-        "-classpath $classpath " . join(" ",@source_list));
+    if( scalar(@source_list) > 0 ) {
+        ensure_dir_exists($class_dir);
+        print_do("$javac $javac_opt_flag -sourcepath . -d $class_dir " .
+            "-classpath $classpath " . join(" ",@source_list));
+    }
 
     #
     # create the JNI header files
