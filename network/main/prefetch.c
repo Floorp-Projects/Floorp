@@ -124,15 +124,17 @@ pre_ProcessList(MWContext* context)
 {
 	if (XP_ListCount(prefetch_list)>0) 
 	{
-        URL_Struct* urls;
         XP_List* pList = prefetch_list;
-
-        while ((urls = (URL_Struct*)XP_ListNextObject(pList)))
+        URL_Struct* urls = (URL_Struct*)XP_ListNextObject(pList);
+        
+        while (urls)
         {
             NET_GetURL(urls,
                 FO_CACHE_ONLY,
                 context,
                 pre_Finished);
+
+            urls = (URL_Struct*)XP_ListNextObject(pList);
         }
 	}
 }
