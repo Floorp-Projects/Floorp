@@ -48,10 +48,10 @@ nsPosixLocale::~nsPosixLocale(void)
 NS_IMETHODIMP 
 nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_t length)
 {
-  char  country_code[3];
-  char  lang_code[3];
-  char  extra[65];
-  char  posix_locale[128];
+  char  country_code[MAX_COUNTRY_CODE_LEN+1];
+  char  lang_code[MAX_LANGUAGE_CODE_LEN+1];
+  char  extra[MAX_EXTRA_LEN+1];
+  char  posix_locale[MAX_LOCALE_LEN+1];
   nsAutoCString xp_locale(*locale);
 
   if ((const char *)xp_locale!=nsnull) {
@@ -63,18 +63,18 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
 
     if (*country_code) {
       if (*extra) {
-        PR_snprintf(posix_locale,128,"%s_%s.%s",lang_code,country_code,extra);
+        PR_snprintf(posix_locale,sizeof(posix_locale),"%s_%s.%s",lang_code,country_code,extra);
       }
       else {
-        PR_snprintf(posix_locale,128,"%s_%s",lang_code,country_code);
+        PR_snprintf(posix_locale,sizeof(posix_locale),"%s_%s",lang_code,country_code);
       }
     }
     else {
       if (*extra) {
-        PR_snprintf(posix_locale,128,"%s.%s",lang_code,extra);
+        PR_snprintf(posix_locale,sizeof(posix_locale),"%s.%s",lang_code,extra);
       }
       else {
-        PR_snprintf(posix_locale,128,"%s",lang_code);
+        PR_snprintf(posix_locale,sizeof(posix_locale),"%s",lang_code);
       }
     }
 
@@ -88,10 +88,10 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
 NS_IMETHODIMP
 nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
 {
-  char  country_code[3];
-  char  lang_code[3];
-  char  extra[65];
-  char  posix_locale[128];
+  char  country_code[MAX_COUNTRY_CODE_LEN+1];
+  char  lang_code[MAX_LANGUAGE_CODE_LEN+1];
+  char  extra[MAX_EXTRA_LEN+1];
+  char  posix_locale[MAX_LOCALE_LEN+1];
 
   if (posixLocale!=nsnull) {
     if (strcmp(posixLocale,"C")==0 || strcmp(posixLocale,"POSIX")==0) {
@@ -105,20 +105,10 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
     }
 
     if (*country_code) {
-      if (*extra) {
-        PR_snprintf(posix_locale,128,"%s-%s.%s",lang_code,country_code,extra);
-      }
-      else {
-        PR_snprintf(posix_locale,128,"%s-%s",lang_code,country_code);
-      }
+      PR_snprintf(posix_locale,sizeof(posix_locale),"%s-%s",lang_code,country_code);
     } 
     else {
-      if (*extra) {
-        PR_snprintf(posix_locale,128,"%s.%s",lang_code,extra);
-      }
-      else {
-        PR_snprintf(posix_locale,128,"%s",lang_code);
-      }
+      PR_snprintf(posix_locale,sizeof(posix_locale),"%s",lang_code);
     }
 
     locale->AssignWithConversion(posix_locale);
@@ -135,44 +125,108 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
 PRBool
 nsPosixLocale::ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator)
 {
-  PRUint32 len = PL_strlen(locale_string);
+  const char *src = locale_string;
+  char *dest;
+  int dest_space, len;
 
   *language = '\0';
   *country = '\0';
   *extra = '\0';
-
-  if (2 == len) {
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]='\0';
-    country[0]='\0';
-  } 
-  else if (5 == len) {
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]='\0';
-    country[0]=locale_string[3];
-    country[1]=locale_string[4];
-    country[2]='\0';
-  }
-  else if (4 <= len && '.' == locale_string[2]) {
-    PL_strcpy(extra, &locale_string[3]);
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]='\0';
-  }
-  else if (7 <= len && '.' == locale_string[5]) {
-    PL_strcpy(extra, &locale_string[6]);
-    language[0]=locale_string[0];
-    language[1]=locale_string[1];
-    language[2]='\0';
-    country[0]=locale_string[3];
-    country[1]=locale_string[4];
-    country[2]='\0';
-  }
-  else {
-    return PR_FALSE;
+  if (strlen(locale_string) < 2) {
+    return(PR_FALSE);
   }
 
-  return PR_TRUE;
+  //
+  // parse the language part
+  //
+  dest = language;
+  dest_space = MAX_LANGUAGE_CODE_LEN;
+  while ((*src) && (isalpha(*src)) && (dest_space--)) {
+    *dest++ = tolower(*src++);
+  }
+  *dest = '\0';
+  len = dest - language;
+  if ((len != 2) && (len != 3)) {
+    NS_ASSERTION((len == 2) || (len == 3), "language code too short");
+    NS_ASSERTION(len < 3, "reminder: verify we can handle 3+ character language code in all parts of the system; eg: language packs");
+    *language = '\0';
+    return(PR_FALSE);
+  }
+
+  // check if all done
+  if (*src == '\0') {
+    return(PR_TRUE);
+  }
+
+  if ((*src != '_') && (*src != '-') && (*src != '.')) {
+    NS_ASSERTION(isalpha(*src), "language code too long");
+    NS_ASSERTION(!isalpha(*src), "unexpected language/country separator");
+    *language = '\0';
+    return(PR_FALSE);
+  }
+
+  //
+  // parse the country part
+  //
+  if ((*src == '_') || (*src == '-')) { 
+    src++;
+    dest = country;
+    dest_space = MAX_COUNTRY_CODE_LEN;
+    while ((*src) && (isalpha(*src)) && (dest_space--)) {
+      *dest++ = toupper(*src++);
+    }
+    *dest = '\0';
+    len = dest - country;
+    if (len != 2) {
+      NS_ASSERTION(len == 2, "unexpected country code length");
+      *language = '\0';
+      *country = '\0';
+      return(PR_FALSE);
+    }
+  }
+
+  // check if all done
+  if (*src == '\0') {
+    return(PR_TRUE);
+  }
+
+  if (*src != '.') {
+    NS_ASSERTION(isalpha(*src), "country code too long");
+    NS_ASSERTION(!isalpha(*src), "unexpected country/extra separator");
+    *language = '\0';
+    *country = '\0';
+    return(PR_FALSE);
+  }
+
+  //
+  // handle the extra part
+  //
+  src++;  // move past the extra part separator
+  dest = extra;
+  dest_space = MAX_EXTRA_LEN;
+  while ((*src) && (dest_space--)) {
+    *dest++ = *src++;
+  }
+  *dest = '\0';
+  len = dest - extra;
+  if (len < 1) {
+    NS_ASSERTION(len > 0, "found country/extra separator but no extra code");
+    *language = '\0';
+    *country = '\0';
+    *extra = '\0';
+    return(PR_FALSE);
+  }
+
+  // check if all done
+  if (*src == '\0') {
+    return(PR_TRUE);
+  }
+
+  NS_ASSERTION(*src == '\0', "extra code too long");
+  *language = '\0';
+  *country = '\0';
+  *extra = '\0';
+
+  return(PR_FALSE);
 }
+
