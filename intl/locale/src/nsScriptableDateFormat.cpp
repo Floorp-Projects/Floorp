@@ -125,7 +125,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
         struct tm tmTime;
         time_t  timetTime;
 
-        nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+        memset( &tmTime, 0, sizeof(tmTime) );
         tmTime.tm_year = year - 1900;
         tmTime.tm_mon = month - 1;
         tmTime.tm_mday = day;

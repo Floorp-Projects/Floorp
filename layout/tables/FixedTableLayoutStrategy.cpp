@@ -93,7 +93,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
 
   nscoord* colWidths = new PRBool[numCols];
   if (!colWidths) return PR_FALSE;
-  nsCRT::memset(colWidths, WIDTH_NOT_SET, numCols*sizeof(nscoord));
+  memset(colWidths, WIDTH_NOT_SET, numCols*sizeof(nscoord));
 
   nscoord* propInfo = new PRBool[numCols];
   if (!propInfo) {
@@ -103,7 +103,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  nsCRT::memset(propInfo, 0, numCols*sizeof(nscoord));
+  memset(propInfo, 0, numCols*sizeof(nscoord));
   nscoord propTotal = 0;
   nscoord percTotal = 0;
   // for every column, determine its specified width

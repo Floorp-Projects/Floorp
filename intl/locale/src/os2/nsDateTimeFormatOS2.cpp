@@ -190,7 +190,7 @@ nsresult nsDateTimeFormatOS2::FormatPRExplodedTime(nsILocale* locale,
    * when tmTime is passed to strftime() with garbage bad things may happen. 
    * see bug #10412
    */
-  nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+  memset( &tmTime, 0, sizeof(tmTime) );
 
   tmTime.tm_yday = explodedTime->tm_yday;
   tmTime.tm_wday = explodedTime->tm_wday;

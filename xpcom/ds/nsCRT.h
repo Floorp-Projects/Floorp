@@ -129,10 +129,10 @@ public:
     ::memmove(aDest, aSrc, (size_t)aCount);
   }
 
-  static void memset(void* aDest, PRUint8 aByte, PRUint32 aCount) {
-    NS_ASSERTION((aDest != NULL) || (aCount == 0), "Invalid NULL argument");
-    ::memset(aDest, aByte, aCount);
-  }
+  /**** 
+   ****  nsCRT::memset() is no longer supported.  
+   ****  Please use memset from standard C instead.
+   ****/
 
   /**** 
    ****  nsCRT::zero() is no longer supported.  

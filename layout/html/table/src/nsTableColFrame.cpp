@@ -132,7 +132,7 @@ nsStyleCoord nsTableColFrame::GetStyleWidth() const
 
 void nsTableColFrame::ResetSizingInfo()
 {
-  nsCRT::memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
+  memset(mWidths, WIDTH_NOT_SET, NUM_WIDTHS * sizeof(PRInt32));
   SetConstraint(eNoConstraint);
 }
 

@@ -76,7 +76,7 @@ StressTest(nsILocalFile *  localFile, PRInt32  testNumber, PRBool readWrite)
                 goto exit;
             }
             
-            nsCRT::memset(writeBuf[i], i, 256 * i);
+            memset(writeBuf[i], i, 256 * i);
         }
     }
 
@@ -716,10 +716,10 @@ main(void)
         goto exit;
     }
     
-    nsCRT::memset(one,   1, 256);
-    nsCRT::memset(two,   2, 256 * 2);
-    nsCRT::memset(three, 3, 256 * 3);
-    nsCRT::memset(four,  4, 256 * 4);
+    memset(one,   1, 256);
+    memset(two,   2, 256 * 2);
+    memset(three, 3, 256 * 3);
+    memset(four,  4, 256 * 4);
     
     startBlock = blockFile->AllocateBlocks(1);
     if (startBlock != 0) {

@@ -121,7 +121,7 @@ void nsGBKConvUtil::InitToGBKTable()
   PRUnichar unicode;
   PRUnichar i;
   // zap it to zero first
-  nsCRT::memset(gUnicodeToGBKTable,0, sizeof(gUnicodeToGBKTable));
+  memset(gUnicodeToGBKTable,0, sizeof(gUnicodeToGBKTable));
 
   for ( i=0; i<MAX_GBK_LENGTH; i++ )
   {

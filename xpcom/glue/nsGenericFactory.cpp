@@ -467,7 +467,7 @@ NS_NewGenericModule(const char* moduleName,
                     nsIModule* *result)
 {
     nsModuleInfo info;
-    nsCRT::memset(&info, 0, sizeof(info));
+    memset(&info, 0, sizeof(info));
 
     info.mVersion    = NS_MODULEINFO_VERSION;
     info.mModuleName = moduleName;

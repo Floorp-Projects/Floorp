@@ -666,7 +666,7 @@ void* HTMLStyleSheetImpl::operator new(size_t size)
   HTMLStyleSheetImpl* rv = (HTMLStyleSheetImpl*) ::operator new(size);
 #ifdef NS_DEBUG
   if (nsnull != rv) {
-    nsCRT::memset(rv, 0xEE, size);
+    memset(rv, 0xEE, size);
   }
 #endif
   rv->mInHeap = 1;
@@ -678,7 +678,7 @@ void* HTMLStyleSheetImpl::operator new(size_t size, nsIArena* aArena)
   HTMLStyleSheetImpl* rv = (HTMLStyleSheetImpl*) aArena->Alloc(PRInt32(size));
 #ifdef NS_DEBUG
   if (nsnull != rv) {
-    nsCRT::memset(rv, 0xEE, size);
+    memset(rv, 0xEE, size);
   }
 #endif
   rv->mInHeap = 0;

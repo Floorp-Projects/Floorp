@@ -131,7 +131,7 @@ nsFixedSizeAllocator::Alloc(size_t aSize)
     }
 
 #ifdef DEBUG
-    nsCRT::memset(next, 0xc8, aSize);
+    memset(next, 0xc8, aSize);
 #endif
 
     return next;
@@ -145,7 +145,7 @@ nsFixedSizeAllocator::Free(void* aPtr, size_t aSize)
 
 #ifdef DEBUG
     NS_ASSERTION(bucket && bucket->mSize == aSize, "ack! corruption! bucket->mSize != aSize!");
-    nsCRT::memset(aPtr, 0xd8, bucket->mSize);
+    memset(aPtr, 0xd8, bucket->mSize);
 #endif
 
     entry->mNext = bucket->mFirst;
