@@ -215,20 +215,25 @@ nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
   nsIDOMDocument* domDoc = nsnull;
 
   nsresult rv = loader->GetContainer(&container);
-  if (NS_SUCCEEDED(rv) && container)
+  if (NS_SUCCEEDED(rv) && container) {
     rv = container->QueryInterface(kIDocShellIID, (void**) &docshell);
-      if (NS_SUCCEEDED(rv) && docshell) 
-        rv = docshell->GetContentViewer(&contentv);
-
-  if (NS_SUCCEEDED(rv) && contentv) {
-    rv = contentv->QueryInterface(kIDocumentViewerIID,
-				       (void**) &docv);
-    if (NS_SUCCEEDED(rv) && docv) {
-      docv->GetDocument(document);
-      rv = document->QueryInterface(kIDOMDocumentIID, 
-				    (void**) &domDoc);
-      if (NS_SUCCEEDED(rv) && docv) {
-	return domDoc;
+    container->Release();
+    if (NS_SUCCEEDED(rv) && docshell) {
+      rv = docshell->GetContentViewer(&contentv);
+      docshell->Release();
+      if (NS_SUCCEEDED(rv) && contentv) {
+	rv = contentv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+	contentv->Release();	
+	if (NS_SUCCEEDED(rv) && docv) {
+	  rv = docv->GetDocument(document);
+	  docv->Release();
+	  if (NS_SUCCEEDED(rv) && document) {
+	    rv = document->QueryInterface(kIDOMDocumentIID, (void**) &domDoc);
+	    if (NS_SUCCEEDED(rv) && docv) {
+	      return domDoc;
+	    }
+	  }
+	}
       }
     }
   }
