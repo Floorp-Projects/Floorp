@@ -25,6 +25,8 @@
 #include "nsshell.h"
 #include "nscore.h"
 
+class nsIApplicationShell;
+
 // bf88e640-df99-11d1-9244-00805f8a7ab6
 #define NS_ISHELLINSTANCE_IID      \
  { 0xbf88e640, 0xdf99, 0x11d1, \
@@ -56,3 +58,4 @@ public:
 };
 
 #endif /* nsIShellInstance_h___ */
+
