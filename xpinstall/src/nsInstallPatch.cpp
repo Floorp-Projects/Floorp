@@ -259,7 +259,11 @@ PRInt32 nsInstallPatch::Complete()
     
     mInstall->GetPatch(&ikey, &fileName);
     
-    if (fileName != nsnull && (*fileName == *mPatchedFile) )
+    if (fileName == nsnull)
+    {
+        err = nsInstall::UNEXPECTED_ERROR;
+    }
+    else if (*fileName == *mPatchedFile) 
     {
         // the patch has not been superceded--do final replacement
         err = ReplaceFileNowOrSchedule( *mPatchedFile, *mTargetFile);
@@ -271,10 +275,13 @@ PRInt32 nsInstallPatch::Complete()
             char* tempRegName = mRegistryName->ToNewCString();
             char* tempVersion = tempVersionString.ToNewCString();
 
-            err = VR_Install( tempRegName, 
-							  (char*) (const char *) nsNSPRPath(*mTargetFile),
-                              tempVersion, 
-                              PR_FALSE );
+            // DO NOT propogate version registry errors, it will abort 
+            // FinalizeInstall() leaving things hosed. These piddly errors
+            // aren't worth that.
+            VR_Install( tempRegName, 
+                        (char*) (const char *) nsNSPRPath(*mTargetFile),
+                        tempVersion, 
+                        PR_FALSE );
             
             if (tempRegName) delete [] tempRegName;
             if (tempVersion) delete [] tempVersion;
@@ -330,7 +337,7 @@ nsInstallPatch::CanUninstall()
 PRBool
 nsInstallPatch::RegisterPackageNode()
 {
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 
