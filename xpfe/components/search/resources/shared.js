@@ -164,7 +164,42 @@ function fillContextMenu(name, treeName)
 		popupNode.removeChild(popupNode.childNodes[popupNode.childNodes.length - 1]);
 	}
 
+	var		searchMode = 0;
+	if (pref)	searchMode = pref.GetIntPref("browser.search.mode");
+	if (pref && bundle)
+	{
+		// then add a menu separator (if necessary)
+		if (popupNode.childNodes.length > 0)
+		{
+			if (popupNode.childNodes[popupNode.childNodes.length - 1].tagName != "menuseparator")
+			{
+			    var menuSep = document.createElement("menuseparator");
+			    popupNode.appendChild(menuSep);
+			}
+		}
+		// And then add a "Search Mode" menu item
+		var propMenuName = (searchMode == 0) ? bundle.GetStringFromName("enableAdvanced") : bundle.GetStringFromName("disableAdvanced");
+		var menuItem = document.createElement("menuitem");
+		menuItem.setAttribute("value", propMenuName);
+		popupNode.appendChild(menuItem);
+		// Work around bug # 26402 by setting "oncommand" attribute
+		// AFTER appending menuitem
+		menuItem.setAttribute("oncommand", "return setSearchMode();");
+	}
+
     return(true);
+}
+
+
+
+function setSearchMode()
+{
+	var		searchMode = 0;
+	if (pref)	searchMode = pref.GetIntPref("browser.search.mode");
+	if (searchMode == 0)	searchMode = 1;
+	else			searchMode = 0;
+	if (pref)	pref.SetIntPref("browser.search.mode", searchMode);
+	return(true);
 }
 
 
