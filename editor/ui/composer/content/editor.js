@@ -198,8 +198,21 @@ function EditorStartup(editorType, editorElement)
 // This is the only method also called by Message Composer
 function EditorSharedStartup()
 {
-  // set up JS-implemented commands for HTML editing
-  SetupHTMLEditorCommands();
+  // set up JS-implemented commands for Text or HTML editing
+  switch (editorShell.editorType)
+  {
+    case "html":
+    case "htmlmail":
+      SetupHTMLEditorCommands();
+      break;
+    default:
+      dump("INVALID EDITOR TYPE: "+editorShell.editorType+"\n");
+      // Fall throught to implement just text?
+    case "text":
+    case "textmail":
+      SetupTextEditorCommands();
+      break;
+  }
 
   // Just for convenience
   gContentWindow = window._content;
