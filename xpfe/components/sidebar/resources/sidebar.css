@@ -22,17 +22,24 @@
 
 */
 
+window
+{
+  overflow: auto;
+}
+
 iframe
 {
   height: 125px;
   border: 0px;
 }
 
+/*
 treecell
 { 
  font-family: Verdana, Sans-Serif;
  font-size: 8pt;
-} 
+}
+*/ 
 
 treecell[sortActive="true"][sortDirection="ascending"]
 {
@@ -57,45 +64,34 @@ treehead > treerow > treecell
  vertical-align: middle;
 }
 
-treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
+treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/resrdf/folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > treecell > titledbutton
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/article.gif");
 }
 
-treeitem[container="true"][open="true"] > treerow > treecell > titledbutton
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[container="true"] > treerow > treecell > titledbutton
+treeitem[container="true"] > treerow > treecell > .tree-icon
 {
  list-style-image: url("resource:/res/rdf/folder-closed.gif");
-}
-
-treeitem > treerow > treecell > titledbutton
-{
- height: 16px;
- width: 16px;
- color: inherit;
- border: none;
- padding: 0px;
- margin: 0px;
- font: inherit;
 }
 
 /*
@@ -134,6 +130,7 @@ titledbutton.paneltitle
 treecell titledbutton
 {
   color: inherit;
+  list-style-image: inherit;
 }
 
 
