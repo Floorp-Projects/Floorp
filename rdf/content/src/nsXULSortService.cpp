@@ -1391,7 +1391,6 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 				if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	continue;
 				if (nameSpaceID != kNameSpaceID_XUL)	continue;
 
-				nsCOMPtr<nsIAtom> tag;
 				if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	continue;
 				if (tag.get() != kTreeChildrenAtom)	continue;
 
