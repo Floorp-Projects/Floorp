@@ -755,13 +755,11 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     loader->GetSize(imageSize);
     NS_RELEASE(loader);
 
+    PRBool needBackgroundColor = PR_FALSE;
 #if XXX
     // XXX enable this code as soon as nsIImage can support it
     if (image->NeedsBlend()) {
-      if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-        aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(aBounds);
-      }
+      needBackgroundColor = PR_TRUE;
     }
 #endif
 
@@ -782,19 +780,26 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     default:
       xCount = 0;
       yCount = 0;
+      needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_X:
       xCount = PRIntn(aDirtyRect.XMost() / tileWidth);
       yCount = 0;
+      needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_Y:
       xCount = 0;
       yCount = PRIntn(aDirtyRect.YMost() / tileHeight);
+      needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_XY:
       xCount = PRIntn(aDirtyRect.XMost() / tileWidth);
       yCount = PRIntn(aDirtyRect.YMost() / tileHeight);
       break;
+    }
+    if (needBackgroundColor) {
+      aRenderingContext.SetColor(aColor.mBackgroundColor);
+      aRenderingContext.FillRect(aBounds);
     }
 
     // When we have non-zero background position values, we have to
