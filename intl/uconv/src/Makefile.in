@@ -96,4 +96,4 @@ endif
 
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
-	$(INSTALL) $(EXPORT_LOCALE) $(DIST)/bin/chrome/global/locale
+	$(INSTALL) $(EXPORT_LOCALE) $(DIST)/bin/chrome/locales/en-US/global/locale

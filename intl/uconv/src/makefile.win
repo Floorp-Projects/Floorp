@@ -96,7 +96,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\charsetalias.properties $(DIST)\bin\res
 	$(MAKE_INSTALL) .\wincharset.properties $(DIST)\bin\res
-	$(MAKE_INSTALL) charsetTitles.properties $(DIST)\bin\chrome\global\locale
+	$(MAKE_INSTALL) charsetTitles.properties $(DIST)\bin\chrome\locales\en-US\global\locale
 	$(MAKE_INSTALL) charsetData.properties $(DIST)\bin\res
     $(MAKE_INSTALL) .\acceptlanguage.properties $(DIST)\bin\res
 
