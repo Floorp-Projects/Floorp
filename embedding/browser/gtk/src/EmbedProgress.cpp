@@ -54,7 +54,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
   // give the widget a chance to attach any listeners
   mOwner->ContentStateChange();
   // if we've got the start flag, emit the signal
-  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
+  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && 
       (aStateFlags & GTK_MOZ_EMBED_FLAG_START))
   {
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),
@@ -80,7 +80,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		  (const char *)uriString, aStateFlags, aStatus);
 
   // and for stop, too
-  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
+  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && 
       (aStateFlags & GTK_MOZ_EMBED_FLAG_STOP))
   {
     gtk_signal_emit(GTK_OBJECT(mOwner->mOwningWidget),

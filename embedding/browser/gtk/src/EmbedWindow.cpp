@@ -34,10 +34,12 @@ EmbedWindow::EmbedWindow(void)
   NS_INIT_REFCNT();
   mOwner       = nsnull;
   mVisibility  = PR_FALSE;
+  mIsModal     = PR_FALSE;
 }
 
 EmbedWindow::~EmbedWindow(void)
 {
+  ExitModalEventLoop(PR_FALSE);
 }
 
 nsresult
@@ -86,6 +88,8 @@ EmbedWindow::CreateWindow(void)
 void
 EmbedWindow::ReleaseChildren(void)
 {
+  ExitModalEventLoop(PR_FALSE);
+    
   mBaseWindow->Destroy();
   mBaseWindow = 0;
   mWebBrowser = 0;
@@ -102,7 +106,6 @@ NS_INTERFACE_MAP_BEGIN(EmbedWindow)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
-  NS_INTERFACE_MAP_ENTRY(nsIPrompt)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
@@ -218,19 +221,32 @@ EmbedWindow::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 NS_IMETHODIMP
 EmbedWindow::ShowAsModal(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mIsModal = PR_TRUE;
+  GtkWidget *toplevel;
+  toplevel = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
+  gtk_grab_add(toplevel);
+  gtk_main();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::IsWindowModal(PRBool *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = mIsModal;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::ExitModalEventLoop(nsresult aStatus)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mIsModal) {
+    GtkWidget *toplevel;
+    toplevel = gtk_widget_get_toplevel(GTK_WIDGET(mOwner->mOwningWidget));
+    gtk_grab_remove(toplevel);
+    mIsModal = PR_FALSE;
+    gtk_main_quit();
+  }
+  return NS_OK;
 }
 
 // nsIWebBrowserChromeFocus
@@ -408,190 +424,6 @@ EmbedWindow::OnHideTooltip(void)
     gtk_widget_destroy(sTipWindow);
   sTipWindow = NULL;
   return NS_OK;
-}
-
-// nsIPrompt
-
-NS_IMETHODIMP
-EmbedWindow::Alert(const PRUnichar *aDialogTitle, const PRUnichar *aText)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  prompter.Create(EmbedPrompter::TYPE_ALERT);
-  prompter.Run();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::AlertCheck(const PRUnichar *aDialogTitle,
-			const PRUnichar *aText,
-			const PRUnichar *aCheckMsg, PRBool *aCheckValue)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  prompter.SetCheckMessage(aCheckMsg);
-  prompter.SetCheckValue(*aCheckValue);
-  prompter.Create(EmbedPrompter::TYPE_ALERT_CHECK);
-  prompter.Run();
-  prompter.GetCheckValue(aCheckValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::Confirm(const PRUnichar *aDialogTitle, const PRUnichar *aText,
-		     PRBool *_retval)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  prompter.Create(EmbedPrompter::TYPE_CONFIRM);
-  prompter.Run();
-  prompter.GetConfirmValue(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::ConfirmCheck(const PRUnichar *aDialogTitle,
-			  const PRUnichar *aText, const PRUnichar *aCheckMsg,
-			  PRBool *aCheckValue, PRBool *_retval)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  prompter.SetCheckMessage(aCheckMsg);
-  prompter.SetCheckValue(*aCheckValue);
-  prompter.Create(EmbedPrompter::TYPE_CONFIRM);
-  prompter.Run();
-  prompter.GetConfirmValue(_retval);
-  if (*_retval)
-    prompter.GetCheckValue(aCheckValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text,
-                       PRUint32 button0And1Flags, const PRUnichar *button2Title,
-                       const PRUnichar *checkMsg, PRBool *checkValue,
-                       PRInt32 *buttonPressed)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-EmbedWindow::Prompt(const PRUnichar *aDialogTitle, const PRUnichar *aText,
-		    PRUnichar **result,
-		    const PRUnichar *aCheckMsg, PRBool *aCheckValue,
-		    PRBool *_retval)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  if (result && *result)
-    prompter.SetTextValue(*result);
-  if (aCheckValue) {
-    prompter.SetCheckValue(*aCheckValue);
-    if (aCheckMsg)
-      prompter.SetCheckMessage(aCheckMsg);
-    else
-      prompter.SetCheckMessage(NS_LITERAL_STRING("Save This Value").get());
-  }  
-  prompter.Create(EmbedPrompter::TYPE_PROMPT);
-  prompter.Run();
-  prompter.GetConfirmValue(_retval);
-  if (*_retval) {
-    if (result && *result) {
-      nsMemory::Free(*result);
-      *result = nsnull;
-    }
-    prompter.GetTextValue(result);
-    if (aCheckValue)
-      prompter.GetCheckValue(aCheckValue);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::PromptUsernameAndPassword(const PRUnichar *aDialogTitle,
-				       const PRUnichar *aText,
-				       PRUnichar **aUser, PRUnichar **aPwd,
-				       const PRUnichar *aCheckMsg, PRBool *aCheckValue,
-				       PRBool *_retval)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  if (aUser && *aUser)
-    prompter.SetUser(*aUser);
-  if (aPwd && *aPwd)
-    prompter.SetPassword(*aPwd);
-  if (aCheckValue) {
-    prompter.SetCheckValue(*aCheckValue);
-    if (aCheckMsg)
-      prompter.SetCheckMessage(aCheckMsg);
-    else
-      prompter.SetCheckMessage(NS_LITERAL_STRING("Save These Values").get());
-  }      
-  prompter.Create(EmbedPrompter::TYPE_PROMPT_USER_PASS);
-  prompter.Run();
-  prompter.GetConfirmValue(_retval);
-  if (*_retval) {
-    if (aUser && *aUser) {
-      nsMemory::Free(*aUser);
-      *aUser = nsnull;
-    }
-    prompter.GetUser(aUser);
-    if (aPwd && *aPwd) {
-      nsMemory::Free(*aPwd);
-      *aPwd = nsnull;
-    }
-    prompter.GetPassword(aPwd);
-    if (aCheckValue)
-      prompter.GetCheckValue(aCheckValue);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::PromptPassword(const PRUnichar *aDialogTitle, 
-			    const PRUnichar *aText, PRUnichar **aPwd,
-			    const PRUnichar *aCheckMsg, PRBool *aCheckValue,
-			    PRBool *_retval)
-{
-  EmbedPrompter prompter;
-  prompter.SetTitle(aDialogTitle);
-  prompter.SetMessageText(aText);
-  if (aPwd && *aPwd)
-    prompter.SetPassword(*aPwd);
-  if (aCheckValue) {
-    prompter.SetCheckValue(*aCheckValue);
-    if (aCheckMsg)
-      prompter.SetCheckMessage(aCheckMsg);
-    else
-      prompter.SetCheckMessage(NS_LITERAL_STRING("Save Password").get());
-  }        
-  prompter.Create(EmbedPrompter::TYPE_PROMPT_PASS);
-  prompter.Run();
-  prompter.GetConfirmValue(_retval);
-  if (*_retval) {
-    if (aPwd && *aPwd) {
-      nsMemory::Free(*aPwd);
-      *aPwd = nsnull;
-    }
-    prompter.GetPassword(aPwd);
-    if (aCheckValue)
-      prompter.GetCheckValue(aCheckValue);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-EmbedWindow::Select(const PRUnichar *aDialogTitle, const PRUnichar *aText,
-		    PRUint32 aCount, const PRUnichar **aSelectList,
-		    PRInt32 *aOutSelection, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // nsIInterfaceRequestor
