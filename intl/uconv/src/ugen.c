@@ -732,9 +732,9 @@ PRIVATE PRBool uCnGAlways8BytesComposedHangul(
             *outlen = 8;
             out[0] = out[2] = out[4] = out[6] = 0xa4;
             out[1] = 0xd4;
-            out[2] = lMap[LIndex];
-            out[4] = VIndex + 0xbf;
-            out[6] = tMap[TIndex];
+            out[3] = lMap[LIndex];
+            out[5] = VIndex + 0xbf;
+            out[7] = tMap[TIndex];
 	    return PR_TRUE;
     }
 }
