@@ -91,13 +91,13 @@ nsresult nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
   PRBool mIsShift;
   char mChar;
   
-  if (NS_OK == aKeyEvent->GetKeyCode(mKeyCode) && 
-      NS_OK == aKeyEvent->GetShiftKey(mIsShift)) {
+  if (NS_OK == aKeyEvent->GetKeyCode(&mKeyCode) && 
+      NS_OK == aKeyEvent->GetShiftKey(&mIsShift)) {
     switch(mKeyCode) {
-    case NS_VK_BACK:
+    case aKeyEvent->VK_BACK:
         nsDeleteLast();
       break;
-    case NS_VK_RETURN:
+    case aKeyEvent->VK_RETURN:
       // Need to implement creation of either <P> or <BR> nodes.
       break;
     default:
