@@ -407,6 +407,8 @@ nsViewManager::PostInvalidateEvent()
   }
 }
 
+#undef DEBUG_MOUSE_LOCATION
+
 PRInt32 nsViewManager::mVMCount = 0;
 nsIRenderingContext* nsViewManager::gCleanupContext = nsnull;
 
@@ -1920,22 +1922,25 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           float t2p = mContext->AppUnitsToDevUnits();
           float p2t = mContext->DevUnitsToAppUnits();
 
-          //Calculate the proper offset for the view we're going to
-          nsPoint offset(0, 0);
-
-          //Get offset from root of baseView
-          nsView *parent;
-          for (parent = baseView; parent; parent = parent->GetParent())
-            parent->ConvertToParentCoords(&offset.x, &offset.y);
-
           if ((aEvent->message == NS_MOUSE_MOVE &&
                NS_STATIC_CAST(nsMouseEvent*,aEvent)->reason ==
                  nsMouseEvent::eReal) ||
               aEvent->message == NS_MOUSE_ENTER) {
-            mMouseLocation.MoveTo(NSTwipsToIntPixels(offset.x, t2p) +
+            nsPoint rootOffset(0, 0);
+            for (nsView *v = baseView; v != mRootView; v = v->GetParent())
+              v->ConvertToParentCoords(&rootOffset.x, &rootOffset.y);
+
+            mMouseLocation.MoveTo(NSTwipsToIntPixels(rootOffset.x, t2p) +
                                     aEvent->point.x,
-                                  NSTwipsToIntPixels(offset.y, t2p) +
+                                  NSTwipsToIntPixels(rootOffset.y, t2p) +
                                     aEvent->point.y);
+#ifdef DEBUG_MOUSE_LOCATION
+            if (aEvent->message == NS_MOUSE_ENTER)
+              printf("[vm=%p]got mouse enter for %p\n",
+                     this, aEvent->widget);
+            printf("[vm=%p]setting mouse location to (%d,%d)\n",
+                   this, mMouseLocation.x, mMouseLocation.y);
+#endif
           } else if (aEvent->message == NS_MOUSE_EXIT) {
             // Although we only care about the mouse moving into an area
             // for which this view manager doesn't receive mouse move
@@ -1945,11 +1950,27 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // enter after the mouse exit when the mouse moves from one
             // of our widgets into another.
             mMouseLocation.MoveTo(NSCOORD_NONE, NSCOORD_NONE);
+#ifdef DEBUG_MOUSE_LOCATION
+            printf("[vm=%p]got mouse exit for %p\n",
+                   this, aEvent->widget);
+            printf("[vm=%p]clearing mouse location\n",
+                   this);
+#endif
           }
 
-          //Subtract back offset from root of view
-          for (parent = view; parent; parent = parent->GetParent())
-            parent->ConvertFromParentCoords(&offset.x, &offset.y);
+          //Calculate the proper offset for the view we're going to
+          nsPoint offset(0, 0);
+
+          if (view != baseView) {
+            //Get offset from root of baseView
+            nsView *parent;
+            for (parent = baseView; parent; parent = parent->GetParent())
+              parent->ConvertToParentCoords(&offset.x, &offset.y);
+
+            //Subtract back offset from root of view
+            for (parent = view; parent; parent = parent->GetParent())
+              parent->ConvertFromParentCoords(&offset.x, &offset.y);
+          }
 
           //Dispatch the event
           //Before we start mucking with coords, make sure we know our baseline
@@ -4073,6 +4094,11 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
     mSynthMouseMoveEventQueue = nsnull;
     return;
   }
+
+#ifdef DEBUG_MOUSE_LOCATION
+  printf("[vm=%p]synthesizing mouse move to (%d,%d)\n",
+         this, mMouseLocation.x, mMouseLocation.y);
+#endif
 
   nsMouseEvent event(NS_MOUSE_MOVE, mRootView->GetWidget(),
                      nsMouseEvent::eSynthesized);
