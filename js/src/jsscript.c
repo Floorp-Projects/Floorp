@@ -201,8 +201,14 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         principals = NULL;
     }
 
-    /* Compile the new script using the caller's scope chain, a la eval(). */
-    fp->flags |= JSFRAME_EVAL;
+    /*
+     * Compile the new script using the caller's scope chain, a la eval().
+     * Unlike jsobj.c:obj_eval, however, we do not set JSFRAME_EVAL in fp's
+     * flags, because compilation is here separated from execution, and the
+     * run-time scope chain may not match the compile-time.  JSFRAME_EVAL is
+     * tested in jsemit.c and jsscan.c to optimize based on identity of run-
+     * and compile-time scope.
+     */
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),
