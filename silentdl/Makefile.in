@@ -26,15 +26,15 @@ MODULE		= silentdl
 LIBRARY_NAME	= silentdl
 IS_COMPONENT	= 1
 
-CPPSRCS = \
-	nsJSSilentDownload.cpp \
-	nsJSSilentDownloadTask.cpp \
-	nsSilentDownload.cpp \
-	$(NULL)
+#CPPSRCS = \
+#	nsJSSilentDownload.cpp \
+#	nsJSSilentDownloadTask.cpp \
+#	nsSilentDownload.cpp \
+#	$(NULL)
 
-EXPORTS = nsSilentDownload.h nsIDOMSilentDownloadTask.h nsIDOMSilentDownload.h
+#EXPORTS = nsSilentDownload.h nsIDOMSilentDownloadTask.h nsIDOMSilentDownload.h
 
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
+#EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
