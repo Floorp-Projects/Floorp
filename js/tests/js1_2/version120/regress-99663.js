@@ -40,12 +40,17 @@
 *
 *******************************************************************************
 *******************************************************************************
+*
+*
+* NOTE: the test uses the |it| object of SpiderMonkey; don't run it in Rhino -
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 99663;
 var summary = 'Regression test for Bugzilla bug 99663';
-/* This testcase expects error messages containing
+/*
+ * This testcase expects error messages containing
  * the phrase 'read-only' or something similar -
  */
 var READONLY = /read\s*-?\s*only/;
