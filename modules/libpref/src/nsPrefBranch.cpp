@@ -46,11 +46,11 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIStringBundle.h"
 #include "prefapi.h"
 #include "prmem.h"
 #include "pldhash.h"
+#include "nsPrefsCID.h"
 
 #include "nsIFileSpec.h"  // this should be removed eventually
 #include "prefapi_private_data.h"
@@ -810,7 +810,7 @@ nsresult nsPrefBranch::GetDefaultFromPropertiesFile(const char *aPrefName, PRUni
 
   // string names are in unicode
   nsAutoString stringId;
-  stringId.AssignWithConversion(aPrefName);
+  stringId.AssignASCII(aPrefName);
 
   return bundle->GetStringFromName(stringId.get(), return_buf);
 }
@@ -843,14 +843,14 @@ nsresult nsPrefBranch::getValidatedPrefName(const char *aPrefName, const char **
     PL_strncmp(fullPref, capabilityPrefix, sizeof(capabilityPrefix)-1) == 0)
   {
     nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefSecurityCheck> secCheck = 
+             do_GetService(NS_GLOBAL_PREF_SECURITY_CHECK, &rv);
 
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
     PRBool enabled;
-    rv = secMan->IsCapabilityEnabled("CapabilityPreferencesAccess", &enabled);
+    rv = secCheck->CanAccessSecurityPreferences(&enabled);
     if (NS_FAILED(rv) || !enabled)
       return NS_ERROR_FAILURE;
   }

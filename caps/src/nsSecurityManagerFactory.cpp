@@ -51,6 +51,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsPrefsCID.h"
 
 ///////////////////////
 // nsSecurityNameSet //
@@ -380,6 +381,20 @@ static const nsModuleComponentInfo capsComponentInfo[] =
       nsnull,
       nsIClassInfo::MAIN_THREAD_ONLY
     },
+
+    { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
+      NS_SCRIPTSECURITYMANAGER_CID, 
+      NS_GLOBAL_PREF_SECURITY_CHECK,
+      Construct_nsIScriptSecurityManager,
+      RegisterSecurityNameSet,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsnull,
+      nsIClassInfo::MAIN_THREAD_ONLY
+    },
+
 
     { NS_PRINCIPAL_CLASSNAME, 
       NS_PRINCIPAL_CID, 

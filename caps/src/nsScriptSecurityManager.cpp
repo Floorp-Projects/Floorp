@@ -414,9 +414,10 @@ DeleteDomainEntry(nsHashKey *aKey, void *aData, void* closure)
 ////////////////////////////////////
 // Methods implementing ISupports //
 ////////////////////////////////////
-NS_IMPL_ISUPPORTS3(nsScriptSecurityManager,
+NS_IMPL_ISUPPORTS4(nsScriptSecurityManager,
                    nsIScriptSecurityManager,
                    nsIXPCSecurityManager,
+                   nsIPrefSecurityCheck,
                    nsIObserver)
 
 ///////////////////////////////////////////////////
@@ -2707,6 +2708,17 @@ nsScriptSecurityManager::CheckXPCPermissions(nsISupports* aObj,
     //-- Access tests failed
     return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
+
+//////////////////////////////////////////////
+// Method implementing nsIPrefSecurityCheck //
+//////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanAccessSecurityPreferences(PRBool* _retval)
+{
+    return IsCapabilityEnabled("CapabilityPreferencesAccess", _retval);  
+}
+
 
 /////////////////////////////////////
 // Method implementing nsIObserver //

@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  string \
 		  js \
 		  xpconnect \
-		  caps \
 		  intl \
 		  necko \
 		  $(NULL)
