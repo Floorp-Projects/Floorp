@@ -148,12 +148,6 @@ public:
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer,
-                              nsIContent*     aOldChild,
-                              nsIContent*     aNewChild,
-                              PRInt32         aIndexInParent);
   NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aChild,

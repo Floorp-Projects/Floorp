@@ -50,12 +50,6 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer,
-                              nsIContent*     aOldChild,
-                              nsIContent*     aNewChild,
-                              PRInt32         aIndexInParent);
   NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aChild,

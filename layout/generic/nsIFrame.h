@@ -477,24 +477,6 @@ public:
                         nsDidReflowStatus aStatus) = 0;
 
   /**
-   * This call is invoked when content is replaced in the content
-   * tree. The container frame that maps that content is asked to deal
-   * with the replaced content by deleting old frames and then
-   * creating new frames and updating the index-in-parent values for
-   * it's affected children. In addition, the call must generate
-   * reflow commands that will incrementally reflow and repair the
-   * damaged portion of the frame tree.
-   *
-   * @param aIndexInParent the index in the content container where
-   *          the new content was inserted.  */
-  NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent*     aContainer,
-                              nsIContent*     aOldChild,
-                              nsIContent*     aNewChild,
-                              PRInt32         aIndexInParent) = 0;
-
-  /**
    * This call is invoked when content is changed in the content tree.
    * The first frame that maps that content is asked to deal with the
    * change by generating an incremental reflow command.

@@ -761,30 +761,11 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
                            nsIContent*  aNewChild,
                            PRInt32      aIndexInContainer)
 {
-#ifdef FRAME_CONSTRUCTION
   EnterReflowLock();
   nsresult  rv = mPresContext->ContentReplaced(aDocument, aContainer, aOldChild,
                                                aNewChild, aIndexInContainer);
   ExitReflowLock();
   return rv;
-#else
-  NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
-
-  EnterReflowLock();
-
-  nsIFrame* frame = FindFrameWithContent(aContainer);
-  NS_PRECONDITION(nsnull != frame, "null frame");
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-     ("PresShell::ContentReplaced: container=%p[%s] oldChild=%p[%s][%d] newChild=%p[%s] frame=%p",
-      aContainer, ContentTag(aContainer, 0),
-      aOldChild, ContentTag(aOldChild, 1), aIndexInContainer,
-      aNewChild, ContentTag(aNewChild, 2), frame));
-  frame->ContentReplaced(this, mPresContext, aContainer, aOldChild,
-                         aNewChild, aIndexInContainer);
-
-  ExitReflowLock();
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
