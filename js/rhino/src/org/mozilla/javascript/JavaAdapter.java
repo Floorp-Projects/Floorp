@@ -109,7 +109,7 @@ public final class JavaAdapter
         private int[] argsToConvert;
     }
 
-    private static final String    IFGLUE_BASE = IFGlue.class.getName();
+    private static final String IFGLUE_BASE = IFGlue.class.getName();
 
 
     /**
@@ -547,7 +547,13 @@ public final class JavaAdapter
                         ClassFileWriter.ACC_PUBLIC);
 
         cfw.addLoadThis();
-        generatePushWrappedArgs(cfw, argTypes);
+        generatePushWrappedArgs(cfw, argTypes, argTypes.length + 1);
+        // add method name as the last JS parameter
+        cfw.add(ByteCode.DUP); // duplicate array reference
+        cfw.addPush(argTypes.length);
+        cfw.addPush(method.getName());
+        cfw.add(ByteCode.AASTORE);
+
         cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "ifglue_call",
                       "([Ljava/lang/Object;)Ljava/lang/Object;");
         generateReturnResult(cfw, returnType);
@@ -746,10 +752,11 @@ public final class JavaAdapter
      * in the helper method. Leaves the array object on the top of the stack.
      */
     private static void generatePushWrappedArgs(ClassFileWriter cfw,
-                                                Class[] argTypes)
+                                                Class[] argTypes,
+                                                int arrayLength)
     {
         // push arguments
-        cfw.addPush(argTypes.length);
+        cfw.addPush(arrayLength);
         cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
         int paramOffset = 1;
         for (int i = 0; i != argTypes.length; ++i) {
@@ -944,7 +951,7 @@ public final class JavaAdapter
         cfw.addALoad(FUNCTION);
 
         // push arguments
-        generatePushWrappedArgs(cfw, parms);
+        generatePushWrappedArgs(cfw, parms, parms.length);
 
         // push bits to indicate which parameters should be wrapped
         if (parms.length > 64) {
