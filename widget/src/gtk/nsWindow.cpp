@@ -2695,7 +2695,7 @@ nsWindow::HandleXlibConfigureNotifyEvent(XEvent *event)
 GtkWidget *
 nsWindow::GetMozArea()
 {
-  GdkWindow *parent = mSuperWin->shell_window;
+  GdkWindow *parent = nsnull;
   GtkWidget *widget;
 
   if (mMozAreaClosestParent)
@@ -2707,6 +2707,12 @@ nsWindow::GetMozArea()
     mMozAreaClosestParent = mMozArea;
     return (GtkWidget *)mMozAreaClosestParent;
   }
+  
+  if (mSuperWin)
+  {
+    parent = mSuperWin->shell_window;
+  }
+
   while (parent)
   {
     gdk_window_get_user_data (parent, (void **)&widget);
