@@ -282,7 +282,7 @@ STDMETHODIMP Accessible::get_accName(
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszName = ::SysAllocString(name.GetUnicode());
+     *pszName = ::SysAllocString(name.get());
   }
 
   return S_OK;
@@ -302,7 +302,7 @@ STDMETHODIMP Accessible::get_accValue(
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszValue = ::SysAllocString(value.GetUnicode());
+     *pszValue = ::SysAllocString(value.get());
   }
 
   return S_OK;
@@ -322,7 +322,7 @@ STDMETHODIMP Accessible::get_accDescription(
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszDescription = ::SysAllocString(description.GetUnicode());
+     *pszDescription = ::SysAllocString(description.get());
   }
 
   return S_OK;
@@ -438,7 +438,7 @@ STDMETHODIMP Accessible::get_accDefaultAction(
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszDefaultAction = ::SysAllocString(defaultAction.GetUnicode());
+     *pszDefaultAction = ::SysAllocString(defaultAction.get());
   }
 
   return S_OK;
@@ -741,7 +741,7 @@ STDMETHODIMP DocAccessible::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
   if (accDoc) {
     nsAutoString URL;
     if (NS_SUCCEEDED(accDoc->GetURL(URL))) {
-      *aURL= ::SysAllocString(URL.GetUnicode());
+      *aURL= ::SysAllocString(URL.get());
       return S_OK;
     }
   }
@@ -754,7 +754,7 @@ STDMETHODIMP DocAccessible::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
   if (accDoc) {
     nsAutoString title;
     if (NS_SUCCEEDED(accDoc->GetTitle(title))) { // getter_Copies(pszTitle)))) {
-      *aTitle= ::SysAllocString(title.GetUnicode());
+      *aTitle= ::SysAllocString(title.get());
       return S_OK;
     }
   }
@@ -767,7 +767,7 @@ STDMETHODIMP DocAccessible::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
   if (accDoc) {
     nsAutoString mimeType;
     if (NS_SUCCEEDED(accDoc->GetMimeType(mimeType))) {
-      *aMimeType= ::SysAllocString(mimeType.GetUnicode());
+      *aMimeType= ::SysAllocString(mimeType.get());
       return S_OK;
     }
   }
@@ -780,7 +780,7 @@ STDMETHODIMP DocAccessible::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
   if (accDoc) {
     nsAutoString docType;
     if (NS_SUCCEEDED(accDoc->GetDocType(docType))) {
-      *aDocType= ::SysAllocString(docType.GetUnicode());
+      *aDocType= ::SysAllocString(docType.get());
       return S_OK;
     }
   }
@@ -795,7 +795,7 @@ STDMETHODIMP DocAccessible::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID
     *aNameSpaceURI = NULL;
     nsAutoString nameSpaceURI;
     if (NS_SUCCEEDED(accDoc->GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI))) 
-      *aNameSpaceURI = ::SysAllocString(nameSpaceURI.GetUnicode());
+      *aNameSpaceURI = ::SysAllocString(nameSpaceURI.get());
     return S_OK;
   }
 

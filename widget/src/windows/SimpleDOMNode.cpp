@@ -155,13 +155,13 @@ STDMETHODIMP SimpleDOMNode::get_nodeInfo(
   if (*aNodeType !=  NODETYPE_TEXT) {
     nsAutoString nodeName;
     mDOMNode->GetNodeName(nodeName);
-    *aNodeName =   ::SysAllocString(nodeName.GetUnicode());
+    *aNodeName =   ::SysAllocString(nodeName.get());
   }
 
   nsAutoString nodeValue;
 
   mDOMNode->GetNodeValue(nodeValue);
-  *aNodeValue = ::SysAllocString(nodeValue.GetUnicode());
+  *aNodeValue = ::SysAllocString(nodeValue.get());
 
   PRInt32 nameSpaceID = 0;
   if (content)
@@ -213,7 +213,7 @@ STDMETHODIMP SimpleDOMNode::get_attributes(
       nameAtom->GetUnicode(&pszAttributeName);
       aAttribNames[index] = ::SysAllocString(pszAttributeName);
       if (NS_SUCCEEDED(content->GetAttribute(nameSpaceID, nameAtom, attributeValue))) 
-        aAttribValues[index] = ::SysAllocString(attributeValue.GetUnicode());
+        aAttribValues[index] = ::SysAllocString(attributeValue.get());
     }
   }
 
@@ -280,8 +280,8 @@ STDMETHODIMP SimpleDOMNode::get_computedStyle(
     if (NS_SUCCEEDED(cssDecl->Item(index, property)) && property.CharAt(0) != '-')  // Ignore -moz-* properties
       cssDecl->GetPropertyValue(property, value);  // Get property value
     if (!value.IsEmpty()) {
-      aStyleProperties[realIndex] =   ::SysAllocString(property.GetUnicode());
-      aStyleValues[realIndex]     =   ::SysAllocString(value.GetUnicode());
+      aStyleProperties[realIndex] =   ::SysAllocString(property.get());
+      aStyleValues[realIndex]     =   ::SysAllocString(value.get());
       ++realIndex;
     }
   }
@@ -308,7 +308,7 @@ STDMETHODIMP SimpleDOMNode::get_computedStyleForProperties(
     nsAutoString value;
     if (aStyleProperties[index])
       cssDecl->GetPropertyValue(nsDependentString(NS_STATIC_CAST(PRUnichar*,aStyleProperties[index])), value);  // Get property value
-    aStyleValues[index] = ::SysAllocString(value.GetUnicode());
+    aStyleValues[index] = ::SysAllocString(value.get());
   }
 
   return S_OK;
