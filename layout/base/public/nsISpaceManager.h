@@ -80,6 +80,8 @@ struct nsBandData {
  */
 class nsISpaceManager : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_ISPACEMANAGER_IID; return iid; }
+
   /**
    * Get the frame that's associated with the space manager. This frame created
    * the space manager, and the world coordinate space is relative to this frame.

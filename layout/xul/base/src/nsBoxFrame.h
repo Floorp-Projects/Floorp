@@ -28,8 +28,11 @@
 #ifndef nsBoxFrame_h___
 #define nsBoxFrame_h___
 
+#include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIBox.h"
+#include "nsISpaceManager.h"
+
 class nsHTMLReflowCommand;
 
 class nsCalculatedBoxInfo : public nsBoxInfo {
@@ -49,7 +52,7 @@ class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewBoxFrame(nsIFrame** aNewFrame, PRUint32 aFlags = 0);
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
@@ -100,7 +103,7 @@ public:
 
 
 protected:
-    nsBoxFrame();
+    nsBoxFrame(PRUint32 aFlags = 0);
 
     virtual void GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize);
     virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
@@ -149,6 +152,9 @@ private:
     // Should use a dynamic array.
     nsCalculatedBoxInfo mSprings[100];
     nscoord mSpringCount;
+    nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
+    PRUint32 mFlags;
+
 }; // class nsBoxFrame
 
 

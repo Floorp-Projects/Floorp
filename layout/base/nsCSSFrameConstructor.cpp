@@ -93,7 +93,7 @@ nsresult
 NS_NewTitledButtonFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewBoxFrame ( nsIFrame** aNewFrame );
+NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags );
 
 nsresult
 NS_NewSliderFrame ( nsIFrame** aNewFrame );
@@ -1807,7 +1807,8 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::tabbox          == tag.get())  ||
         (nsXULAtoms::tabpanel        == tag.get())  ||
         (nsXULAtoms::tabpage         == tag.get())  ||
-        (nsXULAtoms::progressmeter   == tag.get()  )) {
+        (nsXULAtoms::progressmeter   == tag.get())  ||
+        (nsXULAtoms::window          == tag.get())) {
     return PR_TRUE;
   }
 #endif
@@ -1928,7 +1929,15 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
 
     // Create an area frame for the document element
     nsIFrame* areaFrame;
-    NS_NewAreaFrame(&areaFrame);
+    PRInt32 nameSpaceID;
+    if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
+        nameSpaceID == nsXULAtoms::nameSpaceID) {
+      NS_NewBoxFrame(&areaFrame);
+    }
+    else {
+      NS_NewAreaFrame(&areaFrame);
+    }
+
     areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
@@ -1996,8 +2005,19 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
 
     // XXX Until we clean up how painting damage is handled, we need to use the
     // flag that says that this is the body...
-    NS_NewDocumentElementFrame(&areaFrame);
+    PRInt32 nameSpaceID;
+    if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
+        nameSpaceID == nsXULAtoms::nameSpaceID) {
+      NS_NewBoxFrame(&areaFrame, NS_BLOCK_DOCUMENT_ROOT);
+    }
+    else {
+      NS_NewDocumentElementFrame(&areaFrame);
+    }
     areaFrame->Init(*aPresContext, aDocElement, parFrame, styleContext, nsnull);
+
+    // Add a mapping from content object to frame. The primary frame is the scroll
+    // frame, because it contains the area frame
+    presShell->SetPrimaryFrameFor(aDocElement, scrollFrame ? scrollFrame : areaFrame);
 
     if (scrollFrame) {
       // If the document element is scrollable, then it needs a view. Otherwise,
@@ -3051,7 +3071,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 #endif // XP_MENUS
 
     // BOX CONSTRUCTION
-    else if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol) {
+    else if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || 
+             aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewBoxFrame(&newFrame);

@@ -320,6 +320,9 @@ nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext&        aPresContext
 {
   TDBG_S(gsDebugIR,"TOF IR: IR_TargetIsChild\n");
   nsresult rv;
+  if (!aNextFrame)
+    return NS_OK;
+
   if (aNextFrame == mInnerTableFrame) {
     rv = IR_TargetIsInnerTableFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
