@@ -27,10 +27,15 @@
 #include "xpidl.h"
 #include <ctype.h>
 
+#define AS_DECL 0
+#define AS_CALL 1
+#define AS_IMPL 2
+
 static gboolean write_method_signature(IDL_tree method_tree, FILE *outfile,
-                                       gboolean as_call);
+                                       int mode, const char *className);
 static gboolean write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
-                                    gboolean getter, gboolean as_call);
+                                    gboolean getter, 
+                                    int mode, const char *className);
 
 static void
 write_indent(FILE *outfile) {
@@ -104,7 +109,9 @@ interface(TreeState *state)
 {
     IDL_tree iface = state->tree, iter, orig;
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
-    char *classNameUpper = NULL, *cp;
+    char *classNameUpper = NULL;
+    char *classNameImpl = NULL;
+    char *cp;
     gboolean ok = TRUE;
     const char *iid;
     const char *name_space;
@@ -226,17 +233,18 @@ interface(TreeState *state)
         switch(IDL_NODE_TYPE(data)) {
           case IDLN_OP_DCL:
             write_indent(state->file);
-            write_method_signature(data, state->file, FALSE);
+            write_method_signature(data, state->file, AS_DECL, NULL);
             break;
 
           case IDLN_ATTR_DCL:
             write_indent(state->file);
-            if (!write_attr_accessor(data, state->file, TRUE, FALSE))
+            if (!write_attr_accessor(data, state->file, TRUE, AS_DECL, NULL))
                 FAIL;
             if (!IDL_ATTR_DCL(data).f_readonly) {
                 fputs("; \\\n", state->file); /* Terminate the previous one. */
                 write_indent(state->file);
-                if (!write_attr_accessor(data, state->file, FALSE, FALSE))
+                if (!write_attr_accessor(data, state->file,
+                                         FALSE, AS_DECL, NULL))
                     FAIL;
                 /* '; \n' at end will clean up. */
             }
@@ -296,25 +304,27 @@ interface(TreeState *state)
         switch(IDL_NODE_TYPE(data)) {
           case IDLN_OP_DCL:
             write_indent(state->file);
-            write_method_signature(data, state->file, FALSE);
+            write_method_signature(data, state->file, AS_DECL, NULL);
             fputs(" { return _to ## ", state->file);
-            write_method_signature(data, state->file, TRUE);
+            write_method_signature(data, state->file, AS_CALL, NULL);
             break;
 
           case IDLN_ATTR_DCL:
             write_indent(state->file);
-            if (!write_attr_accessor(data, state->file, TRUE, FALSE))
+            if (!write_attr_accessor(data, state->file, TRUE, AS_DECL, NULL))
                 FAIL;
             fputs(" { return _to ## ", state->file);
-            if (!write_attr_accessor(data, state->file, TRUE, TRUE))
+            if (!write_attr_accessor(data, state->file, TRUE, AS_CALL, NULL))
                 FAIL;
             if (!IDL_ATTR_DCL(data).f_readonly) {
                 fputs("; } \\\n", state->file); /* Terminate the previous one. */
                 write_indent(state->file);
-                if (!write_attr_accessor(data, state->file, FALSE, FALSE))
+                if (!write_attr_accessor(data, state->file,
+                                         FALSE, AS_DECL, NULL))
                     FAIL;
                 fputs(" { return _to ## ", state->file);
-                if (!write_attr_accessor(data, state->file, FALSE, TRUE))
+                if (!write_attr_accessor(data, state->file,
+                                         FALSE, AS_CALL, NULL))
                     FAIL;
                 /* '; } \n' at end will clean up. */
             }
@@ -336,11 +346,135 @@ interface(TreeState *state)
     }
     fputc('\n', state->file);
 
+    /*
+     * Build a sample implementation template.
+     */
+    if (strlen(className) >= 3 && className[2] == 'I') {
+        classNameImpl = strdup(className);
+        if (!classNameImpl)
+            FAIL;
+        memmove(&classNameImpl[2], &classNameImpl[3], strlen(classNameImpl) - 2);
+    } else {
+        classNameImpl = strdup("_MYCLASS_");
+        if (!classNameImpl)
+            FAIL;
+    }
+
+    fputs("#if 0\n"
+          "/* Use the code below as a template for the "
+          "implementation class for this interface. */\n"
+          "\n"
+          "/* Header file */"
+          "\n",
+          state->file);
+    fprintf(state->file, "class %s : public %s\n", classNameImpl, className);
+    fputs("{\n"
+          "public:\n", state->file);
+    write_indent(state->file);
+    fputs("NS_DECL_ISUPPORTS\n", state->file);
+    write_indent(state->file);
+    fprintf(state->file, "NS_DECL_%s\n", classNameUpper);
+    fputs("\n", state->file);
+    write_indent(state->file);
+    fprintf(state->file, "%s();\n", classNameImpl);
+    write_indent(state->file);
+    fprintf(state->file, "virtual ~%s();\n", classNameImpl);
+    write_indent(state->file);
+    fputs("/* additional members */\n", state->file);
+    fputs("};\n\n", state->file);
+
+    fputs("/* Implementation file */\n", state->file);
+
+    fprintf(state->file, 
+            "NS_IMPL_ISUPPORTS1(%s, %s)\n", classNameImpl, className);
+    fputs("\n", state->file);
+    
+    fprintf(state->file, "%s::%s()\n", classNameImpl, classNameImpl);
+    fputs("{\n", state->file);
+    write_indent(state->file);
+    fputs("NS_INIT_ISUPPORTS();\n", state->file);
+    write_indent(state->file);
+    fputs("/* member initializers and constructor code */\n", state->file);
+    fputs("}\n\n", state->file);
+    
+    fprintf(state->file, "%s::~%s()\n", classNameImpl, classNameImpl);
+    fputs("{\n", state->file);
+    write_indent(state->file);
+    fputs("/* destructor code */\n", state->file);
+    fputs("}\n\n", state->file);
+
+    for (iter = IDL_INTERFACE(state->tree).body;
+         iter != NULL;
+         iter = IDL_LIST(iter).next)
+    {
+        IDL_tree data = IDL_LIST(iter).data;
+
+        switch(IDL_NODE_TYPE(data)) {
+          case IDLN_OP_DCL:
+            /* It would be nice to remove this state-twiddling. */
+            orig = state->tree; 
+            state->tree = data;
+            xpidl_write_comment(state, 0);
+            state->tree = orig;
+
+            write_method_signature(data, state->file, AS_IMPL, classNameImpl);
+            fputs("\n{\n", state->file);
+            write_indent(state->file);
+            write_indent(state->file);
+            fputs("return NS_ERROR_NOT_IMPLEMENTED;\n"
+                  "}\n"
+                  "\n", state->file);
+            break;
+
+          case IDLN_ATTR_DCL:
+            /* It would be nice to remove this state-twiddling. */
+            orig = state->tree; 
+            state->tree = data;
+            xpidl_write_comment(state, 0);
+            state->tree = orig;
+            
+            if (!write_attr_accessor(data, state->file, TRUE, 
+                                     AS_IMPL, classNameImpl))
+                FAIL;
+            fputs("\n{\n", state->file);
+            write_indent(state->file);
+            write_indent(state->file);
+            fputs("return NS_ERROR_NOT_IMPLEMENTED;\n"
+                  "}\n", state->file);
+
+            if (!IDL_ATTR_DCL(data).f_readonly) {
+                if (!write_attr_accessor(data, state->file, FALSE, 
+                                         AS_IMPL, classNameImpl))
+                    FAIL;
+                fputs("\n{\n", state->file);
+                write_indent(state->file);
+                write_indent(state->file);
+                fputs("return NS_ERROR_NOT_IMPLEMENTED;\n"
+                      "}\n", state->file);
+            }
+            fputs("\n", state->file);
+            break;
+
+          case IDLN_CONST_DCL:
+          case IDLN_CODEFRAG:
+              continue;
+
+          default:
+            FAIL;
+        }
+    }
+
+    fputs("/* End of implementation class template. */\n"
+          "#endif\n"
+          "\n", state->file);
+
 #undef FAIL
 
 out:
     if (classNameUpper)
         free(classNameUpper);
+    if (classNameImpl)
+        free(classNameImpl);
     return ok;
 }
 
@@ -453,22 +587,25 @@ write_type(IDL_tree type_tree, FILE *outfile)
 #define ATTR_TYPE(tree) (IDL_NODE_TYPE(ATTR_TYPE_DECL(tree)))
 
 /*
- * If as_call is defined, omit all types.  (Used when generating the
- * NS_FORWARD_NSIFOO macro.)
+ *  AS_DECL writes 'NS_IMETHOD foo(string bar, long sil)'
+ *  AS_IMPL writes 'NS_IMETHODIMP className::foo(string bar, long sil)'
+ *  AS_CALL writes 'foo(bar, sil)'
  */
 static gboolean
 write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
-                    gboolean getter, gboolean as_call)
+                    gboolean getter, int mode, const char *className)
 {
     char *attrname = ATTR_IDENT(attr_tree).str;
 
-    if (!as_call) {
+    if (mode == AS_DECL) {
         fputs("NS_IMETHOD ", outfile);
+    } else if (mode == AS_IMPL) {
+        fprintf(outfile, "NS_IMETHODIMP %s::", className);
     }
     fprintf(outfile, "%cet%c%s(",
             getter ? 'G' : 'S',
             toupper(*attrname), attrname + 1);
-    if (!as_call) {
+    if (mode == AS_DECL || mode == AS_IMPL) {
         /* Setters for string, wstring and nsid get const. */
         if (!getter &&
             (IDL_NODE_TYPE(ATTR_TYPE_DECL(attr_tree)) == IDLN_TYPE_STRING ||
@@ -491,13 +628,12 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
 static gboolean
 attr_dcl(TreeState *state)
 {
-    /*
-     * XXX lists of attributes with the same type, e.g.
-     * attribute string foo, bar sil;
-     * are legal IDL... but we don't do anything with 'em.
-     */
+    GSList *doc_comments;
 
-    GSList *doc_comments =
+    if (!verify_attribute_declaration(state->tree))
+        return FALSE;
+
+    doc_comments =
         IDL_IDENT(IDL_LIST(IDL_ATTR_DCL
                            (state->tree).simple_declarations).data).comments;
 
@@ -506,6 +642,11 @@ attr_dcl(TreeState *state)
         printlist(state->file, doc_comments);
     }
 
+    /*
+     * XXX lists of attributes with the same type, e.g.
+     * attribute string foo, bar sil;
+     * are legal IDL... but we don't do anything with 'em.
+     */
     if (IDL_LIST(IDL_ATTR_DCL(state->tree).simple_declarations).next != NULL) {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
                        "multiple attributes in a single declaration aren't "
@@ -515,13 +656,13 @@ attr_dcl(TreeState *state)
     xpidl_write_comment(state, 2);
 
     write_indent(state->file);
-    if (!write_attr_accessor(state->tree, state->file, TRUE, FALSE))
+    if (!write_attr_accessor(state->tree, state->file, TRUE, AS_DECL, NULL))
         return FALSE;
     fputs(" = 0;\n", state->file);
 
     if (!IDL_ATTR_DCL(state->tree).f_readonly) {
         write_indent(state->file);
-        if (!write_attr_accessor(state->tree, state->file, FALSE, FALSE))
+        if (!write_attr_accessor(state->tree, state->file, FALSE, AS_DECL, NULL))
             return FALSE;
         fputs(" = 0;\n", state->file);
     }
@@ -712,11 +853,15 @@ forward_dcl(TreeState *state)
 
 /*
  * Shared between the interface class declaration and the NS_DECL_IFOO macro
- * provided to aid declaration of implementation classes.  If as_call is true,
- * write 'foo(bar, sil)' rather than 'int foo(string bar, long sil)'
+ * provided to aid declaration of implementation classes.  
+ * mode...
+ *  AS_DECL writes 'NS_IMETHOD foo(string bar, long sil)'
+ *  AS_IMPL writes 'NS_IMETHODIMP className::foo(string bar, long sil)'
+ *  AS_CALL writes 'foo(bar, sil)'
  */
 static gboolean
-write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
+write_method_signature(IDL_tree method_tree, FILE *outfile, int mode,
+                       const char *className)
 {
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
     gboolean no_generated_args = TRUE;
@@ -725,7 +870,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
     const char *name;
     IDL_tree iter;
 
-    if (!as_call) {
+    if (mode == AS_DECL) {
         if (op_notxpcom) {
             fputs("NS_IMETHOD_(", outfile);
             if (!write_type(op->op_type_spec, outfile))
@@ -736,10 +881,25 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
         }
         fputc(' ', outfile);
     }
+    else if (mode == AS_IMPL) {
+        if (op_notxpcom) {
+            fputs("NS_IMETHODIMP_(", outfile);
+            if (!write_type(op->op_type_spec, outfile))
+                return FALSE;
+            fputc(')', outfile);
+        } else {
+            fputs("NS_IMETHODIMP", outfile);
+        }
+        fputc(' ', outfile);
+    }
     name = IDL_IDENT(op->ident).str;
-    fprintf(outfile, "%c%s(", toupper(*name), name + 1);
+    if (mode == AS_IMPL) {
+        fprintf(outfile, "%s::%c%s(", className, toupper(*name), name + 1);
+    } else {
+        fprintf(outfile, "%c%s(", toupper(*name), name + 1);
+    }
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-        if (!as_call) {
+        if (mode == AS_DECL || mode == AS_IMPL) {
             if (!write_param(IDL_LIST(iter).data, outfile))
                 return FALSE;
         } else {
@@ -760,7 +920,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
                                                 IDL_ident_new("_retval"));
         if (!fake_param)
             return FALSE;
-        if (!as_call) {
+        if (mode == AS_DECL || mode == AS_IMPL) {
             if (!write_param(fake_param, outfile))
                 return FALSE;
         } else {
@@ -773,7 +933,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
 
     /* varargs go last */
     if (op->f_varargs) {
-        if (!as_call) {
+        if (mode == AS_DECL || mode == AS_IMPL) {
             fputs("nsVarArgs *", outfile);
         }
         fputs("_varargs", outfile);
@@ -784,7 +944,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
      * If generated method has no arguments, output 'void' to avoid C legacy
      * behavior of disabling type checking.
      */
-    if (no_generated_args && !as_call) {
+    if (no_generated_args && mode == AS_DECL) {
         fputs("void", outfile);
     }
 
@@ -816,7 +976,7 @@ op_dcl(TreeState *state)
     xpidl_write_comment(state, 2);
 
     write_indent(state->file);
-    if (!write_method_signature(state->tree, state->file, FALSE))
+    if (!write_method_signature(state->tree, state->file, AS_DECL, NULL))
         return FALSE;
     fputs(" = 0;\n\n", state->file);
 

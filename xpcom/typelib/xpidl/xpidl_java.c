@@ -652,6 +652,14 @@ attribute_declaration(TreeState *state)
     gboolean method_noscript = 
         (IDL_tree_property_get(ATTR_PROPS(state->tree), "noscript") != NULL);
 
+#if 0
+    /*
+     * Disabled here because I can't verify this check against possible
+     * users of the java xpidl backend.
+     */
+    if (!verify_attribute_declaration(state->tree))
+        return FALSE;
+#endif
 
     /* Comment */
     fputc('\n', state->file);

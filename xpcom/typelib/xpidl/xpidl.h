@@ -198,6 +198,12 @@ xpidl_parse_iid(nsID *id, const char *str);
                              UP_IS_AGGREGATE(node)))
 
 /*
+ * Check that scriptable attributes in scriptable interfaces actually are.
+ */
+gboolean
+verify_attribute_declaration(IDL_tree method_tree);
+
+/*
  * Perform various validation checks on methods.
  */
 gboolean
