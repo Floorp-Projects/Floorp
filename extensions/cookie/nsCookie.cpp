@@ -28,7 +28,6 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsFileStream.h"
-#include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 #include "nsFileLocations.h"
 #include "nsINetSupportDialogService.h"

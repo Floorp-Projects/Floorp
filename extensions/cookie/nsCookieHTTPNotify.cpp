@@ -20,7 +20,10 @@
  * Contributor(s): 
  */
 
+#ifdef DEBUG_dp
 #include <stdio.h>
+#endif 
+
 #include "nsCookieHTTPNotify.h"
 #include "nsIGenericFactory.h"
 #include "nsIHTTPChannel.h"
@@ -206,7 +209,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     nsXPIDLCString cookieHeader;
     rv = pHTTPConnection->GetResponseHeader(mSetCookieHeader, getter_Copies(cookieHeader));
     if (NS_FAILED(rv)) return rv;
-    if (!cookieHeader) return NS_ERROR_OUT_OF_MEMORY;
+    if (!cookieHeader) return NS_OK; // not an error, there's just no header.
 
     // Get the url
     nsCOMPtr<nsIURI> pURL;
