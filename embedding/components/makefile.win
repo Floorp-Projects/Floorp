@@ -22,7 +22,6 @@ DEPTH=..\..
 
 DIRS= \
 	windowwatcher \
-	appstartup \
 	build \
 	$(NULL)
 
