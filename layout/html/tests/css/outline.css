@@ -1,0 +1,39 @@
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+
+GOOD { outline: maroon; }
+GOOD { outline: outset; } 
+GOOD { outline: thick } 
+GOOD { outline: rgb(255,50,50) thin dashed } 
+GOOD { outline: rgb(0%, 100%, 0%) } 
+GOOD { outline: #0000ff }
+GOOD { outline: #f00 }  
+GOOD { outline: solid green; } 
+GOOD { outline: blue 1em } 
+GOOD { outline: medium outset; } 
+GOOD { outline: dotted purple 10px  } 
+GOOD { outline: groove invert; } 
+GOOD { outline: invert inherit inherit; } 
+GOOD { outline: invert; } 
+GOOD { outline: inherit; } 
+BAD { outline: invert blue }
+BAD { outline: dashed red 5%; }
+BAD { outline: neon; }
+BAD { outline: olive -10px }
+BAD { outline: "red" }
+BAD { outline: ; }
