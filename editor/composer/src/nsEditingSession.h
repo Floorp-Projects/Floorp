@@ -141,6 +141,8 @@ protected:
   // off, otherwise false.
   PRPackedBool    mScriptsEnabled;
 
+  PRPackedBool    mProgressListenerRegistered;
+
   // The image animation mode before it was turned off.
   PRUint16        mImageAnimationMode;
 
