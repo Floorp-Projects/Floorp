@@ -48,7 +48,7 @@
 
 /*static*/
 nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument, 
-                                       const nsAReadableString &aUsemap, 
+                                       const nsAString &aUsemap, 
                                        nsIDOMHTMLMapElement **aMap)
 {
   NS_ENSURE_ARG_POINTER(aDocument);

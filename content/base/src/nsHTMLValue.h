@@ -64,7 +64,7 @@ public:
   nsHTMLValue(nsHTMLUnit aUnit = eHTMLUnit_Null);
   nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit);
   nsHTMLValue(float aValue);
-  nsHTMLValue(const nsAReadableString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
+  nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
   nsHTMLValue(nsISupports* aValue);
   nsHTMLValue(nscolor aValue);
   nsHTMLValue(const nsHTMLValue& aCopy);
@@ -79,7 +79,7 @@ public:
   PRInt32     GetIntValue(void) const;
   PRInt32     GetPixelValue(void) const;
   float       GetPercentValue(void) const;
-  nsAWritableString&   GetStringValue(nsAWritableString& aBuffer) const;
+  nsAString&   GetStringValue(nsAString& aBuffer) const;
   nsISupports*  GetISupportsValue(void) const;
   nscolor     GetColorValue(void) const;
 
@@ -87,13 +87,13 @@ public:
   void  SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit);
   void  SetPixelValue(PRInt32 aValue);
   void  SetPercentValue(float aValue);
-  void  SetStringValue(const nsAReadableString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
+  void  SetStringValue(const nsAString& aValue, nsHTMLUnit aUnit = eHTMLUnit_String);
   void  SetISupportsValue(nsISupports* aValue);
   void  SetColorValue(nscolor aValue);
   void  SetEmptyValue(void);
 
 #ifdef DEBUG
-  void  AppendToString(nsAWritableString& aBuffer) const;
+  void  AppendToString(nsAString& aBuffer) const;
 #endif
 
 protected:
@@ -146,7 +146,7 @@ inline float nsHTMLValue::GetPercentValue(void) const
   return 0.0f;
 }
 
-inline nsAWritableString& nsHTMLValue::GetStringValue(nsAWritableString& aBuffer) const
+inline nsAString& nsHTMLValue::GetStringValue(nsAString& aBuffer) const
 {
   NS_ASSERTION((mUnit == eHTMLUnit_String) || (mUnit == eHTMLUnit_ColorName) ||
                (mUnit == eHTMLUnit_Null), "not a string value");

@@ -345,7 +345,7 @@ CSSCharsetRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::GetCssText(nsAWritableString& aCssText)
+CSSCharsetRuleImpl::GetCssText(nsAString& aCssText)
 {
   aCssText.Assign(NS_LITERAL_STRING("@charset \""));
   aCssText.Append(mEncoding);
@@ -354,7 +354,7 @@ CSSCharsetRuleImpl::GetCssText(nsAWritableString& aCssText)
 }
 
 NS_IMETHODIMP
-CSSCharsetRuleImpl::SetCssText(const nsAReadableString& aCssText)
+CSSCharsetRuleImpl::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -633,7 +633,7 @@ CSSImportRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP
-CSSImportRuleImpl::GetCssText(nsAWritableString& aCssText)
+CSSImportRuleImpl::GetCssText(nsAString& aCssText)
 {
   aCssText.Assign(NS_LITERAL_STRING("@import url("));
   aCssText.Append(mURLSpec);
@@ -651,7 +651,7 @@ CSSImportRuleImpl::GetCssText(nsAWritableString& aCssText)
 }
 
 NS_IMETHODIMP
-CSSImportRuleImpl::SetCssText(const nsAReadableString& aCssText)
+CSSImportRuleImpl::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -678,7 +678,7 @@ CSSImportRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 NS_IMETHODIMP
-CSSImportRuleImpl::GetHref(nsAWritableString & aHref)
+CSSImportRuleImpl::GetHref(nsAString & aHref)
 {
   aHref = mURLSpec;
   return NS_OK;
@@ -1119,7 +1119,7 @@ CSSMediaRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP
-CSSMediaRuleImpl::GetCssText(nsAWritableString& aCssText)
+CSSMediaRuleImpl::GetCssText(nsAString& aCssText)
 {
   PRUint32 index;
   PRUint32 count;
@@ -1163,7 +1163,7 @@ CSSMediaRuleImpl::GetCssText(nsAWritableString& aCssText)
 }
 
 NS_IMETHODIMP
-CSSMediaRuleImpl::SetCssText(const nsAReadableString& aCssText)
+CSSMediaRuleImpl::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1216,7 +1216,7 @@ CSSMediaRuleImpl::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 }
 
 NS_IMETHODIMP
-CSSMediaRuleImpl::InsertRule(nsAReadableString & aRule, PRUint32 aIndex, PRUint32* _retval)
+CSSMediaRuleImpl::InsertRule(const nsAString & aRule, PRUint32 aIndex, PRUint32* _retval)
 {
   NS_ENSURE_TRUE(mSheet, NS_ERROR_FAILURE);
   
@@ -1470,7 +1470,7 @@ CSSNameSpaceRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::GetCssText(nsAWritableString& aCssText)
+CSSNameSpaceRuleImpl::GetCssText(nsAString& aCssText)
 {
   aCssText.Assign(NS_LITERAL_STRING("@namespace "));
   if (mPrefix) {
@@ -1486,7 +1486,7 @@ CSSNameSpaceRuleImpl::GetCssText(nsAWritableString& aCssText)
 }
 
 NS_IMETHODIMP
-CSSNameSpaceRuleImpl::SetCssText(const nsAReadableString& aCssText)
+CSSNameSpaceRuleImpl::SetCssText(const nsAString& aCssText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

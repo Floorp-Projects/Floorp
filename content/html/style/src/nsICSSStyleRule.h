@@ -124,12 +124,12 @@ public:
 #ifdef DEBUG
   void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 #endif
-  nsresult ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet,
+  nsresult ToString( nsAString& aString, nsICSSStyleSheet* aSheet,
                     PRBool aIsPseudoElem, PRInt8 aNegatedIndex ) const;
 
 private:
 
-  void AppendNegationToString(nsAWritableString& aString);
+  void AppendNegationToString(nsAString& aString);
 
 public:
   PRInt32         mNameSpace;

@@ -38,7 +38,7 @@
 #ifndef nsTextFragment_h___
 #define nsTextFragment_h___
 
-#include "nsAWritableString.h"
+#include "nsAString.h"
 class nsString;
 
 // XXX should this normalize the code to keep a \u0000 at the end?
@@ -128,7 +128,7 @@ public:
    * Change the contents of this fragment to be a copy of the
    * the argument string.
    */
-  nsTextFragment& operator=(const nsAReadableString& aString);
+  nsTextFragment& operator=(const nsAString& aString);
 
   /**
    * Return PR_TRUE if this fragment is represented by PRUnichar data

@@ -71,7 +71,7 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
   }
 }
 
-nsCSSValue::nsCSSValue(const nsAReadableString& aValue, nsCSSUnit aUnit)
+nsCSSValue::nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters), "not a string value");
@@ -171,7 +171,7 @@ void nsCSSValue::SetIntValue(PRInt32 aValue, nsCSSUnit aUnit)
   }
 }
 
-void nsCSSValue::SetStringValue(const nsAReadableString& aValue,
+void nsCSSValue::SetStringValue(const nsAString& aValue,
                                 nsCSSUnit aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters), "not a string unit");
@@ -219,7 +219,7 @@ void nsCSSValue::SetNormalValue(void)
   mUnit = eCSSUnit_Normal;
 }
 
-void nsCSSValue::AppendToString(nsAWritableString& aBuffer,
+void nsCSSValue::AppendToString(nsAString& aBuffer,
                                 nsCSSProperty aPropID) const
 {
   if (eCSSUnit_Null == mUnit) {
@@ -345,7 +345,7 @@ void nsCSSValue::AppendToString(nsAWritableString& aBuffer,
   aBuffer.Append(NS_LITERAL_STRING(" "));
 }
 
-void nsCSSValue::ToString(nsAWritableString& aBuffer,
+void nsCSSValue::ToString(nsAString& aBuffer,
                           nsCSSProperty aPropID) const
 {
   aBuffer.Truncate();

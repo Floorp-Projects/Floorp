@@ -64,7 +64,7 @@ public:
    * @return          XPCOM return values.
    */
   static nsresult FindImageMap(nsIDocument *aDocument, 
-                               const nsAReadableString &aUsemap, 
+                               const nsAString &aUsemap, 
                                nsIDOMHTMLMapElement **aMap);
 };
 

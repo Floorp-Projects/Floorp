@@ -4013,7 +4013,7 @@ nsCSSDeclaration::RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue)
 }
 
 nsresult
-nsCSSDeclaration::AppendComment(const nsAReadableString& aComment)
+nsCSSDeclaration::AppendComment(const nsAString& aComment)
 {
   return /* NS_ERROR_NOT_IMPLEMENTED, or not any longer that is */ NS_OK;
 }
@@ -4747,21 +4747,21 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
 
 
 nsresult
-nsCSSDeclaration::GetValue(const nsAReadableString& aProperty,
-                           nsAWritableString& aValue)
+nsCSSDeclaration::GetValue(const nsAString& aProperty,
+                           nsAString& aValue)
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty);
   return GetValue(propID, aValue);
 }
 
-PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAWritableString& aResult)
+PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString& aResult)
 {
   nsCSSValue  value;
   GetValue(aProperty, value);
   return AppendValueToString(aProperty, value, aResult);
 }
 
-PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAWritableString& aResult)
+PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult)
 {
   nsCSSUnit unit = aValue.GetUnit();
 
@@ -4968,7 +4968,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, const nsCS
 
 nsresult
 nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
-                           nsAWritableString& aValue)
+                           nsAString& aValue)
 {
   PRBool  isImportant = GetValueIsImportant(aProperty);
   if (PR_TRUE == isImportant) {
@@ -5323,7 +5323,7 @@ nsCSSDeclaration::GetImportantValues()
 }
 
 PRBool
-nsCSSDeclaration::GetValueIsImportant(const nsAReadableString& aProperty)
+nsCSSDeclaration::GetValueIsImportant(const nsAString& aProperty)
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty);
   return GetValueIsImportant(propID);
@@ -5376,7 +5376,7 @@ nsCSSDeclaration::AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
  
 void
 nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                                 nsAWritableString& aString)
+                                                 nsAString& aString)
 {
   NS_ASSERTION(aProperty, "null CSS property passed to AppendPropertyAndValueToString.");
   aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aProperty))
@@ -5386,7 +5386,7 @@ nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
 }
 
 void
-nsCSSDeclaration::TryBorderShorthand(nsAWritableString & aString,
+nsCSSDeclaration::TryBorderShorthand(nsAString & aString,
                                      PRInt32 & aBorderTopWidth,
                                      PRInt32 & aBorderTopStyle,
                                      PRInt32 & aBorderTopColor,
@@ -5461,7 +5461,7 @@ nsCSSDeclaration::TryBorderShorthand(nsAWritableString & aString,
 }
 
 void
-nsCSSDeclaration::TryBorderSideShorthand(nsAWritableString & aString,
+nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
                                          nsCSSProperty aShorthand,
                                          PRInt32 & aBorderWidth,
                                          PRInt32 & aBorderStyle,
@@ -5497,7 +5497,7 @@ nsCSSDeclaration::TryBorderSideShorthand(nsAWritableString & aString,
 }
 
 void
-nsCSSDeclaration::TryMarginOrPaddingShorthand(nsAWritableString & aString,
+nsCSSDeclaration::TryMarginOrPaddingShorthand(nsAString & aString,
                                               nsCSSProperty aShorthand,
                                               PRInt32 & aTop,
                                               PRInt32 & aBottom,
@@ -5537,7 +5537,7 @@ nsCSSDeclaration::TryMarginOrPaddingShorthand(nsAWritableString & aString,
 }
 
 void
-nsCSSDeclaration::TryBackgroundShorthand(nsAWritableString & aString,
+nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
                                          PRInt32 & aBgColor,
                                          PRInt32 & aBgImage,
                                          PRInt32 & aBgRepeat,
@@ -5583,7 +5583,7 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAWritableString & aString,
 }
 
 void
-nsCSSDeclaration::TryBackgroundPosition(nsAWritableString & aString,
+nsCSSDeclaration::TryBackgroundPosition(nsAString & aString,
                                         PRInt32 & aBgPositionX,
                                         PRInt32 & aBgPositionY)
 {
@@ -5612,7 +5612,7 @@ case _prop: \
           break;
 
 nsresult
-nsCSSDeclaration::ToString(nsAWritableString& aString)
+nsCSSDeclaration::ToString(nsAString& aString)
 {
   if (nsnull != mOrder) {
     PRInt32 count = mOrder->Count();
@@ -5930,7 +5930,7 @@ nsCSSDeclaration::Count()
 }
 
 nsresult
-nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn)
+nsCSSDeclaration::GetNthProperty(PRUint32 aIndex, nsAString& aReturn)
 {
   aReturn.Truncate();
   if (nsnull != mOrder && aIndex < (PRUint32)mOrder->Count()) {

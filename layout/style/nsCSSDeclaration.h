@@ -575,23 +575,23 @@ public:
   nsresult AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue);
   nsresult AppendStructValue(nsCSSProperty aProperty, void* aStruct);
   nsresult SetValueImportant(nsCSSProperty aProperty);
-  nsresult AppendComment(const nsAReadableString& aComment);
+  nsresult AppendComment(const nsAString& aComment);
   nsresult RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue);
 
   nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
-  nsresult GetValue(nsCSSProperty aProperty, nsAWritableString& aValue);
-  nsresult GetValue(const nsAReadableString& aProperty, nsAWritableString& aValue);
+  nsresult GetValue(nsCSSProperty aProperty, nsAString& aValue);
+  nsresult GetValue(const nsAString& aProperty, nsAString& aValue);
 
   nsCSSDeclaration* GetImportantValues();
   PRBool GetValueIsImportant(nsCSSProperty aProperty);
-  PRBool GetValueIsImportant(const nsAReadableString& aProperty);
+  PRBool GetValueIsImportant(const nsAString& aProperty);
 
   PRUint32 Count();
-  nsresult GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn);
+  nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn);
 
   PRInt32 GetStyleImpact() const;
 
-  nsresult ToString(nsAWritableString& aString);
+  nsresult ToString(nsAString& aString);
 
   nsCSSDeclaration* Clone() const;
 
@@ -605,12 +605,12 @@ protected:
   nsresult RemoveProperty(nsCSSProperty aProperty);
 
 private:
-  PRBool   AppendValueToString(nsCSSProperty aProperty, nsAWritableString& aResult);
-  PRBool   AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAWritableString& aResult);
+  PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult);
+  PRBool   AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult);
   nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
   PRBool operator==(const nsCSSDeclaration& aCopy) const;
 
-  void TryBorderShorthand(nsAWritableString & aString,
+  void TryBorderShorthand(nsAString & aString,
                           PRInt32 & aBorderTopWidth,
                           PRInt32 & aBorderTopStyle,
                           PRInt32 & aBorderTopColor,
@@ -623,28 +623,28 @@ private:
                           PRInt32 & aBorderRightWidth,
                           PRInt32 & aBorderRightStyle,
                           PRInt32 & aBorderRightColor);
-  void  TryBorderSideShorthand(nsAWritableString & aString,
+  void  TryBorderSideShorthand(nsAString & aString,
                                nsCSSProperty  aShorthand,
                                PRInt32 & aBorderWidth,
                                PRInt32 & aBorderStyle,
                                PRInt32 & aBorderColor);
-  void  TryMarginOrPaddingShorthand(nsAWritableString & aString,
+  void  TryMarginOrPaddingShorthand(nsAString & aString,
                                     nsCSSProperty aShorthand,
                                     PRInt32 & aTop, PRInt32 & aBottom,
                                     PRInt32 & aLeft, PRInt32 & aRight);
-  void  TryBackgroundShorthand(nsAWritableString & aString,
+  void  TryBackgroundShorthand(nsAString & aString,
                                PRInt32 & aBgColor, PRInt32 & aBgImage,
                                PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
                                PRInt32 & aBgPositionX,
                                PRInt32 & aBgPositionY);
-  void  TryBackgroundPosition(nsAWritableString & aString,
+  void  TryBackgroundPosition(nsAString & aString,
                               PRInt32 & aBgPositionX,
                               PRInt32 & aBgPositionY);
 
   PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
                                   PRInt32 aThird, PRInt32 aFourth);
   void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                          nsAWritableString& aResult);
+                                          nsAString& aResult);
 
 protected:
     //

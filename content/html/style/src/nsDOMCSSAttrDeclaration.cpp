@@ -69,8 +69,8 @@ nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
 }
 
 NS_IMETHODIMP
-nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyName,
-                                             nsAWritableString& aReturn)
+nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAString& aPropertyName,
+                                             nsAString& aReturn)
 {
   nsCSSDeclaration* decl;
   nsresult rv = GetCSSDeclaration(&decl, PR_TRUE);
@@ -243,8 +243,8 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIContent* aContent,
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropName,
-                                                 const nsAReadableString& aPropValue)
+nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAString& aPropName,
+                                                 const nsAString& aPropValue)
 {
   nsCSSDeclaration* decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
@@ -292,7 +292,7 @@ nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAReadableString& aPropN
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
+nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAString& aDecl,
                                                PRBool aParseOnlyOneDecl,
                                                PRBool aClearOldDecl)
 {
