@@ -116,4 +116,9 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor);
 // Determins brightness for a specific color
 extern "C" NS_GFX_(int) NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 
+// function to convert from RGB color space to HSV color space 
+extern "C" NS_GFX_(void) RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue);
+// function to convert from HSV color space to RGB color space 
+extern "C" NS_GFX_(void) HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue);
+
 #endif /* nsColor_h___ */

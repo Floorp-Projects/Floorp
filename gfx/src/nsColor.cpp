@@ -40,6 +40,9 @@
 #include "nsColor.h"
 #include "nsColorNames.h"
 #include "nsString.h"
+#include "nscore.h"
+#include "nsCoord.h"
+#include "nsUnitConversion.h"
 
 static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
 {
@@ -444,4 +447,111 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
     b = 0;
 
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
+}
+
+// Function to convert RGB color space into the HSV colorspace
+// Hue is the primary color defined from 0 to 359 degrees
+// Saturation is defined from 0 to 255.  The higher the number.. the deeper the color
+// Value is the brightness of the color. 0 is black, 255 is white.  
+extern "C" NS_GFX_(void)
+RGB2HSV(nscolor aColor,PRUint16 &aHue,PRUint16 &aSat,PRUint16 &aValue)
+{
+PRUint16  r,g,b,max,min,delta;
+float     hue;
+
+  r = NS_GET_R(aColor);
+  g = NS_GET_G(aColor);
+  b = NS_GET_B(aColor);
+
+  if (r>g) {
+    max = r;
+    min = g;
+  } else {
+    max = g;
+    min = r;
+  }
+
+  if (b>max) {
+    max = b;
+  }
+  if (b<min) {
+    min = b;
+  }
+
+  // value or brightness will always be the max of all the colors(RGB)
+  aValue = max;   
+  delta = max-min;
+
+  aSat = (max!=0)?((delta*255)/max):0;
+
+  if (aSat==0) {
+    hue = 1000;
+  } else {
+    if(r==max){
+      hue=(float)(g-b)/(float)delta;
+    } else if (g==max) {
+      hue= 2.0F+(float)(b-r)/(float)delta;
+    } else if (b==max) {
+      hue = 4.0F+(float)(r-g)/(float)delta;
+    }
+  }
+
+  if(hue<999) {
+    hue*=60;
+    if(hue<0){
+      hue+=360;
+    }
+  } else {
+    hue=0;
+  }
+
+  aHue = (int)hue;
+}
+
+// Function to convert HSV color space into the RGB colorspace
+// Hue is the primary color defined from 0 to 359 degrees
+// Saturation is defined from 0 to 255.  The higher the number.. the deeper the color
+// Value is the brightness of the color. 0 is black, 255 is white.  
+extern "C" NS_GFX_(void)
+HSV2RGB(nscolor &aColor,PRUint16 aHue,PRUint16 aSat,PRUint16 aValue)
+{
+PRUint16  r,g,b;
+PRUint16  i,p,q,t;
+double    h,f,percent;
+
+  if ( aSat == 0 ){
+    // achromatic color, no hue is defined
+    r = aValue;
+    g = aValue;
+    b = aValue;
+  } else {
+    // hue in in degrees around the color wheel defined from
+    // 0 to 360 degrees.  
+    if (aHue >= 360) {
+      aHue = 0;
+    }
+
+    // we break the color wheel into 6 areas.. these
+    // areas define how the saturation and value define the color.
+    // reds behave differently than the blues
+    h = (double)aHue / 60.0;
+    i = (int) floor(h);
+    f = h-(double)i;
+    percent = ((double)aValue/255.0);   // this needs to be a value from 0 to 1, so a percentage
+                                        // can be calculated of the saturation.
+    p = (PRIntn)(percent*(255-aSat));
+    q = (PRIntn)(percent*(255-(aSat*f)));
+    t = (PRIntn)(percent*(255-(aSat*(1.0-f))));
+
+    // i is guarenteed to never be larger than 5.
+    switch(i){
+      case 0: r = aValue; g = t; b = p;break;
+      case 1: r = q; g = aValue; b = p;break;
+      case 2: r = p; g = aValue; b = t;break;
+      case 3: r = p; g = q; b = aValue;break;
+      case 4: r = t; g = p; b = aValue;break;
+      case 5: r = aValue; g = p; b = q;break;
+    }
+  }
+  aColor = NS_RGB(r,g,b);
 }
