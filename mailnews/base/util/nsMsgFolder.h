@@ -167,6 +167,7 @@ public:
   NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
 
   NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, nsIMsgFolder **_retval); 
+  NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable);
 
   // end NS_DECL_NSIMSGFOLDER
   
@@ -237,6 +238,7 @@ protected:
                                          unknown; -2 means unknown but we already
                                          tried to find out.) */
   PRInt32 mNumTotalMessages;         /* count of existing messages. */
+  PRBool mNotifyCountChanges;
   PRUint32 mExpungedBytes;
   nsCOMPtr<nsISupportsArray> mSubFolders;
   nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to

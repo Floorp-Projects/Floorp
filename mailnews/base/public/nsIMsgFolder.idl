@@ -330,4 +330,13 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
 
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
+
+	/**
+	 *	Turn notifications on/off for various notification types. Currently only supporting
+	 *  allMessageCountNotifications which refers to both total and unread message counts.
+	 */
+	const unsigned long allMessageCountNotifications    = 0;
+
+	void enableNotifications(in long notificationType, in boolean enable);
+
 };

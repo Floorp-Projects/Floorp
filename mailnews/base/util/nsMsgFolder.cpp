@@ -94,7 +94,8 @@ nsMsgFolder::nsMsgFolder(void)
     mIsServerIsValid(PR_FALSE),
     mIsServer(PR_FALSE),
     mDeleteIsMoveToTrash(PR_TRUE),
-    mBaseMessageURI(nsnull)
+    mBaseMessageURI(nsnull),
+	mNotifyCountChanges(PR_TRUE)
 	{
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -2213,6 +2214,10 @@ nsMsgFolder::NotifyUnicharPropertyChanged(nsIAtom *property,
 
 nsresult nsMsgFolder::NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
 {
+	//Don't send off count notifications if they are turned off.
+	if(!mNotifyCountChanges && ((property == kTotalMessagesAtom) ||( property ==  kTotalUnreadMessagesAtom)))
+		return NS_OK;
+
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
 	{
@@ -2400,3 +2405,18 @@ nsMsgFolder::GetFilterList(nsIMsgFilterList **aResult)
 
   return server->GetFilterList(aResult);
 }
+
+/* void enableNotifications (in long notificationType, in boolean enable); */
+NS_IMETHODIMP nsMsgFolder::EnableNotifications(PRInt32 notificationType, PRBool enable)
+{
+	if(notificationType == nsIMsgFolder::allMessageCountNotifications)
+	{
+		mNotifyCountChanges = enable;
+		if(enable)
+			UpdateSummaryTotals(PR_TRUE);
+		return NS_OK;
+	}
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
