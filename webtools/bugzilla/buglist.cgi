@@ -253,7 +253,7 @@ if {[info exists FORM(order)]} {
             set FORM(order) bugs.priority
         }
         *Assign* {
-            set FORM(order) "assign.login_name, bugs.bug_status, priorities.rank, bugs.bug_id"
+            set FORM(order) "assign.login_name, bugs.bug_status, priority, bugs.bug_id"
         }
         default {
             set FORM(order) "bugs.bug_status, priorities.rank, assign.login_name, bugs.bug_id"
