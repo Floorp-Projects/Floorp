@@ -268,7 +268,7 @@ function InitDialog()
   var halign = globalTableElement.align.toLowerCase();
   if (halign == centerStr)
     dialog.TableAlignList.selectedIndex = 1;
-  else if (halign == bottomStr)
+  else if (halign == rightStr)
     dialog.TableAlignList.selectedIndex = 2;
   else // Default = left
     dialog.TableAlignList.selectedIndex = 0;
@@ -535,9 +535,6 @@ function ChangeSelection(newType)
   // Keep the same focus CellElement, just change the type
   DoCellSelection();
   SetSelectionButtons();
-
-  // Enable/Disable appropriate span textboxes
-  SetSpanEnable();
 
   // Note: globalCellElement should still be a clone of CellElement
 }
@@ -1132,12 +1129,9 @@ function ApplyTableAttributes()
     }
   }
 
-  CloneAttribute(TableElement, globalTableElement, "width");
-  CloneAttribute(TableElement, globalTableElement, "border");
-  CloneAttribute(TableElement, globalTableElement, "cellspacing");
-  CloneAttribute(TableElement, globalTableElement, "cellpadding");
-  CloneAttribute(TableElement, globalTableElement, "align");
-  CloneAttribute(TableElement, globalTableElement, "bgcolor");
+  // Clone all remaining attributes to pick up
+  //  anything changed by Advanced Edit Dialog
+  editorShell.CloneAttributes(TableElement, globalTableElement);
 }
 
 function ApplyCellAttributes()
@@ -1229,17 +1223,11 @@ function Apply()
   {
     editorShell.BeginBatchChanges();
 
-    // Can't use editorShell.CloneAttributes -- we must change only
-    //   attributes that are checked!
     ApplyTableAttributes();
 
     // We may have just a table, so check for cell element
     if (globalCellElement)
-    {
       ApplyCellAttributes();
-      // Be sure user didn't mess up table by setting incorrect span values
-//      editorShell.NormalizeTable(TableElement);
-    }
 
     editorShell.EndBatchChanges();
 
