@@ -91,8 +91,6 @@ public BrowserControl getBrowserControl() {
  * Subclasses should override this and call super.delete() at the end of
  * their overridden delete() method.
 
- * @see org.mozilla.webclient.wrapper_native.ImplObjectNative#delete
-
  */
 
 public void delete()

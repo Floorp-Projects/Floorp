@@ -34,7 +34,7 @@ import java.lang.Math;
  * introduce mutability.  A mutable range will return true from 
  * isMutable().  
  *
- * @version  $Id: Range.java,v 1.2 1999/11/06 02:25:56 dmose%mozilla.org Exp $
+ * @version  $Id: Range.java,v 1.3 2005/03/15 02:49:16 edburns%acm.org Exp $
  * @author   The LFC Team (Rob Davis, Paul Kim, Alan Chung, Ray Ryan, etc)
  * @author   David-John Burrowes (he moved it to the AU package)
  * @see Range#isMutable()
@@ -51,7 +51,7 @@ public class Range extends Object implements Cloneable, Serializable {
      * The RCSID for this class.
      */
     private static final String RCSID =
-        "$Id: Range.java,v 1.2 1999/11/06 02:25:56 dmose%mozilla.org Exp $";
+        "$Id: Range.java,v 1.3 2005/03/15 02:49:16 edburns%acm.org Exp $";
 
     /**
      *   A zero range
@@ -80,7 +80,7 @@ public class Range extends Object implements Cloneable, Serializable {
      * Creates an instance of Range from another Range object 
      * otherRange which must be non-null.
      *
-     * @param	range	the reference range to create this range from	
+     * @param	otherRange	the reference range to create this range from	
      * @exception  IllegalArgumentException if otherRange is null
      */
     public Range(Range otherRange) {
@@ -262,7 +262,7 @@ public class Range extends Object implements Cloneable, Serializable {
      * otherRange. A zero-length range has no overlapping elements
      * with any range.
      *
-     * @param	a range to check overlaps with this range
+     * @param otherRange	a range to check overlaps with this range
      * @exception  IllegalArgumentException if otherRange is null
      * @return	number of elements in both this range and otherRange
      */

@@ -293,8 +293,8 @@ public class Utilities extends Object {
     /**
      *
      * <p>This method tries to load the resource
-     * <code>META-INF/services/&gt;interfaceClassName&gt;</code>, where
-     * <code>&gt;interfaceClassName&lt;</code> is the argument to this
+     * <code>META-INF/services/&lt;interfaceClassName&gt;</code>, where
+     * <code>&lt;interfaceClassName&gt;</code> is the argument to this
      * method.  If the resource is found, interpret it as a
      * <code>Properties</code> file and read out its first line.
      * Interpret the first line as the fully qualified class name of a

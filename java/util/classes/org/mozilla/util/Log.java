@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -26,11 +26,9 @@ package org.mozilla.util;
 import java.util.Date;
 
 /**
- * <P>
- * <B>Log</B>
- * </P>
+ * <p>Logging facility.</p>
  * @author Keith Bernstein
- * @version $Id: Log.java,v 1.2 1999/11/06 02:25:55 dmose%mozilla.org Exp $
+ * @version $Id: Log.java,v 1.3 2005/03/15 02:49:16 edburns%acm.org Exp $
  */
 
 public class Log extends Object {
@@ -40,25 +38,28 @@ public class Log extends Object {
     static int showTimestampPrefix = 1;
     
     /**
-    * This string will be prepended to all output from this class.
+    * <p>This string will be prepended to all output from this
+    * class.</p>
     *
-    * This string is usually the application name, e.g. "JavaPlan".
+    * <p>This string is usually the application name, e.g. "JavaPlan".</p>
     *
-    * It is useful because it includes a timestamp and the base string (usually the
-    * application name), so that if two apps are launched from the same commandline
-    * (for example), with "&", or one app invokes another, it is clear who the message
-    * is comming from. The time stamp can help see how long operations took, etc.
+    * <p>It is useful because it includes a timestamp and the base string
+    * (usually the application name), so that if two apps are launched
+    * from the same commandline (for example), with "&", or one app
+    * invokes another, it is clear who the message is comming from. The
+    * time stamp can help see how long operations took, etc.</p>
     *
-    * If you don't want your messages prefixed with anything (no time stamp or name), you must
-    * pass "null" for "applicationName".
+    * <p>If you don't want your messages prefixed with anything (no time
+    * stamp or name), you must pass "null" for "applicationName".</p>
     *
-    * If this method is never called, "applicationName" will default to:
-    *    "APPLICATION NAME UNKNOWN [call setApplicationName from main]"
+    * <p>If this method is never called, "applicationName" will default
+    * to: "APPLICATION NAME UNKNOWN [call setApplicationName from
+    * main]"</p>
     * 
     */
     static public synchronized void setApplicationName(String newApplicationName) {
-	// It's really unfortunate that we can't discover this dynamically.
-	applicationName = newApplicationName;
+        // It's really unfortunate that we can't discover this dynamically.
+        applicationName = newApplicationName;
     }
     
     /**
@@ -114,9 +115,10 @@ public class Log extends Object {
     }
     
     /**
-    * Incrememnts or decrements whether or not to prefix logged messages with a timestamp.
-    * Two (or "n") calls with a value of "false" must be followed by two (or "n") calls
-    * with a value of "true" to reenable timestamp prefixes.
+    * Incrememnts or decrements whether or not to prefix logged messages
+    * with a timestamp.  Two (or "n") calls with a value of "false" must
+    * be followed by two (or "n") calls with a value of "true" to
+    * reenable timestamp prefixes.
     */
     static public synchronized void enableTimestampPrefix(boolean enable) {
 	if (enable) {
@@ -127,7 +129,8 @@ public class Log extends Object {
     }
 
     /**
-    * Writes "infoMessage" to stdout, prefixed by the string "ApplicationName: "
+    * Writes "infoMessage" to stdout, prefixed by the string
+    * "ApplicationName: "
     */
     static public synchronized void log(Object infoMessage) {
 	System.out.println(Log.applicationNameWithTimeStamp()+": "+infoMessage);
@@ -135,7 +138,8 @@ public class Log extends Object {
     }
     
     /**
-    * Writes "errorMessage" to stderr, prefixed by the string "ApplicationName error: "
+    * Writes "errorMessage" to stderr, prefixed by the string
+    * "ApplicationName error: "
     */
     static public synchronized void logError(Object errorMessage) {
 	System.err.println(Log.applicationNameWithTimeStamp()+" error: "+errorMessage);
@@ -143,7 +147,8 @@ public class Log extends Object {
     }
     
     /**
-    * Writes "errorMessage" to stderr, prefixed by the string "ApplicationName: "
+    * Writes "errorMessage" to stderr, prefixed by the string
+    * "ApplicationName: "
     */
     static public synchronized void logErrorMessage(Object errorMessage) {
 	System.err.println(Log.applicationNameWithTimeStamp()+": "+errorMessage);
@@ -156,19 +161,22 @@ public class Log extends Object {
     }    
     
     /**
-    * Funnel-point method for printing debug messages.
+    * <p>Funnel-point method for printing debug messages.</p>
     *
-    * Writes "debugMessage" to stderr, prefixed by the string "ApplicationName:"
+    * <p>Writes "debugMessage" to stderr, prefixed by the string
+    * "ApplicationName:"</p>
     *
-    * This method only works if the debugFilter string is found in Debug's list of
-    * filter strings (which you can normally set  on the commandline, see JDApplication),
-    * or if the "ALL" filter has been set into Debug's list of filters, or if the passed
-    * in filter is "", which is considered to always be "set", and will print a line with
-    * "[DEBUG]" listed as the filter.
+    * <p>This method only works if the debugFilter string is found in
+    * Debug's list of filter strings (which you can normally set on the
+    * commandline, see JDApplication), or if the "ALL" filter has been
+    * set into Debug's list of filters, or if the passed in filter is
+    * "", which is considered to always be "set", and will print a line
+    * with "[DEBUG]" listed as the filter.</p>
     *
-    * This method may be called with a "null" debugMessage. A debugMessage is sometimes
-    * unneccesary since the matched filter string is printed with the output anyway, and that
-    * is frequently enough information.
+    * <p>This method may be called with a "null" debugMessage. A
+    * debugMessage is sometimes unneccesary since the matched filter
+    * string is printed with the output anyway, and that is frequently
+    * enough information.</p>
    */
     static public synchronized void logDebugMessage(Object debugMessage, String debugFilter) {
     	if (Debug.containsFilter(debugFilter)) {
@@ -191,16 +199,17 @@ public class Log extends Object {
     }   
      
     /**
-    * Equivalent to calling "logDebugMessage(debugMessage, "ALL")".
-    */
+     * Equivalent to calling "logDebugMessage(debugMessage, "ALL")".
+     */
     static public synchronized void logDebugMessage(Object debugMessage) {
 	logDebugMessage(debugMessage, "ALL");
     }   
 
     /**
-    * Log a message when "aCondition" is true, otherwise be silent.
-    * Equivalent to calling "if (aCondition) logDebugMessage(debugMessage, "")".
-    */
+     * Log a message when "aCondition" is true, otherwise be silent.
+     * Equivalent to calling "if (aCondition)
+     * logDebugMessage(debugMessage, "")".
+     */
     static public synchronized void logDebugMessage(Object debugMessage, boolean aCondition) {
 	if (aCondition) {
 	    Log.logDebugMessage(debugMessage, "");
@@ -208,8 +217,8 @@ public class Log extends Object {
     }   
 
     /**
-    * Log a message when "aCondition" is true, otherwise be silent.
-    */
+     * Log a message when "aCondition" is true, otherwise be silent.
+     */
     static public synchronized void logDebugMessage(Object anInstance, Object debugMessage, boolean aCondition) {
 	if (aCondition) {
 	    Log.logDebugMessage(Debug.getNameAndHashCode(anInstance)+": "+debugMessage, "");

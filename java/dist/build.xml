@@ -30,7 +30,7 @@
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="2_0_a2"/>
+  <property name="version" value="2_0_a3"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -40,8 +40,16 @@
   <property environment="myenv" />
 
   <property name="dist.home" value="${basedir}/dist" />
+  <property name="dist.javadocs" value="${dist.home}/javadocs" />
   <property name="source.home" value="${basedir}/.." />
   <property name="moz.dist" value="${myenv.MOZ_SRC}/mozilla/dist" />
+  <property name="javadoc.private"  value="false"/>
+  <property name="javadoc.protected"  value="true"/>
+
+  <path id="compile.classpath">
+    <pathelement location="${dist.home}/classes"/>
+  </path>
+
 
   <target name="props">
     <condition property="so.prefix" value="">
@@ -85,7 +93,36 @@
   
     <mkdir dir="${dist.home}" />
     <mkdir dir="${dist.home}/components" />
+    <mkdir dir="${dist.javadocs}" />
 
+  </target>
+
+  <target name="javadoc_check">
+    <uptodate property="javadoc.notrequired" targetfile="${dist.javadocs}/packages.html" >
+        <srcfiles dir= "${source.home}" includes="**/*.java"/>
+    </uptodate>
+  </target>
+
+  <target name="javadocs" depends="prepare, javadoc_check"
+          unless="javadoc.notrequired"
+          description="Create the JavaDoc API documentation">
+    <javadoc packagenames="org.mozilla.*"
+             destdir="${dist.javadocs}"
+             Overview="${source.home}/webclient/classes_spec/org/mozilla/webclient/overview.html"
+             private="${javadoc.private}"
+             protected="${javadoc.protected}"
+             windowtitle="${Name} (${version})"
+             doctitle="${Name} (${version})"
+             bottom="Copyright &#169; 2002-2005 Mozilla.org All Rights Reserved.">
+       <fileset dir="${source.home}">
+         <include name="**/*.java"/>
+         <exclude name="**/impl/**/*.java" />
+         <exclude name="**/wrapper_nonnative/**/*.java" />
+         <exclude name="**/test*/**/*.java" />
+         <exclude name="**/*Impl.java" />
+       </fileset>
+      <classpath refid="compile.classpath"/>
+    </javadoc>
   </target>
 
   <target name="dist" depends="prepare,compile.test">

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -28,35 +28,34 @@ import java.util.Enumeration;
 import java.util.Date;
 
 /**
- * <P>
- * <B>Debug</B> Vendor of debug "filter" strings set & queried by clients. This allows
- * conditional code to only be executed if a certain filter is set.<BR>
+ * <P>Vendor of debug "filter" strings set & queried by
+ * clients. This allows conditional code to only be executed if a
+ * certain filter is set.</P>
  *
- * <I>Example of use from <B>JAG</B> days:<BR>
- * JDApplication allows the setting of filters from the commandline at app startup time,
- * and Log supports printing debug messages only when a specific filter string has
- * been set.</I>
+ * <I>Example of use from <B>JAG</B> days:<BR />
+ *
+ * <p>JDApplication allows the setting of filters from the commandline
+ * at app startup time, and Log supports printing debug messages only
+ * when a specific filter string has been set.</p></I>
  * 
- * <P>
+ * <P> Alternatively, users can use the System Properties table to
+ * define filter strings at runtime: </p>
  *
- * Alternatively, users can use the System Properties table to define
- * filter strings at runtime: <P>
- *
- * <CODE>
+ * <pre><CODE>
  * java -DDebug.filters=String ... <P>
- * </CODE>
+ * </CODE></pre>
  *
- * where String is comma (,) separated list of constants <B>WITH NO
- * WHITESPACE</B>.  ie "AXISPANEL_PAINT,BODYPANEL_PAINT". <P>
+ * <p>where String is comma (,) separated list of constants <B>WITH NO
+ * WHITESPACE</B>.  ie "AXISPANEL_PAINT,BODYPANEL_PAINT". </P>
  *
  *
- * All filters are case-sensitive.
+ * <p>All filters are case-sensitive.</p>
  *
- * This class also provides various timing routines.
+ * <p>This class also provides various timing routines.</p>
  *
  * </P>
  * @author Keith Bernstein
- * @version $Id: Debug.java,v 1.3 2002/04/12 22:57:18 edburns%acm.org Exp $ */
+ * @version $Id: Debug.java,v 1.4 2005/03/15 02:49:16 edburns%acm.org Exp $ */
 
 public class Debug extends Object {
     static public final String HELP_FILTER_STRING = "HELP";
@@ -101,59 +100,66 @@ public class Debug extends Object {
 	}
     }
 
-/** 
+    /** 
+     * <p>Wait until a debugger attaches.</p>
+     *
+     * <p>Usage:</p>
+     *
+     * <p>Place a call to this method in the earliest possible entry
+     * point of your servlet app.  It will cause the app to enter into
+     * an infinite loop, sleeping until the static var keepWaiting is
+     * set to false.  The idea is that you attach your debugger to the
+     * servlet, then, set a breakpont in this method.  When it is hit,
+     * you use the debugger to set the keepWaiting class var to
+     * false.</p>
+     */
 
-* Usage: <P>
-
-* Place a call to this method in the earliest possible entry point of
-* your servlet app.  It will cause the app to enter into an infinite
-* loop, sleeping until the static var keepWaiting is set to false.  The
-* idea is that you attach your debugger to the servlet, then, set a
-* breakpont in this method.  When it is hit, you use the debugger to set
-* the keepWaiting class var to false.
-
-*/
-
-public static void waitForDebugger() {
-    while (keepWaiting) {
-	try {
-	    Thread.sleep(5000);
-	}
-	catch (InterruptedException e) {
-	    System.out.println("DebugUtil.waitForDebugger(): Exception: " + 
-			       e.getMessage());
+    public static void waitForDebugger() {
+	while (keepWaiting) {
+	    try {
+		Thread.sleep(5000);
+	    }
+	    catch (InterruptedException e) {
+		System.out.println("DebugUtil.waitForDebugger(): Exception: " + 
+				   e.getMessage());
+	    }
 	}
     }
-}
-
+    
 
     /**
-    * Sets a debug filter, for future consumption by this class, as well as other
-    * utility classes, like Log, etc.
-    *
-    * Virtually all "filters" are simply developer-meaningful strings which will be
-    * tested within developer code, to conditionally execute code.
-    *
-    * There are some predefined filters, which this class actually does something with
-    * (besides simply handing it back when asked for).
-    * 
-    * The predefined filters are:
-    *	HELP
-    *	ALL
-    *	TIMING
-    *
-    * If the "HELP" filter is found, this class will print a message displaying the
-    * predefined filters and what they do.
-    *
-    * If the "ALL" filter is found, this class will return "true" when queried for the 
-    * existence of <B>any</B> filter, effectively turning on all debugging tests.
-    * This is useful for both quick and easy tests, as well as to find forgotten debug
-    * filters (see Log class for more info on this).
-    *
-    * If the "TIMING" filter is specified, then the time routines will always print
-    * their info, regardless of what filter string is passed to them. This is useful
-    * for turning on all timing tests.
-    * */
+     * <p>Sets a debug filter, for future consumption by this class, as
+     * well as other utility classes, like Log, etc.</p>
+     *
+     * <p>Virtually all "filters" are simply developer-meaningful strings
+     * which will be tested within developer code, to conditionally
+     * execute code.</p>
+     *
+     * <p>There are some predefined filters, which this class actually
+     * does something with (besides simply handing it back when asked
+     * for).</p>
+     * 
+     * <p>The predefined filters are:</p>
+     *
+     *	<p>HELP</p>
+     *	<p>ALL</p>
+     *	<p>TIMING</p>
+     *
+     * <p>If the "HELP" filter is found, this class will print a message
+     * displaying the predefined filters and what they do.</p>
+     *
+     * <p>If the "ALL" filter is found, this class will return "true"
+     * when queried for the existence of <B>any</B> filter, effectively
+     * turning on all debugging tests.  This is useful for both quick
+     * and easy tests, as well as to find forgotten debug filters (see
+     * Log class for more info on this).</p>
+     *
+     * <p>If the "TIMING" filter is specified, then the time routines
+     * will always print their info, regardless of what filter string is
+     * passed to them. This is useful for turning on all timing
+     * tests.</p>
+     * 
+     */
     static public synchronized void addFilter(String aFilter) {
 	if (aFilter != null) {
 	    if (filters == null) {
@@ -200,11 +206,11 @@ public static void waitForDebugger() {
     }
     
     /**
-    * Look for any "filter" with the specified prefix.
+    * <p>Look for any "filter" with the specified prefix.</p>
     *
-    * "ALL" is not considered to be a match.
+    * <p>"ALL" is not considered to be a match.</p>
     *
-    * This method works in (normally) O-n time (if no match).
+    * <p>This method works in (normally) O-n time (if no match).</p>
     */
     
     static public synchronized boolean containsFilterWithPrefix(String aFilterPrefix) {
@@ -225,16 +231,19 @@ public static void waitForDebugger() {
     }
     
     /**
-    * Funnel-point method, which takes a filter and an "allFiltersgMatchThisString" string.
-    * See the javadoc for "containsFilter(String aFilter)" for the rest of what this method
-    * does.
+    * <p>Funnel-point method, which takes a filter and an
+    * "allFiltersgMatchThisString" string.  See the javadoc for
+    * "containsFilter(String aFilter)" for the rest of what this method
+    * does.</p>
     *
-    * This method works in (normally) O-1 time.
+    * <p>This method works in (normally) O-1 time.</p>
     *
-    * NOTE: The "allFiltersgMatchThisString" parameter can be used to conditionally execute
-    * code while preventing the "ALL" filter from having any effect. So, the conditional code
-    * should use the test "if (Debug.containsFilter("SomeFilter", ""))" to see if a filter
-    * has been set, and not get a false positive from the "ALL" filter.
+    * <p>NOTE: The "allFiltersgMatchThisString" parameter can be used to
+    * conditionally execute code while preventing the "ALL" filter from
+    * having any effect. So, the conditional code should use the test
+    * "if (Debug.containsFilter("SomeFilter", ""))" to see if a filter
+    * has been set, and not get a false positive from the "ALL"
+    * filter.</p>
     */
     static public synchronized boolean containsFilter(String aFilter, String allFiltersgMatchThisString) {
 	if (((aFilter != null) && ((filters != null) && filters.contains(aFilter)))
@@ -247,22 +256,35 @@ public static void waitForDebugger() {
     }
     
     /**
-    * Returns true if any of the following conditions are true:
-    *   1. The specified filter is contained in the current filter set.
-    *   2. The "ALL" filter is set (this is true even if the passed-in filter is "null").
-    *	3. The passed-in filter is ""... as that filter is considered
-    *      to <B>always</B> be a  match, regardless of the current filter set.
-    *   4. The passed in filter is "null" and the "ALL" filter is currently set.
-    * Otherwise returns false.
-    *
-    * NOTE: This method, and all filtering of this class is case-sensitive.
-    */
+     * <p>Returns true if any of the following conditions are true.</p>
+     *
+     * <ol>
+     *
+     *   <li> The specified filter is contained in the current filter set.</li>
+     *
+     *   <li>The "ALL" filter is set (this is true even if the passed-in
+     *   filter is "null").</li>
+     *
+     *	<li>The passed-in filter is ""... as that filter is considered *
+     *	to <B>always</B> be a match, regardless of the current filter
+     *	set.</li>
+     *
+     *   <li>The passed in filter is "null" and the "ALL" filter is
+     *   currently set.  </li>
+     *
+     * </ol>
+     * 
+     *  <p>Otherwise returns false.</i>
+     *
+     * <p>NOTE: This method, and all filtering of this class is
+     * case-sensitive.</p>
+     */
     static public synchronized boolean containsFilter(String aFilter) {
 	return Debug.containsFilter(aFilter, Debug.ALL_FILTER_STRING);
     }
     
-    // Only used by the timing routines, since they ignore "ALL", but pay attention to
-    // "TIMING".
+    // Only used by the timing routines, since they ignore "ALL", but
+    // pay attention to "TIMING".
     static private synchronized boolean containsTimingFilter(String aFilter) {
 	return Debug.containsFilter(aFilter, Debug.TIMING_FILTER_STRING);
     }
@@ -317,11 +339,13 @@ public static void waitForDebugger() {
     }
 
     /**
-    * Starts a timer which can be stopped using one of the "stopTiming()" methods.
+    * <p>Starts a timer which can be stopped using one of the
+    * "stopTiming()" methods.</p>
     *
-    * This method does not check debug filters... it always does what it's told.
+    * <p>This method does not check debug filters... it always does what
+    * it's told.</p>
     *
-    * Calling this method resets the elapsed time ("lap time").
+    * <p>Calling this method resets the elapsed time ("lap time").</p>
     */
     static public synchronized void startTiming() {
 	startTime = new Date().getTime();
@@ -329,30 +353,43 @@ public static void waitForDebugger() {
     }
     
     /**
-    * Identical to the "startTiming(String logMessage, String aFilter)" method, except it
-    * will only show the message if the filter "TIMING" exists in Debug's filter list.
+    * <p>Identical to the "startTiming(String logMessage, String
+    * aFilter)" method, except it will only show the message if the
+    * filter "TIMING" exists in Debug's filter list.</p>
     */
     static public synchronized void startTiming(String logMessage) {
 	Debug.startTiming(logMessage, Debug.TIMING_FILTER_STRING);
     }
     
     /**
-    * This method does absolutely nothing unless:
-    *   1. The specified filter is contained in the current filter set.
-    *   2. The "TIMING" filter is set (this is true even if the passed-in filter is "null").
-    *	3. The passed-in filter is ""... as that filter is considered
-    *      to <B>always</B> be a match, and so will cause this method to always work,
-    *      regardless of the current filter set.
-    *   NOTE: The "ALL" filter has no effect on timing methods.
+    * <p>This method does absolutely nothing unless one or more of the
+    * following conditions are met.</p>
     *
-    * Otherwise, starts a timer which can be stopped using one of the "stopTiming()" methods
-    * and prints out a logMessage indicating that timing has begun.
+    * <ol>
     *
-    * This method may be called with a "null" logMessage. A logMessage is sometimes
-    * unneccesary since the matched filter string is printed with the output anyway, and that
-    * is frequently enough information.
+    *  <li> The specified filter is contained in the current filter
+    *  set.</li>
     *
-    * Calling this method resets the elapsed time ("lap time").
+    *  <li> The "TIMING" filter is set (this is true even if the passed-in filter is "null").</li>
+    *
+    *  <li>The passed-in filter is ""... as that filter is considered to
+    *  <B>always</B> be a match, and so will cause this method to always
+    *  work, regardless of the current filter set.</li>
+    *
+    * <ol>
+    *
+    * <p> NOTE: The "ALL" filter has no effect on timing methods.</p>
+    *
+    * <p>Otherwise, starts a timer which can be stopped using one of the
+    * "stopTiming()" methods and prints out a logMessage indicating that
+    * timing has begun.</p>
+    *
+    * <p>This method may be called with a "null" logMessage. A
+    * logMessage is sometimes unneccesary since the matched filter
+    * string is printed with the output anyway, and that is frequently
+    * enough information.</p>
+    *
+    * <p>Calling this method resets the elapsed time ("lap time").</p>
     */
     static public synchronized void startTiming(String logMessage, String aFilter) {
 	if (Debug.containsTimingFilter(aFilter)) {
@@ -374,27 +411,26 @@ public static void waitForDebugger() {
     }
     
     /**
-    * Returns the elapsed time since this class was initialized.
-    *
-    * This method does not check debug filters... it always does what it's told.
-    *
-    * Calling this method resets the elapsed time ("lap time").
-    *
-    * This method may be called repeatedly to get "lap" times.
-    */
+     * <p>Returns the elapsed time since this class was initialized.</p>
+     *
+     * <p>This method does not check debug filters... it always does
+     * what it's told.</p>
+     *
+     * <p>Calling this method resets the elapsed time ("lap time").</p>
+     *
+     * <p>This method may be called repeatedly to get "lap" times.</p>
+     */
     static public synchronized long elapsedTimeSinceInitialization() {
 	return Debug.elapsedTime(initializationTime);
     }
 
     /**
-    * Returns the elapsed time since the preceeding startTiming() call,
-    *
-    * This method does not check debug filters... it always does what it's told.
-    *
-    * Calling this method resets the elapsed time ("lap time").
-    *
-    * This method may be called repeatedly to get "lap" times.
-    */
+     * <p>Returns the elapsed time since the preceeding startTiming()
+     * call.  This method does not check debug filters... it always does
+     * what it's told.  Calling this method resets the elapsed time
+     * ("lap time").  This method may be called repeatedly to get "lap"
+     * times.</p>
+     */
     static public synchronized long elapsedTimeSinceStartTime() {
 	if (startTime == 0) {
 	    return 0L; // "startTime()" was never called.
@@ -404,13 +440,14 @@ public static void waitForDebugger() {
     }
 
     /**
-    * Returns the elapsed time since this class was initialized.
+    * <p>Returns the elapsed time since this class was initialized.</p>
     *
-    * This method does not check debug filters... it always does what it's told.
+    * <p>This method does not check debug filters... it always does what
+    * it's told.</p>
     *
-    * Calling this method resets the elapsed time ("lap time").
+    * <p>Calling this method resets the elapsed time ("lap time").</p>
     *
-    * This method may be called repeatedly to get "lap" times.
+    * <p>This method may be called repeatedly to get "lap" times.</p>
     */
     static public synchronized long elapsedTimeSinceElapsedTime() {
 	if (lapTime == 0) {
@@ -421,41 +458,60 @@ public static void waitForDebugger() {
     }
     
     /**
-    * Identical to the "elapsedTime(String logMessage, String aFilter)" method, except it
-    * will only show the message if the filter "TIMING" exists in Debug's filter list.
-    */
+     * <p>Identical to the "elapsedTime(String logMessage, String
+     * aFilter)" method, except it will only show the message if the
+     * filter "TIMING" exists in Debug's filter list.</p>
+     */
     static public synchronized void elapsedTime(String logMessage) {
 	Debug.elapsedTime(logMessage, Debug.TIMING_FILTER_STRING);
     }
 
     /**
-    * This method does absolutely nothing unless:
-    *   1. The specified filter is contained in the current filter set.
-    *   2. The "TIMING" filter is set (this is true even if the passed-in filter is "null").
-    *	3. The passed-in filter is ""... as that filter is considered
-    *      to <B>always</B> be a match, and so will cause this method to always work,
-    *      regardless of the current filter set.
-    *   NOTE: The "ALL" filter has no effect on timing methods.
+    * <p>This method does absolutely nothing unless one or more of the
+    * following conditions are met.</p>
     *
-    * Otherwise, prints the following information:
-    *     1. The elapsed time since initialization of this class.
-    *     2. The elapsed time since the preceeding startTiming() call.
-    *     3. The "lap" time, since the last time "elapsedTime()" was called.
-    *     4. A client-supplied message.
+    * <ol>
+    *
+    * <li> The specified filter is contained in the current filter set.</li>
+    *
+    * <li>The "TIMING" filter is set (this is true even if the passed-in
+    * filter is "null").</li>
+    *
+    * <li> The passed-in filter is ""... as that filter is considered to
+    * <B>always</B> be a match, and so will cause this method to always
+    * work, regardless of the current filter set.</li>
+    *
+    * </ol>
+    *
+    * <p>NOTE: The "ALL" filter has no effect on timing methods.</p>
+    *
+    * <p>Otherwise, prints the following information:</p>
+    *
+    * <li> The elapsed time since initialization of this class.</li>
+    *
+    * <li> The elapsed time since the preceeding startTiming()
+    * call.</li>
+    *
+    * <li> The "lap" time, since the last time "elapsedTime()" was
+    * called.</li>
+    *
+    * <li> A client-supplied message.</li>
     * 
-    * When a filter matches, this method invokes the following methods:
-    *	elapsedTime()
-    *	elapsedTimeSinceInitialization()
-    *	elapsedTimeSinceElapsedTime()
+    * <p>When a filter matches, this method invokes the following methods:</p>
     *
-    * When a filter matches, calling this method resets the elapsed time ("lap time").
+    *	<p>elapsedTime()</p>
+    *	<p>elapsedTimeSinceInitialization()</p>
+    *	<p>elapsedTimeSinceElapsedTime()</p>
     *
+    * <p>When a filter matches, calling this method resets the elapsed
+    * time ("lap time").</p>
     *
-    * This method may be called with a "null" logMessage. A logMessage is sometimes
-    * unneccesary since the matched filter string is printed with the output anyway, and that
-    * is frequently enough information.
+    * <p>This method may be called with a "null" logMessage. A
+    * logMessage is sometimes unneccesary since the matched filter
+    * string is printed with the output anyway, and that is frequently
+    * enough information.</p>
     *
-    * This method may be called repeatedly to get "lap" times.
+    * <p>This method may be called repeatedly to get "lap" times.</p>
     */
     static public synchronized void elapsedTime(String logMessage, String aFilter) {
 	if (Debug.containsTimingFilter(aFilter)) {
@@ -499,10 +555,10 @@ public static void waitForDebugger() {
     }
 
     /**
-    * Print time since start of app, and time since the last time this method
-    * was called.
-    * Call this with a msg you want printed, and a filter.  Then
-    * run with -jsdebug filter and all these timing msgs will come out.
+    * <p>Print time since start of app, and time since the last time
+    * this method was called.  Call this with a msg you want printed,
+    * and a filter.  Then run with -jsdebug filter and all these timing
+    * msgs will come out.</p>
     */
     static public synchronized void printTime( String msg, String aFilter) {
         if ( filters != null && filters.contains( aFilter)) {
@@ -517,8 +573,8 @@ public static void waitForDebugger() {
     }
        
     /**
-    * Returns a String containing the hexadecimal hashCode of the passed in object,
-    * of the form: "0x0000"
+    * <p>Returns a String containing the hexadecimal hashCode of the
+    * passed in object, of the form: "0x0000".</p>
     */
     static public synchronized String getHashCode(Object anObject) {
 	String returnValue;
@@ -532,8 +588,9 @@ public static void waitForDebugger() {
     }
        
     /**
-    * Returns a String containing the class name and hexadecimal hashCode of the
-    * passed in object, of the form: "fully.qualified.ClassName[0x0000]"
+    * <p>Returns a String containing the class name and hexadecimal
+    * hashCode of the passed in object, of the form:
+    * "fully.qualified.ClassName[0x0000]".</p>
     */
     static public synchronized String getNameAndHashCode(Object anObject) {
 	String returnValue;

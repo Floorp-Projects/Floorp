@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -37,109 +37,143 @@ import java.io.FileNotFoundException;
 
 
 /**
+ * <p>The factory from which {@link BrowserControl} instances are
+ * created.</p>
  *
- *  <p><B>BrowserControlFactory</B> uses {@link
- *  Utilities#getImplFromServices} to find an implementation of {@link
- *  WebclientFactory}.  All of the public static methods in this class
- *  simply call through to this implemenatation instance.</p>
+ * <p><B>BrowserControlFactory</B> uses {@link
+ * Utilities#getImplFromServices} to find an implementation of {@link
+ * WebclientFactory}.  All of the public static methods in this class
+ * simply call through to this implementation instance.</p>
  *
- *
- * @version $Id: BrowserControlFactory.java,v 1.11 2004/11/05 06:40:26 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.12 2005/03/15 02:49:16 edburns%acm.org Exp $
  * 
  *
  */
 
-public class BrowserControlFactory extends Object 
-{
-//
-// Protected Constants
-//
+public class BrowserControlFactory extends Object {
+    //
+    // Protected Constants
+    //
+    
+    //
+    // Class Variables
+    //
+    
+    private static WebclientFactory instance = null;
+    
+    //
+    // Constructors and Initializers    
+    //
+    
+    private BrowserControlFactory() {
+	Assert.assert_it(false, "This class shouldn't be constructed.");
+    }
+    
+    //
+    // Class methods
+    //
 
-//
-// Class Variables
-//
-
-private static WebclientFactory instance = null;
-
-//
-// Constructors and Initializers    
-//
-
-private BrowserControlFactory()
-{
-    Assert.assert_it(false, "This class shouldn't be constructed.");
-}
-
-//
-// Class methods
-//
-
-public static void setProfile(String profileName) 
-{
-    getInstance().setProfile(profileName);
-}
-
-/**
- *
- * <p>Initialize the webclient API passing in the path to the browser
- * binary, if necessary.  This must be the first method called in the
- * Webclient API.</p>
- * 
- * <p>If we are embedding a native browser, calling this method will
- * cause the native libraries to be loaded into the JVM.</p>
- *
- * @param absolutePathToNativeBrowserBinDir if non-<code>null</code>
- * this must be the path to the bin dir of the native browser, including
- * the bin.  ie: "D:\\Projects\\mozilla\\dist\\win32_d.obj\\bin".  When
- * embedding a non-native browser, this may be null.
- *
- */
-
-public static void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
-{
-    getInstance().setAppData(absolutePathToNativeBrowserBinDir);
-}
-
-/**
- *
- * @deprecated Use {@link #setAppData(java.lang.String)} instead.
- */
-
-public static void setAppData(String notUsed, String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
-{
-    getInstance().setAppData(absolutePathToNativeBrowserBinDir);
-}
-
-public static void appTerminate() throws Exception
-{
-    getInstance().appTerminate();
-}
-
-public static BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException
-{
-    BrowserControl result = null;
-    result = getInstance().newBrowserControl();
-    return result;
-}
-
-public static void deleteBrowserControl(BrowserControl toDelete)
-{
-    getInstance().deleteBrowserControl(toDelete);
-}
-
-//
-// helper methods
-// 
-
-protected static WebclientFactory getInstance() 
-{
-    if (null != instance) {
-        return instance;
+    /**
+     * <p>If called before the first {@link BrowserControl} has been
+     * created, set the name of the profile to use for this browser
+     * session.  If the underlying browser does not support the concept
+     * of profiles, this method is a no-op.</p>
+     *
+     * @param profileName the name of the profile
+     */
+    
+    public static void setProfile(String profileName) {
+	getInstance().setProfile(profileName);
     }
 
-    instance = (WebclientFactory) 
-       Utilities.getImplFromServices("org.mozilla.webclient.WebclientFactory");
-    return instance;
-}
+    /**
+     *
+     * <p>Initialize the webclient API passing in the path to the browser
+     * binary, if necessary.  This must be the first method called in the
+     * Webclient API, and it must be called once and only once.</p>
+     * 
+     * <p>If we are embedding a native browser, calling this method will
+     * cause the native libraries to be loaded into the JVM.</p>
+     *
+     * @param absolutePathToNativeBrowserBinDir if non-<code>null</code>
+     * this must be the path to the bin dir of the native browser, including
+     * the bin.  ie: "D:\\Projects\\mozilla\\dist\\win32_d.obj\\bin".  When
+     * embedding a non-native browser, this may be null.
+     *
+     */
+    
+    public static void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException {
+	getInstance().setAppData(absolutePathToNativeBrowserBinDir);
+    }
 
+    /**
+     *
+     * @deprecated Use {@link #setAppData(java.lang.String)} instead.
+     */
+    
+    public static void setAppData(String notUsed, String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException {
+	getInstance().setAppData(absolutePathToNativeBrowserBinDir);
+    }
+
+    /**
+     * <p>This method must be called when the application no longer
+     * needs to use the Webclient API for the rest of its lifetime.</p>
+     */
+    
+    public static void appTerminate() throws Exception {
+	getInstance().appTerminate();
+    }
+
+    /**
+     * <p>Create, initialize, and return a new {@link BrowserControl}
+     * instance.  There is one <code>BrowserControl</code> instance per
+     * browser window.  For example, in a tabbed browser application
+     * with three browser tabs open, there will be three
+     * <code>BrowserControl</code> instances, one for each tab.  Also,
+     * any pop-up windows that are created during the course of a user
+     * session also correspond to a <code>BrowserControl</code>
+     * instance.</p>
+     */
+
+    public static BrowserControl newBrowserControl() throws InstantiationException, IllegalAccessException, IllegalStateException {
+	BrowserControl result = null;
+	result = getInstance().newBrowserControl();
+	return result;
+    }
+
+    /**
+     * <p>Delete a {@link BrowserControl} instance created with {@link
+     * #newBrowserControl}.  This method must be called when the user no
+     * longer needs a <code>BrowserControl</code> instance.  For
+     * example, when a browser tab closes.</p>
+     *
+     * @param toDelete the <code>BrowserControl</code> instance to
+     * delete.
+     */
+    
+    public static void deleteBrowserControl(BrowserControl toDelete) {
+	getInstance().deleteBrowserControl(toDelete);
+    }
+    
+    //
+    // helper methods
+    // 
+
+    /**
+     * <p>This method enables separating the webclient interface from
+     * its implementation via the {@link Utilities#getImplFromServices}
+     * method.</p>
+     */
+    
+    protected static WebclientFactory getInstance() 
+    {
+	if (null != instance) {
+	    return instance;
+	}
+	
+	instance = (WebclientFactory) 
+	    Utilities.getImplFromServices("org.mozilla.webclient.WebclientFactory");
+	return instance;
+    }
+    
 } // end of class BrowserControlFactory

@@ -37,7 +37,7 @@ public interface Navigation2 extends Navigation
 
 /**
 
- * @param absoluteUrl, must be absolute
+ * @param absoluteUrl must be absolute
 
  * @param target null at the moment
 
