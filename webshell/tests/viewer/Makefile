@@ -21,7 +21,6 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE=EXE
 PROGRAM=./$(OBJDIR)/viewer
 
-
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
@@ -36,30 +35,21 @@ DIRS	=
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
-EX_LIBS = \
-	$(DIST)/bin/libwidgetunix.so	\
-	$(DIST)/bin/libgfxunix.so	\
+MYLIBS = \
 	$(DIST)/bin/libraptorbase.so	\
-	$(DIST)/bin/libxpcom.so	\
-	$(DIST)/bin/libreg.so	\
-	$(DIST)/bin/libplc21.so	\
+	$(DIST)/bin/libraptorgfx.so	\
+	$(DIST)/bin/libraptorhtml.so	\
+	$(DIST)/bin/libgfxunix.so	\
+	$(DIST)/bin/libxpcom.so	        \
+	$(DIST)/bin/libreg.so	        \
+	$(DIST)/bin/libplc21.so	        \
 	$(DIST)/bin/libplds21.so	\
 	$(DIST)/bin/libnspr21.so	\
+	$(DIST)/bin/libnetlib.so	\
+	$(DIST)/bin/libwidgetunix.so	\
 	$(NULL)
 
-#PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
-
-#TARGETS = $(PROGS)
-
 include $(DEPTH)/config/rules.mk
-
-#$(OBJDIR)/%.o: %.cpp
-#	@$(MAKE_OBJDIR)
-#	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
-
-#$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-#	@$(MAKE_OBJDIR)
-#	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11
 
 
 install:: $(PROGRAM)
