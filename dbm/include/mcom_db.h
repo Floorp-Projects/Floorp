@@ -36,7 +36,9 @@
 #ifndef _DB_H_
 #define	_DB_H_
 
+#ifndef HAVE_SYS_CDEFS_H
 #include "cdefs.h"
+#endif
 #include "prtypes.h"
 
 #ifdef __sgi
