@@ -821,7 +821,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
     nsCOMArray<nsIDOMNode> arrayOfNodes;
     res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, kAlign, PR_TRUE);
     if (NS_FAILED(res)) return res;                                 
-    nodeToExamine = arrayOfNodes[0];
+    nodeToExamine = arrayOfNodes.SafeObjectAt(0);
   }
 
   if (!nodeToExamine) return NS_ERROR_NULL_POINTER;
@@ -3352,14 +3352,14 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
       // remember our new block for postprocessing
       mNewBlock = theBlock;
       // delete anything that was in the list of nodes
-      nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+      nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes.SafeObjectAt(0);
       while (curNode)
       {
         res = mHTMLEditor->DeleteNode(curNode);
         if (NS_FAILED(res)) return res;
         res = arrayOfNodes.RemoveObjectAt(0);
         if (NS_FAILED(res)) return res;
-        curNode = arrayOfNodes[0];
+        curNode = arrayOfNodes.SafeObjectAt(0);
       }
       // put selection in new block
       res = aSelection->Collapse(theBlock,0);
@@ -3493,14 +3493,14 @@ nsHTMLEditRules::WillCSSIndent(nsISelection *aSelection, PRBool *aCancel, PRBool
     mNewBlock = theBlock;
     RelativeChangeIndentationOfElementNode(theBlock, +1);
     // delete anything that was in the list of nodes
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes.SafeObjectAt(0);
     while (curNode)
     {
       res = mHTMLEditor->DeleteNode(curNode);
       if (NS_FAILED(res)) return res;
       res = arrayOfNodes.RemoveObjectAt(0);
       if (NS_FAILED(res)) return res;
-      curNode = arrayOfNodes[0];
+      curNode = arrayOfNodes.SafeObjectAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
@@ -3640,14 +3640,14 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
     // remember our new block for postprocessing
     mNewBlock = theBlock;
     // delete anything that was in the list of nodes
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes.SafeObjectAt(0);
     while (curNode)
     {
       res = mHTMLEditor->DeleteNode(curNode);
       if (NS_FAILED(res)) return res;
       res = arrayOfNodes.RemoveObjectAt(0);
       if (NS_FAILED(res)) return res;
-      curNode = arrayOfNodes[0];
+      curNode = arrayOfNodes.SafeObjectAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(theBlock,0);
@@ -8701,14 +8701,14 @@ nsHTMLEditRules::WillAbsolutePosition(nsISelection *aSelection, PRBool *aCancel,
     // remember our new block for postprocessing
     mNewBlock = thePositionedDiv;
     // delete anything that was in the list of nodes
-    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[0];
+    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes.SafeObjectAt(0);
     while (curNode)
     {
       res = mHTMLEditor->DeleteNode(curNode);
       if (NS_FAILED(res)) return res;
       res = arrayOfNodes.RemoveObjectAt(0);
       if (NS_FAILED(res)) return res;
-      curNode = arrayOfNodes[0];
+      curNode = arrayOfNodes.SafeObjectAt(0);
     }
     // put selection in new block
     res = aSelection->Collapse(thePositionedDiv,0);
