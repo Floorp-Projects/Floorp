@@ -37,8 +37,8 @@ document.forms['f'].id.focus();
 This is a case-insensitive ``all words as substrings'' search;
 words are separated by spaces. 
 By default, the following fields are relevant: Summary, Keywords, 
-Product, Component, Status Whiteboard. If you enter only a single 
-word, the URL field is included in the search, too.
+Product, Component, Status Whiteboard. If a word looks like a part of a
+URL, that field is included in the search, too.
 <p>
 The generic format for a ``word'' is
 &nbsp;<tt>field1,...,fieldN:value1,...,valueM</tt>&nbsp;.
@@ -50,6 +50,8 @@ has an email address that contains
 &nbsp;<tt>ibm</tt>&nbsp; or &nbsp;<tt>sun</tt>&nbsp;.
 If only &nbsp;<tt>value1,...,valueM</tt>&nbsp; is given,
 the prefix (roughly) defaults to &nbsp;<tt>summary,keywords,product,component,statuswhiteboard:</tt>&nbsp; as noted above.
+You can use &nbsp;<tt>-<i>word</i></tt>&nbsp; to express the logical negation
+of &nbsp;<tt><i>word</i></tt>.&nbsp;
 <p>
 Here is a complete listing of available fields (the Shortcut column is just 
 for access speed):
@@ -192,7 +194,7 @@ for access speed):
   <td>Bug Description / Comments (long text)</td>
 </tr>
 <tr>
-  <td><i>one-word queries only</i></td>
+  <td><i>depends</i></td>
   <td>&nbsp;</td>
   <td><tt>url</tt></td>
   <td>&nbsp;</td>
