@@ -23,6 +23,7 @@
 #include "nsIComponentManager.h"
 #include "pratom.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);

@@ -289,7 +289,7 @@ nsComposeAppCore::NewMessage(const nsString& aUrl)
 	nsresult rv;
 	nsString controllerCID;
 
-	nsIAppShellService* appShell
+	nsIAppShellService* appShell;
     rv = nsServiceManager::GetService(kAppShellServiceCID,
                                       nsIAppShellService::GetIID(),
                                       (nsISupports**)&appShell);
