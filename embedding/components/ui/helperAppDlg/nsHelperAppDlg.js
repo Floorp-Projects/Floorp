@@ -63,6 +63,7 @@ function nsHelperAppDialog() {
     this.elements  = new Array;
     this.updateSelf = true;
     this.mTitle    = "";
+    this.mIsMac    = false;
 }
 
 nsHelperAppDialog.prototype = {
@@ -106,6 +107,7 @@ nsHelperAppDialog.prototype = {
          // Hook this object to the dialog.
          this.mDialog.dialog = this;
          // Watch for error notifications.
+         this.mIsMac = (this.mDialog.navigator.platform.indexOf( "Mac" ) != -1);
          this.progressListener.helperAppDlg = this;
          this.mLauncher.setWebProgressListener( this.progressListener );
     },
@@ -385,6 +387,15 @@ nsHelperAppDialog.prototype = {
             this.dialogElement( "useSystemDefault" ).label = this.replaceInsert( this.getString( "defaultApp" ), 1, desc );
         }
     },
+
+    // getPath:
+    getPath: function(file) {
+        if (this.mIsMac) {
+            return file.leafName || file.path;
+        }
+
+        return file.path;
+    },
     
     // initAppAndSaveToDiskValues:
     initAppAndSaveToDiskValues: function() {
@@ -395,12 +406,12 @@ nsHelperAppDialog.prototype = {
         
         // Fill application name textbox.
         if (this.chosenApp && this.chosenApp.path) {
-            this.dialogElement( "appPath" ).value = this.chosenApp.path;
+            this.dialogElement( "appPath" ).value = this.getPath(this.chosenApp);
         }
-        
+
+        var useDefault = this.dialogElement( "useSystemDefault" );;
         if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault) {
             // Open (using system default).
-            var useDefault = this.dialogElement( "useSystemDefault" );
             useDefault.radioGroup.selectedItem = useDefault;
         } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp) {
             // Open with given helper app.
@@ -414,7 +425,6 @@ nsHelperAppDialog.prototype = {
         // If we don't have a "default app" then disable that choice.
         if ( !this.openWithDefaultOK() ) {
             // Disable that choice.
-            var useDefault = this.dialogElement( "useSystemDefault" );
             useDefault.hidden = true;
             // If that's the default, then switch to "save to disk."
             if ( useDefault.selected ) {
@@ -426,7 +436,7 @@ nsHelperAppDialog.prototype = {
         this.toggleChoice();
 
         // If we're running on the Mac, disable the application <textbox>.
-        if ( this.mDialog.navigator.platform.indexOf( "Mac" ) != -1 ) {
+        if ( this.mIsMac ) {
             this.dialogElement( "appPath" ).disabled = true;
         }
     },
@@ -442,31 +452,33 @@ nsHelperAppDialog.prototype = {
     // Returns the user-selected application
     helperAppChoice: function() {
         var result = this.chosenApp;
-        var typed  = this.dialogElement( "appPath" ).value;
-        // First, see if one was chosen via the Choose... button.
-        if ( result ) {
-            // Verify that the user didn't type in something different later.
-            if ( typed != result.path ) {
-                // Use what was typed in.
+        if (!this.mIsMac) {
+            var typed  = this.dialogElement( "appPath" ).value;
+            // First, see if one was chosen via the Choose... button.
+            if ( result ) {
+                // Verify that the user didn't type in something different later.
+                if ( typed != result.path ) {
+                    // Use what was typed in.
+                    try {
+                        result.QueryInterface( Components.interfaces.nsILocalFile ).initWithPath( typed );
+                    } catch( e ) {
+                        // Invalid path was typed.
+                        result = null;
+                    }
+                }
+            } else {
+                // The user didn't use the Choose... button, try using what they typed in.
+                result = Components.classes[ "@mozilla.org/file/local;1" ]
+                    .createInstance( Components.interfaces.nsILocalFile );
                 try {
-                    result.QueryInterface( Components.interfaces.nsILocalFile ).initWithPath( typed );
+                    result.initWithPath( typed );
                 } catch( e ) {
-                    // Invalid path was typed.
                     result = null;
                 }
             }
-        } else {
-            // The user didn't use the Choose... button, try using what they typed in.
-            result = Components.classes[ "@mozilla.org/file/local;1" ]
-                       .createInstance( Components.interfaces.nsILocalFile );
-            try {
-                result.initWithPath( typed );
-            } catch( e ) {
-                result = null;
-            }
+            // Remember what was chosen.
+            this.chosenApp = result;
         }
-        // Remember what was chosen.
-        this.chosenApp = result;
         return result;
     },
 
@@ -637,7 +649,7 @@ nsHelperAppDialog.prototype = {
             // Remember the file they chose to run.
             this.chosenApp = fp.file;
             // Update dialog.
-            this.dialogElement( "appPath" ).value = this.chosenApp.path;
+            this.dialogElement( "appPath" ).value = this.getPath(this.chosenApp);
         }
     },
 
