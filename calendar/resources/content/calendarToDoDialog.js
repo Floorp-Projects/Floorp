@@ -168,13 +168,20 @@ function loadCalendarToDoDialog()
    var categoriesString = this.categoriesStringBundle.GetStringFromName("categories" );
    var categoriesList = categoriesString.split( "," );
    
+   // insert the category already in the task so it doesn't get lost
+   if( gToDo.categories )
+      if( categoriesString.indexOf( gToDo.categories ) == -1 )
+         categoriesList[categoriesList.length] =  gToDo.categories;
+
+   categoriesList.sort();
+   
    var oldMenulist = document.getElementById( "categories-menulist-menupopup" );
    while( oldMenulist.hasChildNodes() )
       oldMenulist.removeChild( oldMenulist.lastChild );
    
    for (var i = 0; i < categoriesList.length ; i++)
    {
-      document.getElementById( "categories-field" ).appendItem(categoriesList[i], "Categories-"+categoriesList[i]);
+      document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
    }
 
    document.getElementById( "categories-field" ).selectedIndex = -1;
