@@ -31,14 +31,27 @@ function onLoad()
     mainStep();
 }
 
+function onClose()
+{
+    if (client.userClose)
+        return true;
+    
+    client.userClose = true;
+    client.currentObject.display ("Closing ChatZilla...", "INFO");
+
+    if (client.getConnectionCount() == 0)
+        /* if we're not connected to anything, just close the window */
+        return true;
+
+    /* otherwise, try to close out gracefully */
+    client.quit (client.userAgent);
+    return false;
+}
+
 function onUnload()
 {
-
     if (client.SAVE_SETTINGS)
         writeIRCPrefs();
-    
-    client.quit ("ChatZilla 0.8 [" + navigator.userAgent + "]");
-    
 }
 
 function onNotImplemented()
@@ -2188,18 +2201,17 @@ function my_whoisreply (e)
 CIRCNetwork.prototype.on433 = /* nickname in use */
 function my_433 (e)
 {
-
     e.server.parent.display ("The nickname ``" + e.params[2] +
-                             "'' is already in use.", e.code);
-    
+                             "'' is already in use.", e.code);    
 }
 
 CIRCNetwork.prototype.onError =
 function my_neterror (e)
 {
-
-    e.server.parent.display (e.meat, "ERROR");
-    
+    if (e.server)
+        e.server.parent.display (e.meat, "ERROR");   
+    else
+        dd ("ERROR: " + e.meat + "\n" + dumpObjectTree (e));
 }
 
 CIRCNetwork.prototype.onDisconnect =
@@ -2212,6 +2224,9 @@ function my_neterror (e)
                   e.server.connection.host + ").", "ERROR");
     this.connecting = false;
     updateTitle();
+
+    if (client.userClose && client.getConnectionCount() == 0)
+        window.close();
 }
 
 CIRCNetwork.prototype.onNick =
