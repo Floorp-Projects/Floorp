@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Scott Collins <scc@netscape.com>
+ *   Scott Collins <scc@ScottCollins.net>
  */
 
 #ifndef nsCOMPtr_h___
@@ -29,6 +29,12 @@
   
   See the User Manual at:
     <http://www.mozilla.org/projects/xpcom/nsCOMPtr.html>
+
+
+  nsCOMPtr
+    better than a raw pointer
+  for owning objects
+                       -- scc
 */
 
 
@@ -384,7 +390,7 @@ class nsCOMPtr_base
               We must, however, be careful only to |Release()| _after_ doing the
               assignment, in case the |Release()| leads to our _own_ destruction,
               which would, in turn, cause an incorrect second |Release()| of our old
-              pointer.  Thank waterson@netscape.com for discovering this.
+              pointer.  Thank <waterson@netscape.com> for discovering this.
             */
           nsISupports* oldPtr = mRawPtr;
           mRawPtr = newPtr;
@@ -401,6 +407,18 @@ class nsCOMPtr
     : private nsCOMPtr_base
 #endif
   {
+    enum { _force_compliant_compilers_to_fail_ = sizeof(T) };
+      /*
+        The declaration above exists specifically to make |nsCOMPtr<T>| _not_ compile with only
+        a forward declaration of |T|.  This should prevent Windows and Mac engineers from
+        breaking Solaris and other compilers that naturally have this behavior.  Thank
+        <law@netscape.com> for inventing this specific trick.
+
+        Of course, if you're using |nsCOMPtr| outside the scope of wanting to compile on
+        Solaris and old GCC, you probably want to remove the enum so you can exploit forward
+        declarations.
+      */
+
 #ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
     private:
       void    assign_with_AddRef( nsISupports* );
