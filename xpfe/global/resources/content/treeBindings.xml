@@ -175,9 +175,9 @@
            extends="chrome://global/content/treeBindings.xml#treecell-indented-folder-inline-edit-base">
     <content autostretch="never">
       <xul:treeindentation/>
-      <xul:image class="tree-cell-primary-icon-inline-edit-leaf" inherits="src"/>
+      <xul:image class="tree-cell-primary-icon" inherits="src"/>
       <xul:box class="inline-edit-cell-box" flex="1">
-        <xul:text class="inline-edit-cell-text" 
+        <xul:text class="tree-cell-text" 
                   inherits="crop,value,align,mode" flex="1" crop="right"/>
       </xul:box>
     </content>
@@ -187,7 +187,7 @@
            extends="chrome://global/content/treeBindings.xml#treecell-indented-folder-inline-edit-base">
     <content autostretch="never">
       <xul:box class="inline-edit-cell-box" flex="1">
-        <xul:text class="inline-edit-cell-text" 
+        <xul:text class="tree-cell-text" 
                   inherits="crop,value,align,mode" flex="1" crop="right"/>
       </xul:box>
     </content>
