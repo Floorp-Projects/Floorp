@@ -300,7 +300,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     /*
       if we are processing an inline RFC822 message, we should skip its childern
     */
-    Boolean isAnInlineMessage = mime_typep(child, (MimeObjectClass *) &mimeMessageClass);
+    PRBool isAnInlineMessage = mime_typep(child, (MimeObjectClass *) &mimeMessageClass);
     
     /*
       AppleDouble part need special care: we need to fetch the part as well it's two
