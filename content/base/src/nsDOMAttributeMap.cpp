@@ -170,8 +170,18 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 
     // Set the new attributevalue
     attribute->GetValue(value);
-    rv = mContent->SetAttr(ni->NamespaceID(), ni->NameAtom(),
-                           ni->GetPrefixAtom(), value, PR_TRUE);
+    if (ni->NamespaceID() == kNameSpaceID_None &&
+        mContent->IsContentOfType(nsIContent::eHTML)) {
+      // Set via setAttribute(), which may do normalization on the
+      // attribute name for HTML
+      nsCOMPtr<nsIDOMElement> ourElement(do_QueryInterface(mContent));
+      NS_ASSERTION(ourElement, "HTML content that's not an element?");
+      ourElement->SetAttribute(name, value);
+    } else {
+      // It's OK to just use SetAttr
+      rv = mContent->SetAttr(ni->NamespaceID(), ni->NameAtom(),
+                             ni->GetPrefixAtom(), value, PR_TRUE);
+    }
 
     // Not all attributes implement nsIAttribute.
     nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aNode);
