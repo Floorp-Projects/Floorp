@@ -46,6 +46,14 @@
 #include "nsAutoLock.h"
 #endif
 
+#include "prlog.h"
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo *gImgLog;
+#else
+#define gImgLog
+#endif
+
 static NS_DEFINE_CID(kImageRequestCID, NS_IMGREQUEST_CID);
 static NS_DEFINE_CID(kImageRequestProxyCID, NS_IMGREQUESTPROXY_CID);
 
@@ -77,6 +85,14 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
 {
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
+#if defined(PR_LOGGING)
+  nsXPIDLCString spec;
+  aURI->GetSpec(getter_Copies(spec));
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgLoader::LoadImage (aURI=%s) {ENTER}\n",
+          this, spec.get()));
+#endif
+
   imgRequest *request = nsnull;
 
   ImageCache::Get(aURI, &request); // addrefs
@@ -84,6 +100,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
 #ifdef LOADER_THREADSAFE
     nsAutoLock lock(mLock); // lock when we are adding things to the cache
 #endif
+
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage |cache miss| {ENTER}\n", this));
+
     nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
     if (!ioserv) return NS_ERROR_FAILURE;
 
@@ -98,17 +118,29 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
     request = NS_REINTERPRET_CAST(imgRequest*, req.get());
     NS_ADDREF(request);
 
-
-    nsXPIDLCString spec;
-    aURI->GetSpec(getter_Copies(spec));
-    printf("     Adding %s to cache\n", spec.get());
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage -- Created new imgRequest [request=%p]\n", this, request));
 
     request->Init(newChannel);
 
     ImageCache::Put(aURI, request);
 
-    newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), cx);  // XXX are we calling this too early?
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
+
+    // XXX are we calling this too early?
+    newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), cx);
+
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage |cache miss| {EXIT}\n", this));
+  } else {
+    PR_LOG(gImgLog, PR_LOG_DEBUG,
+           ("[this=%p] imgLoader::LoadImage |cache hit| [request=%p]\n",
+            this, request));
   }
+
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgLoader::LoadImage -- creating proxy request.\n", this));
 
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
   // init adds itself to imgRequest's list of observers
@@ -118,6 +150,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
 
   *_retval = proxyRequest;
   NS_ADDREF(*_retval);
+
+  PR_LOG(gImgLog, PR_LOG_DEBUG,
+         ("[this=%p] imgLoader::LoadImage {EXIT}\n", this));
 
   return NS_OK;
 }

@@ -26,19 +26,14 @@
 
 #include "nsIURI.h"
 #include "imgRequest.h"
+#include "prtypes.h"
 
-
-#define IMAGE_CACHE_CID \
-{ /* 70058a20-1dd2-11b2-9d22-db0a9d82e8bd */         \
-     0x70058a20,                                     \
-     0x1dd2,                                         \
-     0x11b2,                                         \
-    {0x9d, 0x22, 0xdb, 0x0a, 0x9d, 0x82, 0xe8, 0xbd} \
-}
+#define USE_CACHE 1
 
 class ImageCache
 {
 public:
+#ifdef USE_CACHE
   ImageCache();
   ~ImageCache();
 
@@ -46,8 +41,21 @@ public:
   static PRBool Put(nsIURI *aKey, imgRequest *request);
   static PRBool Get(nsIURI *aKey, imgRequest **request);
   static PRBool Remove(nsIURI *aKey);
+#else
+  ImageCache()  { }
+  ~ImageCache() { }
 
-private:
+  /* additional members */
+  static PRBool Put(nsIURI *aKey, imgRequest *request) {
+    return PR_FALSE;
+  }
+  static PRBool Get(nsIURI *aKey, imgRequest **request) {
+    return PR_FALSE;
+  }
+  static PRBool Remove(nsIURI *aKey) {
+    return PR_FALSE;
+  }
+#endif
 };
 
 #endif
