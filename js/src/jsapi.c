@@ -684,6 +684,7 @@ JS_DestroyRuntime(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
+    JS_ArenaShutDown();
     js_FreeStringGlobals();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
@@ -2104,6 +2105,7 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 
     CHECK_REQUEST(cx);
     /* XXXbe push this into jsobj.c or jsscope.c */
+    /* XXXbe2 worse, assumes obj is native here, before MAP_IS_NATIVE! */
     JS_LOCK_OBJ(cx, obj);
     map = obj->map;
     if (MAP_IS_NATIVE(map)) {
