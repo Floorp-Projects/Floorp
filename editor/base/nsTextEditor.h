@@ -74,6 +74,8 @@ public:
   NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
   NS_IMETHOD InsertBreak();
   NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
+  // This method sets background of the page (the body tag)
+  NS_IMETHOD SetBackgroundColor(const nsString& aColor);
 
 // Transaction control
   NS_IMETHOD EnableUndo(PRBool aEnable);

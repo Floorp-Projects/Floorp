@@ -25,13 +25,16 @@ function EditorStartup(editorType)
   dump("Doing Startup...\n");
   contentWindow = window.content;
 
-  dump("Trying to make an editor appcore through the component manager...\n");
+  dump("Trying to make an Editor Shell through the component manager...\n");
 
-  var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+  editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+  if (editorShell)
+    editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+  
   if (!editorShell)
   {
     dump("Failed to create editor shell\n");
+    // 7/12/99 THIS DOESN'T WORK YET!
     window.close();
     return;
   }
@@ -39,16 +42,16 @@ function EditorStartup(editorType)
   // store the editor shell in the window, so that child windows can get to it.
   window.editorShell = editorShell;
   
-  window.editorShell.Init();
-  window.editorShell.SetWebShellWindow(window);
-  window.editorShell.SetToolbarWindow(window)
-  window.editorShell.SetEditorType(editorType);
-  window.editorShell.SetContentWindow(contentWindow);
+  editorShell.Init();
+  editorShell.SetWebShellWindow(window);
+  editorShell.SetToolbarWindow(window)
+  editorShell.SetEditorType(editorType);
+  editorShell.SetContentWindow(contentWindow);
 
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
-  window.editorShell.LoadUrl(url);
+  editorShell.LoadUrl(url);
   
   dump("EditorAppCore windows have been set.\n");
   SetupToolbarElements();
@@ -83,13 +86,13 @@ function EditorShutdown()
 function EditorNew()
 {
   dump("In EditorNew..\n");
-  window.editorShell.NewWindow();
+  editorShell.NewWindow();
 }
 
 function EditorOpen()
 {
   dump("In EditorOpen..\n");
-  window.editorShell.Open();
+  editorShell.Open();
 }
 
 function EditorNewPlaintext()
@@ -131,14 +134,14 @@ function EditorNewBrowser()
 function EditorSave()
 {
   dump("In EditorSave...\n");
-  window.editorShell.Save();
+  editorShell.Save();
   contentWindow.focus();
 }
 
 function EditorSaveAs()
 {
   dump("In EditorSave...\n");
-  window.editorShell.SaveAs();
+  editorShell.SaveAs();
   contentWindow.focus();
 }
 
@@ -146,14 +149,17 @@ function EditorSaveAs()
 function EditorPrint()
 {
   dump("In EditorPrint..\n");
-  window.editorShell.Print();
+  editorShell.Print();
   contentWindow.focus();
 }
 
 function EditorClose()
 {
   dump("In EditorClose...\n");
-  window.editorShell.CloseWindow();
+  editorShell.CloseWindow();
+  // This doesn't work, but we can close
+  //   the window in the EditorAppShell, so we don't need it
+  //window.close();
 }
 
 // --------------------------- Edit menu ---------------------------
@@ -161,62 +167,62 @@ function EditorClose()
 function EditorUndo()
 {
   dump("Undoing\n");
-  window.editorShell.Undo();
+  editorShell.Undo();
   contentWindow.focus();
 }
 
 function EditorRedo()
 {
   dump("Redoing\n");
-  window.editorShell.Redo();
+  editorShell.Redo();
   contentWindow.focus();
 }
 
 function EditorCut()
 {
-  window.editorShell.Cut();
+  editorShell.Cut();
   contentWindow.focus();
 }
 
 function EditorCopy()
 {
-  window.editorShell.Copy();
+  editorShell.Copy();
   contentWindow.focus();
 }
 
 function EditorPaste()
 {
-  window.editorShell.Paste();
+  editorShell.Paste();
   contentWindow.focus();
 }
 
 function EditorPasteAsQuotation()
 {
-  window.editorShell.PasteAsQuotation();
+  editorShell.PasteAsQuotation();
   contentWindow.focus();
 }
 
 function EditorPasteAsQuotationCited(citeString)
 {
-  window.editorShell.PasteAsCitedQuotation(CiteString);
+  editorShell.PasteAsCitedQuotation(CiteString);
   contentWindow.focus();
 }
 
 function EditorSelectAll()
 {
-  window.editorShell.SelectAll();
+  editorShell.SelectAll();
   contentWindow.focus();
 }
 
 function EditorFind()
 {
-  window.editorShell.Find();
+  editorShell.Find();
   contentWindow.focus();
 }
 
 function EditorFindNext()
 {
-  window.editorShell.FindNext();
+  editorShell.FindNext();
 }
 
 function EditorShowClipboard()
@@ -229,7 +235,7 @@ function EditorShowClipboard()
 function EditorSetDocumentCharacterSet(aCharset)
 {
   dump(aCharset);
-  dump(" NOT IMPLEMENTED YET\n");
+  editorShell.editorDocument.SetDocumentCharacterSet(aCharset);
 }
 
 
@@ -237,14 +243,14 @@ function EditorSetDocumentCharacterSet(aCharset)
 
 function EditorSetTextProperty(property, attribute, value)
 {
-  window.editorShell.SetTextProperty(property, attribute, value);
+  editorShell.SetTextProperty(property, attribute, value);
   dump("Set text property -- calling focus()\n");
   contentWindow.focus();
 }
 
 function EditorSetParagraphFormat(paraFormat)
 {
-  window.editorShell.paragraphFormat = paraFormat;
+  editorShell.paragraphFormat = paraFormat;
   contentWindow.focus();
 }
 
@@ -253,11 +259,11 @@ function EditorSetFontSize(size)
   if( size == "0" || size == "normal" || 
       size == "+0" )
   {
-    window.editorShell.RemoveTextProperty("font", size);
+    editorShell.RemoveTextProperty("font", size);
     dump("Removing font size\n");
   } else {
     dump("Setting font size\n");
-    window.editorShell.SetTextProperty("font", "size", size);
+    editorShell.SetTextProperty("font", "size", size);
   }
   contentWindow.focus();
 }
@@ -265,40 +271,40 @@ function EditorSetFontSize(size)
 function EditorSetFontFace(fontFace)
 {
   if( fontFace == "" || fontFace == "normal") {
-    window.editorShell.RemoveTextProperty("font", "face");
+    editorShell.RemoveTextProperty("font", "face");
   } else if( fontFace == "tt") {
     // The old "teletype" attribute
-    window.editorShell.SetTextProperty("tt", "", "");  
+    editorShell.SetTextProperty("tt", "", "");  
     // Clear existing font face
-    window.editorShell.RemoveTextProperty("font", "face");
+    editorShell.RemoveTextProperty("font", "face");
   } else {
-    window.editorShell.SetTextProperty("font", "face", fontFace);
+    editorShell.SetTextProperty("font", "face", fontFace);
   }        
   contentWindow.focus();
 }
 
 function EditorSetFontColor(color)
 {
-  window.editorShell.SetTextProperty("font", "color", color);
+  editorShell.SetTextProperty("font", "color", color);
   contentWindow.focus();
 }
 
 function EditorSetBackgroundColor(color)
 {
-  window.editorShell.SetBackgroundColor(color);
+  editorShell.SetBackgroundColor(color);
   contentWindow.focus();
 }
 
 function EditorApplyStyle(styleName)
 {
   dump("applying style\n");
-  window.editorShell.SetTextProperty(styleName, "", "");
+  editorShell.SetTextProperty(styleName, "", "");
   contentWindow.focus();
 }
 
 function EditorRemoveStyle(styleName)
 {
-  window.editorShell.RemoveTextProperty(styleName, "");
+  editorShell.RemoveTextProperty(styleName, "");
   contentWindow.focus();
 }
 
@@ -310,7 +316,7 @@ function EditorRemoveLinks()
 
 function EditorApplyStyleSheet(styleSheetURL)
 {
-  window.editorShell.ApplyStyleSheet(styleSheetURL);
+  editorShell.ApplyStyleSheet(styleSheetURL);
 }
 
 
@@ -318,72 +324,61 @@ function EditorApplyStyleSheet(styleSheetURL)
 
 function EditorGetText()
 {
-  if (window.editorShell) {
+  if (editorShell) {
     dump("Getting text\n");
-    var  outputText = window.editorShell.contentsAsText;
+    var  outputText = editorShell.contentsAsText;
     dump(outputText + "\n");
   }
 }
 
 function EditorGetHTML()
 {
-  if (window.editorShell) {
+  if (editorShell) {
     dump("Getting HTML\n");
-    var  outputText = window.editorShell.contentsAsHTML;
+    var  outputText = editorShell.contentsAsHTML;
     dump(outputText + "\n");
   }
 }
 
 function EditorInsertText(textToInsert)
 {
-  if (window.editorShell) {
-    window.editorShell.InsertText(textToInsert);
-  }
+  editorShell.InsertText(textToInsert);
 }
 
 function EditorInsertHTML()
 {
-  if (window.editorShell) {
-    window.openDialog("chrome://editordlgs/content/EdInsSrc.xul",
-                      "InsSrcDlg", "chrome", "");
-  }
+  window.openDialog("chrome://editordlgs/content/EdInsSrc.xul",
+                    "InsSrcDlg", "chrome", "");
 }
 
 function EditorInsertLink()
 {
-   if (window.editorShell) {
-    window.openDialog("chrome://editordlgs/content/EdLinkProps.xul", "LinkDlg", "chrome", "");
-  }
+  window.openDialog("chrome://editordlgs/content/EdLinkProps.xul", "LinkDlg", "chrome", "");
   contentWindow.focus();
 }
 
 function EditorInsertImage()
 {
-  if (window.editorShell) {
-    window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", "");
-  }
+  window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", "");
   contentWindow.focus();
 }
 
 function EditorInsertHLine()
 {
-  if (window.editorShell) {
+  // Inserting an HLine is different in that we don't use properties dialog
+  //  unless we are editing an existing line's attributes
+  //  We get the last-used attributes from the prefs and insert immediately
 
-    // Inserting an HLine is different in that we don't use properties dialog
-    //  unless we are editing an existing line's attributes
-    //  We get the last-used attributes from the prefs and insert immediately
+  tagName = "hr";
+  hLine = editorShell.GetSelectedElement(tagName);
 
-    tagName = "hr";
-    hLine = window.editorShell.GetSelectedElement(tagName);
-
+  if (hLine) {
+    // We only open the dialog for an existing HRule
+    window.openDialog("chrome://editordlgs/content/EdHLineProps.xul", "dlg", "chrome", "");
+  } else {
+    hLine = editorShell.CreateElementWithDefaults(tagName);
     if (hLine) {
-      // We only open the dialog for an existing HRule
-      window.openDialog("chrome://editordlgs/content/EdHLineProps.xul", "dlg", "chrome", "");
-    } else {
-      hLine = window.editorShell.CreateElementWithDefaults(tagName);
-      if (hLine) {
-        window.editorShell.InsertElement(hLine, false);
-      }
+      editorShell.InsertElement(hLine, false);
     }
   }
   contentWindow.focus();
@@ -398,14 +393,14 @@ function EditorInsertNamedAnchor()
 function EditorIndent(indent)
 {
   dump("indenting\n");
-  window.editorShell.Indent(indent);
+  editorShell.Indent(indent);
   contentWindow.focus();
 }
 
 function EditorInsertList(listType)
 {
   dump("Inserting list\n");
-  window.editorShell.InsertList(listType);
+  editorShell.InsertList(listType);
   contentWindow.focus();
 }
 
@@ -426,7 +421,7 @@ function EditorInsertTable()
 function EditorAlign(align)
 {
   dump("aligning\n");
-  window.editorShell.Align(align);
+  editorShell.Align(align);
   contentWindow.focus();
 }
 
@@ -438,7 +433,7 @@ function EditorPrintPreview()
 
 function CheckSpelling()
 {
-  var spellChecker = window.editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
+  var spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
   if (spellChecker)
   {
     dump("Check Spelling starting...\n");
@@ -449,9 +444,11 @@ function CheckSpelling()
     {
       dump("THERE IS NO MISSPELLED WORD!\n");
       // TODO: PUT UP A MESSAGE BOX TO TELL THE USER
-      window.editorShell.CloseSpellChecking();
+      spellChecker.CloseSpellChecking();
     } else {
       dump("We found a MISSPELLED WORD\n");
+      // Set spellChecker variable on window
+      window.spellChecker = spellChecker;
       window.openDialog("chrome://editordlgs/content/EdSpellCheck.xul", "SpellDlg", "chrome", "", firstMisspelledWord);
     }
   }
@@ -467,9 +464,9 @@ function OnCreateAlignmentPopup()
 
 function EditorApplyStyleSheet(url)
 {
-  if (window.editorShell)
+  if (editorShell)
   {
-    window.editorShell.ApplyStyleSheet(url);
+    editorShell.ApplyStyleSheet(url);
   }
 }
 
@@ -524,21 +521,15 @@ function EditorStartLog()
 {
   var fs;
 
-  if (window.editorShell)
-  {
-    fs = EditorGetScriptFileSpec();
-    window.editorShell.StartLogging(fs);
+  fs = EditorGetScriptFileSpec();
+  editorShell.StartLogging(fs);
 
-    fs = null;
-  }
+  fs = null;
 }
 
 function EditorStopLog()
 {
-  if (window.editorShell)
-  {
-    window.editorShell.StopLogging();
-  }
+  editorShell.StopLogging();
 }
 
 function EditorRunLog()
@@ -553,7 +544,7 @@ function EditorGetNodeFromOffsets(offsets)
   var node = null;
   var i;
 
-  node = window.editorShell.editorDocument;
+  node = editorShell.editorDocument;
 
   for (i = 0; i < offsets.length; i++)
   {
@@ -566,7 +557,7 @@ function EditorGetNodeFromOffsets(offsets)
 function EditorSetSelectionFromOffsets(selRanges)
 {
   var rangeArr, start, end, i, node, offset;
-  var selection = window.editorShell.editorSelection;
+  var selection = editorShell.editorSelection;
 
   selection.clearSelection();
 
@@ -576,7 +567,7 @@ function EditorSetSelectionFromOffsets(selRanges)
     start    = rangeArr[0];
     end      = rangeArr[1];
 
-    var range = window.editorShell.editorDocument.createRange();
+    var range = editorShell.editorDocument.createRange();
 
     node   = EditorGetNodeFromOffsets(start[0]);
     offset = start[1];
@@ -594,61 +585,51 @@ function EditorSetSelectionFromOffsets(selRanges)
 
 function EditorTestSelection()
 {
-  if (window.editorShell)
+  dump("Testing selection\n");
+  var selection = editorShell.editorSelection;
+  if (selection)
   {
-    dump("Testing selection\n");
-    var selection = window.editorShell.editorSelection;
-    if (selection)
+    dump("Got selection\n");
+    var  firstRange = selection.getRangeAt(0);
+    if (firstRange)
     {
-      dump("Got selection\n");
-      var  firstRange = selection.getRangeAt(0);
-      if (firstRange)
-      {
-        dump("Range contains \"");
-        dump(firstRange.toString() + "\"\n");
-      }
+      dump("Range contains \"");
+      dump(firstRange.toString() + "\"\n");
     }
   }
   
   dump("Selection as text\n");
-  dump(window.editorShell.selectionAsText + "\n\n");
+  dump(editorShell.selectionAsText + "\n\n");
 
   dump("Selection as HTML\n");
-  dump(window.editorShell.selectionAsHTML + "\n\n");
+  dump(editorShell.selectionAsHTML + "\n\n");
 }
 
 function EditorUnitTests()
 {
-  if (window.editorShell) {
-    dump("Running Unit Tests\n");
-    window.editorShell.RunUnitTests();
-  }
+  dump("Running Unit Tests\n");
+  editorShell.RunUnitTests();
 }
 
 function EditorExit()
 {
-    if (window.editorShell) {
-	    dump("Exiting\n");
-      window.editorShell.Exit();
-    }
+	dump("Exiting\n");
+  editorShell.Exit();
 }
 
 function EditorTestDocument()
 {
-  if (window.editorShell)
+  dump("Getting document\n");
+  var theDoc = editorShell.editorDocument;
+  if (theDoc)
   {
-    dump("Getting document\n");
-    var theDoc = window.editorShell.editorDocument;
-    if (theDoc)
-    {
-      dump("Got the doc\n");
-      dump("Document name:" + theDoc.nodeName + "\n");
-      dump("Document type:" + theDoc.doctype + "\n");
-    }
-    else
-    {
-      dump("Failed to get the doc\n");
-    }
+    dump("Got the doc\n");
+    dump("Document name:" + theDoc.nodeName + "\n");
+    dump("Document type:" + theDoc.doctype + "\n");
+  }
+  else
+  {
+    dump("Failed to get the doc\n");
   }
 }
 

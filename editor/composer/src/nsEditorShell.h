@@ -247,6 +247,8 @@ class nsEditorShell :   public nsIEditorShell,
     nsStringArray   mSuggestedWordList;
     PRInt32         mSuggestedWordIndex;
     NS_IMETHOD      DeleteSuggestedWordList();
+    nsStringArray   mDictionaryList;
+    PRInt32         mDictionaryIndex;
 
   	typedef enum {
   		ePlainTextEditorType = 1,

@@ -43,13 +43,14 @@
 #include "nsFileSpec.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIFileWidget.h" // for GetLocalFileURL stuff
 #include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIPref.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "prprf.h"
+
+const unsigned char nbsp = 160;
 
 #ifdef ENABLE_JS_EDITOR_LOG
 #include "nsJSEditorLog.h"
@@ -165,28 +166,22 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
 
 NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 {
-#ifdef ENABLE_JS_EDITOR_LOG
+//  nsresult result;
+  NS_ASSERTION(mDoc, "Missing Editor DOM Document");
+  
+  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
+  // For initial testing, just set the background on the BODY tag (the document's background)
+
+// Do this only if setting a table or cell background
+// It will be called in nsTextEditor::SetBackgroundColor for the page background
+#if 0 //def ENABLE_JS_EDITOR_LOG
   nsAutoJSEditorLogLock logLock(mJSEditorLog);
 
   if (mJSEditorLog)
     mJSEditorLog->SetBackgroundColor(aColor);
 #endif // ENABLE_JS_EDITOR_LOG
 
-  nsresult res;
-  NS_ASSERTION(mDoc, "Missing Editor DOM Document");
-  
-  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
-  // For initial testing, just set the background on the BODY tag (the document's background)
-
-  // Set the background color attribute on the body tag
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
-  if (NS_SUCCEEDED(res) && bodyElement)
-  {
-    nsAutoEditBatch beginBatching(this);
-    bodyElement->SetAttribute("bgcolor", aColor);
-  }
-  return res;
+  return nsTextEditor::SetBackgroundColor(aColor);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)
@@ -2058,12 +2053,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     return NS_ERROR_FAILURE;
 
   // Set default values for new elements
-  // TODO: These should probably be in XUL or prefs?
-  if (isAnchor)
-  {
-    // TODO: Get the text of the selection and build a suggested Name
-    //  Replace spaces with "_" 
-  } else if (TagName.Equals("hr"))
+  if (TagName.Equals("hr"))
   {
     // Hard coded defaults in case there's no prefs
     nsAutoString align("center");
@@ -2126,49 +2116,31 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   {
     newElement->SetAttribute("cellpadding","2");
     newElement->SetAttribute("cellspacing","2");
+    newElement->SetAttribute("width","50%");
     newElement->SetAttribute("border","1");
   } else if (TagName.Equals("tr"))
   {
     newElement->SetAttribute("valign","top");
   } else if (TagName.Equals("td"))
   {
-    newElement->SetAttribute("width","40px");
-    newElement->SetAttribute("height","40px");
     newElement->SetAttribute("valign","top");
 
     // Insert the default space in a cell so border displays
     nsCOMPtr<nsIDOMNode> newCellNode = do_QueryInterface(newElement);
     if (newCellNode)
     {
-
-      // First create a parent paragraph node
-      // THIS SHOULD BE A RULE METHOD -- SOMETHING LIKE CreateParagraphNode
-      nsCOMPtr<nsIDOMElement> mozDivElement;
-      nsresult result = mDoc->CreateElement("div", getter_AddRefs(mozDivElement));
-      
-      if (NS_SUCCEEDED(result) && mozDivElement)
+      // TODO: This should probably be in the RULES code or 
+      //       preference based for "should we add the nbsp"
+      nsCOMPtr<nsIDOMText>newTextNode;
+      nsString space;
+      // Set contents to the &nbsp character by concatanating the char code
+      space += nbsp;
+      // If we fail here, we return NS_OK anyway, since we have an OK cell node
+      nsresult result = mDoc->CreateTextNode(space, getter_AddRefs(newTextNode));
+      if (NS_SUCCEEDED(result) && newTextNode)
       {
-        // Set the 'class' attribute needed so Composer 4.x doesn't eat the div
-        mozDivElement->SetAttribute("class", "moz-p");
-        
         nsCOMPtr<nsIDOMNode>resultNode;
-        nsCOMPtr<nsIDOMNode> mozDivNode = do_QueryInterface(mozDivElement);
-        result = newCellNode->AppendChild(mozDivNode, getter_AddRefs(resultNode));
-
-        if (NS_SUCCEEDED(result) && resultNode)
-        {
-          // Append a text node
-          nsCOMPtr<nsIDOMText>newTextNode;
-          nsString space;
-          // Set contents to the &nbsp character by concatanating the char code
-          space += 160;
-          result = mDoc->CreateTextNode(space, getter_AddRefs(newTextNode));
-          if (NS_SUCCEEDED(result) && newTextNode)
-          {
-            nsCOMPtr<nsIDOMNode>resultNode2;
-            result = mozDivNode->AppendChild(newTextNode, getter_AddRefs(resultNode2));
-          }
-        }
+        result = newCellNode->AppendChild(newTextNode, getter_AddRefs(resultNode));
       }
     }
   }
@@ -2204,9 +2176,11 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     return NS_ERROR_NULL_POINTER;
   
   nsAutoEditBatch beginBatching(this);
+  // For most elements, set caret after inserting
+  PRBool setCaretAfterElement = PR_TRUE;
 
   nsCOMPtr<nsIDOMNode> parentSelectedNode;
-  PRInt32 offsetOfNewNode;
+  PRInt32 splitPointOffset;
 
   nsCOMPtr<nsIDOMSelection>selection;
   res = nsEditor::GetSelection(getter_AddRefs(selection));
@@ -2257,32 +2231,102 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     }
   }
   
-  res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
+  res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, splitPointOffset);
   if (NS_SUCCEEDED(res))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
     PRBool isInline;
     res = IsNodeInline(newNode, isInline);
-    if( NS_SUCCEEDED(res) /*&& isInline*/)
+    if( NS_SUCCEEDED(res) && isInline)
     {
       // The simple case of an inline node
-      res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
+      // This will split any inline nodes at the caret
+      //   and insert between them
+      res = InsertNode(aElement, parentSelectedNode, splitPointOffset);
     } else {
-      // Inserting a BLOCK element:
-      // TODO: Start with parentSelectedNode and check if its a block that can accept the 
-      //  block node we want to insert as its child. For initial testing, assume its OK
-      //
-      // Get the parent of the paragraph/container
-      nsCOMPtr<nsIDOMNode> parentNode;
-      parentSelectedNode->GetParentNode(getter_AddRefs(parentNode));
-      res = SplitNodeDeep(parentSelectedNode, parentSelectedNode, offsetOfNewNode);
-      if (NS_SUCCEEDED(res))
+      // Inserting a BLOCK element
+      // Get the first block parent of the paragraph/container
+      //  which we can split to create insert location
+      // (Current parent may already be a suitable block to split)
+      nsCOMPtr<nsIDOMNode> parentNodeOfInsert = parentSelectedNode;
+      nsCOMPtr<nsIDOMNode> topNodeToSplit = parentSelectedNode;
+      nsCOMPtr<nsIDOMElement> bodyElement;
+      // We need to find the offset at each level we will split
+      //  to use when we insert the new element
+      PRInt32 offsetToInsertAt = splitPointOffset;
+
+      res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+      
+      if (NS_SUCCEEDED(res) && bodyElement && 
+          // If text node is direct child of body, we can't insert a block node
+          (parentSelectedNode != bodyElement))
       {
-        res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
+        nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
+        PRBool isInline = PR_TRUE;
+        while (isInline)
+        {
+          // Get parent of the top node to split
+          res = topNodeToSplit->GetParentNode(getter_AddRefs(parentNodeOfInsert));
+          // If Inline, we loop around to get the next parent level
+          if (NS_SUCCEEDED(res) && parentNodeOfInsert &&
+              NS_SUCCEEDED(IsNodeInline(topNodeToSplit, isInline)) &&
+              NS_SUCCEEDED(GetChildOffset(topNodeToSplit, parentNodeOfInsert, offsetToInsertAt)))
+          {          
+#ifdef DEBUG_cmanske
+          nsAutoString nodeName;
+          topNodeToSplit->GetNodeName(nodeName);
+          printf("Top Node to split: ");
+          wprintf(nodeName.GetUnicode());
+
+          parentNodeOfInsert->GetNodeName(nodeName);
+          printf(" Parent of this node: ");
+          wprintf(nodeName.GetUnicode());
+          printf("\n");
+#endif
+
+            // The new offset to insert at is just after the topmost node we will split
+            offsetToInsertAt++;
+          } else {
+            // Major failure if we get here
+            return NS_ERROR_FAILURE;
+          }
+        }
+        if (bodyNode != topNodeToSplit)
+        {
+          // We have the node to split and its parent.
+          // TODO: Implement "CanContainElement" to be sure 
+          //    we are allowed to insert aElement under parentNodeOfInsert
+          //    If we can't we should call special methods for various combintations
+//              if (!CanContain(aElement, parentNodeOfInsert)
+//                return NS_ERROR_FAILURE;
+ 
+         // Split nodes from the selection parent ("bottom node") and all intervening parents
+          //   up to the topmost node, which may be = to bottom node)
+          //   (This redistribute children as each level is split.)
+          res = SplitNodeDeep(topNodeToSplit, parentSelectedNode, splitPointOffset);
+          if (NS_SUCCEEDED(res))
+          {
+            //Insert the block element between the 2 "topmost" containers
+            res = InsertNode(aElement, parentNodeOfInsert, offsetToInsertAt);
+            
+            // Check for special case of inserting a table
+            PRBool caretIsSet;
+            res = SetCaretInTableCell(aElement, &caretIsSet);
+            if (NS_SUCCEEDED(res) && caretIsSet)
+              setCaretAfterElement = PR_FALSE;
+          }
+         } else {
+          // If here, we must have an inline node directly under the body
+          //   so we can't insert a block tag
+          // TODO: Take each inline node resulting from DeleteSelectionAndPrepareToCreateNode
+          //   and insert them each into a default paragraph.
+          //   Then insert new block node between them.
+          return NS_ERROR_FAILURE;
+        }
       }
     }
   }
-  if (NS_SUCCEEDED(res))
+  if (setCaretAfterElement && NS_SUCCEEDED(res))
     SetCaretAfterElement(aElement);
   return res;
 }
@@ -2453,6 +2497,77 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
+nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement, PRBool* caretIsSet)
+{
+  nsresult res = NS_ERROR_NULL_POINTER;
+  if (caretIsSet)
+    *caretIsSet = PR_FALSE;
+  if (aElement && IsElementInBody(aElement))
+  {
+    res = NS_OK;
+    nsAutoString tagName;
+    aElement->GetNodeName(tagName);
+    tagName.ToLowerCase();
+    if (tagName == "td" || tagName == "tr" || 
+        tagName == "th" || tagName == "td" ||
+        tagName == "caption")
+    {
+      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
+      nsCOMPtr<nsIDOMNode> parent;
+      // This MUST succeed if IsElementInBody was TRUE
+      node->GetParentNode(getter_AddRefs(parent));
+      nsCOMPtr<nsIDOMNode>firstChild;
+      // Find deepest child
+      PRBool hasChild;
+      while (NS_SUCCEEDED(node->HasChildNodes(&hasChild)) && hasChild)
+      {
+        if (NS_SUCCEEDED(node->GetFirstChild(getter_AddRefs(firstChild))))
+        {
+          parent = node;
+          node = firstChild;
+        }
+      }
+      PRInt32 offset = 0;
+      nsCOMPtr<nsIDOMNode>lastChild;
+      res = parent->GetLastChild(getter_AddRefs(lastChild));
+      if (NS_SUCCEEDED(res) && lastChild && node != lastChild)
+      {
+        if (node == lastChild)
+        {
+          // Check if node is text and has more than just a &nbsp
+          nsCOMPtr<nsIDOMCharacterData>textNode = do_QueryInterface(node);
+          nsString text;
+          char nbspStr[2] = {nbsp, 0};
+          if (textNode && textNode->GetData(text))
+          {
+            // Set selection relative to the text node
+            parent = node;
+            PRInt32 len = text.Length();
+            if (len > 1 || text != nbspStr)
+            {
+              offset = len;
+            }
+          }
+        } else {
+          // We have > 1 node, so set to end of content
+        }
+      }
+      // Set selection at beginning of deepest node
+      // Should we set 
+      nsCOMPtr<nsIDOMSelection> selection;
+      res = nsEditor::GetSelection(getter_AddRefs(selection));
+      if (NS_SUCCEEDED(res) && selection)
+      {
+        res = selection->Collapse(parent, offset);
+        if (NS_SUCCEEDED(res) && caretIsSet)
+          *caretIsSet = PR_TRUE;
+      }
+    }
+  }
+  return res;
+}            
+
+NS_IMETHODIMP
 nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 {
 #ifdef ENABLE_JS_EDITOR_LOG
@@ -2464,8 +2579,8 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 
   nsresult res = NS_ERROR_NULL_POINTER;
 
-  // Must be sure that element is contained in the document body
-  if (IsElementInBody(aElement))
+  // Be sure the element is contained in the document body
+  if (aElement && IsElementInBody(aElement))
   {
     nsCOMPtr<nsIDOMSelection> selection;
     res = nsEditor::GetSelection(getter_AddRefs(selection));
@@ -2477,11 +2592,12 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
       {
         PRInt32 offsetInParent;
         res = GetChildOffset(aElement, parent, offsetInParent);
-
+        // New collapsed selection will be just after the new element
+        offsetInParent++;
         if (NS_SUCCEEDED(res))
         {
-          // Collapse selection to just after desired element,
-          selection->Collapse(parent, offsetInParent+1);
+            // Collapse selection to just after desired element,
+           selection->Collapse(parent, offsetInParent);
         }
       }
     }

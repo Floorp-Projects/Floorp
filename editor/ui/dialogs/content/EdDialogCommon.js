@@ -1,3 +1,25 @@
+// Each editor window must include this file
+// Variables  shared by all dialogs:
+var editorShell;
+
+function InitEditorShell()
+{
+    // get the editor shell from the parent window
+  editorShell = window.opener.editorShell;
+  if (editorShell) {
+    editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+  }
+  if (!editorShell) {
+    dump("EditorShell not found!!!\n");
+    window.close();
+    return false;
+  }
+  // Save as a property of the window so it can be used by child dialogs
+  window.editorShell = editorShell;
+  
+  return true;
+}
+
 function ClearList(list)
 {
   for( i = (list.length-1); i >= 0; i-- ) {
@@ -33,8 +55,18 @@ function ValidateNumberString(value, minValue, maxValue)
       return number + "";
     }
   }
+  message = "The number you entered ("+number+") is outside of allowed range.\nPlease enter a number between "+minValue+" and "+maxValue;
+
+  // Initialize where we place result from generic EdMessage dialog
+  window.msgResult = 0;
+  // This is NOT MODAL!
+  window.openDialog("chrome://editordlgs/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error", "OK");
+  // We could do something like this if we could call
+  //  a method that pumps the message system
+  //while (window.msgResult == 0);
+
+  dump("Message button pressed: "+window.msgResult+"\n");
   // Return an empty string to indicate error
-  //TODO: Popup a message box telling the user about the error
   return "";
 }
 
@@ -203,6 +235,29 @@ function SetLabelEnabledByID( labelID, doEnable )
   }
 }
 
+// Next two methods assume caller has a "percentChar" variable 
+//  to hold an empty string (no % used) or "%" (percent is used)
+function InitPixelOrPercentPopupButton(element, attribute, buttonID)
+{
+  size = element.getAttribute(attribute);
+  btn = document.getElementById(buttonID);
+
+  // Search for a "%" character
+  percentIndex = size.search(/%/);
+  if (percentIndex > 0) {
+    percentChar = "%";
+    // Strip out the %
+    size = size.substr(0, percentIndex);
+    // TODO: USE ENTITIES FOR TEXT VALUES
+    if (btn)
+      btn.setAttribute("value","percent");
+  } else {
+    if (btn)
+      btn.setAttribute("value","pixels");
+  }
+  return size;
+}
+
 // Input string is "" for pixel, or "%" for percent
 function SetPixelOrPercentByID(elementID, percentString)
 {
@@ -223,9 +278,11 @@ function SetPixelOrPercentByID(elementID, percentString)
   }
 }
 
+
 // All dialogs share this simple method
 function onCancel()
 {
   dump("Cancel button clicked: closing window\n");
   window.close();
 }
+

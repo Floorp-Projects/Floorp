@@ -29,12 +29,16 @@ install::
 	$(MAKE_INSTALL) EdHLineProps.js        $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdSpellCheck.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdSpellCheck.js        $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdDictionary.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdDictionary.js        $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdNamedAnchorProps.xul $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdNamedAnchorProps.js  $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdInsertTable.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdInsertTable.js       $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdInsSrc.xul           $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdInsSrc.js            $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdMessage.xul          $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdMessage.js           $(DIST)\bin\chrome\editor\dialogs\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDialogCommon.js
@@ -46,9 +50,13 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdHLineProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.js
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDictionary.xul
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDictionary.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdNamedAnchorProps.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdNamedAnchorProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdInsertTable.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdInsertTable.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdInsSrc.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdInsSrc.js
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdMessage.xul
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdMessage.js

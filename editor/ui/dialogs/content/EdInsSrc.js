@@ -18,21 +18,13 @@
 
 /* Insert Source HTML dialog */
 
-var editorShell;
 var dialog;
 
 // dialog initialization code
 function Startup()
 {
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-
-  if (!editorShell) {
-    dump("editorShell not found!!!\n");
-    window.close();
-    return;  
-  }
+  if (!InitEditorShell())
+    return;
   
   // Create dialog object to store controls for easy access
   dialog = new Object;

@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
+<!DOCTYPE window>
+<!-- dialog containing a control requiring initial setup -->
+<!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
+<xul:window class="dialog" title="Personal Dictionary"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
+    onload = "Startup()"
+    align="vertical">
+
+  <!-- Methods common to all editor dialogs -->
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
+  </script>
+  <script language="JavaScript" src="chrome://editordlgs/content/EdDictionary.js">
+  </script>
+
+  <xul:broadcaster id="args" value=""/>
+  <table>
+    <tr>
+      <td colspan="2">
+        NewWord<br/>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <input type="text" class="SpellCheckWord" id="Word" size="10"/>
+      </td>
+      <td>
+        <xul:titledbutton class="SizeToCell"  id="AddWord" onclick="AddWord()" value="Add"/>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        Words:
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <select class="SpellCheckList" id="SuggestedList" size="6" onchange="SelectWord()">
+          <option>Sample contents 1</option>
+          <option>Sample contents 2</option>
+          <option>Sample contents 3</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <xul:titledbutton class="SizeToCell"  id="ReplaceWord" onclick="ReplaceWord()" value="Replace"/>
+        <br/>
+        <xul:titledbutton class="SizeToCell"  id="RemoveWord" onclick="RemoveWord()" value="Remove"/>
+      </td>
+    </tr>
+  </table>
+  <xul:box>
+    <xul:spring flex="100%"/>    
+    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
+    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+    <xul:spring flex="100%"/>    
+  </xul:box>
+
+</xul:window>

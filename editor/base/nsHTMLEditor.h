@@ -124,6 +124,9 @@ public:
 // End of methods implemented in nsEditor
 //=============================================================
 // HTML Editing methods
+
+  // This sets background on the appropriate container element (table, cell,)
+  //   or calls into nsTextEditor to set the page background
   NS_IMETHOD SetBackgroundColor(const nsString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
   NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList);
@@ -154,6 +157,7 @@ public:
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
   PRBool     IsElementInBody(nsIDOMElement* aElement);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
+  NS_IMETHOD SetCaretInTableCell(nsIDOMElement* aElement, PRBool* caretIsSet);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
 
 // Table Editing (implemented in EditTable.cpp)

@@ -1,42 +1,44 @@
 //Cancel() is in EdDialogCommon.js
-var editorShell;
 var tagName = "table"
 var tableElement = null;
 var rowElement = null;
 var cellElement = null;
 var maxRows = 10000;
 var maxColumns = 10000;
+var percentChar = "";
+var maxPixels = 10000;
 
 // dialog initialization code
 function Startup()
 {
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-  if(!editorShell) {
-    dump("EditoreditorShell not found!!!\n");
-    window.close();
+  if (!InitEditorShell())
     return;
-  }
   dump("EditoreditorShell found for Insert Table dialog\n");
 
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.rowsInput = document.getElementById("rows");
-  dialog.columnsInput = document.getElementById("columns");
-
-  // Set default number to 1 row, 2 columns:
-  dialog.rowsInput.value = 1;
-  dialog.columnsInput.value = 2;
-
   tableElement = editorShell.CreateElementWithDefaults(tagName);
-
   if(!tableElement)
   {
     dump("Failed to create a new table!\n");
     window.close();
   }
-  
+
+  // Create dialog object to store controls for easy access
+  dialog = new Object;
+  dialog.rowsInput = document.getElementById("rows");
+  dialog.columnsInput = document.getElementById("columns");
+  dialog.widthInput = document.getElementById("width");
+  dialog.borderInput = document.getElementById("border");
+
+  // Get default attributes set on the created table:
+  // Get the width attribute of the element, stripping out "%"
+  // This sets contents of button text and "percentChar" variable
+  dialog.widthInput.value = InitPixelOrPercentPopupButton(tableElement, "width", "pixelOrPercentButton");
+  dialog.borderInput.value = tableElement.getAttribute("border");
+
+  // Set default number to 1 row, 2 columns:
+  dialog.rowsInput.value = 1;
+  dialog.columnsInput.value = 2;
+ 
   dialog.rowsInput.focus();
 }
 
@@ -72,8 +74,6 @@ function onOK()
       }
     }
   }
-
-  // TODO: VALIDATE ROWS, COLS and BUILD TABLE
   // Don't delete selected text when inserting
   editorShell.InsertElement(tableElement, false);
   window.close();
