@@ -801,12 +801,12 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	{
 	case nsMsgSearchOp::Contains:
 		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-			PL_strstr(stringToMatch, n_str))
+			PL_strcasestr(stringToMatch, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::DoesntContain:
 		if ((nsnull != n_header) && ((n_str.GetBuffer())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-			!PL_strstr(stringToMatch, n_str))
+			!PL_strcasestr(stringToMatch, n_str))
 			result = PR_TRUE;
 		break;
 	case nsMsgSearchOp::Is:
