@@ -1,0 +1,123 @@
+#include "nsISupports.idl"
+
+[uuid(0F78DA50-8321-11d2-8EAC-00805F29F370)]
+interface nsIRDFNode : nsISupports {
+    void Init(in string uri);
+    boolean EqualsNode(in nsIRDFNode aNode);
+};
+
+
+[uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
+interface nsIRDFResource : nsIRDFNode {
+    readonly attribute string Value;
+    boolean EqualsResource(in nsIRDFResource aResource);
+    boolean EqualsString(in string aURI);
+};
+
+[uuid(E0C493D2-9542-11d2-8EB8-00805F29F370)]
+interface nsIRDFLiteral : nsIRDFNode {
+    readonly attribute wstring Value;
+    boolean EqualsLiteral(in nsIRDFLiteral literal);
+};
+
+interface nsIRDFDataSource;
+
+[uuid(1C2ABDB0-4CEF-11D2-BC16-00805F912FE7)]
+interface nsIRDFCursor : nsISupports {
+    void Advance();
+    readonly attribute nsIRDFDataSource DataSource;
+    readonly attribute nsIRDFNode Value;
+};
+
+[uuid(1ED57100-9904-11d2-8EBA-00805F29F370)]
+interface nsIRDFAssertionCursor : nsIRDFCursor {
+    readonly attribute nsIRDFResource Source;
+    readonly attribute nsIRDFResource Label;
+    readonly attribute nsIRDFNode     Target;
+    readonly attribute boolean TruthValue;
+};
+
+
+[uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
+interface nsIRDFArcsInCursor : nsIRDFCursor {
+    readonly attribute nsIRDFResource Label;
+    readonly attribute nsIRDFNode     Target;
+};
+
+[uuid(1ED57101-9904-11d2-8EBA-00805F29F370)]
+interface nsIRDFArcsOutCursor : nsIRDFCursor {
+    readonly attribute nsIRDFResource Source;
+    readonly attribute nsIRDFResource Label;
+};
+
+[uuid(C2850C10-B0CF-11d2-A684-00104BDE6048)]
+interface nsIRDFResourceCursor : nsIRDFCursor {
+    readonly attribute nsIRDFResource Resource;
+};
+
+[uuid(3CC75360-484A-11D2-BC16-00805F912FE7)]
+interface nsIRDFObserver : nsISupports {
+    void OnAssert(in nsIRDFResource aSource,
+                  in nsIRDFResource aLabel,
+                  in nsIRDFNode     aTarget);
+
+    void OnUnassert(in nsIRDFResource aSource,
+                    in nsIRDFResource aLabel,
+                    in nsIRDFNode     aTarget);
+};
+
+
+[uuid(0F78DA58-8321-11d2-8EAC-00805F29F370)]
+interface nsIRDFDataSource : nsISupports {
+    void Init(in string uri);
+    readonly attribute string URI;
+
+    nsIRDFResource GetSource(in nsIRDFResource aProperty,
+                             in nsIRDFNode     aTarget,
+                             in boolean        aTruthValue);
+
+    nsIRDFAssertionCursor GetSources(in nsIRDFResource aProperty,
+                                     in nsIRDFNode     aTarget,
+                                     in boolean        aTruthValue);
+
+    nsIRDFNode GetTarget(in nsIRDFResource aSource,
+                         in nsIRDFResource aProperty,
+                         in boolean        aTruthValue);
+
+    nsIRDFAssertionCursor GetTargets(in nsIRDFResource aSource,
+                                     in nsIRDFResource aProperty,
+                                     in boolean aTruthValue);
+
+    void Assert(in nsIRDFResource aSource, 
+                in nsIRDFResource aProperty, 
+                in nsIRDFNode     aTarget,
+                in boolean        aTruthValue);
+
+    void Unassert(in nsIRDFResource aSource,
+                  in nsIRDFResource aProperty,
+                  in nsIRDFNode     aTarget);
+
+    boolean HasAssertion(in nsIRDFResource aSource,
+                         in nsIRDFResource aProperty,
+                         in nsIRDFNode     aTarget,
+                         in boolean        aTruthValue);
+
+    void AddObserver(in nsIRDFObserver aObserver);
+
+    void RemoveObserver(in nsIRDFObserver aObserver);
+
+    nsIRDFArcsInCursor ArcLabelsIn(in nsIRDFNode aNode);
+
+    nsIRDFArcsOutCursor ArcLabelsOut(in nsIRDFResource aSource);
+
+    nsIRDFResourceCursor GetAllResources();
+
+    void Flush();
+
+    boolean IsCommandEnabled(in string         aCommand,
+                             in nsIRDFResource aCommandTarget);
+
+    void DoCommand(in string         aCommand,
+                   in nsIRDFResource aCommandTarget);
+                            
+};
