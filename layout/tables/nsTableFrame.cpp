@@ -1993,7 +1993,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     }
     if (willInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
       // distribute extra vertical space to rows
-      aDesiredSize.height = CalcDesiredHeight(aReflowState); 
+      CalcDesiredHeight(aReflowState, aDesiredSize); 
       ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = PR_TRUE;
       // save the previous special height reflow initiator, install us as the new one
       nsIFrame* specialReflowInitiator = aReflowState.mPercentHeightReflowInitiator;
@@ -2030,7 +2030,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
 
   aDesiredSize.width = GetDesiredWidth();
   if (!haveDesiredHeight) {
-    aDesiredSize.height = CalcDesiredHeight(aReflowState); 
+    CalcDesiredHeight(aReflowState, aDesiredSize); 
   }
   if (IsRowInserted()) {
     ProcessRowInserted(aPresContext, *this, PR_TRUE, aDesiredSize.height);
@@ -3404,13 +3404,14 @@ nsTableFrame::CalcDesiredWidth(const nsHTMLReflowState& aReflowState)
 }
 
 
-nscoord 
-nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState) 
+void 
+nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize) 
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) {
     NS_ASSERTION(PR_FALSE, "never ever call me until the cell map is built!");
-    return 0;
+    aDesiredSize.height = 0;
+    return;
   }
   nscoord  cellSpacingY = GetCellSpacingY();
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
@@ -3424,10 +3425,13 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState)
     nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
     if ((NS_UNCONSTRAINEDSIZE != tableSpecifiedHeight) &&
         (tableSpecifiedHeight > 0) &&
-        eCompatibility_NavQuirks != GetPresContext()->CompatibilityMode())
-        // empty tables should not have a size in quirks mode
-      return tableSpecifiedHeight;
-    return 0;
+        eCompatibility_NavQuirks != GetPresContext()->CompatibilityMode()) {
+          // empty tables should not have a size in quirks mode
+      aDesiredSize.height = tableSpecifiedHeight;
+    } 
+    else
+      aDesiredSize.height = 0;
+    return;
   }
   PRInt32 rowCount = cellMap->GetRowCount();
   PRInt32 colCount = cellMap->GetColCount();
@@ -3452,11 +3456,16 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState)
       // unconstrained row group.We don't need to do this if it's an unconstrained reflow
       if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) { 
         DistributeHeightToRows(aReflowState, tableSpecifiedHeight - desiredHeight);
+        // this might have changed the overflow area incorporate the childframe overflow area.
+        nsPresContext* presContext = GetPresContext();
+        for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
+          ConsiderChildOverflow(presContext, aDesiredSize.mOverflowArea, kidFrame);
+        } 
       }
       desiredHeight = tableSpecifiedHeight;
     }
   }
-  return desiredHeight;
+  aDesiredSize.height = desiredHeight;
 }
 
 static
