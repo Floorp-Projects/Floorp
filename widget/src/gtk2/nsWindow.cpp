@@ -163,6 +163,10 @@ static nsresult    initialize_prefs        (void);
 // this is the last window that had a drag event happen on it.
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 
+// This is the time of the last button press event.  The drag service
+// uses it as the time to start drags.
+guint32   nsWindow::mLastButtonPressTime = 0;
+
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 // the current focus window
@@ -1370,6 +1374,9 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     nsMouseEvent  event;
     PRUint32      eventType;
     nsEventStatus status;
+
+    // Always save the time of this event
+    mLastButtonPressTime = aEvent->time;
 
     // check to see if we should rollup
     nsWindow *containerWindow;
