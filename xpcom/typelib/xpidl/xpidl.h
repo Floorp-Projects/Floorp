@@ -38,6 +38,25 @@
 #endif
 
 /*
+ * IDL_tree_warning bombs on libIDL version 6.5, and I don't want to not write
+ * warnings... so I define a versioned one here.  Thanks to Mike Shaver for the
+ * ## idiom, which allows us to pass through varargs calls.
+ */
+#if !(LIBIDL_MAJOR_VERSION == 0 && LIBIDL_MINOR_VERSION == 6 && \
+      LIBIDL_MICRO_VERSION == 5)
+/*
+ * This turns a varargs call to XPIDL_WARNING directly into a varargs call to
+ * IDL_tree_warning.  The only tricky bit is that you must call XPIDL_WARNING
+ * with extra parens, e.g. XPIDL_WARNING((foo, bar, "sil"))
+ *
+ * Probably best removed when we leave 6.5.
+*/
+#define XPIDL_WARNING(x) IDL_tree_warning##x
+#else
+#define XPIDL_WARNING(x) do { } while (0)
+#endif
+
+/*
  * Internal operation flags.
  */
 extern gboolean enable_debug;
