@@ -57,49 +57,68 @@ public:
     return iid;
   }
 
+	// mscott - we have a basic set of imap url actions. These actions are nsImapActions.
+    // Certain actions require us to be in the authenticated state and others require us to
+    // be in the selected state. nsImapState is used to store the state the url needs to
+    // be in. You'll later see us refer to the imap url state in the imap protocol when we
+    // are processing the current url. Don't confuse nsImapState with the generic url state
+    // used to keep track of whether the url is running or not...
+
+	typedef enum {
+		nsImapAuthenticatedState = 0,
+		nsImapSelectedState
+	} nsImapState;
+
 	typedef enum {
 		nsImapActionSendText = 0,      // a state used for testing purposes to send raw url text straight to the server....
-		// kAuthenticatedStateURL urls 
-		nsImapTest,
-		nsImapSelectFolder,
-		nsImapLiteSelectFolder,
-		nsImapExpungeFolder,
-		nsImapCreateFolder,
-		nsImapDeleteFolder,
-		nsImapRenameFolder,
-		nsImapMoveFolderHierarchy,
-		nsImapLsubFolders,
-		nsImapGetMailAccountUrl,
-		nsImapDiscoverChildrenUrl,
-		nsImapDiscoverLevelChildrenUrl,
-		nsImapDiscoverAllBoxesUrl,
-		nsImapDiscoverAllAndSubscribedBoxesUrl,
-		nsImapAppendMsgFromFile,
-		nsImapSubscribe,
-		nsImapUnsubscribe,
-		nsImapRefreshACL,
-		nsImapRefreshAllACLs,
-		nsImapListFolder,
-		nsImapUpgradeToSubscription,
-		nsImapFolderStatus,
-		nsImapRefreshFolderUrls,
+		// nsImapAuthenticatedStateUrl urls
+		// since the following url actions require us to be in the authenticated
+		// state, the high bit is left blank....
+		nsImapTest								= 0x00000001,
+		nsImapSelectFolder						= 0x00000002,
+		nsImapLiteSelectFolder					= 0x00000003,
+		nsImapExpungeFolder						= 0x00000004,
+		nsImapCreateFolder						= 0x00000005,
+		nsImapDeleteFolder						= 0x00000006,
+		nsImapRenameFolder						= 0x00000007,
+		nsImapMoveFolderHierarchy				= 0x00000008,
+		nsImapLsubFolders						= 0x00000009,
+		nsImapGetMailAccountUrl					= 0x0000000A,
+		nsImapDiscoverChildrenUrl				= 0x0000000B,
+		nsImapDiscoverLevelChildrenUrl			= 0x0000000C,
+		nsImapDiscoverAllBoxesUrl				= 0x0000000D,
+		nsImapDiscoverAllAndSubscribedBoxesUrl	= 0x0000000E,
+		nsImapAppendMsgFromFile					= 0x0000000F,
+		nsImapSubscribe							= 0x00000010,
+		nsImapUnsubscribe						= 0x00000011,
+		nsImapRefreshACL						= 0x00000012,
+		nsImapRefreshAllACLs					= 0x00000013,
+		nsImapListFolder						= 0x00000014,
+		nsImapUpgradeToSubscription				= 0x00000015,
+		nsImapFolderStatus						= 0x00000016,
+		nsImapRefreshFolderUrls					= 0x00000017,
+		// it's okay to add more imap actions that require us to 
+		// be in the authenticated state here without renumbering
+		// the imap selected state url actions. just make sure you don't
+		// set the high bit...
         
-		// kSelectedStateURL urls
-		nsImapMsgFetch,
-		nsImapMsgHeader,
-		nsImapSearch,
-		nsImapDeleteMsg,
-		nsImapDeleteAllMsgs,
-		nsImapAddMsgFlags,
-		nsImapSubtractMsgFlags,
-		nsImapSetMsgFlags,
-		nsImapOnlineCopy,
-		nsImapOnlineMove,
-		nsImapOnlineToOfflineCopy,
-		nsImapOnlineToOfflineMove,
-		nsImapOfflineToOnlineMove,
-		nsImapBiff,
-		nsImapSelectNoopFolder
+		// nsImapSelectedState urls. Note, the high bit is always set for
+		// imap actions which require us to be in the selected state
+		nsImapMsgFetch							= 0x10000018,
+		nsImapMsgHeader							= 0x10000019,
+		nsImapSearch							= 0x1000001A,
+		nsImapDeleteMsg							= 0x1000001B,
+		nsImapDeleteAllMsgs						= 0x1000001C,
+		nsImapAddMsgFlags						= 0x1000001D,
+		nsImapSubtractMsgFlags					= 0x1000001E,
+		nsImapSetMsgFlags						= 0x1000001F,
+		nsImapOnlineCopy						= 0x10000020,
+		nsImapOnlineMove						= 0x10000021,
+		nsImapOnlineToOfflineCopy				= 0x10000022,
+		nsImapOnlineToOfflineMove				= 0x10000023,
+		nsImapOfflineToOnlineMove				= 0x10000024,
+		nsImapBiff								= 0x10000025,
+		nsImapSelectNoopFolder					= 0x10000026
 	} nsImapAction;
 
 	/////////////////////////////////////////////////////////////////////////////// 
@@ -130,6 +149,8 @@ public:
 
 	NS_IMETHOD GetImapAction(nsImapAction * aImapAction) = 0;
 	NS_IMETHOD SetImapAction(nsImapAction aImapAction) = 0;
+
+	NS_IMETHOD GetRequiredImapState(nsImapState * aImapUrlState) = 0;
 
 	NS_IMETHOD GetImapPartToFetch(char **resultPart) = 0;
 	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) = 0;
