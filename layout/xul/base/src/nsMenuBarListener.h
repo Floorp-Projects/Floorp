@@ -85,7 +85,7 @@ public:
 protected:
   static void InitAccessKey();
 
-  PRUint32 GetModifiers(nsIDOMKeyEvent* event);
+  static PRUint32 GetModifiers(nsIDOMKeyEvent* event);
 
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
