@@ -33,25 +33,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAppShell_h__
-#define nsAppShell_h__
+#ifndef __nsCommonWidget_h__
+#define __nsCommonWidget_h__
 
-#include "nsIAppShell.h"
-#include "nsIEventQueue.h"
-#include "nsCOMPtr.h"
+#include "nsBaseWidget.h"
+#include "nsGUIEvent.h"
 
-class nsAppShell : public nsIAppShell {
+class nsCommonWidget : public nsBaseWidget {
  public:
+  nsCommonWidget();
+  virtual ~nsCommonWidget();
 
-  nsAppShell();
-  virtual ~nsAppShell();
+  virtual nsIWidget *GetParent(void);
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPSHELL
+  void CommonCreate(nsIWidget *aParent);
 
- private:
+  // event handling code
+  void InitPaintEvent(nsPaintEvent &aEvent);
+  void InitSizeEvent(nsSizeEvent &aEvent);
+  void InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg);
+  NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent,
+			   nsEventStatus &aStatus);
 
-  nsCOMPtr<nsIEventQueue> mEventQueue;
+  // called when we are destroyed
+  void OnDestroy(void);
+
+ protected:
+  nsCOMPtr<nsIWidget> mParent;
+  PRPackedBool        mOnDestroyCalled;
 };
 
-#endif /* nsAppShell_h__ */
+#endif /* __nsCommonWidget_h__ */
