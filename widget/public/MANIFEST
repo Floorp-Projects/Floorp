@@ -32,7 +32,6 @@ nsIMenu.h
 nsIMenuBar.h
 nsIMenuItem.h
 nsIPopUpMenu.h
-nsIContentConnector.h
 nsIKeyBindMgr.h
 nsStringUtil.h
 nsIContextMenu.h
