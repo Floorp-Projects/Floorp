@@ -102,6 +102,7 @@
 #include "rdfutil.h"
 #include "rdf.h"
 
+#include "nsIDOMXULFocusTracker.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMEventReceiver.h"
 
@@ -773,6 +774,7 @@ protected:
     nsCOMPtr<nsIDOMElement>    mPopup;            // [OWNER] of this popup element in the doc
     PRBool                     mIsPopup; 
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
+    nsCOMPtr<nsIDOMXULFocusTracker>     mFocusTracker; // [OWNER] of the focus tracker
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -1829,6 +1831,7 @@ XULDocumentImpl::EndLoad()
           i--;
         }
     }
+
     return NS_OK;
 }
 
@@ -2883,6 +2886,14 @@ XULDocumentImpl::SetPopup(nsIDOMElement* anElement)
 {
 	mPopup = dont_QueryInterface(anElement);
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::GetFocus(nsIDOMXULFocusTracker** aTracker)
+{
+  *aTracker = mFocusTracker;
+  NS_IF_ADDREF(*aTracker);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

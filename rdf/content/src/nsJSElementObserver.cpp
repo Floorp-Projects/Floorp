@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -58,11 +59,18 @@ GetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -86,11 +94,18 @@ SetElementObserverProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -144,6 +159,21 @@ ElementObserverOnSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onsetattribute", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -191,6 +221,21 @@ ElementObserverOnRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onremoveattribute", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -235,6 +280,21 @@ ElementObserverOnSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIDOMAttrPtr b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onsetattributenode", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -286,6 +346,21 @@ ElementObserverOnRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, j
   nsIDOMAttrPtr b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "elementobserver.onremoveattributenode", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

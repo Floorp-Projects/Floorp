@@ -21,12 +21,14 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMXULFocusTracker.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
 
@@ -35,10 +37,12 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIXULFocusTrackerIID, NS_IDOMXULFOCUSTRACKER_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
+NS_DEF_PTR(nsIDOMXULFocusTracker);
 NS_DEF_PTR(nsIDOMXULDocument);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -46,7 +50,8 @@ NS_DEF_PTR(nsIDOMNodeList);
 // XULDocument property ids
 //
 enum XULDocument_slots {
-  XULDOCUMENT_POPUP = -1
+  XULDOCUMENT_POPUP = -1,
+  XULDOCUMENT_FOCUS = -2
 };
 
 /***********************************************************************/
@@ -64,11 +69,39 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case XULDOCUMENT_POPUP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popup", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMElement* prop;
         if (NS_OK == a->GetPopup(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case XULDOCUMENT_FOCUS:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.focus", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMXULFocusTracker* prop;
+        if (NS_OK == a->GetFocus(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -80,6 +113,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -103,9 +137,20 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case XULDOCUMENT_POPUP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popup", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIElementIID, "Element",
@@ -120,6 +165,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -172,6 +218,21 @@ XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementbyid", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -209,6 +270,21 @@ XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsAutoString b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementsbyattribute", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -260,6 +336,7 @@ JSClass XULDocumentClass = {
 static JSPropertySpec XULDocumentProperties[] =
 {
   {"popup",    XULDOCUMENT_POPUP,    JSPROP_ENUMERATE},
+  {"focus",    XULDOCUMENT_FOCUS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
