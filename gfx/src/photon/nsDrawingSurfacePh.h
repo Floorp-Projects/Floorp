@@ -65,6 +65,16 @@ private:
   PRUint32	mHeight;
   PRUint32	mFlags;
   PRBool	mIsOffscreen;
+  nsPixelFormat mPixFormat;
+
+  /* for locks */
+  PhImage_t 	*mImage;
+  PRInt32	mLockX;
+  PRInt32	mLockY;
+  PRUint32	mLockWidth;
+  PRUint32	mLockHeight;
+  PRUint32	mLockFlags;
+  PRBool	mLocked;
 };
 
 #endif

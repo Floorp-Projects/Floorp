@@ -136,12 +136,12 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
     mAlphaHeight = 0;
     break;
 								
-	case nsMaskRequirements_kNeeds1Bit:
-	  mARowBytes = (aWidth + 7) / 8;
-	  mAlphaDepth = 1;
+  case nsMaskRequirements_kNeeds1Bit:
+    mARowBytes = (aWidth + 7) / 8;
+    mAlphaDepth = 1;
 
-	  // 32-bit align each row
-	  mARowBytes = (mARowBytes + 3) & ~0x3;
+    // 32-bit align each row
+    mARowBytes = (mARowBytes + 3) & ~0x3;
     mAlphaBits = new unsigned char[mARowBytes * aHeight];
     mAlphaWidth = aWidth;
     mAlphaHeight = aHeight;
@@ -151,8 +151,12 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
     mAlphaBits = nsnull;
     mAlphaWidth = 0;
     mAlphaHeight = 0;
-//    printf("TODO: want an 8bit mask for an image..\n");
+    printf("TODO: want an 8bit mask for an image..\n");
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init - 8 bit mask not implemented.\n" ));
+    break;
+
+  default:
+    printf("TODO: want a mask for an image.\n");
     break;
   }
 

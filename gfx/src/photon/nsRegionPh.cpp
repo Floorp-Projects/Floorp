@@ -34,6 +34,22 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 #define clrx c->rect.lr.x
 #define clry c->rect.lr.y
 
+static void MangleTiles(PhTile_t *t)
+{
+return;
+  while(t)
+  {
+//    printf("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count,
+//	 t, t->next, tulx, tuly, tlrx, tlry);
+    if (tlrx==-1 && tlry==-1)
+    {
+	printf ("drop bad tile\n");
+	tlrx=0; tlry=0;
+    }
+    t = t->next;
+  }
+}
+
 static void DumpTiles(PhTile_t *t)
 {
 #if 0
@@ -114,6 +130,12 @@ void nsRegionPh :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
   tile->rect.ul.y = aY;
   tile->rect.lr.x = (aX+aWidth-1);
   tile->rect.lr.y = (aY+aHeight-1);
+if (tile->rect.lr.x == -1)
+{
+//  printf ("problem 1: %d %d %d %d\n",aX,aY,aWidth,aHeight);
+  tile->rect.lr.x = 0;
+  tile->rect.lr.y = 0;
+}
   tile->next = NULL;
   
   SetRegionEmpty();
@@ -146,6 +168,7 @@ void nsRegionPh :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
   tile->rect.ul.y = aY;
   tile->rect.lr.x = (aX+aWidth-1);
   tile->rect.lr.y = (aY+aHeight-1);
+if (tile->rect.lr.x == -1) printf ("problem 2\n");
   tile->next = NULL;
     
   unsigned short intersected_tiles;
@@ -178,6 +201,7 @@ void nsRegionPh :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
   tile->rect.ul.y = aY;
   tile->rect.lr.x = (aX+aWidth-1);
   tile->rect.lr.y = (aY+aHeight-1);
+if (tile->rect.lr.x == -1) printf ("problem 3\n");
   tile->next = NULL;
     
   int added;
@@ -207,6 +231,20 @@ void nsRegionPh :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHei
   tile->rect.lr.y = (aY+aHeight-1);
   tile->next = NULL;
 
+/*
+printf ("subtract: %d %d %d %d\n",
+tile->rect.ul.x,
+tile->rect.ul.y,
+tile->rect.lr.x,
+tile->rect.lr.y
+);
+*/
+if (tile->rect.lr.x == -1)
+{
+//  printf ("problem 4\n");
+tile->rect.lr.x=0;
+tile->rect.lr.y=0;
+}
   mRegion = PhClipTilings(mRegion, tile, NULL);
 }
 
@@ -219,17 +257,18 @@ PRBool nsRegionPh :: IsEmpty(void)
   if (!mRegion)
     return PR_TRUE;
 
+  MangleTiles(mRegion);
   mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
+
   PhTile_t *t = mRegion;
 
 //  DumpTiles(t);
 
-//  if (t==NULL) return PR_FALSE;		// hack
-
   while(t)
   {
-    /* if width is positive then it is not empty */
-    if (tlrx - tulx)
+    /* if width is not 0 then it is not empty */
+//    if (tlrx - tulx)
+    if ((tlrx - tulx)>0)
     {
 	  result = PR_FALSE;
 //	printf ("should be false! (not empty)\n");
@@ -322,7 +361,36 @@ void nsRegionPh :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 PRBool nsRegionPh :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::ContainsRect mRegion=<%p> (%d,%d) -> (%d,%d)\n", mRegion, aX, aY, aWidth, aHeight));
+#if 1
+  if (mRegion)
+{
+    mRegion = PhCoalesceTiles( PhMergeTiles( PhSortTiles( mRegion )));  
 
+ /* Create a temporary tile to  assign to mRegion */
+  PhTile_t *tile = PhGetTile();
+  tile->rect.ul.x = aX;
+  tile->rect.ul.y = aY;
+  tile->rect.lr.x = (aX+aWidth-1);
+  tile->rect.lr.y = (aY+aHeight-1);
+  tile->next = NULL;
+if (tile->rect.lr.x == -1) printf ("problem 5\n");
+
+//printf ("testing: %d %d %d %d\n",aX,aY,aWidth,aHeight);
+  PhTile_t *test;
+  test = myIntersectTilings(tile, mRegion, NULL);
+/*
+if (test)
+{
+PhTile_t *t = test;
+  printf ("testing done: %d %d %d %d\n",tulx,tuly,tlrx,tlry);
+}
+*/
+  if (test) return PR_TRUE; else return PR_FALSE;
+}
+else return PR_FALSE;
+
+#else
+//kedl, jerry's stuff below
   PRBool ret = PR_FALSE;
 
   if (mRegion)
@@ -347,6 +415,7 @@ PRBool nsRegionPh :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::ContainsRect returning %d\n", ret));
   return ret;
+#endif
 }
 
 NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
@@ -359,6 +428,8 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
   PhTile_t	        *t = mRegion;
 
   /* Count the Tiles */
+  t = PhCoalesceTiles( PhMergeTiles( PhSortTiles( t )));  
+
   while(t)
   {
     nbox++;  
@@ -367,12 +438,11 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetRects recty count=<%d>\n", nbox));
 
-
   rects = *aRects;
 
   if ((nsnull == rects) || (rects->mRectsLen < (PRUint32) nbox))
   {
-    void *buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + (sizeof(nsRegionRect) * (nbox - 1)));
+    void *buf = PR_Realloc(rects, sizeof(nsRegionRectSet) + (sizeof(nsRegionRect) * (nbox - 0)));//was -1
     if (nsnull == buf)
     {
       if (nsnull != rects)
@@ -385,10 +455,18 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
   }
 
   rects->mNumRects = nbox;
+//  rects->mNumRects = nbox+1;
   rects->mArea = 0;
   rect = &rects->mRects[0];
   t = mRegion;                  /* Reset tile indexer */
-					  
+
+// crap
+    rect->x = 0;
+    rect->width = 0;
+    rect->y = 0;
+    rect->height = 0;
+//    rect++;
+
   while (nbox--)
   {
     rect->x = tulx;
@@ -396,10 +474,12 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
 	rect->y = tuly;
     rect->height = (tlry - tuly+1);											  
     rects->mArea += rect->width * rect->height;
+//printf ("getrect: %d %d %d %d\n",rect->x,rect->y,rect->width,rect->height);
     rect++;
     t = t->next;
   }
- 
+
+//printf ("num rects %d %d\n",rects->mNumRects,rects->mRectsLen);  fflush(stdout);
   *aRects = rects;
   return NS_OK;
 }
