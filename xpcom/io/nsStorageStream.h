@@ -40,7 +40,7 @@ class NS_COM nsStorageStream : public nsIStorageStream,
 {
 public:
     nsStorageStream();
-    ~nsStorageStream();
+    virtual ~nsStorageStream();
     
     NS_METHOD Init(PRUint32 segmentSize, PRUint32 maxSize, nsIAllocator *segmentAllocator = 0);
 
