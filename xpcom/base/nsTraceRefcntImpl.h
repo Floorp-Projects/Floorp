@@ -20,7 +20,6 @@
 #define nsTraceRefcnt_h___
 
 #include "nsCom.h"
-#include <stdio.h>
 
 // Normaly, the implementation of NS_LOG_ADDREF and NS_LOG_RELEASE
 // will use a stack crawl to determine who called Addref/Release on an
@@ -103,6 +102,8 @@ PR_END_MACRO
 
 //----------------------------------------------------------------------
 
+class nsIOutputStream;
+
 struct nsTraceRefcntStats {
   nsrefcnt mAddRefs;
   nsrefcnt mReleases;
@@ -170,10 +171,14 @@ public:
   static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
                              PRUint32 aInstanceSize);
 
-  static NS_COM void DumpNewStatistics(FILE* out = stdout);
+  enum StatisticsType {
+    ALL_STATS,
+    NEW_STATS
+  };
 
-  static NS_COM void DumpAllStatistics(FILE* out = stdout);
-
+  static NS_COM nsresult DumpStatistics(StatisticsType type = ALL_STATS,
+                                        nsIOutputStream* out = nsnull);
+  
   static NS_COM void ResetStatistics(void);
 
   static NS_COM void GatherStatistics(nsTraceRefcntStatFunc aFunc,

@@ -485,7 +485,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_PurgeAtomTable();
 
-    nsTraceRefcnt::DumpAllStatistics();
+    nsTraceRefcnt::DumpStatistics();
     nsTraceRefcnt::ResetStatistics();
 
 #ifdef GC_LEAK_DETECTOR
