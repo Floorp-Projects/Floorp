@@ -109,7 +109,6 @@
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
-static NS_DEFINE_CID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_CID(kAttributeContentCID, NS_ATTRIBUTECONTENT_CID);
 
 #include "nsIDOMWindowInternal.h"
@@ -333,8 +332,6 @@ NS_NewResizerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 
 #endif
-
-static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
 #ifdef NOISY_FINDFRAME
 static PRInt32 FFWC_totalCount=0;
