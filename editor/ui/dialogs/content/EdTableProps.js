@@ -256,7 +256,7 @@ function Startup()
   CellDataChanged = false;
 
   if (currentPanel == CellPanel)
-    gDialog.SelectionList.focus();
+    setTimeout("gDialog.SelectionList.focus()", 0);
   else
     SetTextboxFocus(gDialog.TableRowsInput);
 
