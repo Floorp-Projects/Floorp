@@ -249,6 +249,7 @@ void CleanTemp(void)
     short   vRefNum;
     long    dirID;
     FSSpec  viewerFSp;
+    XPISpec *xpiList, *currXPI = 0, *nextXPI = 0;
 #ifdef MIW_DEBUG
     Boolean isDir = false;
 #endif
@@ -274,6 +275,98 @@ void CleanTemp(void)
     {
         ERR_CHECK(DeleteDirectory(viewerFSp.vRefNum, viewerFSp.parID, viewerFSp.name));
     }
+    
+    /* clean out the zippies (.xpi's) */
+    xpiList = (XPISpec *) NewPtrClear(sizeof(XPISpec));
+    if (!xpiList)
+        return;
+    IterateDirectory(vRefNum, dirID, "\p", 1, CheckIfXPI, (void*)&xpiList);
+    
+    if (xpiList)
+    {
+        currXPI = xpiList;
+        while(currXPI)
+        {
+            nextXPI = currXPI->next; /* save nextXPI before we blow away currXPI */
+            if (currXPI->FSp)
+            {
+                FSpDelete(currXPI->FSp);
+                DisposePtr((Ptr)currXPI->FSp);
+            }
+            DisposePtr((Ptr)currXPI);
+            currXPI = nextXPI;
+        }
+    }
+}
+
+pascal void CheckIfXPI(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *dataPtr)
+{
+    OSErr err = noErr;
+    char cFilename[256];    /* for convenience: copy the name in cpbPtr->hFileInfo */
+    int len = 0;            /* for convenience: length of name string */
+    FSSpecPtr currFSp;
+    XPISpec *currXPI = 0, *newXPI = 0, **xpiList = 0;
+    
+    /* param check */
+    if (!cpbPtr || !dataPtr)
+        return;    
+     xpiList = (XPISpec **)dataPtr;
+     
+    /* file detected */
+    if ((cpbPtr->hFileInfo.ioFlAttrib & ioDirMask) == 0)
+    {
+        if (!cpbPtr->hFileInfo.ioNamePtr)
+            return;
+        len = *(cpbPtr->hFileInfo.ioNamePtr);            
+        strncpy(cFilename, (char*)(cpbPtr->hFileInfo.ioNamePtr + 1), len);
+        
+        /* check suffix for ".xpi" */   
+        if (0 == strncmp(".xpi", cFilename+len-4, 4))
+        {
+            currFSp = (FSSpecPtr) NewPtrClear(sizeof(FSSpec));
+            if (!currFSp)
+                return;
+            err = FSMakeFSSpec(cpbPtr->hFileInfo.ioVRefNum, cpbPtr->hFileInfo.ioFlParID,
+                               cpbPtr->hFileInfo.ioNamePtr, currFSp);
+                               
+            /* if file exists add it to deletion list */
+            if (err == noErr)
+            {
+                currXPI = *xpiList;
+                while (currXPI)
+                { 
+                    /* list head special case */
+                    if (!currXPI->FSp)
+                    {
+                        newXPI = currXPI;  
+                        break;
+                    }
+                    
+                    /* more in list */
+                    if (currXPI->next)
+                    {
+                        currXPI = currXPI->next;
+                        continue;
+                    }
+                    /* list end so allocate new node */ 
+                    else
+                    {
+                        newXPI = (XPISpec *) NewPtrClear(sizeof(XPISpec));
+                        if (!newXPI)
+                            return;  
+                        currXPI->next = newXPI;
+                        break;
+                    }
+                }
+                newXPI->FSp = currFSp;
+            }
+            else
+                DisposePtr((Ptr) currFSp);
+        }
+    }
+    
+    /* paranoia: make sure we continue iterating */
+    *quitFlag = false;
 }
 
 void MakeMenus(void)

@@ -49,6 +49,7 @@
 
 #include "FullPath.h"
 #include "MoreFilesExtras.h"
+#include "IterateDirectory.h"
 #include "Threads.h"
 
 
@@ -339,6 +340,11 @@ if (err) 								\
 /*-----------------------------------------------------------*
  *   structs 
  *-----------------------------------------------------------*/
+typedef struct XPISpec {
+    FSSpecPtr FSp;
+    struct XPISpec *next;
+} XPISpec;
+
 typedef struct InstComp {
 	/* descriptions */
 	Handle	shortDesc;
@@ -569,6 +575,7 @@ OSErr		GetCWD(long *outDirID, short *outVRefNum);
 void		InitOptObject(void);
 void		InitManagers(void);
 void        CleanTemp(void);
+pascal void CheckIfXPI(const CInfoPBRec * const, Boolean *, void *);
 void		MakeMenus(void);
 void 		MainEventLoop(void);
 void		ErrorHandler(short);
