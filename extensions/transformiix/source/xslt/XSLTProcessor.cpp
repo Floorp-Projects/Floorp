@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.33 2001/01/27 15:05:39 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.34 2001/02/14 15:14:20 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.33 $ $Date: 2001/01/27 15:05:39 $
+ * @version $Revision: 1.34 $ $Date: 2001/02/14 15:14:20 $
 **/
 
 /**
@@ -1745,8 +1745,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     //-- create a new ProcessorState
     ProcessorState* ps = new ProcessorState(*xslDocument, *resultDocument);
 
+    // XXX HACK, baseURI is something to be done in the DOM
     nsIURI* docURL = nsnull;
-    nsCOMPtr<nsIDocument> sourceNsDocument = do_QueryInterface(sourceDOMDocument);
+    nsCOMPtr<nsIDocument> sourceNsDocument = do_QueryInterface(styleDOMDocument);
     sourceNsDocument->GetBaseURL(docURL);
     if (docURL) {
         char* urlString;
