@@ -184,7 +184,7 @@ public:
   NS_IMETHOD SetRightToLeftText(PRBool aIsRTL);
 #endif // IBMBIDI
   //locals
-  NS_IMETHOD SetPortTextState();
+  nsresult   SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
 
 protected:
@@ -197,21 +197,22 @@ protected:
 	};
 
 	void 			SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, PRUint32 aChanges = kEverythingChanged);
+  void      SetupPortState();
 
 protected:
-	float             		mP2T;				// Pixel to Twip conversion factor
-	nsIDeviceContext *		mContext;
+    float                   mP2T;               // Pixel to Twip conversion factor
+    nsIDeviceContext *      mContext;
 
-	nsDrawingSurfaceMac*	mFrontSurface;
-	nsDrawingSurfaceMac*	mCurrentSurface;	// pointer to the current surface
+    nsDrawingSurfaceMac*    mFrontSurface;
+    nsDrawingSurfaceMac*    mCurrentSurface;    // pointer to the current surface
 
     CGrafPtr                mPort;              // current grafPort - shortcut for mCurrentSurface->GetPort()
-	nsGraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
-	nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
+    nsGraphicState *        mGS;                // current graphic state - shortcut for mCurrentSurface->GetGS()
+    nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
     nsAutoVoidArray         mGSStack;           // GraphicStates stack, used for PushState/PopState
-	PRUint32				mChanges;			// bit mask of attributes that have changed since last Push().
+    PRUint32                mChanges;           // bit mask of attributes that have changed since last Push().
 #ifdef IBMBIDI
-	PRBool          mRightToLeftText;
+    PRBool                  mRightToLeftText;
 #endif
 };
 
