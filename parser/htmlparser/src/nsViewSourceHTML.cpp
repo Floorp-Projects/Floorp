@@ -992,13 +992,29 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       
           if(eHTMLTag_title == theTag){
             nsCParserNode attrNode(theToken,mLineNumber,GetTokenRecycler());
-            CToken* theNextToken = mTokenizer->PopToken();
-            if(theNextToken) {
-              theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-              if(eToken_text==theType) {
-                attrNode.SetSkippedContent(theNextToken->GetStringValueXXX());
-              } 
+
+
+            nsAutoString theTempStr;
+            nsAutoString theStr;
+            PRBool  done=PR_FALSE;
+            while(!done) {
+              CHTMLToken* theNextToken=(CHTMLToken*)mTokenizer->PeekToken();
+              if(theNextToken) {
+
+                eHTMLTokenTypes theSubType=eHTMLTokenTypes(theNextToken->GetTokenType());
+                if(eToken_end!=theSubType) {
+                  theNextToken=(CHTMLToken*)mTokenizer->PopToken();
+                  theNextToken->GetSource(theTempStr);
+                  theStr+=theTempStr;
+                  gTokenRecycler->RecycleToken(theNextToken);  
+                }
+                else done=PR_TRUE;
+              }
+              else done=PR_TRUE;
             }
+            theStr.CompressWhitespace();
+            attrNode.SetSkippedContent(theStr);
+
             result= OpenHead(attrNode);
             if(NS_OK==result) {
               if(mSink) {
