@@ -218,7 +218,7 @@ function checkNow()
   const IPS = Components.interfaces.nsIPromptService;
   var psvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                        .getService(IPS);
-//  if (!shell.isDefaultBrowser(false)) {
+  if (!shell.isDefaultBrowser(false)) {
     promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage", 
                                                    [brandShortName]);
     var rv = psvc.confirmEx(window, promptTitle, promptMessage, 
@@ -227,12 +227,11 @@ function checkNow()
                             null, null, null, null, { });
     if (rv == 0)
       shell.setDefaultBrowser(true);
-/*
   }
   else {
     promptMessage = shellBundle.getFormattedString("alreadyDefaultBrowser",
                                                    [brandShortName]);
     psvc.alert(window, promptTitle, promptMessage);
-  }*/
+  }
 }
 #endif
