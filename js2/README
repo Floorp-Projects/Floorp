@@ -1,4 +1,5 @@
 Build instructions from pschwartau@netscape.com as of 2 Dec 2001 ...
+Updated - rogerl@netscape.com 10 Jan 2002
 
 Building JS2 on WINNT:
 ---------------------------------------------------------------------------------------------
@@ -19,6 +20,7 @@ RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
 cd  (path to)/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug
 [(path to)/mozilla/js2/tests/cpp/winbuild/DikDik_shell___Win32_Debug] ./DikDik_shell.exe
 
+[XXX I'm not getting these directories - for me it builds into 'Debug' folder]
 
 
 Building JS2 on LINUX:
@@ -56,105 +58,77 @@ cd   (path to):mozilla:js2:tests:cpp:macbuild
 
 ---------------------------------------------------------------------------------------------
 
-/***************************************************************************/
-// The stuff below looks pretty out of date to me.
-// I wonder if it shouldn't just be removed
-
-parse functions
-    parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers,
-    parseParenthesesAndIdentifierQualifiers(const Token &tParen,
-    parseQualifiedIdentifier(const Token &t, bool preferRegExp)
-    parseArrayLiteral(const Token &initialToken)
-    parseObjectLiteral(const Token &initialToken)
-    parsePrimaryExpression()
-    parseMember(ExprNode *target, const Token &tOperator,
-    parseInvoke(ExprNode *target, uint32 pos,
-    parsePostfixExpression(bool newExpression)
-    parseUnaryExpression()
-    parseExpression(bool noIn, bool noAssignment, bool noComma)
-    parseParenthesizedExpression()
-    parseTypeExpression(bool noIn)
-    parseTypedIdentifier(ExprNode *&type)
-    parseTypeBinding(Token::Kind kind, bool noIn)
-    parseTypeListBinding(Token::Kind kind)
-    parseVariableBinding(bool noQualifiers, bool noIn)
-    parseFunctionName(FunctionName &fn)
-    parseFunctionSignature(FunctionDefinition &fd)
-    parseBlock(bool inSwitch, bool noCloseBrace)
-    parseBody(SemicolonState *semicolonState)
-    parseAttributeStatement(uint32 pos, IdentifierList *attributes,
-    parseAttributesAndStatement(const Token *t, AttributeStatement as,
-    parseAnnotatedBlock()
-    parseFor(uint32 pos, SemicolonState &semicolonState)
-    parseTry(uint32 pos)
-    parseStatement(bool /*topLevel*/, bool inSwitch,
-    parseStatementAndSemicolon(SemicolonState &semicolonState)
-    parseIdentifier()
-    parseLiteralField()
-    parseFieldName()
-    parseArgumentList(NodeQueue<ExprPairList> &args)
-    parseArgumentListPrime(NodeQueue<ExprPairList> &args)
-    parseNamedArgumentListPrime(NodeQueue<ExprPairList> &args)
-    parseAllParameters(FunctionDefinition &fd,
-    parseOptionalNamedRestParameters (FunctionDefinition &fd,
-    parseNamedRestParameters(FunctionDefinition &fd,
-    parseNamedParameters(FunctionDefinition &fd,
-    parseRestParameter()
-    parseParameter()
-    parseOptionalParameter()
-    parseOptionalParameterPrime(VariableBinding *first)
-    parseNamedParameter(NodeQueue<IdentifierList> &aliases)
-    parseResultSignature()
-
-
-1/28/01
 
 Files:
 
-cpucfg.h
+bytecodegen.[cpp|h]
+    - Walks parse tree, emit byte code.
+
+collector.[cpp|h]
+    - GC
+
+exception.[cpp|h]
+    - exception object thrown internally
+
+fdlibm_ns.cpp
+    - wraps fdlibm in a namespace
 
 formatter.cpp formatter.h
-"Formatter" class, iostream like wrapper around stdio.
-
-gc_allocator.h, gc_container.h
-boehm gc stuff.
+    - "Formatter" class, iostream like wrapper around stdio.
 
 hash.cpp hash.h
-a hash
+    - a hash
+
+js2execution.[cpp|h]
+    - interpreter loop & runtime support routines
+
+js2runtime.[cpp|h]
+    - pre-bytecode passes over parse tree, build JSType objects
+
+jsarray.[cpp|h]
+jsdate.[cpp|h]
+jsmath.[cpp|h]
+jsstring.[cpp|h]
+    - implementations of ECMAScript built-ins
 
 lexer.cpp lexer.h
-main lexer.
+    - main lexer.
 
 mem.cpp mem.h
-zone, arena, and pool classes for memory management.
-
-nodefactory.h
-parse node factory.
+    - zone, arena, and pool classes for memory management.
 
 numerics.cpp numerics.h
-numbers and stuff.
+    - numbers and stuff.
 
 parser.cpp parser.h
-main parser source.
-tables in parser.h: 
-    enum ExprNode::Kind; types of expressions
-    enum StmtNode::Kind; types of statements
+    - main parser source.
+        tables in parser.h: 
+        enum ExprNode::Kind; types of expressions
+        enum StmtNode::Kind; types of statements
 
+prmjtime.[cpp|h]
+    - [Mac only?] OS interface routines for jsdate
 
 reader.cpp reader.h
-"Reader" class, feeds source to the parser/lexer.
+    - "Reader" class, feeds source to the parser/lexer.
+
+regexpwrapper.cpp
+    - cpp front to regexp engine in regexp/regexp.[ch]
 
 stlcfg.h
-stupid stl tricks
-.
+    - stupid stl tricks
+
+strings.[cpp|h]
+    - unicode string support
+
 systemtypes.h
-basic typedefs.
+    - basic typedefs.
 
 token.cpp token.h
-token class.
+    - token class.
 
 utilities.cpp utilities.h
-random things.
+    - random things.
 
 world.cpp world.h
-the whole world.
+    - the whole world.
