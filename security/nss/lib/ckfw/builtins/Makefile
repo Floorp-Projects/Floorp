@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.6 $ $Date: 2001/01/22 17:16:45 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.7 $ $Date: 2001/01/30 19:43:20 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -66,11 +66,6 @@ EXTRA_LIBS += \
 
 endif
 
-
-ifeq ($(OS_ARCH), WINNT)
-	SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
-	IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
-endif
 
 
 include $(CORE_DEPTH)/coreconf/rules.mk
