@@ -17,4 +17,3 @@
     <handler event="keypress" key="v" modifiers="accel" command="cmd_paste"/>
     <handler event="keypress" key="z" modifiers="accel" command="cmd_undo"/>
     <handler event="keypress" key="z" command="cmd_redo" modifiers="accel,shift" />
-    <handler event="keypress" key="a" modifiers="accel" command="cmd_selectAll"/>

@@ -11,4 +11,3 @@
       <handler event="keypress" key="x" command="cmd_cut" modifiers="accel"/>
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
-      <handler event="keypress" key="a" command="cmd_selectAll" modifiers="accel"/>
