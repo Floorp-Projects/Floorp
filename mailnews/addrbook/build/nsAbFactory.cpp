@@ -55,14 +55,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrBookSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAutoCompleteSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAddressCollecter)
   
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_ADDRESSBOOK_CID, &nsAddressBookConstructor, NS_ADDRESSBOOK_PROGID, },
   { NS_ABDIRECTORYDATASOURCE_CID, &nsAbDirectoryDataSourceConstructor, NS_ABDIRECTORYDATASOURCE_PROGID, },
@@ -79,5 +72,5 @@ static components_t components[] =
 };
 
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsAbModule, components)
+NS_IMPL_NSGETMODULE(nsAbModule)
