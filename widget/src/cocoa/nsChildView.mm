@@ -175,7 +175,7 @@ static PRUint32 underlineAttributeToTextRangeType(PRUint32 aUnderlineStyle)
   //
   // it probably means show 1-pixel thickness underline vs 2-pixel thickness
 
-  return aUnderlineStyle ? NS_TEXTRANGE_RAWINPUT : NS_TEXTRANGE_CONVERTEDTEXT;
+  return aUnderlineStyle == 1 ? NS_TEXTRANGE_CONVERTEDTEXT : NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
 }
 
 static PRUint32 countRanges(NSAttributedString *aString)
@@ -213,18 +213,6 @@ static void convertAttributeToGeckoRange(NSAttributedString *aString, NSRange ma
     aRanges[i].mStartOffset = effectiveRange.location;                         
     aRanges[i].mEndOffset = NSMaxRange(effectiveRange);                         
     aRanges[i].mRangeType = underlineAttributeToTextRangeType([attributeValue intValue]); 
-
-    // reset the range type if the ranges should be selected
-    if (markRange.length > 0) {
-      if (effectiveRange.location == markRange.location 
-          && effectiveRange.length >= markRange.length) {
-        if (aRanges[i].mRangeType == NS_TEXTRANGE_RAWINPUT)
-          aRanges[i].mRangeType = NS_TEXTRANGE_SELECTEDRAWTEXT;
-        else
-          aRanges[i].mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
-      }
-    }
-
     limitRange = NSMakeRange(NSMaxRange(effectiveRange), 
                              NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
     i++;
@@ -2924,7 +2912,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
   PRUnichar buffer[MAX_BUFFER_SIZE];
-  PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? buffer : new PRUnichar[len + 1];
+  PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters: bufPtr];
   bufPtr[len] = (PRUnichar)'\0';
 
@@ -2998,7 +2986,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSString *tmpStr = [mutableAttribStr string];
   unsigned int len = [tmpStr length];
   PRUnichar buffer[MAX_BUFFER_SIZE];
-  PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? buffer : new PRUnichar[len + 1];
+  PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters: bufPtr];
   bufPtr[len] = (PRUnichar)'\0';
 
@@ -3024,6 +3012,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
                              markedRange:mMarkedRange
                              doCommit:NO];
 
+  if (mInComposition && len == 0)
+    [self unmarkText];
+  
   if (bufPtr != buffer)
     delete[] bufPtr;
 }
@@ -3036,7 +3027,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" selectedRange = %d, %d\n", mSelectedRange.location, mSelectedRange.length);
 #endif
 
-  mMarkedRange = NSMakeRange(NSNotFound, 0);
+  mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
   if (mInComposition) {
     [self sendCompositionEvent: NS_COMPOSITION_END];
     mInComposition = NO;  // brade: do we need to send an end composition event?
