@@ -494,6 +494,7 @@ colorpicker[type="button"] {
  
 slider 
   {
+    -moz-binding: url("chrome://global/content/xulBindings.xml#slider");
     -moz-user-focus       : ignore;
     -moz-user-select      : none;
   }

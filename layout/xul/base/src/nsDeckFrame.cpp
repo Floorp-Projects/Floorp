@@ -250,11 +250,13 @@ nsDeckFrame::IndexChanged(nsIPresContext* aPresContext)
 
   // hide the currently showing box
   nsIBox* currentBox = GetBoxAt(mIndex);
-  HideBox(aPresContext, currentBox);
+  if (currentBox) // only hide if it exists
+     HideBox(aPresContext, currentBox);
 
   // show the new box
   nsIBox* newBox = GetBoxAt(index);
-  ShowBox(aPresContext, newBox);
+  if (newBox) // only show if it exists
+     ShowBox(aPresContext, newBox);
 
   mIndex = index;
 }

@@ -110,6 +110,7 @@ public:
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
+
 }; // class nsSliderFrame
 
 class nsSliderFrame : public nsBoxFrame
@@ -131,6 +132,24 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
 
   // nsIFrame overrides
+
+    /** nsIFrame **/
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+
+  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame);
+
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,

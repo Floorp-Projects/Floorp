@@ -540,7 +540,10 @@ nsMonumentLayout::GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList)
   nsCOMPtr<nsIMonument> parent;
   nsCOMPtr<nsIBox> parentBox;
   GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
-  return parent->GetOtherMonumentsAt(parentBox, 0, aList, this);
+  if (parent)
+     return parent->GetOtherMonumentsAt(parentBox, 0, aList, this);
+  else
+     return NS_OK;
 }
 
 /**
@@ -590,7 +593,9 @@ nsMonumentLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsB
    nsCOMPtr<nsIBox> parentBox;
    GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
 
-   parent->GetOtherMonumentsAt(parentBox, aIndexOfObelisk, aList, this);
+   if (parent)
+      parent->GetOtherMonumentsAt(parentBox, aIndexOfObelisk, aList, this);
+
    return NS_OK;
 }
 
@@ -600,7 +605,9 @@ nsMonumentLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox*
    nsCOMPtr<nsIMonument> parent;
    nsCOMPtr<nsIBox> parentBox;
    GetParentMonument(aBox, parentBox, getter_AddRefs(parent));
-   parent->GetOtherTemple(parentBox, aTemple, aTempleBox, this);
+   if(parent)
+     parent->GetOtherTemple(parentBox, aTemple, aTempleBox, this);
+
    return NS_OK;
 }
 

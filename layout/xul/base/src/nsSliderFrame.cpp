@@ -122,6 +122,51 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsSliderFrame::RemoveFrame(nsIPresContext* aPresContext,
+                           nsIPresShell& aPresShell,
+                           nsIAtom* aListName,
+                           nsIFrame* aOldFrame)
+{
+  nsresult rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  PRInt32 start = GetChildCount();
+  if (start == 0) 
+    RemoveListener();
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSliderFrame::InsertFrames(nsIPresContext* aPresContext,
+                            nsIPresShell& aPresShell,
+                            nsIAtom* aListName,
+                            nsIFrame* aPrevFrame,
+                            nsIFrame* aFrameList)
+{
+  PRInt32 start = GetChildCount();
+  nsresult rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+  if (start == 0) 
+    AddListener();
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsSliderFrame::AppendFrames(nsIPresContext* aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList)
+{
+  // if we have no children and on was added then make sure we add the
+  // listener
+  PRInt32 start = GetChildCount();
+  nsresult rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  if (start == 0) 
+    AddListener();
+
+  return rv;
+} 
+
 PRInt32
 nsSliderFrame::GetCurrentPosition(nsIContent* content)
 {
@@ -233,43 +278,52 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
   nsIBox* thumb;
   GetChildBox(&thumb);
 
-  NS_ASSERTION(thumb,"Slider does not have a thumb!!!!");
+  if (thumb) {
+    nsRect thumbRect;
+    thumb->GetBounds(thumbRect);
+    nsMargin m;
+    thumb->GetMargin(m);
+    thumbRect.Inflate(m);
 
-  nsRect thumbRect;
-  thumb->GetBounds(thumbRect);
-  nsMargin m;
-  thumb->GetMargin(m);
-  thumbRect.Inflate(m);
+    nsRect crect;
+    GetClientRect(crect);
 
-  nsRect crect;
-  GetClientRect(crect);
-
-  if (crect.width < thumbRect.width || crect.height < thumbRect.height)
-  {
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisibleOrCollapsed()) {
-      const nsStyleColor* myColor = (const nsStyleColor*)
-      mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-      mStyleContext->GetStyleData(eStyleStruct_Spacing);
-      nsRect rect(0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, rect, *mySpacing, mStyleContext, 0);
+    if (crect.width < thumbRect.width || crect.height < thumbRect.height)
+    {
+      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (disp->IsVisibleOrCollapsed()) {
+        const nsStyleColor* myColor = (const nsStyleColor*)
+        mStyleContext->GetStyleData(eStyleStruct_Color);
+        const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+        mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        nsRect rect(0, 0, mRect.width, mRect.height);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                aDirtyRect, rect, *mySpacing, mStyleContext, 0);
+        }
       }
+      return NS_OK;
     }
-    return NS_OK;
   }
-  
+
   return nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 NS_IMETHODIMP
 nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 {
+  // get the thumb should be our only child
+  nsIBox* thumbBox = nsnull;
+  GetChildBox(&thumbBox);
+
+  if (!thumbBox) {
+    SyncLayout(aState);
+    return NS_OK;
+  }
+
   EnsureOrient();
 
   if (mState & NS_STATE_DEBUG_WAS_SET) {
@@ -288,12 +342,6 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   nsCOMPtr<nsIContent> scrollbar;
   GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
   PRBool isHorizontal = IsHorizontal();
-
-  // get the thumb should be our only child
-  nsIBox* thumbBox = nsnull;
-  GetChildBox(&thumbBox);
-
-  NS_ASSERTION(thumbBox,"Slider does not have a thumb!!!!");
 
   // get the thumb's pref size
   nsSize thumbSize(0,0);
@@ -334,7 +382,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   nscoord flex = 0;
   thumbBox->GetFlex(aState, flex);
-   
+ 
   if (flex > 0) 
   {
     nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
@@ -346,7 +394,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
          thumbSize.width = thumbsize;
        else
           thumbSize.height = thumbsize;
-        
+      
     } else {
         ourmaxpos -= thumbcoord;
         mRatio = float(ourmaxpos)/float(maxpos);
@@ -360,7 +408,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   // set the thumbs y coord to be the current pos * the ratio.
   nscoord pos = nscoord(float(curpos)*mRatio);
   nsRect thumbRect(clientRect.x, clientRect.y, thumbSize.width, thumbSize.height);
-  
+
   if (isHorizontal)
     thumbRect.x += pos;
   else
@@ -369,6 +417,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   nsRect oldThumbRect;
   thumbBox->GetBounds(oldThumbRect);
   LayoutChildAt(aState, thumbBox, thumbRect);
+
 
   SyncLayout(aState);
 
@@ -952,12 +1001,14 @@ nsSliderFrame::AddListener()
   }
 
   nsIFrame* thumbFrame = mFrames.FirstChild();
-  nsCOMPtr<nsIContent> content;
-  thumbFrame->GetContent(getter_AddRefs(content));
+  if (thumbFrame) {
+    nsCOMPtr<nsIContent> content;
+    thumbFrame->GetContent(getter_AddRefs(content));
 
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->AddEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
+    reciever->AddEventListenerByIID(mMediator, NS_GET_IID(nsIDOMMouseListener));
+  }
 }
 
 void
