@@ -60,13 +60,16 @@ function getTestCases() {
         var u = new Unicode(i);
         TEST_STRING += String.fromCharCode(i);
         EXPECT_STRING += String.fromCharCode( u.upper );
-	}
+    }
+
+    // don't print out the value of the strings since they contain control
+    // characters that break the driver
+    var isEqual = EXPECT_STRING == (new String( TEST_STRING )).toUpperCase();
 
     array[item++] = new TestCase( SECTION,
-                                      "new String( "+ TEST_STRING +" ).toUpperCase()",
-                                      EXPECT_STRING,
-                                      (new String( TEST_STRING )).toUpperCase() );
-
+                                      "isEqual",
+                                      true,
+                                      isEqual);
     return array;
 }
 function test() {
@@ -510,3 +513,4 @@ function DecimalToHexString( n ) {
 
     return h;
 }
+
