@@ -70,6 +70,7 @@ class nsLDAPMessage : public nsILDAPMessage
     LDAPMessage *mMsgHandle; // the message we're wrapping
     BerElement *mPosition; // position in the associated attr list
     nsCOMPtr<nsILDAPOperation> mOperation;  // operation this msg relates to
+    nsCOMPtr<nsILDAPConnection> mConnection; // cached connection this op is on
     LDAP *mConnectionHandle; // cached connection handle
 };
 
