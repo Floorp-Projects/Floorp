@@ -82,8 +82,6 @@ nsFormFillController::nsFormFillController() :
   mCompleteDefaultIndex(PR_FALSE),
   mForceComplete(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
-
   mController = do_CreateInstance("@mozilla.org/autocomplete/controller;1");
 
   mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");

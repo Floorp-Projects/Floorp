@@ -64,7 +64,6 @@
 
 nsXREDirProvider::nsXREDirProvider(const nsACString& aProductName)
 {
-  NS_INIT_ISUPPORTS();
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   mProductDir.Assign(NS_LITERAL_CSTRING(".") + aProductName);
   ToLowerCase(mProductDir);
