@@ -21,71 +21,101 @@
  * 
  * ***** END LICENSE BLOCK *****
  */
-
+ 
+var gAllowWindowOpen = true;
+var gPendingEvents = new Array();
 
 function openCalendar() 
 {
-   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-   
-   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-   
-   var topWindow = windowManagerInterface.getMostRecentWindow( "calendar" );
-   
+   var wmdata = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
+   var wmediator = wmdata.QueryInterface(Components.interfaces.nsIWindowMediator);
+
+   var calendarWindow = wmediator.getMostRecentWindow( "calendarMainWindow" );
    //the topWindow is always null, but it loads chrome://calendar/content/calendar.xul into the open window.
 
-   if ( topWindow )
+   if ( calendarWindow )
    {
-      topWindow.focus();
+      calendarWindow.focus();
    }
    else
-      window.open("chrome://calendar/content/calendar.xul", "calendar", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+      calendarWindow = window.open("chrome://calendar/content/calendar.xul", "calendar", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
 
 function getAlarmDialog( Event )
 {
-   var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
- 
-   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+   var wmdata = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
+   var wmediator = wmdata.QueryInterface(Components.interfaces.nsIWindowMediator);
 
-   var topWindow = windowManagerInterface.getMostRecentWindow( "caAlarmDialog" );
-   
-   if ( topWindow )
-      return topWindow;
+   var calendarAlarmWindow = wmediator.getMostRecentWindow( "calendarAlarmWindow" );
+   //the topWindow is always null, but it loads chrome://calendar/content/calendar.xul into the open window.
+
+   if ( calendarAlarmWindow )
+      return calendarAlarmWindow;
    else
    {
-      var args = new Object();
-
-      args.calendarEvent = Event;
-   
-      window.open("chrome://calendar/content/ca-event-alert-dialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar,alwaysRaised", args);
-
       return false;
    }
 
 }
 
+function openCalendarAlarmWindow( Event )
+{
+   var args = new Object();
+
+   args.calendarEvent = Event;
+   
+   calendarAlarmWindow = window.openDialog("chrome://calendar/content/calendarEventAlertDialog.xul", "caAlarmDialog", "chrome,extrachrome,resizable,scrollbars,status,toolbar,alwaysRaised", args);
+   
+   setTimeout( "resetAlarmDialog()", 2000 );
+}
+
+function resetAlarmDialog()
+{
+   gAllowWindowOpen = true;
+
+   firePendingEvents();
+}
+
+function firePendingEvents()
+{
+   for( i = 0; i < gPendingEvents.length; i++ )
+   {
+      addEventToDialog( gPendingEvents[i] );
+   }
+}
+
 function addEventToDialog( Event )
 {
-   var alarmWindow = getAlarmDialog( Event );
-   if( alarmWindow )
-    {
-        if( "createAlarmBox" in alarmWindow )
+   var calendarAlarmWindow = getAlarmDialog( Event );
+   if( calendarAlarmWindow )
+   {
+      dump( "\n\n!!!!!!!!!!!calendar alarm window, in iff" );  
+      if( "createAlarmBox" in calendarAlarmWindow )
         {
-           alarmWindow.onAlarmCall( Event );
+           calendarAlarmWindow.onAlarmCall( Event );
         }
         else
         {
-            if( !("pendingEvents" in alarmWindow) )
+            if( !("pendingEvents" in calendarAlarmWindow) )
             {
-                alarmWindow.pendingEvents = new Array();
+                calendarAlarmWindow.pendingEvents = new Array();
             }
             
             //dump( "\n ADDING PENDING EVENT TO DIALOG _______________________" );
             
-            alarmWindow.pendingEvents.push( Event );
+            calendarAlarmWindow.pendingEvents.push( Event );
         }
-        
     }
+   else if( gAllowWindowOpen )
+   {
+      gAllowWindowOpen = false;
+      
+      calendarAlarmWindow = openCalendarAlarmWindow( Event );
+   }
+   else
+   {
+      gPendingEvents.push( Event );
+   }
 }
 

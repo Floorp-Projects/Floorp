@@ -42,7 +42,7 @@
 <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
-<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/calendarEventAlertDialog.css" ?>
 
 
 <!-- DTD File with all strings specific to the calendar -->
@@ -59,6 +59,8 @@
    title="&brandShortName; - Calendar Alarm - &event.title.alarm;"
    orient="vertical"
    onload="onLoad()"
+   windowtype="calendarAlarmWindow"
+   persist="screenX screenY"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
    
 <!-- Javascript includes -->

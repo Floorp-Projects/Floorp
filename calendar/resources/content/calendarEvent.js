@@ -534,6 +534,7 @@ CalendarEventDataSource.prototype.prepareAlarms = function( )
     
     this.gICalLib.addObserver( this.alarmObserver );
     
+    this.alarmObserver.firePendingAlarms( this.alarmObserver );
 }
 
 function CalendarAlarmObserver( calendarService )
@@ -603,6 +604,8 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
 {
    debug( "Fire alarm "+ calendarEvent );
    
+   addEventToDialog(  calendarEvent );
+
    if ( calendarEvent.alarmEmailAddress )
    {
       

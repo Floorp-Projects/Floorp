@@ -61,7 +61,7 @@ function onLoad()
         buildEventBoxes();
    }
    
-   setupOkCancelButtons( onOkButton, 0 );
+   doSetOKCancel( onOkButton, 0 );
 }
 
 function buildEventBoxes()
@@ -98,6 +98,7 @@ function buildEventBoxes()
       var TooManyDesc = document.getElementById( "too-many-alarms-description" );
       TooManyDesc.setAttribute( "collapsed", "true" );
    }
+   sizeToContent();
 }
 
 function onAlarmCall( Event )
@@ -112,6 +113,7 @@ function onAlarmCall( Event )
    if( AddToArray )
       gAllEvents[ gAllEvents.length ] = Event;
 
+   dump( "\n\nCALLING ONALARMCALL IN calendarEventAlertDialog.js" );
    buildEventBoxes();
 }
 
@@ -184,8 +186,7 @@ function removeAlarmBox( Event )
    else
    {
       //close the dialog
-      closeDialog();
-      //return( true );
+      self.close();
    }
 }
 
@@ -207,11 +208,14 @@ function onOkButton( )
    for( i = 0; i < gAllEvents.length; i++ )
    {
       gAllEvents[i].lastAlarmAck = new Date();
+   }
 
-      var calendarEventService = pendialog.getService( "org.penzilla.calendar" );
+   var calendarEventService = opener.gEventSource;
    
-      gICalLib = calendarEventService.getICalLib();
-
+   gICalLib = calendarEventService.getICalLib();
+   
+   for( i = 0; i < gAllEvents.length; i++ )
+   {
       gICalLib.modifyEvent( gAllEvents[i] );
    }
 
@@ -229,7 +233,7 @@ function acknowledgeAlarm( Event )
 {
    Event.lastAlarmAck = new Date();
 
-   var calendarEventService = pendialog.getService( "org.penzilla.calendar" );
+   var calendarEventService = opener.gEventSource;
    
    gICalLib = calendarEventService.getICalLib();
 
@@ -279,7 +283,7 @@ function snoozeAlarm( Event )
    
    Event.setSnoozeTime( DateObjOfNextAlarm );
    
-   var calendarEventService = pendialog.getService( "org.penzilla.calendar" );
+   var calendarEventService = opener.gEventSource;
    
    gICalLib = calendarEventService.getICalLib();
 
