@@ -295,7 +295,7 @@ main(int argc, char **argv)
     } else {
 	rv = NSS_NoDB_Init(secDir);
 	if (rv != SECSuccess) {
-	    fprintf(stderr, "NSS_Init failed.\n");
+	    fprintf(stderr, "NSS_NoDB_Init failed.\n");
 	    exit(1);
 	}
     }
