@@ -138,11 +138,11 @@ elsif( $::query_date_type eq 'all' ){
     $::query_date_min = 0;
 }
 elsif( $::query_date_type eq 'explicit' ){
-    if ($::FORM{'mindate'} ne "") {
+    if ($::FORM{'mindate'}) {
         $::query_date_min = parse_date($::FORM{'mindate'});
     }
 
-    if ($::FORM{'maxdate'} ne "") {
+    if ($::FORM{'maxdate'}) {
         $::query_date_max = parse_date($::FORM{'maxdate'});
     }
 }
@@ -422,7 +422,7 @@ sub print_ci {
 
 sub print_head {
 
-if ($::versioninfo ne "") {
+if ($::versioninfo) {
     print "<FORM action='multidiff.cgi' method=post>";
     print "<INPUT TYPE='HIDDEN' name='allchanges' value = '$::versioninfo'>";
     print "<INPUT TYPE='HIDDEN' name='cvsroot' value = '$::CVS_ROOT'>";
@@ -621,7 +621,7 @@ sub query_to_english {
     }
     elsif( $::query_date_type eq 'explicit' ){
         my ($w1, $w2);
-        if ( $::FORM{mindate} ne "" && $::FORM{maxdate} ne "" ) {
+        if ( $::FORM{mindate} && $::FORM{maxdate}) {
             $w1 = "between";
             $w2 = "and" ;
         }
@@ -630,14 +630,14 @@ sub query_to_english {
             $w2 = "before";
         }
 
-        if( $::FORM{'mindate'} ne "" ){
+        if( $::FORM{'mindate'}){
             my $dd = &parse_date($::FORM{'mindate'});
             my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
             my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
             $english .= "$w1 <i>$t</i> ";
         }
 
-        if( $::FORM{'maxdate'} ne "" ){
+        if( $::FORM{'maxdate'}){
             my $dd = &parse_date($::FORM{'maxdate'});
             my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
             my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
