@@ -1948,8 +1948,21 @@ nsGfxTextControlFrame2::SetInitialValue()
   return NS_OK;
 }
 
-#define DIV_STRING "-moz-user-focus: none; border: 0px !important; padding: 0px; margin:0px; "
-#define DIV_STRING_SINGLELINE "-moz-user-focus: none; white-space : nowrap; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
+#define DIV_STRING \
+  "-moz-user-focus: none;" \
+  "border: 0px !important;" \
+  "padding: 0px;" \
+  "margin: 0px;" \
+  ""
+
+#define DIV_STRING_SINGLELINE \
+  "-moz-user-focus: none;" \
+  "white-space : nowrap;" \
+  "overflow: auto;" \
+  "border: 0px !important;" \
+  "padding: 0px;" \
+  "margin: 0px;" \
+  ""
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
@@ -2322,11 +2335,39 @@ nsGfxTextControlFrame2::Paint(nsIPresContext*      aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  nsresult rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsresult rv = NS_OK;
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
+    if (NS_FAILED(rv)) return rv;
+    rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATERS);
+    if (NS_FAILED(rv)) return rv;
+    rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
+  }
   DO_GLOBAL_REFLOW_COUNT_DSP("nsGfxTextControlFrame2", &aRenderingContext);
   return rv;
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetFrameForPoint(nsIPresContext* aPresContext,
+                                         const nsPoint& aPoint,
+                                         nsFramePaintLayer aWhichLayer,
+                                         nsIFrame** aFrame)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
+                                      NS_FRAME_PAINT_LAYER_FOREGROUND, aFrame);
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
+    rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
+                                        NS_FRAME_PAINT_LAYER_FLOATERS, aFrame);
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
+    rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
+                                      NS_FRAME_PAINT_LAYER_BACKGROUND, aFrame);
+  }
+  return rv;
+}
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)

@@ -92,6 +92,11 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame** aFrame);
+
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);

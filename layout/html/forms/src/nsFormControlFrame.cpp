@@ -413,17 +413,57 @@ nsFormControlFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  nsresult rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            aWhichLayer);
+  nsresult rv = NS_OK;
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            NS_FRAME_PAINT_LAYER_BACKGROUND);
+    if (NS_FAILED(rv))
+      return rv;
+    // draw selection borders when appropriate
+    rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            NS_FRAME_PAINT_LAYER_BACKGROUND);
+    if (NS_FAILED(rv))
+      return rv;
 
- if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)
- {
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    PaintSpecialBorder(aPresContext, 
-                       aRenderingContext,
-                       this,
-                       aDirtyRect,
-                       rect);    
+    rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            NS_FRAME_PAINT_LAYER_FLOATERS);
+    if (NS_FAILED(rv))
+      return rv;
+    // draw selection borders when appropriate
+    rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            NS_FRAME_PAINT_LAYER_FLOATERS);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            NS_FRAME_PAINT_LAYER_FOREGROUND);
+    if (NS_FAILED(rv))
+      return rv;
+    // draw selection borders when appropriate
+    rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            NS_FRAME_PAINT_LAYER_FOREGROUND);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsFormControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                     const nsPoint& aPoint,
+                                     nsFramePaintLayer aWhichLayer,
+                                     nsIFrame** aFrame)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    rv = nsLeafFrame::GetFrameForPoint(aPresContext, aPoint,
+                                      NS_FRAME_PAINT_LAYER_FOREGROUND, aFrame);
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
+    rv = nsLeafFrame::GetFrameForPoint(aPresContext, aPoint,
+                                       NS_FRAME_PAINT_LAYER_FLOATERS, aFrame);
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
+    rv = nsLeafFrame::GetFrameForPoint(aPresContext, aPoint,
+                                      NS_FRAME_PAINT_LAYER_BACKGROUND, aFrame);
   }
   return rv;
 }
@@ -886,47 +926,6 @@ nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
   mSuggestedWidth = aWidth;
   mSuggestedHeight = aHeight;
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-// static 
-nsresult nsFormControlFrame::PaintSpecialBorder(nsIPresContext* aPresContext, 
-                                                nsIRenderingContext& aRenderingContext,
-                                                nsIFrame *aFrame,
-                                                const nsRect& aDirtyRect,
-                                                const nsRect& aRect)
-{
-  NS_ASSERTION( aPresContext, "PresContext cannot be null");
-  NS_ASSERTION( aFrame, "Frame cannot be null");
-
-  nsresult rv=NS_OK;
-#if 0
-  if(aPresContext && aFrame){
-    // first probe for the pseudo-style context for the frame
-
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    nsCOMPtr<nsIStyleContext> context;
-    aFrame->GetStyleContext(getter_AddRefs(context));
-    nsCOMPtr<nsIStyleContext> specialBorderStyle;
-
-    // style for the inner such as a dotted line (Windows)
-    aPresContext->ProbePseudoStyleContextFor(content, nsHTMLAtoms::mozControlSpecialBorderPseudo, context,
-                                            PR_FALSE,
-                                            getter_AddRefs(specialBorderStyle));
-    if (specialBorderStyle){
-      // paint the border
-
-      const nsStyleBorder* border = (const nsStyleBorder*)specialBorderStyle ->GetStyleData(eStyleStruct_Border);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aFrame,
-                                  aDirtyRect, aRect, *border, specialBorderStyle, 0);
-    }
-
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-#endif
-  return rv;
 }
 
 nsresult 
