@@ -108,29 +108,25 @@ nsresult nsGfxFactoryBeOS::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   if (mClassID.Equals(kCFontMetrics)) {
-    inst = (nsISupports *)new nsFontMetricsBeOS();
+    NS_NEWXPCOM(inst, nsFontMetricsBeOS);
   }
   else if (mClassID.Equals(kCDeviceContext)) {
-    inst = (nsISupports *)new nsDeviceContextBeOS();
+    NS_NEWXPCOM(inst, nsDeviceContextBeOS);
   }
   else if (mClassID.Equals(kCRenderingContext)) {
-    inst = (nsISupports *)new nsRenderingContextBeOS();
+    NS_NEWXPCOM(inst, nsDeviceContextBeOS);
   }
   else if (mClassID.Equals(kCImage)) {
-    inst = (nsISupports *)new nsImageBeOS();
+    NS_NEWXPCOM(inst, nsImageBeOS);
   }
   else if (mClassID.Equals(kCRegion)) {
-    inst = (nsISupports *)new nsRegionBeOS();
+    NS_NEWXPCOM(inst, nsRegionBeOS);
   }
   else if (mClassID.Equals(kCDeviceContextSpec)) {
-    nsDeviceContextSpecBeOS* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecBeOS);
-    inst = (nsISupports *)dcs;
+    NS_NEWXPCOM(inst, nsDeviceContextSpecBeOS);
   }
   else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
-    nsDeviceContextSpecFactoryBeOS* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryBeOS);
-    inst = (nsISupports *)dcs;
+    NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryBeOS);
   }          
 	
   if (inst == NULL) {  
