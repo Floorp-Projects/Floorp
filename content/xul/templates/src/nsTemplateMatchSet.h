@@ -168,8 +168,10 @@ protected:
 
     /**
      * Hashtable entry; holds weak reference to a match object.
+     *
+     * NOTE: this has to be public for several compilers (see 74725) so
+     *       that ConstIterator's union can have access to Entry.
      */
-
 public:
     struct Entry {
         friend class ConstIterator;
