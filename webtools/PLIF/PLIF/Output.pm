@@ -58,7 +58,6 @@ sub init {
 # output handlers.
 sub propertyImpliedAccessAllowed {
     my $self = shift;
-    $self->dump(10, "access to property @_ of object $self attempted");
     return $self->propertyExists(@_);
 }
 
