@@ -654,11 +654,7 @@ nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
     // We got one!
     aHandledFlag = PR_TRUE;
     SetCurrentMenuItem(result);
-    result->OpenMenu(PR_TRUE);
-    result->SelectFirstItem();
-
-    // XXX For menu items, do an execution of the oncommand handler!
-    // Still needed or did I do this already? I'm going senile. - Dave
+    result->Enter();
   }
 }
 
