@@ -187,7 +187,7 @@ char * nsMsgI18NGetDefaultMailCharset()
 	  if (NS_SUCCEEDED(res)) 
 	  {
   		//TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-  		 retVal = PL_strdup("us-ascii");
+  		 retVal = prefValue;
 	  }
 	  else 
 		  retVal = PL_strdup("iso-8859-1");
