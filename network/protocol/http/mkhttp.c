@@ -2693,7 +2693,7 @@ net_setup_http_stream(ActiveEntry * ce)
 	/* check to see if we just now entered a secure space */ 
     /* don't do if this is coming from history */ 
     /* don't do this if about to redirect */ 
-    if( HG22087
+    if( HG22087 && 
 		(CE_FORMAT_OUT == FO_CACHE_AND_PRESENT || CE_FORMAT_OUT == FO_PRESENT) 
         && !CE_URL_S->history_num) 
       { 
