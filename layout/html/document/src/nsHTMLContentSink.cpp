@@ -2015,7 +2015,7 @@ HTMLContentSink::StartLayout()
   // document, then let the style dictate. We need to do this before the initial reflow...
   if (mWebShell) {
     if (mFrameset) {
-      mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+      mWebShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN, PR_FALSE);
     } 
     else if (mBody) {
       PRBool isFrameDoc = PR_FALSE;
@@ -2023,7 +2023,7 @@ HTMLContentSink::StartLayout()
       // a <frame> webshell will have its scrolling set by the parent nsFramesetFrame. 
       // a <body> webshell is reset here just for safety.
       if (!isFrameDoc) {
-        mWebShell->SetScrolling(-1);
+        mWebShell->SetScrolling(-1, PR_FALSE);
       }
     }
   }
