@@ -2513,8 +2513,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        ScriptRuntime.setReference(lhs, rhs);
-        stack[stackTop] = rhs;
+        stack[stackTop] = ScriptRuntime.setReference(lhs, rhs);
         continue Loop;
     }
     case Icode_REF_INC_DEC : {

@@ -3486,11 +3486,9 @@ class BodyCodegen
                 "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
         generateCodeFromNode(child, node);
-        cfw.add(ByteCode.DUP_X1);
-        // stack: value ref value
         addScriptRuntimeInvoke(
-            "setReference", "(Ljava/lang/Object;Ljava/lang/Object;)V");
-        // stack: value
+            "setReference",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     }
 
     private void visitBind(Node node, Node child)

@@ -46,7 +46,7 @@ public abstract class Reference
 {
     public abstract Object get();
 
-    public abstract void set(Object value);
+    public abstract Object set(Object value);
 
     public void delete()
     {

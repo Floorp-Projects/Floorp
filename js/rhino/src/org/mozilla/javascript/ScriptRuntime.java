@@ -1265,7 +1265,7 @@ public class ScriptRuntime {
         return ref.get();
     }
 
-    public static void setReference(Object obj, Object value)
+    public static Object setReference(Object obj, Object value)
     {
         if (!(obj instanceof Reference)) {
             String msg = getMessage2("msg.no.ref.to.set",
@@ -1273,7 +1273,7 @@ public class ScriptRuntime {
             throw constructError("ReferenceError", msg);
         }
         Reference ref = (Reference)obj;
-        ref.set(value);
+        return ref.set(value);
     }
 
     static boolean isSpecialProperty(String s)
@@ -1306,12 +1306,12 @@ public class ScriptRuntime {
                 }
             }
 
-            public void set(Object value)
+            public Object set(Object value)
             {
                 if (id == PROTO) {
-                    setProto(obj, value, scope);
+                    return setProto(obj, value, scope);
                 } else {
-                    setParent(obj, value, scope);
+                    return setParent(obj, value, scope);
                 }
             }
         };
