@@ -1692,7 +1692,7 @@ BookmarkParser::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *objType
 // BookmarkDataSourceImpl
 
 nsBookmarksService::nsBookmarksService()
-	: mInner(nsnull), mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE), mUpdateBatchNest(0)
+	: mInner(nsnull), mUpdateBatchNest(0), mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE)
 
 #ifdef	XP_MAC
 	,mIEFavoritesAvailable(PR_FALSE)

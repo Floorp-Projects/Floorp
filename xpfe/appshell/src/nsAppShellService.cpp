@@ -103,17 +103,11 @@ static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 #define gInstallRestartTopic     "xpinstall-restart"
 
 nsAppShellService::nsAppShellService() : 
-  mAppShell( nsnull ),
-  mCmdLineService( nsnull ),
-  mWindowMediator( nsnull ), 
-  mHiddenWindow( nsnull ),
   mDeleteCalled( PR_FALSE ),
-  mSplashScreen( nsnull ),
-  mNativeAppSupport( nsnull ),
+  mInProfileStartup( PR_FALSE ),
   mModalWindowCount( 0 ),
   mShuttingDown( PR_FALSE ),
-  mQuitOnLastWindowClosing( PR_TRUE ),
-  mInProfileStartup( PR_FALSE )
+  mQuitOnLastWindowClosing( PR_TRUE )
 {
   NS_INIT_REFCNT();
 }

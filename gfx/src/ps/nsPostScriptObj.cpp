@@ -172,8 +172,8 @@ PrintAsDSCTextline(FILE *f, const char *text, int maxlen)
  *	@update 2/1/99 dwc
  */
 nsPostScriptObj::nsPostScriptObj() :
-  mPrintContext(nsnull),
   mPrintSetup(nsnull),
+  mPrintContext(nsnull),
   mTitle(nsnull)
 {
   PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::nsPostScriptObj()\n"));

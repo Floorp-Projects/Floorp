@@ -437,13 +437,13 @@ nsIRDFResource * nsCharsetMenu::kRDF_type = NULL;
 
 nsCharsetMenu::nsCharsetMenu() 
 : mInitialized(PR_FALSE), 
-  mOthersInitialized(PR_FALSE),
   mBrowserMenuInitialized(PR_FALSE),
   mMailviewMenuInitialized(PR_FALSE),
   mComposerMenuInitialized(PR_FALSE),
   mMaileditMenuInitialized(PR_FALSE),
   mSecondaryTiersInitialized(PR_FALSE),
-  mAutoDetectInitialized(PR_FALSE)
+  mAutoDetectInitialized(PR_FALSE),
+  mOthersInitialized(PR_FALSE)
 {
   NS_INIT_REFCNT();
   NS_TIMELINE_START_TIMER("nsCharsetMenu::nsCharsetMenu");

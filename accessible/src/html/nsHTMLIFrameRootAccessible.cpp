@@ -54,7 +54,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
 NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLIFrameAccessible, nsBlockAccessible, nsIAccessibleDocument, nsIAccessibleHyperText)
 
 nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *aDoc):
-  nsBlockAccessible(aNode, aShell), mRootAccessible(aRoot), nsDocAccessibleMixin(aDoc)
+  nsBlockAccessible(aNode, aShell), nsDocAccessibleMixin(aDoc), mRootAccessible(aRoot)
 {
 }
 
@@ -331,7 +331,7 @@ nsresult nsHTMLIFrameAccessible::GetLinkIndexFromAccNode(nsIAccessible *aAccNode
 // construction 
 //-----------------------------------------------------
 nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-  mOuterNode(aNode), nsRootAccessible(aShell)
+  nsRootAccessible(aShell), mOuterNode(aNode)
 {
 }
 

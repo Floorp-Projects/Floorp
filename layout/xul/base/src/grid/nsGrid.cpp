@@ -123,17 +123,17 @@ These are called extraColumns/Rows.
 */
 
 nsGrid::nsGrid():mBox(nsnull),
-                 mColumns(nsnull), 
                  mRows(nsnull),
+                 mColumns(nsnull), 
                  mRowBox(nsnull),
                  mColumnBox(nsnull),
                  mNeedsRebuild(PR_TRUE),
-                 mCellMap(nsnull),
-                 mMarkingDirty(PR_FALSE),
-                 mColumnCount(0),
                  mRowCount(0),
+                 mColumnCount(0),
                  mExtraRowCount(0),
-                 mExtraColumnCount(0)
+                 mExtraColumnCount(0),
+                 mCellMap(nsnull),
+                 mMarkingDirty(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsGrid);
 }

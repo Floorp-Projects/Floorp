@@ -83,8 +83,8 @@ protected:
     nsCOMPtr<nsISupports>   mISupports;    
     
     HashEntry(PRUint8 inType, const nsAString& inEntryName)
-    : mEntryType(inType)
-    , mEntryName(inEntryName)
+    : mEntryName(inEntryName)
+    , mEntryType(inType)
     , mString(nsnull)
     {
       mData.mDouble = 0.0;

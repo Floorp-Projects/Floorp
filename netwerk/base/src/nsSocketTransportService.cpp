@@ -68,9 +68,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
 
 nsSocketTransportService::nsSocketTransportService ()   :
+    mAutodialEnabled(PR_FALSE),
     mConnectedTransports (0),
-    mTotalTransports (0),
-    mAutodialEnabled(PR_FALSE)
+    mTotalTransports (0)
 {
 #if defined(PR_LOGGING)
   if (!gSocketTransportServiceLog)

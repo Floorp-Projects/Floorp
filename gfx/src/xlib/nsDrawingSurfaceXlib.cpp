@@ -50,21 +50,21 @@ static PRLogModuleInfo *DrawingSurfaceXlibLM = PR_NewLogModule("DrawingSurfaceXl
 
 nsDrawingSurfaceXlibImpl::nsDrawingSurfaceXlibImpl() :
   nsIDrawingSurfaceXlib(),
-  mDrawable(None),
-  mImage(nsnull),
   mXlibRgbHandle(nsnull),
   mDisplay(nsnull),
   mScreen(nsnull),
   mVisual(nsnull),
   mDepth(0),
   mGC(nsnull),
+  mDrawable(None),
+  mImage(nsnull),
   // set up lock info
-  mLocked(PR_FALSE),
   mLockX(0),
   mLockY(0),
   mLockWidth(0),
   mLockHeight(0),
   mLockFlags(0),
+  mLocked(PR_FALSE),
   // dimensions...
   mWidth(0),
   mHeight(0),
