@@ -16,22 +16,30 @@
  * Reserved.
  */
 
-#include "nsNNTPNewsgroupListState.h"
-#include "nsMsgNewsHost.h"
+#include "msgCore.h"
+#include "nsNNTPNewsgroupList.h"
+#include "nsIMsgNewsHost.h"
 
+/* XXX - temporary hack so this will compile */
 
-class ListNewsGroupArticleKeysState
+typedef PRUint32 MessageKey;
+
+class nsNNTPArticleList
 #ifdef HAVE_CHANGELISTENER
  : public ChangeListener
 #endif
 {
 public:
-	nsNNTPArticleList();
+	nsNNTPArticleList(const nsIMsgNewsHost * newshost,
+                      const nsIMsgNewsgroup* newsgroup);
                                   /* , MSG_Pane *pane); */
-	~nsNNTPArticleList();
-    
+    virtual ~nsNNTPArticleList();
+
+    NS_DECL_ISUPPORTS
+  
     // nsINNTPArticleKeysState
-    NS_IMETHOD Init(const char *newsHost, const nsIMsgNewsgroup *newsgroup);
+    NS_METHOD Initialize(const nsIMsgNewsHost *newsHost,
+                          const nsIMsgNewsgroup *newsgroup);
 	NS_IMETHOD AddArticleKey(PRInt32 key);
 	NS_IMETHOD FinishAddingArticleKeys();
 
@@ -41,31 +49,35 @@ protected:
 #ifdef HAVE_PANES
 	MSG_Pane				*m_pane;
 #endif
-	const char *			m_groupName;
+  /* formerly m_groupName */
+	nsIMsgNewsgroup			*m_newsgroup;
 	nsIMsgNewsHost			*m_host;
 #ifdef HAVE_NEWSDB
 	NewsGroupDB				*m_newsDB;
 #endif
+#ifdef HAVE_IDARRAY
 	IDArray					m_idsInDB;
 #ifdef DEBUG_bienvenu
 	IDArray					m_idsDeleted;
 #endif
-	int32					m_dbIndex;
+#endif
+	PRInt32					m_dbIndex;
 	MessageKey				m_highwater;
 };
 
-nsNNTPArticleList::nsNNTPArticleList(const char* newshost,
-                                                             const nsIMsgNewsgroup* newsgroup)
+nsNNTPArticleList::nsNNTPArticleList(const nsIMsgNewsHost* newsHost,
+                                     const nsIMsgNewsgroup* newsgroup)
 {
     NS_INIT_REFCNT();
     Initialize(newsHost, newsgroup);
 }
 
-ListNewsgroupArticleKeysState::Initialize(const char* newsHost,
-                                          const nsIMsgNewsgroup* newsgroup)
+nsresult
+nsNNTPArticleList::Initialize(const nsIMsgNewsHost * newsHost,
+                              const nsIMsgNewsgroup* newsgroup)
 {
-	m_host = host;
-	m_groupName = groupName;
+	m_host = newsHost;
+    m_newsgroup = newsgroup;
 #ifdef HAVE_PANES
 	m_pane = pane;
 #endif
@@ -89,6 +101,7 @@ ListNewsgroupArticleKeysState::Initialize(const char* newsHost,
 		FREEIF(url);
 	}
 #endif
+    return NS_MSG_SUCCESS;
 }
 
 nsNNTPArticleList::~nsNNTPArticleList()
@@ -99,12 +112,14 @@ nsNNTPArticleList::~nsNNTPArticleList()
 #endif
 }
 
-int nsNNTPArticleList::AddArticleKey(int32 key)
+nsresult
+nsNNTPArticleList::AddArticleKey(PRInt32 key)
 {
 	m_idsOnServer.set->Add(key);
+#ifdef HAVE_IDARRAY
 	if (m_dbIndex < m_idsInDB.GetSize())
 	{
-		int32 idInDBToCheck = m_idsInDB.GetAt(m_dbIndex);
+		PRInt32 idInDBToCheck = m_idsInDB.GetAt(m_dbIndex);
 		// if there are keys in the database that aren't in the newsgroup
 		// on the server, remove them. We probably shouldn't do this if
 		// we have a copy of the article offline.
@@ -123,14 +138,16 @@ int nsNNTPArticleList::AddArticleKey(int32 key)
 		if (idInDBToCheck == key)
 			m_dbIndex++;
 	}
+#endif
 	return 0;
 }
 
-int nsNNTPArticleList::FinishAddingArticleKeys()
+nsresult
+nsNNTPArticleList::FinishAddingArticleKeys()
 {
 	// make sure none of the deleted turned up on the idsOnServer list
 #ifdef DEBUG_bienvenu
-	for (int32 i = 0; i < m_idsDeleted.GetSize(); i++)
+	for (PRInt32 i = 0; i < m_idsDeleted.GetSize(); i++)
 		XP_ASSERT (!m_idsOnServer.set->IsMember(m_idsDeleted.GetAt(i)));
 #endif
 	return 0;
