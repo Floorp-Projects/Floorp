@@ -118,7 +118,7 @@ else
 ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
 SHARED_LIBRARY		:= $(LIBRARY:.a=)_shr.a
 else
-SHARED_LIBRARY		:= $(LIBRARY:.a=.so)
+SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
 endif
 endif
 endif
