@@ -26,6 +26,8 @@
 #include "nsString2.h"
 #include "plevent.h"
 
+#include "time.h" // XXX should probably be using PRTime stuff
+
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -70,6 +72,20 @@ typedef enum _FTP_STATE {
     FTP_R_DEL_DIR ,
     FTP_S_MKDIR,    // send mkdir
     FTP_R_MKDIR,
+    FTP_S_MODE,     // send ASCII or BINARY
+    FTP_R_MODE,
+    FTP_S_CWD,
+    FTP_R_CWD,
+    FTP_S_SIZE,
+    FTP_R_SIZE,
+    FTP_S_PUT,
+    FTP_R_PUT,
+    FTP_S_RETR,
+    FTP_R_RETR,
+    FTP_S_MDTM,
+    FTP_R_MDTM,
+    FTP_S_LIST,
+    FTP_R_LIST,
 
 ///////////////////////
 //// Data channel connection setup states
@@ -84,7 +100,7 @@ typedef enum _FTP_STATE {
 // higher level ftp actions
 typedef enum _FTP_ACTION {
 	GET,
-	POST,
+	PUT,
 	MKDIR,
 	DEL
 } FTP_ACTION;
@@ -109,6 +125,7 @@ private:
     nsresult Read(void);
     void SetSystInternals(void);
     FTP_STATE FindActionState(void);
+    FTP_STATE FindGetState(void);
 
     // Private members
 
@@ -130,6 +147,9 @@ private:
 	nsString2			mResponseMsg;       // the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
+    nsString2           mFilename;          // url filename (if any)
+    PRInt32             mLength;            // length of the file
+    time_t              mLastModified;      // last modified time for file
 
 // these members should be hung off of a specific transport connection
     PRInt32             mServerType;
@@ -140,6 +160,8 @@ private:
     PRBool              mConnected;
 	PRBool			    mUseDefaultPath;    // use PWD to figure out path
     PRBool              mUsePasv;           // use a passive data connection.
+    PRBool              mAscii;             // transfer mode (ascii or binary)
+    PRBool              mDirectory;         // this url is a directory
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
