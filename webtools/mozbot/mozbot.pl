@@ -1045,7 +1045,7 @@ sub debug {
 
 # logdate: return nice looking date and time stamp
 sub logdate {
-    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime(shift or time);
+    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime(shift or time());
     return sprintf("%d-%02d-%02d %02d:%02d:%02d UTC",
                    $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
@@ -1054,7 +1054,7 @@ sub logdate {
 sub days {
     my $then = shift;
     # maths
-    my $seconds = time - $then;
+    my $seconds = time() - $then;
     my $minutes = int ($seconds / 60);
     my $hours = int ($minutes / 60);
     my $days = int ($hours / 24);
