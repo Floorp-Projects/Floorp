@@ -636,8 +636,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
   }
 
   if (document && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    document->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager *bindingManager = document->GetBindingManager();
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(mContent, getter_AddRefs(binding));
     if (binding)
@@ -741,8 +740,7 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   RemoveElementAt(index);
   
   if (document) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    document->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager *bindingManager = document->GetBindingManager();
     nsCOMPtr<nsIXBLBinding> binding;
     bindingManager->GetBinding(mContent, getter_AddRefs(binding));
     if (binding)

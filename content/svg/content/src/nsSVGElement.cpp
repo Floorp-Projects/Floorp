@@ -667,9 +667,9 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
 {
   *aOwnerSVGElement = nsnull;
 
-  nsCOMPtr<nsIBindingManager> bindingManager;
+  nsIBindingManager *bindingManager = nsnull;
   if (mDocument) {
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    bindingManager = mDocument->GetBindingManager();
   }
 
   nsCOMPtr<nsIContent> parent;
