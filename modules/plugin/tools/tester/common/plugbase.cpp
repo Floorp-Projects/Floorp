@@ -359,7 +359,15 @@ DWORD CPluginBase::makeNPNCall(NPAPI_Action action, DWORD dw1, DWORD dw2, DWORD 
         dw1 = (DWORD)m_pNPInstance;
       if(dw3 == DEFAULT_DWARG_VALUE)
         dw3 = (DWORD)m_pValue;
-      dwRet = (DWORD)NPN_SetValue((NPP)dw1, (NPPVariable)dw2, (void *)dw3);
+
+      // note that Mozilla expects boolean values not as a pointer to BOOL 
+      // but rather as simply null and not null, let's convert
+      if((dw2 == NPPVpluginWindowBool) ||
+         (dw2 == NPPVpluginTransparentBool) ||
+         (dw2 == NPPVpluginKeepLibraryInMemory)) {
+        dwRet = (DWORD)NPN_SetValue((NPP)dw1, (NPPVariable)dw2, (void *)(*(BOOL *)dw3));
+      } else
+        dwRet = (DWORD)NPN_SetValue((NPP)dw1, (NPPVariable)dw2, (void *)dw3);
       break;
     case action_npn_invalidate_rect:
       if(dw1 == DEFAULT_DWARG_VALUE)

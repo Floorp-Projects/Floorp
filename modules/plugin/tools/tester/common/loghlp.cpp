@@ -166,6 +166,9 @@ LPSTR FormatNPPVariable(NPPVariable var)
     case NPPVpluginWindowSize:
       wsprintf(szVar, "NPPVpluginWindowSize");
       break;
+    case NPPVpluginKeepLibraryInMemory:
+      wsprintf(szVar, "NPPVpluginKeepLibraryInMemory");
+      break;
     default:
       wsprintf(szVar, "Unlisted variable");
       break;
@@ -434,14 +437,17 @@ LogItemStruct * makeLogItemStruct(NPAPI_Action action,
       memcpy(plis->arg3.pData, (LPVOID)dw3, plis->arg3.iLength);
       break;
     case action_npn_set_value:
-      if(((NPPVariable)dw2 == NPPVpluginNameString) || ((NPPVariable)dw2 == NPPVpluginDescriptionString))
+      if(((NPPVariable)dw2 == NPPVpluginNameString) || 
+         ((NPPVariable)dw2 == NPPVpluginDescriptionString))
       {
         makeAbbreviatedString(szBuf, sizeof(szBuf), dw3, strlen((char *)dw3), iWrap);
         plis->arg3.iLength = strlen(szBuf) + 1;
         plis->arg3.pData = new char[plis->arg3.iLength];
         memcpy(plis->arg3.pData, (LPVOID)&szBuf[0], plis->arg3.iLength);
       }
-      else if(((NPPVariable)dw2 == NPPVpluginWindowBool) || ((NPPVariable)dw2 == NPPVpluginTransparentBool))
+      else if(((NPPVariable)dw2 == NPPVpluginWindowBool) || 
+              ((NPPVariable)dw2 == NPPVpluginTransparentBool) ||
+              ((NPPVariable)dw2 == NPPVpluginKeepLibraryInMemory))
       {
         plis->arg3.iLength = sizeof(NPBool);
         plis->arg3.pData = new char[plis->arg3.iLength];
@@ -735,12 +741,15 @@ int formatLogItem(LogItemStruct * plis, LPSTR szOutput, LPSTR szEndOfItem, BOOL 
     case action_npn_set_value:
       wsprintf(szRet, "Returns: %s%s", FormatNPAPIError((int)plis->dwReturnValue),szEOL);
 
-      if(((NPPVariable)dw2 == NPPVpluginNameString) || ((NPPVariable)dw2 == NPPVpluginDescriptionString))
+      if(((NPPVariable)dw2 == NPPVpluginNameString) || 
+         ((NPPVariable)dw2 == NPPVpluginDescriptionString))
       {
         FormatPCHARArgument(sz3, sizeof(sz3), &plis->arg3);
         wsprintf(szString, "NPN_SetValue(%#08lx, %s, %s)%s%s", dw1,FormatNPPVariable((NPPVariable)dw2),sz3,szEOL,szRet);
       }
-      else if(((NPPVariable)dw2 == NPPVpluginWindowBool) || ((NPPVariable)dw2 == NPPVpluginTransparentBool))
+      else if(((NPPVariable)dw2 == NPPVpluginWindowBool) || 
+              ((NPPVariable)dw2 == NPPVpluginTransparentBool) ||
+              ((NPPVariable)dw2 == NPPVpluginKeepLibraryInMemory))
       {
         FormatPBOOLArgument(sz3, sizeof(sz3), &plis->arg3);
         wsprintf(szString, "NPN_SetValue(%#08lx, %s, %s)%s%s", 

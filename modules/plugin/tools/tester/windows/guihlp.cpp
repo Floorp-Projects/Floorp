@@ -395,6 +395,7 @@ void updateUI(HWND hWnd)
     ComboBox_AddString(hWndCombo, "NPPVpluginWindowBool");
     ComboBox_AddString(hWndCombo, "NPPVpluginTransparentBool");
     ComboBox_AddString(hWndCombo, "NPPVpluginWindowSize");
+    ComboBox_AddString(hWndCombo, "NPPVpluginKeepLibraryInMemory");
     ComboBox_SetCurSel(hWndCombo, 0);
     ShowWindow(GetDlgItem(hWnd, IDC_BUTTON_PASTE), SW_HIDE);
   }
@@ -663,6 +664,14 @@ void onGo(HWND hWnd)
       npsize.width = GetDlgItemInt(hWnd, IDC_EDIT_ARG3, &bTranslated, TRUE);
       npsize.height = GetDlgItemInt(hWnd, IDC_EDIT_ARG4, &bTranslated, TRUE);
       pPlugin->m_pValue = (void *)&npsize;
+    }
+    else if(strcmp(sz1, "NPPVpluginKeepLibraryInMemory") == 0)
+    {
+      variable = NPPVpluginKeepLibraryInMemory;
+      index = ComboBox_GetCurSel(GetDlgItem(hWnd, IDC_COMBO_ARG3));
+      ComboBox_GetLBText(GetDlgItem(hWnd, IDC_COMBO_ARG3), index, szStringValue);
+      bBoolValue = (strcmp(szStringValue, "TRUE") == 0) ? TRUE : FALSE;
+      pPlugin->m_pValue = (void *)&bBoolValue;
     }
     pPlugin->makeNPNCall(action_npn_set_value, DEFAULT_DWARG_VALUE, (DWORD)variable, DEFAULT_DWARG_VALUE);
   }

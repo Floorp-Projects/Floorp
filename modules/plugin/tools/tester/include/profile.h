@@ -81,6 +81,7 @@ ScriptItemStruct * readProfileSectionAndCreateScriptItemStruct(LPSTR szFileName,
 #define ENTRY_NPPVPLUGINWINDOWBOOL         "NPPVpluginWindowBool"
 #define ENTRY_NPPVPLUGINTRANSPARENTBOOL    "NPPVpluginTransparentBool"
 #define ENTRY_NPPVPLUGINWINDOWSIZE         "NPPVpluginWindowSize"
+#define ENTRY_NPPVPLUGINKEEPLIBRARYINMEMORY "NPPVpluginKeepLibraryInMemory"
 
 // NPNVariable
 #define ENTRY_NPNVXDISPLAY                 "NPNVxDisplay"

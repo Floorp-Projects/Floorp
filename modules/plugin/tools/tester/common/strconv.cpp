@@ -274,6 +274,8 @@ static NPPVariable convertStringToNPPVariable(LPSTR szString)
       return NPPVpluginWindowBool;
     else if(strcmpi(ENTRY_NPPVPLUGINTRANSPARENTBOOL, szString) == 0)
       return NPPVpluginTransparentBool;
+    else if(strcmpi(ENTRY_NPPVPLUGINKEEPLIBRARYINMEMORY, szString) == 0)
+      return NPPVpluginKeepLibraryInMemory;
     else if(strcmpi(ENTRY_NPPVPLUGINWINDOWSIZE, szString) == 0)
       return NPPVpluginWindowSize;
     else
