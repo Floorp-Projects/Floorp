@@ -3941,22 +3941,22 @@ nsImapProtocol::ShowProgress()
     if (m_progressString && m_progressStringId)
     {
       PRUnichar *progressString = NULL;
-      nsCString cProgressString; cProgressString.AssignWithConversion(m_progressString);
+      nsCAutoString cProgressString; cProgressString.AssignWithConversion(m_progressString);
       const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 
-	  nsXPIDLString unicodeMailboxName;
+	    nsXPIDLString unicodeMailboxName;
 
-	  nsresult rv = CreateUnicodeStringFromUtf7(mailboxName, getter_Copies(unicodeMailboxName));
-	  if (NS_SUCCEEDED(rv))
-	  {
-		  // ### should convert mailboxName to PRUnichar and change %s to %S in msg text
-		  progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
-		  if (progressString)
-		  {
-			PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
-			nsTextFormatter::smprintf_free(progressString);
-		  }
-	  }
+	    nsresult rv = CreateUnicodeStringFromUtf7(mailboxName, getter_Copies(unicodeMailboxName));
+	    if (NS_SUCCEEDED(rv))
+	    {
+		    // ### should convert mailboxName to PRUnichar and change %s to %S in msg text
+		    progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
+		    if (progressString)
+		    {
+			  PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
+			  nsTextFormatter::smprintf_free(progressString);
+		    }
+	    }
     }
 }
 
@@ -3965,7 +3965,7 @@ nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
     if (m_imapMiscellaneousSink && aMsgId != m_lastProgressStringId)
   {
-        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, nsnull);
+    m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, nsnull);
     m_lastProgressStringId = aMsgId;
     // who's going to free this? Does ProgressStatus complete synchronously?
   }
@@ -4026,7 +4026,7 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
+    nsAutoString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 
@@ -4202,14 +4202,18 @@ void nsImapProtocol::Language()
       PRInt32 pos = extractedLanguage.FindChar(',', PR_TRUE);
       if (pos > 0) // we have a comma separated list of languages...
         extractedLanguage.Truncate(pos); // truncate everything after the first comma (including the comma)
+      
+      if (extractedLanguage.IsEmpty())
+        return;
+
       command.Append(" LANGUAGE ");
       command.Append(extractedLanguage.GetBuffer()); 
       command.Append(CRLF);
-    }
             
-    rv = SendData(command.GetBuffer());
-    if (NS_SUCCEEDED(rv))
+      rv = SendData(command.GetBuffer());
+      if (NS_SUCCEEDED(rv))
         ParseIMAPandCheckForNewMail(nsnull, PR_TRUE /* ignore bad or no result from the server for this command */);
+    }
   }
 }
 
