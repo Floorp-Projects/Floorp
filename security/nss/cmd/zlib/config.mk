@@ -1,4 +1,4 @@
-# 
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -36,7 +36,7 @@
 # ***** END LICENSE BLOCK *****
 
 #
-#  Currently, override TARGETS variable so that only static libraries
+#  Override TARGETS variable so that only static libraries
 #  are specifed as dependencies within rules.mk.
 #
 
@@ -44,31 +44,4 @@ TARGETS        = $(LIBRARY)
 SHARED_LIBRARY =
 IMPORT_LIBRARY =
 PROGRAM        =
-
-#######################################################################
-# Set the LDFLAGS value to encompass all normal link options, all     #
-# library names, and all special system linking options               #
-#######################################################################
-
-SECTOOLS_LIBS = $(LDOPTS) $(LIBSSL) $(LIBPKCS7) $(LIBCERT) $(LIBKEY) \
-    $(LIBSECMOD) $(LIBCRYPTO) $(LIBSECUTIL) $(LIBSECMOD) $(LIBSSL) \
-    $(LIBPKCS7) $(LIBCERT) $(LIBKEY) $(LIBCRYPTO) $(LIBSECUTIL) \
-    $(LIBHASH) $(LIBDBM) $(DLLPLC) $(DLLPLDS) $(DLLPR) $(DLLSYSTEM)
-
-ifeq ($(OS_TARGET),AIX)
-	OS_LIBS += $(SECTOOLS_LIBS)
-endif
-
-ifeq ($(OS_TARGET),NCR)
-	OS_LIBS += $(SECTOOLS_LIBS)
-endif
-
-ifeq ($(OS_TARGET),SCO_SV)
-	OS_LIBS += $(SECTOOLS_LIBS)
-endif
-
-LDFLAGS += $(SECTOOLS_LIBS)
-
-
-
 
