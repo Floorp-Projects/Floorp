@@ -699,12 +699,12 @@ nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result)
 nsresult NS_NewFileSpec(nsIFileSpec** result)
 //----------------------------------------------------------------------------------------
 {
-	return nsFileSpecImpl::Create(nsnull, nsIFileSpec::GetIID(), result);
+	return nsFileSpecImpl::Create(nsnull, nsIFileSpec::GetIID(), (void**)result);
 }
 
 //----------------------------------------------------------------------------------------
 nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result)
 //----------------------------------------------------------------------------------------
 {
-	return nsDirectoryIteratorImpl::Create(nsnull, nsIDirectoryIterator::GetIID(), result);
+	return nsDirectoryIteratorImpl::Create(nsnull, nsIDirectoryIterator::GetIID(), (void**)result);
 }
