@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+#include "nsISelectionListener.idl"
+#include "nsIEnumerator.idl"
+
+%{C++
+class nsIDOMNode;
+class nsIDOMRange;
+class nsISelectionListener;
+%}
+
+[scriptable, uuid(2d5535e2-1dd2-11b2-8e38-d53ec833adf6)]
+interface nsISelectionPrivate : nsISupports
+ {
+    const short ENDOFPRECEDINGLINE=0;
+    const short STARTOFNEXTLINE=1;
+    
+    attribute boolean interlinePosition;
+
+    /* startBatchChanges
+       match this up with endbatchChanges. will stop ui updates while multiple selection methods are called
+    */
+		void		       startBatchChanges();
+    
+    /* endBatchChanges
+       match this up with startBatchChanges
+    */
+		void		       endBatchChanges();
+		
+		nsIEnumerator  getEnumerator();
+    wstring        toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapCount);
+		void		       addSelectionListener(in nsISelectionListener newListener);
+		void		       removeSelectionListener(in nsISelectionListener listenerToRemove);
+};
+
