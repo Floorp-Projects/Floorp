@@ -8,20 +8,29 @@
     <em:id>{8e117890-a33f-424b-a2ea-deb272731365}</em:id>
 
     <!-- Our current version -->
-    <em:version>0.8</em:version>
+    <em:version>0.8.1</em:version>
 
     <em:targetApplication>
       <Description>
         <!-- Firefox -->
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>0.8</em:minVersion>
-        <em:maxVersion>0.9</em:maxVersion>
+        <em:maxVersion>1.2</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <em:targetApplication>
+      <Description>
+        <!-- Thunderbird -->
+        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+        <em:minVersion>0.7</em:minVersion>
+        <em:maxVersion>1.2</em:maxVersion>
       </Description>
     </em:targetApplication>
 
     <em:name>Mozilla Calendar</em:name>
     <em:description>A calendar client based on iCal standard</em:description>
-    <em:creator>OEone Corp. and Mozilla</em:creator>
+    <em:creator>Axentra Corp. and Mozilla</em:creator>
 
     <em:iconURL>chrome://calendar/content/sunbird_small.png</em:iconURL>
     <em:homepageURL>http://www.mozilla.org/projects/calendar/</em:homepageURL>
@@ -33,6 +42,7 @@
         <em:package>content/calendar/</em:package>
         <em:locale>locale/en-US/calendar/</em:locale>
         <em:skin>skin/classic/calendar/</em:skin>
+        <em:skin>skin/modern/calendar/</em:skin>
       </Description>
     </em:file>
 

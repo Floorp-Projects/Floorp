@@ -122,6 +122,7 @@ xpi::
 	   cp $(topsrcdir)/xpfe/bootstrap/init.d/???calendar* xpi/other_stuff/bin/init.d; \
 	fi
 	cp $(srcdir)/install.js ./xpi
+	cp $(srcdir)/install.rdf ./xpi
 	cd xpi; find other_stuff chrome components install.js \
 	   \( -name CVS -o -name en-US \) -prune -o -print | xargs zip calendar.xpi
 
