@@ -50,7 +50,6 @@
       <box class="tabpanel" id="system" flex="100%" align="vertical">
         <box><html:div>&div.cookiesonsystem.label;</html:div></box>
         <spring style="height: 10px;"/>
-        <html:div style="width: 380px;">
           <tree id="cookietree" class="inset" style="height: 150px; width: 380px;" align="vertical" 
             onselect="ViewCookieSelected(event);"
             onclick="ViewCookieSelected(event)"
@@ -65,7 +64,6 @@
             </treehead>
             <treechildren id="cookielist"/>
           </tree>
-        </html:div>
         <spring style="height: 5px;"/>
         <html:fieldset style="border: 2px groove #CCCCDD;">
           <html:legend>&treehead.infoselected.label;</html:legend>

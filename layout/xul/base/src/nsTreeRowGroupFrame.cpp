@@ -701,10 +701,13 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
 
   mCurrentIndex = aNewIndex;
 
-  if (mContentChain) {
+  // XXX This could cause problems because of async reflow.
+  // Eventually we need to make the code smart enough to look at a content chain
+  // when building ANOTHER content chain.
+  /*if (mContentChain) {
     NS_ERROR("This is bad!");
     return NS_OK;
-  }
+  }*/
 
   // Get our row count.
   PRInt32 rowCount;
@@ -746,10 +749,10 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
 
       FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
 
-    ConstructContentChain(topRowContent);
-	//Now construct the chain for the old top row so its content chain gets
-	//set up correctly.
-	ConstructOldContentChain(aPresContext, rowContent);
+      ConstructContentChain(topRowContent);
+	    //Now construct the chain for the old top row so its content chain gets
+	    //set up correctly.
+	    ConstructOldContentChain(aPresContext, rowContent);
     }
   }
   else {
