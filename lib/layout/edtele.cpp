@@ -3737,7 +3737,7 @@ void CEditTableElement::AddLayoutData(CEditTableCellElement *pEdCell, LO_Element
         pRowData->iRow = i;
         pRowData->iCellsInRow = lo_GetRowSpan(pLoCell);
         // These are ignored for row data
-        pRowData->iCellsInColumn = pColData->iColumn = 0;
+        pRowData->iCellsInColumn = pRowData->iColumn = 0;
 
         m_RowLayoutData.Insert(pRowData, i);
     }
