@@ -174,9 +174,8 @@ nsCSSScanner::nsCSSScanner()
   mPushback = mLocalPushback;
   mPushbackCount = 0;
   mPushbackSize = 4;
-#ifdef CSS_REPORT_PARSE_ERRORS
+  mLineNumber = 1;
   mLastRead = 0;
-#endif
 }
 
 nsCSSScanner::~nsCSSScanner()
@@ -209,7 +208,6 @@ void nsCSSScanner::InitErrorReporting(nsIURI* aURI)
   } else {
     mFileName = "from DOM";
   }
-  mLineNumber = 1;
   mColNumber = 0;
 }
 
@@ -246,6 +244,11 @@ void nsCSSScanner::ReportError(const nsAReadableString& aError)
 
 #endif // CSS_REPORT_PARSE_ERRORS
 
+PRUint32 nsCSSScanner::GetLineNumber()
+{
+  return mLineNumber;
+}
+
 void nsCSSScanner::Close()
 {
   NS_IF_RELEASE(mInput);
@@ -274,11 +277,14 @@ PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
       }
     }
     rv = PRInt32(mBuffer[mOffset++]);
-#ifdef CSS_REPORT_PARSE_ERRORS
     if (((rv == '\n') && (mLastRead != '\r')) || (rv == '\r')) {
       mLineNumber++;
+#ifdef CSS_REPORT_PARSE_ERRORS
       mColNumber = 0;
-    } else if (rv == '\t') {
+#endif
+    } 
+#ifdef CSS_REPORT_PARSE_ERRORS
+    else if (rv == '\t') {
       mColNumber = ((mColNumber - 1 + TAB_STOP_WIDTH) / TAB_STOP_WIDTH)
                    * TAB_STOP_WIDTH;
     } else if (rv != '\n') {

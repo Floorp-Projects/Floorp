@@ -50,6 +50,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
+#include "nsINameSpace.h"
 #include "nsILookAndFeel.h"
 
 #include "nsIStyleSet.h"
@@ -603,8 +604,112 @@ void nsCSSSelector::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   }
 }
 
-nsresult nsCSSSelector::ToString( nsAWritableString& aString ) const
+nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* aSheet ) const
 {
+  const PRUnichar* temp;
+
+  // selectors are linked from right-to-left, so the next selector in the linked list
+  // actually precedes this one in the resulting string
+  if (mNext) {
+    mNext->ToString(aString, aSheet);
+    aString.Append(PRUnichar(' '));
+  }
+
+  // append the namespace prefix
+  if (mNameSpace > 0) {
+    nsCOMPtr<nsINameSpace> sheetNS;
+    aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
+    nsCOMPtr<nsIAtom> prefixAtom;
+    // will return null if namespace was the default
+    sheetNS->FindNameSpacePrefix(mNameSpace, *getter_AddRefs(prefixAtom));
+    if (prefixAtom) {
+      const PRUnichar* prefix;
+      prefixAtom->GetUnicode(&prefix);
+      aString.Append(prefix);
+      aString.Append(PRUnichar('|'));
+    }
+  }
+
+  // smells like a universal selector
+  if (!mTag && !mID && !mClassList) {
+    aString.Append(PRUnichar('*'));
+  } else {
+    // Append the tag name, if there is one
+    if (mTag) {
+      mTag->GetUnicode(&temp);
+      aString.Append(temp);
+    }
+    // Append the id, if there is one
+    if (mID) {
+      mID->GetUnicode(&temp);
+      aString.Append(PRUnichar('#'));
+      aString.Append(temp);
+    }
+    // Append each class in the linked list
+    if (mClassList) {
+      nsAtomList* list = mClassList;
+      while (list != nsnull) {
+        list->mAtom->GetUnicode(&temp);
+        aString.Append(PRUnichar('.'));
+        aString.Append(temp);
+        list = list->mNext;
+      }
+    }
+  }
+
+  // Append each attribute selector in the linked list
+  if (mAttrList) {
+    nsAttrSelector* list = mAttrList;
+    while (list != nsnull) {
+      aString.Append(PRUnichar('['));
+      // Append the namespace prefix
+      if (list->mNameSpace > 0) {
+        nsCOMPtr<nsINameSpace> sheetNS;
+        aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
+        nsCOMPtr<nsIAtom> prefixAtom;
+        // will return null if namespace was the default
+        sheetNS->FindNameSpacePrefix(list->mNameSpace, *getter_AddRefs(prefixAtom));
+        if (prefixAtom) { 
+          const PRUnichar* prefix;
+          prefixAtom->GetUnicode(&prefix);
+          aString.Append(prefix);
+          aString.Append(PRUnichar('|'));
+        }
+      }
+      // Append the attribute name
+      list->mAttr->GetUnicode(&temp);
+      aString.Append(temp);
+      // Append the function
+      if (list->mFunction == NS_ATTR_FUNC_EQUALS) {
+        aString.Append(PRUnichar('='));
+      } else if (list->mFunction == NS_ATTR_FUNC_INCLUDES) {
+        aString.Append(PRUnichar('~'));
+        aString.Append(PRUnichar('='));
+      } else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH) {
+        aString.Append(PRUnichar('|'));
+        aString.Append(PRUnichar('='));
+      }
+      // Append the value
+      aString.Append(list->mValue);
+      aString.Append(PRUnichar(']'));
+      list = list->mNext;
+    }
+  }
+
+  // Append each pseudo-class in the linked list
+  if (mPseudoClassList) {
+    nsAtomList* list = mPseudoClassList;
+    while (list != nsnull) {
+      list->mAtom->GetUnicode(&temp);
+      aString.Append(temp);
+      list = list->mNext;
+    }
+  }
+  // Append the operator
+  if (mOperator) {
+    aString.Append(PRUnichar(' '));
+    aString.Append(mOperator);
+  }
   return NS_OK;
 }
 
@@ -1009,6 +1114,9 @@ public:
   virtual void SetSourceSelectorText(const nsString& aSelectorText);
   virtual void GetSourceSelectorText(nsString& aSelectorText) const;
 
+  virtual PRUint32 GetLineNumber(void) const;
+  virtual void SetLineNumber(PRUint32 aLineNumber);
+
   virtual nsICSSDeclaration* GetDeclaration(void) const;
   virtual void SetDeclaration(nsICSSDeclaration* aDeclaration);
 
@@ -1054,6 +1162,7 @@ protected:
   CSSImportantRule*       mImportantRule;
   DOMCSSDeclarationImpl*  mDOMDeclaration;                          
   void*                   mScriptObject;                           
+  PRUint32                mLineNumber;
 };
 
 #ifdef DEBUG_REFS
@@ -1287,9 +1396,18 @@ void CSSStyleRuleImpl::SetSourceSelectorText(const nsString& aSelectorText)
 
 void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
 {
-  mSelector.ToString( aSelectorText );
+  mSelector.ToString( aSelectorText, mSheet );
 }
 
+PRUint32 CSSStyleRuleImpl::GetLineNumber(void) const
+{
+  return mLineNumber;
+}
+
+void CSSStyleRuleImpl::SetLineNumber(PRUint32 aLineNumber)
+{
+  mLineNumber = aLineNumber;
+}
 
 nsICSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 {
@@ -3349,7 +3467,7 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
-  mSelector.ToString( aCssText );
+  mSelector.ToString( aCssText, mSheet );
   if (mDeclaration)
   {
     nsAutoString   tempString;
@@ -3385,7 +3503,7 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 NS_IMETHODIMP    
 CSSStyleRuleImpl::GetSelectorText(nsAWritableString& aSelectorText)
 {
-  mSelector.ToString( aSelectorText );
+  mSelector.ToString( aSelectorText, mSheet );
   return NS_OK;
 }
 
