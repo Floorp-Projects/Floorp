@@ -146,6 +146,11 @@ PRIVATE int net_ChunkedWrite (NET_StreamClass *stream, char* s, int32 l)
 		}
         else if(obj->cur_state == STRIP_CRLF)
         {
+            if(PL_strnchr(obj->in_buf, LF, obj->in_buf_size) == NULL)
+            {
+                return 1; /* No LF, need more data. */ 
+            }
+
             if(obj->in_buf_size > 1 && obj->in_buf[0] == CR && obj->in_buf[1] == LF)
             {
                 /* strip two bytes */ 
