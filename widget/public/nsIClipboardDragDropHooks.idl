@@ -109,13 +109,14 @@ interface nsIClipboardDragDropHooks : nsISupports
    * that the implementation be very efficient so user feedback is
    * not negatively impacted.
    *
+   * @param event  DOM event (drag drop); null if triggered by copy.
    * @param trans  the transferable holding the list of flavors
    *               and the data for each flavor
    *
    * @return TRUE  copy/drag can proceed
    * @return FALSE copy/drag is cancelled, does not go to OS
    */
-  boolean onCopyOrDrag(in nsITransferable trans);
+  boolean onCopyOrDrag(in nsIDOMEvent aEvent, in nsITransferable trans);
 
   /**
    * Provide an alternative action to the built-in behavior when

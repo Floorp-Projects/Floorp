@@ -1144,7 +1144,7 @@ nsContentAreaDragDrop::DragGesture(nsIDOMEvent* inMouseEvent)
           nsCOMPtr<nsIClipboardDragDropHooks> override = do_QueryInterface(isupp);
           if (override)
           {
-            nsresult hookResult = override->OnCopyOrDrag(trans, &doContinueDrag);
+            nsresult hookResult = override->OnCopyOrDrag(inMouseEvent, trans, &doContinueDrag);
             NS_ASSERTION(NS_SUCCEEDED(hookResult), "hook failure in OnCopyOrDrag");
             if (!doContinueDrag)
               return NS_OK;
