@@ -417,6 +417,8 @@ namespace MetaData {
         { eGreater,  "Greater", 0 },
         { eLessEqual,  "LessEqual", 0 },
         { eGreaterEqual,  "GreaterEqual", 0 },
+        { eIdentical,  "Identical", 0 },
+        { eNotIdentical,  "NotIdentical", 0 },
         { eLogicalXor,  "LogicalXor", 0 },
         { eLogicalNot,  "LogicalNot", 0 },
         { eMinus,  "Minus", 0 },
@@ -617,6 +619,8 @@ namespace MetaData {
         case eGreater:
         case eLessEqual:
         case eGreaterEqual:
+        case eIdentical:
+        case eNotIdentical:
         case eLogicalXor:
         case eLeftShift:
         case eRightShift:

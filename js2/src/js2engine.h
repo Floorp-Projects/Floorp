@@ -57,6 +57,8 @@ enum JS2Op {
     eGreater,
     eLessEqual,
     eGreaterEqual,
+    eIdentical,
+    eNotIdentical,
     eLogicalXor,
     eLogicalNot,
     eMinus,

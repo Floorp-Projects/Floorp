@@ -1595,6 +1595,8 @@ namespace MetaData {
         case ExprNode::logicalOrEquals:
         case ExprNode::comma:
         case ExprNode::Instanceof:
+        case ExprNode::identical:
+        case ExprNode::notIdentical:
 
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
@@ -1774,6 +1776,12 @@ doAssignBinary:
             op = eEqual;
             goto boolBinary;
         case ExprNode::notEqual:
+            op = eNotEqual;
+            goto boolBinary;
+        case ExprNode::identical:
+            op = eEqual;
+            goto boolBinary;
+        case ExprNode::notIdentical:
             op = eNotEqual;
             goto boolBinary;
 boolBinary:
