@@ -154,42 +154,32 @@ HandleXPDialogEvent(nsGUIEvent *aEvent)
 { 
   nsEventStatus result = nsEventStatus_eIgnore;
 
-  /*
-  nsXPBaseWindow* bw =
-    nsXPBaseWindow::FindBrowserFor(aEvent->widget, FIND_WINDOW);
-  if (nsnull != bw) {
+  nsXPBaseWindow* baseWin;
+  aEvent->widget->GetClientData(((void*&)baseWin));
+
+  if (nsnull != baseWin) {
     nsSizeEvent* sizeEvent;
     switch(aEvent->message) {
-    case NS_SIZE:
-      sizeEvent = (nsSizeEvent*)aEvent;  
-      bw->Layout(sizeEvent->windowSize->width,
-                 sizeEvent->windowSize->height);
-      result = nsEventStatus_eConsumeNoDefault;
-      break;
+      case NS_SIZE:
+        sizeEvent = (nsSizeEvent*)aEvent;  
+        baseWin->Layout(sizeEvent->windowSize->width,
+                        sizeEvent->windowSize->height);
+        result = nsEventStatus_eConsumeNoDefault;
+        break;
 
-    case NS_DESTROY:
-      {
-        nsViewerApp* app = bw->mApp;
+    case NS_DESTROY: {
+        //nsViewerApp* app = baseWin->mApp;
         result = nsEventStatus_eConsumeDoDefault;
-        bw->Close();
-        NS_RELEASE(bw);
-
-        // XXX Really shouldn't just exit, we should just notify somebody...
-        if (0 == nsXPBaseWindow::gBrowsers.Count()) {
-          app->Exit();
-        }
+        baseWin->Close();
+        NS_RELEASE(baseWin);
       }
       return result;
-
-    case NS_MENU_SELECTED:
-      result = bw->DispatchMenuItem(((nsMenuEvent*)aEvent)->mCommand);
-      break;
 
     default:
       break;
     }
-    NS_RELEASE(bw);
-  }*/
+    //NS_RELEASE(baseWin);
+  }
   return result;
 }
 
@@ -217,6 +207,8 @@ nsresult nsXPBaseWindow::Init(nsIAppShell* aAppShell,
   if (NS_OK != rv) {
     return rv;
   }
+
+  mWindow->SetClientData(this);
 
   nsWidgetInitData initData;
   initData.mBorderStyle = eBorderStyle_dialog;
