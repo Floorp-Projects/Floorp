@@ -23,10 +23,6 @@ MODULE=shell
 
 DIRS = windows
 
-EXPORTS = \
- nsApplicationManager.h			\
- $(NULL)
-
 CPPSRCS=				\
  nsApplicationManager.cpp			\
  nsShellInstance.cpp			\
