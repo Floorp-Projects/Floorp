@@ -31,9 +31,9 @@
 // See nsStyleColor
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
 #define NS_STYLE_BG_IMAGE_NONE                  0x02
-#define NS_STYLE_BG_X_POSITION_PCT              0x04
+#define NS_STYLE_BG_X_POSITION_PERCENT          0x04
 #define NS_STYLE_BG_X_POSITION_LENGTH           0x08
-#define NS_STYLE_BG_Y_POSITION_PCT              0x10
+#define NS_STYLE_BG_Y_POSITION_PERCENT          0x10
 #define NS_STYLE_BG_Y_POSITION_LENGTH           0x20
 
 // See nsStyleColor
@@ -128,7 +128,7 @@
 
 // See nsStylePosition flags; used for width, height, left, top
 #define NS_STYLE_POSITION_VALUE_LENGTH          0
-#define NS_STYLE_POSITION_VALUE_PCT             1
+#define NS_STYLE_POSITION_VALUE_PERCENT         1
 #define NS_STYLE_POSITION_VALUE_AUTO            2
 #define NS_STYLE_POSITION_VALUE_INHERIT         3
 #define NS_STYLE_POSITION_VALUE_PROPORTIONAL    4
@@ -203,7 +203,7 @@
 #define NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM     16
 #define NS_STYLE_VERTICAL_ALIGN_BOTTOM          17
 #define NS_STYLE_VERTICAL_ALIGN_LENGTH          18
-#define NS_STYLE_VERTICAL_ALIGN_PCT             19
+#define NS_STYLE_VERTICAL_ALIGN_PERCENT         19
 
 // See nsStyleDisplay
 #define NS_STYLE_VISIBILITY_INHERIT             0
