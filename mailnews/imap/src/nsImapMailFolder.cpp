@@ -3387,8 +3387,13 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead
     res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
     if (NS_SUCCEEDED(res))
     {
-      msgHdr->MarkRead(PR_TRUE);
-      commit = PR_TRUE;
+      PRBool isRead;
+      msgHdr->GetIsRead(&isRead);
+      if (!isRead)
+      {
+        msgHdr->MarkRead(PR_TRUE);
+        commit = PR_TRUE;
+      }
     }
 
   }
