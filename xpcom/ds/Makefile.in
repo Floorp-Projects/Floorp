@@ -74,6 +74,7 @@ CPPSRCS =				\
 EXPORTS = \
 	nsAVLTree.h                \
 	nsBTree.h                  \
+	nsCppSharedAllocator.h		 \
 	nsCRT.h                    \
 	nsDeque.h                  \
 	nsEnumeratorUtils.h        \
