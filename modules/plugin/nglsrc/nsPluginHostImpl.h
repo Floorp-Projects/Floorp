@@ -26,11 +26,11 @@
 #include "nsCRT.h"
 #include "prlink.h"
 #include "nsIFileUtilities.h"
-#include "nsPluginsDir.h"
-#include "nsIServiceManager.h"
+#include "nsICookieStorage.h"
 
 class ns4xPlugin;
 class nsFileSpec;
+class nsIServiceManager;
 
 class nsPluginTag
 {
@@ -58,7 +58,8 @@ public:
 
 class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
-                         public nsIFileUtilities
+                         public nsIFileUtilities,
+                         public nsICookieStorage
 {
 public:
   nsPluginHostImpl(nsIServiceManager *serviceMgr);
@@ -176,6 +177,26 @@ public:
 
   NS_IMETHOD NewTempFileName(const char* prefix, PRUint32 bufLen, char* resultBuf);
 
+  // nsICookieStorage interface
+
+  /**
+   * Retrieves a cookie from the browser's persistent cookie store.
+   * @param inCookieURL        URL string to look up cookie with.
+   * @param inOutCookieBuffer  buffer large enough to accomodate cookie data.
+   * @param inOutCookieSize    on input, size of the cookie buffer, on output cookie's size.
+   */
+  NS_IMETHOD
+  GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize);
+  
+  /**
+   * Stores a cookie in the browser's persistent cookie store.
+   * @param inCookieURL        URL string store cookie with.
+   * @param inCookieBuffer     buffer containing cookie data.
+   * @param inCookieSize       specifies  size of cookie data.
+   */
+  NS_IMETHOD
+  SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize);
+  
   /* Called by GetURL and PostURL */
 
   NS_IMETHOD
