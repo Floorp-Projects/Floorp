@@ -89,6 +89,7 @@
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
+#include "nsIPlatformCharset.h"
 
 #ifdef	DEBUG
 #ifdef	XP_MAC
@@ -113,6 +114,14 @@ static NS_DEFINE_CID(kFileLocatorCID,             NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kIOServiceCID,		  NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIIOServiceIID,		  NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
+#ifndef	NS_IPLATFORMCHARSET_CID
+// XXX this CID should be defined elsewhere
+#define NS_IPLATFORMCHARSET_CID \
+{ 0x84b0f182, 0xc6c7, 0x11d2, {0xb3, 0xb0, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
+#endif
+
+static NS_DEFINE_CID(kPlatformCharsetCID,	  NS_IPLATFORMCHARSET_CID);
 
 static NS_DEFINE_IID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID,    NS_ISTRINGBUNDLESERVICE_IID);
@@ -391,6 +400,22 @@ BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource)
 	mDataSource = aDataSource;
 	mIEFavoritesRoot = nsnull;
 	mFoundIEFavoritesRoot = PR_FALSE;
+
+	nsresult		rv;
+	NS_WITH_SERVICE(nsIPlatformCharset, platformCharset, kPlatformCharsetCID, &rv);
+	if (NS_SUCCEEDED(rv) && (platformCharset))
+	{
+		nsAutoString	defaultCharset;
+		if (NS_SUCCEEDED(rv = platformCharset->GetCharset(kPlatformCharsetSel_4xBookmarkFile, defaultCharset)))
+		{
+			// found the default platform charset, now try and get a decoder from it to Unicode
+			NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv, kCharsetConverterManagerCID, &rv);
+			if (NS_SUCCEEDED(rv) && (charsetConv))
+			{
+				rv = charsetConv->GetUnicodeDecoder(&defaultCharset, getter_AddRefs(mUnicodeDecoder));
+			}
+		}
+	}
 
 	if (fileSpec)
 	{
@@ -877,7 +902,8 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 		// Now do properly replace %22's (this is what 4.5 did, anyway...)
 		static const char kEscape22[] = "%22";
 		PRInt32 offset;
-		while ((offset = url.Find(kEscape22)) >= 0) {
+		while ((offset = url.Find(kEscape22)) >= 0)
+		{
 			url.SetCharAt(' ',offset);
 			url.Cut(offset + 1, sizeof(kEscape22) - 2);
 		}
