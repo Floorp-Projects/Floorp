@@ -35,7 +35,17 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
+#include "nsIDocShellHistory.h"
+#include "nsIGlobalHistory.h"
+#include "nsIServiceManager.h"
 #include "nsIClipboardCommands.h"
+#include "nsIWalletService.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDocument.h"
+#include "nsIDOMHTMLCollection.h"
 
 #include <UModalDialogs.h>
 #include <LStream.h>
@@ -66,6 +76,17 @@ nsMacMessageSink	CBrowserShell::mMessageSink;
 
 CBrowserShell::CBrowserShell() :
    mFinder(nsnull)
+{
+	nsresult rv = CommonConstruct();
+	if (rv != NS_OK)
+	   Throw_Err(NS_ERROR_GET_CODE(rv));   // If this fails, there's no reason to live anymore :(
+}
+
+
+CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
+						  	 const SViewInfo	&inViewInfo) :
+    LView(inPaneInfo, inViewInfo),
+    mFinder(nsnull)
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -134,6 +155,18 @@ void CBrowserShell::FinishCreateSelf()
 		
     mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
     mWebBrowserAsBaseWin->Create();
+   
+    // Set the global history
+    nsCOMPtr<nsIDocShell> docShell(do_GetInterface(mWebBrowser));
+    ThrowIfNil_(docShell);
+    nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
+    if (dsHistory)
+    {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIGlobalHistory, history, NS_GLOBALHISTORY_CONTRACTID, &rv);  
+        if (history)
+            dsHistory->SetGlobalHistory(history);
+    }
    
     AdjustFrame();   
 	StartRepeating();
@@ -263,6 +296,47 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 clipCmd->SelectAll();
             break;
 
+		case cmd_Find:
+			Find();
+			break;
+
+		case cmd_FindNext:
+			FindNext();
+			break;
+
+		case cmd_SaveFormData:
+            {
+                nsCOMPtr<nsIDOMWindow> domWindow;
+                nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
+
+                NS_WITH_SERVICE(nsIWalletService, walletService, NS_WALLETSERVICE_CONTRACTID, &rv);
+                ThrowIfError_(rv);
+                rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+                ThrowIfError_(rv);
+                domWindowInternal = do_QueryInterface(domWindow, &rv);
+                ThrowIfError_(rv);
+                PRUint32 retval;
+                rv = walletService->WALLET_RequestToCapture(domWindowInternal, &retval);
+            }
+            break;
+		  
+		case cmd_PrefillForm:
+            {
+                nsCOMPtr<nsIDOMWindow> domWindow;
+                nsCOMPtr<nsIDOMWindowInternal> domWindowInternal;
+
+                NS_WITH_SERVICE(nsIWalletService, walletService, NS_WALLETSERVICE_CONTRACTID, &rv);
+                ThrowIfError_(rv);
+                rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+                ThrowIfError_(rv);
+                domWindowInternal = do_QueryInterface(domWindow, &rv);
+                ThrowIfError_(rv);
+                PRBool retval;
+                // Don't check the result - A result of NS_ERROR_FAILURE means not to show preview dialog
+                rv = walletService->WALLET_Prefill(true, domWindowInternal, &retval);
+            }
+            break;
+
         default:
             cmdHandled = LCommander::ObeyCommand(inCommand, ioParam);
             break;
@@ -272,8 +346,8 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
 
 
 void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
-            		                      Boolean &outEnabled, Boolean &outUsesMark,
-            					                PP_PowerPlant::Char16 &outMark, Str255 outName)
+            		                  Boolean &outEnabled, Boolean &outUsesMark,
+            					      PP_PowerPlant::Char16 &outMark, Str255 outName)
 {
     nsresult rv;
     nsCOMPtr<nsIClipboardCommands> clipCmd;
@@ -308,6 +382,22 @@ void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
         case cmd_SelectAll:
             outEnabled = PR_TRUE;
             break;
+
+		case cmd_Find:
+			outEnabled = true;
+			break;
+
+		case cmd_FindNext:
+			outEnabled = CanFindNext();
+			break;
+        
+		case cmd_SaveFormData:
+		    outEnabled = HasFormElements();
+		    break;
+
+		case cmd_PrefillForm:
+		    outEnabled = HasFormElements();
+		    break;
 
         default:
             LCommander::FindCommandStatus(inCommand, outEnabled,
@@ -418,6 +508,13 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
     return NS_OK;
 }
 
+NS_METHOD CBrowserShell::GetContentViewer(nsIContentViewer** aViewer)
+{
+    nsCOMPtr<nsIDocShell> ourDocShell(do_GetInterface(mWebBrowser));
+    NS_ENSURE_TRUE(ourDocShell, NS_ERROR_FAILURE);
+    return ourDocShell->GetContentViewer(aViewer);
+}
+
 
 //*****************************************************************************
 //***    CBrowserShell: Navigation
@@ -443,49 +540,59 @@ Boolean CBrowserShell::CanGoForward()
 }
 
 
-Boolean CBrowserShell::IsLoading()
+NS_METHOD CBrowserShell::Back()
 {
-    return false;
-}
-
-
-void CBrowserShell::Back()
-{
+   nsresult rv;
+    
     if (CanGoBack())
-        mWebBrowserAsWebNav->GoBack();
-    else
-        ::SysBeep(5);
+      rv = mWebBrowserAsWebNav->GoBack();
+   else
+   {
+      ::SysBeep(5);
+      rv = NS_ERROR_FAILURE;
+   }
+   return rv;
 }
 
-void CBrowserShell::Forward()
+NS_METHOD CBrowserShell::Forward()
 {
+   nsresult rv;
+
     if (CanGoForward())
-        mWebBrowserAsWebNav->GoForward();
-    else
-        ::SysBeep(5);
+      rv = mWebBrowserAsWebNav->GoForward();
+   else
+   {
+      ::SysBeep(5);
+      rv = NS_ERROR_FAILURE;
+   }
+   return rv;
 }
 
-void CBrowserShell::Stop()
+NS_METHOD CBrowserShell::Stop()
 {
-    mWebBrowserAsWebNav->Stop();
+   return mWebBrowserAsWebNav->Stop();
 }
 
 //*****************************************************************************
 //***    CBrowserShell: URL Loading
 //*****************************************************************************
 
-void CBrowserShell::LoadURL(Ptr urlText, SInt32 urlTextLen)
+NS_METHOD CBrowserShell::LoadURL(const char* urlText, SInt32 urlTextLen)
 {
-    nsAutoString urlString; urlString.AssignWithConversion(urlText, urlTextLen);
-    LoadURL(urlString);
+    nsAutoString urlString;
+    
+    if (urlTextLen == -1)
+        urlString.AssignWithConversion(urlText);
+    else
+        urlString.AssignWithConversion(urlText, urlTextLen);
+        
+    return LoadURL(urlString);
 }
 
 
-void CBrowserShell::LoadURL(const nsString& urlText)
+NS_METHOD CBrowserShell::LoadURL(const nsString& urlText)
 {
-    nsresult rv = mWebBrowserAsWebNav->LoadURI(urlText.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
-    if (NS_FAILED(rv))
-        Throw_(NS_ERROR_GET_CODE(rv));
+   return mWebBrowserAsWebNav->LoadURI(urlText.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 
@@ -651,11 +758,11 @@ Boolean CBrowserShell::GetFindParams(nsString& searchText,
 
         StDialogHandler	theHandler(dlog_FindDialog, this);
         LWindow			*theDialog = theHandler.GetDialog();
-        Str255          aStr;
+      Str255      aStr;
 
         // Set initial text for string in dialog box
 
-        UMacUnicode::StringToStr255(searchText, aStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(searchText, aStr);
 
         LEditText	*editField = dynamic_cast<LEditText*>(theDialog->FindPaneByID(kSearchTextEdit));
         editField->SetDescriptor(aStr);
@@ -686,11 +793,12 @@ Boolean CBrowserShell::GetFindParams(nsString& searchText,
             {
                 result = FALSE;
                 break;
+   			
             }
             else if (hitMessage == msg_OK)
             {
                 editField->GetDescriptor(aStr);
-                UMacUnicode::Str255ToString(aStr, searchText);
+            CPlatformUCSConversion::GetInstance()->PlatformToUCS(aStr, searchText);
 
                 caseSensitive = caseSensCheck->GetValue() ? TRUE : FALSE;
                 entireWord = entireWordCheck->GetValue() ? TRUE : FALSE;
@@ -711,7 +819,6 @@ Boolean CBrowserShell::GetFindParams(nsString& searchText,
 	return result;
 }
 
-
 nsresult CBrowserShell::GetClipboardHandler(nsIClipboardCommands **aCommand)
 {
     NS_ENSURE_ARG_POINTER(aCommand);
@@ -726,3 +833,27 @@ nsresult CBrowserShell::GetClipboardHandler(nsIClipboardCommands **aCommand)
     return NS_OK;
 }
 
+Boolean CBrowserShell::HasFormElements()
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        rv = domWindow->GetDocument(getter_AddRefs(domDoc));
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
+            if (htmlDoc) {
+                nsCOMPtr<nsIDOMHTMLCollection> forms;
+                htmlDoc->GetForms(getter_AddRefs(forms));
+                if (forms) {
+                    PRUint32 numForms;
+                    forms->GetLength(&numForms);
+                    return numForms > 0;
+                }
+            }
+        }
+    }
+    return false;
+}
