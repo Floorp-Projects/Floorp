@@ -694,7 +694,6 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
 
     PRBool bMoreHeaders;
     nsXPIDLCString autoBuffer;
-    nsAutoString autoString;
     nsCOMPtr<nsISupports>   item;
     nsCOMPtr<nsIHTTPHeader> header;
     nsCOMPtr<nsIAtom>       headerAtom;
@@ -729,11 +728,13 @@ nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
                     
         header->GetValue(getter_Copies(autoBuffer));
 
+          // STRING USE WARNING: perhaps |autoString| should be an |nsCAutoString|? -- scc
+        nsAutoString autoString;
         headerAtom->ToString(autoString);
-        autoString.Append(": ");
-        autoString.Append(autoBuffer);
-        autoString.Append(CRLF);
-        aResponseBuffer.Append(autoString);
+        autoString.AppendWithConversion(": ");
+        autoString.AppendWithConversion(autoBuffer);
+        autoString.AppendWithConversion(CRLF);
+        aResponseBuffer.AppendWithConversion(autoString);
     }
 
     return NS_OK;
@@ -828,7 +829,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
 
         // Convert the atom name from unicode to ascii...
         atom->GetUnicode(&name);
-        nameBuffer.Assign(name);
+        nameBuffer.AssignWithConversion(name);
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("\tUpdateHeaders [this=%x]."
                "\tIgnoring response header: \'%s\'\n",
@@ -850,7 +851,7 @@ nsresult nsHTTPResponse::UpdateHeaders(nsISimpleEnumerator *aEnumerator)
         const PRUnichar *name = nsnull;
 
         atom->GetUnicode(&name);
-        nameBuffer.Assign(name);
+        nameBuffer.AssignWithConversion(name);
         PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
               ("\tUpdateHeaders [this=%x].\tNew response header: \'%s: %s\'\n",
               this, nameBuffer.GetBuffer(), (const char*)headerValue));
