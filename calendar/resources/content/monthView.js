@@ -202,7 +202,7 @@ function MonthView( calendarWindow )
 *   We create XUL boxes dynamically and insert them into the XUL. 
 *   To refresh the display we remove all the old boxes and make new ones.
 */
-MonthView.prototype.refreshEvents = function( )
+MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 {
    // get this month's events and display them
   
@@ -274,7 +274,7 @@ MonthView.prototype.refreshEvents = function( )
          eventBox.setAttribute( "eventbox", "monthview" );
          eventBox.setAttribute( "onclick", "gCalendarWindow.monthView.clickEventBox( this, event )" );
          eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-         eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+         eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          eventBox.setAttribute( "tooltip", "savetip" );
          
          // add a property to the event box that holds the calendarEvent that the
@@ -334,7 +334,7 @@ MonthView.prototype.refreshEvents = function( )
             
             this.kungFooDeathGripOnEventBoxes.push( eventBox );
             
-            eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+            eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
             eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
    
@@ -363,7 +363,7 @@ MonthView.prototype.refreshEvents = function( )
 *   Called when the user switches to a different view
 */
 
-MonthView.prototype.switchFrom = function( )
+MonthView.prototype.switchFrom = function monthView_switchFrom( )
 {
    
 }
@@ -374,7 +374,7 @@ MonthView.prototype.switchFrom = function( )
 *   Called when the user switches to the month view
 */
 
-MonthView.prototype.switchTo = function( )
+MonthView.prototype.switchTo = function monthView_switchTo( )
 {
    // see showingLastDay notes above
    
@@ -402,7 +402,7 @@ MonthView.prototype.switchTo = function( )
 *   Redraw the display, but not the events
 */
 
-MonthView.prototype.refreshDisplay = function( )
+MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
 { 
    // set the month/year in the header
    
@@ -530,7 +530,7 @@ MonthView.prototype.refreshDisplay = function( )
 *   Mark the selected date, also unmark the old selection if there was one
 */
 
-MonthView.prototype.hiliteSelectedDate = function( )
+MonthView.prototype.hiliteSelectedDate = function monthView_hiliteSelectedDate( )
 {
    // Clear the old selection if there was one
 
@@ -552,7 +552,7 @@ MonthView.prototype.hiliteSelectedDate = function( )
 *  Unmark the selected date if there is one.
 */
 
-MonthView.prototype.clearSelectedDate = function( )
+MonthView.prototype.clearSelectedDate = function monthView_clearSelectedDate( )
 {
    var SelectedBoxes = document.getElementsByAttribute( "monthselected", "true" );
    
@@ -567,7 +567,7 @@ MonthView.prototype.clearSelectedDate = function( )
 *  Unmark the selected date if there is one.
 */
 
-MonthView.prototype.clearSelectedBoxes = function( )
+MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( )
 {
    var SelectedBoxes = document.getElementsByAttribute( "eventselected", "true" );
    
@@ -582,7 +582,7 @@ MonthView.prototype.clearSelectedBoxes = function( )
 *  Mark today as selected, also unmark the old today if there was one.
 */
 
-MonthView.prototype.hiliteTodaysDate = function( )
+MonthView.prototype.hiliteTodaysDate = function monthView_hiliteTodaysDate( )
 {
    var Month = this.calendarWindow.getSelectedDate().getMonth();
    
@@ -613,7 +613,7 @@ MonthView.prototype.hiliteTodaysDate = function( )
 *   and we want to know what the default start date should be for the event.
 */
 
-MonthView.prototype.getNewEventDate = function( )
+MonthView.prototype.getNewEventDate = function monthView_getNewEventDate( )
 {
    // use the selected year, month and day
    // and the current hours and minutes
@@ -634,7 +634,7 @@ MonthView.prototype.getNewEventDate = function( )
 *   Moves goMonths months in the future, goes to next month if no argument.
 */
 
-MonthView.prototype.goToNext = function( goMonths )
+MonthView.prototype.goToNext = function monthView_goToNext( goMonths )
 {  
    if(goMonths){
       var nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + goMonths, 1 );
@@ -653,7 +653,7 @@ MonthView.prototype.goToNext = function( goMonths )
 *   Goes goMonths months into the past, goes to the previous month if no argument.
 */
 
-MonthView.prototype.goToPrevious = function( goMonths )
+MonthView.prototype.goToPrevious = function monthView_goToPrevious( goMonths )
 {
    if(goMonths){
       var prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - goMonths, 1 );
@@ -682,7 +682,7 @@ MonthView.prototype.goToPrevious = function( goMonths )
 *   we set the date to be the selected date, making adjustments if the selected date is not in the month.
 */
 
-MonthView.prototype.adjustNewMonth = function( newMonth )
+MonthView.prototype.adjustNewMonth = function monthView_adjustNewMonth( newMonth )
 {
    // Don't let a date beyond the end of the month make us jump
    // too many or too few months
@@ -720,7 +720,7 @@ MonthView.prototype.adjustNewMonth = function( newMonth )
 *   Called when a day box item is single clicked
 */
 
-MonthView.prototype.clickDay = function( event )
+MonthView.prototype.clickDay = function monthView_clickDay( event )
 {
    if( event.button > 0 )
       return;
@@ -741,7 +741,7 @@ MonthView.prototype.clickDay = function( event )
    }
 }
 
-MonthView.prototype.doubleClickDay = function( event )
+MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
 {
    if( event.button > 0 )
       return;
@@ -773,7 +773,7 @@ MonthView.prototype.doubleClickDay = function( event )
 *   Called when an event box item is single clicked
 */
 
-MonthView.prototype.clickEventBox = function( eventBox, event )
+MonthView.prototype.clickEventBox = function monthView_clickEventBox( eventBox, event )
 {
    this.calendarWindow.selectedDate.setDate( eventBox.calendarEventDisplay.event.start.day );
 
@@ -785,7 +785,7 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
    }
 }
 
-MonthView.prototype.clearSelectedEvent = function ( )
+MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
 {
    this.calendarWindow.EventSelection.emptySelection();
 
@@ -798,7 +798,7 @@ MonthView.prototype.clearSelectedEvent = function ( )
 }
 
 
-MonthView.prototype.getVisibleEvent = function( calendarEvent )
+MonthView.prototype.getVisibleEvent = function monthView_getVisibleEvent( calendarEvent )
 {
    var eventBox = document.getElementById( "month-view-event-box-"+calendarEvent.id );
 
@@ -810,7 +810,7 @@ MonthView.prototype.getVisibleEvent = function( calendarEvent )
       return null;
 }
 
-MonthView.prototype.selectBoxForEvent = function( calendarEvent )
+MonthView.prototype.selectBoxForEvent = function monthView_selectBoxForEvent( calendarEvent )
 {
    var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+calendarEvent.id );
             
@@ -821,13 +821,13 @@ MonthView.prototype.selectBoxForEvent = function( calendarEvent )
 }
 
 /*Just calls setCalendarSize, it's here so it can be implemented on the other two views without difficulty.*/
-MonthView.prototype.doResize = function( )
+MonthView.prototype.doResize = function monthView_doResize( )
 {
    this.setCalendarSize(this.getViewHeight());
 }
 
 /*Takes in a height, sets the calendar's container box to that height, the grid expands and contracts to fit it.*/
-MonthView.prototype.setCalendarSize = function( height )
+MonthView.prototype.setCalendarSize = function monthView_setCalendarSize( height )
 {
     var offset = document.defaultView.getComputedStyle(document.getElementById("month-controls-box"), "").getPropertyValue("height");
     offset = parseInt( offset );
@@ -836,7 +836,7 @@ MonthView.prototype.setCalendarSize = function( height )
 } 
 
 /*returns the height of the current view in pixels*/ 
-MonthView.prototype.getViewHeight = function( )
+MonthView.prototype.getViewHeight = function monthView_getViewHeight( )
 {
     toReturn = document.defaultView.getComputedStyle(document.getElementById("month-view-box"), "").getPropertyValue("height");
     toReturn = parseInt( toReturn ); //strip off the px at the end
@@ -844,7 +844,7 @@ MonthView.prototype.getViewHeight = function( )
 }
 
 
-MonthView.prototype.getNumberOfEventsToShow = function( )
+MonthView.prototype.getNumberOfEventsToShow = function monthView_getNumberOfEventsToShow( )
 {
    //get the style height of the month view box.
    var MonthViewBoxHeight = document.defaultView.getComputedStyle(document.getElementById("month-week-4-day-4-box"), "").getPropertyValue("height");

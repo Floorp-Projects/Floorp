@@ -212,7 +212,7 @@ function CalendarWindow( calendarDataSource )
 *   Removes the observer from the data source.
 */
 
-CalendarWindow.prototype.close = function( )
+CalendarWindow.prototype.close = function calWin_close( )
 {
    gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
 }
@@ -223,7 +223,7 @@ CalendarWindow.prototype.close = function( )
 *   Switch to the day view if it isn't already the current view
 */
 
-CalendarWindow.prototype.switchToDayView = function( )
+CalendarWindow.prototype.switchToDayView = function calWin_switchToDayView( )
 {
    document.getElementById( "day-tree-item-0" ).focus();
    
@@ -236,7 +236,7 @@ CalendarWindow.prototype.switchToDayView = function( )
 *   Switch to the week view if it isn't already the current view
 */
 
-CalendarWindow.prototype.switchToWeekView = function( )
+CalendarWindow.prototype.switchToWeekView = function calWin_switchToWeekView( )
 {
    document.getElementById( "week-tree-hour-0" ).focus();
 
@@ -249,7 +249,7 @@ CalendarWindow.prototype.switchToWeekView = function( )
 *   Switch to the month view if it isn't already the current view
 */
 
-CalendarWindow.prototype.switchToMonthView = function( )
+CalendarWindow.prototype.switchToMonthView = function calWin_switchToMonthView( )
 {
    this.switchToView( this.monthView )
 }
@@ -259,7 +259,7 @@ CalendarWindow.prototype.switchToMonthView = function( )
 *   Display today in the current view
 */
 
-CalendarWindow.prototype.goToToday = function( )
+CalendarWindow.prototype.goToToday = function calWin_goToToday( )
 {
    this.clearSelectedEvent( );
 
@@ -272,7 +272,7 @@ CalendarWindow.prototype.goToToday = function( )
 *   Go to the next period in the current view
 */
 
-CalendarWindow.prototype.goToNext = function( value )
+CalendarWindow.prototype.goToNext = function calWin_goToNext( value )
 {
    if(value){
       this.currentView.goToNext( value );
@@ -287,7 +287,7 @@ CalendarWindow.prototype.goToNext = function( value )
 *   Go to the previous period in the current view
 */
 
-CalendarWindow.prototype.goToPrevious = function( value )
+CalendarWindow.prototype.goToPrevious = function calWin_goToPrevious( value )
 {   
    if(value){
       this.currentView.goToPrevious( value );
@@ -302,7 +302,7 @@ CalendarWindow.prototype.goToPrevious = function( value )
 *   Go to today in the current view
 */
 
-CalendarWindow.prototype.goToDay = function( newDate )
+CalendarWindow.prototype.goToDay = function calWin_goToDay( newDate )
 {
    this.currentView.goToDay( newDate );
 }
@@ -317,7 +317,7 @@ CalendarWindow.prototype.goToDay = function( newDate )
 *
 */
 
-CalendarWindow.prototype.setSelectedEvent = function( selectedEvent )
+CalendarWindow.prototype.setSelectedEvent = function calWin_setSelectedEvent( selectedEvent )
 {
    this.EventSelection.replaceSelection( selectedEvent );
 }
@@ -333,7 +333,7 @@ CalendarWindow.prototype.setSelectedEvent = function( selectedEvent )
 *
 */
 
-CalendarWindow.prototype.clearSelectedEvent = function( unSelectedEvent )
+CalendarWindow.prototype.clearSelectedEvent = function calWin_clearSelectedEvent( unSelectedEvent )
 {
    var undefined;
    
@@ -352,7 +352,7 @@ CalendarWindow.prototype.clearSelectedEvent = function( unSelectedEvent )
 *   Set the selected date
 */
 
-CalendarWindow.prototype.setSelectedDate = function( date )
+CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date )
 {
    // Copy the date because we might mess with it in place
    
@@ -364,7 +364,7 @@ CalendarWindow.prototype.setSelectedDate = function( date )
 *   Get the selected date
 */
 
-CalendarWindow.prototype.getSelectedDate = function( )
+CalendarWindow.prototype.getSelectedDate = function calWin_getSelectedDate( )
 {
    // Copy the date because we might mess with it in place
    
@@ -377,7 +377,7 @@ CalendarWindow.prototype.getSelectedDate = function( )
 *   Change the hour of the selected date
 */
 
-CalendarWindow.prototype.setSelectedHour = function( hour )
+CalendarWindow.prototype.setSelectedHour = function calWin_setSelectedHour( hour )
 {
    var selectedDate = this.getSelectedDate();
    
@@ -396,7 +396,7 @@ CalendarWindow.prototype.setSelectedHour = function( hour )
 *   newView  - MUST be one of the three CalendarView instances created in the constructor
 */
 
-CalendarWindow.prototype.switchToView = function( newView )
+CalendarWindow.prototype.switchToView = function calWin_switchToView( newView )
 {
    // only switch if not already there
    
@@ -428,7 +428,7 @@ CalendarWindow.prototype.switchToView = function( newView )
 *  This is the same for any view.
 */
 
-CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
+CalendarWindow.prototype.changeMouseOverInfo = function calWin_changeMouseOverInfo( calendarEvent, event )
 {
    var Html = document.getElementById( "savetip" );
 
@@ -450,7 +450,7 @@ CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
 *
 */
 
-CalendarWindow.prototype.getLowestElementNotInArray = function( InputArray )
+CalendarWindow.prototype.getLowestElementNotInArray = function calWin_getLowestElementNotInArray( InputArray )
 {
    var Temp = 1;
    var AllZero = true; //are all the elements in the array 0?
@@ -485,14 +485,14 @@ CalendarWindow.prototype.getLowestElementNotInArray = function( InputArray )
 *
 */
 
-CalendarWindow.prototype.compareNumbers = function (a, b) {
+CalendarWindow.prototype.compareNumbers = function calWin_compareNumbers(a, b) {
    return a - b
 }
 
 /** PUBLIC
 *   The resize handler, used to set the size of the views so they fit the screen.
 */
- window.onresize = CalendarWindow.prototype.doResize = function(){
+ window.onresize = CalendarWindow.prototype.doResize = function calWin_doResize(){
      gCalendarWindow.currentView.refresh();
 }
 
@@ -525,7 +525,7 @@ CalendarView.prototype.superConstructor = CalendarView;
 *   ShowEvent: Do we show an event being highlighted, or do we show a day being highlighted.
 */
 
-CalendarView.prototype.goToDay = function( newDate, ShowEvent )
+CalendarView.prototype.goToDay = function calView_goToDay( newDate, ShowEvent )
 {
    this.calendarWindow.setSelectedDate( newDate ); 
    
@@ -537,7 +537,7 @@ CalendarView.prototype.goToDay = function( newDate, ShowEvent )
 *   Refresh display of events and the selection in the view
 */
 
-CalendarView.prototype.refresh = function( ShowEvent )
+CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
 {
    this.refreshDisplay( ShowEvent )
    

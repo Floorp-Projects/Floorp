@@ -110,7 +110,7 @@ function DayView( calendarWindow )
 * 
 */
 
-DayView.prototype.refreshEvents = function( )
+DayView.prototype.refreshEvents = function dayview_refreshEvents( )
 {
    this.kungFooDeathGripOnEventBoxes = new Array();
 
@@ -246,7 +246,7 @@ DayView.prototype.refreshEvents = function( )
          newTextNode = document.createElement( "label" );
          newTextNode.setAttribute( "value", eventText );
          newTextNode.calendarEventDisplay = calendarEventDisplay;
-         newTextNode.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+         newTextNode.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          newTextNode.setAttribute( "onclick", "dayEventItemClick( this, event )" );
          newTextNode.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
          newTextNode.setAttribute( "tooltip", "savetip" );
@@ -255,7 +255,7 @@ DayView.prototype.refreshEvents = function( )
          newImage = document.createElement("image");
          newImage.setAttribute( "class", "all-day-event-class" );
          newImage.calendarEventDisplay = calendarEventDisplay;
-         newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+         newImage.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
          newImage.setAttribute( "onclick", "dayEventItemClick( this, event )" );
          newImage.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
          newImage.setAttribute( "tooltip", "savetip" );
@@ -287,7 +287,7 @@ DayView.prototype.refreshEvents = function( )
 *
 *   This creates an event box for the day view
 */
-DayView.prototype.createEventBox = function ( calendarEventDisplay )
+DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay )
 {
    
    // build up the text to show for this event
@@ -336,7 +336,7 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
    eventBox.setAttribute( "eventbox", "dayview" );
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
    if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
@@ -371,7 +371,7 @@ DayView.prototype.createEventBox = function ( calendarEventDisplay )
 *   Called when the user switches from a different view
 */
 
-DayView.prototype.switchFrom = function( )
+DayView.prototype.switchFrom = function dayview_switchFrom( )
 {
 }
 
@@ -381,7 +381,7 @@ DayView.prototype.switchFrom = function( )
 *   Called when the user switches to the day view
 */
 
-DayView.prototype.switchTo = function( )
+DayView.prototype.switchTo = function dayview_switchTo( )
 {
    // disable/enable view switching buttons   
 
@@ -405,7 +405,7 @@ DayView.prototype.switchTo = function( )
 *   Redraw the display, but not the events
 */
 
-DayView.prototype.refreshDisplay = function( )
+DayView.prototype.refreshDisplay = function dayview_refreshDisplay( )
 {
    // update the title
    var dayName = this.calendarWindow.dateFormater.getDayName( this.calendarWindow.getSelectedDate().getDay() );
@@ -469,7 +469,7 @@ DayView.prototype.refreshDisplay = function( )
 *   Called when an event box item is single clicked
 */
 
-DayView.prototype.clickEventBox = function( eventBox, event )
+DayView.prototype.clickEventBox = function dayview_clickEventBox( eventBox, event )
 {
    this.calendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
    // Do not let the click go through, suppress default selection
@@ -488,7 +488,7 @@ DayView.prototype.clickEventBox = function( eventBox, event )
 *   and we want to know what the default start date should be for the event.
 */
 
-DayView.prototype.getNewEventDate = function( )
+DayView.prototype.getNewEventDate = function dayview_getNewEventDate( )
 {
    var start = new Date( this.calendarWindow.getSelectedDate() );
    
@@ -505,7 +505,7 @@ DayView.prototype.getNewEventDate = function( )
 *   Go to the next day.
 */
 
-DayView.prototype.goToNext = function(goDays)
+DayView.prototype.goToNext = function dayview_goToNext(goDays)
 {
    if (goDays)
 	{
@@ -525,7 +525,7 @@ DayView.prototype.goToNext = function(goDays)
 *   Go to the previous day.
 */
 
-DayView.prototype.goToPrevious = function( goDays )
+DayView.prototype.goToPrevious = function dayview_goToPrevious( goDays )
 {
    if (goDays)
 	{
@@ -540,7 +540,7 @@ DayView.prototype.goToPrevious = function( goDays )
 }
 
 
-DayView.prototype.selectBoxForEvent = function( calendarEvent )
+DayView.prototype.selectBoxForEvent = function dayview_selectBoxForEvent( calendarEvent )
 {
    var EventBoxes = document.getElementsByAttribute( "name", "day-view-event-box-"+calendarEvent.id );
    
@@ -554,7 +554,7 @@ DayView.prototype.selectBoxForEvent = function( calendarEvent )
 *
 *   clear the selected event by taking off the selected attribute.
 */
-DayView.prototype.clearSelectedEvent = function( )
+DayView.prototype.clearSelectedEvent = function dayview_clearSelectedEvent( )
 {
    this.calendarWindow.EventSelection.emptySelection();
 
@@ -567,13 +567,13 @@ DayView.prototype.clearSelectedEvent = function( )
 }
 
 
-DayView.prototype.clearSelectedDate = function( )
+DayView.prototype.clearSelectedDate = function dayview_clearSelectedDate( )
 {
    return;
 }
 
 
-DayView.prototype.getVisibleEvent = function( calendarEvent )
+DayView.prototype.getVisibleEvent = function dayview_getVisibleEvent( calendarEvent )
 {
    eventBox = document.getElementById( "day-view-event-box-"+calendarEvent.id );
    if ( eventBox ) 
@@ -589,7 +589,7 @@ DayView.prototype.getVisibleEvent = function( calendarEvent )
 ** This function is needed because it may be called after the end of each day.
 */
 
-DayView.prototype.hiliteTodaysDate = function( )
+DayView.prototype.hiliteTodaysDate = function dayview_hiliteTodaysDate( )
 {
    return;
 }

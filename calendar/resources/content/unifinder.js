@@ -65,20 +65,17 @@ function calendarUnifinderInit( )
             {
                for( i = 0; i < EventSelectionArray.length; i++ )
                {
-                  var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
+                  var RowToScrollTo = SearchTree.eventView.getRowOfCalendarEvent( EventSelectionArray[i] );
                   
-                  if( SearchTreeItem )
-                  {
-                     var Index = SearchTree.contentView.getIndexOfItem( SearchTreeItem );
-                     
-                     SearchTree.treeBoxObject.ensureRowIsVisible( Index );
-         
-                     SearchTree.treeBoxObject.selection.select( Index );
-                  }
+                  SearchTree.treeBoxObject.ensureRowIsVisible( RowToScrollTo );
+
+                  SearchTree.treeBoxObject.selection.select( RowToScrollTo );
                }
             }
          }
          gCalendarEventTreeClicked = false;
+
+         SearchTree.focus();
       }
    }
       
@@ -635,6 +632,16 @@ calendarEventView.prototype.getCalendarEventAtRow = function( i )
    return( this.eventArray[ i ] );
 }
 
+calendarEventView.prototype.getRowOfCalendarEvent = function( Event )
+{
+   for( var i = 0; i < this.eventArray.length; i++ )
+   {
+      if( this.eventArray[i].id == Event.id )
+         return( i );
+   }
+   return( false );
+}
+
 
 function refreshEventTree( eventArray )
 {
@@ -646,32 +653,6 @@ function refreshEventTree( eventArray )
    document.getElementById(UnifinderTreeName).view = new treeView( eventArray );
 
    document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
-
-   // get the old tree children item and remove it
-   /*
-   var tree = document.getElementById( UnifinderTreeName );
-
-   var elementsToRemove = document.getElementsByAttribute( "calendarevent", "true" );
-   
-   for( var i = 0; i < elementsToRemove.length; i++ )
-   {
-      elementsToRemove[i].parentNode.removeChild( elementsToRemove[i] );
-   }
-
-   // add: tree item, row, cell, box and text items for every event
-   for( var index = 0; index < eventArray.length; ++index )
-   {
-      var calendarEvent = eventArray[ index ];
-      
-      // make the items
-      
-      var treeItem = document.createElement( "treeitem" );
-      
-      setUnifinderEventTreeItem( treeItem, calendarEvent );
-
-      tree.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
-   }
-   */  
 }
 
 function focusFirstItemIfNoSelection()

@@ -43,7 +43,7 @@ function CalendarEventSelection( CalendarWindow )
    this.observerList = new Array();
 }
 
-CalendarEventSelection.prototype.addObserver = function( observer )
+CalendarEventSelection.prototype.addObserver = function calSel_addObserver( observer )
 {
    if( observer )
    {
@@ -67,7 +67,7 @@ CalendarEventSelection.prototype.addObserver = function( observer )
 *      observer     - Observer to remove.
 */
 
-CalendarEventSelection.prototype.removeObserver = function( observer )
+CalendarEventSelection.prototype.removeObserver = function calSel_removeObserver( observer )
 {
    for( var index = 0; index < this.observerList.length; ++index )
    {
@@ -82,14 +82,14 @@ CalendarEventSelection.prototype.removeObserver = function( observer )
 }
 
 
-CalendarEventSelection.prototype.addToSelection = function ( Event )
+CalendarEventSelection.prototype.addToSelection = function calSel_addToSelection( Event )
 {
    this.selectedEvents[ this.selectedEvents.length ] = Event;
 
    this.onSelectionChanged();
 }
 
-CalendarEventSelection.prototype.replaceSelection = function ( Event )
+CalendarEventSelection.prototype.replaceSelection = function calSel_replaceSelection( Event )
 {
    this.selectedEvents = new Array();
 
@@ -99,14 +99,14 @@ CalendarEventSelection.prototype.replaceSelection = function ( Event )
    
 }
 
-CalendarEventSelection.prototype.emptySelection = function ( Event )
+CalendarEventSelection.prototype.emptySelection = function calSel_emptySelection( Event )
 {
    this.selectedEvents = new Array();
 
    this.onSelectionChanged();
 }
 
-CalendarEventSelection.prototype.setArrayToSelection = function( ArrayOfEvents )
+CalendarEventSelection.prototype.setArrayToSelection = function calSel_setArrayToSelection( ArrayOfEvents )
 {
    this.selectedEvents = new Array();
 
@@ -118,7 +118,7 @@ CalendarEventSelection.prototype.setArrayToSelection = function( ArrayOfEvents )
    this.onSelectionChanged();
 }
 
-CalendarEventSelection.prototype.isSelectedEvent = function ( Event )
+CalendarEventSelection.prototype.isSelectedEvent = function calSel_isSelectedEvent( Event )
 {
    for( i = 0; i < this.selectedEvents.length; i++ )
    {
@@ -136,7 +136,7 @@ CalendarEventSelection.prototype.isSelectedEvent = function ( Event )
 *
 */
 
-CalendarEventSelection.prototype.onSelectionChanged = function ( )
+CalendarEventSelection.prototype.onSelectionChanged = function calSel_onSelectionChanged( )
 {
    if( this.selectedEvents.length > 0 )
    {

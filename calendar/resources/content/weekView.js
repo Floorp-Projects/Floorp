@@ -289,7 +289,7 @@ WeekView.prototype.refreshEvents = function( )
             newHTMLNode.setAttribute( "value", eventText );
             newHTMLNode.setAttribute( "WeekViewAllDayText", "true" );
             newHTMLNode.calendarEventDisplay = calendarEventDisplay;
-            newHTMLNode.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+            newHTMLNode.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             newHTMLNode.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newHTMLNode.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newHTMLNode.setAttribute( "tooltip", "savetip" );
@@ -298,7 +298,7 @@ WeekView.prototype.refreshEvents = function( )
 				newImage.setAttribute( "class", "all-day-event-class" );
             newImage.setAttribute( "WeekViewAllDayText", "true" );
             newImage.calendarEventDisplay = calendarEventDisplay;
-            newImage.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+            newImage.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
             newImage.setAttribute( "onclick", "weekEventItemClick( this, event )" );
             newImage.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
             newImage.setAttribute( "tooltip", "savetip" );
@@ -372,7 +372,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    eventBox.setAttribute( "ondblclick", "weekEventItemDoubleClick( this, event )" );
    eventBox.setAttribute( "id", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.mouseOverInfo( calendarEventDisplay, event )" );
+   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "savetip" );
    if( calendarEventDisplay.event.categories && calendarEventDisplay.event.categories != "" )
    {

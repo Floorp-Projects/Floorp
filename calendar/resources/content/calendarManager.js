@@ -61,7 +61,7 @@ function calendarManager( CalendarWindow )
 }
 
 
-calendarManager.prototype.addActiveCalendars = function()
+calendarManager.prototype.addActiveCalendars = function calMan_addActiveCalendars()
 {
    for( var i = 0; i < this.calendars.length; i++ )
    {
@@ -76,7 +76,7 @@ calendarManager.prototype.addActiveCalendars = function()
 /*
 ** Launch the new calendar file dialog
 */
-calendarManager.prototype.launchAddCalendarDialog = function( )
+calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( )
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
@@ -102,7 +102,7 @@ calendarManager.prototype.launchAddCalendarDialog = function( )
 /*
 ** Called when OK is clicked in the new server dialog.
 */
-calendarManager.prototype.addServerDialogResponse = function( CalendarObject )
+calendarManager.prototype.addServerDialogResponse = function calMan_addServerDialogResponse( CalendarObject )
 {
    CalendarObject.active = true;
 
@@ -148,7 +148,7 @@ calendarManager.prototype.addServerDialogResponse = function( CalendarObject )
 /*
 ** Add the calendar so it is included in searches
 */
-calendarManager.prototype.addCalendar = function( ThisCalendarObject )
+calendarManager.prototype.addCalendar = function calMan_addCalendar( ThisCalendarObject )
 {
    this.CalendarWindow.eventSource.gICalLib.addCalendar( ThisCalendarObject.path );
 
@@ -159,7 +159,7 @@ calendarManager.prototype.addCalendar = function( ThisCalendarObject )
 /* 
 ** Remove the calendar, so it doesn't get included in searches 
 */
-calendarManager.prototype.removeCalendar = function( ThisCalendarObject )
+calendarManager.prototype.removeCalendar = function calMan_removeCalendar( ThisCalendarObject )
 {
    this.CalendarWindow.eventSource.gICalLib.removeCalendar( ThisCalendarObject.path );
 
@@ -170,7 +170,7 @@ calendarManager.prototype.removeCalendar = function( ThisCalendarObject )
 /*
 ** Delete the calendar. Remove the file, it won't be used any longer.
 */
-calendarManager.prototype.deleteCalendar = function( ThisCalendarObject )
+calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisCalendarObject )
 {
    this.removeCalendar( ThisCalendarObject );
    
@@ -182,7 +182,7 @@ calendarManager.prototype.deleteCalendar = function( ThisCalendarObject )
 }
 
 
-calendarManager.prototype.getAllCalendars = function()
+calendarManager.prototype.getAllCalendars = function calMan_getAllCalendars()
 {
    this.calendars = new Array();
 
@@ -239,7 +239,7 @@ calendarManager.prototype.getAllCalendars = function()
 }
 
 
-calendarManager.prototype.addCalendarToListBox = function( ThisCalendarObject )
+calendarManager.prototype.addCalendarToListBox = function calMan_addCalendarToListBox( ThisCalendarObject )
 {
    var calendarListItem = document.createElement( "listitem" );
    calendarListItem.setAttribute( "id", "calendar-list-item" );
@@ -257,7 +257,7 @@ calendarManager.prototype.addCalendarToListBox = function( ThisCalendarObject )
 }
 
 
-calendarManager.prototype.getCalendarIndex = function( ThisCalendarObject )
+calendarManager.prototype.getCalendarIndex = function calMan_getCalendarIndex( ThisCalendarObject )
 {
    for( var i = 0; i < this.calendars.length; i++ )
    {
@@ -274,7 +274,7 @@ var request;
 var calendarToGet = null;
 var refresh = false;
 
-calendarManager.prototype.retrieveAndSaveRemoteCalendar = function( ThisCalendarObject, onResponse )
+calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject, onResponse )
 {
    calendarToGet = ThisCalendarObject;
    // make a request
@@ -290,7 +290,7 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function( ThisCalendar
 }
 
 
-calendarManager.prototype.refreshAllRemoteCalendars = function()
+calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAllRemoteCalendars()
 {
    for( var i = 0; i < this.calendars.length; i++ )
    {
