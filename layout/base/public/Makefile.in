@@ -38,6 +38,7 @@ EXPORTS =				\
 	nsIFocusTracker.h		\
 	nsIFrame.h			\
 	nsIFrameImageLoader.h		\
+	nsIFrameManager.h		\
 	nsILayoutDebugger.h		\
 	nsINameSpace.h			\
 	nsINameSpaceManager.h		\
