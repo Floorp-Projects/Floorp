@@ -6642,7 +6642,7 @@ nsPluginStreamInfo::UseExistingPluginCacheFile(nsPluginStreamInfo* psi)
 }
 
 void
-nsPluginStreamInfo::SetStreamComplete(PRBool complete)
+nsPluginStreamInfo::SetStreamComplete(const PRBool complete)
 {
   mStreamComplete = complete;
 }
