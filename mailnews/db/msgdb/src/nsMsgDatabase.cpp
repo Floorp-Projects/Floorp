@@ -698,10 +698,11 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 	{
 		mdb_percent outActualWaste = 0;
 		mdb_bool outShould;
-
-		err = m_mdbStore->ShouldCompress(GetEnv(), 30, &outActualWaste, &outShould);
-		if (NS_SUCCEEDED(err) && outShould)
-			commitType = nsMsgDBCommitType::kCompressCommit;
+        if (m_mdbStore) {
+            err = m_mdbStore->ShouldCompress(GetEnv(), 30, &outActualWaste, &outShould);
+            if (NS_SUCCEEDED(err) && outShould)
+                commitType = nsMsgDBCommitType::kCompressCommit;
+        }
 	}
 //	commitType = nsMsgDBCommitType::kCompressCommit;	// ### until incremental writing works.
 
@@ -1634,7 +1635,7 @@ NS_IMETHODIMP nsMsgDBEnumerator::GetNext(nsISupports **aItem)
 {
 	if (!aItem)
 		return NS_ERROR_NULL_POINTER;
-	nsresult rv;
+	nsresult rv=NS_OK;
 	if (!mNextPrefetched)
 		rv = PrefetchNext();
 	if (NS_SUCCEEDED(rv))
