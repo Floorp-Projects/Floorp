@@ -85,14 +85,16 @@ XP_END_PROTOS
 #endif
 
 
-#if !defined(XP_WIN) && !defined(XP_OS2) && !(defined(__GLIBC__) && __GLIBC__ >= 2)
+#if !defined(XP_WIN) && !defined(XP_OS2) && !(defined(__GLIBC__) && __GLIBC__ >= 2) && !defined(AIXV3)
 /* strdup is not an ANSI function */
 XP_BEGIN_PROTOS
 extern char * strdup (const char * s);
 XP_END_PROTOS
 #endif
 
+#ifndef QNX
 #include <memory.h>
+#endif
 
 #define XP_STRDUP(s)              strdup((s))
 #define XP_MEMCPY(d, s, n)        memcpy((d), (s), (n))
