@@ -65,4 +65,6 @@ clean clobber:
 	rm -rf build
 	rm -f resources/localized/English.lproj/Localized.rsrc
 
-
+# convenience target for PB script build phases
+echo_srcdir:
+	@echo $(srcdir)
