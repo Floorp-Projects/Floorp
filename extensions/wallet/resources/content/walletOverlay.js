@@ -157,7 +157,8 @@
     // Walk through the DOM to determine how a capture or prefill item is to appear.
     //   returned value:
     //      hide, disable, enable for .capture and .prefill
-    function getStateFromFormsArray(formsArray, threshhold) {
+    function getStateFromFormsArray(content, threshhold) {
+      formsArray = content.document.forms;
       if (!formsArray) {
         return {capture: hide, prefill: hide};
       }
@@ -210,7 +211,7 @@
             // obtain saved values if any and store in array called valueList
             var valueList;
             var valueSequence = gWalletService.WALLET_PrefillOneElement
-              (window._content, elementsArray[element]);
+              (content, elementsArray[element]);
             // result is a linear sequence of values, each preceded by a separator character
             // convert linear sequence of values into an array of values
             if (valueSequence) {
@@ -258,9 +259,9 @@
 
     var bestState;
 
-    function stateFoundInFormsArray(formsArray, threshhold) {
+    function stateFoundInFormsArray(content, threshhold) {
       var rv = {capture: false, prefill: false};
-      var state = getStateFromFormsArray(formsArray, threshhold);
+      var state = getStateFromFormsArray(content, threshhold);
       for (var i in state) {
         if (state[i] == enable) {
           bestState[i] = enable;
@@ -279,6 +280,8 @@
     //      hide, disable, enable for .capture and .prefill
 
     function getState(threshhold) {
+      bestState = {capture: hide, prefill: hide};
+      elementCount = 0;
       stateFound(window.content, threshhold);
       return bestState;
     }
@@ -286,7 +289,6 @@
     function stateFound(content, threshhold) {
       var captureStateFound = false;
       var prefillStateFound = false;
-      bestState = {capture: hide, prefill: hide};
       if (!content || !content.document) {
         return {capture: false, prefill: false};
       }
@@ -304,8 +306,6 @@
         return {capture: true, prefill: true};
       }
 
-      elementCount = 0;
-
       // process frames if any
       var formsArray;
       var framesArray = content.frames;
@@ -322,10 +322,9 @@
           }
 
           // process the document of this frame
-          var frameDocument = framesArray[frame].document;
-          if (frameDocument) {
-
-            rv = stateFoundInFormsArray(frameDocument.forms, threshhold);
+          var frameContent = framesArray[frame];
+          if (frameContent.document) {
+            rv = stateFoundInFormsArray(frameContent, threshhold);
             captureStateFound |= rv.capture; prefillStateFound |= rv.prefill;
             if (captureStateFound && prefillStateFound) {
               gIsEncrypted = -1;
@@ -337,7 +336,7 @@
 
       // process top-level document
       gIsEncrypted = -1;
-      rv = stateFoundInFormsArray(document.forms, threshhold);
+      rv = stateFoundInFormsArray(content, threshhold);
       captureStateFound |= rv.capture; prefillStateFound |= rv.prefill;
       if (captureStateFound && prefillStateFound) {
         return {capture: true, prefill: true};
