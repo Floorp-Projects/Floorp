@@ -636,7 +636,7 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                                 \
                             _i9, _i10, _i11)                                  \
   NS_IMPL_ADDREF(_class)                                                      \
   NS_IMPL_RELEASE(_class)                                                     \
-  NS_IMPL_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
+  NS_IMPL_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6, _i7, _i8,   \
                             _i9, _i10, _i11)
 
 #define NS_IMPL_ISUPPORTS_INHERITED0(Class, Super)                            \
@@ -803,7 +803,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
                                        _i7, _i8, _i9, _i10, _i11)             \
   NS_IMPL_THREADSAFE_ADDREF(_class)                                           \
   NS_IMPL_THREADSAFE_RELEASE(_class)                                          \
-  NS_IMPL_THREADSAFE_QUERY_INTERFACE10(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE11(_class, _i1, _i2, _i3, _i4, _i5, _i6,  \
                                        _i7, _i8, _i9, _i10, _i11)
 
 ///////////////////////////////////////////////////////////////////////////////
