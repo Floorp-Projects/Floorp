@@ -16,7 +16,6 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-
 #include "nscore.h"
 #include "nsRepository.h"
 
@@ -265,18 +264,36 @@ void nsNetlibThread::NetlibMainLoop(void)
     /*
      * Create a timer to periodically call NET_PollSockets(...)
      */
+#if !defined(NO_NETWORK_POLLING)
     timerId = SetTimer(NULL, 0, 10, (TIMERPROC)NetlibTimerProc);
+#endif /* NO_NETWORK_POLLING */
 
     while (PR_TRUE == mIsNetlibThreadRunning) {
-        MSG msg;
+      MSG msg;
+      BOOL bIsMsg;
 
-        if (GetMessage(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+      /*
+       * Block for network activity...
+       *
+       * If NET_CallingNetlibAllTheTime(...) is set, then do not block
+       * because a non-socket based protocol is being serviced (ie. file)
+       */
+      if (NET_IsCallNetlibAllTheTimeSet(NULL, NULL)) {
+    		NET_ProcessNet(NULL, NET_EVERYTIME_TYPE);
+        bIsMsg = PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
+      } else {
+        bIsMsg = GetMessage(&msg, NULL, 0, 0);
+      }
+
+      if (FALSE != bIsMsg) {
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+      }
     }
 
+#if !defined(NO_NETWORK_POLLING)
     KillTimer(NULL, timerId);
+#endif /* NO_NETWORK_POLLING */
 }
 
 #else

@@ -28,6 +28,7 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "prlog.h"
+#include "nslocks.h"
 
 #ifdef DEBUG
 static PRLogModuleInfo* gDNSLogModuleInfo;
@@ -75,8 +76,12 @@ struct DNSCacheEntry {
   DNSCacheEntry* mNext;
 };
 
+extern "C" {
 static UINT gMSGFoundDNS;
-static HWND gDNSWindow;
+UINT gMSGAsyncSelect;
+HWND gDNSWindow;
+};
+
 static DNSCacheEntry* gDNSCache;
 
 void
@@ -130,6 +135,11 @@ DNSCacheEntry::Lookup(const char* aHost)
   return pentry;
 }
 
+#if defined(NO_NETWORK_POLLING)
+extern "C" PRFileDesc* net_GetFileDescFromOSFD(PRInt32);
+extern "C" void net_AsyncSelect(PRFileDesc* fd, long netMask);
+#endif /* NO_NETWORK_POLLING */
+
 static LRESULT CALLBACK 
 #if defined(WIN16)
 __loadds
@@ -182,6 +192,35 @@ EventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return rv;
   } 
+
+#if defined(NO_NETWORK_POLLING)
+  if (gMSGAsyncSelect == uMsg) {
+    PRFileDesc* fd;
+
+    /* 
+     * Enter the Libnet lock for the call to net_GetFileDescFromOSFD(...)
+     */
+    LIBNET_LOCK();
+
+    fd = net_GetFileDescFromOSFD(wParam);
+    if (NULL != fd) {
+      /*
+       * Queue up another asynchronous notification before calling 
+       * NET_ProcessNet(...).  This way, we do not need to konw if the socket
+       * is still active after the call (or if it was closed...).  If the
+       * connection is closed, the asynchronous request will be canceled...
+       */
+      net_AsyncSelect(fd, 
+                      FD_READ | FD_WRITE | FD_ACCEPT | FD_CONNECT | FD_CLOSE | FD_OOB);
+
+      /* Process the connection which has data... */
+			NET_ProcessNet(fd, NET_SOCKET_FD);
+    }
+
+    LIBNET_UNLOCK();
+  }
+#endif /* NO_NETWORK_POLLING */
+
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -194,7 +233,8 @@ void net_InitAsyncDNS()
 #endif
 
   // Allocate a message id for the event handler
-  gMSGFoundDNS = RegisterWindowMessage("Mozilla:DNSMessage");
+  gMSGFoundDNS    = RegisterWindowMessage("Mozilla:DNSMessage");
+  gMSGAsyncSelect = RegisterWindowMessage("Mozilla:AsyncSelectMessage");
 
   // Register the class for the event receiver window
   WNDCLASS wc;
@@ -322,4 +362,5 @@ NET_AsyncDNSLookup(void* aContext,
   *pentry = entry;
   return MK_WAITING_FOR_LOOKUP;
 }
+
 #endif
