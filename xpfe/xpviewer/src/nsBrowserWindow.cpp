@@ -2031,6 +2031,10 @@ nsBrowserWindow::NotifyImageButtonEvent(nsIImageButton * aImgBtn, nsGUIEvent* an
       UpdateToolbarBtns();
       break;
 
+    case kReloadCmd :  {
+      mWebShell->Reload(nsURLReload);
+      } break;
+  
     case kHomeCmd : {
       //XXX This test using javascript instead of calling directly
       nsString str("window.home();");
@@ -2245,7 +2249,7 @@ nsBrowserWindow::HandleEvent(nsGUIEvent * anEvent)
     mApp->OpenWindow();
 
   } else if (anEvent->widget == mToolbarBtns[gHomeBtnInx]) {
-    nsString homeURL("http://www.netscape.com");
+    nsString homeURL("http://home.netscape.com/eng/mozilla/5.0/DR1/hello.html");
     mWebShell->LoadURL(homeURL);
 
   } else if (anEvent->widget == mMiniAppsBtns[0]) {

@@ -82,7 +82,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsViewerApp::nsViewerApp()
 {
   char * text = PR_GetEnv("NGLAYOUT_HOME");
-  mStartURL = text ? text : "resource:/res/samples/test0.html";
+  mStartURL = text ? text : "http://home.netscape.com/eng/mozilla/5.0/DR1/hello.html";
   mDelay = 1;
   mRepeatCount = 1;
   mNumSamples = 10;
