@@ -35,12 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* An nsIMIMEInfo gives a user access to mime information.
+/**
+ * An nsIMIMEInfo gives a user access to mime information.
  * there is a one-to-many relationship between MIME types
  * and file extensions. This means that a MIMEInfo object
  * may have multiple file extensions associated with it.
  * However, the reverse is not true.
- *
  */
 
 #include "nsISupports.idl"
@@ -52,58 +52,64 @@ typedef long nsMIMEInfoHandleAction;
 
 [scriptable, uuid(6A57EAE0-2FE8-11d3-A164-0050041CAF44)]
 interface nsIMIMEInfo : nsISupports {
-	/* Gives you an array of file types associated with this type.
+    /**
+     * Gives you an array of file types associated with this type.
      *
      * @return Number of elements in the array.
      * @return Array of extensions.
      */
-	void GetFileExtensions(out PRUint32 elementCount,
+    void GetFileExtensions(out PRUint32 elementCount,
                            [array, size_is(elementCount)] out string extensions);
 
- 		/* Set File Extensions. Input is a comma deliminated list of extensions
- 		*/
- 		void SetFileExtensions( in string aExtensions );
+    /**
+     * Set File Extensions. Input is a comma delimited list of extensions.
+     */
+    void SetFileExtensions( in string aExtensions );
  
-    /* Returns whether or not the given extension is
+    /**
+     * Returns whether or not the given extension is
      * associated with this MIME info.
      *
-     * @return TRUE if the assocaition exists. 
+     * @return TRUE if the association exists. 
      */
-
     boolean ExtensionExists(in string aExtension);
 
-    /*
-    *	Append a given extension to the set of extensions
-    */
+    /**
+     * Append a given extension to the set of extensions
+     */
     void AppendExtension(in string aExtension);
 
-    /* Returns a clone of this MIMEInfo.
+    /**
+     * Returns a clone of this MIMEInfo.
      *
      * @return A clone of the MIMEInfo
      */
-
     nsIMIMEInfo clone();
     
-    /* Returns the first extension association in
+    /**
+     * Returns the first extension association in
      * the internal set of extensions.
      *
      * @return The first extension.
      */
     attribute string primaryExtension;
     
-	/* The MIME type of this MIMEInfo.
+    /**
+     * The MIME type of this MIMEInfo.
      * 
      * @return String representing the MIME type.
      */
-	 attribute string MIMEType;
+    attribute string MIMEType;
 
-	/* A human readable description of the MIME info
+    /**
+     * A human readable description of the MIME info.
      *
      * @return The description
      */
-	 attribute wstring Description;
+    attribute wstring Description;
 
-    /* Gives you arbitrary data about the MIMEInfo. An example
+    /**
+     * Gives you arbitrary data about the MIMEInfo. An example
      * of this is a generic image graphically representing
      * this MIME info. This image can be used to generically
      * and graphically represent the type.
@@ -112,45 +118,64 @@ interface nsIMIMEInfo : nsISupports {
      */
     readonly attribute nsIURI DataURI;
     
-    /*
-     *	Mac Type and creator types
+    /**
+     * Mac Type and creator types
      */
-		attribute PRUint32 MacType;
-		attribute PRUint32 MacCreator;
-		
-    /* Returns whether or not these two MIME infos are logically
+    attribute PRUint32 MacType;
+    attribute PRUint32 MacCreator;
+
+    /**
+     * Returns whether or not these two MIME infos are logically
      * equivelent maintaining the one-to-many relationship between
      * MIME types and file extensions.
      *
      * @returns TRUE if the two are considered equal
      */
-	boolean Equals(in nsIMIMEInfo aMIMEInfo);
+    boolean Equals(in nsIMIMEInfo aMIMEInfo);
 
-	/* Returns a nsIFile that points to the application the user has said
-	 * they want associated with this content type. This is not always guarunteed
-	 * to be set!!
-	 */
-	attribute nsIFile preferredApplicationHandler;
+    /**
+     * Returns a nsIFile that points to the application the user has said
+     * they want associated with this content type. This is not always
+     * guaranteed to be set!!
+     */
+    attribute nsIFile preferredApplicationHandler;
 
-	/* a pretty name description of the associated application */
-	attribute wstring applicationDescription;
+    /**
+     * a pretty name description of the associated application
+     */
+    attribute wstring applicationDescription;
 
-	const long saveToDisk = 0;
+    /**
+     * Returns a nsIFile that points to the application that is associated
+     * by default with this content type.  This will usually be specified in
+     * the platform settings somehow.  This is not always guaranteed
+     * to be set!!
+     */
+    attribute nsIFile defaultApplicationHandler;
+
+    /**
+     * a pretty name description of the default application
+     */
+    attribute wstring defaultDescription;
+
+    const long saveToDisk = 0;
     const long alwaysAsk = 1;
     const long useHelperApp = 2;
-	const long handleInternally = 3;
-	const long useSystemDefault = 4;
+    const long handleInternally = 3;
+    const long useSystemDefault = 4;
 
-	/* preferredAction is how the user specified they would like to handle
-	 * this content type: save to disk, use specified helper app, use OS
-	 * default handler or handle using navigator.
-	 */
-	attribute nsMIMEInfoHandleAction preferredAction;
+    /**
+     * preferredAction is how the user specified they would like to handle
+     * this content type: save to disk, use specified helper app, use OS
+     * default handler or handle using navigator.
+     */
+    attribute nsMIMEInfoHandleAction preferredAction;
 
-	/* alwaysAskBeforeHandling: if true, we should always give the user a dialog
-	 * asking how to dispose of this content. 
-	 */
-	attribute boolean alwaysAskBeforeHandling;
+    /**
+     * alwaysAskBeforeHandling: if true, we should always give the user a
+     * dialog asking how to dispose of this content.
+     */
+    attribute boolean alwaysAskBeforeHandling;
 };
 
 %{C++

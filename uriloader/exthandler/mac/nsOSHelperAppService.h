@@ -44,9 +44,11 @@ public:
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
   NS_IMETHOD LoadUrl(nsIURI * aURL);
   
-  // nsIMIMEService over-rides --> used to hook the mime service into internet config....
+  // method overrides --> used to hook the mime service into internet config....
   NS_IMETHOD GetFromExtension(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo);
   NS_IMETHOD GetFromMIMEType(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo);
+  nsresult GetMIMEInfoForExtensionFromOS(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo);
+  nsresult GetMIMEInfoForMimeTypeFromOS(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 

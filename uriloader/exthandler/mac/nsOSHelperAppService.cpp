@@ -53,17 +53,29 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   if (aMIMEInfo)
   {
     nsCOMPtr<nsIFile> application;   
-    aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
-    if (application)
+
+    nsMIMEInfoHandlerAction action = nsIMIMEInfo::useSystemDefault;
+    aMIMEInfo->GetPreferredAction(&action);
+
+    if (action==nsIMIMEInfo::useHelperApp)
     {
-  	  nsCOMPtr <nsILocalFileMac> app = do_QueryInterface(application, &rv);
-  	  if (NS_FAILED(rv)) return rv;
-  	
-  	  nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
-  	  if (NS_FAILED(rv)) return rv;
-  	
-  	  rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
+      aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
     }
+    else
+    {
+      aMIMEInfo->GetDefaultApplicationHandler(getter_AddRefs(application));
+    }
+
+    if (!application)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr <nsILocalFileMac> app = do_QueryInterface(application, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr <nsILocalFile> docToLoad = do_QueryInterface(aTempFile, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = app->LaunchWithDoc(docToLoad, PR_FALSE); 
   }
   return rv;
 }
@@ -139,35 +151,35 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
   nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  nsresult rv = NS_OK;
+  if (!localFile)
+    return NS_ERROR_FAILURE;
+  
+  localFile->InitWithPath(nsDependentString(platformAppPath));
+  *aFile = localFile;
+  NS_IF_ADDREF(*aFile);
 
-  if (localFile)
-  {
-    if (localFile)
-      localFile->InitWithPath(nsDependentString(platformAppPath));
-    *aFile = localFile;
-    NS_IF_ADDREF(*aFile);
-  }
-  else
-    rv = NS_ERROR_FAILURE;
-
-  return rv;
+  return NS_OK;
 }
 ///////////////////////////
-// nsIMIMEService overrides --> used to leverage internet config information for mime types.
+// method overrides --> use internet config information for mime type lookup.
 ///////////////////////////
 
 NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
 {
-  // first, ask our base class. We may already have this information cached....
+  // first, ask our base class....
   nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, aMIMEInfo);
   if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
   {
     UpdateCreatorInfo(*aMIMEInfo);
-    return rv;
   }
+  return rv;
+}
   
-  // oops, we didn't find an entry....ask the internet config service to look it up for us...
+nsresult nsOSHelperAppService::GetMIMEInfoForExtensionFromOS(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
+{
+  nsresult rv;
+  
+  // ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
   {
@@ -185,15 +197,20 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char * aFileExt, nsIM
 
 NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo)
 {
-  // first, ask our base class. We may already have this information cached....
+  // first, ask our base class....
   nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, aMIMEInfo);
   if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
   {
     UpdateCreatorInfo(*aMIMEInfo);
-    return rv;
   }
+  return rv;
+}
   
-  // oops, we didn't find an entry....ask the internet config service to look it up for us...
+nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo)
+{
+  nsresult rv;
+
+  // ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
   if (icService)
   {

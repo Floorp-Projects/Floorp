@@ -26,82 +26,80 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<!DOCTYPE window [
+<!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
   %brandDTD;
   <!ENTITY % nsHelperAppDlgDTD SYSTEM "chrome://global/locale/nsHelperAppDlg.dtd" >
   %nsHelperAppDlgDTD;
 ]>            
 
-<window id="nsHelperAppDlg"
+<dialog id="nsHelperAppDlg"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="dialog.initDialog()"
         onunload="if (dialog) dialog.onCancel()"
         style="width: 40em;"
-        class="dialog">
-
+        ondialogaccept="return dialog.onOK()"
+        ondialogcancel="return dialog.onCancel()">
             
-    <keyset id="dialogKeys"/>
-           
     <vbox>
-      <hbox flex="1">
-        <vbox flex="1">
-          <description id="intro">&intro.label;</description>    
-          <description id="location" crop="center" value=""/>
-          <separator orient="horizontal" class="thin"/>
-          <description id="prompt">&prompt.label;</description>
-        </vbox>
-        <vbox>
-          <image id="contentTypeImage"/>
-        </vbox>
-      </hbox>
-
-      <separator orient="horizontal" class="thin"/>
-      <radiogroup id="mode" oncommand="dialog.toggleChoice()" align="stretch">
-        <hbox flex="1" align="center">
-            <radio id="openUsing" flex="1"
-                   label="&openUsing.label;"
-                   accesskey="&openUsing.accesskey;"/>
-            <spacer flex="1"/>
-            <button id="chooseApp"
-                    label="&chooseApp.label;"
-                    accesskey="&chooseApp.accesskey;"
-                    oncommand="dialog.chooseApp()"/>
+        <hbox>
+            <vbox flex="1">
+                <description id="intro">&intro.label;</description>
+                <description id="location" crop="center" value=""/>
+                <separator orient="horizontal" class="thin"/>
+                <description id="prompt">&prompt.label;</description>
+            </vbox>
+            <vbox>
+                <image id="contentTypeImage"/>
+            </vbox>
         </hbox>
-        <vbox>
-          <hbox align="center">
-            <radio id="saveToDisk"
-                   label="&saveToDisk.label;"
-                   accesskey="&saveToDisk.accesskey;"/>
-          </hbox>
-        </vbox>
-      </radiogroup>
-      <separator orient="horizontal" class="thin"/>
-      <hbox align="center">
+        
+        <separator orient="horizontal" class="thin"/>
+        
+        <radiogroup id="mode" oncommand="dialog.toggleChoice()" align="stretch">
+            <hbox>
+                <radio id="useSystemDefault"
+                       flex="1"
+                       label="&useSystemDefault.noDesc.label;"
+                       accesskey="&useSystemDefault.accesskey;"/>
+                <spacer flex="1"/>
+            </hbox>
+            <hbox align="center">
+                <radio id="openUsing"
+                       label="&openUsing.label;"
+                       accesskey="&openUsing.accesskey;"/>
+                <textbox id="appPath"
+                         flex="1"
+                         oninput="dialog.updateOKButton()"
+                         onfocus="this.select()"/>
+                <button id="chooseApp"
+                        label="&chooseApp.label;"
+                        accesskey="&chooseApp.accesskey;"
+                        oncommand="dialog.chooseApp()"/>
+            </hbox>
+            <hbox>
+                <radio id="saveToDisk"
+                       label="&saveToDisk.label;"
+                       accesskey="&saveToDisk.accesskey;"/>
+                <spacer flex="1"/>
+            </hbox>
+        </radiogroup>
+        
+        <separator orient="horizontal" class="thin"/>
+
         <checkbox id="alwaysAskMe" label="&alwaysAsk.label;" accesskey="&alwaysAsk.accesskey;"/>
-      </hbox>
+
+        <separator class="groove"/>
     </vbox>
 
-    <separator class="groove"/>
-
-    <hbox>
-      <button id="default.set" label="&default.set.label;" accesskey="&default.set.accesskey;"
-              oncommand="dialog.setDefault()"/>
-      <spacer flex="1"/>
-      <hbox id="okCancelButtonsRight"/>
-    </hbox>
-           
     <!-- Localizable strings (from .dtd) -->
     <strings style="display:none;">
         <string id="brandShortName">         &brandShortName;         </string>
         <string id="intro.withDesc">         &intro.label;            </string>
         <string id="intro.noDesc">           &intro.noDesc.label;     </string>
-        <string id="openUsingString">        &openUsing.label;  </string>
+        <string id="defaultApp">             &useSystemDefault.label; </string>
         <string id="badApp">                 &badApp;                 </string>
         <string id="badApp.title">           &badApp.title;           </string>
-        <string id="noApplicationSpecified"> &noApplicationSpecified.label;</string>
     </strings>
-</window>
+</dialog>

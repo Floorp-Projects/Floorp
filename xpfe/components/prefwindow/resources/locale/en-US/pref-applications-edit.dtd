@@ -1,31 +1,24 @@
 
 <!ENTITY  editType.label                        "Edit Type">
+<!ENTITY  newType.label                         "New Type">
 <!ENTITY  extension.label                       "Extension:">
+<!ENTITY  extension.accesskey                   "e">
+<!--LOCALIZATION NOTE (mimeType): 'MIME' should not be translated -->
 <!ENTITY  mimetype.label                        "MIME Type:">
 <!ENTITY  mimetype.accesskey                    "m">
+<!ENTITY  description.label                     "Description:">
+<!ENTITY  description.accesskey                 "d">
 
-<!ENTITY  handledby.label                       "Handled By">
-
-<!ENTITY  useDefault.label                      "Use system default">
-<!ENTITY  useDefault.accesskey                  "u">
-<!ENTITY  saveToDisk.label                      "Save to Disk">
+<!ENTITY  handling.label                        "When a file of this type is encountered:">
+<!ENTITY  useDefault.label                      "Open it using the default application">
+<!ENTITY  useDefault.accesskey                  "o">
+<!ENTITY  saveToDisk.label                      "Save it to Disk">
 <!ENTITY  saveToDisk.accesskey                  "s">
-<!ENTITY  application.label                     "Application">
-<!ENTITY  application.accesskey                 "a">
+<!ENTITY  application.label                     "Open it with:">
+<!ENTITY  application.accesskey                 "w">
 
 <!ENTITY  browse.label                          "Choose...">
 <!ENTITY  browse.accesskey                      "c">
 
-<!ENTITY  askBeforeOpen.label                   "Ask me before opening downloaded files of this type">
+<!ENTITY  askBeforeOpen.label                   "Always ask me before handling files of this type">
 <!ENTITY  askBeforeOpen.accesskey               "k">
-
-<!ENTITY  newDescription.label                  "Description of type:">
-<!ENTITY  newDescription.accesskey              "d">
-<!ENTITY  newExtensions.label                   "File extension:">
-<!ENTITY  newExtensions.accesskey               "e">
-<!ENTITY  newMIME.label                         "MIME type:">
-<!ENTITY  newMIME.accesskey                     "m">
-<!ENTITY  newAppPath.label                      "Application to use:">
-<!ENTITY  newAppPath.accesskey                  "a">
-<!ENTITY  newTypeTitle.label                    "New Type">
-

@@ -61,6 +61,7 @@
 
 // handler properties
 #define NC_RDF_SAVETODISK				    NC_NAMESPACE_URI"saveToDisk"
+#define NC_RDF_USESYSTEMDEFAULT     NC_NAMESPACE_URI"useSystemDefault"
 #define NC_RDF_HANDLEINTERNAL       NC_NAMESPACE_URI"handleInternal"
 #define NC_RDF_ALWAYSASK            NC_NAMESPACE_URI"alwaysAsk"
 #define NC_RDF_EXTERNALAPPLICATION  NC_NAMESPACE_URI"externalApplication"

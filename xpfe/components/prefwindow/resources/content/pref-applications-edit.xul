@@ -31,6 +31,7 @@
         style="width: 30em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&editType.label;"
+        newtitle="&newType.label;"
         onload="Startup();"
         ondialogaccept="return onAccept();">
 
@@ -41,28 +42,38 @@
 <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var gExtensionLabel   = null;
+    var gExtension        = null;
     var gMIMEField        = null;
     var gHandlerGroup     = null;
     var gAppPath          = null;
     var gAskBeforeOpen    = null;
-    var gContentType      = null;
+    var gDescription      = null;
     var gPrefApplicationsBundle = null;
 
     var gOldMIME          = null;
     var gOldDesc          = null;
     var gOldExtensions   = null;
+
+    const nsIMIMEInfo = Components.interfaces.nsIMIMEInfo;
     
     function Startup()
     {     
-      gContentType      = document.getElementById("contentType");
-      gExtensionLabel   = document.getElementById("extension");
+      gDescription      = document.getElementById("description");
+      gExtension        = document.getElementById("extension");
       gMIMEField        = document.getElementById("mimeType");
       gHandlerGroup     = document.getElementById("handler");
       gAppPath          = document.getElementById("appPath");
       gAskBeforeOpen    = document.getElementById("askBeforeOpen");
         
       gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
+
+      // Set values for radio items to nsIMIMEInfo constants
+      var rSaveToDisk         = document.getElementById("saveToDisk");
+      var rUseHelperApp       = document.getElementById("useHelperApp");
+      var rUseSystemDefault   = document.getElementById("useSystemDefault");
+      rSaveToDisk.value       = nsIMIMEInfo.saveToDisk;
+      rUseHelperApp.value     = nsIMIMEInfo.useHelperApp;
+      rUseSystemDefault.value = nsIMIMEInfo.useSystemDefault;
       
       var handlerInfo = window.arguments[0];
 
@@ -71,32 +82,70 @@
         // Arg is an nsHelperAppDlg object in this case.
         window.gHelperAppDlg = window.arguments[0];
         var info = window.arguments[0].mLauncher.MIMEInfo;
-
-        // Get mime type from which we can construct a HandlerInfo...
-        var mimeType = info.MIMEType.toLowerCase();
-
-        // Construct what we need from mime type URI.
-        getDS();
-        handlerInfo = window.arguments[0] = new HandlerOverride( MIME_URI( mimeType ) );
-
-        // Don't let the user change the mime type; we ignore any such changes anyway.
-        gMIMEField.setAttribute( "readonly", "true" );
+        
+        // Update entry (without dialog showing).
+        try {
+          updateEntry(info);
+        } catch(e) { dump("updateEntry failed: " + e + "\n"); }
+        
+        // Close the dialog.
+        window.close();
+        
+        // Done.
+        return;
+      }
+      
+      // Default to true in case the preference cannot be retrieved
+      var forceAlwaysAsk = true;
+      try {
+        var prefService = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPrefService);
+        var prefBranch = prefService.getBranch("browser.helperApps.alwaysAsk.");
+        forceAlwaysAsk = prefBranch.getBoolPref("force");
+      } catch(e) {
+        dump("forceAlwaysAsk defaulting to true since preference couldn't be opened\n");
+      }
+        
+      if ( !handlerInfo.URI )
+      {
+        // Opening for "New Type".
+        var newTitle = document.documentElement.getAttribute("newtitle");
+        document.documentElement.setAttribute("title", newTitle);
+        
+        // Initialize some stuff to blank for new types.
+        gOldMIME = gOldDesc = gOldExtensions = "";
+        
+        // Make default "use system default."
+        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value",nsIMIMEInfo.useSystemDefault)[0];
+        
+        // Always ask box default depends on pref.
+        gAskBeforeOpen.checked = forceAlwaysAsk;
+        gAskBeforeOpen.disabled = forceAlwaysAsk;
+        
+        // Put focus on mime type field.
+        gMIMEField.focus();
+        
+        // Size/position the dialog.
+        sizeToContent();
+        window.moveToAlertPosition();
+        
+        // Avoid the normal "edit" case code.
+        return;
       }
 
-      gExtensionLabel.setAttribute("value", handlerInfo.extensions);
+      gExtension.setAttribute("value", handlerInfo.extensions);
       gMIMEField.value = handlerInfo.mimeType;
       gOldMIME = handlerInfo.mimeType;
       gOldDesc = handlerInfo.description;
       gOldExtensions = handlerInfo.extensions;
       
       // figure out how this type is handled
-      var data = 0;
-      if (handlerInfo.handleInternal == "true")
-        data = 0;
-      else if (handlerInfo.saveToDisk == "true")
-        data = 1;
+      var data = nsIMIMEInfo.saveToDisk;
+      if (handlerInfo.saveToDisk == "true")
+        data = nsIMIMEInfo.saveToDisk;
+      else if (handlerInfo.useSystemDefault == "true")
+        data = nsIMIMEInfo.useSystemDefault;
       else 
-        data = 2;
+        data = nsIMIMEInfo.useHelperApp;
         
       gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", data)[0];
       doEnabling();
@@ -104,11 +153,6 @@
       var appPath = handlerInfo.appPath;
       if (appPath != undefined)
         gAppPath.value = appPath;
-
-      var prefs = Components.classes["@mozilla.org/preferences;1"].
-        getService(Components.interfaces.nsIPrefBranch);
-      var forceAlwaysAsk = prefs.
-        getBoolPref("browser.helperApps.alwaysAsk.force");
 
       if (forceAlwaysAsk)
       {
@@ -120,7 +164,7 @@
         gAskBeforeOpen.checked = handlerInfo.alwaysAsk == "true" ? true : false;
       }
       
-      gContentType.setAttribute("value", handlerInfo.description);
+      gDescription.setAttribute("value", handlerInfo.description);
       var ext;
       var posOfFirstSpace = handlerInfo.extensions.indexOf(" ");
       if (posOfFirstSpace > -1)
@@ -169,8 +213,8 @@
     
     function selectAppRadio()
     {
-      if (gHandlerGroup.value != "2") 
-        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", "2")[0];
+      if (gHandlerGroup.value != nsIMIMEInfo.useHelperApp) 
+        gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("value", nsIMIMEInfo.useHelperApp)[0];
       doEnabling();
     }
 
@@ -185,6 +229,64 @@
       var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
       var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
       gDS = gRDF.GetDataSource(fileHandler.getURLSpecFromFile(file));
+    }
+
+    function updateEntry(info)
+    {
+      // Initialize data source.
+      getDS();
+      
+      // Get mime type from which we can construct a HandlerInfo...
+      var mimeType = info.MIMEType.toLowerCase();
+      
+      // Create HandlerOverride and populate it.
+      var entry = new HandlerOverride(MIME_URI(mimeType));
+      entry.mUpdateMode = mimeHandlerExists(mimeType);
+      entry.mimeType    = mimeType;
+      entry.isEditable  = true;
+      entry.alwaysAsk   = info.alwaysAskBeforeHandling;
+      
+      // If not updating (i.e., a newly encountered mime type),
+      // then update extension list and description.
+      if (!entry.mUpdateMode) {
+        var extCount           = { value: 0 };
+        var extArray           = { value: null };
+        info.GetFileExtensions(extCount, extArray);
+        for (var i = 0; i < extArray.value.length; i++) {
+          entry.addExtension(extArray.value[i]);
+        }
+        entry.description = info.Description;
+        entry.appDisplayName = "";
+      }
+      
+      if (info.preferredAction == nsIMIMEInfo.saveToDisk) {
+        entry.saveToDisk = true;
+        if (!entry.mUpdateMode) {
+          // Creating a new entry, set path.
+          entry.appPath = "";
+        }
+      } else if (info.preferredAction == nsIMIMEInfo.useSystemDefault ||
+                 info.preferredApplicationHandler == null) {
+        entry.useSystemDefault = true;
+        if (!entry.mUpdateMode) {
+          // Creating a new entry, set path.
+          entry.appPath = "";
+        }
+      } else {
+        entry.saveToDisk       = false;
+        entry.useSystemDefault = false;
+        entry.handleInternal   = false;
+        entry.appPath = info.preferredApplicationHandler.path;
+        entry.appDisplayName = info.applicationDescription;
+      }
+      
+      // Do RDF magic.
+      entry.buildLinks();
+      
+      // flush the ds to disk.
+      var remoteDS = gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+      if (remoteDS)
+        remoteDS.Flush();
     }
 
     function onAccept()
@@ -213,31 +315,34 @@
         }
       }
       
-      if (gOldMIME)
+      if (gOldMIME && gOldMIME != gMIMEField.value)
         removeOverride(gOldMIME); // delete old handler
 
       // now save the information
       var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
-      handlerInfo.mUpdateMode = mimeHandlerExists(gMIMEField.value);
+      handlerInfo.mUpdateMode = (gOldMIME == gMIMEField.value);
       handlerInfo.mimeType = gMIMEField.value;
     
       // set description, editable, and extensions
-      handlerInfo.description = gOldDesc
       handlerInfo.isEditable = true;
-      var extensions = gOldExtensions.toLowerCase().split(" ");
+      handlerInfo.description = gDescription.value;
+      var extensions = gExtension.value.toLowerCase().split(" ");
       for (var i = 0; i < extensions.length; i++) {
         var currExtension = extensions[i];
         handlerInfo.addExtension(currExtension);
       }
     
       // other info we need to set (not reflected in UI)
-      if (gHandlerGroup.value == "2") {
+      if (gHandlerGroup.value == nsIMIMEInfo.useHelperApp) {
         handlerInfo.appPath = gAppPath.value;
         handlerInfo.setHandlerProcedure("saveToDisk", "false");
+        handlerInfo.setHandlerProcedure("useSystemDefault", "false");
         handlerInfo.setHandlerProcedure("handleInternal", "false");
       }
-      else if (gHandlerGroup.value == "1")
+      else if (gHandlerGroup.value == nsIMIMEInfo.saveToDisk)
         handlerInfo.saveToDisk = true;
+      else if (gHandlerGroup.value == nsIMIMEInfo.useSystemDefault)
+        handlerInfo.useSystemDefault = true;
       else
         handlerInfo.handleInternal = true;
     
@@ -253,7 +358,7 @@
       if (file) {
         try {
           file.initWithPath(gAppPath.value);
-          handlerInfo.appDisplayName = file.unicodeLeafName;
+          handlerInfo.appDisplayName = file.leafName;
         }
         catch(e) {
           handlerInfo.appDisplayName = gAppPath.value;    
@@ -268,83 +373,60 @@
       if (remoteDS)
         remoteDS.Flush();
       
-      // See if invoked on behalf of helper app dialog...
-      if ( "gHelperAppDlg" in window ) {
-          // Get mime info.
-          var info = gHelperAppDlg.mLauncher.MIMEInfo;
-    
-          // Update fields that might have changed.
-          if ( gHandlerGroup.value == "1" ) {
-              info.preferredAction = Components.interfaces.nsIMIMEInfo.saveToDisk;
-          } else if ( gHandlerGroup.value == "2" ) {
-              info.preferredAction = Components.interfaces.nsIMIMEInfo.useHelperApp;
-              info.preferredApplicationHandler = file;
-              info.applicationDescription = handlerInfo.appDisplayName;
-          } else {
-              info.preferredAction = Components.interfaces.nsIMIMEInfo.handleInternally;
-          }
-
-          // tell the helper app dialog to update itself
-          gHelperAppDlg.updateSelf = true;
-      }
-    
       window.opener.gUpdateTypeRV = true;
       return true;
     }
   ]]>
   </script>
+  <vbox>
   <hbox align="center">
     <image id="contentTypeImage"/>
-    <label id="contentType" crop="right"/>
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="&mimetype.label;" accesskey="&mimetype.accesskey;" control="mimeType"/>
+          <textbox id="mimeType"/>
+        </row>
+        <row align="center">
+          <label value="&description.label;" accesskey="&description.accesskey;" control="description"/>
+          <textbox id="description" crop="right" flex="1"/>
+        </row>
+        <row align="center">
+          <label value="&extension.label;" accesskey="&extension.accesskey;" control="extension"/>
+          <textbox id="extension"/>
+        </row>
+      </rows>
+    </grid>
   </hbox>
   
   <separator class="thin"/>
 
-  <separator class="groove"/>
-  
-  <separator class="thin"/>
-
-  <grid>
-    <columns>
-      <column flex="1"/>
-      <column flex="3"/>
-    </columns>
-    
-    <rows>
-      <row align="center">
-        <label value="&extension.label;"/>
-        <label id="extension"/>
-      </row>
-      <row align="center">
-        <label value="&mimetype.label;" accesskey="&mimetype.accesskey;"
-               control="mimeType"/>
-        <textbox id="mimeType" flex="1"/>
-      </row>
-    </rows>
-  </grid>
-  
-  <separator class="thin"/>
-
   <groupbox>
-    <caption label="&handledby.label;"/>
-    
+    <description value="&handling.label;"/>
     <radiogroup id="handler">
-<!-- Turn this off since we can't make it work yet
-        <radio value="4" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
--->
-        <radio value="1" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
+      <radio id="useSystemDefault" label="&useDefault.label;" accesskey="&useDefault.accesskey;" oncommand="doEnabling();"/>
       <hbox align="center">
-        <radio value="2" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
+        <radio id="useHelperApp" label="&application.label;" accesskey="&application.accesskey;" oncommand="doEnabling();"/>
         <textbox id="appPath" flex="1" onchange="selectAppRadio();"/>
         <button label="&browse.label;" accesskey="&browse.accesskey;"
                 oncommand="chooseApp();"/>
       </hbox>
+      <radio id="saveToDisk" label="&saveToDisk.label;" accesskey="&saveToDisk.accesskey;" oncommand="doEnabling();"/>
     </radiogroup>
     
   </groupbox>              
 
+  <separator class="thin"/>
+
   <hbox align="center">
     <checkbox id="askBeforeOpen" label="&askBeforeOpen.label;" accesskey="&askBeforeOpen.accesskey;"/>         
   </hbox>  
+  </vbox>
+
+  <separator class="thin"/>
 </dialog>
         

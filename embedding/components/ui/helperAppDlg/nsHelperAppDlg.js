@@ -57,7 +57,6 @@ function nsHelperAppDialog() {
     this.mLauncher = null;
     this.mContext  = null;
     this.mSourcePath = null;
-    this.choseApp  = false;
     this.chosenApp = null;
     this.givenDefaultApp = false;
     this.strings   = new Array;
@@ -240,20 +239,6 @@ nsHelperAppDialog.prototype = {
 
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
-         // Check if file is executable (in which case, we will go straight to
-         // "save to disk").
-         var ignore1 = new Object;
-         var ignore2 = new Object;
-         var tmpFile = this.mLauncher.getDownloadInfo( ignore1, ignore2 );
-         if ( tmpFile.isExecutable() ) {
-             this.mLauncher.saveToDisk( null, false );
-             // Make sure onunload handler doesn't cancel.
-             this.mDialog.dialog = null;
-             // Close the dialog.
-             this.mDialog.close();
-             return;
-         }
-
          // Put product brand short name in prompt.
          var prompt = this.dialogElement( "prompt" );
          var modified = this.replaceInsert( prompt.firstChild.nodeValue, 1, this.getString( "brandShortName" ) );
@@ -294,18 +279,8 @@ nsHelperAppDialog.prototype = {
 
          this.initAppAndSaveToDiskValues();
 
-         // always make sure the window starts off with this checked....
-         this.dialogElement( "alwaysAskMe" ).checked = true;
-
-         // Add special debug hook.
-         if ( this.debug ) {
-             prompt.setAttribute( "onclick", "dialog.doDebug()" );
-         }
-
-         // Set up dialog button callbacks.
-         var object = this; // "this.onOK()" doesn't work!
-         this.mDialog.doSetOKCancel( function () { return object.onOK(); },
-                                     function () { return object.onCancel(); } );
+         // Initialize "always ask me" box.
+         this.dialogElement( "alwaysAskMe" ).checked = this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
 
          // Position it.
          if ( this.mDialog.opener ) {
@@ -324,10 +299,10 @@ nsHelperAppDialog.prototype = {
         var intro = this.dialogElement( "intro" );
         var desc = this.mLauncher.MIMEInfo.Description;
         var modified;
-        if ( desc != "" ) 
+        if ( desc ) 
         {
           // Use intro with descriptive text.
-          modified = this.replaceInsert( this.getString( "intro.withDesc" ), 1, this.mLauncher.MIMEInfo.Description );
+          modified = this.replaceInsert( this.getString( "intro.withDesc" ), 1, desc );
         } 
         else 
         {
@@ -366,79 +341,135 @@ nsHelperAppDialog.prototype = {
         location.value = pathString;
     },
 
-    // initAppAndSaveToDiskValues:
-    initAppAndSaveToDiskValues: function() {
+    // Returns true iff opening the default application makes sense.
+    openWithDefaultOK: function() {
+        var result;
 
-        // Pre-select the choice the user made last time.
-        this.chosenApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
-        var applicationDescription = this.mLauncher.MIMEInfo.applicationDescription;
-
-        if (applicationDescription != "")
-        {
-          this.updateApplicationName(applicationDescription); 
-          this.givenDefaultApp = true;
+        // The checking is different on Windows...
+        if ( this.mDialog.navigator.platform.indexOf( "Win" ) != -1 ) {
+            // Windows presents some special cases.
+            // We need to prevent use of "system default" when the file is
+            // executable (so the user doesn't launch nasty programs downloaded
+            // from the web), and, enable use of "system default" if it isn't
+            // executable (because we will prompt the user for the default app
+            // in that case).
+            
+            // Need to get temporary file and check for executable-ness.
+            var ignore1 = new Object;
+            var ignore2 = new Object;
+            var tmpFile = this.mLauncher.getDownloadInfo( ignore1, ignore2 );
+            
+            //  Default is Ok if the file isn't executable (and vice-versa).
+            result = !tmpFile.isExecutable();
+        } else {
+            // On other platforms, default is Ok if there is a default app.
+            // Note that nsIMIMEInfo providers need to ensure that this holds true
+            // on each platform.
+            result = this.mLauncher.MIMEInfo.defaultApplicationHandler;
         }
-        else if (this.chosenApp && this.chosenApp.path)
-        {
-          // If a user-chosen application, show its path.
-          this.updateApplicationName(this.chosenApp.path);
-          this.choseApp = true;
+        return result;
+    },
+    
+    // Set "default" application description field.
+    initDefaultApp: function() {
+        // Use description, if provided.
+        var desc = this.mLauncher.MIMEInfo.defaultDescription;
+        if ( !desc ) {
+            // Otherwise, use helper application file name
+            var app = this.mLauncher.MIMEInfo.defaultApplicationHandler;
+            if ( app ) {
+                desc = app.leafName;
+            }
         }
-        else
-         this.updateApplicationName(this.getString("noApplicationSpecified"));
-
-        if ( (applicationDescription || this.choseApp) && this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) 
-        {
-          var openUsing = this.dialogElement( "openUsing" );
-          openUsing.radioGroup.selectedItem = openUsing;
-        }
-        else 
-        {
-          // Save to disk.
-          var saveToDisk = this.dialogElement( "saveToDisk" );
-          saveToDisk.radioGroup.selectedItem = saveToDisk;
-          // Disable choose app button.
-          this.dialogElement( "chooseApp" ).setAttribute( "disabled", "true" );
+        if ( desc ) {
+            this.dialogElement( "useSystemDefault" ).label = this.replaceInsert( this.getString( "defaultApp" ), 1, desc );
         }
     },
+    
+    // initAppAndSaveToDiskValues:
+    initAppAndSaveToDiskValues: function() {
+        // Fill in helper app info, if there is any.
+        this.chosenApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
+        // Initialize "default application" field.
+        this.initDefaultApp();
+        
+        // Fill application name textbox.
+        if (this.chosenApp && this.chosenApp.path) {
+            this.dialogElement( "appPath" ).value = this.chosenApp.path;
+        }
+        
+        if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault) {
+            // Open (using system default).
+            var useDefault = this.dialogElement( "useSystemDefault" );
+            useDefault.radioGroup.selectedItem = useDefault;
+        } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp) {
+            // Open with given helper app.
+            var openUsing = this.dialogElement( "openUsing" );
+            openUsing.radioGroup.selectedItem = openUsing;
+        } else {
+            // Save to disk.
+            var saveToDisk = this.dialogElement( "saveToDisk" );
+            saveToDisk.radioGroup.selectedItem = saveToDisk;
+        }
+        // If we don't have a "default app" then disable that choice.
+        if ( !this.openWithDefaultOK() ) {
+            // Disable that choice.
+            var useDefault = this.dialogElement( "useSystemDefault" );
+            useDefault.hidden = true;
+            // If that's the default, then switch to "save to disk."
+            if ( useDefault.selected ) {
+                useDefault.radioGroup.selectedItem = this.dialogElement( "saveToDisk" );
+            }
+        }
+        
+        // Enable/Disable choose application button and textfield
+        this.toggleChoice();
 
-    updateApplicationName: function(newValue)
-    {
-      var applicationText = this.getString( "openUsingString" );
-      applicationText = this.replaceInsert( applicationText, 1, newValue );
-      var expl = this.dialogElement( "openUsing" );
-      expl.label = applicationText;
+        // If we're running on the Mac, disable the application <textbox>.
+        if ( this.mDialog.navigator.platform.indexOf( "Mac" ) != -1 ) {
+            this.dialogElement( "appPath" ).disabled = true;
+        }
     },
 
     // Enable pick app button if the user chooses that option.
     toggleChoice : function () {
         // See what option is selected.
-        if ( this.dialogElement( "openUsing" ).selected ) {
-            // We can enable the pick app button.
-            this.dialogElement( "chooseApp" ).removeAttribute( "disabled" );
+        this.dialogElement( "chooseApp" ).disabled = 
+            this.dialogElement( "appPath" ).disabled = !this.dialogElement( "openUsing" ).selected;
+        this.updateOKButton();
+    },
+
+    // Returns the user-selected application
+    helperAppChoice: function() {
+        var result = this.chosenApp;
+        var typed  = this.dialogElement( "appPath" ).value;
+        // First, see if one was chosen via the Choose... button.
+        if ( result ) {
+            // Verify that the user didn't type in something different later.
+            if ( typed != result.path ) {
+                // Use what was typed in.
+                try {
+                    result.QueryInterface( Components.interfaces.nsILocalFile ).initWithPath( typed );
+                } catch( e ) {
+                    // Invalid path was typed.
+                    result = null;
+                }
+            }
         } else {
-            // We can disable the pick app button.
-            this.dialogElement( "chooseApp" ).setAttribute( "disabled", "true" );
+            // The user didn't use the Choose... button, try using what they typed in.
+            result = Components.classes[ "@mozilla.org/file/local;1" ]
+                       .createInstance( Components.interfaces.nsILocalFile );
+            try {
+                result.initWithPath( typed );
+            } catch( e ) {
+                result = null;
+            }
         }
-
-       this.updateOKButton();
+        // Remember what was chosen.
+        this.chosenApp = result;
+        return result;
     },
 
-    processAlwaysAskState : function () 
-    {
-      // if the user deselected the always ask checkbox, then store that on the mime object for future use...
-      if (!this.dialogElement( "alwaysAskMe" ).checked)
-      {
-        // we first need to rest the user action if the user selected save to disk instead of open...
-        // reset the preferred action in this case...we need to do this b4 setting the always ask before handling state
-
-        if (!this.dialogElement( "openUsing" ).selected)
-        this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.saveToDisk;
-         
-
-        this.mLauncher.MIMEInfo.alwaysAskBeforeHandling = false;
-      }
-    },
     updateOKButton: function() {
         var ok = false;
         if ( this.dialogElement( "saveToDisk" ).selected ) 
@@ -446,44 +477,121 @@ nsHelperAppDialog.prototype = {
             // This is always OK.
             ok = true;
         } 
+        else if ( this.dialogElement( "useSystemDefault" ).selected )
+        {
+            // No app need be specified in this case.
+            ok = true;
+        }
         else 
         {
-          // only enable the OK button if we have a default app to use or if 
-          // the user chose an app....
-          if ((this.choseApp && this.chosenApp.path) || this.givenDefaultApp)
-            ok = true;
+            // only enable the OK button if we have a default app to use or if 
+            // the user chose an app....
+            ok = this.chosenApp || /\S/.test( this.dialogElement( "appPath" ).value );
         }
         
         // Enable Ok button if ok to press.
-        this.dialogElement( "ok" ).disabled = !ok;
+        this.mDialog.document.documentElement.getButton( "accept" ).disabled = !ok;
     },
- 
+    
+    // Returns true iff the user-specified helper app has been modified.
+    appChanged: function() {
+        return this.helperAppChoice() != this.mLauncher.MIMEInfo.preferredApplicationHandler;
+    },
+
+    // See if the user changed things, and if so, update the
+    // mimeTypes.rdf entry for this mime type.
+    updateHelperAppPref: function() {
+        var needUpdate = false;
+        // If current selection differs from what's in the mime info object,
+        // then we need to update.
+        if ( this.dialogElement( "saveToDisk" ).selected ) {
+            needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk;
+            if ( needUpdate )
+                this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.saveToDisk;
+        } else if ( this.dialogElement( "useSystemDefault" ).selected ) {
+            needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.useSystemDefault;
+            if ( needUpdate )
+                this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useSystemDefault;
+        } else {
+            // For "open with", we need to check both preferred action and whether the user chose
+            // a new app.
+            needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.useHelperApp || this.appChanged();
+            if ( needUpdate ) {
+                this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useHelperApp;
+                // App may have changed - Update application and description
+                var app = this.helperAppChoice();
+                this.mLauncher.MIMEInfo.preferredApplicationHandler = app;
+                this.mLauncher.MIMEInfo.applicationDescription = app.leafName;
+            }
+        }
+        // We will also need to update if the "always ask" flag has changed.
+        needUpdate = needUpdate || this.mLauncher.MIMEInfo.alwaysAskBeforeHandling != this.dialogElement( "alwaysAskMe" ).checked;
+        
+        // One last special case: If the input "always ask" flag was false, then we always
+        // update.  In that case we are displaying the helper app dialog for the first
+        // time for this mime type and we need to store the user's action in the mimeTypes.rdf
+        // data source (whether that action has changed or not; if it didn't change, then we need
+        // to store the "always ask" flag so the helper app dialog will or won't display
+        // next time, per the user's selection).
+        needUpdate = needUpdate || !this.mLauncher.MIMEInfo.alwaysAskBeforeHandling;
+        
+        // Make sure mime info has updated setting for the "always ask" flag.
+        this.mLauncher.MIMEInfo.alwaysAskBeforeHandling = this.dialogElement( "alwaysAskMe" ).checked;
+        
+        if ( needUpdate ) {
+            // We update by passing this mime info into the "Edit Type" helper app
+            // pref dialog.  It will update the data source and close the dialog
+            // automatically.
+            this.mDialog.openDialog( "chrome://communicator/content/pref/pref-applications-edit.xul",
+                                     "_blank",
+                                     "chrome,modal=yes,resizable=no",
+                                     this );
+        }
+    },
+    
     // onOK:
     onOK: function() {
-
-      this.processAlwaysAskState(); 
-
-      // Remove our web progress listener (a progress dialog will be
-      // taking over).
-      this.mLauncher.setWebProgressListener( null );
-
-      if ( this.dialogElement( "openUsing" ).selected ) 
-      {
-         // If no app "chosen" then convert input string to file.
-         if (this.chosenApp)
-           this.mLauncher.launchWithApplication( this.chosenApp, false );
-          else 
-           this.mLauncher.launchWithApplication( null, false );
-      }
-      else
-        this.mLauncher.saveToDisk( null, false );
+        // Verify typed app path, if necessary.
+        if ( this.dialogElement( "openUsing" ).selected ) {
+            var helperApp = this.helperAppChoice();
+            if ( !helperApp || !helperApp.exists() ) {
+                // Show alert and try again.                            
+                var msg = this.replaceInsert( this.getString( "badApp" ), 1, this.dialogElement( "appPath" ).value );
+                var svc = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
+                            .getService( Components.interfaces.nsIPromptService );
+                svc.alert( this.mDialog, this.getString( "badApp.title" ), msg );
+                // Disable the OK button.
+                this.mDialog.document.documentElement.getButton( "accept" ).disabled = true;
+                // Select and focus the input field if input field is not disabled
+                var path = this.dialogElement( "appPath" );
+                if ( !path.disabled ) {
+                    path.select();
+                    path.focus();
+                }
+                // Clear chosen application.
+                this.chosenApp = null;
+                // Leave dialog up.
+                return false;
+            }
+        }
         
-      // Unhook dialog from this object.
-      this.mDialog.dialog = null;
-
-      // Close up dialog by returning true.
-      return true;
-     //this.mDialog.close();
+        // Update user pref for this mime type (if necessary).
+        this.updateHelperAppPref();
+ 
+        // Remove our web progress listener (a progress dialog will be
+        // taking over).
+        this.mLauncher.setWebProgressListener( null );
+        
+        if ( this.dialogElement( "saveToDisk" ).selected )
+            this.mLauncher.saveToDisk( null, false );
+        else
+            this.mLauncher.launchWithApplication( null, false );
+            
+        // Unhook dialog from this object.
+        this.mDialog.dialog = null;
+        
+        // Close up dialog by returning true.
+        return true;
     },
 
     // onCancel:
@@ -527,69 +635,10 @@ nsHelperAppDialog.prototype = {
         
         if ( fp.show() == nsIFilePicker.returnOK && fp.file ) {
             // Remember the file they chose to run.
-            this.choseApp = true;
-            this.chosenApp    = fp.file;
+            this.chosenApp = fp.file;
             // Update dialog.
-
-            this.updateApplicationName(this.chosenApp.path);
+            this.dialogElement( "appPath" ).value = this.chosenApp.path;
         }
-    },
-
-    // setDefault:  Open "edit MIMEInfo" dialog (borrowed from prefs).
-    setDefault: function() {
-        // Get RDF service.
-        var rdf = Components.classes[ "@mozilla.org/rdf/rdf-service;1" ]
-                    .getService( Components.interfaces.nsIRDFService );
-        // Now ask if it knows about this mime type.
-        var exists = false;
-        var fileLocator = Components.classes[ "@mozilla.org/file/directory_service;1" ]
-                            .getService( Components.interfaces.nsIProperties );
-        var file        = fileLocator.get( "UMimTyp", Components.interfaces.nsIFile );
-        
-        // Get the data source; load it synchronously if it must be
-        // initialized.
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        var fileHandler = ioService.getProtocolHandler("file").QueryInterface(Components.interfaces.nsIFileProtocolHandler);
-        var fileurl = fileHandler.getURLSpecFromFile(file);
-        
-        var ds = rdf.GetDataSourceBlocking( fileurl );
-
-        // Now check if this mimetype is really in there;
-        // This is done by seeing if there's a "value" arc from the mimetype resource
-        // to the mimetype literal string.
-        var mimeRes       = rdf.GetResource( "urn:mimetype:" + this.mLauncher.MIMEInfo.MIMEType );
-        var valueProperty = rdf.GetResource( "http://home.netscape.com/NC-rdf#value" );
-        var mimeLiteral   = rdf.GetLiteral( this.mLauncher.MIMEInfo.MIMEType );
-        exists =  ds.HasAssertion( mimeRes, valueProperty, mimeLiteral, true );
-
-        var dlgUrl;
-        if ( exists ) {
-            // Open "edit mime type" dialog.
-            dlgUrl = "chrome://communicator/content/pref/pref-applications-edit.xul";
-        } else {
-            // Open "add mime type" dialog.
-            dlgUrl = "chrome://communicator/content/pref/pref-applications-new.xul";
-        }
-
-        // Open whichever dialog is appropriate, passing this dialog object as argument.
-        this.updateSelf = false; // dialog will reset to true onOK
-        this.mDialog.openDialog( dlgUrl,
-                                 "_blank",
-                                 "chrome,modal=yes,resizable=no",
-                                 this );
-
-        if (this.updateSelf) {
-            // Refresh dialog with updated info about the default action.
-            this.initIntro();
-            this.initAppAndSaveToDiskValues();
-        }
-    },
-
-    // updateMIMEInfo:  This is called from the pref-applications-edit dialog when the user
-    //                  presses OK.  Take the updated MIMEInfo and have the helper app service
-    //                  "write" it back out to the RDF datasource.
-    updateMIMEInfo: function() {
-        this.dumpObjectProperties( "\tMIMEInfo", this.mLauncher.MIMEInfo );
     },
 
     // dumpInfo:

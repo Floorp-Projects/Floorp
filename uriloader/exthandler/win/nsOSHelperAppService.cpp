@@ -84,14 +84,10 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
 
       PRBool executable = PR_TRUE;
       local->IsExecutable(&executable);
-      if (!executable)
-      {
-        rv = local->Launch();
-      }
-      else
-      {
-        rv = NS_ERROR_FAILURE;
-      }     
+      if (executable)
+        return NS_ERROR_FAILURE;
+
+      rv = local->Launch();
     }
   }
 
@@ -242,19 +238,15 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
 {
   nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  nsresult rv = NS_OK;
 
-  if (localFile)
-  {
-    if (localFile)
-      localFile->InitWithPath(nsDependentString(platformAppPath));
-    *aFile = localFile;
-    NS_IF_ADDREF(*aFile);
-  }
-  else
-    rv = NS_ERROR_FAILURE;
+  if (!localFile)
+    return NS_ERROR_FAILURE;
 
-  return rv;
+  localFile->InitWithPath(nsDependentString(platformAppPath));
+  *aFile = localFile;
+  NS_IF_ADDREF(*aFile);
+
+  return NS_OK;
 }
 
 // GetMIMEInfoFromRegistry: This function obtains the values of some of the nsIMIMEInfo
@@ -301,17 +293,14 @@ static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// nsIMIMEService method over-rides used to gather information from the windows registry for
+// method overrides used to gather information from the windows registry for
 // various mime types. 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) 
+nsresult nsOSHelperAppService::GetMIMEInfoForExtensionFromOS(const char *aFileExt, nsIMIMEInfo **_retval) 
 {
-  // first, see if the base class already has an entry....
-  nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, _retval);
-  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
-  if (!aFileExt || *aFileExt == '\0') return NS_ERROR_FAILURE;
+  if (!aFileExt || !*aFileExt) return NS_ERROR_FAILURE;
 
-  rv = NS_OK;
+  nsresult rv = NS_OK;
 
   // windows registry assumes your file extension is going to include the '.'.
   // so make sure it's there...
@@ -351,7 +340,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
         // the format of the description usually looks like appname.version.something.
         // for now, let's try to make it pretty and just show you the appname.
 
-        mimeInfo->SetApplicationDescription(description.get());
+        mimeInfo->SetDefaultDescription(description.get());
 
         // Get other nsIMIMEInfo fields from registry, if possible.
         if ( pFileDescription )
@@ -379,12 +368,8 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt, nsIMI
    return rv;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo ** _retval) 
+nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType, nsIMIMEInfo ** _retval) 
 {
-  // first, see if the base class already has an entry....
-  nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, _retval);
-  if (NS_SUCCEEDED(rv) && *_retval) return NS_OK; // okay we got an entry so we are done.
-
   if (PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) == 0) {
     /* XXX Gross hack to wallpaper over the most common Win32
      * extension issues caused by the fix for bug 116938.  See bug
@@ -406,8 +391,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType, nsIMI
   // now look up based on the file extension.
   if (!fileExtension.IsEmpty())
     return GetFromExtension(fileExtension.get(), _retval);
-  else
-   rv = NS_ERROR_FAILURE;
 
-  return rv;
+  return NS_ERROR_FAILURE;
 }

@@ -1,4 +1,4 @@
-<!ENTITY caption.label         "Downloading #1">
+<!ENTITY caption.label         "Opening #1">
 
 <!-- Localization note: The default intro text has 2 "inserts":
         #1 - replaced with the descriptive text that describes the mime type
@@ -7,30 +7,29 @@
      If there is no descriptive text, then the alternative text is used which
      has only insert #2.
  -->
-<!ENTITY intro.label           "You have chosen to download a file of type: &quot;#1&quot; [#2] from">
-<!ENTITY intro.noDesc.label    "You have chosen to download a file of type: #2 from">
+<!ENTITY intro.label           "You have chosen to open a file of type: &quot;#1&quot; (#2) from">
+<!ENTITY intro.noDesc.label    "You have chosen to open a file of type: #2 from">
 
 <!ENTITY prompt.label          "What should #1 do with this file?">
 
-<!ENTITY default.set.label     "Advanced...">
-<!ENTITY default.set.accesskey "A">
+<!ENTITY alwaysAsk.label       "Always show this dialog before handling files of this type">
+<!ENTITY alwaysAsk.accesskey   "a">
 
-<!ENTITY alwaysAsk.label       "Always ask before opening this type of file">
-<!ENTITY alwaysAsk.accesskey   "l">
+<!ENTITY saveToDisk.label      "Save it to disk">
+<!ENTITY saveToDisk.accesskey  "s">
 
-<!ENTITY saveToDisk.label      "Save this file to disk">
-<!ENTITY saveToDisk.accesskey  "d">
+<!ENTITY useSystemDefault.label        "Open it with the default application (#1)">
+<!ENTITY useSystemDefault.noDesc.label "Open it with the default application">
+<!ENTITY useSystemDefault.accesskey    "o">
 
 <!-- LOCALIZATION NOTE:  do not localize "#1" -->
-<!ENTITY openUsing.label       "Open using #1">
-<!ENTITY openUsing.accesskey   "o">
-
-<!ENTITY noApplicationSpecified.label " an application">
+<!ENTITY openUsing.label       "Open it with">
+<!ENTITY openUsing.accesskey   "w">
 
 <!ENTITY chooseApp.label       "Choose...">
 <!ENTITY chooseApp.accesskey   "c">
 
 <!ENTITY chooseAppFilePickerTitle "Choose Application">
 
-<!ENTITY badApp                 "The application you specified [&quot;#1&quot;] could not be found.  Check the file name or select another application.">
+<!ENTITY badApp                 "The application you specified (&quot;#1&quot;) could not be found.  Check the file name or select another application.">
 <!ENTITY badApp.title           "Application not found">
