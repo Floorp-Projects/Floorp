@@ -29,8 +29,18 @@ var prefs = Components.classes["component://netscape/preferences"].getService();
 if (prefs) {
 	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 	if (prefs) {
-		update_compose_title_as_you_type = prefs.GetBoolPref("mail.update_compose_title_as_you_type");
-		other_header = prefs.CopyCharPref("mail.compose.other.header");
+		try {
+			update_compose_title_as_you_type = prefs.GetBoolPref("mail.update_compose_title_as_you_type");
+		}
+		catch (ex) {
+			dump("failed to get the mail.update_compose_title_as_you_type pref\n");
+		}
+		try {
+			other_header = prefs.CopyCharPref("mail.compose.other.header");
+		}
+		catch (ex) {
+			 dump("failed to get the mail.compose.other.header pref\n");
+		}
 	}
 }
 

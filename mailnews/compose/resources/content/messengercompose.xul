@@ -30,12 +30,10 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messengercompose/locale/messengercompose.dtd">
 
-<!-- removed, function must exist to use here
-		onload="ComposeLoad()"
--->
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		onunload="ComposeUnload()"
+		onload="ComposeLoad()"
 		width="640" height="480"
 		title="&msgComposeWindow.title;"
 		align="vertical"> 
