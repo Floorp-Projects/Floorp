@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslproto.h,v 1.6 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslproto.h,v 1.7 2005/04/06 19:43:17 nelsonb%netscape.com Exp $ */
 
 #ifndef __sslproto_h_
 #define __sslproto_h_
@@ -139,9 +139,9 @@
 #define SSL_DH_ANON_WITH_DES_CBC_SHA		0x001a
 #define SSL_DH_ANON_WITH_3DES_EDE_CBC_SHA	0x001b
 
-#define SSL_FORTEZZA_DMS_WITH_NULL_SHA		0x001c
-#define SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA	0x001d
-#define SSL_FORTEZZA_DMS_WITH_RC4_128_SHA	0x001e
+#define SSL_FORTEZZA_DMS_WITH_NULL_SHA		0x001c /* deprecated */
+#define SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA	0x001d /* deprecated */
+#define SSL_FORTEZZA_DMS_WITH_RC4_128_SHA	0x001e /* deprecated */
 
 /* New TLS cipher suites */
 #define TLS_RSA_WITH_AES_128_CBC_SHA      	0x002F
