@@ -1037,7 +1037,9 @@ PRBool nsHTMLContentSinkStream::IgnoreWS(eHTMLTags aTag) const {
     case eHTMLTag_tbody:
     case eHTMLTag_style:
       result = PR_TRUE;
-    break;
+      break;
+    default:
+      break;
   }
 
   return result;
