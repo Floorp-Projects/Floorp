@@ -30,6 +30,8 @@ CHROME_CONTENT = \
 	.\viewsource.js \
 	.\viewSource.xul \
 	.\navigator.xul \
+	.\sessionHistoryUI.js \
+	.\keywords.js \
 	.\navigatorOverlay.xul \
 	.\navExtraOverlay.xul \
 	.\navigator.js \

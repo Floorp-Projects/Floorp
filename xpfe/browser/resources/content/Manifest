@@ -12,3 +12,5 @@ NetSupportConfirmCheckYN.xul
 tooltip.js
 nsContextMenu.js
 navigatorDD.js
+sessionHistoryUI.js
+keywords.js
