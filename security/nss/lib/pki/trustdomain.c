@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.25 $ $Date: 2002/01/09 21:09:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.26 $ $Date: 2002/01/10 00:45:27 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -88,6 +88,9 @@ NSSTrustDomain_Create
     rvTD->arena = arena;
     rvTD->refCount = 1;
     nssTrustDomain_InitializeCache(rvTD, NSSTRUSTDOMAIN_DEFAULT_CACHE_SIZE);
+#ifdef NSS_3_4_CODE
+    rvTD->statusConfig = NULL;
+#endif
     return rvTD;
 loser:
     nssArena_Destroy(arena);
