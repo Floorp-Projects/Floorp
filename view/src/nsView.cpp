@@ -72,11 +72,9 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   nsEventStatus result = nsEventStatus_eIgnore;
   nsView       *view = nsView::GetViewFor(aEvent->widget);
 
-  if (nsnull != view)
+  if (view)
   {
-    nsViewManager *vm = view->GetViewManager();
-
-    vm->DispatchEvent(aEvent, &result);
+    view->GetViewManager()->DispatchEvent(aEvent, &result);
   }
 
   return result;
@@ -202,15 +200,15 @@ nsrefcnt nsView::Release()
 
 nsView* nsView::GetViewFor(nsIWidget* aWidget)
 {           
-  void*    clientData;
-
   NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
 	
   // The widget's client data points back to the owning view
-  if (aWidget && NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
+  if (aWidget) {
+    void* clientData;
+    aWidget->GetClientData(clientData);
     nsISupports* data = (nsISupports*)clientData;
     
-    if (nsnull != data) {
+    if (data) {
       nsIView* view = nsnull;
       if (NS_SUCCEEDED(data->QueryInterface(NS_GET_IID(nsIView), (void **)&view))) {
         return NS_STATIC_CAST(nsView*, view);
@@ -583,10 +581,8 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 
 #if 0
 	// recursively make all sub-views "floating" grr.
-	nsIView *child = mFirstChild;
-	while (nsnull != child) {
+	for (nsView* child = mFirstChild; chlid; child = child->GetNextSibling()) {
 		child->SetFloating(aFloatingView);
-		child->GetNextSibling(child);
 	}
 #endif
 
@@ -626,12 +622,10 @@ void nsView::InsertChild(nsView *aChild, nsView *aSibling)
     if (nsnull != aSibling)
     {
 #ifdef NS_DEBUG
-      nsView* siblingParent = aSibling->GetParent();
-      NS_ASSERTION(siblingParent == this, "tried to insert view with invalid sibling");
+      NS_ASSERTION(aSibling->GetParent() == this, "tried to insert view with invalid sibling");
 #endif
       //insert after sibling
-      nsView* siblingNextSibling = aSibling->GetNextSibling();
-      aChild->SetNextSibling(siblingNextSibling);
+      aChild->SetNextSibling(aSibling->GetNextSibling());
       aSibling->SetNextSibling(aChild);
     }
     else
@@ -655,8 +649,7 @@ void nsView::RemoveChild(nsView *child)
     while (nsnull != kid) {
       if (kid == child) {
         if (nsnull != prevKid) {
-          nsView* kidNextSibling = kid->GetNextSibling();
-          prevKid->SetNextSibling(kidNextSibling);
+          prevKid->SetNextSibling(kid->GetNextSibling());
         } else {
           mFirstChild = kid->GetNextSibling();
         }
@@ -674,7 +667,7 @@ void nsView::RemoveChild(nsView *child)
 
 nsView* nsView::GetChild(PRInt32 aIndex) const
 { 
-  for (nsView* child = GetFirstChild(); child != nsnull; child = child->GetNextSibling()) {
+  for (nsView* child = GetFirstChild(); child; child = child->GetNextSibling()) {
     if (aIndex == 0) {
       return child;
     }
@@ -786,10 +779,7 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
   //make sure visibility state is accurate
   
   if (aResetVisibility) {
-    nsViewVisibility vis;
-    
-    GetVisibility(vis);
-    SetVisibility(vis);
+    SetVisibility(GetVisibility());
   }
 
   NS_RELEASE(dx);
@@ -874,17 +864,14 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
             nonclientBounds.x, nonclientBounds.y,
             windowBounds.width, windowBounds.height);
   }
-  nsRect brect;
-  GetBounds(brect);
+  nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
   PRBool  hasTransparency;
   HasTransparency(hasTransparency);
   fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZIndex, mVis, mOpacity, hasTransparency, mClientData);
-  nsView* kid = mFirstChild;
-  while (nsnull != kid) {
+  for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     kid->List(out, aIndent + 1);
-    kid = kid->GetNextSibling();
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
@@ -901,8 +888,9 @@ NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget 
   // to 0 rather than relying on the caller to do so...
   while (nsnull != ancestor)
   {
-    ancestor->GetWidget(aWidget);
-    if (nsnull != aWidget) {
+    aWidget = ancestor->GetWidget();
+    if (aWidget) {
+      NS_ADDREF(aWidget);
       // the widget's (0,0) is at the top left of the view's bounds, NOT its position
       nsRect r;
       ancestor->GetDimensions(r);
@@ -978,7 +966,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   aEmpty = PR_FALSE;
   aIsClipped = PR_FALSE;
   
-  GetBounds(aClippedRect);
+  aClippedRect = GetBounds();
   PRBool lastViewIsFloating = GetFloating();
 
   // Walk all of the way up the views to see if any
@@ -1000,7 +988,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
       // coordinate system.  They are the offset of this view within
       // parentView
       const nsView* zParentChain;
-      for (zParentChain = zParent; zParentChain != parentView && zParentChain != nsnull;
+      for (zParentChain = zParent; zParentChain != parentView && zParentChain;
            zParentChain = zParentChain->GetParent()) {
         zParentChain->ConvertFromParentCoords(&ancestorX, &ancestorY);
       }
@@ -1010,7 +998,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
         // case we walked from zParentChain all the way up to the
         // root, subtracting from ancestorX/Y. So now we walk from
         // parentView up to the root, adding to ancestorX/Y.
-        while (parentView != nsnull) {
+        while (parentView) {
           parentView->ConvertToParentCoords(&ancestorX, &ancestorY);
           parentView = parentView->GetParent();
         }

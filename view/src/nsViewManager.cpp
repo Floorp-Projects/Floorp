@@ -523,14 +523,15 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView, nsIWidget* aWidget)
   // case b) The aView has a nsIWidget instance
   if (nsnull != mRootView) {
     nsView* parent = mRootView->GetParent();
-    if (nsnull != parent) {
+    if (parent) {
       parent->InsertChild(mRootView, nsnull);
     }
 
     mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
 
-    mRootView->GetWidget(mRootWindow);
-    if (nsnull != mRootWindow) {
+    mRootWindow = mRootView->GetWidget();
+    if (mRootWindow) {
+      NS_ADDREF(mRootWindow);
       return NS_OK;
     }
   }
@@ -1100,30 +1101,22 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
     nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
     if (childWidget) {
       nsView* view = nsView::GetViewFor(childWidget);
-      if (view) {
-        nsViewVisibility visible = nsViewVisibility_kHide;
-        view->GetVisibility(visible);
-        if (visible == nsViewVisibility_kShow) {
-          PRBool floating = PR_FALSE;
-          view->GetFloating(floating);
-          if (!floating) {
-            nsRect bounds;
-            view->GetBounds(bounds);
-            if (bounds.width > 0 && bounds.height > 0) {
-              nsView* viewParent = view->GetParent();
+      if (view && view->GetVisibility() == nsViewVisibility_kShow
+          && !view->GetFloating()) {
+        nsRect bounds = view->GetBounds();
+        if (bounds.width > 0 && bounds.height > 0) {
+          nsView* viewParent = view->GetParent();
 
-              while (viewParent && viewParent != aRootView) {
-                viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
-                viewParent = viewParent->GetParent();
-              }
+          while (viewParent && viewParent != aRootView) {
+            viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
+            viewParent = viewParent->GetParent();
+          }
 
-              // maybe we couldn't get the view into the coordinate
-              // system of aRootView (maybe it's not a descendant
-              // view of aRootView?); if so, don't use it
-              if (viewParent) {
-                aRgn.Or(aRgn, bounds);
-              }
-            }
+          // maybe we couldn't get the view into the coordinate
+          // system of aRootView (maybe it's not a descendant
+          // view of aRootView?); if so, don't use it
+          if (viewParent) {
+            aRgn.Or(aRgn, bounds);
           }
         }
       }
@@ -1187,8 +1180,7 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
   PRInt32 RCCount = 1;
   RCList[0] = &aRC;
     
-  nsCOMPtr<nsIWidget> widget;
-  aRootView->GetWidget(*getter_AddRefs(widget));
+  nsIWidget* widget = aRootView->GetWidget();
   PRBool translucentWindow = PR_FALSE;
   if (widget) {
     widget->GetWindowTranslucency(translucentWindow);
@@ -1363,9 +1355,6 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element,
       //mOffScreenCX->CopyOffScreenBits(gWhite, 0, 0, nsRect(viewX, viewY, damageRect.width, damageRect.height),
       //            NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
 
-      float opacity;
-      view->GetOpacity(opacity);
-
       // -> coordinates relative to aTranslucentArea origin
       damageRect.x += viewX, damageRect.y += viewY;
 
@@ -1380,7 +1369,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element,
                                           damageRectInPixels.width, damageRectInPixels.height,
                                           aBuffers->mBlackCX, targets[i],
                                           damageRectInPixels.x, damageRectInPixels.y,
-                                          opacity, aBuffers->mWhiteCX,
+                                          view->GetOpacity(), aBuffers->mWhiteCX,
                                           NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
             if (NS_FAILED(rv)) {
               NS_WARNING("Blend failed!");
@@ -1561,33 +1550,25 @@ BlendingBuffers* nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
 void nsViewManager::ProcessPendingUpdates(nsView* aView)
 {
   // Protect against a null-view.
-  if (nsnull == aView) {
+  if (!aView) {
     return;
   }
-  PRBool hasWidget;
-  aView->HasWidget(&hasWidget);
-  if (hasWidget) {
+  if (aView->HasWidget()) {
     nsCOMPtr<nsIRegion> dirtyRegion;
     aView->GetDirtyRegion(*getter_AddRefs(dirtyRegion));
-    if (dirtyRegion != nsnull && !dirtyRegion->IsEmpty()) {
-      nsCOMPtr<nsIWidget> widget;
-      aView->GetWidget(*getter_AddRefs(widget));
-      if (widget) {
-        widget->InvalidateRegion(dirtyRegion, PR_FALSE);
-      }
+    if (dirtyRegion && !dirtyRegion->IsEmpty()) {
+      aView->GetWidget()->InvalidateRegion(dirtyRegion, PR_FALSE);
       dirtyRegion->Init();
     }
   }
 
   // process pending updates in child view.
-  nsView* childView = aView->GetFirstChild();
-  while (nsnull != childView)  {
+  for (nsView* childView = aView->GetFirstChild(); childView;
+       childView = childView->GetNextSibling()) {
     if (childView->GetViewManager() == this) {
       ProcessPendingUpdates(childView);
     }
-    childView = childView->GetNextSibling();
   }
-
 }
 
 NS_IMETHODIMP nsViewManager::Composite()
@@ -1608,8 +1589,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, PRUint32 aUpdateFlags)
   // Mark the entire view as damaged
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
-  nsRect bounds;
-  view->GetBounds(bounds);
+  nsRect bounds = view->GetBounds();
   view->ConvertFromParentCoords(&bounds.x, &bounds.y);
   return UpdateView(view, bounds, aUpdateFlags);
 }
@@ -1639,14 +1619,12 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
 
   // if this is a floating view, it isn't covered by any widgets other than
   // its children, which are handled by the widget scroller.
-  PRBool viewIsFloating = PR_FALSE;
-  view->GetFloating(viewIsFloating);
-  if (viewIsFloating) {
+  if (view->GetFloating()) {
     return;
   }
 
   nsView* realRoot = mRootView;
-  while (realRoot->GetParent() != nsnull) {
+  while (realRoot->GetParent()) {
     realRoot = realRoot->GetParent();
   }
 
@@ -1671,9 +1649,7 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
   }
 
   // If the widget is hidden, it don't cover nothing
-  nsViewVisibility visible;
-  aWidgetView->GetVisibility(visible);
-  if (nsViewVisibility_kHide == visible) {
+  if (nsViewVisibility_kHide == aWidgetView->GetVisibility()) {
 #ifdef DEBUG
     // Assert if view is hidden but widget is visible
     nsCOMPtr<nsIWidget> widget;
@@ -1787,18 +1763,12 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   // its children. In that case we walk up to its parent widget and use
   // that as the root to update from. This also means we update areas that
   // may be outside the parent view(s), which is necessary for floaters.
-  PRBool viewIsFloating = PR_FALSE;
-  view->GetFloating(viewIsFloating);
-  if (viewIsFloating) {
+  if (view->GetFloating()) {
     nsView* widgetParent = view;
-    PRBool hasWidget = PR_FALSE;
-    widgetParent->HasWidget(&hasWidget);
 
-    while (!hasWidget) {
+    while (!widgetParent->HasWidget()) {
       widgetParent->ConvertToParentCoords(&damagedRect.x, &damagedRect.y);
-
       widgetParent = widgetParent->GetParent();
-      widgetParent->HasWidget(&hasWidget);
     }
 
     UpdateWidgetArea(widgetParent, damagedRect, nsnull);
@@ -1809,7 +1779,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
     damagedRect.y = origin.y;
 
     nsView* realRoot = mRootView;
-    while (realRoot->GetParent() != nsnull) {
+    while (realRoot->GetParent()) {
       realRoot = realRoot->GetParent();
     }
 
@@ -2192,12 +2162,8 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
       if (nsnull == displayParent) {
         break;
       }
-      PRBool isFloating = PR_FALSE;
-      displayRoot->GetFloating(isFloating);
-      PRBool isParentFloating = PR_FALSE;
-      displayParent->GetFloating(isParentFloating);
 
-      if (isFloating && !isParentFloating) {
+      if (displayRoot->GetFloating() && !displayParent->GetFloating()) {
         break;
       }
       displayRoot = displayParent;
@@ -2217,7 +2183,7 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   if (aEventProcessing) {
     paintFloaters = PR_TRUE;
   } else {
-    displayRoot->GetFloating(paintFloaters);
+    paintFloaters = displayRoot->GetFloating();
   }
   CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
                     aView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y,
@@ -2411,17 +2377,13 @@ NS_IMETHODIMP nsViewManager::GetKeyEventGrabber(nsIView *&aView)
 
 void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
 {
-  PRBool hasWidget;
-  aView->HasWidget(&hasWidget);
-  if (hasWidget) {
+  if (aView->HasWidget()) {
     // Check to see if the parent widget is the
     // same as the new parent. If not then reparent
     // the widget, otherwise there is nothing more
     // to do for the view and its descendants
-    nsCOMPtr<nsIWidget> widget;
-    aView->GetWidget(*getter_AddRefs(widget));
-    nsCOMPtr<nsIWidget> parentWidget;
-    parentWidget = widget->GetParent();
+    nsIWidget* widget = aView->GetWidget();
+    nsCOMPtr<nsIWidget> parentWidget = getter_AddRefs(widget->GetParent());
     if (parentWidget.get() != aNewWidget) {
       widget->SetParent(aNewWidget);
     }
@@ -2432,10 +2394,8 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
   // if they have a widget and reparent it.
 
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  nsView *kid = view->GetFirstChild();
-  while (kid) {
+  for (nsView *kid = view->GetFirstChild(); kid; kid = kid->GetNextSibling()) {
     ReparentChildWidgets(kid, aNewWidget);
-    kid = kid->GetNextSibling();
   }
 }
 
@@ -2451,9 +2411,7 @@ void nsViewManager::ReparentWidgets(nsIView* aView, nsIView *aParent)
   // have to consider reparenting the existing widgets for the view and
   // it's descendants.
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  PRBool hasWidget;
-  aView->HasWidget(&hasWidget);
-  if (hasWidget || view->GetFirstChild()) {
+  if (view->HasWidget() || view->GetFirstChild()) {
     nsCOMPtr<nsIWidget> parentWidget;
     GetWidgetForView(aParent, getter_AddRefs(parentWidget));
     if (parentWidget) {
@@ -2493,7 +2451,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
           // insert at beginning of document order, i.e., after last view
           nsView *kid = parent->GetFirstChild();
           nsView *prev = nsnull;
-          while (kid != nsnull) {
+          while (kid) {
             prev = kid;
             kid = kid->GetNextSibling();
           }
@@ -2504,7 +2462,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
       } else {
         nsView *kid = parent->GetFirstChild();
         nsView *prev = nsnull;
-        while (nsnull != kid && sibling != kid) {
+        while (kid && sibling != kid) {
           //get the next sibling view
           prev = kid;
           kid = kid->GetNextSibling();
@@ -2541,17 +2499,12 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
 #endif
 
       // if the parent view is marked as "floating", make the newly added view float as well.
-      PRBool isFloating = PR_FALSE;
-      parent->GetFloating(isFloating);
-      if (isFloating)
-        child->SetFloating(isFloating);
+      if (parent->GetFloating())
+        child->SetFloating(PR_TRUE);
 
       //and mark this area as dirty if the view is visible...
 
-      nsViewVisibility  visibility;
-      child->GetVisibility(visibility);
-
-      if (nsViewVisibility_kHide != visibility)
+      if (nsViewVisibility_kHide != child->GetVisibility())
         UpdateView(child, NS_VMREFRESH_NO_SYNC);
     }
   return NS_OK;
@@ -2604,34 +2557,27 @@ NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 
 NS_IMETHODIMP nsViewManager::MoveViewBy(nsIView *aView, nscoord aX, nscoord aY)
 {
-  nscoord x, y;
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
-  view->GetPosition(&x, &y);
-  MoveViewTo(view, aX + x, aY + y);
+  nsPoint pt = view->GetPosition();
+  MoveViewTo(view, aX + pt.x, aY + pt.y);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 {
-  nscoord oldX, oldY;
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  nsRect oldArea;
-  view->GetPosition(&oldX, &oldY);
-  view->GetBounds(oldArea);
+  nsPoint oldPt = view->GetPosition();
+  nsRect oldArea = view->GetBounds();
   view->SetPosition(aX, aY);
 
   // only do damage control if the view is visible
 
-  if ((aX != oldX) || (aY != oldY)) {
-    nsViewVisibility  visibility;
-    view->GetVisibility(visibility);
-    if (visibility != nsViewVisibility_kHide) {
+  if ((aX != oldPt.x) || (aY != oldPt.y)) {
+    if (view->GetVisibility() != nsViewVisibility_kHide) {
       nsView* parentView = view->GetParent();
       UpdateView(parentView, oldArea, NS_VMREFRESH_NO_SYNC);
-      nsRect newArea;
-      view->GetBounds(newArea);
-      UpdateView(parentView, newArea, NS_VMREFRESH_NO_SYNC);
+      UpdateView(parentView, view->GetBounds(), NS_VMREFRESH_NO_SYNC);
     }
   }
   return NS_OK;
@@ -2679,11 +2625,8 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
       parentView = view;
 
     // resize the view.
-    nsViewVisibility  visibility;
-    view->GetVisibility(visibility);
-
     // Prevent Invalidation of hidden views 
-    if (visibility == nsViewVisibility_kHide) {  
+    if (view->GetVisibility() == nsViewVisibility_kHide) {  
       view->SetDimensions(aRect, PR_FALSE);
     } else {
       if (!aRepaintExposedAreaOnly) {
@@ -2910,19 +2853,15 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
       nsView* fixedView = mRootView->GetFirstChild();
       while (fixedView != nsnull) {
         if (fixedView->GetZParent() != nsnull && fixedView->GetZIndex() >= 0) {
-          nsRect fixedBounds;
-          fixedView->GetBounds(fixedBounds);
-          opaqueRegion.Or(opaqueRegion, fixedBounds);
+          opaqueRegion.Or(opaqueRegion, fixedView->GetBounds());
         }
         fixedView = fixedView->GetNextSibling();
       }
 
       // get the region into the coordinates of aView
       nscoord deltaX = 0, deltaY = 0;
-      nsView* v = aView;
-      while (v != nsnull) {
+      for (nsView* v = aView; v; v = v->GetParent()) {
         v->ConvertToParentCoords(&deltaX, &deltaY);
-        v = v->GetParent();
       }
       opaqueRegion.MoveBy(-deltaX, -deltaY);
     }
@@ -3000,21 +2939,15 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
-  nsViewVisibility  oldVisible;
-  view->GetVisibility(oldVisible);
-  if (aVisible != oldVisible) {
+  if (aVisible != view->GetVisibility()) {
     view->SetVisibility(aVisible);
 
     if (IsViewInserted(view)) {
-      PRBool hasWidget = PR_FALSE;
-      view->HasWidget(&hasWidget);
-      if (!hasWidget) {
+      if (!view->HasWidget()) {
         if (nsViewVisibility_kHide == aVisible) {
           nsView* parentView = view->GetParent();
           if (parentView) {
-            nsRect  bounds;
-            view->GetBounds(bounds);
-            UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
+            UpdateView(parentView, view->GetBounds(), NS_VMREFRESH_NO_SYNC);
           }
         }
         else {
@@ -3079,10 +3012,8 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
   // long as there are no plugins around (although there may be more
   // flickering and other perf issues than if the widgets were in a
   // good order).
-  nsCOMPtr<nsIWidget> widget;
-  view->GetWidget(*getter_AddRefs(widget));
-  if (widget) {
-    widget->SetZIndex(aZIndex);
+  if (view->HasWidget()) {
+    view->GetWidget()->SetZIndex(aZIndex);
   }
 
   nsZPlaceholderView* zParentView = view->GetZParent();
@@ -3114,11 +3045,8 @@ NS_IMETHODIMP nsViewManager::SetViewContentTransparency(nsIView *aView, PRBool a
 NS_IMETHODIMP nsViewManager::SetViewOpacity(nsIView *aView, float aOpacity)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  float opacity;
 
-  view->GetOpacity(opacity);
-
-  if (opacity != aOpacity)
+  if (view->GetOpacity() != aOpacity)
     {
       view->SetOpacity(aOpacity);
 
@@ -3214,14 +3142,14 @@ NS_IMETHODIMP nsViewManager::SetQuality(nsContentQuality aQuality)
 nsIRenderingContext * nsViewManager::CreateRenderingContext(nsView &aView)
 {
   nsView              *par = &aView;
-  nsCOMPtr<nsIWidget> win;
+  nsIWidget*          win;
   nsIRenderingContext *cx = nsnull;
   nscoord             ax = 0, ay = 0;
 
   do
     {
-      par->GetWidget(*getter_AddRefs(win));
-      if (nsnull != win)
+      win = par->GetWidget();
+      if (win)
         break;
 
       //get absolute coordinates of view, but don't
@@ -3348,7 +3276,6 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
 {
   nsView              *view = NS_STATIC_CAST(nsView*, aView);
   nsIRenderingContext *localcx = nsnull;
-  nsRect              trect;
 
   if (PR_FALSE == mRefreshEnabled)
     return NS_OK;
@@ -3366,7 +3293,7 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
       return NS_ERROR_FAILURE;
     }
 
-  view->GetBounds(trect);
+  nsRect trect = view->GetBounds();
   view->ConvertFromParentCoords(&trect.x, &trect.y);
 
   localcx->Translate(aX, aY);
@@ -3408,27 +3335,23 @@ NS_IMETHODIMP nsViewManager::GetWidgetForView(nsIView *aView, nsIWidget **aWidge
 {
   nsView *view = NS_STATIC_CAST(nsView*, aView);
 
-  *aWidget = nsnull;
-  PRBool hasWidget = PR_FALSE;
-  while (!hasWidget && view)
-    {
-      view->HasWidget(&hasWidget);
-      if (!hasWidget)
-        view = view->GetParent();
-    }
+  while (view && !view->HasWidget()) {
+    view = view->GetParent();
+  }
 
-  if (hasWidget) {
+  if (view) {
     // Widget was found in the view hierarchy
-    view->GetWidget(*aWidget);
+    *aWidget = view->GetWidget();
+    NS_ADDREF(*aWidget);
   } else {
     // No widget was found in the view hierachy, so use try to use the mRootWindow
     if (nsnull != mRootWindow) {
-#ifdef NS_DEBUG
-      nsViewManager* vm = view->GetViewManager();
-      NS_ASSERTION(this == vm, "Must use the view instances view manager when calling GetWidgetForView");
-#endif
+      NS_ASSERTION(this == view->GetViewManager(),
+                   "Must use the view instance's view manager when calling GetWidgetForView");
       *aWidget = mRootWindow;
       NS_ADDREF(mRootWindow);
+    } else {
+      *aWidget = nsnull;
     }
   }
 
@@ -3486,14 +3409,12 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   if (!aTopView)
     aTopView = aView;
 
-  nsRect bounds;
-  aView->GetBounds(bounds);
-  nscoord posX, posY;
-  aView->GetPosition(&posX, &posY);
+  nsRect bounds = aView->GetBounds();
+  nsPoint pos = aView->GetPosition();
 
   if (aView == aTopView) {
     aView->ConvertFromParentCoords(&bounds.x, &bounds.y);
-    posX = posY = 0;
+    pos = nsPoint(0, 0);
   }
 
   aInsideRealView = aInsideRealView || aRealView == aView,
@@ -3501,8 +3422,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   // -> to global coordinates (relative to aTopView)
   bounds.x += aX;
   bounds.y += aY;
-  posX += aX;
-  posY += aY;
+  pos.MoveBy(aX, aY);
 
   // is this a clip view?
   PRBool isClipView = IsClipView(aView);
@@ -3552,12 +3472,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   // This is important because we may be asked to paint
   // a window that's behind a transient floater; in this case we must paint the real window
   // contents, not the floater contents (bug 63496)
-  if (!aPaintFloaters) {
-    PRBool isFloating = PR_FALSE;
-    aView->GetFloating(isFloating);
-    if (isFloating) {
-      return PR_FALSE;
-    }
+  if (!aPaintFloaters && aView->GetFloating()) {
+    return PR_FALSE;
   }
 
   PRBool anyChildren = aView->GetFirstChild() != nsnull;
@@ -3593,7 +3509,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
                                  aInsideRealView,
-                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters,
+                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, pos.x, pos.y, aPaintFloaters,
                                  aEventProcessing);
       if (createdNode != nsnull) {
         EnsureZTreeNodeCreated(aView, aResult);
@@ -3612,10 +3528,9 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.x -= aOriginX;
       bounds.y -= aOriginY;
 
-      float             opacity;
+      float             opacity = aView->GetOpacity();
       PRBool            transparent;
 
-      aView->GetOpacity(opacity);
       aView->HasTransparency(transparent);
 
       if (aEventProcessing || opacity > 0.0f) {
@@ -3825,10 +3740,8 @@ void nsViewManager::ShowDisplayList(nsAutoVoidArray* aDisplayList)
     PRUint32             flags = element->mFlags;
     PRUint32             viewFlags = element->mView->GetViewFlags();
     nsRect               dim;
-    nscoord              vx, vy;
-
     view->GetDimensions(dim);
-    view->GetPosition(&vx, &vy);
+    nsPoint              v = view->GetPosition();
     nsView* parent = view->GetParent();
     PRInt32 zindex = view->GetZIndex();
     nsView* zParent = view->GetZParent();
@@ -3838,7 +3751,7 @@ void nsViewManager::ShowDisplayList(nsAutoVoidArray* aDisplayList)
     printf("%snsIView@%p{%d,%d,%d,%d @ %d,%d; p=%p,m=%p z=%d,zp=%p} [x=%d, y=%d, w=%d, h=%d, absX=%d, absY=%d]\n",
            nest, (void*)view,
            dim.x, dim.y, dim.width, dim.height,
-           vx, vy,
+           v.x, v.y,
            (void*)parent, (void*)view->GetViewManager(), zindex, (void*)zParent,
            rect.x, rect.y, rect.width, rect.height,
            element->mAbsX, element->mAbsY);
@@ -3910,10 +3823,8 @@ void nsViewManager::ComputeViewOffset(nsView *aView, nsPoint *aOrigin)
 
 PRBool nsViewManager::DoesViewHaveNativeWidget(nsView* aView)
 {
-  nsCOMPtr<nsIWidget> widget;
-  aView->GetWidget(*getter_AddRefs(widget));
-  if (nsnull != widget)
-    return (nsnull != widget->GetNativeData(NS_NATIVE_WIDGET));
+  if (aView->HasWidget())
+    return (nsnull != aView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET));
   return PR_FALSE;
 }
 
@@ -3927,10 +3838,8 @@ PRBool nsViewManager::IsClipView(nsView* aView)
 
 nsView* nsViewManager::GetWidgetView(nsView *aView)
 {
-  while (aView != nsnull) {
-    PRBool hasWidget;
-    aView->HasWidget(&hasWidget);
-    if (hasWidget)
+  while (aView) {
+    if (aView->HasWidget())
       return aView;
     aView = aView->GetParent();
   }
@@ -4030,9 +3939,7 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
   }
 
   // is this view even visible?
-  nsViewVisibility  visibility;
-  view->GetVisibility(visibility);
-  if (visibility == nsViewVisibility_kHide) {
+  if (view->GetVisibility() == nsViewVisibility_kHide) {
     return NS_OK; 
   }
 
