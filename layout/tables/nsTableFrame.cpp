@@ -385,7 +385,7 @@ PRInt32 nsTableFrame::GetColCount ()
 
   if (nsnull!=cellMap)
   {
-    if (-1==mEffectiveColCount)
+    //if (-1==mEffectiveColCount)
       SetEffectiveColCount();
   }
   return mEffectiveColCount;
@@ -488,7 +488,8 @@ PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
   */
 PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
 {
-  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRInt32 colCount=GetColCount();
+  NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
   PRBool result = PR_FALSE;
   nsCellMap * cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
@@ -504,7 +505,8 @@ PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
   */
 PRBool nsTableFrame::ColHasSpanningCells(PRInt32 aColIndex)
 {
-  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRInt32 colCount=GetColCount();
+  NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
   PRBool result = PR_FALSE;
   nsCellMap * cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
@@ -656,11 +658,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext* aPresContext)
   if (PR_TRUE==gsDebug) printf("EC: actual = %d, colCount=%d\n", actualColumns, colCount);
   if (actualColumns < colCount)
   {
-    PRBool lastColGroupNeedsInit=PR_FALSE;
     nsIHTMLContent *lastColGroup=nsnull;
     if (nsnull==lastColGroupFrame)
     {
-      lastColGroupNeedsInit=PR_TRUE;
       if (PR_TRUE==gsDebug) printf("EC:creating colgroup\n", actualColumns, colCount);
       // create an implicit colgroup
       nsAutoString colGroupTag;
@@ -742,8 +742,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext* aPresContext)
       lastNewColFrame = colFrame;
       NS_RELEASE(col);                          // ADDREF: col--
     }
-    if (PR_TRUE==lastColGroupNeedsInit)
-      lastColGroupFrame->Init(*aPresContext, firstNewColFrame);
+    lastColGroupFrame->Init(*aPresContext, firstNewColFrame);
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
   }
 }

@@ -155,7 +155,7 @@ nsTableColGroupFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   nsresult result = AppendNewFrames(aPresContext, aChildList);
   if (NS_OK==result)
-    result = InitNewFrames(aPresContext, mFirstChild);
+    result = InitNewFrames(aPresContext, aChildList);
   return result;
 }
 
