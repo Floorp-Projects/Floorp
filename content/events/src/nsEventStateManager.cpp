@@ -2405,12 +2405,23 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   mCurrentTargetContent = aTargetContent;
   mCurrentRelatedContent = aRelatedContent;
 
+  nsIFrame* targetFrame = aTargetFrame;
   if (aTargetContent) {
     aTargetContent->HandleDOMEvent(aPresContext, &event, nsnull,
                                    NS_EVENT_FLAG_INIT, &status); 
+    if (!mCurrentTarget) {
+      // If current target frame is removed, it's pretty likely something has
+      // happened to our target frame as well (since it's either a parent or the
+      // same frame), so we need to re-resolve it.  Conversely, if nothing has
+      // happened to our current target frame, our frame is guaranteed to still
+      // be around, so we don't need to re-resolve it.  (Bug 185850)
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
+    }
   }
-  if (aTargetFrame) {
-    aTargetFrame->HandleEvent(aPresContext, &event, &status);   
+  if (targetFrame) {
+    targetFrame->HandleEvent(aPresContext, &event, &status);   
   }
 
   mCurrentTargetContent = nsnull;
