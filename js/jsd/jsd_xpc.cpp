@@ -2695,6 +2695,8 @@ jsdService::InsertFilter (jsdIFilter *filter, jsdIFilter *after)
         return NS_ERROR_INVALID_ARG;
 
     FilterRecord *rec = PR_NEWZAP (FilterRecord);
+    if (!rec)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     if (!jsds_SyncFilter (rec, filter)) {
         PR_Free (rec);
