@@ -117,6 +117,7 @@ public:
 
   // nsIHTMLFragmentContentSink
   NS_IMETHOD GetFragment(nsIDOMDocumentFragment** aFragment);
+  NS_IMETHOD SetTargetDocument(nsIDocument* aDocument);
 
   nsIContent* GetCurrentContent();
   PRInt32 PushContent(nsIContent *aContent);
@@ -167,31 +168,27 @@ public:
 nsresult
 NS_NewHTMLFragmentContentSink2(nsIHTMLFragmentContentSink** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_PRECONDITION(aResult, "Null out ptr");
 
-  nsCOMPtr<nsHTMLFragmentContentSink2> it;
-  NS_NEWXPCOM(it, nsHTMLFragmentContentSink2);
-  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+  *aResult = new nsHTMLFragmentContentSink2();
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = it->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ADDREF(*aResult);
 
-  return CallQueryInterface(it, aResult);
+  return NS_OK;
 }
 
 nsresult
 NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  NS_PRECONDITION(aResult, "Null out ptr");
 
-  nsCOMPtr<nsHTMLFragmentContentSink> it;
-  NS_NEWXPCOM(it, nsHTMLFragmentContentSink);
-  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+  *aResult = new nsHTMLFragmentContentSink();
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = it->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ADDREF(*aResult);
 
-  return CallQueryInterface(it, aResult);
+  return NS_OK;
 }
 
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
@@ -271,15 +268,6 @@ nsHTMLFragmentContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-nsresult nsHTMLFragmentContentSink::Init()
-{
-  nsresult rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return mNodeInfoManager->Init(nsnull);
-}
-
-
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::WillBuildModel(void)
 {
@@ -343,6 +331,8 @@ nsHTMLFragmentContentSink::EndContext(PRInt32 aID)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
 {
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+  
   nsresult result=NS_OK;
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -481,6 +471,8 @@ static const char kSentinelStr[] = "endnote";
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 {
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+  
   nsAutoString tag;
   nsresult result = NS_OK;
 
@@ -571,6 +563,8 @@ nsHTMLFragmentContentSink::AddHeadContent(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 {
+  NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
+  
   nsresult result = NS_OK;
 
   switch (aNode.GetTokenType()) {
@@ -728,6 +722,28 @@ nsHTMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
   *aFragment = nsnull;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
+{
+  if (aTargetDocument) {
+    aTargetDocument->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
+  }
+
+  if (mNodeInfoManager) {
+    return NS_OK;
+  }
+  
+  nsresult rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = mNodeInfoManager->Init(nsnull);
+  if (NS_FAILED(rv)) {
+    mNodeInfoManager = nsnull;
+  }
+
+  return rv;  
 }
 
 nsIContent* 

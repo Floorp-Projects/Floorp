@@ -971,7 +971,7 @@ nsresult nsRange::GetStartContainer(nsIDOMNode** aStartParent)
     return NS_ERROR_NOT_INITIALIZED;
   if (!aStartParent)
     return NS_ERROR_NULL_POINTER;
-  //NS_IF_RELEASE(*aStartParent); don't think we should be doing this
+
   *aStartParent = mStartParent;
   NS_IF_ADDREF(*aStartParent);
   return NS_OK;
@@ -2532,15 +2532,12 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
   nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &result);
   NS_ENSURE_SUCCESS(result, result);
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mStartParent, &result);
-  NS_ENSURE_SUCCESS(result, result);
-
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIDOMDocument> domDocument;
 
-  result = content->GetDocument(*getter_AddRefs(document));
-  if (document && NS_SUCCEEDED(result)) {
-    domDocument = do_QueryInterface(document, &result);
+  result = mStartParent->GetOwnerDocument(getter_AddRefs(domDocument));
+  if (domDocument && NS_SUCCEEDED(result)) {
+    document = do_QueryInterface(domDocument, &result);
   }
 
   nsVoidArray tagStack;
@@ -2577,6 +2574,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
 
     result = NS_NewHTMLFragmentContentSink(getter_AddRefs(sink));
     if (NS_SUCCEEDED(result)) {
+      sink->SetTargetDocument(document);
       parser->SetContentSink(sink);
       nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(document));
       if (domnsDocument) {
@@ -2631,9 +2629,7 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       }
 
       nsDTDMode mode = eDTDMode_autodetect;
-      nsCOMPtr<nsIDOMDocument> ownerDoc;
-      mStartParent->GetOwnerDocument(getter_AddRefs(ownerDoc));
-      nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(ownerDoc));
+      nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(domDocument));
       if (htmlDoc) {
         nsCompatibility compatMode;
         htmlDoc->GetCompatibilityMode(compatMode);

@@ -683,7 +683,9 @@ protected:
                                         nsCOMPtr<nsIDOMNode> *outFragNode,
                                         PRInt32 *outRangeStartHint,
                                         PRInt32 *outRangeEndHint);
-  nsresult   ParseFragment(const nsAString & aStr, nsVoidArray &aTagStack, nsCOMPtr<nsIDOMNode> *outNode);
+  nsresult   ParseFragment(const nsAString & aStr, nsVoidArray &aTagStack,
+                           nsIDocument* aTargetDoc,
+                           nsCOMPtr<nsIDOMNode> *outNode);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
                                       nsCOMArray<nsIDOMNode>& outNodeList,
                                       PRInt32 aRangeStartHint,
