@@ -96,9 +96,9 @@ protected:
   nsresult GetContentType(char* aPathName, char** aContentType);
   
   // i18n helper routines
-  nsString* URLEncode(nsString& aString, nsIUnicodeEncoder* encoder);
+  nsString* URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder);
   char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder);
-
+  
   NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
   void GetSubmitCharset(nsString& oCharset);
 
