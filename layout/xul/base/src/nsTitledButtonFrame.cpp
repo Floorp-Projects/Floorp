@@ -36,12 +36,10 @@
 #include "nsButtonFrameRenderer.h"
 
 #include "nsHTMLParts.h"
-#include "nsHTMLImage.h"
 #include "nsString.h"
 #include "nsLeafFrame.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIFrameImageLoader.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
 #include "nsIImage.h"
@@ -94,49 +92,12 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 #define ALIGN_TOP    "top"
 #define ALIGN_BOTTOM "bottom"
 
-void
-nsTitledButtonImageLoader::StopLoadImage(nsIPresContext& aPresContext,
-                                 nsIFrame* aTargetFrame)
-{
-  // only stop if we are loading.
-  if (nsnull != mImageLoader) {
-    nsHTMLImageLoader::StopLoadImage(aPresContext, aTargetFrame);
-  }
-}
-
-void
-nsTitledButtonImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsIFrame* aTargetFrame,
-                                  nsFrameImageLoaderCB aCallBack,
-                                  nsHTMLReflowMetrics& aDesiredSize)
-{  
-  // Start the image loading
-  PRIntn loadStatus;
-  StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                 PR_TRUE,
-                 loadStatus);
-
-    // The image is unconstrained
-    if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
-        (nsnull == mImageLoader)) {
-      // Provide a dummy size for now; later on when the image size
-      // shows up we will reflow to the new size.
-      aDesiredSize.width = 1;
-      aDesiredSize.height = 1;
-    } else {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      nsSize imageSize;
-      mImageLoader->GetSize(imageSize);
-      aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
-      aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
-    }
-}
-
-static nsresult
-TitledUpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
-                 PRIntn aStatus)
+nsresult
+nsTitledButtonFrame::UpdateImageFrame(nsIPresContext* aPresContext,
+                                      nsHTMLImageLoader* aLoader,
+                                      nsIFrame* aFrame,
+                                      void* aClosure,
+                                      PRUint32 aStatus)
 {
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a content-changed reflow
@@ -151,20 +112,9 @@ TitledUpdateImageFrame(nsIPresContext& aPresContext, nsIFrame* aFrame,
       }
       NS_RELEASE(content);
     }
-  } else if (NS_IMAGE_LOAD_STATUS_ERROR & aStatus) {
-    // XXX Turned off for the time being until the frame construction code for
-    // images that can't be rendered handles floated and absolutely positioned
-    // images...
-#if 0
-    // We failed to load the image. Notify the pres shell
-    nsIPresShell* presShell = aPresContext.GetShell();
-    presShell->CantRenderReplacedElement(&aPresContext, aFrame);
-    NS_RELEASE(presShell);
-#endif
   }
   return NS_OK;
 }
-
 
 //
 // NS_NewToolbarFrame
@@ -210,9 +160,7 @@ NS_METHOD
 nsTitledButtonFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
-  mImageLoader.StopLoadImage(aPresContext, this);
-
-  mImageLoader.DestroyLoader();
+  mImageLoader.StopAllLoadImages(&aPresContext);
 
   return nsLeafFrame::DeleteFrame(aPresContext);
 }
@@ -220,10 +168,10 @@ nsTitledButtonFrame::DeleteFrame(nsIPresContext& aPresContext)
 
 NS_IMETHODIMP
 nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIStyleContext* aContext,
-              nsIFrame*        aPrevInFlow)
+                          nsIContent*      aContent,
+                          nsIFrame*        aParent,
+                          nsIStyleContext* aContext,
+                          nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
@@ -231,12 +179,13 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   mRenderer.SetFrame(this,aPresContext);
   
   // place 4 pixels of spacing
-	 float p2t;
-	 aPresContext.GetScaledPixelsToTwips(&p2t);
-	 mSpacing = NSIntPixelsToTwips(4, p2t);
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  mSpacing = NSIntPixelsToTwips(4, p2t);
 
   mHasImage = PR_FALSE;
-   // Always set the image loader's base URL, because someone may
+
+  // Always set the image loader's base URL, because someone may
   // decide to change a button _without_ an image to have an image
   // later.
   nsIURL* baseURL = nsnull;
@@ -252,7 +201,15 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
       NS_RELEASE(doc);
     }
   }
-  mImageLoader.SetBaseURL(baseURL);
+
+  // Initialize the image loader. Make sure the source is correct so
+  // that UpdateAttributes doesn't double start an image load.
+  nsAutoString src;
+  GetImageSource(src);
+  if (!src.Equals("")) {
+    mHasImage = PR_TRUE;
+  }
+  mImageLoader.Init(this, UpdateImageFrame, nsnull, baseURL, src);
   NS_IF_RELEASE(baseURL);
 
   UpdateAttributes(aPresContext);
@@ -269,6 +226,23 @@ nsTitledButtonFrame::SetDisabled(nsAutoString aDisabled)
 	 mRenderer.SetDisabled(PR_FALSE, PR_TRUE);
 }
 
+void
+nsTitledButtonFrame::GetImageSource(nsString& aResult)
+{
+  // get the new image src
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, aResult);
+
+  // if the new image is empty
+  if (aResult.Equals("")) {
+    // get the list-style-image
+    const nsStyleList* myList =
+      (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  
+    if (myList->mListStyleImage.Length() > 0) {
+      aResult = myList->mListStyleImage;
+    }
+  }
+}
 
 void
 nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
@@ -290,70 +264,45 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
   mTitle = value;
 
   // see if the source changed
-   // get the old image src
+  // get the old image src
   nsString oldSrc ="";
   mImageLoader.GetURLSpec(oldSrc);
 
-   // get the new image src
-   nsString src = "";
-   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, src);
-
-   // if the new image is empty
-   if (src.Equals("")) {
-     // get the list-style-image
-            const nsStyleList* myList =
-          (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
-  
-          if (myList->mListStyleImage.Length() > 0) {
-            src = myList->mListStyleImage;
-          }
-   }
+  // get the new image src
+  nsAutoString src;
+  GetImageSource(src);
 
    // see if the images are different
-   if (PR_FALSE == oldSrc.Equals(src)) {
-      // if they are and the new image is not empty set it and reload
-          mImageLoader.StopLoadImage(aPresContext, this);
-                  
-         // Get rid of old image loader and start a new image load going
-          mImageLoader.DestroyLoader();
-
-          // Fire up a new image load request
-          PRIntn loadStatus;
-
-          mImageLoader.SetURLSpec(src);
-
-          // only load the image if it is valid
-          if (PR_FALSE == src.Equals(""))
-          {
-            mImageLoader.StartLoadImage(&aPresContext, this, TitledUpdateImageFrame,
-                                        PR_TRUE, loadStatus);
-
-            mSizeFrozen = PR_FALSE;
-            mHasImage = PR_TRUE;
-          } else {
-            mSizeFrozen = PR_TRUE;
-            mHasImage = PR_FALSE;
-          }
-
-        // If the image is already ready then we need to trigger a
-        // redraw because the image loader won't.
+  if (PR_FALSE == oldSrc.Equals(src)) {
+    if (!src.Equals("")) {
+      if (mImageLoader.IsImageSizeKnown()) {
+        mImageLoader.UpdateURLSpec(&aPresContext, src);
+        PRUint32 loadStatus = mImageLoader.GetLoadStatus();
         if (loadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY) {
-          // XXX Stuff this into a method on nsIPresShell/Context
-          nsRect bounds;
-          nsPoint offset;
-          nsIView* view;
-          GetOffsetFromView(offset, &view);
-          nsIViewManager* vm;
-          view->GetViewManager(vm);
-          bounds.x = offset.x;
-          bounds.y = offset.y;
-          bounds.width = mRect.width;
-          bounds.height = mRect.height;
-          vm->UpdateView(view, bounds, 0);
-          NS_RELEASE(vm);
+          // Trigger a paint now because image-loader won't if the
+          // image is already loaded and ready to go.
+          Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_FALSE);
         }
-   }
-
+      }
+      else {
+        // Force a reflow when the image size isn't already known
+        if (nsnull != mContent) {
+          nsIDocument* document = nsnull;
+          mContent->GetDocument(document);
+          if (nsnull != document) {
+            document->ContentChanged(mContent, nsnull);
+            NS_RELEASE(document);
+          }
+        }
+      }
+      mSizeFrozen = PR_FALSE;
+      mHasImage = PR_TRUE;
+    }
+    else {
+      mSizeFrozen = PR_TRUE;
+      mHasImage = PR_FALSE;
+    }
+  }
 }
 
 
@@ -709,8 +658,8 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
 
 void
 nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nsHTMLReflowMetrics& aDesiredSize)
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
@@ -725,21 +674,19 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 			aDesiredSize.width = v;
 			aDesiredSize.height = v;
 	  } else {
+      // Ask the image loader for the *intrinsic* image size
+      mImageLoader.GetDesiredSize(aPresContext, nsnull, aDesiredSize);
 
-		// Ask the image loader for the desired size
-		mImageLoader.GetDesiredSize(aPresContext, aReflowState,
-									this, TitledUpdateImageFrame,
-									aDesiredSize);
+      if (aDesiredSize.width == 1 || aDesiredSize.height == 1)
+      {
+        // Use temporary size of 30x30 pixels until the size arrives
+        float p2t;
+        aPresContext->GetScaledPixelsToTwips(&p2t);
+        int v = NSIntPixelsToTwips(30, p2t);
 
-		if (aDesiredSize.width == 1 && aDesiredSize.height == 1)
-		{
-			float p2t;
-			aPresContext->GetScaledPixelsToTwips(&p2t);
-			int v = NSIntPixelsToTwips(30, p2t);
-
-			aDesiredSize.width = v;
-			aDesiredSize.height = v;
-		}
+        aDesiredSize.width = v;
+        aDesiredSize.height = v;
+      }
 
 	  }
 	}
