@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -49,15 +49,24 @@ public:
 	NS_IMETHOD			GetNumVisibleMessages(PRInt32 *result)  = 0;
 	NS_IMETHOD			GetImapUidValidity(PRInt32 *result)  = 0;
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity)  = 0;
-
+    NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) = 0;
+    NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) = 0;
+    NS_IMETHOD			GetCSID(PRInt16 *result) = 0;
+    
 	NS_IMETHOD			SetVersion(PRUint32 version)  = 0;
 	NS_IMETHOD			GetVersion(PRUint32 *result) = 0;
 
 	NS_IMETHOD			GetLastMessageLoaded(nsMsgKey *result) = 0;
 	NS_IMETHOD			SetLastMessageLoaded(nsMsgKey lastLoaded) = 0;
 
+	NS_IMETHOD			GetFolderSize(PRUint32 *size) = 0;
 	NS_IMETHOD			SetFolderSize(PRUint32 size) = 0;
+	NS_IMETHOD			GetFolderDate(time_t *date) = 0;
 	NS_IMETHOD			SetFolderDate(time_t date) = 0;
+
+    NS_IMETHOD			GetDiskVersion(int *version) = 0;
+
+    NS_IMETHOD          ChangeExpungedBytes(PRInt32 delta) = 0;
 
 	NS_IMETHOD			GetProperty(const char *propertyName, nsString &resultProperty) = 0;
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr) = 0;

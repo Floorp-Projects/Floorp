@@ -351,6 +351,9 @@ extern nsIMdbFactory *NS_NewIMdbFactory();
 	if (!gMDBFactory)
 	{
 		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
+#if 0
+        nsComponentManager::CreateInstance(
+#endif
 	}
 	return gMDBFactory;
 }

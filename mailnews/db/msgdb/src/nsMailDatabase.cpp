@@ -44,7 +44,7 @@ nsMailDatabase::~nsMailDatabase()
 	PRBool			newFile = PR_FALSE;
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
-	nsDBFolderInfo	*folderInfo = NULL;
+	nsIDBFolderInfo	*folderInfo = NULL;
 
 	*pMessageDB = NULL;
 
@@ -99,15 +99,21 @@ nsMailDatabase::~nsMailDatabase()
 			if (!newFile && summaryFileExists && !upgrading)
 			{
 				PRInt32 numNewMessages;
+                PRUint32 folderSize;
+                time_t  folderDate;
 
 				folderInfo->GetNumNewMessages(&numNewMessages);
-
-				if (folderInfo->m_folderSize != st.st_size ||
-						folderInfo->m_folderDate != st.st_mtime || numNewMessages < 0)
+                folderInfo->GetFolderSize(&folderSize);
+                folderInfo->GetFolderDate(&folderDate);
+				if (folderSize != st.st_size ||
+                    folderDate != st.st_mtime ||
+                    numNewMessages < 0)
 					err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			}
 			// compare current version of db versus filed out version info.
-			if (mailDB->GetCurVersion() != folderInfo->GetDiskVersion())
+            int version;
+            folderInfo->GetDiskVersion(&version);
+			if (mailDB->GetCurVersion() != version)
 				err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 		}
 		if (err != NS_OK)
@@ -314,7 +320,8 @@ void nsMailDatabase::UpdateFolderFlag(nsIMessage *mailHdr, PRBool bSet,
 		}
 		else
 		{
-			printf("Couldn't open mail folder for update%s!\n", m_folderName);
+			printf("Couldn't open mail folder for update%s!\n",
+                   (const char*)m_folderName);
 			PR_ASSERT(PR_FALSE);
 		}
 	}

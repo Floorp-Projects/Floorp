@@ -23,7 +23,7 @@
 #include "prprf.h"
 #include "nsMsgKeyArray.h"
 #include "nsMsgDatabase.h"
-#include "nsDBFolderInfo.h"
+#include "nsIDBFolderInfo.h"
 #include "nsISupportsArray.h"
 #include "nsIPref.h"
 
@@ -36,11 +36,11 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsMsgFolder::nsMsgFolder(void)
   : nsRDFResource(), mFlags(0),
-    mNumUnreadMessages(-1),	mNumTotalMessages(0),
+    mNumUnreadMessages(0),	mNumTotalMessages(0),
+		mListeners(nsnull),
     mCsid(0),
     mDepth(0), 
-    mPrefFlags(0),
-		mListeners(nsnull)
+    mPrefFlags(0)
 {
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -1187,7 +1187,7 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 	nsresult result= NS_OK;
 	if (force || !(mPrefFlags & MSG_FOLDER_PREF_CACHED))
     {
-        nsDBFolderInfo   *folderInfo;
+        nsIDBFolderInfo   *folderInfo;
         nsMsgDatabase       *db;
         if((result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db))))
         {
@@ -1201,12 +1201,13 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
 
 				folderInfo->GetNumMessages(&mNumTotalMessages);
 				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
-			
-				//These should be put in IMAP folder only.
-//				mNumPendingTotalMessages = folderInfo->GetImapTotalPendingMessages();
-//				mNumPendingUnreadMessages = folderInfo->GetImapUnreadPendingMessages();
 
-//				mCsid = folderInfo->GetCSID();
+				//These should be put in IMAP folder only.
+				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
+				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
+
+        // folderInfo->GetCSID(&mCsid);
+        
 				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
 					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
             }
@@ -1474,8 +1475,8 @@ nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult)
     if (pos < 0)
       pos = uriLen;
 
-    PRInt32 cnt = uri.Left(folderName, pos);
-    NS_ASSERTION(cnt == pos, "something wrong with nsString");
+    NS_ASSERTION(uri.Left(folderName, pos) == pos,
+                 "something wrong with nsString");
 
     path += sep;
 
@@ -1539,8 +1540,8 @@ nsPath2URI(const char* rootURI, nsFileSpec& spec, char* *uri)
     if (pos < 0) 
       pos = pathStrLen;
 
-    PRInt32 cnt = pathStr.Left(folderName, pos);
-    NS_ASSERTION(cnt == pos, "something wrong with nsString");
+    NS_ASSERTION(pathStr.Left(folderName, pos) == pos,
+                 "something wrong with nsString");
 
     pathStr.Cut(0, pos + sepLen);
     pathStrLen -= pos + sepLen;

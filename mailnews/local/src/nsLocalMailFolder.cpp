@@ -692,7 +692,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(nsString& prettyName)
   return NS_OK;
 }
 
-nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db)
+nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsMsgDatabase **db)
 {
     nsMailDatabase  *mailDB;
 

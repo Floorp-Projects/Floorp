@@ -101,7 +101,7 @@ public:
 	NS_IMETHOD RememberPassword(char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
-  virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db);
+  virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
 

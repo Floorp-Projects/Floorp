@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -63,6 +63,9 @@ public:
 	NS_IMETHOD			GetNumVisibleMessages(PRInt32 *result) ;
 	NS_IMETHOD			GetImapUidValidity(PRInt32 *result) ;
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
+	NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) ;
+	NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) ;
+	NS_IMETHOD			GetCSID(PRInt16 *result) ;
 
 	NS_IMETHOD			SetVersion(PRUint32 version) ;
 	NS_IMETHOD			GetVersion(PRUint32 *result);
@@ -70,9 +73,15 @@ public:
 	NS_IMETHOD			GetLastMessageLoaded(nsMsgKey *result);
 	NS_IMETHOD			SetLastMessageLoaded(nsMsgKey lastLoaded);
 
+	NS_IMETHOD			GetFolderSize(PRUint32 *size);
 	NS_IMETHOD			SetFolderSize(PRUint32 size);
+	NS_IMETHOD			GetFolderDate(time_t *date);
 	NS_IMETHOD			SetFolderDate(time_t date);
 
+    NS_IMETHOD			GetDiskVersion(int *version);
+
+    NS_IMETHOD			ChangeExpungedBytes(PRInt32 delta);
+  
 	NS_IMETHOD			GetProperty(const char *propertyName, nsString &resultProperty);
 	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr);
 	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
@@ -80,7 +89,6 @@ public:
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
 	// accessor methods.
-	int					GetDiskVersion();
 
 	PRBool				AddLaterKey(nsMsgKey key, time_t *until);
 	PRInt32				GetNumLatered();
@@ -96,13 +104,10 @@ public:
 	void				SetSortInfo(nsMsgSortType, nsMsgSortOrder);
 	void				GetSortInfo(nsMsgSortType *, nsMsgSortOrder *);
 	PRBool				TestFlag(PRInt32 flags);
-	PRInt16				GetCSID() ;
 	void				SetCSID(PRInt16 csid) ;
 	PRInt16				GetIMAPHierarchySeparator() ;
 	void				SetIMAPHierarchySeparator(PRInt16 hierarchySeparator) ;
-	PRInt32				GetImapTotalPendingMessages() ;
 	void				ChangeImapTotalPendingMessages(PRInt32 delta);
-	PRInt32				GetImapUnreadPendingMessages() ;
 	void				ChangeImapUnreadPendingMessages(PRInt32 delta) ;
 	
 

@@ -27,10 +27,10 @@
 #include "nsIDBChangeListener.h"
 #include "nsMsgMessageFlags.h"
 #include "nsISupportsArray.h"
+#include "nsDBFolderInfo.h"
 
 class nsThreadMessageHdr;
 class ListContext;
-class nsDBFolderInfo;
 class nsMsgKeyArray;
 class nsNewsSet;
 
@@ -168,7 +168,7 @@ public:
     NS_IMETHOD IsHeaderRead(nsIMessage *hdr, PRBool *pRead);
 
 	static nsIMdbFactory	*GetMDBFactory();
-	nsDBFolderInfo			*GetDBFolderInfo() {return m_dbFolderInfo;}
+	nsIDBFolderInfo			*GetDBFolderInfo() {return m_dbFolderInfo;}
 	nsIMdbEnv				*GetEnv() {return m_mdbEnv;}
 	nsIMdbStore				*GetStore() {return m_mdbStore;}
 	virtual PRUint32		GetCurVersion();

@@ -29,7 +29,7 @@
 #include "nsIMsgFolder.h" /* include the interface we are going to support */
 #include "nsRDFResource.h"
 #include "nsIRDFResourceFactory.h"
-#include "nsDBFolderInfo.h"
+#include "nsIDBFolderInfo.h"
 #include "nsMsgDatabase.h"
 
  /* 
@@ -274,7 +274,7 @@ public:
   NS_IMETHOD GetUsersName(char **userName);
   NS_IMETHOD GetHostName(char **hostName);
 
- virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db) = 0;
+ virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsMsgDatabase **db) = 0;
  	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
 
 
@@ -302,8 +302,8 @@ protected:
   // These values are used for tricking the front end into thinking that we have more 
   // messages than are really in the DB.  This is usually after and IMAP message copy where
   // we don't want to do an expensive select until the user actually opens that folder
-  PRUint32 mNumPendingUnreadMessages;
-  PRUint32 mNumPendingTotalMessages;
+  PRInt32 mNumPendingUnreadMessages;
+  PRInt32 mNumPendingTotalMessages;
 
 	PRBool mIsCachable;
 

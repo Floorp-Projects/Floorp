@@ -20,7 +20,7 @@
 #include "nsParseMailbox.h"
 #include "nsIMessage.h"
 #include "nsMailDatabase.h"
-#include "nsDBFolderInfo.h"
+#include "nsIDBFolderInfo.h"
 #include "nsIByteBuffer.h"
 #include "nsIInputStream.h"
 #include "nsMsgLocalFolderHdrs.h"
@@ -229,7 +229,7 @@ void nsMsgMailboxParser::UpdateDBFolderInfo()
 // update folder info in db so we know not to reparse.
 void nsMsgMailboxParser::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *mailboxName)
 {
-	nsDBFolderInfo *folderInfo = mailDB->GetDBFolderInfo();
+	nsIDBFolderInfo *folderInfo = mailDB->GetDBFolderInfo();
 
 	// ### wrong - use method on db.
 	mailDB->SetSummaryValid(PR_TRUE);
@@ -254,10 +254,10 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
         (void)m_newMsgHdr->GetFlags(&flags);
 		if (flags & MSG_FLAG_EXPUNGED)
 		{
-			nsDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
+			nsIDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
             PRUint32 size;
             (void)m_newMsgHdr->GetMessageSize(&size);
-			folderInfo->m_expungedBytes += size;
+            folderInfo->ChangeExpungedBytes(size);
 			if (m_newMsgHdr)
 			{
 				m_newMsgHdr->Release();;
@@ -276,9 +276,9 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 	}
 	else if (m_mailDB)
 	{
-		nsDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
+		nsIDBFolderInfo *folderInfo = m_mailDB->GetDBFolderInfo();
 		if (folderInfo)
-			folderInfo->m_expungedBytes += m_position - m_envelope_pos;
+			folderInfo->ChangeExpungedBytes(m_position - m_envelope_pos);
 	}
 	return 0;
 }
@@ -1356,7 +1356,7 @@ nsParseNewMailState::Init(MSG_Master *master, nsFileSpec &folder)
 			}
 		}
 	}
-#endif DOING_MDN
+#endif // DOING_MDN
 	m_usingTempDB = FALSE;
 	m_tmpdbName = NULL;
 	m_disableFilters = FALSE;

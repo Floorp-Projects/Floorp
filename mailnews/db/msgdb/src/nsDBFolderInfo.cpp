@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -69,12 +69,12 @@ nsDBFolderInfo::QueryInterface(REFNSIID iid, void** result)
 
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
-  : m_expiredMarkColumnToken(0),
-    m_expiredMark(0),
+  : m_expiredMark(0),
     m_viewType(0),
-    m_numVisibleMessagesColumnToken(0),
     m_flags(0),
-    m_lastMessageLoaded(0)
+    m_lastMessageLoaded(0),
+    m_numVisibleMessagesColumnToken(0),
+  m_expiredMarkColumnToken(0)
 {
     NS_INIT_REFCNT();
 	m_mdbTable = NULL;
@@ -272,10 +272,26 @@ NS_IMETHODIMP nsDBFolderInfo::SetHighWater(nsMsgKey highWater, PRBool force /* =
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDBFolderInfo::GetFolderSize(PRUint32 *size)
+{
+  if (!size) return NS_ERROR_NULL_POINTER;
+  *size = m_folderSize;
+  return NS_OK;
+}
+
 NS_IMETHODIMP	nsDBFolderInfo::SetFolderSize(PRUint32 size)
 {
 	m_folderSize = size;
 	return SetUint32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
+}
+
+NS_IMETHODIMP
+nsDBFolderInfo::GetFolderDate(time_t *folderDate)
+{
+  if (!folderDate) return NS_ERROR_NULL_POINTER;
+  *folderDate = m_folderDate;
+  return NS_OK;
 }
 
 NS_IMETHODIMP	nsDBFolderInfo::SetFolderDate(time_t folderDate)
@@ -297,9 +313,18 @@ NS_IMETHODIMP nsDBFolderInfo::SetExpiredMark(nsMsgKey expiredKey)
 	return SetUint32PropertyWithToken(m_expiredMarkColumnToken, expiredKey);
 }
 
-int	nsDBFolderInfo::GetDiskVersion() 
+NS_IMETHODIMP nsDBFolderInfo::GetDiskVersion(int *version) 
 {
-	return m_version;
+    if (!version) return NS_ERROR_NULL_POINTER;
+	*version = m_version;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDBFolderInfo::ChangeExpungedBytes(PRInt32 delta)
+{
+    m_expungedBytes += delta;
+    return NS_OK;
 }
 
 PRBool nsDBFolderInfo::AddLaterKey(nsMsgKey key, time_t *until)
@@ -469,9 +494,12 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 	return (m_flags & flags) != 0;
 }
 
-PRInt16	nsDBFolderInfo::GetCSID() 
+NS_IMETHODIMP
+nsDBFolderInfo::GetCSID(PRInt16 *result) 
 {
-	return m_csid;
+    if (!result) return NS_ERROR_NULL_POINTER;
+	*result = m_csid;
+    return NS_OK;
 }
 
 void nsDBFolderInfo::SetCSID(PRInt16 csid) 
@@ -489,9 +517,12 @@ void nsDBFolderInfo::SetIMAPHierarchySeparator(PRInt16 hierarchySeparator)
 	m_IMAPHierarchySeparator = hierarchySeparator; 
 }
 
-PRInt32	nsDBFolderInfo::GetImapTotalPendingMessages() 
+NS_IMETHODIMP
+nsDBFolderInfo::GetImapTotalPendingMessages(PRInt32 *result) 
 {
-	return m_totalPendingMessages;
+    if (!result) return NS_ERROR_NULL_POINTER;
+	*result = m_totalPendingMessages;
+    return NS_OK;
 }
 
 void nsDBFolderInfo::ChangeImapTotalPendingMessages(PRInt32 delta)
@@ -500,9 +531,12 @@ void nsDBFolderInfo::ChangeImapTotalPendingMessages(PRInt32 delta)
 	SetInt32PropertyWithToken(m_totalPendingMessagesColumnToken, m_totalPendingMessages);
 }
 
-PRInt32	nsDBFolderInfo::GetImapUnreadPendingMessages() 
+NS_IMETHODIMP
+nsDBFolderInfo::GetImapUnreadPendingMessages(PRInt32 *result) 
 {
-	return m_unreadPendingMessages;
+    if (!result) return NS_ERROR_NULL_POINTER;
+	*result = m_unreadPendingMessages;
+    return NS_OK;
 }
 
 void nsDBFolderInfo::ChangeImapUnreadPendingMessages(PRInt32 delta) 
