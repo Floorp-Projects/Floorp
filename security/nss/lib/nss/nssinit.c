@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.34 2002/01/23 04:42:21 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.35 2002/01/23 15:36:54 ian.mcgreer%sun.com Exp $
  */
 
 #include <ctype.h>
@@ -273,20 +273,23 @@ static const char *dllname =
 #define FILE_SEP '/'
 
 static void
-nss_FindExternalRoot(char *dbname)
+nss_FindExternalRoot(const char *dbpath)
 {
-	char *path, *cp, **cur_name;
-	int len = PORT_Strlen(dbname);
-	int path_len = len - 1;
+	char *path;
+	int len, path_len;
 
+	path_len = PORT_Strlen(dbpath);
+	len = path_len + PORT_Strlen(dllname) + 2; /* FILE_SEP + NULL */
 	
-	path = PORT_Alloc(len+sizeof(dllname));
+	path = PORT_Alloc(len);
 	if (path == NULL) return;
 
 	/* back up to the top of the directory */
-	PORT_Memcpy(path,dbname,path_len);
-	path[path_len++] = FILE_SEP;
-	PORT_Memcpy(&path[path_len],*cur_name,PORT_Strlen(*cur_name)+1);
+	PORT_Memcpy(path,dbpath,path_len);
+	if (path[path_len] != FILE_SEP) {
+	    path[path_len++] = FILE_SEP;
+	}
+	PORT_Memcpy(&path[path_len],dllname,PORT_Strlen(dllname));
 	(void) SECMOD_AddNewModule("Root Certs",path, 0, 0);
 	PORT_Free(path);
 	return;
