@@ -3798,13 +3798,13 @@ NS_IMETHODIMP nsHTMLEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLa
 
 // this will NOT find aAttribute unless aAttribute has a non-null value
 // so singleton attributes like <Table border> will not be matched!
-void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
-                                              nsIAtom        *aProperty, 
+void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode        *aNode,
+                                              nsIAtom           *aProperty, 
                                               const nsAReadableString *aAttribute, 
                                               const nsAReadableString *aValue, 
-                                              PRBool         &aIsSet,
-                                              nsIDOMNode    **aStyleNode,
-                                              nsString       *outValue) const
+                                              PRBool            &aIsSet,
+                                              nsIDOMNode       **aStyleNode,
+                                              nsAWritableString *outValue) const
 {
   nsresult result;
   aIsSet = PR_FALSE;  // must be initialized to false for code below to work

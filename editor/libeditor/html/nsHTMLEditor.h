@@ -538,13 +538,13 @@ protected:
     * @param aStyleNode [OUT] set to the node representing <aProperty aAttribute=aValue>, if found.
     *                   null if aIsSet is returned as PR_FALSE;
     */
-  virtual void IsTextPropertySetByContent(nsIDOMNode     *aNode,
-                                          nsIAtom        *aProperty, 
+  virtual void IsTextPropertySetByContent(nsIDOMNode        *aNode,
+                                          nsIAtom           *aProperty, 
                                           const nsAReadableString *aAttribute,
                                           const nsAReadableString *aValue,
-                                          PRBool         &aIsSet,
-                                          nsIDOMNode    **aStyleNode,
-                                          nsString       *outValue = nsnull) const;
+                                          PRBool            &aIsSet,
+                                          nsIDOMNode       **aStyleNode,
+                                          nsAWritableString *outValue = nsnull) const;
 
   /** style-based query returns PR_TRUE if (aProperty, aAttribute) is set in aSC.
     * WARNING: not well tested yet since we don't do style-based queries anywhere.
