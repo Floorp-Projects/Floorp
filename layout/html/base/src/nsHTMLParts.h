@@ -189,8 +189,6 @@ NS_NewWBRFrame(nsIPresShell* aPresShell, nsIFrame** aResult) {
   return NS_NewEmptyFrame(aPresShell, aResult);
 }
 nsresult
-NS_NewScrollFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-nsresult
 NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
 NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
