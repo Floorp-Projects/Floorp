@@ -858,6 +858,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     $substs{"summary"} = $values{'short_desc'};
     $substs{"reasonsheader"} = join(" ", @reasons);
     $substs{"reasonsbody"} = $reasonsbody;
+    $substs{"space"} = " ";
     
     my $template = Param("newchangedmail");
     
