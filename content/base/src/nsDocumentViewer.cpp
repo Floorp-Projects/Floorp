@@ -1571,8 +1571,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 
    // It's only valid to access this from a top frame.  Doesn't work from 
    // sub-frames.
-   if(docShellParent)
-      return NS_ERROR_FAILURE;
+   NS_ENSURE_TRUE(!docShellParent, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIPresShell> presShell;
    GetPresShell(*getter_AddRefs(presShell));
