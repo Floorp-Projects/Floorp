@@ -82,6 +82,7 @@ components/webBrowser_setup.xpt
 
 
 ; gfx
+components/libtimer_gtk.so
 components/libgfx_gtk.so                     
 components/gfx.xpt 
 
