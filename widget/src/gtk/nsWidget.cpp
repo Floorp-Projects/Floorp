@@ -29,7 +29,7 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include <gdk/gdkx.h>
-
+#include "nsIRollupListener.h"
 
 #ifdef USE_XIM
 #include "nsIServiceManager.h"
@@ -42,6 +42,11 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
+
+
+static nsIRollupListener *gRollupListener = nsnull;
+static nsIWidget *gRollupWidget = nsnull;
+
 
 //
 // Keep track of the last widget being "dragged"
@@ -313,6 +318,30 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+{
+  //  printf("nsWindow::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture);
+  
+  if (aDoCapture) {
+    //    gtk_grab_add(mWidget);
+    NS_IF_RELEASE(gRollupListener);
+    NS_IF_RELEASE(gRollupWidget);
+    gRollupListener = aListener;
+    NS_ADDREF(aListener);
+    gRollupWidget = this;
+    NS_ADDREF(this);
+  } else {
+    //    gtk_grab_remove(mWidget);
+    NS_IF_RELEASE(gRollupListener);
+    //gRollupListener = nsnull;
+    NS_IF_RELEASE(gRollupWidget);
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsWidget::SetModal(void)
 {
@@ -1630,8 +1659,19 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseEvent event;
   PRUint32 eventType = 0;
 
+  if (gRollupWidget && gRollupListener)
+  {
+    GtkWidget *rollupWidget = GTK_WIDGET(gRollupWidget->GetNativeData(NS_NATIVE_WIDGET));
+    GtkWidget *thisWidget = GTK_WIDGET(GetNativeData(NS_NATIVE_WIDGET));
+    if (rollupWidget != thisWidget && gtk_widget_get_toplevel(thisWidget) != rollupWidget)
+    {
+      gRollupListener->Rollup();
+      return;
+    }
+  }
+
 #ifdef DEBUG_pavlov
-  printf("button press\n");
+  //  printf("button press\n");
 #endif
 
   // Switch on single, double, triple click.

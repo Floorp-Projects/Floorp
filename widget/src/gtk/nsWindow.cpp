@@ -42,6 +42,7 @@
 
 #include "stdio.h"
 
+
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -641,6 +642,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     if (mIsToplevel && mShell)
     {
       gtk_widget_hide(mShell);
+      gtk_widget_unmap(mShell);
     } 
 
     gtk_widget_hide(mWidget);
@@ -768,7 +770,10 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
       if (GTK_WIDGET_VISIBLE(mShell))
+      {
         gtk_widget_hide(mShell);
+        gtk_widget_unmap(mShell);
+      }
     }
     else
     {
@@ -776,6 +781,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
       gtk_widget_hide(mWidget);
+      gtk_widget_unmap(mWidget);
     }
   }
   else
@@ -827,8 +833,9 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
                                PRInt32 aHeight, PRBool aRepaint)
 {
-  Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
+  // resize can cause a show to happen, so do this last
+  Resize(aWidth,aHeight,aRepaint);
   return NS_OK;
 }
 
