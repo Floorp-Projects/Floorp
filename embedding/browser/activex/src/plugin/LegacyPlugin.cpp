@@ -566,4 +566,6 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
 }
 
+#ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 #include "_stubs/MozAxPlugin.c"
+#endif
