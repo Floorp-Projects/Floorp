@@ -304,7 +304,7 @@ endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
-LOCAL_INCLUDES	= -I$(srcdir)
+LOCAL_INCLUDES	= -I$(srcdir) -I.
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 mozilla.1: mozilla.man.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
