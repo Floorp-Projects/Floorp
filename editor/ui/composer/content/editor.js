@@ -1384,6 +1384,12 @@ function HideInapplicableUIElements()
     var spellingMenuItem = document.getElementById("menu_checkspelling");
     if (spellingMenuItem)
       spellingMenuItem.setAttribute("hidden", "true");
+
+    // Spelling item is in its own menu block, so remove it
+    // (we can't use "hidden" since class="hide-in-IM" CSS rule overrides!)
+    var spellingSepItem  = document.getElementById("sep_checkspelling");
+    if (spellingSepItem)
+      spellingSepItem.parentNode.removeChild(spellingSepItem);
   }
 
 }
