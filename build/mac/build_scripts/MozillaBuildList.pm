@@ -1243,7 +1243,7 @@ sub BuildImglibProjects()
 
 sub BuildImglib2Projects()
 {
-    #unless( $main::options{useimg2} ) { return; }
+    unless( $main::options{useimg2} ) { return; }
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
