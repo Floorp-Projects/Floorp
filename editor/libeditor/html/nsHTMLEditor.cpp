@@ -161,9 +161,6 @@ static char hrefText[] = "href";
 static char anchorTxt[] = "anchor";
 static char namedanchorText[] = "namedanchor";
 
-#define kBaseEditorStyleSheet NS_LITERAL_STRING("chrome://editor/content/EditorOverride.css")
-#define kNormalStyleSheet NS_LITERAL_STRING("chrome://editor/content/EditorContent.css")
-
 nsCOMPtr<nsIParserService> nsHTMLEditor::sParserService;
 PRInt32 nsHTMLEditor::sInstanceCount = 0;
 
@@ -361,11 +358,6 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   }
 
   if (NS_FAILED(rulesRes)) return rulesRes;
-
-  result = AddOverrideStyleSheet(kBaseEditorStyleSheet);
-  if (NS_FAILED(result)) return result;
-  return AddOverrideStyleSheet(kNormalStyleSheet);
-
   return result;
 }
 
