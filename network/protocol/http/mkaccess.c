@@ -80,11 +80,6 @@ extern int MK_ACCESS_COOKIES_COOKIE_WILL_PERSIST;
 #endif
 extern int MK_ACCESS_COOKIES_SET_IT;
 extern int MK_ACCESS_YOUR_COOKIES;
-extern int MK_ACCESS_MAXIMUM_COOKS;
-extern int MK_ACCESS_COOK_COUNT;
-extern int MK_ACCESS_MAXIMUM_COOKS_PER_SERV;
-extern int MK_ACCESS_MAXIMUM_COOK_SIZE;
-extern int MK_ACCESS_NO_COOKIES;
 extern int MK_ACCESS_NAME;
 extern int MK_ACCESS_VALUE;
 extern int MK_ACCESS_HOST;
@@ -1734,7 +1729,6 @@ net_AddCookiePermission
 }
 #endif
 
-
 /* Java script is calling NET_SetCookieString, netlib is calling 
 ** this via NET_SetCookieStringFromHttp.
 */
@@ -3376,7 +3370,6 @@ NET_AskForProxyAuth(MWContext * context,
 #if defined(CookieManagement)
 #include "htmldlgs.h"
 extern int XP_CERT_PAGE_STRINGS;
-extern int SA_VIEW_BUTTON_LABEL;
 extern int SA_REMOVE_BUTTON_LABEL;
 
 #define BUFLEN 5000
@@ -3606,6 +3599,9 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
     net_CookiePermissionStruct *cookperm;
     CookieViewerDialog *dlg;
     int i;
+    char * view_sites = NULL;
+    char * view_cookies = NULL;
+    char * heading = NULL;
 
     static XPDialogInfo dialogInfo = {
 	0,
@@ -3620,6 +3616,8 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 	return;
     }
     StrAllocCopy(buffer2, "");
+    StrAllocCopy (view_cookies, XP_GetString(MK_ACCESS_VIEW_COOKIES));
+    StrAllocCopy (view_sites, XP_GetString(MK_ACCESS_VIEW_SITES));
 
     /* generate initial section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -3741,11 +3739,39 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
     cookie_list=net_cookie_list;
     cookie = NULL;
     while (cookie = NextCookieAfter(cookie, &cookieNum)) {
+	char * name = NULL;
+	char * value = NULL;
+	char * domain_or_host = NULL;
+	char * path = NULL;
+	char * secure = NULL;
+	char * yes_or_no = NULL;
+	char * expires = NULL;
 	char * expireDate = NULL;
-	StrAllocCopy (expireDate, ctime(&(cookie->expires)));
-        if (expireDate && (expireDate[strlen(expireDate)-1] == '\n')) {
+
+	StrAllocCopy (name, XP_GetString(MK_ACCESS_NAME));
+	StrAllocCopy (value, XP_GetString(MK_ACCESS_VALUE));
+	StrAllocCopy (domain_or_host,
+	    cookie->is_domain
+		? XP_GetString(MK_ACCESS_DOMAIN)
+		: XP_GetString(MK_ACCESS_HOST));
+	StrAllocCopy (path, XP_GetString(MK_ACCESS_PATH));
+	StrAllocCopy (secure, XP_GetString(MK_ACCESS_SECURE));
+	StrAllocCopy (yes_or_no,
+	    HG78111
+		? XP_GetString(MK_ACCESS_YES)
+		: XP_GetString(MK_ACCESS_NO));
+	StrAllocCopy (expires, XP_GetString(MK_ACCESS_EXPIRES));
+	StrAllocCopy (expireDate,
+	    cookie->expires
+		? ctime(&(cookie->expires))
+		: XP_GetString(MK_ACCESS_END_OF_SESSION));
+
+	if (!expireDate) {
+            StrAllocCopy (expireDate, "");
+        } else if (expireDate[strlen(expireDate)-1] == '\n') {
             expireDate[strlen(expireDate)-1] = ' ';
 	}
+
 	g += PR_snprintf(buffer+g, BUFLEN-g,
 "       case %d:\n"
 "         top.frames[prop_frame].document.write(\n"
@@ -3758,26 +3784,34 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "         );\n"
 "         break;\n",
 	    cookieNum,
-	    XP_GetString(MK_ACCESS_NAME), cookie->name,
-	    XP_GetString(MK_ACCESS_VALUE), cookie->cookie,
-	    (cookie->is_domain
-		? XP_GetString(MK_ACCESS_DOMAIN)
-		: XP_GetString(MK_ACCESS_DOMAIN)),
-		cookie->host,
-	    XP_GetString(MK_ACCESS_PATH), cookie->path,
-	    XP_GetString(MK_ACCESS_SECURE),
-		(HG78111 ?
-		    XP_GetString(MK_ACCESS_YES): XP_GetString(MK_ACCESS_NO)),
-	    XP_GetString(MK_ACCESS_EXPIRES),
-		cookie->expires
-                    ? (expireDate ? expireDate : "")
-		    : XP_GetString(MK_ACCESS_END_OF_SESSION)
+	    name, cookie->name,
+	    value, cookie->cookie,
+	    domain_or_host, cookie->host,
+	    path, cookie->path,
+	    secure, yes_or_no,
+	    expires, expireDate
 	    );
 	FLUSH_BUFFER
+	PR_FREEIF(name);
+	PR_FREEIF(value);
+	PR_FREEIF(domain_or_host);
+	PR_FREEIF(path);
+	PR_FREEIF(secure);
+	PR_FREEIF(yes_or_no);
+	PR_FREEIF(expires);
 	PR_FREEIF(expireDate);
+	/* caveat: It would have been simpler to not allocate and free the
+	 * above strings but rather just use the XP_GetString(...) parameters
+	 * in the call to PR_snprintf.	However there are only four buffers
+	 * that XP_GetString uses and it keeps recycling them.	Since the
+	 * above would require more than four parameters which are calls to
+	 * XP_GetString, some of the returned buffers would be overwritten
+         * before they could be used.  Hence the simpler approach wouldn't work
+	 */
     }
 
     /* generate next section of html file */
+    StrAllocCopy (heading, XP_GetString(MK_ACCESS_COOKIES_ACCEPTED));
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      }\n"
 "      top.frames[prop_frame].document.close();\n"
@@ -3828,11 +3862,9 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "                          \"MULTIPLE \" +\n"
 "                          \"onchange=top.ViewCookieSelected(selname.selectedIndex);>\"\n"
 "      );\n",
-	    XP_GetString(MK_ACCESS_VIEW_COOKIES),
-	    XP_GetString(MK_ACCESS_VIEW_SITES),
-	    XP_GetString(MK_ACCESS_COOKIES_ACCEPTED)
-	);
+	view_cookies, view_sites, heading);
     FLUSH_BUFFER
+    PR_FREEIF(heading);
 
     /* generate the html for the list of cookies in alphabetical order */
     cookie_list=net_cookie_list;
@@ -3855,6 +3887,7 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
     net_unlock_cookie_list();
 
     /* generate next section of html file */
+    StrAllocCopy (heading, XP_GetString(MK_ACCESS_COOKIES_PERMISSION));
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[list_frame].document.write(\n"
 "                  \"</SELECT>\" +\n"
@@ -3912,10 +3945,9 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "                  \"<P>\" +\n"
 "                  \"<SELECT NAME=selname SIZE=15 MULTIPLE> \"\n"
 "      );\n",
-	    XP_GetString(MK_ACCESS_VIEW_COOKIES),
-	    XP_GetString(MK_ACCESS_VIEW_SITES),
-	    XP_GetString(MK_ACCESS_COOKIES_PERMISSION)
-	);
+	view_cookies, view_sites, heading);
+    FLUSH_BUFFER
+    PR_FREEIF(heading);
     FLUSH_BUFFER
 
     /* generate the html for the list of cookie permissions */
@@ -3965,8 +3997,7 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "          \"&nbsp;\" +\n"
 "          \"<INPUT type=BUTTON \" +\n"
 "                 \"value=Remove \" +\n"
-"                 \"onclick=top.DeleteItemSelected();\" +\n"
-"                 \"name=BUTTON>\" +\n"
+"                 \"onclick=top.DeleteItemSelected();>\" +\n"
 "          \"<DIV align=right>\" +\n"
 "            \"<INPUT type=BUTTON value=OK width=80 onclick=parent.clicker(this,window.parent)>\" +\n"
 "            \" &nbsp;&nbsp;\" +\n"
@@ -4073,10 +4104,10 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 	);
     FLUSH_BUFFER
 
-    /* free buffer since it is no longer needed */
-    if (buffer) {
-	PR_Free(buffer);
-    }
+    /* free some strings that are no longer needed */
+    PR_FREEIF(view_cookies);
+    PR_FREEIF(view_sites);
+    PR_FREEIF(buffer);
 
     /* put html just generated into strings->arg[2] and invoke HTML dialog */
     if (buffer2) {
