@@ -92,6 +92,7 @@ protected:
     nsresult SendData(char *aBuffer, PRUint32 aLen);
     nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                           PRUint32 &aLen, PRBool *_retval);
+    nsresult ParseContentType(char *type);
     PRInt32  PushOverLine(char *&aPtr, PRUint32 &aLen);
     char *FindToken(char *aCursor, PRUint32 aLen);
     nsresult BufferData(char *aData, PRUint32 aLen);
@@ -108,6 +109,7 @@ protected:
                                         // one channel per part.
     nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;
+    nsCString           mContentCharset;
     PRInt32             mContentLength;
     
     char                *mBuffer;
