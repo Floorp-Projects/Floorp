@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.82 $ ';
+$::UtilsVersion = '$Revision: 1.83 $ ';
 
 package TinderUtils;
 
@@ -953,9 +953,13 @@ sub run_all_tests {
 		# Figure out the average startup time.
 		$avg_startuptime = $agg_startuptime / $startup_count;
 		print_log "Average startup time: $avg_startuptime\n";
-		print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
-		print_log "\n\nTinderboxPrint:Ts:$avg_startuptimems\n\n";
-		
+
+		my $min_startuptime = min(@times);
+		print_log "Minimum startup time: $min_startuptime\n";
+
+		# print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
+		print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
+
 		# Report data back to server
 		if($Settings::TestsPhoneHome) {
 		  print_log "phonehome = 1\n";
@@ -988,6 +992,16 @@ sub BinaryExists {
         1;
     }
 }
+
+sub min() {
+    my $m = $_[0];
+    my $i;
+    foreach $i (@_) {
+	$m = $i if ($m > $i);
+    }
+    return $m;
+}
+
 
 sub DeleteBinary {
     my ($binary) = @_;
