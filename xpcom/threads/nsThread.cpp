@@ -577,21 +577,20 @@ nsThreadPool::GetRequest(nsIThread* currentThread)
     nsCOMPtr<nsIRunnable> request;
     nsAutoLock lock(mLock);
 
-    PRUint32 requestCnt;
+    PRInt32 requestCnt;
     while (PR_TRUE) {
         requestCnt = mPendingRequests.Count();
         
         if (requestCnt > 0) {
-            PRInt32 pendingThread = 0;
+            PRInt32 pendingThread;
             PRInt32 runningPos;
-            while (PR_TRUE) {
+            for (pendingThread = 0; pendingThread < requestCnt; ++pendingThread) {
                 request = mPendingRequests.ObjectAt(pendingThread);
 
-                // if we are breaking here, it means that either we have a bad 
-                // request in our list, or all pending requests are being run on
-                // another worker thread.  
-                if (request == nsnull) {
-                    pendingThread = -1;
+                if (!request) {
+                    NS_ERROR("Bad request in pending request list");
+                    // Make it look like we just found no runnable requests
+                    pendingThread = requestCnt;
                     break;  
                 }
 
@@ -600,10 +599,10 @@ nsThreadPool::GetRequest(nsIThread* currentThread)
                 if (runningPos == -1)
                     break;
 
-                pendingThread++;
             }
             
-            if (pendingThread != -1) {
+            if (pendingThread < requestCnt) {
+                // Found something to run
                 PRBool removed = mPendingRequests.RemoveObjectAt(pendingThread);
                 NS_ASSERTION(removed, "nsCOMArray broken");
                 PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
