@@ -196,7 +196,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
 // in the given flavor
 //
 nsresult
-nsClipboard :: PutOnClipboard ( ResType inFlavor, const void* inData, short inLen )
+nsClipboard :: PutOnClipboard ( ResType inFlavor, const void* inData, PRInt32 inLen )
 {
   nsresult errCode = NS_OK;
   

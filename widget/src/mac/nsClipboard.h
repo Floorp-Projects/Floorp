@@ -63,7 +63,7 @@ protected:
   PRBool CheckIfFlavorPresent ( ResType inMacFlavor ) ;
 
   // actually places data on the clipboard
-  nsresult PutOnClipboard ( ResType inFlavor, const void* inData, short inLen ) ;
+  nsresult PutOnClipboard ( ResType inFlavor, const void* inData, PRInt32 inLen ) ;
 
 }; // nsClipboard
 
