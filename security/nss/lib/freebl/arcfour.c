@@ -188,7 +188,7 @@ RC4_DestroyContext(RC4Context *cx, PRBool freeit)
 /*
  * Straight RC4 op.  No optimization.
  */
-SECStatus 
+static SECStatus 
 rc4_no_opt(RC4Context *cx, unsigned char *output,
            unsigned int *outputLen, unsigned int maxOutputLen,
            const unsigned char *input, unsigned int inputLen)
@@ -218,7 +218,7 @@ rc4_no_opt(RC4Context *cx, unsigned char *output,
 /*
  * Byte-at-a-time RC4, unrolling the loop into 8 pieces.
  */
-SECStatus 
+static SECStatus 
 rc4_unrolled(RC4Context *cx, unsigned char *output,
              unsigned int *outputLen, unsigned int maxOutputLen,
              const unsigned char *input, unsigned int inputLen)
@@ -334,7 +334,7 @@ rc4_unrolled(RC4Context *cx, unsigned char *output,
  * Convert input and output buffers to words before performing
  * RC4 operations.
  */
-SECStatus 
+static SECStatus 
 rc4_wordconv(RC4Context *cx, unsigned char *output,
              unsigned int *outputLen, unsigned int maxOutputLen,
              const unsigned char *input, unsigned int inputLen)
