@@ -3,4 +3,4 @@
 <!ENTITY  releaseURL            "http://www.mozilla.org/releases/">
 <!ENTITY  getNewThemesURL       "http://texturizer.net/thunderbird/themes.html">
 <!ENTITY  getNewExtensionsURL   "http://texturizer.net/thunderbird/extensions/">
-<!ENTITY  content.version       "1.6b">
+#expand <!ENTITY  content.version "__MOZILLA_REGION_VERSION__">
