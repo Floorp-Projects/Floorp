@@ -34,6 +34,7 @@ var pref = Components.classes["@mozilla.org/preferences;1"]
 var appCore = null;
 
 //cached elements/fields
+var gBrowser = null;
 var statusTextFld = null;
 var statusMeter = null;
 var throbberElement = null;
@@ -43,6 +44,7 @@ var stopContext = null;
 
 // focused frame URL
 var gFocusedURL = null;
+
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -326,7 +328,9 @@ nsXULBrowserWindow.prototype =
 
 function getBrowser()
 {
-  return document.getElementById("content");
+  if (!gBrowser)
+    gBrowser = document.getElementById("content");
+  return gBrowser;
 }
 
 function getWebNavigation()
