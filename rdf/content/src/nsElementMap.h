@@ -108,7 +108,7 @@ public:
     nsresult
     FindFirst(const nsString& aID, nsIContent** aContent);
 
-    typedef PRIntn (*nsElementMapEnumerator)(const nsString& aID,
+    typedef PRIntn (*nsElementMapEnumerator)(const PRUnichar* aID,
                                              nsIContent* aElement,
                                              void* aClosure);
 
