@@ -577,12 +577,18 @@ SECKEY_UpdateCertPQG(CERTCertificate * subjectCert)
 SECStatus
 SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
                               SECItem *params) {
-        SECStatus rv;
-	SECKEYPQGDualParams dual_params;
+    SECStatus rv;
+    SECKEYPQGDualParams dual_params;
+    SECItem newparams;
+
+    PORT_Assert(arena);
 
     if (params == NULL) return SECFailure; 
     
     if (params->data == NULL) return SECFailure;
+
+    /* make a copy of the data into the arena so QuickDER output is valid */
+    rv = SECITEM_CopyItem(arena, &newparams, params);
 
     /* Check if params use the standard format.
      * The value 0xa1 will appear in the first byte of the parameter data
@@ -590,31 +596,33 @@ SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
      * code should be changed to use a better method to detect non-standard
      * parameters.    */
 
-    if ((params->data[0] != 0xa1) &&
-        (params->data[0] != 0xa0)) {
+    if ((newparams.data[0] != 0xa1) &&
+        (newparams.data[0] != 0xa0)) {
 
+        if (SECSuccess == rv) {
             /* PQG params are in the standard format */
 
 	    /* Store DSA PQG parameters */
 	    prepare_pqg_params_for_asn1(&pubk->u.fortezza.params);
-            rv = SEC_ASN1DecodeItem(arena, &pubk->u.fortezza.params,
+            rv = SEC_QuickDERDecodeItem(arena, &pubk->u.fortezza.params,
                               SECKEY_PQGParamsTemplate,
-                              params);
+                              &newparams);
+        }
 
-	    if (rv == SECSuccess) {
+	if (SECSuccess == rv) {
 
-	        /* Copy the DSA PQG parameters to the KEA PQG parameters. */
-	        rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
-                                      &pubk->u.fortezza.params.prime);
-                if (rv != SECSuccess) return rv;
-                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
-                                      &pubk->u.fortezza.params.subPrime);
-                if (rv != SECSuccess) return rv;
-                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
-                                      &pubk->u.fortezza.params.base);
-                if (rv != SECSuccess) return rv;
-            }
-
+	    /* Copy the DSA PQG parameters to the KEA PQG parameters. */
+	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
+                                  &pubk->u.fortezza.params.prime);
+        }
+        if (SECSuccess == rv) {
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
+                                  &pubk->u.fortezza.params.subPrime);
+        }
+        if (SECSuccess == rv) {
+            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
+                                  &pubk->u.fortezza.params.base);
+        }
     } else {
 
 	dual_params.CommParams.prime.len = 0;
@@ -626,67 +634,79 @@ SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
 
         /* else the old fortezza-only wrapped format is used. */
 
-	if (params->data[0] == 0xa1) {
-            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
-				SECKEY_FortezzaPreParamTemplate, params);
-	} else {
-            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
-	   			    SECKEY_FortezzaAltPreParamTemplate, params);
+        if (SECSuccess == rv) {
+	    if (newparams.data[0] == 0xa1) {
+                rv = SEC_QuickDERDecodeItem(arena, &dual_params, 
+				    SECKEY_FortezzaPreParamTemplate, &newparams);
+	    } else {
+                rv = SEC_QuickDERDecodeItem(arena, &dual_params, 
+	   			        SECKEY_FortezzaAltPreParamTemplate, &newparams);
+            }
         }
-
-        if (rv < 0) return rv;
 	
         if ( (dual_params.CommParams.prime.len > 0) &&
              (dual_params.CommParams.subPrime.len > 0) && 
              (dual_params.CommParams.base.len > 0) ) {
             /* copy in common params */
-	    
-	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.prime,
-                                  &dual_params.CommParams.prime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.subPrime,
-                                  &dual_params.CommParams.subPrime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.base,
-                                  &dual_params.CommParams.base);
+	    if (SECSuccess == rv) {
+	        rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.prime,
+                                      &dual_params.CommParams.prime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.subPrime,
+                                      &dual_params.CommParams.subPrime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.base,
+                                      &dual_params.CommParams.base);
+            }
 
 	    /* Copy the DSA PQG parameters to the KEA PQG parameters. */
-	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
-                                  &pubk->u.fortezza.params.prime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
-                                  &pubk->u.fortezza.params.subPrime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
-                                  &pubk->u.fortezza.params.base);
-            if (rv != SECSuccess) return rv;
-
+            if (SECSuccess == rv) {
+	        rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
+                                      &pubk->u.fortezza.params.prime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
+                                      &pubk->u.fortezza.params.subPrime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
+                                      &pubk->u.fortezza.params.base);
+            }
         } else {
 
 	    /* else copy in different params */
 
 	    /* copy DSA PQG parameters */
-	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.prime,
+            if (SECSuccess == rv) {
+	        rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.prime,
                                   &dual_params.DiffParams.DiffDSAParams.prime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.subPrime,
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.subPrime,
                                   &dual_params.DiffParams.DiffDSAParams.subPrime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.base,
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.params.base,
                                   &dual_params.DiffParams.DiffDSAParams.base);
+            }
 
 	    /* copy KEA PQG parameters */
 
-	    rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
+            if (SECSuccess == rv) {
+	        rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.prime,
                                   &dual_params.DiffParams.DiffKEAParams.prime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.subPrime,
                                   &dual_params.DiffParams.DiffKEAParams.subPrime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.fortezza.keaParams.base,
                                   &dual_params.DiffParams.DiffKEAParams.base);
+            }
         }
-       
     }
     return rv;
 }
@@ -699,12 +719,18 @@ SECKEY_FortezzaDecodePQGtoOld(PRArenaPool *arena, SECKEYPublicKey *pubk,
 
 SECStatus
 SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) {
-        SECStatus rv;
-	SECKEYPQGDualParams dual_params;
+    SECStatus rv;
+    SECKEYPQGDualParams dual_params;
+    SECItem newparams;
 
     if (params == NULL) return SECFailure; 
     
     if (params->data == NULL) return SECFailure;
+
+    PORT_Assert(arena);
+
+    /* make a copy of the data into the arena so QuickDER output is valid */
+    rv = SECITEM_CopyItem(arena, &newparams, params);
 
     /* Check if params use the standard format.
      * The value 0xa1 will appear in the first byte of the parameter data
@@ -712,14 +738,16 @@ SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) 
      * code should be changed to use a better method to detect non-standard
      * parameters.    */
 
-    if ((params->data[0] != 0xa1) &&
-        (params->data[0] != 0xa0)) {
+    if ((newparams.data[0] != 0xa1) &&
+        (newparams.data[0] != 0xa0)) {
     
-         /* PQG params are in the standard format */
-         prepare_pqg_params_for_asn1(&pubk->u.dsa.params);
-         rv = SEC_ASN1DecodeItem(arena, &pubk->u.dsa.params,
-                             SECKEY_PQGParamsTemplate,
-                             params);
+        if (SECSuccess == rv) {
+             /* PQG params are in the standard format */
+             prepare_pqg_params_for_asn1(&pubk->u.dsa.params);
+             rv = SEC_QuickDERDecodeItem(arena, &pubk->u.dsa.params,
+                                 SECKEY_PQGParamsTemplate,
+                                 &newparams);
+        }
     } else {
 
 	dual_params.CommParams.prime.len = 0;
@@ -729,50 +757,55 @@ SECKEY_DSADecodePQG(PRArenaPool *arena, SECKEYPublicKey *pubk, SECItem *params) 
         dual_params.DiffParams.DiffDSAParams.subPrime.len = 0;
 	dual_params.DiffParams.DiffDSAParams.base.len = 0;
 
-        /* else the old fortezza-only wrapped format is used. */
-        if (params->data[0] == 0xa1) {
-            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
-				SECKEY_FortezzaPreParamTemplate, params);
-	} else {
-            rv = SEC_ASN1DecodeItem(arena, &dual_params, 
-	   			    SECKEY_FortezzaAltPreParamTemplate, params);
+        if (SECSuccess == rv) {
+            /* else the old fortezza-only wrapped format is used. */
+            if (newparams.data[0] == 0xa1) {
+                rv = SEC_QuickDERDecodeItem(arena, &dual_params, 
+				    SECKEY_FortezzaPreParamTemplate, &newparams);
+	    } else {
+                rv = SEC_QuickDERDecodeItem(arena, &dual_params, 
+	   			        SECKEY_FortezzaAltPreParamTemplate, &newparams);
+            }
         }
-
-        if (rv < 0) return rv;
 
         if ( (dual_params.CommParams.prime.len > 0) &&
              (dual_params.CommParams.subPrime.len > 0) && 
              (dual_params.CommParams.base.len > 0) ) {
             /* copy in common params */
-	    
-	    rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.prime,
-                                  &dual_params.CommParams.prime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.subPrime,
-                                  &dual_params.CommParams.subPrime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.base,
-                                  &dual_params.CommParams.base);
 
+            if (SECSuccess == rv) {	    
+	        rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.prime,
+                                      &dual_params.CommParams.prime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.subPrime,
+                                      &dual_params.CommParams.subPrime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.base,
+                                    &dual_params.CommParams.base);
+            }
         } else {
 
 	    /* else copy in different params */
 
 	    /* copy DSA PQG parameters */
-	    rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.prime,
-                                  &dual_params.DiffParams.DiffDSAParams.prime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.subPrime,
-                                  &dual_params.DiffParams.DiffDSAParams.subPrime);
-            if (rv != SECSuccess) return rv;
-            rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.base,
-                                  &dual_params.DiffParams.DiffDSAParams.base);
-
+            if (SECSuccess == rv) {
+	        rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.prime,
+                                      &dual_params.DiffParams.DiffDSAParams.prime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.subPrime,
+                                      &dual_params.DiffParams.DiffDSAParams.subPrime);
+            }
+            if (SECSuccess == rv) {
+                rv = SECITEM_CopyItem(arena, &pubk->u.dsa.params.base,
+                                      &dual_params.DiffParams.DiffDSAParams.base);
+            }
         }
     }
     return rv;
 }
-
 
 
 /* Decodes the DER encoded fortezza public key and stores the results in a
