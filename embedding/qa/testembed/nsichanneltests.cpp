@@ -73,6 +73,18 @@ CnsIChannelTests::~CnsIChannelTests()
 {
 }
 
+ChannelRow ChannelTable[] = {
+	{"http://www.netscape.com/", "text/plain"},
+	{"https://www.sun.com/",    "text/html"},
+	{"ftp://ftp.mozilla.org/",  "image/gif"},
+	{"gopher://gopher.tc.umn.edu/", "application/vnd.mozilla.xul+xml"},
+	{"telnet://www.packetgram.com", "text/plain"},
+	{"file://C|/Program Files",  "image/jpeg"},
+	{"about:plugins",   ""},
+	{"javascript:document.write('hi')", ""},
+	{"data:text/plain;charset=iso-8859-7,%be%fg%be", ""},
+	{"jar:resource:///chrome/comm.jar!/content/communicator/plugins.html",  ""},
+}; 
 
 /////////////////////////////////////////////////////////////////////////////
 // nsIChannelTests message handlers
@@ -86,6 +98,7 @@ nsIChannel * CnsIChannelTests::GetChannelObject(nsCAutoString theSpec)
 	   return nsnull;
 	}
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
+	RvTestResult(rv, "NS_NewChannel", 1);
 	if (!theChannel)
 	{
 	   QAOutput("Didn't get Channel object. GetChannelObject Test failed.", 2);
@@ -97,6 +110,7 @@ nsIChannel * CnsIChannelTests::GetChannelObject(nsCAutoString theSpec)
 nsIURI * CnsIChannelTests::GetURIObject(nsCAutoString theSpec)
 {
 	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+	RvTestResult(rv, "NS_NewURI", 1);
 	if (!theURI)
 	{
 	   QAOutput("Didn't get URI object. GetURIObject Test failed.", 2);
@@ -304,7 +318,7 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 
 void CnsIChannelTests::OnStartTests(UINT nMenuID)
 {
-	theSpec = "http://www.netscape.com";
+	theSpec = "ftp://ftp.netscape.com";
 	theChannel = GetChannelObject(theSpec);
 	if (!theChannel)
 	{
@@ -376,28 +390,34 @@ void CnsIChannelTests::OnStartTests(UINT nMenuID)
 
 void CnsIChannelTests::RunAllTests()
 {
-	theSpec = "http://www.netscape.com";
-	theChannel = GetChannelObject(theSpec);
-	if (!theChannel)
-	{
-	   QAOutput("Didn't get nsIChannel object. RunAllTests not run.", 2);
-	   return;
-	}
+	int i;
 
-	SetOriginalURITest(theChannel, theSpec, 1);
-	GetOriginalURITest(theChannel, 1);
-	GetURITest(theChannel, 1);
-	SetOwnerTest(theChannel, 1);
-	GetOwnerTest(theChannel, 1);
-	SetNotificationsTest(theChannel, 1);
-	GetNotificationsTest(theChannel, 1);
-	AsyncOpenTest(theChannel, 1);
-	GetSecurityInfoTest(theChannel, 1);
-	SetContentTypeTest(theChannel, 1);
-	GetContentTypeTest(theChannel, 1);
-	SetContentCharsetTest(theChannel, 1);
-	GetContentCharsetTest(theChannel, 1);
-	SetContentLengthTest(theChannel, 1);
-	GetContentLengthTest(theChannel, 1);
-	OpenTest(theChannel, 1);
+	for (i=0; i<10; i++)
+	{
+		theSpec = ChannelTable[i].theURL;
+		theChannel = GetChannelObject(theSpec);
+		if (!theChannel)
+		{
+		   QAOutput("Didn't get nsIChannel object. RunAllTests not run.", 2);
+		   return;
+		}
+
+		SetOriginalURITest(theChannel, theSpec, 1);
+		GetOriginalURITest(theChannel, 1);
+		GetURITest(theChannel, 1);
+		SetOwnerTest(theChannel, 1);
+		GetOwnerTest(theChannel, 1);
+		SetNotificationsTest(theChannel, 1);
+		GetNotificationsTest(theChannel, 1);
+		AsyncOpenTest(theChannel, 1);
+		GetSecurityInfoTest(theChannel, 1);
+		SetContentTypeTest(theChannel, 1);
+		GetContentTypeTest(theChannel, 1);
+		SetContentCharsetTest(theChannel, 1);
+		GetContentCharsetTest(theChannel, 1);
+		SetContentLengthTest(theChannel, 1);
+		GetContentLengthTest(theChannel, 1);
+		OpenTest(theChannel, 1);
+		QAOutput("\n");
+	}
 }
