@@ -235,7 +235,7 @@ class Parser {
         // function to parent source
         int savedSourceTop = sourceTop;
         int savedFunctionNumber = functionNumber;
-        Object args;
+        ObjArray args = new ObjArray();
         Object body;
         String source;
         try {
@@ -246,7 +246,6 @@ class Parser {
             sourceAdd((char) ts.FUNCTION);
             if (name != null) { sourceAddString(ts.NAME, name); }
             sourceAdd((char) ts.LP);
-            args = nf.createLeaf(ts.LP);
 
             if (!ts.matchToken(ts.RP)) {
                 boolean first = true;
@@ -256,8 +255,7 @@ class Parser {
                     first = false;
                     mustMatchToken(ts, ts.NAME, "msg.no.parm");
                     String s = ts.getString();
-                    nf.addChildToBack(args, nf.createName(s));
-
+                    args.add(s);
                     sourceAddString(ts.NAME, s);
                 } while (ts.matchToken(ts.COMMA));
 

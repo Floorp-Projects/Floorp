@@ -40,8 +40,8 @@ import java.util.*;
 
 public class FunctionNode extends Node {
 
-    public FunctionNode(String name, Node left, Node right) {
-        super(TokenStream.FUNCTION, left, right);
+    public FunctionNode(String name, Node statements) {
+        super(TokenStream.FUNCTION, statements);
         functionName = name;
         itsVariableTable = new VariableTable();
     }
@@ -102,4 +102,5 @@ public class FunctionNode extends Node {
     protected boolean itsCheckThis;
     protected int itsFunctionType;
     private String functionName;
+    ObjArray argNames;
 }

@@ -548,14 +548,11 @@ public class NodeTransformer {
 
     protected void addParameters(FunctionNode fnNode) {
         VariableTable vars = fnNode.getVariableTable();
-        Node args = fnNode.getFirstChild();
-        if (args.getType() == TokenStream.LP && vars.getParameterCount() == 0)
-        {
+        if (vars.getParameterCount() == 0) {
+            ObjArray argNames = fnNode.argNames;
             // Add parameters
-            for (Node cursor = args.getFirstChild(); cursor != null;
-                 cursor = cursor.getNext())
-            {
-                String arg = cursor.getString();
+            for (int i = 0, N = argNames.size(); i != N; ++i) {
+                String arg = (String)argNames.get(i);
                 vars.addParameter(arg, createVariableObject(arg, true));
             }
         }

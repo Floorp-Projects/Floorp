@@ -201,21 +201,22 @@ public class IRFactory {
         return new Node(TokenStream.BLOCK, lineno);
     }
 
-    public Object createFunctionNode(String name, Object args,
-                                     Object statements)
+    public Object createFunctionNode(String name, Object statements)
     {
-        if (name == null)
-            name = "";
-        return new FunctionNode(name, (Node) args, (Node) statements);
+        return new FunctionNode(name, (Node) statements);
     }
 
-    public Object createFunction(String name, Object args, Object statements,
+    public Object createFunction(String name, ObjArray argNames,
+                                 Object statements,
                                  String sourceName, int baseLineno,
                                  int endLineno, Object source,
                                  boolean isExpr)
     {
-        FunctionNode f = (FunctionNode) createFunctionNode(name, args,
-                                                           statements);
+        if (name == null) {
+            name = "";
+        }
+        FunctionNode f = (FunctionNode) createFunctionNode(name, statements);
+        f.argNames = argNames;
         f.setFunctionType(isExpr ? FunctionNode.FUNCTION_EXPRESSION
                                  : FunctionNode.FUNCTION_STATEMENT);
         f.putProp(Node.SOURCENAME_PROP, sourceName);

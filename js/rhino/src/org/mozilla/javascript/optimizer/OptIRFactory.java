@@ -51,15 +51,9 @@ public class OptIRFactory extends IRFactory {
         this.nameHelper = nameHelper;
     }
 
-    public Object createFunctionNode(String name, Object args,
-                                     Object statements)
+    public Object createFunctionNode(String name, Object statements)
     {
-        if (name == null)
-            name = "";
-        OptFunctionNode result =  new OptFunctionNode(name, (Node) args,
-                                                      (Node) statements,
-                                                      nameHelper);
-        return result;
+        return new OptFunctionNode(name, (Node)statements, nameHelper);
     }
 
     private ClassNameHelper nameHelper;

@@ -41,10 +41,10 @@ import java.util.*;
 
 public class OptFunctionNode extends FunctionNode {
 
-    public OptFunctionNode(String name, Node left, Node right,
+    public OptFunctionNode(String name, Node statements,
                            ClassNameHelper nameHelper)
     {
-        super(name, left, right);
+        super(name, statements);
         OptClassNameHelper nh = (OptClassNameHelper) nameHelper;
         itsClassName = nh.getJavaScriptClassName(name, false);
     }
