@@ -229,6 +229,8 @@ sub setField {
     my($app, $fieldID, $category, $name, $type, $data, $mode) = @_;
     # if fieldID is undefined, then add a new entry and return the
     # fieldID. $data will often be undefined or empty
+    $data = '' unless defined($data);
+    $mode = 0 unless defined($mode);
     if (defined($fieldID)) {
         $self->database($app)->execute('UPDATE userDataTypes SET category=?, name=?, type=?, data=?, mode=? WHERE fieldID = ?',
                                        $category, $name, $type, $data, $mode, $fieldID);
