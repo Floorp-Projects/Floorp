@@ -2129,7 +2129,8 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
                 (pElement && EDT_CanSizeObject(pMWContext, pElement, Point.x, Point.y)) )
             {
                 // Flag to override the normal lock when sizing corners
-                BOOL bLock = !(BOOL)(uFlags & MK_CONTROL);
+                // (This is ignored when sizing table elements)
+                BOOL bLock = (uFlags & MK_CONTROL) != 0;
                 XP_Rect rect;
                 if( EDT_StartSizing(pMWContext, pElement, Point.x, Point.y, bLock, &rect) )
                 {
@@ -2526,6 +2527,8 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
     ClientToScreen(GetPane(), &cpScreenPoint);
 
 #ifdef EDITOR
+    // We must be done with possible drag image
+    m_pLastImageObject = NULL;
 
     m_pStartSelectionCell = NULL;
     MWContext *pMWContext = GetContext();
@@ -2539,7 +2542,6 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
         //  adjacent objects)
         if(abs(m_cpLBUp.x - m_cpLBDown.x) > CLICK_THRESHOLD ||
 	        abs(m_cpLBUp.y - m_cpLBDown.y) > CLICK_THRESHOLD)	{
-            ASSERT(cpPoint.y == Point.y - GetOriginY()); // REMOVEME
 
             // Resize the object
             EDT_EndSizing(pMWContext);
@@ -2594,11 +2596,6 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
 	abs(m_cpLBUp.y - m_cpLBDown.y) > CLICK_THRESHOLD)	{
 	    return;
     }
-#ifdef EDITOR
-    // Done with possible drag image
-    m_pLastImageObject = NULL;
-#endif
-
     //	If there's no element, there's no need to see if we should load something.
     //  Just send a JS Click event to the document and return.
     if(pElement == NULL) {
@@ -3136,7 +3133,7 @@ void CWinCX::DragCurrentURL()
     delete pDropSource;
 }
 
-void wfe_Progress(MWContext *pContext, const char *pMessage);
+extern void wfe_Progress(MWContext *pContext, const char *pMessage);
 
 void CWinCX::OnMouseMoveCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately)	
 {
@@ -3213,7 +3210,8 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
     MWContext  * context  = GetContext();
 
     BOOL bTextSet = FALSE;
-
+    BOOL bIsEditor = EDT_IS_EDITOR(context);
+    
     LO_Element *pElement = GetLayoutElement(xyPoint, layer);
     if (pElement && (pElement->type == LO_IMAGE)) {
         LO_ImageStruct* pImage = &pElement->lo_image;
@@ -3307,29 +3305,38 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
 #endif // EDITOR
 
         // Don't bother to do selection or dragging unless we actually moved
-        if( (abs(cpPoint.x - m_cpLBDown.x) > 5)
-              || (abs(cpPoint.y - m_cpLBDown.y) > 5) )
+        if( (abs(cpPoint.x - m_cpLBDown.x) > CLICK_THRESHOLD)
+              || (abs(cpPoint.y - m_cpLBDown.y) > CLICK_THRESHOLD) )
         {
-            if( m_bMouseInSelection )
+            // Drag HTML selection unless only an image is selected
+            //  (it is handled below)
+            // In either Browser or Composer, don't bother to extend
+            //  the selection if we will be dragging an image
+            if( m_pLastImageObject == 0 )
             {
-                // release the mouse capture
-                ::ReleaseCapture();
-                m_bMouseInSelection = FALSE;
+                if( m_bMouseInSelection )
+                {
+                    // release the mouse capture
+                    ::ReleaseCapture();
+                    m_bMouseInSelection = FALSE;
 
-                // Get and drag the selection
-                DragSelection();
-                // Don't do anything else if we are dragging!
-                goto MOUSE_TIMER;
-            }
-            // Extend the selection
+                    // Get and drag the selection
+                    DragSelection();
+                    // Don't do anything else if we are dragging!
+                    goto MOUSE_TIMER;
+                }
+                // Extend the selection
 #ifdef EDITOR
-            if( EDT_IS_EDITOR(context) )
-            {
-                EDT_ExtendSelection(context, xVal, yVal);
-            } else 
+                if( bIsEditor )
+                {
+                    // TODO: There's a bug in extending the selection:
+                    //       It looses the selection on an object, such as an image
+                    EDT_ExtendSelection(context, xVal, yVal);
+                } else 
 #endif // EDITOR
-            {
-                LO_ExtendSelection(GetDocumentContext(), xVal, yVal);
+                {
+                    LO_ExtendSelection(GetDocumentContext(), xVal, yVal);
+                }
             }
         }
 
@@ -3384,7 +3391,7 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
         // The anchor element is held within the last_armed_xref global
         // If last_armed_xref is non-null then the anchor is highlighted and
         // needs to be unhighlighted and a drag and drop operation started.
-        if( m_pLastArmedAnchor && !EDT_IS_EDITOR(context) ) {
+        if( m_pLastArmedAnchor && !bIsEditor ) {
         	if(abs(m_cpMMove.x - m_cpLBDown.x) > CLICK_THRESHOLD ||
         		abs(m_cpMMove.y - m_cpLBDown.y) > CLICK_THRESHOLD)	{
 
@@ -3500,8 +3507,10 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
             }
         }
 #ifdef EDITOR
-        // Drag image from an Editor or Browser
-        else if ( m_pLastImageObject &&
+        // Drag image from a Browser (no image selection exists)
+        //  or from an editor only if it was selected before
+        //  (1st click selects, 2nd click down and move will drag)
+        else if ( m_pLastImageObject && (!bIsEditor || bIsEditor && m_bMouseInSelection) &&
                   (abs(m_cpMMove.x - m_cpLBDown.x) > CLICK_THRESHOLD ||
         		   abs(m_cpMMove.y - m_cpLBDown.y) > CLICK_THRESHOLD) ) {
             
@@ -6167,13 +6176,15 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
 #ifdef MOZ_NGLAYOUT
   XP_ASSERT(0);
 #else
+    LO_EmbedStruct *pEmbed = NULL;
+    LO_ImageStruct * image_struct = NULL;
+    LO_TextStruct * text_struct = NULL;
+
     // keep track of what we have done already so that we
     //   don't thrash
     BOOL bTextSet = FALSE;
     BOOL bCursorSet = FALSE;
-    LO_EmbedStruct *pEmbed = NULL;
-    LO_ImageStruct * image_struct = NULL;
-    LO_TextStruct * text_struct = NULL;
+    BOOL bIsEditor = EDT_IS_EDITOR(context);
 
     // get our stashed data
     mouse_over_closure * pClose = (mouse_over_closure *) pObj;
@@ -6200,7 +6211,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
     //   which are tightly surrounded by a cell boundary.
     //  TODO: Alt key leaves menu select mode on - how do we defeat that behavior?
 
-    if( EDT_IS_EDITOR(context) && !EDT_IsSizing(context) )
+    if( bIsEditor && !EDT_IsSizing(context) )
     {
         ED_HitType iTableHit = ED_HIT_NONE;
         if( pWin->m_bSelectingCells )
@@ -6296,7 +6307,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         if(bIsLink && !bTextSet)
         {
 #ifdef EDITOR
-            if( EDT_IS_EDITOR(context) )
+            if( bIsEditor )
             {
                 // Condense the URL of the link and append hint that
                 //   pressing Ctrl + mouse click will edit the link
@@ -6310,7 +6321,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
             wfe_Progress(context, (char *) text_struct->anchor_href->anchor);
             bTextSet = TRUE;
         }
-        if( EDT_IS_EDITOR(context) )
+        if( bIsEditor )
         {
 #ifdef EDITOR
             if( bMouseInSelection )
@@ -6337,7 +6348,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         }
     } 
 #ifdef EDITOR
-    else if( EDT_IS_EDITOR(context) &&
+    else if( bIsEditor &&
                lo_element && 
                !EDT_IsSizing(context) )
     {
@@ -6398,7 +6409,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
 			LO_AnchorData *pAnchorData = LO_MapXYToAreaAnchor(pWin->GetDocumentContext(), image_struct,
 				image_offset.x, image_offset.y);
 			if(pAnchorData != NULL)	{
-                if( !EDT_IS_EDITOR(context) && !bMouseInSelection ){
+                if( !bIsEditor && !bMouseInSelection ){
                     SetCursor(theApp.LoadCursor(IDC_SELECTANCHOR));
                     bCursorSet = TRUE;
                 }
@@ -6422,7 +6433,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
             anchor = (char *) image_struct->anchor_href->anchor;
             anchor += buf;
 
-            if( !EDT_IS_EDITOR(context) && !bMouseInSelection ){
+            if( !bIsEditor && !bMouseInSelection ){
                 SetCursor(theApp.LoadCursor(IDC_SELECTANCHOR));
                 bCursorSet = TRUE;
             }
@@ -6434,7 +6445,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         }
         else if(image_struct->anchor_href) {
             // Set anchor cursor only if not in editor and not in a selection
-            if( !EDT_IS_EDITOR(context) && !bMouseInSelection ) {
+            if( !bIsEditor && !bMouseInSelection ) {
     	        SetCursor(theApp.LoadCursor(IDC_SELECTANCHOR));
                 bCursorSet = TRUE;
             }
@@ -6444,7 +6455,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
 	        }
 		}
         else if(image_struct->image_attr->attrmask & LO_ATTR_INTERNAL_IMAGE 
-                && EDT_IS_EDITOR(context) 
+                && bIsEditor 
                 && image_struct->alt != NULL ){
 
             char *str;
@@ -6457,11 +6468,50 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                 PA_UNLOCK(image_struct->alt);
             }
         }
-        if( EDT_IS_EDITOR(context) && !bCursorSet ){
-            // Experimental: Image can  be dragged, so if no cursor set above,
-            // use Open Hand with arrow to indicate "draggability" of the image
-            SetCursor(theApp.LoadCursor(IDC_ARROW_HAND));
-            bCursorSet = TRUE;
+        if( !bCursorSet ){
+            // Image can be dragged from a Browser or from an Editor after it is selected, 
+            //   so if no cursor set above,
+            //   use Open Hand with arrow to indicate "draggability" of the image
+            // Do this for a Browser window ONLY if we have a Composer Window available
+            //   to drag into
+            BOOL bHaveEditorWindow = bIsEditor;
+            if( !bHaveEditorWindow )
+            {
+                // Check if there are any editor windows open (either Mail or Page Composer)
+                CGenericFrame * f;
+                for(f = theApp.m_pFrameList; f; f = f->m_pNext)
+                {
+                    MWContext *pMWContext = f->GetMainContext()->GetContext();
+
+                    if ( pMWContext && EDT_IS_EDITOR(pMWContext) )
+                    {
+                        bHaveEditorWindow = TRUE;
+                        break;
+                    }
+                }
+            }
+
+
+            if( !bIsEditor && bHaveEditorWindow || 
+                 (bIsEditor && (image_struct->ele_attrmask & LO_ELE_SELECTED) != 0) )
+            {
+                SetCursor(theApp.LoadCursor(IDC_ARROW_HAND));
+                bCursorSet = TRUE;
+                // Display some help on the status line
+                // NOTE: In Browser, there is no Image selection,
+                //   so image can be dragged upon first mouse down
+    	        wfe_Progress(context, XP_GetString(XP_EDT_CLICK_AND_DRAG_IMAGE));
+    	        bTextSet = TRUE;
+            }
+            else if( bIsEditor )
+            {
+                SetCursor(theApp.LoadStandardCursor(IDC_ARROW));
+                bCursorSet = TRUE;
+    	        // Tell user how to select image
+                // NOTE: Image must be selected before dragging when in Composer
+                wfe_Progress(context, XP_GetString(XP_EDT_CLICK_TO_SELECT_IMAGE));
+    	        bTextSet = TRUE;
+            }
         }
     }
 
@@ -6497,7 +6547,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
     //  but if we arrive here and have not set cursor, use the IBeam, except
     //  if we are in a location to select the entire line: use right-facing arrow
     // Otherwise we get the default left-facing arrow, which is confusing
-    if( EDT_IS_EDITOR(context) && !bCursorSet )
+    if( bIsEditor && !bCursorSet )
     {
         SetCursor( theApp.LoadCursor(LO_CanSelectLine(context, pClose->xVal, pClose->yVal) ? 
                                      IDC_ARROW_RIGHT : IDC_EDIT_IBEAM) );

@@ -1368,7 +1368,7 @@ void FE_EditorDocumentLoaded(MWContext* pMWContext)
     CEditFrame* pFrame;
     CGenericFrame *pWnd = (CGenericFrame*)GetFrame(pMWContext);
 #ifdef ENDER
-    if (pWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))
+    if (!pWnd->IsKindOf(RUNTIME_CLASS(CEditFrame)))
         return;
     else 
 #endif //ENDER

@@ -1255,7 +1255,11 @@ void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
                 // Cancel an Object Sizing operation
                 if( EDT_IsSizing(pMWContext) )
+                {
                     GetContext()->CancelSizing();
+                    // Erase inappropriate cursors
+                    UpdateCursor();
+                }
 
                 // Call the CGenericView's interrupt function
                 OnNavigateInterrupt();
