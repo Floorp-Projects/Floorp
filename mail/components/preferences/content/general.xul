@@ -73,7 +73,7 @@
     </preferences>
     
     <stringbundle id="mapiBundle" src="chrome://messenger-mapi/locale/mapi.properties"/>
-    <stringbundle id="brandBundle" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
 
     <groupbox align="start" id="defaultClientBox">
       <caption label="&generalSettings.caption;"/>
