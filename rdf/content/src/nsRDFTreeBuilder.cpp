@@ -1274,7 +1274,7 @@ RDFTreeBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
             return rv;
         }
 
-        if (resource != aResource)
+        if (resource.get() != aResource)
             continue; // not the resource we want
 
         // Fount it!
