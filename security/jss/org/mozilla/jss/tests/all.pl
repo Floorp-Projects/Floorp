@@ -173,6 +173,13 @@ $result = system("$java org.mozilla.jss.tests.TestKeyGen $testdir $pwfile");
 $result >>=8;
 $result and die "TestKeyGen returned $result";
 
+# test digesting
+#
+print STDERR "============= test digesting\n";
+$result = system("$java org.mozilla.jss.tests.DigestTest $testdir $pwfile");
+$result >>=8;
+$result and die "DigestTest returned $result";
+
 # test signing
 #
 print STDERR "============= test signing\n";

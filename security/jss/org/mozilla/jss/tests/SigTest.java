@@ -120,7 +120,7 @@ public class SigTest {
         if( signer.verify(signature) ) {
             System.out.println("Signature Verified Successfully!");
         } else {
-            System.out.println("ERROR: Signature failed to verify.");
+            throw new Exception("ERROR: Signature failed to verify.");
         }
 
         System.out.println("SigTest passed.");

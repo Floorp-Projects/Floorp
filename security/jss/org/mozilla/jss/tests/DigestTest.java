@@ -79,7 +79,7 @@ public class DigestTest {
         if( MessageDigest.isEqual(nsdigestOut, sundigestOut) ) {
             System.out.println("Sun and Mozilla give same SHA-1 hash");
         } else {
-            System.out.println("ERROR: Sun and Mozilla give different"+
+            throw new Exception("ERROR: Sun and Mozilla give different"+
                 " SHA-1 hashes");
         }
 
@@ -95,7 +95,7 @@ public class DigestTest {
         if( MessageDigest.isEqual(nsdigestOut, sundigestOut) ) {
             System.out.println("Sun and Mozilla give same MD5 hash");
         } else {
-            System.out.println("ERROR: Sun and Mozilla give different"+
+            throw new Exception("ERROR: Sun and Mozilla give different"+
                 " MD5 hashes");
         }
 
@@ -121,13 +121,15 @@ public class DigestTest {
         if( digestOut.length == digest.getOutputSize() ) {
             System.out.println("digest output size is " + digestOut.length);
         } else {
-            System.out.println("ERROR: digest output size is "+
+            throw new Exception("ERROR: digest output size is "+
                 digestOut.length + ", should be "+digest.getOutputSize() );
         }
+        System.exit(0);
 
 
       } catch( Exception e ) {
             e.printStackTrace();
+            System.exit(1);
       }
     }
 }
