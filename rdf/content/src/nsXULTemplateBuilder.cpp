@@ -6575,6 +6575,7 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
             if (! tmpl) {
                 // Not in the template map, so this must not have been
                 // generated. We'll need to examine its kids.
+                ungenerated.AppendElement(child);
                 continue;
             }
 
