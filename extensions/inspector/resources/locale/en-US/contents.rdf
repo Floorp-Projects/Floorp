@@ -15,4 +15,7 @@
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+
+  <RDF:Description about="urn:mozilla:locale:en-US:inspector"
+	                 chrome:localeVersion="0.9.4"/>
 </RDF:RDF>

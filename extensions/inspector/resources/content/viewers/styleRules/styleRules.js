@@ -80,9 +80,9 @@ function StyleRulesViewer() // implements inIViewer
   
   this.mURL = window.location;
   this.mRuleOutliner = document.getElementById("olStyleRules");
-  this.mRuleBoxObject = XPCU.QI(this.mRuleOutliner.boxObject, "nsIOutlinerBoxObject");
+  this.mRuleBoxObject = this.mRuleOutliner.outlinerBoxObject;
   this.mPropsOutliner = document.getElementById("olStyleProps");
-  this.mPropsBoxObject = XPCU.QI(this.mPropsOutliner.boxObject, "nsIOutlinerBoxObject");
+  this.mPropsBoxObject = this.mPropsOutliner.outlinerBoxObject;
 }
 
 StyleRulesViewer.prototype = 
@@ -125,8 +125,23 @@ StyleRulesViewer.prototype =
 
   destroy: function()
   {
+    // We need to remove the views at this time or else they will attempt to 
+    // re-paint while the document is being deconstructed, resulting in
+    // some nasty XPConnect assertions
+    this.mRuleBoxObject.view = null;
+    this.mPropsBoxObject.view = null;
   },
 
+  isCommandEnabled: function(aCommand)
+  {
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    return null;
+  },
+  
   ////////////////////////////////////////////////////////////////////////////
   //// event dispatching
 
@@ -265,43 +280,91 @@ StyleRulesViewer.prototype =
 
 };
 
+function doesQI(aObject, aInterface)
+{
+  if (!("QueryInterface" in aObject)) return false;
+  
+  try {
+    var result = aObject.QueryInterface(Components.interfaces[aInterface]);
+    return true;
+  } catch (ex) {
+    return false;
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //// StyleRuleView
 
-function StyleRuleView(aElement)
+function StyleRuleView(aObject)
 {
   this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
-  this.mRules = this.mDOMUtils.getStyleRules(aElement);
+  if (doesQI(aObject, "nsIDOMCSSStyleSheet")) {
+    this.mSheetRules = aObject.cssRules;
+  } else {
+    this.mRules = this.mDOMUtils.getStyleRules(aObject);
+  }
+
+  if (this.mRules) {
+    for (var i = this.mRules.Count(); i >= 0; --i) {
+      var rule = this.mRules.GetElementAt(i);
+      try {
+        rule = XPCU.QI(rule, "nsIDOMCSSStyleRule");
+      } catch (ex) {
+        this.mRules.RemoveElement(rule);
+      }
+    }
+  }
 }
 
 StyleRuleView.prototype = new inBaseOutlinerView();
 
+StyleRuleView.prototype.mSheetRules = null;
+StyleRuleView.prototype.mRules = null;
+
 StyleRuleView.prototype.__defineGetter__("rowCount",
 function() 
 {
-  return this.mRules ? this.mRules.Count() : 0;
+  return this.mRules ? this.mRules.Count() : this.mSheetRules ? this.mSheetRules.length : 0;
 });
 
 StyleRuleView.prototype.getRuleAt = 
 function(aRow) 
 {
-  var rule = this.mRules.GetElementAt(aRow);
-  return XPCU.QI(rule, "nsIDOMCSSStyleRule");
+  if (this.mRules) {
+    var rule = this.mRules.GetElementAt(aRow);
+    try {
+      return XPCU.QI(rule, "nsIDOMCSSStyleRule");
+    } catch (ex) {
+      return null;
+    }
+  } else
+    return this.mSheetRules[aRow];
 }
 
 StyleRuleView.prototype.getCellText = 
 function(aRow, aColId) 
 {
-  var rule = this.getRuleAt(aRow);
+  if (aRow > this.rowCount) return "";
   
-  if (aColId == "olcSelector") {
-    return rule.selectorText;
+  var rule = this.getRuleAt(aRow);
+  if (!rule) return "";
+  
+  if (aColId == "olcRule") {
+    switch (rule.type) {
+      case CSSRule.STYLE_RULE:
+        return rule.selectorText;
+      case CSSRule.IMPORT_RULE:
+        // XXX should use .cssText here, but that asserts about some media crap
+        return "@import url(" + rule.href + ");";
+      default:
+        return rule.cssText;
+    }
   } else if (aColId == "olcFileURL") {
     return rule.parentStyleSheet.href;
   } else if (aColId == "olcWeight") {
-    return this.mDOMUtils.getRuleWeight(rule);
+    return rule.type == CSSRule.STYLE_RULE ? this.mDOMUtils.getRuleWeight(rule) : "";
   } else if (aColId == "olcLine") {
-    return this.mDOMUtils.getRuleLine(rule);
+    return rule.type == CSSRule.STYLE_RULE ? this.mDOMUtils.getRuleLine(rule) : "";
   }
   
   return "";
@@ -347,3 +410,4 @@ function(aRow, aColId)
   
   return "";
 }
+

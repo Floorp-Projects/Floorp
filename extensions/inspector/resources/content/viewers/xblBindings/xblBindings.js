@@ -51,23 +51,17 @@ var gInitContent = false;
 
 //////////// global constants ////////////////////
 
-const kDOMDataSourceIID    = "@mozilla.org/rdf/datasource;1?name=Inspector_DOM";
+const kDOMViewCID = "@mozilla.org/inspector/dom-view;1";
 const kXBLNSURI = "http://www.mozilla.org/xbl";
 
 //////////////////////////////////////////////////
 
 window.addEventListener("load", XBLBindings_initialize, false);
-window.addEventListener("load", XBLBindings_destroy, false);
 
 function XBLBindings_initialize()
 {
   viewer = new XBLBindings();
   viewer.initialize(parent.FrameExchange.receiveData(window));
-}
-
-function XBLBindings_destroy()
-{
-  viewer.destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -80,7 +74,6 @@ function XBLBindings()
   this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
   this.mContentOutliner = document.getElementById("olContent");
-  this.mContentOutlinerBody = document.getElementById("olbContent");
   this.mMethodOutliner = document.getElementById("olMethods");
   this.mPropOutliner = document.getElementById("olProps");
   this.mHandlerOutliner = document.getElementById("olHandlers");
@@ -133,31 +126,22 @@ XBLBindings.prototype =
     for (var i = 0; i < panes.length; ++i) {
       InsUtil.persistAll(panes[i].id);
     }
+
+    this.mContentOutliner.outlinerBoxObject.view = null;
+    this.mMethodOutliner.outlinerBoxObject.view = null;
+    this.mPropOutliner.outlinerBoxObject.view = null;
+    this.mHandlerOutliner.outlinerBoxObject.view = null;
+    this.mResourceOutliner.outlinerBoxObject.view = null;    
   },
   
-  initContent: function()
+  isCommandEnabled: function(aCommand)
   {
-    if (this.mContentInit) return;
-
-    window.setTimeout(function(me) {
-      // prepare and attach the content DOM datasource
-      me.mContentDS = XPCU.createInstance(kDOMDataSourceIID, "inIDOMDataSource");
-      me.mContentDS.removeFilterByType(3);
-      me.mContentOutlinerBody.database.AddDataSource(me.mContentDS);
-      
-      // initialize the outliner builder for displaying anonymous content
-      var tb = new inOutlinerBuilder(me.mContentOutliner, kInspectorNSURI, "Child");
-      tb.rowFields = {"nodeType": "nodeType"};
-      tb.initialize();
-      tb.addColumn({ name: "nodeName", title: "", flex: 1, className: ""});
-      tb.addColumn({ name: "nodeValue", title: "", flex: 1, className: ""});
-      tb.build();
-      
-      me.mContentInit = true;
-      
-      if (me.mBinding)
-        me.displayContent();
-    }, 10, this);
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    return null;
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -169,6 +153,22 @@ XBLBindings.prototype =
   ////////////////////////////////////////////////////////////////////////////
   //// displaying binding info
   
+  initContent: function()
+  {
+    if (this.mContentInit) return;
+
+    window.setTimeout(function(me) {
+      // prepare and attach the content DOM datasource
+      me.mContentView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
+      me.mContentView.removeFilterByType(Node.TEXT_NODE);
+      me.mContentOutliner.outlinerBoxObject.view = me.mContentView;
+
+      me.mContentInit = true;
+      if (me.mBinding)
+        me.displayContent();
+    }, 10, this);
+  },
+
   populateBindings: function()
   {
     var urls = this.mDOMUtils.getBindingURLs(this.mSubject);
@@ -179,10 +179,10 @@ XBLBindings.prototype =
     while (urls.hasMoreElements()) {
       var item = urls.getNext();
       var url = item.QueryInterface(Components.interfaces.nsIAtom).GetUnicode();
-      var item = document.createElement("menuitem");
-      item.setAttribute("value", url);
-      item.setAttribute("label", url);
-      popup.appendChild(item);
+      var menu = document.createElement("menuitem");
+      menu.setAttribute("value", url);
+      menu.setAttribute("label", url);
+      popup.appendChild(menu);
     }
     
     var menulist = document.getElementById("mlBindings");
@@ -248,16 +248,11 @@ XBLBindings.prototype =
   displayContent: function()
   {
     if (this.mContentInit && this.mBinding) {
-      this.mContentDS.document = this.mBindingDoc;
       var list = this.mBinding.getElementsByTagName("content");
-      if (list.length) {
-        var res = this.mContentDS.getResourceForObject(list[0]);
-        this.mContentOutlinerBody.setAttribute("ref", res.Value);
-      } else {
-        // no content, so clear the outliner
-        this.mContentDS.document = null;
-        this.mContentOutlinerBody.builder.rebuild();
-      }
+      if (list.length)
+        this.mContentView.rootNode = list[0];
+      else
+        this.mContentView.rootNode = null;
       document.getElementById("bxContent").setAttribute("disabled", list.length == 0);
     } 
   },
@@ -483,11 +478,6 @@ function(aRow, aColId)
   }
   
   return "";
-}
-
-function gDocLoadListener()
-{
-  viewer.doDisplayBinding();
 }
 
 ////////////////////////////////////////////////////////////////////////////

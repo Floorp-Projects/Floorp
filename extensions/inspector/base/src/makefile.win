@@ -30,6 +30,7 @@ REQUIRES	= xpcom \
 		  rdfutil \
 		  gfx \
 		  layout \
+    layout_xul \
 		  content \
 		  widget \
 		  locale \
@@ -50,43 +51,41 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 DIRS=win
 
 CPPSRCS= \
-	.\inDOMDataSource.cpp \
-	.\inDOMRDFResource.cpp \
+  .\inDOMView.cpp \
   .\inDeepTreeWalker.cpp \
-	.\inFlasher.cpp \
-	.\inSearchLoop.cpp \
-	.\inFileSearch.cpp \
-	.\inCSSValueSearch.cpp \
-	.\inDOMUtils.cpp \
-	.\inLayoutUtils.cpp \
-	.\inBitmap.cpp \
-	.\inBitmapDepot.cpp \
-	.\inBitmapDecoder.cpp \
-	.\inBitmapProtocolHandler.cpp \
-	.\inBitmapChannel.cpp \
-	.\inBitmapURI.cpp \
-	.\inPNGEncoder.cpp \
-	$(NULL)
+  .\inFlasher.cpp \
+  .\inSearchLoop.cpp \
+  .\inFileSearch.cpp \
+  .\inCSSValueSearch.cpp \
+  .\inDOMUtils.cpp \
+  .\inLayoutUtils.cpp \
+  .\inBitmap.cpp \
+  .\inBitmapDepot.cpp \
+  .\inBitmapDecoder.cpp \
+  .\inBitmapProtocolHandler.cpp \
+  .\inBitmapChannel.cpp \
+  .\inBitmapURI.cpp \
+  .\inPNGEncoder.cpp \
+  $(NULL)
 
 
 CPP_OBJS= \
-	.\$(OBJDIR)\inDOMDataSource.obj \
-	.\$(OBJDIR)\inDOMRDFResource.obj \
-	.\$(OBJDIR)\inDeepTreeWalker.obj \
-	.\$(OBJDIR)\inFlasher.obj \
-	.\$(OBJDIR)\inSearchLoop.obj \
-	.\$(OBJDIR)\inFileSearch.obj \
-	.\$(OBJDIR)\inCSSValueSearch.obj \
-	.\$(OBJDIR)\inDOMUtils.obj \
-	.\$(OBJDIR)\inLayoutUtils.obj \
-	.\$(OBJDIR)\inBitmap.obj \
-	.\$(OBJDIR)\inBitmapDepot.obj \
-	.\$(OBJDIR)\inBitmapDecoder.obj \
-	.\$(OBJDIR)\inBitmapProtocolHandler.obj \
-	.\$(OBJDIR)\inBitmapChannel.obj \
-	.\$(OBJDIR)\inBitmapURI.obj \
-	.\$(OBJDIR)\inPNGEncoder.obj \
-	$(NULL)
+  .\$(OBJDIR)\inDOMView.obj \
+  .\$(OBJDIR)\inDeepTreeWalker.obj \
+  .\$(OBJDIR)\inFlasher.obj \
+  .\$(OBJDIR)\inSearchLoop.obj \
+  .\$(OBJDIR)\inFileSearch.obj \
+  .\$(OBJDIR)\inCSSValueSearch.obj \
+  .\$(OBJDIR)\inDOMUtils.obj \
+  .\$(OBJDIR)\inLayoutUtils.obj \
+  .\$(OBJDIR)\inBitmap.obj \
+  .\$(OBJDIR)\inBitmapDepot.obj \
+  .\$(OBJDIR)\inBitmapDecoder.obj \
+  .\$(OBJDIR)\inBitmapProtocolHandler.obj \
+  .\$(OBJDIR)\inBitmapChannel.obj \
+  .\$(OBJDIR)\inBitmapURI.obj \
+  .\$(OBJDIR)\inPNGEncoder.obj \
+  $(NULL)
 
 EXPORTS=$(NULL)
 

@@ -24,8 +24,6 @@
         persist="screenX screenY width height maximized"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-
   <popupset id="aTooltipSet"/>
   
   <popupset id="ppsGlobalPopupset"/>
@@ -50,7 +48,9 @@
 
   <vbox id="bxInspectorMain" flex="1"/>
   
+  <!--
   <statusbar id="status-bar"/>
+  -->
 </window>
 
         

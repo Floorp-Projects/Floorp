@@ -36,9 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- @namespace domi url("http://www.mozilla.org/inspector");
- 
-domi|panel[disabled="true"] > .viewer-pane-box-1 {
+domi-panel[disabled="true"] > .viewer-pane-box-1 {
   visibility: collapse;
 }
 

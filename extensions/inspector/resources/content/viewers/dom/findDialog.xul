@@ -4,71 +4,62 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/dom/findDialog.css"?>
 
-<window id="winFind" class="dialog" 
+<dialog id="winFind" style="width: 30em;"
         title="Find"
-        style="width: 30em;"
+        ondialogaccept="return dialog.doFind();"
         persist="screenX screenY"
-        orient="horizontal"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/FindDialog.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
 
-  <commandset id="cmdsCommands">
-    <command id="cmdFind" oncommand="dialog.doFind()"/>
-    <command id="cmdClose" oncommand="dialog.close()"/>
-  </commandset>
-
-  <keyset id="ksKeys">
-    <key id="kFind" keycode="VK_RETURN" observes="cmdFind"/>
-    <key id="kClose" keycode="VK_ESCAPE" observes="cmdClose"/>
-  </keyset>
-
-  <vbox flex="1">
-    <grid>
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row id="rwRow1">
-          <deck id="rwRow1Text">
-            <label id="txText1Id" value="Id"/>
-            <label id="txText1Tag" value="Tag"/>
-            <label id="txText1Attr" value="Attr"/>
-          </deck>
-          <textbox id="tfText1"/>
-        </row>
-        <row id="rwRow2">
-          <label id="txText2" value="Value"/>
-          <textbox id="tfText2"/>
-        </row>
-      </rows>
-    </grid>
-    
-    <hbox valign="top">
-      <groupbox id="tbxType">
-        <caption label="Search By"/>
-        <radiogroup id="rgType">
-          <radio id="rdType_id" label="ID" value="id" oncommand="dialog.toggleType('id')"/>
-          <radio id="rdType_tag" label="Tag" value="tag" oncommand="dialog.toggleType('tag')"/>
-          <radio id="rdType_attr" label="Attribute" value="attr" oncommand="dialog.toggleType('attr')"/>
-        </radiogroup>
-      </groupbox>
-      <groupbox id="tbxDirection" hide="true">
-        <caption label="Direction"/>
-        <radiogroup id="rgDirection">
-          <radio id="rdDir_up" value="up" label="Up"/>
-          <radio id="rdDir_down" value="down" label="Down"/>
-        </radiogroup>
-      </groupbox>
-    </hbox>
-  </vbox>
-
-  <vbox>
-    <button label="Find" observes="cmdFind" default="true"/>
-    <button label="Cancel" observes="cmdClose"/>
-  </vbox>
-
-</window>
+  <hbox flex="1">
+    <vbox flex="1">
+      <grid>
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row id="rwRow1">
+            <deck id="rwRow1Text">
+              <label id="txText1Id" value="Id"/>
+              <label id="txText1Tag" value="Tag"/>
+              <label id="txText1Attr" value="Attr"/>
+            </deck>
+            <textbox id="tfText1"/>
+          </row>
+          <row id="rwRow2">
+            <label id="txText2" value="Value"/>
+            <textbox id="tfText2"/>
+          </row>
+        </rows>
+      </grid>
+      
+      <hbox>
+        <groupbox id="tbxType">
+          <caption label="Search By"/>
+          <radiogroup id="rgType">
+            <radio id="rdType_id" label="ID" value="id" oncommand="dialog.toggleType('id')"/>
+            <radio id="rdType_tag" label="Tag" value="tag" oncommand="dialog.toggleType('tag')"/>
+            <radio id="rdType_attr" label="Attribute" value="attr" oncommand="dialog.toggleType('attr')"/>
+          </radiogroup>
+        </groupbox>
+        <groupbox id="tbxDirection" hide="true">
+          <caption label="Direction"/>
+          <radiogroup id="rgDirection">
+            <radio id="rdDir_up" value="up" label="Up"/>
+            <radio id="rdDir_down" value="down" label="Down"/>
+          </radiogroup>
+        </groupbox>
+      </hbox>
+    </vbox>
+  
+    <vbox>
+      <button label="Find" dlgtype="accept" default="true"/>
+      <button label="Cancel" dlgtype="cancel"/>
+    </vbox>
+  </hbox>
+  
+</dialog>

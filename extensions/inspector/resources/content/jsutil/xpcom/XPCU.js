@@ -63,8 +63,7 @@ var XPCU =
     try {
       return aEl.QueryInterface(Components.interfaces[aIName]);
     } catch (ex) {
-      dump("Error in QI: " + aIName + "\n" + ex);
-      return null;
+      throw("Unable to QI " + aEl + " to " + aIName);
     }
   }
 

@@ -5,7 +5,7 @@
 <overlay id="ovPrefs" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <treechildren id="panelChildren">
+  <treechildren id="advancedChildren">
     <treeitem id="inspector">
       <treerow>       
         <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-inspector.xul" label="&Inspector.label;"/> 

@@ -124,9 +124,7 @@ inFileSearch::SearchAsync(inISearchObserver *aObserver)
       KillSearch(inISearchObserver::SUCCESS);
     }
   } else {
-    nsAutoString msg;
-    msg.AssignWithConversion("No search path has been provided");
-    mObserver->OnSearchError(this, ToNewUnicode(msg));
+    mObserver->OnSearchError(this, NS_LITERAL_STRING("No search path has been provided"));
     KillSearch(inISearchObserver::ERROR);
   }
 
@@ -157,9 +155,11 @@ inFileSearch::SearchStep(PRBool* _retval)
 }
 
 NS_IMETHODIMP 
-inFileSearch::GetStringResultAt(PRInt32 aIndex, PRUnichar **_retval)
+inFileSearch::GetStringResultAt(PRInt32 aIndex, nsAString& _retval)
 {
   nsCOMPtr<nsIFile> file;
+
+  _retval = NS_LITERAL_STRING("");
 
   if (mHoldResults) {
     nsCOMPtr<nsISupports> supports;
@@ -171,13 +171,11 @@ inFileSearch::GetStringResultAt(PRInt32 aIndex, PRUnichar **_retval)
   } 
   
   if (file) {
-    char* temp;
-    mLastResult->GetPath(&temp);
-    nsAutoString path;
-    path.AssignWithConversion(temp);
+    nsXPIDLCString temp;
+    mLastResult->GetPath(getter_Copies(temp));
+    _retval = NS_ConvertASCIItoUCS2(temp);
     if (mReturnRelativePaths)
-      MakePathRelative(&path);
-    *_retval = ToNewUnicode(path);
+      MakePathRelative(_retval);
   } else {
     return NS_ERROR_FAILURE;
   }
@@ -608,9 +606,8 @@ inFileSearch::AdvanceWildcard(PRUnichar** aString, PRUnichar* aNextChar)
 // URL fixing
 
 nsresult
-inFileSearch::MakePathRelative(nsAutoString* aPath)
+inFileSearch::MakePathRelative(nsAString& aPath)
 {
-  nsAutoString result;
 
   // get an nsAutoString version of the search path
   char* temp;
@@ -618,13 +615,13 @@ inFileSearch::MakePathRelative(nsAutoString* aPath)
   nsAutoString searchPath;
   searchPath.AssignWithConversion(temp);
 
-  PRInt32 found = aPath->Find(searchPath, PR_FALSE, 0, 1);
-  if (found == 0) {
-    PRUint32 len = searchPath.Length();
-    aPath->Mid(result, len+1, aPath->Length()-len);
+  nsAutoString result;
+  PRUint32 len = searchPath.Length();
+  if (Substring(aPath, 0, len) == searchPath) {
+    result = Substring(aPath, len+1, aPath.Length() - len - 1);
     result.ReplaceChar('\\', '/');
   }
-  aPath->Assign(result);
+  aPath = result;
 
   return NS_OK;
 }

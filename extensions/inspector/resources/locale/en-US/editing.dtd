@@ -1,0 +1,16 @@
+<!ENTITY mnEditUndo.label "Undo">
+<!ENTITY mnEditUndo.accesskey "u">
+<!ENTITY mnEditRedo.label "Redo">
+<!ENTITY mnEditRedo.accesskey "r">
+<!ENTITY mnEditCut.label "Cut">
+<!ENTITY mnEditCut.accesskey "t">
+<!ENTITY mnEditCopy.label "Copy">
+<!ENTITY mnEditCopy.accesskey "c">
+<!ENTITY mnEditPaste.label "Paste">
+<!ENTITY mnEditPaste.accesskey "p">
+<!ENTITY mnEditInsert.label "Insert">
+<!ENTITY mnEditInsert.accesskey "i">
+<!ENTITY mnEditEdit.label "Edit">
+<!ENTITY mnEditEdit.accesskey "e">
+<!ENTITY mnEditDelete.label "Delete">
+<!ENTITY mnEditDelete.accesskey "d">

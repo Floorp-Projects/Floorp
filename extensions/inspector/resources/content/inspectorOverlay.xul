@@ -6,7 +6,6 @@
 ]>
 
 <overlay id="ovInspector"
-         xmlns:domi="http://www.mozilla.org/inspector"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://inspector/content/inspector.js"/>
@@ -20,46 +19,49 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/file.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  <!--
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inFormManager.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchService.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchModule.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inFormManager.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchTreeBuilder.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
-
+  -->
   <vbox id="bxInspectorMain">
 
-    <domi:panelset id="bxPanelSet" flex="1" viewercommandset="cmdsGlobalCommands">
-      <domi:panel id="bxDocPanel" title="&bxDocPanel.title;" 
+    <domi-panelset id="bxPanelSet" flex="1"
+                   viewercommandset="cmdsGlobalCommands">
+      <domi-panel id="bxDocPanel" title="&bxDocPanel.title;" 
                   flex="1" persist="width"/>
 
       <splitter id="splPanels"/>
       
-      <domi:panel id="bxObjectPanel" title="&bxObjectPanel.title;" linkedpanel="bxDocPanel"
+      <domi-panel id="bxObjectPanel" title="&bxObjectPanel.title;" linkedpanel="bxDocPanel"
                   flex="1" persist="width"/>
-    </domi:panelset>
+    </domi-panelset>
 
     <splitter id="splBrowser" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
         label="Browser" closebutton="true" collapse="after"/>
         
     <hbox id="bxBrowser" flex="1">
-      <browser id="ifBrowser" type="content-primary" flex="1" src="about:blank"/>
+      <browser id="ifBrowser" type="content-primary" disableHistory="true" flex="1" src="about:blank"/>
     </hbox>
 
+    <!--
     <splitter id="splSearch" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
         label="Search Results" closebutton="true" collapse="after"/>
-        
+     
     <vbox id="bxSearch">
       <tree id="trSearch" flex="1" context="ppSearchResults" datasources="rdf:null">
         <template/>
       </tree>
     
-      <!-- TEMPORARY UNTIL FIX FOR 54237 -->
-      <browser id="inSearchServiceLoader" height="1"/>
+      TEMPORARY UNTIL FIX FOR 54237
+      <browser id="inSearchServiceLoader" disableHistory="true" height="1"/>
     </vbox>
-    
+    -->
   </vbox>
 
 </overlay>

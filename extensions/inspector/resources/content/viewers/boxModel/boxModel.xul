@@ -51,20 +51,20 @@
       </columns>
       <rows>
         <row>
-          <text id="txR1C1Label" class="label"/>
-          <text id="txR1C1Value" class="label"/>
-          <text id="txR1C2Label" class="label"/>
-          <text id="txR1C2Value" class="label"/>
-          <text id="txR1C3Label" class="label"/>
-          <text id="txR1C3Value" class="label"/>
+          <label id="txR1C1Label"/>
+          <label id="txR1C1Value"/>
+          <label id="txR1C2Label"/>
+          <label id="txR1C2Value"/>
+          <label id="txR1C3Label"/>
+          <label id="txR1C3Value"/>
         </row>
         <row>
-          <text id="txR2C1Label" class="label"/>
-          <text id="txR2C1Value" class="label"/>
-          <text id="txR2C2Label" class="label"/>
-          <text id="txR2C2Value" class="label"/>
-          <text id="txR2C3Label" class="label"/>
-          <text id="txR2C3Value" class="label"/>
+          <label id="txR2C1Label"/>
+          <label id="txR2C1Value"/>
+          <label id="txR2C2Label"/>
+          <label id="txR2C2Value"/>
+          <label id="txR2C3Label"/>
+          <label id="txR2C3Value"/>
         </row>
       </rows>
     </grid>
@@ -73,7 +73,7 @@
   <vbox id="bxCaptureStuff" flex="1">
     <groupbox id="tbxImage">
       <caption label="Image"/>
-      <hbox autostretch="never" flex="1">
+      <hbox align="center" flex="1">
         <button label="Capture" command="cmdCapture"/>
         <button label="Pick Color..." command="cmdOpenColorPicker"/>
         <button label="Save As..." command="cmdSaveImage"/>
@@ -94,7 +94,7 @@
       </hbox>
     </groupbox>
       
-    <hbox id="bxZoom" autostretch="never" valign="top" flex="1">
+    <hbox id="bxZoom" align="start" flex="1">
       <stack id="bxZoomStack">
         <html:img id="imgZoom"/>
         <hbox id="bxMargin" flex="1" 

@@ -62,6 +62,7 @@ box[orient="vertical"] > .titled-splitter {
 }
 
 .titledsplitter-text {
+  margin: 0px !important;
   font-weight: bold;
 }
 

@@ -37,11 +37,4 @@
  * ***** END LICENSE BLOCK ***** */
 
 @import url("chrome://communicator/skin");
-
 @import url("chrome://inspector/content/inspector.css");
-
-@namespace domi url("http://www.mozilla.org/inspector");
-
-treecol {
-  width: 16px;
-}

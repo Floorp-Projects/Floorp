@@ -28,9 +28,6 @@
       
     <command id="cmd:toggleAttributes" viewer="dom"
              oncommand="inspector.getViewer('dom').toggleAttributes()"/>
-
-    <command id="cmd:showColumns" viewer="dom"
-             oncommand="inspector.getViewer('dom').showColumnsDialog()"/>
   </commandset>
 
 </overlay>

@@ -40,31 +40,27 @@
 
 /* :::::::: node type color coding :::::::: */
 
-/* element node */
-outlinerbody:-moz-outliner-cell-text(nodeType-1) {
+outlinerbody:-moz-outliner-cell-text(ELEMENT_NODE) {
   color: #000000;
 }
 
-/* attribute node */
-outlinerbody:-moz-outliner-cell-text(nodeType-2) {
+outlinerbody:-moz-outliner-cell-text(ATTRIBUTE_NODE) {
   color: #556b2f;
 }
 
-/* text node or cdata node */
-outlinerbody:-moz-outliner-cell-text(nodeType-3),
-outlinerbody:-moz-outliner-cell-text(nodeType-4) {
+outlinerbody:-moz-outliner-cell-text(CDATA_SECTION_NODE),
+outlinerbody:-moz-outliner-cell-text(TEXT_NODE) {
   color: #0000AA;
 }
 
-/* comment node */
-outlinerbody:-moz-outliner-cell-text(nodeType-8) {
+outlinerbody:-moz-outliner-cell-text(COMMENT_NODE) {
   color: #228b22;
 }
 
-/* anonymous element */
-outlinerbody:-moz-outliner-cell-text(Anonymous-true) {
+outlinerbody:-moz-outliner-cell-text(anonymous) {
   color: #ff0000;
 }
+
 
 outlinerbody:-moz-outliner-cell-text(selected, focus) {
   color: #FFFFFF;

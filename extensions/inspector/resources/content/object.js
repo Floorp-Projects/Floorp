@@ -90,6 +90,11 @@ ObjectApp.prototype =
   {
   },
   
+  doViewerCommand: function(aCommand)
+  {
+    this.mPanelSet.execCommand(aCommand);
+  },
+  
   getViewer: function(aUID)
   {
     return this.mPanelSet.registry.getViewerByUID(aUID);

@@ -39,11 +39,6 @@
 /***************************************************************
 * DOMNodeViewer --------------------------------------------
 *  The default viewer for DOM Nodes
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-* REQUIRED IMPORTS:
-*   chrome://inspector/content/util.js
-*   chrome://inspector/content/jsutil/xpcom/XPCU.js
-*   chrome://inspector/content/jsutil/rdf/RDFU.js
 ****************************************************************/
 
 //////////// global variables /////////////////////
@@ -52,22 +47,16 @@ var viewer;
 
 //////////// global constants ////////////////////
 
-const kDOMDataSourceIID    = "@mozilla.org/rdf/datasource;1?name=Inspector_DOM";
+const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
 
 //////////////////////////////////////////////////
 
-window.addEventListener("unload", DOMNodeViewer_destroy, false);
 window.addEventListener("load", DOMNodeViewer_initialize, false);
 
 function DOMNodeViewer_initialize()
 {
   viewer = new DOMNodeViewer();
   viewer.initialize(parent.FrameExchange.receiveData(window));
-}
-
-function DOMNodeViewer_destroy()
-{
-  viewer.destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -78,12 +67,12 @@ function DOMNodeViewer()  // implements inIViewer
   this.mObsMan = new ObserverManager(this);
 
   this.mURL = window.location;
-  this.mAttrTree = document.getElementById("trAttributes");
+  this.mAttrOutliner = document.getElementById("olAttr");
 
-  var ds = XPCU.createInstance(kDOMDataSourceIID, "inIDOMDataSource");
-  this.mDS = ds;
-  ds.addFilterByType(2, true);
-  this.mAttrTree.database.AddDataSource(ds);
+  // prepare and attach the DOM DataSource
+  this.mDOMView = XPCU.createInstance(kDOMViewCID, "inIDOMView");
+  this.mDOMView.addFilterByType(2, true);
+  this.mAttrOutliner.outlinerBoxObject.view = this.mDOMView;
 }
 
 DOMNodeViewer.prototype = 
@@ -91,11 +80,20 @@ DOMNodeViewer.prototype =
   ////////////////////////////////////////////////////////////////////////////
   //// Initialization
   
-  mDS: null,
+  mDOMView: null,
   mSubject: null,
-  mPane: null,
+  mPanel: null,
 
-  get selectedAttribute() { return this.mAttrTree.selectedItems[0] },
+  get selectedIndex()
+  {
+    return this.mAttrOutliner.currentIndex;
+  },
+
+  get selectedAttribute()
+  {
+    var index = this.selectedIndex;
+    return index >= 0 ? this.mDOMView.getNodeFromRowIndex(index) : null;
+  },
 
   ////////////////////////////////////////////////////////////////////////////
   //// interface inIViewer
@@ -103,7 +101,7 @@ DOMNodeViewer.prototype =
   //// attributes 
 
   get uid() { return "domNode" },
-  get pane() { return this.mPane },
+  get pane() { return this.mPanel },
 
   get selection() { return null },
 
@@ -114,24 +112,20 @@ DOMNodeViewer.prototype =
     var deck = document.getElementById("dkContent");
     
     if (aObject.nodeType == 1) {
-      deck.setAttribute("index", 0);
-      
-      if (aObject.ownerDocument != this.mDS.document)
-        this.mDS.document = aObject.ownerDocument;
+      deck.setAttribute("selectedIndex", 0);
       
       this.setTextValue("nodeName", aObject.nodeName);
       this.setTextValue("nodeType", aObject.nodeType);
       this.setTextValue("nodeValue", aObject.nodeValue);
       this.setTextValue("namespace", aObject.namespaceURI);
-  
-      var res = this.mDS.getResourceForObject(aObject);
-      try {
-        this.mAttrTree.setAttribute("ref", res.Value);
-      } catch (ex) {
-        debug("ERROR: While rebuilding attribute tree\n" + ex);
+
+      if (aObject != this.mDOMView.rootNode) {
+        this.mDOMView.rootNode = aObject;
+        this.mAttrOutliner.outlinerBoxObject.selection.select(-1);
+        this.mAttrOutliner.outlinerBoxObject.invalidate();
       }
     } else {
-      deck.setAttribute("index", 1);
+      deck.setAttribute("selectedIndex", 1);
       var txb = document.getElementById("txbTextNodeValue");
       txb.value = aObject.nodeValue;
     }
@@ -143,7 +137,7 @@ DOMNodeViewer.prototype =
 
   initialize: function(aPane)
   {
-    this.mPane = aPane;
+    this.mPanel = aPane;
     aPane.notifyViewerReady(this);
   },
 
@@ -151,56 +145,51 @@ DOMNodeViewer.prototype =
   {
   },
 
+  isCommandEnabled: function(aCommand)
+  {
+    switch (aCommand) {
+      case "cmdEditPaste":
+        var canPaste = this.mPanel.panelset.clipboardFlavor == "inspector/dom-node";
+        if (canPaste) {
+          var node = this.mPanel.panelset.getClipboardData();
+          canPaste = node ? node.nodeType == Node.ATTRIBUTE_NODE : false;
+        }
+        return canPaste;
+      case "cmdEditInsert":
+        return true;
+      case "cmdEditCut":
+      case "cmdEditCopy":
+      case "cmdEditEdit":
+      case "cmdEditDelete":
+        return this.selectedAttribute != null;
+    }
+    return false;
+  },
+  
+  getCommand: function(aCommand)
+  {
+    switch (aCommand) {
+      case "cmdEditCut":
+        return new cmdEditCut();
+      case "cmdEditCopy":
+        return new cmdEditCopy();
+      case "cmdEditPaste":
+        return new cmdEditPaste();
+      case "cmdEditInsert":
+        return new cmdEditInsert();
+      case "cmdEditEdit":
+        return new cmdEditEdit();
+      case "cmdEditDelete":
+        return new cmdEditDelete();
+    }
+    return null;
+  },
+  
   ////////////////////////////////////////////////////////////////////////////
   //// event dispatching
 
   addObserver: function(aEvent, aObserver) { this.mObsMan.addObserver(aEvent, aObserver); },
   removeObserver: function(aEvent, aObserver) { this.mObsMan.removeObserver(aEvent, aObserver); },
-
-  ////////////////////////////////////////////////////////////////////////////
-  //// UI Commands
-
-  cmdNewAttribute: function()
-  {
-    var name = prompt("Enter the attribute name:", "");
-    if (name) {
-      var attr = this.mSubject.getAttributeNode(name);
-      if (!attr)
-        this.mSubject.setAttribute(name, "");
-      var res = this.mDS.getResourceForObject(attr);
-      var kids = this.mAttrTree.getElementsByTagName("treechildren")[1];
-      var item = kids.childNodes[kids.childNodes.length-1];
-      if (item) {
-        var cell = item.getElementsByAttribute("ins-type", "value")[0];
-        this.mAttrTree.selectItem(item);
-        this.mAttrTree.startEdit(cell);
-      }
-    }
-  },
-  
-  cmdEditSelectedAttribute: function()
-  {
-    var item = this.mAttrTree.selectedItems[0];
-    var cell = item.getElementsByAttribute("ins-type", "value")[0];
-    this.mAttrTree.startEdit(cell);
-  },
-
-  cmdDeleteSelectedAttribute: function()
-  {
-    var item = this.selectedAttribute;
-    if (item) {
-      var attrname = InsUtil.getDSProperty(this.mDS, item.id, "nodeName");
-      this.mSubject.removeAttribute(attrname);
-    }
-  },
-
-  cmdSetSelectedAttributeValue: function(aItem, aValue)
-  {
-    if (aItem) {
-      var attrname = InsUtil.getDSProperty(this.mDS, aItem.id, "nodeName");
-      this.mSubject.setAttribute(attrname, aValue);
-    }
-  },
 
   ////////////////////////////////////////////////////////////////////////////
   //// Uncategorized
@@ -209,9 +198,199 @@ DOMNodeViewer.prototype =
   {
     var field = document.getElementById("tx_"+aName);
     if (field) {
-      field.setAttribute("value", aText);
+      field.value = aText;
     }
   }
-
 };
 
+////////////////////////////////////////////////////////////////////////////
+//// Command Objects
+
+function cmdEditCut() {}
+cmdEditCut.prototype =
+{
+  cmdCopy: null,
+  cmdDelete: null,
+  doCommand: function()
+  {
+    if (!this.cmdCopy) {
+      this.cmdDelete = new cmdEditDelete();
+      this.cmdCopy = new cmdEditCopy();
+    }
+    this.cmdCopy.doCommand();
+    this.cmdDelete.doCommand();    
+  },
+
+  undoCommand: function()
+  {
+    this.cmdDelete.undoCommand();    
+    this.cmdCopy.undoCommand();
+  }
+};
+
+function cmdEditCopy() {}
+cmdEditCopy.prototype =
+{
+  copiedAttr: null,
+  previousData: null,
+  previousFlavor: null,
+    
+  doCommand: function()
+  {
+    var copiedAttr = null;
+    if (!this.copiedAttr) {
+      copiedAttr = viewer.selectedAttribute;
+      if (!copiedAttr)
+        return true;
+      this.copiedAttr = copiedAttr;
+      this.previousData = viewer.pane.panelset.getClipboardData();
+      this.previousFlavor = viewer.pane.panelset.clipboardFlavor;
+    } else
+      copiedAttr = this.copiedAttr;
+      
+    viewer.pane.panelset.setClipboardData(copiedAttr, "inspector/dom-node");
+    return false;
+  },
+  
+  undoCommand: function()
+  {
+    viewer.pane.panelset.setClipboardData(this.previousData, this.previousFlavor);
+  }
+};
+
+function cmdEditPaste() {}
+cmdEditPaste.prototype =
+{
+  pastedAttr: null,
+  previousAttrValue: null,
+  subject: null,
+  
+  doCommand: function()
+  {
+    var subject, pastedAttr;
+    if (this.subject) {
+      subject = this.subject;
+      pastedAttr = this.pastedAttr;
+    } else {
+      subject = viewer.subject;
+      pastedAttr = viewer.pane.panelset.getClipboardData();
+      this.pastedAttr = pastedAttr;
+      this.subject = subject;
+      this.previousAttrValue = viewer.subject.getAttribute(pastedAttr.nodeName);
+    }
+    
+    if (subject && pastedAttr)
+      subject.setAttribute(pastedAttr.nodeName, pastedAttr.nodeValue);      
+  },
+  
+  undoCommand: function()
+  {
+    if (this.pastedAttr) {
+      if (this.previousAttrValue)
+        this.subject.setAttribute(this.pastedAttr.nodeName, this.previousAttrValue);
+      else
+        this.subject.removeAttribute(this.pastedAttr.nodeName);
+    }
+  }
+};
+
+function cmdEditInsert() {}
+cmdEditInsert.prototype =
+{
+  attr: null,
+  subject: null,
+  
+  promptFor: function()
+  {
+    var name = prompt("Enter the attribute name:", "");
+    if (name) {
+      var value = prompt("Enter the attribute value:", "");
+      if (value) {
+        this.subject = viewer.subject;
+        this.subject.setAttribute(name, value);
+        this.attr = this.subject.getAttributeNode(name);
+        return false;
+      }
+    }
+    return true;
+  },
+  
+  doCommand: function()
+  {
+    if (this.attr)
+      this.subject.setAttribute(this.attr.nodeName, this.attr.nodeValue);
+    else
+      return this.promptFor();
+    return false;
+  },
+  
+  undoCommand: function()
+  {
+    if (this.attr && this.subject == viewer.subject)
+      this.subject.removeAttribute(this.attr.nodeName, this.attr.nodeValue);
+  }
+};
+
+function cmdEditDelete() {}
+cmdEditDelete.prototype =
+{
+  attr: null,
+  subject: null,
+  
+  doCommand: function()
+  {
+    var attr = this.attr ? this.attr : viewer.selectedAttribute;
+    if (attr) {
+      this.attr = attr;
+      this.subject = viewer.subject;
+      this.subject.removeAttribute(attr.nodeName);
+    }
+  },
+  
+  undoCommand: function()
+  {
+    if (this.attr)
+      this.subject.setAttribute(this.attr.nodeName, this.attr.nodeValue);
+  }
+};
+
+function cmdEditEdit() {}
+cmdEditEdit.prototype =
+{
+  attr: null,
+  previousValue: null,
+  newValue: null,
+  subject: null,
+  
+  promptFor: function()
+  {
+    var attr = viewer.selectedAttribute;
+    if (attr) {
+      var value = prompt("Enter the attribute value:", attr.nodeValue);
+      if (value) {
+        this.subject = viewer.subject;
+        this.newValue = value;
+        this.previousValue = attr.nodeValue;
+        this.subject.setAttribute(attr.nodeName, value);
+        this.attr = this.subject.getAttributeNode(attr.nodeName);
+        return false;
+      }
+    }
+    return true;
+  },
+  
+  doCommand: function()
+  {
+    if (this.attr)
+      this.subject.setAttribute(this.attr.nodeName, this.newValue);
+    else
+      return this.promptFor();
+    return false;
+  },
+  
+  undoCommand: function()
+  {
+    if (this.attr)
+      this.subject.setAttribute(this.attr.nodeName, this.previousValue);
+  }
+};

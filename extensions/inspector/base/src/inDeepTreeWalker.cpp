@@ -43,13 +43,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMNodeList.h"
-#include "nsIContent.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIDOMWindow.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIWebNavigation.h"
-#include "nsIScriptGlobalObject.h"
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.

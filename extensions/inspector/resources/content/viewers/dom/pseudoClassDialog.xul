@@ -8,13 +8,10 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
-<window id="winPseudoClasses" class="color-dialog" 
+<dialog id="winPseudoClasses"
         title="&pseudoClasses.title;"
-        orient="vertical"
         persist="screenX screenY width height"
-        xmlns:domi="http://www.mozilla.org/inspector"
+        ondialogaccept="return dialog.onOk()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!--============================= SCRIPTS ============================= -->
@@ -33,8 +30,6 @@
     </vbox>
   </groupbox>
 
-  <hbox id="okCancelButtonsRight"/>
-  
-</window>
+</dialog>
 
         

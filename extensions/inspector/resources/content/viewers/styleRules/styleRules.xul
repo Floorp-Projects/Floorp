@@ -9,8 +9,6 @@
 <?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
 
 <page id="winStyleRules"
-      orient="vertical"
-      xmlns:domi="http://www.mozilla.org/inspector"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!--============================= SCRIPTS ============================= -->
@@ -45,10 +43,10 @@
 
   <!--============================= CONTENT ============================== -->
 
-  <outliner id="olStyleRules" flex="1"
+  <outliner id="olStyleRules" flex="1" persist="height"
             onselect="viewer.onRuleSelect()">
   
-    <outlinercol id="olcSelector" label="Selector" flex="1"/>
+    <outlinercol id="olcRule" label="Rule" flex="1"/>
     <splitter class="tree-splitter"/>
     <outlinercol id="olcFileURL" label="File" flex="1"/>
     <splitter class="tree-splitter"/>
@@ -59,11 +57,11 @@
     <outlinerbody id="olbStyleRules" flex="1"/>
   </outliner>
   
-  <splitter collapse="after">
+  <splitter id="splOutliners" collapse="after" persist="state">
     <grippy/>
   </splitter>
 
-  <outliner id="olStyleProps" flex="1" context="ppStylePropsContext">
+  <outliner id="olStyleProps" flex="1"  persist="height" context="ppStylePropsContext">
   
     <outlinercol id="olcPropPriority" label="Priority" class="outlinercol-image"/>
     <splitter class="tree-splitter"/>

@@ -198,7 +198,7 @@ ViewerRegistry.prototype =
 
   uncacheViewer: function(aViewer)
   {
-     delete this.mViewerHash[aViewer.uid].viewer;
+    delete this.mViewerHash[aViewer.uid];
   },
   
   // for previously loaded viewers only
