@@ -22,6 +22,7 @@
 #include "nsMarkupDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
+#include "plhash.h"
 
 class nsIHTMLStyleSheet;
 class nsContentList;
@@ -49,6 +50,21 @@ public:
   NS_IMETHOD AddImageMap(nsIImageMap* aMap);
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult);
+
+  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  // XXX Temporary form methods. Forms will soon become actual content
+  // elements. For now, the document keeps a list of them.
+  NS_IMETHOD AddForm(nsIFormManager *aForm);
+
+  NS_IMETHOD_(PRInt32) GetFormCount() const;
+  
+  NS_IMETHOD GetFormAt(PRInt32 aIndex, nsIFormManager **aForm) const;
+  // XXX
+  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+  NS_IMETHOD AddNamedItem(const nsString& aName, nsIContent *aContent);
+
+  NS_IMETHOD RemoveNamedItem(const nsString& aName);
 
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
 
@@ -78,40 +94,7 @@ public:
   { return nsDocument::GetElementsByTagName(aTagname, aReturn); }
 
   // nsIDOMNode interface
-  NS_IMETHOD    GetNodeName(nsString& aNodeName)
-  { return nsDocument::GetNodeName(aNodeName); }
-  NS_IMETHOD    GetNodeValue(nsString& aNodeValue)
-  { return nsDocument::GetNodeValue(aNodeValue); }
-  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue)
-  { return nsDocument::SetNodeValue(aNodeValue); }
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType)
-  { return nsDocument::GetNodeType(aNodeType); }
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)
-  { return nsDocument::GetParentNode(aParentNode); }
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes)
-  { return nsDocument::GetChildNodes(aChildNodes); }
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes)
-  { return nsDocument::GetHasChildNodes(aHasChildNodes); }
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild)
-  { return nsDocument::GetFirstChild(aFirstChild); }
-  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild)
-  { return nsDocument::GetLastChild(aLastChild); }
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling)
-  { return nsDocument::GetPreviousSibling(aPreviousSibling); }
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling)
-  { return nsDocument::GetNextSibling(aNextSibling); }
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes)
-  { return nsDocument::GetAttributes(aAttributes); }
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
-  { return nsDocument::InsertBefore(aNewChild, aRefChild, aReturn); }
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  { return nsDocument::ReplaceChild(aNewChild, aOldChild, aReturn); }
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  { return nsDocument::RemoveChild(aOldChild, aReturn); }
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn)
-  { return nsDocument::CloneNode(aReturn); }
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
-  { return nsDocument::Equals(aNode, aDeep, aReturn); }
+  NS_FORWARD_IDOMNODE(nsDocument)
 
   // nsIDOMHTMLDocument interface
   NS_IMETHOD    GetTitle(nsString& aTitle);
@@ -137,6 +120,7 @@ public:
   NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc);
   NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn);
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn);
+  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMElement **aReturn);
 
   // From nsIScriptObjectOwner interface, implemented by nsDocument
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -148,12 +132,16 @@ protected:
 
   nsIHTMLStyleSheet* mAttrStyleSheet;
   nsVoidArray mImageMaps;
+  nsVoidArray mTempForms;  // XXX Temporary
 
   nsContentList *mImages;
   nsContentList *mApplets;
   nsContentList *mEmbeds;
   nsContentList *mLinks;
   nsContentList *mAnchors;
+  nsContentList *mForms;
+  
+  PLHashTable *mNamedItems;
 
   nsIParser *mParser;
 };

@@ -25,7 +25,7 @@
 
 class nsDOMNodeList : public nsIDOMNodeList, public nsIScriptObjectOwner {
 public:
-  nsDOMNodeList(nsIContent &aContent);
+  nsDOMNodeList(nsIContent *aContent);
   virtual ~nsDOMNodeList();
 
   NS_DECL_ISUPPORTS
@@ -34,12 +34,14 @@ public:
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMNodeList interface
-  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_DECL_IDOMNODELIST
 
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  // Called to tell us that the content is going away and that we
+  // should drop our (non ref-counted) reference to it
+  void ReleaseContent();
 
 private:
-  nsIContent &mContent;
+  nsIContent *mContent;
   void *mScriptObject;
 };
 

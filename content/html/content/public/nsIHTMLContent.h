@@ -51,6 +51,8 @@ public:
 
   virtual nsContentAttr GetAttribute(const nsString& aName,
                                      nsString& aResult) const = 0;
+  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,
+                                     nsString &aResult) const = 0;
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aValue) const = 0;
   virtual PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const = 0;

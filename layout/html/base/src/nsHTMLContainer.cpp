@@ -65,11 +65,13 @@ NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLContainer::nsHTMLContainer()
 {
+  mChildNodes = nsnull;
 }
 
 nsHTMLContainer::nsHTMLContainer(nsIAtom* aTag)
   : nsHTMLTagContent(aTag)
 {
+  mChildNodes = nsnull;
 }
 
 nsHTMLContainer::~nsHTMLContainer()
@@ -78,6 +80,11 @@ nsHTMLContainer::~nsHTMLContainer()
   for (PRInt32 i = 0; i < n; i++) {
     nsIContent* kid = (nsIContent*) mChildren.ElementAt(i);
     NS_RELEASE(kid);
+  }
+  
+  if (nsnull != mChildNodes) {
+    mChildNodes->ReleaseContent();
+    NS_RELEASE(mChildNodes);
   }
 }
 
@@ -886,7 +893,12 @@ NS_IMETHODIMP
 nsHTMLContainer::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   NS_PRECONDITION(nsnull != aChildNodes, "null pointer");
-  *aChildNodes = new nsDOMNodeList(*this);
+  if (nsnull == mChildNodes) {
+    mChildNodes = new nsDOMNodeList(this);
+    NS_ADDREF(mChildNodes);
+  }
+  *aChildNodes = mChildNodes;
+  NS_ADDREF(mChildNodes);
   return NS_OK;
 }
 

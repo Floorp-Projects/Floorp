@@ -22,6 +22,14 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 
+nsContentList::nsContentList(nsIDocument *aDocument)
+{
+  NS_INIT_REFCNT();
+  mScriptObject = nsnull;
+  mFunc = nsnull;
+  mMatchTag = nsnull;
+  mDocument = aDocument;
+}
 
 nsContentList::nsContentList(nsIDocument *aDocument,
 			     const nsString& aMatchTag) 
@@ -189,7 +197,7 @@ nsContentList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
       nsAutoString name;
       // XXX Should it be an EqualsIgnoreCase?
       if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
-	  (aName.Equals(name))) ||
+	   (aName.Equals(name))) ||
 	  ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
 	   (aName.Equals(name)))) {
 	return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);

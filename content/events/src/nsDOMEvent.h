@@ -20,6 +20,7 @@
 #define nsDOMEvent_h__
 
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsISupports.h"
 #include "nsIPrivateDOMEvent.h"
 

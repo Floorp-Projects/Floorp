@@ -42,6 +42,7 @@ public:
   // Alphabetical list of html attribute atoms
   static nsIAtom* a;
   static nsIAtom* above;
+  static nsIAtom* acceptcharset;
   static nsIAtom* action;
   static nsIAtom* active;
   static nsIAtom* align;
@@ -81,6 +82,7 @@ public:
   static nsIAtom* dl;
 
   static nsIAtom* encoding;
+  static nsIAtom* enctype;
 
   static nsIAtom* face;
   static nsIAtom* font;
@@ -113,6 +115,7 @@ public:
   static nsIAtom* link;
   static nsIAtom* left;
   static nsIAtom* leftpadding;
+  static nsIAtom* longdesc;
   static nsIAtom* lowsrc;
 
   static nsIAtom* marginheight;
@@ -180,6 +183,7 @@ public:
   static nsIAtom* tabstop;
   static nsIAtom* target;
   static nsIAtom* text;
+  static nsIAtom* title;
   static nsIAtom* top;
   static nsIAtom* toppadding;
   static nsIAtom* type;

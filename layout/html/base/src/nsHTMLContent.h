@@ -82,6 +82,8 @@ public:
                                      nsString& aResult) const;
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,
+                                     nsString &aResult) const;
   virtual void SetAttribute(nsIAtom* aAttribute,
                             const nsHTMLValue& aValue = nsHTMLValue::kNull);
   virtual void UnsetAttribute(nsIAtom* aAttribute);
