@@ -38,3 +38,4 @@ nsIPopUpMenu.h
 nsIImageButton.h
 nsIImageButtonListener.h
 nsIContentConnector.h
+nsIToolbarItem.h
