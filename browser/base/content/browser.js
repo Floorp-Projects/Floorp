@@ -908,7 +908,7 @@ function readFromClipboard()
     trans.getTransferData("text/unicode", data, dataLen);
 
     if (data) {
-      data = data.value.QueryInterface(Components.interfaces.nsISupportsWString);
+      data = data.value.QueryInterface(Components.interfaces.nsISupportsString);
       url = data.data.substring(0, dataLen.value / 2);
     }
   } catch (ex) {
