@@ -821,7 +821,7 @@ function onTabCompleteRequest (e)
         return;
     }
 
-    var wordStart = line.substr(0, selStart).search(/\s\w*$/);
+    var wordStart = line.substr(0, selStart).search(/\s\S*$/);
     if (wordStart == -1)
         wordStart = 0;
     else
