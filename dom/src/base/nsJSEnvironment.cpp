@@ -1030,6 +1030,8 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
+
   if (!aGlobalObject) {
     // If we don't get a global object then there's nothing more to do here.
 
@@ -1051,7 +1053,8 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
     rv = xpc->InitClassesWithNewWrappedGlobal(mContext, aGlobalObject,
                                               NS_GET_IID(nsISupports),
-                                              PR_FALSE, getter_AddRefs(holder));
+                                              PR_FALSE,
+                                              getter_AddRefs(holder));
   } else {
     // If there's already a global object in mContext we're called
     // after ::JS_ClearScope() was called. We'll haveto tell XPConnect
@@ -1064,8 +1067,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   rv = InitClasses(); // this will complete global object initialization
   NS_ENSURE_SUCCESS(rv, rv);
-
-  ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
   mIsInitialized = PR_TRUE;
 
