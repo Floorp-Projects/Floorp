@@ -16,10 +16,19 @@
  * Reserved.
  */
 
+// 
+// nsAppShell
+//
+// This file contains the default implementation of the application shell. Clients
+// may either use this implementation or write their own. If you write your
+// own, you must create a message sink to route events to. (The message sink
+// interface may change, so this comment must be updated accordingly.)
+//
+
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 
-#include "nsMacMessageSink.h"	//еее until this is moved into XP
+#include "nsMacMessageSink.h"	//еее until this is moved into webshell(?)
 #include "nsMacMessagePump.h"
 #include "nsToolKit.h"
 

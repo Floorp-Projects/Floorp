@@ -16,16 +16,19 @@
  * Reserved.
  */
 
+// 
+// nsAppShell
+//
+// This file contains the default interface of the application shell. Clients
+// may either use this implementation or write their own. If you write your
+// own, you must create a message sink to route events to. (The message sink
+// interface may change, so this comment must be updated accordingly.)
+//
+
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
-#include <Fonts.h>
-#include <TextEdit.h>
-#include <Dialogs.h>
-#include <Traps.h>
-#include <Events.h>
-#include <Menus.h>
 
 #include <memory>
 
@@ -33,17 +36,14 @@ class nsMacMessagePump;
 class nsMacMessageSink;
 class nsToolkit;
 
-/**
- * Native MAC Application shell wrapper
- */
 
 class nsAppShell : public nsIAppShell
 {
   private:
-    nsDispatchListener             *mDispatchListener;
+    nsDispatchListener             *mDispatchListener;    // note: we don't own this, but it can be NULL
     auto_ptr<nsToolkit>            mToolKit;
     auto_ptr<nsMacMessagePump>     mMacPump;
-    nsMacMessageSink               *mMacSink;   //еее this will be COM, so use scc's COM_auto_ptr
+    nsMacMessageSink               *mMacSink;             //еее this will be COM, so use scc's COM_auto_ptr
     PRBool                         mExitCalled;
 
 	// CLASS METHODS

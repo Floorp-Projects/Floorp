@@ -16,6 +16,21 @@
  * Reserved.
  */
 
+// 
+// nsMacMessagePump
+//
+// This file contains the default implementation for the mac event loop. Events that
+// pertain to the layout engine are routed there via a MessageSink that is passed in
+// at creation time. Events not destined for layout are handled here (such as window
+// moved).
+//
+// Clients may either use this implementation or write their own. Embedding applications
+// will almost certainly write their own because they will want control of the event
+// loop to do other processing. There is nothing in the architecture which forces the
+// embedding app to use anything called a "message pump" so the event loop can actually
+// live anywhere the app wants.
+//
+
 #ifndef nsMacMessagePump_h__
 #define nsMacMessagePump_h__
 
