@@ -120,7 +120,7 @@
 #include "nsIFocusController.h"
 
 #include "nsIScrollableView.h"
-#include "nsIScrollable.h"
+#include "nsIHTMLDocument.h"
 #include "nsITimelineService.h"
 #include "nsGfxCIID.h"
 
@@ -678,23 +678,11 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   mViewManager->SetDefaultBackgroundColor(mPresContext->DefaultBackgroundColor());
 
   if (aDoInitialReflow) {
-    nsCOMPtr<nsIScrollable> sc = do_QueryInterface(mContainer);
-
-    if (sc) {
-      nsCOMPtr<nsIDOMHTMLFrameSetElement> frameset(do_QueryInterface(mDocument->GetRootContent()));
-
-      if (frameset) {
-        // If this is a frameset (i.e. not a frame) then we never want
-        // scrollbars on it, the scrollbars go inside the frames
-        // inside the frameset...
-
-        sc->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                           NS_STYLE_OVERFLOW_HIDDEN);
-        sc->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                           NS_STYLE_OVERFLOW_HIDDEN);
-      } else {
-        sc->ResetScrollbarPreferences();
-      }
+    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
+    if (htmlDoc) {
+      nsCOMPtr<nsIDOMHTMLFrameSetElement> frameset =
+        do_QueryInterface(mDocument->GetRootContent());
+      htmlDoc->SetIsFrameset(frameset != nsnull);
     }
 
     // Initial reflow

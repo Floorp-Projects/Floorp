@@ -3028,34 +3028,39 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
     return;
 
   // scrolling
-  if (aData->mDisplayData->mOverflow.GetUnit() == eCSSUnit_Null) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::scrolling);
-    if (value && value->Type() == nsAttrValue::eEnum) {
-      PRInt32 mappedValue;
-      switch (value->GetEnumValue()) {
-        case NS_STYLE_FRAME_ON:
-        case NS_STYLE_FRAME_SCROLL:
-        case NS_STYLE_FRAME_YES:
-          mappedValue = NS_STYLE_OVERFLOW_SCROLL;
-          break;
+  nsCSSValue* overflowValues[2] = {
+    &aData->mDisplayData->mOverflowX,
+    &aData->mDisplayData->mOverflowY,
+  };
+  for (PRInt32 i = 0; i < NS_ARRAY_LENGTH(overflowValues); ++i) {
+    if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
+      const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::scrolling);
+      if (value && value->Type() == nsAttrValue::eEnum) {
+        PRInt32 mappedValue;
+        switch (value->GetEnumValue()) {
+          case NS_STYLE_FRAME_ON:
+          case NS_STYLE_FRAME_SCROLL:
+          case NS_STYLE_FRAME_YES:
+            mappedValue = NS_STYLE_OVERFLOW_SCROLL;
+            break;
 
-        case NS_STYLE_FRAME_OFF:
-        case NS_STYLE_FRAME_NOSCROLL:
-        case NS_STYLE_FRAME_NO:
-          mappedValue = NS_STYLE_OVERFLOW_HIDDEN;
-          break;
-      
-        case NS_STYLE_FRAME_AUTO:
-          mappedValue = NS_STYLE_OVERFLOW_AUTO;
-          break;
+          case NS_STYLE_FRAME_OFF:
+          case NS_STYLE_FRAME_NOSCROLL:
+          case NS_STYLE_FRAME_NO:
+            mappedValue = NS_STYLE_OVERFLOW_HIDDEN;
+            break;
+        
+          case NS_STYLE_FRAME_AUTO:
+            mappedValue = NS_STYLE_OVERFLOW_AUTO;
+            break;
 
-        default:
-          NS_NOTREACHED("unexpected value");
-          mappedValue = NS_STYLE_OVERFLOW_AUTO;
-          break;
+          default:
+            NS_NOTREACHED("unexpected value");
+            mappedValue = NS_STYLE_OVERFLOW_AUTO;
+            break;
+        }
+        overflowValues[i]->SetIntValue(mappedValue, eCSSUnit_Enumerated);
       }
-      aData->mDisplayData->mOverflow.SetIntValue(mappedValue,
-                                                 eCSSUnit_Enumerated);
     }
   }
 }

@@ -679,9 +679,19 @@ const PRInt32 nsCSSProps::kOverflowKTable[] = {
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
   eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
+  // Deprecated:
   eCSSKeyword__moz_scrollbars_none, NS_STYLE_OVERFLOW_HIDDEN,
   eCSSKeyword__moz_scrollbars_horizontal, NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL,
   eCSSKeyword__moz_scrollbars_vertical, NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL,
+  eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kOverflowSubKTable[] = {
+  eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
+  eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
+  eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
+  // Deprecated:
   eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP,
   -1,-1
 };
@@ -1313,6 +1323,12 @@ static const nsCSSProperty gMozOutlineSubpropTable[] = {
   eCSSProperty__moz_outline_color,
   eCSSProperty__moz_outline_style,
   eCSSProperty__moz_outline_width,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gOverflowSubpropTable[] = {
+  eCSSProperty_overflow_x,
+  eCSSProperty_overflow_y,
   eCSSProperty_UNKNOWN
 };
 

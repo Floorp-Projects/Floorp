@@ -1102,7 +1102,8 @@ nsStyleDisplay::nsStyleDisplay()
   mBreakType = NS_STYLE_CLEAR_NONE;
   mBreakBefore = PR_FALSE;
   mBreakAfter = PR_FALSE;
-  mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
+  mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
+  mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SetRect(0,0,0,0);
   mOpacity = 1.0f;
@@ -1119,7 +1120,8 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   mBreakType = aSource.mBreakType;
   mBreakBefore = aSource.mBreakBefore;
   mBreakAfter = aSource.mBreakAfter;
-  mOverflow = aSource.mOverflow;
+  mOverflowX = aSource.mOverflowX;
+  mOverflowY = aSource.mOverflowY;
   mClipFlags = aSource.mClipFlags;
   mClip = aSource.mClip;
   mOpacity = aSource.mOpacity;
@@ -1133,7 +1135,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
-      || mOverflow != aOther.mOverflow
+      || mOverflowX != aOther.mOverflowX
+      || mOverflowY != aOther.mOverflowY
       // might need to create a view to handle change from 1.0 to partial opacity
       || (mOpacity != aOther.mOpacity
           && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0))))

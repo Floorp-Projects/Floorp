@@ -685,8 +685,6 @@ private:
                                       nsIContent*               aChild,
                                       nsIDOMHTMLSelectElement*  aSelectElement);
 
-  PRBool IsScrollable(nsPresContext* aPresContext, const nsStyleDisplay* aDisplay);
-
   nsIFrame* GetFrameFor(nsIPresShell*   aPresShell,
                         nsPresContext* aPresContext,
                         nsIContent*     aContent);

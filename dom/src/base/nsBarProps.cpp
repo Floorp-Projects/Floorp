@@ -275,15 +275,14 @@ ScrollbarsPropImpl::GetVisible(PRBool *aVisible)
       do_QueryInterface(mDOMWindow->GetDocShell());
 
     if (scroller) {
-      PRInt32 prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO :
-                                     NS_STYLE_OVERFLOW_HIDDEN;
+      PRInt32 prefValue;
       scroller->GetDefaultScrollbarPreferences(
                   nsIScrollable::ScrollOrientation_Y, &prefValue);
-      if (prefValue == NS_STYLE_OVERFLOW_HIDDEN) // try the other way
+      if (prefValue == nsIScrollable::Scrollbar_Never) // try the other way
         scroller->GetDefaultScrollbarPreferences(
                     nsIScrollable::ScrollOrientation_X, &prefValue);
 
-      if (prefValue == NS_STYLE_OVERFLOW_HIDDEN)
+      if (prefValue == nsIScrollable::Scrollbar_Never)
         *aVisible = PR_FALSE;
     }
   }
@@ -307,8 +306,8 @@ ScrollbarsPropImpl::SetVisible(PRBool aVisible)
       do_QueryInterface(mDOMWindow->GetDocShell());
 
     if (scroller) {
-      PRInt32 prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO :
-                                     NS_STYLE_OVERFLOW_HIDDEN;
+      PRInt32 prefValue = aVisible ? nsIScrollable::Scrollbar_Auto :
+                                     nsIScrollable::Scrollbar_Never ;
       scroller->SetDefaultScrollbarPreferences(
                   nsIScrollable::ScrollOrientation_Y, prefValue);
       scroller->SetDefaultScrollbarPreferences(

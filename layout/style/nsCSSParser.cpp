@@ -261,6 +261,7 @@ protected:
 #ifdef ENABLE_OUTLINE
   PRBool ParseOutline(nsresult& aErrorCode);
 #endif
+  PRBool ParseOverflow(nsresult& aErrorCode);
   PRBool ParsePadding(nsresult& aErrorCode);
   PRBool ParsePause(nsresult& aErrorCode);
   PRBool ParsePlayDuring(nsresult& aErrorCode);
@@ -4024,6 +4025,8 @@ PRBool CSSParserImpl::ParseProperty(nsresult& aErrorCode,
   case eCSSProperty__moz_outline:
     return ParseOutline(aErrorCode);
 #endif
+  case eCSSProperty_overflow:
+    return ParseOverflow(aErrorCode);
   case eCSSProperty_padding:
     return ParsePadding(aErrorCode);
   case eCSSProperty_padding_end:
@@ -4157,6 +4160,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty__moz_outline:
   case eCSSProperty__moz_outline_radius:
 #endif
+  case eCSSProperty_overflow:
   case eCSSProperty_padding:
   case eCSSProperty_padding_end:
   case eCSSProperty_padding_left:
@@ -4443,9 +4447,10 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
                         nsCSSProps::kBorderWidthKTable);
 #endif
-  case eCSSProperty_overflow:
+  case eCSSProperty_overflow_x:
+  case eCSSProperty_overflow_y:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
-                        nsCSSProps::kOverflowKTable);
+                        nsCSSProps::kOverflowSubKTable);
   case eCSSProperty_padding_bottom:
   case eCSSProperty_padding_end_value: // for internal use
   case eCSSProperty_padding_left_value: // for internal use
@@ -5553,6 +5558,33 @@ PRBool CSSParserImpl::ParseOutline(nsresult& aErrorCode)
   return PR_TRUE;
 }
 #endif
+
+PRBool CSSParserImpl::ParseOverflow(nsresult& aErrorCode)
+{
+  nsCSSValue overflow;
+  if (!ParseVariant(aErrorCode, overflow, VARIANT_AHK,
+                   nsCSSProps::kOverflowKTable) ||
+      !ExpectEndProperty(aErrorCode, PR_TRUE))
+    return PR_FALSE;
+
+  nsCSSValue overflowX(overflow);
+  nsCSSValue overflowY(overflow);
+  if (eCSSUnit_Enumerated == overflow.GetUnit())
+    switch(overflow.GetIntValue()) {
+      case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+        overflowX.SetIntValue(NS_STYLE_OVERFLOW_SCROLL, eCSSUnit_Enumerated);
+        overflowY.SetIntValue(NS_STYLE_OVERFLOW_HIDDEN, eCSSUnit_Enumerated);
+        break;
+      case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+        overflowX.SetIntValue(NS_STYLE_OVERFLOW_HIDDEN, eCSSUnit_Enumerated);
+        overflowY.SetIntValue(NS_STYLE_OVERFLOW_SCROLL, eCSSUnit_Enumerated);
+        break;
+    }
+  AppendValue(eCSSProperty_overflow_x, overflowX);
+  AppendValue(eCSSProperty_overflow_y, overflowY);
+  aErrorCode = NS_OK;
+  return PR_TRUE;
+}
 
 PRBool CSSParserImpl::ParsePadding(nsresult& aErrorCode)
 {

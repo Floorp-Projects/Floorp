@@ -48,20 +48,20 @@
  * min and the max. 
  */
 
-[scriptable, uuid(61792520-82C2-11d3-AF76-00A024FFC08C)]
+[scriptable, uuid(919e792a-6490-40b8-bba5-f9e9ad5640c8)]
 interface nsIScrollable : nsISupports
 {
 	/*
 	Constants declaring the two scroll orientations a scroll bar can be in.
-	ScrollOrientation_X - Vertical scrolling.  When passing this in to a scroll position
-		method you are requesting or setting the positions for the vertical
-		scroll bar.
-	ScrollOrientation_Y - Horizontal scrolling.  When passing this in to a scroll
-		position you are requesting or setting the positions for the horizontal
-		scroll bar.
+        ScrollOrientation_X - Horizontal scrolling.  When passing this
+                in to a scroll position method you are requesting or
+                setting the positions for the horizontal scroll bar.
+        ScrollOrientation_Y - Vertical scrolling.  When passing this
+                in to a scroll position you are requesting or setting
+                the positions for the vertical scroll bar.
 	*/
-	const long ScrollOrientation_Y = 1;
-	const long ScrollOrientation_X = 2;
+	const long ScrollOrientation_X = 1;
+	const long ScrollOrientation_Y = 2;
 
 	/*
 	Retrieves or Sets the current thumb position to the curPos passed in for the
@@ -71,7 +71,7 @@ interface nsIScrollable : nsISupports
 				NS_ERROR_INVALID_ARG - returned when curPos is not within the
 					minPos and maxPos.
 	*/
-	void getCurScrollPos(in long scrollOrientation, out long curPos);
+	long getCurScrollPos(in long scrollOrientation);
 	void setCurScrollPos(in long scrollOrientation, in long curPos);
 
 	/*
@@ -114,11 +114,8 @@ interface nsIScrollable : nsISupports
 	default is 'scrolling preference for all documents in this shell'
 	resetScrollbarPreferences resets current to default
 	*/
-	void getCurrentScrollbarPreferences(in long scrollOrientation, out long scrollbarPref);
-	void setCurrentScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
-	void getDefaultScrollbarPreferences(in long scrollOrientation, out long scrollbarPref);
+	long getDefaultScrollbarPreferences(in long scrollOrientation);
 	void setDefaultScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
-	void resetScrollbarPreferences();
 
 	/*
 	Get information about whether the vertical and horizontal scrollbars are
