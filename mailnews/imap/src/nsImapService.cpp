@@ -2388,7 +2388,9 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newLeafName);
 
 			nsCAutoString cStrFolderName(NS_STATIC_CAST(const char *, folderName));
-            PRInt32 leafNameStart = 
+      // Unescape the name before looking for parent path
+      nsUnescape(NS_CONST_CAST(char*, cStrFolderName.get()));
+      PRInt32 leafNameStart = 
             cStrFolderName.RFindChar(hierarchySeparator);
             if (leafNameStart != -1)
             {
