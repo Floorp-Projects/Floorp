@@ -33,6 +33,7 @@ install::
 	$(MAKE_INSTALL) navigator.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigatorOverlay.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.js $(DISTBROWSWER)
+	$(MAKE_INSTALL) navigatorDD.js $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheckYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) tooltip.js $(DISTBROWSWER)

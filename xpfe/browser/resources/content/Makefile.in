@@ -34,6 +34,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/navigator.xul \
 		$(srcdir)/navigatorOverlay.xul \
 		$(srcdir)/navigator.js \
+		$(srcdir)/navigatorDD.js \
 		$(srcdir)/openLocation.xul \
 		$(srcdir)/viewSource.xul \
 		$(srcdir)/NetSupportConfirmYN.xul \

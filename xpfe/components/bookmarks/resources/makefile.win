@@ -34,6 +34,7 @@ CHROME_CONTENT = \
 	.\bm-props.js \
 	.\bm-props.xul \
 	.\bookmarks.js \
+	.\bookmarksDD.js \
 	.\bookmarks.xul \
 	$(NULL)
 
