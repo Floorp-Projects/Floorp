@@ -112,8 +112,9 @@ ExceptionalErrorReporter (JSContext *cx, const char *message,
   panic:
 #ifdef DEBUG
     fprintf (stderr,
-             "mozJSSubScriptLoader: Error occurred while reporting error :/\n");
+             "mozJSSubScriptLoader: Error occurred while reporting error :/\n")
 #endif
+    ;
 }
 
 mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nsnull)
