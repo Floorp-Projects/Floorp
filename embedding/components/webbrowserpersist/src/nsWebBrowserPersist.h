@@ -168,6 +168,7 @@ private:
     PRBool                    mCurrentDataPathIsRelative;
     nsCString                 mCurrentRelativePathToData;
     nsCOMPtr<nsIURI>          mCurrentBaseURI;
+    nsCString                 mCurrentCharset;
     nsCOMPtr<nsIURI>          mTargetBaseURI;
     PRUint32                  mCurrentThingsToPersist;
 
