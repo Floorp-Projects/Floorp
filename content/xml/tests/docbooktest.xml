@@ -3,6 +3,10 @@
 <!DOCTYPE Book SYSTEM "docbook.dtd">
 <Book> <Title>SoftQuad
 Inc.</Title>
+<p xmlns="http://www.w3.org/TR/REC-html40" xmlns:h="http://www.w3.org/TR/REC-html40">
+<h:img src="flamer.gif"/>
+<img src="flamer.gif"/>
+</p>
 <BookInfo> <BookBiblio> <Title>Demo Product Documentation</Title>
 <AuthorGroup><CorpAuthor>SoftQuad Inc.</CorpAuthor></AuthorGroup> 
 </BookBiblio> </BookInfo> <Preface> <Title><Anchor

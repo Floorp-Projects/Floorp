@@ -61,7 +61,7 @@ public:
                                            nsISupports *aParent, 
                                            void** aReturn)=0;
 
-  NS_IMETHOD    NewScriptCharacterData(const int aNodeType,
+  NS_IMETHOD    NewScriptCharacterData(PRUint16 aNodeType,
                                        nsIScriptContext *aContext, 
                                        nsISupports *aData, 
                                        nsISupports *aParent, 

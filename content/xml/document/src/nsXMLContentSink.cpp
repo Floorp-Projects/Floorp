@@ -484,13 +484,19 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
       // Look for "xmlns" at the start of the attribute name
       offset = k.Find(kNameSpaceDef);
       if (0 == offset) {
-        PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
-        // If the next character is a :, there is a namespace prefix
-        if (':' == next) {
-          k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+        if (k.Length() == (sizeof(kNameSpaceDef)-1)) {
+          // If there's nothing left, this is a default namespace
+          prefix.Truncate();
         }
         else {
-          prefix.Truncate();
+          PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
+          // If the next character is a :, there is a namespace prefix
+          if (':' == next) {
+            k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
+          }
+          else {
+            continue;
+          }
         }
 
         // Get the attribute value (the URI for the namespace)
@@ -1243,10 +1249,7 @@ nsXMLContentSink::AddEntityReference(const nsIParserNode& aNode)
 PRInt32 
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
-  if (nsnull == aPrefix) {
-    return kNameSpaceID_None;
-  }
-  PRInt32 id = kNameSpaceID_Unknown;
+  PRInt32 id = (nsnull == aPrefix) ? kNameSpaceID_None : kNameSpaceID_Unknown;
   if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
     PRInt32 index = mNameSpaceStack->Count() - 1;
     nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
@@ -1409,19 +1412,19 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
         return rv;
       }
         
-      nsIURL* mDocURL = mDocument->GetDocumentURL();
-      const char* mURL;
-      if (mDocURL) {
-         (void)mDocURL->GetSpec(&mURL);
+      nsIURL* docURL = mDocument->GetDocumentURL();
+      const char* url;
+      if (docURL) {
+         (void)docURL->GetSpec(&url);
       }
 
       nsAutoString val;
       PRBool isUndefined;
 
-      PRBool result = context->EvaluateString(aScript, mURL, aLineNo, 
+      PRBool result = context->EvaluateString(aScript, url, aLineNo, 
                                               val, &isUndefined);
       
-      NS_IF_RELEASE(mDocURL);
+      NS_IF_RELEASE(docURL);
       
       NS_RELEASE(context);
       NS_RELEASE(owner);
