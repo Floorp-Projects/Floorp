@@ -1027,6 +1027,8 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
         
         result=PR_FALSE;
 
+        static eHTMLTags gTableElements[]={eHTMLTag_td,eHTMLTag_th};
+
         PRInt32 theIndex=theCount-1;
         while(theChildIndex<theIndex) {
           eHTMLTags theParentTag=aContext.TagAt(theIndex--);
@@ -1038,6 +1040,10 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
               result=PR_TRUE;
               break;
             }
+          }
+          else if(FindTagInSet(theParentTag,gTableElements,sizeof(gTableElements)/sizeof(eHTMLTag_unknown))){
+            result=PR_TRUE;  //added this to catch a case we missed; bug 57173.
+            break;
           }
         }
       }
