@@ -186,11 +186,14 @@
 
 -(void)mouseDown:(NSEvent*)aEvent
 {
-  if (mIsFolder) {
+  // pop up a "context menu" on folders showing their contents. we check
+  // for single click to fix issues with dblclicks (bug 162367)
+  if (mIsFolder && [aEvent clickCount] == 1) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
     NSMenu* menu = BookmarksService::LocateMenu(content);
     [NSMenu popUpContextMenu: menu withEvent: aEvent forView: self];
-  } else
+  }
+  else
     [super mouseDown:aEvent];
 }
 
