@@ -307,7 +307,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
     
     if(aIID.Equals(NS_GET_IID(ProxyEventClassIdentity)))
     {
-        *aInstancePtr = (void**)self;  //todo this should be a static cast
+        *aInstancePtr = NS_STATIC_CAST(void*, self);  
         NS_ADDREF(self);
         return NS_OK;
     }
