@@ -2710,19 +2710,9 @@ NavigatorImpl::JavaEnabled(PRBool* aReturn)
       return rv;
   }
   
-  rv = prefs->GetBoolPref("security.enable_java", aReturn);
-
-#if 0
-  nsIJVMManager* manager = NULL;
-  rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
-                                             nsIJVMManager::GetIID(),
-                                             (nsISupports **)&manager);
-
-  if (rv == NS_OK && manager != NULL) {
-    rv = manager->IsJavaEnabled(aReturn);
-    nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
-  }
-#endif
+  // if pref doesn't exist, map result to false.
+  if (prefs->GetBoolPref("security.enable_java", aReturn) != NS_OK)
+      *aReturn = PR_FALSE;
 
   return rv;
 }
