@@ -127,7 +127,7 @@ CSRCS		+= qtfe-dns.c
 endif
 
 QTFE_PROGNAME	:= qtmozilla
-DSO_PROGNAME	:= moz
+DSO_PROGNAME	:= qtmoz
 
 GUESS_CONFIG	:= $(shell $(topsrcdir)/config/config.guess | sed 's/i[23456]86/x86/')
 
@@ -507,7 +507,7 @@ endif
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
 
-ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS)
+ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS)
 
 ALL_EXPORT_DSOS	= $(ALL_EXPORT_LIBS:$(DIST)/lib/lib%.a=-l%)
 PLUGIN_DSO	= $(DIST)/bin/libnullplugin.so
@@ -600,8 +600,8 @@ MCS_CMD		= true
 # Only IRIX 5.x uses this.
 EXTRA_POST_LINK_CMD	= echo
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIBS)
-EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS)
+EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
+EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2)
 
 DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 
@@ -720,28 +720,6 @@ endif
 endif
 
 ########################################
-# Linux
-ifeq ($(OS_ARCH),Linux)
-
-XLIB		= -L/usr/X11R6/lib -lXext -lX11
-XMULIB		= -lXpm
-
-OTHER_LIBS	= $(QTLIB) $(XMULIB) $(EXTENSIONLIB) $(XLIB) /usr/lib/libm.so -ldl
-
-# Until we have enough code to drag the function in earlier, we need
-# to let the linker have a second look through these files to resolve
-# circular dependencies in the backend code.
-FORCED_LIBS	:= \
-		    $(DIST)/lib/libxlate.a \
-		    $(DIST)/lib/libimg.a \
-		    $(DIST)/lib/libxlate.a \
-		    $(DIST)/lib/libreg.a
-
-EXPORT_LDFLAGS	+= $(FORCED_LIBS) -lc
-
-endif
-
-########################################
 # NCR SYSV 4.0
 ifeq ($(OS_ARCH),NCR)
 OTHER_LIBS	= -L/usr/X/lib $(QTLIB) -lXext -lX11 -lgen -lm $(OS_LIBS)
@@ -766,7 +744,7 @@ ifeq ($(OS_ARCH),OSF1)
 # 
 OTHER_LIBS	= $(QTLIB) -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(OTHER_LIBS)
+EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
 
 endif
 
@@ -855,7 +833,7 @@ endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(OTHER_LIBS) $(NSPR_LIBS)
+		  $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
 
 endif
 endif
@@ -1017,10 +995,10 @@ pure:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.pure
 quantify:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.quantify
 
 # Use gtscc to find dead code globals.
-unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(DIST)/bin/gtscc 
+unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(DIST)/bin/gtscc 
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
+	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LDFLAGS) $(NSPR_LIBS) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
 
 ifeq ($(OS_ARCH),AIX)
 AIX_HACK	:= $(notdir $(AIX_NSPR))
