@@ -317,7 +317,8 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS2(nsComponentManagerImpl, nsIComponentManager, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsComponentManagerImpl, nsIComponentManager,
+                   nsISupportsWeakReference, nsIInterfaceRequestor)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -2239,6 +2240,25 @@ nsComponentManagerImpl::EnumerateProgIDs(nsIEnumerator** aEmumerator)
 
     return NS_NewHashtableEnumerator(mProgIDs, ConvertProgIDKeyToString,
                                      this, aEmumerator);
+}
+
+
+nsresult
+nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
+{
+    nsresult rv = NS_OK;
+    if (uuid.Equals(NS_GET_IID(nsIServiceManager)))
+    {
+        // Return the global service manager
+        rv = nsServiceManager::GetGlobalServiceManager((nsIServiceManager **)result);
+    }
+    else
+    {
+        // fall through to QI as anything QIable is a superset of what canbe
+        // got via the GetInterface()
+        rv = QueryInterface(uuid, result);
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
