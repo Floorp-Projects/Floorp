@@ -2264,7 +2264,7 @@ case $target_os in
         ;;
     *)
     
-AC_CHECK_LIB(c, iconv, [_ICONV_LIBS="$_ICONV_LIBS -lc"],
+AC_CHECK_LIB(c, iconv, [_ICONV_LIBS="$_ICONV_LIBS"],
     AC_CHECK_LIB(iconv, iconv, [_ICONV_LIBS="$_ICONV_LIBS -liconv"],
         AC_CHECK_LIB(iconv, libiconv, [_ICONV_LIBS="$_ICONV_LIBS -liconv"])))
 _SAVE_LIBS=$LIBS
