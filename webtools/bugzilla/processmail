@@ -99,7 +99,7 @@ sub DescCC {
     if (scalar(@$cclist) <= 0) {
         return "";
     }
-    return "Cc: " . join(", ", $cclist) . "\n";
+    return "Cc: " . join(", ", @$cclist) . "\n";
 }
 
 
