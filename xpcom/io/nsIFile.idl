@@ -41,7 +41,7 @@ interface nsISimpleEnumerator;
  * be safely passed to javascript via xpconnect.  Therefore, the "native
  * methods" are not scriptable. 
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 [scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFile : nsISupports

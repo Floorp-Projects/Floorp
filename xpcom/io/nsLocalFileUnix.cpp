@@ -1611,7 +1611,7 @@ convert_native_to_ucs2(const char *input, unsigned inputLen, nsAString &result)
     result.Truncate();
 
     // allocate space for largest possible result
-    result.SetCapacity(inputLen + 1);
+    result.SetLength(inputLen);
 
     nsAString::iterator start;
     result.BeginWriting(start);
