@@ -387,70 +387,6 @@ static PLDHashTableOps contractID_DHashTableOps = {
     PL_DHashFinalizeStub,
 };
 
-
-nsServiceEntry::nsServiceEntry(nsISupports* service, nsFactoryEntry* factEntry)
-  : mObject(service), 
-    mListeners(NULL), 
-    mShuttingDown(PR_FALSE),
-    mFactoryEntry(factEntry)
-{
-    NS_ASSERTION(mObject, "Service Entry initialized with null service");
-    NS_IF_ADDREF(mObject);
-}
-
-nsServiceEntry::~nsServiceEntry()
-{
-    NotifyListeners();
-    NS_IF_RELEASE(mObject);
-}
-
-nsresult
-nsServiceEntry::AddListener(nsIShutdownListener* listener)
-{
-    if (listener == NULL)
-        return NS_OK;
-    if (mListeners == NULL) {
-        mListeners = new nsVoidArray();
-        if (mListeners == NULL)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-    PRInt32 rv = mListeners->AppendElement(listener);
-    NS_ADDREF(listener);
-    return rv == -1 ? NS_ERROR_FAILURE : NS_OK;
-}
-
-nsresult
-nsServiceEntry::RemoveListener(nsIShutdownListener* listener)
-{
-    if (listener == NULL)
-        return NS_OK;
-    NS_ASSERTION(mListeners, "no listeners added yet");
-    if ( mListeners->RemoveElement(listener) )
-    	return NS_OK;
-    NS_ASSERTION(0, "unregistered shutdown listener");
-    return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsServiceEntry::NotifyListeners(void)
-{
-    if (mListeners && mFactoryEntry) {
-        PRUint32 size = mListeners->Count();
-        for (PRUint32 i = 0; i < size; i++) {
-            nsIShutdownListener* listener = (nsIShutdownListener*)(*mListeners)[0];
-            nsresult rv = listener->OnShutdown(mFactoryEntry->cid, 
-                                               mObject);
-            if (NS_FAILED(rv)) return rv;
-            NS_RELEASE(listener);
-            mListeners->RemoveElementAt(0);
-        }
-        NS_ASSERTION(mListeners->Count() == 0, "failed to notify all listeners");
-        delete mListeners;
-        mListeners = NULL;
-    }
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
@@ -460,14 +396,14 @@ MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, 
                                const char *aLocation,
                                int aType)
-    : cid(aClass), mServiceEntry(nsnull), typeIndex(aType)
+    : cid(aClass), typeIndex(aType)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
     location = nsCRT::strdup(aLocation);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
-    : cid(aClass), mServiceEntry(nsnull), typeIndex(NS_COMPONENT_TYPE_FACTORY_ONLY)
+    : cid(aClass), typeIndex(NS_COMPONENT_TYPE_FACTORY_ONLY)
 {
     MOZ_COUNT_CTOR(nsFactoryEntry);
     factory = aFactory;
@@ -1707,11 +1643,7 @@ FreeServiceFactoryEntryEnumerate(PLDHashTable *aTable,
         return PL_DHASH_NEXT;
     
     nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
-    if (factoryEntry->mServiceEntry) {
-        delete factoryEntry->mServiceEntry;
-        factoryEntry->mServiceEntry = nsnull;
-    }
-
+    factoryEntry->mServiceObject = nsnull;
     return PL_DHASH_NEXT;
 }
 
@@ -1727,11 +1659,7 @@ FreeServiceContractIDEntryEnumerate(PLDHashTable *aTable,
         return PL_DHASH_NEXT;
 
     nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
-    if (factoryEntry->mServiceEntry) {
-        delete factoryEntry->mServiceEntry;
-        factoryEntry->mServiceEntry = nsnull;
-    }
-
+    factoryEntry->mServiceObject = nsnull;
     return PL_DHASH_NEXT;
 }
 
@@ -1779,37 +1707,17 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
         entry = factoryTableEntry->mFactoryEntry;
     }
-    nsServiceEntry* serviceEntry;
-    if (entry && entry->mServiceEntry) {
-        serviceEntry = entry->mServiceEntry;
 
-        if (!serviceEntry->mObject)
-            return NS_ERROR_NULL_POINTER;
-
-        nsISupports* service; // keep as raw point (avoid extra addref/release)
-        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
-        if (NS_SUCCEEDED(rv)) {
-            // The refcount acquired in QI() above is "returned" to
-            // the caller.
-            *result = service;
-
-            // If someone else requested the service to be shut down, 
-            // and we just asked to get it again before it could be 
-            // released, then cancel their shutdown request:
-            if (serviceEntry->mShuttingDown) {
-                serviceEntry->mShuttingDown = PR_FALSE;
-                NS_ADDREF(service);      // Released in UnregisterService
-            }
-        }
-        return rv;
+    if (entry && entry->mServiceObject) {
+         return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
-    nsISupports* service;
+    nsCOMPtr<nsISupports> service;
     // We need to not be holding the service manager's monitor while calling 
     // CreateInstance, because it invokes user code which could try to re-enter
     // the service manager:
     mon.Exit();
-    rv = CreateInstance(aClass, NULL, aIID, (void**)&service);
+    rv = CreateInstance(aClass, NULL, aIID, getter_AddRefs(service));
     mon.Enter();
 
     if (NS_FAILED(rv))
@@ -1820,20 +1728,16 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
             NS_STATIC_CAST(nsFactoryTableEntry*,
                            PL_DHashTableOperate(&mFactories, &aClass,
                                                 PL_DHASH_LOOKUP));
-        if (PL_DHASH_ENTRY_IS_FREE(factoryTableEntry)) {
-            NS_ASSERTION(factoryTableEntry, "we should have a factory entry since CI succeeded - we should not get here");
-            return NS_ERROR_FAILURE;
+        if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
+            entry = factoryTableEntry->mFactoryEntry;
         }
-    }
-  
-    serviceEntry = new nsServiceEntry(service, entry);
-    if (serviceEntry == nsnull) {
-        NS_RELEASE(service);
-        return NS_ERROR_OUT_OF_MEMORY;       
+        NS_ASSERTION(entry, "we should have a factory entry since CI succeeded - we should not get here");
+        if (!entry) return NS_ERROR_FAILURE; 
     }
 
-    entry->mServiceEntry = serviceEntry; // deleted in nsFactoryEntry's destructor
-    *result = service; // transfer ownership
+    entry->mServiceObject = service; 
+    *result = service.get();
+    NS_ADDREF(NS_STATIC_CAST(nsISupports*, (*result))); 
     return rv;
 }
 
@@ -1861,15 +1765,11 @@ nsComponentManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aServi
         factoryTableEntry->mFactoryEntry = entry;
     }
     else {
-        if (entry->mServiceEntry)
+        if (entry->mServiceObject)
             return NS_ERROR_FAILURE;
     }
 
-    nsServiceEntry *serviceEntry = new nsServiceEntry(aService, entry); //owns a ref to aService
-    if (serviceEntry == NULL) 
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    entry->mServiceEntry = serviceEntry;
+    entry->mServiceObject = aService;
     return NS_OK;
 }
 
@@ -1890,11 +1790,10 @@ nsComponentManagerImpl::UnregisterService(const nsCID& aClass)
         entry = factoryTableEntry->mFactoryEntry;
     }
 
-    if (entry == NULL || entry->mServiceEntry == NULL)
+    if (!entry || !entry->mServiceObject)
         return NS_ERROR_SERVICE_NOT_FOUND;
-
-    delete entry->mServiceEntry;
-    entry->mServiceEntry = nsnull;
+    
+    entry->mServiceObject = nsnull;
     return rv;
 }
 
@@ -1930,15 +1829,11 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
         contractIDTableEntry->mFactoryEntry = entry;
     }
     else {
-        if (entry->mServiceEntry)
+        if (entry->mServiceObject)
             return NS_ERROR_FAILURE;
     }
 
-    nsServiceEntry *serviceEntry = new nsServiceEntry(aService, entry); //owns a ref to aService
-    if (serviceEntry == nsnull) 
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    entry->mServiceEntry = serviceEntry;
+    entry->mServiceObject = aService;
     return NS_OK;
 }
 
@@ -1970,22 +1865,11 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     if (PL_DHASH_ENTRY_IS_BUSY(factoryTableEntry)) {
         entry = factoryTableEntry->mFactoryEntry;
     }
-    nsServiceEntry* serviceEntry;
-    if (entry && entry->mServiceEntry) {
-        serviceEntry = entry->mServiceEntry;
 
-        if (!serviceEntry->mObject)
-            return NS_ERROR_NULL_POINTER;
-        nsISupports* service; // keep as raw point (avoid extra addref/release)
-        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+    if (entry && entry->mServiceObject) {
+        nsCOMPtr<nsISupports> service;
+        rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
         *result =(service!=nsnull);
-        // If someone else requested the service to be shut down, 
-        // and we just asked to get it again before it could be 
-        // released, then cancel their shutdown request:
-        if (serviceEntry->mShuttingDown) {
-            serviceEntry->mShuttingDown = PR_FALSE;
-            NS_ADDREF(service);      // Released in UnregisterService
-        }
     }
     return rv;
 
@@ -2022,22 +1906,10 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
         }
     }   // exit monitor
 
-    nsServiceEntry* serviceEntry;
-    if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
-        serviceEntry = entry->mServiceEntry;
-
-        if (!serviceEntry->mObject)
-            return NS_ERROR_NULL_POINTER;
-        nsISupports* service; // keep as raw point (avoid extra addref/release)
-        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+    if (entry && entry != kNonExistentContractID && entry->mServiceObject) {
+        nsCOMPtr<nsISupports> service;
+        rv = entry->mServiceObject->QueryInterface(aIID, getter_AddRefs(service));
         *result =(service!=nsnull);
-        // If someone else requested the service to be shut down, 
-        // and we just asked to get it again before it could be 
-        // released, then cancel their shutdown request:
-        if (serviceEntry->mShuttingDown) {
-            serviceEntry->mShuttingDown = PR_FALSE;
-            NS_ADDREF(service);      // Released in UnregisterService
-        }
     }
     return rv;
 }
@@ -2059,12 +1931,11 @@ nsComponentManagerImpl::UnregisterService(const char* aContractID)
        entry = contractIDTableEntry->mFactoryEntry;
    }
    
-   if (entry == nsnull || entry == kNonExistentContractID || entry->mServiceEntry == nsnull)
+   if (entry == nsnull || entry == kNonExistentContractID || entry->mServiceObject == nsnull)
         return NS_ERROR_SERVICE_NOT_FOUND;
 
-    delete entry->mServiceEntry;
-    entry->mServiceEntry = nsnull;
-    return rv;
+   entry->mServiceObject = nsnull;
+   return rv;
 }
 
 NS_IMETHODIMP
@@ -2093,37 +1964,17 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     if (PL_DHASH_ENTRY_IS_BUSY(contractIDTableEntry)) {
         entry = contractIDTableEntry->mFactoryEntry;
     }
-    nsServiceEntry* serviceEntry;
-    if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
-        serviceEntry = entry->mServiceEntry;
 
-        if (!serviceEntry->mObject)
-            return NS_ERROR_NULL_POINTER;
-
-        nsISupports* service; // keep as raw point (avoid extra addref/release)
-        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
-        if (NS_SUCCEEDED(rv)) {
-            // The refcount acquired in QI() above is "returned" to
-            // the caller.
-            *result = service;
-
-            // If someone else requested the service to be shut down, 
-            // and we just asked to get it again before it could be 
-            // released, then cancel their shutdown request:
-            if (serviceEntry->mShuttingDown) {
-                serviceEntry->mShuttingDown = PR_FALSE;
-                NS_ADDREF(service);      // Released in UnregisterService
-            }
-        }
-        return rv;
+    if (entry && entry != kNonExistentContractID && entry->mServiceObject) {
+        return entry->mServiceObject->QueryInterface(aIID, result);
     }
 
-    nsISupports* service;
+    nsCOMPtr<nsISupports> service;
     // We need to not be holding the service manager's monitor while calling 
     // CreateInstance, because it invokes user code which could try to re-enter
     // the service manager:
     mon.Exit();
-    rv = CreateInstanceByContractID(aContractID, NULL, aIID, (void**)&service);
+    rv = CreateInstanceByContractID(aContractID, NULL, aIID, getter_AddRefs(service));
     mon.Enter();
 
     if (NS_FAILED(rv))
@@ -2142,14 +1993,9 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         if (!entry) return NS_ERROR_FAILURE; 
     }
   
-    serviceEntry = new nsServiceEntry(service, entry);
-    if (serviceEntry == nsnull) {
-        NS_RELEASE(service);
-        return NS_ERROR_OUT_OF_MEMORY;       
-    }
-
-    entry->mServiceEntry = serviceEntry; // deleted in nsFactoryEntry's destructor
-    *result = service; // transfer ownership
+    entry->mServiceObject = service;
+    *result = service.get();
+    NS_ADDREF(NS_STATIC_CAST(nsISupports*, (*result)));
     return rv;
 }
 
