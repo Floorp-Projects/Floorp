@@ -290,12 +290,11 @@ sub main {
 
   unless ($Settings::TestOnly) {
     # Checkout/update the camino code.
-    # Chimera branch doing this for us, we will need this later.
-    # $status = checkout($mozilla_build_dir);
-    # TinderUtils::print_log("Status from checkout: $status\n");
-    # if ($status != 0) {
-    #   $post_status = 'busted';
-    # }
+    $status = checkout($mozilla_build_dir);
+    TinderUtils::print_log("Status from checkout: $status\n");
+    if ($status != 0) {
+      $post_status = 'busted';
+    }
     
     # Build camino if we passed the checkout command.
     if ($post_status ne 'busted') {
