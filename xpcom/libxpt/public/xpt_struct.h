@@ -44,13 +44,11 @@ typedef struct XPTInterfaceDescriptor XPTInterfaceDescriptor;
 typedef struct XPTConstDescriptor XPTConstDescriptor;
 typedef struct XPTMethodDescriptor XPTMethodDescriptor;
 typedef struct XPTParamDescriptor XPTParamDescriptor;
+typedef struct XPTTypeDescriptor XPTTypeDescriptor;
 typedef struct XPTTypeDescriptorPrefix XPTTypeDescriptorPrefix;
-typedef struct XPTSimpleTypeDescriptor XPTSimpleTypeDescriptor;
-typedef struct XPTInterfaceDescriptor XPTInterfaceDescriptor;
-typedef struct XPTInterfaceIsTypeDescriptor XPTInterfaceIsTypeDescriptor;
 typedef struct XPTString XPTString;
+typedef struct XPTAnnotation XPTAnnotation;
 typedef struct XPTAnnotationPrefix XPTAnnotationPrefix;
-typedef struct XPTEmptyAnnotation XPTEmptyAnnotation;
 typedef struct XPTPrivateAnnotation XPTPrivateAnnotation;
 
 struct XPTHeader {
@@ -67,6 +65,7 @@ struct XPTHeader {
 struct XPTInterfaceDirectoryEntry {
     uint128                iid;
     char                   *name;
+    char                   *namespace;    
     XPTInterfaceDescriptor *interface_descriptor;
 };
 
@@ -78,6 +77,23 @@ struct XPTInterfaceDescriptor {
     XPTConstDescriptor          *const_descriptors;
 };
 
+/*
+ * A ConstDescriptor is a variable-size record that records the name and 
+ * value of a scoped interface constant. 
+ *
+ * The types of the method parameter are restricted to the following subset 
+ * of TypeDescriptors: 
+ *
+ * int8, uint8, int16, uint16, int32, uint32, 
+ * int64, uint64, wchar_t, char, string
+ * 
+ * The type (and thus the size) of the value record is determined by the 
+ * contents of the associated TypeDescriptor record. For instance, if type 
+ * corresponds to int16, then value is a two-byte record consisting of a 
+ * 16-bit signed integer.  For a ConstDescriptor type of string, the value 
+ * record is of type String*, i.e. an offset within the data pool to a 
+ * String record containing the constant string.
+ */
 struct XPTConstDescriptor {
     char                *name;
     XPTTypeDescriptor   type;
@@ -98,7 +114,7 @@ struct XPTConstDescriptor {
 
 struct XPTMethodDescriptor {
     uint8               is_getter:1, is_setter:1, is_varargs:1,
-                        is_constructor:1, reserved:4;
+                        is_constructor:1, is_hidden:1, reserved:3;
     char                *name;
     uint8               num_args;
     XPTParamDescriptor  *params;
@@ -110,24 +126,35 @@ struct XPTParamDescriptor {
     XPTTypeDescriptor type;
 };
 
+/* 
+ * A TypeDescriptor is a variable-size record used to identify the type of a 
+ * method argument or return value. 
+ *
+ * There are three types of TypeDescriptors:
+ *
+ * SimpleTypeDescriptor
+ * InterfaceTypeDescriptor
+ * InterfaceIsTypeDescriptor
+ *
+ * The tag field in the prefix indicates which of the variant TypeDescriptor 
+ * records is being used, and hence the way any remaining fields should be 
+ * parsed. Values from 0 to 17 refer to SimpleTypeDescriptors. The value 18 
+ * designates an InterfaceTypeDescriptor, while 19 represents an 
+ * InterfaceIsTypeDescriptor.
+ */
+#define TD_INTERFACE_TYPE    18
+#define TD_INTERFACE_IS_TYPE 19
+
 struct XPTTypeDescriptorPrefix {
     uint8 is_pointer:1, is_unique_pointer:1, is_reference:1,
           tag:5;
 };
 
-struct XPTInterfaceTypeDescriptor {
-    XPTInterfaceDirectoryEntry *interface;
-};
-
-struct XPTInterfaceIsTypeDescriptor {
-    uint8 argnum;
-};
-
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
     union {
-        XPTInterfaceTypeDescriptor interface;
-        XPTInterfaceIsTypeDescriptor interface_is;
+        XPTInterfaceDirectoryEntry *interface;
+        uint8                      argnum;
     } type;
 }
 
@@ -135,6 +162,27 @@ struct XPTString {
     uint16 length;
     char   bytes[];
 };
+
+/*
+ * Annotation records are variable-size records used to store secondary 
+ * information about the typelib, e.g. such as the name of the tool that 
+ * generated the typelib file, the date it was generated, etc.  The 
+ * information is stored with very loose format requirements so as to 
+ * allow virtually any private data to be stored in the typelib.
+ *
+ * There are two types of Annotations:
+ *
+ * EmptyAnnotation
+ * PrivateAnnotation
+ *
+ * The tag field of the prefix discriminates among the variant record 
+ * types for Annotation's.  If the tag is 0, this record is an 
+ * EmptyAnnotation. EmptyAnnotation's are ignored - they're only used to 
+ * indicate an array of Annotation's that's completely empty.  If the tag 
+ * is 1, the record is a PrivateAnnotation. 
+ */
+#define EMPTY_ANNOTATION 0
+#define PRIVATE_ANNOTATION 1
 
 struct XPTAnnotationPrefix {
     uint8 is_last:1, tag:7;
