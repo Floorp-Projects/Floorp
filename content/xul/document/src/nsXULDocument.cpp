@@ -855,6 +855,7 @@ protected:
     static nsIAtom*  kLazyContentAtom;
     static nsIAtom*  kObservesAtom;
     static nsIAtom*  kOpenAtom;
+    static nsIAtom*  kPersistAtom;
     static nsIAtom*  kRefAtom;
     static nsIAtom*  kRuleAtom;
     static nsIAtom*  kTemplateAtom;
@@ -878,6 +879,9 @@ protected:
 
     nsresult
     AddNamedDataSource(const char* uri);
+
+    nsresult
+    Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute);
 
     // IMPORTANT: The ownership implicit in the following member variables has been 
     // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
@@ -909,7 +913,7 @@ protected:
     nsElementMap               mResources;
     nsCOMPtr<nsISupportsArray> mBuilders;        // [OWNER] of array, elements shouldn't own this, but they do
     nsCOMPtr<nsIRDFContentModelBuilder> mXULBuilder;     // [OWNER] 
-    nsCOMPtr<nsIRDFDataSource>          mLocalDataSource;     // [OWNER] 
+    nsCOMPtr<nsIRDFDataSource>          mLocalStore;     // [OWNER] 
     nsCOMPtr<nsIRDFDataSource>          mDocumentDataSource;  // [OWNER] 
     nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
@@ -939,6 +943,7 @@ nsIAtom* XULDocumentImpl::kIdAtom;
 nsIAtom* XULDocumentImpl::kLazyContentAtom;
 nsIAtom* XULDocumentImpl::kObservesAtom;
 nsIAtom* XULDocumentImpl::kOpenAtom;
+nsIAtom* XULDocumentImpl::kPersistAtom;
 nsIAtom* XULDocumentImpl::kRefAtom;
 nsIAtom* XULDocumentImpl::kRuleAtom;
 nsIAtom* XULDocumentImpl::kTemplateAtom;
@@ -984,6 +989,7 @@ XULDocumentImpl::XULDocumentImpl(void)
         kLazyContentAtom                = NS_NewAtom("lazycontent");
         kObservesAtom                   = NS_NewAtom("observes");
         kOpenAtom                       = NS_NewAtom("open");
+        kPersistAtom                    = NS_NewAtom("persist");
         kRefAtom                        = NS_NewAtom("ref");
         kRuleAtom                       = NS_NewAtom("rule");
         kTemplateAtom                   = NS_NewAtom("template");
@@ -1085,6 +1091,7 @@ XULDocumentImpl::~XULDocumentImpl()
         NS_IF_RELEASE(kLazyContentAtom);
         NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kOpenAtom);
+        NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
         NS_IF_RELEASE(kTemplateAtom);
@@ -2036,19 +2043,17 @@ XULDocumentImpl::EndLoad()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add XUL datasource to db");
         if (NS_FAILED(rv)) return rv;
 
-#ifdef USE_LOCAL_STORE
         // Add the local store to the composite datasource.
-        rv = gRDFService->GetDataSource("rdf:local-store", &mLocalDataSource);
+        rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(mLocalStore));
 
         if (NS_FAILED(rv)) {
             NS_ERROR("couldn't create local data source");
             return rv;
         }
 
-        rv = db->AddDataSource(mLocalDataSource);
+        rv = db->AddDataSource(mLocalStore);
         NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't add local data source to db");
         if (NS_FAILED(rv)) return rv;
-#endif
 
         // Now create the root content for the document.
         rv = mXULBuilder->CreateRootContent(mRootResource);
@@ -2153,6 +2158,25 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
         }
         else if (aAttribute == kRefAtom) {
             RebuildWidgetItem(aElement);
+        }
+    }
+
+    // Finally, see if there is anything we need to persist in the
+    // localstore.
+    //
+    // XXX Namespace handling broken :-(
+    nsAutoString persist;
+    rv = aElement->GetAttribute(kNameSpaceID_None, kPersistAtom, persist);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        nsAutoString attr;
+        rv = aAttribute->ToString(attr);
+        if (NS_FAILED(rv)) return rv;
+
+        if (persist.Find(attr) >= 0) {
+            rv = Persist(aElement, kNameSpaceID_None, aAttribute);
+            if (NS_FAILED(rv)) return rv;
         }
     }
 
@@ -3085,6 +3109,83 @@ XULDocumentImpl::GetElementsByAttribute(const nsString& aAttribute, const nsStri
 }
 
 
+NS_IMETHODIMP
+XULDocumentImpl::Persist(const nsString& aID, const nsString& aAttr)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMElement> domelement;
+    rv = GetElementById(aID, getter_AddRefs(domelement));
+    if (NS_FAILED(rv)) return rv;
+
+    if (! domelement)
+        return NS_OK;
+
+    nsCOMPtr<nsIContent> element = do_QueryInterface(domelement);
+    NS_ASSERTION(element != nsnull, "null ptr");
+    if (! element)
+        return NS_ERROR_UNEXPECTED;
+
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> tag;
+    rv = element->ParseAttributeString(aAttr, *getter_AddRefs(tag), nameSpaceID);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = Persist(element, nameSpaceID, tag);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+
+nsresult
+XULDocumentImpl::Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFResource> source;
+    rv = nsRDFContentUtils::GetElementResource(aElement, getter_AddRefs(source));
+    if (NS_FAILED(rv)) return rv;
+
+    // No ID, so nothing to persist.
+    if (! source)
+        return NS_OK;
+
+    // Ick. Construct a resource from the namespace and attribute.
+    nsCOMPtr<nsIRDFResource> property;
+    rv = nsRDFContentUtils::GetResource(aNameSpaceID, aAttribute, getter_AddRefs(property));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString value;
+    rv = aElement->GetAttribute(kNameSpaceID_None, aAttribute, value);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool novalue = (rv != NS_CONTENT_ATTR_HAS_VALUE);
+
+    nsCOMPtr<nsIRDFNode> oldtarget;
+    rv = mLocalStore->GetTarget(source, property, PR_TRUE, getter_AddRefs(oldtarget));
+    if (NS_FAILED(rv)) return rv;
+
+    if (oldtarget && novalue) {
+        rv = mLocalStore->Unassert(source, property, oldtarget);
+    }
+    else {
+        nsCOMPtr<nsIRDFLiteral> newtarget;
+        rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(newtarget));
+        if (NS_FAILED(rv)) return rv;
+
+        if (oldtarget) {
+            rv = mLocalStore->Change(source, property, oldtarget, newtarget);
+        }
+        else {
+            rv = mLocalStore->Assert(source, property, newtarget, PR_TRUE);
+        }
+    }
+
+    if (NS_FAILED(rv)) return rv;
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMNSDocument interface
 
@@ -3486,7 +3587,7 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     }
 
     // We share the same data sources
-    popupDoc->mLocalDataSource = mLocalDataSource;
+    popupDoc->mLocalStore = mLocalStore;
     popupDoc->mDocumentDataSource = mDocumentDataSource;
 
     // We share the same namespace manager

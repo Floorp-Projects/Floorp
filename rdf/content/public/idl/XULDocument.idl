@@ -8,6 +8,8 @@ interface XULDocument : Document {
 
 	readonly attribute XULCommandDispatcher commandDispatcher;
 
-    Element getElementById(in DOMString id);
+        Element getElementById(in DOMString id);
 	NodeList getElementsByAttribute(in DOMString name, in DOMString value);
+
+        void persist(in DOMString id, in DOMString attr);
 };

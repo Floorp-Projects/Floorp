@@ -2215,7 +2215,6 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         return rv;
     }
 
-#ifdef USE_LOCAL_STORE
     // Add the local store as the first data source in the db.
     {
         nsCOMPtr<nsIRDFDataSource> localstore;
@@ -2227,7 +2226,6 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
         if (NS_FAILED(rv)) return rv;
     }
-#endif
 
     // Parse datasources: they are assumed to be a whitespace
     // separated list of URIs; e.g.,
