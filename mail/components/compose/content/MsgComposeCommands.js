@@ -1159,26 +1159,25 @@ function ComposeStartup(recycled, aParams)
   var params = null; // New way to pass parameters to the compose window as a nsIMsgComposeParameters object
   var args = null;   // old way, parameters are passed as a string
   
-  if (recycled)
-    dump("This is a recycled compose window!\n");
-
   if (aParams)
     params = aParams;
-
-  else if (window.arguments && window.arguments[0]) {
-    try {
+  else if (window.arguments && window.arguments[0]) 
+  {
+    try 
+    {
       if (window.arguments[0] instanceof Components.interfaces.nsIMsgComposeParams)
         params = window.arguments[0];
       else
         params = handleMailtoArgs(window.arguments[0]);
     }
-    catch(ex) { dump("ERROR with parameters: " + ex + "\n"); }
       
+    catch(ex) { dump("ERROR with parameters: " + ex + "\n"); }
+     
     // if still no dice, try and see if the params is an old fashioned list of string attributes
     // XXX can we get rid of this yet? 
     if (!params)
       args = GetArgs(window.arguments[0]);
-  }
+  }  
 
   var identityList = document.getElementById("msgIdentity");
   var identityListPopup = document.getElementById("msgIdentityPopup");
