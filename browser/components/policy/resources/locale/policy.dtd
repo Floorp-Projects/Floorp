@@ -1,8 +1,0 @@
-
-<!ENTITY  addCurrentPageTo.label                  "Add Current Site to:">
-<!ENTITY  addToNewRegion.label                    "New Region...">
-
-<!ENTITY  currentPageDetails.label                "Current Site can:">
-<!ENTITY  currentPageCanSetCookies.label          "Set Cookies">
-<!ENTITY  currentPageCanExecuteJavaScript.label   "Execute Scripts">
-
