@@ -40,6 +40,10 @@
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNeckoUtil.h"
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
+#include "nsIDOMWindow.h"
+#include "nsIWindowMediator.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
@@ -162,10 +166,16 @@ public:
     static nsSupportsHashtable *mDataSourceTable;
 
 protected:
+    NS_IMETHOD SelectProviderForPackage(const PRUnichar *aThemeFileName,
+                                        const PRUnichar *aPackageName, 
+                                        const PRUnichar *aProviderName);
+
     NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
     NS_IMETHOD InitializeDataSource(nsString &aPackage,
                                     nsString &aProvider,
-                                    nsIRDFDataSource **aResult);
+                                    nsIRDFDataSource **aResult,
+                                    PRBool aUseProfileDirOnly = PR_FALSE);
+
     nsresult GetPackageTypeResource(const nsString& aChromeType, nsIRDFResource** aResult);
     nsresult GetChromeResource(nsIRDFDataSource *aDataSource,
                                nsString& aResult, nsIRDFResource* aChromeResource,
@@ -177,8 +187,13 @@ protected:
                               nsIRDFDataSource *aDataSource);
 private:
     NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
-    NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult);
+    NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
+                              PRBool aUseProfileDirOnly = PR_FALSE);
 
+    NS_IMETHOD CheckForProfileFile(const nsCAutoString& aFileName, nsCAutoString& aFileURL);
+    NS_IMETHOD GetProfileRoot(nsCAutoString& aFileURL);
+
+    NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
 };
 
 PRUint32 nsChromeRegistry::gRefCnt  ;
@@ -373,7 +388,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     nsString packageStr(package), providerStr(provider);
     InitializeDataSource(packageStr, providerStr, getter_AddRefs(dataSource));
 
-
     rv = GetChromeResource(dataSource, name, chromeResource, kCHROME_name);
     if (NS_FAILED (rv)) {
         if (PL_strcmp(provider,"/locale") == 0)
@@ -540,7 +554,8 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult)
+NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult, 
+                                               PRBool aUseProfileDir)
 {
     nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                                      nsnull,
@@ -556,23 +571,21 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, n
     if (!mDataSourceTable)
       mDataSourceTable = new nsSupportsHashtable;
 
-    rv = remote->Init(aFileName);
+    nsCAutoString fileURL;
+    CheckForProfileFile(aFileName, fileURL);
+
+    rv = remote->Init(fileURL);
     if (NS_FAILED(rv)) {
-      nsStringKey skey(aFileName);
+      nsStringKey skey(fileURL);
       mDataSourceTable->Put(&skey, nsnull);
       return rv;
     }
 
     // We need to read this synchronously.
     rv = remote->Refresh(PR_TRUE);
-    if (NS_FAILED(rv)) {
-      nsStringKey skey(aFileName);
-      mDataSourceTable->Put(&skey, nsnull);
-      return rv;
-    }
-
+    
     nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
-    nsStringKey skey(aFileName);
+    nsStringKey skey(fileURL);
     mDataSourceTable->Put(&skey, (void*)supports.get());
 
     return NS_OK;
@@ -581,12 +594,13 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName, n
 NS_IMETHODIMP
 nsChromeRegistry::InitializeDataSource(nsString &aPackage,
                                        nsString &aProvider,
-                                       nsIRDFDataSource **aResult)
+                                       nsIRDFDataSource **aResult,
+                                       PRBool aUseProfileOnly)
 {
     nsCAutoString chromeFile, overlayFile;
 
     // Retrieve the mInner data source.
-    chromeFile = "resource:/chrome/";
+    chromeFile = "chrome/";
     chromeFile += aPackage;
     chromeFile += aProvider; // provider already has a / in the front of it
     chromeFile += "/";
@@ -594,11 +608,26 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
     chromeFile += "chrome.rdf";
     overlayFile += "overlays.rdf";
 
+    // Try the profile root first.
+    nsCAutoString profileKey;
+    GetProfileRoot(profileKey);
+    profileKey += chromeFile;
+
+    nsCAutoString installKey("resource:/");
+    installKey += chromeFile;
+
     if (mDataSourceTable)
     {
       // current.rdf and overlays.rdf are loaded in pairs and so if one is loaded, the other should be too.
-      nsStringKey skey(chromeFile);
+      nsStringKey skey(profileKey);
       nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&skey)));
+  
+      if (!supports && !aUseProfileOnly) {
+        // Try the install key instead.
+        nsStringKey instkey(installKey);
+        supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&instkey)));
+      }
+
       if (supports)
       {
         nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports);
@@ -610,14 +639,12 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
         }
         return NS_ERROR_FAILURE;
       }
-      else if (mDataSourceTable->Exists(&skey))
-      	return NS_OK;
     }
 
    nsCOMPtr<nsIRDFDataSource> overlayDataSource;
 
-   LoadDataSource(chromeFile, aResult);
-   LoadDataSource(overlayFile, getter_AddRefs(overlayDataSource));
+   LoadDataSource(chromeFile, aResult, aUseProfileOnly);
+   LoadDataSource(overlayFile, getter_AddRefs(overlayDataSource), aUseProfileOnly);
 
    return NS_OK;
 }
@@ -732,10 +759,60 @@ void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, ch
 
 // theme stuff
 
-NS_IMETHODIMP nsChromeRegistry::RefreshChrome()
+NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 {
+  nsresult rv;
+
+  // Flush the style sheet cache completely.
+
+  // get the window mediator
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, "components://netscape/rdf/datasource?name=window-mediator", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
+      PRBool more;
+
+      // get each dom window
+      windowEnumerator->HasMoreElements(&more);
+      while (more) {
+        nsCOMPtr<nsISupports> protoWindow;
+        rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+        if (NS_SUCCEEDED(rv) && protoWindow) {
+          nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(protoWindow);
+          if (domWindow)
+            RefreshWindow(domWindow);
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }
+
+NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
+{
+  // Get the DOM document.
+
+  // Iterate over the style sheets.
+  for ( ; ;) {
+    // Reload the style sheets synchronously right here. Cache them.
+
+    // Remove the old style sheet
+
+    // Add the newly loaded style sheet
+  }
+  
+  // Get our frames object
+
+  // Walk the frames
+  for ( ; ;) {
+    // For each frame, recur.
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsChromeRegistry::ApplyTheme(const PRUnichar *themeFileName)
 {
@@ -883,36 +960,165 @@ NS_IMETHODIMP nsChromeRegistry::RemoveOverlays(nsAutoString aPackage,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::ApplyThemeToPackage(const PRUnichar *aThemeFileName,
-                                                    const PRUnichar *aPackageName,
-                                                    const PRUnichar *aProviderName)
+NS_IMETHODIMP nsChromeRegistry::SetSkin(const PRUnichar *aSkin,
+                                           const PRUnichar *aPackageName)
+{
+  nsAutoString provider("skin");
+  return SelectProviderForPackage(aSkin, aPackageName, provider.GetUnicode());
+}
+
+NS_IMETHODIMP nsChromeRegistry::SetLocale(const PRUnichar *aLocale,
+                                             const PRUnichar *aPackageName)
+{
+  nsAutoString provider("locale");
+  return SelectProviderForPackage(aLocale, aPackageName, provider.GetUnicode());
+}
+
+NS_IMETHODIMP nsChromeRegistry::SetDefaultSkin(const PRUnichar *aSkin,
+                                               const PRUnichar *aPackageName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::SetDefaultLocale(const PRUnichar *aSkin,
+                                                 const PRUnichar *aPackageName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const PRUnichar *aThemeFileName,
+                                                         const PRUnichar *aPackageName, 
+                                                         const PRUnichar *aProviderName)
 {
   nsresult rv;
+
+  // Fetch the data source, guaranteeing that it comes from the
+  // profile directory.
+  // Get the correct data source. Force it to come from the profile dir.
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  nsAutoString package(aPackageName), provider("/");
-  provider += aProviderName;
+  nsAutoString package(aPackageName), provider(aProviderName);
+  if (NS_FAILED(rv = InitializeDataSource(package, provider, getter_AddRefs(dataSource), PR_TRUE)))
+    return rv;
 
-  if (NS_FAILED(InitializeDataSource(package, provider, getter_AddRefs(dataSource))))
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIRDFResource> resource;
-  rv = GetPackageTypeResource("chrome:overlays",
-                              getter_AddRefs(resource));
+  // Assert the new skin.  If a value already exists, blow it away using a Change operation.
+  nsCOMPtr<nsIRDFResource> chromeResource;
+  nsAutoString name;
+  rv = GetChromeResource(dataSource, name, chromeResource, kCHROME_name);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIRDFContainer> container;
-  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
-                                          nsnull,
-                                          NS_GET_IID(nsIRDFContainer),
-                                          getter_AddRefs(container));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  
-  if (NS_SUCCEEDED(container->Init(dataSource, resource)))
-  {
-    RemoveOverlays(package, provider, container, dataSource);
+  nsAutoString lookup("chrome://");
+  lookup += aPackageName;
+  lookup += "/";
+  lookup += aProviderName;
+  lookup += "/";
+
+  nsCOMPtr<nsIRDFResource> source;
+  if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(source)))) {
+    NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+    return rv;
   }
 
+  // Get the old targets
+  nsCOMPtr<nsIRDFNode> retVal;
+  dataSource->GetTarget(source, chromeResource, PR_TRUE, getter_AddRefs(retVal));
+
+  nsCOMPtr<nsIRDFLiteral> literal;
+  gRDFService->GetLiteral(name.GetUnicode(), getter_AddRefs(literal));
+
+  if (retVal) {
+    // Perform a CHANGE operation.
+    dataSource->Change(source, chromeResource, retVal, literal);
+  } else {
+    // Do an ASSERT instead.
+    dataSource->Assert(source, chromeResource, literal, PR_TRUE);
+  }
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource);
+  if (! remote)
+    return NS_ERROR_UNEXPECTED;
+
+  remote->Flush();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsChromeRegistry::CheckForProfileFile(const nsCAutoString& aFileName, nsCAutoString& aFileURL) 
+{ 
+  nsCOMPtr<nsIFileLocator> fl;
+  
+  nsresult rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+                                          nsnull,
+                                          NS_GET_IID(nsIFileLocator),
+                                          getter_AddRefs(fl));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  // Build a fileSpec that points to the destination
+  // (profile dir + chrome + package + provider + chrome.rdf)
+  nsCOMPtr<nsIFileSpec> chromeFileInterface;
+  fl->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(chromeFileInterface));
+  nsFileSpec chromeFile;
+
+  PRBool exists = PR_FALSE;
+  if (chromeFileInterface) {
+    chromeFileInterface->GetFileSpec(&chromeFile);
+    chromeFile += "/";
+    chromeFile += (const char*)aFileName;
+    exists = chromeFile.Exists();
+  }
+
+  if (exists) {
+    nsFileURL fileURL(chromeFile);
+    const char* fileStr = fileURL.GetURLString();
+    aFileURL = fileStr;
+    aFileURL += aFileName;
+  }
+  else {
+    // Use the install dir.
+    aFileURL = "resource:/";
+    aFileURL += aFileName;
+  }
+
+  return NS_OK; 
+}
+    
+NS_IMETHODIMP
+nsChromeRegistry::GetProfileRoot(nsCAutoString& aFileURL) 
+{ 
+  nsCOMPtr<nsIFileLocator> fl;
+  
+  nsresult rv = nsComponentManager::CreateInstance("component://netscape/filelocator",
+                                          nsnull,
+                                          NS_GET_IID(nsIFileLocator),
+                                          getter_AddRefs(fl));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  // Build a fileSpec that points to the destination
+  // (profile dir + chrome + package + provider + chrome.rdf)
+  nsCOMPtr<nsIFileSpec> chromeFileInterface;
+  fl->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(chromeFileInterface));
+
+  if (chromeFileInterface) {
+    nsFileSpec chromeFile;
+    chromeFileInterface->GetFileSpec(&chromeFile);
+    nsFileURL fileURL(chromeFile);
+    const char* fileStr = fileURL.GetURLString();
+    aFileURL = fileStr;
+  }
+  else {
+    aFileURL = "resource:/";
+  }
+  return NS_OK; 
+}
+
+
+NS_IMETHODIMP
+nsChromeRegistry::ReloadChrome()
+{
   return NS_OK;
 }
