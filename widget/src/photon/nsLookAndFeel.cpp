@@ -51,6 +51,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     res = mXPLookAndFeel->GetColor(aID, aColor);
     if (NS_SUCCEEDED(res))
       return res;
+    res = NS_OK;
   }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
