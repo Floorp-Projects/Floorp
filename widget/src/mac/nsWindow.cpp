@@ -92,6 +92,14 @@ nsWindow::~nsWindow()
 		mWindowRegion = nsnull;	
 		}
 
+	if (mParent == nsnull)
+	{
+		CloseWindow(mWindowPtr);
+		delete[] mWindowRecord;
+
+		mWindowPtr = nsnull;
+		mWindowRecord = nsnull;
+	}
   //XtDestroyWidget(mWidget);
   //if (nsnull != mGC) {
     //::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
