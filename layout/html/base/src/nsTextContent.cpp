@@ -45,7 +45,8 @@
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
 
-#define gCalcDebug 0
+#define CALC_DEBUG 0
+//#define DO_SELECTION 0
 
 
 
@@ -150,7 +151,8 @@ public:
   // TextFrame methods
   PRInt32 GetPosition(nsIPresContext& aCX,
                       nsGUIEvent*     aEvent,
-                      nsIFrame *      aNewFrame);
+                      nsIFrame *      aNewFrame,
+                      PRUint32&       aAcutalContentOffset);
 
   void    CalcCursorPosition(nsIPresContext& aPresContext,
                              nsGUIEvent*     aEvent,
@@ -167,6 +169,12 @@ public:
 
   PRInt32 GetContentOffset() { return mContentOffset;}
   PRInt32 GetContentLength() { return mContentLength;}
+
+  char * CompressWhiteSpace(char            * aBuffer,
+                            PRInt32           aBufSize,
+                            PRUint16        * aIndexes,
+                            PRUint32        & aStrLen,
+                            PRBool          & aShouldDeleteStr);
 
 protected:
   virtual ~TextFrame();
@@ -521,22 +529,42 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-void
-TextFrame::PaintRegularText(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nscoord dx, nscoord dy)
+
+//---------------------------------------------------------------------
+// Compresses the White Space and builds a mapping between
+// the compressed and uncompressed strings
+//---------------------------------------------------------------------
+char * TextFrame::CompressWhiteSpace(char            * aBuffer,
+                                     PRInt32           aBufSize,
+                                     PRUint16        * aIndexes,
+                                     PRUint32        & aStrLen,
+                                     PRBool          & aShouldDeleteStr) 
 {
+
+  char* s  = aBuffer;
+  char* s0 = s;
+
+  aBuffer[0] = 0;
+  aShouldDeleteStr    = PR_FALSE;
+  PRUint16 mappingInx = 0;
+  PRUint16 strInx     = 0;
+  aStrLen             = 0;
+
   // Skip leading space if necessary
   Text* txt = (Text*) mContent;
-  const PRUnichar* cp = txt->mText + mContentOffset;
+  const PRUnichar* cp  = txt->mText + mContentOffset;
   const PRUnichar* end = cp + mContentLength;
+
+  strInx = mContentOffset;
+
   if ((mFlags & TEXT_SKIP_LEADING_WS) != 0) {
     while (cp < end) {
       PRUnichar ch = *cp++;
       if (!XP_IS_SPACE(ch)) {
         cp--;
         break;
+      } else {
+        aIndexes[mappingInx++] = strInx;
       }
     }
   }
@@ -549,12 +577,10 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
       // Make a copy of the text we are to render, translating tabs
       // into whitespace.
-      char buf[100];
-      char* s = buf;
-      char* s0 = s;
       PRInt32 maxLen = (end - cp) + 8*tabs;
-      if (maxLen > sizeof(buf)) {
+      if (maxLen > aBufSize) {
         s0 = s = new char[maxLen];
+        aShouldDeleteStr = PR_TRUE;
       }
 
       // Translate tabs into whitespace; translate other whitespace into
@@ -568,80 +594,45 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
             col += spaces;
             while (--spaces >= 0) {
               *s++ = ' ';
+              aStrLen++;
             }
+            aIndexes[mappingInx++] = strInx;
+            strInx++;
             continue;
           } else {
             *s++ = ' ';
+            aStrLen++;
+            aIndexes[mappingInx++] = strInx;
+            strInx++;
           }
         } else if (ch == CH_NBSP) {
           *s++ = ' ';
+          aStrLen++;
+          aIndexes[mappingInx++] = strInx;
+          strInx++;
         } else {
           *s++ = ch;
+          aStrLen++;
+          aIndexes[mappingInx++] = strInx;
+          strInx++;
         }
         col++;
       }
-
-      // Get Selection Object
-      nsIPresShell     * shell     = aPresContext.GetShell();
-      nsIDocument      * doc       = shell->GetDocument();
-      nsISelection     * selection = doc->GetSelection();
-      nsSelectionRange * range     = selection->GetRange();
-
-
-
-      if (doc->IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
-        nsRect rect;
-        GetRect(rect);
-        rect.x = 0;     // HACK!!!: Not sure why x and y value are sometime garbage -- gpk
-        rect.y = 0;
-        rect.width--;
-        rect.height--;
-
-        nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
-
-        aRenderingContext.SetColor(NS_RGB(0,0,0));
-        aRenderingContext.FillRect(rect);
-
-        aRenderingContext.SetColor(NS_RGB(255,255,255));
-
-        // Render the text
-        {
-          char buf[255];
-          int len = s - s0;
-          strncpy(buf, s0, len);
-          buf[len] = 0;
-          printf("1 - Drawing [%s] at [%d,%d,%d,%d]\n", buf, rect.x, rect.y, rect.width, rect.height);
-        }
-        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
-        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-        aRenderingContext.SetColor(color->mColor);
-      } else {
-        // Render the text
-        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-        aRenderingContext.SetColor(color->mColor);
-        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
-      }
-      NS_RELEASE(shell);
-      NS_RELEASE(doc);
-      NS_RELEASE(selection);
-
-      if (s0 != buf) {
-        delete[] s0;
-      }
     }
-  } else {
+  } else { // is TEXT_IS_PRE
+
     if ((mFlags & TEXT_HAS_MULTIBYTE) != 0) {
       // XXX to be written
     } else {
       // Make a copy of the text we are to render, compressing out
       // whitespace; translating whitespace to literal spaces;
       // eliminating trailing whitespace.
-      char buf[100];
-      char* s = buf;
+      char* s = aBuffer;
       char* s0 = s;
       PRInt32 maxLen = end - cp;
-      if (maxLen > sizeof(buf)) {
+      if (maxLen > aBufSize) {
         s0 = s = new char[maxLen];
+        aShouldDeleteStr = PR_TRUE;
       }
 
       // Compress down the whitespace
@@ -653,74 +644,449 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
             if (!XP_IS_SPACE(ch)) {
               cp--;
               break;
+            } else {
+              aIndexes[mappingInx++] = strInx;
             }
           }
           *s++ = ' ';
+          aStrLen++;
+          aIndexes[mappingInx++] = strInx;
+          strInx++;
         } else {
           *s++ = ch;
+          aStrLen++;
+          aIndexes[mappingInx++] = strInx;
+          strInx++;
+        }
+      }
+    }
+  }
+
+  //aStrLen = s - s0;
+  return s0;
+}
+
+void
+TextFrame::PaintRegularText(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect,
+                            nscoord dx, nscoord dy)
+{
+  PRBool   delCompressedStr;
+  PRUint16 indexes[1024];
+  PRUint32 compressedStrLen = 0;
+  char buf[128];
+  char *   compressedStr  = CompressWhiteSpace(buf, sizeof(buf), indexes, compressedStrLen, delCompressedStr);
+
+#ifndef DO_SELECTION
+  if (1) {
+    // Skip leading space if necessary
+    Text* txt = (Text*) mContent;
+    const PRUnichar* cp = txt->mText + mContentOffset;
+    const PRUnichar* end = cp + mContentLength;
+    if ((mFlags & TEXT_SKIP_LEADING_WS) != 0) {
+      while (cp < end) {
+        PRUnichar ch = *cp++;
+        if (!XP_IS_SPACE(ch)) {
+          cp--;
+          break;
+        }
+      }
+    }
+
+
+    if ((mFlags & TEXT_IS_PRE) != 0) {
+      if ((mFlags & TEXT_HAS_MULTIBYTE) != 0) {
+        // XXX to be written
+      } else {
+        PRIntn tabs = TEXT_GET_TAB_COUNT(mFlags);
+
+        // Make a copy of the text we are to render, translating tabs
+        // into whitespace.
+        char buf[100];
+        char* s = buf;
+        char* s0 = s;
+        PRInt32 maxLen = (end - cp) + 8*tabs;
+        if (maxLen > sizeof(buf)) {
+          s0 = s = new char[maxLen];
+        }
+
+        // Translate tabs into whitespace; translate other whitespace into
+        // spaces.
+        PRIntn col = (PRIntn) mColumn;
+        while (cp < end) {
+          PRUint8 ch = (PRUint8) *cp++;
+          if (XP_IS_SPACE(ch)) {
+            if (ch == '\t') {
+              PRIntn spaces = 8 - (col & 7);
+              col += spaces;
+              while (--spaces >= 0) {
+                *s++ = ' ';
+              }
+              continue;
+            } else {
+              *s++ = ' ';
+            }
+          } else if (ch == CH_NBSP) {
+            *s++ = ' ';
+          } else {
+            *s++ = ch;
+          }
+          col++;
+        }
+
+        // Render the text
+        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+
+        char cmpBuf[256];
+        char sBuf[256];
+        int len = s - s0;
+        strncpy(cmpBuf, compressedStr, compressedStrLen);
+        cmpBuf[compressedStrLen] = 0;
+        strncpy(sBuf, s0, len);
+        cmpBuf[compressedStrLen] = 0;
+
+        if (compressedStrLen != len ||
+            strcmp(cmpBuf, sBuf)) {
+          int x = 0;
+        }
+
+        if (s0 != buf) {
+          delete[] s0;
         }
       }
 
-      // Get Selection Object
-      nsIPresShell     * shell     = aPresContext.GetShell();
-      nsIDocument      * doc       = shell->GetDocument();
-      nsISelection     * selection = doc->GetSelection();
-      nsSelectionRange * range     = selection->GetRange();
+    } else {
+      if ((mFlags & TEXT_HAS_MULTIBYTE) != 0) {
+        // XXX to be written
+      } else {
+        // Make a copy of the text we are to render, compressing out
+        // whitespace; translating whitespace to literal spaces;
+        // eliminating trailing whitespace.
+        char buf[100];
+        char* s = buf;
+        char* s0 = s;
+        PRInt32 maxLen = end - cp;
+        if (maxLen > sizeof(buf)) {
+          s0 = s = new char[maxLen];
+        }
 
-
-      if (doc->IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
-        nsRect rect;
-        GetRect(rect);
-        rect.x = 0;     // HACK!!!: Not sure why x and y value are sometime garbage -- gpk
-        rect.y = 0;
-        rect.width--;
-        rect.height--;
-
-        {
-          char buf[255];
-          int len = s - s0;
-          strncpy(buf, s0, len);
-          buf[len] = 0;
-          printf("2 - Drawing [%s] at [%d,%d,%d,%d]\n", buf, rect.x, rect.y, rect.width, rect.height);
-          if (strstr(buf, "size=4")) {
-            int xx = 0;
-            xx++;
+        // Compress down the whitespace
+        while (cp < end) {
+          PRUint8 ch = (PRUint8) *cp++;
+          if (XP_IS_SPACE(ch)) {
+            while (cp < end) {
+              ch = (PRUint8) *cp++;
+              if (!XP_IS_SPACE(ch)) {
+                cp--;
+                break;
+              }
+            }
+            *s++ = ' ';
+          } else {
+            *s++ = ch;
           }
         }
 
-        /*nsSelctionPoint * startPnt = range->GetStartPoint();
-        nsSelctionPoint * endPnt   = range->GetEndPoint();
-        if (mContent == startPnt->GetContent()) {
-          PRInt32 offset = startPnt->GetOffset();
+        // Render the text
+        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
 
-        }*/ 
+        char cmpBuf[256];
+        char sBuf[256];
+        int len = s - s0;
+        strncpy(cmpBuf, compressedStr, compressedStrLen);
+        cmpBuf[compressedStrLen] = 0;
+        strncpy(sBuf, s0, len);
+        sBuf[len] = 0;
 
+        if (compressedStrLen != len ||
+            strcmp(cmpBuf, sBuf)) {
+          int x = 0;
+        }
+
+        if (s0 != buf) {
+          delete[] s0;
+        }
+      }
+    }
+    return;
+  }
+#endif
+
+  // Get Selection Object
+  nsIPresShell     * shell     = aPresContext.GetShell();
+  nsIDocument      * doc       = shell->GetDocument();
+  nsISelection     * selection = doc->GetSelection();
+  nsSelectionRange * range     = selection->GetRange();
+
+  nsSelectionPoint * startPnt  = range->GetStartPoint();
+  nsSelectionPoint * endPnt    = range->GetEndPoint();
+
+  PRBool startEndInSameContent;
+
+  // This is a little more optimized, 
+  // Check to see if the start and end points are in the same content 
+  if (mContent == startPnt->GetContent() &&
+		  mContent == endPnt->GetContent()) {
+    startEndInSameContent = PR_TRUE;  // If this gets set to TRUE then we get to skip the IsInRange check
+
+    // The Start & End contents are the same 
+    // Now check to see if it is an "insert" cursor 
+    if (startPnt->GetOffset() == endPnt->GetOffset()) {
+      
+		  // Render the text Normal
+		  const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+		  aRenderingContext.SetColor(color->mColor);
+		  aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
+
+      // If cursor is in this frame the draw it
+      if (startPnt->GetOffset() > mContentOffset &&
+          startPnt->GetOffset() < mContentOffset+mContentLength) { // Draw Cursor Only
         nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
+		    nsString textStr;
+		    textStr.Append(compressedStr, endPnt->GetOffset()- mContentOffset);
 
+		    nscoord textLen = fm->GetWidth(textStr);
+
+		    aRenderingContext.SetColor(NS_RGB(255,0,0));
+		    aRenderingContext.DrawLine(textLen, 0, textLen, mRect.height);
+      }
+      return;
+    } 
+  } else {
+    startEndInSameContent = PR_FALSE;
+  }
+
+
+  if (startEndInSameContent || doc->IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
+    nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
+
+    PRInt32 startOffset = startPnt->GetOffset() - mContentOffset;
+    PRInt32 endOffset   = endPnt->GetOffset()   - mContentOffset;
+
+    nsRect rect;
+    GetRect(rect);
+    rect.x = 0;     // HACK!!!: Not sure why x and y value are sometime garbage -- gpk
+    rect.y = 0;
+    rect.width--;
+    rect.height--;
+
+    {
+      char buf[255];
+      strncpy(buf, compressedStr, compressedStrLen);
+      buf[compressedStrLen] = 0;
+      printf("2 - Drawing [%s] at [%d,%d,%d,%d]\n", buf, rect.x, rect.y, rect.width, rect.height);
+      if (strstr(buf, "size=4")) {
+        int xx = 0;
+        xx++;
+      }
+    }
+
+    if (startEndInSameContent) {
+
+      // Assume here the offsets are different 
+      // because we have already taken care of case where they are
+
+      // Render the text Normal
+      const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      aRenderingContext.SetColor(color->mColor);
+
+      //---------------------------------------------------
+      // Calc the starting point of the Selection and
+      // and draw from the beginning to where the selection starts
+      //---------------------------------------------------
+      nsString textStr;
+      nscoord  startTwipLen   = 0;
+      PRUint32 selTextCharLen = endPnt->GetOffset()-startPnt->GetOffset();
+
+      if (startPnt->GetOffset() > mContentOffset) {
+        textStr.Append(compressedStr, startPnt->GetOffset());
+        startTwipLen = fm->GetWidth(textStr);
+        aRenderingContext.DrawString(compressedStr, startPnt->GetOffset(), dx, dy, startTwipLen);
+      }
+
+      //---------------------------------------------------
+      // Calc the starting point of the Selection and
+      // and draw the selected text 
+      //---------------------------------------------------
+      textStr.SetLength(0);
+      textStr.Append(compressedStr+startPnt->GetOffset(), selTextCharLen);
+
+      nscoord selTextTwipLen = fm->GetWidth(textStr);
+
+      rect.x     = startTwipLen;
+      rect.width = selTextTwipLen;
+
+      // Render Selected Text
+      aRenderingContext.SetColor(NS_RGB(0,0,0));
+      aRenderingContext.FillRect(rect);
+
+      aRenderingContext.SetColor(NS_RGB(255,255,255));
+      // Render the text in White
+      aRenderingContext.DrawString(compressedStr+startPnt->GetOffset(), selTextCharLen, 
+                                  dx+startTwipLen, dy, selTextTwipLen);
+
+      //---------------------------------------------------
+      // Calc the end point of the Selection and
+      // and draw the remaining text 
+      //---------------------------------------------------
+      if (endPnt->GetOffset() < compressedStrLen) {
+        textStr.SetLength(0);
+        textStr.Append(compressedStr+endPnt->GetOffset(), compressedStrLen-selTextCharLen);
+
+        PRUint32 endTextTwipLen = fm->GetWidth(textStr);
+
+        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.DrawString(compressedStr+endPnt->GetOffset(), compressedStrLen-endPnt->GetOffset(), 
+                                     dx+startTwipLen+selTextTwipLen, dy, mRect.width-endTextTwipLen);
+      }
+
+    } else if (mContent == startPnt->GetContent()) {
+
+      if (startPnt->GetOffset() > mContentOffset && 
+          startPnt->GetOffset() < mContentOffset+mContentLength) {
+        // Render the text Normal
+        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        aRenderingContext.SetColor(color->mColor);
+
+        PRInt32  startOffset = startPnt->GetOffset();
+
+        //---------------------------------------------------
+        // Calc the starting point of the Selection and
+        // and draw from the beginning to where the selection starts
+        //---------------------------------------------------
+        nsString textStr;
+        nscoord  startTwipLen   = 0;
+        PRUint32 selTextCharLen = compressedStrLen-startOffset;
+
+        if (startOffset > 0) {
+          textStr.Append(compressedStr, startOffset);
+          startTwipLen = fm->GetWidth(textStr);
+          aRenderingContext.DrawString(compressedStr, startOffset, dx, dy, startTwipLen);
+        }
+
+        //---------------------------------------------------
+        // Calc the starting point of the Selection and
+        // and draw the selected text 
+        //---------------------------------------------------
+        textStr.SetLength(0);
+        textStr.Append(compressedStr+startOffset, selTextCharLen);
+
+        nscoord selTextTwipLen = fm->GetWidth(textStr);
+
+        rect.x     = startTwipLen;
+        rect.width = selTextTwipLen;
+
+        // Render Selected Text
         aRenderingContext.SetColor(NS_RGB(0,0,0));
         aRenderingContext.FillRect(rect);
 
         aRenderingContext.SetColor(NS_RGB(255,255,255));
-        // Render the text
-        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
-        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-        aRenderingContext.SetColor(color->mColor);
+        // Render the text in White
+        aRenderingContext.DrawString(compressedStr+startOffset, selTextCharLen, 
+                                    dx+startTwipLen, dy, selTextTwipLen);
       } else {
-        // Render the text
+        // Render the text Normal
         const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
-        aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
+        aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
       }
+    } else if (mContent == endPnt->GetContent()) {
 
-      NS_RELEASE(shell);
-      NS_RELEASE(doc);
-      NS_RELEASE(selection);
+      if (endPnt->GetOffset() > mContentOffset && 
+          endPnt->GetOffset() < mContentOffset+mContentLength) {
 
-      if (s0 != buf) {
-        delete[] s0;
+        //PRInt32 endOffset   = endPnt->GetOffset();
+        if (endOffset == compressedStrLen) {
+          endOffset--;
+        }
+        //---------------------------------------------------
+        // Calc the starting point of the Selection and
+        // and draw from the beginning to where the selection starts
+        //---------------------------------------------------
+        nsString textStr;
+        PRUint32 selTextCharLen = endOffset;
+
+        //---------------------------------------------------
+        // Calc the starting point of the Selection and
+        // and draw the selected text 
+        //---------------------------------------------------
+        textStr.SetLength(0);
+        textStr.Append(compressedStr, selTextCharLen);
+
+        nscoord selTextTwipLen = fm->GetWidth(textStr);
+
+        rect.width = selTextTwipLen;
+
+        // Render Selected Text
+        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        aRenderingContext.FillRect(rect);
+
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+        // Render the text in White
+        aRenderingContext.DrawString(compressedStr, selTextCharLen,  dx, dy, selTextTwipLen);
+
+        //---------------------------------------------------
+        // Calc the end point of the Selection and
+        // and draw the remaining text 
+        //---------------------------------------------------
+        //if (endPnt->GetOffset() < compressedStrLen) {
+          textStr.SetLength(0);
+          textStr.Append(compressedStr+endOffset, compressedStrLen-selTextCharLen);
+
+          PRUint32 endTextTwipLen = fm->GetWidth(textStr);
+
+          const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+          aRenderingContext.SetColor(color->mColor);
+          aRenderingContext.DrawString(compressedStr+endOffset, compressedStrLen-endOffset, 
+                                       dx+selTextTwipLen, dy, mRect.width-endTextTwipLen);
+        //}
+      } else {
+        // Render the text Normal
+        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
       }
+    
+    } else {
+      aRenderingContext.SetColor(NS_RGB(0,0,0));
+      aRenderingContext.FillRect(rect);
+
+      aRenderingContext.SetColor(NS_RGB(255,255,255));
+      // Render the text
+      aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
+      const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      aRenderingContext.SetColor(color->mColor);
     }
+
+    /*aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.FillRect(rect);
+
+    aRenderingContext.SetColor(NS_RGB(255,255,255));
+    // Render the text
+    aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
+    const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    aRenderingContext.SetColor(color->mColor);
+    */
+
+  } else {
+    // Render the text
+    const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    aRenderingContext.SetColor(color->mColor);
+    aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
   }
+
+  if (delCompressedStr) {
+    delete compressedStr;
+  }
+  NS_RELEASE(shell);
+  NS_RELEASE(doc);
+  NS_RELEASE(selection);
+
 }
 
 NS_IMETHODIMP
@@ -1068,14 +1434,15 @@ void TextFrame::CalcActualPosition(PRUint32         &aMsgType,
 //-- GetPosition
 //--------------------------------------------------------------------------
 PRInt32 TextFrame::GetPosition(nsIPresContext& aCX,
-                               nsGUIEvent * aEvent,
-                               nsIFrame * aNewFrame) {
+                               nsGUIEvent *    aEvent,
+                               nsIFrame *      aNewFrame,
+                               PRUint32&       aAcutalContentOffset) {
 
   PRInt32 offset; 
   PRInt32 width;
   CalcCursorPosition(aCX, aEvent, (TextFrame *)aNewFrame, offset, width);
-  offset += ((TextFrame *)aNewFrame)->GetContentOffset();
-
+  aAcutalContentOffset = ((TextFrame *)aNewFrame)->GetContentOffset();;
+  offset += aAcutalContentOffset;
   return offset;
 }
 
@@ -1090,30 +1457,7 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
                                    PRInt32 &       aWidth) {
 
  
-  if (gCalcDebug) printf("Cursor Point [%d,%d]\n", aEvent->point.x, aEvent->point.y);
-
-  // Get starting offset into the content
-  PRInt32 startingOffset = 0;
-  if (nsnull != aNewFrame->GetPrevInFlow()) {
-    TextFrame* prev = (TextFrame*) aNewFrame->GetPrevInFlow();
-    startingOffset = prev->GetContentOffset() + prev->GetContentLength();
-  }
-
-//XXX  // Get cached state for containing block frame
-//  if (nsnull != aLineLayout) {
-//    aLineLayout->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
-//  }
-
-  nsIContent * content;
-  GetContent(content);
-
-  Text* txt = (Text*) content;
-
-  const PRUnichar* cp = txt->mText + startingOffset;
-  const PRUnichar* end = cp + txt->mLength - startingOffset;
-  const PRUnichar* cpStart = cp;
-  //mContentOffset = startingOffset;
-
+ 
   nsIStyleContext * styleContext;
 
   aNewFrame->GetStyleContext(&aCX, styleContext);
@@ -1122,199 +1466,40 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
   NS_RELEASE(styleContext);
 
   nsIFontMetrics* fm   = aCX.GetMetricsFor(font->mFont);
-  PRInt32 spaceWidth   = fm->GetWidth(' ');
-  PRBool  atLeftMargin = PR_TRUE;
-  PRBool  wrapping     = PR_TRUE;
-  if (NS_STYLE_WHITESPACE_NORMAL != styleText->mWhiteSpace) {
-    wrapping = PR_FALSE;
-  }
 
-  // Set whitespace skip flag
-  PRBool skipWhitespace = PR_FALSE;
-#if XXX_wont_work
-  if (nsnull != aLineLayout) {
-    if (aLineLayout->SkipLeadingWhiteSpace()) {
-      skipWhitespace = PR_TRUE;
-      mFlags |= TEXT_SKIP_LEADING_WS;
-    }
-  }
-#endif
-
-  // Try to fit as much of the text as possible. Note that if we are
-  // at the left margin then the first word always fits. In addition,
-  // we compute the size of the largest word that we contain. If we
-  // end up containing nothing (because there isn't enough space for
-  // the first word) then we still compute the size of that first
-  // non-fitting word.
-
-  // XXX XP_IS_SPACE must not return PR_TRUE for the unicode &nbsp character
-  // XXX what about &zwj and it's cousins?
   nscoord x            = 0;
-  nscoord maxWidth     = 100000;//aMaxSize.width;
   nscoord width        = 0;
-  nscoord maxWordWidth = 0;
 
-  const PRUnichar* lastWordEnd = cpStart;
+  PRUint16        indexes[1024];
+  PRUint32        compressedStrLen;
+  PRBool          shouldDelete = PR_FALSE;
+  char            buf[128];
+  char *          compressedStr;
 
-  int w = 0;
-  while (cp < end) {
-    width = fm->GetWidth(cpStart, PRUint32(cp - cpStart));
+  compressedStr = CompressWhiteSpace(buf, sizeof(buf), indexes, compressedStrLen, shouldDelete);
 
-    if (gCalcDebug) printf("Cursor %d ******>> Width %d Pos: %d   end: %d \n", aEvent->point.x, 
-                                                               width, 
-                                                               PRUint32(cp - cpStart), 
-                                                               end-cpStart);
+  PRUint32 i;
+  char buffer[1024];
+  for (i=1;i<compressedStrLen;i++) {
+    strncpy(buffer, compressedStr, i);
+	  buffer[i] = 0;
+    width = fm->GetWidth(buffer);
     if (width >= aEvent->point.x) {
-      if (gCalcDebug) printf("*********************************\n*STOPPED**! Offset is [%d][%d]\n", width, PRUint32(cp - cpStart));
-      if (gCalcDebug) printf("**********************************\n");
-      CalcActualPosition(aEvent->message, cpStart, cp, aOffset, aWidth, fm);
-
-      //--------- Major Debugging ----
-     /*if (aEvent->message == NS_MOUSE_MOVE ||
-          aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-          int len = txt->mLength - startingOffset;
-
-          //printf("Len %d\n", len);
-          PRUnichar buf0[256];
-          PRUnichar buf1[256];
-          PRUnichar buf2[256];
-          const PRUnichar* start = txt->mText + startingOffset;
-
-          printf("mStart %d  mEnd %d  len %d\n", mStartSelect, mEndSelect, len);
-
-          for (PRUint32 i=0;i<mStartSelect;i++) {
-            printf("%c/", *start);
-            buf0[i] = *start;
-            start++;
-          }
-          if (mEndSelect-mStartSelect > 4) {
-            int x = 0;
-            x++;
-          }
-          printf("\n%d>", mEndSelect-mStartSelect);
-          buf0[i] = 0;
-          for (i=0;i<mEndSelect-mStartSelect;i++) {
-            printf("%c/", *start);
-            buf1[i] = *start;
-            start++;
-          }
-          printf("\n%d>", len-mEndSelect);
-          buf1[i] = 0;
-          for (i=0;i<len-mEndSelect;i++) {
-            printf("%c/", *start);
-            buf2[i] = *start;
-            start++;
-          }
-          printf("\n");
-          buf2[i] = 0;
-          //printf("[%s][%s][%s]\n", buf0, buf1, buf2);
-
-          int l0 = fm->GetWidth(cpStart,              PRUint32(mStartSelect));
-          int l1 = fm->GetWidth(cpStart+mStartSelect, PRUint32(mEndSelect-mStartSelect));
-          int l2 = fm->GetWidth(cpStart+mEndSelect,   PRUint32(len-mEndSelect));
-          int l3 = fm->GetWidth(cpStart,              PRUint32(mEndSelect));
-          printf("%d  %d  %d/\n", mStartSelect, mEndSelect-mStartSelect, len-mEndSelect);
-          printf("%d  %d  %d  %d  %d\n", l0, l1, l2, l3, (l0+l1+l2));
-
-          printf("mStart %d,%d  mEnd %d,%d  whole width %d  len %d\n", mStartSelect, mStartWidth, mEndSelect, mEndWidth, fm->GetWidth(cpStart, PRUint32(txt->mLength-startingOffset)), PRUint32(txt->mLength-startingOffset));
-          if (mEndSelect-mStartSelect > 0) {
-            mSelectWidth = fm->GetWidth(cpStart+mStartSelect, PRUint32(mEndSelect-mStartSelect));
-          } else {
-            mSelectWidth = 0;
-          }
-      }*/
-      //------
-
-      //----
-      NS_RELEASE(content);
-      return; 
+      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+        i--;
+        if (i < 0) {
+          i = 0;
         }
-
-    PRUnichar ch = *cp++;
-
-    //XXX PRBool isWhitespace;
-    if (XP_IS_SPACE(ch)) {
-      if (gCalcDebug) printf("Before 11111111111111111111111111111111\n");
-      // Compress whitespace down to a single whitespace
-      while (cp < end) {
-        ch = *cp;
-        if (XP_IS_SPACE(ch)) {
-          cp++;
-          continue;
-        }
-        break;
       }
-      if (skipWhitespace) {
-        skipWhitespace = PR_FALSE;
-        continue;
-      }
-      width = spaceWidth;
-      //XXX isWhitespace = PR_TRUE;
-      if (gCalcDebug) printf("After 11111111111111111111111111111111\n");
-    } else {
-      if (gCalcDebug) printf("Before 2222222222222222222222222222222222222\n");
-      // The character is not a space character. Find the end of the
-      // word and then measure it.
-      if (ch >= 256) {
-        //XXX hasMultibyte = PR_TRUE;
-      }
-      const PRUnichar* wordStart = cp - 1; 
-      while (cp < end) {
-        width = fm->GetWidth(cpStart, PRUint32(cp - cpStart));
-
-        if (gCalcDebug) printf("-Cursor %d ******>> Width %d Pos: %d   end: %d \n", aEvent->point.x, 
-                                                                   width, 
-                                                                   PRUint32(cp - cpStart), 
-                                                                   end-cpStart);
-        if (width >= aEvent->point.x) {
-          if (gCalcDebug) printf("**********************************\nSTOPPED! Offset is [%d][%d]\n", width, PRUint32(cp - cpStart));
-          if (gCalcDebug) printf("**********************************\n");
-          CalcActualPosition(aEvent->message, cpStart, cp, aOffset, aWidth, fm);
-          NS_RELEASE(content);
-          return; 
-        }
-
-        ch = *cp;
-        if (ch >= 256) {
-          //XXX hasMultibyte = PR_TRUE;
-        }
-        if (!XP_IS_SPACE(ch)) {
-          cp++;
-          continue;
-        }
-        if (gCalcDebug) printf("At bottom...breaking..........................\n");
-        break;
-      }
-      if (gCalcDebug) printf("After 2222222222222222222222222222222222222\n");
+	    aOffset = indexes[i];
+	    aWidth  = width;
+      aWidth = 0;
+	    return;
     }
+  }
 
-    // Now that we have the end of the word or whitespace, see if it
-    // will fit.
-    if (!atLeftMargin && wrapping && (x + width > maxWidth)) {
-      // The word/whitespace will not fit.
-      cp = lastWordEnd;
-      if (x == 0) {
-        // Nothing fit at all. In this case, we still may want to know
-        // the maxWordWidth so compute it right now.
-        maxWordWidth = width;
-      }
-      if (gCalcDebug) printf(">>>>> Breaking\n");
-      break;
-    } // if
-
-    // The word fits. Add it to the run of text.
-    x += width;
-    if (width > maxWordWidth) {
-      maxWordWidth = width;
-    }
-    atLeftMargin = PR_FALSE;
-    lastWordEnd  = cp;
-    width        = 0;
-    //XXX endsInWhitespace = isWhitespace;
-    if (gCalcDebug) printf("Bottom--------------------------------\n");
-  } // while
-
-  NS_RELEASE(content);
+  aOffset = i;
+  aWidth  = width;
 
 }
 
