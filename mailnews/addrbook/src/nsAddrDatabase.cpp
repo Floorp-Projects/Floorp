@@ -318,7 +318,7 @@ nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
 	static nsIMdbFactory *gMDBFactory = NULL;
 	if (!gMDBFactory)
 	{
-		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
+//		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
 	}
 	return gMDBFactory;
 }
