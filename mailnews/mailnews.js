@@ -346,7 +346,7 @@ pref("mail.server.default.store_read_mail_in_pfc", false);
 pref("mail.server.default.store_sent_mail_in_pfc", false);  
 
 // for spam
-pref("mail.server.default.spamLevel",60);  // 0 - 100, 0 off, 20, lowest, 40 low, 60 medium, 80 high, 100 highest
+pref("mail.server.default.spamLevel",0);  // 0 off, 100 on.  not doing bool since we might have real levels one day.
 pref("mail.server.default.moveOnSpam",false);
 pref("mail.server.default.moveTargetMode",0); // 0 == "Junk" on server, 1 == specific folder
 pref("mail.server.default.spamActionTargetAccount","");
