@@ -89,6 +89,9 @@ done
 MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $_topsrcdir`
 if [ "$MOZCONFIG" ]; then
   . $MOZCONFIG
+fi
+
+if [ "$mozconfig_ac_options" ]; then
   ac_echo_options 1>&2
 fi
 
