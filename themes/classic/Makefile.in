@@ -35,7 +35,8 @@ endif
 DIRS  = global/$(THEME_PLATFORM) \
 	$(NULL)
 
-ifeq (,$(filter mac cocoa OS2 WINNT,$(OS_ARCH)))
+# global/unix contains css rules that more closely match gtk widgets
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 DIRS  += global/unix
 endif
 
