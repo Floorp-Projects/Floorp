@@ -153,17 +153,15 @@ nsresult nsSharedPrefHandler::OnSavePrefs()
   return NS_OK;
 }
     
-nsresult nsSharedPrefHandler::OnPrefChanged(PrefAction action,
+nsresult nsSharedPrefHandler::OnPrefChanged(PRBool defaultPref,
                                             PrefHashEntry* pref,
                                             PrefValue newValue)
 {
-  if (!mSessionActive)
-    return NS_OK;
-  if (action != PREF_SETUSER)
-    return NS_OK;
-  if (!IsPrefShared(pref->key))
-    return NS_OK;
-  if (mReadingUserPrefs || mProcessingTransaction)
+  if (!mSessionActive 
+    || defaultPref
+    || !IsPrefShared(pref->key)
+    || mReadingUserPrefs
+    || mProcessingTransaction)
     return NS_OK;
     
   nsresult rv = EnsureTransactionService();
@@ -173,7 +171,7 @@ nsresult nsSharedPrefHandler::OnPrefChanged(PrefAction action,
   
   ipcMessageWriter outMsg(256);
   outMsg.PutInt32(kCurrentPrefsTransactionDataVersion);
-  outMsg.PutInt32(action);
+  outMsg.PutInt32(defaultPref); // XXX: Is not used?
   outMsg.PutInt32(prefNameLen + 1);
   outMsg.PutBytes(pref->key, prefNameLen + 1);
 
@@ -296,7 +294,7 @@ NS_IMETHODIMP nsSharedPrefHandler::OnTransactionAvailable(PRUint32 aQueueID, con
     
     dataVersion = inMsg.GetInt32();
     NS_ENSURE_TRUE(dataVersion == kCurrentPrefsTransactionDataVersion, NS_ERROR_INVALID_ARG);
-    prefAction = inMsg.GetInt32();
+    prefAction = inMsg.GetInt32();  //XXX: Is not used?
     dataLen = inMsg.GetInt32(); // includes terminating null
     stringStart = (const char *)inMsg.GetPtr();
     nsDependentCString prefNameStr(stringStart);

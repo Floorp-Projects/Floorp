@@ -56,6 +56,7 @@
 #include "pldhash.h"
 
 #include "prefapi.h"
+#include "prefread.h"
 #include "prefapi_private_data.h"
 
 // supporting PREF_Init()
@@ -70,16 +71,15 @@
 
 // Definitions
 #define INITIAL_MAX_DEFAULT_PREF_FILES 10
-
+#define PREF_READ_BUFFER_SIZE 4096
 
 // Prototypes
 #ifdef MOZ_PROFILESHARING
 static PRBool isSharingEnabled();
 #endif
 
-static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
-                             PRBool aIsGlobalContext, PRBool aSkipFirstLine);
-
+static nsresult openPrefFile(nsIFile* aFile);
+static nsresult pref_InitInitialObjects(void);
 
   // needed so we can still get the JS Runtime Service during XPCOM shutdown
 static nsIJSRuntimeService* gJSRuntimeService = nsnull; // owning reference
@@ -144,8 +144,11 @@ nsresult nsPrefService::Init()
   nsXPIDLCString lockFileName;
   nsresult rv;
 
-  if (!PREF_Init(nsnull))
-    return NS_ERROR_FAILURE;
+  rv = PREF_Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = pref_InitInitialObjects();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   /*
    * The following is a small hack which will allow us to only load the library
@@ -231,10 +234,10 @@ NS_IMETHODIMP nsPrefService::ResetPrefs()
   NotifyServiceObservers(NS_PREFSERVICE_RESET_TOPIC_ID);
   PREF_CleanupPrefs();
 
-  if (!PREF_Init(nsnull))
-    return NS_ERROR_FAILURE;
+  nsresult rv = PREF_Init();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_OK;
+  return pref_InitInitialObjects();
 }
 
 NS_IMETHODIMP nsPrefService::ResetUserPrefs()
@@ -378,7 +381,7 @@ nsresult nsPrefService::UseUserPrefFile()
   if (NS_SUCCEEDED(rv) && aFile) {
     rv = aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
     if (NS_SUCCEEDED(rv)) {
-      rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
+      rv = openPrefFile(aFile);
     }
   }
   return rv;
@@ -400,11 +403,10 @@ nsresult nsPrefService::ReadAndOwnUserPrefFile(nsIFile *aFile)
 #endif
 
   // We need to track errors in reading the shared and the
-  // non-shared files independently. Clear gErrorOpeningUserPrefs
-  // and set the appropriate member variable from it after reading.
-  gErrorOpeningUserPrefs = PR_FALSE;
-  nsresult rv = openPrefFile(mCurrentFile, PR_TRUE, PR_FALSE, PR_TRUE);
-  mErrorOpeningUserPrefs = gErrorOpeningUserPrefs;
+  // non-shared files independently. 
+  // Set the appropriate member variable from it after reading.
+  nsresult rv = openPrefFile(mCurrentFile);
+  mErrorOpeningUserPrefs = NS_FAILED(rv);
 
 #ifdef MOZ_PROFILESHARING
   gSharedPrefHandler->ReadingUserPrefs(PR_FALSE);
@@ -430,12 +432,11 @@ nsresult nsPrefService::ReadAndOwnSharedUserPrefFile(nsIFile *aFile)
 #endif
 
   // We need to track errors in reading the shared and the
-  // non-shared files independently. Clear gErrorOpeningUserPrefs
-  // and set the appropriate member variable from it after reading.
-  gErrorOpeningUserPrefs = PR_FALSE;
-  nsresult rv = openPrefFile(mCurrentSharedFile, PR_TRUE, PR_FALSE, PR_TRUE);
-  mErrorOpeningSharedUserPrefs = gErrorOpeningUserPrefs;
-  
+  // non-shared files independently. 
+  // Set the appropriate member variable from it after reading.
+  nsresult rv = openPrefFile(mCurrentSharedFile);
+  mErrorOpeningSharedUserPrefs = NS_FAILED(rv);
+
 #ifdef MOZ_PROFILESHARING
   gSharedPrefHandler->ReadingUserPrefs(PR_FALSE);
 #endif
@@ -594,14 +595,10 @@ static PRBool isSharingEnabled()
 }
 #endif
 
-static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
-                             PRBool aIsGlobalContext, PRBool aSkipFirstLine)
+static nsresult openPrefFile(nsIFile* aFile)
 {
   nsCOMPtr<nsIInputStream> inStr;
-  char *readBuf;
-  PRInt64 llFileSize;
-  PRUint32 fileSize;
-  nsresult rv;
+  char      readBuf[PREF_READ_BUFFER_SIZE];
 
 #if MOZ_TIMELINE
   {
@@ -611,50 +608,23 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
   }
 #endif
 
-  rv = aFile->GetFileSize(&llFileSize);
-  if (NS_FAILED(rv))
-    return rv;        
-  LL_L2UI(fileSize, llFileSize); // Converting 64 bit structure to unsigned int
-
-  // Now that we know the file exists, set this flag until we have
-  // successfully read and evaluated the prefs file. This will
-  // prevent us from writing an empty or partial prefs.js.
-  
-  gErrorOpeningUserPrefs = aIsErrorFatal;
-
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
   if (NS_FAILED(rv)) 
     return rv;        
 
-  // XXX maybe we should read the file in chunks instead??
-  readBuf = (char *)PR_Malloc(fileSize);
-  if (!readBuf) 
-    return NS_ERROR_OUT_OF_MEMORY;
+  PrefParseState ps;
+  PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  for (;;) {
+    PRUint32 amtRead = 0;
+    rv = inStr->Read(readBuf, sizeof(readBuf), &amtRead);
+    if (NS_FAILED(rv) || amtRead == 0)
+      break;
 
-  PRUint32 amtRead = 0;
-  rv = inStr->Read(readBuf, fileSize, &amtRead);
-  NS_ASSERTION((amtRead == fileSize), "failed to read the entire prefs file!!");
-  if (amtRead != fileSize)
-    return NS_ERROR_FAILURE;
- #ifdef XP_OS2 /* OS/2 workaround - our system editor adds an EOF character */
-     if (readBuf[amtRead - 1] == 0x1A) {
-        amtRead--;
-     }
- #endif
-  if (NS_SUCCEEDED(rv)) {
-    nsCAutoString leafName;
-    aFile->GetNativeLeafName(leafName);
-    if (PREF_EvaluateConfigScript(readBuf, amtRead, leafName.get(), aIsGlobalContext, PR_TRUE,
-                                   aSkipFirstLine))
-      gErrorOpeningUserPrefs = PR_FALSE;
-    else
-      rv = NS_ERROR_FAILURE;
+    PREF_ParseBuf(&ps, readBuf, amtRead); 
   }
-
-  PR_Free(readBuf);
+  PREF_FinalizeParseState(&ps);
   return rv;        
 }
-
 
 /*
  * some stuff that gets called from Pref_Init()
@@ -688,10 +658,10 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 }
 
 //----------------------------------------------------------------------------------------
-PRBool pref_InitInitialObjects()
 // Initialize default preference JavaScript buffers from
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
+static nsresult pref_InitInitialObjects()
 {
   nsCOMPtr<nsIFile> aFile;
   nsCOMPtr<nsIFile> defaultPrefDir;
@@ -721,8 +691,7 @@ PRBool pref_InitInitialObjects()
   };
 
   rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
-  if (NS_FAILED(rv))
-    return PR_FALSE;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFile **defaultPrefFiles = (nsIFile **)nsMemory::Alloc(INITIAL_MAX_DEFAULT_PREF_FILES * sizeof(nsIFile *));
   int maxDefaultPrefFiles = INITIAL_MAX_DEFAULT_PREF_FILES;
@@ -730,16 +699,16 @@ PRBool pref_InitInitialObjects()
 
   // Parse all the random files that happen to be in the components directory.
   nsCOMPtr<nsISimpleEnumerator> dirIterator;
-  rv = defaultPrefDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+  defaultPrefDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
   if (!dirIterator) {
-    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-    return PR_FALSE;
+    NS_ERROR("ERROR: Could not make a directory iterator.");
+    return NS_ERROR_FAILURE;
   }
 
   dirIterator->HasMoreElements(&hasMoreElements);
   if (!hasMoreElements) {
-    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Prefs directory is empty.");
-    return PR_FALSE;
+    NS_ERROR("ERROR: Prefs directory is empty.");
+    return NS_ERROR_FAILURE;
   }
 
   while (hasMoreElements) {
@@ -772,13 +741,13 @@ PRBool pref_InitInitialObjects()
         }
       }
     }
-  };
+  }
 
   NS_QuickSort((void *)defaultPrefFiles, numFiles, sizeof(nsIFile *), inplaceSortCallback, nsnull);
 
   int k;
   for (k = 0; k < numFiles; k++) {
-    rv = openPrefFile(defaultPrefFiles[k], PR_FALSE, PR_FALSE, PR_FALSE);
+    rv = openPrefFile(defaultPrefFiles[k]);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Config file not parsed successfully");
     NS_RELEASE(defaultPrefFiles[k]);
   }
@@ -792,11 +761,12 @@ PRBool pref_InitInitialObjects()
     if (NS_SUCCEEDED(rv)) {
       rv = aFile->AppendNative(nsDependentCString(specialFiles[k]));
       if (NS_SUCCEEDED(rv)) {
-        rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
+        rv = openPrefFile(aFile);
         NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");
       }
     }
   }
 
-  return PR_TRUE;
+  return NS_OK;
 }
+
