@@ -168,7 +168,7 @@ ColumnsDialog.prototype =
     box._isColBox = true;
     box._isAttrCol = true;
     box.setAttribute("class", "column-selector");
-    box.setAttribute("autostretch", "never");
+    box.setAttribute("align", "center");
 
     var text = document.createElementNS(kXULNSURI, "text");
     text.setAttribute("value", "Attr");

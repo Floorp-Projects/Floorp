@@ -1106,8 +1106,7 @@
       </menulist>
       <checkbox id="muteVolumeCheckbox"
                 oncommand="MuteVolume(this)"
-                label="&muteVolume.label;"
-                autostretch="never"/>
+                label="&muteVolume.label;"/>
     </hbox>
     <separator class="groove"/>
     <grid flex="1">

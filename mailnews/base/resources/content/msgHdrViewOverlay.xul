@@ -152,7 +152,7 @@
     <spacer flex="1"/>
   </vbox> 
 
-  <vbox autostretch="never">
+  <vbox>
     <spacer flex="1"/>
     <image style="padding: 5px" id="fromBuddyIcon"/>
     <spacer flex="1"/>

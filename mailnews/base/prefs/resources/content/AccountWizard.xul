@@ -272,35 +272,35 @@
           <column flex="1"/>
         </columns>
         <rows>
-          <row autostretch="never" id="account.name">
+          <row align="center" id="account.name">
             <label class="label" flex="1" id="account.name.label" value="&accnameLabel.label;"/>
             <label class="label" id="account.name.text"/>
           </row>
-          <row autostretch="never" id="identity.email">
+          <row align="center" id="identity.email">
             <label class="label" flex="1" id="identity.email.label" value="&emailLabel.label;"/>
             <label class="label" id="identity.email.text"/>
           </row>
-          <row autostretch="never" id="server.username">
+          <row align="center" id="server.username">
             <label class="label" flex="1" id="server.username.label" value="&usernameLabel.label;"/>
             <label class="label" id="server.username.text"/>
           </row>
-          <row autostretch="never" id="server.name">
+          <row align="center" id="server.name">
             <label class="label" flex="1" id="server.name.label" value="&serverNamePrefix.label;"/>
             <label class="label" id="server.name.text"/>
           </row>
-          <row autostretch="never" id="server.type">
+          <row align="center" id="server.type">
             <label class="label" flex="1" id="server.type.label" value="&serverTypePrefix.label;"/>
             <label class="label" id="server.type.text"/>
           </row>
-          <row autostretch="never" id="newsServer.name">
+          <row align="center" id="newsServer.name">
             <label class="label" flex="1" id="newsServer.name.label" value="&newsServerNamePrefix.label;"/>
             <label class="label" id="newsServer.name.text"/>
           </row>
-          <row autostretch="never" id="smtpServer.username">
+          <row align="center" id="smtpServer.username">
             <label class="label" flex="1" id="smtpServer.username.label" value="&usernameSmtpLabel.label;"/>
             <label class="label" id="smtpServer.username.text"/>
           </row>
-          <row autostretch="never" id="smtpServer.name">
+          <row align="center" id="smtpServer.name">
             <label class="label" flex="1" id="smtpServer.name.label" value="&smtpServerNamePrefix.label;"/>
             <label class="label" id="smtpServer.name.text"/>
           </row>

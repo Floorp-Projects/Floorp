@@ -5,7 +5,7 @@
 
 <window id="insaneInsertion"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        orient="vertical" autostretch="never">
+        orient="vertical" align="start">
 <html>
     Below this text is a group of XUL widgets with the labels A-I.  If
   the insertion code is behaving correctly, then the widgets will all be in alphabetical

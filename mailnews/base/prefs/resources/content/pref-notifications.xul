@@ -83,7 +83,7 @@
     <hbox align="center" class="indent">
       <textbox readonly="true" flex="1" id="mailnewsSoundFileUrl" preftype="string"
            prefstring="mail.biff.play_sound.url"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
                 accesskey="&browse.accesskey;" oncommand="Browse()"/>
         <button id="preview" label="&preview.label;"

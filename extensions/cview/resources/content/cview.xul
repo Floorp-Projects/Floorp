@@ -137,8 +137,7 @@
   <vbox id="outer-box" flex="1">
   <hbox id="inner-box" flex="9">
     <vbox id="component-box" flex="1" width="50%">
-      <text id="component-label" value="Components..." crop="right"
-        autostretch="never"/>
+      <text id="component-label" value="Components..." crop="right"/>
 
       <tree flex="1" id="component-tree" persist="height"
         primary="true" onselect="onComponentSelect(event);"
@@ -161,8 +160,7 @@
     </splitter>
 
     <vbox id="interface-box" flex="1" width="50%">
-    <text id="interface-label" value="Interfaces..." crop="right"
-      autostretch="never"/>
+    <text id="interface-label" value="Interfaces..." crop="right"/>
 
       <tree flex="1" id="interface-tree" persist="height"
         onclick="onInterfaceClick(event);" context="interfacePopup"
