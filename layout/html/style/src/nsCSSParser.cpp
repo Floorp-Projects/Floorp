@@ -1099,6 +1099,7 @@ CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
 #define VARIANT_CK   (VARIANT_COLOR | VARIANT_KEYWORD)
 #define VARIANT_C    VARIANT_COLOR
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
+#define VARIANT_HPN  (VARIANT_INHERIT | VARIANT_PERCENT | VARIANT_NUMBER)
 
 // Keyword id tables for variant/enum parsing
 static PRInt32 kBackgroundAttachmentKTable[] = {
@@ -1685,6 +1686,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_PADDING_RIGHT:
   case PROP_PADDING_TOP:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_LP, nsnull);
+  case PROP_OPACITY:
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_HPN, nsnull);
   case PROP_OVERFLOW:
     return ParseEnum(aErrorCode, aDeclaration, aName, kOverflowKTable);
   case PROP_POSITION:

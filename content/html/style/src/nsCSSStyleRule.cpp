@@ -843,6 +843,25 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
         }
 
+        // opacity: factor, percent, enum
+        if (ourColor->mOpacity.GetUnit() == eCSSUnit_Percent) {
+          color->mOpacity.SetPercentValue(ourColor->mOpacity.GetPercentValue());
+        }
+        else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Number) {
+          color->mOpacity.SetFactorValue(ourColor->mOpacity.GetFloatValue());
+        }
+        else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Enumerated) {
+          // Only enum value is inherit
+          nsStyleColor* parentColor = color;
+          nsIStyleContext* parentContext = aContext->GetParent();
+          if (nsnull != parentContext) {
+            parentColor = (nsStyleColor*)parentContext->GetData(eStyleStruct_Color);
+            color->mOpacity = parentColor->mOpacity;
+            NS_RELEASE(parentContext);
+          }
+          
+        }
+
   // XXX: NYI        nsCSSValue mBackFilter;
       }
     }

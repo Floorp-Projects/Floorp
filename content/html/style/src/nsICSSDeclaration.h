@@ -230,6 +230,7 @@ struct nsCSSColor : public nsCSSStruct  {
   nsCSSValue mBackFilter;
   nsCSSValue mCursor;
   nsCSSValue mCursorImage;
+  nsCSSValue mOpacity;
 };
 
 struct nsCSSText : public nsCSSStruct  {
