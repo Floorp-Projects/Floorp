@@ -41,6 +41,7 @@ enum Type {
   TYPE_XPIDL_OBJECT,
   TYPE_FUNC,
   TYPE_VOID,
+  TYPE_JSVAL,
   TYPE_UNKNOWN
 };
 

@@ -32,8 +32,7 @@
 
 static const char *kNPLStr =  \
 "/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-\n"
-" *\n"
-" * The contents of this file are subject to the Netscape Public License\n"
+" *\n"" * The contents of this file are subject to the Netscape Public License\n"
 " * Version 1.0 (the \"NPL\"); you may not use this file except in\n" 
 " * compliance with the NPL.  You may obtain a copy of the NPL at\n"
 " * http://www.mozilla.org/NPL/\n"
@@ -147,6 +146,9 @@ FileGen::GetVariableTypeForMethodLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_FUNC:
         sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
         break;
+      case TYPE_JSVAL:
+        strcpy(aBuffer, "jsval");
+        break;
       default:
         // XXX Fail for other cases
         break;
@@ -193,6 +195,9 @@ FileGen::GetVariableTypeForLocal(char *aBuffer, IdlVariable &aVariable)
       case TYPE_FUNC:
         sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
         break;
+      case TYPE_JSVAL:
+        strcpy(aBuffer, "jsval");
+        break;
       default:
         // XXX Fail for other cases
         break;
@@ -238,6 +243,9 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
         break;
       case TYPE_FUNC:
         sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
+        break;
+      case TYPE_JSVAL:
+        strcpy(aBuffer, "jsval");
         break;
       default:
         // XXX Fail for other cases
