@@ -745,6 +745,13 @@ nsWidget::DeleteWindowCallback(Window aWindow)
   delete window_key;
 }
 
+#undef TRACE_PAINT
+#undef TRACE_PAINT_FLASH
+
+#ifdef TRACE_PAINT_FLASH
+#include "nsXUtils.h" // for nsGtkUtils::gdk_window_flash()
+#endif
+
 PRBool
 nsWidget::OnPaint(nsPaintEvent &event)
 {
@@ -764,6 +771,36 @@ nsWidget::OnPaint(nsPaintEvent &event)
     else {
       result = PR_FALSE;
     }
+
+#ifdef TRACE_PAINT
+	static PRInt32 sPrintCount = 0;
+
+    if (event.rect) 
+	{
+      printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
+			 sPrintCount++,
+			 (void *) this,
+			 (const char *) nsCAutoString(mName),
+			 (void *) mBaseWindow,
+			 event.rect->x, 
+			 event.rect->y,
+			 event.rect->width, 
+			 event.rect->height);
+    }
+    else 
+	{
+      printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
+			 sPrintCount++,
+			 (void *) this,
+			 (const char *) nsCAutoString(mName),
+			 (void *) mBaseWindow);
+    }
+#endif
+
+#ifdef TRACE_PAINT_FLASH
+    nsXUtils::FlashWindow(mDisplay,mBaseWindow,2,100000);
+#endif
+
   }
   return result;
 }

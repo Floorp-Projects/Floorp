@@ -102,6 +102,11 @@ nsWindow::GetEventMask()
   return event_mask;
 }
 
+#undef TRACE_INVALIDATE
+
+#ifdef TRACE_INVALIDATE
+static PRInt32 sInvalidatePrintCount = 0;
+#endif
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
@@ -114,6 +119,16 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
                             mBounds.width, mBounds.height);
   // XXX fix this
   pevent.time = 0;
+
+#ifdef TRACE_INVALIDATE
+  printf("%4d nsWindow::Invalidate(this=%p,name=%s,xid=%p,sync=%s)\n",
+         sInvalidatePrintCount++,
+         (void *) this,
+         (const char *) nsCAutoString(mName),
+         (void *) mBaseWindow,
+         aIsSynchronous ? "yes" : "no");
+#endif
+
   AddRef();
   OnPaint(pevent);
   Release();
@@ -132,6 +147,21 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   pevent.rect = new nsRect(aRect);
   // XXX fix this
   pevent.time = 0;
+
+#ifdef TRACE_INVALIDATE
+  printf("%4d nsWidget::Invalidate(this=%p,name=%s,xid=%p,sync=%s,rect=%d,%d,%d,%d)\n",
+         sInvalidatePrintCount++,
+         (void *) this,
+         (const char *) nsCAutoString(mName),
+         (void *) mBaseWindow,
+         aIsSynchronous ? "yes" : "no",
+         aRect.x, 
+         aRect.y,
+         aRect.width, 
+         aRect.height);
+#endif
+
+
   AddRef();
   OnPaint(pevent);
   Release();
