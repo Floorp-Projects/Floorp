@@ -1441,7 +1441,7 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
     printf("///////////// Menu is NULL!\n");
     // check to make sure something had been selected
     AdjustMenus(mHitMenu, nsnull, event);
-    NS_RELEASE(mHitMenu);
+    NS_IF_RELEASE(mHitMenu);
     // Clear All SubMenu items
     while (mHitSubMenus->Count() > 0) {
       PRUint32 inx = mHitSubMenus->Count()-1;
