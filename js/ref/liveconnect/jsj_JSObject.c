@@ -508,7 +508,7 @@ done:
  *
  * Returns NULL on failure.
  */
-JSJavaThreadState *
+static JSJavaThreadState *
 enter_js(JNIEnv *jEnv, jobject java_wrapper_obj,
          JSContext **cxp, JSObject **js_objp, JSErrorReporter *old_error_reporterp)
 {
