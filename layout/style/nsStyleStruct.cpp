@@ -1732,14 +1732,12 @@ nsChangeHint nsStyleUserInterface::MaxDifference()
 nsStyleUIReset::nsStyleUIReset(void) 
 { 
   mUserSelect = NS_STYLE_USER_SELECT_AUTO;
-  mKeyEquivalent = PRUnichar(0); // XXX what type should this be?
   mForceBrokenImageIcon = 0;
 }
 
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource) 
 {
   mUserSelect = aSource.mUserSelect;
-  mKeyEquivalent = aSource.mKeyEquivalent;
   mForceBrokenImageIcon = aSource.mForceBrokenImageIcon;
 }
 
@@ -1751,7 +1749,6 @@ nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
 {
   if (mForceBrokenImageIcon == aOther.mForceBrokenImageIcon) {
     if (mUserSelect == aOther.mUserSelect) {
-      // ignore mKeyEquivalent
       return NS_STYLE_HINT_NONE;
     }
     return NS_STYLE_HINT_VISUAL;

@@ -4381,9 +4381,6 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
-  case eCSSProperty_key_equivalent:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
-                        nsCSSProps::kKeyEquivalentKTable);
   case eCSSProperty_line_height:
     return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HLPN | VARIANT_NORMAL, nsnull);
   case eCSSProperty_list_style_image:
