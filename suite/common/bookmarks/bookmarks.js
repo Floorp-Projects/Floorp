@@ -122,6 +122,7 @@ function doSort(sortColName)
       sortDirection = "ascending";
   }
 
+/*
   // get RDF Core service
   var rdfCore = XPAppCoresManager.Find("RDFCore");
   if (!rdfCore) {
@@ -133,6 +134,14 @@ function doSort(sortColName)
   }
   // sort!!!
   rdfCore.doSort(node, sortResource, sortDirection);
+*/
+
+	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	if (!isupports)    return(false);
+	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+	if (!xulSortService)    return(false);
+	xulSortService.Sort(node, sortResource, sortDirection);
+
   return(false);
 }
 
