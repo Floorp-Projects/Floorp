@@ -1167,7 +1167,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
 
         // Add the assertion to RDF
         nsCOMPtr<nsIRDFResource> property;
-        gRDFService->GetResource(propertyStr, getter_AddRefs(property));
+        gRDFService->GetResource(propertyStr.get(), getter_AddRefs(property));
 
         nsCOMPtr<nsIRDFLiteral> target;
         gRDFService->GetLiteral(v.get(), getter_AddRefs(target));
@@ -1372,7 +1372,7 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
         typeStr += NS_ConvertUCS2toUTF8(attrName);
 
         nsCOMPtr<nsIRDFResource> type;
-        rv = gRDFService->GetResource(typeStr, getter_AddRefs(type));
+        rv = gRDFService->GetResource(typeStr.get(), getter_AddRefs(type));
         if (NS_FAILED(rv)) return rv;
 
         rv = mDataSource->Assert(source, kRDF_type, type, PR_TRUE);
@@ -1406,7 +1406,7 @@ RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
     propertyStr += NS_ConvertUCS2toUTF8(attrName);
 
     nsCOMPtr<nsIRDFResource> property;
-    rv = gRDFService->GetResource(propertyStr, getter_AddRefs(property));
+    rv = gRDFService->GetResource(propertyStr.get(), getter_AddRefs(property));
     if (NS_FAILED(rv)) return rv;
 
     // See if they've specified a 'resource' attribute, in which case

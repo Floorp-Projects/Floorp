@@ -858,7 +858,7 @@ static PRInt32 kShift = 6;
         }
 
         nsIRDFResource* resource;
-        rv = GetResource((const char*) s, &resource);
+        rv = GetResource(s.get(), &resource);
         if (NS_FAILED(rv)) return rv;
 
         // XXX an ugly but effective way to make sure that this
