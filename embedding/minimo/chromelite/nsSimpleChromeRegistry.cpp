@@ -52,12 +52,6 @@ nsSimpleChromeRegistry::~nsSimpleChromeRegistry()
 }
 
 NS_IMETHODIMP 
-nsSimpleChromeRegistry::Canonify(nsIURI *aChromeURL)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsSimpleChromeRegistry::ConvertChromeURL(nsIURI *aChromeURL, nsIURI* *aResult)
 {
   NS_WARNING("Who is calling ConvertChromeURL?");
