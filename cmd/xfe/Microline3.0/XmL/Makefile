@@ -42,6 +42,9 @@ LIBRARY_NAME	= XmL
 # There are unused widgets.  They are currently not needed to build Mozilla,
 # but that might change in the future.
 ifdef XFE_WIDGETS_BUILD_UNUSED
+
+XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
+
 UNUSED_CSRCS	= \
 				Progress.c \
 				$(NULL)
@@ -74,4 +77,5 @@ EXPORTS			= \
 				$(NULL)
 
 include $(DEPTH)/config/rules.mk
-include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
+
+DEFINES		+= $(XFE_EXTRA_DEFINES)
