@@ -33,12 +33,7 @@
 
 #include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
-
-#ifndef NEW_CLIPBOARD_SUPPORT
-#include "nsSelectionMgr.h"
-#else
 #include "nsClipboard.h"
-#endif
 
 #include "stdio.h"
 
