@@ -69,6 +69,13 @@ class nsXULAttributes;
 
 ////////////////////////////////////////////////////////////////////////
 
+#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
+#define XUL_PROTOTYPE_ATTRIBUTE_METER(counter) (nsXULPrototypeAttribute::counter++)
+#else
+#define XUL_PROTOTYPE_ATTRIBUTE_METER(counter) ((void) 0)
+#endif
+
+
 /**
 
   A prototype attribute for an nsXULPrototypeElement.
@@ -82,9 +89,7 @@ public:
         : mNameSpaceID(kNameSpaceID_Unknown),
           mEventHandler(nsnull)
     {
-#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-        gNumAttributes++;
-#endif
+        XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
     }
 
     ~nsXULPrototypeAttribute();
@@ -98,14 +103,14 @@ public:
     /**
       If enough attributes, on average, are event handlers, it pays to keep
       mEventHandler here, instead of maintaining a separate mapping in each
-      nsXULElement associating certain mName values to their mEventHandlers.
+      nsXULElement associating those mName values with their mEventHandlers.
       Assume we don't need to keep mNameSpaceID along with mName in such an
       event-handler-only name-to-function-pointer mapping.
 
       Let
         minAttrSize  = sizeof(mNameSpaceID) + sizeof(mName) + sizeof(mValue)
         mappingSize  = sizeof(mName) + sizeof(mEventHandler)
-        elemOverhead = nElems * sizeof(void*)
+        elemOverhead = nElems * sizeof(MappingPtr)
 
       Then
         nAttrs * minAttrSize + nEventHandlers * mappingSize + elemOverhead
@@ -114,7 +119,7 @@ public:
         nEventHandlers * mappingSize + elemOverhead
         > nAttrs * (mappingSize - sizeof(mName))
       or
-        nEventHandlers + (nElems * sizeof(void*)) / mappingSize
+        nEventHandlers + (nElems * sizeof(MappingPtr)) / mappingSize
         > nAttrs * (1 - sizeof(mName) / mappingSize)
 
       If nsCOMPtr and all other pointers are the same size, this reduces to
@@ -136,7 +141,11 @@ public:
     static PRUint32   gNumElements;
     static PRUint32   gNumAttributes;
     static PRUint32   gNumEventHandlers;
-#endif
+    static PRUint32   gNumCacheTests;
+    static PRUint32   gNumCacheHits;
+    static PRUint32   gNumCacheSets;
+    static PRUint32   gNumCacheFills;
+#endif /* !XUL_PROTOTYPE_ATTRIBUTE_METERING */
 };
 
 

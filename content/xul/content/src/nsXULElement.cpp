@@ -282,6 +282,10 @@ nsIAtom*             nsXULElement::kNullAtom;
 PRUint32             nsXULPrototypeAttribute::gNumElements;
 PRUint32             nsXULPrototypeAttribute::gNumAttributes;
 PRUint32             nsXULPrototypeAttribute::gNumEventHandlers;
+PRUint32             nsXULPrototypeAttribute::gNumCacheTests;
+PRUint32             nsXULPrototypeAttribute::gNumCacheHits;
+PRUint32             nsXULPrototypeAttribute::gNumCacheSets;
+PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
 //----------------------------------------------------------------------
@@ -298,9 +302,7 @@ nsXULElement::nsXULElement()
       mSlots(nsnull)
 {
     NS_INIT_REFCNT();
-#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-    nsXULPrototypeAttribute::gNumElements++;
-#endif
+    XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
 }
 
 
@@ -466,9 +468,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                 if (NS_FAILED(rv)) return rv;
 
                 if (found) {
-#ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
-                    nsXULPrototypeAttribute::gNumEventHandlers++;
-#endif
+                    XUL_PROTOTYPE_ATTRIBUTE_METER(gNumEventHandlers);
                     rv = element->AddScriptEventListener(attr->mName, attr->mValue, iid);
                     if (NS_FAILED(rv)) return rv;
                 }
@@ -1530,6 +1530,7 @@ nsXULElement::SetScriptObject(void *aScriptObject)
 NS_IMETHODIMP
 nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
 {
+    XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheTests);
     *aHandler = nsnull;
     if (mPrototype) {
         for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
@@ -1537,6 +1538,7 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
 
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
                 (attr->mName.get() == aName)) {
+                XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheHits);
                 *aHandler = attr->mEventHandler;
                 break;
             }
@@ -1548,6 +1550,7 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
 NS_IMETHODIMP
 nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
 {
+    XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
     if (mPrototype) {
         for (PRInt32 i = 0; i < mPrototype->mNumAttributes; ++i) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
@@ -1556,6 +1559,7 @@ nsXULElement::SetCompiledEventHandler(nsIAtom *aName, void* aHandler)
                 (attr->mName.get() == aName)) {
                 nsresult rv;
 
+                XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheFills);
                 attr->mEventHandler = aHandler;
 
                 nsCOMPtr<nsIScriptGlobalObject> global;
