@@ -69,11 +69,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
         ctor.put("prototype", ctor, proto);
     }
 
-    public NativeRegExp(Scriptable scope, String source, String global) {
-        init(scope, source, global);
+    public NativeRegExp(Context cx, Scriptable scope, String source, String global) {
+        init(cx, scope, source, global);
     }
 
-    public void init(Scriptable scope, String source, String global) {
+    public void init(Context cx, Scriptable scope, String source, String global) {
         this.source = source;
         flags = 0;
         if (global != null) {
@@ -94,7 +94,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
             }
         }
 
-        CompilerState state = new CompilerState(source, flags);
+        CompilerState state = new CompilerState(source, flags, cx);
         this.ren = parseRegExp(state);
         if (ren == null) return;
         RENode end = new RENode(state, REOP_END, null);
@@ -131,7 +131,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         String s = args.length == 0 ? "" : ScriptRuntime.toString(args[0]);
         String global = args.length > 1 ? ScriptRuntime.toString(args[1])
                                         : null;
-        thisObj.init(funObj, s, global);
+        thisObj.init(cx, funObj, s, global);
         return thisObj;
     }
 
@@ -152,8 +152,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
     /**
      * "lastIndex" property of RegExp instances (defined in prototype)
      */
-    public int getLastIndex() {
-        return lastIndex;
+    public long getLastIndex() {
+        return (lastIndex & 0x0FFFFFFFFL);
     }
 
     /**
@@ -1038,43 +1038,139 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 ren = new RENode(state, REOP_NONSPACE, null);
                 break;
 
-              case '0':
-                state.index = index;
-                num = doOctal(state);
-                index = state.index;
-                ren = new RENode(state, REOP_FLAT1, null);
-                c = (char) num;
-                break;
+        	  case '0':
+        	  case '1':
+        	  case '2':
+        	  case '3':
+        	  case '4':
+        	  case '5':
+        	  case '6':
+        	  case '7':
+        	  case '8':
+        	  case '9':
+                    /*
+                        Yuk. Keeping the old style \n interpretation for 1.2
+                        compatibility.
+                    */
+                if (state.cx.getLanguageVersion() == Context.VERSION_1_2) {
+                    switch (c) {                    
+                      case '0':
+                        state.index = index;
+                        num = doOctal(state);
+                        index = state.index;
+                        ren = new RENode(state, REOP_FLAT1, null);
+                        c = (char) num;
+                        break;
 
-              case '1':
-              case '2':
-              case '3':
-              case '4':
-              case '5':
-              case '6':
-              case '7':
-              case '8':
-              case '9':
-                num = unDigit(c);
-                while (++index < source.length && isDigit(c = source[index]))
-                    num = 10 * num - unDigit(c);
-                if (num > 9 || num > state.parenCount) {
-                    state.index = ocp;
-                    num = doOctal(state);
-                    index = state.index;
-                    ren = new RENode(state, REOP_FLAT1, null);
-                    c = (char) num;
-                    break;
+                      case '1':
+                      case '2':
+                      case '3':
+                      case '4':
+                      case '5':
+                      case '6':
+                      case '7':
+                      case '8':
+                      case '9':
+                        num = unDigit(c);
+                        len = 1;
+                        while (++index < source.length
+                                            && isDigit(c = source[index])) {
+                            num = 10 * num + unDigit(c);
+                            len++;
+                        }
+                        /* n in [8-9] and > count of parenetheses, then revert to
+                        '8' or '9', ignoring the '\' */
+                        if (((num == 8) || (num == 9)) && (num > state.parenCount)) {
+                            ocp = --index;  /* skip beyond the '\' */
+                            doFlat = true;
+                            skipCommon = true;
+                            break;                        
+                        }
+                        /* more than 1 digit, or a number greater than
+                            the count of parentheses => it's an octal */
+                        if ((len > 1) || (num > state.parenCount)) {
+                            state.index = ocp;
+                            num = doOctal(state);
+                            index = state.index;
+                            ren = new RENode(state, REOP_FLAT1, null);
+                            c = (char) num;
+                            break;
+                        }
+                        index--;
+                        ren = new RENode(state, REOP_BACKREF, null);
+                        ren.num = num - 1;       /* \1 is numbered 0, etc. */
+
+                        /* Avoid common chr- and flags-setting 
+                                                        code after switch. */
+                        ren.flags = RENode.NONEMPTY;
+                        skipCommon = true;
+                        break;
+                    }
                 }
-                index--;
-                ren = new RENode(state, REOP_BACKREF, null);
-                ren.num = num - 1;       /* \1 is numbered 0, etc. */
-
-                /* Avoid common chr- and flags-setting code after switch. */
-                ren.flags = RENode.NONEMPTY;
-                skipCommon = true;
+                else {
+                    boolean twodigitescape = false;
+                    if (index < (source.length - 1) 
+                                && source[index + 1] >= '0' 
+                                    && source[index + 1] <= '9') {
+                        if (c >= '0' && c <= '3') {
+                            if (c <= '7') { /* ZeroToThree OctalDigit */
+                                if (index < (source.length - 2) 
+                                            && source[index + 2] >= '0' 
+                                                && source[index + 2] <= '9') {
+                        	        ren = new RENode(state, REOP_FLAT1, null);
+                                    c = (char)(64 * unDigit(c) 
+                                                + 8 * unDigit(source[++index]) 
+                                                    + unDigit(source[++index]));
+                                }
+                                else 
+                           /*ZeroToThree OctalDigit lookahead != OctalDigit */
+                                    twodigitescape = true;
+                            }
+                            else /* ZeroToThree EightOrNine */
+                                twodigitescape = true;
+                        }
+                        else { /* FourToNine DecimalDigit */
+                            twodigitescape = true;
+                        }
+                        if (twodigitescape) {
+                            num = 10 * unDigit(c) + unDigit(source[index + 1]);
+                            if (num >= 10 && num <= state.parenCount) {
+                                index++;
+            	                ren = new RENode(state, REOP_BACKREF, null);
+            	                ren.num = num - 1;/* \1 is numbered 0, etc. */
+            	                /* Avoid common chr- and flags-setting
+            	                    code after switch. */
+            	                ren.flags = RENode.NONEMPTY;
+            	                skipCommon = true;
+                            }
+                            if (c > '7' || source[index + 1] > '7') {                                
+                                Context.reportError(
+                                    ScriptRuntime.getMessage(
+                                                "msg.invalid.backref", null));
+    	                        return null;
+                            }
+                            ren = new RENode(state, REOP_FLAT1, null);
+                            c = (char)(8 * unDigit(c) + unDigit(source[++index]));
+                        }
+                    }
+                    else { /* DecimalDigit lookahead != DecimalDigit */
+                        if (c == '0') {
+                	        ren = new RENode(state, REOP_FLAT1, null);
+                            c = 0;
+                        }
+                        else {
+                            num = (char)unDigit(c);
+        	                ren = new RENode(state, REOP_BACKREF, null);
+        	                ren.num = num - 1;	/* \1 is numbered 0, etc. */
+        	                /* Avoid common chr- and flags-setting 
+        	                                            code after switch. */
+        	                ren.flags = RENode.NONEMPTY;
+        	                skipCommon = true;
+                        }
+                    }
+                }
                 break;
-
+                
               case 'x':
                 ocp = index;
                 if (++index < source.length && isHex(c = source[index])) {
@@ -1083,7 +1179,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         num <<= 4;
                         num += unHex(c);
                     } else {
-                        index--;       /* back up so index points to last hex char */
+                        if (state.cx.getLanguageVersion() == Context.VERSION_1_2)
+                            index--; /* back up so index points to last hex char */
+                        else { /* ecma 2 requires pairs of hex digits. */
+                            index = ocp;
+                            num = 'x';
+                        }
                     }
                 } else {
             		index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
@@ -1185,17 +1286,16 @@ public class NativeRegExp extends ScriptableObject implements Function {
     private int doOctal(CompilerState state) {
         char[] source = state.source;
         int index = state.index;
-        int num = 0;
+        int tmp, num = 0;
         char c;
         while (++index < source.length && '0' <= (c = source[index]) &&
                c <= '7')
         {
-            num = 8 * num + (int)(c - '0');
-            if (num > 0377) {
-                reportError("msg.overlarge.octal", tail(source, state.index));
-                num = 0;
+            tmp = 8 * num + (int)(c - '0');
+            if (tmp > 0377) {
                 break;
             }
+            num = tmp;
         }
         index--;
         state.index = index;
@@ -1422,6 +1522,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     
                 case REOP_BACKREF: {
                         int num = ren.num;
+                        if (num >= state.parens.length) {
+                            Context.reportError(
+                                ScriptRuntime.getMessage(
+                                            "msg.bad.backref", null));
+                            return -1;
+                        }
                         SubString parsub = state.parens[num];
                         if (parsub == null)
                             parsub = state.parens[num] = new SubString();
@@ -1794,10 +1900,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
 }
 
 class CompilerState {
-    CompilerState(String source, int flags) {
+    CompilerState(String source, int flags, Context cx) {
         this.source = source.toCharArray();
         this.flags = flags;
+        this.cx = cx;
     }
+    Context     cx;
     char[]      source;
     int         indexBegin;
     int         index;
