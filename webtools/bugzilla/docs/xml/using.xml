@@ -271,17 +271,16 @@
       <ulink url="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"/>.</para>
 
       <para>The Search page has controls for selecting different possible
-      values for all of the fields in a bug, as described above. Once you've
-      defined a search, you can either run it, or save it as a Remembered
-      Query, which can optionally appear in the footer of your pages.</para>
+      values for all of the fields in a bug, as described above. For some
+      fields, multiple values can be selected. In those cases, Bugzilla
+      returns bugs where the content of the field matches one of the selected
+      values. If none is selected, then the field can take any value.</para>
+      
+      <para>Once you've defined a search, you can either run it, or save it
+      as a Remembered Query, which can optionally appear in the footer of
+      your pages.</para>
 
-      <para>Highly advanced querying is done using Boolean Charts, which have
-      their own 
-      <ulink
-      url="http://landfill.bugzilla.org/bugzilla-tip/booleanchart.html">
-      context-sensitive help</ulink>
-
-      .</para>
+      <para>Highly advanced querying is done using Boolean Charts.</para>
     </section>
 
     <section id="list">
