@@ -59,9 +59,36 @@
 
 
 //----------------------------------------------------------------------------------------
-static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
+static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 {
+   //  Set the component registry location:
+    nsresult rv;
+    nsCOMPtr<nsIProperties> dirService;
+    rv = nsDirectoryService::Create(nsnull, 
+                                    NS_GET_IID(nsIProperties), 
+                                    getter_AddRefs(dirService));  // needs to be around for life of product
+
+    if (dirService)
+    {
+      nsCOMPtr <nsILocalFile> aLocalFile;
+      dirService->Get("xpcom.currentProcessDirectory", NS_GET_IID(nsILocalFile), getter_AddRefs(aLocalFile));
+      if (aLocalFile)
+      {
+        *aFile = aLocalFile;
+        NS_ADDREF(*aFile);
+        return NS_OK;
+      }
+    }
+
+    nsLocalFile* localFile = new nsLocalFile;
+
+    if (localFile == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(localFile);
+
+
+
 #ifdef XP_PC
     char buf[MAX_PATH];
     if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
@@ -70,7 +97,8 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
         if (lastSlash)
             *(lastSlash + 1) = '\0';
         
-        aFile->InitWithPath(buf);
+        localFile->InitWithPath(buf);
+        *aFile = localFile;
         return NS_OK;
     }
 
@@ -97,11 +125,13 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
             // Truncate the nsame so the spec is just to the app directory
             appFSSpec.name[0] = 0;
 
-        	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(aFile);
-			if (localFileMac) {
-				localFileMac->InitWithFSSpec(&appFSSpec);
-                return NS_OK;
-            }
+        	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(localFile);
+			    if (localFileMac) 
+          {
+				    localFileMac->InitWithFSSpec(&appFSSpec);
+            *aFile = localFile;
+            return NS_OK;
+          }
         }
     }
 
@@ -115,7 +145,8 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
     char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
     if (moz5)
     {
-        aFile->InitWithPath(moz5);
+        localFile->InitWithPath(moz5);
+        *aFile = localFile;
         return NS_OK;
     }
     else
@@ -131,7 +162,8 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
         // Fall back to current directory.
         if (getcwd(buf, sizeof(buf)))
         {
-            aFile->InitWithPath(buf);
+            localFile->InitWithPath(buf);
+            *aFile = localFile;
             return NS_OK;
         }
     }
@@ -141,7 +173,8 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
     char *moz5 = getenv("MOZILLA_FIVE_HOME");
     if (moz5)
     {
-        aFile->InitWithPath(moz5);
+        localFile->InitWithPath(moz5);
+        *aFile = localFile;
         return NS_OK;
     }
     else
@@ -157,13 +190,17 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile* aFile)
         if((p = strrchr(buf, '/')) != 0)
         {
           *p = 0;
-          aFile->InitWithPath(buf);
+          localFile->InitWithPath(buf);
+          *aFile = localFile;
           return NS_OK;
         }
       }
     }
 
 #endif
+    
+    if (localFile)
+       delete localFile;
 
     NS_ERROR("unable to get current process directory");
     return NS_ERROR_FAILURE;
@@ -277,13 +314,9 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
         
         if (strncmp(prop, "xpcom.currentProcess.componentRegistry", 38) == 0)
         {
-            nsLocalFile* localFile = new nsLocalFile;
-
-    if (localFile == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(localFile);
-
-            nsresult rv = GetCurrentProcessDirectory(localFile);
+            nsILocalFile* localFile;
+            
+            nsresult rv = GetCurrentProcessDirectory(&localFile);
             if (NS_FAILED(rv)) 
                 return rv;
  
@@ -294,19 +327,12 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
 #endif /* XP_MAC */
     
             Set(prop, NS_STATIC_CAST(nsILocalFile*, localFile));
-            rv =localFile->QueryInterface(uuid, result);
-            NS_RELEASE(localFile);
-            return rv;
         }
         else if (strncmp(prop, "xpcom.currentProcess.componentDirectory", 39) == 0)
         {
-            nsLocalFile* localFile = new nsLocalFile;
+            nsILocalFile* localFile;
 
-    if (localFile == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(localFile);
-
-            nsresult rv = GetCurrentProcessDirectory(localFile);
+            nsresult rv = GetCurrentProcessDirectory(&localFile);
             if (NS_FAILED(rv)) 
                 return rv;
  
@@ -316,30 +342,47 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
             localFile->Append("components");           
 #endif /* XP_MAC */
     
-            rv =localFile->QueryInterface(uuid, result);
-            NS_RELEASE(localFile);
-            return rv;
+           Set(prop, NS_STATIC_CAST(nsILocalFile*, localFile));
         }
-              
-        return NS_ERROR_FAILURE;
     }
 
+    
+    // now check again to see if it was added above.
+    if (Exists(&key))
+    {
+      nsCOMPtr<nsIFile> ourFile;
+      nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
+      
+      if (value && NS_SUCCEEDED(value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile))))
+      {
+        nsCOMPtr<nsIFile> cloneFile;
+        ourFile->Clone(getter_AddRefs(cloneFile));
+        return cloneFile->QueryInterface(uuid, result);
+      }
+    }
 
-    nsISupports* value = (nsISupports*)nsHashtable::Get(&key);
-    return value->QueryInterface(uuid, result);
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsDirectoryService::Set(const char* prop, nsISupports* value)
 {
     nsStringKey key(prop);
-    if (Exists(&key))
+    if (Exists(&key) || value == nsnull)
         return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIFile> ourFile;
+    value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile));
+    if (ourFile)
+    {
+        nsIFile* cloneFile;
+        ourFile->Clone(&cloneFile);
 
-    nsISupports* prevValue = (nsISupports*)Put(&key, value);
-    NS_IF_RELEASE(prevValue);
-    NS_IF_ADDREF(value);
-    return NS_OK;
+        nsISupports* prevValue = (nsISupports*)Put(&key, value);
+        NS_IF_RELEASE(prevValue);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;   
 }
 
 NS_IMETHODIMP
