@@ -3382,7 +3382,7 @@ nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterf
 {
   PK11SlotInfo *slot;
   char * nickname = NULL;
-  SECStatus sec_rv;
+  nsresult rv = NS_ERROR_FAILURE;
   int numCACerts;
   SECItem *CACerts;
   CERTDERCerts * collectArgs;
@@ -3390,17 +3390,20 @@ nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterf
   CERTCertificate * cert=NULL;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if ( arena == NULL ) 
+  if ( arena == NULL ) {
     goto loser;
+  }
 
   collectArgs = getCertsFromPackage(arena, data, length);
-  if (!collectArgs)
+  if (!collectArgs) {
     goto loser;
+  }
 
   cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), collectArgs->rawCerts,
                 	       (char *)NULL, PR_FALSE, PR_TRUE);
-  if (!cert)
+  if (!cert) {
     goto loser;
+  }
 
   slot = PK11_KeyForCertExists(cert, NULL, ctx);
   if ( slot == NULL ) {
@@ -3428,22 +3431,27 @@ nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterf
 
   /* user wants to import the cert */
   slot = PK11_ImportCertForKey(cert, nickname, ctx);
-  if (!slot) 
-      goto loser;
+  if (!slot) {
+    goto loser;
+  }
   PK11_FreeSlot(slot);
   numCACerts = collectArgs->numcerts - 1;
 
   if (numCACerts) {
-  	CACerts = collectArgs->rawCerts+1;
-    sec_rv = CERT_ImportCAChain(CACerts, numCACerts, certUsageUserCertImport);
+    CACerts = collectArgs->rawCerts+1;
+    if ( ! CERT_ImportCAChain(CACerts, numCACerts, certUsageUserCertImport) ) {
+      rv = NS_OK;
+    }
   }
   
 loser:
   if (arena) {
     PORT_FreeArena(arena, PR_FALSE);
   }
-  CERT_DestroyCertificate(cert);
-  return (sec_rv) ? NS_ERROR_FAILURE : NS_OK;
+  if ( cert ) {
+    CERT_DestroyCertificate(cert);
+  }
+  return rv;
 }
 
 /*
