@@ -360,6 +360,7 @@ public:
       gHTMLElements[gStyleTags[index]].mSelfContained=PR_TRUE;
     }
     gHTMLElements[eHTMLTag_a].mSelfContained=PR_FALSE;
+    gHTMLElements[eHTMLTag_div].mSelfContained=PR_TRUE;
     gHTMLElements[eHTMLTag_frameset].mSelfContained=PR_TRUE;
     gHTMLElements[eHTMLTag_ol].mSelfContained=PR_TRUE;
     gHTMLElements[eHTMLTag_ul].mSelfContained=PR_TRUE;
