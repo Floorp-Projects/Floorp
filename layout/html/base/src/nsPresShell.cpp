@@ -245,6 +245,7 @@ protected:
   nsVoidArray mReflowCommands;
   PRUint32 mReflowLockCount;
   PRBool mIsDestroying;
+  nsIFrame* mCurrentEventFrame;
 };
 
 #ifdef NS_DEBUG
@@ -748,6 +749,9 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
     manager->ClearFrameRefs(aFrame);
     NS_RELEASE(manager);
   }
+  if (aFrame == mCurrentEventFrame) {
+    mCurrentEventFrame = nsnull;
+  }
 }
 
 NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
@@ -1020,7 +1024,7 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
 {
   void*     clientData;
   nsIFrame* frame;
-  nsresult  rv;
+  nsresult  rv = NS_OK;
   
   NS_ASSERTION(!(nsnull == aView), "null view");
 
@@ -1032,34 +1036,37 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame) {
-    nsIFrame* targetFrame;
-    frame->GetFrameForPoint(aEvent->point, &targetFrame);
-    if (nsnull != frame) {
+    frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+    if (nsnull != mCurrentEventFrame) {
       //Once we have the targetFrame, handle the event in this order
       nsIEventStateManager *manager;
       if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
         //1. Give event to event manager for state changes and generation of synthetic events.
-        manager->HandleEvent(*mPresContext, aEvent, targetFrame, aEventStatus);
+        rv = manager->HandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus);
 
         //2. Give event to the DOM for third party and JS use.
-        nsIContent* targetContent;
-        if (NS_OK == targetFrame->GetContent(targetContent) && nsnull != targetContent) {
-          rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
-                                             DOM_EVENT_INIT, aEventStatus);
-          NS_RELEASE(targetContent);
+        if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+          nsIContent* targetContent;
+          if (NS_OK == mCurrentEventFrame->GetContent(targetContent) && nsnull != targetContent) {
+            rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
+                                               DOM_EVENT_INIT, aEventStatus);
+            NS_RELEASE(targetContent);
+          }
         }
+
         //3. Give event to the Frames for browser default processing.
         // XXX The event isn't translated into the local coordinate space
         // of the frame...
-        if (NS_OK == rv) {
-          rv = targetFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+        if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+          rv = mCurrentEventFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
         }
         NS_RELEASE(manager);
       }
     }
   }
-  else
+  else {
     rv = NS_OK;
+  }
 
   return rv;
 }

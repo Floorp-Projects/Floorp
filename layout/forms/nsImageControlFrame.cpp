@@ -348,11 +348,17 @@ nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext)
   GetType(&type);
 
   if ((nsnull != mFormFrame) && !nsFormFrame::GetDisabled(this)) {
+    nsIContent *formContent = nsnull;
+    mFormFrame->GetContent(formContent);
+
     nsEventStatus status;
     nsEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SUBMIT;
-    mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+    if (nsnull != formContent) {
+      formContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+      NS_RELEASE(formContent);
+    }
     if (nsEventStatus_eConsumeNoDefault != status) {
       mFormFrame->OnSubmit(aPresContext, this);
     }
