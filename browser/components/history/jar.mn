@@ -4,4 +4,3 @@ browser.jar:
 
 en-US.jar:
     locale/en-US/browser/history/history.dtd               (locale/history.dtd)
-    locale/en-US/browser/history/history.properties        (locale/history.properties)
