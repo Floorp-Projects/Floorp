@@ -174,13 +174,8 @@ protected:
 protected:
 	RgnHandle			mWindowRegion;				// the region defining this window
 	WindowPtr			mWindowPtr;
-	PRBool				mPainting;
+	PRBool				mDrawing;
 	PRBool				mDestroyCalled;
-	
-	// Absolutely, positively, the region of this widget in GrafPort relative coords
-	RgnHandle			mMacPortRelativeRegion;
-	PRInt32				mMacPortRelativeX;
-	PRInt32				mMacPortRelativeY;
 };
 
 // =============================================================================
