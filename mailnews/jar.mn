@@ -33,7 +33,7 @@ messenger.jar:
     content/messenger/addressbook/addressbook-panel.xul                        (addrbook/resources/content/addressbook-panel.xul)
     content/messenger/addressbook/addressbook-panel.js                         (addrbook/resources/content/addressbook-panel.js)
     content/messenger/addressbook/print.css                                    (addrbook/resources/content/print.css)
-    content/messenger/AccountManager.xul                                       (base/prefs/resources/content/AccountManager.xul)
+*   content/messenger/AccountManager.xul                                       (base/prefs/resources/content/AccountManager.xul)
     content/messenger/AccountManager.js                                        (base/prefs/resources/content/AccountManager.js)
     content/messenger/am-main.xul                                              (base/prefs/resources/content/am-main.xul)
     content/messenger/am-main.js                                               (base/prefs/resources/content/am-main.js)
