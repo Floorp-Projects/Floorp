@@ -971,7 +971,7 @@ case "$target" in
         if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
             AC_MSG_ERROR([cd \$MOZ_TOOLS failed. MOZ_TOOLS ==? $MOZ_TOOLS])
         fi
-        MOZ_TOOLS_DIR=`echo $MOZ_TOOLS_DIR | sed -e 's|^/cygdrive/||' -e 's|/|:/|'`
+        MOZ_TOOLS_DIR=`cygpath -w $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
         GLIB_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
         GLIB_LIBS='$(MOZ_TOOLS_DIR)/lib/glib-1.2.lib'
         LIBIDL_CFLAGS='-I$(MOZ_TOOLS_DIR)/include'
