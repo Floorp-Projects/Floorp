@@ -40,6 +40,7 @@
 #include "nsTransactionManagerCID.h"
 #include "nsITransactionManager.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIDOMSelection.h"
 #include "nsIEnumerator.h"
@@ -49,6 +50,7 @@
 #include "nsICaret.h"
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
+
 
 #ifdef NECKO
 #include "nsIIOService.h"
@@ -111,6 +113,7 @@ static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
 static NS_DEFINE_IID(kEditorShellCID,       NS_EDITORAPPCORE_CID);
 static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
+
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
@@ -493,6 +496,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 
   mDoc = aDoc;
   mPresShell = aPresShell;		// we don't addref the pres shell
+  
+  // disable links
+  nsCOMPtr<nsIPresContext> context;
+  mPresShell->GetPresContext(getter_AddRefs(context));
+  context->SetLinkHandler(0);  
 
   // Init mEditProperty
   nsresult result = NS_NewEditProperty(getter_AddRefs(mEditProperty));
