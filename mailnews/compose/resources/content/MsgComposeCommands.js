@@ -208,8 +208,20 @@ function ComposeStartup()
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
 	    	{
-	    		if (args.body) //We need to set the body before setting msgCompose.editor;
-	    			msgCompFields.SetBody(args.body);
+	    		if (args.body) //We need to set the body before setting
+                               //msgCompose.editor;
+                {
+                    if (args.bodyislink == "true" && msgCompose.composeHTML)
+                    {
+                        msgCompFields.SetBody("<A HREF=\"" + args.body +
+                                                  "\">" + unescape(args.body)
+                                                  + "</A>");
+                    }
+                    else
+                    {
+                        msgCompFields.SetBody(args.body);
+                    }
+                }
 
 	    		if (args.to)
 	    			msgCompFields.SetTo(args.to);
