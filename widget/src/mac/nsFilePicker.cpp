@@ -53,7 +53,6 @@
 
 #include <InternetConfig.h>
 
-#include "nsMacControl.h"
 #include "nsCarbonHelpers.h"
 
 #include "nsFilePicker.h"

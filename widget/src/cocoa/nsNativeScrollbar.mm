@@ -36,11 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+#include <ControlDefinitions.h>
+
 #include "nsNativeScrollbar.h"
 #include "nsIDeviceContext.h"
-#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
-#include <ControlDefinitions.h>
-#endif
 
 #include "nsReadableUtils.h"
 #include "nsWidgetAtoms.h"

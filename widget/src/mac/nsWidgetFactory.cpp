@@ -38,28 +38,21 @@
 
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsIButton.h"
-#include "nsITextWidget.h"
+#include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
+
 #include "nsWidgetsCID.h"
 
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsMacWindow.h"
 #include "nsAppShell.h"
-#include "nsButton.h"
-#include "nsTextWidget.h"
-#include "nsLabel.h"
 #include "nsFilePicker.h"
 #include "nsNativeScrollbar.h"
-
 
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
-#define nsMenuBar nsMenuBarX
-#define nsMenu nsMenuX
-#define nsMenuItem nsMenuItemX
-
 
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -67,40 +60,41 @@
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 #include "nsDragHelperService.h"
-
-#if USE_NATIVE_VERSION
-# include "nsCheckButton.h"
-#endif
-
 #include "nsLookAndFeel.h"
-
-#include "nsIComponentManager.h"
-
 #include "nsSound.h"
-
 #include "nsBidiKeyboard.h"
 
-#include "nsIGenericFactory.h"
+#if USE_NATIVE_VERSION
+
+#include "nsIButton.h"
+#include "nsITextWidget.h"
+
+#include "nsButton.h"
+#include "nsCheckButton.h"
+#include "nsTextWidget.h"
+#include "nsLabel.h"
+
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 #if USE_NATIVE_VERSION
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsComboBox)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRadioButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsListBox)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextAreaWidget)
-#endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)	// used by Viewer?
+#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBar)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenu)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBarX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItemX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -111,8 +105,22 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
-static const nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo gComponents[] =
 {
+#if USE_NATIVE_VERSION
+	{ 	"Text Field",
+		NS_TEXTFIELD_CID,
+		"@mozilla.org/widgets/textwidget/mac;1",
+		nsTextWidgetConstructor },
+	{	"Label",
+		NS_LABEL_CID,
+		"@mozilla.org/widget/label/mac;1",
+		nsLabelConstructor },
+	{	"Button",
+		NS_BUTTON_CID,
+		"@mozilla.org/widgets/button/mac;1",
+		nsButtonConstructor },
+#endif
 	{	"nsWindow",
 		NS_WINDOW_CID,
 		"@mozilla.org/widgets/window/mac;1",
@@ -125,18 +133,10 @@ static const nsModuleComponentInfo components[] =
 		NS_CHILD_CID,
 		"@mozilla.org/widgets/child_window/mac;1",
 		ChildWindowConstructor },
-	{	"Button",
-		NS_BUTTON_CID,
-		"@mozilla.org/widgets/button/mac;1",
-		nsButtonConstructor },
 	{	"File Picker",
 		NS_FILEPICKER_CID,
 		"@mozilla.org/filepicker;1",
 		nsFilePickerConstructor },
-	{ 	"Text Field",
-		NS_TEXTFIELD_CID,
-		"@mozilla.org/widgets/textwidget/mac;1",
-		nsTextWidgetConstructor },
 	{	"AppShell",
 		NS_APPSHELL_CID,
 		"@mozilla.org/widget/appshell/mac;1",
@@ -149,22 +149,18 @@ static const nsModuleComponentInfo components[] =
 		NS_LOOKANDFEEL_CID,
 		"@mozilla.org/widget/lookandfeel;1",
 		nsLookAndFeelConstructor },
-	{	"Label",
-		NS_LABEL_CID,
-		"@mozilla.org/widget/label/mac;1",
-		nsLabelConstructor },
 	{	"Menubar",
 		NS_MENUBAR_CID,
 		"@mozilla.org/widget/menubar/mac;1",
-		nsMenuBarConstructor },
+		nsMenuBarXConstructor },
 	{	"Menu",
 		NS_MENU_CID,
 		"@mozilla.org/widget/menu/mac;1",
-		nsMenuConstructor },
+		nsMenuXConstructor },
 	{	"MenuItem",
 		NS_MENUITEM_CID,
 		"@mozilla.org/widget/menuitem/mac;1",
-		nsMenuItemConstructor },
+		nsMenuItemXConstructor },
 	{ 	"Sound",
 		NS_SOUND_CID,
 		"@mozilla.org/sound;1",
@@ -203,5 +199,5 @@ static const nsModuleComponentInfo components[] =
 		nsBidiKeyboardConstructor },
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)
+NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)
 

@@ -45,7 +45,6 @@
 #include "nsIContent.h"
 
 class nsIScrollbarMediator;
-class StControlProcSingleton5;
 
 
 //

@@ -37,6 +37,9 @@
 
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
+
 #include "nsWidgetsCID.h"
 
 #include "nsToolkit.h"
@@ -49,10 +52,6 @@
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 
-#define nsMenuBar nsMenuBarX
-#define nsMenu nsMenuX
-#define nsMenuItem nsMenuItemX
-
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
 #include "nsTransferable.h"
@@ -60,21 +59,12 @@
 #include "nsDragService.h"
 #include "nsDragHelperService.h"
 
-#if USE_NATIVE_VERSION
-# include "nsCheckButton.h"
-#endif
-
 #include "nsLookAndFeel.h"
-
-#include "nsIComponentManager.h"
 
 #include "nsSound.h"
 #include "nsNativeScrollbar.h"
 
 #include "nsBidiKeyboard.h"
-
-
-#include "nsIGenericFactory.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
@@ -82,12 +72,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellCocoa)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBar)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenu)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuBarX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMenuItemX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeScrollbar)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -96,7 +85,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 
-static nsModuleComponentInfo components[] =
+static const nsModuleComponentInfo gComponents[] =
 {
 	{	"nsWindow",
 		NS_WINDOW_CID,
@@ -129,15 +118,15 @@ static nsModuleComponentInfo components[] =
 	{	"Menubar",
 		NS_MENUBAR_CID,
 		"@mozilla.org/widget/menubar/mac;1",
-		nsMenuBarConstructor },
+		nsMenuBarXConstructor },
 	{	"Menu",
 		NS_MENU_CID,
 		"@mozilla.org/widget/menu/mac;1",
-		nsMenuConstructor },
+		nsMenuXConstructor },
 	{	"MenuItem",
 		NS_MENUITEM_CID,
 		"@mozilla.org/widget/menuitem/mac;1",
-		nsMenuItemConstructor },
+		nsMenuItemXConstructor },
 	{ 	"Sound",
 		NS_SOUND_CID,
 		"@mozilla.org/sound;1",
@@ -176,4 +165,4 @@ static nsModuleComponentInfo components[] =
 		nsNativeScrollbarConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsWidgetMacModule, components)
+NS_IMPL_NSGETMODULE(nsWidgetMacModule, gComponents)

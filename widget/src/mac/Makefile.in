@@ -82,18 +82,15 @@ GFX_LCPPSRCS = \
 		nsWatchTask.cpp \
 		$(NULL)
 
-CPPSRCS			= nsAppShell.cpp \
+CPPSRCS	= nsAppShell.cpp \
 		nsBidiKeyboard.cpp \
-		nsButton.cpp \
 		nsChildWindow.cpp \
 		nsClipboard.cpp \
 		nsDeleteObserver.cpp \
 		nsDragService.cpp \
 		nsDragHelperService.cpp \
 		nsFilePicker.cpp \
-		nsLabel.cpp \
 		nsLookAndFeel.cpp \
-		nsMacControl.cpp \
 		nsMacEventHandler.cpp \
 		nsMacMessagePump.cpp \
 		nsMacResources.cpp \
@@ -103,9 +100,7 @@ CPPSRCS			= nsAppShell.cpp \
 		nsMenuBarX.cpp \
 		nsMenuItemX.cpp \
 		nsMimeMapper.cpp \
-		nsNativeScrollbar.cpp \
 		nsSound.cpp \
-		nsTextWidget.cpp \
 		nsTSMStrategy.cpp \
 		nsToolkitBase.cpp \
 		nsToolkit.cpp \
@@ -113,6 +108,8 @@ CPPSRCS			= nsAppShell.cpp \
 		nsWindow.cpp \
 		nsMacNativeUnicodeConverter.cpp \
 		nsStylClipboardUtils.cpp \
+		nsMacControl.cpp \
+		nsNativeScrollbar.cpp \
 		$(GFX_LCPPSRCS) \
 		$(NULL)
 
