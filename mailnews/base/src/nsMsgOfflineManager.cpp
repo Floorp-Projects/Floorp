@@ -119,9 +119,9 @@ nsresult nsMsgOfflineManager::AdvanceToNextState(nsresult exitStatus)
     {
     case eNoState:
 
+      m_curState = eSendingUnsent;
       if (m_sendUnsentMessages)
       {
-        m_curState = eSendingUnsent;
         SendUnsentMessages();
       }
       else
