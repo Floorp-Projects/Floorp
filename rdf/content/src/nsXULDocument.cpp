@@ -4358,8 +4358,14 @@ nsXULDocument::ResumeWalk()
                     rv = AddElementToMap(child);
                     if (NS_FAILED(rv)) return rv;
 
-                    rv = CheckBroadcasterHookup(child);
+                    rv = ProcessCommonAttributes(child);
                     if (NS_FAILED(rv)) return rv;
+
+                    if ((protoele->mNameSpaceID == kNameSpaceID_XUL) &&
+                        (protoele->mTag.get() == kObservesAtom)) {
+                        rv = HookupObserver(child);
+                        if (NS_FAILED(rv)) return rv;
+                    }
                 }
                 else {
                     // We're in the "first ply" of an overlay: the
@@ -4939,44 +4945,17 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 
 
 nsresult
-nsXULDocument::CheckBroadcasterHookup(nsIContent* aElement)
+nsXULDocument::HookupObserver(nsIContent* aElement)
 {
     nsresult rv;
 
-    PRBool doHookup = PR_FALSE;
+    // It's not there yet. Defer hookup until later.
+    BroadcasterHookup* hookup = new BroadcasterHookup(aElement);
+    if (! hookup)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    PRInt32 nameSpaceID;
-    rv = aElement->GetNameSpaceID(nameSpaceID);
+    rv = AddForwardReference(hookup);
     if (NS_FAILED(rv)) return rv;
-
-    if (nameSpaceID == kNameSpaceID_XUL) {
-        nsCOMPtr<nsIAtom> tag;
-        rv = aElement->GetTag(*getter_AddRefs(tag));
-        if (NS_FAILED(rv)) return rv;
-
-        if (tag.get() == kObservesAtom) {
-            doHookup = PR_TRUE;
-        }
-    }
-
-    if (! doHookup) {
-        nsAutoString value;
-        rv = aElement->GetAttribute(kNameSpaceID_None, kObservesAtom, value);
-        if (NS_FAILED(rv)) return rv;
-
-        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            doHookup = PR_TRUE;
-        }
-    }
-
-    if (doHookup) {
-        BroadcasterHookup* hookup = new BroadcasterHookup(aElement);
-        if (! hookup)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        rv = AddForwardReference(hookup);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     return NS_OK;
 }
@@ -5213,6 +5192,11 @@ nsXULDocument::BroadcasterHookup::Resolve()
         attribute = "*";
     }
 
+    // Make sure we got a valid listener.
+    NS_ASSERTION(listener != nsnull, "no listener");
+    if (! listener)
+        return eResolve_Error;
+
     // Try to find the broadcaster element in the document.
     nsCOMPtr<nsIDocument> doc;
     rv = mObservesElement->GetDocument(*getter_AddRefs(doc));
@@ -5233,7 +5217,7 @@ nsXULDocument::BroadcasterHookup::Resolve()
         return eResolve_Later;
 
     nsCOMPtr<nsIDOMXULElement> broadcaster = do_QueryInterface(target);
-    if (NS_FAILED(rv))
+    if (! broadcaster)
         return eResolve_Error; // not a XUL element, so we can't subscribe
 
     rv = broadcaster->AddBroadcastListener(attribute, listener);
@@ -5413,40 +5397,6 @@ nsXULDocument::ProcessCommonAttributes(nsIContent* aElement)
             if (NS_FAILED(rv)) return rv;
         }
     }
-
-#if 0
-    // Add any script event listeners to XUL elements, because a XUL
-    // element's SetAttribute() won't do it automatically.
-    nsCOMPtr<nsIXULContent> xulele = do_QueryInterface(aElement);
-    if (xulele) {
-        PRInt32 count;
-        rv = aElement->GetAttributeCount(count);
-        if (NS_FAILED(rv)) return rv;
-
-        for (PRInt32 i = 0; i < count; ++i) {
-            PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> tag;
-            rv = aElement->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(tag));
-            if (NS_FAILED(rv)) return rv;
-
-            if (nameSpaceID != kNameSpaceID_None)
-                continue;
-
-            rv = aElement->GetAttribute(nameSpaceID, tag, value);
-            if (NS_FAILED(rv)) return rv;
-
-            // Check for event handlers and add a script listener if necessary.
-            nsIID iid;
-            PRBool found;
-            rv = gXULUtils->GetEventHandlerIID(tag.get(), &iid, &found);
-            if (NS_FAILED(rv)) return rv;
-
-            if (found) {
-                xulele->AddScriptEventListener(tag, value, iid);
-            }
-        }
-    }
-#endif
 
     return NS_OK;
 }
