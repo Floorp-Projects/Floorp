@@ -482,15 +482,13 @@ void dprintf(const char *format, ...)
 {
 #if DEBUG
     va_list ap;
-	char	*buffer;
+	Str255 buffer;
 	
 	va_start(ap, format);
-	buffer = PR_vsmprintf(format, ap);
+	buffer[0] = PR_vsnprintf((char *)buffer + 1, sizeof(buffer) - 1, format, ap);
 	va_end(ap);
 	
-	c2pstr(buffer);
-	DebugStr( (unsigned char *)buffer);
-	free(buffer);
+	DebugStr(buffer);
 #endif /* DEBUG */
 }
 
