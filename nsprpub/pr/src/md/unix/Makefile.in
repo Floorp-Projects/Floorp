@@ -102,6 +102,7 @@ else
 $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
 	$(LD) -G -z text -z endfiltee -o $@ $(ULTRASPARC_ASOBJS)
 	$(INSTALL) -m 444 $@ $(dist_libdir)/cpu/sparcv8plus
+	$(INSTALL) -m 444 $@ $(dist_bindir)/cpu/sparcv8plus
 #
 # The -f $(ORIGIN)/... linker flag uses the real file, after symbolic links
 # are resolved, as the origin.  If NSDISTMODE is not "copy", libnspr4.so
