@@ -258,11 +258,13 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kRDF_InstanceOf);
         NS_RELEASE(kRDF_type);
 
+#ifdef	XP_WIN
         if (ieFavoritesDir)
         {
         	nsCRT::free(ieFavoritesDir);
         	ieFavoritesDir = nsnull;
         }
+#endif
 
         gFileSystemDataSource = nsnull;
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
