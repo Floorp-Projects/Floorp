@@ -211,7 +211,7 @@ sub do_delete
 	my ($targetpath) = $_[0];
 	my ($targetcomp) = $_[1];
 	my ($targetfile) = $_[2];
-	my ($target)     = "$targetpath$PD$targetcomp$PD$targetfile";
+	my ($target) = ($flat) ? "$targetpath$PD$targetfile" : "$targetpath$PD$targetcomp$PD$targetfile";
 
 	($debug >= 2) && print "do_delete():\n";
 	($debug >= 1) && print "-$targetfile\n";
