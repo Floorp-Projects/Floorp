@@ -536,9 +536,9 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
             } elsif ($type eq "casesubstring") {
                 $query .= "and instr($n, $q)\n";
             } elsif ($type eq "allwords") {
-                $query .= GetByWordList($f, $s, "and");
+                $query .= GetByWordList($n, $s, "and");
             } elsif ($type eq "anywords") {
-                $query .= GetByWordList($f, $s, "or");
+                $query .= GetByWordList($n, $s, "or");
             } else {
                 $query .= "and instr(lower($n), lower($q))\n";
             }
