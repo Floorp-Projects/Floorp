@@ -97,7 +97,7 @@ main(int argc, char* argv[])
   if (NS_FAILED(ret)) return ret;
 
   nsIPersistentProperties* props = nsnull;
-  ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+  ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, nsnull,
     NS_GET_IID(nsIPersistentProperties), (void**) &props);
   if (NS_FAILED(ret) || (!props)) {
     printf("create nsIPersistentProperties failed\n");
