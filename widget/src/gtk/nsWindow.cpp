@@ -216,7 +216,12 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
 void nsWindow::CreateGC()
 {
   if (nsnull == mGC) {
-    mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+    if (mWidget != nsnull && GTK_WIDGET(mWidget)->window != nsnull)
+      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+    else {
+      GtkWidget* window = ::gtk_window_new(GTK_WINDOW_POPUP);
+      mGC = ::gdk_gc_new(GTK_WIDGET(window)->window);
+    }
   }
 }
 
