@@ -121,12 +121,14 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   nsStyleColor* color =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nscoord x0 = spacing->mBorderPadding.left;
-  nscoord y0 = spacing->mBorderPadding.top;
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+  nscoord x0 = borderPadding.left;
+  nscoord y0 = borderPadding.top;
   nscoord width = mRect.width -
-    (spacing->mBorderPadding.left + spacing->mBorderPadding.right);
+    (borderPadding.left + borderPadding.right);
   nscoord height = mRect.height -
-    (spacing->mBorderPadding.top + spacing->mBorderPadding.bottom);
+    (borderPadding.top + borderPadding.bottom);
 
   // Center hrule vertically within the available space
   y0 += (height - thickness) / 2;

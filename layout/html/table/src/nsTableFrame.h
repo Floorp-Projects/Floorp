@@ -29,7 +29,6 @@ class CellData;
 class nsITableLayoutStrategy;
 struct InnerTableReflowState;
 struct nsStylePosition;
-struct nsStyleSpacing;
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 
@@ -216,7 +215,7 @@ protected:
 
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           InnerTableReflowState& aState,
-                          nsStyleSpacing* aKidSpacing);
+                          const nsMargin& aKidMargin);
 
   void PlaceChild(nsIPresContext*    aPresContext,
                   InnerTableReflowState& aState,

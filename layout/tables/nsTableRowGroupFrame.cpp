@@ -164,12 +164,12 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableRowGroupFrame::GetTopMarginFor(nsIPresContext*      aCX,
                                               RowGroupReflowState& aState,
-                                              nsStyleSpacing* aKidSpacing)
+                                              const nsMargin& aKidMargin)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidSpacing->mMargin.top) < 0) {
+  if ((margin = aKidMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -282,8 +282,10 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidSC->GetData(kStyleSpacingSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
-    nscoord bottomMargin = kidSpacing->mMargin.bottom;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(this, kidMargin);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+    nscoord bottomMargin = kidMargin.bottom;
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -292,7 +294,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
     // Subtract off for left and right margin
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+      kidAvailSize.width -= kidMargin.left + kidMargin.right;
     }
 
     // Reflow the child into the available space
@@ -325,7 +327,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     // Place the child after taking into account it's margin
     aState.y += topMargin;
     nsRect kidRect (0, 0, desiredSize.width, desiredSize.height);
-    kidRect.x += kidSpacing->mMargin.left;
+    kidRect.x += kidMargin.left;
     kidRect.y += aState.y;
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
                kidMaxElementSize);
@@ -394,7 +396,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     // Add back in the left and right margins, because one row does not 
     // impact another row's width
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width += kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+      kidAvailSize.width += kidMargin.left + kidMargin.right;
     }
 
     // Get the next child
@@ -736,8 +738,10 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
       aPresContext->ResolveStyleContextFor(kid, this);
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidSC->GetData(kStyleSpacingSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
-    nscoord bottomMargin = kidSpacing->mMargin.bottom;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(this, kidMargin);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+    nscoord bottomMargin = kidMargin.bottom;
 
     nsIFrame* kidFrame;
 

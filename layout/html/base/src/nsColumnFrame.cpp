@@ -118,7 +118,7 @@ nsresult ColumnFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nscoord ColumnFrame::GetTopMarginFor(nsIPresContext*    aCX,
                                      ColumnReflowState& aState,
                                      nsIFrame*          aKidFrame,
-                                     nsStyleSpacing*    aKidSpacing)
+                                     const nsMargin&    aKidMargin)
 {
   // Does the frame have a prev-in-flow?
   nsIFrame* kidPrevInFlow;
@@ -132,7 +132,7 @@ nscoord ColumnFrame::GetTopMarginFor(nsIPresContext*    aCX,
 
     // XXX Style system should be zero'ing out margins for pseudo frames...
     if (!ChildIsPseudoFrame(aKidFrame)) {
-      if ((margin = aKidSpacing->mMargin.top) < 0) {
+      if ((margin = aKidMargin.top) < 0) {
         maxNegTopMargin = -margin;
       } else {
         maxPosTopMargin = margin;
@@ -155,7 +155,7 @@ nscoord ColumnFrame::GetTopMarginFor(nsIPresContext*    aCX,
 void ColumnFrame::PlaceChild(nsIPresContext*    aPresContext,
                              ColumnReflowState& aState,
                              nsIFrame*          aKidFrame,
-                             nsStyleSpacing*    aKidSpacing,
+                             const nsMargin&    aKidMargin,
                              const nsRect&      aKidRect,
                              nsSize*            aMaxElementSize,
                              nsSize&            aKidMaxElementSize)
@@ -168,7 +168,7 @@ void ColumnFrame::PlaceChild(nsIPresContext*    aPresContext,
   aState.spaceManager->Translate(0, aKidRect.height);
 
   // Update the x-most
-  nscoord xMost = aKidRect.XMost() + aKidSpacing->mMargin.right;
+  nscoord xMost = aKidRect.XMost() + aKidMargin.right;
   if (xMost > aState.kidXMost) {
     aState.kidXMost = xMost;
   }
@@ -247,13 +247,15 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidSC->GetData(kStyleSpacingSID);
+    nsMargin  kidMargin;
+    kidSpacing->CalcMarginFor(kidFrame, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState,
-                                        kidFrame, kidSpacing);
+                                        kidFrame, kidMargin);
 
     // XXX Style system should do this...
     nscoord bottomMargin = ChildIsPseudoFrame(kidFrame)
       ? 0
-      : kidSpacing->mMargin.bottom;
+      : kidMargin.bottom;
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -299,9 +301,9 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
     // Place the child after taking into account it's margin
     aState.y += topMargin;
     aState.spaceManager->Translate(0, topMargin);
-    kidRect.x += kidSpacing->mMargin.left;
+    kidRect.x += kidMargin.left;
     kidRect.y += aState.y;
-    PlaceChild(aPresContext, aState, kidFrame, kidSpacing,
+    PlaceChild(aPresContext, aState, kidFrame, kidMargin,
                kidRect, aMaxElementSize, kidMaxElementSize);
     if (bottomMargin < 0) {
       aState.prevMaxNegBottomMargin = -bottomMargin;
@@ -451,13 +453,15 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidSC->GetData(kStyleSpacingSID);
+    nsMargin  kidMargin;
+    kidSpacing->CalcMarginFor(kidFrame, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState,
-                                        kidFrame, kidSpacing);
+                                        kidFrame, kidMargin);
 
     // XXX Style system should do this...
     nscoord bottomMargin = ChildIsPseudoFrame(kidFrame)
       ? 0
-      : kidSpacing->mMargin.bottom;
+      : kidMargin.bottom;
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -503,9 +507,9 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
       // Place the child
       aState.y += topMargin;
       aState.spaceManager->Translate(0, topMargin);
-      kidRect.x += kidSpacing->mMargin.left;
+      kidRect.x += kidMargin.left;
       kidRect.y += aState.y;
-      PlaceChild(aPresContext, aState, kidFrame, kidSpacing,
+      PlaceChild(aPresContext, aState, kidFrame, kidMargin,
                  kidRect, aMaxElementSize, kidMaxElementSize);
       if (bottomMargin < 0) {
         aState.prevMaxNegBottomMargin = -bottomMargin;
@@ -727,13 +731,15 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     }
 
     // Get the child's margins
+    nsMargin  kidMargin;
+    kidSpacing->CalcMarginFor(kidFrame, kidMargin);
     nscoord topMargin = GetTopMarginFor(aPresContext, aState,
-                                        kidFrame, kidSpacing);
+                                        kidFrame, kidMargin);
 
     // XXX Style system should do this...
     nscoord bottomMargin = ChildIsPseudoFrame(kidFrame)
       ? 0
-      : kidSpacing->mMargin.bottom;
+      : kidMargin.bottom;
 
     // Link the child frame into the list of children and update the
     // child count
@@ -814,9 +820,9 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
       // finish).
       aState.y += topMargin;
       aState.spaceManager->Translate(0, topMargin);
-      kidRect.x += kidSpacing->mMargin.left;
+      kidRect.x += kidMargin.left;
       kidRect.y += aState.y;
-      PlaceChild(aPresContext, aState, kidFrame, kidSpacing,
+      PlaceChild(aPresContext, aState, kidFrame, kidMargin,
                  kidRect, aMaxElementSize, kidMaxElementSize);
       if (bottomMargin < 0) {
         aState.prevMaxNegBottomMargin = -bottomMargin;
@@ -1015,13 +1021,15 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
         prevKidFrame->GetRect(startKidRect);
   
         // Get style info
-        nsStyleSpacing* kidSpacing;
-        prevKidFrame->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)kidSpacing);
+        nsStyleSpacing* prevKidSpacing;
+        prevKidFrame->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)prevKidSpacing);
+        nsMargin  kidMargin;
+        prevKidSpacing->CalcMarginFor(prevKidFrame, prevKidMargin);
   
         // XXX Style system should do this...
         nscoord bottomMargin = ChildIsPseudoFrame(prevKidFrame)
           ? 0
-          : kidSpacing->mMargin.bottom;
+          : prevKidMargin.bottom;
   
         state.y = startKidRect.YMost();
         if (bottomMargin < 0) {
@@ -1073,7 +1081,9 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       nsStyleSpacing* kidSpacing;
 
       target->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)kidSpacing);
-      PlaceChild(aPresContext, state, target, kidSpacing, kidRect,
+      nsMargin  kidMargin;
+      kidSpacing->CalcMarginFor(target, kidMargin);
+      PlaceChild(aPresContext, state, target, kidMargin, kidRect,
                  nsnull, kidMaxElementSize);
 
       // Set our last content offset

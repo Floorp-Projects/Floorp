@@ -333,7 +333,9 @@ nsLineLayout::WordBreakReflow()
     }
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidSC->GetData(kStyleSpacingSID);
-    kidAvailSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(frame, kidMargin);
+    kidAvailSize.width -= kidMargin.left + kidMargin.right;
   }
 
   // Reflow that child of the block having set the reflow type so that
@@ -395,8 +397,10 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   kidAvailSize.height = mMaxHeight;
   nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
     kidSC->GetData(kStyleSpacingSID);
+  nsMargin kidMargin;
+  kidSpacing->CalcMarginFor(mKidFrame, kidMargin);
   if (!mUnconstrainedWidth) {
-    kidAvailSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+    kidAvailSize.width -= kidMargin.left + kidMargin.right;
     if (!isFirstChild && (kidAvailSize.width <= 0)) {
       // No room.
       return NS_LINE_LAYOUT_BREAK_BEFORE;
@@ -413,7 +417,7 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     kidMaxElementSize = &maxElementSize;
   }
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
-  nscoord dx = mReflowData.mX + kidSpacing->mMargin.left;
+  nscoord dx = mReflowData.mX + kidMargin.left;
   if (aReflowCommand) {
     nsIFrame* nextFrame;
 
@@ -488,8 +492,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
 
   // Advance
   // XXX RTL
-  nscoord horizontalMargins = kidSpacing->mMargin.left +
-    kidSpacing->mMargin.right;
+  nscoord horizontalMargins = kidMargin.left +
+    kidMargin.right;
   nscoord totalWidth = kidSize.width + horizontalMargins;
   mReflowData.mX += totalWidth;
   if (!mUnconstrainedWidth) {

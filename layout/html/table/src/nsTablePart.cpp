@@ -39,7 +39,6 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
@@ -1123,37 +1122,39 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
   aContent->GetAttribute(nsHTMLAtoms::border, value);
   if ((value.GetUnit() == eHTMLUnit_Pixel) || 
       (value.GetUnit() == eHTMLUnit_Empty)) {
-    nsStyleBorder* border = (nsStyleBorder*)
-      aContext->GetData(kStyleBorderSID);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetData(kStyleSpacingSID);
     float p2t = aPresContext->GetPixelsToTwips();
-    nscoord twips = (aForCell || (value.GetUnit() == eHTMLUnit_Empty))
-      ? nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t))
-      : nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetPixelValue(), p2t));
-    nscoord two = nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t));
-
-    spacing->mPadding.top = two;
-    spacing->mPadding.right = two;
-    spacing->mPadding.bottom = two;
-    spacing->mPadding.left = two;
-
-    border->mSize.top = twips;
-    border->mSize.right = twips;
-    border->mSize.bottom = twips;
-    border->mSize.left = twips;
-
-    if (border->mStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
-      border->mStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
+    nsStyleCoord twips;
+    if (aForCell || (value.GetUnit() == eHTMLUnit_Empty)) {
+      twips.SetCoordValue(nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t)));
     }
-    if (border->mStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
-      border->mStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+    else {
+      twips.SetCoordValue(nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetPixelValue(), p2t)));
     }
-    if (border->mStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
-      border->mStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+    nsStyleCoord  two(nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t)));
+
+    spacing->mPadding.SetTop(two);
+    spacing->mPadding.SetRight(two);
+    spacing->mPadding.SetBottom(two);
+    spacing->mPadding.SetLeft(two);
+
+    spacing->mBorder.SetTop(twips);
+    spacing->mBorder.SetRight(twips);
+    spacing->mBorder.SetBottom(twips);
+    spacing->mBorder.SetLeft(twips);
+
+    if (spacing->mBorderStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
     }
-    if (border->mStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
-      border->mStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+    if (spacing->mBorderStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (spacing->mBorderStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (spacing->mBorderStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
+      spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
     }
   }
 }

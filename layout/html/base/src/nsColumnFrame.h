@@ -21,8 +21,6 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIRunaround.h"
 
-struct nsStyleSpacing;
-
 struct ColumnReflowState;
 
 class ColumnFrame : public nsHTMLContainerFrame, public nsIRunaround {
@@ -66,12 +64,12 @@ protected:
   nscoord GetTopMarginFor(nsIPresContext*    aCX,
                           ColumnReflowState& aState,
                           nsIFrame*          aKidFrame,
-                          nsStyleSpacing*    aKidSpacing);
+                          const nsMargin&    aKidMargin);
 
   void PlaceChild(nsIPresContext*    aPresContext,
                   ColumnReflowState& aState,
                   nsIFrame*          aKidFrame,
-                  nsStyleSpacing*    aKidSpacing,
+                  const nsMargin&    aKidMargin,
                   const nsRect&      aKidRect,
                   nsSize*            aMaxElementSize,
                   nsSize&            aKidMaxElementSize);

@@ -22,7 +22,6 @@
 #include "nsContainerFrame.h"
 
 struct RowReflowState;
-struct nsStyleSpacing;
 
 /**
  * nsTableRowFrame is the frame that maps table rows 
@@ -118,7 +117,7 @@ protected:
 
   nscoord GetTopMarginFor(nsIPresContext*   aCX,
                           RowReflowState&   aState,
-                          nsStyleSpacing*   aKidSpacing);
+                          const nsMargin&   aKidMargin);
 
   void          PlaceChild( nsIPresContext* aPresContext,
                             RowReflowState& aState,

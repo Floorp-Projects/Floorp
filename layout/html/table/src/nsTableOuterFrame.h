@@ -25,7 +25,6 @@ class nsTableFrame;
 class nsVoidArray;
 class nsTableCaptionFrame;
 struct OuterTableReflowState;
-struct nsStyleSpacing;
 
 /**
  * main frame for an nsTable content object, 
@@ -157,7 +156,7 @@ protected:
 
   nscoord       GetTopMarginFor(nsIPresContext* aCX,
                                 OuterTableReflowState& aState,
-                                nsStyleSpacing* aKidSpacing);
+                                const nsMargin& aKidMargin);
 
   void          PlaceChild( OuterTableReflowState& aState,
                             nsIFrame*          aKidFrame,

@@ -166,14 +166,16 @@ nsresult nsBlockReflowState::RecoverState(nsLineData* aLine)
   
     // If the previous line is a block, then factor in its bottom margin
     if (prevLine->mIsBlock) {
-      nsStyleSpacing* spacing;
+      nsStyleSpacing* kidSpacing;
       nsIFrame*       kid = prevLine->mFirstChild;
   
-      kid->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)spacing);
-      if (spacing->mMargin.bottom < 0) {
-        mPrevMaxNegBottomMargin = -spacing->mMargin.bottom;
+      kid->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)kidSpacing);
+      nsMargin  kidMargin;
+      kidSpacing->CalcMarginFor(kid, kidMargin);
+      if (kidMargin.bottom < 0) {
+        mPrevMaxNegBottomMargin = -kidMargin.bottom;
       } else {
-        mPrevMaxPosBottomMargin = spacing->mMargin.bottom;
+        mPrevMaxPosBottomMargin = kidMargin.bottom;
       }
     }
   }
@@ -554,27 +556,29 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
       isBlockLine = PR_TRUE;
-      nsStyleSpacing* spacing = (nsStyleSpacing*)
+      nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
         kidSC->GetData(kStyleSpacingSID);
+      nsMargin  kidMargin;
+      kidSpacing->CalcMarginFor(kid, kidMargin);
 
       // Calculate top margin by collapsing with previous bottom margin
       // if any.
       nscoord maxNegTopMargin = 0;
       nscoord maxPosTopMargin = 0;
-      if (spacing->mMargin.top < 0) {
-        maxNegTopMargin = -spacing->mMargin.top;
+      if (kidMargin.top < 0) {
+        maxNegTopMargin = -kidMargin.top;
       } else {
-        maxPosTopMargin = spacing->mMargin.top;
+        maxPosTopMargin = kidMargin.top;
       }
       nscoord maxPos = PR_MAX(aState.mPrevMaxPosBottomMargin, maxPosTopMargin);
       nscoord maxNeg = PR_MAX(aState.mPrevMaxNegBottomMargin, maxNegTopMargin);
       topMargin = maxPos - maxNeg;
 
       // Save away bottom information for later promotion into aState
-      if (spacing->mMargin.bottom < 0) {
-        maxNegBottomMargin = -spacing->mMargin.bottom;
+      if (kidMargin.bottom < 0) {
+        maxNegBottomMargin = -kidMargin.bottom;
       } else {
-        maxPosBottomMargin = spacing->mMargin.bottom;
+        maxPosBottomMargin = kidMargin.bottom;
       }
       break;
     }
@@ -1005,9 +1009,9 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
     nsStylePosition* myPosition = (nsStylePosition*)
       mStyleContext->GetData(kStylePositionSID);
 
-    aState.mY = mySpacing->mBorderPadding.top;
-    aState.mX = mySpacing->mBorderPadding.left;
-    aState.mBorderPadding = mySpacing->mBorderPadding;
+    mySpacing->CalcBorderPaddingFor(this, aState.mBorderPadding);
+    aState.mY = aState.mBorderPadding.top;
+    aState.mX = aState.mBorderPadding.left;
 
     if (aState.mUnconstrainedWidth) {
       // If our width is unconstrained don't bother futzing with the
@@ -1021,9 +1025,9 @@ nsBlockFrame::InitializeState(nsIPresContext*     aPresContext,
       // doesn't include the border+padding so we have to add that in
       // instead of subtracting it out of our maxsize.
       nscoord lr =
-        mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
+        aState.mBorderPadding.left + aState.mBorderPadding.right;
       nscoord tb =
-        mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
+        aState.mBorderPadding.top + aState.mBorderPadding.bottom;
 
       // Get and apply the stylistic size. Note: do not limit the
       // height until we are done reflowing.

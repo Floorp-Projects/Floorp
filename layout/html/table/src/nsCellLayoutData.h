@@ -83,50 +83,44 @@ public:
 private:  
 
   // All these methods are support methods for RecalcLayoutData
-  nsIStyleContext* GetStyleContextAt(nsVoidArray* aList,  PRInt32 aIndex);
+  nsIFrame* GetFrameAt(nsVoidArray* aList,  PRInt32 aIndex);
 
-  nscoord GetMargin(nsIStyleContext* aStyle,PRUint8 aEdge);
+  nscoord GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const;
 
-  nscoord GetBorderWidth(nsIStyleContext* aStyle,PRUint8 aEdge);
+  nscoord GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const;
 
-  nscoord GetPadding(nsIStyleContext* aStyle,PRUint8 aEdge);
+  nscoord GetPadding(nsIFrame* aFrame, PRUint8 aEdge) const;
 
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
-  nsIStyleContext* CompareCellBorders(nsIStyleContext* aStyle1,
-                                      PRUint8 aEdge1,
-                                      nsIStyleContext* aStyle2,
-                                      PRUint8 aEdge2);
+  nsIFrame* CompareCellBorders(nsIFrame* aFrame1,
+                               PRUint8 aEdge1,
+                               nsIFrame* aFrame2,
+                               PRUint8 aEdge2);
 
   
-  nsIStyleContext* FindHighestPrecedentBorder(nsVoidArray* aList,
-                                              PRUint8 aEdge);
+  nsIFrame* FindHighestPrecedentBorder(nsVoidArray* aList,
+                                       PRUint8 aEdge);
           
   
 
-  nsStyleSpacing* FindInnerBorder( nsIStyleContext* aStyle,
-                                   nsVoidArray*  aList,
-                                   PRUint8 aEdge);
+  nsIFrame* FindInnerBorder( nsVoidArray*  aList,
+                             PRUint8 aEdge);
 
-  nsStyleSpacing* FindOuterBorder( nsTableFrame* aTableFrame,
-                                   nsIFrame* aFrame, 
-                                   nsIStyleContext* aStyle,
-                                   PRUint8 aEdge);
+  nsIFrame* FindOuterBorder( nsTableFrame* aTableFrame,
+                             PRUint8 aEdge);
   
-  nsStyleSpacing* FindBorderStyle(nsTableFrame*    aTableFrame,
-                                  nsIStyleContext* aCellStyle,
-                                  nsVoidArray*     aCellList,
-                                  PRUint8          aEdge);
+  nsIFrame* FindBorderFrame(nsTableFrame*    aTableFrame,
+                            nsVoidArray*     aCellList,
+                            PRUint8          aEdge);
 
   void CalculateBorders(nsTableFrame* aTableFrame,
-                        nsIStyleContext*  aCellStyle,
                         nsVoidArray*  aBoundaryCells[4]);
 
   nscoord FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge);
 
 
   void CalculateMargins(nsTableFrame* aTableFrame,
-                        nsIStyleContext*  aCellStyle,
                         nsVoidArray*  aBoundaryCells[4]);
 
 public:
@@ -149,7 +143,7 @@ private:
   nsSize                    mMaxElementSize;
 
   nsMargin                  mMargin;
-  nsStyleSpacing*           mBorderStyle[4];
+  nsIFrame*                 mBorderFrame[4];  // the frame whose border is used
 };
 
 #endif

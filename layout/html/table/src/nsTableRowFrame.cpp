@@ -170,12 +170,12 @@ PRInt32 nsTableRowFrame::GetTallestChild() const
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableRowFrame::GetTopMarginFor( nsIPresContext*  aCX,
                                           RowReflowState&  aState,
-                                          nsStyleSpacing* aKidSpacing)
+                                          const nsMargin&  aKidMargin)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidSpacing->mMargin.top) < 0) {
+  if ((margin = aKidMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -281,8 +281,10 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     kidFrame->GetStyleContext(aPresContext, kidSC);
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidSC->GetData(kStyleSpacingSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
-    nscoord bottomMargin = kidSpacing->mMargin.bottom;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(kidFrame, kidMargin);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+    nscoord bottomMargin = kidMargin.bottom;
     NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
@@ -292,7 +294,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     }
     // Subtract off for left and right margin
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+      kidAvailSize.width -= kidMargin.left + kidMargin.right;
     }
 
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
@@ -426,7 +428,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     // Add back in the left and right margins, because one row does not 
     // impact another row's width
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width += kidSpacing->mMargin.left + kidSpacing->mMargin.right;
+      kidAvailSize.width += kidMargin.left + kidMargin.right;
     }
 
     // Get the next child
@@ -805,8 +807,10 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       aPresContext->ResolveStyleContextFor(cell, this);
     nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
       kidStyleContext->GetData(kStyleSpacingSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
-    nscoord bottomMargin = kidSpacing->mMargin.bottom;
+    nsMargin kidMargin;
+    kidSpacing->CalcMarginFor(this, kidMargin);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+    nscoord bottomMargin = kidMargin.bottom;
 
     nsIFrame* kidFrame;
 

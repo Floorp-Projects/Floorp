@@ -58,7 +58,7 @@ class nsInlineState
 {
 public:
   nsStyleFont*      font;           // style font
-  nsStyleSpacing*   spacing;        // style spacing
+  nsMargin          borderPadding;  // inner margin
   nsSize            mStyleSize;
   PRIntn            mStyleSizeFlags;
   nsSize            availSize;      // available space in which to reflow (starts as max size minus insets)
@@ -73,14 +73,14 @@ public:
 
   // Constructor
   nsInlineState(nsStyleFont*     aStyleFont,
-                nsStyleSpacing*  aSpacing,
+                const nsMargin&  aBorderPadding,
                 const nsSize&    aMaxSize,
                 nsSize*          aMaxElementSize)
-    : x(aSpacing->mBorderPadding.left),  // determined by inner edge
-      y(aSpacing->mBorderPadding.top)    // determined by inner edge
+    : x(aBorderPadding.left),  // determined by inner edge
+      y(aBorderPadding.top)    // determined by inner edge
   {
     font = aStyleFont;
-    spacing = aSpacing;
+    borderPadding = aBorderPadding;
 
     unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
     unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
@@ -89,11 +89,11 @@ public:
     // needed for border/padding
     availSize.width = aMaxSize.width;
     if (PR_FALSE == unconstrainedWidth) {
-      availSize.width -= aSpacing->mBorderPadding.left + aSpacing->mBorderPadding.right;
+      availSize.width -= aBorderPadding.left + aBorderPadding.right;
     }
     availSize.height = aMaxSize.height;
     if (PR_FALSE == unconstrainedHeight) {
-      availSize.height -= aSpacing->mBorderPadding.top + aSpacing->mBorderPadding.bottom;
+      availSize.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
 
     // Initialize max element size
@@ -725,7 +725,9 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
   // Initialize our reflow state. We must wait until after we've processed
   // the overflow list, because our first content offset might change
-  nsInlineState state(styleFont, styleSpacing, aMaxSize, aMaxElementSize);
+  nsMargin borderPadding;
+  styleSpacing->CalcBorderPaddingFor(this, borderPadding);
+  nsInlineState state(styleFont, borderPadding, aMaxSize, aMaxElementSize);
   InitializeState(aPresContext, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
@@ -766,7 +768,7 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // Vertically align the children
   nscoord lineHeight =
     nsCSSLayout::VerticallyAlignChildren(aPresContext, this, styleFont,
-                                         styleSpacing->mBorderPadding.top,
+                                         borderPadding.top,
                                          mFirstChild, mChildCount,
                                          state.ascents, state.maxAscent);
 
@@ -789,23 +791,21 @@ nsInlineFrame::ComputeFinalSize(nsIPresContext* aPresContext,
                                 nsInlineState& aState,
                                 nsReflowMetrics& aDesiredSize)
 {
-  nsStyleSpacing* s = aState.spacing;
-
   // Compute default size
-  aDesiredSize.width = aState.x + s->mBorderPadding.right;
-  aDesiredSize.ascent = s->mBorderPadding.top + aState.maxAscent;
-  aDesiredSize.descent = aState.maxDescent + s->mBorderPadding.bottom;
+  aDesiredSize.width = aState.x + aState.borderPadding.right;
+  aDesiredSize.ascent = aState.borderPadding.top + aState.maxAscent;
+  aDesiredSize.descent = aState.maxDescent + aState.borderPadding.bottom;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
   // Apply width/height style properties
   PRIntn ss = aState.mStyleSizeFlags;
   if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
-    aDesiredSize.width = s->mBorderPadding.left + aState.mStyleSize.width +
-      s->mBorderPadding.right;
+    aDesiredSize.width = aState.borderPadding.left + aState.mStyleSize.width +
+      aState.borderPadding.right;
   }
   if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
-    aDesiredSize.height = s->mBorderPadding.top + aState.mStyleSize.height +
-      s->mBorderPadding.bottom;
+    aDesiredSize.height = aState.borderPadding.top + aState.mStyleSize.height +
+      aState.borderPadding.bottom;
   }
 }
 
@@ -974,10 +974,11 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
 
   nscoord   lineHeight;
-  nsIFrame* kidFrame;
   PRInt32   kidIndex;
 
-  nsInlineState state(styleFont, styleSpacing, aMaxSize, nsnull);
+  nsMargin  borderPadding;
+  styleSpacing->CalcBorderPaddingFor(this, borderPadding);
+  nsInlineState state(styleFont, borderPadding, aMaxSize, nsnull);
   InitializeState(aPresContext, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
@@ -990,7 +991,7 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
       // Vertically align the children
       lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this,
-                     styleFont, styleSpacing->mBorderPadding.top, mFirstChild,
+                     styleFont, borderPadding.top, mFirstChild,
                      mChildCount, state.ascents, state.maxAscent);
     
       ComputeFinalSize(aPresContext, state, aDesiredSize);
@@ -1005,7 +1006,7 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
       // Vertically align the children
       lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this,
-                     styleFont, styleSpacing->mBorderPadding.top, mFirstChild,
+                     styleFont, borderPadding.top, mFirstChild,
                      mChildCount, state.ascents, state.maxAscent);
     
       ComputeFinalSize(aPresContext, state, aDesiredSize);
@@ -1091,7 +1092,7 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
     // Vertically align the children
     lineHeight = nsCSSLayout::VerticallyAlignChildren(aPresContext, this,
-                   styleFont, styleSpacing->mBorderPadding.top, mFirstChild,
+                   styleFont, borderPadding.top, mFirstChild,
                    mChildCount, state.ascents, state.maxAscent);
   
     ComputeFinalSize(aPresContext, state, aDesiredSize);
@@ -1128,8 +1129,7 @@ nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
                               nsReflowMetrics& aKidMetrics,
                               ReflowStatus aKidReflowStatus)
 {
-  nsStyleSpacing* spacing = aState.spacing;
-  nscoord xr = aState.availSize.width + spacing->mBorderPadding.left;
+  nscoord xr = aState.availSize.width + aState.borderPadding.left;
   nscoord remainingSpace = xr - aState.x;
   nscoord x = aState.x;
 
@@ -1147,7 +1147,7 @@ nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
   }
 
   // Vertically align the children
-  const nsMargin& insets = spacing->mBorderPadding;
+  const nsMargin& insets = aState.borderPadding;
   nsCSSLayout::VerticallyAlignChildren(aPresContext, this, aState.font,
                                        insets.top, mFirstChild, mChildCount,
                                        aState.ascents, aState.maxAscent);

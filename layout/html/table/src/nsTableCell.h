@@ -23,8 +23,6 @@
 #include "nsTableContent.h"
 #include "nsTableRow.h"
 
-struct nsStyleBorder;
-
 /**
  * nsTableCell is the content object that represents table cells 
  * (HTML tags TD and TH). This class cannot be reused

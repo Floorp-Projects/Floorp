@@ -37,7 +37,6 @@ static const PRBool gsDebug = PR_FALSE;
 #endif
 
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
@@ -59,16 +58,16 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 {
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nsStyleBorder* myBorder =
-    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
+  nsStyleSpacing* mySpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   NS_ASSERTION(nsnull!=myColor, "bad style color");
-  NS_ASSERTION(nsnull!=myBorder, "bad style border");
+  NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
 
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *myBorder, 0);
+                              aDirtyRect, mRect, *mySpacing, 0);
   /*
   printf("painting borders, size = %d %d %d %d\n", 
           myBorder->mSize.left, myBorder->mSize.top, 
@@ -97,9 +96,11 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
       (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   nsStyleText* textStyle =
       (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
   
-  nscoord topInset = spacing->mBorderPadding.top;
-  nscoord bottomInset = spacing->mBorderPadding.bottom;
+  nscoord topInset = borderPadding.top;
+  nscoord bottomInset = borderPadding.bottom;
   PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
@@ -235,10 +236,13 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  nscoord topInset = spacing->mBorderPadding.top;
-  nscoord rightInset = spacing->mBorderPadding.right;
-  nscoord bottomInset = spacing->mBorderPadding.bottom;
-  nscoord leftInset = spacing->mBorderPadding.left;
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
+  nscoord topInset = borderPadding.top;
+  nscoord rightInset = borderPadding.right;
+  nscoord bottomInset = borderPadding.bottom;
+  nscoord leftInset = borderPadding.left;
 
   // reduce available space by insets
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)
@@ -358,29 +362,27 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   * Update the border style to map to the HTML border style
   *
   */
-void nsTableCellFrame::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth)
+void nsTableCellFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth)
 {
-  for (PRInt32 index = 0; index < 4; index++)
-    aBorderStyle.mSizeFlag[index] = NS_STYLE_BORDER_WIDTH_LENGTH_VALUE; 
+  nsStyleCoord  width;
+  width.SetCoordValue(aBorderWidth);
+  aSpacingStyle.mBorder.SetTop(width);
+  aSpacingStyle.mBorder.SetLeft(width);
+  aSpacingStyle.mBorder.SetBottom(width);
+  aSpacingStyle.mBorder.SetRight(width);
 
-  aBorderStyle.mSize.top    = 
-  aBorderStyle.mSize.left   = 
-  aBorderStyle.mSize.bottom = 
-  aBorderStyle.mSize.right  = aBorderWidth;
-
-
-  aBorderStyle.mStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
-  aBorderStyle.mStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
-  aBorderStyle.mStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
-  aBorderStyle.mStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
   
-  NS_ColorNameToRGB("white",&aBorderStyle.mColor[NS_SIDE_TOP]);
-  NS_ColorNameToRGB("white",&aBorderStyle.mColor[NS_SIDE_LEFT]);
+  NS_ColorNameToRGB("white",&aSpacingStyle.mBorderColor[NS_SIDE_TOP]);
+  NS_ColorNameToRGB("white",&aSpacingStyle.mBorderColor[NS_SIDE_LEFT]);
 
   // This should be the background color of the tables 
   // container
-  NS_ColorNameToRGB("gray",&aBorderStyle.mColor[NS_SIDE_BOTTOM]);
-  NS_ColorNameToRGB("gray",&aBorderStyle.mColor[NS_SIDE_RIGHT]);
+  NS_ColorNameToRGB("gray",&aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM]);
+  NS_ColorNameToRGB("gray",&aSpacingStyle.mBorderColor[NS_SIDE_RIGHT]);
 }
 
 
@@ -431,24 +433,30 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   spacing_result = table->GetAttribute(nsHTMLAtoms::cellspacing,spacing_value);
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
 
+  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+
   // check to see if cellpadding or cellspacing is defined
   if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
   {
   
     PRInt32 value;
+    nsStyleCoord  padding(0, eStyleUnit_Coord);
+    nsStyleCoord  spacing(0, eStyleUnit_Coord);
 
     if (padding_result == eContentAttr_HasValue && ConvertToIntValue(padding_value,0,value))
-      padding = (nscoord)(p2t*(float)value); 
+      padding.SetCoordValue((nscoord)(p2t*(float)value)); 
     
     if (spacing_result == eContentAttr_HasValue && ConvertToIntValue(spacing_value,0,value))
-      spacing = (nscoord)(p2t*(float)value); 
+      spacing.SetCoordValue((nscoord)(p2t*(float)value)); 
 
-    nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-    spacingData->mMargin.SizeTo(spacing,spacing,spacing,spacing);
-    spacingData->mPadding.top     = 
-    spacingData->mPadding.left    = 
-    spacingData->mPadding.bottom  = 
-    spacingData->mPadding.right   =  padding; 
+    spacingData->mMargin.SetTop(spacing);
+    spacingData->mMargin.SetLeft(spacing);
+    spacingData->mMargin.SetBottom(spacing);
+    spacingData->mMargin.SetRight(spacing);
+    spacingData->mPadding.SetTop(padding);
+    spacingData->mPadding.SetLeft(padding);
+    spacingData->mPadding.SetBottom(padding);
+    spacingData->mPadding.SetRight(padding); 
 
   }
   if (border_result == eContentAttr_HasValue)
@@ -462,8 +470,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
       border = nscoord(p2t*(float)intValue); 
     }
   }
-  nsStyleBorder& borderData = *(nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
-  MapHTMLBorderStyle(borderData,border);
+  MapHTMLBorderStyle(*spacingData,border);
 }
 
 void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
@@ -489,7 +496,7 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 
   MapTextAttributes(aPresContext);
   MapBorderMarginPadding(aPresContext);
-  mStyleContext->RecalcAutomaticData();
+  mStyleContext->RecalcAutomaticData(aPresContext);
   return NS_OK;
 }
 

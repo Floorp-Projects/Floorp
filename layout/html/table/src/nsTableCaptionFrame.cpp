@@ -33,7 +33,6 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
@@ -103,18 +102,18 @@ NS_METHOD nsTableCaptionFrame::Paint(nsIPresContext& aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      const nsRect& aDirtyRect)
 {
-  nsStyleBorder* myBorder =
-    (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
+  nsStyleSpacing* mySpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
   NS_ASSERTION(nsnull!=myColor, "bad style color");
-  NS_ASSERTION(nsnull!=myBorder, "bad style border");
-  if (nsnull==myBorder) return NS_OK;
+  NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
+  if (nsnull==mySpacing) return NS_OK;
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *myBorder, 0);
+                              aDirtyRect, mRect, *mySpacing, 0);
 
 
   // for debug...
@@ -137,9 +136,11 @@ void  nsTableCaptionFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
     (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
   
-  nscoord topInset = spacing->mBorderPadding.top;
-  nscoord bottomInset = spacing->mBorderPadding.bottom;
+  nscoord topInset = borderPadding.top;
+  nscoord bottomInset = borderPadding.bottom;
   PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
   
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
@@ -212,10 +213,12 @@ NS_METHOD nsTableCaptionFrame::ResizeReflow(nsIPresContext* aPresContext,
   // Compute the insets (sum of border and padding)
   nsStyleSpacing* spacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  nscoord topInset = spacing->mBorderPadding.top;
-  nscoord rightInset = spacing->mBorderPadding.right;
-  nscoord bottomInset = spacing->mBorderPadding.bottom;
-  nscoord leftInset = spacing->mBorderPadding.left;
+  nsMargin  borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+  nscoord topInset = borderPadding.top;
+  nscoord rightInset = borderPadding.right;
+  nscoord bottomInset = borderPadding.bottom;
+  nscoord leftInset = borderPadding.left;
 
   // reduce available space by insets
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)

@@ -36,7 +36,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIContentDelegate.h"
 
-static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
@@ -61,12 +61,12 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
     PRIntn skipSides = GetSkipSides();
     nsStyleColor* color =
       (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-    nsStyleBorder* border =
-      (nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
+    nsStyleSpacing* spacing =
+      (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *border, skipSides);
+                                aDirtyRect, mRect, *spacing, skipSides);
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
