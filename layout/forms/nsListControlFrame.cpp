@@ -2994,25 +2994,16 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
-      nsCOMPtr<nsIEventStateManager> stateManager;
-      if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
-        nsIFrame * frame;
-        stateManager->GetEventTarget(&frame);
-        if (!IsClickingInCombobox(aMouseEvent)) {
-          return NS_OK;
-        }
-        // This will consume the focus event we get from the clicking on the dropdown
-        //stateManager->ConsumeFocusEvents(PR_TRUE);
+      if (!IsClickingInCombobox(aMouseEvent)) {
+        return NS_OK;
+      }
 
-        PRBool isDroppedDown;
-        mComboboxFrame->IsDroppedDown(&isDroppedDown);
-        mComboboxFrame->ShowDropDown(!isDroppedDown);
-        // Reset focus on main webshell here
-        //stateManager->SetContentState(mContent, NS_EVENT_STATE_FOCUS);
+      PRBool isDroppedDown;
+      mComboboxFrame->IsDroppedDown(&isDroppedDown);
+      mComboboxFrame->ShowDropDown(!isDroppedDown);
 
-        if (isDroppedDown) {
-          CaptureMouseEvents(mPresContext, PR_FALSE);
-        }
+      if (isDroppedDown) {
+        CaptureMouseEvents(mPresContext, PR_FALSE);
       }
     }
   }
