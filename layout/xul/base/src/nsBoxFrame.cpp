@@ -2050,12 +2050,12 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           {
               // stretch
               nscoord h = GET_HEIGHT(size);
-              nscoord max = GET_HEIGHT(info->maxSize);
-              nscoord min = GET_HEIGHT(info->minSize);
-              if (h < min)
-                  h = min;
-              else if (h > max) 
-                  h = max;
+              nscoord max1 = GET_HEIGHT(info->maxSize);
+              nscoord min1 = GET_HEIGHT(info->minSize);
+              if (h < min1)
+                  h = min1;
+              else if (h > max1) 
+                  h = max1;
 
               SET_HEIGHT(info->calculatedSize, h);
           } else {
@@ -2065,12 +2065,12 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
               if (h > s)
                   h = s;
 
-              nscoord max = GET_HEIGHT(info->maxSize);
-              nscoord min = GET_HEIGHT(info->minSize);
-              if (h < min)
-                  h = min;
-              else if (h > max) 
-                  h = max;
+              nscoord max1 = GET_HEIGHT(info->maxSize);
+              nscoord min1 = GET_HEIGHT(info->minSize);
+              if (h < min1)
+                  h = min1;
+              else if (h > max1) 
+                  h = max1;
 
               SET_HEIGHT(info->calculatedSize, h);
           }
@@ -2800,6 +2800,7 @@ nsCalculatedBoxInfoImpl::nsCalculatedBoxInfoImpl(nsIFrame* aFrame)
     frame = aFrame;
     prefWidthIntrinsic = PR_TRUE;
     prefHeightIntrinsic = PR_TRUE;
+    needsRecalc = PR_TRUE;
 }
 
 nsCalculatedBoxInfoImpl::~nsCalculatedBoxInfoImpl()
