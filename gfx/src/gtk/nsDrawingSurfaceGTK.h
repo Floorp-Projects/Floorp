@@ -26,6 +26,8 @@
 #include "nsIDrawingSurface.h"
 #include "nsIDrawingSurfaceGTK.h"
 
+#include "nsTimer.h"
+
 #include <gtk/gtk.h>
 
 class nsDrawingSurfaceGTK : public nsIDrawingSurface,
@@ -65,6 +67,9 @@ public:
   GdkGC *GetGC(void);
   GdkDrawable *GetDrawable(void);
 
+protected:
+  PRUint8 ConvertMaskToCount(unsigned long val);
+
 private:
   /* general */
   GdkPixmap	*mPixmap;
@@ -84,6 +89,9 @@ private:
   PRUint32	mLockHeight;
   PRUint32	mLockFlags;
   PRBool	mLocked;
+
+  //  MOZ_TIMER_DECLARE(mLockTime)
+  //  MOZ_TIMER_DECLARE(mUnlockTime)
 };
 
 #endif
