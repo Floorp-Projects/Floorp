@@ -783,17 +783,11 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
 
   if (mWidget) {
-    //    mWidget->allocation.width = aWidth;
-    //    mWidget->allocation.height = aHeight;
-
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
     {
-      //      mShell->allocation.width = aWidth;
-      //      mShell->allocation.height = aHeight;
-
-      //      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
-      gtk_widget_set_usize(mShell, aWidth, aHeight);
+      gtk_window_set_default_size(GTK_WINDOW(mShell), aWidth, aHeight);
+      //      gtk_widget_set_usize(mShell, aWidth, aHeight);
     }
 
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
