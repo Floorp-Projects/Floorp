@@ -92,6 +92,10 @@
 #include "nsEscape.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamConverterService.h"
+#include "nsIMsgCompose.h"
+#include "nsIMsgCompFields.h"
+#include "nsIMsgComposeService.h"
+#include "nsMsgCompFieldsFact.h"
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -109,6 +113,9 @@ static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
+static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
+static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
+static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_) || defined(DEBUG_jefft)
 #define DEBUG_MESSENGER
@@ -794,7 +801,6 @@ NS_IMETHODIMP
 nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement *srcFolderElement,
 						  nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove)
 {
-#if 1
 	nsresult rv;
 
 	if(!srcFolderElement || !dstFolderElement || !messages)
@@ -836,76 +842,6 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement 
 	rv = DoCommand(database, isMove ? (char *)NC_RDF_MOVE : (char *)NC_RDF_COPY, folderArray, argumentArray);
 	return rv;
 
-#else
-	nsresult rv;
-
-	if(!srcFolderElement || !dstFolderElement || !messages)
-		return NS_ERROR_NULL_POINTER;
-
-	nsCOMPtr<nsIRDFResource> srcResource, dstResource;
-	nsCOMPtr<nsICopyMessageListener> dstFolder;
-	nsCOMPtr<nsIMsgFolder> srcFolder;
-	nsCOMPtr<nsISupportsArray> resourceArray;
-
-	rv = dstFolderElement->GetResource(getter_AddRefs(dstResource));
-	if(NS_FAILED(rv))
-		return rv;
-
-	dstFolder = do_QueryInterface(dstResource);
-	if(!dstFolder)
-		return NS_ERROR_NO_INTERFACE;
-
-	rv = srcFolderElement->GetResource(getter_AddRefs(srcResource));
-	if(NS_FAILED(rv))
-		return rv;
-
-	srcFolder = do_QueryInterface(srcResource);
-	if(!srcFolder)
-		return NS_ERROR_NO_INTERFACE;
-
-	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
-	if(NS_FAILED(rv))
-		return rv;
-
-	//Call the mailbox service to copy first message.  In the future we should call CopyMessages.
-	//And even more in the future we need to distinguish between the different types of URI's, i.e.
-	//local, imap, and news, and call the appropriate copy function.
-
-	PRUint32 cnt;
-    rv = resourceArray->Count(&cnt);
-    if (NS_SUCCEEDED(rv) && cnt > 0)
-	{
-		nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(resourceArray->ElementAt(0));
-		nsCOMPtr<nsIRDFResource> firstMessage(do_QueryInterface(msgSupports));
-		char *uri;
-		firstMessage->GetValue(&uri);
-		nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
-		rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-												nsCOMTypeInfo<nsICopyMessageStreamListener>::GetIID(),
-												getter_AddRefs(copyStreamListener)); 
-		if(NS_FAILED(rv))
-			return rv;
-
-		rv = copyStreamListener->Init(srcFolder, dstFolder, nsnull);
-		if(NS_FAILED(rv))
-			return rv;
-		nsIMsgMessageService * messageService = nsnull;
-		rv = GetMessageServiceFromURI(uri, &messageService);
-
-		if (NS_SUCCEEDED(rv) && messageService)
-		{
-			nsIURI * url = nsnull;
-			nsCOMPtr<nsIStreamListener> streamListener(do_QueryInterface(copyStreamListener));
-			if(!streamListener)
-				return NS_ERROR_NO_INTERFACE;
-			messageService->CopyMessage(uri, streamListener, isMove, nsnull, &url);
-			ReleaseMessageServiceFromURI(uri, messageService);
-		}
-
-	}
-
-	return rv;
-#endif
 }
 
 NS_IMETHODIMP
@@ -1441,7 +1377,7 @@ nsMessenger::LoadFirstDraft()
 
 
     // This should really pass in a URI, but for now, just to test, we can pass in nsnull
-    rv = pMsgDraft->OpenDraftMsg(nsnull, nsnull); 
+    rv = pMsgDraft->OpenDraftMsg(nsnull, nsnull, PR_FALSE); 
   } 
 
   return rv;
@@ -1644,5 +1580,143 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
       available -= readCount;
     }
   }
+  return rv;
+}
+
+// **** ForwardMessages ****
+// type: -1: base on prefs 0: as attachment 1: as quoted 2: as inline
+NS_IMETHODIMP
+nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList, 
+                             PRInt32 type)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISupportsArray> messageArray;
+
+  if (!domNodeList) return rv;
+  rv = ConvertDOMListToResourceArray(domNodeList,
+                                     getter_AddRefs(messageArray));
+  if (NS_FAILED(rv)) return rv;
+  PRUint32 cnt = 0, i;
+  rv = messageArray->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  if (!cnt) return NS_ERROR_NULL_POINTER;
+  
+  if (type < 0 || type > 2)
+  {
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = prefs->GetIntPref("mail.forward_message_mode", &type);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMsgIdentity> identity;
+  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  if (NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE (nsIMsgComposeService, composeService,
+                   kMsgComposeServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE (nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIMsgCompFields> compFields;
+  nsCOMPtr<nsIRDFResource> rdfResource;
+  nsCOMPtr<nsISupports> msgSupport;
+  char *msgUri = nsnull;
+  
+  switch (type)
+  {
+      case 0: // forward as attachments
+      {
+          if (NS_SUCCEEDED(rv))
+          {
+              rv = compMgr->CreateInstance(kMsgCompFieldsCID, nsnull, 
+                                           nsCOMTypeInfo<nsIMsgCompFields>::GetIID(),
+                                           getter_AddRefs(compFields));
+              if (NS_FAILED(rv)) return rv;
+          }
+          nsString attachments;
+          for (i=0; i<cnt; i++)
+          {
+              msgSupport = getter_AddRefs(messageArray->ElementAt(i));
+              if (msgSupport)
+              {
+                  rdfResource = do_QueryInterface(msgSupport, &rv);
+                  if (NS_SUCCEEDED(rv))
+                  {
+                      rv = rdfResource->GetValue(&msgUri);
+                      if (msgUri)
+                      {
+                          if (attachments.Length())
+                              attachments += ',';
+                          attachments += msgUri;
+                          nsCRT::free(msgUri);
+                      }
+                  }
+              }
+          }
+          nsString subject;
+          nsString fwdSubject;
+          msgSupport = getter_AddRefs(messageArray->ElementAt(0));
+          nsCOMPtr<nsIDBMessage> aMessage = do_QueryInterface(msgSupport);
+          if (aMessage)
+          {
+            nsCOMPtr<nsIMsgDBHdr> aMsgHdr;
+            aMessage->GetMsgDBHdr(getter_AddRefs(aMsgHdr));
+            if (aMsgHdr)
+            {
+              aMsgHdr->GetSubject(&subject);
+              fwdSubject = "[Fwd: ";
+              fwdSubject += subject;
+              fwdSubject += "]";
+            }
+          }
+          if (fwdSubject.Length())
+            compFields->SetSubject(fwdSubject.ToNewUnicode());
+          compFields->SetAttachments(attachments.ToNewUnicode());
+          rv = composeService->OpenComposeWindowWithCompFields(nsnull,
+                                     MSGCOMP_FORMAT_Default, compFields);
+          break;
+      }
+      case 1: // forward as inline
+      {
+          for (i=0; i<cnt; i++)
+          {
+              msgSupport = getter_AddRefs(messageArray->ElementAt(i));
+              if (msgSupport)
+              {
+                  rdfResource = do_QueryInterface(msgSupport, &rv);
+                  if(NS_SUCCEEDED(rv))
+                  {
+                      rv = rdfResource->GetValue(&msgUri);
+                      if (NS_SUCCEEDED(rv) && msgUri)
+                      {
+                        nsAutoString str (msgUri);
+                        nsCOMPtr<nsIMsgDraft> pMsgDraft;
+                        rv = compMgr->CreateInstance(kMsgDraftCID,
+                                                     nsnull,
+                                                     nsCOMTypeInfo<nsIMsgDraft>::GetIID(), 
+                                                     getter_AddRefs(pMsgDraft));
+                        if (NS_SUCCEEDED(rv) && pMsgDraft)
+                          pMsgDraft->OpenDraftMsg(str.ToNewUnicode(),
+                                                  nsnull, PR_TRUE);
+                      }
+                  }
+              }
+          }
+          break;
+      }
+
+      default:
+      {
+          rv = NS_ERROR_FAILURE;
+          break;
+      }
+  }
+
   return rv;
 }

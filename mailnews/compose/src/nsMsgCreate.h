@@ -34,7 +34,9 @@ public:
 	NS_DECL_ISUPPORTS
 
   /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream, nsIMessage **aMsgToReplace); */
-  NS_IMETHOD  OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace);
+  NS_IMETHOD  OpenDraftMsg(const PRUnichar *msgURI, 
+                           nsIMessage **aMsgToReplace,
+                           PRBool addInlineHeaders);
 
   /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream, nsIMessage **aMsgToReplace); */
   NS_IMETHOD  OpenEditorTemplate(const PRUnichar *msgURI, nsIMessage **aMsgToReplace);
@@ -50,6 +52,7 @@ public:
   char                  *mURI;
   nsIMsgMessageService  *mMessageService;
   nsMimeOutputType      mOutType;
+  PRBool                mAddInlineHeaders;
 };
 
 // Will be used by factory to generate a nsMsgQuote class...

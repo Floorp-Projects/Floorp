@@ -335,6 +335,7 @@ nsStreamConverter::nsStreamConverter()
   mDoneParsing = PR_FALSE;
   mAlreadyKnowOutputType = PR_FALSE;
   mMimeStreamConverterListener = nsnull;
+  mForwardInline = PR_FALSE;
 }
 
 nsStreamConverter::~nsStreamConverter()
@@ -557,6 +558,21 @@ nsStreamConverter::SetMimeHeadersListener(nsIMimeStreamConverterListener *listen
    mMimeStreamConverterListener = listener;
    bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, listener);
    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamConverter::SetForwardInline(PRBool forwardInline)
+{
+  mForwardInline = forwardInline;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStreamConverter::GetForwardInline(PRBool *result)
+{
+  if (!result) return NS_ERROR_NULL_POINTER;
+  *result = mForwardInline;
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -67,6 +67,7 @@ nsMsgDraft::nsMsgDraft()
   mURI = nsnull;
   mMessageService = nsnull;
   mOutType = nsMimeOutput::nsMimeMessageDraftOrTemplate;
+  mAddInlineHeaders = PR_FALSE;
 }
 
 nsMsgDraft::~nsMsgDraft()
@@ -257,7 +258,11 @@ SaveDraftMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   // Set us as the output stream for HTML data from libmime...
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
-	  mimeConverter->SetMimeOutputType(ptr->mOutType);  // Set the type of output for libmime
+  {
+	  mimeConverter->SetMimeOutputType(ptr->mOutType);  // Set the type of
+                                                        // output for libmime
+      mimeConverter->SetForwardInline(ptr->mAddInlineHeaders);
+  }
 
   nsCOMPtr<nsIChannel> dummyChannel;
   NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
@@ -359,7 +364,8 @@ nsresult  rv;
 }
 
 nsresult
-nsMsgDraft::OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace)
+nsMsgDraft::OpenDraftMsg(const PRUnichar *msgURI, nsIMessage **aMsgToReplace,
+                         PRBool addInlineHeaders)
 {
 PRUnichar     *HackUpAURIToPlayWith(void);      // RICHIE - forward declare for now
 
@@ -368,7 +374,8 @@ PRUnichar     *HackUpAURIToPlayWith(void);      // RICHIE - forward declare for 
     printf("RICHIE: DO THIS UNTIL THE FE CAN REALLY SUPPORT US!\n");
     msgURI = HackUpAURIToPlayWith();
   }
-
+  
+  mAddInlineHeaders = addInlineHeaders;
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageDraftOrTemplate, 
                                          aMsgToReplace);
 }

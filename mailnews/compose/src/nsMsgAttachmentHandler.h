@@ -42,6 +42,7 @@ public:
   //////////////////////////////////////////////////////////////////////
   //
   nsresult              SnarfAttachment(nsMsgCompFields *compFields);
+  nsresult              SnarfMsgAttachment(nsMsgCompFields *compFields);
   nsresult              UrlExit(nsresult status, const PRUnichar* aMsg);
 
   PRBool                UseUUEncode_p(void);
@@ -116,6 +117,7 @@ public:
   PRBool                m_file_analyzed;
 
   MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
+  char *                m_uri; // original uri string
 };
 
 

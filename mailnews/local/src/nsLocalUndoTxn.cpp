@@ -267,10 +267,12 @@ nsLocalMoveCopyMsgTxn::Undo()
                 }
             }
         }
+        srcDB->SetSummaryValid(PR_TRUE);
         srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
     }
 
     dstDB->DeleteMessages(&m_dstKeyArray, nsnull);
+    dstDB->SetSummaryValid(PR_TRUE);
     dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
 
     return rv;
@@ -314,6 +316,7 @@ nsLocalMoveCopyMsgTxn::Redo()
             }
         }
     }
+    dstDB->SetSummaryValid(PR_TRUE);
     dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
 
     if (m_isMove)
@@ -325,6 +328,7 @@ nsLocalMoveCopyMsgTxn::Redo()
         else
         {
             rv = srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
+            srcDB->SetSummaryValid(PR_TRUE);
             srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
         }
     }

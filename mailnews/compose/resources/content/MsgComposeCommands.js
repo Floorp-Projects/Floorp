@@ -220,6 +220,14 @@ function ComposeStartup()
 				if (subjectValue != "") {
 					document.getElementById("msgSubject").value = subjectValue;
 				}
+                var attachmentValue = msgCompFields.GetAttachments();
+                if (attachmentValue != "") {
+                   var atts =  attachmentValue.split(",");
+                    for (var i=0; i < atts.length; i++)
+                    {
+                        AddAttachment(atts[i]);
+                    }
+                }
 			}
 			
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore

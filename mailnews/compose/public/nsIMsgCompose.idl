@@ -35,8 +35,8 @@ enum
 	MSGCOMP_TYPE_New	= 0,
 	MSGCOMP_TYPE_Reply,
 	MSGCOMP_TYPE_ReplyAll,
-	MSGCOMP_TYPE_ForwardInline,
-	MSGCOMP_TYPE_ForwardAsAttachment
+	MSGCOMP_TYPE_ForwardAsAttachment,
+	MSGCOMP_TYPE_ForwardInline
 };
 %}
 

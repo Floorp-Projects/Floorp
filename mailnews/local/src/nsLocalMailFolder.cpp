@@ -1705,6 +1705,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
                                                msgDBHdr, 
                                                getter_AddRefs(newHdr));
+        mDatabase->SetSummaryValid(PR_TRUE);
         mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
       }
     }
@@ -1750,6 +1751,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
             newHdr->GetMessageSize(&msgSize);
             localUndoTxn->AddDstMsgSize(msgSize);
         }
+        msgDb->SetSummaryValid(PR_TRUE);
         msgDb->Commit(nsMsgDBCommitType::kLargeCommit);
       }
     }

@@ -163,6 +163,23 @@ nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsre
   return NS_OK;
 }
 
+nsresult 
+nsURLFetcher::Initialize(nsOutputFileStream *fOut,
+                         nsAttachSaveCompletionCallback cb, 
+                         void *tagData)
+{
+  if (!fOut)
+    return NS_ERROR_INVALID_ARG;
+
+  if (!fOut->is_open())
+    return NS_ERROR_FAILURE;
+
+  mOutStream = fOut;
+  mCallback = cb;
+  mTagData = tagData;
+  return NS_OK;
+}
+
 nsresult
 nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut, 
                              nsAttachSaveCompletionCallback cb, void *tagData)

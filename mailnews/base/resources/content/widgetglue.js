@@ -264,19 +264,28 @@ function MsgReplyToAllMessage()
 function MsgForwardMessage()
 {
   dump("\nMsgForwardMessage from XUL\n");
-  MsgForwardAsInline();
+  var tree = GetThreadTree();
+  //get the selected elements
+  var messageList = tree.selectedItems;
+  messenger.forwardMessages(messageList, -1);
 }
 
 function MsgForwardAsAttachment()
 {
   dump("\nMsgForwardAsAttachment from XUL\n");
-  ComposeMessage(4, 0);
+  var tree = GetThreadTree();
+  //get the selected elements
+  var messageList = tree.selectedItems;
+  messenger.forwardMessages(messageList, 0);
 }
 
 function MsgForwardAsInline()
 {
   dump("\nMsgForwardAsInline from XUL\n");
-  ComposeMessage(3, 0);
+  var tree = GetThreadTree();
+  //get the selected elements
+  var messageList = tree.selectedItems;
+  messenger.forwardMessages(messageList, 1);
 }
 
 function MsgCopyMessage(destFolder)

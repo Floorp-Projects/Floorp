@@ -340,6 +340,7 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
                 }
             }
         }
+        srcDB->SetSummaryValid(PR_TRUE);
         srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
         return NS_OK; // always return NS_OK
     }
@@ -362,6 +363,7 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
         if (NS_SUCCEEDED(rv))
         {
             srcDB->DeleteMessages(&m_srcKeyArray, nsnull);
+            srcDB->SetSummaryValid(PR_TRUE);
             srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
         }
         return NS_OK; // always return NS_OK

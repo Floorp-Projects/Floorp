@@ -27,6 +27,8 @@
 #include "nsMimeTypes.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h"
 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -110,10 +112,12 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 #endif
 
   mDeleteFile = PR_FALSE;
+  m_uri = nsnull;
 }
 
 nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
 {
+  PR_FREEIF(m_uri);
 }
 
 void
@@ -413,6 +417,60 @@ FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus,
   else
     return NS_OK;
 }
+nsresult 
+nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
+{
+  nsresult rv = NS_ERROR_INVALID_ARG;
+  nsIMsgMessageService *messageService = nsnull;
+
+  if (PL_strcasestr(m_uri, "_message:"))
+  {
+    mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
+    mCompFields = compFields;
+    PR_FREEIF(m_real_name);
+    m_real_name = PL_strdup("forward.msg");
+    PR_FREEIF(m_type);
+    m_type = PL_strdup("message/rfc822");
+    PR_FREEIF(m_override_type);
+    m_override_type = PL_strdup("message/rfc822");
+    if (!mFileSpec) 
+    {
+        rv = NS_ERROR_FAILURE;
+        goto done;
+    }
+    mOutFile = new nsOutputFileStream(*mFileSpec, PR_WRONLY | PR_CREATE_FILE);
+    if (!mOutFile)
+    {
+        rv =  NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
+        goto done;
+    }
+    mFetcher = new nsURLFetcher();
+    if (!mFetcher)
+    {
+      rv =  NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+    }
+    NS_ADDREF(mFetcher); // to keep us around; very awkward way
+    rv = mFetcher->Initialize(mOutFile, FetcherURLDoneCallback, this);
+    rv = GetMessageServiceFromURI(m_uri, &messageService);
+    if (NS_SUCCEEDED(rv) && messageService)
+      rv = messageService->DisplayMessage(m_uri, mFetcher, nsnull, nsnull);
+  }
+done:
+  if (NS_FAILED(rv))
+  {
+      mOutFile->close();
+      delete mOutFile;
+      mOutFile = nsnull;
+      mFileSpec->Delete(PR_FALSE);
+      delete mFileSpec;
+      mFileSpec = nsnull;
+  }
+  if (messageService)
+      ReleaseMessageServiceFromURI(m_uri, messageService);
+
+  return rv;
+}
 
 nsresult
 nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
@@ -424,7 +482,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   NS_ASSERTION (! m_done, "Already done");
 
   if (!mURL)
-    return NS_ERROR_INVALID_ARG;
+    return SnarfMsgAttachment(compFields);
 
   tempName = GenerateFileNameFromURI(mURL); // Make it a sane name
 

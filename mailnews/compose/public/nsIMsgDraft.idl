@@ -34,7 +34,8 @@ interface nsIMsgDraft : nsISupports
 	 * This is the primary interface for drafts and templates, loaded by
 	 * a URI
 	 */
-	void		OpenDraftMsg(in wstring msgURI, out nsIMessage aMsgToReplace);
+	void		OpenDraftMsg(in wstring msgURI, out nsIMessage aMsgToReplace,
+                             in PRBool addInlineHeaders);
 
 	void		OpenEditorTemplate(in wstring msgURI, out nsIMessage aMsgReplace);  
 };

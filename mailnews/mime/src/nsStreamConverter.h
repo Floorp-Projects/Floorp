@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -39,11 +39,7 @@ public:
   NS_DECL_ISUPPORTS 
 
   // nsIMimeStreamConverter support
-  NS_IMETHOD SetMimeOutputType(nsMimeOutputType aType);
-  NS_IMETHOD GetMimeOutputType(nsMimeOutputType *aOutFormat);
-  NS_IMETHOD SetStreamURI(nsIURI *aURI);
-  NS_IMETHOD SetMimeHeadersListener(nsIMimeStreamConverterListener* listener);
-
+  NS_DECL_NSIMIMESTREAMCONVERTER
   // nsIStreamConverter methods
   NS_DECL_NSISTREAMCONVERTER
   // nsIStreamListener methods
@@ -85,6 +81,7 @@ private:
   PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
                                                   // data so don't feed the parser any more!
   nsIMimeStreamConverterListener*	mMimeStreamConverterListener;
+  PRBool mForwardInline;
 }; 
 
 // factory method

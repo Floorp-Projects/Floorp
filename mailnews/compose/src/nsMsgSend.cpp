@@ -1138,18 +1138,24 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
   part->SetPartSeparator(aSeparator);
 
   nsXPIDLCString turl;
-  ma->mURL->GetSpec(getter_Copies(turl));
-	hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
-											 ma->m_description,
-											 ma->m_x_mac_type,
-											 ma->m_x_mac_creator,
-											 ma->m_real_name,
-											 turl,
-											 m_digest_p,
-											 ma,
-                       ma->m_charset, // rhp - this needs to be the charset we determine from
-                                      // the file or none at all!
-                       ma->m_content_id);
+  if (!ma->mURL)
+    turl.Copy(ma->m_uri);
+  else
+    ma->mURL->GetSpec(getter_Copies(turl));
+  hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
+                                           ma->m_description,
+                                           ma->m_x_mac_type,
+                                           ma->m_x_mac_creator,
+                                           ma->m_real_name,
+                                           turl,
+                                           m_digest_p,
+                                           ma,
+                                           ma->m_charset, // rhp - this needs
+                                                          // to be the charset
+                                                          // we determine from
+                                                          // the file or none
+                                                          // at all! 
+                                           ma->m_content_id);
 	if (!hdrs)
 		return 0;
 
@@ -1658,6 +1664,9 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 #ifdef NS_DEBUG
         printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
 #endif
+#ifdef XP_WIN
+        str.ReplaceChar('|', ':');
+#endif
         //
         // Now we have to setup the m_attachments entry for the file://
         // URL that is passed in...
@@ -1771,28 +1780,31 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
 
         nsMsgNewURL(&(m_attachments[newLoc].mURL), str);
 
-			  PR_FREEIF(m_attachments[newLoc].m_charset);
-			  m_attachments[newLoc].m_charset = PL_strdup (mCompFields->GetCharacterSet());
-			  PR_FREEIF(m_attachments[newLoc].m_encoding);
-			  m_attachments[newLoc].m_encoding = PL_strdup ("7bit");
-
-			  /* Count up attachments which are going to come from mail folders
-			     and from NNTP servers. */
+        PR_FREEIF(m_attachments[newLoc].m_charset);
+        m_attachments[newLoc].m_charset = PL_strdup(mCompFields->GetCharacterSet());
+        PR_FREEIF(m_attachments[newLoc].m_encoding);
+        m_attachments[newLoc].m_encoding = PL_strdup ("7bit");
+        
+        /* Count up attachments which are going to come from mail folders
+        and from NNTP servers. */
         nsXPIDLCString turl;
         if (m_attachments[newLoc].mURL)
         {
-			m_attachments[newLoc].mURL->GetSpec(getter_Copies(turl));
-			if (PL_strncasecmp(turl, "mailbox:",8) ||
-					PL_strncasecmp(turl, "IMAP:",5))
-				(*aMailboxCount)++;
-			else
-				if (PL_strncasecmp(turl, "news:",5) ||
-						PL_strncasecmp(turl, "snews:",6))
-				(*aNewsCount)++;
-
-			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
-
-        	++newLoc;
+          msg_pick_real_name(&m_attachments[newLoc],
+                             mCompFields->GetCharacterSet());
+          ++newLoc;
+        }
+        else if (str.Find("_message:") != -1)
+        {
+          if (str.Find("mailbox_message:") != -1 ||
+              str.Find("imap_message:") != -1)
+            (*aMailboxCount)++;
+          else if (str.Find("news_message:") != -1 ||
+                   str.Find("snews_message:") != -1)
+            (*aNewsCount)++;
+          
+          m_attachments[newLoc].m_uri = str.ToNewCString();
+          ++newLoc;
 		}
       }
 

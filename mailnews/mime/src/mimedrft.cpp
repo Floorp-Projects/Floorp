@@ -181,7 +181,9 @@ struct mime_draft_data
   nsOutputFileStream  *tmpFileStream;      // output file handle 
 
   MimeDecoderData     *decoder_data;
-  char                *mailcharset;        // get it from CHARSET of Content-Type 
+  char                *mailcharset;        // get it from CHARSET of
+										   // Content-Type 
+  PRBool forwardInline;
 };
 
 // RICHIE - PROBABLY BELONGS IN A HEADER SOMEWHERE!!!
@@ -245,10 +247,34 @@ printf("RICHIE: Need to do something with the attachment data!!!!\n");
 mime_dump_attachments ( attachmentList );
 #endif
 
-  NS_WITH_SERVICE(nsIMsgComposeService, msgComposeService, kCMsgComposeServiceCID, &rv); 
+  nsMsgAttachmentData *curAttachment = attachmentList;
+  if (curAttachment)
+  {
+	nsString attachments;
+	char* spec = nsnull;
+
+	while (curAttachment && curAttachment->real_name)
+	  {
+		rv = curAttachment->url->GetSpec(&spec);
+		if (NS_SUCCEEDED(rv) && spec)
+		  {
+			if (attachments.Length())
+			  attachments += ',';
+			attachments += spec;
+			nsCRT::free(spec);
+			spec = nsnull;
+		  }
+		curAttachment++;
+	  }
+	if (attachments.Length())
+	  compFields->SetAttachments(attachments.ToNewUnicode());
+  }
+
+  NS_WITH_SERVICE(nsIMsgComposeService, msgComposeService,
+				  kCMsgComposeServiceCID, &rv); 
   if ((NS_FAILED(rv)) || (!msgComposeService))
     return rv; 
-
+  
   if (editorType == nsMsgPlainTextEditor)
     format = MSGCOMP_FORMAT_PlainText;
   else if (editorType == nsMsgHTMLEditor)
@@ -1111,7 +1137,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
     // We need to figure out how to pass the forwarded flag along with this
     // operation.
     
-    // forward_inline = (mdd->format_out != FO_CMDLINE_ATTACHMENTS);    
+    //forward_inline = (mdd->format_out != FO_CMDLINE_ATTACHMENTS);    
+	forward_inline = mdd->forwardInline;
     if (forward_inline)
     {
 #ifdef MOZ_SECURITY
@@ -1657,11 +1684,15 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 
     if (tmpSpecStr)
     {
-      char *slashPtr = tmpSpecStr;
+      char *slashPtr = tmpSpecStr+7;
       while (*slashPtr)
       {
         if (*slashPtr == '\\') 
           *slashPtr = '/';
+#ifdef XP_WIN
+		if (*slashPtr == ':')
+			*slashPtr = '|';
+#endif 
 
         slashPtr++;
       }
@@ -1810,6 +1841,7 @@ mime_bridge_create_draft_stream(
     }
   }
 
+  newPluginObj2->GetForwardInline(&mdd->forwardInline);
   mdd->format_out = format_out;
   mdd->options = PR_NEWZAP  ( MimeDisplayOptions );
   if ( !mdd->options ) 

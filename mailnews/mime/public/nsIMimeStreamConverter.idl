@@ -71,4 +71,9 @@ interface nsIMimeStreamConverter : nsISupports {
      * This is used to extract headers while parsing a message
      */
   	void SetMimeHeadersListener(in nsIMimeStreamConverterListener listener);
+
+    /*
+     * This is used for forward inline
+     */
+    attribute PRBool forwardInline;
 };
