@@ -50,7 +50,7 @@ interface nsISmtpService : nsISupports {
                        out nsIURI aURL);
 
   readonly attribute nsISupportsArray smtpServers;
-  attribute nsISmtpServer DefaultSmtpServer;
+  attribute nsISmtpServer defaultServer;
   nsISmtpServer createSmtpServer();
   void deleteSmtpServer(in nsISmtpServer server);
 };

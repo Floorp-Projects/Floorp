@@ -321,7 +321,7 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
 }
 
 NS_IMETHODIMP
-nsSmtpService::GetDefaultSmtpServer(nsISmtpServer **aServer)
+nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
 {
   NS_ENSURE_ARG_POINTER(aServer);
 
@@ -353,7 +353,7 @@ nsSmtpService::GetDefaultSmtpServer(nsISmtpServer **aServer)
 }
 
 NS_IMETHODIMP
-nsSmtpService::SetDefaultSmtpServer(nsISmtpServer *aServer)
+nsSmtpService::SetDefaultServer(nsISmtpServer *aServer)
 {
   // XXX need to make sure the default SMTP server is in the array
   mDefaultSmtpServer = aServer;
@@ -396,7 +396,7 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
     nsCAutoString key;
     
     do {
-        key = "server";
+        key = "smtp";
         key.Append(i);
         
         entry.key = key;
