@@ -30,24 +30,4 @@
 // addressButton --> the titledbutton in the UI that we have created
 // to represent this email address. this is probably what you want
 // to modify / poke. 
-function AddExtraAddressProcessing(emailAddress, addressButton)
-{}
 
-// NotifyClearAddresses --> use to clear any observers on the email
-// addresses that maybe in the hdr view overlay. Each time a new
-// message is loaded in message pane, we'll call this function...
-function NotifyClearAddresses()
-{
-}
-
-function FinishEmailProcessing()
-{
-}
-
-// the on create handler for the email address popup.
-// for now, we aren't doing any enabling or disabling so we can just
-// return true.
-function fillEmailAddressMenu(node)
-{
-  return true;
-}
