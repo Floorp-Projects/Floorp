@@ -136,10 +136,16 @@ interface nsIMIMEInfo : nsISupports {
     attribute wstring applicationDescription;
 
     /**
+     * Indicates whether a default application handler exists,
+     * i.e. whether the defaultApplicationHandler attribute is valid
+     */
+    readonly attribute boolean hasDefaultHandler;
+
+    /**
      * Returns a nsIFile that points to the application that is associated
      * by default with this content type.  This will usually be specified in
-     * the platform settings somehow.  This is not always guaranteed
-     * to be set!!
+     * the platform settings somehow.  This is only guaranteed to be set if
+     * hasDefaultHandler is true!
      */
     attribute nsIFile defaultApplicationHandler;
 

@@ -296,6 +296,13 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetPreferredApplicationHandler(nsIFile * aPreferre
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMIMEInfoImpl::GetHasDefaultHandler(PRBool * _retval)
+{
+  *_retval = mDefaultApplication != nsnull;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMIMEInfoImpl::GetDefaultApplicationHandler(nsIFile ** aDefaultAppHandler)
 {
   *aDefaultAppHandler = mDefaultApplication;

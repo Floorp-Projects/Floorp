@@ -143,17 +143,17 @@ MimeTypeArrayImpl::NamedItem(const nsAString& aName,
       nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
       mimeInfo->GetPreferredAction(&action);
       if (action != nsIMIMEInfo::handleInternally) {
-        nsCOMPtr<nsIFile> helper;
-        mimeInfo->GetDefaultApplicationHandler(getter_AddRefs(helper));
-        if (!helper) {
+        PRBool hasHelper = PR_FALSE;
+        mimeInfo->GetHasDefaultHandler(&hasHelper);
+        if (!hasHelper) {
+          nsCOMPtr<nsIFile> helper;
           mimeInfo->GetPreferredApplicationHandler(getter_AddRefs(helper));
           if (!helper) {
-            // mime info from the OS may not have a PreferredApplicaitonHandler
+            // mime info from the OS may not have a PreferredApplicationHandler
             // so just check for an empty default description
             nsXPIDLString defaultDescription;
             mimeInfo->GetDefaultDescription(getter_Copies(defaultDescription));
             if (defaultDescription.IsEmpty()) {
-
               // no support; just leave
               return NS_OK;
             }
