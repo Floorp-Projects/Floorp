@@ -353,6 +353,9 @@ public class Interpreter
     {
         int lineno = node.getLineno();
         if (lineno != itsLineNumber && lineno >= 0) {
+            if (itsData.firstLinePC < 0) {
+                itsData.firstLinePC = lineno;
+            }
             itsLineNumber = lineno;
             iCodeTop = addIcode(Icode_LINE, iCodeTop);
             iCodeTop = addShort(lineno, iCodeTop);
@@ -542,6 +545,8 @@ public class Interpreter
                     if (itsStackDepth - savedStackDepth != 2)
                         Kit.codeBug();
                 }
+                // To get better debugging output for undefined or null calls.
+                int debugNameIndex = itsLastStringIndex;
                 int argCount = 0;
                 while ((child = child.getNext()) != null) {
                     iCodeTop = generateICode(child, iCodeTop);
@@ -557,6 +562,12 @@ public class Interpreter
                     iCodeTop = addShort(itsLineNumber, iCodeTop);
                 } else {
                     iCodeTop = addIndexOp(type, argCount, iCodeTop);
+                    if (debugNameIndex < 0xFFFF) {
+                        // Use only 2 bytes to store debug index
+                        iCodeTop = addShort(debugNameIndex, iCodeTop);
+                    } else {
+                        iCodeTop = addShort(0xFFFF, iCodeTop);
+                    }
                 }
                 // adjust stack
                 if (type == Token.NEW) {
@@ -1418,6 +1429,7 @@ public class Interpreter
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
+        itsLastStringIndex = index;
         if (index < 4) {
             iCodeTop = addIcode(Icode_REG_STR_C0 + index, iCodeTop);
         } else if (index <= 0xFF) {
@@ -1669,6 +1681,7 @@ public class Interpreter
                     case Token.NEW :
                     case Token.CALL :
                         out.println(tname+' '+indexReg);
+                        pc += 2;
                         break;
                     case Token.THROW : {
                         int line = getShort(iCode, pc);
@@ -1792,6 +1805,11 @@ public class Interpreter
                 // line number
                 return 1 + 1 + 1 + 2;
 
+            case Token.CALL :
+            case Token.NEW :
+                // index of potential function name for debugging
+                return 1 + 2;
+
             case Icode_SHORTNUMBER :
                 // short number
                 return 1 + 2;
@@ -1861,7 +1879,11 @@ public class Interpreter
     static String getSourcePositionFromStack(Context cx, int[] linep)
     {
         InterpreterData idata = cx.interpreterData;
-        linep[0] = getShort(idata.itsICode, cx.interpreterLineIndex);
+        if (cx.interpreterLineIndex >= 0) {
+            linep[0] = getShort(idata.itsICode, cx.interpreterLineIndex);
+        } else {
+            linep[0] = 0;
+        }
         return idata.itsSourceFile;
     }
 
@@ -2023,6 +2045,7 @@ public class Interpreter
 
         InterpreterData savedData = cx.interpreterData;
         cx.interpreterData = idata;
+        cx.interpreterLineIndex = idata.firstLinePC;
 
         Object result = undefined;
         // If javaException != null on exit, it will be throw instead of
@@ -2508,14 +2531,9 @@ switch (op) {
             stack[stackTop] = f.call(cx, calleeScope, calleeThis, outArgs);
         } else {
             if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-            else if (lhs == undefined) {
-                // special code for better error message for call
-                // to undefined
-                lhs = stringReg;
-            }
-            throw ScriptRuntime.typeError1("msg.isnt.function",
-                                           ScriptRuntime.toString(lhs));
+            throw notAFunction(lhs, idata, pc);
         }
+        pc += 2;
         continue Loop;
     }
     case Token.NEW : {
@@ -2547,15 +2565,9 @@ switch (op) {
             stack[stackTop] = f.construct(cx, scope, outArgs);
         } else {
             if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-            else if (lhs == undefined) {
-                // special code for better error message for call
-                // to undefined
-                lhs = stringReg;
-            }
-            throw ScriptRuntime.typeError1("msg.isnt.function",
-                                           ScriptRuntime.toString(lhs));
-
+            throw notAFunction(lhs, idata, pc);
         }
+        pc += 2;
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -3254,6 +3266,25 @@ switch (op) {
         return stackTop;
     }
 
+    static RuntimeException notAFunction(Object notAFunction,
+                                         InterpreterData idata, int namePC)
+    {
+        String debugName;
+        if (notAFunction == Undefined.instance || notAFunction == null) {
+            // special code for better error message for call
+            // to undefined or null
+            int index = getIndex(idata.itsICode, namePC);
+            if (index == 0xFFFF) {
+                debugName = "<unknown>";
+            } else {
+                debugName = idata.itsStringTable[index];
+            }
+        } else {
+            debugName = ScriptRuntime.toString(notAFunction);
+        }
+        throw ScriptRuntime.typeError1("msg.isnt.function", debugName);
+    }
+
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
                                          int shift, int count)
     {
@@ -3305,6 +3336,7 @@ switch (op) {
     private int itsLineNumber = 0;
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
+    private int itsLastStringIndex;
     private int itsLocalTop;
 
     private static final int MIN_LABEL_TABLE_SIZE = 32;

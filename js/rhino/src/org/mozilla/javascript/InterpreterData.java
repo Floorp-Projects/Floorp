@@ -127,6 +127,8 @@ final class InterpreterData implements Serializable, DebuggableScript
 
     UintMap longJumps;
 
+    int firstLinePC = -1; // PC for the first LINE icode
+
     InterpreterData parentData;
 
     public boolean isTopLevel()
