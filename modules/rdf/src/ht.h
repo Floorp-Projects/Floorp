@@ -33,6 +33,7 @@
 #include "nspr.h"
 #include "prefapi.h"
 #include "fe_proto.h"
+#include "intl_csi.h"
 
 #ifdef	XP_MAC
 #include "stdlib.h"

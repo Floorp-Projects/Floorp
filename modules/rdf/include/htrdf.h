@@ -30,6 +30,7 @@
 
 #include "ntypes.h"
 #include "structs.h"
+#include "pa_parse.h"
 
 /*
  * Hyper Tree Api
@@ -218,7 +219,7 @@ PR_PUBLIC_API(void) HT_SetPaneFEData (HT_Pane pane, void* data);
 PR_PUBLIC_API(HT_View) HT_GetSelectedView (HT_Pane pane);
 PR_PUBLIC_API(HT_Error) HT_SetSelectedView (HT_Pane pane, HT_View view);
 
-PR_PUBLIC_API(void) HT_LayoutComplete(TagList *metaTags, char *url);
+PR_PUBLIC_API(void) HT_LayoutComplete(MWContext *context, TagList *metaTags, char *url);
 
 enum    _HT_ViewType	{
         HT_VIEW_BOOKMARK=0, HT_VIEW_HISTORY, HT_VIEW_SITEMAP, HT_VIEW_FILES, HT_VIEW_SEARCH

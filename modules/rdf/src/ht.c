@@ -25,13 +25,13 @@
 #include "fs2rdf.h"
 #include "glue.h"
 #include "hist2rdf.h"
-#include "ht.h"
 #include "mcf.h"
 #include "scook.h"
 #include "utils.h"
 #include "rdf.h"
 #include "rdfparse.h"
 #include "remstore.h"
+#include "ht.h"
 
 
 	/* globals */
@@ -1470,27 +1470,90 @@ HT_AddToContainer (HT_Resource container, char *url, char *optionalTitle)
 		}
 		htSetBookmarkAddDateToNow(r);
 		RDF_Assert(db, r, gCoreVocab->RDF_parent, container->node, RDF_RESOURCE_TYPE);
-		htLookInCacheForMetaTags(url);
+		/* htLookInCacheForMetaTags(url); */
 	}
 }
 
 
 
 PR_PUBLIC_API(void)
-HT_LayoutComplete(TagList *metaTags, char *url)
+HT_LayoutComplete(MWContext *context, TagList *metaTags, char *url)
 {
-	XP_ASSERT(metaTags != NULL);
-	XP_ASSERT(url != NULL);
+	INTL_CharSetInfo	csid;
+	PA_Block		name, content;
+	PA_Tag			*metaList;
+	RDF_Resource		r;
+	char			*temp;
+	unsigned long		matchNum;
 
-	if ((metaTags != NULL) && (url != NULL))
+struct	{
+	char		*name;
+	RDF_Resource	r;
+	} matches[9];
+
+	/* Note: if more elements are added, adjust the size of the array above! */
+
+	matches[0].name = "description";	matches[0].r = gWebData->RDF_description;
+	matches[1].name = "keyword";		matches[1].r = gWebData->RDF_keyword;
+	matches[2].name = "smallIcon";		matches[2].r = gNavCenter->RDF_smallIcon;
+	matches[3].name = "largeIcon";		matches[3].r = gNavCenter->RDF_largeIcon;
+	matches[4].name = "smallPressedIcon";	matches[4].r = gNavCenter->RDF_smallPressedIcon;
+	matches[5].name = "largePressedIcon";	matches[5].r = gNavCenter->RDF_largePressedIcon;
+	matches[6].name = "smallRolloverIcon";	matches[6].r = gNavCenter->RDF_smallRolloverIcon;
+	matches[7].name = "largeRolloverIcon";	matches[7].r = gNavCenter->RDF_largeRolloverIcon;
+	matches[8].name = NULL;			matches[8].r = NULL;
+
+	XP_ASSERT(context != NULL);
+	if (context == NULL)	return;
+	XP_ASSERT(metaTags != NULL);
+	if (metaTags == NULL)	return;
+	XP_ASSERT(url != NULL);
+	if (url == NULL)	return;
+
+	csid = LO_GetDocumentCharacterSetInfo(context);
+
+	metaList = metaTags->tagList;
+	while (metaList != NULL)
 	{
-		/* if url exists in RDF graph, then get any META tags
-		   for this document from the context, and save them */
+		if (metaList->data != NULL)
+		{
+			/* get any META tags for this document
+			   and save them into the graph */
+
+			name = PA_FetchParamValue(metaList, "name", (uint16)csid);
+			content = PA_FetchParamValue(metaList, "content", (uint16)csid);
+			if ((name != NULL) && (content != NULL))
+			{
+				if ((r = RDF_GetResource(gNCDB, url, PR_TRUE)) != NULL)
+				{
+					for (matchNum=0; matches[matchNum].name != NULL; matchNum++)
+					{
+						if (!strcmp((char *)name, matches[matchNum].name))
+						{
+							/* if already exists, don't change */
+							if ((temp = RDF_GetSlotValue(gNCDB, r,
+								matches[matchNum].r, RDF_STRING_TYPE,
+								PR_FALSE, PR_TRUE)) != NULL)
+							{
+								freeMem(temp);
+							}
+							else
+							{
+								RDF_Assert(gNCDB, r, matches[matchNum].r,
+									(char *)content, RDF_STRING_TYPE);
+							}
+						}
+					}
+				}
+			}
+		}
+		metaList = metaList->next;
 	}
 }
 
 
 
+#if 0
 void
 htMetaTagURLExitFunc (URL_Struct *urls, int status, MWContext *cx)
 {
@@ -1552,9 +1615,11 @@ struct	{
 		}
 	}
 }
+#endif
 
 
 
+#if 0
 void
 htLookInCacheForMetaTags(char *url)
 {
@@ -1571,6 +1636,7 @@ htLookInCacheForMetaTags(char *url)
 		}
 	}
 }
+#endif
 
 
 
@@ -1593,7 +1659,7 @@ HT_AddBookmark (char *url, char *optionalTitle)
 			}
 			htSetBookmarkAddDateToNow(r);
 			RDF_Assert(gNCDB, r, gCoreVocab->RDF_parent, nbFolder, RDF_RESOURCE_TYPE);
-			htLookInCacheForMetaTags(url);
+			/* htLookInCacheForMetaTags(url); */
 		}
 	}
 }
@@ -9642,7 +9708,7 @@ copyRDFLinkURL (HT_Resource dropTarget, char* objURL, char *objTitle)
 		}
 	}
 	RDF_Assert(db, obj, gCoreVocab->RDF_parent, new, RDF_RESOURCE_TYPE);
-	htLookInCacheForMetaTags(objURL);
+	/* htLookInCacheForMetaTags(objURL); */
 	return COPY_MOVE_LINK;      
 }
 
@@ -9715,7 +9781,7 @@ copyRDFLinkURLAt (HT_Resource dropx, char* objURL, char *objTitle, PRBool before
 		RDF_Assert(db, obj, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE);
 		XP_FREE(id);
 	}
-	htLookInCacheForMetaTags(objURL);
+	/* htLookInCacheForMetaTags(objURL); */
 	return (COPY_MOVE_LINK);
 }
 

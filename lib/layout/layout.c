@@ -3881,7 +3881,7 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
 	if (top_state && top_state->metaTags)
 	{		
 		/* Tell RDF HT code that layout of the current document is complete */
-		HT_LayoutComplete( top_state->metaTags, top_state->url );
+		HT_LayoutComplete( context, top_state->metaTags, top_state->url );
 
 		/* Free the meta tag list */
 		lo_FreeTagList( top_state->metaTags );

@@ -2296,7 +2296,7 @@ NET_UnEscape
 # PA_CloneMDLTag
 # PA_DropDocData
 # PA_FetchAllNameValues
-# PA_FetchParamValue
+PA_FetchParamValue
 # PA_FetchRequestedNameValues
 # PA_FreeOverflow
 # PA_FreeTag
