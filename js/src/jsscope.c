@@ -555,6 +555,12 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
              * others count on this linkage.  We must leave child out of the
              * hash table, and not require it to be there when we eventually
              * GC it (see RemovePropertyTreeChild, below).
+             *
+             * It is necessary to leave the duplicate child out of the hash
+             * table to preserve entry uniqueness.  It is safe to leave the
+             * child out of the hash table (unlike the duplicate child cases
+             * below), because the child's parent link will be null, which
+             * can't dangle.
              */
             JS_ASSERT(sprop != child && SPROP_MATCH(sprop, child));
             JS_RUNTIME_METER(rt, duplicatePropTreeNodes);
@@ -574,10 +580,14 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
 
                         JS_ASSERT(sprop != child);
                         if (SPROP_MATCH(sprop, child)) {
-                            /* Duplicate child, see comment above. */
+                            /*
+                             * Duplicate child, see comment above.  In this
+                             * case, we must let the duplicate be inserted at
+                             * this level in the tree, so we keep iterating,
+                             * looking for an empty slot in which to insert.
+                             */
                             JS_ASSERT(sprop != child);
                             JS_RUNTIME_METER(rt, duplicatePropTreeNodes);
-                            goto out;
                         }
                     }
                     chunkp = &chunk->next;
@@ -592,9 +602,13 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
                 sprop = kids;
                 JS_ASSERT(sprop != child);
                 if (SPROP_MATCH(sprop, child)) {
-                    /* Duplicate child, see comment above. */
+                    /*
+                     * Duplicate child, see comment above.  Once again, we
+                     * must let duplicates created by deletion pile up in a
+                     * kids-chunk-list, in order to find them when sweeping
+                     * and thereby avoid dangling parent pointers.
+                     */
                     JS_RUNTIME_METER(rt, duplicatePropTreeNodes);
-                    goto out;
                 }
 
                 chunk = NewPropTreeKidsChunk(rt);
@@ -609,7 +623,6 @@ InsertPropertyTreeChild(JSRuntime *rt, JSScopeProperty *parent,
         *childp = child;
     }
 
-out:
     child->parent = parent;
     return JS_TRUE;
 }
