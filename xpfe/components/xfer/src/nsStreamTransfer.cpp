@@ -347,10 +347,10 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
 
                     //make sure nameFromURL only contains ascii,
                     //otherwise we have no idea about urlname's original charset, suggest nothing
-                    for (char *ptr = nameFromURL; *ptr; ptr++) {
+                    char *ptr;
+                    for (ptr = nameFromURL; *ptr; ptr++)
                       if (*ptr & '\200')
                         break;
-                    }
 
                     if (!(*ptr))
                       result = NS_ConvertASCIItoUCS2(nameFromURL).GetUnicode();
