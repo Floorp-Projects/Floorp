@@ -33,7 +33,7 @@ GetTextEditFactory(nsIFactory **aFactory, const nsCID & aClass)
   PR_EnterMonitor(GetEditorMonitor());
 
   nsTextEditFactory *factory = new nsTextEditFactory(aClass);
-  if (factory)
+  if (!factory)
     return NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsIFactory> pNSIFactory = do_QueryInterface(factory);
   if (!pNSIFactory)
