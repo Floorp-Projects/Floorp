@@ -22,6 +22,7 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDiskDocument.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDOMEventCapturer.h"
@@ -34,6 +35,7 @@
 class nsIEventListenerManager;
 class nsDOMStyleSheetCollection;
 class nsIDOMSelection;
+class nsIOutputStream;
 class nsDocument;
 
 class nsPostData : public nsIPostData {
@@ -99,6 +101,7 @@ protected:
 class nsDocument : public nsIDocument, 
                    public nsIDOMDocument, 
                    public nsIDOMNSDocument,
+                   public nsIDiskDocument,
                    public nsIScriptObjectOwner, 
                    public nsIDOMEventCapturer, 
                    public nsIJSScriptObject
@@ -351,6 +354,19 @@ public:
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
 
+  // nsIDiskDocument inteface
+  NS_IMETHOD  InitDiskDocument(nsFileSpec *aFileSpec);
+  NS_IMETHOD  SaveFile(     nsFileSpec*     aFileSpec,
+                            PRBool          aReplaceExisting,
+                            PRBool          aSaveCopy,
+                            ESaveFileType   aSaveFileType,
+                            const nsString& aSaveCharset);
+
+  NS_IMETHOD  GetFileSpec(nsFileSpec& aFileSpec);
+  NS_IMETHOD  GetModCount(PRInt32 *outModCount);
+  NS_IMETHOD  ResetModCount();
+  NS_IMETHOD  IncrementModCount();
+
   // nsIDOMEventTarget interface
   NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
                               PRBool aPostProcess, PRBool aUseCapture);
@@ -383,11 +399,35 @@ public:
   virtual PRBool    Convert(JSContext *aContext, jsval aID);
   virtual void      Finalize(JSContext *aContext);
 
+  /**
+    * Methods to output the document contents as Text or HTML, outputting into
+    * the given output stream. If charset is not an empty string, the contents
+    * will be converted into the given charset.
+    *
+    * If the selection is passed in is not null, only the selected content
+    * will be output. Note that the selection is stored on a per-presentation
+    * shell basis, not per document, hence it is a parameter here.
+    * These should be exposed in an interface, but aren't yet.
+    */
+
+  virtual nsresult  OutputDocumentAsText(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset);
+  virtual nsresult  OutputDocumentAsHTML(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset);
+
 protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
   virtual nsresult Reset(nsIURL* aURL);
+
+	// this enum is temporary; there should be no knowledge of HTML in
+	// nsDocument. That will be fixed when content sink stream factories
+	// are available.
+  enum EOutputFormat {
+    eOutputText,
+    eOutputHTML
+  };
+
+	virtual nsresult  OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selection, EOutputFormat aOutputFormat, const nsString& aCharset);
 
 protected:
 
@@ -421,6 +461,11 @@ protected:
   nsVoidArray *mEpilog;
   nsDocumentChildNodes* mChildNodes;
   nsIWordBreaker* mWordBreaker;
+  
+  // disk file members
+  nsFileSpec*     mFileSpec;
+  PRInt32         mModCount;
+  
 };
 
 #endif /* nsDocument_h___ */
