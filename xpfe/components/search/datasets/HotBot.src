@@ -6,20 +6,21 @@
 	
 <INPUT NAME="MT" user>
 <INPUT NAME="DC" VALUE="10">
-<INPUT NAME="DE" VALUE="2">
-<INPUT NAME="OPs" VALUE="MDRTP">
+<INPUT NAME="DE" VALUE="1">
 <INPUT NAME="DV" VALUE="O">
-<INPUT NAME="LG" VALUE="any">
 <INPUT NAME="RG" VALUE="all">
+<INPUT NAME="LG" VALUE="any">
 <INPUT NAME="_v" VALUE="2">
+<INPUT NAME="OPs" VALUE="MDRTP">
 
 <interpret
+	bannerStart = "<!-- adSpaceCOM -->"
+	bannerEnd = "<!-- /adSpaceCOM -->"
 	resultListStart="<!-- BRES -->"
 	resultListEnd = "<!-- ERES -->"
-	resultItemStart = "</B>"
+	resultItemStart = "<p> <b>"
 	resultItemEnd = "<p>"
-	relevanceStart="<br>"
-	relevanceEnd="%&nbsp;&nbsp;">    
-	bannerStart = "<!-- ADS  -->"
-	bannerEnd = "<!-- END ADS -->"
+	relevanceStart="<br><b>"
+	relevanceEnd="%"
+	resultItemSiteTag="target"
 	>
