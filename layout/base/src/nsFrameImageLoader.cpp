@@ -154,7 +154,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
   // Start image load request
   mImageRequest = aGroup->GetImage(cp, this, aBackgroundColor,
                                    desiredWidth, desiredHeight, 0);
-  delete cp;
+  delete[] cp;
 
   return NS_OK;
 }
