@@ -37,6 +37,8 @@
 #include "nsStyleConsts.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsITextWidget.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 #define ALIGN_UNSET PRUint8(-1)
 
@@ -101,16 +103,20 @@ void nsInput::SetContent(const nsString& aValue)
   }
 }
 
-NS_IMETHODIMP
-nsInput::MapAttributesInto(nsIStyleContext* aContext, 
+void
+nsInput::MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                           nsIStyleContext* aContext,
                            nsIPresContext* aPresContext)
 {
-  if (ALIGN_UNSET != mAlign) {
+  nsHTMLValue value;
+
+  aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+  if (eHTMLUnit_Enumerated == value.GetUnit()) {
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetMutableStyleData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
       aContext->GetMutableStyleData(eStyleStruct_Text);
-    switch (mAlign) {
+    switch (value.GetIntValue()) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;
       break;
@@ -118,11 +124,18 @@ nsInput::MapAttributesInto(nsIStyleContext* aContext,
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
     default:
-      text->mVerticalAlign.SetIntValue(mAlign, eStyleUnit_Enumerated);
+      text->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
       break;
     }
   }
-  MapImagePropertiesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsInput::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &nsInput::MapAttributesInto;
   return NS_OK;
 }
 
@@ -331,7 +344,7 @@ nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
     if (ParseAlignParam(aValue, val)) {
       mAlign = val.GetIntValue();
       // Reflect the attribute into the syle system
-      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);  // is this needed?
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);  // is this needed? YES
     } else {
       mAlign = ALIGN_UNSET;
     }

@@ -160,13 +160,22 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLLegendElement::MapAttributesInto(nsIStyleContext* aContext,
-                                       nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   // XXX write me
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLLegendElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLLegendElement::HandleDOMEvent(nsIPresContext& aPresContext,

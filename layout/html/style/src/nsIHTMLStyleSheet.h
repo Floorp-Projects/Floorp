@@ -26,6 +26,7 @@ class nsIAtom;
 class nsString;
 class nsHTMLValue;
 class nsIHTMLAttributes;
+class nsIHTMLContent;
 
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}
 #define NS_IHTML_STYLE_SHEET_IID     \
@@ -38,14 +39,19 @@ public:
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
 
   // Attribute management methods
-  NS_IMETHOD SetAttributesFor(nsIAtom* aTag, nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetIDFor(nsIAtom* aID, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetClassFor(nsIAtom* aClass, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, nsIAtom* aTag, 
+  NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
+                              nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetIDFor(nsIAtom* aID, nsIHTMLContent* aContent, 
+                      nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetClassFor(nsIAtom* aClass, nsIHTMLContent* aContent, 
+                         nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, 
+                             nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, nsIAtom* aTag, 
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, 
+                             nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIAtom* aTag, 
+  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIHTMLContent* aContent, 
                                nsIHTMLAttributes*& aAttributes) = 0;
 
 };

@@ -31,6 +31,8 @@
 #include "nsIDocument.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -96,18 +98,19 @@ nsTableRowGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
   return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-NS_IMETHODIMP
-nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,
-                                   nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
-  if (nsnull != mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     nsStyleText* textStyle = nsnull;
 
     // align: enum
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
       textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
@@ -115,7 +118,7 @@ nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,
     }
     
     // valign: enum
-    GetAttribute(nsHTMLAtoms::valign, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
       if (nsnull==textStyle)
@@ -123,8 +126,16 @@ nsTableRowGroup::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
   }
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsTableRowGroup::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
+
 
 nsresult
 nsTableRowGroup::CreateFrame(nsIPresContext* aPresContext,

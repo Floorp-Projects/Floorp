@@ -27,6 +27,8 @@
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 
 #ifdef NS_DEBUG
@@ -90,9 +92,10 @@ nsTableCaption::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
   return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-NS_IMETHODIMP
-nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
-                                  nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -100,7 +103,7 @@ nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
   nsHTMLValue value;
 
   // align
-  GetAttribute(nsHTMLAtoms::align, value);
+  aAttributes->GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() != eHTMLUnit_Null) {
     NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
 
@@ -123,8 +126,16 @@ nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mTextAlign = alignValue;
     }
   }
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsTableCaption::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
+
 
 
 NS_IMETHODIMP

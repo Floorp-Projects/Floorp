@@ -39,6 +39,7 @@
 #include "nsCSSLayout.h"
 #include "nsHTMLBase.h"
 #include "nsIDocumentLoader.h"
+#include "nsGenericHTMLElement.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -1378,12 +1379,20 @@ nsHTMLFrameset::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
   return nsHTMLContainer::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-NS_IMETHODIMP
-nsHTMLFrameset::MapAttributesInto(nsIStyleContext* aContext, 
-                                  nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  MapImagePropertiesInto(aContext, aPresContext);
-  MapImageBorderInto(aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLFrameset::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
 

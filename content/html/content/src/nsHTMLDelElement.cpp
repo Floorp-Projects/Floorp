@@ -145,13 +145,22 @@ nsHTMLDelElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLDelElement::MapAttributesInto(nsIStyleContext* aContext,
-                             nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   // XXX write me
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLDelElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLDelElement::HandleDOMEvent(nsIPresContext& aPresContext,

@@ -161,12 +161,21 @@ nsHTMLAreaElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLAreaElement::MapAttributesInto(nsIStyleContext* aContext,
-                                     nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLAreaElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLAreaElement::HandleDOMEvent(nsIPresContext& aPresContext,

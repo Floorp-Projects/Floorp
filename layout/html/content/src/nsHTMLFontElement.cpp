@@ -28,6 +28,7 @@
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFontElementIID, NS_IDOMHTMLFONTELEMENT_IID);
 
@@ -181,11 +182,12 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
-                                     nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     nsStyleFont* font = (nsStyleFont*)
       aContext->GetMutableStyleData(eStyleStruct_Font);
@@ -199,7 +201,7 @@ nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
     const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
 
     // face: string list
-    GetAttribute(nsHTMLAtoms::face, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::face, value);
     if (value.GetUnit() == eHTMLUnit_String) {
 
       nsIDeviceContext* dc = aPresContext->GetDeviceContext();
@@ -228,7 +230,7 @@ nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // pointSize: int, enum
-    GetAttribute(nsHTMLAtoms::pointSize, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::pointSize, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
       // XXX should probably sanitize value
       font->mFont.size = parentFont->mFont.size +
@@ -246,7 +248,7 @@ nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
       // size: int, enum , NOTE: this does not count as an explicit size
       // also this has no effect if font is already explicit
       if (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
-        GetAttribute(nsHTMLAtoms::size, value);
+        aAttributes->GetAttribute(nsHTMLAtoms::size, value);
         if ((value.GetUnit() == eHTMLUnit_Integer) ||
             (value.GetUnit() == eHTMLUnit_Enumerated)) { 
           PRInt32 size = value.GetIntValue();
@@ -269,7 +271,7 @@ nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // fontWeight: int, enum
-    GetAttribute(nsHTMLAtoms::fontWeight, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::fontWeight, value);
     if (value.GetUnit() == eHTMLUnit_Integer) { // +/-
       PRInt32 weight = parentFont->mFont.weight + value.GetIntValue();
       font->mFont.weight =
@@ -285,7 +287,7 @@ nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // color: color
-    GetAttribute(nsHTMLAtoms::color, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::color, value);
     if (value.GetUnit() == eHTMLUnit_Color) {
       nsStyleColor* color = (nsStyleColor*)
         aContext->GetMutableStyleData(eStyleStruct_Color);
@@ -304,7 +306,14 @@ nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
 
     NS_IF_RELEASE(parentContext);
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLFontElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

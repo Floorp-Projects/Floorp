@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 // XXX wrap, variable, cols, tabstop
 
@@ -167,21 +168,22 @@ nsHTMLPreElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLPreElement::MapAttributesInto(nsIStyleContext* aContext,
-                                    nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
 
     // wrap: empty
-    GetAttribute(nsHTMLAtoms::wrap, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
     if (value.GetUnit() == eHTMLUnit_Empty) {
       // XXX set
     }
       
     // variable: empty
-    GetAttribute(nsHTMLAtoms::variable, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
     if (value.GetUnit() == eHTMLUnit_Empty) {
       nsStyleFont* font = (nsStyleFont*)
         aContext->GetMutableStyleData(eStyleStruct_Font);
@@ -189,18 +191,27 @@ nsHTMLPreElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // cols: int
-    GetAttribute(nsHTMLAtoms::cols, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
       // XXX set
     }
 
     // tabstop: int
+    aAttributes->GetAttribute(nsHTMLAtoms::tabstop, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
       // XXX set
     }
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLPreElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLPreElement::HandleDOMEvent(nsIPresContext& aPresContext,

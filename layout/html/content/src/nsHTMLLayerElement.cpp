@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLELEMENT_IID);
 
@@ -202,33 +203,34 @@ nsHTMLLayerElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLLayerElement::MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   // Note: ua.css specifies that the 'position' is absolute
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue      value;
     float            p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* position = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
 
     // Left
-    GetAttribute(nsHTMLAtoms::left, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::left, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       position->mLeftOffset.SetCoordValue(twips);
     }
 
     // Top
-    GetAttribute(nsHTMLAtoms::top, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::top, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       position->mTopOffset.SetCoordValue(twips);
     }
 
     // Width
-    GetAttribute(nsHTMLAtoms::width, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       position->mWidth.SetCoordValue(twips);
@@ -238,7 +240,7 @@ nsHTMLLayerElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // Height
-    GetAttribute(nsHTMLAtoms::height, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       position->mHeight.SetCoordValue(twips);
@@ -248,13 +250,13 @@ nsHTMLLayerElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // Z-index
-    GetAttribute(nsHTMLAtoms::zindex, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::zindex, value);
     if (value.GetUnit() == eHTMLUnit_Integer) {
       position->mZIndex.SetIntValue(value.GetIntValue(), eStyleUnit_Integer);
     }
 
     // Visibility
-    GetAttribute(nsHTMLAtoms::visibility, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::visibility, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       nsStyleDisplay* display = (nsStyleDisplay*)
         aContext->GetMutableStyleData(eStyleStruct_Display);
@@ -263,10 +265,18 @@ nsHTMLLayerElement::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // Background and bgcolor
-    mInner.MapBackgroundAttributesInto(aContext, aPresContext);
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLLayerElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLLayerElement::HandleDOMEvent(nsIPresContext& aPresContext,

@@ -168,8 +168,7 @@ public:
                           PRInt32 aMask, const nsStyleFont* aFont, 
                           nsIPresContext* aPresContext);
 
-  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
-                          nsIContent* aContent);
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -515,8 +514,7 @@ PRBool CSSStyleRuleImpl::SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord
 }
 
 NS_IMETHODIMP
-CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
-                               nsIContent* aContent)
+CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != mDeclaration) {
     nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);

@@ -147,15 +147,20 @@ nsHTMLTagContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
 
 
-static nsresult EnsureWritableAttributes(nsIHTMLAttributes*& aAttributes, PRBool aCreate)
+static nsresult EnsureWritableAttributes(nsIHTMLContent* aContent, 
+                                         nsIHTMLAttributes*& aAttributes, PRBool aCreate)
 {
   nsresult  result = NS_OK;
 
   if (nsnull == aAttributes) {
     if (PR_TRUE == aCreate) {
-      result = NS_NewHTMLAttributes(&aAttributes);
+      nsMapAttributesFunc mapFunc;
+      result = aContent->GetAttributeMappingFunction(mapFunc);
       if (NS_OK == result) {
-        aAttributes->AddContentRef();
+        result = NS_NewHTMLAttributes(&aAttributes, mapFunc);
+        if (NS_OK == result) {
+          aAttributes->AddContentRef();
+        }
       }
     }
   }
@@ -331,7 +336,7 @@ nsHTMLTagContent::SetDocument(nsIDocument* aDocument)
 
   if (nsnull != mAttributes) {
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    sheet->SetAttributesFor(mTag, mAttributes); // sync attributes with sheet
+    sheet->SetAttributesFor(this, mAttributes); // sync attributes with sheet
   }
   return rv;
 }
@@ -555,10 +560,10 @@ nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
 
     if (nsnull != mDocument) {  // set attr via style sheet
       nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-      result = sheet->SetAttributeFor(aAttribute, aValue, mTag, mAttributes);
+      result = sheet->SetAttributeFor(aAttribute, aValue, this, mAttributes);
     }
     else {  // manage this ourselves and re-sync when we connect to doc
-      result = EnsureWritableAttributes(mAttributes, PR_TRUE);
+      result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
       if (nsnull != mAttributes) {
         PRInt32   count;
         result = mAttributes->SetAttribute(aAttribute, aValue, count);
@@ -579,10 +584,10 @@ nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
   nsresult  result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->SetAttributeFor(aAttribute, aValue, mTag, mAttributes);
+    result = sheet->SetAttributeFor(aAttribute, aValue, this, mAttributes);
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    result = EnsureWritableAttributes(mAttributes, PR_TRUE);
+    result = EnsureWritableAttributes(this, mAttributes, PR_TRUE);
     if (nsnull != mAttributes) {
       PRInt32   count;
       result = mAttributes->SetAttribute(aAttribute, aValue, count);
@@ -600,10 +605,10 @@ nsHTMLTagContent::UnsetAttribute(nsIAtom* aAttribute)
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->UnsetAttributeFor(aAttribute, mTag, mAttributes);
+    result = sheet->UnsetAttributeFor(aAttribute, this, mAttributes);
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    result = EnsureWritableAttributes(mAttributes, PR_FALSE);
+    result = EnsureWritableAttributes(this, mAttributes, PR_FALSE);
     if (nsnull != mAttributes) {
       PRInt32 count;
       result = mAttributes->UnsetAttribute(aAttribute, count);
@@ -653,10 +658,10 @@ nsHTMLTagContent::SetID(nsIAtom* aID)
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->SetIDFor(aID, mTag, mAttributes);
+    result = sheet->SetIDFor(aID, this, mAttributes);
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    EnsureWritableAttributes(mAttributes, PRBool(nsnull != aID));
+    EnsureWritableAttributes(this, mAttributes, PRBool(nsnull != aID));
     if (nsnull != mAttributes) {
       PRInt32 count;
       result = mAttributes->SetID(aID, count);
@@ -684,10 +689,10 @@ nsHTMLTagContent::SetClass(nsIAtom* aClass)
   nsresult result = NS_OK;
   if (nsnull != mDocument) {  // set attr via style sheet
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-    result = sheet->SetClassFor(aClass, mTag, mAttributes);
+    result = sheet->SetClassFor(aClass, this, mAttributes);
   }
   else {  // manage this ourselves and re-sync when we connect to doc
-    EnsureWritableAttributes(mAttributes, PRBool(nsnull != aClass));
+    EnsureWritableAttributes(this, mAttributes, PRBool(nsnull != aClass));
     if (nsnull != mAttributes) {
       PRInt32 count;
       result = mAttributes->SetClass(aClass, count);

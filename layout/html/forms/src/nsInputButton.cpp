@@ -46,6 +46,8 @@
 #include "nsStyleUtil.h"
 #include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 enum nsButtonTagType {
   kButtonTag_Button,
@@ -63,9 +65,9 @@ enum nsButtonType {
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
-class nsInputButton : public nsInput {
+typedef nsInput nsInputButtonSuper;
+class nsInputButton : public nsInputButtonSuper {
 public:
-  typedef nsInput nsInputButtonSuper;
   nsInputButton (nsIAtom* aTag, nsIFormManager* aManager,
                  nsButtonType aType);
 
@@ -76,8 +78,7 @@ public:
 
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
   nsButtonType GetButtonType() { return mType; }
   nsButtonTagType GetButtonTagType() { return mTagType; }
@@ -315,22 +316,35 @@ nsInputButton::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
   return nsInputButtonSuper::SetAttribute(aAttribute, aString, aNotify);
 }
 
-NS_IMETHODIMP
-nsInputButton::MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if ((kButton_Image == mType) && (kButtonTag_Input == mTagType)) {
+  nsHTMLValue value;
+  aAttributes->GetAttribute(nsHTMLAtoms::type, value);
+  if (eHTMLUnit_String == value.GetUnit()) {  // XXX thiws should be parses in AttributeToString
+    nsAutoString  val;
+    value.GetStringValue(val);
+    if (val.EqualsIgnoreCase("image")) {
     // Apply the image border as well. For form elements the color is
     // always forced to blue.
-    static nscolor blue[4] = {
-      NS_RGB(0, 0, 255),
-      NS_RGB(0, 0, 255),
-      NS_RGB(0, 0, 255),
-      NS_RGB(0, 0, 255)
-    };
-    MapImageBorderInto(aContext, aPresContext, blue);
+      static nscolor blue[4] = {
+        NS_RGB(0, 0, 255),
+        NS_RGB(0, 0, 255),
+        NS_RGB(0, 0, 255),
+        NS_RGB(0, 0, 255)
+      };
+      nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, blue);
+    }
   }
-  nsInputButtonSuper::MapAttributesInto(aContext, aPresContext);
+  nsInputButtonSuper::MapAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsInputButton::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
 

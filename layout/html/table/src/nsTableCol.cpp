@@ -26,6 +26,8 @@
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsIHTMLAttributes.h"
+#include "nsGenericHTMLElement.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -123,20 +125,21 @@ nsTableCol::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
   return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-NS_IMETHODIMP
-nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
-                              nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
-  if (nsnull != mAttributes) {
+  if (nsnull != aAttributes) {
 
     float p2t;
     nsHTMLValue value;
     nsStyleText* textStyle = nsnull;
 
     // width
-    GetAttribute(nsHTMLAtoms::width, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() != eHTMLUnit_Null) {
       nsStylePosition* position = (nsStylePosition*)
         aContext->GetMutableStyleData(eStyleStruct_Position);
@@ -153,7 +156,7 @@ nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
     }
 
     // align: enum
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
       textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
@@ -161,7 +164,7 @@ nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
     }
     
     // valign: enum
-    GetAttribute(nsHTMLAtoms::valign, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
       if (nsnull==textStyle)
@@ -169,6 +172,13 @@ nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
   }
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsTableCol::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
 

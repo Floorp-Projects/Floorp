@@ -31,6 +31,7 @@
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsIPtr.h"
+#include "nsHTMLIIDs.h"
 
 //#define DEBUG_REFS
 //#define DEBUG_RULES
@@ -38,7 +39,6 @@
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
 NS_DEF_PTR(nsIHTMLContent);
 NS_DEF_PTR(nsIContent);

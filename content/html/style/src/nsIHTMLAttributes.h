@@ -21,17 +21,17 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsHTMLValue.h"
-#include "nsIContent.h"
+#include "nsIHTMLContent.h"
 class nsIAtom;
 class nsISizeOfHandler;
 class nsISupportsArray;
-class nsIHTMLContent;
 
 
 // IID for the nsIHTMLAttributes interface {a18f85f0-c058-11d1-8031-006008159b5a}
 #define NS_IHTML_ATTRIBUTES_IID     \
 {0xa18f85f0, 0xc058, 0x11d1,        \
   {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+
 
 class nsIHTMLAttributes : public nsISupports {
 public:
@@ -65,6 +65,7 @@ public:
 
   NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) = 0;
   NS_IMETHOD Reset(void) = 0;
+  NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc) = 0;
 
   /**
    * Add this object's size information to the sizeof handler.
@@ -75,7 +76,7 @@ public:
 };
 
 extern NS_HTML nsresult
-  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult);
+  NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsMapAttributesFunc aMapFunc);
 
 #endif /* nsIHTMLAttributes_h___ */
 

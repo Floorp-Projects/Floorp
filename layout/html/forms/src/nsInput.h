@@ -52,8 +52,10 @@ public:
                          nsIStyleContext* aStyleContext,
                          nsIFrame*&       aResult) = 0;
 
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
+  static void MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                                nsIStyleContext* aContext,
+                                nsIPresContext* aPresContext);
 
   /**
     * @see nsISupports QueryInterface

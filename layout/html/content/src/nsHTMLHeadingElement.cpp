@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHeadingElementIID, NS_IDOMHTMLHEADINGELEMENT_IID);
 
@@ -151,21 +152,30 @@ nsHTMLHeadingElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLHeadingElement::MapAttributesInto(nsIStyleContext* aContext,
-                                        nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
-    GetAttribute(nsHTMLAtoms::align, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       nsStyleText* text = (nsStyleText*)
         aContext->GetMutableStyleData(eStyleStruct_Text);
       text->mTextAlign = value.GetIntValue();
     }
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLHeadingElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::HandleDOMEvent(nsIPresContext& aPresContext,

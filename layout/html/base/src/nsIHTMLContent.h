@@ -27,11 +27,16 @@ class nsIStyleRule;
 class nsIStyleContext;
 class nsIPresContext;
 class nsXIFConverter;
+class nsIHTMLAttributes;
 
 // IID for the nsIHTMLContent class
 #define NS_IHTMLCONTENT_IID   \
 { 0xb9e110b0, 0x94d6, 0x11d1, \
   {0x89, 0x5c, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
+
+typedef void (*nsMapAttributesFunc)(nsIHTMLAttributes* aAttributes, 
+                                    nsIStyleContext* aContext, 
+                                    nsIPresContext* aPresContext);
 
 // Abstract interface for all html content
 class nsIHTMLContent : public nsIContent {
@@ -61,6 +66,7 @@ public:
   NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
                                   PRInt32& aCountResult) const = 0;
   NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const = 0;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const = 0;
 
   NS_IMETHOD SetID(nsIAtom* aID) = 0;
   NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
@@ -70,9 +76,6 @@ public:
   NS_IMETHOD GetClass(nsIAtom*& aResult) const = 0;
 
   NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult) = 0;
-
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext) = 0;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,

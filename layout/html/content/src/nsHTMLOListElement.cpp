@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLOListElementIID, NS_IDOMHTMLOLISTELEMENT_IID);
 
@@ -183,29 +184,38 @@ nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLOListElement::MapAttributesInto(nsIStyleContext* aContext,
-                                      nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     nsStyleList* list = (nsStyleList*)
       aContext->GetMutableStyleData(eStyleStruct_List);
 
     // type: enum
-    GetAttribute(nsHTMLAtoms::type, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::type, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       list->mListStyleType = value.GetIntValue();
     }
 
     // compact: empty
-    GetAttribute(nsHTMLAtoms::compact, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::compact, value);
     if (value.GetUnit() == eHTMLUnit_Empty) {
       // XXX set
     }
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLOListElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLOListElement::HandleDOMEvent(nsIPresContext& aPresContext,

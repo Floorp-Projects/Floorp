@@ -44,8 +44,8 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
+
   virtual void Reset();
 
 protected:

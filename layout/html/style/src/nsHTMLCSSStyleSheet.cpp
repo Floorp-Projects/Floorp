@@ -25,10 +25,10 @@
 #include "nsIHTMLContent.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
+#include "nsHTMLIIDs.h"
 
 static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID, NS_IHTML_CSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
-static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
 
 class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet {

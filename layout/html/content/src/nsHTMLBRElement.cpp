@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLBRElementIID, NS_IDOMHTMLBRELEMENT_IID);
 
@@ -159,21 +160,30 @@ nsHTMLBRElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-NS_IMETHODIMP
-nsHTMLBRElement::MapAttributesInto(nsIStyleContext* aContext,
-                                   nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
-  if (nsnull != mInner.mAttributes) {
+  if (nsnull != aAttributes) {
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetMutableStyleData(eStyleStruct_Display);
     nsHTMLValue value;
-    GetAttribute(nsHTMLAtoms::clear, value);
+    aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
       display->mBreakType = value.GetIntValue();
     }
   }
-  return mInner.MapAttributesInto(aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLBRElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLBRElement::HandleDOMEvent(nsIPresContext& aPresContext,

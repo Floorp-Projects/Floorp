@@ -140,8 +140,6 @@ public:
   nsresult SetClass(nsIAtom* aClass);
   nsresult GetClass(nsIAtom*& aResult) const;
   nsresult GetStyleRule(nsIStyleRule*& aResult);
-  nsresult MapAttributesInto(nsIStyleContext* aStyleContext,
-                             nsIPresContext* aPresContext);
   nsresult ToHTMLString(nsString& aResult) const;
   nsresult ToHTML(FILE* out) const;
   nsresult CreateFrame(nsIPresContext*  aPresContext,
@@ -231,18 +229,26 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsString& aResult);
 
-  void MapImageAttributesInto(nsIStyleContext* aContext,
-                              nsIPresContext* aPresContext);
+  static void MapCommonAttributesInto(nsIHTMLAttributes* aAttributes, 
+                                      nsIStyleContext* aStyleContext,
+                                      nsIPresContext* aPresContext);
 
-  void MapImageAlignAttributeInto(nsIStyleContext* aContext,
-                                  nsIPresContext* aPresContext);
+  static void MapImageAttributesInto(nsIHTMLAttributes* aAttributes, 
+                                     nsIStyleContext* aContext,
+                                     nsIPresContext* aPresContext);
 
-  void MapImageBorderAttributesInto(nsIStyleContext* aContext,
-                                    nsIPresContext* aPresContext,
-                                    nscolor aBorderColors[4]);
+  static void MapImageAlignAttributeInto(nsIHTMLAttributes* aAttributes, 
+                                         nsIStyleContext* aContext,
+                                         nsIPresContext* aPresContext);
 
-  void MapBackgroundAttributesInto(nsIStyleContext* aContext,
-                                   nsIPresContext* aPresContext);
+  static void MapImageBorderAttributesInto(nsIHTMLAttributes* aAttributes, 
+                                           nsIStyleContext* aContext,
+                                           nsIPresContext* aPresContext,
+                                           nscolor aBorderColors[4]);
+
+  static void MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes, 
+                                          nsIStyleContext* aContext,
+                                          nsIPresContext* aPresContext);
 
   static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aFactory);
 
@@ -699,8 +705,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                nsHTMLValue& aValue,                    \
                                nsString& aResult) const;               \
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,              \
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC2(_g)                        \
   NS_IMETHOD Compact() {                                               \
@@ -764,8 +769,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                nsHTMLValue& aValue,                    \
                                nsString& aResult) const;               \
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,              \
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
 /**
  * This macro implements the portion of query interface that is

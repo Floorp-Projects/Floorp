@@ -153,9 +153,10 @@ nsInputCheckbox::~nsInputCheckbox()
 }
 
 
-NS_IMETHODIMP
-nsInputCheckbox::MapAttributesInto(nsIStyleContext* aContext, 
-                                   nsIPresContext* aPresContext)
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
 {
   float p2t = aPresContext->GetPixelsToTwips();
   nscoord pad = NSIntPixelsToTwips(3, p2t);
@@ -172,16 +173,22 @@ nsInputCheckbox::MapAttributesInto(nsIStyleContext* aContext,
   }
   // add bottom padding if backward mode
   // XXX why isn't this working?
-  nsIFormManager* formMan = GetFormManager();
-  if (formMan && (kBackwardMode == formMan->GetMode())) {
+
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(mode);
+  if (eCompatibility_NavQuirks == mode) {
     if (eStyleUnit_Null == spacing->mMargin.GetBottomUnit()) {
       nsStyleCoord bottom(pad);
       spacing->mMargin.SetBottom(bottom);
     }
-    nsInput::MapAttributesInto(aContext, aPresContext);
   }
-  NS_IF_RELEASE(formMan);
+  nsInput::MapAttributesInto(aAttributes, aContext, aPresContext);
+}
 
+NS_IMETHODIMP
+nsInputCheckbox::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
 

@@ -19,6 +19,7 @@
 #include "nsHTMLContainer.h"
 #include "nsFrame.h"
 #include "nsHTMLIIDs.h"
+#include "nsGenericHTMLElement.h"
 
 // XXX rework this
 
@@ -32,6 +33,8 @@ public:
                          nsIFrame*        aParentFrame,
                          nsIStyleContext* aStyleContext,
                          nsIFrame*&       aResult);
+
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
@@ -90,6 +93,22 @@ nsCommentNode::List(FILE* out, PRInt32 aIndent) const
   fputs(">\n", out);
   return NS_OK;
 }
+
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
+{
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsCommentNode::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+{
+  aMapFunc = &MapAttributesInto;
+  return NS_OK;
+}
+
 
 nsresult
 NS_NewCommentNode(nsIHTMLContent** aInstancePtrResult,

@@ -95,19 +95,12 @@ public:
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
 
-  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext);
+  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                nsHTMLValue& aValue,
                                nsString& aResult) const;
 
-  virtual void MapBackgroundAttributesInto(nsIStyleContext* aContext,
-                                           nsIPresContext* aPresContext);
-
-  void SetBackgroundFromAttribute(nsStyleColor *aColor, nsHTMLValue *aValue);
-
- 
 
   /** @return the number of rows spanned by this cell.  Always >= 1 */
   virtual int GetRowSpan ();
