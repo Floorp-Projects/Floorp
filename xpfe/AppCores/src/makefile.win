@@ -44,6 +44,7 @@ LINCS= \
 	-I$(XPDIST)\public\raptor   \
 	-I$(XPDIST)\public\appcores \
 	-I$(XPDIST)\public\rdf \
+	-I$(XPDIST)\public\walletlib \
     $(NULL)
 
 LLIBS =				            \

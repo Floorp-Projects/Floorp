@@ -250,6 +250,40 @@
      }
   }
 
+  function WalletEditor()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Editor\n");
+      appCore.walletEditor();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function WalletSafeFillin()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Safe Fillin\n");
+      appCore.walletSafeFillin();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+  function WalletQuickFillin()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Quick Fillin\n");
+      appCore.walletQuickFillin();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+
   </html:script>
 
   <broadcaster id="canGoBack"/>
@@ -401,6 +435,11 @@
       <menuitem name="Window 1" onclick="BrowserReload();" key="1"/>
       <menuitem name="Window 2" onclick="BrowserReload();" />
       <menuitem name="Window 3" onclick="BrowserReload();" />
+    </menu>
+    <menu name="Wallet">
+      <menuitem name="Wallet contents" onclick="WalletEditor();"/>
+      <menuitem name="Safe fillins" onclick="WalletSafeFillin();"/>
+      <menuitem name="Quick fillins" onclick="WalletQuickFillin();"/>
     </menu>
      <menu name="Help">
       <menuitem name="Help Contents" onclick="BrowserReload();"/>
