@@ -590,10 +590,15 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   }
 
   NS_ADDREF(mURL);
+  // *** bug 12459 - bad web page url causes system to crash
+  // *** jefft -- We cannot use delete if FireURLRequest() failed. The reason
+  // someone in the food chain could destroy the object through AddRef() &
+  // Release(). We should use AddRef() and Release() for error recovery too.
+  NS_ADDREF(mFetcher);
   status = mFetcher->FireURLRequest(mURL, mOutFile, FetcherURLDoneCallback, this);
   if (NS_FAILED(status)) 
   {
-    delete mFetcher;
+    NS_RELEASE(mFetcher);
     mFetcher = nsnull;
     return NS_ERROR_UNEXPECTED;
   }
