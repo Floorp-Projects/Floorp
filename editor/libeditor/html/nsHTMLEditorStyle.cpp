@@ -1119,7 +1119,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
                 mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
               // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
               // in this implementation for node; let's check if it carries those css styles
-              if (aValue) firstValue.Assign(*aValue);
+              if (aValue) theValue.Assign(*aValue);
               mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
                                                                  isSet, theValue,
                                                                  COMPUTED_STYLE_TYPE);

@@ -1059,6 +1059,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
   nsresult res = GetElementContainerOrSelf(aNode, getter_AddRefs(theElement));
   if (NS_FAILED(res)) return res;
   nsCOMPtr<nsIDOMNode> theNode = do_QueryInterface(theElement);
+  aValueString.Truncate();
 
   if (theElement && IsCSSEditableProperty(theNode, aHTMLProperty, aAttribute)) {
     // Yes, the requested HTML style has a CSS equivalence in this implementation
