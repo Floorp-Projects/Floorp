@@ -40,10 +40,6 @@
 #include <windows.h>
 #include "nsToolkit.h"
 
-extern "C" {
-extern HINSTANCE _pr_hInstance;
-}
- 
 #if defined(__GNUC__)
 // If DllMain gets name mangled, it won't be seen.
 extern "C" {
@@ -56,7 +52,6 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
     switch( reason ) {
         case DLL_PROCESS_ATTACH:
             nsToolkit::Startup(hModule);
-            _pr_hInstance = hModule;
             break;
 
         case DLL_THREAD_ATTACH:
@@ -67,7 +62,6 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
     
         case DLL_PROCESS_DETACH:
             nsToolkit::Shutdown();
-            _pr_hInstance = NULL;
             break;
 
     }
