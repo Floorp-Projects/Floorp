@@ -348,8 +348,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
                                   mFilterList.Length(),
                                   filterBuffer,
                                   l, NULL, NULL);
-    filterBuffer[len] = NULL;
-    filterBuffer[len+1] = NULL;
+    filterBuffer[len] = '\0';
+    filterBuffer[len+1] = '\0';
                                   
     if (!initialDir.IsEmpty()) {
       ofn.lpstrInitialDir = initialDir.get();
@@ -749,9 +749,16 @@ nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
   mFilterList.Append(PRUnichar('\0'));
 
   if (!nsCRT::strcmp(aFilter, NS_LITERAL_STRING("..apps").get()))
-    mFilterList.Append(NS_LITERAL_STRING("*.exe; *.com"));
+    mFilterList.Append(NS_LITERAL_STRING("*.exe;*.com"));
   else
-    mFilterList.Append(aFilter);
+  {
+    nsString filter;
+    filter.Assign(aFilter);
+    filter.StripWhitespace();
+    if (filter.Equals(NS_LITERAL_STRING("*")))
+      filter.Append(NS_LITERAL_STRING(".*"));
+    mFilterList.Append(filter);
+  }
 
   mFilterList.Append(PRUnichar('\0'));
 
