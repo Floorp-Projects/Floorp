@@ -355,7 +355,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
-			m_dbName = dbName;
+			m_dbName = nsCRT::strdup(dbName);
 #ifdef XP_PC
 			UnixToNative(nativeFileName);
 #endif
@@ -364,7 +364,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			else
 				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
 				&thumb); 
-			if (NS_SUCCEEDED(ret))
+			if (NS_SUCCEEDED(ret) && thumb)
 			{
 				mdb_count outTotal;    // total somethings to do in operation
 				mdb_count outCurrent;  // subportion of total completed so far
@@ -1252,7 +1252,8 @@ nsresult nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 		mdb_pos	outPos;
 
 		err = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
-		if (outPos < 0)	// is this right?
+		// is this right? Mork is returning a 0 id, but that should valid.
+		if (outPos < 0 || outOid.mOid_Scope == 0)	
 			break;
 		if (err == NS_OK)
 			outputKeys.Add(outOid.mOid_Id);
@@ -1434,12 +1435,15 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 	nsresult	err = NS_OK;
 	nsIMdbCell	*hdrCell;
 
-	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-	if (err == NS_OK && hdrCell)
+	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
-		struct mdbYarn yarn;
-		hdrCell->AliasYarn(GetEnv(), &yarn);
-		YarnTonsString(&yarn, &resultStr);
+		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
+		if (err == NS_OK && hdrCell)
+		{
+			struct mdbYarn yarn;
+			hdrCell->AliasYarn(GetEnv(), &yarn);
+			YarnTonsString(&yarn, &resultStr);
+		}
 	}
 	return err;
 }
@@ -1454,12 +1458,15 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 	nsresult	err = NS_OK;
 	nsIMdbCell	*hdrCell;
 
-	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
-	if (err == NS_OK && hdrCell)
+	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
 	{
-		struct mdbYarn yarn;
-		hdrCell->AliasYarn(GetEnv(), &yarn);
-		YarnToUInt32(&yarn, uint32Result);
+		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
+		if (err == NS_OK && hdrCell)
+		{
+			struct mdbYarn yarn;
+			hdrCell->AliasYarn(GetEnv(), &yarn);
+			YarnToUInt32(&yarn, uint32Result);
+		}
 	}
 	return err;
 }
