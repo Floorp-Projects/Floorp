@@ -63,6 +63,7 @@ public:
 protected:
     
     PRBool m_DefaultMailClient;
+    PRBool m_DefaultNewsClient;
     PRBool m_ShowDialog;
     nsMapiRegistryUtils m_registryUtils ;
 

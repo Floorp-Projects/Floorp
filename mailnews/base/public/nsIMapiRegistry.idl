@@ -45,7 +45,8 @@ interface nsIDOMWindow;
  * for the default Mail Client.
  * 
  */
-[scriptable, uuid(c5be14ba-4e0a-4eec-a1b8-04363761d63c)]
+
+[scriptable, uuid(6183EC68-04F1-45a2-95C6-9E8BE8E59F64)]
 interface nsIMapiRegistry: nsISupports {
 
    /** This is set to TRUE if Mozilla is the default mail application
@@ -64,7 +65,13 @@ interface nsIMapiRegistry: nsISupports {
     * Call this only if Mozilla is not the default Mail client
     */
    void showMailIntegrationDialog(in nsIDOMWindow parentWindow);
+
+   /* After being installed, when we first launch, make sure we add the correct
+	  OS registry entries to make us show up as regsitered mail and news client
+	  in the OS
+   */
    
+   void registerMailAndNewsClient();
 };
 
 %{C++

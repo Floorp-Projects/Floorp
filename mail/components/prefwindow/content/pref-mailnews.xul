@@ -45,7 +45,10 @@
     var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailnewsDoubleClick2NewWindow", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
                        "newMailNotificationAlert"];
-
+#ifdef XP_WIN
+    _elementIDs.push("mailnewsEnableMapi");
+    _elementIDs.push("mailnewsEnableNews");
+#endif
 #ifdef MOZ_WIDGET_GTK2
     _elementIDs.push("checkDefaultMail");
     _elementIDs.push("checkDefaultNews");
@@ -56,7 +59,17 @@
   <groupbox align="start">
     <caption label="&generalSettings.label;"/>
     
-    <hbox id="mapi"/>
+#ifdef XP_WIN
+      <checkbox id="mailnewsEnableMapi" label="&setDefaultMailClient.label;"
+              accesskey="&setDefaultMailClient.accesskey;" 
+              oncommand="onEnableMapi();"
+              startupFunc="registerCallback();"/>
+
+      <checkbox id="mailnewsEnableNews" label="&setDefaultNewsClient.label;"
+              accesskey="&setDefaultNewsClient.accesskey;" 
+              oncommand="onEnableNews();"/>
+#endif
+
 #ifdef MOZ_WIDGET_GTK2
     <vbox align="left" id="defaultClientBox">
       <label value="&whenStartingCheck.label;"/>

@@ -54,7 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIPromptService.h"
-#include "nsIAppStartup.h"
+#include "nsIAppStartup.h" 
 #include "nsIAppShellService.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsINativeAppSupport.h"
@@ -73,7 +73,7 @@
 #include "nsIMsgComposeParams.h"
 #include "nsIMsgCompose.h"
 #include "nsMsgCompCID.h"
-#include "nsXPFEComponentsCID.h"
+#include "nsXPFEComponentsCID.h" 
 #include "nsIMsgSend.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIMsgComposeService.h"
@@ -92,7 +92,6 @@
 #endif
 
 extern PRLogModuleInfo *MAPI;
-
 
 class nsMAPISendListener : public nsIMsgSendListener
 {
@@ -162,24 +161,21 @@ PRBool nsMapiHook::isMapiService = PR_FALSE;
 
 PRBool nsMapiHook::Initialize()
 {
-#ifndef MOZ_THUNDERBIRD
+#ifndef MOZ_THUNDERBIRD 
     nsresult rv;
     nsCOMPtr<nsINativeAppSupport> native;
-
-    nsCOMPtr<nsICmdLineService> cmdLineArgs (
-      do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return PR_FALSE;
+    nsCOMPtr<nsICmdLineService> cmdLineArgs (do_GetService(NS_COMMANDLINESERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return PR_FALSE; 
 
     nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return PR_FALSE;
+    if (NS_FAILED(rv)) return PR_FALSE; 
 
-    rv = appStartup->GetNativeAppSupport(getter_AddRefs(native));
+    rv = appStartup->GetNativeAppSupport(getter_AddRefs(native)); 
     if (NS_FAILED(rv)) return PR_FALSE;
 
     rv = native->EnsureProfile(cmdLineArgs);
     if (NS_FAILED(rv)) return PR_FALSE;
 #endif
-
     return PR_TRUE;
 }
 
@@ -194,7 +190,7 @@ PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername,
 {
     nsresult rv;
     PRBool btnResult = PR_FALSE;
-
+   
     nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv));
     if (NS_SUCCEEDED(rv) && dlgService)
     {
@@ -506,7 +502,7 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
         nsString Body;
         Body.AssignWithConversion(aMessage->lpszNoteText);
         if (Body.Last() != nsCRT::LF)
-          Body.AppendLiteral(CRLF);
+          Body.AppendLiteral(CRLF); 
         rv = aCompFields->SetBody(Body) ;
     }
 
@@ -572,18 +568,17 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
             // a value for lpszFileName, use it. Otherwise stick with leafName
             if (aFiles[i].lpszFileName)
             {
-                nsAutoString wholeFileName;
+              nsAutoString wholeFileName;
                 if (aIsUnicode)
                     wholeFileName.Assign(aFiles[i].lpszFileName);
                 else
                     ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, wholeFileName);
-
-               // need to find the last '\' and find the leafname from that.
-               PRInt32 lastSlash = wholeFileName.RFindChar(PRUnichar('\\'));
-               if (lastSlash != kNotFound)
-                 wholeFileName.Right(leafName, wholeFileName.Length() - lastSlash - 1);
-               else
-                 leafName.Assign(wholeFileName);
+                // need to find the last '\' and find the leafname from that.
+                PRInt32 lastSlash = wholeFileName.RFindChar(PRUnichar('\\'));
+                if (lastSlash != kNotFound)
+                  wholeFileName.Right(leafName, wholeFileName.Length() - lastSlash - 1);
+                else
+                  leafName.Assign(wholeFileName);
             }
             else 
               pFile->GetLeafName (leafName);
@@ -599,7 +594,6 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
              {
                rv = pTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0777);
                NS_ENSURE_SUCCESS(rv, rv);
-               pTempFile->GetLeafName(leafName);
                pTempFile->Remove(PR_FALSE); // remove so we can copy over it.
              }
             // copy the file to its new location and file name
@@ -714,7 +708,7 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
         rv = ConvertToUnicode(platformCharSet.get(), (char *) aMessage->lpszNoteText, Body);
         if (NS_FAILED(rv)) return rv ;
         if (Body.Last() != nsCRT::LF)
-          Body.AppendLiteral(CRLF);
+          Body.AppendLiteral(CRLF); 
         rv = aCompFields->SetBody(Body) ;
     }
 
@@ -778,21 +772,21 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
         PRUnichar * newFilePaths = (PRUnichar *) strFilePaths.get() ;
         while (offset != kNotFound)
         {
-          //Temp Directory
-          nsCOMPtr <nsIFile> pTempFileDir;
-          NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
+            //Temp Directory
+            nsCOMPtr <nsIFile> pTempFileDir;
+            NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
+            nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
 
-          nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
+            // if not already existing, create another temp dir for mapi within Win temp dir
+            // this is windows only so we can do "\\"
+            pTempDir->AppendRelativePath (NS_LITERAL_STRING("moz_mapi"));
+            pTempDir->Exists(&bExist) ;
+            if (!bExist)
+            {
+                rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
+                if (NS_FAILED(rv)) return rv ;
+            }
 
-          // if not already existing, create another temp dir for mapi within Win temp dir
-          // this is windows only so we can do "\\"
-          pTempDir->AppendRelativePath (NS_LITERAL_STRING("moz_mapi"));
-          pTempDir->Exists(&bExist) ;
-          if (!bExist)
-          {
-              rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
-              if (NS_FAILED(rv)) return rv ;
-          }
             nsString RemainingPaths ;
             RemainingPaths.Assign(newFilePaths) ;
             offset = RemainingPaths.Find (strDelimChars) ;
@@ -806,10 +800,10 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
                 FilePathsLen -= offset + strDelimChars.Length();
             }
 
-            if (RemainingPaths[1] != ':' && RemainingPaths[1] != '\\')
+            if (RemainingPaths[1] != ':' && RemainingPaths[1] != '\\') 
             {
-              char cwd[MAX_PATH];
-              if (_getdcwd(_getdrive(), cwd, MAX_PATH))
+              char cwd[MAX_PATH];  
+              if (_getdcwd(_getdrive(), cwd, MAX_PATH)) 
               {
                 nsAutoString cwdStr;
                 CopyASCIItoUTF16(cwd, cwdStr);
@@ -817,7 +811,9 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
                 RemainingPaths.Insert(cwdStr, 0);
               }
             }
+
             pFile->InitWithPath (RemainingPaths) ;
+
             rv = pFile->Exists(&bExist) ;
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
 
