@@ -54,9 +54,10 @@
 <!ENTITY componentbarCmd.label "Component Bar">
 <!ENTITY componentbarCmd.accesskey "C">
 
-<!ENTITY useStyleSheetMenu.label "Use Stylesheet">
+<!ENTITY useStyleSheetMenu.label "Use Style">
 <!ENTITY useStyleSheetMenu.accesskey "u">
-<!ENTITY useStyleSheetNone.label "None">
+<!ENTITY useStyleSheetPersistentOnly.label "Basic Page Style">
+<!ENTITY useStyleSheetPersistentOnly.accesskey "B">
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
