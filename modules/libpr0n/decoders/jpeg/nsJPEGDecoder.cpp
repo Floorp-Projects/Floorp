@@ -781,9 +781,9 @@ fill_input_buffer (j_decompress_ptr jd)
 
 
       /* Copy remainder of netlib buffer into backtrack buffer. */
-      nsCRT::memmove(src->decoder->mBackBuffer + src->decoder->mBackBufferLen,
-                     src->pub.next_input_byte,
-                     src->pub.bytes_in_buffer);
+      memmove(src->decoder->mBackBuffer + src->decoder->mBackBufferLen,
+              src->pub.next_input_byte,
+              src->pub.bytes_in_buffer);
 
 
       /* Point to start of data to be rescanned. */

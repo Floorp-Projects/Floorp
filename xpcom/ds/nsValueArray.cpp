@@ -174,7 +174,7 @@ PRBool nsValueArray::InsertValueAt(nsValueArrayValue aValue, nsValueArrayIndex a
             // All those at and beyond the insertion point need to move.
             //
             if (aIndex < count) {
-                nsCRT::memmove(&mValueArray[(aIndex + 1) * mBytesPerValue], &mValueArray[aIndex * mBytesPerValue], (count - aIndex) * mBytesPerValue);
+                memmove(&mValueArray[(aIndex + 1) * mBytesPerValue], &mValueArray[aIndex * mBytesPerValue], (count - aIndex) * mBytesPerValue);
             }
 
             //
@@ -221,7 +221,7 @@ PRBool nsValueArray::RemoveValueAt(nsValueArrayIndex aIndex) {
         // Move memory around if appropriate.
         //
         if (aIndex != (count - 1)) {
-            nsCRT::memmove(&mValueArray[aIndex * mBytesPerValue], &mValueArray[(aIndex + 1) * mBytesPerValue], (count - aIndex - 1) * mBytesPerValue);
+            memmove(&mValueArray[aIndex * mBytesPerValue], &mValueArray[(aIndex + 1) * mBytesPerValue], (count - aIndex - 1) * mBytesPerValue);
         }
 
         //

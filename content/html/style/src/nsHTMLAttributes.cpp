@@ -1094,8 +1094,8 @@ HTMLAttributesImpl::UnsetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
       }
       else {
         if (index < mAttrCount) {
-          nsCRT::memmove(&(mAttrNames[index]), &(mAttrNames[index + 1]), 
-                         (mAttrCount - index) * sizeof(nsIAtom*));
+          memmove(&(mAttrNames[index]), &(mAttrNames[index + 1]), 
+                  (mAttrCount - index) * sizeof(nsIAtom*));
         }
       }
       NS_RELEASE(aAttrName);

@@ -134,7 +134,7 @@ il_BACat (char **destination,
             if (*destination == NULL) 
               return(NULL);
 
-            nsCRT::memmove(*destination + destination_length, source, source_length);
+            memmove(*destination + destination_length, source, source_length);
 
         } 
         else {
@@ -1448,7 +1448,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
                 /* Shift remaining data to the head of the buffer */
                 if (gs->gathered && (gs->gather_head != gs->hold)) {
-                    nsCRT::memmove(gs->hold, gs->gather_head, gs->gathered);
+                    memmove(gs->hold, gs->gather_head, gs->gathered);
                     gs->gather_head = gs->hold;
                 }
 

@@ -270,7 +270,7 @@ static char* GetResCString(PRInt32 stringIndex, Str255& buf)
     // Because of different availability of Pascal to C conversion routines
     // in Carbon and not, just do it by hand.
     PRInt32 len = buf[0];
-    nsCRT::memmove(buf, buf + 1, len);
+    memmove(buf, buf + 1, len);
     buf[len] = '\0';
     
     return (char *)buf;

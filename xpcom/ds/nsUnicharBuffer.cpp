@@ -138,8 +138,8 @@ UnicharBufferImpl::Fill(nsresult* aErrorCode,
 
   if (0 != aKeep) {
     // Slide over kept data
-    nsCRT::memmove(mBuffer, mBuffer + (mLength - aKeep),
-                   aKeep * sizeof(PRUnichar));
+    memmove(mBuffer, mBuffer + (mLength - aKeep),
+            aKeep * sizeof(PRUnichar));
   }
 
   // Read in some new data

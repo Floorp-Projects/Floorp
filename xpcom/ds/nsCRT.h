@@ -124,10 +124,10 @@ public:
    ****  Please use memcpy from standard C instead.
    ****/
 
-  static void memmove(void* aDest, const void* aSrc, PRUint32 aCount) {
-    NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
-    ::memmove(aDest, aSrc, (size_t)aCount);
-  }
+  /**** 
+   ****  nsCRT::memmove() is no longer supported.  
+   ****  Please use memmove from standard C instead.
+   ****/
 
   /**** 
    ****  nsCRT::memset() is no longer supported.  
