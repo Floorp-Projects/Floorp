@@ -70,9 +70,10 @@ NS_NewProgressMeterFrame ( nsIFrame*& aNewFrame );
 nsresult
 NS_NewTitledButtonFrame ( nsIFrame*& aNewFrame );
 
-nsresult
-NS_NewBoxFrame ( nsIFrame*& aNewFrame );
-
+/*
+#include "nsProgressMeterFrame.h"
+#include "nsTitledButtonFrame.h"
+*/
 #endif
 
 //static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -1297,7 +1298,6 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treeindentation == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
-        (nsXULAtoms::box             == tag.get())  ||
         (nsXULAtoms::progressmeter   == tag.get()  )) {
     return PR_TRUE;
   }
@@ -2245,14 +2245,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewProgressMeterFrame(newFrame);
     }
     // End of PROGRESS METER CONSTRUCTION logic
-
-    // BOX CONSTRUCTION
-    else if (aTag == nsXULAtoms::box) {
-      processChildren = PR_TRUE;
-      isReplaced = PR_TRUE;
-      rv = NS_NewBoxFrame(newFrame);
-    }
-    // End of BOX CONSTRUCTION logic
 
     // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton) {

@@ -65,7 +65,7 @@ public:
 						  const nsRect& aRect);
 
 	virtual void SetNameSpace(PRInt32 aNameSpace);
-	virtual void SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext);
+	virtual void SetFrame(nsIFrame* aFrame, nsIPresContext& aPresContext);
  
 	virtual void SetActive(PRBool aActive, PRBool notify);
 	virtual void SetHover(PRBool aHover, PRBool notify);
@@ -82,13 +82,12 @@ public:
 	virtual void GetButtonRect(const nsRect& aRect, nsRect& aResult);
 	virtual void GetButtonInnerFocusRect(const nsRect& aRect, nsRect& aResult);
 	virtual void GetButtonContentRect(const nsRect& aRect, nsRect& aResult);
-  virtual nsMargin GetButtonOuterFocusBorderAndPadding();
-  virtual nsMargin GetButtonBorderAndPadding();
-  virtual nsMargin GetButtonInnerFocusMargin();
-  virtual nsMargin GetButtonInnerFocusBorderAndPadding();
-  virtual nsMargin GetButtonOutlineBorderAndPadding();
-  virtual nsMargin GetFullButtonBorderAndPadding();
-  virtual nsMargin GetAddedButtonBorderAndPadding();
+    virtual nsMargin GetButtonOuterFocusBorderAndPadding();
+    virtual nsMargin GetButtonBorderAndPadding();
+    virtual nsMargin GetButtonInnerFocusMargin();
+    virtual nsMargin GetButtonInnerFocusBorderAndPadding();
+    virtual nsMargin GetButtonOutlineBorderAndPadding();
+    virtual nsMargin GetFullButtonBorderAndPadding();
 
 	virtual void ReResolveStyles(nsIPresContext& aPresContext);
 
@@ -100,7 +99,6 @@ public:
 							nsHTMLReflowMetrics& aDesiredSize,
 							nsMargin& aBorderPadding);
 
-  virtual void Redraw();
 
 protected:
 
@@ -120,9 +118,7 @@ private:
 	nsCOMPtr<nsIStyleContext> mOutlineStyle;
 
 	PRInt32 mNameSpace;
-	nsFrame* mFrame;
-
-  nsRect mOutlineRect;
+	nsIFrame* mFrame;
 };
 
 
