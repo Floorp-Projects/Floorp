@@ -138,8 +138,7 @@
 </menubar>
 </toolbox>
 
-  <outliner id="historyOutliner"
-            ondblclick="if (event.button == 0) OpenURL(event.ctrlKey || event.metaKey);"/>
+  <outliner id="historyOutliner"/>
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusbar-display" flex="1"/>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
