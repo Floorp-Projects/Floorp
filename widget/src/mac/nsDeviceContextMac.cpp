@@ -19,13 +19,10 @@
 #include "nsDeviceContextMac.h"
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextSpecMac.h"
-//XXX#include "../nsGfxCIID.h"
-
+#include "nsString.h"
 
 #include <StringCompare.h>
 #include <Fonts.h>
-#include "math.h"
-#include "nspr.h"
 #include "il_util.h"
 #include <FixMath.h>
 
