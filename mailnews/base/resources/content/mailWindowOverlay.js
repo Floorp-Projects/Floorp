@@ -124,13 +124,11 @@ function InitMessageMenu()
 
 function GetMessageType(message)
 {
-
     var compositeDS = GetCompositeDataSource("MessageProperty");
     var property = RDF.GetResource('http://home.netscape.com/NC-rdf#MessageType');
     var result = compositeDS.GetTarget(message, property, true);
     result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
     return result.Value;
-
 }
 
 function InitMessageMark()
@@ -156,7 +154,6 @@ function InitMarkFlaggedItem(id)
     if(item)
         item.setAttribute("checked", areMessagesFlagged);
 }
-
 
 function SelectedMessagesAreRead()
 {
@@ -361,9 +358,9 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
 function MsgCopyMessage(destFolder)
 {
     // Get the id for the folder we're copying into
-    destUri = destFolder.getAttribute('id');
-    destResource = RDF.GetResource(destUri);
-    destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var destUri = destFolder.getAttribute('id');
+    var destResource = RDF.GetResource(destUri);
+    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
     var srcFolder = GetLoadedMsgFolder();
     if(srcFolder)
@@ -378,9 +375,9 @@ function MsgCopyMessage(destFolder)
 function MsgMoveMessage(destFolder)
 {
     // Get the id for the folder we're copying into
-    destUri = destFolder.getAttribute('id');
-    destResource = RDF.GetResource(destUri);
-    destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var destUri = destFolder.getAttribute('id');
+    var destResource = RDF.GetResource(destUri);
+    var destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     
     var srcFolder = GetLoadedMsgFolder();
     if(srcFolder)
@@ -731,7 +728,6 @@ function MsgMarkAsFlagged(markFlagged)
     MarkMessagesFlagged(compositeDataSource, selectedMessages, markFlagged);
 }
 
-
 function MsgMarkAllRead()
 {
     var compositeDataSource = GetCompositeDataSource("MarkAllMessagesRead");
@@ -760,7 +756,6 @@ function MsgDownloadSelected()
 
 function MsgMarkThreadAsRead()
 {
-    
     var messageList = GetSelectedMessages();
     if(messageList.length == 1)
     {
@@ -769,30 +764,33 @@ function MsgMarkThreadAsRead()
 
         MarkThreadAsRead(compositeDataSource, message);
     }
-
 }
 
 function MsgViewPageSource() 
 {
-    dump("MsgViewPageSource(); \n ");
-    
+    //dump("MsgViewPageSource(); \n ");
     var messages = GetSelectedMessages();
     ViewPageSource(messages);
 }
 
-function MsgFind() {
+function MsgFind() 
+{
     messenger.find();
 }
-function MsgFindAgain() {
+
+function MsgFindAgain() 
+{
     messenger.findAgain();
 }
 
-function MsgSearchMessages() {
+function MsgSearchMessages() 
+{
     var preselectedFolder = GetFirstSelectedMsgFolder();
     window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable", { folder: preselectedFolder });
 }
 
-function MsgFilters() {
+function MsgFilters() 
+{
     var preselectedFolder = GetFirstSelectedMsgFolder();
     window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable", { folder: preselectedFolder });
 }
@@ -803,12 +801,14 @@ function MsgViewAllHeaders()
     MsgReload();
     return true;
 }
+
 function MsgViewNormalHeaders() 
 {
     pref.SetIntPref("mail.show_headers",1);
     MsgReload();
     return true;
 }
+
 function MsgViewBriefHeaders() 
 {
     pref.SetIntPref("mail.show_headers",0);
@@ -837,7 +837,6 @@ function MsgSendUnsentMsg()
 
 function PrintEnginePrint()
 {
-
     var messageList = GetSelectedMessages();
     numMessages = messageList.length;
 

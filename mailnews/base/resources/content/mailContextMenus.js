@@ -30,7 +30,9 @@ function fillThreadPaneContextMenu()
 	if(numSelected >= 0)
 	{
 		selectedMessage = selectedMessages[0];
-		isNewsgroup = GetMessageType(selectedMessage) == "news";
+		if (selectedMessage) {
+			isNewsgroup = GetMessageType(selectedMessage) == "news";
+		}
 	}
 
 
@@ -61,36 +63,16 @@ function fillThreadPaneContextMenu()
 	return(true);
 }
 
-function GetMessageType(message)
-{
-	var compositeDataSource = GetCompositeDataSource("MessageProperty");
-	var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
-	if(messageResource && compositeDataSource)
-	{
-		var property =
-			RDF.GetResource('http://home.netscape.com/NC-rdf#MessageType');
-		if (!property) return null;
-		var result = compositeDataSource.GetTarget(messageResource, property , true);
-		if (!result) return null;
-		result = result.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		if (!result) return null;
-		return result.Value;
-	}
-
-	return null;
-
-}
-
 function SetupNewMessageWindowMenuItem(menuID, numSelected, forceHide)
 {
 	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, true);
+	EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupEditAsNewMenuItem(menuID, numSelected, forceHide)
 {
 	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
-	EnableMenuItem(menuID, true);
+	EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupReplyToSenderMenuItem(menuID, numSelected, forceHide)
@@ -334,7 +316,7 @@ function fillMessagePaneContextMenu(contextMenu)
 
 	var isNewsgroup = false;
 
-	if(numSelected == 1)
+	if ((numSelected == 1) && message)
 		isNewsgroup = GetMessageType(message) == "news";
 
 	var hideMailItems = AreBrowserItemsShowing();
