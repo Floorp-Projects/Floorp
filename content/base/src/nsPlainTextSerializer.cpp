@@ -54,6 +54,7 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -288,8 +289,6 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 
   mOutputString = &aStr;
 
-  nsAutoString linebuffer;
-
   // We have to split the string across newlines
   // to match parser behavior
   PRInt32 start = 0;
@@ -298,8 +297,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 
     if(offset>start) {
       // Pass in the line
-      textstr.Mid(linebuffer, start, offset-start);
-      rv = DoAddLeaf(eHTMLTag_text, linebuffer);
+      rv = DoAddLeaf(eHTMLTag_text, Substring(textstr, start, offset-start));
       if (NS_FAILED(rv)) break;
     }
 
@@ -314,8 +312,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   // Consume the last bit of the string if there's any left
   if (NS_SUCCEEDED(rv) & (start < length)) {
     if (start) {
-      textstr.Mid(linebuffer, start, offset-start);
-      rv = DoAddLeaf(eHTMLTag_text, linebuffer);
+      rv = DoAddLeaf(eHTMLTag_text, Substring(textstr, start, length-start));
     }
     else {
       rv = DoAddLeaf(eHTMLTag_text, textstr);
