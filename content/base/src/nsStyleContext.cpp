@@ -89,7 +89,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   }
   else {
     mColor = NS_RGB(0, 0, 0);
-    mOpacity.SetPercentValue(1.0F);
+    mOpacity = 1.0F;
   }
 
   mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
