@@ -56,6 +56,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
+#include "nsFixedSizeAllocator.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
 #include "nsICSSParser.h"
@@ -500,6 +501,36 @@ nsXULAttributes::~nsXULAttributes()
     delete mClassList;
 }
 
+static nsFixedSizeAllocator *gAttrAllocator;
+static PRUint32 gRefCnt;
+
+static PRBool
+CreateAttrAllocator()
+{
+    gAttrAllocator = new nsFixedSizeAllocator();
+    if (!gAttrAllocator)
+        return PR_FALSE;
+    
+    const size_t bucketSize = sizeof(nsXULAttributes);
+    const PRInt32 initalElements = 128; // XXX tune me
+    if (NS_FAILED(gAttrAllocator->Init("XUL Attributes", &bucketSize,
+                                       1, bucketSize * initalElements,
+                                       8))) {
+        delete gAttrAllocator;
+        gAttrAllocator = nsnull;
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
+static void
+DestroyAttrAllocator()
+{
+    NS_ASSERTION(!gRefCnt, "Premature call to DestroyAttrAllocator!");
+    delete gAttrAllocator;
+    gAttrAllocator = nsnull;
+}
 
 nsresult
 nsXULAttributes::Create(nsIContent* aContent, nsXULAttributes** aResult)
@@ -508,13 +539,41 @@ nsXULAttributes::Create(nsIContent* aContent, nsXULAttributes** aResult)
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (! (*aResult = new nsXULAttributes(aContent)))
+    if (!gRefCnt && !CreateAttrAllocator())
         return NS_ERROR_OUT_OF_MEMORY;
+
+    // Increment here, because this controls the gAttrAllocator's destruction.
+    // Failure cases below must decrement gRefCnt, and then call
+    // DestroyAttrAllocator if gRefCnt == 0, to avoid leaking a ref that will
+    // not be balanced by a matching Destroy call. (|goto error;| works.)
+    gRefCnt++;
+    void *place = gAttrAllocator->Alloc(sizeof (nsXULAttributes));
+    if (!place)
+        goto error;
+
+    *aResult = ::new (place) nsXULAttributes(aContent);
+    if (!*aResult)
+        goto error;
 
     NS_ADDREF(*aResult);
     return NS_OK;
+
+error:
+    if (!--gRefCnt)
+        DestroyAttrAllocator();
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
+/* static */ void
+nsXULAttributes::Destroy(nsXULAttributes *aAttrs)
+{
+    aAttrs->~nsXULAttributes();
+    NS_ASSERTION(gAttrAllocator,
+                 "Allocator destroyed with live nsXULAttributes remaining!");
+    gAttrAllocator->Free(aAttrs, sizeof *aAttrs);
+    if (!--gRefCnt)
+        DestroyAttrAllocator();
+}
 
 // nsISupports interface
 
@@ -525,10 +584,21 @@ NS_INTERFACE_MAP_BEGIN(nsXULAttributes)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULNamedNodeMap)
 NS_INTERFACE_MAP_END
 
-
 NS_IMPL_ADDREF(nsXULAttributes);
-NS_IMPL_RELEASE(nsXULAttributes);
 
+// Custom release method to go through the fixed-size allocator
+nsrefcnt
+nsXULAttributes::Release()
+{
+    mRefCnt--;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXULAttributes");
+    if (mRefCnt == 0) {
+        mRefCnt = 1;            // stabilize (necessary for this class?)
+        Destroy(this);
+        return 0;
+    }
+    return mRefCnt;
+}
 
 // nsIDOMNamedNodeMap interface
 
