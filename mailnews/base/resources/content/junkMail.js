@@ -104,8 +104,6 @@ function onAccept()
 
 function storeSettings(aSettings, aLoggingEnabled)
 {
-  dump("XXX aLoggingEnabled " + aLoggingEnabled + "\n");
-
   aSettings.level = document.getElementById("level").selectedItem.getAttribute("value");
 
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
@@ -123,6 +121,5 @@ function storeSettings(aSettings, aLoggingEnabled)
 
 function doHelpButton()
 {
-  // until we have help, I use this for testing
-  dump("XXX " + gSpamSettings[gCurrentServer.key].settings.loggingEnabled + "\n");
+  // implement help
 }
