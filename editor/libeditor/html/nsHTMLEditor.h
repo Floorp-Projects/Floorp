@@ -493,7 +493,7 @@ protected:
                                              const nsString& aContextStr,
                                              const nsString& aInfoStr);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode);
-  nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *nsrange,
+  nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
                                         const nsString& aInputString,
                                         const nsString& aContextStr,
                                         const nsString& aInfoStr,
