@@ -274,6 +274,14 @@ Initialize(nsIModule* aSelf)
 
     return rv;
   }
+  rv = nsAttrValue::Init();
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not initialize nsAttrValue");
+
+    Shutdown();
+
+    return rv;
+  }
 
   // Register all of our atoms once
   nsCSSAnonBoxes::AddRefAtoms();
@@ -417,6 +425,7 @@ Shutdown()
   NS_IF_RELEASE(nsRuleNode::gLangService);
   nsGenericHTMLElement::Shutdown();
 
+  nsAttrValue::Shutdown();
   nsContentUtils::Shutdown();
   nsLayoutStylesheetCache::Shutdown();
   NS_NameSpaceManagerShutdown();

@@ -54,7 +54,6 @@ class nsTableRowGroupFrame;
 class nsTableRowFrame;
 class nsTableColGroupFrame;
 class nsITableLayoutStrategy;
-class nsHTMLValue;
 class nsStyleContext;
 
 struct nsTableReflowState;

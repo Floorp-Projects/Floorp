@@ -479,7 +479,7 @@ nsGenericHTMLElement::SetLang(const nsAString& aLang)
   return NS_OK;
 }
 
-static const nsHTMLValue::EnumTable kDirTable[] = {
+static const nsAttrValue::EnumTable kDirTable[] = {
   { "ltr", NS_STYLE_DIRECTION_LTR },
   { "rtl", NS_STYLE_DIRECTION_RTL },
   { 0 }
@@ -488,11 +488,13 @@ static const nsHTMLValue::EnumTable kDirTable[] = {
 nsresult
 nsGenericHTMLElement::GetDir(nsAString& aDir)
 {
-  nsHTMLValue value;
-  nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsHTMLAtoms::dir);
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    value.EnumValueToString(kDirTable, aDir);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
+    attr->ToString(aDir);
+  }
+  else {
+    aDir.Truncate();
   }
 
   return NS_OK;
@@ -1762,12 +1764,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
       mutation.mAttrName = aAttribute;
       nsAutoString newValue;
-      // It sucks that we have to call GetAttr just to get the stringvalue
-      // here, but in SetInlineStyleRule we don't have the stringvalue
-      // directly and it would be a waste of time to get it since in the
-      // common case it's not needed. If we make nsHTMLValue->string
-      // conversion possible we wouldn't have to do this.
-      GetAttr(aNamespaceID, aAttribute, newValue);
+      aParsedValue.ToString(newValue);
       if (!newValue.IsEmpty()) {
         mutation.mNewAttrValue = do_GetAtom(newValue);
       }
@@ -1873,36 +1870,7 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     return NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  // Use subclass to convert enums to string.
-  if (attrValue->Type() == nsAttrValue::eEnum) {
-    nsHTMLValue htmlVal(attrValue->GetEnumValue(), eHTMLUnit_Enumerated);
-    if (aNameSpaceID != kNameSpaceID_None ||
-        AttributeToString(aAttribute, htmlVal, aResult) !=
-        NS_CONTENT_ATTR_HAS_VALUE) {
-      NS_NOTREACHED("no enum to string conversion found");
-
-      return NS_CONTENT_ATTR_NOT_THERE;
-    }
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-
   attrValue->ToString(aResult);
-
-  return NS_CONTENT_ATTR_HAS_VALUE;
-}
-
-nsresult
-nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
-                                       nsHTMLValue& aValue) const
-{
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aAttribute);
-
-  if (!val) {
-    aValue.Reset();
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-
-  val->ToHTMLValue(aValue);
 
   return NS_CONTENT_ATTR_HAS_VALUE;
 }
@@ -2183,22 +2151,6 @@ nsGenericHTMLElement::IsContentOfType(PRUint32 aFlags) const
 //----------------------------------------------------------------------
 
 
-nsresult
-nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
-                                        const nsHTMLValue& aValue,
-                                        nsAString& aResult) const
-{
-  if (nsHTMLAtoms::dir == aAttribute) {
-    if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
-      aValue.EnumValueToString(kDirTable, aResult);
-
-      return NS_OK;
-    }
-  }
-  aResult.Truncate();
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
 PRBool
 nsGenericHTMLElement::ParseAttribute(nsIAtom* aAttribute,
                                      const nsAString& aValue,
@@ -2415,7 +2367,7 @@ nsGenericHTMLElement::GetPresContext()
 }
 
 // XXX check all mappings against ebina's usage
-static const nsHTMLValue::EnumTable kAlignTable[] = {
+static const nsAttrValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
 
@@ -2433,7 +2385,7 @@ static const nsHTMLValue::EnumTable kAlignTable[] = {
 
 // Elements that should return vertical align values "middle", "bottom", and "top" 
 //  instead of "center", "baseline", and "texttop" from GetAttribute() should use this
-static const nsHTMLValue::EnumTable kVAlignTable[] = {
+static const nsAttrValue::EnumTable kVAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
@@ -2448,7 +2400,7 @@ static const nsHTMLValue::EnumTable kVAlignTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kDivAlignTable[] = {
+static const nsAttrValue::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -2457,7 +2409,7 @@ static const nsHTMLValue::EnumTable kDivAlignTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kFrameborderTable[] = {
+static const nsAttrValue::EnumTable kFrameborderTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "1", NS_STYLE_FRAME_1 },
@@ -2465,7 +2417,7 @@ static const nsHTMLValue::EnumTable kFrameborderTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kScrollingTable[] = {
+static const nsAttrValue::EnumTable kScrollingTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "on", NS_STYLE_FRAME_ON },
@@ -2476,7 +2428,7 @@ static const nsHTMLValue::EnumTable kScrollingTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kTableVAlignTable[] = {
+static const nsAttrValue::EnumTable kTableVAlignTable[] = {
   { "top",     NS_STYLE_VERTICAL_ALIGN_TOP },
   { "middle",  NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { "bottom",  NS_STYLE_VERTICAL_ALIGN_BOTTOM },
@@ -2494,7 +2446,7 @@ nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
 //----------------------------------------
 
 // Vanilla table as defined by the html4 spec...
-static const nsHTMLValue::EnumTable kTableHAlignTable[] = {
+static const nsAttrValue::EnumTable kTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -2504,7 +2456,7 @@ static const nsHTMLValue::EnumTable kTableHAlignTable[] = {
 };
 
 // This table is used for TABLE when in compatability mode
-static const nsHTMLValue::EnumTable kCompatTableHAlignTable[] = {
+static const nsAttrValue::EnumTable kCompatTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -2526,20 +2478,10 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
   return aResult.ParseEnumValue(aString, kTableHAlignTable);
 }
 
-PRBool
-nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
-                                               nsAString& aResult) const
-{
-  if (InNavQuirksMode(GetOwnerDoc())) {
-    return aValue.EnumValueToString(kCompatTableHAlignTable, aResult);
-  }
-  return aValue.EnumValueToString(kTableHAlignTable, aResult);
-}
-
 //----------------------------------------
 
 // These tables are used for TD,TH,TR, etc (but not TABLE)
-static const nsHTMLValue::EnumTable kTableCellHAlignTable[] = {
+static const nsAttrValue::EnumTable kTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -2548,7 +2490,7 @@ static const nsHTMLValue::EnumTable kTableCellHAlignTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kCompatTableCellHAlignTable[] = {
+static const nsAttrValue::EnumTable kCompatTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -2561,7 +2503,6 @@ static const nsHTMLValue::EnumTable kCompatTableCellHAlignTable[] = {
   // NS_STYLE_TEXT_ALIGN_CENTER to map to center by using the following order
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
   { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },
-
   { 0 }
 };
 
@@ -2575,16 +2516,6 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
   return aResult.ParseEnumValue(aString, kTableCellHAlignTable);
 }
 
-PRBool
-nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
-                                                   nsAString& aResult) const
-{
-  if (InNavQuirksMode(GetOwnerDoc())) {
-    return aValue.EnumValueToString(kCompatTableCellHAlignTable, aResult);
-  }
-  return aValue.EnumValueToString(kTableCellHAlignTable, aResult);
-}
-
 //----------------------------------------
 
 PRBool
@@ -2595,38 +2526,10 @@ nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
 }
 
 PRBool
-nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
-                                         nsAString& aResult)
-{
-  return aValue.EnumValueToString(kAlignTable, aResult);
-}
-
-PRBool
-nsGenericHTMLElement::VAlignValueToString(const nsHTMLValue& aValue,
-                                         nsAString& aResult)
-{
-  return aValue.EnumValueToString(kVAlignTable, aResult);
-}
-
-PRBool
-nsGenericHTMLElement::TableVAlignValueToString(const nsHTMLValue& aValue,
-                                               nsAString& aResult)
-{
-  return aValue.EnumValueToString(kTableVAlignTable, aResult);
-}
-
-PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
                                          nsAttrValue& aResult) const
 {
   return aResult.ParseEnumValue(aString, kDivAlignTable);
-}
-
-PRBool
-nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
-                                            nsAString& aResult) const
-{
-  return aValue.EnumValueToString(kDivAlignTable, aResult);
 }
 
 PRBool
@@ -2654,24 +2557,10 @@ nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
 }
 
 PRBool
-nsGenericHTMLElement::FrameborderValueToString(const nsHTMLValue& aValue,
-                                               nsAString& aResult)
-{
-  return aValue.EnumValueToString(kFrameborderTable, aResult);
-}
-
-PRBool
 nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
                                           nsAttrValue& aResult)
 {
   return aResult.ParseEnumValue(aString, kScrollingTable);
-}
-
-PRBool
-nsGenericHTMLElement::ScrollingValueToString(const nsHTMLValue& aValue,
-                                             nsAString& aResult)
-{
-  return aValue.EnumValueToString(kScrollingTable, aResult);
 }
 
 nsresult

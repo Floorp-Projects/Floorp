@@ -38,7 +38,6 @@
 #include "nsBulletFrame.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLValue.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsGenericHTMLElement.h"
@@ -392,18 +391,15 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
   // Try to get value directly from the list-item, if it specifies a
   // value attribute. Note: we do this with our parent's content
   // because our parent is the list-item.
-  nsHTMLValue value;
   nsIContent* parentContent = mParent->GetContent();
   if (parentContent) {
     nsGenericHTMLElement *hc =
       nsGenericHTMLElement::FromContent(parentContent);
     if (hc) {
-      if (NS_CONTENT_ATTR_HAS_VALUE ==
-          hc->GetHTMLAttribute(nsHTMLAtoms::value, value)) {
-        if (eHTMLUnit_Integer == value.GetUnit()) {
-          // Use ordinal specified by the value attribute
-          mOrdinal = value.GetIntValue();
-        }
+      const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::value);
+      if (attr && attr->Type() == nsAttrValue::eInteger) {
+        // Use ordinal specified by the value attribute
+        mOrdinal = attr->GetIntegerValue();
       }
     }
   }

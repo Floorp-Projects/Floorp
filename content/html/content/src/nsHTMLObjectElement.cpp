@@ -87,9 +87,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -260,22 +257,6 @@ nsHTMLObjectElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLObjectElement::AttributeToString(nsIAtom* aAttribute,
-                                       const nsHTMLValue& aValue,
-                                       nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      VAlignValueToString(aValue, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
-                                                     aResult);
 }
 
 static void

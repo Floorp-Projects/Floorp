@@ -50,7 +50,6 @@
 #include "nsIContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
-#include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"
 #include "nsVoidArray.h"
 #include "nsIView.h"
@@ -636,10 +635,9 @@ PRInt32 nsTableCellFrame::GetRowSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
-    nsHTMLValue val;
-    hc->GetHTMLAttribute(nsHTMLAtoms::rowspan, val); 
-    if (eHTMLUnit_Integer == val.GetUnit()) { 
-       rowSpan=val.GetIntValue(); 
+    const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::rowspan); 
+    if (attr && attr->Type() == nsAttrValue::eInteger) { 
+       rowSpan = attr->GetIntegerValue(); 
     }
   }
   return rowSpan;
@@ -651,10 +649,9 @@ PRInt32 nsTableCellFrame::GetColSpan()
   nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
-    nsHTMLValue val;
-    hc->GetHTMLAttribute(nsHTMLAtoms::colspan, val); 
-    if (eHTMLUnit_Integer == val.GetUnit()) { 
-       colSpan=val.GetIntValue(); 
+    const nsAttrValue* attr = hc->GetParsedAttr(nsHTMLAtoms::colspan); 
+    if (attr && attr->Type() == nsAttrValue::eInteger) { 
+       colSpan = attr->GetIntegerValue(); 
     }
   }
   return colSpan;

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAttrValue.h"
-#include "nsHTMLValue.h"
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
 #include "nsICSSStyleRule.h"
@@ -48,6 +47,100 @@
 #ifdef MOZ_SVG
 #include "nsISVGValue.h"
 #endif
+
+nsVoidArray* nsAttrValue::sEnumTableArray = nsnull;
+
+class nsCheapStringBufferUtils {
+public:
+  /**
+   * Get the string pointer
+   * @param aBuf the buffer
+   * @return a pointer to the string
+   */
+  static const PRUnichar* StrPtr(const PRUnichar* aBuf) {
+    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
+    return (const PRUnichar*)( ((const char*)aBuf) + sizeof(PRUint32) );
+  }
+  static PRUnichar* StrPtr(PRUnichar* aBuf) {
+    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
+    return (PRUnichar*)( ((char*)aBuf) + sizeof(PRUint32) );
+  }
+  /**
+   * Get the string length
+   * @param aBuf the buffer
+   * @return the string length
+   */
+  static PRUint32 Length(const PRUnichar* aBuf) {
+    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
+    return *((PRUint32*)aBuf);
+  }
+  /**
+   * Get a DependentString from a buffer
+   *
+   * @param aBuf the buffer to get string from
+   * @return a DependentString representing this string
+   */
+  static nsDependentSubstring GetDependentString(const PRUnichar* aBuf) {
+    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
+    const PRUnichar* buf = StrPtr(aBuf);
+    return Substring(buf, buf + Length(aBuf));
+  }
+  /**
+   * Construct from an AString
+   * @param aBuf the buffer to copy to
+   * @param aStr the string to construct from
+   */
+  static void CopyToBuffer(PRUnichar*& aBuf, const nsAString& aStr) {
+    PRUint32 len = aStr.Length();
+    aBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUint32) +
+                                       len * sizeof(PRUnichar));
+    *((PRUint32*)aBuf) = len;
+    CopyUnicodeTo(aStr, 0, StrPtr(aBuf), len);
+  }
+  /**
+   * Construct from an AString
+   * @param aBuf the buffer to copy to
+   * @param aStr the string to construct from
+   */
+  static void CopyToExistingBuffer(PRUnichar*& aBuf, PRUnichar* aOldBuf,
+                                   const nsAString& aStr) {
+    NS_ASSERTION(aOldBuf, "Cannot work on null buffer!");
+    PRUint32 len = aStr.Length();
+    aBuf = NS_STATIC_CAST(PRUnichar*,
+                          nsMemory::Realloc(aOldBuf, sizeof(PRUint32) +
+                                                     len * sizeof(PRUnichar)));
+    *(NS_REINTERPRET_CAST(PRUint32*, aBuf)) = len;
+    CopyUnicodeTo(aStr, 0, StrPtr(aBuf), len);
+  }
+  /**
+   * Construct from another nsCheapStringBuffer
+   * @param aBuf the buffer to put into
+   * @param aSrc the buffer to construct from
+   */
+  static void Clone(PRUnichar*& aBuf, const PRUnichar* aSrc) {
+    NS_ASSERTION(aSrc, "Cannot work on null buffer!");
+    aBuf = (PRUnichar*)nsMemory::Clone(aSrc, sizeof(PRUint32) +
+                                             Length(aSrc) * sizeof(PRUnichar));
+  }
+  /**
+   * Free the memory for the buf
+   * @param aBuf the buffer to free
+   */
+  static void Free(PRUnichar* aBuf) {
+    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
+    nsMemory::Free(aBuf);
+  }
+  /**
+   * Get a hashcode for the buffer
+   * @param aBuf the buffer
+   * @return the hashcode
+   */
+  static PRUint32 HashCode(const PRUnichar* aBuf) {
+    NS_ASSERTION(aBuf, "Cannot work on null buffer!");
+    return nsCRT::BufferHashCode(StrPtr(aBuf),
+                                 Length(aBuf));
+  }
+};
 
 nsAttrValue::nsAttrValue()
     : mBits(0)
@@ -83,6 +176,26 @@ nsAttrValue::nsAttrValue(nsISVGValue* aValue)
 nsAttrValue::~nsAttrValue()
 {
   ResetIfSet();
+}
+
+/* static */
+nsresult
+nsAttrValue::Init()
+{
+  NS_ASSERTION(!sEnumTableArray, "nsAttrValue already initialized");
+
+  sEnumTableArray = new nsVoidArray;
+  NS_ENSURE_TRUE(sEnumTableArray, NS_ERROR_OUT_OF_MEMORY);
+  
+  return NS_OK;
+}
+
+/* static */
+void
+nsAttrValue::Shutdown()
+{
+  delete sEnumTableArray;
+  sEnumTableArray = nsnull;
 }
 
 nsAttrValue::ValueType
@@ -232,10 +345,10 @@ nsAttrValue::SetTo(const nsAString& aValue)
 }
 
 void
-nsAttrValue::SetTo(PRInt16 aInt, ValueType aType)
+nsAttrValue::SetTo(PRInt16 aInt)
 {
   ResetIfSet();
-  SetIntValueAndType(aInt, aType);
+  SetIntValueAndType(aInt, eInteger);
 }
 
 void
@@ -315,7 +428,19 @@ nsAttrValue::ToString(nsAString& aResult) const
     }
     case eEnum:
     {
-      NS_NOTREACHED("trying to convert enum to string");
+      PRInt16 val = GetEnumValue();
+      EnumTable* table = NS_STATIC_CAST(EnumTable*, sEnumTableArray->
+          FastElementAt(GetIntInternal() & NS_ATTRVALUE_ENUMTABLEINDEX_MASK));
+      while (table->tag) {
+        if (table->value == val) {
+          aResult.AssignASCII(table->tag);
+
+          return;
+        }
+        table++;
+      }
+
+      NS_NOTREACHED("couldn't find value in EnumTable");
 
       break;
     }
@@ -360,71 +485,6 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eSVGValue:
     {
       GetMiscContainer()->mSVGValue->GetValueString(aResult);
-    }
-#endif
-  }
-}
-
-void
-nsAttrValue::ToHTMLValue(nsHTMLValue& aResult) const
-{
-  switch(Type()) {
-    case eString:
-    {
-      aResult.SetStringValue(GetStringValue());
-      break;
-    }
-    case eAtom:
-    {
-      nsAutoString tmp;
-      GetAtomValue()->ToString(tmp);
-      aResult.SetStringValue(tmp);
-      break;
-    }
-    case eInteger:
-    {
-      aResult.SetIntValue(GetIntInternal(), eHTMLUnit_Integer);
-      break;
-    }
-    case eColor:
-    {
-      nscolor v;
-      GetColorValue(v);
-      aResult.SetColorValue(v);
-      break;
-    }
-    case eProportional:
-    {
-      aResult.SetIntValue(GetProportionalValue(), eHTMLUnit_Proportional);
-      break;
-    }
-    case eEnum:
-    {
-      aResult.SetIntValue(GetEnumValue(), eHTMLUnit_Enumerated);
-      break;
-    }
-    case ePercent:
-    {
-      aResult.SetPercentValue(GetPercentValue());
-      break;
-    }
-    case eCSSStyleRule:
-    {
-      aResult.SetCSSStyleRuleValue(GetCSSStyleRuleValue());
-      break;
-    }
-    case eAtomArray:
-    {
-      nsCOMArray<nsIAtom>* array = new nsCOMArray<nsIAtom>(*GetAtomArrayValue());
-      aResult.SetAtomArrayValue(array);
-      break;
-    }
-#ifdef MOZ_SVG
-    case eSVGValue:
-    {
-      nsAutoString tmp;
-      GetSVGValue()->GetValueString(tmp);
-      aResult.SetStringValue(tmp);
     }
 #endif
   }
@@ -738,16 +798,36 @@ nsAttrValue::ParseStringOrAtom(const nsAString& aValue)
 
 PRBool
 nsAttrValue::ParseEnumValue(const nsAString& aValue,
-                            const nsHTMLValue::EnumTable* aTable,
+                            const EnumTable* aTable,
                             PRBool aCaseSensitive)
 {
   ResetIfSet();
+
+  // Have to const cast here since nsVoidArray can't deal with constpointers
+  EnumTable* tableStart = NS_CONST_CAST(EnumTable*, aTable);
 
   nsAutoString val(aValue);
   while (aTable->tag) {
     if (aCaseSensitive ? val.EqualsASCII(aTable->tag) :
                          val.EqualsIgnoreCase(aTable->tag)) {
-      SetIntValueAndType(aTable->value, eEnum);
+
+      // Find index of EnumTable
+      PRInt16 index = sEnumTableArray->IndexOf(tableStart);
+      if (index < 0) {
+        index = sEnumTableArray->Count();
+        NS_ASSERTION(index <= NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE,
+                     "too many enum tables");
+        if (!sEnumTableArray->AppendElement(tableStart)) {
+          return PR_FALSE;
+        }
+      }
+
+      PRInt32 value = (aTable->value << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) +
+                      index;
+
+      SetIntValueAndType(value, eEnum);
+      NS_ASSERTION(GetEnumValue() == aTable->value,
+                   "failed to store enum properly");
 
       return PR_TRUE;
     }

@@ -164,9 +164,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -586,13 +583,13 @@ nsHTMLFormElement::Reset()
   return rv;
 }
 
-static const nsHTMLValue::EnumTable kFormMethodTable[] = {
+static const nsAttrValue::EnumTable kFormMethodTable[] = {
   { "get", NS_FORM_METHOD_GET },
   { "post", NS_FORM_METHOD_POST },
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kFormEnctypeTable[] = {
+static const nsAttrValue::EnumTable kFormEnctypeTable[] = {
   { "multipart/form-data", NS_FORM_ENCTYPE_MULTIPART },
   { "application/x-www-form-urlencoded", NS_FORM_ENCTYPE_URLENCODED },
   { "text/plain", NS_FORM_ENCTYPE_TEXTPLAIN },
@@ -612,27 +609,6 @@ nsHTMLFormElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
-                                     const nsHTMLValue& aValue,
-                                     nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::method) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      aValue.EnumValueToString(kFormMethodTable, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::enctype) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      aValue.EnumValueToString(kFormEnctypeTable, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 void

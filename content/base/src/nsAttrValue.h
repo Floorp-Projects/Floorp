@@ -43,13 +43,13 @@
 #include "nsDependentSubstring.h"
 #include "nsColor.h"
 #include "nsCOMArray.h"
-#include "nsHTMLValue.h"
 
 typedef unsigned long PtrBits;
 class nsAString;
 class nsIAtom;
 class nsICSSStyleRule;
 class nsISVGValue;
+class nsIDocument;
 
 #define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 
@@ -62,6 +62,10 @@ class nsISVGValue;
 #define NS_ATTRVALUE_INTEGERTYPE_MAXVALUE ((1 << (31 - NS_ATTRVALUE_INTEGERTYPE_BITS)) - 1)
 #define NS_ATTRVALUE_INTEGERTYPE_MINVALUE (-NS_ATTRVALUE_INTEGERTYPE_MAXVALUE - 1)
 
+#define NS_ATTRVALUE_ENUMTABLEINDEX_BITS (32 - 16 - NS_ATTRVALUE_INTEGERTYPE_BITS)
+#define NS_ATTRVALUE_ENUMTABLEINDEX_MAXVALUE ((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1)
+#define NS_ATTRVALUE_ENUMTABLEINDEX_MASK (PtrBits((1 << NS_ATTRVALUE_ENUMTABLEINDEX_BITS) - 1))
+
 class nsAttrValue {
 public:
   nsAttrValue();
@@ -72,6 +76,9 @@ public:
   explicit nsAttrValue(nsISVGValue* aValue);
 #endif
   ~nsAttrValue();
+
+  static nsresult Init();
+  static void Shutdown();
 
   // This has to be the same as in ValueBaseType
   enum ValueType {
@@ -98,7 +105,7 @@ public:
 
   void SetTo(const nsAttrValue& aOther);
   void SetTo(const nsAString& aValue);
-  void SetTo(PRInt16 aInt, ValueType aType);
+  void SetTo(PRInt16 aInt);
   void SetTo(nsICSSStyleRule* aValue);
 #ifdef MOZ_SVG
   void SetTo(nsISVGValue* aValue);
@@ -107,7 +114,6 @@ public:
   void SwapValueWith(nsAttrValue& aOther);
 
   void ToString(nsAString& aResult) const;
-  void ToHTMLValue(nsHTMLValue& aResult) const;
 
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
@@ -117,7 +123,7 @@ public:
   inline PRInt32 GetIntegerValue() const;
   PRBool GetColorValue(nscolor& aColor) const;
   inline PRInt32 GetProportionalValue() const;
-  inline PRInt32 GetEnumValue() const;
+  inline PRInt16 GetEnumValue() const;
   inline float GetPercentValue() const;
   inline nsCOMArray<nsIAtom>* GetAtomArrayValue() const;
   inline nsICSSStyleRule* GetCSSStyleRuleValue() const;
@@ -141,6 +147,23 @@ public:
   void ParseStringOrAtom(const nsAString& aValue);
 
   /**
+   * Structure for a mapping from int (enum) values to strings.  When you use
+   * it you generally create an array of them.
+   * Instantiate like this:
+   * EnumTable myTable[] = {
+   *   { "string1", 1 },
+   *   { "string2", 2 },
+   *   { 0 }
+   * }
+   */
+  struct EnumTable {
+    /** The string the value maps to */
+    const char* tag;
+    /** The enum value that maps to this string */
+    PRInt16 value;
+  };
+
+  /**
    * Parse into an enum value.
    *
    * @param aValue the string to find the value for
@@ -149,7 +172,7 @@ public:
    * @return whether the enum value was found or not
    */
   PRBool ParseEnumValue(const nsAString& aValue,
-                        const nsHTMLValue::EnumTable* aTable,
+                        const EnumTable* aTable,
                         PRBool aCaseSensitive = PR_FALSE);
 
   /**
@@ -233,6 +256,8 @@ private:
   PRBool EnsureEmptyMiscContainer();
   PRBool EnsureEmptyAtomArray();
 
+  static nsVoidArray* sEnumTableArray;
+
   PtrBits mBits;
 };
 
@@ -261,11 +286,14 @@ nsAttrValue::GetProportionalValue() const
   return GetIntInternal();
 }
 
-inline PRInt32
+inline PRInt16
 nsAttrValue::GetEnumValue() const
 {
   NS_PRECONDITION(Type() == eEnum, "wrong type");
-  return GetIntInternal();
+  // We don't need to worry about sign extension here since we're
+  // returning an PRInt16 which will cut away the top bits.
+  return NS_STATIC_CAST(PRInt16,
+            GetIntInternal() >> NS_ATTRVALUE_ENUMTABLEINDEX_BITS);
 }
 
 inline float

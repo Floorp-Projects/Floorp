@@ -68,9 +68,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 };
@@ -104,7 +101,7 @@ NS_IMPL_DOM_CLONENODE(nsHTMLBRElement)
 
 NS_IMPL_STRING_ATTR(nsHTMLBRElement, Clear, clear)
 
-static const nsHTMLValue::EnumTable kClearTable[] = {
+static const nsAttrValue::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
   { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
@@ -122,20 +119,6 @@ nsHTMLBRElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLBRElement::AttributeToString(nsIAtom* aAttribute,
-                                   const nsHTMLValue& aValue,
-                                   nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::clear) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      aValue.EnumValueToString(kClearTable, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

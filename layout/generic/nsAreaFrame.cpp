@@ -43,7 +43,6 @@
 #include "nsINodeInfo.h"
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
-#include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
 

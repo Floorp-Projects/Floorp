@@ -46,7 +46,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsIWidget.h"
 #include "nsILinkHandler.h"
-#include "nsHTMLValue.h"
 #include "nsGUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"

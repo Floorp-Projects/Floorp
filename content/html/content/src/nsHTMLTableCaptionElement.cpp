@@ -68,9 +68,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
@@ -107,7 +104,7 @@ NS_IMPL_DOM_CLONENODE(nsHTMLTableCaptionElement)
 NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align)
 
 
-static const nsHTMLValue::EnumTable kCaptionAlignTable[] = {
+static const nsAttrValue::EnumTable kCaptionAlignTable[] = {
   { "left",  NS_SIDE_LEFT },
   { "right", NS_SIDE_RIGHT },
   { "top",   NS_SIDE_TOP},
@@ -125,22 +122,6 @@ nsHTMLTableCaptionElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
-                                      const nsHTMLValue& aValue,
-                                      nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      aValue.EnumValueToString(kCaptionAlignTable, aResult);
-
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static 

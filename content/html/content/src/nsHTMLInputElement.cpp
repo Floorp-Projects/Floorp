@@ -179,9 +179,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -564,13 +561,12 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 NS_IMETHODIMP
 nsHTMLInputElement::GetSize(PRUint32* aValue)
 {
-  *aValue = 0;
-
-  nsHTMLValue value;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      GetHTMLAttribute(nsHTMLAtoms::size, value) &&
-      value.GetUnit() == eHTMLUnit_Integer) {
-    *aValue = value.GetIntValue();
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::size);
+  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
+    *aValue = attrVal->GetIntegerValue();
+  }
+  else {
+    *aValue = 0;
   }
 
   return NS_OK;
@@ -1727,8 +1723,7 @@ nsHTMLInputElement::SetParent(nsIContent* aParent)
   }
 }
 
-
-static const nsHTMLValue::EnumTable kInputTypeTable[] = {
+static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
   { "file", NS_FORM_INPUT_FILE },
@@ -1796,42 +1791,9 @@ nsHTMLInputElement::ParseAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
-                                      const nsHTMLValue& aValue,
-                                      nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::type) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      // The DOM spec says that input types should be capitalized but
-      // AFAIK all existing browsers return the type in lower case,
-      // http://bugzilla.mozilla.org/show_bug.cgi?id=32369 is the bug
-      // about this problem.  -- jst@netscape.com
-      // Update.  The DOM spec will be changed to have input types be
-      // all-lowercase.  See
-      // http://bugzilla.mozilla.org/show_bug.cgi?id=113174#c12
-      // -- bzbarsky@mit.edu
-
-      aValue.EnumValueToString(kInputTypeTable, aResult);
-
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      AlignValueToString(aValue, aResult);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
-                                                     aResult);
-}
-
-
-NS_IMETHODIMP
 nsHTMLInputElement::GetType(nsAString& aValue)
 {
-  const nsHTMLValue::EnumTable *table = kInputTypeTable;
+  const nsAttrValue::EnumTable *table = kInputTypeTable;
 
   while (table->tag) {
     if (mType == table->value) {

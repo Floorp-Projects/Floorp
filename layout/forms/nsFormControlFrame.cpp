@@ -661,36 +661,34 @@ NS_IMETHODIMP
 nsFormControlFrame::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
-  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
 
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
-
   if (content) {
-    nsHTMLValue value;
-    result = content->GetHTMLAttribute(nsHTMLAtoms::maxlength, value);
-    if (eHTMLUnit_Integer == value.GetUnit()) { 
-      *aSize = value.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::maxlength);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      *aSize = attr->GetIntegerValue();
+
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return result;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 nsresult
 nsFormControlFrame::GetSizeFromContent(PRInt32* aSize) const
 {
   *aSize = -1;
-  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
 
   nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
-
   if (content) {
-    nsHTMLValue value;
-    result = content->GetHTMLAttribute(nsHTMLAtoms::size, value);
-    if (eHTMLUnit_Integer == value.GetUnit()) { 
-      *aSize = value.GetIntValue();
+    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::size);
+    if (attr && attr->Type() == nsAttrValue::eInteger) {
+      *aSize = attr->GetIntegerValue();
+
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return result;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP_(PRInt32)

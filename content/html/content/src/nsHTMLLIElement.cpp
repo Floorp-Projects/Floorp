@@ -68,9 +68,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 };
@@ -107,7 +104,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
 
 
-static const nsHTMLValue::EnumTable kUnorderedListItemTypeTable[] = {
+static const nsAttrValue::EnumTable kUnorderedListItemTypeTable[] = {
   { "disc", NS_STYLE_LIST_STYLE_DISC },
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
   { "round", NS_STYLE_LIST_STYLE_CIRCLE },
@@ -115,7 +112,7 @@ static const nsHTMLValue::EnumTable kUnorderedListItemTypeTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kOrderedListItemTypeTable[] = {
+static const nsAttrValue::EnumTable kOrderedListItemTypeTable[] = {
   { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
   { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
   { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },
@@ -138,22 +135,6 @@ nsHTMLLIElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
-                                   const nsHTMLValue& aValue,
-                                   nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::type) {
-    if (!aValue.EnumValueToString(kOrderedListItemTypeTable, aResult)) {
-      aValue.EnumValueToString(kUnorderedListItemTypeTable, aResult);
-    }
-    
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

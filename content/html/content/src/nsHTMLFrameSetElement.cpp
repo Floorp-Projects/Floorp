@@ -85,9 +85,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
 private:
@@ -221,12 +218,9 @@ nsHTMLFrameSetElement::GetRowSpec(PRInt32 *aNumValues,
   *aSpecs = nsnull;
   
   if (!mRowSpecs) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetHTMLAttribute(nsHTMLAtoms::rows, value) &&
-        eHTMLUnit_String == value.GetUnit()) {
-      nsAutoString rows;
-      value.GetStringValue(rows);
-      nsresult rv = ParseRowCol(rows, mNumRows, &mRowSpecs);
+    const nsAttrValue* value = GetParsedAttr(nsHTMLAtoms::rows);
+    if (value && value->Type() == nsAttrValue::eString) {
+      nsresult rv = ParseRowCol(value->GetStringValue(), mNumRows, &mRowSpecs);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -257,12 +251,9 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
   *aSpecs = nsnull;
 
   if (!mColSpecs) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetHTMLAttribute(nsHTMLAtoms::cols, value) &&
-        eHTMLUnit_String == value.GetUnit()) {
-      nsAutoString cols;
-      value.GetStringValue(cols);
-      nsresult rv = ParseRowCol(cols, mNumCols, &mColSpecs);
+    const nsAttrValue* value = GetParsedAttr(nsHTMLAtoms::cols);
+    if (value && value->Type() == nsAttrValue::eString) {
+      nsresult rv = ParseRowCol(value->GetStringValue(), mNumCols, &mColSpecs);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -300,18 +291,6 @@ nsHTMLFrameSetElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
-                                         const nsHTMLValue& aValue,
-                                         nsAString& aResult) const
-{
-  if (aAttribute == nsHTMLAtoms::frameborder) {
-    nsGenericHTMLElement::FrameborderValueToString(aValue, aResult);
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  } 
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 nsChangeHint

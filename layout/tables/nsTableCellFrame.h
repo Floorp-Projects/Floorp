@@ -46,7 +46,6 @@
 #include "nsLayoutAtoms.h"
 
 class nsTableFrame;
-class nsHTMLValue;
 
 /**
  * Additional frame-state bits

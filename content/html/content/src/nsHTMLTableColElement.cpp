@@ -72,9 +72,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
@@ -140,31 +137,6 @@ nsHTMLTableColElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
-                                         const nsHTMLValue& aValue,
-                                         nsAString& aResult) const
-{
-  /* ignore these attributes, stored already as strings
-     ch
-   */
-  /* ignore attributes that are of standard types
-     charoff, span
-   */
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (TableCellHAlignValueToString(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::valign) {
-    if (TableVAlignValueToString(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static 

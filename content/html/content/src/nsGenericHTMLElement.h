@@ -62,7 +62,6 @@ class nsIForm;
 class nsIPresState;
 class nsIScrollableView;
 class nsILayoutHistoryState;
-class nsHTMLValue;
 struct nsRect;
 struct nsSize;
 struct nsRuleData;
@@ -239,7 +238,10 @@ public:
 
   // HTML element methods
   void Compact() { mAttrsAndChildren.Compact(); }
-  nsresult GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
+  const nsAttrValue* GetParsedAttr(nsIAtom* aAttr) const
+  {
+    return mAttrsAndChildren.GetAttr(aAttr);
+  }
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
   // Implementation for nsIStyledContent
@@ -253,22 +255,6 @@ public:
   already_AddRefed<nsIURI> GetBaseURI() const;
 
   //----------------------------------------
-  /**
-   * Turn an attribute value into string based on the type of attribute
-   * (does not need to do standard types such as string, integer,
-   * color ...).  Called by GetAttr().
-   *
-   * @param aAttribute the attribute to convert
-   * @param aValue the value to convert
-   * @param aResult the string [OUT]
-   * @return NS_CONTENT_ATTR_HAS_VALUE if the value was successfully converted
-   *         NS_CONTENT_ATTR_NOT_THERE if the value could not be converted
-   * @see nsGenericHTMLElement::GetAttr
-   */
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
-
   /**
    * Convert an attribute string value to attribute type based on the type of
    * attribute.  Called by SetAttr().
@@ -353,15 +339,6 @@ public:
    */
   PRBool ParseDivAlignValue(const nsAString& aString,
                             nsAttrValue& aResult) const;
-  /**
-   * Convert a div align value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  PRBool DivAlignValueToString(const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
 
   /**
    * Convert a table halign string to value (left/right/center/char/justify)
@@ -372,15 +349,6 @@ public:
    */
   PRBool ParseTableHAlignValue(const nsAString& aString,
                                nsAttrValue& aResult) const;
-  /**
-   * Convert a table halign value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
-                                  nsAString& aResult) const;
 
   /**
    * Convert a table cell halign string to value
@@ -391,15 +359,6 @@ public:
    */
   PRBool ParseTableCellHAlignValue(const nsAString& aString,
                                    nsAttrValue& aResult) const;
-  /**
-   * Convert a table cell halign value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  PRBool TableCellHAlignValueToString(const nsHTMLValue& aValue,
-                                      nsAString& aResult) const;
 
   /**
    * Convert a table valign string to value (left/right/center/char/justify/
@@ -411,36 +370,6 @@ public:
    */
   static PRBool ParseTableVAlignValue(const nsAString& aString,
                                       nsAttrValue& aResult);
-  /**
-   * Convert a table valign value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  static PRBool TableVAlignValueToString(const nsHTMLValue& aValue,
-                                         nsAString& aResult);
-
-  /**
-   * Convert an align value to string (left/right/texttop/baseline/center/
-   * bottom/top/middle/absbottom/abscenter/absmiddle)
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  static PRBool AlignValueToString(const nsHTMLValue& aValue,
-                                   nsAString& aResult);
-
-  /**
-   * Convert a valign value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  static PRBool VAlignValueToString(const nsHTMLValue& aValue,
-                                    nsAString& aResult);
 
   /**
    * Convert an image attribute to value (width, height, hspace, vspace, border)
@@ -462,15 +391,6 @@ public:
    */
   static PRBool ParseFrameborderValue(const nsAString& aString,
                                       nsAttrValue& aResult);
-  /**
-   * Convert a frameborder value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  static PRBool FrameborderValueToString(const nsHTMLValue& aValue,
-                                         nsAString& aResult);
 
   /**
    * Convert a scrolling string to value (yes/no/on/off/scroll/noscroll/auto)
@@ -481,15 +401,6 @@ public:
    */
   static PRBool ParseScrollingValue(const nsAString& aString,
                                     nsAttrValue& aResult);
-  /**
-   * Convert a scrolling value to string
-   *
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  static PRBool ScrollingValueToString(const nsHTMLValue& aValue,
-                                       nsAString& aResult);
 
   /**
    * Create the style struct from the style attr.  Used when an element is first

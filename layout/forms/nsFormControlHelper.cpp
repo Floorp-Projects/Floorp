@@ -132,18 +132,13 @@ nsresult nsFormControlHelper::GetFrameFontFM(nsIFrame* aFrame,
 nsresult
 nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
 {
-  aOutValue.SetLength(0);
-  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
-
-  if (content) {
-    nsHTMLValue value;
-    result = content->GetHTMLAttribute(nsHTMLAtoms::wrap, value);
-    if (eHTMLUnit_String == value.GetUnit()) { 
-      value.GetStringValue(aOutValue);
-    }
+  if (aContent->IsContentOfType(nsIContent::eHTML)) {
+    return aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::wrap, aOutValue);
   }
-  return result;
+
+  aOutValue.Truncate();
+
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 
@@ -340,17 +335,10 @@ nsresult
 nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "Null pointer bad!");
-  nsGenericHTMLElement *formControl =
-    nsGenericHTMLElement::FromContent(aContent);
-  if (!formControl)
+  if (!aContent->IsContentOfType(nsIContent::eHTML))
     return NS_ERROR_FAILURE;
 
-  nsHTMLValue value;
-  nsresult rv = formControl->GetHTMLAttribute(nsHTMLAtoms::name, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv && eHTMLUnit_String == value.GetUnit()) {
-    value.GetStringValue(*aResult);
-  }
-  return rv;
+  return aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, *aResult);
 }
 
 PRInt32
@@ -369,17 +357,10 @@ nsresult
 nsFormControlHelper::GetValueAttr(nsIContent* aContent, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "Null pointer bad!");
-  nsGenericHTMLElement *formControl =
-    nsGenericHTMLElement::FromContent(aContent);
-  if (!formControl)
+  if (!aContent->IsContentOfType(nsIContent::eHTML))
     return NS_ERROR_FAILURE;
 
-  nsHTMLValue value;
-  nsresult rv = formControl->GetHTMLAttribute(nsHTMLAtoms::value, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv && eHTMLUnit_String == value.GetUnit()) {
-    value.GetStringValue(*aResult);
-  }
-  return rv;
+  return aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, *aResult);
 }
 
 //----------------------------------------------------------------------------------

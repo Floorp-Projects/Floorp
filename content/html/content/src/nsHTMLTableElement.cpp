@@ -84,9 +84,6 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
@@ -834,7 +831,7 @@ nsHTMLTableElement::DeleteRow(PRInt32 aValue)
   return parent->RemoveChild(row, getter_AddRefs(deleted_row));
 }
 
-static const nsHTMLValue::EnumTable kFrameTable[] = {
+static const nsAttrValue::EnumTable kFrameTable[] = {
   { "void",   NS_STYLE_TABLE_FRAME_NONE },
   { "above",  NS_STYLE_TABLE_FRAME_ABOVE },
   { "below",  NS_STYLE_TABLE_FRAME_BELOW },
@@ -847,7 +844,7 @@ static const nsHTMLValue::EnumTable kFrameTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kRulesTable[] = {
+static const nsAttrValue::EnumTable kRulesTable[] = {
   { "none",   NS_STYLE_TABLE_RULES_NONE },
   { "groups", NS_STYLE_TABLE_RULES_GROUPS },
   { "rows",   NS_STYLE_TABLE_RULES_ROWS },
@@ -856,7 +853,7 @@ static const nsHTMLValue::EnumTable kRulesTable[] = {
   { 0 }
 };
 
-static const nsHTMLValue::EnumTable kLayoutTable[] = {
+static const nsAttrValue::EnumTable kLayoutTable[] = {
   { "auto",   NS_STYLE_TABLE_LAYOUT_AUTO },
   { "fixed",  NS_STYLE_TABLE_LAYOUT_FIXED },
   { 0 }
@@ -879,7 +876,7 @@ nsHTMLTableElement::ParseAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::border) {
     if (!aResult.ParseIntWithBounds(aValue, 0)) {
       // XXX this should really be NavQuirks only to allow non numeric value
-      aResult.SetTo(1, nsAttrValue::eInteger);
+      aResult.SetTo(1);
     }
 
     return PR_TRUE;
@@ -920,38 +917,6 @@ nsHTMLTableElement::ParseAttribute(nsIAtom* aAttribute,
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAString& aResult) const
-{
-  /* ignore summary, just a string */
-  /* ignore attributes that are of standard types border, cellpadding,
-     cellspacing, cols, height, width, background, bgcolor */
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (TableHAlignValueToString(aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::frame) {
-    if (aValue.EnumValueToString(kFrameTable, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::layout) {
-    if (aValue.EnumValueToString(kLayoutTable, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::rules) {
-    if (aValue.EnumValueToString(kRulesTable, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-
-  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void 

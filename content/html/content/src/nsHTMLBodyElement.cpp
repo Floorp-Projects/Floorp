@@ -138,8 +138,6 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   if (!aData || (aData->mSID != eStyleStruct_Margin) || !aData->mMarginData || !mPart)
     return NS_OK; // We only care about margins.
 
-  nsHTMLValue value;
-  
   PRInt32 bodyMarginWidth  = -1;
   PRInt32 bodyMarginHeight = -1;
   PRInt32 bodyTopMargin = -1;
@@ -152,11 +150,12 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   nsCompatibility mode = aData->mPresContext->CompatibilityMode();
 
 
+  const nsAttrValue* value;
   if (mPart->GetAttrCount() > 0) {
     // if marginwidth/marginheight are set, reflect them as 'margin'
-    mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
-    if (eHTMLUnit_Integer == value.GetUnit()) {
-      bodyMarginWidth = value.GetIntValue();
+    value = mPart->GetParsedAttr(nsHTMLAtoms::marginwidth);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyMarginWidth = value->GetIntegerValue();
       if (bodyMarginWidth < 0) bodyMarginWidth = 0;
       nsCSSRect& margin = aData->mMarginData->mMargin;
       if (margin.mLeft.GetUnit() == eCSSUnit_Null)
@@ -165,9 +164,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
         margin.mRight.SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
     }
 
-    mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
-    if (eHTMLUnit_Integer == value.GetUnit()) {
-      bodyMarginHeight = value.GetIntValue();
+    value = mPart->GetParsedAttr(nsHTMLAtoms::marginheight);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyMarginHeight = value->GetIntegerValue();
       if (bodyMarginHeight < 0) bodyMarginHeight = 0;
       nsCSSRect& margin = aData->mMarginData->mMargin;
       if (margin.mTop.GetUnit() == eCSSUnit_Null)
@@ -178,9 +177,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
     if (eCompatibility_NavQuirks == mode){
       // topmargin (IE-attribute)
-      mPart->GetHTMLAttribute(nsHTMLAtoms::topmargin, value);
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        bodyTopMargin = value.GetIntValue();
+      value = mPart->GetParsedAttr(nsHTMLAtoms::topmargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyTopMargin = value->GetIntegerValue();
         if (bodyTopMargin < 0) bodyTopMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mTop.GetUnit() == eCSSUnit_Null)
@@ -188,9 +187,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       // bottommargin (IE-attribute)
-      mPart->GetHTMLAttribute(nsHTMLAtoms::bottommargin, value);
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        bodyBottomMargin = value.GetIntValue();
+      value = mPart->GetParsedAttr(nsHTMLAtoms::bottommargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyBottomMargin = value->GetIntegerValue();
         if (bodyBottomMargin < 0) bodyBottomMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mBottom.GetUnit() == eCSSUnit_Null)
@@ -198,9 +197,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       // leftmargin (IE-attribute)
-      mPart->GetHTMLAttribute(nsHTMLAtoms::leftmargin, value);
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        bodyLeftMargin = value.GetIntValue();
+      value = mPart->GetParsedAttr(nsHTMLAtoms::leftmargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyLeftMargin = value->GetIntegerValue();
         if (bodyLeftMargin < 0) bodyLeftMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mLeft.GetUnit() == eCSSUnit_Null)
@@ -208,9 +207,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       }
 
       // rightmargin (IE-attribute)
-      mPart->GetHTMLAttribute(nsHTMLAtoms::rightmargin, value);
-      if (eHTMLUnit_Integer == value.GetUnit()) {
-        bodyRightMargin = value.GetIntValue();
+      value = mPart->GetParsedAttr(nsHTMLAtoms::rightmargin);
+      if (value && value->Type() == nsAttrValue::eInteger) {
+        bodyRightMargin = value->GetIntegerValue();
         if (bodyRightMargin < 0) bodyRightMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mRight.GetUnit() == eCSSUnit_Null)
