@@ -263,8 +263,10 @@ public:
 
   static int SameAsPreviousMap(int aIndex);
 
-  // This function creates a possibly adjusted font
-  HFONT CreateFontHandle(HDC aDC, LOGFONT* aLogFont);
+  // These functions create possibly adjusted fonts
+  HFONT CreateFontHandle(HDC aDC, nsString* aName, LOGFONT* aLogFont);
+  HFONT CreateFontHandle(HDC aDC, nsGlobalFont* aGlobalFont, LOGFONT* aLogFont);
+  HFONT CreateFontAdjustHandle(HDC aDC, LOGFONT* aLogFont);
   void InitMetricsFor(HDC aDC, nsFontWin* aFontWin);
 
 protected:
