@@ -553,9 +553,9 @@ nsAutoCompleteController::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString
   const PRUnichar* colID;
   col->GetIdConst(&colID);
   
-  if (colID.EqualsLiteral("treecolAutoCompleteValue"))
+  if (NS_LITERAL_STRING("treecolAutoCompleteValue").Equals(colID))
     GetValueAt(row, _retval);
-  else if(colID.EqualsLiteral("treecolAutoCompleteComment"))
+  else if (NS_LITERAL_STRING("treecolAutoCompleteComment").Equals(colID))
     GetCommentAt(row, _retval);
      
   return NS_OK;
