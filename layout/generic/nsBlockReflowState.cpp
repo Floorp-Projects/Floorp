@@ -1253,18 +1253,25 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
         nsLineData* prevLine = lastLine->mPrevLine;
 
         state.mY = prevLine->mBounds.YMost();
-
         if (!state.mUnconstrainedHeight) {
           state.mAvailSize.height -= state.mY;
         }
 
+        // XXX This isn't really right...
         state.mKidXMost = mRect.XMost();
 
-#if 0
-        // XXX Set this...
-        state.mPrevMaxNegBottomMargin = ?;
-        state.mPrevMaxPosBottomMargin = ?;
-#endif
+        // If the previous line is a block, then factor in its bottom margin
+        if (prevLine->mIsBlock) {
+          nsStyleSpacing* spacing;
+          nsIFrame*       kid = prevLine->mFirstChild;
+
+          kid->GetStyleData(kStyleSpacingSID, (nsStyleStruct*&)spacing);
+          if (spacing->mMargin.bottom < 0) {
+            state.mPrevMaxNegBottomMargin = -spacing->mMargin.bottom;
+          } else {
+            state.mPrevMaxPosBottomMargin = spacing->mMargin.bottom;
+          }
+        }
       }
 
       // Reflow unmapped children
