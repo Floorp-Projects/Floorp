@@ -3685,8 +3685,11 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         // XXX need a lookup function here; plus look ahead using the
         // text-runs
         if ((firstChar == '\'') || (firstChar == '\"')) {
-          wordLen = 2;
-          contentLen = 2;
+          if (contentLen > 1)
+          {
+            wordLen = 2;
+            contentLen = 2;
+          }
         }
         else {
           wordLen = 1;
