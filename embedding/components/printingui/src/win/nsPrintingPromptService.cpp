@@ -238,7 +238,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
 
 /* void showPageSetup (in nsIDOMWindow parent, in nsIPrintSettings printSettings); */
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
     NS_ENSURE_ARG(printSettings);
 

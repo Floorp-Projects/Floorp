@@ -98,9 +98,9 @@ nsPrintingPrompt::ShowProgress(nsIWebBrowserPrint *webBrowserPrint, nsIPrintSett
 
 /* void showPageSetup (in nsIPrintSettings printSettings); */
 NS_IMETHODIMP 
-nsPrintingPrompt::ShowPageSetup(nsIPrintSettings *printSettings)
+nsPrintingPrompt::ShowPageSetup(nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
-   return mPromptService->ShowPageSetup(mParent, printSettings);
+   return mPromptService->ShowPageSetup(mParent, printSettings, aObs);
 }
 
 /* void showPrinterProperties (in wstring printerName, in nsIPrintSettings printSettings); */

@@ -176,8 +176,11 @@ interface nsIPrintingPrompt : nsISupports
    *  Shows the print progress dialog
    *
    *  @param printSettings - PrintSettings for page setup (required)
+   *  @param aObs - An observer to know if the contents of the Print Settings 
+   *                object has changed while the dialog is being shown. 
+   *                For example, some platforms may implement an "Apply" button (not required)
    */
-  void showPageSetup(in nsIPrintSettings printSettings);
+  void showPageSetup(in nsIPrintSettings printSettings, in nsIObserver aObs);
 
   /**
    *  Sometimes platforms need to bring up a special properties dialog for showing
