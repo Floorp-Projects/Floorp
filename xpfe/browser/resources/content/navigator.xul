@@ -238,21 +238,24 @@ Contributor(s): ______________________________________. -->
         <button class="button-toolbar-1 top" id="reload-button" crop="right" observes="canReload" />
         <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" onclick="BrowserStop()"/>
     
-        <box class="box-toolbar-group" flex="1">
-          <menubutton class="menubutton-icon button-toolbar-3" id="sessionhist-popup">
-    			  <menupopup class="button-toolbar-3">
-    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" oncommand="setKeyword(0)"/>
-    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" oncommand="setKeyword(1)"/>
-    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&shopKeyword.label;" oncommand="setKeyword(2)"/>
-    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&careerKeyword.label;" oncommand="setKeyword(3)"/>
-    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" oncommand="setKeyword(4)"/>
-    			    <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" oncommand="setKeyword(5)"/>		 
-    			  </menupopup>
-    			</menubutton>
+
+          <box class="box-toolbar-group" flex="1">
+          <menubutton class="menubutton-icon button-toolbar-3" id="ubhist-keyword-popup">
+          <menupopup class="button-toolbar-3" oncreate="CreateUBHistoryMenu(event);" oncommand="ExecuteUBCommand(event);">
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&quoteKeyword.label;" keyword="quote"/>
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&localKeyword.label;" keyword="local"/>
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&shopKeyword.label;" keyword="shop"/>
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&careerKeyword.label;" keyword="career"/>
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&webmailKeyword.label;" keyword="webmail"/>
+              <menuitem class="button-toolbar-3 menuitem-non-iconic" value="&listKeywords.label;" keyword="list"/>                 
+              <menuseparator/>
+          </menupopup>
+          </menubutton>
+
          
           <box autostretch="never" valign="middle" flex="1">
       			<image id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
-            <textfield class="plain chromeclass-location" id="urlbar" onkeypress="if( event.which == 13 ) BrowserLoadURL();" flex="1"/>
+            <textfield class="plain chromeclass-location" id="urlbar" onkeypress="if( event.which == 13 ) { AddToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>
             <button class="button-toolbar-3" id="search-button" value="&searchButton.label;" oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" /> 
             <button class="button-toolbar-3" id="go-button" value="&goButton.label;" oncommand="BrowserLoadURL();" /> 
           </box>
