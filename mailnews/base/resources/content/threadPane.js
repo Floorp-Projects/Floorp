@@ -50,9 +50,10 @@ function ThreadPaneOnClick(event)
        outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
 
        // if the cell is in a "cycler" column
+       // or if the user double clicked on the twisty,
        // don't open the message in a new window
        var col = document.getElementById(colID.value);
-       if (col && col.getAttribute("cycler") != "true") {
+       if (col && col.getAttribute("cycler") != "true" && (childElt.value != "twisty")) {
          ThreadPaneDoubleClick();
        }
     }
