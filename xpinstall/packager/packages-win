@@ -199,6 +199,8 @@ bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsXmlRpcClient.js
 bin\plugins\npnul32.dll
+bin\components\xmlextras.xpt
+bin\components\xmlextras.dll
 
 ; chrome stuff
 bin\chrome\comm\*
