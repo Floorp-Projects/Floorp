@@ -23,6 +23,7 @@
 #include "nsRDFResource.h"
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
+#include "nsIRDFDelegateFactory.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
@@ -37,13 +38,20 @@ nsrefcnt nsRDFResource::gRDFServiceRefCnt = 0;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsRDFResource::nsRDFResource(void)
-    : mURI(nsnull)
+    : mURI(nsnull), mDelegates(nsnull)
 {
     NS_INIT_REFCNT();
 }
 
 nsRDFResource::~nsRDFResource(void)
 {
+    // Release all of the delegate objects
+    while (mDelegates) {
+        DelegateEntry* doomed = mDelegates;
+        mDelegates = mDelegates->mNext;
+        delete doomed;
+    }
+
     gRDFService->UnregisterResource(this);
 
     // N.B. that we need to free the URI *after* we un-cache the resource,
@@ -165,5 +173,86 @@ nsRDFResource::EqualsString(const char* aURI, PRBool* aResult)
     *aResult = (nsCRT::strcmp(aURI, mURI) == 0);
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
+{
+    NS_PRECONDITION(aKey != nsnull, "null ptr");
+    if (! aKey)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    *aResult = nsnull;
+
+    DelegateEntry* entry = mDelegates;
+    while (entry) {
+        if (entry->mKey == aKey) {
+            rv = entry->mDelegate->QueryInterface(aIID, aResult);
+            return rv;
+        }
+
+        entry = entry->mNext;
+    }
+
+    // Construct a ProgID of the form "component:/rdf/delegate/[key]/[scheme]
+    nsCAutoString progID("component://rdf/delegate-factory/");
+    progID.Append(aKey);
+    progID.Append("/");
+
+    for (const char* p = mURI; *p && *p != ':'; ++p)
+        progID.Append(*p);
+
+    nsCOMPtr<nsIRDFDelegateFactory> delegateFactory;
+    rv = nsComponentManager::CreateInstance(progID,
+                                            nsnull,
+                                            NS_GET_IID(nsIRDFDelegateFactory),
+                                            getter_AddRefs(delegateFactory));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = delegateFactory->CreateDelegate(this, aKey, aIID, aResult);
+    if (NS_FAILED(rv)) return rv;
+
+    // Okay, we've successfully created a delegate. Let's remember it.
+    entry = new DelegateEntry;
+    if (! entry) {
+        NS_RELEASE(*NS_REINTERPRET_CAST(nsISupports**, aResult));
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    entry->mKey      = aKey;
+    entry->mDelegate = do_QueryInterface(*NS_REINTERPRET_CAST(nsISupports**, aResult));
+    entry->mNext     = mDelegates;
+
+    mDelegates = entry;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRDFResource::ReleaseDelegate(const char* aKey)
+{
+    NS_PRECONDITION(aKey != nsnull, "null ptr");
+    if (! aKey)
+        return NS_ERROR_NULL_POINTER;
+
+    DelegateEntry* entry = mDelegates;
+    DelegateEntry** link = &mDelegates;
+
+    while (entry) {
+        if (entry->mKey == aKey) {
+            *link = entry->mNext;
+            delete entry;
+            return NS_OK;
+        }
+
+        link = &(entry->mNext);
+        entry = entry->mNext;
+    }
+
+    NS_WARNING("nsRDFResource::ReleaseDelegate() no delegate found");
+    return NS_OK;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
