@@ -194,9 +194,69 @@ sbShiftT,
 sbShiftT,
 sbShiftT,
 sbShiftT,
-0,
+tbShiftT,
 
 /* 0x30-0x37 */
+tbShiftT,
+tbShiftT,
+tbShiftT,
+0,
+0,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x38-0x3F */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x40-0x47 */
+0,
+0,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+
+/* 0x48-0x4F */
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+tbShiftT,
+
+/* 0x50-0x57 */
+tbShiftT,
+tbShiftT,
+tbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x58-0x5F */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+tbShiftT,
+tbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x60-0x67 */
 0,
 0,
 0,
@@ -206,7 +266,27 @@ sbShiftT,
 0,
 0,
 
-/* 0x38-0x3F */
+/* 0x68-0x6F */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x70-0x77 */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x78-0x7F */
 0,
 0,
 0,
@@ -214,7 +294,7 @@ sbShiftT,
 0,
 0,
 sbShiftT,
-0
+0,
 };
 
 /* This table is used for unicode to single encoding conversion */
@@ -287,11 +367,91 @@ sbShiftT,
 0,
 0,
 0,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x38-0x3F */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x40-0x47 */
+0,
+0,
+0,
+0,
+0,
 0,
 0,
 0,
 
-/* 0x38-0x3F */
+/* 0x48-0x4F */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x50-0x57 */
+0,
+0,
+0,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x58-0x5F */
+sbShiftT,
+sbShiftT,
+sbShiftT,
+0,
+0,
+sbShiftT,
+sbShiftT,
+sbShiftT,
+
+/* 0x60-0x67 */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x68-0x6F */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x70-0x77 */
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+0,
+
+/* 0x78-0x7F */
 0,
 0,
 0,
@@ -299,7 +459,7 @@ sbShiftT,
 0,
 0,
 sbShiftT,
-sbShiftT
+0,
 };
 
 PRIVATE UnicodeTableSet unicodetableset[] =
@@ -452,7 +612,7 @@ MODULE_PRIVATE UnicodeTableSet* GetUnicodeTableSet(uint16 csid)
 -----------------------------------------------------------------------------------*/
 MODULE_PRIVATE uShiftTable* GetShiftTableFromCsid(uint16 csid)
 {
-	return (uShiftTable*)(strShiftTable[csid & 0x3F]); 
+	return (uShiftTable*)(strShiftTable[csid & (MAXCSIDINTBL - 1)]); 
 }
 MODULE_PRIVATE uShiftTable* InfoToShiftTable(unsigned char info)
 {

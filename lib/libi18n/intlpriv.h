@@ -332,7 +332,7 @@ XP_END_PROTOS
 
 
 
-#define MAXCSIDINTBL	64
+#define MAXCSIDINTBL	128
 
 
 
