@@ -325,6 +325,17 @@ SWITCH: for ($::FORM{'knob'}) {
         my $newid = DBNameToIdAndCheck($newname, 1);
         DoComma();
         $::query .= "assigned_to = $newid";
+        if (Param("useqacontact")) {
+            SendSQL("select initialqacontact from components where program=" .
+                    SqlQuote($::FORM{'product'}) .
+                    " and value=" . SqlQuote($::FORM{'component'}));
+            my $qacontact = FetchOneColumn();
+            if (defined $qacontact && $qacontact ne "") {
+                my $newqa = DBNameToIdAndCheck($qacontact, 1);
+                DoComma();
+                $::query .= "qa_contact = $newqa";
+            }
+        }
         last SWITCH;
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
