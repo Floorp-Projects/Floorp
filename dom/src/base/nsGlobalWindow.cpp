@@ -78,6 +78,7 @@
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIJSContextStack.h"
+#include "nsIJSRuntimeService.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIPref.h"
 #include "nsIPresShell.h"
@@ -385,6 +386,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
      to the script object so it can be retrieved later, as the JS glue
      is wont to do. */
   if (!aDocShell && mContext) {
+    ClearAllTimeouts();
     if (mScriptObject) {
       // Indicate that the window is now closed. Since we've
       // cleared scope, we have to explicitly set a property.
@@ -3899,7 +3901,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
                                    nsIScriptContext *aContext)
 {
-  JSContext *cx;
+  JSRuntime *rt = nsnull;
 
   if (--aTimeout->ref_count > 0)
     return;
@@ -3907,20 +3909,43 @@ void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
   if (!aContext)
     aContext = mContext;
   if (aContext) {
+    JSContext *cx;
     cx = (JSContext *) aContext->GetNativeContext();
+    rt = ::JS_GetRuntime(cx);
+  } else {
+    /* XXX The timeout *must* be unrooted, even if !aContext. This can be
+       done without a JS context using the JSRuntime. This is safe enough,
+       but it would be better to drop all a window's timeouts before its
+       context is cleared. Bug 50705 describes a situation where we're not.
+       In that case, at the time the context is cleared, a timeout (actually
+       an Interval) is still active, but temporarily removed from the window's
+       list of timers (placed instead on the timer manager's list). This makes
+       the nearly handy ClearAllTimeouts routine useless, so we we settled on
+       using the JSRuntime rather than relying on the window having a context.
+       It would be good to remedy this workable but clumsy situation someday.
+     */
+    NS_WARNING("DropTimeout proceeding without context.");
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+    if (rtsvc)
+      rtsvc->GetRuntime(&rt);
+  }
 
-    if (aTimeout->expr)
-      ::JS_RemoveRoot(cx, &aTimeout->expr);
-    else if (aTimeout->funobj) {
-      ::JS_RemoveRoot(cx, &aTimeout->funobj);
-      if (aTimeout->argv) {
-        int i;
-        for (i = 0; i < aTimeout->argc; i++)
-          ::JS_RemoveRoot(cx, &aTimeout->argv[i]);
-        PR_FREEIF(aTimeout->argv);
-      }
+  NS_ASSERTION(rt, "DropTimeout with no JSRuntime. eek!");
+  if (!rt) // most unexpected. not much choice but to bail.
+    return;
+
+  if (aTimeout->expr)
+    ::JS_RemoveRootRT(rt, &aTimeout->expr);
+  else if (aTimeout->funobj) {
+    ::JS_RemoveRootRT(rt, &aTimeout->funobj);
+    if (aTimeout->argv) {
+      int i;
+      for (i = 0; i < aTimeout->argc; i++)
+        ::JS_RemoveRootRT(rt, &aTimeout->argv[i]);
+      PR_FREEIF(aTimeout->argv);
     }
   }
+
   if (aTimeout->timer) {
     aTimeout->timer->Cancel();
     aTimeout->timer = nsnull;
