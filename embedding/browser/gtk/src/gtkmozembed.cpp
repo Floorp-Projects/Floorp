@@ -43,7 +43,7 @@ public:
   nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
   nsVoidArray                 topLevelWindows;
   GdkSuperWin                *superwin;
-  nsCString		     mInitialURL;
+  nsCString		      mInitialURL;
 };
 
 /* signals */
@@ -310,7 +310,7 @@ gtk_moz_embed_realize(GtkWidget *widget)
   embed_private->webBrowser->SetParentURIContentListener(uriListener);
 
   // If an initial url was stored, load it
-  if (embed_private->mInitialURL)
+  if (embed_private->mInitialURL.Length() > 0)
   {
 	  const char * foo = (const char *) embed_private->mInitialURL;
 	  gtk_moz_embed_load_url (widget, foo);
