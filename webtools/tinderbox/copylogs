@@ -3,8 +3,7 @@
 $tree = 'SeaMonkey';
 
 for $br (last_successful_builds($tree)) {
-
-  next unless $br->{buildname} =~ /shrike.*\b(Clobber|Clbr)\b/;
+  next unless $br->{buildname} =~ /^$warning_buildnames_pat$/;
 
   my $logfile = "$tree/$br->{logfile}";
   unless (-e $logfile) {
