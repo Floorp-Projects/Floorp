@@ -105,7 +105,7 @@ inline nsresult nsICODecoder::SetImageData()
 {
   PRUint32 bpr;
   mFrame->GetImageBytesPerRow(&bpr);
-  for (PRUint32 offset = 0, PRUint32 i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
+  for (PRUint32 offset = 0, i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
     mFrame->SetImageData(mDecodedBuffer+offset, bpr, offset);
   return NS_OK;
 }
@@ -114,7 +114,7 @@ inline nsresult nsICODecoder::SetAlphaData()
 {
   PRUint32 bpr;
   mFrame->GetAlphaBytesPerRow(&bpr);
-  for (PRUint32 offset = 0, PRUint32 i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
+  for (PRUint32 offset = 0, i = 0; i < mDirEntry.mHeight; ++i, offset += bpr)
     mFrame->SetAlphaData(mAlphaBuffer+offset, bpr, offset);
   return NS_OK;
 }

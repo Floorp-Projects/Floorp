@@ -88,8 +88,8 @@ private:
   nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
   nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
   nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
-  nsresult SetData(PRUint8* aData);
-  nsresult SetAlphaData(PRUint8* aData);
+  nsresult SetImageData();
+  nsresult SetAlphaData();
 
 private:
   nsCOMPtr<imgIDecoderObserver> mObserver;
@@ -115,6 +115,9 @@ private:
   PRUint8* mRow; // Holds one raw line of the image
   PRUint32 mRowBytes; // How many bytes of the row were already received
   PRUint32 mCurLine;
+
+  PRUint8* mDecodedBuffer;
+  PRUint8* mAlphaBuffer;
 };
 
 
