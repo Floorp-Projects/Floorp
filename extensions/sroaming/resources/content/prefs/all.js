@@ -415,8 +415,8 @@ RoamingPrefs.prototype =
         text += "\n" + tech;
       GetPromptService().alert(window, dialogTitle, text);
     } catch(e) {
-      dump("Error while trying to display an error: " + e
-           + " (original error: " + prop + " " + tech + ")\n");
+      dumpError("Error while trying to display an error: " + e
+                + " (original error: " + prop + " " + tech + ")\n");
     }
   }
 }
