@@ -179,8 +179,7 @@ EventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-static PRBool
-OneTimeInit()
+void net_InitAsyncDNS()
 {
   static char *windowClass = "NETLIB:DNSWindow";
 
@@ -215,8 +214,6 @@ OneTimeInit()
   DNS_TRACE(DNS_TRACE_LOOKUPS,
             ("DNS lookup: hidden window=%p msg=%d",
              gDNSWindow, gMSGFoundDNS));
-
-  return NULL != gDNSWindow;
 }
 
 extern "C" int
@@ -231,12 +228,10 @@ NET_AsyncDNSLookup(void* aContext,
                    PRHostEnt** aHoststructPtrPtr,
                    PRFileDesc* aSocket)
 {
-  static PRBool firstTime = PR_TRUE;
-  if (firstTime) {
-    firstTime = PR_FALSE;
-    if (!OneTimeInit()) {
-      return -1;
-    }
+  /* DNS initialization failed... */
+  if (NULL == gDNSWindow) {
+    PR_ASSERT(0);
+    return -1;
   }
 
   *aHoststructPtrPtr = NULL;
