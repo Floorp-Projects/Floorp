@@ -60,20 +60,22 @@ sub filename {
     return $self->{'_FILENAME'};
 }
 
-# typically uou won't call this directly, but will ese ensureRead below.
+# typically you won't call this directly, but will use ensureRead below.
 sub read {
     my $self = shift;
+    my $settings;
+    eval {
+        $settings = $self->doRead($self->filename);
+    };
+    if ($@) {
+        $self->warn(3, $@);
+        return;
+    }
     $self->{'_DIRTY'} = undef; # to prevent recursion: eval -> propertySet -> ensureRead (dirty check) -> read -> eval
-    my $filename = $self->filename;
-    local *FILE; # ugh
-    $self->assert(open(FILE, "<$filename"), 1, "Could not open configuration file '$filename' for reading: $!");
-    local $/ = undef; # slurp entire file (no record delimiter)
-    my $settings = <FILE>;
-    $self->assert(close(FILE), 3, "Could not close configuration file '$filename': $!");
     if ($settings) {
         $settings =~ /^(.*)$/so;
         eval($1); # untaint the configuration file
-        $self->assert(defined($@), 1, "Error processing configuration file '$filename': $@");
+        $self->assert(defined($@), 1, 'Error processing configuration file \''.($self->filename).'\': '.$@);
     }
     $self->{'_DIRTY'} = 0;
 }
@@ -99,21 +101,16 @@ sub assumeRead {
 # DESTROY handler below.
 sub write {
     my $self = shift;
-    my $filename = $self->filename;
-    local *FILE; # ugh
-    $self->assert(open(FILE, ">$filename"), 1, "Could not open configuration file '$filename' for writing: $!");
-    $self->assert(FILE->print("# This is the configuration file.\n# You may edit this file, so long as it remains valid Perl.\n"), 1,
-                  "Could not store leading comments in '$filename': $!");
+    my $settings = "# This is the configuration file.\n# You may edit this file, so long as it remains valid Perl.\n";
     local $Data::Dumper::Terse = 1;
     foreach my $variable (sort(keys(%$self))) {
         if ($variable !~ /^_/o) { # we skip the internal variables (prefixed with '_')
             my $contents = Data::Dumper->Dump([$self->{$variable}]);
             chop($contents); # remove the newline
-            $self->assert(FILE->print("\$self->propertySet('$variable', $contents);\n"), 1,
-                          "Could not dump variable '$variable' to configuration file '$filename': $!");
+            $settings .= "\$self->propertySet('$variable', $contents);\n";
         }
     }
-    $self->assert(close(FILE), 1, "Could not close configuration file '$filename': $!");
+    $self->doWrite($self->filename, $settings);
     $self->{'_DIRTY'} = 0;
 }
 
@@ -142,4 +139,27 @@ sub DESTROY {
     if ($self->{'_DIRTY'}) {
         $self->write();
     }
+}
+
+
+# internal low-level implementation routines
+
+sub doRead {
+    my $self = shift;
+    my($filename) = @_;
+    local *FILE; # ugh
+    $self->assert(open(FILE, "<$filename"), 1, "Could not open configuration file '$filename' for reading: $!");
+    local $/ = undef; # slurp entire file (no record delimiter)
+    my $settings = <FILE>;
+    $self->assert(close(FILE), 3, "Could not close configuration file '$filename': $!");
+    return $settings;
+}
+
+sub doWrite {
+    my $self = shift;
+    my($filename, $contents) = @_;
+    local *FILE; # ugh
+    $self->assert(open(FILE, ">$filename"), 1, "Could not open configuration file '$filename' for writing: $!");
+    $self->assert(FILE->print($contents), 1, "Could not dump settings to configuration file '$filename': $!");
+    $self->assert(close(FILE), 1, "Could not close configuration file '$filename': $!");
 }
