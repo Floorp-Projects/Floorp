@@ -258,16 +258,6 @@ pref("font.scale.tt_bitmap.dark_text.gain", "0.8");
 //pref("font.directory.truetype.1", "/u/sam/tt_font1");
 //pref("font.directory.truetype.2", "/u/sam/tt_font2");
 //pref("font.directory.truetype.3", "/u/sam/tt_font3");
-pref("font.directory.truetype.1", "/home/jungshik/.fonts.ft2");
-pref("font.directory.truetype.2", "/usr/local/share/fonts/ttf");
-pref("font.directory.truetype.3", "/home/jungshik/.fonts.ft2/math/MathTTF");
-pref("font.directory.truetype.4", "/home/jungshik/.fonts.ft2/math");
-pref("font.directory.truetype.5", "/home/jungshik/.fonts.ft2/math/texcm-ttf");
-pref("font.directory.truetype.6", "/home/jungshik/.fonts.ft2/tamil");
-pref("font.directory.truetype.7", "/usr/share/fonts/TIS-620/TrueType");
-pref("font.directory.truetype.8", "/home/jungshik/.fonts.ft2/Indic");
-pref("font.directory.truetype.9", "/home/jungshik/.fonts.ft2/symbol");
-pref("font.directory.truetype.10", "/home/jungshik/.fonts.ft2/zh");
 pref("font.FreeType2.printing", true);
 
 // below a certian pixel size anti-aliased bitmat scaled fonts 
