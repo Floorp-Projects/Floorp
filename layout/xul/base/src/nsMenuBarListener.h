@@ -80,10 +80,10 @@ public:
   
   NS_DECL_ISUPPORTS
 
+  static PRBool IsAccessKeyPressed(nsIDOMKeyEvent* event);
+
 protected:
   static void InitAccessKey();
-
-  PRBool IsAccessKeyPressed(nsIDOMKeyEvent* event);
 
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
