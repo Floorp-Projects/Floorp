@@ -1914,15 +1914,16 @@ NS_IMETHODIMP
 nsSocketBOS::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aBytesWritten)
 {
     nsresult rv;
-    PRInt32 total;
+    PRInt32 total = 0;
+    PRInt32 written;
 
     LOG(("nsSocketBOS::Write [this=%x count=%u]\n", this, aCount));
 
 tryWrite:
-    total = PR_Write(mSock, aBuf, aCount);
-    LOG(("nsSocketBOS PR_Write [this=%x] wrote %d\n", this, total));
+    written = PR_Write(mSock, aBuf + total, aCount - total);
+    LOG(("nsSocketBOS PR_Write [this=%x] wrote %d of %d\n", this, total, aCount));
 
-    if (total < 0) {
+    if (written < 0) {
         if (PR_GetError() == PR_WOULD_BLOCK_ERROR) {
             //
             // Block until the socket is writable and then try again.
@@ -1938,6 +1939,15 @@ tryWrite:
         LOG(("nsSocketBOS::Write [this=%x] Write Failed  [rv=%x]\n", this, PR_GetError()));
         return NS_ERROR_FAILURE;
     }
+    
+    // up our total count since something was written
+    total += written;
+
+    // If not all the data has been written loop again.  This happens
+    // if this is a non blocking socket and there was a short write.
+    if ((PRUint32)total != aCount)
+      goto tryWrite;
+
     /*
     if (mTransport && total) {
         mTransport->OnStatus(this, mContext, NS_NET_STATUS_SENDING_TO);
