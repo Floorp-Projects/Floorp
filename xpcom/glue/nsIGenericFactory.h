@@ -56,7 +56,7 @@ public:
     NS_IMETHOD SetDestructor(DestructorProcPtr destructor) = 0;
 };
 
-extern nsresult
+extern NS_COM nsresult
 NS_NewGenericFactory(nsIGenericFactory* *result,
                      nsIGenericFactory::ConstructorProcPtr constructor,
                      nsIGenericFactory::DestructorProcPtr destructor = NULL);

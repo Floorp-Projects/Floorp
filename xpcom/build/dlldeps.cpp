@@ -41,6 +41,7 @@
 #include "nsInterfaceInfo.h"
 #include "xptcall.h"
 #include "nsIFileSpec.h"
+#include "nsIGenericFactory.h"
 
 extern void xptc_dummy();
 
@@ -79,4 +80,5 @@ void XXXNeverCalled()
     NS_NewFileSpec(NULL);
     xptc_dummy();
     XPTI_GetInterfaceInfoManager();
+    NS_NewGenericFactory(NULL, NULL, NULL);
 }

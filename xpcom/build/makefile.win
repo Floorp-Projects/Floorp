@@ -50,7 +50,7 @@ CPP_OBJS =                             \
 #CPP_OBJS = $(CPP_OBJS) .\$(OBJDIR)\nsConstructorPattern.obj
 !endif
 
-LLIBS =                                \
+OURLIBS =                              \
 	$(LIBNSPR)                     \
 	$(DIST)\lib\plc3.lib           \
         $(DIST)\lib\xpcombase_s.lib    \
@@ -64,6 +64,10 @@ LLIBS =                                \
         $(DIST)\lib\xpcomxptinfo_s.lib \
         $(DIST)\lib\xpcomproxy_s.lib   \
 	$(DIST)\lib\libreg32.lib       \
+	$(NULL)
+
+LLIBS =                                \
+        $(OURLIBS)                     \
         shell32.lib                    \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 	$(GLOWDIR)\glowcode.lib        \
