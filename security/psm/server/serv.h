@@ -121,7 +121,7 @@ int SSM_strncasecmp(const char *s1, const char *s2, size_t count);
  * #if 0 block a #if 1 block or add a -DPSM_LOG to the compile
  * line.
  */
-#if 0
+#if 1
 #define PSM_LOG 1
 #endif
 
