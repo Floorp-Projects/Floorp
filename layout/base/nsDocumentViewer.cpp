@@ -79,6 +79,7 @@
 #include "nsIDeviceContextSpecFactory.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+#include "nsView.h" // For nsView::GetViewFor
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -1845,15 +1846,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
     return rv;
 
   // if aParentWidget has a view, we'll hook our view manager up to its view tree
-  void* clientData;
-  nsIView* containerView = nsnull;
-  if (NS_SUCCEEDED(aParentWidget->GetClientData(clientData))) {
-    nsISupports* data = (nsISupports*)clientData;
-
-    if (data) {
-      CallQueryInterface(data, &containerView);
-    }
-  }
+  nsIView* containerView = nsView::GetViewFor(aParentWidget);
 
   if (containerView) {
     // see if the containerView has already been hooked into a foreign view manager hierarchy
