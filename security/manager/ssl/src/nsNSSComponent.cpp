@@ -1383,16 +1383,18 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
                                 PRInt32* aErrorCode,
                                 nsIPrincipal** aPrincipal)
 {
+  if (!aPrincipal || !aErrorCode) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aErrorCode = 0;
+  *aPrincipal = nsnull;
+
   nsNSSShutDownPreventionLock locker;
   SEC_PKCS7DecoderContext * p7_ctxt = nsnull;
   SEC_PKCS7ContentInfo * p7_info = nsnull; 
   unsigned char hash[SHA1_LENGTH]; 
   PRBool rv;
-
-  if (!aPrincipal || !aErrorCode)
-    return NS_ERROR_NULL_POINTER;
-  *aErrorCode = 0;
-  *aPrincipal = nsnull;
 
   p7_ctxt = SEC_PKCS7DecoderStart(ContentCallback,
                         nsnull,
@@ -1442,8 +1444,12 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
   // Get the signing cert //
   CERTCertificate *cert = p7_info->content.signedData->signerInfos[0]->cert;
   if (cert) {
-    nsresult rv2;
     nsCOMPtr<nsIX509Cert> pCert = new nsNSSCertificate(cert);
+    if (!pCert) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsresult rv2;
     if (!mScriptSecurityManager) {
       nsAutoLock lock(mutex);
       // re-test the condition to prevent double initialization
@@ -1453,24 +1459,24 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
         if (NS_FAILED(rv2)) return rv2;
       }
     }
+
     //-- Create a certificate principal with id and organization data
     nsAutoString fingerprint;
     rv2 = pCert->GetSha1Fingerprint(fingerprint);
-    NS_LossyConvertUCS2toASCII fingerprintStr(fingerprint);
     if (NS_FAILED(rv2)) return rv2;
     nsCOMPtr<nsIPrincipal> certPrincipal;
-    rv2 = mScriptSecurityManager->GetCertificatePrincipal(fingerprintStr.get(), nsnull,
-                                                          getter_AddRefs(certPrincipal));
+    rv2 = mScriptSecurityManager->
+      GetCertificatePrincipal(NS_LossyConvertUTF16toASCII(fingerprint).get(),
+                              nsnull, getter_AddRefs(certPrincipal));
     if (NS_FAILED(rv2) || !certPrincipal) return rv2;
 
     nsAutoString orgName;
     rv2 = pCert->GetOrganization(orgName);
     if (NS_FAILED(rv2)) return rv2;
-    NS_LossyConvertUCS2toASCII  orgNameStr(orgName);
-    rv2 = certPrincipal->SetCommonName(orgNameStr.get());
+    rv2 = certPrincipal->SetCommonName(NS_LossyConvertUTF16toASCII(orgName).get());
     if (NS_FAILED(rv2)) return rv2;
 
-    *aPrincipal = certPrincipal;
+    NS_ADDREF(*aPrincipal = certPrincipal);
   }
 
   if (p7_info) {
