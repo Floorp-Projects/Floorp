@@ -185,6 +185,24 @@ PRIVATE int32 VNIextended_VIS[118] =
        213255,216187,217186,219188,239254,245222,248182,249190,
        251183,239241,245230,248215,249209,251216 };
  
+PRIVATE uint16 VIS_VNI[128] =          /*** 128 to 255 ***/
+     { 0xcf41,0xc941,0xc841,0xcb41,0xc141,0xc041,0xc541,0xc441,
+       0xd545,0xcf45,0xc145,0xc045,0xc545,0xc345,0xc445,0xc14f,
+       0xc04f,0xc54f,0xc34f,0xc44f,0xcfd4,0xd9d4,0xd8d4,0xdbd4,
+       0x00d2,0xdb4f,0xcf4f,0x00c6,0xdb55,0xd555,0xcf55,0xd859,
+       0xd54f,0xe961,0xe861,0xeb61,0xe161,0xe061,0xe561,0xe461,
+       0xf565,0xef65,0xe165,0xe065,0xe565,0xe365,0xe465,0xe16f,
+       0xe06f,0xe56f,0xe36f,0xd5d4,0x00d4,0xe46f,0xf8f4,0xfbf4,
+       0x00f2,0xcfd6,0xd9d6,0xd8d6,0xdbd6,0x00f4,0xf9f4,0x00d6,
+       0xd841,0xd941,0xc241,0xd541,0xdb41,0xca41,0xfa61,0xfc61,
+       0xd845,0xd945,0xc245,0xdb45,0x00cc,0x00cd,0x00d3,0xf879,
+       0x00d1,0xf9f6,0xd84f,0xd94f,0xc24f,0xef61,0xfb79,0xf8f6,
+       0xfbf6,0xd855,0xd955,0xf579,0x00ee,0xd959,0xf5f4,0x00f6,
+       0xf861,0xf961,0xe261,0xf561,0xfb61,0xea61,0xf5f6,0xe361,
+       0xf865,0xf965,0xe265,0xfb65,0x00ec,0x00ed,0x00f3,0x00e6,
+       0x00f1,0xeff6,0xf86f,0xf96f,0xe26f,0xf56f,0xfb6f,0xef6f,
+       0xef75,0xf875,0xf975,0xf575,0xfb75,0xf979,0xeff4,0xd5d6 };
+ 
 PRIVATE unsigned char cVIQRType( unsigned char c);
 PRIVATE unsigned char IsVIQRWord(const unsigned char *s,
 				int32 len_s,
@@ -208,6 +226,9 @@ PRIVATE int32 S_VISCII_to_VIQR( const unsigned char *frombuffer,
 PRIVATE int32 S_VNI_to_VISCII(  const unsigned char *frombuffer,
 				unsigned char *tobuffer,
 				int32 maxsz);
+PRIVATE int32 S_VISCII_to_VNI( 	const unsigned char *frombuffer,
+				unsigned char *tobuffer,
+				int32 maxsz);
 PRIVATE unsigned char *xlat_vis_ucs2_X(CCCDataObject obj,
                                               unsigned char *buf);
 PRIVATE unsigned char *xlat_X_ucs2_vis(CCCDataObject obj,
@@ -223,6 +244,9 @@ PRIVATE unsigned char *xlat_vni_2_viscii (
                                          int32 vni_bufsz);
 PRIVATE unsigned char *xlat_viscii_2_viqr (
                                           CCCDataObject obj,
+                                          const unsigned char *vis_buf,
+                                          int32 vis_bufsz);
+PRIVATE unsigned char *xlat_viscii_2_vni ( CCCDataObject obj,
                                           const unsigned char *vis_buf,
                                           int32 vis_bufsz);
 /**********************************************************************/
@@ -607,6 +631,44 @@ PRIVATE int32 S_VNI_to_VISCII(  const unsigned char *frombuffer,
 }
  
 /**********************************************************************/
+/*** Function: S_VISCII_to_VNI()                                    ***/
+/*** Purpose:  Converts a VISCII string to a VNI string             ***/
+/*** Note:     tobuffer must have size at least 2 times bigger than ***/
+/*** ----      than frombuffer (1-byte charset -> 2-byte charset)   ***/
+/*** Implementer:    Vuong Nguyen (vlangsj@pluto.ftos.net)          ***/
+/**********************************************************************/
+PRIVATE int32 S_VISCII_to_VNI( 	const unsigned char *frombuffer,
+				unsigned char *tobuffer,
+				int32 maxsz)
+{    unsigned char  c;
+     uint16 idex;
+     int32 i, ctr;
+ 
+     ctr = 0;
+     for (i = 0;(i < maxsz) && ('\0' != (c = (unsigned char) frombuffer[i])); i++) {
+          idex = 0;
+          if (c < 32)
+               switch (c) {
+                   case  2: idex = 0xda41; break;
+                   case  5: idex = 0xdc41; break;
+                   case  6: idex = 0xc341; break;
+                   case 20: idex = 0xdb59; break;
+                   case 25: idex = 0xd559; break;
+                   case 30: c = 0xCE;      break;
+               }
+          else if (c > 127) idex = VIS_VNI[c-128];
+          if (idex) {
+               tobuffer[ctr++] = (unsigned char) (idex & 0xFF);
+               c = (unsigned char) (idex >> 8);
+               if (c) tobuffer[ctr++] = c;
+          }
+          else tobuffer[ctr++] = c;
+     }
+     tobuffer[ctr] = 0;
+     return(ctr);
+}
+ 
+/**********************************************************************/
 /*** Function:  xlat_vis_ucs2_X()                                   ***/
 /*** Purpose:   Converts a converted temporary VISCII buffer to a   ***/
 /*** -------    to_charset via mz_AnyToAnyThroughUCS2               ***/
@@ -695,6 +757,37 @@ PRIVATE unsigned char *xlat_vni_2_viscii (
     vis_bufsz = S_VNI_to_VISCII( vni_buf, vis_buf, vni_bufsz);
     INTL_SetCCCLen(obj, vis_bufsz);   /* length not counting null */
     return(vis_buf);
+}
+ 
+/**********************************************************************/
+/*** Function:  xlat_viscii_2_vni()                                 ***/
+/*** Purpose:   Converts a VISCII buffer to VNI buffer              ***/
+/*** Arguments:   vis_buf:     Ptr to a buf of VISCII chars         ***/
+/*** ---------    vis_bufsize: Size in bytes of vis_buf             ***/
+/***              uncvtbuf:    We temparoraly ignore the            ***/
+/***                           un-converted buffer now.             ***/
+/*** Returns:   Returns NULL on failure, otherwise it returns a     ***/
+/*** -------    pointer to a buffer converted characters.           ***/
+/***            Caller must XP_FREE() this memory.                  ***/
+/*** Implementer:    Vuong Nguyen (vlangsj@pluto.ftos.net)          ***/
+/**********************************************************************/
+PRIVATE unsigned char *xlat_viscii_2_vni (
+                                          CCCDataObject obj,
+                                          const unsigned char *vis_buf,
+                                          int32 vis_bufsz)
+{
+    unsigned char *vni_buf = NULL;
+    int32          vni_bufsz;
+ 
+    /* Need to double the buffer, since VNI is (1 to 2)-bytes charset */
+    vni_bufsz = (vis_bufsz * 2) + 1;
+    if ((vni_buf = (unsigned char *)XP_ALLOC(vni_bufsz)) == (unsigned char *)NULL) {
+            INTL_SetCCCRetval(obj, MK_OUT_OF_MEMORY);
+            return(NULL);
+    }
+    vni_bufsz = S_VISCII_to_VNI( vis_buf, vni_buf, vis_bufsz);
+    INTL_SetCCCLen(obj, vni_bufsz);   /* length not counting null */
+    return(vni_buf);
 }
  
 /**********************************************************************/
@@ -797,8 +890,8 @@ MODULE_PRIVATE unsigned char *viet_any_2_viqr (
         default:  /*** A via-UCS2 conversion is needed        ***/
                   out_buf = xlat_X_ucs2_vis(obj, in_buf, in_bufsz);
     }
-    if (use_tmp_mem) bufsz = INTL_GetCCCLen(obj);
     if (out_buf) {
+        if (use_tmp_mem) bufsz = INTL_GetCCCLen(obj);
         viqr_buf = xlat_viscii_2_viqr(obj, out_buf, bufsz);
         if (use_tmp_mem) {     /*** VIQR allocates memory itself so  ***/
             XP_FREE(out_buf);  /*** we need to free the temp VIS buf ***/
@@ -808,3 +901,42 @@ MODULE_PRIVATE unsigned char *viet_any_2_viqr (
     return(out_buf);
 }
  
+/**********************************************************************/
+/*** Function:  viet_any_2_vni()                                    ***/
+/*** Purpose:   Converts a from_charset buffer to a VNI buffer      ***/
+/**********************************************************************/
+MODULE_PRIVATE unsigned char *viet_any_2_vni (
+                                          CCCDataObject obj,
+                                          const unsigned char *in_buf,
+                                          int32 in_bufsz)
+{
+    unsigned char *out_buf, *vni_buf;
+    uint32 use_tmp_mem, bufsz, fcsid;
+ 
+    fcsid = INTL_GetCCCFromCSID(obj);
+    use_tmp_mem = 1; /*** Assume we will use a temporary VIS buf ***/
+    switch (fcsid) {
+        case CS_VIET_VISCII:
+                  /*** No intermediate conversion is needed ***/
+                  out_buf = (unsigned char *) in_buf;
+                  bufsz = in_bufsz;
+                  use_tmp_mem = 0;
+                  break;
+        case CS_VIET_VIQR:
+                  /*** This is multi-bytes charset, cannot convert ***/
+                  /*** via UCS2, so we use our internal conversion ***/
+                  out_buf = xlat_viqr_2_viscii(obj,in_buf,in_bufsz);
+                  break;
+        default:  /*** A via-UCS2 conversion is needed        ***/
+                  out_buf = xlat_X_ucs2_vis(obj, in_buf, in_bufsz);
+    }
+    if (out_buf) {
+        if (use_tmp_mem) bufsz = INTL_GetCCCLen(obj);
+        vni_buf = xlat_viscii_2_vni(obj, out_buf, bufsz);
+        if (use_tmp_mem) {     /*** VNI allocates memory itself so   ***/
+            XP_FREE(out_buf);  /*** we need to free the temp VIS buf ***/
+        }
+        out_buf = vni_buf;
+    }
+    return(out_buf);
+}
