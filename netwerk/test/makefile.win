@@ -29,7 +29,8 @@ PROG2 = .\$(OBJDIR)\TestSocketInput.exe
 PROG3 = .\$(OBJDIR)\TestSocketIO.exe
 PROG4 = .\$(OBJDIR)\TestProtocols.exe
 PROG5 = .\$(OBJDIR)\TestSocketTransport.exe
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5)
+PROG6 = .\$(OBJDIR)\urltest.exe
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -81,3 +82,5 @@ $(PROG3): $(OBJDIR) TestSocketIO.cpp
 $(PROG4): $(OBJDIR) TestProtocols.cpp
 
 $(PROG5): $(OBJDIR) TestSocketTransport.cpp
+
+$(PROG6): $(OBJDIR) urltest.cpp
