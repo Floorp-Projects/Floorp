@@ -106,6 +106,7 @@ protected:
    PRBool                  mChromeLoaded; // True when chrome has loaded
    PRBool                  mShowAfterLoad;
    PRBool                  mIntrinsicallySized; 
+   PRBool                  mCenterAfterLoad;
    unsigned long           mZlevel;
 };
 
