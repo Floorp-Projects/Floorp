@@ -72,11 +72,18 @@ class nsCppSharedAllocator
           nsAllocator::Free(p);
         }
 
+#if 0
+				/*
+					Hmmm.  Some platforms don't seem to have placement |new|.  I'll comment this out
+					temporarily until I can come up with a fix.
+				*/
+
       void
       construct( pointer p, const T& val )
         {
           new (p) T(val);
         }
+#endif
       
       void
       destroy( pointer p )
