@@ -31,10 +31,19 @@ nsEventQueueImpl::nsEventQueueImpl()
 {
   NS_INIT_REFCNT();
   AddRef(); 
-  // eventqueue ownership model is a little unusual. it addrefs
-  // itself, but when linked into a chain after the head, it releases
-  // itself, so when it goes dark and empty (unused) it will be
-  // deleted.
+  /* The slightly weird ownership model for eventqueues goes like this:
+     there's an addref from the factory generally held by whoever asked for
+     the queue. The queue addrefs itself (right here) and releases itself
+     when it goes dark and empty. Chained queues also hold references to
+     their immediate elder link, because we have code that assumes the random
+     release of a queue can't break a chain earlier than our current pointer.
+     A queue releases itself immediately upon being chained, dropping
+     the addref given it by the factory. Only the references held to it by
+     a younger chained queue (and from the outside), and this one here in the
+     constructor, keep it alive. The release when it goes dark and empty
+     will queue it, as it were, for destruction.
+     (A dark queue no longer accepts events, an empty one has none.)
+  */
 
   mEventQueue = NULL;
   mYoungerQueue = NULL;
@@ -179,6 +188,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
   PL_ProcessPendingEvents(mEventQueue);
+  CheckForDeactivation();
   return NS_OK;
 }
 
@@ -250,7 +260,8 @@ nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
 */
   rv = NS_ERROR_NO_INTERFACE;
 
-  // XXX probably wants a threadlock
+  // (be careful doing this outside nsEventQueueService's mEventQMonitor)
+
   GetYoungest(&end); // addrefs. released by Unlink.
   nsCOMPtr<nsPIEventQueueChain> endChain(do_QueryInterface(end));
   if (endChain) {
@@ -268,7 +279,7 @@ nsEventQueueImpl::Unlink()
   nsPIEventQueueChain *young = mYoungerQueue,
                       *old = mElderQueue;
 
-  // this is probably OK, but for now let's at least know if it happens
+  // this is probably OK, but shouldn't happen by design, so tell me if it does
   NS_ASSERTION(!mYoungerQueue, "event queue chain broken in middle");
 
   // break links early in case the Release cascades back onto us
@@ -304,10 +315,12 @@ nsEventQueueImpl::GetYoungestActive(nsIEventQueue **aQueue)
 
   if (mYoungerQueue)
     mYoungerQueue->GetYoungestActive(&answer);
-  if (answer == NULL && mAcceptingEvents && mCouldHaveEvents) {
-    answer = NS_STATIC_CAST(nsIEventQueue *, this);
-    NS_ADDREF(answer);
-  }
+  if (answer == NULL)
+    if (mAcceptingEvents && mCouldHaveEvents) {
+      answer = NS_STATIC_CAST(nsIEventQueue *, this);
+      NS_ADDREF(answer);
+    } else
+      CheckForDeactivation();
   *aQueue = answer;
   return NS_OK;
 }
