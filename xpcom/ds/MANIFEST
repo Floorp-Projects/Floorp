@@ -34,6 +34,7 @@ nsVector.h
 nsVoidArray.h
 nsVoidBTree.h
 nsXPIDLString.h
+pldhash.h
 plvector.h
 nsTextFormater.h
 nsTextFormatter.h
