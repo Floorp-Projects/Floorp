@@ -1966,16 +1966,16 @@ bill_to_company
 BillTo.CompanyName
 
 bill_to_company_phone_ac
-Business.Phone.LocCode
+BillTo.Phone.LocCode
 
 bill_to_company_phone_prefix
-Business.Phone.Number.Prefix
+BillTo.Phone.Number.Prefix
 
 bill_to_company_phone_suffix
-Business.Phone.Number.Suffix
+BillTo.Phone.Number.Suffix
 
 bill_to_company_phone_ext
-Business.Phone.Extension
+BillTo.Phone.Extension
 
 bill_to_fax_ac
 BillTo.Fax.LocCode
@@ -2020,16 +2020,16 @@ ship_to_company
 ShipTo.CompanyName
 
 ship_to_company_phone_ac
-Business.Phone.LocCode
+ShipTo.Phone.LocCode
 
 ship_to_company_phone_prefix
-Business.Phone.Number.Prefix
+ShipTo.Phone.Number.Prefix
 
 ship_to_company_phone_suffix
-Business.Phone.Number.Suffix
+ShipTo.Phone.Number.Suffix
 
 ship_to_company_phone_ext
-Business.Phone.Extension
+ShipTo.Phone.Extension
 
 payment_method
 Card.Type
