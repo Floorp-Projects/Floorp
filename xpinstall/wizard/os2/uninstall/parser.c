@@ -361,7 +361,7 @@ ULONG GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBu
     while(bFound)
     {
        memset(szNumber, 0, sizeof(szNumber));
-      if((stricmp(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+      if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
       {
         strcpy(szNumber, &fdFile.achName[iFilenameOnlyLen]);
         ulNumber = atoi(szNumber);
