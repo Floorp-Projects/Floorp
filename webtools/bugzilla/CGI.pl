@@ -173,7 +173,7 @@ sub ValidateBugID {
     FetchOneColumn()
       || ThrowUserError("invalid_bug_id_non_existent", {'bug_id' => $id});
 
-    return if ($field eq "dependson" || $field eq "blocked");
+    return if (defined $field && ($field eq "dependson" || $field eq "blocked"));
     
     return if Bugzilla->user->can_see_bug($id);
 
