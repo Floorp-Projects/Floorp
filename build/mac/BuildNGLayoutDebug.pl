@@ -20,6 +20,7 @@
 #
 # nglayout build script (debug)
 #
+use Mac::Processes;
 use NGLayoutBuildList;
 use Cwd;
 use Moz;
@@ -45,14 +46,9 @@ $build{nglayout}= 0;
 #
 
 @choices = ("pull_and_build_all", 
-						"pull_all", 
-						"build_all",  
-						"pull_nglayout", 
-						"build_dist", 
-						"build_projects");
+						"build_all");
 #damn, this does not work on 
-if (0)
-{
+
   while (GetFrontProcess	() !=  GetCurrentProcess())
   {
 	   SetFrontProcess( GetCurrentProcess() );
@@ -67,35 +63,12 @@ if (0)
 			$pull{all} = 1;
 			$build{all} = 1;
 		}
-		elsif ($i eq "pull_all")
-		{
-			$pull{all} = 1;
-		}
 		elsif ($i eq "build_all")
 		{
 			$build{all} = 1;
 		}
-		elsif ($i eq "build_dist")
-		{
-			$build{dist} = 1;
-		}
-		elsif ($i eq "build_projects")
-		{
-			$build{projects} = 1;
-		}
+
 	}
-}
-else
-{
-	$pull{all} = 1;
-	$build{all} = 1;
-#	$pull{netlib} = 1;
-#	$pull{nglayout} = 1;
-#	$build{common} = 1;
-#	$build{nglayout} = 1;
-# $build{dist} = 1;
-#	$pull{nglayout} = 1;
-}
 
 if ($pull{all})
 {
@@ -123,7 +96,10 @@ Moz::StopForErrors();
 
 #OpenErrorLog("::NGLayoutBuildLog");
 OpenErrorLog(":::Mozilla.BuildLog");		# Tinderbox requires that name
-Checkout();
+
+if ($pull{all}) { 
+   Checkout();
+}
 
 chdir($MOZ_SRC);
 BuildDist();
