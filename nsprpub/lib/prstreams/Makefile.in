@@ -42,7 +42,6 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifndef USE_AUTOCONF
 # Disable optimization of the nspr on SunOS4.1.3
 ifeq ($(OS_ARCH),SunOS)
     ifeq ($(OS_RELEASE),4.1.3_U1)
@@ -69,9 +68,8 @@ endif
 ifeq ($(OS_ARCH), BeOS)
     CFLAGS += -frtti -fexceptions
 endif
-endif # !USE_AUTOCONF
 
-INCLUDES = -I$(includedir)
+INCLUDES = -I$(dist_includedir)
 
 HEADERS = $(wildcard $(srcdir)/*.h)
 
@@ -85,29 +83,20 @@ CXXSRCS = \
 
 OBJS = $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)) $(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
-ifndef USE_AUTOCONF
+LIBRARY_NAME    = prstrms
+LIBRARY_VERSION = $(MOD_MAJOR_VERSION)
+
+RELEASE_HEADERS = $(HEADERS)
+RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
+RELEASE_LIBS    = $(TARGETS)
+
+include $(topsrcdir)/config/rules.mk
+
 ifeq ($(OS_ARCH), WINNT)
-    ifeq ($(OS_TARGET), WIN16)
-        EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).lib
-    else
         DLLBASE=/BASE:0x30000000
         RES=$(OBJDIR)/prstrms.res
         RESNAME=prstrms.rc
-        OS_LIBS = user32.lib
-        ifeq ($(OS_TARGET), WIN95)
-            EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).lib
-        else
-            EXTRA_LIBS = $(libdir)/libnspr$(MOD_VERSION).lib
-        endif
-    endif
 else
-    ifeq ($(OS_ARCH),OS2)
-      ifeq ($(MOZ_OS2_TOOLS),VACPP)
-         EXTRA_LIBS = $(libdir)/nspr$(MOD_VERSION).$(LIB_SUFFIX)
-      else
-         EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION) -lstdcpp
-      endif
-    else
     ifeq ($(OS_ARCH), AIX)
       ifeq ($(OS_RELEASE), 4.1)
         ifeq ($(CLASSIC_NSPR),1)
@@ -126,12 +115,6 @@ else
         OS_LIBS += -ldl
       endif
     endif
-    ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
-        EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION)_shr
-    else
-        EXTRA_LIBS = -L$(libdir) -lnspr$(MOD_VERSION)
-    endif
-endif
 endif
 
 # On NCR and SCOOS, we can't link with extra libraries when
@@ -145,26 +128,23 @@ ifeq ($(OS_ARCH),SCOOS)
     EXTRA_LIBS =
 endif
 ifeq ($(OS_ARCH),BeOS)
-    EXTRA_LIBS = -lstdc++.r4 -L$(libdir) -lnspr$(MOD_VERSION)
+    EXTRA_LIBS = -lstdc++.r4 -L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)
 endif
 
 ifeq ($(OS_ARCH), UNIXWARE)
     OS_LIBS += -lC
 endif
-endif # !USE_AUTOCONF
 
-ifdef RESOLVE_LINK_SYMBOLS
-EXTRA_LIBS := -L$(libdir) -lnspr$(MOD_VERSION)
+ifeq ($(OS_ARCH),WINNT)
+OS_LIBS	+= user32.lib
 endif
 
-LIBRARY_NAME    = prstrms
-LIBRARY_VERSION = $(MOD_VERSION)
+EXTRA_LIBS = $(LIBNSPR)
 
-RELEASE_HEADERS = $(HEADERS)
-RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
-RELEASE_LIBS    = $(TARGETS)
+ifdef RESOLVE_LINK_SYMBOLS
+EXTRA_LIBS += $(OS_LIBS)
+endif
 
-include $(topsrcdir)/config/rules.mk
 
 #
 # Version information generation (begin)
@@ -198,9 +178,9 @@ ifeq ($(OS_ARCH), WINNT)
 	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
 else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)
-	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) $<
 else
-	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) plvrsion.c
+	$(CC) -o $@ -c $(CFLAGS) -I$(OBJDIR) $<
 endif
 endif
 #
@@ -208,21 +188,21 @@ endif
 #
 
 export:: $(TARGETS) $(HEADERS)
-	$(INSTALL) -m 444 $(HEADERS) $(includedir)
-	$(INSTALL) -m 444 $(TARGETS) $(libdir)
+	$(INSTALL) -m 444 $(HEADERS) $(dist_includedir)
+	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
 ifeq ($(OS_ARCH),OS2)
-	$(INSTALL) -m 444 $(TARGETS) $(bindir)
+	$(INSTALL) -m 444 $(TARGETS) $(dist_bindir)
 endif
 ifeq ($(OS_ARCH),HP-UX)
 ifdef SHARED_LIBRARY
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(libdir)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_libdir)
 endif
 endif
 ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(libdir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_libdir)
 ifdef SHARED_LIBRARY
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(libdir)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(bindir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_libdir)
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(dist_bindir)
 endif
 endif
 
