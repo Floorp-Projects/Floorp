@@ -417,8 +417,7 @@ sub print_table_footer {
     close FOOTER;
   }
   print "<p><a href='${rel_path}admintree.cgi?tree=$tree'>",
-        "Administrate Tinderbox Trees</a><br>";
-  print "<br><br>";
+        "Administrate Tinderbox Trees</a><br>\n";
 }
 
 sub open_showbuilds_href {
@@ -466,8 +465,7 @@ sub who_menu {
   $qr = "${rel_path}../registry/who.cgi?email=$who"
       . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
 
-  return "<a href='$qr' onclick=\"return js_who_menu("
-        ."$td->{num},'$who',event,$mindate,$maxdate);\">";
+  return "<a href='$qr' onclick=\"who(event); return false;\">";
 }
 
 # Check to see if anyone checked in during time slot.
@@ -523,10 +521,7 @@ sub print_javascript {
       window.event = 0;
     }
 
-    function js_who_menu(tree,n,d,mindate,maxdate) {
-      var who_link = "http://cvs-mirror.mozilla.org/webtools/registry/who.cgi"
-                   + "?email=" + escape(n)
-                   + "&d=$cvs_module|$cvs_branch|$cvs_root|" + mindate + "|" + maxdate;
+    function who(d) {
 
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
@@ -535,7 +530,7 @@ sub print_javascript {
       }
 
       var l = document.layers['popup'];
-      l.src = who_link;
+      l.src = d.target.href;
       l.top = d.target.y - 6;
       l.left = d.target.x - 6;
       if (l.left + l.clipWidth > window.width) {
