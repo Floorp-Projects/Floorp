@@ -87,7 +87,50 @@ struct BufioFileStruct
 static PRBool _bufio_loadBuf( BufioFile* file, PRUint32 count );
 static int    _bufio_flushBuf( BufioFile* file );
 
+#ifdef XP_OS2
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <share.h>
+#include <io.h>
 
+FILE* os2_fileopen(const char* name, const char* mode)
+{
+    int access = O_RDWR;
+    int descriptor;
+    int pmode = 0;
+
+    /* Fail if only one character is passed in - this shouldn't happen */
+    if (mode[1] == '\0') {
+        return NULL;
+    }
+    /* Only possible options are wb+, rb+, wb and rb */
+    if (mode[0] == 'w' && mode[1] == 'b') {
+        access |= (O_TRUNC | O_CREAT);
+        if (mode[2] == '+') {
+            access |= O_RDWR;
+            pmode = S_IREAD | S_IWRITE;
+        } else {
+            access |= O_WRONLY;
+            pmode = S_IWRITE;
+        }
+    }
+    if (mode[0] == 'r' && mode[1] == 'b') {
+        if (mode[2] == '+') {
+            access |= O_RDWR;
+            pmode = S_IREAD | S_IWRITE;
+        } else {
+            access = O_RDONLY;
+            pmode = S_IREAD;
+        }
+    }
+
+    descriptor = sopen(name, access, SH_DENYNO, pmode);
+    if (descriptor != -1) {
+        return fdopen(descriptor, mode);
+    }
+    return NULL;
+}
+#endif
 
 /** 
  * like fopen() this routine takes *native* filenames, not NSPR names.
@@ -97,7 +140,11 @@ BufioFile*  bufio_Open(const char* name, const char* mode)
     FILE        *fd;
     BufioFile   *file = NULL;
 
+#ifdef XP_OS2
+    fd = os2_fileopen( name, mode );
+#else
     fd = fopen( name, mode );
+#endif
     
     if ( fd )
     {
