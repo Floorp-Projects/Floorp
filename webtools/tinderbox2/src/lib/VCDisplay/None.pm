@@ -6,8 +6,8 @@
 # cvsquery an we may need to generalize the interfaces in the future
 # to accomidate more VC systems.
 
-# $Revision: 1.7 $ 
-# $Date: 2003/01/19 17:15:41 $ 
+# $Revision: 1.8 $ 
+# $Date: 2003/04/20 20:34:02 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/VCDisplay/None.pm,v $ 
 # $Name:  $ 
@@ -76,8 +76,8 @@ sub source {
   }
 
   my $output = '';
-  if ($args{"alt_linktxt"}) {
-      $output = $args{"alt_linktxt"};
+  if ($args{"linktxt"}) {
+      $output = $args{"linktxt"};
   }
 
   return $output;
@@ -108,8 +108,8 @@ sub guess {
   }
 
   my $output = '';
-  if ($args{"alt_linktxt"}) {
-      $output = $args{"alt_linktxt"};
+  if ($args{"linktxt"}) {
+      $output = $args{"linktxt"};
   }
 
   return $output;
@@ -131,30 +131,28 @@ sub query {
     ($args{'tree'} && $args{'linktxt'}) ||
       die("function VCDisplay::query, not called with enough arguments ");
     
-    ($args{'mindate'} || $args{'who'}) || 
-      die("function VCDisplay::query, not called with enough arguments ");
-    
     (TreeData::tree_exists($args{'tree'})) ||
       die("function VCDisplay::query, tree: $args{'tree'} does not exist\n");
   }
 
   my $output = '';
-  if ($args{'who'}) {
 
-      # If there is an author, then allowing the user to send mail to
-      # this person is most useful. 
+  my $checkin_page_reference = ($args{'maxdate'} || $args{'mindate'});
+  
+  my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
+                "/all_vc.html");
 
-      my $display_author=$args{'who'};
-      $display_author =~ s/\%.*//;
+  if ($checkin_page_reference) {
 
-      $mailto_author = TreeData::VCName2MailAddress($args{'who'});
-      $output = HTMLPopUp::Link(
-                                "href" => "mailto: $mailto_author",
-                                "linktxt" => "\t\t<tt>$display_author</tt>",
-                                );
-  } elsif ($args{"alt_linktxt"}) {
-      $output = $args{"alt_linktxt"};
+      # we round the time, since there are only names in the page for
+      # rounded times.
+      $checkin_page_reference = main::round_time($checkin_page_reference);
+      $href .= "\#$checkin_page_reference";
   }
+
+  $args{'href'} = $href;
+
+  my ($output) = HTMLPopUp::Link(%args);
 
   return $output;
 };
