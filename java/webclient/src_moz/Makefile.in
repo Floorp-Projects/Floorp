@@ -125,7 +125,7 @@ ifeq ($(BAL_INTERFACE),)
 	@echo +++ Creating runem.  Use this to run the test browser.
 	rm -f runem
 	@echo #!/bin/sh > runem
-	@echo $(PERL) runem.pl $(DIST)/bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) "$1 $2 $3 $4 $5 $6" >> runem
+	@echo $(PERL) runem.pl $(DIST)/bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
 	chmod 755 runem
 endif
 
