@@ -686,13 +686,16 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     GetProp* gp = static_cast<GetProp*>(instruction);
                     JSValue& value = (*registers)[src1(gp).first];
                     if (value.isObject()) {
-                        JSObject* object = value.object;
-                        // REVISIT: when we implement statics with slots.
                         if (value.isType()) {
-                            JSClass* c = dynamic_cast<JSClass*>(object);
-                            if (c) object = c->getScope();
+                            // REVISIT: should signal error if slot doesn't exist.
+                            JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
+                            if (thisClass && thisClass->hasStatic(*src2(gp))) {
+                                const JSSlot& slot = thisClass->getSlot(*src2(gp));
+                                (*registers)[dst(gp).first] = (*thisClass)[slot.mIndex];
+                            }
+                        } else {
+                            (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
                         }
-                        (*registers)[dst(gp).first] = object->getProperty(*src2(gp));
                     }
                     // XXX runtime error
                 }
@@ -702,13 +705,16 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     SetProp* sp = static_cast<SetProp*>(instruction);
                     JSValue& value = (*registers)[dst(sp).first];
                     if (value.isObject()) {
-                        JSObject* object = value.object;
-                        // REVISIT: when we implement statics with slots.
                         if (value.isType()) {
-                            JSClass* c = dynamic_cast<JSClass*>(object);
-                            if (c) object = c->getScope();
+                            // REVISIT: should signal error if slot doesn't exist.
+                            JSClass* thisClass = dynamic_cast<JSClass*>(value.object);
+                            if (thisClass && thisClass->hasStatic(*src1(sp))) {
+                                const JSSlot& slot = thisClass->getSlot(*src1(sp));
+                                (*thisClass)[slot.mIndex] = (*registers)[src2(sp).first];
+                            }
+                        } else {
+                            value.object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                         }
-                        object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                     }
                 }
                 break;
@@ -716,14 +722,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     GetStatic* gs = static_cast<GetStatic*>(instruction);
                     JSClass* c = src1(gs);
-                    (*registers)[dst(gs).first] = c->getScope()->getVariable(*src2(gs));
+                    (*registers)[dst(gs).first] = (*c)[src2(gs)];
                 }
                 break;
             case SET_STATIC:
                 {
                     SetStatic* ss = static_cast<SetStatic*>(instruction);
                     JSClass* c = dst(ss);
-                    c->getScope()->setProperty(*src1(ss), (*registers)[src2(ss).first]);
+                    (*c)[src1(ss)] = (*registers)[src2(ss).first];
                 }
                 break;
 /*
@@ -908,6 +914,18 @@ using JSString throughout.
                     dest = r;
                     r.f64 += val4(sx);
                     (*inst)[src2(sx)] = r;
+                }
+                break;
+            
+            case STATIC_XCR:
+                {
+                    StaticXcr *sx = static_cast<StaticXcr*>(instruction);
+                    JSValue& dest = (*registers)[dst(sx).first];
+                    JSClass* thisClass = src1(sx);
+                    JSValue r = (*thisClass)[src2(sx)].toNumber();
+                    dest = r;
+                    r.f64 += val4(sx);
+                    (*thisClass)[src2(sx)] = r;
                 }
                 break;
 
