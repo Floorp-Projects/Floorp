@@ -267,7 +267,8 @@ function GetNextNMessages(folder)
 			dump('i = '+ i);
 			dump('\n');				
 			if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
-				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSenderAndGroup ||
+				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
+				type == msgComposeType.ReplyToSenderAndGroup ||
 				type == msgComposeType.Template || type == msgComposeType.Draft)
 			{
 				msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity);

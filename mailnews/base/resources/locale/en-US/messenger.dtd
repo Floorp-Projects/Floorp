@@ -300,7 +300,7 @@ Rights Reserved.
 <!ENTITY replyMsgCmd.label "Reply">
 <!ENTITY replyMsgCmd.accesskey	"r">
 <!ENTITY replyMsgCmd.key	"r">
-<!ENTITY replySenderCmd.label "Reply to Sender">
+<!ENTITY replySenderCmd.label "Reply to Sender Only">
 <!ENTITY replySenderCmd.accesskey	"r">
 <!ENTITY replyNewsgroupCmd.label "Reply to Newsgroup">
 <!ENTITY replyNewsgroupCmd.accesskey	"y">
@@ -368,7 +368,7 @@ Rights Reserved.
 <!--Tooltips-->
 <!ENTITY getMsgButton.tooltip "Get new messages"> 
 <!ENTITY newMsgButton.tooltip "Create a new message"> 
-<!ENTITY replyButton.tooltip "Reply to sender only"> 
+<!ENTITY replyButton.tooltip "Reply to the message"> 
 <!ENTITY replyAllButton.tooltip "Reply to sender and all recipients"> 
 <!ENTITY forwardButton.tooltip "Forward selected message"> 
 <!ENTITY fileButton.tooltip "File selected message"> 
@@ -388,7 +388,7 @@ Rights Reserved.
 <!ENTITY contextOpenNewWindow.accesskey "w">
 <!ENTITY contextEditAsNew.label "Edit As New...">
 <!ENTITY contextEditAsNew.accesskey "e">
-<!ENTITY contextReplySender.label "Reply to Sender">
+<!ENTITY contextReplySender.label "Reply to Sender Only">
 <!ENTITY contextReplySender.accesskey "r">
 <!ENTITY contextReplyNewsgroup.label "Reply to Newsgroup">
 <!ENTITY contextReplyNewsgroup.accesskey "g">

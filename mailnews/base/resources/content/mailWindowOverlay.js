@@ -95,7 +95,9 @@ function InitMessageMenu()
     //We show reply to Newsgroups only for news messages.
     var replyNewsgroupMenuItem = document.getElementById("replyNewsgroupMainMenu");
     if(replyNewsgroupMenuItem)
+    {
         replyNewsgroupMenuItem.setAttribute("hidden", isNews ? "" : "true");
+    }
 
     //For mail messages we say reply. For news we say ReplyToSender.
     var replyMenuItem = document.getElementById("replyMainMenu");
@@ -387,9 +389,9 @@ function MsgReplySender(event)
   var messageArray = GetSelectedMessages();
 
   if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.Reply, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
+    ComposeMessage(msgComposeType.ReplyToSender, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
-    ComposeMessage(msgComposeType.Reply, msgComposeFormat.Default, loadedFolder, messageArray);
+    ComposeMessage(msgComposeType.ReplyToSender, msgComposeFormat.Default, loadedFolder, messageArray);
 
 }
 

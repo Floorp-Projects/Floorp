@@ -971,6 +971,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       case nsIMsgCompType::Reply : 
       case nsIMsgCompType::ReplyAll:
       case nsIMsgCompType::ReplyToGroup:
+      case nsIMsgCompType::ReplyToSender:
       case nsIMsgCompType::ReplyToSenderAndGroup:
         {
           mQuotingToFollow = PR_TRUE;
@@ -1191,7 +1192,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
     if (!mCiteReference.IsEmpty())
       mComposeObj->mCiteReference = mCiteReference;
 
-    if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll ||
+    if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll || type == nsIMsgCompType::ReplyToSender ||
                      type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup))
     {
       nsIMsgCompFields *compFields = nsnull;
@@ -1293,7 +1294,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         
         if (! newgroups.IsEmpty())
         {
-          if (type != nsIMsgCompType::Reply)
+          if ((type != nsIMsgCompType::Reply) && (type != nsIMsgCompType::ReplyToSender))
             compFields->SetNewsgroups(newgroups.GetUnicode());
           if (type == nsIMsgCompType::ReplyToGroup)
             compFields->SetTo(&emptyUnichar);
@@ -1301,8 +1302,9 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         
         if (! followUpTo.IsEmpty())
         {
-          compFields->SetNewsgroups(followUpTo.GetUnicode());
-          if (type == nsIMsgCompType::Reply)
+		       if (type != nsIMsgCompType::ReplyToSender)
+			      compFields->SetNewsgroups(followUpTo.GetUnicode());
+           if (type == nsIMsgCompType::Reply)
             compFields->SetTo(&emptyUnichar);
         }
         
@@ -1532,6 +1534,7 @@ nsresult nsMsgCompose::ProcessReplyFlags()
   if (mType == nsIMsgCompType::Reply || 
       mType == nsIMsgCompType::ReplyAll ||
       mType == nsIMsgCompType::ReplyToGroup ||
+      mType == nsIMsgCompType::ReplyToSender ||
       mType == nsIMsgCompType::ReplyToSenderAndGroup ||
       mType == nsIMsgCompType::ForwardAsAttachment ||              
   	  mType == nsIMsgCompType::ForwardInline)
@@ -2099,6 +2102,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   	case nsIMsgCompType::ForwardInline :
   	case nsIMsgCompType::NewsPost :
   	case nsIMsgCompType::ReplyToGroup :
+  	case nsIMsgCompType::ReplyToSender : 
   	case nsIMsgCompType::ReplyToSenderAndGroup :
   		addSignature = PR_TRUE;
   		break;

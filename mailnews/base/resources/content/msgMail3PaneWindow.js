@@ -81,12 +81,7 @@ var folderListener = {
 							UpdateStatusMessageCounts(folder);
 						}
 					}
-
-
 				}
-
-
-
 			}
 		}
 	},
