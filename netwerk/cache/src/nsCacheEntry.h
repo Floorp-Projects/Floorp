@@ -33,12 +33,14 @@
 
 #include "nsICache.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsCacheMetaData.h"
 
 
 class nsCacheDevice;
 class nsCacheMetaData;
 class nsCacheRequest;
 class nsCacheEntryDescriptor;
+
 
 class nsCacheEntry
 {
@@ -79,6 +81,9 @@ public:
                                  nsAReadableCString **      value);
     nsresult SetMetaDataElement( const nsAReadableCString&  key,
                                  const nsAReadableCString&  value);
+
+    nsresult GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
+                              PRUint32 *                     count);
 
     //** enumerate MetaData method
 

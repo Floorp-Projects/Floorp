@@ -113,6 +113,21 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
 }
 
 
+nsresult
+nsCacheEntry::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
+                               PRUint32 *                     count)
+{
+    if (!array || !count)  return NS_ERROR_NULL_POINTER;
+
+    if (!mMetaData) {
+        *array = nsnull;
+        *count = 0;
+        return NS_OK;
+    }
+    return mMetaData->GetKeyValueArray(array, count);
+}
+
+
 void
 nsCacheEntry::MarkValid()
 {

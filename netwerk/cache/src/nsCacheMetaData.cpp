@@ -52,6 +52,7 @@ nsCacheMetaData::nsCacheMetaData()
 nsCacheMetaData::~nsCacheMetaData()
 {
     //** maybe we should finalize the table...
+    PL_DHashTableFinish(&table);
 }
 
 
@@ -115,6 +116,23 @@ nsCacheMetaData::SetElement(const nsAReadableCString * key,
 
 
 //** enumerate MetaData elements
+nsresult
+nsCacheMetaData::GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
+                                  PRUint32 *                     count)
+{
+    // count elements
+    PRUint32  total = 0;
+    PRUint32  totalEntries = PL_DHashTableEnumerate(&table, CountElements, &total);
+
+    if (total != totalEntries) {
+        //** just checking
+    }
+    // allocate array
+
+    // fill array
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 
@@ -162,16 +180,59 @@ nsCacheMetaData::MoveEntry(PLDHashTable * /* table */,
 
 void
 nsCacheMetaData::ClearEntry(PLDHashTable * /* table */,
-                                  PLDHashEntryHdr * hashEntry)
+                            PLDHashEntryHdr * hashEntry)
 {
     ((nsCacheMetaDataHashTableEntry *)hashEntry)->keyHash  = 0;
     ((nsCacheMetaDataHashTableEntry *)hashEntry)->key      = 0;
     ((nsCacheMetaDataHashTableEntry *)hashEntry)->value    = 0;
 }
 
+
 void
-nsCacheMetaData::Finalize(PLDHashTable * /* table */)
+nsCacheMetaData::Finalize(PLDHashTable * table)
 {
-    //** gee, if there's anything left in the table, maybe we should get rid of it.
+    (void) PL_DHashTableEnumerate(table, FreeElements, nsnull);   
 }
 
+
+/**
+ * hash table enumeration callback functions
+ */
+
+PLDHashOperator
+nsCacheMetaData::CountElements(PLDHashTable *table,
+                               PLDHashEntryHdr *hdr,
+                               PRUint32 number,
+                               void *arg)
+{
+    ++*(PRUint32 *)arg;
+    return PL_DHASH_NEXT;
+}
+
+
+PLDHashOperator
+nsCacheMetaData::AccumulateElements(PLDHashTable *table,
+                                    PLDHashEntryHdr *hdr,
+                                    PRUint32 number,
+                                    void *arg)
+{
+    nsCacheMetaDataHashTableEntry *entry = (nsCacheMetaDataHashTableEntry *)hdr;
+    nsCacheMetaDataKeyValuePair *pair    = (nsCacheMetaDataKeyValuePair *)arg;
+
+    pair->key   = entry->key;
+    pair->value = entry->value;
+    return PL_DHASH_NEXT;
+}
+
+
+PLDHashOperator
+nsCacheMetaData::FreeElements(PLDHashTable *table,
+                              PLDHashEntryHdr *hdr,
+                              PRUint32 number,
+                              void *arg)
+{
+    nsCacheMetaDataHashTableEntry *entry = (nsCacheMetaDataHashTableEntry *)hdr;
+    delete entry->key;
+    delete entry->value;
+    return PL_DHASH_NEXT;
+}

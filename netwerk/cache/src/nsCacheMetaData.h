@@ -31,6 +31,11 @@
 #include "nsString.h"
 // #include "nsAReadableString.h"
 
+typedef struct {
+    nsCString *  key;
+    nsCString *  value;
+} nsCacheMetaDataKeyValuePair;
+
 
 typedef struct {
   PLDHashNumber  keyHash;
@@ -51,6 +56,9 @@ public:
     nsresult              SetElement(const nsAReadableCString * key,
                                      const nsAReadableCString * value);
 
+    nsresult              GetKeyValueArray(nsCacheMetaDataKeyValuePair ** array,
+                                           PRUint32 *                     count);
+
 private:
     // PLDHashTable operation callbacks
     static const void *   GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
@@ -68,6 +76,25 @@ private:
     static void           ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
 
     static void           Finalize( PLDHashTable *table);
+
+    static
+    PLDHashOperator       CountElements(PLDHashTable *table,
+                                        PLDHashEntryHdr *hdr,
+                                        PRUint32 number,
+                                        void *arg);
+
+
+    static
+    PLDHashOperator       AccumulateElements(PLDHashTable *table,
+                                             PLDHashEntryHdr *hdr,
+                                             PRUint32 number,
+                                             void *arg);
+
+    static
+    PLDHashOperator       FreeElements(PLDHashTable *table,
+                                       PLDHashEntryHdr *hdr,
+                                       PRUint32 number,
+                                       void *arg);
 
     // member variables
     static PLDHashTableOps ops;
