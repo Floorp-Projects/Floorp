@@ -34,7 +34,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.7 2001/09/20 22:15:32 relyea%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.8 2002/06/10 22:00:32 ddrinan%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -553,7 +553,7 @@ NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts, SECOidTag *bulk
     mapi = smime_mapi_by_cipher(cipher);
 
     *bulkalgtag = smime_cipher_map[mapi].algtag;
-    *keysize = smime_keysize_by_cipher(smime_cipher_map[mapi].algtag);
+    *keysize = smime_keysize_by_cipher(smime_cipher_map[mapi].cipher);
 
     return SECSuccess;
 }
