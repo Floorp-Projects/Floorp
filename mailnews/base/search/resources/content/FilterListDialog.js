@@ -22,6 +22,8 @@ var rdf;
 
 var editButton;
 var deleteButton;
+var reorderUpButton;
+var reorderDownButton;
 
 const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
@@ -41,6 +43,8 @@ function onLoad()
 
     editButton = document.getElementById("editButton");
     deleteButton = document.getElementById("deleteButton");
+    reorderUpButton = document.getElementById("reorderUpButton");
+    reorderDownButton = document.getElementById("reorderDownButton");
 
     doSetOKCancel(onOk, null);
     
@@ -228,13 +232,16 @@ function refreshFilterList() {
 
 function updateButtons()
 {
-    var filter = currentFilter();
-    if (filter) {
-        editButton.removeAttribute("disabled");
-        deleteButton.removeAttribute("disabled");
+    var filters = document.getElementById("filterTree").selectedItems;
+    var filterSelected = (filters.length > 0)
+    editButton.disabled = !filterSelected;
+    deleteButton.disabled = !filterSelected;
+    if (filterSelected) {
+        reorderUpButton.disabled = !filters[0].previousSibling;
+        reorderDownButton.disabled = !filters[0].nextSibling;
     } else {
-        editButton.setAttribute("disabled", "true");
-        deleteButton.setAttribute("disabled", "true");
+        reorderUpButton.disabled = true;
+        reorderDownButton.disabled = true;
     }                      
 }
 

@@ -116,8 +116,8 @@ Rights Reserved.
         </box>
         <box orient="vertical">
           <spring flex="1"/>
-          <button class="reorder-up" oncommand="onUp(event);"/>
-          <button class="reorder-down" oncommand="onDown(event);"/>
+          <button id="reorderUpButton" class="reorder-up" oncommand="onUp(event);"/>
+          <button id="reorderDownButton" class="reorder-down" oncommand="onDown(event);"/>
           <spring flex="1"/>
         </box>
         <box orient="vertical">
