@@ -69,10 +69,18 @@ public:
     * @param aNumValues the actual number of values set (out parm)
     * @param aValues an array of nsString which contains the values (out parm
     * that is allocated by the caller)
+    * @param aNames an array of nsString which contains the names (out parm
+    * that is allocated by the caller)
     * @return PR_TRUE if any values were set, PR_FALSE otherwise
     */
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues) = 0;
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames) = 0;
+
+  /**
+    * Return true if this control should have its data submitted
+    * @param aSubmitter the submit button or text field that caused the submit
+    */
+  virtual PRBool IsSuccessful(nsIFormControl* aSubmitter) const = 0;
 
   /**
     * Set this control back to its initial value

@@ -75,7 +75,7 @@ struct nsInputDimensionSpec
   * @see nsLeafFrame and its base classes for more info
   */
 class nsInputFrame : public nsLeafFrame {
-  typedef nsLeafFrame super;
+  typedef nsLeafFrame nsInputFrameSuper;
 public:
   /**
     * Main constructor

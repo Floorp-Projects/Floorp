@@ -25,7 +25,7 @@ class nsString;
 
 class nsInputCheckbox : public nsInput {
 public:
-  typedef nsInput super;
+  typedef nsInput nsInputCheckboxSuper;
   nsInputCheckbox (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
@@ -39,8 +39,8 @@ public:
 
   virtual PRInt32 GetMaxNumValues();
   
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
   virtual void Reset();
 

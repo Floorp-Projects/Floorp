@@ -37,6 +37,7 @@
 #include "nsIComboBox.h"
 #include "nsIListBox.h"
 #include "nsInput.h"
+#include "nsHTMLForms.h"
 
 static NS_DEFINE_IID(kListWidgetIID, NS_ILISTWIDGET_IID);
 static NS_DEFINE_IID(kComboBoxIID, NS_ICOMBOBOX_IID);
@@ -86,8 +87,8 @@ public:
 
   virtual PRInt32 GetMaxNumValues();
   
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
   PRBool IsMultiple() { return mMultiple; }
 
@@ -121,8 +122,8 @@ public:
 
   virtual PRInt32 GetMaxNumValues();
 
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
   PRBool GetText(nsString& aString) const;
 
@@ -277,7 +278,6 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 //      printf("\n ** text = %s", text.ToNewCString());
 //      list->AddItemAt(text, 1);
 //    }
-  printf("\n item=%s\n", text.ToNewCString());
     list->AddItemAt(text, i);
   }
 
@@ -363,10 +363,10 @@ nsSelect::GetMaxNumValues()
 }
 
 PRBool
-nsSelect::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                        nsString* aValues)
+nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                         nsString* aValues, nsString* aNames)
 {
-  if (aMaxNumValues <= 0) {
+  if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     NS_ASSERTION(0, "invalid max num values");
     return PR_FALSE;
   }
@@ -379,7 +379,8 @@ nsSelect::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     PRInt32 index = list->GetSelectedIndex();
     if (index >= 0) {
       nsOption* selected = (nsOption*)ChildAt(index);
-      selected->GetValues(aMaxNumValues, aNumValues, aValues);
+      selected->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
+      aNames[0] = *mName;
       return PR_TRUE;
     }
     else {
@@ -400,7 +401,9 @@ nsSelect::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
       aNumValues = 0;
       for (int i = 0; i < numSelections; i++) {
         nsOption* selected = (nsOption*)ChildAt(selections[i]);
-        selected->GetValues(aMaxNumValues - i, numValues, aValues + i);  // options can only have 1 value 
+        selected->GetNamesValues(aMaxNumValues - i, numValues, 
+                                 aValues + i, aNames + i);  // options can only have 1 value
+        aNames[i] = *mName;
         aNumValues += 1;
       }
       return PR_TRUE;
@@ -429,9 +432,9 @@ nsSelect::Reset()
 
   for (int i = 0; i < numChildren; i++) {
     nsOption* option = (nsOption*)ChildAt(i);  // YYY this had better be an option 
-    PRBool selAttr;
+    PRInt32 selAttr;
     ((nsInput *)option)->GetAttribute(nsHTMLAtoms::selected, selAttr);
-    if (selAttr) {
+    if (ATTR_NOTSET != selAttr) {
       list->SelectItem(i);
       if (!mMultiple) {
         break;  
@@ -523,7 +526,8 @@ void nsOption::SetText(nsString& aString)
 }
 
 PRBool
-nsOption::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, nsString* aValues)
+nsOption::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, 
+                         nsString* aValues, nsString* aNames)
 {
   if (aMaxNumValues <= 0) {
     NS_ASSERTION(aMaxNumValues > 0, "invalid max num values");

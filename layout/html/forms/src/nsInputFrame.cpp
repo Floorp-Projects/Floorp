@@ -76,7 +76,7 @@ nsInputFrame::~nsInputFrame()
 
 NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
 {
-  return super::SetRect(aRect);
+  return nsInputFrameSuper::SetRect(aRect);
 }
 
 
@@ -320,32 +320,30 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
   static NS_DEFINE_IID(kSupportsIID, NS_ISUPPORTS_IID);
   nsIWidget* thisWidget;
 
-  nsIView*   view;
+  nsIView* view;
   GetView(view);
-  if (view == nsnull) {
-    return nsEventStatus_eIgnore;
-  }
+  if (view != nsnull) {
+    nsresult result = GetWidget(view, &thisWidget);
+    nsISupports* thisWidgetSup;
+    result = thisWidget->QueryInterface(kSupportsIID, (void **)&thisWidgetSup);
+    if (thisWidget == nsnull) {
+      return nsEventStatus_eIgnore;
+    }
+    nsISupports* eventWidgetSup;
+    result = aEvent->widget->QueryInterface(kSupportsIID, (void **)&eventWidgetSup);
 
-  nsresult result = GetWidget(view, &thisWidget);
-  nsISupports* thisWidgetSup;
-  result = thisWidget->QueryInterface(kSupportsIID, (void **)&thisWidgetSup);
-  if (thisWidget == nsnull) {
-    return nsEventStatus_eIgnore;
-  }
-  nsISupports* eventWidgetSup;
-  result = aEvent->widget->QueryInterface(kSupportsIID, (void **)&eventWidgetSup);
-
-  PRBool isOurEvent = (thisWidgetSup == eventWidgetSup) ? PR_TRUE : PR_FALSE;
+    PRBool isOurEvent = (thisWidgetSup == eventWidgetSup) ? PR_TRUE : PR_FALSE;
     
-  NS_RELEASE(eventWidgetSup);
-  NS_RELEASE(thisWidgetSup);
-  NS_IF_RELEASE(view);
-  NS_IF_RELEASE(thisWidget);
+    NS_RELEASE(eventWidgetSup);
+    NS_RELEASE(thisWidgetSup);
+    NS_IF_RELEASE(view);
+    NS_IF_RELEASE(thisWidget);
 
-	if (!isOurEvent) {
-		aEventStatus = nsEventStatus_eIgnore;
-    return NS_OK;
-	}
+	  if (!isOurEvent) {
+		  aEventStatus = nsEventStatus_eIgnore;
+      return NS_OK;
+	  }
+  }
 
   switch (aEvent->message) {
     case NS_MOUSE_ENTER:
@@ -359,11 +357,14 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 	    if (eMouseDown == mLastMouseState) {
 	      /*nsIView* view = GetView();
 	      nsIWidget *widget = view->GetWindow();
-		  widget->SetFocus();
-		  NS_RELEASE(widget);
+		    widget->SetFocus();
+		    NS_RELEASE(widget);
 	      NS_RELEASE(view); */
-		  MouseClicked(&aPresContext);
-		  //return PR_FALSE;
+        float conv = aPresContext.GetTwipsToPixels();
+        ((nsInput*)mContent)->SetClickPoint(NS_TO_INT_ROUND(conv * aEvent->point.x),
+                                            NS_TO_INT_ROUND(conv * aEvent->point.y));   
+ 		    MouseClicked(&aPresContext);
+		    //return PR_FALSE;
 	    } 
 	    mLastMouseState = eMouseEnter;
 	    break;
@@ -384,6 +385,7 @@ void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
 
   aSize.width  = GetStyleDim(aPresContext, aMaxSize.width, aMaxSize.width, pos->mWidth);
   aSize.height = GetStyleDim(aPresContext, aMaxSize.height, aMaxSize.width, pos->mHeight);
+
   NS_RELEASE(input);
 }
 

@@ -209,7 +209,7 @@ void nsInputRadio::SetAttribute(nsIAtom* aAttribute,
     mChecked = PR_TRUE;
   }
   else {
-    super::SetAttribute(aAttribute, aValue);
+    nsInputRadioSuper::SetAttribute(aAttribute, aValue);
   }
 }
 
@@ -221,15 +221,15 @@ nsContentAttr nsInputRadio::GetAttribute(nsIAtom* aAttribute,
     return GetCacheAttribute(mChecked, aResult, eHTMLUnit_Empty);
   }
   else {
-    return super::GetAttribute(aAttribute, aResult);
+    return nsInputRadioSuper::GetAttribute(aAttribute, aResult);
   }
 }
 
 PRBool
-nsInputRadio::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                        nsString* aValues)
+nsInputRadio::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                             nsString* aValues, nsString* aNames)
 {
-  if (aMaxNumValues <= 0) {
+  if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
   nsIRadioButton* radio = (nsIRadioButton *)GetWidget();
@@ -243,6 +243,7 @@ nsInputRadio::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   } else {
     aValues[0] = *mValue;
   }
+  aNames[0] = *mName;
   aNumValues = 1;
 
   return PR_TRUE;

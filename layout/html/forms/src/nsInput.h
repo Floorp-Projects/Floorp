@@ -21,10 +21,12 @@
 
 #include "nsHTMLContainer.h"
 #include "nsIFormControl.h"
+#include "nsPoint.h"
 class nsIFormManager;
 class nsIWidget;
 class nsIView;
 class nsIPresContext;
+
 
 /**
   * nsInput represents an html Input element. This is a base class for
@@ -33,7 +35,7 @@ class nsIPresContext;
   */
 class nsInput : public nsHTMLContainer {
 public:
-  typedef nsHTMLContainer super;
+  typedef nsHTMLContainer nsInputSuper;
   /** 
     * main constructor
     * @param aTag the html tag associated with this object
@@ -80,10 +82,12 @@ public:
   /**
     * @see nsIFormControl GetFormManager
     */
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
   virtual PRBool IsHidden();
+
+  virtual PRBool IsSuccessful(nsIFormControl* aSubmitter) const;
 
   /**
     * @see nsIFormControl GetFormManager
@@ -110,9 +114,6 @@ public:
 
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, nsString& aValue) const;
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const;
-#if 0
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, PRBool& aValue) const;
-#endif
  
   /**
     * Set the named attribute of this input
@@ -150,6 +151,7 @@ public:
   virtual void GetType(nsString& aResult) const = 0;
   virtual PRBool GetChecked(PRBool aGetInitialValue) const;
   virtual void SetChecked(PRBool aState, PRBool aSetInitialValue);
+  virtual void SetClickPoint(nscoord aX, nscoord aY);
 
 protected:
   virtual         ~nsInput();
@@ -159,20 +161,20 @@ protected:
     */
   nsIWidget*      mWidget;
   nsIFormManager* mFormMan;
+  nsPoint         mLastClickPoint;
 
   void          CacheAttribute(const nsString& aValue, nsString*& aLoc);
   void          CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32& aLoc);
   nsContentAttr GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const;
   nsContentAttr GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHTMLUnit aUnit) const;
-#if 0
-  nsContentAttr GetCacheAttribute(PRBool aLoc, nsHTMLValue& aValue) const;
-#endif
 
   // Attributes common to all html form elements
   nsString*       mName;
   nsString*       mValue;
   PRInt32         mSize;
   PRInt32         mAlign;
+  PRInt32         mWidth;
+  PRInt32         mHeight;
 
   // Aggregator class and instance variable used to aggregate in the
   // nsIFormControl interface to nsInput w/o using multiple
@@ -189,14 +191,15 @@ protected:
     virtual PRBool GetName(nsString& aName) const;
     virtual void GetType(nsString& aType) const;
     virtual PRInt32 GetMaxNumValues();
-    virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                             nsString* aValues);
+    virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                  nsString* aValues, nsString* aNames);
     virtual void Reset();
     virtual void SetFormManager(nsIFormManager* aFormMan, PRBool aDecrementRef = PR_TRUE);
     virtual nsIFormManager* GetFormManager() const;
     virtual nsrefcnt GetRefCount() const;
     virtual PRBool GetChecked(PRBool aGetInitialValue) const;
     virtual void SetChecked(PRBool aState, PRBool aSetInitialValue);
+    virtual PRBool IsSuccessful(nsIFormControl* aSubmitter) const;
   };
   AggInputControl mControl;
 };

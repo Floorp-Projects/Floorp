@@ -39,19 +39,29 @@
 #include "nsIFontCache.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormManager.h"
+#include "nsIImage.h"
+#include "nsHTMLForms.h"
 
-enum nsInputButtonType {
-  kButton_InputButton,
+enum nsButtonTagType {
+  kButtonTag_Button,
+  kButtonTag_Input
+};
+
+enum nsButtonType {
   kButton_Button,
-  kButton_InputReset,
-  kButton_InputSubmit,
-  kButton_InputHidden
+  kButton_Reset,
+  kButton_Submit,
+  kButton_Image,
+  kButton_Hidden
 };
 	
+static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
+
 class nsInputButton : public nsInput {
 public:
+  typedef nsInput nsInputButtonSuper;
   nsInputButton (nsIAtom* aTag, nsIFormManager* aManager,
-                 nsInputButtonType aType);
+                 nsButtonType aType);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
@@ -59,27 +69,43 @@ public:
 
   virtual void GetDefaultLabel(nsString& aLabel);
 
-  nsInputButtonType GetButtonType() { return mType; }
+  nsButtonType GetButtonType() { return mType; }
+  nsButtonTagType GetButtonTagType() { return mTagType; }
 
   virtual PRInt32 GetMaxNumValues(); 
 
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues, 
+                                nsString* aValues, nsString* aNames);
 
   virtual PRBool IsHidden();
+
+  virtual PRBool IsSuccessful(nsIFormControl* aSubmitter) const;
 
  protected:
   virtual ~nsInputButton();
 
   virtual void GetType(nsString& aResult) const;
 
-  nsInputButtonType mType;
+  nsButtonType    mType;
+  nsButtonTagType mTagType;  
 };
 
 class nsInputButtonFrame : public nsInputFrame {
 public:
+  typedef nsInputFrame nsInputButtonFrameSuper;
   nsInputButtonFrame(nsIContent* aContent,
                      PRInt32 aIndexInParent,
                      nsIFrame* aParentFrame);
+
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect);
+
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                         nsReflowMetrics& aDesiredSize,
+                         const nsSize& aMaxSize,
+                         nsSize* aMaxElementSize,
+                         ReflowStatus& aStatus);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView* aView);
 
@@ -89,7 +115,10 @@ public:
 
   virtual const nsIID& GetIID();
 
-  nsInputButtonType GetButtonType() const;
+  nsButtonType GetButtonType() const;
+  nsButtonTagType GetButtonTagType() const;
+
+  nsIImage* GetImage(nsIPresContext& aPresContext);
 
 
 protected:
@@ -105,9 +134,12 @@ protected:
 // nsInputButton Implementation
 
 nsInputButton::nsInputButton(nsIAtom* aTag, nsIFormManager* aManager,
-                             nsInputButtonType aType)
+                             nsButtonType aType)
   : nsInput(aTag, aManager), mType(aType) 
 {
+  nsAutoString tagName;
+  aTag->ToString(tagName);
+  mTagType = (tagName.EqualsIgnoreCase("input")) ? kButtonTag_Input : kButtonTag_Button;
 }
 
 nsInputButton::~nsInputButton()
@@ -117,10 +149,18 @@ nsInputButton::~nsInputButton()
   }
 }
 
+PRBool nsInputButton::IsSuccessful(nsIFormControl* aSubmitter) const
+{
+  if ((void*)&mControl == (void*)aSubmitter) {
+    return nsInputButtonSuper::IsSuccessful(aSubmitter);
+  }
+  return PR_FALSE;
+}
+
 PRBool 
 nsInputButton::IsHidden()
 {
-  if (kButton_InputHidden == mType) {
+  if (kButton_Hidden == mType) {
     return PR_TRUE;
   }
   else {
@@ -131,27 +171,38 @@ nsInputButton::IsHidden()
 void nsInputButton::GetType(nsString& aResult) const
 {
   aResult.SetLength(0);
-  switch (mType) {
-  case kButton_InputButton:
-  case kButton_Button:
+
+  if (kButtonTag_Button == mTagType) {
     aResult.Append("button");
-    break;
-  case kButton_InputReset:
-    aResult.Append("reset");
-    break;
-  default:
-  case kButton_InputSubmit:
-    aResult.Append("submit");
-    break;
+    return;
+  }
+
+  switch (mType) {
+    case kButton_Button:
+      aResult.Append("button");
+      break;
+    case kButton_Reset:
+      aResult.Append("reset");
+      break;
+    case kButton_Image:
+      aResult.Append("image");
+      break;
+    case kButton_Hidden:
+      aResult.Append("hidden");
+      break;
+    case kButton_Submit:
+    default:
+      aResult.Append("submit");
+      break;
   }
 }
 
 void
 nsInputButton::GetDefaultLabel(nsString& aString) 
 {
-  if (kButton_InputReset == mType) {
+  if (kButton_Reset == mType) {
     aString = "Reset";
-  } else if (kButton_InputSubmit == mType) {
+  } else if (kButton_Submit == mType) {
     aString = "Submit";
   } else {
     aString = "noname";
@@ -163,7 +214,7 @@ nsInputButton::CreateFrame(nsIPresContext* aPresContext,
                            PRInt32 aIndexInParent,
                            nsIFrame* aParentFrame)
 {
-  if (kButton_InputHidden == mType) {
+  if (kButton_Hidden == mType) {
     nsIFrame* frame;
     nsFrame::NewFrame(&frame, this, aIndexInParent, aParentFrame);
     return frame;
@@ -177,8 +228,10 @@ nsInputButton::CreateFrame(nsIPresContext* aPresContext,
 PRInt32
 nsInputButton::GetMaxNumValues() 
 {
-  if ((kButton_InputSubmit == mType) || (kButton_InputHidden)) {
+  if ((kButton_Submit == mType) || (kButton_Hidden == mType)) {
     return 1;
+  } else if ((kButton_Image == mType) && (kButtonTag_Input == mTagType)) {
+    return 2;
   } else {
 	  return 0;
   }
@@ -186,21 +239,36 @@ nsInputButton::GetMaxNumValues()
 
 
 PRBool
-nsInputButton::GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                         nsString* aValues)
+nsInputButton::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                              nsString* aValues, nsString* aNames)
 {
-  if (aMaxNumValues <= 0) {
+  if ((aMaxNumValues <= 0) || (nsnull == mName)) {
     return PR_FALSE;
   }
 
-  if ((kButton_InputSubmit != mType) && (kButton_InputHidden != mType)) {
-    aNumValues = 0;
-    return PR_FALSE;
-  }
+  if ((kButton_Image == mType) && (kButtonTag_Input == mTagType)) {
+    char buf[20];
+    aNumValues = 2;
 
-  if (nsnull != mValue) {
     aValues[0].SetLength(0);
-    aValues[0].Append(*mValue);
+    sprintf(&buf[0], "%d", mLastClickPoint.x);
+    aValues[0].Append(&buf[0]);
+
+    aNames[0] = *mName;
+    aNames[0].Append(".x");
+
+    aValues[1].SetLength(0);
+    sprintf(&buf[0], "%d", mLastClickPoint.y);
+    aValues[1].Append(&buf[0]);
+
+    aNames[1] = *mName;
+    aNames[1].Append(".y");
+
+    return PR_TRUE;
+  }
+  else if ((kButton_Submit == mType) || (kButton_Hidden == mType) && (nsnull != mValue)) {
+    aValues[0] = *mValue;
+    aNames[0]  = *mName;
     aNumValues = 1;
     return PR_TRUE;
   } else {
@@ -223,11 +291,56 @@ nsInputButtonFrame::~nsInputButtonFrame()
 {
 }
 
-nsInputButtonType 
+nsButtonType 
 nsInputButtonFrame::GetButtonType() const
 {
   nsInputButton* button = (nsInputButton *)mContent;
   return button->GetButtonType();
+}
+
+nsButtonTagType 
+nsInputButtonFrame::GetButtonTagType() const
+{
+  nsInputButton* button = (nsInputButton *)mContent;
+  return button->GetButtonTagType();
+}
+
+nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext)
+{
+  if (kButton_Image != GetButtonType()) {
+    return nsnull;
+  }
+
+  nsAutoString src;
+  if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+    return aPresContext.LoadImage(src, this);
+  }
+  return nsnull;
+}
+
+NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect& aDirtyRect)
+{
+  // let super do processing if there is no image
+  if (kButton_Image != GetButtonType()) {
+    return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  }
+
+  nsIImage* image = GetImage(aPresContext);
+  if (nsnull == image) {
+    return NS_OK;
+  }
+
+  // First paint background and borders
+  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+  // Now render the image into our inner area (the area without the
+  nsRect inner;
+  GetInnerArea(&aPresContext, inner);
+  aRenderingContext.DrawImage(image, inner);
+
+  return NS_OK;
 }
 
 void
@@ -236,14 +349,45 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
   nsInputButton* button = (nsInputButton *)mContent;
   nsIFormManager* formMan = button->GetFormManager();
   if (nsnull != formMan) {
-    if (kButton_InputReset == button->GetButtonType()) {
+    nsButtonType    butType    = button->GetButtonType();
+    nsButtonTagType butTagType = button->GetButtonTagType();
+    if (kButton_Reset == butType) {
       formMan->OnReset();
-    } else if (kButton_InputSubmit == button->GetButtonType()) {
+    } else if ((kButton_Submit == butType) ||
+               ((kButton_Image == butType) && (kButtonTag_Input == butTagType))) {
       //NS_ADDREF(this);
-      formMan->OnSubmit(aPresContext, this);
+      nsIFormControl* control;
+      mContent->QueryInterface(kIFormControlIID, (void**)&control);
+      formMan->OnSubmit(aPresContext, this, control);
       //NS_RELEASE(this);
     }
     NS_RELEASE(formMan);
+  }
+}
+
+NS_METHOD
+nsInputButtonFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                 nsReflowMetrics& aDesiredSize,
+                                 const nsSize& aMaxSize,
+                                 nsSize* aMaxElementSize,
+                                 ReflowStatus& aStatus)
+{
+  if ((kButtonTag_Input == GetButtonTagType()) && (kButton_Image == GetButtonType())) {
+    nsSize ignore;
+    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, ignore);
+    AddBordersAndPadding(aPresContext, aDesiredSize);
+    if (nsnull != aMaxElementSize) {
+      aMaxElementSize->width = aDesiredSize.width;
+      aMaxElementSize->height = aDesiredSize.height;
+    }
+    mCacheBounds.width  = aDesiredSize.width;
+    mCacheBounds.height = aDesiredSize.height;
+    aStatus = frComplete;
+    return NS_OK;
+  }
+  else {
+    return nsInputButtonFrameSuper::
+      ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
   }
 }
 
@@ -253,35 +397,57 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    nsReflowMetrics& aDesiredLayoutSize,
                                    nsSize& aDesiredWidgetSize)
 {
-  if (kButton_InputHidden == GetButtonType()) {
+
+  if (kButton_Hidden == GetButtonType()) { // there is no physical rep
     aDesiredLayoutSize.width  = 0;
     aDesiredLayoutSize.height = 0;
-    aDesiredWidgetSize.width  = 0;
-    aDesiredWidgetSize.height = 0;
-    return;
   }
-  nsSize styleSize;
-  GetStyleSize(*aPresContext, aMaxSize, styleSize);
+  else {
+    nsSize styleSize;
+    GetStyleSize(*aPresContext, aMaxSize, styleSize);
 
-  nsSize size;
-  PRBool widthExplicit, heightExplicit;
-  PRInt32 ignore;
-  nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 1,
-                            PR_FALSE, nsnull, 1);
-  CalculateSize(aPresContext, this, styleSize, spec, size, 
-                widthExplicit, heightExplicit, ignore);
+    if (kButton_Image == GetButtonType()) { // there is an image
+      float p2t = aPresContext->GetPixelsToTwips();
+      if ((0 < styleSize.width) && (0 < styleSize.height)) {
+        // Use dimensions from style attributes
+        aDesiredLayoutSize.width  = nscoord(styleSize.width  * p2t);
+        aDesiredLayoutSize.height = nscoord(styleSize.height * p2t);
+      } else {
+        nsIImage* image = GetImage(*aPresContext);
+        if (nsnull == image) {
+          // XXX Here is where we trigger a resize-reflow later on; or block
+          // layout or whatever our policy wants to be
+          aDesiredLayoutSize.width  = nscoord(50 * p2t);
+          aDesiredLayoutSize.height = nscoord(50 * p2t);
+        } else {
+          aDesiredLayoutSize.width  = nscoord(image->GetWidth()  * p2t);
+          aDesiredLayoutSize.height = nscoord(image->GetHeight() * p2t);
+        }
+      }
+    }
+    else {  // there is a widget
+      nsSize size;
+      PRBool widthExplicit, heightExplicit;
+      PRInt32 ignore;
+      nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 1,
+                                PR_FALSE, nsnull, 1);
+      CalculateSize(aPresContext, this, styleSize, spec, size, 
+                    widthExplicit, heightExplicit, ignore);
 
-  if (!widthExplicit) {
-    size.width += 100;
-  } 
-  if (!heightExplicit) {
-    size.height += 100;
-  } 
+      if (!widthExplicit) {
+        size.width += 100;
+      } 
+      if (!heightExplicit) {
+        size.height += 100;
+      } 
 
-  aDesiredLayoutSize.width = size.width;
-  aDesiredLayoutSize.height= size.height;
-  aDesiredWidgetSize.width = size.width;
-  aDesiredWidgetSize.height= size.height;
+      aDesiredLayoutSize.width = size.width;
+      aDesiredLayoutSize.height= size.height;
+    }
+  }
+
+  aDesiredWidgetSize.width = aDesiredLayoutSize.width;
+  aDesiredWidgetSize.height= aDesiredLayoutSize.height;
 }
 
 
@@ -328,7 +494,7 @@ nsInputButtonFrame::GetCID()
 nsresult
 CreateButton(nsIHTMLContent** aInstancePtrResult,
              nsIAtom* aTag, nsIFormManager* aManager,
-             nsInputButtonType aType)
+             nsButtonType aType)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -347,7 +513,7 @@ nsresult
 NS_NewHTMLInputButton(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputButton);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Button);
 }
 
 nsresult
@@ -361,19 +527,26 @@ nsresult
 NS_NewHTMLInputSubmit(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputSubmit);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Submit);
 }
 
 nsresult
 NS_NewHTMLInputReset(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputReset);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Reset);
+}
+
+nsresult
+NS_NewHTMLInputImage(nsIHTMLContent** aInstancePtrResult,
+                     nsIAtom* aTag, nsIFormManager* aManager)
+{
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Image);
 }
 
 nsresult
 NS_NewHTMLInputHidden(nsIHTMLContent** aInstancePtrResult,
                       nsIAtom* aTag, nsIFormManager* aManager)
 {
-  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_InputHidden);
+  return CreateButton(aInstancePtrResult, aTag, aManager, kButton_Hidden);
 }

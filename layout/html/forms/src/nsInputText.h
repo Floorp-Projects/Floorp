@@ -35,7 +35,7 @@ enum nsInputTextType {
 
 class nsInputText : public nsInput {
 public:
-  typedef nsInput super;
+  typedef nsInput nsInputTextSuper;
   nsInputText (nsIAtom* aTag, nsIFormManager* aManager, nsInputTextType aType);
 
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
@@ -51,8 +51,8 @@ public:
   
   nsInputTextType GetTextType() const;
 
-  virtual PRBool GetValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                           nsString* aValues);
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
   virtual void Reset();
 
