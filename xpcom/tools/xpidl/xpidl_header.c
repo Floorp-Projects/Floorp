@@ -21,35 +21,37 @@
  */
 
 #include "xpidl.h"
+#include <ctype.h>
 
 /* is this node from an aggregate type (interface)? */
-#define UP_IS_AGGREGATE(node)						      \
-    (IDL_NODE_UP(node) &&						      \
+#define UP_IS_AGGREGATE(node)                                                 \
+    (IDL_NODE_UP(node) &&                                                     \
      IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_INTERFACE)
 
+#define UP_IS_NATIVE(node)                                                    \
+    (IDL_NODE_UP(node) &&                                                     \
+     IDL_NODE_TYPE(IDL_NODE_UP(node)) == IDLN_NATIVE)
+
 /* is this type output in the form "<foo> *"? */
-#define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||	      \
-			    IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
-			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&	      \
+#define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||        \
+			    IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||               \
+			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&                         \
 			     UP_IS_AGGREGATE(node)) )
+
+#define IDL_OUTPUT_FLAGS (IDLF_OUTPUT_NO_NEWLINES |                           \
+                          IDLF_OUTPUT_NO_QUALIFY_IDENTS |                     \
+                          IDLF_OUTPUT_PROPERTIES)
 
 static void
 dump_IDL(TreeState *state)
 {
-    fputs(" <IDL> ", state->file);
+    IDL_tree_to_IDL(state->tree, state->ns, state->file, IDL_OUTPUT_FLAGS);
 }
 
 #define DUMP_IDL_COMMENT(state)                                               \
   fputs("\n  /* ", state->file);                                              \
   dump_IDL(state);                                                            \
   fputs(" */\n", state->file);
-
-static gboolean
-ident(TreeState *state)
-{
-    fputs(IDL_IDENT(state->tree).str, state->file);
-    return TRUE;
-}
 
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
@@ -107,7 +109,6 @@ interface(TreeState *state)
             className);
     iid = IDL_tree_property_get(iface, "uuid");
     if (iid) {
-        char *iidName, *iidStruct;
         /* XXX use nsID parsing routines to validate? */
         if (strlen(iid) != 36)
             /* XXX report error */
@@ -210,7 +211,11 @@ xpcom_type(TreeState *state)
         fputs("PRBool", state->file);
         break;
       case IDLN_IDENT:
-        fputs(IDL_IDENT(state->tree).str, state->file);
+        if (UP_IS_NATIVE(state->tree)) {
+            fputs(IDL_NATIVE(IDL_NODE_UP(state->tree)).user_type, state->file);
+        } else {
+            fputs(IDL_IDENT(state->tree).str, state->file);
+        }
         if (UP_IS_AGGREGATE(state->tree))
             fputs(" *", state->file);
         break;
@@ -276,6 +281,8 @@ type(TreeState *state)
         fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
         return TRUE;
     }
+
+    return TRUE;
 }
 
 static gboolean
@@ -385,9 +392,9 @@ do_typedef(TreeState *state)
         if (!xpcom_type(state))
             return FALSE;
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
-            fprintf(state->file, "%s[%d]",
+            fprintf(state->file, "%s[%ld]",
                     IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).str,
-                    IDL_INTEGER(IDL_LIST(IDL_TYPE_ARRAY(complex).size_list).
+                 (long)IDL_INTEGER(IDL_LIST(IDL_TYPE_ARRAY(complex).size_list).
                                 data).value);
         } else {
             fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
