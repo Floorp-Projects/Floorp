@@ -63,6 +63,34 @@ captureThis();
 
 
 
+function tryThis()
+{
+  var sum = 4 ;
+  var i = 0;
+
+  while (sum < 10)
+  {
+    try
+    {
+     sum += 1;
+     i += 1;
+    }
+    finally
+    {
+     print("In finally case of testThis() function");
+    }
+  }
+  return i;
+}
+
+
+status = inSection(2);
+actual = tryThis();
+expect = 6;
+captureThis();
+
+
+
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
