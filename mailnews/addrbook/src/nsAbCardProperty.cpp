@@ -28,11 +28,20 @@
 #include "rdf.h"
 #include "nsCOMPtr.h"
 
+#include "nsICollation.h"
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+#include "nsCollationCID.h"
+
 #include "nsAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
+static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 
 
 /* The definition is nsAddressBook.cpp */
@@ -801,3 +810,35 @@ NS_IMETHODIMP nsAbCardProperty::CopyCard(nsIAbCard* srcCard)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsAbCardProperty::GetCollationKey(const PRUnichar *str, PRUnichar **key)
+{
+	nsresult rv;
+	nsAutoString convertStr(str);
+	nsAutoString resultStr;
+
+	nsCOMPtr<nsILocale> locale; 
+	nsCOMPtr<nsICollation> collationKeyGenerator;
+
+    NS_WITH_SERVICE(nsILocaleService, localeSvc, kLocaleServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+	if (NS_SUCCEEDED(rv) && locale)
+	{
+		nsCOMPtr <nsICollationFactory> factory;
+
+		rv = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+								  kICollationFactoryIID, getter_AddRefs(factory)); 
+		if (NS_SUCCEEDED(rv) && factory)
+		{
+			rv = factory->CreateCollation(locale, getter_AddRefs(collationKeyGenerator));
+			if (NS_SUCCEEDED(rv) && collationKeyGenerator)
+			{
+				rv = collationKeyGenerator->CreateSortKey(kCollationCaseInSensitive, convertStr, resultStr);
+				*key = resultStr.ToNewUnicode();
+			}
+		}
+	}
+
+	return rv;
+}

@@ -43,6 +43,10 @@ nsIRDFResource* nsAbCardDataSource::kNC_DisplayName = nsnull;
 nsIRDFResource* nsAbCardDataSource::kNC_PrimaryEmail = nsnull;
 nsIRDFResource* nsAbCardDataSource::kNC_WorkPhone = nsnull;
 
+//for locale sorting,
+nsIRDFResource* nsAbCardDataSource::kNC_DisplayNameCollation = nsnull;
+nsIRDFResource* nsAbCardDataSource::kNC_PrimaryEmailCollation = nsnull;
+
 // commands
 nsIRDFResource* nsAbCardDataSource::kNC_Delete = nsnull;
 nsIRDFResource* nsAbCardDataSource::kNC_NewCard = nsnull;
@@ -51,6 +55,9 @@ nsIRDFResource* nsAbCardDataSource::kNC_NewCard = nsnull;
 #define NC_RDF_DISPLAYNAME			"http://home.netscape.com/NC-rdf#DisplayName"
 #define NC_RDF_PRIMARYEMAIL			"http://home.netscape.com/NC-rdf#PrimaryEmail"
 #define NC_RDF_WORKNAME				"http://home.netscape.com/NC-rdf#WorkPhone"
+
+#define NC_RDF_DISPLAYNAME_SORT		"http://home.netscape.com/NC-rdf#DisplayName?collation=true"
+#define NC_RDF_PRIMARYEMAIL_SORT	"http://home.netscape.com/NC-rdf#PrimaryEmail?collation=true"
 
 //Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -80,12 +87,22 @@ nsAbCardDataSource::~nsAbCardDataSource (void)
 
 	nsrefcnt refcnt;
 
-	NS_RELEASE2(kNC_DisplayName, refcnt);
-	NS_RELEASE2(kNC_PrimaryEmail, refcnt);
-	NS_RELEASE2(kNC_WorkPhone, refcnt);
+	if (kNC_DisplayName)
+		NS_RELEASE2(kNC_DisplayName, refcnt);
+	if (kNC_PrimaryEmail)
+		NS_RELEASE2(kNC_PrimaryEmail, refcnt);
+	if (kNC_WorkPhone)
+		NS_RELEASE2(kNC_WorkPhone, refcnt);
+	 
+	if (kNC_DisplayNameCollation)
+		NS_RELEASE2(kNC_DisplayNameCollation, refcnt);
+	if (kNC_PrimaryEmailCollation)
+		NS_RELEASE2(kNC_PrimaryEmailCollation, refcnt);
 
-	NS_RELEASE2(kNC_Delete, refcnt);
-	NS_RELEASE2(kNC_NewCard, refcnt);
+	if (kNC_Delete)
+		NS_RELEASE2(kNC_Delete, refcnt);
+	if (kNC_NewCard)
+		NS_RELEASE2(kNC_NewCard, refcnt);
 
 }
 
@@ -110,6 +127,9 @@ nsresult nsAbCardDataSource::Init()
     mRDFService->GetResource(NC_RDF_DISPLAYNAME, &kNC_DisplayName);
     mRDFService->GetResource(NC_RDF_PRIMARYEMAIL, &kNC_PrimaryEmail);
     mRDFService->GetResource(NC_RDF_WORKNAME,	&kNC_WorkPhone);
+
+    mRDFService->GetResource(NC_RDF_DISPLAYNAME_SORT, &kNC_DisplayNameCollation);
+    mRDFService->GetResource(NC_RDF_PRIMARYEMAIL_SORT, &kNC_PrimaryEmailCollation);
 
     mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
     mRDFService->GetResource(NC_RDF_NEWCADR, &kNC_NewCard);
@@ -378,23 +398,44 @@ nsresult nsAbCardDataSource::createCardNode(nsIAbCard* card,
                                           nsIRDFResource* property,
                                           nsIRDFNode** target)
 {
-  PRUnichar *name = nsnull;
-  nsresult rv = NS_RDF_NO_VALUE;
-  
-  if ((kNC_DisplayName == property))
-	rv = card->GetDisplayName(&name);
-  else if ((kNC_PrimaryEmail == property))
-    rv = card->GetPrimaryEmail(&name);
-  else if ((kNC_WorkPhone == property))
-    rv = card->GetWorkPhone(&name);
-  if (NS_FAILED(rv)) return rv;
-  if (name)
-  {
-	  nsString nameString(name);
-	  createNode(nameString, target);
-	  delete[] name;
-  }
-  return rv;
+	PRUnichar *name = nsnull;
+	nsresult rv = NS_RDF_NO_VALUE;
+
+	if ((kNC_DisplayName == property))
+		rv = card->GetDisplayName(&name);
+	else if ((kNC_PrimaryEmail == property))
+		rv = card->GetPrimaryEmail(&name);
+	else if ((kNC_WorkPhone == property))
+		rv = card->GetWorkPhone(&name);
+	else if (kNC_DisplayNameCollation == property)
+	{
+		PRUnichar *tempStr = nsnull;
+		rv = card->GetDisplayName(&tempStr);
+		if (tempStr)
+		{
+			rv = card->GetCollationKey(tempStr, &name);
+			nsCRT::free(tempStr);
+		}
+	}
+	else if (kNC_PrimaryEmailCollation == property)
+	{
+		PRUnichar *tempStr = nsnull;
+		rv = card->GetPrimaryEmail(&tempStr);
+		if (tempStr)
+		{
+			rv = card->GetCollationKey(tempStr, &name);
+			nsCRT::free(tempStr);
+		}
+	}
+	if (NS_FAILED(rv)) 
+		return rv;
+	if (name)
+	{
+		nsString nameString(name);
+		createNode(nameString, target);
+		nsCRT::free(name);
+	}
+	return rv;
 }
 
 nsresult nsAbCardDataSource::DoDeleteFromCard(nsIAbCard *card, nsISupportsArray *arguments)

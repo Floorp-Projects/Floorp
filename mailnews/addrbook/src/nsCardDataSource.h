@@ -103,6 +103,9 @@ protected:
 	static nsIRDFResource* kNC_City;
 	static nsIRDFResource* kNC_Nickname;
 
+	static nsIRDFResource* kNC_DisplayNameCollation;
+	static nsIRDFResource* kNC_PrimaryEmailCollation;
+
 	// commands
 	static nsIRDFResource* kNC_Delete;
 	static nsIRDFResource* kNC_NewCard;

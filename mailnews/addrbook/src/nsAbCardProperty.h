@@ -151,6 +151,8 @@ public:
 	NS_IMETHOD EditCardToDatabase(const char *uri);
 	NS_IMETHOD CopyCard(nsIAbCard* srcCard);
 
+	NS_IMETHOD GetCollationKey(const PRUnichar *str, PRUnichar **key);
+
 
 protected:
 

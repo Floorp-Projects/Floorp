@@ -93,4 +93,5 @@ interface nsIAbCard : nsISupports {
 	void AddCardToDatabase(in string uri);
 	void EditCardToDatabase(in string uri);
 	void CopyCard(in nsIAbCard srcCard);
+	void GetCollationKey(in wstring str, out wstring key);
 };
