@@ -36,7 +36,7 @@
 
 NS_IMPL_ISUPPORTS3(DeviceContextImpl, nsIDeviceContext, nsIObserver, nsISupportsWeakReference)
 
-DeviceContextImpl :: DeviceContextImpl()
+DeviceContextImpl::DeviceContextImpl()
 {
   NS_INIT_REFCNT();
   mFontCache = nsnull;
@@ -64,7 +64,7 @@ static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closu
   return PR_TRUE;
 }
 
-DeviceContextImpl :: ~DeviceContextImpl()
+DeviceContextImpl::~DeviceContextImpl()
 {
   nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
   if (obs)
@@ -98,7 +98,7 @@ DeviceContextImpl::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
+NS_IMETHODIMP DeviceContextImpl::Init(nsNativeWidget aWidget)
 {
   mWidget = aWidget;
 
@@ -107,7 +107,7 @@ NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
   return NS_OK;
 }
 
-void DeviceContextImpl :: CommonInit(void)
+void DeviceContextImpl::CommonInit(void)
 {
 #ifdef NS_DEBUG
   NS_ASSERTION(!mInitialized, "device context is initialized twice!");
@@ -124,57 +124,57 @@ void DeviceContextImpl :: CommonInit(void)
     obs->AddObserver(this, "memory-pressure", PR_TRUE);
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetTwipsToDevUnits(float &aTwipsToDevUnits) const
+NS_IMETHODIMP DeviceContextImpl::GetTwipsToDevUnits(float &aTwipsToDevUnits) const
 {
   aTwipsToDevUnits = mTwipsToPixels;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToTwips(float &aDevUnitsToTwips) const
+NS_IMETHODIMP DeviceContextImpl::GetDevUnitsToTwips(float &aDevUnitsToTwips) const
 {
   aDevUnitsToTwips = mPixelsToTwips;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetAppUnitsToDevUnits(float aAppUnits)
+NS_IMETHODIMP DeviceContextImpl::SetAppUnitsToDevUnits(float aAppUnits)
 {
   mAppUnitsToDevUnits = aAppUnits;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetDevUnitsToAppUnits(float aDevUnits)
+NS_IMETHODIMP DeviceContextImpl::SetDevUnitsToAppUnits(float aDevUnits)
 {
   mDevUnitsToAppUnits = aDevUnits;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetAppUnitsToDevUnits(float &aAppUnits) const
+NS_IMETHODIMP DeviceContextImpl::GetAppUnitsToDevUnits(float &aAppUnits) const
 {
   aAppUnits = mAppUnitsToDevUnits;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToAppUnits(float &aDevUnits) const
+NS_IMETHODIMP DeviceContextImpl::GetDevUnitsToAppUnits(float &aDevUnits) const
 {
   aDevUnits = mDevUnitsToAppUnits;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) const
+NS_IMETHODIMP DeviceContextImpl::GetCanonicalPixelScale(float &aScale) const
 {
   aScale = mCPixelScale;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetCanonicalPixelScale(float aScale)
+NS_IMETHODIMP DeviceContextImpl::SetCanonicalPixelScale(float aScale)
 {
   mCPixelScale = aScale;
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
+static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
-NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
+NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
 {
 #ifdef NS_PRINT_PREVIEW
   // AltDC NEVER use widgets to create their DCs
@@ -183,30 +183,27 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRen
   }
 #endif
 
-  nsIRenderingContext *pContext;
-  nsIWidget           *win;
+  nsresult   rv;
+  nsIWidget *win;
   aView->GetWidget(win);
-  nsresult             rv;
 
   aContext = nsnull;
-  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
-
-  if (NS_OK == rv) {
+  nsCOMPtr<nsIRenderingContext> pContext = do_CreateInstance(kRenderingContextCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
     rv = InitRenderingContext(pContext, win);
-    if (NS_OK != rv) {
-      NS_RELEASE(pContext);
+    if (NS_SUCCEEDED(rv)) {
+      aContext = pContext;
+      NS_ADDREF(aContext);
     }
   }
-
+  
   NS_IF_RELEASE(win);
-  aContext = pContext;
   return rv;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
+NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
 {
-  nsIRenderingContext *pContext;
-  nsresult             rv;
+  nsresult rv;
 
 #ifdef NS_PRINT_PREVIEW
   // AltDC NEVER use widgets to create their DCs
@@ -218,20 +215,19 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
 #endif
 
   aContext = nsnull;
-  rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
-
-  if (NS_OK == rv) {
+  nsCOMPtr<nsIRenderingContext> pContext = do_CreateInstance(kRenderingContextCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
     rv = InitRenderingContext(pContext, aWidget);
-    if (NS_OK != rv) {
-      NS_RELEASE(pContext);
+    if (NS_SUCCEEDED(rv)) {
+      aContext = pContext;
+      NS_ADDREF(aContext);
     }
-  }
-
-  aContext = pContext;
+  }    
+  
   return rv;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
+NS_IMETHODIMP DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
 #ifdef NS_PRINT_PREVIEW
   // there are a couple of cases where the kUseAltDCFor_CREATERC_xxx flag has been turned off
@@ -249,11 +245,10 @@ NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aCo
 NS_IMETHODIMP DeviceContextImpl::CreateFontCache()
 {
   mFontCache = new nsFontCache();
-  if (nsnull == mFontCache) {
+  if (!mFontCache) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mFontCache->Init(this);
-  return NS_OK;
+  return mFontCache->Init(this);
 }
 
 NS_IMETHODIMP DeviceContextImpl::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
@@ -328,7 +323,7 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
   return mFontCache->GetMetricsFor(aFont, mLocaleLangGroup, aMetrics);
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
+NS_IMETHODIMP DeviceContextImpl::SetZoom(float aZoom)
 {
   if (mZoom != aZoom) {
     mZoom = aZoom;
@@ -337,13 +332,13 @@ NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetZoom(float &aZoom) const
+NS_IMETHODIMP DeviceContextImpl::GetZoom(float &aZoom) const
 {
   aZoom = mZoom;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetTextZoom(float aTextZoom)
+NS_IMETHODIMP DeviceContextImpl::SetTextZoom(float aTextZoom)
 {
   if (mTextZoom != aTextZoom) {
     mTextZoom = aTextZoom;
@@ -352,19 +347,19 @@ NS_IMETHODIMP DeviceContextImpl :: SetTextZoom(float aTextZoom)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetTextZoom(float &aTextZoom) const
+NS_IMETHODIMP DeviceContextImpl::GetTextZoom(float &aTextZoom) const
 {
   aTextZoom = mTextZoom;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetGamma(float &aGamma)
+NS_IMETHODIMP DeviceContextImpl::GetGamma(float &aGamma)
 {
   aGamma = mGammaValue;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetGamma(float aGamma)
+NS_IMETHODIMP DeviceContextImpl::SetGamma(float aGamma)
 {
   if (aGamma != mGammaValue)
   {
@@ -380,14 +375,14 @@ NS_IMETHODIMP DeviceContextImpl :: SetGamma(float aGamma)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: GetGammaTable(PRUint8 *&aGammaTable)
+NS_IMETHODIMP DeviceContextImpl::GetGammaTable(PRUint8 *&aGammaTable)
 {
   //XXX we really need to ref count this somehow. MMP
   aGammaTable = mGammaTable;
   return NS_OK;
 }
 
-void DeviceContextImpl :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
+void DeviceContextImpl::SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
 {
   double fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
 
@@ -431,7 +426,7 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
     nsAutoString  local;
     PRBool        aliased;
     data->mDC->GetLocalFontName(aFamily, local, aliased);
-    if (aliased || (NS_OK == data->mDC->CheckFontExistence(local))) {
+    if (aliased || (NS_SUCCEEDED(data->mDC->CheckFontExistence(local)))) {
       data->mFaceName = local;
       return PR_FALSE; // found one, stop.
     }
@@ -522,8 +517,8 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
   nsresult result = NS_OK;
 
   if (nsnull != mFontAliasTable) {
-    if (aForceAlias || (NS_OK != CheckFontExistence(aFont))) {
-      if (NS_OK == CheckFontExistence(aAlias)) {
+    if (aForceAlias || NS_FAILED(CheckFontExistence(aFont))) {
+      if (NS_SUCCEEDED(CheckFontExistence(aAlias))) {
         nsString* entry = new nsString(aAlias);
         if (nsnull != entry) {
           FontAliasKey key(aFont);
@@ -533,7 +528,7 @@ nsresult DeviceContextImpl::AliasFont(const nsString& aFont,
           result = NS_ERROR_OUT_OF_MEMORY;
         }
       }
-      else if ((0 < aAltAlias.Length()) && (NS_OK == CheckFontExistence(aAltAlias))) {
+      else if ((0 < aAltAlias.Length()) && NS_SUCCEEDED(CheckFontExistence(aAltAlias))) {
         nsString* entry = new nsString(aAltAlias);
         if (nsnull != entry) {
           FontAliasKey key(aFont);
@@ -575,7 +570,7 @@ NS_IMETHODIMP DeviceContextImpl::GetLocalFontName(const nsString& aFaceName, nsS
   return result;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: FlushFontCache(void)
+NS_IMETHODIMP DeviceContextImpl::FlushFontCache(void)
 {
   if (nsnull != mFontCache)
     mFontCache->Flush();
@@ -584,7 +579,7 @@ NS_IMETHODIMP DeviceContextImpl :: FlushFontCache(void)
 }
 
 #ifdef NS_PRINT_PREVIEW
-NS_IMETHODIMP DeviceContextImpl :: SetAltDevice(nsIDeviceContext* aAltDC)
+NS_IMETHODIMP DeviceContextImpl::SetAltDevice(nsIDeviceContext* aAltDC)
 {
   mAltDC = aAltDC;
 
@@ -595,7 +590,7 @@ NS_IMETHODIMP DeviceContextImpl :: SetAltDevice(nsIDeviceContext* aAltDC)
   return NS_OK;
 }
 
-NS_IMETHODIMP DeviceContextImpl :: SetUseAltDC(PRUint8 aValue, PRBool aOn)
+NS_IMETHODIMP DeviceContextImpl::SetUseAltDC(PRUint8 aValue, PRBool aOn)
 {
   if (aOn) {
     mUseAltDC |= aValue;
@@ -610,20 +605,20 @@ NS_IMETHODIMP DeviceContextImpl :: SetUseAltDC(PRUint8 aValue, PRBool aOn)
 
 MOZ_DECL_CTOR_COUNTER(nsFontCache)
 
-nsFontCache :: nsFontCache()
+nsFontCache::nsFontCache()
 {
   MOZ_COUNT_CTOR(nsFontCache);
   mContext = nsnull;
 }
 
-nsFontCache :: ~nsFontCache()
+nsFontCache::~nsFontCache()
 {
   MOZ_COUNT_DTOR(nsFontCache);
   Flush();
 }
 
 NS_IMETHODIMP 
-nsFontCache :: Init(nsIDeviceContext* aContext)
+nsFontCache::Init(nsIDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   // Note: we don't hold a reference to the device context, because it
@@ -633,7 +628,7 @@ nsFontCache :: Init(nsIDeviceContext* aContext)
 }
 
 NS_IMETHODIMP 
-nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
+nsFontCache::GetDeviceContext(nsIDeviceContext *&aContext) const
 {
   aContext = mContext;
   NS_IF_ADDREF(aContext);
@@ -641,7 +636,7 @@ nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
 }
 
 NS_IMETHODIMP 
-nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIFontMetrics *&aMetrics)
 {
   // First check our cache
@@ -747,7 +742,7 @@ nsresult nsFontCache::Compact()
   return NS_OK;
 }
 
-nsresult nsFontCache :: Flush()
+nsresult nsFontCache::Flush()
 {
   for (PRInt32 i = mFontMetrics.Count()-1; i >= 0; --i) {
     nsIFontMetrics* fm = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[i]);
