@@ -74,7 +74,28 @@ public:
     NS_IMETHOD GetLiteral(const PRUnichar* value, nsIRDFLiteral** literal) = 0;
 
     /**
-     * Registers a resource with the RDF system, making it unique w.r.t. GetResource.
+     * Registers a resource with the RDF system, making it unique w.r.t.
+     * GetResource.
+     *
+     * An implementation of nsIRDFResource should call this in its
+     * Init() method if it wishes the resource to be globally unique
+     * (which is usually the case).
+     *
+     * NOTE that the resource will <i>not</i> be ref-counted by the
+     * RDF service: the assumption is that the resource implementation
+     * will call nsIRDFService::UnregisterResource() when the last
+     * reference to the resource is released.
+     *
+     * NOTE that the nsIRDFService implementation may choose to
+     * maintain a reference to the resource's URI; therefore, the
+     * resource implementation should ensure that the resource's URI
+     * (accessable via nsIRDFResource::GetValue(const char* *aURI)) is
+     * valid before calling RegisterResource(). Furthermore, the
+     * resource implementation should ensure that this pointer
+     * <i>remains</i> valid for the lifetime of the resource. (The
+     * implementation of the resource cache in nsIRDFService uses the
+     * URI maintained "internally" in the resource as a key into the
+     * cache rather than copying the resource URI itself.)
      */
     NS_IMETHOD RegisterResource(nsIRDFResource* aResource, PRBool replace = PR_FALSE) = 0;
 
@@ -97,14 +118,14 @@ public:
 
     /**
      * Register a <i>named data source</i>. The RDF service will call
-     * <tt>nsIRDFDataSource::GetURI()</tt> to determine the URI under which to 
-     * register the data source.
+     * <tt>nsIRDFDataSource::GetURI()</tt> to determine the URI under
+     * which to register the data source.
      *
      * Note that the data source will <i>not</i> be refcounted by the
-     * RDF service! The assumption is that an RDF data source registers
-     * with the service once it is initialized (via <tt>nsIRDFDataSource::Init()</tt>),
-     * and unregisters when the last reference to the data source is
-     * released.
+     * RDF service! The assumption is that an RDF data source
+     * registers with the service once it is initialized (via
+     * <tt>nsIRDFDataSource::Init()</tt>), and unregisters when the
+     * last reference to the data source is released.
      */
     NS_IMETHOD RegisterDataSource(nsIRDFDataSource* dataSource,
                                   PRBool replace = PR_FALSE) = 0;
