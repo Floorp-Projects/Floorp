@@ -145,10 +145,17 @@ private:
   PRPackedBool mIsInitialized;
   PRPackedBool mScriptsEnabled;
   PRPackedBool mGCOnDestruction;
+  PRPackedBool mProcessingScriptTag;
 
   PRUint32 mBranchCallbackCount;
   PRUint32 mDefaultJSOptions;
-  PRBool mProcessingScriptTag;
+
+  // mGlobalWrapperRef is used only to hold a strong reference to the
+  // global object wrapper while the nsJSContext is alive. This cuts
+  // down on the number of rooting and unrooting calls XPConnect has
+  // to make when the global object is touched in JS.
+
+  nsCOMPtr<nsISupports> mGlobalWrapperRef;
 
   static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
 
