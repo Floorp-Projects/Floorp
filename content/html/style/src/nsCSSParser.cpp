@@ -1346,11 +1346,6 @@ static PRInt32 kListStyleKTable[] = {
   -1
 };
 
-static PRInt32 kMarginSizeKTable[] = {
-  KEYWORD_AUTO, NS_STYLE_MARGIN_SIZE_AUTO,
-  -1
-};
-
 static PRInt32 kOverflowKTable[] = {
   KEYWORD_VISIBLE, NS_STYLE_OVERFLOW_VISIBLE,
   KEYWORD_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN,
@@ -1795,8 +1790,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_MARGIN_LEFT:
   case PROP_MARGIN_RIGHT:
   case PROP_MARGIN_TOP:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP,
-                        kMarginSizeKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_PADDING:
     return ParsePadding(aErrorCode, aDeclaration);
   case PROP_PADDING_BOTTOM:
