@@ -92,7 +92,7 @@ public:
                   PRBool  aConsiderSpans);
 
   PRInt32 GetEffectiveColSpan(PRInt32                 aColIndex, 
-                              const nsTableCellFrame* aCell);
+                              const nsTableCellFrame& aCell);
 
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
@@ -216,7 +216,7 @@ public:
   PRInt32 GetEffectiveColSpan(PRInt32                 aRowIndex,
                               PRInt32                 aColIndex,
                               PRInt32                 aNumColsInTable,
-                              const nsTableCellFrame* aCell);
+                              const nsTableCellFrame& aCell);
 
   PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;

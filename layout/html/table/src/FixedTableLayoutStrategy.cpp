@@ -121,7 +121,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
         const nsStylePosition* cellPosition;
         cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
 
-        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(cellFrame);
+        PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);
         // Get fixed cell width if available
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
           colWidths[colX] = cellPosition->mWidth.GetCoordValue() / colSpan;

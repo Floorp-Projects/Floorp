@@ -301,8 +301,10 @@ public:
     * @return  the col span, correcting for col spans that extend beyond the edge
     *          of the table.
     */
-  virtual PRInt32  GetEffectiveColSpan(PRInt32 aColIndex, const nsTableCellFrame *aCell) const;
-  virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame *aCell) const;
+  virtual PRInt32  GetEffectiveColSpan(PRInt32                 aColIndex, 
+                                       const nsTableCellFrame& aCell) const;
+
+  virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame& aCell) const;
 
   /** return the value of the COLS attribute, adjusted for the 
     * actual number of columns in the table
