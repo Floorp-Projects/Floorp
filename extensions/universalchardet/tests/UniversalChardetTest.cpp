@@ -46,7 +46,7 @@
 #ifdef XP_PC
 #include <io.h>
 #endif
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
 #endif
 
