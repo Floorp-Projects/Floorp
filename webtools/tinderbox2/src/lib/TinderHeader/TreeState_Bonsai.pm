@@ -4,12 +4,11 @@
 # TinderHeader::TreeState_Bonsai - an interface to the bonasi VC
 # managment system this module will get the current tree state and set
 # the current tree state using the bonsai conventions when we have
-# implemented it.  Currently it is just holding code from the old
-# version of tinderbox which will help us code the correct version.
+# implemented it.  
 
-# $Revision: 1.1 $ 
-# $Date: 2000/06/22 04:17:19 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2001/02/15 20:48:37 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai.pm,v $ 
 # $Name:  $ 
 
@@ -35,39 +34,55 @@
 # Contributor(s): 
 
 
-package TinderDB::TreeState;
+package TinderHeader::TreeState;
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+# Load standard perl libraries
+
+
+# Load Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
+use BonsaiData;
+
+
+
+$VERSION = ( qw $Revision: 1.2 $ )[1];
+
+# load the simple name of this module into TinderHeader so we can
+# track the implementations provided.
+
+$TinderHeader::NAMES2OBJS{ 'TreeState' } = 
+  TinderHeader::TreeState->new();
+
+
+
+sub new {
+  my $type = shift;
+  my %params = @_;
+  my $self = {};
+
+  bless $self, $type;
+
+  return  $self;
+}
+
 
 sub gettree_header {
-  my $line, $treestate;
 
-  open(BID, "<../bonsai/data/$bonsai_tree/batchid.pl")
-    or die("can't open batchid<br>");
-  $line = <BID>;
-  close(BID);
-
-  if ($line =~ m/'(\d+)'/) {
-      $bid = $1;
-  } else {
-      return ;
-  }
-
-  open(BATCH, "<../bonsai/data/$bonsai_tree/batch-${bid}.pl")
-    or die("can't open batch-${bid}.pl<br>");
-  while ($line = <BATCH>) { 
-    if ($line =~ /^\$::TreeOpen = '(\d+)';/) {
-        $treestate = $1;
-        last;
-    }
-  }
-  close(BATCH);
-
-  $treestate = ($treestate ? 'OPEN' : 'CLOSED');
+  my ($treestate) = BonsaiData::get_tree_state();
 
   return $treestate;
 }
 
+sub savetree_header {
+
+  # NULL implementation.
+
+  #  The tree state must be changed via the bonsai tool. Yhere is no
+  #  programatic way to change the state.
+
+}
 
 1;
 
