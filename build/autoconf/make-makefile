@@ -25,6 +25,7 @@
 
 # Determine various tree path variables
 #
+#$debug = 1;
 
 ($depth, @makefiles) = parse_arguments(@ARGV);
 
@@ -159,9 +160,17 @@ sub find_srcdir {
   my $ac_given_srcdir = $program_name;
   $ac_given_srcdir =~ s|/?build/autoconf/.*$||;
 
+  if ($debug) {
+	print "ac_given_srcdir = $ac_given_srcdir\n";
+        print "depth           = $depth\n";
+  }
   if ($ac_given_srcdir =~ /^\./ and $depth ne '.') {
     my $quoted_depth = quotemeta($depth);
-    $ac_given_srcdir =~ s/$quoted_depth$//;
+    $ac_given_srcdir =~ s/$quoted_depth//;
+    $ac_given_srcdir =~ s/^\/// if ($ac_given_srcdir =~ /^\//);
+  }
+  if ($debug) {
+	print "ac_given_srcdir = $ac_given_srcdir\n";
   }
   $ac_given_srcdir = '.' if $ac_given_srcdir eq '';
   return $ac_given_srcdir;
@@ -175,7 +184,7 @@ sub update_makefiles {
 
   my $ac_file;
   foreach $ac_file (@makefiles) {
-    my $ac_file_in    = "$ac_given_srcdir/$ac_file.in";
+    my $ac_file_in    = "$ac_given_srcdir/${ac_file}.in";
     my $ac_dir        = dirname($ac_file);
     my $ac_dots       = '';
     my $ac_dir_suffix = '';
@@ -202,7 +211,16 @@ sub update_makefiles {
       $srcdir     = "$ac_dots$ac_given_srcdir$ac_dir_suffix";
       $top_srcdir = "$ac_dots$ac_given_srcdir";
     }
-  
+ 
+    if ($debug) {
+	print "ac_dir     = $ac_dir\n";
+	print "ac_file    = $ac_file\n";
+	print "ac_file_in = $ac_file_in\n";
+	print "srcdir     = $srcdir\n";
+	print "top_srcdir = $top_srcdir\n";
+ 	print "cwd        = " . `pwd` . "\n";
+    }
+ 
     # Copy the file and make substitutions.
     #    @srcdir@     -> value of $srcdir
     #    @top_srcdir@ -> value of $top_srcdir
