@@ -49,44 +49,10 @@ class nsIRDFResource;
 class nsString;
 
 /**
- * Returns PR_TRUE if the URI is an RDF ordinal property; e.g., rdf:_1,
- * rdf:_2, etc.
+ * The dreaded is-a function. Uses rdf:instanceOf to determine if aResource is aType.
  */
 PR_EXTERN(PRBool)
-rdf_IsOrdinalProperty(nsIRDFResource* property);
-
-/**
- * Converts an ordinal property to an index
- */
-PR_EXTERN(nsresult)
-rdf_OrdinalResourceToIndex(nsIRDFResource* aOrdinal, PRInt32* aIndex);
-
-/**
- * Converts an index to an ordinal property
- */
-PR_EXTERN(nsresult)
-rdf_IndexToOrdinalResource(PRInt32 aIndex, nsIRDFResource** aOrdinal);
-
-
-/**
- * Returns PR_TRUE if the resource is a container resource; e.g., an
- * rdf:Bag.
- */
-PR_EXTERN(PRBool)
-rdf_IsContainer(nsIRDFDataSource* db,
-                nsIRDFResource* resource);
-
-PR_EXTERN(PRBool)
-rdf_IsBag(nsIRDFDataSource* aDataSource,
-          nsIRDFResource* aResource);
-
-PR_EXTERN(PRBool)
-rdf_IsSeq(nsIRDFDataSource* aDataSource,
-          nsIRDFResource* aResource);
-
-PR_EXTERN(PRBool)
-rdf_IsAlt(nsIRDFDataSource* aDataSource,
-          nsIRDFResource* aResource);
+rdf_IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
 
 /**
  * Construct a new, "anonymous" node; that is, a node with an internal
@@ -114,83 +80,6 @@ rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI);
  */
 PR_EXTERN(nsresult)
 rdf_PossiblyMakeAbsolute(const nsString& aContextURI, nsString& aURI);
-
-/**
- * Create a bag resource.
- */
-PR_EXTERN(nsresult)
-rdf_MakeBag(nsIRDFDataSource* ds,
-            nsIRDFResource* resource);
-
-/**
- * Create a sequence resource.
- */
-PR_EXTERN(nsresult)
-rdf_MakeSeq(nsIRDFDataSource* ds,
-            nsIRDFResource* resource);
-
-/**
- * Create an alternation resource.
- */
-PR_EXTERN(nsresult)
-rdf_MakeAlt(nsIRDFDataSource* ds,
-            nsIRDFResource* resource);
-
-/**
- * Get the current upper bound of the container
- */
-PR_EXTERN(nsresult)
-rdf_ContainerGetCount(nsIRDFDataSource* aDataSource,
-                      nsIRDFResource* aContainer,
-                      PRInt32* aCount);
-
-/**
- * Add an element to the end of container.
- */
-PR_EXTERN(nsresult)
-rdf_ContainerAppendElement(nsIRDFDataSource* ds,
-                           nsIRDFResource* container,
-                           nsIRDFNode* element);
-
-
-/**
- * Remove an element from a container
- */
-PR_EXTERN(nsresult)
-rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
-                           nsIRDFResource* aContainer,
-                           nsIRDFNode* aElement,
-                           PRBool aRenumber);
-
-
-/**
- * Insert an element into a container at the specified index.
- */
-PR_EXTERN(nsresult)
-rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
-                             nsIRDFResource* aContainer,
-                             nsIRDFNode* aElement,
-                             PRInt32 aIndex,
-                             PRBool aRenumber);
-
-/**
- * Determine the index of an element in a container.
- */
-PR_EXTERN(nsresult)
-rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
-                     nsIRDFResource* aContainer,
-                     nsIRDFNode* aElement,
-                     PRInt32* aIndex);
-
-
-/**
- * Create a cursor on a container that enumerates its contents in
- * order
- */
-PR_EXTERN(nsresult)
-NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
-                          nsIRDFResource* aContainer,
-                          nsISimpleEnumerator** aResult);
 
 
 PR_EXTERN(void) SHTtest ();

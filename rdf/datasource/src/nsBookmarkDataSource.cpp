@@ -27,6 +27,7 @@
 
  */
 
+#include "nsIRDFContainer.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -52,7 +53,7 @@ static NS_DEFINE_IID(kIRDFDataSourceIID,        NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-
+static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_IID(kIRDFBookmarkDataSourceIID,NS_IRDFBOOKMARKDATASOURCE_IID);
 
@@ -431,11 +432,13 @@ BookmarkParser::AddBookmark(nsIRDFResource * aContainer, const char *url, const 
 		return rv;
 	}
 
-	if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, bookmark)))
-	{
-		NS_ERROR("unable to add bookmark to container");
-		return rv;
-	}
+    nsCOMPtr<nsIRDFContainer> container;
+    rv = NS_NewRDFContainer(mDataSource, aContainer, getter_AddRefs(container));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = container->AppendElement(bookmark);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
+    if (NS_FAILED(rv)) return rv;
 
 	rv = mDataSource->Assert(bookmark, kRDF_type, kNC_Bookmark, PR_TRUE);
     if (rv != NS_RDF_ASSERTION_ACCEPTED)
@@ -556,15 +559,20 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine, nsIRDFResource* aCont
         return rv;
     }
 
-    if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, folder))) {
-        NS_ERROR("unable to add new folder to parent");
-        return rv;
-    }
+    nsCOMPtr<nsIRDFContainer> container;
+    rv = NS_NewRDFContainer(mDataSource, aContainer, getter_AddRefs(container));
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = rdf_MakeSeq(mDataSource, folder))) {
-        NS_ERROR("unable to make new folder as sequence");
-        return rv;
-    }
+    rv = container->AppendElement(folder);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
+    if (NS_FAILED(rv)) return rv;
+
+    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdfc->MakeSeq(mDataSource, folder, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to make new folder as sequence");
+    if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(folder, kRDF_type, kNC_Folder, PR_TRUE);
     if (rv != NS_RDF_ASSERTION_ACCEPTED) {
@@ -606,9 +614,11 @@ BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsIRDFResource* aC
 		}
 		if (NS_SUCCEEDED(rv = mDataSource->Assert(separator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE)))
 		{
-			if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, separator)))
-			{
-			}
+            nsCOMPtr<nsIRDFContainer> container;
+            rv = NS_NewRDFContainer(mDataSource, aContainer, getter_AddRefs(container));
+            if (NS_SUCCEEDED(rv)) {
+                rv = container->AppendElement(separator);
+            }
 		}
 	}
 	return(rv);
@@ -992,10 +1002,13 @@ nsresult
 BookmarkDataSourceImpl::ReadBookmarks(void)
 {
     nsresult rv;
-    if (NS_FAILED(rv = rdf_MakeSeq(mInner, kNC_BookmarksRoot))) {
-        NS_ERROR("Unaboe to make NC:BookmarksRoot a sequence");
-        return rv;
-    }
+
+    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdfc->MakeSeq(mInner, kNC_BookmarksRoot, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to make NC:BookmarksRoot a sequence");
+    if (NS_FAILED(rv)) return rv;
 
 	nsSpecialSystemDirectory bookmarksFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 
@@ -1029,9 +1042,10 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 		nsCOMPtr<nsIRDFResource>	ieFolder;
 		if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(kURINC_IEFavoritesRoot, getter_AddRefs(ieFolder))))
 		{
-			if (NS_SUCCEEDED(rv = rdf_MakeSeq(mInner, ieFolder)))
+			NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+			if (NS_SUCCEEDED(rv))
 			{
-				if (NS_SUCCEEDED(rv = mInner->Assert(ieFolder, kRDF_type, kNC_Folder, PR_TRUE)))
+				if (NS_SUCCEEDED(rv = rdfc->MakeSeq(mInner, ieFolder, nsnull)))
 				{
 					BookmarkParser parser;
 					parser.Init(&ieStream, this);
@@ -1042,9 +1056,28 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 					{
 						rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 					}
-					if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mInner, kNC_BookmarksRoot, ieFolder)))
+                    nsCOMPtr<nsIRDFContainer> bookmarksRoot;
+                    rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(bookmarksRoot));
+                    if (NS_SUCCEEDED(rv)) {
+					if (NS_SUCCEEDED(rv = bookmarksRoot->AppendElement(ieFolder)))
 					{
+						BookmarkParser parser;
+						parser.Init(&ieStream, this);
+						parser.Parse(ieFolder);
+						
+						nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
+						if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle, getter_AddRefs(ieTitleLiteral))))
+						{
+							rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
+						}
+
+	                    nsCOMPtr<nsIRDFContainer> container;
+	                    rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
+	                    if (NS_SUCCEEDED(rv)) {
+	                        rv = container->AppendElement(ieFolder);
+	                    }
 					}
+                    }
 				}
 			}
 		}
@@ -1064,9 +1097,12 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 		{
 			rv = mInner->Assert(ieFolder, kNC_Name, ieTitleLiteral, PR_TRUE);
 		}
-		if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mInner, kNC_BookmarksRoot, ieFolder)))
-		{
-		}
+
+        nsCOMPtr<nsIRDFContainer> container;
+        rv = NS_NewRDFContainer(mInner, kNC_BookmarksRoot, getter_AddRefs(container));
+        if (NS_SUCCEEDED(rv)) {
+            rv = container->AppendElement(ieFolder);
+        }
 	}
 #endif
 
@@ -1090,8 +1126,20 @@ BookmarkDataSourceImpl::CanAccept(nsIRDFResource* aSource,
     // XXX This is really crippled, and needs to be stricter. We want
     // to exclude any property that isn't talking about a known
     // bookmark.
-    if (! rdf_IsOrdinalProperty(aProperty) ||
-        (aProperty != kRDF_type) ||
+    nsresult rv;
+    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    PRBool isOrdinal;
+    rv = rdfc->IsOrdinalProperty(aProperty, &isOrdinal);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    if (isOrdinal) {
+        return PR_TRUE;
+    }
+    else if ((aProperty != kRDF_type) ||
         (aProperty != kWEB_LastModifiedDate) ||
         (aProperty != kWEB_LastVisitDate) ||
         (aProperty != kNC_Name) ||

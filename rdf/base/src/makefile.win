@@ -28,6 +28,8 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsDefaultResourceFactory.obj  \
         .\$(OBJDIR)\nsInMemoryDataSource.obj      \
         .\$(OBJDIR)\nsRDFContentSink.obj          \
+        .\$(OBJDIR)\nsRDFContainer.obj            \
+        .\$(OBJDIR)\nsRDFContainerUtils.obj       \
         .\$(OBJDIR)\nsRDFParserUtils.obj          \
         .\$(OBJDIR)\nsRDFService.obj              \
         .\$(OBJDIR)\nsRDFXMLDataSource.obj        \

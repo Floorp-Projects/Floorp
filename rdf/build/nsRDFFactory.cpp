@@ -25,6 +25,8 @@
 #include "nsIFactory.h"
 #include "nsIHistoryDataSource.h"
 #include "nsILocalStore.h"
+#include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFContentSink.h"
@@ -53,6 +55,8 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_CID(kLocalStoreCID,                      NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,           NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID,          NS_RDFCOMPOSITEDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFContainerCID,                    NS_RDFCONTAINER_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,               NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,                  NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFDefaultResourceCID,              NS_RDFDEFAULTRESOURCE_CID);
 static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,         NS_RDFFILESYSTEMDATASOURCE_CID);
@@ -191,6 +195,14 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kRDFCompositeDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFCompositeDataSource((nsIRDFCompositeDataSource**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFContainerCID)) {
+        if (NS_FAILED(rv = NS_NewRDFContainer((nsIRDFContainer**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kRDFContainerUtilsCID)) {
+        if (NS_FAILED(rv = NS_NewRDFContainerUtils((nsIRDFContainerUtils**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFHistoryDataSourceCID)) {
@@ -379,7 +391,17 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     // register all the other rdf components:
     rv = compMgr->RegisterComponent(kRDFContentSinkCID,
                                          "RDF Content Sink",
-                                         NS_RDF_PROGID "|content-sink",
+                                         NS_RDF_PROGID "/content-sink",
+                                         aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kRDFContainerCID, 
+                                         "RDF Container",
+                                         NS_RDF_PROGID "/container",
+                                         aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kRDFContainerUtilsCID, 
+                                         "RDF Container Utilities",
+                                         NS_RDF_PROGID "/container-utils",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFHTMLBuilderCID,

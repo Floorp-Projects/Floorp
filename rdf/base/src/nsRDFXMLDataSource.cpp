@@ -48,6 +48,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIOutputStream.h"
 #include "nsIParser.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFContentSink.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -87,6 +88,7 @@ static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
@@ -176,6 +178,9 @@ protected:
     static PRInt32 gRefCnt;
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
+    static nsIRDFResource* kRDF_Bag;
+    static nsIRDFResource* kRDF_Seq;
+    static nsIRDFResource* kRDF_Alt;
 
 public:
     RDFXMLDataSourceImpl(void);
@@ -341,6 +346,9 @@ public:
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXMLDataSourceImpl::kRDF_nextVal;
+nsIRDFResource* RDFXMLDataSourceImpl::kRDF_Bag;
+nsIRDFResource* RDFXMLDataSourceImpl::kRDF_Seq;
+nsIRDFResource* RDFXMLDataSourceImpl::kRDF_Alt;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -395,6 +403,9 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
 
         rv = rdf->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
         rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
     }
 }
 
@@ -1300,13 +1311,13 @@ static const char kRDFAlt[] = "RDF:Alt";
     // Decide if it's a sequence, bag, or alternation, and print the
     // appropriate tag-open sequence
 
-    if (rdf_IsBag(mInner, aContainer)) {
+    if (rdf_IsA(mInner, aContainer, kRDF_Bag)) {
         tag = kRDFBag;
     }
-    else if (rdf_IsSeq(mInner, aContainer)) {
+    else if (rdf_IsA(mInner, aContainer, kRDF_Seq)) {
         tag = kRDFSeq;
     }
-    else if (rdf_IsAlt(mInner, aContainer)) {
+    else if (rdf_IsA(mInner, aContainer, kRDF_Alt)) {
         tag = kRDFAlt;
     }
     else {
@@ -1346,6 +1357,9 @@ static const char kRDFAlt[] = "RDF:Alt";
     rv = mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
     if (NS_FAILED(rv)) return rv;
 
+    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     while (1) {
         PRBool hasMore;
         rv = arcs->HasMoreElements(&hasMore);
@@ -1360,7 +1374,8 @@ static const char kRDFAlt[] = "RDF:Alt";
 
         // If it's a membership property, then output a "LI"
         // tag. Otherwise, output a property.
-        if (rdf_IsOrdinalProperty(property)) {
+        PRBool isOrdinal;
+        if (NS_SUCCEEDED(rdfc->IsOrdinalProperty(property, &isOrdinal)) && isOrdinal) {
             rv = SerializeMember(aStream, aContainer, property);
         }
         else if (property == kRDF_instanceOf) {
@@ -1476,7 +1491,9 @@ RDFXMLDataSourceImpl::Serialize(nsIOutputStream* aStream)
         if (NS_FAILED(rv))
             break;
 
-        if (rdf_IsContainer(mInner, resource)) {
+        if (rdf_IsA(mInner, resource, kRDF_Bag) ||
+            rdf_IsA(mInner, resource, kRDF_Seq) ||
+            rdf_IsA(mInner, resource, kRDF_Alt)) {
             rv = SerializeContainer(aStream, resource);
         }
         else {

@@ -339,7 +339,7 @@ RDFHTMLBuilderImpl::OnAssert(nsIContent* parent,
     if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &valueResource))) {
         // If it's a tree property or an RDF container, then add it as
         // a tree child and return.
-        if (IsTreeProperty(property) || rdf_IsContainer(mDB, valueResource)) {
+        if (IsTreeProperty(property) /* || rdf_IsContainer(mDB, valueResource) */) {
             rv = AddTreeChild(parent, property, valueResource);
             NS_RELEASE(valueResource);
             return rv;
@@ -389,9 +389,11 @@ RDFHTMLBuilderImpl::IsTreeProperty(nsIRDFResource* aProperty)
         return PR_TRUE;
     }
 #endif // defined(TREE_PROPERTY_HACK)
+#if 0
     if (rdf_IsOrdinalProperty(aProperty)) {
         return PR_TRUE;
     }
+#endif
     return PR_FALSE;
 }
 

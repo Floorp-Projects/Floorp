@@ -48,6 +48,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
 #include "nsIPresShell.h"
+#include "nsIRDFContainer.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -108,6 +109,7 @@ static NS_DEFINE_IID(kIXULContentSinkIID,      NS_IXULCONTENTSINK_IID);
 
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
@@ -1109,15 +1111,15 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 
           nsresult rv;
           nsCOMPtr<nsIRDFLiteral> literal;
-          if (NS_FAILED(rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(literal)))) {
-              NS_ERROR("unable to create RDF literal");
-              return rv;
-          }
+          rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(literal));
+          if (NS_FAILED(rv)) return rv;
 
-          if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, GetTopResource(), literal))) {
-              NS_ERROR("unable to add text to container");
-              return rv;
-          }
+          nsCOMPtr<nsIRDFContainer> container;
+          rv = NS_NewRDFContainer(mDataSource, GetTopResource(), getter_AddRefs(container));
+          if (NS_FAILED(rv)) return rv;
+
+          rv = container->AppendElement(literal);
+          NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add text to container");
         }
       }
     }
@@ -1323,10 +1325,12 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         return rv;
     }
 
-    if (NS_FAILED(rv = rdf_MakeSeq(mDataSource, rdfResource))) {
-        NS_ERROR("unable to create sequence for tag");
-        return rv;
-    }
+    NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = rdfc->MakeSeq(mDataSource, rdfResource, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create sequence for tag");
+    if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(rdfResource, kRDF_instanceOf, kXUL_element, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to mark resource as XUL element");
@@ -1377,12 +1381,13 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
     else {
         // We now have an RDF node for the container.  Hook it up to
         // its parent container with a "child" relationship.
-        if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource,
-                                                   GetTopResource(),
-                                                   rdfResource))) {
-            NS_ERROR("unable to add child to container");
-            return rv;
-        }
+        nsCOMPtr<nsIRDFContainer> container;
+        rv = NS_NewRDFContainer(mDataSource, GetTopResource(), getter_AddRefs(container));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = container->AppendElement(rdfResource);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add child to container");
+        if (NS_FAILED(rv)) return rv;
     }
 
     // Push the element onto the context stack, so that child

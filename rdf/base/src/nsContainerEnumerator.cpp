@@ -48,8 +48,9 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -140,15 +141,33 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
     // Otherwise, we need to grovel
 
     // Figure out the upper bound so we'll know when we're done.
-    PRInt32 count;
-    rv = rdf_ContainerGetCount(mDataSource, mContainer, &count);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get upper bound on container");
+    nsCOMPtr<nsIRDFNode> nextValNode;
+    rv = mDataSource->GetTarget(mContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextValNode));
     if (NS_FAILED(rv)) return rv;
 
+    if (rv != NS_OK)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIRDFLiteral> nextVal = do_QueryInterface(nextValNode);
+    if (! nextVal)
+        return NS_ERROR_UNEXPECTED;
+
+    nsXPIDLString nextValStr;
+    rv = nextVal->GetValue(getter_Copies(nextValStr));
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 err;
+    PRInt32 count = nsAutoString(nextValStr).ToInteger(&err);
+    if (NS_FAILED(err))
+        return NS_ERROR_UNEXPECTED;
+
+    // Now iterate through each index.
     while (mNextIndex < count) {
         if (! mCurrent) {
+            NS_WITH_SERVICE(nsIRDFContainerUtils, rdfc, kRDFContainerUtilsCID, &rv);
+            if (NS_FAILED(rv)) return rv;
 
-            rv = rdf_IndexToOrdinalResource(mNextIndex, getter_AddRefs(mOrdinalProperty));
+            rv = rdfc->IndexToOrdinalResource(mNextIndex, getter_AddRefs(mOrdinalProperty));
             if (NS_FAILED(rv)) return rv;
 
             rv = mDataSource->GetTargets(mContainer, mOrdinalProperty, PR_TRUE, &mCurrent);
@@ -226,12 +245,6 @@ NS_NewContainerEnumerator(nsIRDFDataSource* aDataSource,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    PRBool isContainer = rdf_IsContainer(aDataSource, aContainer);
-
-    NS_ASSERTION(isContainer, "not a container");
-    if (! isContainer)
-        return NS_ERROR_ILLEGAL_VALUE;
-    
     ContainerEnumeratorImpl* result = new ContainerEnumeratorImpl(aDataSource, aContainer);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
