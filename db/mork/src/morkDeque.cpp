@@ -170,17 +170,17 @@ morkLink::morkLink() : mLink_Next( 0 ), mLink_Prev( 0 )
 /*static*/ void*
 morkLink::MakeNewLink(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
 {
-  void* link = 0;
+  void* alink = 0;
   if ( &ioHeap )
   {
-    ioHeap.Alloc(ev->AsMdbEnv(), inSize, (void**) &link);
-    if ( !link )
+    ioHeap.Alloc(ev->AsMdbEnv(), inSize, (void**) &alink);
+    if ( !alink )
       ev->OutOfMemoryError();
   }
   else
     ev->NilPointerError();
   
-  return link;
+  return alink;
 }
 
 /*static*/
@@ -210,12 +210,12 @@ morkDeque::morkDeque()
 morkLink*
 morkDeque::RemoveFirst() /*i*/
 {
-  morkLink* link = mDeque_Head.mLink_Next;
-  if ( link != &mDeque_Head )
+  morkLink* alink = mDeque_Head.mLink_Next;
+  if ( alink != &mDeque_Head )
   {
-    (mDeque_Head.mLink_Next = link->mLink_Next)->mLink_Prev = 
+    (mDeque_Head.mLink_Next = alink->mLink_Next)->mLink_Prev = 
       &mDeque_Head;
-    return link;
+    return alink;
   }
   return (morkLink*) 0;
 }
@@ -225,12 +225,12 @@ morkDeque::RemoveFirst() /*i*/
 morkLink*
 morkDeque::RemoveLast() /*i*/
 {
-  morkLink* link = mDeque_Head.mLink_Prev;
-  if ( link != &mDeque_Head )
+  morkLink* alink = mDeque_Head.mLink_Prev;
+  if ( alink != &mDeque_Head )
   {
-    (mDeque_Head.mLink_Prev = link->mLink_Prev)->mLink_Next = 
+    (mDeque_Head.mLink_Prev = alink->mLink_Prev)->mLink_Next = 
       &mDeque_Head;
-    return link;
+    return alink;
   }
   return (morkLink*) 0;
 }
@@ -242,13 +242,13 @@ morkDeque::At(mork_pos index) const /*i*/
   /* indexes are one based (and not zero based) */
 { 
   register mork_num count = 0;
-  register morkLink* link;
-  for ( link = this->First(); link; link = this->After(link) )
+  register morkLink* alink;
+  for ( alink = this->First(); alink; alink = this->After(alink) )
   {
     if ( ++count == index )
       break;
   }
-  return link;
+  return alink;
 }
 
 /*| IndexOf: 
@@ -259,11 +259,11 @@ morkDeque::IndexOf(const morkLink* member) const /*i*/
   /* zero means member is not in deque */
 { 
   register mork_num count = 0;
-  register const morkLink* link;
-  for ( link = this->First(); link; link = this->After(link) )
+  register const morkLink* alink;
+  for ( alink = this->First(); alink; alink = this->After(alink) )
   {
     ++count;
-    if ( member == link )
+    if ( member == alink )
       return (mork_pos) count;
   }
   return 0;
@@ -275,8 +275,8 @@ mork_num
 morkDeque::Length() const /*i*/
 { 
   register mork_num count = 0;
-  register morkLink* link;
-  for ( link = this->First(); link; link = this->After(link) )
+  register morkLink* alink;
+  for ( alink = this->First(); alink; alink = this->After(alink) )
     ++count;
   return count;
 }
@@ -287,8 +287,8 @@ int
 morkDeque::LengthCompare(mork_num c) const /*i*/
 { 
   register mork_num count = 0;
-  register const morkLink* link;
-  for ( link = this->First(); link; link = this->After(link) )
+  register const morkLink* alink;
+  for ( alink = this->First(); alink; alink = this->After(alink) )
   {
     if ( ++count > c )
       return 1;
