@@ -47,12 +47,12 @@ CPPSRCS= \
         nsObject.cpp \
 	nsWindow.cpp \
 	nsComboBox.cpp \
+	nsTextHelper.cpp \
 	nsTextAreaWidget.cpp \
+	nsTextWidget.cpp \
 	nsListBox.cpp \
 	nsRadioButton.cpp \
 	nsFileWidget.cpp \
-	nsTextHelper.cpp \
-	nsTextWidget.cpp \
 	nsCheckButton.cpp \
 	nsScrollbar.cpp \
 	nsButton.cpp \

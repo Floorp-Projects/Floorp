@@ -182,7 +182,9 @@ protected:
   virtual void            UpdateVisibilityFlag();
   virtual void            UpdateDisplay();
 
+public:
   Widget mWidget;
+protected:
   EVENT_CALLBACK mEventCallback;
   nsIDeviceContext *mContext;
   nsIFontMetrics *mFontMetrics;
