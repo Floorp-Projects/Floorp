@@ -55,6 +55,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         $(CURDIR)$(*B).c
 <<KEEP
 
@@ -67,6 +74,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<KEEP
@@ -80,6 +94,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)_jmc\$(*B).c
 <<KEEP
@@ -93,6 +114,13 @@ $(OBJS): makefile.win \
         $(LINCS_1)
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         $(CURDIR)$(*B).cpp
 <<KEEP
 
@@ -105,6 +133,13 @@ $(OBJS): makefile.win \
         $(LINCS_1)
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
 <<KEEP
@@ -119,6 +154,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)_jmc\$(*B).cpp
 <<KEEP
@@ -151,6 +193,13 @@ $(OBJS): makefile.win \
         $(LINCS_1)
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<
@@ -180,6 +229,13 @@ $(OBJS): makefile.win \
         $(LLIBS)
         $(OS_LIBS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
@@ -197,6 +253,13 @@ $(OBJS): makefile.win \
         $(OS_LIBS)
         /link $(LFLAGS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
@@ -220,6 +283,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         $(CURDIR)$(*B).c
 <<KEEP
 
@@ -233,6 +303,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<KEEP
@@ -247,6 +324,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         $(CURDIR)$(*B).cpp
 <<KEEP
 
@@ -260,6 +344,13 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
+!ifdef MAPFILE
+        -Fm$(MAPFILE)
+!endif
+!ifdef CODFILE
+        -Fa$(CODFILE)
+        -FAsc
+!endif
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).cpp
 <<KEEP
