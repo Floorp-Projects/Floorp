@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
+ *		Jean Claude Batista <jcb@macadamian.com>
  *
  */
 
@@ -35,6 +36,7 @@
 #include "nsICharsetConverterManager2.h"
 
 #include <qintdict.h>
+#include <qfontmetrics.h>
 
 class nsFont;
 class nsString;
@@ -45,19 +47,13 @@ class nsFontQTUserDefined;
 class QString;
 class QFont;
 class QFontInfo;
-class QFontMetrics;
 class QFontDatabase;
 
 #undef FONT_HAS_GLYPH
-#define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
- 
+#define FONT_HAS_GLYPH(map,char) IS_REPRESENTABLE(map,char)
+
 typedef struct nsFontCharSetInfo nsFontCharSetInfo;
  
-typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
-                                      QFontMetrics *aFontMetrics,
-                                      const PRUnichar* aSrcBuf,PRInt32 aSrcLen,
-                                      char* aDestBuf,PRInt32 aDestLen);
-
 class nsFontQT
 {
 public:
@@ -66,10 +62,15 @@ public:
   virtual ~nsFontQT();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
  
-  virtual QFont*   GetQFont(void);
-  virtual PRBool   GetQFontIs10646(void);
-  inline int SupportsChar(PRUnichar aChar)
-    { return (mFont && FONT_HAS_GLYPH(mMap,aChar)); };
+  virtual QFont   *GetQFont(void);
+  virtual PRUint32 *GetCharSetMap();
+  PRBool          IsUnicodeFont();
+ 
+  inline int HasChar(PRUnichar aChar)
+  {
+    return(mFontMetrics && mFontMetrics->inFont(QChar(aChar)));
+  };
+  virtual int SupportsChar(PRUnichar aChar);
  
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual int DrawString(nsRenderingContextQT* aContext,
@@ -89,7 +90,6 @@ public:
   QFontInfo*             mFontInfo;
   QFontMetrics*          mFontMetrics;
   nsFontCharSetInfo*     mCharSetInfo;
-  PRUint32*              mMap;
 };
 
 class nsFontMetricsQT : public nsIFontMetrics
@@ -130,6 +130,7 @@ public:
  
     nsFontQT*  FindFont(PRUnichar aChar);
     nsFontQT*  FindUserDefinedFont(PRUnichar aChar);
+    nsFontQT*  FindLangGroupPrefFont(nsIAtom *aLangGroup,PRUnichar aChar);
     nsFontQT*  FindLocalFont(PRUnichar aChar);
     nsFontQT*  FindGenericFont(PRUnichar aChar);
     nsFontQT*  FindGlobalFont(PRUnichar aChar);

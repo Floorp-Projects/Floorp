@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
  */
 
 #include "nsFontMetricsQT.h"
@@ -1072,7 +1072,7 @@ NS_IMETHODIMP nsRenderingContextQT::GetWidth(const PRUnichar *aString,
         nsFontQT **font = metrics->mLoadedFonts;
         nsFontQT **lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
         while (font < lastFont) {
-          if (IS_REPRESENTABLE((*font)->mMap,c)) {
+          if ((*font)->SupportsChar(c)) {
             currFont = *font;
             goto FoundFont; // for speed -- avoid "if" statement
           }
@@ -1186,7 +1186,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const PRUnichar *aString,
         nsFontQT **font = metrics->mLoadedFonts;
         nsFontQT **lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
         while (font < lastFont) {
-          if (IS_REPRESENTABLE((*font)->mMap,c)) {
+          if ((*font)->SupportsChar(c)) {
             currFont = *font;
             goto FoundFont; // for speed -- avoid "if" statement
           }
@@ -1481,7 +1481,7 @@ nsRenderingContextQT::GetBoundingMetrics(const PRUnichar *aString,
       nsFontQT **font = metrics->mLoadedFonts;
       nsFontQT **end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (IS_REPRESENTABLE((*font)->mMap, c)) {
+        if ((*font)->SupportsChar( c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
