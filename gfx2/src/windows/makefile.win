@@ -25,9 +25,10 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
 MODULE		= gfx2
-LIBRARY_NAME= gfx2
-DLL		    = $(OBJDIR)\$(LIBRARY_NAME).dll
-MAKE_OBJ_TYPE = DLL
+LIBRARY_NAME= gfx2_s
+LIBRARY=$(LIBRARY_NAME)
+#DLL		    = $(OBJDIR)\$(LIBRARY_NAME).dll
+#MAKE_OBJ_TYPE = DLL
 
 XPIDL_MODULE= gfx2win
 
@@ -53,11 +54,11 @@ LLIBS	= \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+#install:: $(DLL)
+#	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
-#install:: $(LIBRARY)
-#	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

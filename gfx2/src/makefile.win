@@ -24,28 +24,27 @@
 DEPTH	= ..\..
 include <$(DEPTH)/config/config.mak>
 
-#MODULE		= gfx2
-#LIBRARY_NAME= gfx2
-#DLL		    = $(OBJDIR)\$(LIBRARY_NAME).dll
+MODULE		= gfx2
+LIBRARY_NAME= gfx2
+DLL		    = $(OBJDIR)\$(LIBRARY_NAME).dll
+MAKE_OBJ_TYPE = DLL
 
-#MAKE_OBJ_TYPE = DLL
+OBJS = \
+	.\$(OBJDIR)\gfxImageContainer.obj \
+	$(NULL)
+
+LLIBS	= \
+	$(DIST)\lib\gfx2_s.lib \
+ 	$(DIST)\lib\xpcom.lib \
+	$(NULL)
 
 DIRS		= windows
 
-#OBJS = \
-#	.\$(OBJDIR)\nsRect.obj \
-#	$(NULL)
-
-#LLIBS	= \
-#	$(DIST)\lib\gfx2_s.lib \
-# 	$(DIST)\lib\xpcom.lib \
-#	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-#install:: $(DLL)
-#	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(DLL)
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
-#clobber::
-#	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
-#	rm -f $(PDBFILE).pdb
+clobber::
+	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).dll
+	rm -f $(PDBFILE).pdb
