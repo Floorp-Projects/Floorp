@@ -329,11 +329,12 @@ ErrorExit:
 /* File I/O functions called by PR I/O routines */
 PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 {
-// Macintosh doesn¹t really have mode bits, just drop them
+// Macintosh doesnÕt really have mode bits, just drop them
 #pragma unused (mode)
 
 	OSErr 				err;
- 	HParamBlockRec 		pb;
+ 	HParamBlockRec 		hpb;
+ 	ParamBlockRec 		pb;
 	char	 			*macFileName = NULL;
 	Str255				pascalName;
 	PRInt8 				perm;
@@ -343,34 +344,52 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 	if (err != noErr)
 		goto ErrorExit;
 
-	pb.ioParam.ioCompletion		= NULL;
+	hpb.ioParam.ioCompletion	= NULL;
 	PStrFromCStr(macFileName, pascalName);
 	PR_DELETE(macFileName);
-	pb.ioParam.ioNamePtr 		= pascalName;
-	pb.ioParam.ioVRefNum 		= 0;
-	pb.ioParam.ioVersNum 		= 0;
+	hpb.ioParam.ioNamePtr 		= pascalName;
+	hpb.ioParam.ioVRefNum 		= 0;
+	hpb.ioParam.ioVersNum 		= 0;
 
-open:
+
 	if (flags & PR_RDWR)
 		perm = fsRdWrPerm;
 	else if (flags & PR_WRONLY)
 		perm = fsWrPerm;
 	else
 		perm = fsRdPerm;	
-	pb.ioParam.ioPermssn 		= perm;
+	hpb.ioParam.ioPermssn 		= perm;
 
-	pb.ioParam.ioMisc 			= NULL;
+	hpb.ioParam.ioMisc	 		= NULL;
 	
-	err = PBHOpenSync(&pb);
-	if (err == noErr)
-		return pb.ioParam.ioRefNum;
-	else if ((err != fnfErr) || ((flags & PR_CREATE_FILE) == 0))
+open:
+	err = PBHOpenSync(&hpb);
+	if ((err == fnfErr) && (flags & PR_CREATE_FILE)) {
+		err = PBHCreateSync(&hpb);
+		if (err == noErr)
+			goto open;
+	}
+	if (err != noErr)
 		goto ErrorExit;
-		
-	err = PBHCreateSync(&pb);
-	if (err == noErr)
-		goto open;
 
+	if (flags & PR_TRUNCATE) {
+		pb.ioParam.ioCompletion = NULL;
+		pb.ioParam.ioRefNum = hpb.ioParam.ioRefNum;
+		pb.ioParam.ioMisc = NULL;
+		err = PBSetEOFSync(&pb);
+		if (err != noErr)
+			goto ErrorExit;
+	} else if (flags & PR_APPEND) {
+		pb.ioParam.ioCompletion = NULL;
+		pb.ioParam.ioRefNum = hpb.ioParam.ioRefNum;
+		pb.ioParam.ioPosMode = fsFromLEOF;
+		pb.ioParam.ioPosOffset = 0;
+		err = PBSetFPosSync(&pb);
+		if (err != noErr)
+			goto ErrorExit;
+	}
+	return hpb.ioParam.ioRefNum;
+		
 ErrorExit:
 	_PR_MD_CURRENT_THREAD()->md.osErrCode = err;
 	_MD_SetError(err);
