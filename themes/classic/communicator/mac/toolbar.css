@@ -3,7 +3,7 @@
 
 toolbar
   {
-    background-color      : #CCCCCC;
+    background-color      : #DDDDDD;
     border-bottom         : 1px solid #003366;
   }
 
@@ -23,15 +23,14 @@ toolbar[collapsed="true"] > toolbargrippy
 
 toolbargrippy:hover 
   {
-    background-color      : #99cccc !important; 
-    background-image      : url("chrome://global/skin/taskbar-tab-hover.gif") !important;  
+    background-color      : #003366 !important; 
+    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif") !important;
   } 
 
   
 .toolbar-primary 
   {
-    background-image      : url("chrome://global/skin/navbar-bg.gif");
-    background-color      : #CCCCCC;
+    background-color      : #DDDDDD;
     padding               : 0px;
     min-height            : 47px;
     border                : none;
@@ -39,19 +38,19 @@ toolbargrippy:hover
   
 .toolbar-primary > toolbargrippy, .toolbar-standard > toolbargrippy
   {
-    background-color      : #003366; 
-    background-image      : url("chrome://global/skin/taskbar-tab.gif"); 
+    background-color      : #DDDDDD; 
+    background-image      : url("chrome://global/skin/taskbar-tab-trans.gif"); 
     background-repeat     : no-repeat;
   }
   
 .toolbar-standard 
   {
 	  color                 : white;
-	  background-color      : #003366;
+	  background-color      : #DDDDDD;
 	  padding               : 0px;
 	  margin                : 0px;
 	  border                : none;
-	  min-height            : 46px;
+	  min-height            : 22px;
   }
 
 
