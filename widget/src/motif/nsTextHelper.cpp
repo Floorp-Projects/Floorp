@@ -27,6 +27,27 @@
 
 #define DBG 0
 
+//-------------------------------------------------------------------------
+//
+// nsTextHelper constructor
+//
+//-------------------------------------------------------------------------
+
+nsTextHelper::nsTextHelper(Widget aWidget)
+{
+  mWidget     = aWidget;
+  mIsReadOnly = PR_FALSE;
+  mIsPassword = PR_FALSE;
+}
+
+//-------------------------------------------------------------------------
+//
+// nsTextHelper destructor
+//
+//-------------------------------------------------------------------------
+nsTextHelper::~nsTextHelper()
+{
+}
 
 //-------------------------------------------------------------------------
 void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
@@ -141,26 +162,6 @@ PRUint32  nsTextHelper::GetCaretPosition()
   return (PRUint32)XmTextGetInsertionPosition(mWidget);
 }
 
-//-------------------------------------------------------------------------
-//
-// nsTextHelper constructor
-//
-//-------------------------------------------------------------------------
-
-nsTextHelper::nsTextHelper(nsISupports *aOuter) : nsWindow(aOuter)
-{
-  mIsReadOnly = PR_FALSE;
-  mIsPassword = PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// nsTextHelper destructor
-//
-//-------------------------------------------------------------------------
-nsTextHelper::~nsTextHelper()
-{
-}
 
 //-------------------------------------------------------------------------
 PRBool nsTextHelper::AutoErase()
