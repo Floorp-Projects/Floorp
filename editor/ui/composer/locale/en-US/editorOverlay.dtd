@@ -38,7 +38,7 @@
 <!ENTITY fileRecentMenu.label "Recent Pages">
 <!ENTITY filerecentmenu.accesskey "r">
 <!ENTITY fileRevert.label "Revert to Last Saved">
-<!ENTITY filerevert.accesskey "v">
+<!ENTITY filerevert.accesskey "d">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
 <!ENTITY filesave.keybinding "s">
@@ -406,12 +406,22 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY paragraphaddress.accesskey "a">
 <!ENTITY paragraphPreformatCmd.label "Preformat">
 <!ENTITY paragraphpreformat.accesskey "f">
-<!ENTITY paragraphListCmd.label "List item">
-<!ENTITY paragraphlist.accesskey "l">
-<!ENTITY paragraphDfnTermCmd.label "Term">
-<!ENTITY paragraphterm.accesskey "t">
-<!ENTITY paragraphDfnDescCmd.label "Description">
-<!ENTITY paragraphdesc.accesskey "d">
+
+
+<!-- List menu items -->
+<!ENTITY formatlistMenu.label "List">
+<!ENTITY formatlistmenu.accesskey "l">
+<!ENTITY listBulletCmd.label "Bulleted">
+<!ENTITY listbullet.accesskey "t">
+<!ENTITY listNumberedCmd.label "Numbered">
+<!ENTITY listnumbered.accesskey "n">
+<!ENTITY listTermCmd.label "Term">
+<!ENTITY listterm.accesskey "t">
+<!ENTITY listDefinitionCmd.label "Definition">
+<!ENTITY listdefinition.accesskey "d">
+<!ENTITY listProps.label "List Properties...">
+<!ENTITY listprops.accesskey "l">
+
 <!-- Shared by Heading and Paragraph menu, and in toolbar menulist -->
 <!ENTITY ParagraphSelect.tooltip "tooltip for Paragraph menu on formatting toolbar">
 <!ENTITY normalCmd.label "Normal">
@@ -430,12 +440,6 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY BlockquoteAbbr.label "BQ">
 <!ENTITY AddressAbbr.label "Addr.">
 <!ENTITY PreformatAbbr.label "Pre.">
-<!ENTITY DfnTermAbbr.label "DT">
-<!ENTITY DfnDescAbbr.label "DD">
-
-<!-- List menu items -->
-<!ENTITY listProps.label "List...">
-<!ENTITY formatlistmenu.accesskey "l">
 
 <!-- Style Sheet submenu NOT IMPLEMENTED -->
 <!ENTITY stylesheetMenu.label "Apply Style Sheet">

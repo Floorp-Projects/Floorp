@@ -115,7 +115,7 @@ var DocumentStateListener =
     EditorInitToolbars();
     
     // udpate menu items now that we have an editor to play with
-    //dump("Updating 'create' commands\n");
+    dump("Updating 'create' commands\n");
     window.content.focus();
     window.updateCommands("create");
   },
@@ -415,9 +415,9 @@ function EditorViewSource()
 
 function EditorSetDocumentCharacterSet(aCharset)
 {
-  if(window.editorShell &&
-     (! window.editorShell.documentModified) &&
-       editorShell.editorDocument.locatoin != "about:blank")
+  if(editorShell &&
+     (! editorShell.documentModified) &&
+       editorShell.editorDocument.location != "about:blank")
   {
     dump(aCharset);
     editorShell.SetDocumentCharacterSet(aCharset);
@@ -934,6 +934,29 @@ function EditorInitEditMenu()
   //      with multiple paste format types
 }
 
+function EditorOpenUrl(url)
+{
+  if (!url || url.length == 0)
+    return; 
+
+  // if the existing window is untouched, just load there
+  if (!FindAndSelectEditorWindowWithURL(url))
+  {
+    if (PageIsEmptyAndUntouched())
+    {
+      window.editorShell.LoadUrl(url);
+    }
+    else
+    {
+  	  // open new window
+      window.openDialog("chrome://editor/content",
+  	                    "_blank",
+  	                    "chrome,dialog=no,all",
+  	                    url);
+    }
+  }
+}
+
 function InitRecentFilesMenu()
 {
   //Build submenu of
@@ -968,7 +991,8 @@ function EditorInitFormatMenu()
     {
       var objStr = "";
       menuItem.removeAttribute("disabled");
-      switch (element.nodeName)
+      var name = element.nodeName.toLowerCase();
+      switch (name)
       {
         case 'img':
           objStr = GetString("Image");
@@ -1027,6 +1051,24 @@ function SetBackColorString(xulElementID)
 function InitBackColorPopup()
 {
   SetBackColorString("BackColorCaption"); 
+}
+
+function InitListMenu()
+{
+  SetMenuItemCheckedFromState("menu_ul", "cmd_ul");
+  SetMenuItemCheckedFromState("menu_ol", "cmd_ol");
+  SetMenuItemCheckedFromState("menu_dt", "cmd_dt");
+  SetMenuItemCheckedFromState("menu_dd", "cmd_dd");
+}
+
+function SetMenuItemCheckedFromState(menuItemID, commandID)
+{
+  var menuItem = document.getElementById(menuItemID);
+  var commandNode = document.getElementById(commandID);
+  if (menuItem && commandNode)
+  {
+    menuItem.setAttribute("checked", commandNode.getAttribute("state"));
+  }
 }
 
 function EditorInitToolbars()
@@ -1480,12 +1522,12 @@ function EditorInitTableMenu()
   document.getElementById("menu_tableJoinCells").setAttribute("value",menuText);
 
   // Set platform-specific hints for how to select cells
-  if (gIsWin) osKey = "XulKeyWin";
-  if (gIsMac) osKey = "XulKeyMac";
-  if (gIsUNIX) osKey = "XulKeyUnix";
+  // Mac uses "Cmd", all others use "Ctrl"
+  var tableKey = gIsMac ? "XulKeyMac" : "TableSelectKey";
+  tableKey = GetString(tableKey);
+  var DragStr = tableKey+GetString("Drag");
+  var ClickStr = tableKey+GetString("Click");
 
-  var DragStr = GetString(osKey)+GetString("Drag");
-  var ClickStr = GetString(osKey)+GetString("Click");
   var DelStr = GetString(gIsMac ? "Clear" : "Del");
 
   document.getElementById("menu_DeleteCell").setAttribute("acceltext",ClickStr);

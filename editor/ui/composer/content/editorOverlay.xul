@@ -179,6 +179,8 @@
 
     <command id="cmd_ul"            state="false"     oncommand="goDoCommand('cmd_ul')"/>
     <command id="cmd_ol"            state="false"     oncommand="goDoCommand('cmd_ol')"/>
+    <command id="cmd_dt"            state="false"     oncommand="goDoCommand('cmd_dt')"/>
+    <command id="cmd_dd"            state="false"     oncommand="goDoCommand('cmd_dd')"/>
 
     <command id="cmd_indent"                          oncommand="goDoCommand('cmd_indent')"/>
     <command id="cmd_outdent"                         oncommand="goDoCommand('cmd_outdent')"/>
@@ -266,9 +268,7 @@
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" value="&openFileCmd.label;"/>
       <menu accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="InitRecentFilesMenu()">
         <!-- Items appended at runtime -->
-        <menupopup id="menupopup_RecentFiles">
-          <menuitem value="(recent file menu)"/>
-        </menupopup>
+        <menupopup id="menupopup_RecentFiles"/>
       </menu>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator />
@@ -583,14 +583,25 @@
         <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
         <menuitem value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="ADDRESS"/>   
         <menuitem value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="PRE"/>       
-        <menuitem value="&paragraphDfnTermCmd.label;"     accesskey="&paragraphterm.accesskey;"       data="DT"/>        
-        <menuitem value="&paragraphDfnDescCmd.label;"     accesskey="&paragraphdesc.accesskey;"       data="DD"/>        
       </menupopup>
     </menu>
 
-    <!-- List Style (opens dialog)  -->
-    <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"
-        position="12" observes="cmd_listProperties"/>
+    <!-- List Style submenu -->
+    <menu id="listMenu" value="&formatlistMenu.label;"
+          accesskey="&formatlistmenu.accesskey;"
+          position="12" oncreate="InitListMenu()">
+      <menupopup>
+        <menuitem id="menu_ul" value="&listBulletCmd.label;"      accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
+        <menuitem id="menu_ol" value="&listNumberedCmd.label;"    accesskey="&listnumbered.accesskey;"   observes="cmd_ol"/>
+        <menuseparator/>
+        <menuitem id="menu_dt" value="&listTermCmd.label;"        accesskey="&listterm.accesskey;"       observes="cmd_dt"/>
+        <menuitem id="menu_dd" value="&listDefinitionCmd.label;"  accesskey="&listdefinition.accesskey;" observes="cmd_dd"/>
+        <menuseparator/>
+        <menuitem id="listProps" value="&listProps.label;"        accesskey="&listprops.accesskey;"      observes="cmd_listProperties"/>
+      </menupopup>
+    </menu>
+
+
     <menu id="alignMenu" value="&alignMenu.label;"      accesskey="&formatalignmenu.accesskey;"
         position="13">
       <!-- Align submenu -->
@@ -787,18 +798,16 @@
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
     <menupopup id="ParagraphPopup" oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
       <menuitem value="&normalCmd.label;"              data=""/>
-      <menuitem value="&paragraphParagraphCmd.label;"  data="P"/>
-      <menuitem value="&heading1Cmd.label;"            data="H1"/>
-      <menuitem value="&heading2Cmd.label;"            data="H2"/>
-      <menuitem value="&heading3Cmd.label;"            data="H3"/>
-      <menuitem value="&heading4Cmd.label;"            data="H4"/>
-      <menuitem value="&heading5Cmd.label;"            data="H5"/>
-      <menuitem value="&heading6Cmd.label;"            data="H6"/>
-      <menuitem value="&paragraphBlockquoteCmd.label;" data="BLOCKQUOTE"/>
-      <menuitem value="&paragraphAddressCmd.label;"    data="ADDRESS"/>
-      <menuitem value="&paragraphPreformatCmd.label;"  data="PRE"/>
-      <menuitem value="&paragraphDfnTermCmd.label;"    data="DT"/>
-      <menuitem value="&paragraphDfnDescCmd.label;"    data="DD"/>
+      <menuitem value="&paragraphParagraphCmd.label;"  data="p"/>
+      <menuitem value="&heading1Cmd.label;"            data="h1"/>
+      <menuitem value="&heading2Cmd.label;"            data="h2"/>
+      <menuitem value="&heading3Cmd.label;"            data="h3"/>
+      <menuitem value="&heading4Cmd.label;"            data="h4"/>
+      <menuitem value="&heading5Cmd.label;"            data="h5"/>
+      <menuitem value="&heading6Cmd.label;"            data="h6"/>
+      <menuitem value="&paragraphBlockquoteCmd.label;" data="blockquote"/>
+      <menuitem value="&paragraphAddressCmd.label;"    data="address"/>
+      <menuitem value="&paragraphPreformatCmd.label;"  data="pre"/>
     </menupopup>
   </menulist>
 
