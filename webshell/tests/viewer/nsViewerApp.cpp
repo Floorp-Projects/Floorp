@@ -210,6 +210,8 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-r # -- set the repeat count, which is the number of times the URLs will be loaded in batch mode.\n");
   fprintf(stderr, "\t-f filename -- read a list of URLs from <filename>\n");
   fprintf(stderr, "\t-o dirname -- create an output file for the frame dump of each page and put it in <dirname>\n\t\t<dirname> must include the trailing <slash> character appropriate for your OS\n");
+  fprintf(stderr, "\t-h # -- the initial height of the viewer window.");
+  fprintf(stderr, "\t-w # -- the initial width of the viewer window.");
   fprintf(stderr, "\t-filter filtername -- make 'Dump Frames' command use the filter <filtername> to alter the output.\n\t\tfiltername = none, dump all frames\n\t\tfiltername = table, dump only table frames\n");
   fprintf(stderr, "\t-C -- enable crawler\n");
   fprintf(stderr, "\t-R filename -- record pages visited in <filename>\n");
@@ -336,6 +338,26 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->SetDelay(delay);
+      }
+      else if (PL_strcmp(argv[i], "-w") == 0) {
+        int width;
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &width))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->SetWidth(width);
+      }
+      else if (PL_strcmp(argv[i], "-h") == 0) {
+        int height;
+        i++;
+        if (i>=argc || 1!=sscanf(argv[i], "%d", &height))
+        {
+          PrintHelpInfo(argv);
+          exit(-1);
+        }
+        mCrawler->SetHeight(height);
       }
       else if (PL_strcmp(argv[i], "-r") == 0) {
         i++;
