@@ -584,6 +584,7 @@ protected:
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRPackedBool               mIsPopup;
     PRPackedBool               mIsFastLoad;
+    PRPackedBool               mApplyingPersitedAttrs;
     nsXULDocument*             mNextFastLoad;
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
