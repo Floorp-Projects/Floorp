@@ -624,6 +624,12 @@ PK11_HashBuf(SECOidTag hashAlg, unsigned char *out, unsigned char *in,
     unsigned int out_length;
     SECStatus rv;
 
+    /* len will be passed to PK11_DigestOp as unsigned. */
+    if (len < 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     context = PK11_CreateDigestContext(hashAlg);
     if (context == NULL) return SECFailure;
 
@@ -770,6 +776,11 @@ PK11_DigestOp(PK11Context *context, const unsigned char * in, unsigned inLen)
 {
     CK_RV crv = CKR_OK;
     SECStatus rv = SECSuccess;
+
+    if (!in) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     /* if we ran out of session, we need to restore our previously stored
      * state.
