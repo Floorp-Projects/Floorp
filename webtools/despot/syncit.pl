@@ -163,7 +163,7 @@ while (@reprow = $repquery->fetchrow()) {
     }
     print COMMITCHECK "sub GetT {\n";
     print COMMITCHECK '($b,$_) = (@_);' . "\n";
-    $query = Query("select branches.name,partitions.id from partitions,branches where repositoryid = '$repid' and state != 'Open' and branches.id = branchid order by branches.name");
+    $query = Query("select branches.name,partitions.id from partitions,branches where repositoryid = '$repid' and branches.id = branchid order by branches.name");
     $lastbranch = "";
     while (@row = $query->fetchrow()) {
         ($branchname,$partid) = (@row);
