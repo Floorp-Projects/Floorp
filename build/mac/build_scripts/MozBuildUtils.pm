@@ -252,6 +252,53 @@ sub EmptyTree($)
 }
 
 
+#//--------------------------------------------------------------------------------------------------
+#// Recurse through a directory hierarchy, looking for MANIFEST files.
+#// Currently unused.
+#//--------------------------------------------------------------------------------------------------
+
+sub ScanForManifestFiles($$$$)
+{
+    my($dir, $theme_root, $theme_name, $dist_dir) = @_;
+
+    opendir(DIR, $dir) or die "Cannot open dir $dir\n";
+    my @files = readdir(DIR);
+    closedir DIR;
+
+    my $file;
+
+    foreach $file (@files)
+    {    
+        my $filepath = $dir.":".$file;
+
+        if (-d $filepath)
+        {
+            # print "Looking for MANIFEST files in $filepath\n";        
+            ScanForManifestFiles($filepath, $theme_root, $theme_name, $dist_dir);
+        }
+        elsif ($file eq "MANIFEST")
+        {
+            # print "Doing manifest file $filepath\n";
+
+            # Get the dest path from the first line of the file
+
+            open(MANIFEST, $filepath) || die "Could not open file $file";
+            # Read in the path if available
+            my($dest_line) = <MANIFEST>;
+            chomp $dest_line;
+            close MANIFEST;
+
+            $dest_line =~ s|^#!dest[\t ]+|| || die "No destination line found in $filepath\n";
+
+            my($dest_path) = $dist_dir."chrome:skins:$theme_name:$dest_line";
+            # print " Destination is $dest_path\n";
+
+            InstallResources($filepath, "$dest_path", 0);
+        }
+    }
+}
+
+
 #-----------------------------------------------
 # SetupBuildLog
 #-----------------------------------------------
