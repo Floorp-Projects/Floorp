@@ -29,8 +29,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-// remove this when the nsIURIContentListener crap goes 
-#include "nsIDocShell.h"
 #include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kWebBrowserCID, NS_WEBBROWSER_CID);
@@ -42,7 +40,6 @@ public:
   nsCOMPtr<nsIWebBrowser>     webBrowser;
   nsCOMPtr<nsIGtkEmbed>       embed;
   nsCOMPtr<nsISupportsArray>  topLevelWindowWebShells;
-  nsCOMPtr<nsIDocShell>       docShell;
   nsVoidArray                 topLevelWindows;
   GdkSuperWin                *superwin;
 };
@@ -281,14 +278,10 @@ gtk_moz_embed_realize(GtkWidget *widget)
   }
   // set our callback for creating new browser windows
   embed_private->embed->SetNewBrowserCallback(gtk_moz_embed_handle_new_browser, widget);
-  // get our hands on the docShell.  we can't do this in the init()
-  // function for this particular gtkmozembed object because the
-  // docShell won't be there until after we call nsIWebBrowser->Create()
-  embed_private->webBrowser->GetDocShell(getter_AddRefs(embed_private->docShell));
   // set our webBrowser object as the content listener object
   nsCOMPtr<nsIURIContentListener> uriListener;
   uriListener = do_QueryInterface(embed_private->embed);
-  embed_private->docShell->SetParentURIContentListener(uriListener);
+  embed_private->webBrowser->SetParentURIContentListener(uriListener);
 }
 
 void
