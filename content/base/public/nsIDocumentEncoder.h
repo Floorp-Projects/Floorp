@@ -198,6 +198,13 @@ public:
   NS_IMETHOD SetRange(nsIDOMRange* aRange) = 0;
 
   /**
+   *  If the node is set to a non-null value, then the
+   *  node is used for encoding, otherwise the entire
+   *  document or range or selection is encoded.
+   */
+  NS_IMETHOD SetNode(nsIDOMNode* aNode) = 0;
+
+  /**
    *  Documents typically have an intrinsic character set.
    *  If no intrinsic value is found, the platform character set
    *  is used.
