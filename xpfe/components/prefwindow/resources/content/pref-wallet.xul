@@ -40,6 +40,15 @@
     {
       window.openDialog("chrome://wallet/content/WalletEditor.xul","","modal=yes,chrome,resizable=no");
     }
+
+    function changePasswords()
+    {
+      wallet = Components.classes['component://netscape/wallet'];
+      wallet = wallet.getService();
+      wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+      wallet.WALLET_ChangePassword();
+    }
+
   </html:script>
         
   <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
@@ -90,5 +99,8 @@
     </box>
     <spring class="vgap"/>
   </titledbox>
+
+  <spring class="vgap"/>
+  <titledbutton value="&changePasswords.label;" class="dialog push" onclick="changePasswords();"/>
   
 </window>
