@@ -62,27 +62,15 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #define WORD_BUF_SIZE 100
 #define TEXT_BUF_SIZE 1000
 
-// XXX TODO:
-// 0. re-implement justified text
-// 1. add in a rendering method that can render justified text
-// 2. text renderer should negotiate with rendering context/font
-//    metrics to see what it can handle; for example, if the renderer can
-//    automatically deal with underlining, strikethrough, justification,
-//    etc, then the text renderer should let the rc do the work;
-//    otherwise there should be XP fallback code here.
+// XXX PRE sections that are marked "display: inline" will not reflow
+// properly here because the post-measuring logic in ReflowNormal that
+// joins "words" together won't be executed.
 
-// XXX TODO:
-// implement nsIFrame::Reflow
+// XXX these are a copy of nsTextTransformer's version and they aren't I18N'd!
+#define XP_IS_LOWERCASE(_ch) \
+  (((_ch) >= 'a') && ((_ch) <= 'z'))
 
-// XXX Speedup ideas
-// 1. justified text can use word width information during resize reflows
-// 2. when we are doing an unconstrained reflow we know we are going to
-// get reflowed again; collect up the word widths we are computing as we
-// do this and then save them in the mWords; later on when we get reflowed
-// again we can destroy them
-// 3. when pulling up text get word width information from next-in-flow
-
-// XXX use a PreTextFrame for pre-formatted text?
+#define XP_TO_UPPER(_ch) ((_ch) & ~32)
 
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
@@ -183,6 +171,37 @@ public:
                             PRUint8 aDecorations, 
                             nscoord aX, nscoord aY, nscoord aWidth);
 
+  void PaintSmallCapsText(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          nscolor aTextColor,
+                          PRUint8 aDecorations,
+                          nscolor aSelectionTextColor,
+                          nscolor aSelectionBGColor,
+                          nscoord dx, nscoord dy);
+
+  void RenderSmallCapsString(nsIRenderingContext& aRenderingContext,
+                             PRUint8 aDecorations,
+                             nsIFontMetrics* aNormalFont,
+                             nsIFontMetrics* aSmallFont,
+                             nsIFontMetrics*& aLastFont,
+                             PRUnichar* aBuffer, PRInt32 aLength,
+                             nscoord aX, nscoord aY,
+                             nscoord aWidth);
+
+  void MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+                            nsIFontMetrics* aNormalFont,
+                            nsIFontMetrics* aSmallFont,
+                            PRUnichar* aWord,
+                            PRInt32 aWordLength,
+                            nscoord& aWidthResult);
+
+  void GetWidthSmallCaps(nsIRenderingContext& aRenderingContext,
+                         nsIFontMetrics* aNormalFont,
+                         nsIFontMetrics* aSmallFont,
+                         nsIFontMetrics*& aLastFont,
+                         PRUnichar* aBuffer, PRInt32 aLength,
+                         nscoord& aWidthResult);
+
   void PaintUnicodeText(nsIPresContext& aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nscolor aTextColor,
@@ -240,13 +259,15 @@ protected:
 // tab count.
 
 // Flag indicating that whitespace was skipped
-#define TEXT_SKIP_LEADING_WS    0x01
+#define TEXT_SKIP_LEADING_WS 0x01
 
-#define TEXT_HAS_MULTIBYTE      0x02
+#define TEXT_HAS_MULTIBYTE   0x02
 
-#define TEXT_IS_PRE             0x04
+#define TEXT_IS_PRE          0x04
 
-#define TEXT_BLINK_ON           0x08
+#define TEXT_BLINK_ON        0x08
+
+#define TEXT_IN_WORD         0x10
 
 //----------------------------------------------------------------------
 
@@ -460,20 +481,28 @@ TextFrame::Paint(nsIPresContext& aPresContext,
     nscolor selfg = NS_RGB(255, 255, 255);
 
     // Select rendering method and render
-    PRUint32 hints = 0;
-    aRenderingContext.GetHints(hints);
-    if ((TEXT_HAS_MULTIBYTE & mFlags) ||
-        (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
-      // Use PRUnichar rendering routine
-      PaintUnicodeText(aPresContext, aRenderingContext,
-                       color->mColor, font->mFont.decorations,
-                       selfg, selbg, 0, 0);
+    PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == plainFont.variant;
+    if (smallCaps) {
+      PaintSmallCapsText(aPresContext, aRenderingContext,
+                         color->mColor, font->mFont.decorations,
+                         selfg, selbg, 0, 0);
     }
     else {
-      // Use char rendering routine
-      PaintAsciiText(aPresContext, aRenderingContext,
-                     color->mColor, font->mFont.decorations,
-                     selfg, selbg, 0, 0);
+      PRUint32 hints = 0;
+      aRenderingContext.GetHints(hints);
+      if ((TEXT_HAS_MULTIBYTE & mFlags) ||
+          (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
+        // Use PRUnichar rendering routine
+        PaintUnicodeText(aPresContext, aRenderingContext,
+                         color->mColor, font->mFont.decorations,
+                         selfg, selbg, 0, 0);
+      }
+      else {
+        // Use char rendering routine
+        PaintAsciiText(aPresContext, aRenderingContext,
+                       color->mColor, font->mFont.decorations,
+                       selfg, selbg, 0, 0);
+      }
     }
   }
 
@@ -639,7 +668,7 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
     if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
       PRBool isWhitespace;
       PRInt32 wordLen, contentLen;
-      aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      aTX.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace);
       NS_ASSERTION(isWhitespace, "mFlags and content are out of sync");
       if (isWhitespace) {
         if (nsnull != aIndexes) {
@@ -659,6 +688,7 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
 
   // Rescan the content and transform it. Stop when we have consumed
   // mContentLength characters.
+  PRBool inWord = (TEXT_IN_WORD & mFlags) ? PR_TRUE : PR_FALSE;
   PRInt32 column = mColumn;
   PRInt32 textLength = 0;
   while (0 != n) {
@@ -698,10 +728,11 @@ TextFrame::PrepareUnicodeText(nsIRenderingContext& aRenderingContext,
     else {
       // Get the next word
       PRBool isWhitespace;
-      bp = aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      bp = aTX.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
       if (nsnull == bp) {
         break;
       }
+      inWord = PR_FALSE;
       if (isWhitespace) {
         if (nsnull != aIndexes) {
           // Point mapping indicies at the same content index since
@@ -783,7 +814,7 @@ TextFrame::PrepareAsciiText(nsIRenderingContext& aRenderingContext,
     if (0 != (mFlags & TEXT_SKIP_LEADING_WS)) {
       PRBool isWhitespace;
       PRInt32 wordLen, contentLen;
-      aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      aTX.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace);
       NS_ASSERTION(isWhitespace, "mFlags and content are out of sync");
       if (isWhitespace) {
         if (nsnull != aIndexes) {
@@ -803,6 +834,7 @@ TextFrame::PrepareAsciiText(nsIRenderingContext& aRenderingContext,
 
   // Rescan the content and transform it. Stop when we have consumed
   // mContentLength characters.
+  PRBool inWord = (TEXT_IN_WORD & mFlags) ? PR_TRUE : PR_FALSE;
   PRInt32 column = mColumn;
   PRInt32 textLength = 0;
   while (0 != n) {
@@ -842,10 +874,11 @@ TextFrame::PrepareAsciiText(nsIRenderingContext& aRenderingContext,
     else {
       // Get the next word
       PRBool isWhitespace;
-      bp = aTX.GetNextWord(wordLen, contentLen, isWhitespace);
+      bp = aTX.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
       if (nsnull == bp) {
         break;
       }
+      inWord = PR_FALSE;
       if (isWhitespace) {
         if (nsnull != aIndexes) {
           // Point mapping indicies at the same content index since
@@ -1110,6 +1143,281 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
 }
 
 void
+TextFrame::RenderSmallCapsString(nsIRenderingContext& aRenderingContext,
+                                 PRUint8 aDecorations,
+                                 nsIFontMetrics* aNormalFont,
+                                 nsIFontMetrics* aSmallFont,
+                                 nsIFontMetrics*& aLastFont,
+                                 PRUnichar* aBuffer, PRInt32 aLength,
+                                 nscoord aX, nscoord aY,
+                                 nscoord aWidth)
+{
+  PRUnichar buf[TEXT_BUF_SIZE];
+  PRUnichar* bp0 = buf;
+  if (aLength > TEXT_BUF_SIZE) {
+    bp0 = new PRUnichar[aLength];
+  }
+  PRUnichar* bp = bp0;
+
+  nscoord smallY;
+  nscoord normalAscent, smallAscent;
+  aNormalFont->GetMaxAscent(normalAscent);
+  aSmallFont->GetMaxAscent(smallAscent);
+  if (normalAscent > smallAscent) {
+    smallY = aY + normalAscent - smallAscent;
+  }
+
+  nsIFontMetrics* lastFont = aLastFont;
+  nscoord w;
+  PRInt32 pendingCount;
+  PRUnichar* runStart = bp;
+  for (; --aLength >= 0; aBuffer++) {
+    nsIFontMetrics* nextFont;
+    PRUnichar ch = *aBuffer;
+    if (XP_IS_LOWERCASE(ch)) {
+      nextFont = aSmallFont;
+      ch = XP_TO_UPPER(ch);
+    }
+    else {
+      nextFont = aNormalFont;
+    }
+    if (nextFont != lastFont) {
+      pendingCount = bp - runStart;
+      if (0 != pendingCount) {
+        // Measure previous run of characters using the previous font
+        aRenderingContext.GetWidth(runStart, pendingCount, w);
+        aRenderingContext.DrawString(runStart, pendingCount, aX,
+                                     lastFont == aNormalFont ? aY : smallY,
+                                     w);
+        aX += w;
+        runStart = bp;
+      }
+      aRenderingContext.SetFont(nextFont);
+      lastFont = nextFont;
+    }
+    *bp++ = ch;
+  }
+  pendingCount = bp - runStart;
+  if (0 != pendingCount) {
+    // Measure previous run of characters using the previous font
+    aRenderingContext.GetWidth(runStart, pendingCount, w);
+    aRenderingContext.DrawString(runStart, pendingCount, aX,
+                                 lastFont == aNormalFont ? aY : smallY, w);
+  }
+  aLastFont = lastFont;
+
+  if (bp0 != buf) {
+    delete [] bp0;
+  }
+
+  PaintTextDecorations(aRenderingContext, aDecorations, aX, aY, aWidth);
+}
+
+void
+TextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
+                                nsIFontMetrics* aNormalFont,
+                                nsIFontMetrics* aSmallFont,
+                                PRUnichar* aWord,
+                                PRInt32 aWordLength,
+                                nscoord& aWidthResult)
+{
+  nsIRenderingContext& rc = *aReflowState.rendContext;
+  nsIFontMetrics* lastFont = aNormalFont;
+  GetWidthSmallCaps(rc, aNormalFont, aSmallFont, lastFont,
+                    aWord, aWordLength,
+                    aWidthResult);
+  if (lastFont != aNormalFont) {
+    rc.SetFont(aNormalFont);
+  }
+}
+
+void
+TextFrame::GetWidthSmallCaps(nsIRenderingContext& aRenderingContext,
+                             nsIFontMetrics* aNormalFont,
+                             nsIFontMetrics* aSmallFont,
+                             nsIFontMetrics*& aLastFont,
+                             PRUnichar* aBuffer, PRInt32 aLength,
+                             nscoord& aWidthResult)
+{
+  PRUnichar buf[TEXT_BUF_SIZE];
+  PRUnichar* bp0 = buf;
+  if (aLength > TEXT_BUF_SIZE) {
+    bp0 = new PRUnichar[aLength];
+  }
+  PRUnichar* bp = bp0;
+
+  nsIFontMetrics* lastFont = aLastFont;
+  nscoord w, sum = 0;
+  PRInt32 pendingCount;
+  PRUnichar* runStart = bp;
+  for (; --aLength >= 0; aBuffer++) {
+    nsIFontMetrics* nextFont;
+    PRUnichar ch = *aBuffer;
+    if (XP_IS_LOWERCASE(ch)) {
+      nextFont = aSmallFont;
+      ch = XP_TO_UPPER(ch);
+    }
+    else {
+      nextFont = aNormalFont;
+    }
+    if (nextFont != lastFont) {
+      pendingCount = bp - runStart;
+      if (0 != pendingCount) {
+        // Measure previous run of characters using the previous font
+        aRenderingContext.GetWidth(runStart, pendingCount, w);
+        sum += w;
+        runStart = bp;
+      }
+      aRenderingContext.SetFont(nextFont);
+      lastFont = nextFont;
+    }
+    *bp++ = ch;
+  }
+  pendingCount = bp - runStart;
+  if (0 != pendingCount) {
+    // Measure previous run of characters using the previous font
+    aRenderingContext.GetWidth(runStart, pendingCount, w);
+    sum += w;
+  }
+  if (bp0 != buf) {
+    delete [] bp0;
+  }
+  aLastFont = lastFont;
+  aWidthResult = sum;
+}
+
+void
+TextFrame::PaintSmallCapsText(nsIPresContext& aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nscolor aTextColor,
+                              PRUint8 aDecorations,
+                              nscolor aSelectionTextColor,
+                              nscolor aSelectionBGColor,
+                              nscoord dx, nscoord dy)
+{
+  nsIPresShell* shell = aPresContext.GetShell();
+  nsIDocument* doc = shell->GetDocument();
+  PRBool displaySelection;
+  displaySelection = doc->GetDisplaySelection();
+
+  // Make enough space to transform
+  PRUnichar wordBufMem[WORD_BUF_SIZE];
+  PRUnichar paintBufMem[TEXT_BUF_SIZE];
+  PRInt32 indicies[TEXT_BUF_SIZE];
+  PRInt32* ip = indicies;
+  PRUnichar* paintBuf = paintBufMem;
+  if (mContentLength > TEXT_BUF_SIZE) {
+    ip = new PRInt32[mContentLength];
+    paintBuf = new PRUnichar[mContentLength];
+  }
+  nscoord width = mRect.width;
+  PRInt32 textLength;
+
+  // Transform text from content into renderable form
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
+  PrepareUnicodeText(aRenderingContext, tx,
+                     displaySelection ? ip : nsnull,
+                     paintBuf, textLength, width);
+
+  nsIFontMetrics* normal;
+  nsIFontMetrics* small;
+  normal = aRenderingContext.GetFontMetrics();
+
+  // Get small-caps font that is 70% the size of the normal font
+  const nsFont* normalFont;
+  normal->GetFont(normalFont);
+  nsFont newFont(*normalFont);
+  newFont.size = nscoord(0.7 * newFont.size);
+  small = aPresContext.GetMetricsFor(newFont);
+
+  nsIFontMetrics* lastFont = normal;
+
+  PRUnichar* text = paintBuf;
+  if (0 != textLength) {
+    if (!displaySelection) {
+      // When there is no selection showing, use the fastest and
+      // simplest rendering approach
+      RenderSmallCapsString(aRenderingContext, aDecorations,
+                            normal, small, lastFont,
+                            text, textLength, dx, dy, width);
+    }
+    else {
+      SelectionInfo si;
+      ComputeSelectionInfo(aRenderingContext, doc, ip, textLength, si);
+
+      nscoord textWidth;
+      nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
+      if (si.mEmptySelection) {
+        RenderSmallCapsString(aRenderingContext, aDecorations,
+                              normal, small, lastFont,
+                              text, textLength, dx, dy, width);
+        GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
+                          text, PRUint32(si.mStartOffset), textWidth);
+        RenderSelectionCursor(aRenderingContext,
+                              dx + textWidth, dy, mRect.height,
+                              CURSOR_COLOR);
+      }
+      else {
+        nscoord x = dx;
+
+        if (0 != si.mStartOffset) {
+          // Render first (unselected) section
+          GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
+                            text, PRUint32(si.mStartOffset),
+                            textWidth);
+          RenderSmallCapsString(aRenderingContext, aDecorations,
+                                normal, small, lastFont,
+                                text, si.mStartOffset,
+                                x, dy, textWidth);
+          x += textWidth;
+        }
+        PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
+        if (0 != secondLen) {
+          // Get the width of the second (selected) section
+          GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
+                            text + si.mStartOffset,
+                            PRUint32(secondLen), textWidth);
+
+          // Render second (selected) section
+          aRenderingContext.SetColor(aSelectionBGColor);
+          aRenderingContext.FillRect(x, dy, textWidth, mRect.height);
+          aRenderingContext.SetColor(aSelectionTextColor);
+          RenderSmallCapsString(aRenderingContext, aDecorations,
+                                normal, small, lastFont,
+                                text + si.mStartOffset, secondLen,
+                                x, dy, textWidth);
+          aRenderingContext.SetColor(aTextColor);
+          x += textWidth;
+        }
+        if (textLength != si.mEndOffset) {
+          PRInt32 thirdLen = textLength - si.mEndOffset;
+
+          // Render third (unselected) section
+          GetWidthSmallCaps(aRenderingContext, normal, small, lastFont,
+                            text + si.mEndOffset, PRUint32(thirdLen),
+                            textWidth);
+          RenderSmallCapsString(aRenderingContext, aDecorations,
+                                normal, small, lastFont,
+                                text + si.mEndOffset,
+                                thirdLen, x, dy, textWidth);
+        }
+      }
+      NS_RELEASE(fm);
+    }
+  }
+
+  // Cleanup
+  if (paintBuf != paintBufMem) {
+    delete [] paintBuf;
+  }
+  if (ip != indicies) {
+    delete [] ip;
+  }
+  NS_RELEASE(shell);
+  NS_RELEASE(doc);
+}
+
+void
 TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nscolor aTextColor,
@@ -1307,12 +1615,6 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   nscoord width = 0;
   PRInt32 textLength;
 
-  // Get the renderable form of the text
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
-  PrepareUnicodeText(*aRendContext, tx,
-                     ip, paintBuf, textLength, width);
-  ip[mContentLength] = ip[mContentLength-1]+1;
-
   // Find the font metrics for this text
   nsIStyleContext* styleContext;
   aNewFrame->GetStyleContext(&aCX, styleContext);
@@ -1321,6 +1623,13 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   NS_RELEASE(styleContext);
   nsIFontMetrics* fm = aCX.GetMetricsFor(font->mFont);
   aRendContext->SetFont(fm);
+  PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == font->mFont.variant;
+
+  // Get the renderable form of the text
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE);
+  PrepareUnicodeText(*aRendContext, tx,
+                     ip, paintBuf, textLength, width);
+  ip[mContentLength] = ip[mContentLength-1]+1;
 
   PRInt32 offset = mContentOffset + mContentLength;
   PRInt32 index;
@@ -1416,17 +1725,6 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-static void
-MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
-                     const nsStyleFont& aFont,
-                     PRUnichar* aWord,
-                     PRInt32 aWordLength,
-                     nscoord& aWidthResult)
-{
-  // XXX write me!
-  aReflowState.rendContext->GetWidth(aWord, aWordLength, aWidthResult);
-}
-
 nsReflowStatus
 TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
                         nsHTMLReflowMetrics& aMetrics,
@@ -1443,7 +1741,16 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
     wrapping = PR_FALSE;
   }
+
+  // Prepare for small-font handling
+  nsIFontMetrics* smallFont = nsnull;
   PRBool smallCaps = NS_STYLE_FONT_VARIANT_SMALL_CAPS == aFont.mFont.variant;
+  if (smallCaps) {
+    // Get small-caps font that is 70% the size of the normal font
+    nsFont newFont(aFont.mFont);
+    newFont.size = nscoord(0.7 * newFont.size);
+    smallFont = aLineLayout.mPresContext.GetMetricsFor(newFont);
+  }
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
@@ -1472,15 +1779,22 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
   PRInt32 prevOffset = -1;
   nscoord lastWordWidth = 0;
 
-  // Loop over words and whitespace in content and measure
+  // Loop over words and whitespace in content and measure. Set inWord
+  // to true if we are part of a previous piece of text's word. This
+  // is only valid for one pass through the measuring loop.
+  PRBool inWord = aLineLayout.InWord();
+  if (inWord) {
+    mFlags |= TEXT_IN_WORD;
+  }
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
-    PRUnichar* bp = tx.GetNextWord(wordLen, contentLen, isWhitespace);
+    PRUnichar* bp = tx.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
     if (nsnull == bp) {
       break;
     }
+    inWord = PR_FALSE;
 
     // Measure the word/whitespace
     nscoord width;
@@ -1496,7 +1810,7 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
       width = spaceWidth;
     } else {
       if (smallCaps) {
-        MeasureSmallCapsText(aReflowState, aFont, bp, wordLen, width);
+        MeasureSmallCapsText(aReflowState, fm, smallFont, bp, wordLen, width);
       }
       else {
         aReflowState.rendContext->GetWidth(bp, wordLen, width);
@@ -1590,6 +1904,9 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
         }
       }
     }
+  }
+  if (smallCaps) {
+    NS_RELEASE(smallFont);
   }
 
   if (0 == x) {
@@ -1711,7 +2028,7 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
                        
   PRBool isWhitespace;
   PRInt32 wordLen, contentLen;
-  PRUnichar* bp = tx.GetNextWord(wordLen, contentLen, isWhitespace);
+  PRUnichar* bp = tx.GetNextWord(PR_TRUE, wordLen, contentLen, isWhitespace);
   if ((nsnull == bp) || isWhitespace) {
     // Don't bother measuring nothing
     aStop = PR_TRUE;
@@ -1731,7 +2048,13 @@ TextFrame::ComputeWordFragmentWidth(nsLineLayout& aLineLayout,
     nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(font->mFont);
     rc.SetFont(fm);
     if (NS_STYLE_FONT_VARIANT_SMALL_CAPS == font->mFont.variant) {
-      MeasureSmallCapsText(aReflowState, *font, buf, wordLen, width);
+      // Get small-caps font that is 70% the size of the normal font
+      nsFont newFont(font->mFont);
+      newFont.size = nscoord(0.7 * newFont.size);
+      nsIFontMetrics* smallFont =
+        aLineLayout.mPresContext.GetMetricsFor(newFont);
+      MeasureSmallCapsText(aReflowState, fm, smallFont, buf, wordLen, width);
+      NS_RELEASE(smallFont);
     }
     else {
       rc.GetWidth(buf, wordLen, width);
@@ -1785,6 +2108,10 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
 
   // Transform each section of the content. The transformer stops on
   // tabs and newlines.
+  PRBool inWord = aLineLayout.InWord();
+  if (inWord) {
+    mFlags |= TEXT_IN_WORD;
+  }
   nscoord totalLen = 0;
   for (;;) {
     PRUnichar* bp = tx.GetNextSection(lineLen, contentLen);
@@ -1803,6 +2130,14 @@ TextFrame::ReflowPre(nsLineLayout& aLineLayout,
       nscoord sectionWidth;
       aReflowState.rendContext->GetWidth(bp, lineLen, sectionWidth);
       width += sectionWidth;
+#if XXX
+      if (' ' == bp[lineLen-1]) {
+        endsInWhitespace = PR_TRUE;
+      }
+      else {
+        endsInWhitespace = PR_FALSE;
+      }
+#endif
     }
   }
   if (tx.HasMultibyte()) {
