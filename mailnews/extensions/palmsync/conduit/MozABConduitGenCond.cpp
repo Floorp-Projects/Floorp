@@ -422,7 +422,7 @@ long CALLBACK CondCfgDlgProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lPar
             else
                 pCfgInfo->syncNew = eDoNothing;
             pCfgInfo->syncPref = (IsDlgButtonChecked(hWnd, IDC_MAKEDEFAULT))
-      				?  ePermanentPreference : eTemporaryPreference;
+				?  ePermanentPreference : eTemporaryPreference;
             EndDialog(hWnd, 0);
             return TRUE;
           default:

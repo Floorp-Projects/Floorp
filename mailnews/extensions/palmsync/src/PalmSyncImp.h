@@ -67,7 +67,7 @@ public :
 
     // Get the list of Address Books for the currently logged in user profile
     STDMETHODIMP nsGetABList(BOOL aIsUnicode, short * aABListCount,
-                            lpnsMozABDesc * aABList, long ** aABCatIndexList, BOOL ** aFirstTimeSyncList);
+                            lpnsMozABDesc * aABList, long ** aABCatIndexList, BOOL ** aDirFlags);
 
     // Synchronize the Address Book represented by the aCategoryIndex and/or corresponding aABName in Mozilla
     STDMETHODIMP nsSynchronizeAB(BOOL aIsUnicode, long aCategoryIndex, long aCategoryId, LPTSTR aABName,

@@ -97,8 +97,8 @@ protected:
     long CopyHHtoPC();
     long CopyPCtoHH();
     // utility methods
-    BOOL CategoryExists(CPString &mozABName, CPString &mozABURL);
-    BOOL CategoryNameMatches(CPString &catName, CPString &cutOffMozABName, CPString &mozABURL);
+    BOOL CategoryExists(CPString &mozABName, BOOL isPAB);
+    BOOL CategoryNameMatches(CPString &catName, CPString &cutOffMozABName, BOOL isPAB);
 
 private:
     CSyncProperties m_rSyncProperties;

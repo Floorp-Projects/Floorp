@@ -116,7 +116,11 @@ NS_IMETHODIMP nsAbIPCCard::Copy(nsIAbCard *srcCard)
     srcCard->GetLastModifiedDate(&lastModifiedDate);
     mStatus = (lastModifiedDate) ? ATTR_MODIFIED : ATTR_NEW;
 
-    return nsAbCardProperty::Copy(srcCard);
+    rv = nsAbCardProperty::Copy(srcCard);
+    // do we need to join the work and home addresses?
+    // or split them?
+
+    return rv;
 }
 
 nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
@@ -169,7 +173,7 @@ nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
     SetCellularNumber(str.get());
 
     // See if home address contains multiple lines.
-    SplitHomeAddresses(srcCard, PR_TRUE);
+    SplitHomeAndWorkAddresses(srcCard, PR_TRUE);
 
     CONVERT_CRLF_TO_SPACE(str, srcCard->homeCity);
     SetHomeCity(str.get());
@@ -182,12 +186,6 @@ nsresult nsAbIPCCard::Copy(nsABCOMCardStruct * srcCard)
 
     CONVERT_CRLF_TO_SPACE(str, srcCard->homeCountry);
     SetHomeCountry(str.get());
-
-    CONVERT_CRLF_TO_SPACE(str, srcCard->workAddress);
-    SetWorkAddress(str.get());
-
-    CONVERT_CRLF_TO_SPACE(str, srcCard->workAddress2);
-    SetWorkAddress2(str.get());
 
     CONVERT_CRLF_TO_SPACE(str, srcCard->workCity);
     SetWorkCity(str.get());
@@ -294,7 +292,7 @@ nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
     SetCellularNumber(str.get());
 
     // See if home address contains multiple lines.
-    SplitHomeAddresses(srcCard, PR_FALSE);
+    SplitHomeAndWorkAddresses(srcCard, PR_FALSE);
 
     CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeCity, PR_TRUE);
     SetHomeCity(str.get());
@@ -307,12 +305,6 @@ nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
 
     CONVERT_ASSIGNTO_UNICODE(str, srcCard->homeCountry, PR_TRUE);
     SetHomeCountry(str.get());
-
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workAddress, PR_TRUE);
-    SetWorkAddress(str.get());
-
-    CONVERT_ASSIGNTO_UNICODE(str, srcCard->workAddress2, PR_TRUE);
-    SetWorkAddress2(str.get());
 
     CONVERT_ASSIGNTO_UNICODE(str, srcCard->workCity, PR_TRUE);
     SetWorkCity(str.get());
@@ -372,31 +364,54 @@ nsresult nsAbIPCCard::ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard)
     return NS_OK;
 }
 
-void nsAbIPCCard::SplitHomeAddresses(nsABCOMCardStruct * card, PRBool isUnicode)
+void nsAbIPCCard::SplitAddresses(PRBool isUnicode, LPTSTR homeAddress, LPTSTR workAddress)
 {
-  // If the address contains more than one line then split it into two 
-  // (since moz only allows two address lines) and make sure all CRLFs
-  // are converted to spaces in the 2nd address line. Lines are ended
-  // with CRLF (done by moz conduit) and 'card->homeAddress2 is never used.
   PRInt32 idx;
-  nsAutoString str;
+  nsAutoString homeAddressStr;
+  nsAutoString workAddressStr;
   if (isUnicode)
-    str.Assign(card->homeAddress);
-  else
-    CONVERT_ASSIGNTO_UNICODE(str, card->homeAddress, PR_FALSE);
-
-  nsAutoString addr1, addr2;
-  if ((idx = str.Find( "\x0D\x0A")) != kNotFound)
   {
-    str.Left(addr1, idx);
-    str.Right( addr2, str.Length() - idx - 2);  // need to minus string lenght of CRLF.
+    homeAddressStr.Assign(homeAddress);
+    workAddressStr.Assign(workAddress);
+  }
+  else
+  {
+    CONVERT_ASSIGNTO_UNICODE(homeAddressStr, homeAddress, PR_FALSE);
+    CONVERT_ASSIGNTO_UNICODE(workAddressStr, workAddress, PR_FALSE);
+  }
+  nsAutoString addr1, addr2;
+  if ((idx = homeAddressStr.Find( "\x0D\x0A")) != kNotFound)
+  {
+    homeAddressStr.Left(addr1, idx);
+    homeAddressStr.Right( addr2, homeAddressStr.Length() - idx - 2);  // need to minus string lenght of CRLF.
     addr2.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(", ").get());
 
     SetHomeAddress(addr1.get());
     SetHomeAddress2(addr2.get());
   }
   else
-    SetHomeAddress(str.get());
+    SetHomeAddress(homeAddressStr.get());
+  if ((idx = workAddressStr.Find( "\x0D\x0A")) != kNotFound)
+  {
+    workAddressStr.Left(addr1, idx);
+    workAddressStr.Right( addr2, workAddressStr.Length() - idx - 2);  // need to minus string lenght of CRLF.
+    addr2.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(", ").get());
+
+    SetWorkAddress(addr1.get());
+    SetWorkAddress2(addr2.get());
+  }
+  else
+    SetWorkAddress(workAddressStr.get());
+}
+
+void nsAbIPCCard::SplitHomeAndWorkAddresses(nsABCOMCardStruct * card, PRBool isUnicode)
+{
+  // If the address contains more than one line then split it into two 
+  // (since moz only allows two address lines) and make sure all CRLFs
+  // are converted to spaces in the 2nd address line. Lines are ended
+  // with CRLF (done by moz conduit). So card->homeAddress2 
+  // and card->workAddress2 are never used.
+  SplitAddresses(isUnicode, card->homeAddress, card->workAddress);
 }
 
 
@@ -407,9 +422,18 @@ PRBool nsAbIPCCard::EqualsAfterUnicodeConversion(nsABCOMCardStruct * card, nsStr
 
     // convert to Unicode first
     nsAbIPCCard card1(card, PR_FALSE);
+    card1.SplitAddresses(PR_FALSE, card->homeAddress, card->workAddress);
     nsABCOMCardStruct * newCard = new nsABCOMCardStruct;
     // get the unicode nsABCOMCardStruct and compare
     card1.GetABCOMCardStruct(PR_TRUE, newCard);
+    // want to split newCard home and work address
+
+    // I think this leaks...need to free up the original values
+    card1.CopyValue(PR_TRUE, m_HomeAddress, &newCard->homeAddress);
+    card1.CopyValue(PR_TRUE, m_HomeAddress2, &newCard->homeAddress2);
+    card1.CopyValue(PR_TRUE, m_WorkAddress, &newCard->workAddress);
+    card1.CopyValue(PR_TRUE, m_WorkAddress2, &newCard->workAddress2);
+  
     PRBool ret = Equals(newCard, differingAttrs);
     delete newCard;
     return ret;
@@ -456,6 +480,7 @@ PRBool nsAbIPCCard::Equals(nsABCOMCardStruct * card, nsStringArray & differingAt
     if(card->cellularNumber)
         if (Compare(nsDependentString(card->cellularNumber), m_CellularNumber, nsCaseInsensitiveStringComparator()))
             differingAttrs.AppendString(NS_LITERAL_STRING(kCellularColumn));
+    // card  has home and work addresses joined, but "this" has them split
     if(card->homeAddress)
         if (Compare(nsDependentString(card->homeAddress), m_HomeAddress, nsCaseInsensitiveStringComparator()))
             differingAttrs.AppendString(NS_LITERAL_STRING(kHomeAddressColumn));
@@ -474,6 +499,7 @@ PRBool nsAbIPCCard::Equals(nsABCOMCardStruct * card, nsStringArray & differingAt
     if(card->homeCountry)
         if (Compare(nsDependentString(card->homeCountry), m_HomeCountry, nsCaseInsensitiveStringComparator()))
             differingAttrs.AppendString(NS_LITERAL_STRING(kHomeCountryColumn));
+    // card->workAddress is Joined, m_workAddress and m_workAddress2 are split
     if(card->workAddress)
         if (Compare(nsDependentString(card->workAddress), m_WorkAddress, nsCaseInsensitiveStringComparator()))
             differingAttrs.AppendString(NS_LITERAL_STRING(kWorkAddressColumn));
@@ -616,6 +642,7 @@ NS_IMETHODIMP nsAbIPCCard::Equals(nsIAbCard *card, PRBool *_retval)
     if (Compare(str, m_HomeCountry, nsCaseInsensitiveStringComparator()))
         return NS_OK;
 
+    // both card and this have their addresses split, which is correct
     card->GetWorkAddress(getter_Copies(str));
     if (Compare(str, m_WorkAddress, nsCaseInsensitiveStringComparator()))
         return NS_OK;
@@ -828,13 +855,11 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     CopyValue(isUnicode, m_PagerNumber, &card->pagerNumber);
     CopyValue(isUnicode, m_CellularNumber, &card->cellularNumber);
     // See if home address contains multiple lines.
-    JoinHomeAddresses(isUnicode, card);
+    JoinHomeAndWorkAddresses(isUnicode, card);
     CopyValue(isUnicode, m_HomeCity, &card->homeCity);
     CopyValue(isUnicode, m_HomeState, &card->homeState);
     CopyValue(isUnicode, m_HomeZipCode, &card->homeZipCode);
     CopyValue(isUnicode, m_HomeCountry, &card->homeCountry);
-    CopyValue(isUnicode, m_WorkAddress, &card->workAddress);
-    CopyValue(isUnicode, m_WorkAddress2, &card->workAddress2);
     CopyValue(isUnicode, m_WorkCity, &card->workCity);
     CopyValue(isUnicode, m_WorkState, &card->workState);
     CopyValue(isUnicode, m_WorkZipCode, &card->workZipCode);
@@ -857,9 +882,9 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     card->preferMailFormat = m_PreferMailFormat;
     card->addressToUse = CPalmSyncImp::nsUseABHomeAddressForPalmAddress(); // 0 == home, 1 == work
     if (CPalmSyncImp::nsPreferABHomePhoneForPalmPhone())
-      card->preferredPhoneNum = (m_HomePhone.IsEmpty()) ? 1 : 2;
+      card->preferredPhoneNum = (m_HomePhone.IsEmpty()) ? (m_WorkPhone.IsEmpty() ? 4 : 1) : 2;
     else
-      card->preferredPhoneNum = (m_WorkPhone.IsEmpty()) ? 2 : 1;
+      card->preferredPhoneNum = (m_WorkPhone.IsEmpty()) ? 2 : (m_WorkPhone.IsEmpty() ? 4 : 1);
     card->isMailList = m_IsMailList;
     // Can't use ToNewCString() call here becasue MSCOM will complaint about
     // memory deallocation (ie, NdrPointerFree()) use CoTaskMemAlloc() instead.
@@ -877,13 +902,13 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     return NS_OK;
 }
 
-void nsAbIPCCard::JoinHomeAddresses(PRBool isUnicode, nsABCOMCardStruct * card)
+void nsAbIPCCard::JoinAddress(PRBool isUnicode, LPTSTR *ptrAddress, nsString &address1, nsString &address2)
 {
   // If the two address lines in a moz card are not empty
   // then join the lines into a single line separated by
   // '\x0A'. This is the format expected by Palm.
-  card->homeAddress = NULL;
-  PRUint32 strLength= m_HomeAddress.Length() + m_HomeAddress2.Length();
+  *ptrAddress = NULL;
+  PRUint32 strLength= address1.Length() + address2.Length();
   if(!strLength)
     return;
 
@@ -892,37 +917,37 @@ void nsAbIPCCard::JoinHomeAddresses(PRBool isUnicode, nsABCOMCardStruct * card)
   if(isUnicode)
   { 
     PRUnichar * uniStr = (PRUnichar *) CoTaskMemAlloc(sizeof(PRUnichar) * (strLength));
-    if(m_HomeAddress.Length())
+    if(address1.Length())
     {
-      wcsncpy(uniStr, m_HomeAddress.get(), strLength-1);
+      wcsncpy(uniStr, address1.get(), strLength-1);
       uniStr[strLength-1] = '\0';
-      if(m_HomeAddress2.Length())
+      if(address2.Length())
       {
         wcsncat(uniStr, (const wchar_t *)"\x0A", strLength-1);
-        wcsncat(uniStr, m_HomeAddress2.get(), strLength-1);
+        wcsncat(uniStr, address2.get(), strLength-1);
         uniStr[strLength-1] = '\0';
       }
     }
     else
     {
-      wcsncpy(uniStr, m_HomeAddress2.get(), strLength-1);
+      wcsncpy(uniStr, address2.get(), strLength-1);
       uniStr[strLength-1] = '\0';
     }
 
-    card->homeAddress = uniStr;
+    *ptrAddress = uniStr;
   } 
   else
   { 
     char * str = (char *) CoTaskMemAlloc(strLength);
     nsCAutoString cStr;
-    if(m_HomeAddress.Length())
+    if(address1.Length())
     {
-      cStr = NS_LossyConvertUCS2toASCII(m_HomeAddress); 
+      cStr = NS_LossyConvertUCS2toASCII(address1); 
       strncpy(str, cStr.get(), strLength-1);
       str[strLength-1] = '\0';
-      if(m_HomeAddress2.Length())
+      if(address2.Length())
       {
-        cStr = NS_LossyConvertUCS2toASCII(m_HomeAddress2);
+        cStr = NS_LossyConvertUCS2toASCII(address2);
         strncat(str, "\x0A", strLength-1);
         strncat(str, cStr.get(), strLength-1);
         str[strLength-1] = '\0';
@@ -930,12 +955,17 @@ void nsAbIPCCard::JoinHomeAddresses(PRBool isUnicode, nsABCOMCardStruct * card)
     }
     else
     {
-      cStr = NS_LossyConvertUCS2toASCII(m_HomeAddress2);
+      cStr = NS_LossyConvertUCS2toASCII(address2);
       strncpy(str, cStr.get(), strLength-1);
       str[strLength-1] = '\0';
     }
-    card->homeAddress = (LPTSTR) str;
+    *ptrAddress = (LPTSTR) str;
   } 
+}
+void nsAbIPCCard::JoinHomeAndWorkAddresses(PRBool isUnicode, nsABCOMCardStruct * card)
+{
+  JoinAddress(isUnicode, &card->homeAddress, m_HomeAddress, m_HomeAddress2);
+  JoinAddress(isUnicode, &card->workAddress, m_WorkAddress, m_WorkAddress2);
 }
 
 

@@ -97,13 +97,13 @@ CMozABConduitRecord::CMozABConduitRecord(nsABCOMCardStruct &rec)
     m_csAddress = (MozABPCManager::gUseHomeAddress)
                     ? rec.homeAddress : rec.workAddress;
 
+    m_csCity = (MozABPCManager::gUseHomeAddress) ? rec.homeCity : rec.workCity;
+    m_csState = (MozABPCManager::gUseHomeAddress) ? rec.homeState : rec.workState;
+    m_csZipCode = (MozABPCManager::gUseHomeAddress) ? rec.homeZipCode : rec.workZipCode;
+    m_csCountry = (MozABPCManager::gUseHomeAddress) ? rec.homeCountry : rec.workCountry;
 //    CONDUIT_LOG3(gFD, "\nCMozABConduitRecord::CMozABConduitRecord(nsABCOMCardStruct &rec) gUseHomeAddress = %s card home address = %s card work address = %s\n", 
 //      (MozABPCManager::gUseHomeAddress) ? "true" : "false", (char *) rec.homeAddress, (char *) rec.workAddress);
     m_dwDisplayPhone = rec.preferredPhoneNum;
-    m_csCity = rec.homeCity;
-    m_csState = rec.homeState;
-    m_csZipCode = rec.homeZipCode;
-    m_csCountry = rec.homeCountry;
 
     m_csNote = rec.notes;
 
@@ -164,7 +164,8 @@ eRecCompare CMozABConduitRecord::Compare(const CMozABConduitRecord &rec)
          (m_dwPhone3LabelID != rec.m_dwPhone3LabelID ) ||
          (m_dwPhone4LabelID != rec.m_dwPhone4LabelID ) ||
          (m_dwPhone5LabelID != rec.m_dwPhone5LabelID ) ||
-         (m_dwDisplayPhone !=  rec.m_dwDisplayPhone ) ||
+         // comment this out until we can match 4.x's displayPhone algorithm
+//         (m_dwDisplayPhone !=  rec.m_dwDisplayPhone ) ||
          (m_csName !=  rec.m_csName ) ||
          (m_csFirst !=  rec.m_csFirst ) ||
          (m_csTitle !=  rec.m_csTitle ) ||
@@ -295,13 +296,37 @@ long CMozABConduitRecord::ConvertFromGeneric(CPalmRecord &rec)
 //        (MozABPCManager::gUseHomeAddress) ? "true" : "false", (char *) m_nsCard.homeAddress, (char *) m_nsCard.workAddress, (char *) m_csAddress);
     }
     // City
-    if (flags.city) COPY_FROM_GENERIC(m_csCity, m_nsCard.homeCity)
+    if (flags.city) 
+    {
+      if (MozABPCManager::gUseHomeAddress)
+        COPY_FROM_GENERIC(m_csCity, m_nsCard.homeCity)
+      else
+        COPY_FROM_GENERIC(m_csCity, m_nsCard.workCity)
+    }
     // State
-    if (flags.state) COPY_FROM_GENERIC(m_csState, m_nsCard.homeState)
+    if (flags.state) 
+    {
+      if (MozABPCManager::gUseHomeAddress)
+        COPY_FROM_GENERIC(m_csState, m_nsCard.homeState)
+      else
+        COPY_FROM_GENERIC(m_csState, m_nsCard.workState)
+    }
     // ZipCode
-    if (flags.zipCode) COPY_FROM_GENERIC(m_csZipCode, m_nsCard.homeZipCode)
+    if (flags.zipCode) 
+    {
+      if (MozABPCManager::gUseHomeAddress)
+        COPY_FROM_GENERIC(m_csZipCode, m_nsCard.homeZipCode)
+      else
+        COPY_FROM_GENERIC(m_csZipCode, m_nsCard.workZipCode)
+    }
     // Country
-    if (flags.country) COPY_FROM_GENERIC(m_csCountry, m_nsCard.homeCountry)
+    if (flags.country)
+    {
+      if (MozABPCManager::gUseHomeAddress)
+        COPY_FROM_GENERIC(m_csCountry, m_nsCard.homeCountry)
+      else
+        COPY_FROM_GENERIC(m_csCountry, m_nsCard.workCountry)
+    }
     // Title
     if (flags.title) COPY_FROM_GENERIC(m_csTitle, m_nsCard.jobTitle)
     // Customs

@@ -46,6 +46,9 @@ typedef struct
   LPTSTR lpszABUrl;
 }nsMozABDesc, *lpnsMozABDesc;
 
+const int kFirstTimeSyncDirFlag = 0x1;
+const int kIsPabDirFlag = 0x2;
+
 // This structure defines the data fields for MozAB based on "nsIAbCard.idl"
 // This structure is used for interaction with the other AddressBook Apps
 // nsIAbCard changes should be reflected here to take care of those changes

@@ -178,7 +178,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
   nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(resource, &rv);
   if(NS_FAILED(rv)) return E_FAIL;
 
-  nsXPIDLCString fileName, uri;
+  nsXPIDLCString fileName, uri, prefName;
   nsAutoString description;
   PRUint32 dirType, palmSyncTimeStamp;
   PRInt32 palmCategoryIndex;
@@ -213,6 +213,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
         if(NS_FAILED(rv)) return E_FAIL;
         rv = properties->GetCategoryId(&palmCategoryIndex);
         if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetPrefName(getter_Copies(prefName));
 
         // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
         if (((fileName.Length() > kABFileName_PreviousSuffixLen) && 
@@ -232,7 +233,7 @@ nsresult nsAbPalmHotSync::GetABInterface()
         // check for matching AB+Category, and special case personal address book
         // to match "Personal" category.
         if(description == mAbName || 
-            (uri.Equals(PERSONAL_ADDRBOOK_URL, nsCaseInsensitiveCStringComparator())
+            (prefName.Equals("ldap_2.servers.pab", nsCaseInsensitiveCStringComparator())
              && mAbName.Equals(NS_LITERAL_STRING("Personal"), nsCaseInsensitiveStringComparator())))
           break;
         directory = nsnull;

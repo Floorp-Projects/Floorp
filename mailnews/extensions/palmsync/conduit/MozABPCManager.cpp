@@ -94,7 +94,7 @@ BOOL MozABPCManager::InitMozPalmSyncInstance(IPalmSync **aRetValue)
 }
 
 // this function allocates the list as well as the strings, caller should free list and delete strings
-long MozABPCManager::GetPCABList(DWORD * pCategoryCount, LONG ** pCategoryIndexList, CPString *** pCategoryNameList, CPString *** pCategoryUrlList, BOOL ** pIsFirstTimeSyncList)
+long MozABPCManager::GetPCABList(DWORD * pCategoryCount, LONG ** pCategoryIndexList, CPString *** pCategoryNameList, CPString *** pCategoryUrlList, BOOL ** pDirFlags)
 {
     lpnsMozABDesc mozABNameList=NULL;
 
@@ -108,7 +108,7 @@ long MozABPCManager::GetPCABList(DWORD * pCategoryCount, LONG ** pCategoryIndexL
 
     // get the ABList
     HRESULT hres = pNsPalmSync->nsGetABList(FALSE, &dwMozABCount, 
-                                        &mozABNameList, pCategoryIndexList, pIsFirstTimeSyncList);
+                                        &mozABNameList, pCategoryIndexList, pDirFlags);
     if (hres != S_OK) {
         retval = (long) hres;
         return retval;

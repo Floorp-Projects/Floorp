@@ -50,9 +50,9 @@ public:
     MozABPCManager() { }
     ~MozABPCManager() { }
 
-	// this will return the list of ABs in Mozilla and if they were synced before
+	// this will return the list of ABs in Mozilla and some flags, including if they were synced before
     long GetPCABList(DWORD * pCategoryCount, LONG ** pCategoryIndexList, 
-                        CPString *** pCategoryNameList, CPString *** pCategoryURLList, BOOL ** pIsFirstTimeSyncList);
+                        CPString *** pCategoryNameList, CPString *** pCategoryURLList, BOOL ** pDirFlags);
 	// this will update a Mozilla AB with updated Palm records and 
 	// return updated records in a Mozilla AB after the last sync
     // this will take care of first time sync also in which case 
