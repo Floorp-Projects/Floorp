@@ -245,7 +245,7 @@ void CNSToolbar2::AddHiddenButton(CToolbarButton *pButton)
 // Arguments -  nIndex			the index to remove from
 //
 // Returns - the button being removed
-CToolbarButton* CNSToolbar2::RemoveButton(int nIndex, BOOL bNotify)
+CToolbarButton* CNSToolbar2::RemoveButton(int nIndex, BOOL bNotify, BOOL doRelayout)
 {
 	ASSERT( nIndex < m_nMaxButtons);
 	ASSERT( nIndex >=0 && nIndex < m_nNumButtons);
@@ -264,21 +264,22 @@ CToolbarButton* CNSToolbar2::RemoveButton(int nIndex, BOOL bNotify)
 
 	pButton->MoveWindow(0,0,0,0);
 	
-	if(CheckMaxButtonSizeChanged(pButton, FALSE))
+	if (doRelayout)
 	{
-		ChangeButtonSizes();
-		LayoutButtons(-1);
-		GetParentFrame()->RecalcLayout();
+		if(CheckMaxButtonSizeChanged(pButton, FALSE))
+		{
+			ChangeButtonSizes();
+			LayoutButtons(-1);
+			GetParentFrame()->RecalcLayout();
+		}
+		else
+		{
+			//make sure it's the size of the largest button so far
+			LayoutButtons(nIndex - 1);
+		}
 	}
-	else
-	{
-		//make sure it's the size of the largest button so far
-		LayoutButtons(nIndex - 1);
-	}
-
 
 	return pButton;
-
 }
 
 // Function - Remove
@@ -288,28 +289,28 @@ CToolbarButton* CNSToolbar2::RemoveButton(int nIndex, BOOL bNotify)
 // Arguments -  pButton		the button to remove
 //
 // Returns - the button being removed or NULL if that button can't be found
-CToolbarButton* CNSToolbar2::RemoveButton(CToolbarButton *pButton)
+CToolbarButton* CNSToolbar2::RemoveButton(CToolbarButton *pButton, BOOL doRelayout)
 {
 
 	for(int i = 0; i < m_nNumButtons; i++)
 	{
 		if(m_pButtonArray[i] == pButton)
 		{
-			return RemoveButton(i);
+			return RemoveButton(i, TRUE, doRelayout);
 		}
 	}
 
 	return NULL;
 }
 
-CToolbarButton* CNSToolbar2::RemoveButtonByCommand(UINT nCommand)
+CToolbarButton* CNSToolbar2::RemoveButtonByCommand(UINT nCommand, BOOL doRelayout)
 {
 
 	for(int i = 0; i < m_nNumButtons; i++)
 	{
 		if(m_pButtonArray[i]->GetButtonCommand() == nCommand)
 		{
-			return RemoveButton(i);
+			return RemoveButton(i, TRUE, doRelayout);
 		}
 	}
 

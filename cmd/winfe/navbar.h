@@ -47,9 +47,12 @@ class CNavTitleBar : public CWnd, public CCustomImageObject
 	BOOL m_bShowTitleText;
 
 	CRect cachedCloseRect;
+	CRect cachedAddRect;
 	CRect cachedModeRect;
+
 	BOOL m_bDrawCloseFrame;
 	BOOL m_bDrawModeFrame;
+	BOOL m_bDrawAddFrame;
 
 	UINT m_hFocusTimer;
 

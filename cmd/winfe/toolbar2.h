@@ -93,9 +93,9 @@ public:
 
 	void AddHiddenButton(CToolbarButton *pButton);
 
-	CToolbarButton* RemoveButton(int nIndex, BOOL bNotify = TRUE);
-	CToolbarButton* RemoveButton(CToolbarButton *pButton);
-	CToolbarButton* RemoveButtonByCommand(UINT nCommand);
+	CToolbarButton* RemoveButton(int nIndex, BOOL bNotify = TRUE, BOOL doRelayout = TRUE);
+	CToolbarButton* RemoveButton(CToolbarButton *pButton, BOOL doRelayout = TRUE);
+	CToolbarButton* RemoveButtonByCommand(UINT nCommand, BOOL doRelayout = TRUE);
 
 	void DecrementButtonCount() { m_nNumButtons--; }
 	virtual BOOL ShouldClipChildren() { return TRUE; }

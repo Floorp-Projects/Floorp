@@ -1401,8 +1401,9 @@ void CRDFToolbar::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHa
 					// Destroy the toolbar button
 					CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 					if (m_hWnd)
-					  RemoveButton(pButton);
-					else DecrementButtonCount();
+						RemoveButton(pButton, FALSE);
+					else 
+						DecrementButtonCount();
 					delete pButton;
 
 				}
@@ -1421,10 +1422,7 @@ void CRDFToolbar::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHa
 			{
 				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 				if (pButton->m_hWnd)
-				{
-					pButton->SetText(HT_GetNodeName(n)); // Update our name.
 					LayoutButtons(-1);
-				}
 			}
 		}
 	}
@@ -1653,7 +1651,7 @@ void CRDFToolbar::SetMinimumRows(int rowWidth)
 	{
         // Get the current button
 		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
-        if (!pButton) // Separator
+        if (!pButton)
 			continue;
 
         CSize s = pButton->GetMinimalButtonSize();
@@ -1717,6 +1715,22 @@ void CRDFToolbar::ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, in
 
 void CRDFToolbar::LayoutButtons(int nIndex)
 {
+	// Make sure buttons exist for every item.
+	HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	if (!cursor)
+		return;
+	HT_Resource item;
+    while ((item = HT_GetNextItem(cursor)))
+	{
+        // Get the current button
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+        if (!pButton)
+		{
+			AddHTButton(item);
+			pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
+		}
+	}
+
     int width = m_nWidth;
 
     if (width <= 0)
@@ -1748,10 +1762,9 @@ void CRDFToolbar::LayoutButtons(int nIndex)
     int numChars = 0; // Start off trying to fit the whole thing on the toolbar.
     int minChars = 0;
 	
-	HT_Cursor cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
+	cursor = HT_NewCursor(HT_TopNode(m_ToolbarView));
 	if (!cursor)
 		return;
-	HT_Resource item;
     while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
@@ -2480,11 +2493,14 @@ void CRDFToolbarHolder::DrawSeparator(int i, HDC hDC, int nStartX, int nEndX, in
 
 	if (i < m_nNumOpen)
 	{
-		CRDFToolbar* pToolbar = (CRDFToolbar*)(m_pToolbarArray[i]->GetToolbar());
-		pToolbar->ComputeColorsForSeparators();
+		if (m_pToolbarArray[i] != NULL)
+		{
+			CRDFToolbar* pToolbar = (CRDFToolbar*)(m_pToolbarArray[i]->GetToolbar());
+			pToolbar->ComputeColorsForSeparators();
 		
-		shadowColor = pToolbar->GetShadowColor();
-		highlightColor = pToolbar->GetHighlightColor();
+			shadowColor = pToolbar->GetShadowColor();
+			highlightColor = pToolbar->GetHighlightColor();
+		}
 	}
 
 	HPEN pen = ::CreatePen(PS_SOLID, 1, shadowColor);

@@ -19,6 +19,7 @@
 // Embedded menu and close box for Aurora (Created by Dave Hyatt)
 
 #include "stdafx.h"
+#include "cxabstra.h"
 #include "navbar.h"
 #include "navfram.h"
 #include "usertlbr.h"
@@ -47,7 +48,7 @@ BEGIN_MESSAGE_MAP(CNavTitleBar, CWnd)
 END_MESSAGE_MAP()
 
 CNavTitleBar::CNavTitleBar()
-:m_bHasFocus(FALSE), m_bDrawCloseFrame(FALSE), m_bDrawModeFrame(FALSE)
+:m_bHasFocus(FALSE), m_bDrawCloseFrame(FALSE), m_bDrawModeFrame(FALSE), m_bDrawAddFrame(FALSE)
 {
 	m_pBackgroundImage = NULL;
 	m_View = NULL;
@@ -209,11 +210,6 @@ void CNavTitleBar::OnPaint( )
 	dc.DrawText((LPCSTR)titleText, -1, &sizeRect, nFormat);
 
 	// Draw the control strip text.
-	CString modeText("details");
-	HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
-	if (data)
-		modeText = (char*)data;
-
 	CFont smallArialFont;
 	LOGFONT lf2;
 	XP_MEMSET(&lf2,0,sizeof(LOGFONT));
@@ -222,34 +218,68 @@ void CNavTitleBar::OnPaint( )
 	strcpy(lf2.lfFaceName, "Arial");
 	smallArialFont.CreatePointFontIndirect(&lf2, &dc);
 	HFONT smallFont = (HFONT)smallArialFont.GetSafeHandle();
-
 	::SelectObject(dc.m_hDC, smallFont);
+
+	// The ADD button
+	CString addText("Add"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
+	//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
+	//if (data)
+	//	modeText = (char*)data;
+	
+	CRect addRect(controlStripRect);
+	int smallHeight = ::DrawText(dc.m_hDC, addText, addText.GetLength(), &addRect, DT_CALCRECT | DT_WORDBREAK);
+	
+	if (addRect.Width() > rect.Width() - 9)
+	{
+		// Don't write into the close box area!
+		addRect.right = addRect.left + (rect.Width() - 9);
+	}
+	addRect.left += 4;	// indent slightly horizontally
+	addRect.right += 4;
+
+	// Center the text vertically.
+	addRect.top = (controlStripRect.Height() - smallHeight) / 2;
+	addRect.bottom = addRect.top + smallHeight;
+
+	// Cache the rect
+	cachedAddRect.top = 0;
+	cachedAddRect.left = 0;
+	cachedAddRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+	cachedAddRect.right = addRect.right + 3;
+
+	// The MANAGE button
+	CString modeText("Manage"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
+	//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
+	//if (data)
+	//	modeText = (char*)data;
+
 	CRect modeRect(controlStripRect);
-	int smallHeight = ::DrawText(dc.m_hDC, modeText, modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
+	smallHeight = ::DrawText(dc.m_hDC, modeText, modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
 	
 	if (modeRect.Width() > rect.Width() - 9)
 	{
 		// Don't write into the close box area!
 		modeRect.right = modeRect.left + (rect.Width() - 9);
 	}
-	modeRect.left += 4;	// indent slightly horizontally
-	modeRect.right += 4;
+	modeRect.left += cachedAddRect.right + 6;	// account for add rect and indent slightly horizontally
+	modeRect.right += cachedAddRect.right + 6;
 
 	// Center the text vertically.
 	modeRect.top = (controlStripRect.Height() - smallHeight) / 2;
 	modeRect.bottom = modeRect.top + smallHeight;
+	modeRect.right += 4;
 
 	// Cache the rect
 	cachedModeRect.top = 0;
-	cachedModeRect.left = 0;
+	cachedModeRect.left = cachedAddRect.right + 2;
 	cachedModeRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
-	cachedModeRect.right = modeRect.right + 3;
+	cachedModeRect.right = cachedModeRect.left + modeRect.Width() + 3;
 
 	// Now compute the close box rect.
-	CString closeText("close");
+	CString closeText("Close");  
 	HT_GetTemplateData(topNode, gNavCenter->controlStripCloseText, HT_COLUMN_STRING, &data);
 	if (data)
-		closeText = (char*)data;
+	  closeText = (char*)data;
 
 	CRect closeRect(controlStripRect);
 	::DrawText(dc.m_hDC, closeText, closeText.GetLength(), &closeRect, DT_CALCRECT | DT_WORDBREAK);
@@ -281,6 +311,7 @@ void CNavTitleBar::OnPaint( )
 	dc.SetTextColor(m_ControlStripForegroundColor);
 	dc.DrawText((LPCSTR)closeText, -1, &closeRect, nFormat);
 	dc.DrawText((LPCSTR)modeText, -1, &modeRect, nFormat);
+	dc.DrawText((LPCSTR)addText, -1, &addRect, nFormat);
 
 	// See if we're supposed to draw a framing rect.
 	
@@ -292,6 +323,10 @@ void CNavTitleBar::OnPaint( )
 	if (m_bDrawModeFrame)
 	{
 		dc.FrameRect(cachedModeRect, &controlBrush);
+	}
+	if (m_bDrawAddFrame)
+	{
+		dc.FrameRect(cachedAddRect, &controlBrush);
 	}
 
 	dc.SetTextColor(oldColor);
@@ -319,6 +354,20 @@ void CNavTitleBar::OnLButtonDown (UINT nFlags, CPoint point )
 	{
 		CRDFOutliner* pOutliner = (CRDFOutliner*)HT_GetViewFEData(m_View);
 		HT_ToggleTreeMode(m_View);
+	}
+	else if (cachedAddRect.PtInRect(point))
+	{
+		CGenericFrame* pFrame = (CGenericFrame*)FEU_GetLastActiveFrame(MWContextBrowser);
+		if (pFrame)
+		{
+			CAbstractCX* pAbstract = pFrame->GetMainContext();
+			MWContext* mwContext = pAbstract->GetContext();
+			History_entry *pHistEnt = SHIST_GetCurrent( &(mwContext->hist) );
+			if (pHistEnt)
+			{
+				HT_AddToContainer( HT_TopNode(m_View), pHistEnt->address, mwContext->title );
+			}
+		}
 	}
 	else
 	{
@@ -351,9 +400,11 @@ void CNavTitleBar::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		BOOL oldCloseFrame = m_bDrawCloseFrame;
 		BOOL oldModeFrame = m_bDrawModeFrame;
+		BOOL oldAddFrame = m_bDrawAddFrame;
 
 		m_bDrawCloseFrame = FALSE;
 		m_bDrawModeFrame = FALSE;
+		m_bDrawAddFrame = FALSE;
 
 		if (cachedCloseRect.PtInRect(point))
 		{
@@ -365,12 +416,20 @@ void CNavTitleBar::OnMouseMove(UINT nFlags, CPoint point)
 			m_bDrawModeFrame = TRUE;
 			m_hFocusTimer = SetTimer(IDT_STRIPFOCUS, STRIPFOCUS_DELAY_MS, NULL);
 		}
+		else if (cachedAddRect.PtInRect(point))
+		{
+			m_bDrawAddFrame = TRUE;
+			m_hFocusTimer = SetTimer(IDT_STRIPFOCUS, STRIPFOCUS_DELAY_MS, NULL);
+		}
 		
 		if (oldCloseFrame != m_bDrawCloseFrame)
 			InvalidateRect(cachedCloseRect);
 
 		if (oldModeFrame != m_bDrawModeFrame)
 			InvalidateRect(cachedModeRect);
+
+		if (oldAddFrame != m_bDrawAddFrame)
+			InvalidateRect(cachedAddRect);
 	}
 }
 
@@ -411,6 +470,8 @@ void CNavTitleBar::OnTimer(UINT nIDEvent)
 		{
 			m_bDrawCloseFrame = FALSE;
 			m_bDrawModeFrame = FALSE;
+			m_bDrawAddFrame = FALSE;
+
 			Invalidate();
 			UpdateWindow();
 		}
