@@ -349,17 +349,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
     res = mRules->DidDoAction(selection, &ruleInfo, res);
   }
 
-  // Insert some formatting whitespace:
-  nsAutoString whitespace(NS_LINEBREAK);
-  (void)nsEditor::InsertText(whitespace);
-
-// XXXX: Horrible hack! We are doing this because
-// of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/13/99
-  // BEGIN HACK!!!
-  // HACKForceRedraw();
-  // END HACK
-
   return res;
 }
 
