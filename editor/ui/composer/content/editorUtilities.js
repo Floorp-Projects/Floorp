@@ -48,8 +48,11 @@ const gMac = "Mac";
 
 /************* Message dialogs ***************/
 
-function AlertWithTitle(title, message)
+function AlertWithTitle(title, message, parentWindow)
 {
+  if (!parentWindow)
+    parentWindow = window;
+
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
@@ -59,7 +62,7 @@ function AlertWithTitle(title, message)
       title = GetString("Alert");
 
     // "window" is the calling dialog window
-    promptService.alert(window, title, message);
+    promptService.alert(parentWindow, title, message);
   }
 }
 

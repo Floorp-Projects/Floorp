@@ -290,7 +290,7 @@
              so we use our own id, label, and accesskey but connect to the same global key and broadcaster node
    -->
   <menu id="fileMenu" label="&fileMenu.label;" accesskey="&filemenu.accesskey;">
-    <menupopup id="menu_FilePopup">
+    <menupopup id="menu_FilePopup" onpopupshowing="EditorInitFileMenu();">
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
           <!-- From globalOverlay.xul -->

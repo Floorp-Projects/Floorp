@@ -441,11 +441,13 @@ function DocumentHasBeenSaved()
   return true;
 }
 
-function CheckAndSaveDocument(reasonToSave, allowDontSave)
+function CheckAndSaveDocument(command, allowDontSave)
 {
-  // if we don't have an editorShell or an editorDocument, bail
-  if (!window.editorShell && !window.editorShell.editorDocument)
-    return true;
+  try {
+    // if we don't have an editorShell or an editorDocument, bail
+    if (!window.editorShell && !window.editorShell.editorDocument)
+      return true;
+  } catch (e) { return true; }
 
   var document = editorShell.editorDocument;
   if (!editorShell.documentModified && !gHTMLSourceChanged)
@@ -455,11 +457,33 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   // and therefore need to be visible (to prevent user confusion)
   window.focus();  
 
+  var scheme = GetScheme(GetDocumentUrl());
+  var doPublish = (scheme && scheme != "file");
+
+  var strID;
+  switch (command)
+  {
+    case "cmd_close":
+      strID = "BeforeClosing";
+      break;
+    case "cmd_preview":
+      strID = "BeforePreview";
+      break;
+    case "cmd_editSendPage":
+      strID = "SendPageReason";
+      break;
+    case "cmd_validate":
+      strID = "BeforeValidate";
+      break;
+  }
+    
+  var reasonToSave = strID ? GetString(strID) : "";
+
   var title = window.editorShell.editorDocument.title;
   if (!title)
     title = GetString("untitled");
 
-  var dialogTitle = GetString("SaveDocument");
+  var dialogTitle = GetString(doPublish ? "PublishPage" : "SaveDocument");
   var dialogMsg = GetString("SaveFilePrompt");
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
 
@@ -467,16 +491,29 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
   var result = {value:0};
-  var promptFlags = 
-    (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
-    (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
-    (allowDontSave
-    ? (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2)
-    : 0);
-  promptService.confirmEx(
-    window, dialogTitle, dialogMsg, promptFlags,
-    null, null, null, null, {value:0}, result
-  );
+  var promptFlags = promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1;
+  var button1Title = null;
+  var button3Title = null;
+
+  if (doPublish)
+  {
+    promptFlags += promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0;
+    button1Title = GetString("Publish");
+    button3Title = GetString("DontPublish");    
+  }
+  else
+  {
+    promptFlags += promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0;
+  }
+
+  // If allowing "Don't..." button, add that
+  if (allowDontSave)
+    promptFlags += doPublish ?
+        (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2)
+        : (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2);
+    
+  promptService.confirmEx(window, dialogTitle, dialogMsg, promptFlags,
+                          button1Title, null, button3Title, null, {value:0}, result);
 
   if (result.value == 0)
   {
@@ -484,6 +521,17 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
     if (gHTMLSourceChanged)
       FinishHTMLSource();
 
+    if (doPublish)
+    {
+      // We save the command the user wanted to do in a global
+      // and return as if user canceled because publishing is asynchronous
+      // This command will be fired when publishing finishes
+      gCommandAfterPublishing = command;
+      goDoCommand("cmd_publish");
+      return false;
+    }
+
+    // Save to local disk
     var success = SaveDocument(false, false, editorShell.contentsMIMEType);
     return success;
   }
@@ -520,7 +568,7 @@ function EditorCanClose()
   // Returns FALSE only if user cancels save action
 
   // "true" means allow "Don't Save" button
-  var canClose = CheckAndSaveDocument(GetString("BeforeClosing"), true);
+  var canClose = CheckAndSaveDocument("cmd_close", true);
 
   // This is our only hook into closing via the "X" in the caption
   //   or "Quit" (or other paths?)
@@ -1583,7 +1631,7 @@ function BuildRecentMenu(savePrefs)
   // Current page is the "0" item in the list we save in prefs,
   //  but we don't include it in the menu.
   var curTitle = window.editorShell.editorDocument.title;
-  var curUrl = GetDocumentUrl();
+  var curUrl = StripPassword(GetDocumentUrl());
   var historyCount = 10;
   try { historyCount = gPrefs.getIntPref("editor.history.url_maximum"); } catch(e) {}
   var titleArray = new Array(historyCount);
@@ -1607,13 +1655,17 @@ function BuildRecentMenu(savePrefs)
 
     // Continue if URL pref is missing because 
     //  a URL not found during loading may have been removed
-    if (!url)
+    // Also skip "data:" URL
+    if (!url || GetScheme(url) == "data")
       continue;
 
-    var scheme = GetScheme(url);
-    // Skip over current and "data:" URL
-    if (url != curUrl && scheme && scheme != "data")
+    // Never show password in menu!
+    url = StripPassword(url);
+
+    // Skip over current URL
+    if (url != curUrl)
     {
+
       // Build the menu
       AppendRecentMenuitem(popup, title, url, menuIndex);
       menuIndex++;
@@ -1688,6 +1740,14 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
       menupopup.appendChild(menuItem);
     }
   }
+}
+
+function EditorInitFileMenu()
+{
+  // Disable "Save" menuitem when editing remote url. User should use "Save As"
+  var scheme = GetScheme(GetDocumentUrl());
+  if (scheme && scheme != "file")
+    SetElementEnabledById("saveMenuitem", false);
 }
 
 function EditorInitFormatMenu()
