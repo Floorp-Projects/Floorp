@@ -3355,7 +3355,7 @@ nsBrowserWindow::DoToggleSelection()
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      PRBool  current = doc->GetDisplaySelection();
+      PRInt8  current = doc->GetDisplaySelection();
       doc->SetDisplaySelection(!current);
       ForceRefresh();
     }

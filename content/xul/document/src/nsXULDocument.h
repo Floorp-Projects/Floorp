@@ -268,9 +268,9 @@ public:
 
     virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
 
-    virtual void SetDisplaySelection(PRBool aToggle);
+    virtual void SetDisplaySelection(PRInt8 aToggle);
 
-    virtual PRBool GetDisplaySelection() const;
+    virtual PRInt8 GetDisplaySelection() const;
 
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
@@ -529,7 +529,7 @@ protected:
     nsString                   mCharSetID;
     nsVoidArray                mStyleSheets;
     nsCOMPtr<nsIDOMSelection>  mSelection;          // [OWNER]
-    PRBool                     mDisplaySelection;
+    PRInt8                     mDisplaySelection;
     PRBool                     mIsKeyBindingDoc;
     nsVoidArray                mPresShells;
     nsCOMPtr<nsIEventListenerManager> mListenerManager;   // [OWNER]

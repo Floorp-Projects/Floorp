@@ -3553,7 +3553,7 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   NS_IF_RELEASE(start);
   NS_IF_RELEASE(end);
 
-  SetDisplaySelection(PR_TRUE); 
+  SetDisplaySelection(nsIDocument::SELECTION_ON); 
 
 
   if (aIsFound && doReplace) {

@@ -1742,7 +1742,7 @@ nsXULDocument::SelectAll()
     startPnt->SetPoint(start, -1, PR_TRUE);
     endPnt->SetPoint(end, -1, PR_FALSE);
 #endif
-    SetDisplaySelection(PR_TRUE);
+    SetDisplaySelection(nsIDocument::SELECTION_ON);
 
     return NS_OK;
 }
@@ -1929,12 +1929,12 @@ nsXULDocument::GetNextContent(const nsIContent *aContent) const
 }
 
 void
-nsXULDocument::SetDisplaySelection(PRBool aToggle)
+nsXULDocument::SetDisplaySelection(PRInt8 aToggle)
 {
     mDisplaySelection = aToggle;
 }
 
-PRBool
+PRInt8
 nsXULDocument::GetDisplaySelection() const
 {
     return mDisplaySelection;

@@ -3382,12 +3382,12 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
   return result;
 }
 
-void nsDocument::SetDisplaySelection(PRBool aToggle)
+void nsDocument::SetDisplaySelection(PRInt8 aToggle)
 {
   mDisplaySelection = aToggle;
 }
 
-PRBool nsDocument::GetDisplaySelection() const
+PRInt8 nsDocument::GetDisplaySelection() const
 {
   return mDisplaySelection;
 }
