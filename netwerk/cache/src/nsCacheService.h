@@ -105,6 +105,9 @@ private:
     /**
      * Internal Methods
      */
+
+    nsresult         CreateDiskDevice();
+
     nsresult         CreateRequest(nsCacheSession *   session,
                                    const char *       clientKey,
                                    nsCacheAccessMode  accessRequested,
