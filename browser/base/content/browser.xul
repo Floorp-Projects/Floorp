@@ -1017,7 +1017,7 @@
     
   </toolbox>
   
-  <hbox flex="1" id="contentEnclosure">
+  <hbox flex="1" id="browser">
     <vbox id="sidebar-box" hidden="true">
       <sidebarheader align="center">
         <label id="sidebar-title"/>
@@ -1029,15 +1029,15 @@
     </vbox>    
     
     <splitter id="sidebar-splitter" hidden="true"/>
-    <!-- we only need to handle |ondragdrop| because everything else is
-          taken care of by the builtin behavior inside the tabbrowser -->
-    <tabbrowser id="content" disablehistory="true"
-                flex="1" contenttooltip="aHTMLTooltip"
-                contentcontextmenu="contentAreaContextMenu"
-                onnewtab="BrowserOpenTab();"
-                autocompletepopup="PopupAutoComplete"
-                ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
-                onclick="return contentAreaClick(event);"/>
+    <vbox id="appcontent" flex="1">
+      <tabbrowser id="content" disablehistory="true"
+                  flex="1" contenttooltip="aHTMLTooltip"
+                  contentcontextmenu="contentAreaContextMenu"
+                  onnewtab="BrowserOpenTab();"
+                  autocompletepopup="PopupAutoComplete"
+                  ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
+                  onclick="return contentAreaClick(event);"/>
+    </vbox>
   </hbox>
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
