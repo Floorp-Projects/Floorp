@@ -164,6 +164,9 @@ nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsID
   rangeCheck(aSrc, aSX, aSY, aWidth, aHeight);
   rangeCheck(aDst, aDX, aDY, aWidth, aHeight);
 
+  if (aWidth <= 0 || aHeight <= 0)
+    return NS_OK;
+
   PRUint8* srcBytes = nsnull;
   PRUint8* secondSrcBytes = nsnull;
   PRUint8* destBytes = nsnull;
