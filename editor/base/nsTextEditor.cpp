@@ -19,14 +19,7 @@
 #include "nsTextEditor.h"
 #include "nsEditorEventListeners.h"
 
-#include "nsIStreamListener.h"
-#include "nsIParser.h"
-#include "nsParserCIID.h"
 #include "nsIDocument.h"
-#include "nsIHTMLContentSink.h"
-#include "nsHTMLContentSinkStream.h"
-#include "nsHTMLToTXTSinkStream.h"
-#include "nsXIFDTD.h"
 #include "nsFileSpec.h"
 
 #include "nsIDOMDocument.h"
@@ -36,7 +29,6 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMSelection.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMElement.h"
@@ -71,15 +63,14 @@
 #include "nsIFileWidget.h"
 
 // Drag & Drop, Clipboard
-#include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-#include "nsIFormatConverter.h"
+//#include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
+//static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
 // Document encoders
 static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
@@ -1585,11 +1576,14 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString)
     nsCOMPtr<nsIPresShell> shell;
 
  	  rv = GetPresShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv)) {
-      rv = encoder->Init(shell,doc, mimetype);
-      if (NS_FAILED(rv))
-        return rv;
-    }
+    if (NS_FAILED(rv))
+      return rv;
+    rv = encoder->Init(shell, doc, mimetype);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Try to turn on pretty printing, but don't panic if it doesn't work:
+    (void)encoder->PrettyPrint(PR_TRUE);
 
     rv = encoder->EncodeToString(aOutputString);
   }
