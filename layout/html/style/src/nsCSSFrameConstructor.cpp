@@ -2907,6 +2907,7 @@ nsCSSFrameConstructor::MustGeneratePseudoParent(nsIPresContext*  aPresContext,
   }
 
   // exclude tags
+  // XXX Now that form does not have a special frame, can we remove this?
   if ( (nsLayoutAtoms::commentTagName == aTag) ||
        (nsHTMLAtoms::form             == aTag) ) {
     return PR_FALSE;
@@ -3143,6 +3144,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
       nsCOMPtr<nsIAtom> tag;
       aChildContent->GetTag(*getter_AddRefs(tag));
       // A form doesn't get a psuedo frame parent, but it needs a frame, so just use the current parent
+      // XXX now that form is a normal frame, do we need to do this?
       if (nsHTMLAtoms::form == tag.get()) {
         nsFrameItems items;
         rv = ConstructFrame(aPresShell, aPresContext, aState, aChildContent,         
@@ -4761,22 +4763,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     rv = NS_NewLegendFrame(aPresShell, &newFrame);
     processChildren = PR_TRUE;
     canBePositioned = PR_FALSE;
-  }
-  else if (nsHTMLAtoms::form == aTag) {
-    if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-    }
-    PRBool  isOutOfFlow = isFloating || isAbsolutelyPositioned || isFixedPositioned;
-
-    rv = NS_NewFormFrame(aPresShell, &newFrame,
-                         isOutOfFlow ? NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT : 0);
-    processChildren = PR_TRUE;
-
-    // A form frame is a block frame therefore it can contain floaters
-    isFloaterContainer = PR_TRUE;
-
-    // See if it's a containing block for absolutely positioned elements
-    isPositionedContainingBlock = isAbsolutelyPositioned || isFixedPositioned || isRelativePositioned;
   }
   else if (nsHTMLAtoms::frameset == aTag) {
     if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames

@@ -61,9 +61,6 @@
 #undef NOISY_VERTICAL_ALIGN
 #endif
 
-// hack for bug 50695
-#include "nsIFormManager.h"
-
 // Prefs-driven control for |text-decoration: blink|
 static PRPackedBool sPrefIsLoaded = PR_FALSE;
 static PRPackedBool sBlinkIsAllowed = PR_TRUE;
@@ -1427,11 +1424,6 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
     if (nsLayoutAtoms::blockFrame == frameType.get()) {
-      // special hack for bug 50695, skip form frames
-      nsIFrame* formFrame;
-      if (NS_OK == rs->frame->QueryInterface(NS_GET_IID(nsIFormManager), (void **)&formFrame)) {
-        continue;
-      }
       if (aRestrictToFirstLevel && firstBlockRS) {
         break;
       }
