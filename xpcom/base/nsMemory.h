@@ -37,9 +37,7 @@ public:
     static NS_EXPORT void*      Alloc(size_t size);
     static NS_EXPORT void*      Realloc(void* ptr, size_t size);
     static NS_EXPORT void       Free(void* ptr);
-    static NS_EXPORT nsresult   HeapMinimize();
-    static NS_EXPORT nsresult   RegisterObserver(nsIMemoryPressureObserver* obs);
-    static NS_EXPORT nsresult   UnregisterObserver(nsIMemoryPressureObserver* obs);
+    static NS_EXPORT nsresult   HeapMinimize(PRBool aImmediate);
     static NS_EXPORT void*      Clone(const void* ptr, size_t size);
     static NS_EXPORT nsIMemory* GetGlobalMemoryService();       // AddRefs
 };

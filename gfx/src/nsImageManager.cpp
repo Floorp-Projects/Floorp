@@ -22,6 +22,10 @@
 
 #include "nsIImageManager.h"
 #include "nsIMemory.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsWeakReference.h"
+#include "nsString.h"
 
 #include "libimg.h"
 
@@ -33,20 +37,21 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIImageManagerIID, NS_IIMAGEMANAGER_IID);
 
-class ImageManagerImpl : public nsIImageManager, public nsIMemoryPressureObserver
+class ImageManagerImpl : public nsIImageManager,
+                         public nsIObserver,
+                         public nsSupportsWeakReference
 {
 public:
   ImageManagerImpl();
   virtual ~ImageManagerImpl();
 
-  nsresult Init();
-
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSIMEMORYPRESSUREOBSERVER
+  NS_DECL_NSIOBSERVER
   
+  virtual nsresult Init();
   virtual void SetCacheSize(PRInt32 aCacheSize);
   virtual PRInt32 GetCacheSize(void);
   virtual PRInt32 ShrinkCache(void);
@@ -87,20 +92,24 @@ ImageManagerImpl::ImageManagerImpl()
 
 ImageManagerImpl::~ImageManagerImpl()
 {
-  // nsMemory needs to be fixed to not hold refs to observers.
-  // nsMemory::UnregisterObserver(this);
-
   IL_Shutdown();
   gImageManager = nsnull;
 }
 
-NS_IMPL_ISUPPORTS2(ImageManagerImpl, nsIImageManager, nsIMemoryPressureObserver); 
+NS_IMPL_ISUPPORTS3(ImageManagerImpl,
+                   nsIImageManager,
+                   nsIObserver,
+                   nsISupportsWeakReference); 
 
-nsresult 
+nsresult
 ImageManagerImpl::Init()
 {
-  // don't register until bug 52393 is fixed.
-  // nsMemory::RegisterObserver(this);
+  nsCOMPtr<nsIObserverService> os =
+    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+
+  if (os)
+    os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+
   return NS_OK;
 }
 
@@ -131,9 +140,12 @@ ImageManagerImpl::FlushCache(PRUint8 img_catagory)
 
 
 NS_IMETHODIMP
-ImageManagerImpl::FlushMemory(PRUint32 reason, size_t requestedAmount)
+ImageManagerImpl::Observe(nsISupports* aSubject,
+                          const PRUnichar* aTopic,
+                          const PRUnichar* aSomeData)
 {
-  IL_FlushCache(1);   // flush everything
+  if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0)
+    IL_FlushCache(1);   // flush everything
   return NS_OK;
 }
 
@@ -144,14 +156,19 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
+  nsresult rv;
   if (nsnull == gImageManager) {
     gImageManager = new ImageManagerImpl();
+    if (! gImageManager)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = CallQueryInterface(NS_STATIC_CAST(nsIImageManager*, gImageManager), aInstancePtrResult);
+    gImageManager->Init();
   }
-  if (nsnull == gImageManager) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  else {
+    rv = CallQueryInterface(NS_STATIC_CAST(nsIImageManager*, gImageManager), aInstancePtrResult);
   }
-  return gImageManager->QueryInterface(kIImageManagerIID,
-                                       (void **)aInstancePtrResult);
+  return rv;
 }
 
 /* This is going to be obsolete, once ImageManagerImpl becomes a service on all platforms */

@@ -501,7 +501,8 @@ oncommand="goPreferences('pref-themes.xul','chrome://communicator/content/pref/p
      <menuitem value="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
      <menuitem value="&editor-test-page.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
      <menuitem value="&install-psm.label;" oncommand="window._content.location.href='http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html'"/>
-    
+     <menuitem value="&flush-memory.label;" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
+
     </menupopup>
   </menu>
 

@@ -631,10 +631,6 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // will cause servicemanager to become inaccessible.
     gShuttingDown = PR_TRUE;
 
-    // Release memory pressure observers now so that things get
-    // released earlier.
-    nsMemoryImpl::ReleaseObservers();
-
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
     NS_IF_RELEASE(servMgr);
