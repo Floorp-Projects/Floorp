@@ -305,8 +305,8 @@ nsGREDirServiceProvider::AddGRELocationToPath()
 
   mPathEnvString = PR_smprintf("%s=%s;%s",
                                XPCOM_SEARCH_KEY,
-                               path,
-                               grePath);
+                               grePath,
+                               path);
   PR_SetEnv(mPathEnvString);
   free(grePath);
 }
