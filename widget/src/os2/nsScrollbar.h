@@ -63,6 +63,7 @@ public:
     // Creation hooks
     virtual  PCSZ     WindowClass();
     virtual  ULONG    WindowStyle();
+    virtual PRBool OnPaint();
 
  private:
     void     SetThumbRange( PRUint32 aEndRange, PRUint32 aSize);
