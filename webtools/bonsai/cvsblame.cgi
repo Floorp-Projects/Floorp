@@ -197,7 +197,7 @@ foreach $path (split('/',$rcs_path)) {
 }
 $output .= "$file_tail "
     ." (<A HREF onclick='return dif(\"$prev_revision{$revision}\",\"$revision\");'"
-    ." onmouseover='return log(event,0,\"$prev_revision{$revision}\","
+    ." onmouseover='return log(event,\"$prev_revision{$revision}\","
     ."\"$revision\");'>";
 $output .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 $output .= $revision if $revision;
@@ -248,45 +248,60 @@ foreach $revision (@revision_map)
     # Highlight lines
     if (defined($mark_cmd = $mark_line{$line})
         && $mark_cmd ne 'end') {
+	$output .= '</td></tr></TABLE>' if $useAlternateColor;
+        $output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>'
+            ."<TR><TD BGCOLOR=LIGHTGREEN WIDTH='100%'>$font_tag";
+	$inMark = 1;
+    }
 
-        $output .= "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 "
-            ."><TR><TD BGCOLOR=LIGHTGREEN WIDTH='100%'>$font_tag";
+    if ($old_revision ne $revision) {
+      if ($useAlternateColor) {
+	$useAlternateColor = 0;
+	$output .= '</td></tr></TABLE>' unless $inMark;
+      } else {
+	$useAlternateColor = 1;
+	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
+	  . '<TR><TD BGCOLOR=#e7e7e7><PRE>' unless $inMark;
+      }
     }
 
     $output .= sprintf("%${line_num_width}s ", $line) if $opt_line_nums;
 
     if ($old_revision ne $revision || $rev_count > 20) {
 
-        $author_width = max($author_width,length($revision_author{$revision}));
         $revision_width = max($revision_width,length($revision));
-
-        $output .= ($rev_count > 20 ? '| ' : '+ ');
-        
-        $output .= sprintf("%-${author_width}s ",$revision_author{$revision});
 
         $output .= "<A HREF "
         ."onclick='return dif(\"$prev_revision{$revision}\",\"$revision\");' "
-        ."onmouseover='return log(event,$line,\"$prev_revision{$revision}\","
-        ."\"$revision\");'>$revision</A> ";
+        ."onmouseover='return log(event,\"$prev_revision{$revision}\","
+        ."\"$revision\");'>";
+	$author = $revision_author{$revision};
+	$author =~ s/%.*$//;
+        $author_width = max($author_width,length($author));
+        $output .= sprintf("%-${author_width}s ", $author);
+	$output .= "$revision</A> ";
         $output .= ' ' x ($revision_width - length($revision));
 
         $old_revision = $revision;
         $rev_count = 0;
     } else {
-        $output .= '|   ' . ' ' x ($author_width + $revision_width);
+        $output .= '| ' . ' ' x ($author_width + $revision_width);
     }
     $rev_count++;
 
     $output .= "$text";
     
     # Close the highlighted section
-    if (defined($mark_cmd) && $mark_cmd ne 'begin') {
+    if (defined($mark_cmd) and $mark_cmd ne 'begin') {
         chop($output);
         $output .= "</TD>";
         #if( defined($prev_revision{$file_rev})) {
-            $output .= "<TD ALIGN=RIGHT><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD  BGCOLOR=LIGHTGREEN>&nbsp</TD>";
+            $output .= "<TD ALIGN=RIGHT><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp</TD>";
         #}
         $output .= "</TR></TABLE>";
+	$output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
+	  . '<TR><TD BGCOLOR=#e7e7e7><PRE>' if $useAlternateColor;
+	$inMark = 0;
     }
 
     print $output;
@@ -309,8 +324,11 @@ while (($revision, $junk) = each %usedlog) {
         $log =~ s/"/\\"/g;
 
         # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
+	$author = $revision_author{$revision};
+	$author =~ tr/%/@/;
         print "log$revisionName = \""
-            ."$revision_ctime{$revision}<BR>"
+            ."<b>$revision</b> &nbsp;&nbsp;<a href='mailto:$author'>$author</a>"
+	    ." &nbsp;&nbsp;<b>$revision_ctime{$revision}</b><BR>"
             ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
 }
 print "</SCRIPT>";
@@ -373,7 +391,7 @@ function finishedLoad() {
     return true;
 }
 
-function log(event, line, prev_rev, rev) {
+function log(event, prev_rev, rev) {
     window.defaultStatus = "";
     if (prev_rev == '') {
         window.status = "View diffs for " + file_tail;
@@ -387,20 +405,19 @@ function log(event, line, prev_rev, rev) {
 
     l = document.layers['popup'];
     if (document.loaded) {
-        l.document.write("<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=2><TR><TD>");
-        if (line) {
-            l.document.write("line " + line + ", ");
-        }
+        l.document.write("<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=2><TR><TD BGCOLOR=#FF0000>");
+        l.document.write("<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=4><TR><TD BGCOLOR=#FFFFFF>");
         l.document.write(eval("log" + revToName(rev)) + "</TD></TR></TABLE>");
+	l.document.write("</td></tr></table>");
         l.document.close();
     }
 
     if(event.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
          l.top = (window.innerHeight + window.pageYOffset - (l.clip.height + 15));
     } else {
-         l.top = event.target.y - 3;
+         l.top = event.target.y - 10;
     }
-    l.left = event.target.x + 40;
+    l.left = event.target.x + 70;
     l.visibility="show";
 
     return true;
