@@ -40,7 +40,6 @@
 #include "ssl.h"
 #include "imap.h"
 
-#include "xp_error.h"
 #include "prefapi.h"
 
 #ifdef AUTH_SKEY_DEFINED
@@ -313,7 +312,7 @@ net_smtp_response (ActiveEntry * cur_entry)
     if(CE_STATUS < 0)
 	  {
 		CE_URL_S->error_msg =
-		  NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+		  NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
         /* return TCP error
          */

@@ -18,8 +18,6 @@
 #ifndef MKTCP_H
 #define MKTCP_H
 
-#include "xp_sock.h"
-
 PR_BEGIN_EXTERN_C
 
 /* state machine data for host connect */

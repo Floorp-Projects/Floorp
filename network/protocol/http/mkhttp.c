@@ -46,7 +46,6 @@
 #include "ssl.h"
 #include "jscookie.h"
 #include "prefapi.h"
-#include "xp_error.h"
 #include "libi18n.h"
 #include "prtime.h"
 #include "prmem.h"
@@ -496,7 +495,7 @@ net_start_http_connect(ActiveEntry * ce)
 		  }
 
         TRACEMSG(("HTTP: Unable to connect to host for `%s' (errno = %d).", 
-                          CE_URL_S->address, SOCKET_ERRNO));
+                          CE_URL_S->address, PR_GetOSError()));
 		/*
 		 * Proxy failover
 		 */
@@ -619,7 +618,7 @@ net_finish_http_connect(ActiveEntry * ce)
 
         NET_ClearConnectSelect(CE_WINDOW_ID, CE_CON_SOCK);
         TRACEMSG(("HTTP: Unable to connect to host for `%s' (errno = %d).",
-                                              CE_URL_S->address, SOCKET_ERRNO));
+                                              CE_URL_S->address, PR_GetOSError()));
 
 		/*
 		 * Proxy failover
@@ -1752,7 +1751,7 @@ net_parse_http_mime_headers (ActiveEntry *ce)
 
     if(CE_STATUS < 0)
 	  {
-        NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        NET_ExplainErrorDetails(MK_TCP_READ_ERROR, PR_GetOSError());
 
         /* return TCP error
          */
@@ -2964,7 +2963,7 @@ net_http_push_partial_cache_file(ActiveEntry *ce)
 		/* @@@ This is the wrong error code
 		 */
 		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, 
-													   SOCKET_ERRNO);
+													   PR_GetOSError());
 		return(MK_TCP_READ_ERROR);
 	  }
 	else if(status == 0)	

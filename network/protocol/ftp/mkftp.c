@@ -65,7 +65,6 @@
 #endif
 #endif /* XP_UNIX */ 
 
-#include "xp_error.h"
 #include "prefapi.h"
 
 /* for XP_GetString() */
@@ -2617,7 +2616,8 @@ net_ftp_push_partial_cache_file(ActiveEntry * ce)
 
     if( status < 0 )
     {
-        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, SOCKET_ERRNO);
+        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR,
+                                                       PR_GetOSError());
         return MK_TCP_READ_ERROR;
     }
     else if( status == 0 )
