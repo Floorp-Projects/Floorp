@@ -35,7 +35,8 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
     NS_ENSURE_ARG_POINTER(aRootNode);
     NS_ENSURE_ARG_POINTER(aCallback);
 
-    nsVoidArray stack;
+    nsAutoVoidArray stack;
+    PRInt32 stackSize = 0;
     nsresult rv = NS_OK;
 
     // Push the top most node onto the stack
@@ -46,17 +47,17 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
     }
     rootPos->current = aRootNode;
     stack.AppendElement(rootPos);
+    stackSize++;
 
-    while (stack.Count() > 0)
+    while (stackSize > 0)
     {
         nsCOMPtr<nsIDOMNode> current;
         nsCOMPtr<nsIDOMNode> next;
 
         // Pop the last position off the stack
-        DOMTreePos *pos = (DOMTreePos *) stack.ElementAt(stack.Count() - 1);
-        stack.RemoveElementAt(stack.Count() - 1);
-        current = do_QueryInterface(pos->current);
-        delete pos;
+        stackSize--;
+        DOMTreePos *currentPos = NS_STATIC_CAST(DOMTreePos *, stack[stackSize]);
+        current = do_QueryInterface(currentPos->current);
             
         // Iterate through each sibling
         while (current)
@@ -81,24 +82,44 @@ nsresult nsDOMWalker::WalkDOM(nsIDOMNode *aRootNode, nsDOMWalkerCallback *aCallb
                 // Push the current node back onto the stack
                 if (next)
                 {
-                    DOMTreePos *nextPos = new DOMTreePos;
-                    if (nextPos == nsnull)
+                    if (stackSize < stack.Count())
+                    {
+                        DOMTreePos *nextPos = NS_STATIC_CAST(DOMTreePos *, stack[stackSize]);
+                        nextPos->current = next;
+                    }
+                    else
+                    {
+                        DOMTreePos *nextPos = new DOMTreePos;
+                        if (nextPos == nsnull)
+                        {
+                            rv = NS_ERROR_OUT_OF_MEMORY;
+                            goto cleanup;
+                        }
+                        nextPos->current = next;
+                        stack.AppendElement(nextPos);
+                    }
+                    stackSize++;
+                }
+
+                // Push the first child onto the stack
+                if (stackSize < stack.Count())
+                {
+                    DOMTreePos *childPos = NS_STATIC_CAST(DOMTreePos *, stack[stackSize]);
+                    current->GetFirstChild(getter_AddRefs(childPos->current));
+                }
+                else
+                {
+                    DOMTreePos *childPos = new DOMTreePos;
+                    if (childPos == nsnull)
                     {
                         rv = NS_ERROR_OUT_OF_MEMORY;
                         goto cleanup;
                     }
-                    nextPos->current = next;
-                    stack.AppendElement(nextPos);
+                    current->GetFirstChild(getter_AddRefs(childPos->current));
+                    stack.AppendElement(childPos);
                 }
-                // Push the first child onto the stack
-                DOMTreePos *childPos = new DOMTreePos;
-                if (childPos == nsnull)
-                {
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                    goto cleanup;
-                }
-                current->GetFirstChild(getter_AddRefs(childPos->current));
-                stack.AppendElement(childPos);
+                stackSize++;
+
                 break;
             }
             current = next;
@@ -110,7 +131,7 @@ cleanup:
     PRInt32 i;
     for (i = 0; i < stack.Count(); i++)
     {
-        DOMTreePos *pos = (DOMTreePos *) stack.ElementAt(i);
+        DOMTreePos *pos = NS_STATIC_CAST(DOMTreePos *, stack.ElementAt(i));
         delete pos;
     }
     stack.Clear();
