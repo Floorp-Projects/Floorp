@@ -388,10 +388,14 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
 #used for the distributed stress test, the server generates certificates 
 #from GLOB_MIN_CERT to GLOB_MAX_CERT 
+# NOTE - this variable actually gets initialized by directly by the 
+# ssl_dist_stress.shs sl_ds_init() before init is called - need to change 
+# in  both places. speaking of data encapsulatioN...
+
     if [ -z "$GLOB_MIN_CERT" ] ; then
         GLOB_MIN_CERT=0
     fi
-    if [ -z "$GLOBMAX_CERT" ] ; then
+    if [ -z "$GLOB_MAX_CERT" ] ; then
         GLOB_MAX_CERT=200
     fi
     if [ -z "$MIN_CERT" ] ; then
