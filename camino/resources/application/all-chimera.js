@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file contains Chimera-specific default preferences.
+// This file contains Camino-specific default preferences.
 
 // What to load in a new tab: 0 = blank, 1 = homepage, 2 = last page
 pref("browser.tabs.startPage", 0);
@@ -61,8 +61,8 @@ pref("chimera.keychain_passwords_autofill", true);
 pref("chimera.enable_plugins", true);
 pref("chimera.log_js_to_console", true);
 
-// Identify Chimera in the UA string
-pref("general.useragent.vendor", "Chimera");
+// Identify Camino in the UA string
+pref("general.useragent.vendor", "Camino");
 pref("general.useragent.vendorSub", "0.7+");
 
 pref("network.dir.generate_html", true);
