@@ -33,19 +33,30 @@ Is there any restriction on which static class I should call first</h4>
 
 <blockquote>No restrictions. You can call any function from the static
 classes nsComponentManager and nsServiceManager. XPCOM will do the right
-thing to initialize itself at both places.</blockquote>
+thing to initialize itself at both places.
+<p>Autoregistration() can happen only after Init_XPCOM() is called since
+the registy might be required by SelfRegister() functions of the dlls and
+it is only in Init_XPCOM() do we create register the RegistryFactory()
+with the ComponentManager.</blockquote>
 
 <h4>
 What is the order of creation of the ServiceManager, ComponentManager and
 Registry</h4>
 
 <blockquote>Init_XPCOM()
-<br>&nbsp;&nbsp;&nbsp; create the global component manager
-<br>&nbsp;&nbsp;&nbsp; create the global registry and register as service
-with global service manager
-<br>&nbsp;&nbsp;&nbsp; create the global component manager and register
-as service with the global service manager
-<p>Now the hard problem is when to trigger Init_XPCOM() There are two static
+<blockquote>
+<li>
+create the global component manager</li>
+
+<li>
+create the global component manager and register as service with the global
+service manager</li>
+
+<li>
+RegisterFactory(...RegistryFactory...)&nbsp; Register the RegistryFactory()
+with the component manager so that new registry objects can be created.</li>
+</blockquote>
+Now the hard problem is when to trigger Init_XPCOM() There are two static
 objects nsComponentManager and nsServiceManager. Any function in either
 of them can be called first. Today nsServiceManager::GetService() is the
 first one that gets called. All the members of the static nsServiceManager
@@ -54,6 +65,17 @@ All members of the static nsComponentManager use the nsGetGlobalComponentManager
 to get to the global component manager. Hence if we trigger Init_XPCOM()
 from both NS_GetGlobalComponentManager() and NS_GetGlobalServiceManager()
 we will be safe.</blockquote>
+
+<h4>
+Is there a global Registry being maintained</h4>
+
+<blockquote>No. The nsIRegistry is designed to be lightweight access to
+the registry. Consumers who need to access the registry should use the
+component manager to create the their own registry access object. This
+is required because the open() call is supported by the nsIRegistry() and
+if we maintain a global registry arbitrating which registry file is opened
+is going to be a major headach.
+<p>The ProgID for the registry will be <font color="#990000">component://netscape/registry</font></blockquote>
 
 <hr WIDTH="100%">
 </body>
