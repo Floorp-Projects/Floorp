@@ -73,7 +73,7 @@ static PRBool CurrentAppDirMatchesPersistentDescriptor(xptiInterfaceInfoManager*
     aMgr->GetApplicationDir(getter_AddRefs(appDir));
 
     nsCOMPtr<nsILocalFile> descDir;
-    nsresult rv = NS_NewLocalFile(nsnull, false, getter_AddRefs(descDir));
+    nsresult rv = NS_NewLocalFile(nsnull, PR_FALSE, getter_AddRefs(descDir));
     if (NS_FAILED(rv))
         return PR_FALSE;
 
