@@ -32,6 +32,7 @@ class nsIToolbarItem : public nsISupports
 {
 
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ITOOLBARITEM_IID; return iid; }
 
     /**
      * Forces the item to repaint 

@@ -32,6 +32,7 @@ class nsIToolbarManagerListener : public nsISupports
 {
 
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ITOOLBARMANAGERLISTENER_IID; return iid; }
 
  /**
   * Notifies 

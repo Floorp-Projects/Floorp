@@ -30,9 +30,11 @@ class nsIContent;
 class nsIContentConnector : public nsISupports
 {
 public:
-	NS_IMETHOD SetContentRoot(nsIContent* pContent) = 0;
+  static const nsIID& IID() { static nsIID iid = NS_ICONTENTCONNECTOR_IID; return iid; }
 
-	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0;
+  NS_IMETHOD SetContentRoot(nsIContent* pContent) = 0;
+
+  NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0;
 };
 
 #endif /* nsIContentConnector_h___ */

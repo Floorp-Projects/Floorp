@@ -25,7 +25,9 @@
 
 class nsIWidget;
 class nsIThrobber;
-class nsIToolbarManager;
+#if GRIPPYS_NOT_WIDGETS
+  class nsIToolbarManager;
+#endif
 class nsIToolbarItem;
 
 // deb24690-35f8-11d2-9248-00805f8a7ab6
@@ -44,8 +46,8 @@ enum nsToolbarBorderType {
 
 class nsIToolbar : public nsISupports
 {
-
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ITOOLBAR_IID; return iid; }
 
  /**
   * Adds a widget to the toolbar and indicates the left side gap
@@ -122,6 +124,7 @@ public:
   */
   NS_IMETHOD SetNextLastItemIsStretchy(const PRBool & aState) = 0;
 
+#if GRIPPYS_NOT_WIDGETS
  /**
   * Sets the Toolbar manager for this toolbar
   *
@@ -133,6 +136,7 @@ public:
   *
   */
   NS_IMETHOD GetToolbarManager(nsIToolbarManager *& aToolbarManager) = 0;
+#endif
 
  /**
   * Tells the toolbar to draw the border on all 4 sides, instead of just top and bottom
@@ -173,11 +177,13 @@ public:
                                      const nsRect& aDirtyRect) = 0;
 
 
+#if GRIPPYS_NOT_WIDGETS
  /**
   * Create a Tab on this toolbar
   *
   */
   NS_IMETHOD CreateTab(nsIWidget *& aTab) = 0;
+#endif
 
 };
 
