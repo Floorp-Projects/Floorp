@@ -23,6 +23,8 @@
 #include "nsIServiceManager.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
+#include "nsIFileSpec.h"
+#include "nsCOMPtr.h"
 #include "prio.h"
 #include "prerror.h"
 #include "prmem.h"
@@ -722,9 +724,33 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
  *                           parent nodes.
  *
  *--------------------------------------------------------------------------*/
+
+static
+nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
+{
+	nsresult rv;
+        nsCOMPtr<nsIFileSpec> spec;
+        rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
+        if (NS_SUCCEEDED(rv)) {
+                rv = spec->GetPersistentDescriptorString(string);
+                if (NS_SUCCEEDED(rv)) {
+                        return NS_OK;
+                }
+                else {
+                        PR_FREEIF(*string);
+                        return rv;
+                }
+        }
+        else {
+                *string = nsnull;
+                return rv;
+        }
+}                       
+
 nsresult
 nsPrefMigration::GetDriveName(nsFileSpec inputPath, char**driveName)
 {
+  nsresult rv;
   if (!driveName) return NS_ERROR_NULL_POINTER;
   NS_ASSERTION(!*driveName,"*driveName should be null");
  
@@ -735,12 +761,13 @@ nsPrefMigration::GetDriveName(nsFileSpec inputPath, char**driveName)
   while (!foundIt)
   {
     PR_FREEIF(*driveName);
-    *driveName = PR_smprintf("%s",oldParent.GetCString());
+    rv = GetStringFromSpec(oldParent,driveName);
+    
     oldParent.GetParent(newParent);
     /* Since GetParent doesn't return an error if there's no more parents
      * I have to compare the results of the parent value (string) to see 
      * if they've changed. */
-    if (PL_strcmp(*driveName, newParent.GetCString()) == 0)
+    if (oldParent == newParent) 
       foundIt = PR_TRUE;
     else
       oldParent = newParent;
