@@ -217,8 +217,11 @@ nsXBLService::~nsXBLService(void)
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 NS_IMETHODIMP
-nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag) 
+nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag,
+                           nsIXBLBinding** aBinding) 
 { 
+  *aBinding = nsnull;
+
   nsresult rv;
 
   nsCOMPtr<nsIDocument> document;
@@ -291,7 +294,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aA
   newBinding->GenerateAnonymousContent(aContent);
 
   // Tell the binding to install event handlers
-  newBinding->InstallEventHandlers(aContent);
+  newBinding->InstallEventHandlers(aContent, aBinding);
 
   // Set up our properties
   newBinding->InstallProperties(aContent);

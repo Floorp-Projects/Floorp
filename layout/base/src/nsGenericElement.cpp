@@ -1617,7 +1617,10 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
                   // We have a binding that must be installed.
                   nsresult rv;
                   NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-                  xblService->LoadBindings(mContent, value, PR_FALSE);
+                  xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding));
+                  if (binding) {
+                    binding->ExecuteAttachedHandler();
+                  }
                 }
               }
             }

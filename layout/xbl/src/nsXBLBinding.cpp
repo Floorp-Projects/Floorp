@@ -184,6 +184,7 @@ nsIAtom* nsXBLBinding::kNameAtom = nsnull;
 nsIAtom* nsXBLBinding::kReadOnlyAtom = nsnull;
 nsIAtom* nsXBLBinding::kURIAtom = nsnull;
 nsIAtom* nsXBLBinding::kAttachToAtom = nsnull;
+nsIAtom* nsXBLBinding::kBindingAttachedAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -275,6 +276,7 @@ nsXBLBinding::nsXBLBinding(void)
     kReadOnlyAtom = NS_NewAtom("readonly");
     kURIAtom = NS_NewAtom("uri");
     kAttachToAtom = NS_NewAtom("attachto");
+    kBindingAttachedAtom = NS_NewAtom("bindingattached");
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -316,6 +318,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kReadOnlyAtom);
     NS_RELEASE(kURIAtom);
     NS_RELEASE(kAttachToAtom);
+    NS_RELEASE(kBindingAttachedAtom);
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -516,7 +519,7 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
+nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aBinding)
 {
   // Fetch the handlers element for this binding.
   nsCOMPtr<nsIContent> handlers;
@@ -538,18 +541,26 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
       child->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
     
       if (!type.IsEmpty()) {
-        nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
-        PRBool found = PR_FALSE;
         nsIID iid;
-        GetEventHandlerIID(eventAtom, &iid, &found);
-        if (found) {
+        PRBool found = PR_FALSE;
+        PRBool special = PR_FALSE;
+        nsCOMPtr<nsIAtom> eventAtom = getter_AddRefs(NS_NewAtom(type));
+        if (eventAtom.get() == kBindingAttachedAtom) {
+          *aBinding = this;
+          NS_ADDREF(*aBinding);
+          special = PR_TRUE;
+        }
+        else
+          GetEventHandlerIID(eventAtom, &iid, &found);
+
+        if (found || special) {
           // Add an event listener for mouse and key events only.
           PRBool mouse  = IsMouseHandler(type);
           PRBool key    = IsKeyHandler(type);
           PRBool focus  = IsFocusHandler(type);
           PRBool xul    = IsXULHandler(type);
           PRBool scroll = IsScrollHandler(type);
-
+          
           nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
           nsAutoString attachType;
           child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
@@ -566,7 +577,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
             else receiver = do_QueryInterface(boundDoc);
           }
 
-          if (mouse || key || focus || xul) {
+          if (mouse || key || focus || xul || scroll || special) {
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
             NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
@@ -594,12 +605,13 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
               receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
             else if(focus)
               receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
+            else if (xul)
+              receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
             else if (scroll)
               receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
-            else
-              receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
 
-            NS_RELEASE(handler);
+            if (!special) // Let the listener manager hold on to the handler.
+              NS_RELEASE(handler);
           }
           else {
             // Call AddScriptEventListener for other IID types
@@ -616,8 +628,14 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
     }
   }
 
-  if (mNextBinding)
-    mNextBinding->InstallEventHandlers(aBoundElement);
+  if (mNextBinding) {
+    nsCOMPtr<nsIXBLBinding> binding;
+    mNextBinding->InstallEventHandlers(aBoundElement, getter_AddRefs(binding));
+    if (!*aBinding) {
+      *aBinding = binding;
+      NS_IF_ADDREF(*aBinding);
+    }
+  }
 
   return NS_OK;
 }
@@ -1000,6 +1018,30 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
     nsCOMPtr<nsIXBLAttributeEntry> tmpAttr = xblAttr;
     tmpAttr->GetNext(getter_AddRefs(xblAttr));
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::ExecuteAttachedHandler()
+{
+  if (mNextBinding)
+    mNextBinding->ExecuteAttachedHandler();
+
+  if (mFirstHandler)
+    mFirstHandler->BindingAttached();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXBLBinding::ExecuteDetachedHandler()
+{
+  if (mFirstHandler)
+    mFirstHandler->BindingDetached();
+
+  if (mNextBinding)
+    mNextBinding->ExecuteDetachedHandler();
 
   return NS_OK;
 }

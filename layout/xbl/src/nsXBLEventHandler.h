@@ -49,7 +49,11 @@ class nsXBLEventHandler : public nsIDOMKeyListener,
 public:
   nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, const nsString& aEventName);
   virtual ~nsXBLEventHandler();
-   
+  
+  NS_IMETHOD BindingAttached();
+  NS_IMETHOD BindingDetached();
+
+  // nsIDOMetc.
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
   
   virtual nsresult KeyUp(nsIDOMEvent* aMouseEvent);
@@ -112,7 +116,9 @@ protected:
   static nsIAtom* kCommandAtom;
   static nsIAtom* kClickCountAtom;
   static nsIAtom* kButtonAtom;
-  
+  static nsIAtom* kBindingAttachedAtom;
+  static nsIAtom* kBindingDetachedAtom;
+
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
 protected:

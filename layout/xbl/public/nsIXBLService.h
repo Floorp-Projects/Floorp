@@ -36,6 +36,7 @@
 
 class nsIContent;
 class nsISupportsArray;
+class nsIXBLBinding;
 
 // {0E7903E1-C7BB-11d3-97FB-00400553EEF0}
 #define NS_IXBLSERVICE_IID \
@@ -48,7 +49,8 @@ public:
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag) = 0;
+  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag,
+                          nsIXBLBinding** aBinding) = 0;
 
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushStyleBindings(nsIContent* aContent) = 0;

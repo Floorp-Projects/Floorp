@@ -72,10 +72,15 @@ public:
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL);
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL);
 
+  NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
+  NS_IMETHOD ClearAttachedQueue();
+  NS_IMETHOD ProcessAttachedQueue();
+
 // MEMBER VARIABLES
 protected: 
   nsSupportsHashtable* mBindingTable;
   nsSupportsHashtable* mDocumentTable;
+  nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
 
 
@@ -93,6 +98,7 @@ nsBindingManager::nsBindingManager(void)
 
   mBindingTable = nsnull;
   mDocumentTable = nsnull;
+  mAttachedQueue = nsnull;
 }
 
 nsBindingManager::~nsBindingManager(void)
@@ -189,7 +195,12 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsString& aURL)
     return rv;
 
   // Load the bindings.
-  xblService->LoadBindings(aContent, aURL, PR_TRUE);
+  nsCOMPtr<nsIXBLBinding> binding;
+  xblService->LoadBindings(aContent, aURL, PR_TRUE, getter_AddRefs(binding));
+  if (binding) {
+    AddToAttachedQueue(binding);
+    ProcessAttachedQueue();
+  }
 
   return NS_OK;
 }
@@ -228,6 +239,43 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsString& aUR
     binding = nextBinding;
   }
 */
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::AddToAttachedQueue(nsIXBLBinding* aBinding)
+{
+  if (!mAttachedQueue)
+    NS_NewISupportsArray(getter_AddRefs(mAttachedQueue)); // This call addrefs the array.
+
+  mAttachedQueue->AppendElement(aBinding);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::ClearAttachedQueue()
+{
+  if (mAttachedQueue)
+    mAttachedQueue->Clear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::ProcessAttachedQueue()
+{
+  if (!mAttachedQueue)
+    return NS_OK;
+
+  PRUint32 count;
+  mAttachedQueue->Count(&count);
+  for (PRUint32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIXBLBinding> binding;
+    mAttachedQueue->GetElementAt(i, getter_AddRefs(binding));
+    binding->ExecuteAttachedHandler();
+  }
+
+  ClearAttachedQueue();
   return NS_OK;
 }
 
