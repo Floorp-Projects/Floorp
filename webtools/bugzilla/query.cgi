@@ -23,6 +23,7 @@
 #                 Matthias Radestock <matthias@sorted.org>
 #                 Gervase Markham <gerv@gerv.net>
 #                 Byron Jones <bugzilla@glob.com.au>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 use strict;
 use lib ".";
@@ -54,6 +55,7 @@ use vars qw(
 );
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
@@ -83,17 +85,20 @@ if ($userid) {
         foreach my $ref (@oldquerycookies) {
             my ($name, $cookiename, $value) = (@$ref);
             if ($value) {
-                my $qname = SqlQuote($name);
-                SendSQL("LOCK TABLES namedqueries WRITE");
-                SendSQL("SELECT query FROM namedqueries " .
-                        "WHERE userid = $userid AND name = $qname");
-                my $query = FetchOneColumn();
+                # If the query name contains invalid characters, don't import.
+                $name =~ /[<>&]/ && next;
+                trick_taint($name);
+                $dbh->do("LOCK TABLES namedqueries WRITE");
+                my $query = $dbh->selectrow_array(
+                    "SELECT query FROM namedqueries " .
+                     "WHERE userid = ? AND name = ?",
+                     undef, ($userid, $name));
                 if (!$query) {
-                    SendSQL("INSERT INTO namedqueries " .
+                    $dbh->do("INSERT INTO namedqueries " .
                             "(userid, name, query) VALUES " .
-                            "($userid, $qname, " . SqlQuote($value) . ")");
+                            "(?, ?, ?)", undef, ($userid, $name, $value));
                 }
-                SendSQL("UNLOCK TABLES");
+                $dbh->do("UNLOCK TABLES");
             }
             $cgi->send_cookie(-name => $cookiename,
                               -expires => "Fri, 01-Jan-2038 00:00:00 GMT");
@@ -103,17 +108,19 @@ if ($userid) {
 
 if ($::FORM{'nukedefaultquery'}) {
     if ($userid) {
-        SendSQL("DELETE FROM namedqueries " .
-                "WHERE userid = $userid AND name = " . SqlQuote(DEFAULT_QUERY_NAME));
+        $dbh->do("DELETE FROM namedqueries" .
+                 " WHERE userid = ? AND name = ?", 
+                 undef, ($userid, DEFAULT_QUERY_NAME));
     }
     $::buffer = "";
 }
 
 my $userdefaultquery;
 if ($userid) {
-    SendSQL("SELECT query FROM namedqueries " .
-            "WHERE userid = $userid AND name = " . SqlQuote(DEFAULT_QUERY_NAME));
-    $userdefaultquery = FetchOneColumn();
+    $userdefaultquery = $dbh->selectrow_array(
+        "SELECT query FROM namedqueries " .
+         "WHERE userid = ? AND name = ?", 
+         undef, ($userid, DEFAULT_QUERY_NAME));
 }
 
 my %default;
@@ -389,15 +396,11 @@ $default{'charts'} = \@charts;
 
 # Named queries
 if ($userid) {
-    my @namedqueries;
-    SendSQL("SELECT name FROM namedqueries " .
-            "WHERE userid = $userid AND name != " . SqlQuote(DEFAULT_QUERY_NAME) .
-            "ORDER BY name");
-    while (MoreSQLData()) {
-        push(@namedqueries, FetchOneColumn());
-    }
-    
-    $vars->{'namedqueries'} = \@namedqueries;    
+     $vars->{'namedqueries'} = $dbh->selectcol_arrayref(
+           "SELECT name FROM namedqueries " .
+            "WHERE userid = ? AND name != ?" .
+         "ORDER BY name",
+         undef, ($userid, DEFAULT_QUERY_NAME));
 }
 
 # Sort order
