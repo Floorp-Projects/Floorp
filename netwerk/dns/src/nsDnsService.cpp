@@ -1415,7 +1415,7 @@ nsDNSService::Lookup(const char*     hostName,
                 // non-cacheable lookups are released here.
                 EvictLookup(lookup);
             } else {
-#if defined(XP_OS2)  || defined(XP_BEOS)
+#if 0
                 if (PR_CLIST_IS_EMPTY(lookup))   // if the lookup isn't in the eviction queue
                     AddToEvictionQ(lookup);
 #endif                        
