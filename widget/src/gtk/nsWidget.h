@@ -137,7 +137,7 @@ class nsWidget : public nsBaseWidget
     PRBool DispatchWindowEvent(nsGUIEvent* event);
 
     GtkWidget *mWidget;
-    nsWidget *mParent;
+    nsIWidget *mParent;
 
     // This is the composite update area (union of all the calls to
     // Invalidate)

@@ -30,8 +30,8 @@
 #define INITIAL_MAX_ITEMS 128
 #define ITEMS_GROWSIZE    128
 
-NS_IMPL_ADDREF(nsComboBox)
-NS_IMPL_RELEASE(nsComboBox)
+NS_IMPL_ADDREF_INHERITED(nsComboBox, nsComboBoxSuper)
+NS_IMPL_RELEASE_INHERITED(nsComboBox, nsComboBoxSuper)
 
 //-------------------------------------------------------------------------
 //
@@ -60,7 +60,9 @@ nsComboBox::~nsComboBox()
       g_free(items->data);
     }
   g_list_free(mItems);
+#if 0
   gtk_widget_destroy(mCombo);
+#endif
 }
 
 //-------------------------------------------------------------------------

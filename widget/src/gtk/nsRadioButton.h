@@ -25,7 +25,8 @@
 /**
  * Native GTK+ Radiobutton wrapper
  */
-class nsRadioButton : public nsWidget,
+#define nsRadioButtonSuper nsWidget
+class nsRadioButton : public nsRadioButtonSuper,
                       public nsIRadioButton
 {
 

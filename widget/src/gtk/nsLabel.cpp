@@ -27,8 +27,8 @@
 
 #include "nsGtkEventHandler.h"
 
-NS_IMPL_ADDREF(nsLabel)
-NS_IMPL_RELEASE(nsLabel)
+NS_IMPL_ADDREF_INHERITED(nsLabel, nsLabelSuper)
+NS_IMPL_RELEASE_INHERITED(nsLabel, nsLabelSuper)
 
 //-------------------------------------------------------------------------
 //

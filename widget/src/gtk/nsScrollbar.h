@@ -25,8 +25,8 @@
 /**
  * Native GTK+ scrollbar wrapper.
  */
-
-class nsScrollbar : public nsWidget,
+#define nsScrollbarSuper nsWidget
+class nsScrollbar : public nsScrollbarSuper,
                     public nsIScrollbar
 {
 

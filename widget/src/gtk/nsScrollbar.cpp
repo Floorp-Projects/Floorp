@@ -25,8 +25,8 @@
 
 #include "nsGtkEventHandler.h"
 
-NS_IMPL_ADDREF (nsScrollbar);
-NS_IMPL_RELEASE (nsScrollbar);
+NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsScrollbarSuper);
+NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsScrollbarSuper);
 
 //-------------------------------------------------------------------------
 //

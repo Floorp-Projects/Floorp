@@ -25,8 +25,8 @@
 /**
  * Base class for nsTextAreaWidget and nsTextWidget
  */
-
-class nsTextHelper : public nsWidget,
+#define nsTextHelperSuper nsWidget
+class nsTextHelper : public nsTextHelperSuper,
                      public nsITextAreaWidget,
                      public nsITextWidget
 {
@@ -34,6 +34,11 @@ class nsTextHelper : public nsWidget,
 public:
     nsTextHelper();
     virtual ~nsTextHelper();
+
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef();
+    NS_IMETHOD_(nsrefcnt) Release();
+
     NS_IMETHOD        SelectAll();
     NS_IMETHOD        PreCreateWidget(nsWidgetInitData *aInitData);
     NS_IMETHOD        SetMaxTextLength(PRUint32 aChars);

@@ -26,7 +26,9 @@
  * Native GTK+ Checkbox wrapper
  */
 
-class nsCheckButton : public nsWidget,
+#define nsCheckButtonSuper nsWidget
+
+class nsCheckButton : public nsCheckButtonSuper,
                       public nsICheckButton
 {
 

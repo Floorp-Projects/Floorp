@@ -26,9 +26,6 @@
 
 #include <gtk/gtk.h>
 
-NS_IMPL_ADDREF(nsDialog)
-NS_IMPL_RELEASE(nsDialog)
-
 //-------------------------------------------------------------------------
 //
 // nsDialog constructor
@@ -46,6 +43,23 @@ nsDialog::nsDialog() : nsWindow(), nsIDialog()
 //-------------------------------------------------------------------------
 nsDialog::~nsDialog()
 {
+}
+
+//-------------------------------------------------------------------------
+//
+// nsDialog addref, release
+//
+//-------------------------------------------------------------------------
+nsrefcnt
+nsDialog::AddRef()
+{
+  return nsWindow::AddRef();
+}
+
+nsrefcnt
+nsDialog::Release()
+{
+  return nsWindow::Release();
 }
 
 //-------------------------------------------------------------------------

@@ -26,8 +26,8 @@
 /**
  * Native Win32 tab control wrapper
  */
-
-class nsTabWidget : public nsWidget,
+#define nsTabWidgetSuper nsWidget
+class nsTabWidget : public nsTabWidgetSuper,
                     public nsITabWidget
 {
 
@@ -35,10 +35,10 @@ public:
   nsTabWidget();
   virtual ~nsTabWidget();
 
-      // nsISupports
-  NS_IMETHOD_(nsrefcnt) Release(void);          
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
+  // nsISupports
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
+  NS_IMETHOD_(nsrefcnt) Release(void);          
 
   // nsITabWidget part 
   NS_IMETHOD SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]);

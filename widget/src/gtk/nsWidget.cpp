@@ -93,6 +93,10 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
+#ifdef NOISY_WIDGET_DESTROY
+  printf("nsWidget::Destroy:%p: isDestroying=%s widget=%p parent=%p\n",
+         this, mIsDestroying ? "yes" : "no", mWidget, mParent);
+#endif
   GtkAllocation *old_size = NULL;
   if (!mIsDestroying) {
     nsBaseWidget::Destroy();
@@ -122,12 +126,13 @@ void nsWidget::OnDestroy()
   nsBaseWidget::OnDestroy();
   // dispatch the event
   if (!mIsDestroying) {
-    // dispatching of the event may cause the reference count to drop to 0
-    // and result in this object being destroyed. To avoid that, add a reference
-    // and then release it after dispatching the event
-    AddRef();
+    // dispatching of the event may cause the reference count to drop
+    // to 0 and result in this object being destroyed. To avoid that,
+    // add a reference and then release it after dispatching the event
+    nsrefcnt old = mRefCnt;
+    mRefCnt = 99;
     DispatchStandardEvent(NS_DESTROY);
-    Release();
+    mRefCnt = old;
   }
 }
 
@@ -269,13 +274,9 @@ PRBool nsWidget::OnResize(nsRect &aRect)
     event.point.y = mWidget->allocation.y;
     event.time = 0;
     PRBool result = DispatchWindowEvent(&event);
-    // XXX why does this always crash?  maybe we need to add 
-    // a ref in the dispatch code?  check the windows
-    // code for a reference
-    //NS_RELEASE(event.widget);
     return result;
   }
-return PR_FALSE;
+  return PR_FALSE;
 }
 
 //------
@@ -294,7 +295,6 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
   event.point.y = aY;
   event.eventStructType = NS_GUI_EVENT;
   PRBool result = DispatchWindowEvent(&event);
-  // NS_RELEASE(event.widget);
   return result;
 }
 
@@ -677,6 +677,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
+  mParent = aParent;
+  NS_IF_ADDREF(mParent);
 
   if (aNativeParent) {
     parentWidget = GTK_WIDGET(aNativeParent);
@@ -817,7 +819,6 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
-    NS_IF_ADDREF(event.widget);
 
     GdkEventConfigure *ge;
     ge = (GdkEventConfigure*)gtk_get_current_event();
@@ -880,9 +881,7 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
   nsGUIEvent event;
   event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
-
   PRBool result = DispatchWindowEvent(&event);
-  NS_IF_RELEASE(event.widget);
   return result;
 }
 
@@ -913,6 +912,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
     aStatus = mEventListener->ProcessEvent(*event);
   }
   NS_RELEASE(event->widget);
+
   return NS_OK;
 }
 
