@@ -29,11 +29,7 @@
 var contentAreaDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
-      // under the assumption that content areas won't contain
-      // draggable XBL, we'll ignore the drag if we're dragging XBL
-      // anonymous content nodes, like scrollbars, etc.
-      // XXX bogus
-      if (aEvent.target != aEvent.originalTarget)
+      if (aEvent.getPreventDefault())
         throw Components.results.NS_ERROR_FAILURE;
 
       // only drag form elements by using the alt key,
@@ -53,12 +49,13 @@ var contentAreaDNDObserver = {
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(draggedNode,false))
         {
-          var anchors = domselection.anchorNode.getElementsByTagName("a");
-          if (anchors.length > 0) {       
-	    draggedNode = anchors[0];
-	    urlstring = draggedNode.href;
-          }
+          // track down the anchor node, if any
 
+          var firstAnchor = this.findFirstAnchor(domselection.anchorNode);
+
+          if (firstAnchor)
+            urlstring = firstAnchor.href;
+          
           var privateSelection = domselection.QueryInterface(Components.interfaces.nsISelectionPrivate);
           if (privateSelection)
           {
@@ -67,8 +64,8 @@ var contentAreaDNDObserver = {
             // than looking for specific elements
             htmlstring = privateSelection.toStringWithFormat("text/html", 128+256, 0);
             titlestring = privateSelection.toStringWithFormat("text/plain", 0, 0);
-            // how are we going to get the URL, if any? Scan the selection
-            // for the first anchor? See bug #58315
+          } else {
+            titlestring = domselection.toString();
           }
         }
       else 
@@ -201,6 +198,24 @@ var contentAreaDNDObserver = {
     return "<a href=\"" + url + "\">" + text + "</a>";
   },
 
+  findFirstAnchor: function(node)
+  {
+    if (!node) return null;
+
+    while (node) {
+      if (node.nodeType == Node.ELEMENT_NODE &&
+          node.localName.toLowerCase() == "a")
+        return node;
+      
+      var childResult = this.findFirstAnchor(node.firstChild);
+      if (childResult)
+        return childResult;
+
+      node = node.nextSibling;
+    }
+    return null;
+  },
+  
   normalizeSelection: function(baseNode, domselection)
   {
     var parent = baseNode.parentNode;
