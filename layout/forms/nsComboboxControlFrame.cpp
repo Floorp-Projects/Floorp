@@ -240,6 +240,17 @@ nsComboboxControlFrame::InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate
 void 
 nsComboboxControlFrame::Reset(nsIPresContext* aPresContext)
 {
+  if (mPresState) {
+    nsIStatefulFrame* sFrame = nsnull;
+    nsresult res = mListControlFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame),
+                                                     (void**)&sFrame);
+    if (NS_SUCCEEDED(res) && sFrame) {
+      res = sFrame->RestoreState(mPresContext, mPresState);
+      NS_RELEASE(sFrame);
+    }
+    mPresState = do_QueryInterface(nsnull);
+  }
+
    // Reset the dropdown list to its original state
   nsIFormControlFrame* fcFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
@@ -881,11 +892,6 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
-  nsRect absoluteTwips;
-  nsRect absolutePixels;
-  GetAbsoluteFramePosition(aPresContext, this,  absoluteTwips, absolutePixels);
-  //PositionDropdown(aPresContext, aDesiredSize.height, absoluteTwips, absolutePixels);
-
   aStatus = NS_FRAME_COMPLETE;
 #if 0
   COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 127, 22) 
@@ -1307,9 +1313,10 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
   mDropdownFrame = aDropDownFrame;
  
   if (NS_OK != mDropdownFrame->QueryInterface(kIListControlFrameIID, (void**)&mListControlFrame)) {
+
     return NS_ERROR_FAILURE;
   }
-  
+
   return NS_OK;
 }
 
@@ -1735,7 +1742,10 @@ nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** a
 NS_IMETHODIMP
 nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  if (!mListControlFrame) return NS_ERROR_UNEXPECTED;
+  if (!mListControlFrame) {
+    mPresState = aState;
+    return NS_OK;
+  }
   nsIStatefulFrame* sFrame = nsnull;
   nsresult res = mListControlFrame->QueryInterface(NS_GET_IID(nsIStatefulFrame),
                                                    (void**)&sFrame);
