@@ -44,7 +44,7 @@
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';
-var summary = 'Testing: formal parameters to a function sharing the same name';
+var summary = 'Testing functions having duplicate formal parameter names';
 var status = '';
 var statusitems = [];
 var actual = '';
