@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.7 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.8 $ $Date: 2001/10/11 16:33:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -42,6 +42,11 @@ static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.7 $ $Date:
 #ifndef DEVM_H
 #include "devm.h"
 #endif /* DEVM_H */
+
+/* for the cache... */
+#ifndef PKI_H
+#include "pki.h"
+#endif /* PKI_H */
 
 #ifdef NSS_3_4_CODE
 #include "pkcs11.h"
@@ -172,10 +177,17 @@ nssToken_Destroy
 )
 {
     if (--tok->refCount == 0) {
+#ifndef NSS_3_4_CODE
+	/* don't do this in 3.4 -- let PK11SlotInfo handle it */
 	if (tok->defaultSession) {
 	    nssSession_Destroy(tok->defaultSession);
 	}
-	return NSSArena_Destroy(tok->arena);
+#endif
+	if (tok->arena) {
+	    return NSSArena_Destroy(tok->arena);
+	} else {
+	    nss_ZFreeIf(tok);
+	}
     }
     return PR_SUCCESS;
 }
@@ -234,40 +246,39 @@ nssToken_ImportObject
     return PR_SUCCESS;
 }
 
-/* This is only used by the Traverse function.  If we ditch traversal,
- * ditch this.
- */
-struct certCallbackStr {
-    PRStatus (*callback)(NSSCertificate *c, void *arg);
-    void *arg;
-};
-
-/* also symmKeyCallbackStr, pubKeyCallbackStr, etc. */
-
-/*
- * This callback examines each matching certificate by passing it to
- * a higher-level callback function.
- */
-static PRStatus
-examine_cert_callback(NSSToken *t, nssSession *session,
-                      CK_OBJECT_HANDLE h, void *arg)
+NSS_IMPLEMENT CK_OBJECT_HANDLE
+nssToken_FindObjectByTemplate
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  CK_ATTRIBUTE_PTR cktemplate,
+  CK_ULONG ctsize
+)
 {
-    PRStatus cbrv;
-    NSSCertificate *cert;
-    struct certCallbackStr *ccb = (struct certCallbackStr *)arg;
-    /* maybe it should be nssToken_CreateCertificate(token, handle); */
-    cert = NSSCertificate_CreateFromHandle(NULL, h, session, t->slot);
-    if (!cert) {
-	goto loser;
+    CK_SESSION_HANDLE hSession;
+    CK_OBJECT_HANDLE rvObject;
+    CK_ULONG count;
+    CK_RV ckrv;
+    nssSession *session;
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    hSession = session->handle;
+    nssSession_EnterMonitor(session);
+    ckrv = CKAPI(tok)->C_FindObjectsInit(hSession, cktemplate, ctsize);
+    if (ckrv != CKR_OK) {
+	nssSession_ExitMonitor(session);
+	return CK_INVALID_KEY;
     }
-    cbrv = (*ccb->callback)(cert, ccb->arg);
-    if (cbrv != PR_SUCCESS) {
-	goto loser;
+    ckrv = CKAPI(tok)->C_FindObjects(hSession, &rvObject, 1, &count);
+    if (ckrv != CKR_OK) {
+	nssSession_ExitMonitor(session);
+	return CK_INVALID_KEY;
     }
-    NSSCertificate_Destroy(cert);
-    return PR_SUCCESS;
-loser:
-    return PR_FAILURE;
+    ckrv = CKAPI(tok)->C_FindObjectsFinal(hSession);
+    nssSession_ExitMonitor(session);
+    if (ckrv != CKR_OK) {
+	return CK_INVALID_KEY;
+    }
+    return rvObject;
 }
 
 extern const NSSError NSS_ERROR_MAXIMUM_FOUND;
@@ -301,6 +312,53 @@ loser:
     return PR_FAILURE;
 }
 
+struct cert_callback_str {
+    PRStatus (*callback)(NSSCertificate *c, void *arg);
+    void *arg;
+};
+
+/* Parts of this (cache lookup, creating a cert) should be passed up to
+ * a higher level through a callback, but left here for now
+ */
+static PRStatus 
+retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
+{
+    PRStatus nssrv;
+    NSSCertificate *cert;
+    NSSDER issuer, serial;
+    CK_ULONG template_size;
+    /* Set up the unique id */
+    CK_ATTRIBUTE cert_template[] = {
+	{ CKA_ISSUER,        NULL, 0 },
+	{ CKA_SERIAL_NUMBER, NULL, 0 }
+    };
+    struct cert_callback_str *ccb = (struct cert_callback_str *)arg;
+    template_size = sizeof(cert_template) / sizeof(cert_template[0]);
+    /* Get the unique id */
+    nssrv = nssCKObject_GetAttributes(h, cert_template, template_size,
+                                      NULL, session, t->slot);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[0], &issuer);
+    NSS_CK_ATTRIBUTE_TO_ITEM(&cert_template[1], &serial);
+    /* Look in the cert's trust domain cache first */
+    cert = nssTrustDomain_GetCertForIssuerAndSNFromCache(t->trustDomain, 
+                                                         &issuer, &serial);
+    nss_ZFreeIf(issuer.data);
+    nss_ZFreeIf(serial.data);
+    if (!cert) {
+	/* Could not find cert, so create it */
+	cert = NSSCertificate_CreateFromHandle(NULL, h, session, t->slot);
+	if (!cert) {
+	    goto loser;
+	}
+    }
+    /* Got the cert, feed it to the callback */
+    return (*ccb->callback)(cert, ccb->arg);
+loser:
+    return PR_FAILURE;
+}
+
+#define OBJECT_STACK_SIZE 16
+
 static PRStatus *
 nsstoken_TraverseObjects
 (
@@ -315,41 +373,69 @@ nsstoken_TraverseObjects
 {
     NSSSlot *slot;
     PRStatus cbrv;
+    PRUint32 i;
     CK_RV ckrv;
     CK_ULONG count;
-    CK_OBJECT_HANDLE object;
+    CK_OBJECT_HANDLE *objectStack;
+    CK_OBJECT_HANDLE startOS[OBJECT_STACK_SIZE];
     CK_SESSION_HANDLE hSession;
+    NSSArena *objectArena = NULL;
+    nssList *objectList = NULL;
     slot = tok->slot;
     hSession = session->handle;
+    objectStack = startOS;
+    nssSession_EnterMonitor(session);
     ckrv = CKAPI(slot)->C_FindObjectsInit(hSession, obj_template, otsize);
     if (ckrv != CKR_OK) {
+	nssSession_ExitMonitor(session);
 	goto loser;
     }
     while (PR_TRUE) {
-	/* this could be sped up by getting 5-10 at a time? */
-	ckrv = CKAPI(slot)->C_FindObjects(hSession, &object, 1, &count);
+	ckrv = CKAPI(slot)->C_FindObjects(hSession, objectStack, 
+	                                  OBJECT_STACK_SIZE, &count);
 	if (ckrv != CKR_OK) {
+	    nssSession_ExitMonitor(session);
 	    goto loser;
 	}
-	if (count == 0) {
-	    break;
-	}
-	cbrv = (*callback)(tok, session, object, arg);
-	if (cbrv != PR_SUCCESS) {
-	    NSSError e;
-	    if ((e = NSS_GetError()) == NSS_ERROR_MAXIMUM_FOUND) {
-		/* The maximum number of elements have been found, exit. */
-		nss_ClearErrorStack();
-		break;
+	if (count == OBJECT_STACK_SIZE) {
+	    if (!objectList) {
+		objectArena = NSSArena_Create();
+		objectList = nssList_Create(objectArena, PR_FALSE);
 	    }
-	    goto loser;
+	    objectStack = nss_ZNEWARRAY(objectArena, CK_OBJECT_HANDLE, 
+	                                OBJECT_STACK_SIZE);
+	    nssList_Add(objectList, objectStack);
+	} else {
+	    break;
 	}
     }
     ckrv = CKAPI(slot)->C_FindObjectsFinal(hSession);
+    nssSession_ExitMonitor(session);
     if (ckrv != CKR_OK) {
 	goto loser;
     }
+    if (objectList) {
+	nssListIterator *objects;
+	objects = nssList_CreateIterator(objectList);
+	for (objectStack = (CK_OBJECT_HANDLE *)nssListIterator_Start(objects);
+	     objectStack != NULL;
+	     objectStack = (CK_OBJECT_HANDLE *)nssListIterator_Next(objects)) {
+	    for (i=0; i<count; i++) {
+		cbrv = (*callback)(tok, session, objectStack[i], arg);
+	    }
+	}
+	nssListIterator_Finish(objects);
+	count = OBJECT_STACK_SIZE;
+    }
+    for (i=0; i<count; i++) {
+	cbrv = (*callback)(tok, session, startOS[i], arg);
+    }
+    if (objectArena)
+	NSSArena_Destroy(objectArena);
+    return NULL;
 loser:
+    if (objectArena)
+	NSSArena_Destroy(objectArena);
     return NULL; /* for now... */
 }
 
@@ -362,21 +448,16 @@ nssToken_TraverseCertificates
   void *arg
 )
 {
-    PRStatus *rvstack;
-    nssSession *session;
-    struct certCallbackStr ccb;
+    PRStatus nssrv;
+    /* this is really traversal - the template is all certs */
     CK_ATTRIBUTE cert_template[] = {
 	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size }
     };
     CK_ULONG ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
-    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
-    ccb.callback = callback;
-    ccb.arg = arg;
-    nssSession_EnterMonitor(session);
-    rvstack = nsstoken_TraverseObjects(tok, session, cert_template, ctsize,
-                                       examine_cert_callback, (void *)&ccb);
-    nssSession_ExitMonitor(session);
-    return rvstack;
+    nssrv = nssToken_FindCertificatesByTemplate(tok, sessionOpt, 
+                                                cert_template, ctsize,
+                                                callback, arg);
+    return NULL; /* XXX */
 }
 
 NSS_IMPLEMENT PRStatus
@@ -386,20 +467,20 @@ nssToken_FindCertificatesByTemplate
   nssSession *sessionOpt,
   CK_ATTRIBUTE_PTR cktemplate,
   CK_ULONG ctsize,
-  PRStatus (*callback)(NSSToken *t, nssSession *session,
-                       CK_OBJECT_HANDLE h, void *arg),
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
   void *arg
 )
 {
     PRStatus *rvstack;
     nssSession *session;
+    struct cert_callback_str ccb;
     session = (sessionOpt) ? sessionOpt : tok->defaultSession;
-    nssSession_EnterMonitor(session);
     /* this isn't really traversal, it's find by template ... */
+    ccb.callback = callback;
+    ccb.arg = arg;
     rvstack = nsstoken_TraverseObjects(tok, session, 
-                                       cktemplate, ctsize, 
-                                       callback, arg);
-    nssSession_ExitMonitor(session);
+                                       cktemplate, ctsize,
+                                       retrieve_cert, (void *)&ccb);
     if (rvstack) {
 	/* examine the errors */
 	goto loser;
@@ -408,40 +489,4 @@ nssToken_FindCertificatesByTemplate
 loser:
     return PR_FAILURE;
 }
-
-#if 0
-NSS_IMPLEMENT PRStatus
-nssToken_FindCertificatesByTemplate
-(
-  NSSToken *tok,
-  nssSession *sessionOpt,
-  nssList *certList,
-  PRUint32 maximumOpt,
-  NSSArena *arenaOpt,
-  CK_ATTRIBUTE_PTR cktemplate,
-  CK_ULONG ctsize
-)
-{
-    PRStatus *rvstack;
-    nssSession *session;
-    struct collect_arg_str collectArgs;
-    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
-    collectArgs.arena = arenaOpt;
-    collectArgs.list = certList;
-    collectArgs.maximum = maximumOpt;
-    nssSession_EnterMonitor(session);
-    /* this isn't really traversal, it's find by template ... */
-    rvstack = nsstoken_TraverseObjects(tok, session, cktemplate, ctsize,
-                                       collect_certs_callback,
-                                       (void *)&collectArgs);
-    nssSession_ExitMonitor(session);
-    if (rvstack) {
-	/* examine the errors */
-	goto loser;
-    }
-    return PR_SUCCESS;
-loser:
-    return PR_FAILURE;
-}
-#endif
 

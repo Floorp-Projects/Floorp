@@ -35,11 +35,11 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.4 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.5 $ $Date: 2001/10/11 16:33:38 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
- * nssdevt.h
+ * devt.h
  *
  * This file contains definitions for the low-level cryptoki devices.
  */
@@ -48,8 +48,17 @@ static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.4 $ $D
 #include "nssbaset.h"
 #endif /* NSSBASET_H */
 
+#ifndef NSSPKIT_H
+#include "nsspkit.h"
+#endif /* NSSPKIT_H */
+
+#ifndef NSSDEVT_H
+#include "nssdevt.h"
+#endif /* NSSDEVT_H */
+
 #ifdef NSS_3_4_CODE
 #include "pkcs11t.h"
+#include "secmodt.h"
 #else
 #ifndef NSSCKT_H
 #include "nssckt.h"
@@ -57,18 +66,6 @@ static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.4 $ $D
 #endif /* NSS_3_4_CODE */
 
 PR_BEGIN_EXTERN_C
-
-/*
- * NSSModule and NSSSlot -- placeholders for the PKCS#11 types
- */
-
-typedef struct NSSModuleStr NSSModule;
-
-typedef struct NSSSlotStr NSSSlot;
-
-typedef struct NSSTokenStr NSSToken;
-
-typedef struct nssSessionStr nssSession;
 
 /* The list of boolean flags used to describe properties of a
  * module.
@@ -102,27 +99,36 @@ struct nssSlotAuthInfoStr
 
 struct NSSSlotStr
 {
-    NSSArena   *arena;
-    PRInt32     refCount;
-    NSSModule  *module; /* Parent */
-    NSSToken   *token;  /* Child (or peer, if you will) */
-    NSSUTF8    *name;
-    CK_SLOT_ID  slotID;
-    void       *epv;
-    CK_FLAGS    ckFlags; /* from CK_SLOT_INFO.flags */
-    PRUint32    flags;
+    NSSArena *arena;
+    PRInt32 refCount;
+    NSSModule *module; /* Parent */
+    NSSToken *token;  /* Child (or peer, if you will) */
+    NSSUTF8 *name;
+    CK_SLOT_ID slotID;
+    void *epv;
+    CK_FLAGS ckFlags; /* from CK_SLOT_INFO.flags */
+    PRUint32 flags;
     struct nssSlotAuthInfoStr authInfo;
+    NSSTrustDomain *trustDomain;
+#ifdef NSS_3_4_CODE
+    PK11SlotInfo *pk11slot;
+#endif
 };
 
 struct NSSTokenStr
 {
-    NSSArena   *arena;
-    PRInt32     refCount;
-    NSSSlot    *slot;  /* Parent (or peer, if you will) */
-    NSSUTF8    *name;
-    CK_FLAGS    ckFlags; /* from CK_TOKEN_INFO.flags */
-    PRUint32    flags;
+    NSSArena *arena;
+    PRInt32 refCount;
+    NSSSlot *slot;  /* Parent (or peer, if you will) */
+    NSSUTF8 *name;
+    CK_FLAGS ckFlags; /* from CK_TOKEN_INFO.flags */
+    PRUint32 flags;
+    void *epv;
     nssSession *defaultSession;
+    NSSTrustDomain *trustDomain;
+#ifdef NSS_3_4_CODE
+    PK11SlotInfo *pk11slot;
+#endif
 };
 
 struct nssSessionStr

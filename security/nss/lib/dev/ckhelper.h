@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.4 $ $Date: 2001/10/08 20:19:30 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.5 $ $Date: 2001/10/11 16:33:36 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifdef NSS_3_4_CODE
@@ -104,6 +104,28 @@ nssCKObject_GetAttributes
   NSSArena *arenaOpt,
   nssSession *session,
   NSSSlot  *slot
+);
+
+/* Get a single attribute as an item. */
+NSS_EXTERN PRStatus
+nssCKObject_GetAttributeItem
+(
+  CK_OBJECT_HANDLE object,
+  CK_ATTRIBUTE_TYPE attribute,
+  NSSArena *arenaOpt,
+  nssSession *session,
+  NSSSlot *slot,
+  NSSItem *rvItem
+);
+
+NSS_EXTERN PRBool
+nssCKObject_IsAttributeTrue
+(
+  CK_OBJECT_HANDLE object,
+  CK_ATTRIBUTE_TYPE attribute,
+  nssSession *session,
+  NSSSlot *slot,
+  PRStatus *rvStatus
 );
 
 PR_END_EXTERN_C
