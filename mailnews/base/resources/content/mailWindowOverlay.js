@@ -60,7 +60,6 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
 	if(reallyDelete)
 		dump("reallyDelete\n");
 	var srcFolder = GetLoadedMsgFolder();
-	var tree = GetThreadTree();
 	// if from the toolbar, return right away if this is a news message
 	// only allow cancel from the menu:  "Edit | Cancel / Delete Message"
 	if (fromToolbar)
@@ -405,6 +404,35 @@ function MsgSendUnsentMsg()
 		SendUnsentMessages(folder);
 	}
 }
+
+function PrintEnginePrint()
+{
+
+	var messageList = GetSelectedMessages();
+	numMessages = messageList.length;
+
+
+	if (numMessages == 0)
+	{
+		dump("PrintEnginePrint(): No messages selected.\n");
+		return false;
+	}  
+
+	var selectionArray = new Array(numMessages);
+
+	for(var i = 0; i < numMessages; i++)
+	{
+		var messageResource = messageList[i].QueryInterface(Components.interfaces.nsIRDFResource);
+		selectionArray[i] = messageResource.Value;
+	}
+
+	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
+								                        "",
+								                        "chrome,dialog=no,all",
+								                        numMessages, selectionArray, statusFeedback);
+	return true;
+}
+
 
 function MsgMarkByDate() {}
 function MsgOpenAttachment() {}

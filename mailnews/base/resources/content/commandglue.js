@@ -840,28 +840,3 @@ function Redo()
     messenger.Redo(msgWindow);
 }
 
-function PrintEnginePrint()
-{
-	var tree = GetThreadTree();
-	var selectedItems = tree.selectedItems;
-	var numSelected = selectedItems.length;
-
-  if (numSelected == 0)
-  {
-    dump("PrintEnginePrint(): No messages selected.\n");
-    return false;
-  }  
-
-	var selectionArray = new Array(numSelected);
-
-	for(var i = 0; i < numSelected; i++)
-	{
-		selectionArray[i] = selectedItems[i].getAttribute("id");
-	}
-
-  printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
-								                        "",
-								                        "chrome,dialog=no,all",
-								                        numSelected, selectionArray, statusFeedback);
-  return true;
-}
