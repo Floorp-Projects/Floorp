@@ -75,18 +75,25 @@ NSPR_API(PRInt64) LL_Zero(void);
 NSPR_API(PRUint64) LL_MaxUint(void);
 #endif
 
-#define LL_MAXINT   LL_MaxInt()
-#define LL_MININT   LL_MinInt()
-#define LL_ZERO     LL_Zero()
-#define LL_MAXUINT  LL_MaxUint()
-
 #if defined(HAVE_LONG_LONG)
 
 #if PR_BYTES_PER_LONG == 8
+#define LL_MAXINT   9223372036854775807L
+#define LL_MININT   (-LL_MAXINT - 1L)
+#define LL_ZERO     0L
+#define LL_MAXUINT  18446744073709551615UL
 #define LL_INIT(hi, lo)  ((hi ## L << 32) + lo ## L)
 #elif (defined(WIN32) || defined(WIN16)) && !defined(__GNUC__)
+#define LL_MAXINT   9223372036854775807i64
+#define LL_MININT   (-LL_MAXINT - 1i64)
+#define LL_ZERO     0i64
+#define LL_MAXUINT  18446744073709551615ui64
 #define LL_INIT(hi, lo)  ((hi ## i64 << 32) + lo ## i64)
 #else
+#define LL_MAXINT   9223372036854775807LL
+#define LL_MININT   (-LL_MAXINT - 1LL)
+#define LL_ZERO     0LL
+#define LL_MAXUINT  18446744073709551615ULL
 #define LL_INIT(hi, lo)  ((hi ## LL << 32) + lo ## LL)
 #endif
 
@@ -200,6 +207,11 @@ NSPR_API(PRUint64) LL_MaxUint(void);
      *(rp) = ((PRUint64)(a) % (b)))
 
 #else  /* !HAVE_LONG_LONG */
+
+#define LL_MAXINT   LL_MaxInt()
+#define LL_MININT   LL_MinInt()
+#define LL_ZERO     LL_Zero()
+#define LL_MAXUINT  LL_MaxUint()
 
 #ifdef IS_LITTLE_ENDIAN
 #define LL_INIT(hi, lo) {PR_UINT32(lo), PR_UINT32(hi)}
