@@ -87,17 +87,17 @@ ImageURLImpl::QueryInterface(const nsIID& aIID,
 
   if (aIID.Equals(kURLIID)) {
     *aInstancePtr = (void*) mURL;
-    mURL->AddRef();
+    NS_ADDREF(mURL);
     return NS_OK;
   }
   if (aIID.Equals(kClassIID)) {
     *aInstancePtr = (void*) this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   } 
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) ((nsISupports*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
