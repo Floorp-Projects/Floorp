@@ -84,14 +84,6 @@ public:
    * @param aParent intended parent for view. this is not actually set in the
    *        nsIView through this method. it is only used by the initialization
    *        code to walk up the view tree, if necessary, to find resources.
-   * @param aWindowIID IID for Widget type that this view
-   *        should have associated with it. if nsull, then no
-   *        width will be created for this view
-   * @param aWidgetInitData data used to initialize this view's widget before
-   *        its create is called.
-   * @param aNative native window that will be used as parent of
-   *        aWindowIID. if nsnull, then parent will be derived from
-   *        parent view and it's ancestors
    * @param aCilpRect initial clip rect of view
    * @param aVisibilityFlag initial visibility state of view
    * @result The result of the initialization, NS_OK if no errors
@@ -99,9 +91,6 @@ public:
   NS_IMETHOD  Init(nsIViewManager* aManager,
 						       const nsRect &aBounds,
                    const nsIView *aParent,
-        					 const nsIID *aWindowIID = nsnull,
-                   nsWidgetInitData *aWidgetInitData = nsnull,
-        					 nsNativeWidget aNative = nsnull,
         					 const nsViewClip *aClip = nsnull,
         					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
@@ -122,14 +111,6 @@ public:
    * @result view manager
    */
   NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) = 0;
-
-  /**
-   * In 4.0, the "cutout" nature of a view is queryable.
-   * If we believe that all cutout view have a native widget, this
-   * could be a replacement.
-   * @result widget that this view contains
-   */
-  NS_IMETHOD  GetWidget(nsIWidget *&aWidget) = 0;
 
   /**
    * Called to indicate that the specified rect of the view
@@ -395,6 +376,43 @@ public:
    * manager.
    */
   NS_IMETHOD SetDirtyRegion(nsIRegion *aRegion) = 0;
+
+  /**
+   * Create a widget to associate with this view. This is a helper
+   * function for SetWidget.
+   * @param aWindowIID IID for Widget type that this view
+   *        should have associated with it. if nsull, then no
+   *        width will be created for this view
+   * @param aWidgetInitData data used to initialize this view's widget before
+   *        its create is called.
+   * @param aNative native window that will be used as parent of
+   *        aWindowIID. if nsnull, then parent will be derived from
+   *        parent view and it's ancestors
+   * @return error status
+   */
+  NS_IMETHOD CreateWidget(const nsIID &aWindowIID,
+                          nsWidgetInitData *aWidgetInitData = nsnull,
+        					        nsNativeWidget aNative = nsnull) = 0;
+
+  /**
+   * Set the widget associated with this view.
+   * @param aWidget widget to associate with view. It is an error
+   *        to associate a widget with more than one view. To disassociate
+   *        a widget from a view, use nsnull. If there are no more references
+   *        to the widget that may have been associated with the view, it will
+   *        be destroyed.
+   * @return error status
+   */
+  NS_IMETHOD SetWidget(nsIWidget *aWidget) = 0;
+
+  /**
+   * In 4.0, the "cutout" nature of a view is queryable.
+   * If we believe that all cutout view have a native widget, this
+   * could be a replacement.
+   * @param aWidget out parameter for widget that this view contains,
+    *       or nsnull if there is none.
+   */
+  NS_IMETHOD GetWidget(nsIWidget *&aWidget) = 0;
 
   /**
    * Output debug info to FILE

@@ -244,11 +244,12 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
   {
   //  nsWidgetInitData* initData = GetWidgetInitData(*aPresContext); // needs to be deleted
     // initialize the view as hidden since we don't know the (x,y) until Paint
-    result = view->Init(viewMan, boundBox, parView, &kWidgetCID, nsnull,
-                        nsnull, nsnull, nsViewVisibility_kHide);
+    result = view->Init(viewMan, boundBox, parView, nsnull,
+                        nsViewVisibility_kHide);
   //  if (nsnull != initData) {
   //    delete(initData);
   //  }
+
     if (NS_OK != result) {
       result = NS_OK;       //XXX why OK? MMP
       goto exit;            //XXX sue me. MMP
@@ -268,6 +269,13 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
   #endif
 
     viewMan->InsertChild(parView, view, 0);
+
+    result = view->CreateWidget(kWidgetCID);
+
+    if (NS_OK != result) {
+      result = NS_OK;       //XXX why OK? MMP
+      goto exit;            //XXX sue me. MMP
+    }
   }
 
   {

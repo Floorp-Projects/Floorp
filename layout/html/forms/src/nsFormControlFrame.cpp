@@ -252,16 +252,21 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 	  const nsIID& id = GetCID();
     nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
-    result = view->Init(viewMan, boundBox, parView, &id, initData,
-                        nsnull, nsnull, nsViewVisibility_kHide);
-    if (nsnull != initData) {
-      delete(initData);
-    }
+    result = view->Init(viewMan, boundBox, parView,
+                        nsnull, nsViewVisibility_kHide);
     if (NS_OK != result) {
 	    NS_ASSERTION(0, "widget initialization failed"); 
       aStatus = NS_FRAME_NOT_COMPLETE;
       return NS_OK;
 	  }
+
+    viewMan->InsertChild(parView, view, 0);
+
+    view->CreateWidget(id, initData);
+
+    if (nsnull != initData) {
+      delete(initData);
+    }
 
 	  // set our widget
 	  result = GetWidget(view, &mWidget);
@@ -279,7 +284,6 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 	    NS_ASSERTION(0, "could not get widget");
 	  }
 
-    viewMan->InsertChild(parView, view, 0);
     SetView(view);
 
     if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {

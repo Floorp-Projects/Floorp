@@ -51,6 +51,14 @@ class nsIScrollableView : public nsISupports
 {
 public:
   /**
+   * Create the controls used to allow scrolling. Call this method
+   * before anything else is done with the scrollable view.
+   * @param aNative native widget to use as parent for control widgets
+   * @return error status
+   */
+  NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull) = 0;
+
+  /**
    * Compute the size of the scrolled container.
    */
   NS_IMETHOD  ComputeContainerSize(void) = 0;
