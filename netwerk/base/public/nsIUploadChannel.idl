@@ -36,58 +36,55 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+
 interface nsIInputStream;
-interface nsIChannel;
-interface nsIFile;
 
-// Notes:
-//   Do we want to have expose contentType and contentLength?
-//   What about a getter for the nsIFile?
-
+/**
+ * nsIUploadChannel
+ *
+ * A channel may optionally implement this interface if it supports the
+ * notion of uploading a data stream.  The upload stream may only be set
+ * prior to the invocation of asyncOpen on the channel.
+ *
+ * @status FROZEN
+ */
 [scriptable, uuid(ddf633d8-e9a4-439d-ad88-de636fd9bb75)]
 interface nsIUploadChannel : nsISupports
 {
-  /**
-   * Set the stream to be uploaded by this channel. 
-   * History here is that we need to support both streams that already have header (eg.
-   * content-type & content-length) information prepend to the stream (namely plugins) 
-   * as well as clients (composer, uploading application) that want to upload data streams 
-   * without any knowledgle of protocol specifications.  For this reason, we have a special
-   * meaning for contentType.  See below.
-   * 
-   *   @param stream
-   *          Stream to be uploaded by this channel
-   *   @param contentType
-   *          If the contentType is nsnull, the protocol will assume that no content 
-   *          headers are to be added to the uploaded stream and that any required
-   *          headers are already in the param |stream|.  In HTTP's case, if you do
-   *          specify a content header, the implemention should prepend this as a 
-   *          content-type header to the uploading stream.  In FTP's case, this 
-   *          parameter is ignored. 
-   *   @param contentLength
-   *          Use of -1 assumes that the data length is returned by the |stream|'s 
-   *          Available() method. 
-   */
-  void setUploadStream(in nsIInputStream stream, in string contentType, in long contentLength);    
+    /**
+     * Sets a stream to be uploaded by this channel.
+     *
+     * Most implementations of this interface require that the stream:
+     *   (1) implement threadsafe addRef and release
+     *   (2) implement nsIInputStream::readSegments
+     *   (3) implement nsISeekableStream::seek
+     *
+     * History here is that we need to support both streams that already have
+     * headers (e.g., Content-Type and Content-Length) information prepended to
+     * the stream (by plugins) as well as clients (composer, uploading
+     * application) that want to upload data streams without any knowledge of
+     * protocol specifications.  For this reason, we have a special meaning
+     * for the aContentType parameter (see below).
+     * 
+     * @param aStream
+     *        The stream to be uploaded by this channel.
+     * @param aContentType
+     *        If aContentType is empty, the protocol will assume that no
+     *        content headers are to be added to the uploaded stream and that
+     *        any required headers are already encoded in the stream.  In the
+     *        case of HTTP, if this parameter is non-empty, then its value will
+     *        replace any existing Content-Type header on the HTTP request.
+     *        In the case of FTP and FILE, this parameter is ignored.
+     * @param aContentLength
+     *        A value of -1 indicates that the length of the stream should be
+     *        determined by calling the stream's |available| method.
+     */
+    void setUploadStream(in nsIInputStream aStream,
+                         in ACString aContentType,
+                         in long aContentLength);    
 
-  /** 
-   * Sets a file to be uploaded by this channel.  
-   *   @param file
-   *          The nsIFile to be uploaded by this channel
-   *   @param contentType
-   *          If the contentType is nsnull here, the protocol may ask the MIME service 
-   *          for an appropriate content type if one is required for uploading.
-   *   @param contentLength
-   *          Use of -1 assumes that the data length is returned by nsIFile::fileSize 
-   */
-  void setUploadFile(in nsIFile file, in string contentType, in long contentLength);
-
-  /**
-   * Get the stream (to be) uploaded by this channel.  This may return null if 
-   * setUploadFile was called.  
-   */
-  readonly attribute nsIInputStream uploadStream;
-
+    /**
+     * Get the stream (to be) uploaded by this channel.
+     */
+    readonly attribute nsIInputStream uploadStream;
 };
-
-

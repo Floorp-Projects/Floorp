@@ -3933,7 +3933,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				    {
 					nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
 					NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
-					uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
+					uploadChannel->SetUploadStream(postDataStream, NS_LITERAL_CSTRING(""), -1);
 				    }
 				}
 			}

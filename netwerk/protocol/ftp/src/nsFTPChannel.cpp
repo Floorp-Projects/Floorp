@@ -731,26 +731,10 @@ nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetUploadStream(nsIInputStream *stream, const char *contentType, PRInt32 contentLength)
+nsFTPChannel::SetUploadStream(nsIInputStream *stream, const nsACString &contentType, PRInt32 contentLength)
 {
     mUploadStream = stream;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetUploadFile(nsIFile *file, const char *contentType, PRInt32 contentLength)
-{
-    if (!file) return NS_ERROR_NULL_POINTER;
-
-    nsresult rv;
-    // Grab a file input stream
-    nsCOMPtr<nsIInputStream> stream;
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);    
-    if (NS_FAILED(rv))
-        return rv;
-
-    // set the stream on ourselves
-    return SetUploadStream(stream, nsnull, -1); 
 }
 
 NS_IMETHODIMP

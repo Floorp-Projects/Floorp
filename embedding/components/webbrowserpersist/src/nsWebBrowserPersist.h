@@ -101,7 +101,7 @@ private:
     nsresult MakeOutputStreamFromURI(nsIURI *aURI, nsIOutputStream  **aOutStream);
     nsresult CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel);
     nsresult StartUpload(nsIStorageStream *aOutStream, nsIURI *aDestinationURI,
-        const char *aContentType);
+        const nsACString &aContentType);
     nsresult CalculateAndAppendFileExt(nsIURI *aURI, nsIChannel *aChannel,
         nsIURI *aOriginalURIWithExtension);
     nsresult CalculateUniqueFilename(nsIURI *aURI);
@@ -128,7 +128,7 @@ private:
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentWithFixup(
         nsIDocument *pDocument, nsIDocumentEncoderNodeFixup *pFixup,
-        nsIURI *aFile, PRBool aReplaceExisting, const char *aFormatType,
+        nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
         const nsString &aSaveCharset, PRUint32  aFlags);
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);

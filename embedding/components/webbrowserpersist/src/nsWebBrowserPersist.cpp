@@ -442,7 +442,7 @@ NS_IMETHODIMP nsWebBrowserPersist::CancelSave()
 
 nsresult
 nsWebBrowserPersist::StartUpload(nsIStorageStream *storStream, 
-    nsIURI *aDestinationURI, const char *aContentType)
+    nsIURI *aDestinationURI, const nsACString &aContentType)
 {
      // setup the upload channel if the destination is not local
     nsCOMPtr<nsIInputStream> inputstream;
@@ -800,7 +800,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
                 {
                     data->mStream->Close();
                     data->mStream = nsnull; // null out stream so we don't close it later
-                    rv = StartUpload(storStream, data->mFile, contentType.get());
+                    rv = StartUpload(storStream, data->mFile, contentType);
                     if (NS_FAILED(rv))
                     {
                         cancel = PR_TRUE;
@@ -1118,7 +1118,7 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
                 nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
                 NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
                 // Attach the postdata to the http channel
-                uploadChannel->SetUploadStream(aPostData, nsnull, -1);
+                uploadChannel->SetUploadStream(aPostData, NS_LITERAL_CSTRING(""), -1);
             }
         }
     }
@@ -1442,7 +1442,7 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
             nsnull,  // no dom fixup
             aFile,
             mReplaceExisting,
-            contentType.get(),
+            contentType,
             charType,
             mEncodingFlags);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -1501,7 +1501,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
             nodeFixup,
             docData->mFile,
             mReplaceExisting,
-            contentType.get(),
+            contentType,
             charType,
             mEncodingFlags);
 
@@ -2998,7 +2998,7 @@ nsWebBrowserPersist::CreateChannelFromURI(nsIURI *aURI, nsIChannel **aChannel)
 nsresult
 nsWebBrowserPersist::SaveDocumentWithFixup(
     nsIDocument *aDocument, nsIDocumentEncoderNodeFixup *aNodeFixup,
-    nsIURI *aFile, PRBool aReplaceExisting, const char *aFormatType,
+    nsIURI *aFile, PRBool aReplaceExisting, const nsACString &aFormatType,
     const nsString &aSaveCharset, PRUint32 aFlags)
 {
     NS_ENSURE_ARG_POINTER(aFile);
@@ -3034,7 +3034,7 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID.get(), &rv);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-    nsAutoString newContentType; newContentType.AssignWithConversion(aFormatType);
+    NS_ConvertASCIItoUCS2 newContentType(aFormatType);
     rv = encoder->Init(aDocument, newContentType, aFlags);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 

@@ -1148,7 +1148,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
       nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
       NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
-      rv = uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
+      rv = uploadChannel->SetUploadStream(postDataStream, NS_LITERAL_CSTRING(""), -1);
       // Reset the method to its original value
       if (httpChannel) {
           httpChannel->SetRequestMethod(method);

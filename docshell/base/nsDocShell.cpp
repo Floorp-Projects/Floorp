@@ -5199,7 +5199,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
 
             // we really need to have a content type associated with this stream!!
-            uploadChannel->SetUploadStream(aPostData,nsnull, -1);
+            uploadChannel->SetUploadStream(aPostData, NS_LITERAL_CSTRING(""), -1);
             /* If there is a valid postdata *and* it is a History Load,
              * set up the cache key on the channel, to retrieve the
              * data *only* from the cache. If it is a normal reload, the 
