@@ -1962,7 +1962,7 @@ sub BuildPluginsProjects()
     my($plugin_path) = ":mozilla:modules:plugin:samples:default:mac:";
     my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
 
-    BuildProject($plugin_path . "NullPlugin.mcp", "NullPluginPPC$C");
+    BuildProject($plugin_path . "DefaultPlugin.mcp", "DefaultPlugin$C");
     MakeAlias($plugin_path . "Default Plug-in", $plugin_dist);
 
     EndBuildModule("plugins");
