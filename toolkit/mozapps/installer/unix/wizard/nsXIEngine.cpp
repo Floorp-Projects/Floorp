@@ -672,6 +672,7 @@ printf("DEBUG: libpath = >>%s<<\n", libpath);
 	{
 		dlerr = dlerror();
 		DUMP(dlerr);
+		fprintf(stderr,"DLError: %s",dlerr);
 		return E_LIB_OPEN;
 	}
 	DUMP("xpistub opened");
