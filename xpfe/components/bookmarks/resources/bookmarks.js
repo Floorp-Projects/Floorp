@@ -195,10 +195,10 @@ function fillContextMenu(name)
 		if (nodeIndex > 0)
 		{
 			// perform command intersection calculation
-			for (var cmdIndex = 0; cmdIndex < cmdArray.lenght; cmdIndex++)
+			for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
 			{
 				var	cmdFound = false;
-				for (var nextCmdIndex = 0; nextCmdIndex < nextCmdArray.lenght; nextCmdIndex++)
+				for (var nextCmdIndex = 0; nextCmdIndex < nextCmdArray.length; nextCmdIndex++)
 				{
 					if (nextCmdArray[nextCmdIndex] == cmdArray[cmdIndex])
 					{
@@ -206,7 +206,7 @@ function fillContextMenu(name)
 						break;
 					}
 				}
-				if (cmdfound == false)
+				if (cmdFound == false)
 				{
 					cmdArray[cmdIndex] = null;
 				}
