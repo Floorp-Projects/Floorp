@@ -456,7 +456,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 		PUSH_STRING( acceptlang );
 		PUSH_NEWLINE();
 	}
-        PR_FREEIF(acceptlang);
 
 	PUSH_STRING ("MIME-Version: 1.0" CRLF);
 
