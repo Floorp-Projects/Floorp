@@ -1536,6 +1536,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           incrState.mNextRCFrame = state.mNextRCFrame; 
           PRBool keepGoing; 
           rv = ReflowLine(incrState, line, &keepGoing, PR_TRUE); 
+          line->RemoveFloatersFromSpaceManager(aReflowState.mSpaceManager);
           state.mNextRCFrame = nsnull; 
         } 
       }
