@@ -593,6 +593,18 @@ finish:
 }
 
 /**********************************************************************
+ * This is what used to be PK11Cert.getNickname.  Kept merely to
+ * satisfy the symbol export file jss.def.
+ */
+JNIEXPORT jstring JNICALL
+Java_org_mozilla_jss_pkcs11_PK11Cert_getNickname
+    (JNIEnv *env, jobject this)
+{
+    PR_NOT_REACHED("a stub function");
+    return NULL;
+}
+
+/**********************************************************************
  * PK11Cert.setTrust
  */
 JNIEXPORT void JNICALL
