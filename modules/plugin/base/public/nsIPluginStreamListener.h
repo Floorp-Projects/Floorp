@@ -39,6 +39,14 @@
 #include "nsIPluginStreamInfo.h"
 #include "nsIInputStream.h"
 
+#define NS_IPLUGINSTREAMLISTENER_IID                 \
+{ /* df055770-5448-11d2-8164-006008119d7a */         \
+    0xdf055770,                                      \
+    0x5448,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 /**
  * The nsIPluginStreamListener interface defines the minimum set of functionality that
  * the browser will support if it allows plugins. Plugins can call QueryInterface
@@ -47,6 +55,7 @@
  */
 class nsIPluginStreamListener : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINSTREAMLISTENER_IID)
 
     /**
      * Notify the observer that the URL has started to load.  This method is
@@ -92,14 +101,6 @@ public:
     NS_IMETHOD
     GetStreamType(nsPluginStreamType *result) = 0;
 };
-
-#define NS_IPLUGINSTREAMLISTENER_IID                 \
-{ /* df055770-5448-11d2-8164-006008119d7a */         \
-    0xdf055770,                                      \
-    0x5448,                                          \
-    0x11d2,                                          \
-    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
