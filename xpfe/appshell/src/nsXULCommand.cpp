@@ -129,7 +129,14 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
   mWebShell->GetName( &name);
   nsAutoString str(name);
 
-  if (DEBUG_MENUSDEL) printf("DoCommand -  mWebShell is [%s] 0x%x\n", str.ToNewCString(), mWebShell);
+  if (DEBUG_MENUSDEL)
+  {
+	  char * cstr = str.ToNewCString();
+
+      printf("DoCommand -  mWebShell is [%s] 0x%x\n",cstr, mWebShell);
+
+	  if (cstr) delete [] cstr;
+  }
   return ExecuteJavaScriptString(mWebShell, mCommandStr);
 }
 
