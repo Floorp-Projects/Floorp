@@ -1009,7 +1009,10 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 	NS_RELEASE(profDefaultsDir);
 
 	// Copy contents from defaults folder.
-	defaultsDirSpec.RecursiveCopy(dirSpec);
+	if (defaultsDirSpec.Exists())
+	{
+		defaultsDirSpec.RecursiveCopy(dirSpec);
+	}
 
 	nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 		
