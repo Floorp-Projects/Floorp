@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,52 +39,70 @@
 #ifndef nsStringBundle_h__
 #define nsStringBundle_h__
 
-#include "prclist.h"
-#include "plarena.h"
-
-#include "nsCOMPtr.h"
-#include "nsHashtable.h"
-#include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
-#include "nsIErrorService.h"
+#include "nsCOMPtr.h"
+#include "nsIPersistentProperties2.h"
+#include "nsString.h"
+#include "nsCOMArray.h"
+#include "nsIStringBundleOverride.h"
 
-struct bundleCacheEntry_t;
-
-class nsStringBundleService : public nsIStringBundleService,
-                              public nsIObserver,
-                              public nsSupportsWeakReference
+class nsStringBundle : public nsIStringBundle
 {
 public:
-  nsStringBundleService();
-  virtual ~nsStringBundleService();
+    // init version
+    nsStringBundle(const char* aURLSpec, nsIStringBundleOverride*);
+    nsresult LoadProperties();
+    virtual ~nsStringBundle();
+  
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTRINGBUNDLE
 
-  nsresult Init();
+    nsCOMPtr<nsIPersistentProperties> mProps;
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTRINGBUNDLESERVICE
-  NS_DECL_NSIOBSERVER
-    
+protected:
+    //
+    // functional decomposition of the funitions repeatively called 
+    //
+    nsresult GetStringFromID(PRInt32 aID, nsAString& aResult);
+    nsresult GetStringFromName(const nsAString& aName, nsAString& aResult);
+
+    nsresult GetCombinedEnumeration(nsISimpleEnumerator* aOverrideEnumerator,
+                                    nsISimpleEnumerator** aResult);
 private:
-  nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
-  nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
-                            PRUint32 argCount, PRUnichar** argArray,
-                            PRUnichar* *result);
-
-  void flushBundleCache();
-  
-  bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
-                                      nsCStringKey *aHashKey);
-
-  static void recycleEntry(bundleCacheEntry_t*);
-  
-  nsHashtable mBundleMap;
-  PRCList mBundleCache;
-  PLArenaPool mCacheEntryPool;
-
-  nsCOMPtr<nsIErrorService>     mErrorService;
-
+    nsCString              mPropertiesURL;
+    nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
+    PRPackedBool                 mAttemptedLoad;
+    PRPackedBool                 mLoaded;
+    
+public:
+    static nsresult FormatString(const PRUnichar *formatStr,
+                                 const PRUnichar **aParams, PRUint32 aLength,
+                                 PRUnichar **aResult);
 };
+
+/**
+ * An extesible implementation of the StringBudle interface.
+ *
+ * @created         28/Dec/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsExtensibleStringBundle : public nsIStringBundle
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTRINGBUNDLE
+
+  nsresult Init(const char * aCategory, nsIStringBundleService *);
+private:
+  
+  nsCOMArray<nsIStringBundle> mBundles;
+  PRBool             mLoaded;
+
+public:
+
+  nsExtensibleStringBundle();
+  virtual ~nsExtensibleStringBundle();
+};
+
+
 
 #endif

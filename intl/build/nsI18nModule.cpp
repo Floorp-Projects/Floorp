@@ -302,7 +302,11 @@ static nsModuleComponentInfo components[] =
       NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
 
  // strres
-  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID, nsStringBundleServiceConstructor},
+  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID,
+    nsStringBundleServiceConstructor},
+  { "String Textfile Overrides", NS_STRINGBUNDLETEXTOVERRIDE_CID,
+    NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID,
+    nsStringBundleTextOverrideConstructor },
 
  // locale
   { "nsLocaleService component",
