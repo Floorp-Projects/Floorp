@@ -23,6 +23,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsFileStream.h"
 #include "prio.h"
 #include "prerror.h"
 #include "prmem.h"
@@ -421,12 +422,7 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  //PL_strcpy(prefs_jsPath, newProfilePath);
-  //PL_strcat(prefs_jsPath, "\\prefs50.js\0");
-
-  //if(PREF_Init(prefs_jsPath))
-  //{
-    PREF_GetCharPref(pref, oldPath, &oldDirLength);
+  PREF_GetCharPref(pref, oldPath, &oldDirLength);
     if(*oldPath != '\0')
     {
       PL_strcpy(newPath, oldPath);
@@ -602,14 +598,24 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
 nsresult
 nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
 {
-  /*
-  nsFileSpec bookmarkFile = profilePath;
-  bookmarkFile += "bookmark.htm";
-  if (bookmarkFile.Exists())
-    bookmarkFile.Rename("bookmark.html");
-  */
-  /* This was originally designed for the bookmark renaming.  Since that's now
-     invalid I'm leaving this in place for future miscellaneous migrations */
+  /* Need to add a string to the top of the prefs.js file to prevent it
+   * from being loaded as a standard javascript file which would be a
+   * security hole.
+   */
+  const char *headerString="# Mozilla User5 Preferences    "; 
+  
+  nsFileSpec fs(profilePath);
+  fs += "prefs.js";
+
+  nsOutputFileStream fsStream(fs, (PR_WRONLY | PR_CREATE_FILE | PR_APPEND));
+  
+  if (!fsStream.is_open())
+  {
+    return -1;
+  }
+
+  fsStream << headerString << nsEndl ;
+
   return NS_OK;
 }
 
