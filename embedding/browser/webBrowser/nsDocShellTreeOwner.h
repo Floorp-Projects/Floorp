@@ -137,6 +137,15 @@ protected:
     void AddToWatcher();
     void RemoveFromWatcher();
 
+    // These helper functions return the correct instances of the requested
+    // interfaces.  If the object passed to SetWebBrowserChrome() implements
+    // nsISupportsWeakReference, then these functions call QueryReferent on
+    // that object.  Otherwise, they return an addrefed pointer.  If the
+    // WebBrowserChrome object doesn't exist, they return nsnull.
+    already_AddRefed<nsIWebBrowserChrome>     GetWebBrowserChrome();
+    already_AddRefed<nsIEmbeddingSiteWindow>  GetOwnerWin();
+    already_AddRefed<nsIInterfaceRequestor>   GetOwnerRequestor();
+
 protected:
 
    // Weak References
@@ -147,6 +156,8 @@ protected:
    nsIWebBrowserChrome*    mWebBrowserChrome;
    nsIEmbeddingSiteWindow* mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
+
+   nsWeakPtr               mWebBrowserChromeWeak;   // nsIWebBrowserChrome
 
     // the objects that listen for chrome events like context menus and tooltips. 
     // They are separate objects to avoid circular references between |this|
