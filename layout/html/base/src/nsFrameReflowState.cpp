@@ -64,10 +64,14 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
     case NS_STYLE_DISPLAY_INLINE_TABLE:
       if ((nsHTMLAtoms::img == tag) ||
           (nsHTMLAtoms::applet == tag) ||
-          (nsHTMLAtoms::object == tag)) {
+          (nsHTMLAtoms::object == tag) ||
+          (nsHTMLAtoms::input == tag) ||
+          (nsHTMLAtoms::select == tag)) {
         frameType = eCSSFrameType_InlineReplaced;
       }
-      frameType = eCSSFrameType_Inline;
+      else {
+        frameType = eCSSFrameType_Inline;
+      }
       break;
 
     case NS_STYLE_DISPLAY_RUN_IN:
