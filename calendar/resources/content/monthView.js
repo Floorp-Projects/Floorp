@@ -520,7 +520,8 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
   }
 
   { // sixth week should not display if holds only off days and only work days displayed
-    var isSixthWeekDisplayed = (firstDateCol + lastDayOfMonth > 5 * 7);
+    var monthHasSixthWeek = (firstDateCol + lastDayOfMonth > 5 * 7);
+    var isSixthWeekDisplayed = monthHasSixthWeek;
     if (isSixthWeekDisplayed && isOnlyWorkDays) {
       isSixthWeekDisplayed = false;
       for (var sixthWeekCol = 0; sixthWeekCol <= lastDateCol; sixthWeekCol++) {
@@ -540,7 +541,8 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
     var isFifthWeekDisplayed = (firstDateCol + lastDayOfMonth > 4 * 7);
     if (isFifthWeekDisplayed && !isSixthWeekDisplayed && isOnlyWorkDays) {
       isFifthWeekDisplayed = false;
-      for (var fifthWeekCol = 0; fifthWeekCol <= lastDateCol; fifthWeekCol++) {
+      var lastFifthWeekCol = (monthHasSixthWeek? 6 : lastDateCol);
+      for (var fifthWeekCol = 0; fifthWeekCol <= lastFifthWeekCol; fifthWeekCol++) {
 	if (!isDayOff[(Offset + fifthWeekCol) % 7]) {
 	  isFifthWeekDisplayed = true;
 	  break;
