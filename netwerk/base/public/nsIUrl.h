@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,116 +16,117 @@
  * Reserved.
  */
 
-#ifndef _nsIURL_h_
-#define _nsIURL_h_
+#ifndef nsIUrl_h___
+#define nsIUrl_h___
 
-/* 
-    The nsIURL class is an interface to the URL behaviour. 
-    This follows the URL spec at-
-    
-         http://www.w3.org/Addressing/URL/url-spec.txt
-    
-    For the purpose of this class, here is the most elaborate form of a URL
-    and its corresponding parts-
-    
-         ftp://username:password@hostname:portnumber/pathname
-         \ /   \               / \      / \        /\       /
-          -     ---------------   ------   --------  -------
-          |            |             |        |         |
-          |            |             |        |        Path
-          |            |             |       Port         
-          |            |            Host
-          |         PreHost            
-        Scheme
+#include "nsISupports.h"
 
-    The URL class extends the URI behaviour by providing a mechanism 
-    for consumers to retreive (and on protocol specific levels put) 
-	documents defined by the URI.
+#undef GetPort  // Windows (sigh)
 
-	Functions missing from this file are the stream listener portions
-	for asynch operations. TODO. 
+#define NS_IURL_IID                                  \
+{ /* 82c1b000-ea35-11d2-931b-00104ba0fd40 */         \
+    0x82c1b000,                                      \
+    0xea35,                                          \
+    0x11d2,                                          \
+    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
 
-	Please send me a mail before you add anything to this file. 
-	Thanks!- Gagan Saksena
-
+/**
+ * The nsIURI class is an interface to the URI behaviour for parsing
+ * portions out of a URI. This follows Tim Berners-Lee's URI spec at-
+ * 
+ *   http://www.w3.org/Addressing/URI/URI_Overview.html
+ * 
+ * For the purpose of this class, here is the most elaborate form of a URI
+ * and its corresponding parts-
+ * 
+ *   ftp://username:password@hostname:portnumber/pathname
+ *   \ /   \               / \      / \        /\       /
+ *    -     ---------------   ------   --------  -------
+ *    |            |             |        |         |
+ *    |            |             |        |        Path
+ *    |            |             |       Port         
+ *    |            |            Host
+ *    |         PreHost            
+ *    Scheme
+ * 
+ * Note that this class does not assume knowledge of search/query portions 
+ * embedded within the path portion of the URI.
+ * 
+ * This class pretty much "final" and there shouldn't be anything added.
+ * If you do feel something belongs here, please do send me a mail. Thanks!
  */
-
-#include "nsIURI.h"
-#include "nsIInputStream.h"
-#include "nsIProtocolInstance.h"
-
-class nsIURL : public nsIURI
+class nsIUrl : public nsISupports
 {
-
 public:
-    
-    /* 
-        Used for testing purposes. if you need a string representation for
-        your work, use ToString().
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IURL_IID);
+
+    // Core parsing functions
+
+    /**
+     * The Scheme is the protocol that this URI refers to. 
+     */
+    NS_IMETHOD GetScheme(const char* *result) = 0;
+    NS_IMETHOD SetScheme(const char* scheme) = 0;
+
+    /**
+     * The PreHost portion includes elements like the optional 
+     * username:password, or maybe other scheme specific items. 
+     */
+    NS_IMETHOD GetPreHost(const char* *result) = 0;
+    NS_IMETHOD SetPreHost(const char* preHost) = 0;
+
+    /**
+     * The Host is the internet domain name to which this URI refers. 
+     * Note that it could be an IP address as well. 
+     */
+    NS_IMETHOD GetHost(const char* *result) = 0;
+    NS_IMETHOD SetHost(const char* host) = 0;
+
+    /**
+     * A return value of -1 indicates that no port value is set and the 
+     * implementor of the specific scheme will use its default port. 
+     * Similarly setting a value of -1 indicates that the default is to be used.
+     * Thus as an example-
+     *   for HTTP, Port 80 is same as a return value of -1. 
+     * However after setting a port (even if its default), the port number will
+     * appear in the ToString function.
     */
-    
-#ifdef DEBUG
-    NS_IMETHOD          DebugString(const char* *o_URLString) const=0;
-#endif //DEBUG
+    NS_IMETHOD GetPort(PRInt32 *result) = 0;
+    NS_IMETHOD SetPort(PRInt32 port) = 0;
 
-    //Core action functions
-    /* 
-        Note: The GetStream function also opens a connection using 
-        the available information in the URL. This is the same as 
-        calling OpenInputStream on the connection returned from 
-        OpenProtocolInstance. Note that this stream doesn't contain any 
-        header information either. 
-    */
-    NS_IMETHOD          GetStream(nsIInputStream* *o_InputStream) = 0;
+    /** 
+     * Note that the path includes the leading '/' Thus if no path is 
+     * available the GetPath will return a "/" 
+     * For SetPath if none is provided, one would be prefixed to the path. 
+     */
+    NS_IMETHOD GetPath(const char* *result) = 0;
+    NS_IMETHOD SetPath(const char* path) = 0;
 
-#if 0 //Will go away...
-    /*
-        The GetDocument function BLOCKS till the data is made available
-        or an error condition is encountered. The return type is the overall
-        success status which depends on the protocol implementation. 
-        Its just a convenience function that internally sets up a temp 
-		stream in memory and buffers everything. Note that this 
-		mechanism strips off the headers and only the raw data is 
-		copied to the passed string.
+    // Other utility functions
+    /**
+     * Note that this comparison is only on char* level. Use 
+     * the scheme specific URI to do a more thorough check. For example--
+     * in HTTP-
+     *    http://foo.com:80 == http://foo.com
+     * but this function through nsIURI alone will not return equality
+     * for this case.
+     * @return NS_OK if equal
+     * @return NS_COMFALSE if not equal
+     */
+    NS_IMETHOD Equals(nsIUrl* other) = 0;
 
-        TODO - return status? 
-    */
-    NS_IMETHOD          GetDocument(const char* *o_Data) = 0;
-#endif
+    /**
+     * Makes a copy of the URL.
+     */
+    NS_IMETHOD Clone(nsIUrl* *result) = 0;
 
-    /*
-        MakeAbsoluteFrom function takes a new string that is a relative url, 
-        and converts this object to represent the final form. As an example
-        if this is "http://foo/bar" and we call MakeAbsoluteFrom("/baz")
-        then this will change to "http://foo/baz" There is a whole series
-        of possibilities here. Check this URL for more details (TODO -Gagan)
-    */
-    NS_IMETHOD          MakeAbsoluteFrom(const char* i_NewURL) = 0;
+    /**
+     * Writes a string representation of the URI. 
+     * Free string with delete[].
+     */
+    NS_IMETHOD ToNewCString(const char* *uriString) = 0;
 
-    /* 
-        The OpenProtocolInstance method sets up the connection as decided by the 
-        protocol implementation. This may then be used to get various 
-        connection specific details like the input and the output streams 
-        associated with the connection, or the header information by querying
-        on the connection type which will be protocol specific.
-
-    */
-    NS_IMETHOD          OpenProtocolInstance(nsIProtocolInstance* *o_ProtocolInstance) = 0;
-
-
-
-    static const nsIID& GetIID() { 
-        // {6DA32F00-BD64-11d2-B00F-006097BFC036}
-        static const nsIID NS_IURL_IID = 
-        { 0x6da32f00, 0xbd64, 0x11d2, { 0xb0, 0xf, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
-        return NS_IURL_IID; 
-    };
 };
 
-// Should change to NS_METHOD CreateURL(nsIURL* *o_URL, const char* i_URL)
-// and be placed where?
-extern NS_NET
-    nsIURL* CreateURL(const char* i_URL);
-
-
-#endif /* _nsIURL_h_ */
+#endif /* nsIIUrl_h___ */

@@ -30,6 +30,7 @@ LLIBS=                                \
         $(DIST)\lib\netwerkbase_s.lib \
         $(DIST)\lib\xpcom32.lib       \
         $(DIST)\lib\raptorbase.lib    \
+        $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  
 
 MISCDEP=$(LLIBS)
