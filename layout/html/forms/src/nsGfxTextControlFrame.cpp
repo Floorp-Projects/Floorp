@@ -3520,6 +3520,7 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
           mFrame->SetFocus();
         }
       }
+      NS_IF_RELEASE(event.widget);
     }
   }
   return result;
