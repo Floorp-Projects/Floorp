@@ -443,10 +443,14 @@ Contributor(s): ______________________________________. -->
           src="about:blank" flex="1" tooltip="aHTMLTooltip" onmouseover="if (throbberElement) EnableBusyCursor(throbberElement.getAttribute('busy') == 'true')"/>
       </box>
       
-      <statusbar id="status-bar" class="chromeclass-status"/>
-  
+      <statusbar id="status-bar" class="chromeclass-status">
+        <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+        <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
+        <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
+        <statusbarpanel class="statusbarpanel-icononly" id="security-button" tooltip="aTooltip" tooltiptext="foopy noopy"/>
+      </statusbar>  
+    
     </box>
-
 
   </box>
 
