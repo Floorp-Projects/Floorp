@@ -56,9 +56,9 @@
 #include "nsIEventQueue.h"
 #include "nsNetUtil.h"
 
-#include "nsIDOMDocumentEvent.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMEvent.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsGUIEvent.h"
 
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
@@ -507,21 +507,34 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
  * Struct used to dispatch events
  */
 struct ImageEvent : PLEvent {
-  ImageEvent(nsIDOMEventTarget* aTarget, nsIDOMEvent* aEvent)
-    : mTarget(aTarget),
-      mEvent(aEvent)
+  ImageEvent(nsIPresContext* aPresContext, nsIContent* aContent,
+             const nsAString& aMessage)
+    : mPresContext(aPresContext),
+      mContent(aContent),
+      mMessage(aMessage)
   {}
-      
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
-  nsCOMPtr<nsIDOMEvent> mEvent;
+  nsCOMPtr<nsIPresContext> mPresContext;
+  nsCOMPtr<nsIContent> mContent;
+  nsString mMessage;
 };
 
 PR_STATIC_CALLBACK(void*)
 HandleImagePLEvent(PLEvent* aEvent)
 {
   ImageEvent* evt = NS_STATIC_CAST(ImageEvent*, aEvent);
-  PRBool preventDefaultCalled;  // we don't care...
-  evt->mTarget->DispatchEvent(evt->mEvent, &preventDefaultCalled);
+  nsEventStatus estatus = nsEventStatus_eIgnore;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
+
+  if (evt->mMessage == NS_LITERAL_STRING("load")) {
+    event.message = NS_IMAGE_LOAD;
+  } else {
+    event.message = NS_IMAGE_ERROR;
+  }
+
+  evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
+                                NS_EVENT_FLAG_INIT, &estatus);
+  
   return nsnull;
 }
 
@@ -554,19 +567,15 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   nsCOMPtr<nsIDocument> document;
   rv = GetOurDocument(getter_AddRefs(document));
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(this);
-  NS_ENSURE_TRUE(eventTarget, NS_ERROR_UNEXPECTED);
+  nsCOMPtr<nsIPresShell> shell;
+  document->GetShellAt(0, getter_AddRefs(shell));
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIContent> ourContent = do_QueryInterface(this);
   
-  nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(document);
-  NS_ENSURE_TRUE(doc, rv);
-
-  nsCOMPtr<nsIDOMEvent> domEvent;
-  rv = doc->CreateEvent(NS_LITERAL_STRING("HTMLEvents"), getter_AddRefs(domEvent));
-  NS_ENSURE_TRUE(domEvent, rv);
-  
-  domEvent->InitEvent(aEventType, PR_FALSE, PR_FALSE);
-  
-  ImageEvent* evt = new ImageEvent(eventTarget, domEvent);
+  ImageEvent* evt = new ImageEvent(presContext, ourContent, aEventType);
   
   NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
 
