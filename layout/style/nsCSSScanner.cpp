@@ -182,14 +182,12 @@ nsCSSScanner::nsCSSScanner()
     // XXX need a monitor
     BuildLexTable();
   }
-  mInput = nsnull;
   mBuffer = new PRUnichar[BUFFER_SIZE];
-  mOffset = 0;
-  mCount = 0;
   mPushback = mLocalPushback;
-  mPushbackCount = 0;
   mPushbackSize = 4;
-  mLastRead = 0;
+  // No need to init the other members, since they represent state
+  // which can get cleared.  We'll init them every time Init() is
+  // called.
 }
 
 nsCSSScanner::~nsCSSScanner()
@@ -234,20 +232,38 @@ nsCSSScanner::~nsCSSScanner()
 void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
                         PRUint32 aLineNumber)
 {
-  NS_PRECONDITION(nsnull != aInput, "Null input stream pointer");
-  Close();
+  NS_PRECONDITION(aInput, "Null input stream pointer");
+  NS_PRECONDITION(!mInput, "Should not have an existing input stream!");
+
   mInput = aInput;
-  NS_IF_ADDREF(aInput);
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-  if (aURI) {
-    aURI->GetSpec(mFileName);
-  } else {
-    mFileName.Adopt(nsCRT::strdup("from DOM"));
+  // If aURI is the same as mURI, no need to reget mFileName -- it
+  // shouldn't have changed.
+  if (aURI != mURI) {
+    mURI = aURI;
+    if (aURI) {
+      aURI->GetSpec(mFileName);
+    } else {
+      mFileName.Adopt(nsCRT::strdup("from DOM"));
+    }
   }
-  mColNumber = 0;
 #endif // CSS_REPORT_PARSE_ERRORS
   mLineNumber = aLineNumber;
+
+  // Reset variables that we use to keep track of our progress through mInput
+  mOffset = 0;
+  mCount = 0;
+  mPushbackCount = 0;
+  mLastRead = 0;
+
+#ifdef CSS_REPORT_PARSE_ERRORS
+  mColNumber = 0;
+#endif
+
+  // Note that we do NOT want to change mBuffer, mPushback, or
+  // mPushbackCount here.  We can keep using the existing values even
+  // if the input stream we're using has changed.
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -413,7 +429,7 @@ void nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
 
 void nsCSSScanner::Close()
 {
-  NS_IF_RELEASE(mInput);
+  mInput = nsnull;
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
