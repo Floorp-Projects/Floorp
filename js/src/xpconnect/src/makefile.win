@@ -66,10 +66,10 @@ LLIBS=	$(LIBNSPR)	\
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
     
 
 clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
+	rm -f $(DIST)\bin\$(DLLNAME).dll
