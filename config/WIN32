@@ -106,12 +106,6 @@ OS_LFLAGS=$(OS_LFLAGS) /MAP:$(MAPFILE) /MAPINFO:LINES
 !endif
 #MOZ_MAPINFO
 
-# if MOZ_DEBUG is not set and MOZ_CODINFO
-!if defined (MOZ_CODINFO)
-OS_LFLAGS= $(OS_LFLAGS) /COD:$(CODFILE) 
-!endif
-#MOZ_CODINFO
-
 !endif
 # MOZ_DEBUG
 
