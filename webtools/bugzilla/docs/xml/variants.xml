@@ -59,13 +59,13 @@
     <title>Scarab</title>
 
     <para>Scarab is a new open source bug-tracking system built using Java
-    Serlet technology. It is currently at version 1.0 beta 8.</para>
+    Servlet technology. It is currently at version 1.0 beta 13.</para>
 
     <para>URL: 
     <ulink url="http://scarab.tigris.org/">http://scarab.tigris.org</ulink>
     </para>
 
-    <para>This section last updated 27 Jul 2002</para>
+    <para>This section last updated 18 Jan 2003</para>
   </section>
 
   <section id="variant-perforce" xreflabel="Using Perforce to track bugs">
