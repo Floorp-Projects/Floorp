@@ -188,10 +188,6 @@ ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) \
 			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*)
 endif
 
-ifndef USE_AUTOCONF
-ALL_TRASH		+= $(OBJDIR)
-endif
-
 ifdef JAVA_OR_NSJVM
 ifdef JDIRS
 ALL_TRASH		+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
@@ -272,14 +268,6 @@ alldep:: export depend libs install
 everything:: clobber_all alldep
 
 #
-# Maybe this should be done in config/Makefile so it only happens once...?
-#
-#XXXceb
-# Directory SDK doesn't use NSPR
-TARGETS			+= tweak_nspr
-
-
-#
 # Rules to make OBJDIR and MDDEPDIR (for --enable-md).
 # These rules replace the MAKE_OBJDIR and MAKE_DEPDIR macros.
 # The macros often failed with parallel builds (-jN),
@@ -304,20 +292,6 @@ $(OBJDIR):
 
 MAKE_DIRS += $(OBJDIR)
 endif
-
-
-
-#
-# Since the NSPR folks won't help, we'll fix things the sneaky way.
-#
-tweak_nspr:
-ifndef USE_AUTOCONF
-	@(cd $(DEPTH)/nsprpub/config; \
-		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; else true; fi; \
-		mv UNIX.mk UNIX.mk.orig; \
-		awk '/^OBJDIR_NAME[ 	]*=/ { \
-			printf("OBJDIR_NAME\t= %s%s%s%s%s%s.OBJ\n","$(OS_CONFIG)","$(OS_VERSION)","$(PROCESSOR_ARCHITECTURE)","$(COMPILER)","$(IMPL_STRATEGY)","$(OBJDIR_TAG)"); next} {print}' UNIX.mk.orig > UNIX.mk)
-endif # ! USE_AUTOCONF
 
 ifdef ALL_PLATFORMS
 all_platforms:: $(NFSPWD)
@@ -989,7 +963,7 @@ endif
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND):
-	cd $(DEPTH)/config; $(MAKE) nsinstall tweak_nspr
+	cd $(DEPTH)/config; $(MAKE) nsinstall
 	cd $(MKDEPEND_DIR); $(MAKE)
 endif
 
