@@ -3705,11 +3705,11 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     }
     if (LINE_REFLOW_OK != lineReflowStatus) {
       // It is possible that one or more of next lines are empty
-      // (because of DeleteChildsNextInFlow). If so, delete them now
+      // (because of DeleteNextInFlowChild). If so, delete them now
       // in case we are finished.
       ++aLine;
       while ((aLine != end_lines()) && (0 == aLine->GetChildCount())) {
-        // XXX Is this still necessary now that DeleteChildsNextInFlow
+        // XXX Is this still necessary now that DeleteNextInFlowChild
         // uses DoRemoveFrame?
         nsLineBox *toremove = aLine;
         aLine = mLines.erase(aLine);
@@ -5271,36 +5271,21 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
 }
 
 void
-nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
-                                     nsIFrame*       aChild)
+nsBlockFrame::DeleteNextInFlowChild(nsIPresContext* aPresContext,
+                                    nsIFrame*       aNextInFlow)
 {
-#ifdef DEBUG
-  // out-of-flow and placeholders frames don't satisfy the IsChild condition because
-  // DeleteChildsNextInFlow needs to be called on the parent of the next-in-flow
-  nsFrameState childState;
-  aChild->GetFrameState(&childState);
-  nsCOMPtr<nsIAtom> frameType;
-  aChild->GetFrameType(getter_AddRefs(frameType));
-  if ((nsLayoutAtoms::placeholderFrame != frameType) && !(childState & NS_FRAME_OUT_OF_FLOW)) {
-    NS_PRECONDITION(IsChild(aPresContext, aChild), "bad geometric parent");
-  }
-#endif
+  nsIFrame* prevInFlow;
+  aNextInFlow->GetPrevInFlow(&prevInFlow);
+  NS_PRECONDITION(prevInFlow, "bad next-in-flow");
+  NS_PRECONDITION(IsChild(aPresContext, aNextInFlow), "bad geometric parent");
 
-  nsIFrame* nextInFlow;
-  aChild->GetNextInFlow(&nextInFlow);
-  NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
 #ifdef IBMBIDI
   nsIFrame* nextBidi;
-  aChild->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
-                          (void**) &nextBidi,sizeof(nextBidi));
-  if (nextBidi != nextInFlow) {
+  prevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
+                              (void**) &nextBidi,sizeof(nextBidi));
+  if (nextBidi != aNextInFlow) {
 #endif // IBMBIDI
-  nsBlockFrame* parent;
-  nextInFlow->GetParent((nsIFrame**)&parent);
-  NS_PRECONDITION(nsnull != parent, "next-in-flow with no parent");
-  NS_PRECONDITION(! parent->mLines.empty(), "next-in-flow with weird parent");
-//  NS_PRECONDITION(nsnull == parent->mOverflowLines, "parent with overflow");
-  parent->DoRemoveFrame(aPresContext, nextInFlow);
+  DoRemoveFrame(aPresContext, aNextInFlow);
 #ifdef IBMBIDI
   }
 #endif // IBMBIDI
@@ -5321,11 +5306,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsIFrame* nextInFlow;
   aPlaceholder->GetNextInFlow(&nextInFlow);
   if (nextInFlow) {
-    // Use nextInFlow's parent since it always will be able to find nextInFlow.
     // If aPlaceholder's parent is an inline, nextInFlow's will be a block.
     nsHTMLContainerFrame* parent;
     nextInFlow->GetParent((nsIFrame**)&parent);
-    parent->DeleteChildsNextInFlow(aState.mPresContext, aPlaceholder);
+    parent->DeleteNextInFlowChild(aState.mPresContext, nextInFlow);
   }
   // Reflow the floater.
   nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
@@ -6239,7 +6223,7 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 }
 
 //////////////////////////////////////////////////////////////////////
-// Debugging
+// Start Debugging
 
 #ifdef NS_DEBUG
 static PRBool
@@ -6278,16 +6262,34 @@ InSiblingList(nsLineList& aLines, nsIFrame* aFrame)
 PRBool
 nsBlockFrame::IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
+  // Continued out-of-flows don't satisfy InLineList(), continued out-of-flows
+  // and placeholders don't satisfy InSiblingList().  
+  PRBool skipLineList    = PR_FALSE;
+  PRBool skipSiblingList = PR_FALSE;
+  nsIFrame* prevInFlow;
+  aFrame->GetPrevInFlow(&prevInFlow);
+  if (prevInFlow) {
+    nsFrameState state;
+    aFrame->GetFrameState(&state);
+    nsCOMPtr<nsIAtom> frameType;
+    aFrame->GetFrameType(getter_AddRefs(frameType));
+    skipLineList    = (state & NS_FRAME_OUT_OF_FLOW); 
+    skipSiblingList = (nsLayoutAtoms::placeholderFrame == frameType) ||
+                      (state & NS_FRAME_OUT_OF_FLOW);
+  }
+
   nsIFrame* parent;
   aFrame->GetParent(&parent);
   if (parent != (nsIFrame*)this) {
     return PR_FALSE;
   }
-  if (InLineList(mLines, aFrame) && InSiblingList(mLines, aFrame)) {
+  if ((skipLineList || InLineList(mLines, aFrame)) && 
+      (skipSiblingList || InSiblingList(mLines, aFrame))) {
     return PR_TRUE;
   }
   nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
-  if (overflowLines && InLineList(*overflowLines, aFrame) && InSiblingList(*overflowLines, aFrame)) {
+  if (overflowLines && (skipLineList || InLineList(*overflowLines, aFrame)) && 
+      (skipSiblingList || InSiblingList(*overflowLines, aFrame))) {
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -6323,7 +6325,8 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 }
 #endif
 
-//----------------------------------------------------------------------
+// End Debugging
+//////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsBlockFrame::Init(nsIPresContext*  aPresContext,

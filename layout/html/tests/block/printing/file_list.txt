@@ -20,3 +20,5 @@ file:///s:/mozilla/layout/html/tests/block/printing/145305-19.html
 file:///s:/mozilla/layout/html/tests/block/printing/145305-20.html
 file:///s:/mozilla/layout/html/tests/block/printing/145305-21.html
 file:///s:/mozilla/layout/html/tests/block/printing/150652.html
+file:///s:/mozilla/layout/html/tests/block/printing/163614.html
+

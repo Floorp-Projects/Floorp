@@ -626,8 +626,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
         // parent is not this because we are executing pullup code)
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
         nsHTMLContainerFrame* parent;
-        mFrame->GetParent((nsIFrame**)&parent);
-        parent->DeleteChildsNextInFlow(mPresContext, mFrame);
+        kidNextInFlow->GetParent((nsIFrame**)&parent);
+        parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }
   }
