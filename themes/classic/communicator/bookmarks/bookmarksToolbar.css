@@ -101,6 +101,44 @@
     {
       border-left         : 2px solid ThreeDDarkShadow !important;
     }
+    
+  menuitem[dragover-top="true"].bookmark-item
+    {
+      border-top          : 1px solid ThreeDDarkShadow !important;
+    }
+
+  menu[dragover-top="true"].bookmark-item
+    {
+      border-top          : 1px solid ThreeDDarkShadow !important;
+    } 
+
+  menuitem.bookmark-item
+    {
+      border-top          : 1px solid transparent !important;
+      border-bottom       : 1px solid transparent !important;
+    }
+    
+  menu.bookmark-item
+    {
+      border-top          : 1px solid transparent !important;
+      border-bottom       : 1px solid transparent !important;
+    }
+    
+  menu[dragover="true"].bookmark-item
+    {
+      background-color      : Highlight !important;
+      color                 : HighlightText !important;
+    }
+
+  menuitem[dragover-bottom="true"].bookmark-item
+    {
+      border-bottom       : 1px solid ThreeDDarkShadow !important;
+    }
+
+  menu[dragover-bottom="true"].bookmark-item
+    {
+      border-bottom       : 1px solid ThreeDDarkShadow !important;
+    }
 
   .bookmark-item.button-toolbar[dragover-right="true"]
     {
