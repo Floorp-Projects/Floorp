@@ -287,7 +287,7 @@ xpmenuchildren:-moz-dropdown-menu {
   visibility:hidden;
 }
 
-xpmenu[open] xpmenuchildren:-moz-dropdown-menu {
+xpmenuchildren[menuactive]:-moz-dropdown-menu {
   visibility: visible;
 }
 
