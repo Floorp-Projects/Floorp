@@ -5008,7 +5008,8 @@ void CSizingObject::ResizeObject()
 
                     // Move to last cell of table
                     // (1ST param unused, 2nd = Forward, 3rd = NextRow index ptr
-                    while(m_pBuffer->NextTableCell(FALSE, TRUE, 0));
+                    while(m_pBuffer->NextTableCell(FALSE, TRUE, 0))
+                        ;
 
                     if( m_iStyle == ED_SIZE_ADD_ROWS )
                         m_pBuffer->InsertTableRows(NULL, TRUE, m_iAddRows);
