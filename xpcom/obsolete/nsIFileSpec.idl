@@ -154,6 +154,8 @@ interface nsIFileSpec : nsISupports
 	void seek(in long offset);
 	long tell();
 	void endLine();
+	wstring getUnicodePath();
+	void setUnicodePath(in wstring aUnicodePath);
 	
 };
 	
