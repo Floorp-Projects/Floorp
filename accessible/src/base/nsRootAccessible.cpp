@@ -419,6 +419,9 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
     mCaretAccessible->RemoveSelectionListener();
     mCaretAccessible = nsnull;
   }
+
+  mAccService = nsnull;
+
   return NS_OK;
 }
 

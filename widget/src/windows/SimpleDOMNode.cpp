@@ -302,13 +302,6 @@ NS_IMETHODIMP SimpleDOMNode::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclarati
   if (content) 
     content->GetDocument(*getter_AddRefs(doc));
 
-  nsCOMPtr<nsIPresShell> shell;
-  if (doc)
-    doc->GetShellAt(0, getter_AddRefs(shell)); 
-
-  if (!shell)
-    return NS_ERROR_FAILURE;   
-
   nsCOMPtr<nsIScriptGlobalObject> global;
   doc->GetScriptGlobalObject(getter_AddRefs(global));
   nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
