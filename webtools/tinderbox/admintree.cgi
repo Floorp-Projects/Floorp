@@ -52,7 +52,7 @@ if (defined($tree)) {
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
 <INPUT TYPE=HIDDEN NAME=command VALUE=set_message>
 <br><b>Message of the Day
-<br><TEXTAREA NAME=message ROWS=40 COLS=75 WRAP=SOFT>$message_of_day
+<br><TEXTAREA NAME=message ROWS=30 COLS=75 WRAP=SOFT>$message_of_day
 </TEXTAREA>
 <br><INPUT TYPE=SUBMIT VALUE='Set Message of the Day'>
 </FORM>
