@@ -1,0 +1,128 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton <pinkerton@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsITransferable;
+
+/**
+ * nsIClipboardOwner interface
+ *
+ * @author Mike Pinkerton <pinkerton@netscape.com>
+ * @version 1.1
+ * @see nsIClipboard
+ **/
+[scriptable, uuid(73de5286-1dd2-11b2-a8b9-f5e2993c4a16)]
+interface nsIClipboardOwner : nsISupports
+{
+  /**
+   * Notifies the owner of the clipboard transferable that the
+   * transferable is being removed from the clipboard
+   *
+   * @param  aTransferable The transferable
+   */
+  void losingOwnership ( in nsITransferable aTransferable ) ;
+};
+
+/**
+ * nsIClipboard interface
+ *
+ * @author Mike Pinkerton <pinkerton@netscape.com>
+ * @version 1.1
+ * @note planning on making get async... need new interface for callbacks to hit... or clipboard owner... threadsafety issues?
+ * @see nsIClipboardOwner
+ **/
+[scriptable, uuid(55b80482-1dd2-11b2-a67a-d657ccb708ea)]
+interface nsIClipboard : nsISupports
+{
+  const long kSelectionClipboard = 0;
+  const long kGlobalClipboard = 1;
+    
+  /**
+   * Given a transferable, set the data on the native clipboard
+   *
+   * @param  aTransferable The transferable
+   * @param  anOwner The owner of the transferable
+   * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+   */
+  
+  void setData ( in nsITransferable aTransferable, in nsIClipboardOwner anOwner, 
+                 in long aWhichClipboard );
+
+  /**
+   * Given a transferable, get the clipboard data.
+   *
+   * @param  aTransferable The transferable
+   * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+   */
+  
+  void getData ( in nsITransferable aTransferable, in long aWhichClipboard ) ;
+
+  /**
+   * This empties the clipboard and notifies the clipboard owner.
+   * This empties the "logical" clipboard. It does not clear the native clipboard.
+   *
+   * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+   */
+  
+  void emptyClipboard ( in long aWhichClipboard ) ;
+
+  /**
+   * Some platforms support deferred notification for putting data on the clipboard
+   * This method forces the data onto the clipboard in its various formats
+   * This may be used if the application going away.
+   *
+   * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+   */
+  
+  void forceDataToClipboard ( in long aWhichClipboard ) ;
+
+  /**
+   * This provides a way to give correct UI feedback about, for instance, if a paste 
+   * should be allowed.
+   *
+   * @param aFlavors An array of wstrings containing mime types.
+   * @attention is the documentation for \a aFlavors correct? (the mime types part)
+   * @param nFlavors The number of strings in \a aFlavors.
+   * @param aWhichClipboard Specifies the clipboard to which this operation applies.
+   * @return TRUE if there is data matching one of the flavors on \a aWhichClipboard
+   *
+   * @note It does _NOT_ actually retreive the data and should be a very
+   *       inexpensive call. All it does is check if there is data on the clipboard
+   *       matching any of the flavors in the given list.
+
+   */
+  boolean hasDataMatchingFlavors([array, size_is(nFlavors), const] in wstring aFlavors,
+                                 [const] in unsigned long nFlavors,
+                                 in long aWhichClipboard);
+
+  /**
+   * Allows clients to determine if the implementation supports the concept of a 
+   * separate clipboard for selection.
+   * 
+   * @return TRUE if the implimentation supports kSelectionClipboard
+   */
+  boolean supportsSelectionClipboard ( ) ;
+};
+
+

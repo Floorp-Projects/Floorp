@@ -1,0 +1,78 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 1999 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton
+ */
+
+#include "nsISupports.idl"
+#include "nsIDragSession.idl"
+
+interface nsIDOMNode;
+
+/**
+ * nsIDragService interface
+ *
+ * @author Mike Pinkerton <pinkerton@netscape.com>
+ * @version 1.1
+ * @see nsIDragSession
+ * @see "gfx2"
+ */
+[scriptable, uuid(4d353438-1dd2-11b2-a880-d10d79cf157e)]
+interface nsIDragService : nsISupports
+{
+  const long DRAGDROP_ACTION_NONE = 0;
+  const long DRAGDROP_ACTION_COPY = 1;
+  const long DRAGDROP_ACTION_MOVE = 2;
+  const long DRAGDROP_ACTION_LINK = 4;
+  
+  /**
+   * Starts a modal drag session with an array of transaferables 
+   *
+   * @param aDOMNode ??????????
+   * @param aTransferables An array of nsITransferable objects to be dragged.
+   * @param nTransferables The number of nsITransferable objects in \a aTransferables.
+   * @param aRegion A region containing rectangles for cursor feedback, 
+   *                in window coordinates.
+   * @param aActionType Specified which of copy/move/link are allowed.
+   */
+  void invokeDragSession(in nsIDOMNode aDOMNode,
+                         [array, size_is(nTransferables)] in nsITransferable aTransferables,
+                         in unsigned long nTransferables,
+                         in nsIRegion aRegion,
+                         in unsigned long aActionType);
+
+  /**
+   * Returns the current Drag Session  
+   */
+  nsIDragSession getCurrentSession();
+
+  /**
+   * Tells the Drag Service to start a drag session. This is called when
+   * an external drag occurs
+   */
+  void startDragSession();
+
+  /**
+   * Tells the Drag Service to end a drag session. This is called when
+   * an external drag occurs
+   */
+  void endDragSession();
+  
+};
+
