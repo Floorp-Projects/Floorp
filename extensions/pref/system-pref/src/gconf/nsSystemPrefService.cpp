@@ -441,11 +441,11 @@ NS_IMETHODIMP nsSystemPrefService::RemoveObserver(const char *aDomain, nsIObserv
     NS_ENSURE_SUCCESS(rv, rv);
 
     // need to find the index of observer, so we can remove it
-    PRInt32 count = mObservers->Count();
+    PRIntn count = mObservers->Count();
     if (count <= 0)
         return NS_OK;
 
-    PRInt32 i;
+    PRIntn i;
     SysPrefCallbackData *pCallbackData;
     for (i = 0; i < count; ++i) {
         pCallbackData = (SysPrefCallbackData *)mObservers->ElementAt(i);
@@ -591,7 +591,7 @@ GConfProxy::~GConfProxy()
     mInitialized = PR_FALSE;
 
     if (mGConfLib) {
-        // PR_UnloadLibrary(mGConfLib);
+        PR_UnloadLibrary(mGConfLib);
         mGConfLib = nsnull;
     }
     if (mObservers) {
@@ -734,11 +734,11 @@ GConfProxy::NotifyRemove (PRUint32 aAtom, const void *aUserData)
 {
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_FAILURE);
 
-    PRInt32 count = mObservers->Count();
+    PRIntn count = mObservers->Count();
     if (count <= 0)
         return NS_OK;
 
-    PRInt32 i;
+    PRIntn i;
     GConfCallbackData *pData;
     for (i = 0; i < count; ++i) {
         pData = (GConfCallbackData *)mObservers->ElementAt(i);
