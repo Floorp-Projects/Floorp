@@ -325,7 +325,9 @@
         
           <menu label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
             <menupopup id="menu_ToolsPopup">
-            #ifdef XP_WIN
+              <menuitem label="&search.label;" accesskey="&search.accesskey;" 
+                        key="key_search" command="Tools:Search"/>
+#ifdef XP_WIN
               <menu label="&mailMenu.label;"
                            accesskey="&mailMenu.accesskey;">
                 <menupopup id="viewMailMenu">
@@ -345,9 +347,7 @@
                                    command="Browser:ReadNews"/>
                 </menupopup>
               </menu>
-            #endif
-              <menuitem label="&search.label;" accesskey="&search.accesskey;" 
-                        key="key_search" command="Tools:Search"/>
+#endif
               <menuseparator/>
               <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;" 
                         key="key_openDownloads" command="Tools:Downloads"/>
