@@ -247,6 +247,7 @@ nsTreeRows::Subtree::InsertRowAt(nsTemplateMatch* aMatch, PRInt32 aIndex)
     mRows[aIndex].mMatch = aMatch;
     mRows[aIndex].mContainerType = eContainerType_Unknown;
     mRows[aIndex].mContainerState = eContainerState_Unknown;
+    mRows[aIndex].mContainerFill = eContainerFill_Unknown;
     mRows[aIndex].mSubtree = nsnull;
     ++mCount;
 
