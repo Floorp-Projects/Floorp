@@ -50,7 +50,11 @@ endif
 
 TARGETS	= $(OBJS)
 
-INCLUDES = -I$(dist_includedir) -I$(dist_includedir)/.. -I$(dist_includedir)/../boehm -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+
+ifdef GC_LEAK_DETECTOR
+INCLUDES += -I$(dist_includedir)/.. -I$(dist_includedir)/../boehm
+endif
 
 DEFINES += -D_NSPR_BUILD_
 
