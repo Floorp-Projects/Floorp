@@ -44,7 +44,6 @@ XPIDLSRCS	= \
 		nsIWindowMediatorListener.idl \
 		nsIXULWindow.idl \
 		nsIUserInfo.idl \
-		nsITimingService.idl \
 		nsINativeAppSupport.idl \
 		nsIPopupWindowManager.idl \
 		nsICloseAllWindows.idl \
