@@ -72,6 +72,7 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD SetFocus(void);
 
     NS_IMETHOD GetBounds(nsRect &aRect);
+
     virtual PRBool OnResize(nsRect &aRect);
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 
@@ -144,9 +145,6 @@ class nsWidget : public nsBaseWidget
     PRBool mShown;
 
     PRUint32 mPreferredWidth, mPreferredHeight;
-    nsRect mBounds;
-    PRBool mIsDestroying;
-    PRBool mOnDestroyCalled;
 };
 
 #endif /* nsWidget_h__ */
