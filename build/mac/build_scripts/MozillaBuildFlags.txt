@@ -35,6 +35,7 @@ apprunner       0
 resources       0
 
 options_flags
+pull_by_date    0
 chrome_jars     1
 chrome_files    0
 use_jars        1
