@@ -37,11 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIElementFactory.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsIAtom.h"
 #include "nsINodeInfo.h"
 #include "nsSVGAtoms.h"
-#include "nsIXMLContent.h"
 
 
 nsresult
@@ -75,59 +74,8 @@ NS_NewSVGStyleElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
-
-class nsSVGElementFactory : public nsIElementFactory
-{
-protected:
-  nsSVGElementFactory();
-  virtual ~nsSVGElementFactory();
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIElementFactory interface
-  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
-  
-public:
-  friend nsresult NS_NewSVGElementFactory(nsIElementFactory** aResult);
-};
-
-
-
-nsSVGElementFactory::nsSVGElementFactory()
-{
-}
-
-nsSVGElementFactory::~nsSVGElementFactory()
-{
-  
-}
-
-
-NS_IMPL_ISUPPORTS1(nsSVGElementFactory, nsIElementFactory)
-
-
 nsresult
-NS_NewSVGElementFactory(nsIElementFactory** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  nsSVGElementFactory* result = new nsSVGElementFactory();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(result);
-  *aResult = result;
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsSVGElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
-                                           nsIContent** aResult)
+NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 {
   nsIAtom *name = aNodeInfo->NameAtom();
   

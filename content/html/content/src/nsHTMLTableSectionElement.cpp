@@ -166,7 +166,8 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex,
 
   // create the row
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  mNodeInfo->NameChanged(nsHTMLAtoms::tr, getter_AddRefs(nodeInfo));
+  nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::tr,
+                              getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIHTMLContent> rowContent = NS_NewHTMLTableRowElement(nodeInfo);
   if (!nodeInfo) {

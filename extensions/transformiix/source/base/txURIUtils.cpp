@@ -250,7 +250,7 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
     // nsIContent (which is important performance wise) and if that QI
     // fails we QI to nsIDocument. If both those QI's fail we won't let
     // the caller access this unknown node.
-    nsCOMPtr<nsIPrincipal> principal;
+    nsIPrincipal *principal = nsnull;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     nsCOMPtr<nsIAttribute> attr;
     nsCOMPtr<nsIDocument> doc;
@@ -289,8 +289,7 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
                 return PR_TRUE;
             }
 
-            ni->GetDocumentPrincipal(getter_AddRefs(principal));
-
+            principal = ni->GetDocumentPrincipal();
             if (!principal) {
               // we can't get to the principal so we'll give up and give the
               // caller access

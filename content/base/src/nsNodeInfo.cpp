@@ -76,7 +76,7 @@ void
 nsNodeInfo::Clear()
 {
   if (mOwnerManager) {
-    NS_STATIC_CAST(nsNodeInfoManager*, mOwnerManager)->RemoveNodeInfo(this);
+    mOwnerManager->RemoveNodeInfo(this);
     NS_RELEASE(mOwnerManager);
   }
 

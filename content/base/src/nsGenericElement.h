@@ -732,7 +732,7 @@ protected:
 
   nsIDocument* GetOwnerDocument() const
   {
-    return mDocument ? mDocument : mNodeInfo->GetDocument();
+    return mDocument ? mDocument : nsContentUtils::GetDocument(mNodeInfo);
   }
   
   nsIContent*  GetParent() const {

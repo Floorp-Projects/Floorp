@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "Expr.h"
+#include "nsIAtom.h"
 #include "txAtoms.h"
 #include "txXPathTreeWalker.h"
 #include "txIXPathContext.h"

@@ -94,6 +94,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsDOMString.h"
 #include "nsGenericElement.h"
+#include "nsNodeInfoManager.h"
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -445,13 +446,14 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
         return NS_OK;
       }
       
-      ni->GetDocumentPrincipal(aPrincipal);
-
+      *aPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
       if (!*aPrincipal) {
         // we can't get to the principal so we'll give up
 
         return NS_OK;
       }
+
+      NS_ADDREF(*aPrincipal);
     }
     else {
       CallQueryInterface(domDoc, aDocument);
@@ -498,7 +500,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
 
   // In most cases this is a document, so lets try that first
   nsCOMPtr<nsIDocument> trustedDoc = do_QueryInterface(aTrustedNode);
-  nsCOMPtr<nsIPrincipal> trustedPrincipal;
+  nsIPrincipal* trustedPrincipal = nsnull;
 
   if (!trustedDoc) {
 #ifdef DEBUG
@@ -512,7 +514,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
     if (!domDoc) {
       // In theory this should never happen. But since theory and reality are
       // different for XUL elements we'll try to get the principal from the
-      // nsINodeInfoManager.
+      // nsNodeInfoManager.
 
       nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
       NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
@@ -520,7 +522,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       nsINodeInfo *ni = cont->GetNodeInfo();
       NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
       
-      ni->GetDocumentPrincipal(getter_AddRefs(trustedPrincipal));
+      trustedPrincipal = ni->NodeInfoManager()->GetDocumentPrincipal();
       
       if (!trustedPrincipal) {
         // Can't get principal of aTrustedNode so we can't check security
@@ -761,7 +763,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
     nsINodeInfo *ni = aContent->GetNodeInfo();
 
     if (ni) {
-      old_doc = ni->GetDocument();
+      old_doc = nsContentUtils::GetDocument(ni);
     }
 
     if (!old_doc) {
@@ -1590,7 +1592,7 @@ nsContentUtils::CheckQName(const nsAString& aQualifiedName,
 nsresult
 nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      const nsAString& aQualifiedName,
-                                     nsINodeInfoManager* aNodeInfoManager,
+                                     nsNodeInfoManager* aNodeInfoManager,
                                      nsINodeInfo** aNodeInfo)
 {
   nsIParserService* parserService = GetParserServiceWeakRef();
@@ -1601,6 +1603,8 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
   nsresult rv = parserService->CheckQName(qName, PR_TRUE, &colon);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRInt32 nsID;
+  sNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsID);
   if (colon) {
     const PRUnichar* end;
     qName.EndReading(end);
@@ -1608,16 +1612,15 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(qName.get(), colon));
 
     rv = aNodeInfoManager->GetNodeInfo(Substring(colon + 1, end), prefix,
-                                       aNamespaceURI, aNodeInfo);
+                                       nsID, aNodeInfo);
   }
   else {
-    rv = aNodeInfoManager->GetNodeInfo(aQualifiedName, nsnull, aNamespaceURI,
+    rv = aNodeInfoManager->GetNodeInfo(aQualifiedName, nsnull, nsID,
                                        aNodeInfo);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIAtom* prefix = (*aNodeInfo)->GetPrefixAtom();
-  PRInt32 nsID = (*aNodeInfo)->NamespaceID();
   nsIAtom* nil = nsnull;
 
   // NAMESPACE_ERR: Raised if the qualifiedName is a malformed qualified name,

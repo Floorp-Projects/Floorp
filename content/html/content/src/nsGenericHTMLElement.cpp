@@ -134,8 +134,8 @@
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
+#include "nsNodeInfoManager.h"
 
 static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
@@ -314,7 +314,7 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst, PRBool aDeep)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsIDocument *doc = mNodeInfo->GetDocument();
+  nsIDocument *doc = nsContentUtils::GetDocument(mNodeInfo);
 
   PRInt32 id;
   if (doc) {
@@ -2646,9 +2646,10 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
   nsresult result = NS_OK;
   NS_ASSERTION(aContent->GetNodeInfo(), "If we don't have a nodeinfo, we are very screwed");
 
+  // XXX GetOwnerDoc
   nsIDocument* doc = aContent->GetDocument();
   if (!doc) {
-    doc = aContent->GetNodeInfo()->GetDocument();
+    doc = nsContentUtils::GetDocument(aContent->GetNodeInfo());
   }
 
   if (doc) {

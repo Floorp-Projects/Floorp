@@ -56,12 +56,10 @@ class nsVoidArray;
 class nsXULPrototypeElement;
 class nsIXULDocument;
 class nsIScriptGlobalObject;
-class nsINodeInfoManager;
+class nsNodeInfoManager;
 
-// {187A63D0-8337-11d3-BE47-00104BDE6048}
 #define NS_IXULPROTOTYPEDOCUMENT_IID \
-{ 0x187a63d0, 0x8337, 0x11d3, { 0xbe, 0x47, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
-
+{ 0x726f0ab8, 0xb3cb, 0x11d8, { 0xb2, 0x67, 0x00, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 class nsIXULPrototypeDocument : public nsISerializable
 {
@@ -89,10 +87,10 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const = 0;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData) = 0;
 
-    virtual nsIPrincipal* GetDocumentPrincipal() = 0;
-    NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
+    virtual nsIPrincipal *GetDocumentPrincipal() = 0;
+    virtual void SetDocumentPrincipal(nsIPrincipal *aPrincipal) = 0;
 
-    NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) = 0;
+    virtual nsNodeInfoManager *GetNodeInfoManager() = 0;
 
     NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult) = 0;
     NS_IMETHOD NotifyLoadDone() = 0;

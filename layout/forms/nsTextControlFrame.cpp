@@ -56,7 +56,6 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIControllerContext.h"
-#include "nsIElementFactory.h"
 #include "nsIHTMLContent.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
@@ -119,7 +118,8 @@
 #include "nsIEditorObserver.h"
 #include "nsITransactionManager.h"
 #include "nsIDOMText.h" //for multiline getselection
-
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -137,23 +137,6 @@ static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static const PRInt32 DEFAULT_COLS = 20;
 static const PRInt32 DEFAULT_ROWS = 1;
 static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
-
-static nsIWeakReference *sElementFactory = nsnull;
-
-static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
-{
-  if (!sElementFactory) {
-    sElementFactory = NS_GetWeakReference(
-                        nsCOMPtr<nsIElementFactory>(
-                          do_GetService(
-                            NS_ELEMENT_FACTORY_CONTRACTID_PREFIX
-                            "http://www.w3.org/1999/xhtml")));
-    if (!sElementFactory)
-      return NS_ERROR_FAILURE;
-  }
-  return CallQueryReferent(sElementFactory, aFactory);
-}
-
 
 class nsTextInputListener : public nsISelectionListener,
                             public nsIDOMFocusListener,
@@ -1161,12 +1144,6 @@ nsTextControlFrame::~nsTextControlFrame()
   //delete mTextSelImpl; dont delete this since mSelCon will release it.
 }
 
-/* static */ void
-nsTextControlFrame::ReleaseGlobals()
-{
-  NS_IF_RELEASE(sElementFactory);
-}
-
 static PRBool
 SuppressEventHandlers(nsIPresContext* aPresContext)
 {
@@ -1615,20 +1592,10 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
   
   // Now create a DIV and add it to the anonymous content child list.
-  nsCOMPtr<nsIElementFactory> elementFactory;
-  rv = GetElementFactoryService(getter_AddRefs(elementFactory));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!elementFactory)
-    return NS_ERROR_FAILURE;
-
-  nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull,
-                                    kNameSpaceID_XHTML,
-                                    getter_AddRefs(nodeInfo));
+  rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::div, nsnull,
+                                           kNameSpaceID_XHTML,
+                                           getter_AddRefs(nodeInfo));
 
   if (NS_FAILED(rv))
     return rv;
@@ -1637,8 +1604,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> divContent;
-
-  rv = elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(divContent));
+  rv = NS_NewHTMLElement(getter_AddRefs(divContent), nodeInfo);
 
   if (NS_FAILED(rv))
     return rv;

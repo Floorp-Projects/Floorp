@@ -70,6 +70,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
+#include "nsINodeInfo.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"

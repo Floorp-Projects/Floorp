@@ -68,6 +68,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsArray.h"
+#include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 
 
@@ -147,13 +148,13 @@ public:
     NS_IMETHOD GetHeaderData(nsIAtom* aField, nsAString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aField, const nsAString& aData);
 
-    virtual nsIPrincipal* GetDocumentPrincipal();
-    NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal);
+    virtual nsIPrincipal *GetDocumentPrincipal();
+    void SetDocumentPrincipal(nsIPrincipal *aPrincipal);
 
     NS_IMETHOD AwaitLoadDone(nsIXULDocument* aDocument, PRBool* aResult);
     NS_IMETHOD NotifyLoadDone();
     
-    NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager);
+    virtual nsNodeInfoManager *GetNodeInfoManager();
 
     // nsIScriptGlobalObjectOwner methods
     NS_DECL_NSISCRIPTGLOBALOBJECTOWNER
@@ -172,7 +173,7 @@ protected:
     PRPackedBool mLoaded;
     nsCOMPtr<nsICollection> mPrototypeWaiters;
 
-    nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
+    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
 
     nsXULPrototypeDocument();
     virtual ~nsXULPrototypeDocument();
@@ -256,13 +257,10 @@ nsXULPrototypeDocument::Init()
     rv = NS_NewISupportsArray(getter_AddRefs(mOverlayReferences));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mNodeInfoManager = new nsNodeInfoManager();
+    NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = mNodeInfoManager->Init(nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_OK;
+    return mNodeInfoManager->Init(nsnull);
 }
 
 nsXULPrototypeDocument::~nsXULPrototypeDocument()
@@ -696,21 +694,18 @@ nsXULPrototypeDocument::GetDocumentPrincipal()
 }
 
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
+void
+nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 {
     NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
     mDocumentPrincipal = aPrincipal;
     mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
-    return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULPrototypeDocument::GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager)
+nsNodeInfoManager*
+nsXULPrototypeDocument::GetNodeInfoManager()
 {
-    *aNodeInfoManager = mNodeInfoManager;
-    NS_IF_ADDREF(*aNodeInfoManager);
-    return NS_OK;
+    return mNodeInfoManager;
 }
 
 

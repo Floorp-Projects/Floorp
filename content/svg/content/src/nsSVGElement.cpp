@@ -59,6 +59,7 @@
 #include "nsCSSProps.h"
 #include "nsICSSParser.h"
 #include "nsGenericHTMLElement.h"
+#include "nsNodeInfoManager.h"
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
   : nsGenericElement(aNodeInfo)

@@ -46,6 +46,7 @@
 #include "txCore.h"
 #include "nsCOMPtr.h"
 #include "nsDependentSubstring.h"
+#include "nsIAtom.h"
 #include "txXPathNode.h"
 
 #ifndef TX_EXE

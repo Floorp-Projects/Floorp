@@ -58,6 +58,8 @@
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
 #include "nsEscape.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -129,11 +131,11 @@ public:
                          nsIContent* aContent);
 
   nsresult AddText(const nsAString& aString);
-  nsresult AddTextToContent(nsIHTMLContent* aContent,const nsString& aText);
+  nsresult AddTextToContent(nsIContent* aContent,const nsString& aText);
   nsresult FlushText();
 
-  void ProcessBaseTag(nsIHTMLContent* aContent);
-  void AddBaseTagInfo(nsIHTMLContent* aContent);
+  void ProcessBaseTag(nsIContent* aContent);
+  void AddBaseTagInfo(nsIContent* aContent);
 
   nsresult Init();
 
@@ -155,7 +157,7 @@ public:
   nsString mBaseTarget;
 
   nsCOMPtr<nsIDocument> mTargetDocument;
-  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
+  nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
 };
 
 class nsHTMLFragmentContentSink2 : public nsHTMLFragmentContentSink
@@ -415,7 +417,7 @@ nsHTMLFragmentContentSink::CloseMap()
 }
 
 void
-nsHTMLFragmentContentSink::ProcessBaseTag(nsIHTMLContent* aContent)
+nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
 {
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
@@ -427,7 +429,7 @@ nsHTMLFragmentContentSink::ProcessBaseTag(nsIHTMLContent* aContent)
 }
 
 void
-nsHTMLFragmentContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
+nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
 {
   if (aContent) {
     if (!mBaseHREF.IsEmpty()) {
@@ -457,7 +459,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
     FlushText();
 
     nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-    nsIHTMLContent *content = nsnull;
+    nsIContent *content = nsnull;
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
@@ -485,7 +487,7 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
     NS_ENSURE_SUCCESS(result, result);
 
-    result = NS_CreateHTMLElement(&content, nodeInfo, PR_FALSE);
+    result = NS_NewHTMLElement(&content, nodeInfo);
 
     if (NS_OK == result) {
       result = AddAttributes(aNode, content);
@@ -546,7 +548,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         FlushText();
 
         // Create new leaf content object
-        nsCOMPtr<nsIHTMLContent> content;
+        nsCOMPtr<nsIContent> content;
         nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
         nsIParserService* parserService =
@@ -575,7 +577,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         NS_ENSURE_SUCCESS(result, result);
 
         if(NS_SUCCEEDED(result)) {
-          result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
+          result = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo);
 
           if (NS_OK == result) {
             result = AddAttributes(aNode, content);
@@ -703,20 +705,9 @@ nsHTMLFragmentContentSink::SetTargetDocument(nsIDocument* aTargetDocument)
   NS_ENSURE_ARG_POINTER(aTargetDocument);
 
   mTargetDocument = aTargetDocument;
-  mNodeInfoManager = aTargetDocument->GetNodeInfoManager();
-  if (mNodeInfoManager) {
-    return NS_OK;
-  }
+  mNodeInfoManager = aTargetDocument->NodeInfoManager();
 
-  nsresult rv = NS_NewNodeInfoManager(getter_AddRefs(mNodeInfoManager));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = mNodeInfoManager->Init(aTargetDocument);
-  if (NS_FAILED(rv)) {
-    mNodeInfoManager = nsnull;
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 nsIContent*
@@ -802,7 +793,7 @@ nsHTMLFragmentContentSink::AddText(const nsAString& aString)
 }
 
 nsresult
-nsHTMLFragmentContentSink::AddTextToContent(nsIHTMLContent* aContent,const nsString& aText) {
+nsHTMLFragmentContentSink::AddTextToContent(nsIContent* aContent,const nsString& aText) {
   NS_ASSERTION(aContent !=nsnull, "can't add text w/o a content");
 
   nsresult result=NS_OK;

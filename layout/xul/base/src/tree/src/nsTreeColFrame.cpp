@@ -49,6 +49,7 @@
 #include "nsIDOMElement.h"
 #include "nsITreeBoxObject.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsINodeInfo.h"
 
 //
 // NS_NewTreeColFrame

@@ -371,11 +371,12 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
   nsCOMPtr<nsINodeInfo> newNodeInfo;
   nsCOMPtr<nsIAtom> prefix;
 
-  if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
+  if (!aPrefix.IsEmpty()) {
     prefix = do_GetAtom(aPrefix);
   }
 
-  nsresult rv = mNodeInfo->PrefixChanged(prefix, getter_AddRefs(newNodeInfo));
+  nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
+                                              getter_AddRefs(newNodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mContent) {

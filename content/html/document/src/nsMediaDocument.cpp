@@ -51,6 +51,7 @@
 #include "nsIDocShell.h"
 #include "nsIParser.h" // kCharsetFrom* macro definition
 #include "nsIDocumentCharsetInfo.h" 
+#include "nsNodeInfoManager.h"
 
 nsMediaDocumentStreamListener::nsMediaDocumentStreamListener(nsMediaDocument *aDocument)
 {

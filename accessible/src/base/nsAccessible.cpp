@@ -85,6 +85,7 @@
 #include "nsAccessibleTreeWalker.h"
 #include "nsIURI.h"
 #include "nsIImageLoadingContent.h"
+#include "nsINameSpaceManager.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"

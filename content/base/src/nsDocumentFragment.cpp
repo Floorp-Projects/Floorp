@@ -173,7 +173,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 {
   NS_ENSURE_ARG(aOwnerDocument);
 
-  nsINodeInfoManager *nimgr = aOwnerDocument->GetNodeInfoManager();
+  nsNodeInfoManager *nimgr = aOwnerDocument->NodeInfoManager();
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv = nimgr->GetNodeInfo(nsLayoutAtoms::documentFragmentNodeName,

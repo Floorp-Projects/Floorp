@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsXMLContentSink.h"
-#include "nsIElementFactory.h"
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIDocument.h"
@@ -97,7 +96,8 @@
 #include "nsIPrincipal.h"
 #include "nsXBLAtoms.h"
 #include "nsXMLPrettyPrinter.h"
-
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 static const char kNameSpaceSeparator = ':';
 #define kXSLType "text/xsl"
@@ -438,40 +438,21 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIContent> content;
+  rv = NS_NewElement(getter_AddRefs(content), aNodeInfo->NamespaceID(),
+                     aNodeInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // XHTML needs some special attention
   if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     mPrettyPrintHasFactoredElements = PR_TRUE;
-    nsIHTMLContent* htmlContent = nsnull;
-    rv = NS_CreateHTMLElement(&htmlContent, aNodeInfo, PR_TRUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsIContent* tmp = htmlContent;
-    content.swap(tmp);
   }
   else {
-    // The first step here is to see if someone has provided their
-    // own content element implementation (e.g., XUL or MathML).  
-    // This is done based off a contractid/namespace scheme. 
-    nsCOMPtr<nsIElementFactory> elementFactory;
-    rv = nsContentUtils::GetNSManagerWeakRef()->
-      GetElementFactory(aNodeInfo->NamespaceID(),
-                        getter_AddRefs(elementFactory));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = elementFactory->CreateInstanceByTag(aNodeInfo,
-                                             getter_AddRefs(content));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // If we care, find out if we just used a special factory.
     if (!mPrettyPrintHasFactoredElements && !mPrettyPrintHasSpecialRoot &&
         mPrettyPrintXML) {
-      PRBool hasFactory = PR_FALSE;
-      rv = nsContentUtils::GetNSManagerWeakRef()->
-        HasRegisteredFactory(aNodeInfo->NamespaceID(), &hasFactory);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      mPrettyPrintHasFactoredElements = hasFactory;
+      mPrettyPrintHasFactoredElements =
+        nsContentUtils::GetNSManagerWeakRef()->
+          HasElementCreator(aNodeInfo->NamespaceID());
     }
 
     if (!aNodeInfo->NamespaceEquals(kNameSpaceID_SVG)) {
@@ -856,125 +837,20 @@ nsXMLContentSink::StartLayout()
 
 }
 
-////////////////////////////////////////////////////////////////////////
-//
-//   XML Element Factory
-//
-
-class XMLElementFactoryImpl : public nsIElementFactory
-{
-protected:
-  XMLElementFactoryImpl();
-  virtual ~XMLElementFactoryImpl();
-
-public:
-  friend
-  nsresult
-  NS_NewXMLElementFactory(nsIElementFactory** aResult);
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIElementFactory interface
-  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
-
-};
-
-
-XMLElementFactoryImpl::XMLElementFactoryImpl()
-{
-}
-
-XMLElementFactoryImpl::~XMLElementFactoryImpl()
-{
-}
-
-
-NS_IMPL_ISUPPORTS1(XMLElementFactoryImpl, nsIElementFactory)
-
-
-nsresult
-NS_NewXMLElementFactory(nsIElementFactory** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  XMLElementFactoryImpl* result = new XMLElementFactoryImpl();
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  *aResult = result;
-  NS_ADDREF(*aResult);
- 
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-XMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
-                                           nsIContent** aResult)
-{
-  return NS_NewXMLElement(aResult, aNodeInfo);
-}
-
-
 #ifdef MOZ_MATHML
 ////////////////////////////////////////////////////////////////////////
 // MathML Element Factory - temporary location for bug 132844
 // Will be factored out post 1.0
 
-class MathMLElementFactoryImpl : public nsIElementFactory
-{
-protected:
-  MathMLElementFactoryImpl();
-  virtual ~MathMLElementFactoryImpl();
-
-public:
-  friend
-  nsresult
-  NS_NewMathMLElementFactory(nsIElementFactory** aResult);
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIElementFactory interface
-  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
-
-};
-
-MathMLElementFactoryImpl::MathMLElementFactoryImpl()
-{
-}
-
-MathMLElementFactoryImpl::~MathMLElementFactoryImpl()
-{
-}
-
-NS_IMPL_ISUPPORTS1(MathMLElementFactoryImpl, nsIElementFactory)
-
 nsresult
-NS_NewMathMLElementFactory(nsIElementFactory** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  MathMLElementFactoryImpl* result = new MathMLElementFactoryImpl();
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
-
-  *aResult = result;
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
-                                              nsIContent** aResult)
+NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
 {
   static const char kMathMLStyleSheetURI[] = "resource://gre/res/mathml.css";
 
   aNodeInfo->SetIDAttributeAtom(nsHTMLAtoms::id);
   
   // this bit of code is to load mathml.css on demand
-  nsIDocument* doc = aNodeInfo->GetDocument();
+  nsIDocument* doc = nsContentUtils::GetDocument(aNodeInfo);
   if (doc) {
     nsICSSLoader* cssLoader = doc->GetCSSLoader();
     PRBool enabled;

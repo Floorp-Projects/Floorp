@@ -42,6 +42,7 @@
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsNodeInfoManager.h"
 
 class nsPluginDocument : public nsMediaDocument,
                          public nsIPluginDocument

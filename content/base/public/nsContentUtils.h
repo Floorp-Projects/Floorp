@@ -51,14 +51,14 @@
 #include "nsCOMArray.h"
 #include "nsIStatefulFrame.h"
 #include "nsIPref.h"
+#include "nsINodeInfo.h"
+#include "nsNodeInfoManager.h"
 
 class nsIXPConnect;
 class nsIContent;
 class nsIDocument;
 class nsIDocShell;
 class nsINameSpaceManager;
-class nsINodeInfo;
-class nsINodeInfoManager;
 class nsIScriptSecurityManager;
 class nsIThreadJSContextStack;
 class nsIParserService;
@@ -283,7 +283,7 @@ public:
 
   static nsresult GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                        const nsAString& aQualifiedName,
-                                       nsINodeInfoManager* aNodeInfoManager,
+                                       nsNodeInfoManager* aNodeInfoManager,
                                        nsINodeInfo** aNodeInfo);
 
   static nsAdoptingCString GetCharPref(const char *aPref);
@@ -332,6 +332,40 @@ public:
                             imgIDecoderObserver* aObserver,
                             PRInt32 aLoadFlags,
                             imgIRequest** aRequest);
+
+  /**
+   * Convenience method to create a new nodeinfo that differs only by name
+   * from aNodeInfo.
+   */
+  static nsresult NameChanged(nsINodeInfo *aNodeInfo, nsIAtom *aName,
+                              nsINodeInfo** aResult)
+  {
+    nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
+
+    return niMgr->GetNodeInfo(aName, aNodeInfo->GetPrefixAtom(),
+                              aNodeInfo->NamespaceID(), aResult);
+  }
+
+  /**
+   * Convenience method to create a new nodeinfo that differs only by prefix
+   * from aNodeInfo.
+   */
+  static nsresult PrefixChanged(nsINodeInfo *aNodeInfo, nsIAtom *aPrefix,
+                                nsINodeInfo** aResult)
+  {
+    nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
+
+    return niMgr->GetNodeInfo(aNodeInfo->NameAtom(), aPrefix,
+                              aNodeInfo->NamespaceID(), aResult);
+  }
+
+  /**
+   * Retrieve a pointer to the document that owns aNodeInfo.
+   */
+  static nsIDocument *GetDocument(nsINodeInfo *aNodeInfo)
+  {
+    return aNodeInfo->NodeInfoManager()->GetDocument();
+  }
   
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,

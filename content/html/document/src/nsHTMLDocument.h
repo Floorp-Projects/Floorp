@@ -199,6 +199,13 @@ public:
     return mDefaultNamespaceID == kNameSpaceID_XHTML;
   }
 
+#ifdef DEBUG
+  virtual nsresult CreateElem(nsIAtom *aName, nsIAtom *aPrefix,
+                              PRInt32 aNamespaceID,
+                              PRBool aDocumentDefaultType,
+                              nsIContent** aResult);
+#endif
+
 protected:
   nsresult GetPixelDimensions(nsIPresShell* aShell,
                               PRInt32* aWidth,

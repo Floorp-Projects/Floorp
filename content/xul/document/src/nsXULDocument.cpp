@@ -72,8 +72,6 @@
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMXULElement.h"
-#include "nsIElementFactory.h"
-#include "nsIPrincipal.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -112,6 +110,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
@@ -121,11 +121,9 @@
 // CIDs
 //
 
-static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 static PRBool IsChromeURI(nsIURI* aURI)
@@ -160,9 +158,6 @@ nsIRDFService* nsXULDocument::gRDFService;
 nsIRDFResource* nsXULDocument::kNC_persist;
 nsIRDFResource* nsXULDocument::kNC_attribute;
 nsIRDFResource* nsXULDocument::kNC_value;
-
-nsIElementFactory* nsXULDocument::gHTMLElementFactory;
-nsIElementFactory*  nsXULDocument::gXMLElementFactory;
 
 nsIXULPrototypeCache* nsXULDocument::gXULCache;
 
@@ -367,6 +362,8 @@ nsXULDocument::nsXULDocument(void)
 
     // Override the default in nsDocument
     mCharacterSet.AssignLiteral("UTF-8");
+
+    mDefaultElementType = kNameSpaceID_XUL;
 }
 
 nsXULDocument::~nsXULDocument()
@@ -413,9 +410,6 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kNC_persist);
         NS_IF_RELEASE(kNC_attribute);
         NS_IF_RELEASE(kNC_value);
-
-        NS_IF_RELEASE(gHTMLElementFactory);
-        NS_IF_RELEASE(gXMLElementFactory);
 
         if (gXULCache) {
             // Remove the current document here from the FastLoad table in
@@ -2086,14 +2080,6 @@ nsXULDocument::Init()
         gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "value"),
                                  &kNC_value);
 
-        rv = CallGetService(kHTMLElementFactoryCID, &gHTMLElementFactory);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get HTML element factory");
-        if (NS_FAILED(rv)) return rv;
-
-        rv = CallGetService(kXMLElementFactoryCID, &gXMLElementFactory);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XML element factory");
-        if (NS_FAILED(rv)) return rv;
-
         rv = CallGetService(kXULPrototypeCacheCID, &gXULCache);
         if (NS_FAILED(rv)) return rv;
     }
@@ -3285,37 +3271,14 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         rv = nsXULElement::Create(aPrototype, this, PR_TRUE, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
-    else if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
-        // If it's an HTML element, it's gonna be heavyweight no matter
-        // what. So we need to copy everything out of the prototype
-        // into the element.
-
-        gHTMLElementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
-                                                 getter_AddRefs(result));
-        if (NS_FAILED(rv)) return rv;
-
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
-
-        result->SetDocument(this, PR_FALSE, PR_TRUE);
-
-        rv = AddAttributes(aPrototype, result);
-        if (NS_FAILED(rv)) return rv;
-    }
     else {
         // If it's not a XUL element, it's gonna be heavyweight no matter
         // what. So we need to copy everything out of the prototype
         // into the element.
-
-        nsCOMPtr<nsIElementFactory> elementFactory;
-        GetElementFactory(aPrototype->mNodeInfo->NamespaceID(),
-                          getter_AddRefs(elementFactory));
-        rv = elementFactory->CreateInstanceByTag(aPrototype->mNodeInfo,
-                                                 getter_AddRefs(result));
+        rv = NS_NewElement(getter_AddRefs(result),
+                           aPrototype->mNodeInfo->NamespaceID(),
+                           aPrototype->mNodeInfo);
         if (NS_FAILED(rv)) return rv;
-
-        if (! result)
-            return NS_ERROR_UNEXPECTED;
 
         result->SetDocument(this, PR_FALSE, PR_TRUE);
 
@@ -3325,8 +3288,8 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
 
     result->SetContentID(mNextContentID++);
 
-    *aResult = result;
-    NS_ADDREF(*aResult);
+    result.swap(*aResult);
+
     return NS_OK;
 }
 
@@ -3460,19 +3423,18 @@ nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
 
         if (! bodyContent) {
             // Get the document.
-            nsCOMPtr<nsIDOMDocument> domdoc =
-                do_QueryInterface(aElement->GetDocument());
-            NS_ASSERTION(domdoc, "no document");
-            if (! domdoc)
+            nsIDocument *document = aElement->GetDocument();
+            NS_ASSERTION(document, "no document");
+            if (! document)
                 return NS_ERROR_UNEXPECTED;
-            if (domdoc) {
-                nsCOMPtr<nsIDOMElement> bodyElement;
-                domdoc->CreateElement(NS_LITERAL_STRING("treechildren"),
-                                      getter_AddRefs(bodyElement));
 
-                bodyContent = do_QueryInterface(bodyElement);
-                aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
-            }
+            nsresult rv = document->CreateElem(nsXULAtoms::treechildren,
+                                               nsnull, kNameSpaceID_XUL,
+                                               PR_FALSE,
+                                               getter_AddRefs(bodyContent));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
         }
     }
     else {
@@ -4084,21 +4046,6 @@ nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
     return aParent->RemoveChildAt(nodeOffset, PR_TRUE);
 }
 
-void
-nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID,
-                                 nsIElementFactory** aResult)
-{
-    // Retrieve the appropriate factory.
-    nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(aNameSpaceID,
-                                                             aResult);
-
-    if (!*aResult) {
-        // Nothing found. Use generic XML element.
-        *aResult = gXMLElementFactory;
-        NS_IF_ADDREF(*aResult);
-    }
-}
-
 //----------------------------------------------------------------------
 //
 // CachedChromeStreamListener
@@ -4227,64 +4174,4 @@ nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
         NS_IF_ADDREF(*aFocusController = windowPrivate->GetRootFocusController());
     } else
         *aFocusController = nsnull;
-}
-
-//----------------------------------------------------------------------
-//
-// The XUL element factory
-//
-
-class XULElementFactoryImpl : public nsIElementFactory
-{
-protected:
-    XULElementFactoryImpl();
-    virtual ~XULElementFactoryImpl();
-
-public:
-    friend
-    nsresult
-    NS_NewXULElementFactory(nsIElementFactory** aResult);
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsIElementFactory interface
-    NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
-};
-
-XULElementFactoryImpl::XULElementFactoryImpl()
-{
-}
-
-XULElementFactoryImpl::~XULElementFactoryImpl()
-{
-}
-
-
-NS_IMPL_ISUPPORTS1(XULElementFactoryImpl, nsIElementFactory)
-
-
-nsresult
-NS_NewXULElementFactory(nsIElementFactory** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    XULElementFactoryImpl* result = new XULElementFactoryImpl();
-    if (! result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(result);
-    *aResult = result;
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-XULElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
-                                           nsIContent** aResult)
-{
-    return nsXULElement::Create(aNodeInfo, aResult);
 }

@@ -238,15 +238,9 @@ protected:
     static nsIRDFResource* kNC_attribute;
     static nsIRDFResource* kNC_value;
 
-    static nsIElementFactory* gHTMLElementFactory;
-    static nsIElementFactory* gXMLElementFactory;
-
     static nsIXULPrototypeCache* gXULCache;
 
     static PRLogModuleInfo* gXULLog;
-
-    static void GetElementFactory(PRInt32 aNameSpaceID,
-                                  nsIElementFactory** aResult);
 
     nsresult
     Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute);

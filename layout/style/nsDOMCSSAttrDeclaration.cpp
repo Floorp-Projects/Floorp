@@ -49,6 +49,7 @@
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
 #include "nsStyleConsts.h"
+#include "nsContentUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
 
@@ -149,7 +150,7 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
 
   // XXXbz GetOwnerDocument
-  nsIDocument* doc = nodeInfo->GetDocument();
+  nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
 
   nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
 

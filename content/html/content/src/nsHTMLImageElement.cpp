@@ -168,12 +168,9 @@ NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
       do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
     NS_ENSURE_TRUE(doc, nsnull);
 
-    nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
-    NS_ENSURE_TRUE(nodeInfoManager, nsnull);
-
-    rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::img, nsnull,
-                                      kNameSpaceID_None,
-                                      getter_AddRefs(nodeInfo));
+    rv = doc->NodeInfoManager()->GetNodeInfo(nsHTMLAtoms::img, nsnull,
+                                             kNameSpaceID_None,
+                                             getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(rv, nsnull);
   }
 

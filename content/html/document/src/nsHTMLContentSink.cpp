@@ -64,7 +64,6 @@
 #include "nsInt64.h"
 
 #include "nsGenericHTMLElement.h"
-#include "nsIElementFactory.h"
 #include "nsITextContent.h"
 
 #include "nsIDOMText.h"
@@ -123,6 +122,8 @@
 
 #include "nsEscape.h"
 #include "nsIElementObserver.h"
+#include "nsNodeInfoManager.h"
+#include "nsContentCreatorFunctions.h"
 
 
 //----------------------------------------------------------------------
@@ -281,7 +282,7 @@ protected:
   nsresult SetDocumentTitle(const nsAString& aTitle);
   // If aCheckIfPresent is true, will only set an attribute in cases
   // when it's not already set.
-  nsresult AddAttributes(const nsIParserNode& aNode, nsIHTMLContent* aContent,
+  nsresult AddAttributes(const nsIParserNode& aNode, nsIContent* aContent,
                          PRBool aNotify = PR_FALSE,
                          PRBool aCheckIfPresent = PR_FALSE);
   already_AddRefed<nsIHTMLContent>
@@ -397,7 +398,7 @@ protected:
    * added to the content node, since the way URI attributes are treated may
    * depend on the value of the base URI
    */
-  void AddBaseTagInfo(nsIHTMLContent* aContent);
+  void AddBaseTagInfo(nsIContent* aContent);
 
   void ProcessBaseHref(const nsAString& aBaseHref);
   void ProcessBaseTarget(const nsAString& aBaseTarget);
@@ -788,7 +789,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 
 nsresult
 HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
-                               nsIHTMLContent* aContent, PRBool aNotify,
+                               nsIContent* aContent, PRBool aNotify,
                                PRBool aCheckIfPresent)
 {
   // Add tag attributes to the content attributes
@@ -953,27 +954,29 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 }
 
 nsresult
-NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aCaseSensitive)
+NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
 {
+  *aResult = nsnull;
+
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
   if (!parserService)
     return NS_ERROR_OUT_OF_MEMORY;
 
   nsIAtom *name = aNodeInfo->NameAtom();
 
-  // Find tag in tag table
   PRInt32 id;
-
-  if (aCaseSensitive) {
+  nsCOMPtr<nsIHTMLContent> result;
+  if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
+    // Find tag in tag table
     parserService->HTMLCaseSensitiveAtomTagToId(name, &id);
-  } else {
-    parserService->HTMLAtomTagToId(name, &id);
-  }
 
-  if (aCaseSensitive) {
-    *aResult = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
-                                 PR_FALSE, PR_FALSE).get();
-  } else {
+    result = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
+                               PR_FALSE, PR_FALSE);
+  }
+  else {
+    // Find tag in tag table
+    parserService->HTMLAtomTagToId(name, &id);
+
     // Revese map id to name to get the correct character case in
     // the tag name.
 
@@ -988,76 +991,20 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo, PRBool aC
       if (!name->Equals(nsDependentString(tag))) {
         nsCOMPtr<nsIAtom> atom = do_GetAtom(tag);
 
-        nsresult rv = aNodeInfo->NameChanged(atom, getter_AddRefs(kungFuDeathGrip));
-        NS_ENSURE_SUCCESS(rv, nsnull);
+        nsresult rv =
+          nsContentUtils::NameChanged(aNodeInfo, atom,
+                                      getter_AddRefs(kungFuDeathGrip));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nodeInfo = kungFuDeathGrip;
       }
     }
 
-    *aResult = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull,
-                                 PR_FALSE, PR_FALSE).get();
+    result = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull,
+                               PR_FALSE, PR_FALSE);
   }
 
-  return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-//----------------------------------------------------------------------
-
-
-class nsHTMLElementFactory : public nsIElementFactory,
-                             public nsSupportsWeakReference
-{
-public:
-  nsHTMLElementFactory();
-  virtual ~nsHTMLElementFactory();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo,
-                                 nsIContent** aResult);
-};
-
-nsresult
-NS_NewHTMLElementFactory(nsIElementFactory** aInstancePtrResult)
-{
-  *aInstancePtrResult = new nsHTMLElementFactory();
-  if (!*aInstancePtrResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aInstancePtrResult);
-
-  return NS_OK;
-}
-
-nsHTMLElementFactory::nsHTMLElementFactory()
-{
-}
-
-nsHTMLElementFactory::~nsHTMLElementFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS2(nsHTMLElementFactory, nsIElementFactory,
-                   nsISupportsWeakReference)
-
-NS_IMETHODIMP
-nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
-                                          nsIContent** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
-
-  nsresult rv;
-  nsCOMPtr<nsIHTMLContent> htmlContent;
-  rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), aNodeInfo,
-                            aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
-
-  *aResult = htmlContent;
-  NS_IF_ADDREF(*aResult);
-
-  return rv;
+  return result ? CallQueryInterface(result, aResult) : NS_ERROR_OUT_OF_MEMORY;
 }
 
 already_AddRefed<nsIHTMLContent>
@@ -3736,7 +3683,7 @@ HTMLContentSink::TryToScrollToRef()
 }
 
 void
-HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
+HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
 {
   if (!mBaseHREF.IsEmpty()) {
     aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF,
@@ -3887,13 +3834,13 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 
   if (parent) {
     // Create content object
-    nsCOMPtr<nsIHTMLContent> element;
+    nsCOMPtr<nsIContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::base, nsnull,
                                   kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
 
-    result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
+    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
     NS_ENSURE_SUCCESS(result, result);
 
     element->SetContentID(mDocument->GetAndIncrementContentID());
@@ -3944,12 +3891,12 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
   if (parent) {
     // Create content object
-    nsCOMPtr<nsIHTMLContent> element;
+    nsCOMPtr<nsIContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
     mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::link, nsnull, kNameSpaceID_None,
                                   getter_AddRefs(nodeInfo));
 
-    result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
+    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
     NS_ENSURE_SUCCESS(result, result);
 
     element->SetContentID(mDocument->GetAndIncrementContentID());
@@ -4232,12 +4179,12 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // on to it till we are done.
   nsCOMPtr<nsIHTMLContent> parent =
     mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-  nsCOMPtr<nsIHTMLContent> element;
+  nsCOMPtr<nsIContent> element;
   nsCOMPtr<nsINodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::script, nsnull, kNameSpaceID_None,
                                 getter_AddRefs(nodeInfo));
 
-  rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
+  rv = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4354,8 +4301,8 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::style, nsnull, kNameSpaceID_None,
                                 getter_AddRefs(nodeInfo));
 
-  nsCOMPtr<nsIHTMLContent> element;
-  rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
+  nsCOMPtr<nsIContent> element;
+  rv = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   element->SetContentID(mDocument->GetAndIncrementContentID());

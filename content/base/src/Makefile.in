@@ -79,6 +79,7 @@ REQUIRES	= xpcom \
 
 EXPORTS		= \
 		nsStubDocumentObserver.h \
+		nsNodeInfoManager.h \
 		nsStyleSet.h \
 		$(NULL)
 

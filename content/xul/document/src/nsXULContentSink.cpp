@@ -103,6 +103,7 @@
 #include "nsUnicharUtils.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
+#include "nsNodeInfoManager.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
 
@@ -184,7 +185,7 @@ protected:
 
     nsAutoVoidArray mNameSpaceStack;
 
-    nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
+    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
     
     
     nsresult NormalizeAttributeString(const nsAFlatString& aText,
@@ -599,8 +600,9 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aProto
     mCSSLoader = aDocument->GetCSSLoader();
     NS_ENSURE_TRUE(mCSSLoader, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = aPrototype->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
-    if (NS_FAILED(rv)) return rv;
+    mNodeInfoManager = aPrototype->GetNodeInfoManager();
+    if (! mNodeInfoManager)
+        return NS_ERROR_UNEXPECTED;
 
     mState = eInProlog;
     return NS_OK;

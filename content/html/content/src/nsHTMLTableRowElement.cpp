@@ -303,7 +303,8 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
   // create the cell
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  mNodeInfo->NameChanged(nsHTMLAtoms::td, getter_AddRefs(nodeInfo));
+  nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::td,
+                              getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIHTMLContent> cellContent = NS_NewHTMLTableCellElement(nodeInfo);
   if (!cellContent) {
