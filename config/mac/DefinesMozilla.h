@@ -16,17 +16,17 @@
  * Reserved.
  */
 
-// ÑÑÑ Security
+// ——— Security
 //#define NADA_VERSION
 //#define EXPORT_VERSION
 #define US_VERSION
 
-// ÑÑÑ Misc
+// ——— Misc
 //#define NO_DBM		// define this to kill DBM
 #define NEW_BOOKMARKS
 // Enables us to switch profiling from project preferences
 
-// ÑÑÑ Version
+// ——— Version
 //#define ALPHA
 //#define BETA
 // Comment out both ALPHA and BETA for the final version
@@ -47,10 +47,11 @@
 // 98-10-14 joe -- temporary item to turn on ENDER MIME support before it fully lands
 #define MOZ_ENDER_MIME 1
 
+#define USE_NSREG 1
 
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	You typically will not need to change things below here
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// ———————————————————————————————————————————————————————————————————————————
+//	•	You typically will not need to change things below here
+// ———————————————————————————————————————————————————————————————————————————
 
 #define MOCHA
 #define MOZILLA_CLIENT	1
@@ -66,6 +67,7 @@
 #endif
 
 #define LAYERS	1
+// #define NU_CACHE 1 // uncomment to turn on new memory cache features
 
 #define CASTED_READ_OBJECT(stream, type, reference) (reference = NULL)
 
