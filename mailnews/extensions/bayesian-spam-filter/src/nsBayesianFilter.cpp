@@ -50,7 +50,7 @@ static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>
 
 class Token {
 public:
-    Token(const char* word, PRUint32 count = 0) : mWord(word), mCount(count), mProbability(NAN) {}
+    Token(const char* word, PRUint32 count = 0) : mWord(word), mCount(count), mProbability(0) {}
     Token(const Token& token) : mWord(token.mWord), mCount(token.mCount), mProbability(token.mProbability) {}
     ~Token() {}
     
