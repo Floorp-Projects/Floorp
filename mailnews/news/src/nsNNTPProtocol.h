@@ -33,6 +33,10 @@
 #include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
 
+// this is only needed as long as our libmime hack is in place
+#include "prio.h"
+#define ARTICLE_PATH  "tempArticle.eml"
+
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)
@@ -179,6 +183,10 @@ private:
 	// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
 	PRBool	m_urlInProgress;	
+
+	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
+	// converter interface...
+	PRFileDesc* m_tempArticleFile;
 
 	// News Event Sinks
     nsINNTPNewsgroupList	* m_newsgroupList;

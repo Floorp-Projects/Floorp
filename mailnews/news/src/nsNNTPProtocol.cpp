@@ -1047,9 +1047,12 @@ PRInt32 nsNNTPProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 
 	m_dataBuf[numBytesRead] = '\0'; // null terminate the string.
 
-	// oops....we also want to eat up the '\r' as well....
-	if (numBytesRead > 0 && m_dataBuf[numBytesRead-1] == '\r')
-		m_dataBuf[numBytesRead-1] = '\0';
+	// oops....we also want to eat up the '\n' and the \r'...
+	if (numBytesRead > 1 && m_dataBuf[numBytesRead-2] == '\r')
+		m_dataBuf[numBytesRead-2] = '\0'; // hit both cr and lf...
+	else
+		if (numBytesRead > 0 && (m_dataBuf[numBytesRead-1] == '\r' || m_dataBuf[numBytesRead-1] == '\n'))
+			m_dataBuf[numBytesRead-1] = '\0';
 
 	if (line)
 		*line = m_dataBuf;
@@ -1970,6 +1973,16 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   PR_ASSERT (cd->stream);
   if (!cd->stream) return -1;
 #endif
+
+  // mscott: short term mime hack.....until libmime plays "nice" with a new stream converter
+  // interface, we have to interact with it like we did in the old networking world...however this
+  // would be hard to do now...in addition the code and effort would be wasted as we'd have to through
+  // it away once libmime did use a new stream converter interface. So we are going to cheet and write
+  // the article to file. We'll then call a load file url on our "temp" file. Then mkfile does all the work
+  // with talking to the RFC-822->HTML stream converter....clever huh =).....
+
+  // we are about to display an article so open up a temp file on the article...
+  m_tempArticleFile = PR_Open(ARTICLE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
   m_nextState = NNTP_READ_ARTICLE;
 
   return 0;
@@ -2014,6 +2027,9 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			m_nextState = NEWS_START_CANCEL;
 		else
 			m_nextState = NEWS_DONE;
+		// and close the article file if it was open....
+		if (m_tempArticleFile)
+			PR_Close(m_tempArticleFile);
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 	}
 	else
@@ -2040,7 +2056,8 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
 			// we don't have one now so print the data out so we can verify that we got it....
 			printf("%s", outputBuffer);
-//			status = SendData(outputBuffer); 
+			if (m_tempArticleFile)
+				PR_Write(m_tempArticleFile,(void *) outputBuffer,PL_strlen(outputBuffer));
 		}
 	}
 
