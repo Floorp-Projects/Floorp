@@ -36,6 +36,7 @@ REQUIRES	= libreg \
 CPPSRCS		= \
 		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
+		nsComponentManagerObsolete.cpp \
 		nsGenericFactory.cpp \
 		nsNativeComponentLoader.cpp \
 		nsRegistry.cpp \
@@ -51,12 +52,14 @@ endif
 
 EXPORTS		= \
 		nsComponentManagerUtils.h \
+		nsComponentManagerObsolete.h \
 		nsIGenericFactory.h \
 		nsIRegistryUtils.h \
 		nsIServiceManagerUtils.h \
 		nsIServiceManagerObsolete.h \
 		nsXPComFactory.h \
 		nsStaticComponent.h \
+		nsObsoleteModuleLoading.h \
 		$(NULL)
 
 XPIDLSRCS	= \
@@ -65,6 +68,7 @@ XPIDLSRCS	= \
 		nsIClassInfo.idl \
 		nsIComponentLoader.idl \
 		nsIComponentManager.idl \
+		nsIComponentManagerObsolete.idl \
 		nsIFactory.idl \
 		nsIModule.idl \
 		nsIRegistry.idl \

@@ -28,6 +28,9 @@
 #include "nsCOMPtr.h"
 #endif
 
+#ifndef nsComponentManagerObsolete_h___
+#include "nsComponentManagerObsolete.h"
+#endif
 
 #define NS_COMPONENTMANAGER_CID                      \
 { /* 91775d60-d5dc-11d2-92fb-00e09805570f */         \
