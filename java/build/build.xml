@@ -127,6 +127,7 @@
   <target name="create.win32.webclient.scripts" if="build.win32.classes">
 
     <echo file="${package.example}/runem.bat">set CLASSPATH=..\lib\webclient_${package.version}_${short.os.name}.jar
+set PATH=%PATH%;%JDKHOME%\jre\bin
 perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
     </echo>
     <chmod perm="775" file="${package.example}/runem.bat"/>
@@ -145,6 +146,9 @@ perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
     <delete dir="${package.home}"/>
     <delete dir="${build.home}/META-INF"/>
     <delete file="${dist}/install.js"/>
+    <delete>
+      <fileset dir="." includes="*.xpi"/>
+    </delete>
 
   </target>
 
