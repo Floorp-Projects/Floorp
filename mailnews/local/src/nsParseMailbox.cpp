@@ -1170,7 +1170,8 @@ int nsParseMailMessageState::FinalizeHeaders()
 					*ch = 0;
 					recipient->length = nsCRT::strlen(recipient->value);
 				}
-				m_newMsgHdr->SetRecipients(recipient->value, PR_FALSE);
+				m_newMsgHdr->SetRecipients(recipient->value);
+                m_newMsgHdr->SetRecipientsIsNewsgroup(PR_FALSE);
 			}
 			else if (recipient)
 			{
@@ -1187,8 +1188,10 @@ int nsParseMailMessageState::FinalizeHeaders()
 					PR_FREEIF(addresses);
 					PR_FREEIF(names);
 				}
-				else	// hmm, should we just use the original string?
-					m_newMsgHdr->SetRecipients(recipient->value, PR_TRUE);
+				else {	// hmm, should we just use the original string?
+					m_newMsgHdr->SetRecipients(recipient->value);
+                    m_newMsgHdr->SetRecipientsIsNewsgroup(PR_TRUE);
+                }
 			}
 			if (ccList)
 			{

@@ -482,9 +482,9 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 											PRBool *pResult) 
 {
     nsresult err = NS_OK;
-    nsString  recipients;
+    nsXPIDLCString  recipients;
     nsXPIDLCString  ccList;
-    nsString  matchString;
+    nsXPIDLCString  matchString;
 	PRUint32 msgFlags;
 
 	PRBool result;
@@ -515,12 +515,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         switch (pTerm->m_attribute)
         {
         case nsMsgSearchAttrib::Sender:
-            msgToMatch->GetAuthor(&matchString);
+            msgToMatch->GetAuthor(getter_Copies(matchString));
             err = pTerm->MatchRfc822String (nsCAutoString(matchString), charset, &result);
             break;
         case nsMsgSearchAttrib::Subject:
 			{
-            msgToMatch->GetSubject(&matchString /* , PR_TRUE */);
+            msgToMatch->GetSubject(getter_Copies(matchString) /* , PR_TRUE */);
 			nsCAutoString singleByteString(matchString); 
             err = pTerm->MatchString (&singleByteString, charset, PR_FALSE, &result);
 			}
@@ -528,7 +528,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
         case nsMsgSearchAttrib::ToOrCC:
         {
             PRBool boolKeepGoing = pTerm->MatchAllBeforeDeciding();
-            msgToMatch->GetRecipients(&recipients);
+            msgToMatch->GetRecipients(getter_Copies(recipients));
             err = pTerm->MatchRfc822String (nsCAutoString(recipients), charset, &result);
             if (boolKeepGoing == result)
             {
@@ -571,7 +571,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 			}
             break;
         case nsMsgSearchAttrib::To:
-            msgToMatch->GetRecipients(&recipients);
+            msgToMatch->GetRecipients(getter_Copies(recipients));
             err = pTerm->MatchRfc822String(nsCAutoString(recipients), charset, &result);
             break;
         case nsMsgSearchAttrib::CC:
@@ -705,24 +705,24 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         nsMsgSearchValue *pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            nsString subject;
+            nsXPIDLCString subject;
 			PRUint32 msgFlags;
 
 			// Don't even bother to look at expunged messages awaiting compression
 			pHeaders->GetFlags(&msgFlags);
             pValue->attribute = nsMsgSearchAttrib::Subject;
             char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? (char *)"Re: " : (char *)"";
-            pHeaders->GetSubject(&subject);
-            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) nsAutoCString(subject)); // hack. invoke cast operator by force
+            pHeaders->GetSubject(getter_Copies(subject));
+            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*)subject);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttrib::Sender;
-			nsString author;
-            pHeaders->GetAuthor(&author);
-			pValue->u.string = PL_strdup((const char *) nsAutoCString(author));
+			nsXPIDLCString author;
+            pHeaders->GetAuthor(getter_Copies(author));
+			pValue->u.string = PL_strdup(author);
             newResult->AddValue (pValue);
             err = NS_ERROR_OUT_OF_MEMORY;
         }

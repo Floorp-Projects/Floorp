@@ -30,6 +30,7 @@
 #include "nsMsgThread.h"
 #include "nsFileStream.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgBaseCID.h"
 #include "nsMorkCID.h"
@@ -2502,12 +2503,12 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	}
 #ifdef SUBJ_THREADING
 	// try subject threading if we couldn't find a reference and the subject starts with Re:
-	nsAutoString subject;
+	nsXPIDLCString subject;
 
-	newHdr->GetSubject(&subject);
+	newHdr->GetSubject(getter_Copies(subject));
 	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
 	{
-		nsCAutoString cSubject = subject;
+		nsCAutoString cSubject(subject);
 		thread = getter_AddRefs(GetThreadForSubject(cSubject));
 		if(thread)
 		{
@@ -2672,13 +2673,11 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 
 	nsMsgThread *threadHdr = nsnull;
 	
-	nsAutoString subject;
+	nsXPIDLCString subject;
 
-	nsresult err = msgHdr->GetSubject(&subject);
+	nsresult err = msgHdr->GetSubject(getter_Copies(subject));
 
-	nsAutoCString cSubject(subject);
-
-	err = CreateNewThread(msgHdr->m_messageKey, (const char *) cSubject, &threadHdr);
+	err = CreateNewThread(msgHdr->m_messageKey, subject, &threadHdr);
 	msgHdr->SetThreadId(msgHdr->m_messageKey);
 	if (threadHdr)
 	{
@@ -2792,17 +2791,15 @@ nsresult nsMsgDatabase::DumpContents()
         nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);      // closed system, cast ok
 		if (NS_SUCCEEDED(rv))
 		{
-            nsAutoString author;
-            nsAutoString subject;
+            nsXPIDLCString author;
+            nsXPIDLCString subject;
 
 			msgHdr->GetMessageKey(&key);
-			msgHdr->GetAuthor(&author);
-			msgHdr->GetSubject(&subject);
-			char *authorStr = author.ToNewCString();
-			char *subjectStr = subject.ToNewCString();
-			printf("hdr key = %u, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
-			delete [] authorStr;
-			delete [] subjectStr;
+			msgHdr->GetAuthor(getter_Copies(author));
+			msgHdr->GetSubject(getter_Copies(subject));
+			printf("hdr key = %u, author = %s subject = %s\n", key,
+                   ((const char *)author) ? (const char *)author : "",
+                   ((const char*)subject) ? (const char*)subject : "");
 			NS_RELEASE(msgHdr);
 		}
     }

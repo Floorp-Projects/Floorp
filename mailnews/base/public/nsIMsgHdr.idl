@@ -76,6 +76,11 @@ interface nsIMsgHdr : nsISupports
     attribute unsigned long messageSize;
     attribute unsigned long lineCount;
     
+    attribute string author;
+    attribute string subject;
+    attribute string recipients;
+    attribute boolean recipientsIsNewsgroup;
+    
     /* anything below here still has to be fixed */
     void setReferences(in string references);
 
@@ -83,15 +88,6 @@ interface nsIMsgHdr : nsISupports
                             in unsigned long numAddresses);
     void setCCListArray(in string names, in string addresses,
                         in unsigned long numAddresses);
-
-    
-    void setAuthor(in string author);
-    void setSubject(in string subject);
-    void setRecipients(in string recipients, in boolean recipientsIsNewsgroup);
-
-	[noscript] void getAuthor(in nsString resultAuthor);
-	[noscript] void getSubject(in nsString resultSubject);
-	[noscript] void getRecipients(in nsString resultRecipients);
 
 	[noscript] void getMime2DecodedAuthor(in nsString resultAuthor);
 	[noscript] void getMime2DecodedSubject(in nsString resultSubject);

@@ -692,7 +692,6 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 
 	if (m_compFields && identity) 
 	{ 
-		nsAutoString aString;
 		nsAutoString aCharset(msgCompHeaderInternalCharset());
 		char *outCString;
 
@@ -872,8 +871,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
     nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(firstURI.GetUnicode()));
     if ((NS_SUCCEEDED(rv)) && message)
     {
-      nsAutoString aString("");
-      nsAutoString bString("");
+      nsXPIDLCString subject;
+      nsAutoString subjectStr("");
       nsAutoString aCharset("");
       nsAutoString decodedString;
       nsAutoString encodedCharset;  // we don't use this
@@ -881,7 +880,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
     
       rv = message->GetCharSet(&aCharset);
       if (NS_FAILED(rv)) return rv;
-      rv = message->GetSubject(&aString);
+      rv = message->GetSubject(getter_Copies(subject));
       if (NS_FAILED(rv)) return rv;
       
       mType = type;
@@ -896,17 +895,20 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           if (!aCharset.Equals(""))
             m_compFields->SetCharacterSet(nsAutoCString(aCharset));
         
-          bString += "Re: ";
-          bString += aString;
-          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(bString, encodedCharset, decodedString)))
+          subjectStr += "Re: ";
+          subjectStr += subject;
+          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(subjectStr, encodedCharset, decodedString)))
             m_compFields->SetSubject(decodedString.GetUnicode());
           else
-            m_compFields->SetSubject(bString.GetUnicode());
-        
-          rv = message->GetAuthor(&aString);		
+            m_compFields->SetSubject(subjectStr.GetUnicode());
+
+          nsXPIDLCString author;
+          rv = message->GetAuthor(getter_Copies(author));		
           if (NS_FAILED(rv)) return rv;
-          m_compFields->SetTo(nsAutoCString(aString));
-          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(aString, encodedCharset, decodedString)))
+          m_compFields->SetTo(author);
+          
+          nsString authorStr(author);
+          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(authorStr, encodedCharset, decodedString)))
             if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
             {
               m_compFields->SetTo(aCString);
@@ -915,21 +917,24 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           
             if (type == nsIMsgCompType::ReplyAll)
             {
-              nsAutoString cString;
-              rv = message->GetRecipients(&cString);
-	      if (NS_FAILED(rv)) return rv; 
-              CleanUpRecipients(cString);
+              nsXPIDLCString recipients;
+              rv = message->GetRecipients(getter_Copies(recipients));
+              if (NS_FAILED(rv)) return rv;
+              nsAutoString recipStr(recipients);
+              CleanUpRecipients(recipStr);
+              
               nsXPIDLCString ccList;
               rv = message->GetCcList(getter_Copies(ccList));
-	      if (NS_FAILED(rv)) return rv; 
-              nsAutoString dString(ccList);
-              CleanUpRecipients(dString);
-              if (cString.Length() > 0 && dString.Length() > 0)
-                cString = cString + ", ";
-              cString = cString + dString;
-              m_compFields->SetCc(nsAutoCString(cString));
+              if (NS_FAILED(rv)) return rv;
               
-              if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(cString, encodedCharset, decodedString)))
+              nsAutoString ccListStr(ccList);
+              CleanUpRecipients(ccListStr);
+              if (recipStr.Length() > 0 && ccListStr.Length() > 0)
+                recipStr += ", ";
+              recipStr += ccListStr;
+              m_compFields->SetCc(nsAutoCString(recipStr));
+              
+              if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(recipStr, encodedCharset, decodedString)))
                 if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
                 {
 					char * resultStr = nsnull;
@@ -967,14 +972,14 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           if (!aCharset.Equals(""))
             m_compFields->SetCharacterSet(nsAutoCString(aCharset));
         
-          bString += "[Fwd: ";
-          bString += aString;
-          bString += "]";
+          subjectStr += "[Fwd: ";
+          subjectStr += subject;
+          subjectStr += "]";
         
-          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(bString, encodedCharset, decodedString)))
+          if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(subjectStr, encodedCharset, decodedString)))
             m_compFields->SetSubject(decodedString.GetUnicode());
           else
-            m_compFields->SetSubject(bString.GetUnicode());
+            m_compFields->SetSubject(subjectStr.GetUnicode());
         
           // Setup quoting callbacks for later...
           if (type == nsIMsgCompType::ForwardAsAttachment)

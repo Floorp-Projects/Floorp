@@ -538,7 +538,8 @@ nsresult nsMailDatabase::PrePopulate()
 	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
 	newHdr->SetSubject("Why the Lakers suck");
 	newHdr->SetDate(now);
-	newHdr->SetRecipients("riley@heat.com (Pat Riley)", PR_FALSE);
+	newHdr->SetRecipients("riley@heat.com (Pat Riley)");
+    newHdr->SetRecipientsIsNewsgroup(PR_FALSE);
 	AddNewHdrToDB (newHdr, PR_TRUE);
 	newHdr->Release();
 

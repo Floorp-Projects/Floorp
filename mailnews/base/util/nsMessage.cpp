@@ -152,10 +152,18 @@ NS_IMETHODIMP nsMessage::SetCcList(const char *ccList)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::SetRecipients(const char *recipients, PRBool recipientsIsNewsgroup)
+NS_IMETHODIMP nsMessage::SetRecipients(const char *recipients)
 {
 	if(mMsgHdr)
-		return mMsgHdr->SetRecipients(recipients, recipientsIsNewsgroup);
+		return mMsgHdr->SetRecipients(recipients);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMessage::SetRecipientsIsNewsgroup(PRBool aIsNewsgroup)
+{
+	if(mMsgHdr)
+    return mMsgHdr->SetRecipientsIsNewsgroup(aIsNewsgroup);
 	else
 		return NS_ERROR_FAILURE;
 }
@@ -201,7 +209,7 @@ NS_IMETHODIMP nsMessage::SetStatusOffset(PRUint32 statusOffset)
 }
 
 
-NS_IMETHODIMP nsMessage::GetAuthor(nsString *resultAuthor)
+NS_IMETHODIMP nsMessage::GetAuthor(char* *resultAuthor)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetAuthor(resultAuthor);
@@ -209,7 +217,7 @@ NS_IMETHODIMP nsMessage::GetAuthor(nsString *resultAuthor)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetSubject(nsString *resultSubject)
+NS_IMETHODIMP nsMessage::GetSubject(char* *resultSubject)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetSubject(resultSubject);
@@ -217,10 +225,18 @@ NS_IMETHODIMP nsMessage::GetSubject(nsString *resultSubject)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetRecipients(nsString *resultRecipients)
+NS_IMETHODIMP nsMessage::GetRecipients(char* *resultRecipients)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetRecipients(resultRecipients);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMessage::GetRecipientsIsNewsgroup(PRBool* aIsNewsgroup)
+{
+	if(mMsgHdr)
+		return mMsgHdr->GetRecipientsIsNewsgroup(aIsNewsgroup);
 	else
 		return NS_ERROR_FAILURE;
 }

@@ -372,10 +372,23 @@ NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
 }
 
-NS_IMETHODIMP nsMsgHdr::SetRecipients(const char *recipients, PRBool rfc822 /* = PR_TRUE */)
+NS_IMETHODIMP nsMsgHdr::SetRecipients(const char *recipients)
 {
 	// need to put in rfc822 address parsing code here (or make caller do it...)
 	return SetStringColumn(recipients, m_mdb->m_recipientsColumnToken);
+}
+
+NS_IMETHODIMP nsMsgHdr::SetRecipientsIsNewsgroup(PRBool rfc822)
+{
+    m_recipientsIsNewsgroup = rfc822; // ???
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHdr::GetRecipientsIsNewsgroup(PRBool *rfc822)
+{
+    NS_ENSURE_ARG_POINTER(rfc822);
+    (*rfc822) = m_recipientsIsNewsgroup;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses)
@@ -405,7 +418,8 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
 		curName += strlen(curName) + 1;
 		curAddress += strlen(curAddress) + 1;
 	}
-	ret = SetRecipients(allRecipients, PR_TRUE);
+	ret = SetRecipients(allRecipients);
+    SetRecipientsIsNewsgroup(PR_TRUE);
 	return ret;
 }
 
@@ -537,19 +551,19 @@ NS_IMETHODIMP nsMsgHdr::SetPriorityString(const char *priority)
 	return SetPriority(priorityVal);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetAuthor(nsString *resultAuthor)
+NS_IMETHODIMP nsMsgHdr::GetAuthor(char* *resultAuthor)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_senderColumnToken, *resultAuthor);
+	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetSubject(nsString *resultSubject)
+NS_IMETHODIMP nsMsgHdr::GetSubject(char* *resultSubject)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_subjectColumnToken, *resultSubject);
+	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetRecipients(nsString *resultRecipients)
+NS_IMETHODIMP nsMsgHdr::GetRecipients(char* *resultRecipients)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_recipientsColumnToken, *resultRecipients);
+	return m_mdb->RowCellColumnToCharPtr(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetCcList(char * *resultCCList)

@@ -218,8 +218,8 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 	char	dateStr[40];	/* 30 probably not enough */
 	nsMsgRuleActionType actionType;
 	void				*value;
-	nsString	author;
-	nsString	subject;
+	nsXPIDLCString	author;
+	nsXPIDLCString	subject;
 
 	GetFilterName(&filterName);
 	GetAction(&actionType, &value);
@@ -229,16 +229,16 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
     PR_ExplodeTime(date, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateStr, 100, "%m/%d/%Y %I:%M %p", &exploded);
 
-	msgHdr->GetAuthor(&author);
-	msgHdr->GetSubject(&subject);
+	msgHdr->GetAuthor(getter_Copies(author));
+	msgHdr->GetSubject(getter_Copies(subject));
 	if (stream)
 	{
 		*stream << "Applied filter \"";
 		*stream << filterName;
 		*stream << "\" to message from ";
-		*stream << nsAutoCString(author);
+		*stream << (const char*)author;
 		*stream << " - ";
-		*stream << nsAutoCString(subject);
+		*stream << (const char *)subject;
 		*stream << " at ";
 		*stream << dateStr;
 		*stream << "\n";

@@ -34,68 +34,9 @@ class nsCString;
 
 class nsMsgHdr : public nsIMsgDBHdr {
 public:
-
+    NS_DECL_NSIMSGHDR
 	friend class nsMsgDatabase;
     ////////////////////////////////////////////////////////////////////////////
-    // nsIMsghdr methods:
-    NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty);
-    NS_IMETHOD SetProperty(const char *propertyName, nsString &propertyStr);
-    NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult);
-    NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal);
-    NS_IMETHOD GetNumReferences(PRUint16 *result);
-    NS_IMETHOD GetStringReference(PRInt32 refNum, nsCString &resultReference);
-    NS_IMETHOD GetDate(PRTime *result);
-    NS_IMETHOD SetDate(PRTime date);
-    NS_IMETHOD SetMessageId(const char *messageId);
-    NS_IMETHOD SetReferences(const char *references);
-    NS_IMETHOD SetCcList(const char *ccList);
-    NS_IMETHOD SetRecipients(const char *recipients, PRBool recipientsIsNewsgroup);
-	NS_IMETHOD SetRecipientsArray(const char *names, const char *addresses, PRUint32 numAddresses);
-    NS_IMETHOD SetCCListArray(const char *names, const char *addresses, PRUint32 numAddresses);
-    NS_IMETHOD SetAuthor(const char *author);
-    NS_IMETHOD SetSubject(const char *subject);
-    NS_IMETHOD SetStatusOffset(PRUint32 statusOffset);
-
-	NS_IMETHOD GetAuthor(nsString *resultAuthor);
-	NS_IMETHOD GetSubject(nsString *resultSubject);
-	NS_IMETHOD GetRecipients(nsString *resultRecipients);
-	NS_IMETHOD GetMessageId(char **resultMessageId);
-
-	NS_IMETHOD GetMime2DecodedAuthor(nsString *resultAuthor);
-	NS_IMETHOD GetMime2DecodedSubject(nsString *resultSubject);
-	NS_IMETHOD GetMime2DecodedRecipients(nsString *resultRecipients);
-
-	NS_IMETHOD GetAuthorCollationKey(nsString *resultAuthor);
-	NS_IMETHOD GetSubjectCollationKey(nsString *resultSubject);
-	NS_IMETHOD GetRecipientsCollationKey(nsString *resultRecipients);
-
-	NS_IMETHOD GetCcList(char **ccList);
-    // flag handling routines
-    NS_IMETHOD GetFlags(PRUint32 *result);
-    NS_IMETHOD SetFlags(PRUint32 flags);
-    NS_IMETHOD OrFlags(PRUint32 flags, PRUint32 *result);
-    NS_IMETHOD AndFlags(PRUint32 flags, PRUint32 *result);
-
-	// Mark message routines
-	NS_IMETHOD MarkRead(PRBool bRead);
-	NS_IMETHOD MarkFlagged(PRBool bRead);
-
-    NS_IMETHOD GetMessageKey(nsMsgKey *result);
-    NS_IMETHOD GetThreadId(nsMsgKey *result);
-    NS_IMETHOD SetThreadId(nsMsgKey inKey);
-    NS_IMETHOD SetMessageKey(nsMsgKey inKey);
-    NS_IMETHOD GetMessageSize(PRUint32 *result);
-    NS_IMETHOD SetMessageSize(PRUint32 messageSize);
-    NS_IMETHOD GetLineCount(PRUint32 *result);
-    NS_IMETHOD SetLineCount(PRUint32 lineCount);
-    NS_IMETHOD SetPriority(nsMsgPriority priority);
-    NS_IMETHOD SetPriorityString(const char *priority);
-    NS_IMETHOD GetMessageOffset(PRUint32 *result);
-    NS_IMETHOD GetStatusOffset(PRUint32 *result); 
-	NS_IMETHOD GetCharSet(nsString *result);
-	NS_IMETHOD GetPriority(nsMsgPriority *msgPriority);
-    NS_IMETHOD GetThreadParent(nsMsgKey *result);
-    NS_IMETHOD SetThreadParent(nsMsgKey inKey);
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
@@ -132,6 +73,7 @@ protected:
 	nsCString		m_references;
     nsMsgPriority	m_priority;
 
+    PRBool m_recipientsIsNewsgroup;
     // nsMsgHdrs will have to know what db and row they belong to, since they are really
     // just a wrapper around the msg row in the mdb. This could cause problems,
     // though I hope not.

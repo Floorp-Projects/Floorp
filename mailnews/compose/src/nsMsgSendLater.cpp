@@ -428,7 +428,7 @@ nsresult
 nsMsgSendLater::CompleteMailFileSend()
 {
 nsresult                    rv;
-nsString                    recips;
+nsXPIDLCString                    recips;
 nsXPIDLCString                    ccList;
 PRBool                      created;
 nsCOMPtr<nsIMsgCompFields>  compFields = nsnull;
@@ -440,7 +440,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FAILURE;
 
   // Get the recipients...
-  if (NS_FAILED(mMessage->GetRecipients(&recips)))
+  if (NS_FAILED(mMessage->GetRecipients(getter_Copies(recips))))
     return NS_ERROR_UNEXPECTED;
   else
   	mMessage->GetCcList(getter_Copies(ccList));
@@ -464,12 +464,13 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   // Since we have already parsed all of the headers, we are simply going to
   // set the composition fields and move on.
   //
-  nsString author;
-  mMessage->GetAuthor(&author);
+  nsXPIDLCString author;
+  mMessage->GetAuthor(getter_Copies(author));
 
   nsMsgCompFields * fields = (nsMsgCompFields *)compFields.get();
 
-  fields->SetFrom(author.ToNewUnicode());
+  nsString authorStr(author);
+  fields->SetFrom(authorStr.ToNewUnicode());
 
   if (m_to)
   	fields->SetTo(m_to);
@@ -569,14 +570,11 @@ nsMsgSendLater::StartNextMailFileSend()
 
   myRDFNode->GetValue(getter_Copies(aMessageURI));
 
-  char *tString = nsnull;
-  nsString      subject;
-  mMessage->GetSubject(&subject);
-  tString = subject.ToNewCString();
 #ifdef NS_DEBUG
-  printf("Sending message: [%s]\n", tString);
+  nsXPIDLCString      subject;
+  mMessage->GetSubject(getter_Copies(subject));
+  printf("Sending message: [%s]\n", (const char*)subject);
 #endif
-  PR_FREEIF(tString);
 
   mTempFileSpec = nsMsgCreateTempFileSpec("nsqmail.tmp"); 
 	if (!mTempFileSpec)
