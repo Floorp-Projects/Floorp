@@ -808,6 +808,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     CompareArgs ca;
     jsuint len, newlen, i;
     jsval *vec;
+    JSStackFrame *fp;
     jsid id;
     size_t nbytes;
 
@@ -855,6 +856,12 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #else
     newlen = len;
 #endif
+
+    /* Root vec, clearing it first in case a GC nests while we're filling it. */
+    memset(vec, 0, len * sizeof(jsval));
+    fp = cx->fp;
+    fp->vars = vec;
+    fp->nvars = len;
 
     for (i = 0; i < len; i++) {
         ca.status = IndexToId(cx, i, &id);
