@@ -73,6 +73,10 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
+#ifdef USE_QI_IN_SUPPRESS_EVENT_HANDLERS
+#include "nsIPrintContext.h"
+#include "nsIPrintPreviewContext.h"
+#endif // USE_QI_IN_SUPPRESS_EVENT_HANDLERS
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIComponentManager.h"
@@ -1367,6 +1371,46 @@ nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
   //delete mTextSelImpl; dont delete this since mSelCon will release it.
 }
 
+static PRBool
+SuppressEventHandlers(nsIPresContext* aPresContext)
+{
+  PRBool suppressHandlers = PR_FALSE;
+
+  if (aPresContext)
+  {
+    // Right now we only suppress event handlers and controller manipulation
+    // when in a print preview or print context!
+
+#ifdef USE_QI_IN_SUPPRESS_EVENT_HANDLERS
+
+    // Using QI to see if we're printing or print previewing is more
+    // accurate, but a bit more heavy weight then just checking
+    // the pagination bool, which will return the right answer to us
+    // with the current implementation.
+
+    nsCOMPtr<nsIPrintContext> printContext = do_QueryInterface(aPresContext);
+    if (printContext)
+      suppressHandlers = PR_TRUE;
+    else
+    {
+      nsCOMPtr<nsIPrintPreviewContext> printPreviewContext = do_QueryInterface(aPresContext);
+      if (printPreviewContext)
+        suppressHandlers = PR_TRUE;
+    }
+
+#else
+
+    // In the current implementation, we only paginate when
+    // printing or in print preview.
+
+    aPresContext->IsPaginated(&suppressHandlers);
+
+#endif
+  }
+
+  return suppressHandlers;
+}
+
 void
 nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
 {
@@ -1392,31 +1436,35 @@ nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
   }
   
   // Clean up the controller
-  nsCOMPtr<nsIControllers> controllers;
-  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
-  if (inputElement)
-    inputElement->GetControllers(getter_AddRefs(controllers));
-  else
-  {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-    textAreaElement->GetControllers(getter_AddRefs(controllers));
-  }
 
-  if (controllers)
+  if (!SuppressEventHandlers(aPresContext))
   {
-    PRUint32 numControllers;
-    nsresult rv = controllers->GetControllerCount(&numControllers);
-    NS_ASSERTION((NS_SUCCEEDED(rv)), "bad result in gfx text control destructor");
-    for (PRUint32 i = 0; i < numControllers; i ++)
+    nsCOMPtr<nsIControllers> controllers;
+    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
+    if (inputElement)
+      inputElement->GetControllers(getter_AddRefs(controllers));
+    else
     {
-      nsCOMPtr<nsIController> controller;
-      rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
-      if (NS_SUCCEEDED(rv) && controller)
+      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+      textAreaElement->GetControllers(getter_AddRefs(controllers));
+    }
+
+    if (controllers)
+    {
+      PRUint32 numControllers;
+      nsresult rv = controllers->GetControllerCount(&numControllers);
+      NS_ASSERTION((NS_SUCCEEDED(rv)), "bad result in gfx text control destructor");
+      for (PRUint32 i = 0; i < numControllers; i ++)
       {
-        nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
-        if (editController)
+        nsCOMPtr<nsIController> controller;
+        rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+        if (NS_SUCCEEDED(rv) && controller)
         {
-          editController->SetCommandRefCon(nsnull);
+          nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+          if (editController)
+          {
+            editController->SetCommandRefCon(nsnull);
+          }
         }
       }
     }
@@ -2010,44 +2058,47 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // Initialize the controller for the editor
 
-  nsCOMPtr<nsIControllers> controllers;
-  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
-  if (inputElement)
-    rv = inputElement->GetControllers(getter_AddRefs(controllers));
-  else
+  if (!SuppressEventHandlers(aPresContext))
   {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-
-    if (!textAreaElement)
-      return NS_ERROR_FAILURE;
-
-    rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
-  }
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (controllers)
-  {
-    PRUint32 numControllers;
-    PRBool found = PR_FALSE;
-    rv = controllers->GetControllerCount(&numControllers);
-    for (PRUint32 i = 0; i < numControllers; i ++)
+    nsCOMPtr<nsIControllers> controllers;
+    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
+    if (inputElement)
+      rv = inputElement->GetControllers(getter_AddRefs(controllers));
+    else
     {
-      nsCOMPtr<nsIController> controller;
-      rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
-      if (NS_SUCCEEDED(rv) && controller)
+      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+
+      if (!textAreaElement)
+        return NS_ERROR_FAILURE;
+
+      rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
+    }
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (controllers)
+    {
+      PRUint32 numControllers;
+      PRBool found = PR_FALSE;
+      rv = controllers->GetControllerCount(&numControllers);
+      for (PRUint32 i = 0; i < numControllers; i ++)
       {
-        nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
-        if (editController)
+        nsCOMPtr<nsIController> controller;
+        rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+        if (NS_SUCCEEDED(rv) && controller)
         {
-          editController->SetCommandRefCon(mEditor);
-          found = PR_TRUE;
+          nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+          if (editController)
+          {
+            editController->SetCommandRefCon(mEditor);
+            found = PR_TRUE;
+          }
         }
       }
+      if (!found)
+        rv = NS_ERROR_FAILURE;
     }
-    if (!found)
-      rv = NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIPlaintextEditor> textEditor(do_QueryInterface(mEditor));
