@@ -201,6 +201,7 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   return rv;
 }
 
+#ifndef XP_MAC
 /*
  * Write a line to a file
  * return NS_OK if no error occurs
@@ -254,6 +255,7 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString*& aLine) {
   }
   return 0;
 }
+#endif
 
 PRIVATE void
 net_lock_cookie_list(void)
@@ -1755,6 +1757,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	net_IntSetCookieString(context, cur_url, set_cookie_header, gmtCookieExpires);
 }
 
+#ifndef XP_MAC
 /* saves the HTTP cookies permissions to disk */
 PRIVATE void
 net_SaveCookiePermissions()
@@ -2111,6 +2114,435 @@ net_ReadCookies()
   cookies_changed = FALSE;
   return;
 }
+#else
+
+/* saves the HTTP cookies permissions to disk
+ * the parameter passed in on entry is ignored
+ * returns 0 on success -1 on failure.
+ */
+PRIVATE void
+net_SaveCookiePermissions()
+{
+    XP_List * list_ptr;
+    net_CookiePermissionStruct * cookie_permission_s;
+    XP_File fp;
+    int32 len = 0;
+
+    if(NET_GetCookieBehaviorPref() == NET_DontUse) {
+	return;
+    }
+
+    if(!cookie_permissions_changed) {
+	return;
+    }
+
+    net_lock_cookie_permission_list();
+    list_ptr = net_cookie_permission_list;
+
+    if(!(net_cookie_permission_list)) {
+	net_unlock_cookie_permission_list();
+	return;
+    }
+
+    if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_WRITE))) {
+	net_unlock_cookie_permission_list();
+	return;
+    }
+    len = NET_XP_FileWrite("# Netscape HTTP Cookie Permission File" LINEBREAK
+                 "# http://www.netscape.com/newsref/std/cookie_spec.html"
+                  LINEBREAK "# This is a generated file!  Do not edit."
+		  LINEBREAK LINEBREAK, -1, fp);
+
+    if (len < 0) {
+	NET_XP_FileClose(fp);
+	net_unlock_cookie_permission_list();
+	return;
+    }
+
+    /* format shall be:
+     * host \t permission <optional trust label information >
+     */
+    while((cookie_permission_s = (net_CookiePermissionStruct *)
+	    XP_ListNextObject(list_ptr)) != NULL) {
+	len = NET_XP_FileWrite(cookie_permission_s->host, -1, fp);
+	if (len < 0) {
+	    NET_XP_FileClose(fp);
+	    net_unlock_cookie_permission_list();
+	    return;
+	}
+
+        NET_XP_FileWrite("\t", 1, fp);
+
+	if(cookie_permission_s->permission) {
+            NET_XP_FileWrite("TRUE", -1, fp);
+	} else {
+            NET_XP_FileWrite("FALSE", -1, fp);
+	}
+
+	len = NET_XP_FileWrite(LINEBREAK, -1, fp);
+	if (len < 0) {
+	    NET_XP_FileClose(fp);
+	    net_unlock_cookie_permission_list();
+	    return;
+	}
+    }
+
+    /* save current state of cookie nag-box's checkmark */
+    NET_XP_FileWrite("@@@@", -1, fp);
+    NET_XP_FileWrite("\t", 1, fp);
+    if (cookie_remember_checked) {
+        NET_XP_FileWrite("TRUE", -1, fp);
+    } else {
+        NET_XP_FileWrite("FALSE", -1, fp);
+    }
+    NET_XP_FileWrite(LINEBREAK, -1, fp);
+
+    cookie_permissions_changed = FALSE;
+    NET_XP_FileClose(fp);
+    net_unlock_cookie_permission_list();
+    return;
+}
+
+/* reads the HTTP cookies permission from disk
+ * the parameter passed in on entry is ignored
+ * returns 0 on success -1 on failure.
+ *
+ */
+#define PERMISSION_LINE_BUFFER_SIZE 4096
+
+PRIVATE int
+net_ReadCookiePermissions()
+{
+    XP_File fp;
+    char buffer[PERMISSION_LINE_BUFFER_SIZE];
+    char *host, *p;
+    Bool permission_value;
+    net_CookiePermissionStruct * cookie_permission;
+    char *host_from_header2;
+
+    if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_READ)))
+	return;
+
+    /* format is:
+     * host \t permission <optional trust label information>
+     * if this format isn't respected we move onto the next line in the file.
+     */
+
+    net_lock_cookie_permission_list();
+    while(NET_XP_FileReadLine(buffer, PERMISSION_LINE_BUFFER_SIZE, fp)) {
+        if (*buffer == '#' || *buffer == CR || *buffer == LF || *buffer == 0) {
+	    continue;
+	}
+
+        XP_StripLine(buffer); /* remove '\n' from end of the line */
+
+        host = buffer;
+        /* isolate the host field which is the first field on the line */
+        if( !(p = PL_strchr(host, '\t')) ) {
+            continue; /* no permission field */
+        }
+        *p++ = '\0';
+        if(*p == CR || *p == LF || *p == 0) {
+            continue; /* no permission field */
+	}
+
+        /* ignore leading periods in host name */
+        while (host && (*host == '.')) {
+            host++;
+	}
+
+	/*
+         * the first part of the permission file is valid -
+         * allocate a new permission struct and fill it in
+         */
+        cookie_permission = PR_NEW(net_CookiePermissionStruct);
+        if (cookie_permission) {
+            host_from_header2 = PL_strdup(host);
+            cookie_permission->host = host_from_header2;
+
+            /*
+             *  Now handle the permission field.
+             * a host value of "@@@@" is a special code designating the
+             * state of the cookie nag-box's checkmark
+	     */
+            permission_value = (!PL_strncmp(p, "TRUE", sizeof("TRUE")-1));
+            if (!PL_strcmp(host, "@@@@")) {
+                cookie_remember_checked = permission_value;
+            } else {
+                cookie_permission->permission = permission_value;
+			
+
+                /* add the permission entry */
+                net_AddCookiePermission( cookie_permission, FALSE );
+            }
+        } /* end if (cookie_permission) */
+    } /* while(NET_XP_FileReadLine( */
+
+    net_unlock_cookie_permission_list();
+    NET_XP_FileClose(fp);
+    cookie_permissions_changed = FALSE;
+    return;
+}
+
+/* saves out the HTTP cookies to disk
+ *
+ * on entry pass in the name of the file to save
+ *
+ * returns 0 on success -1 on failure.
+ *
+ */
+PRIVATE void
+net_SaveCookies()
+{
+    XP_List * list_ptr;
+    net_CookieStruct * cookie_s;
+	time_t cur_date = time(NULL);
+	XP_File fp;
+	int32 len = 0;
+	char date_string[36];
+
+	if(NET_GetCookieBehaviorPref() == NET_DontUse)
+	  return;
+
+	if(!cookies_changed)
+	  return;
+
+	net_lock_cookie_list();
+	list_ptr = net_cookie_list;
+	if(!(list_ptr)) {
+		net_unlock_cookie_list();
+		return;
+	}
+
+	if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookie, XP_FILE_WRITE))) {
+		net_unlock_cookie_list();
+		return;
+	}
+
+	len = NET_XP_FileWrite("# Netscape HTTP Cookie File" LINEBREAK
+				 "# http://www.netscape.com/newsref/std/cookie_spec.html"
+				 LINEBREAK "# This is a generated file!  Do not edit."
+				 LINEBREAK LINEBREAK,
+				 -1, fp);
+	if (len < 0)
+	{
+		NET_XP_FileClose(fp);
+		net_unlock_cookie_list();
+		return;
+	}
+
+	/* format shall be:
+ 	 *
+	 * host \t is_domain \t path \t secure \t expires \t name \t cookie
+	 *
+	 * is_domain is TRUE or FALSE
+	 * secure is TRUE or FALSE  
+	 * expires is a time_t integer
+	 * cookie can have tabs
+	 */
+    while((cookie_s = (net_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL)
+      {
+		if(cookie_s->expires < cur_date)
+			continue;  /* don't write entry if cookie has expired 
+						* or has no expiration date
+						*/
+
+		len = NET_XP_FileWrite(cookie_s->host, -1, fp);
+		if (len < 0)
+		{
+			NET_XP_FileClose(fp);
+			net_unlock_cookie_list();
+			return;
+		}
+		NET_XP_FileWrite("\t", 1, fp);
+		
+		if(cookie_s->is_domain)
+			NET_XP_FileWrite("TRUE", -1, fp);
+		else
+			NET_XP_FileWrite("FALSE", -1, fp);
+		NET_XP_FileWrite("\t", 1, fp);
+
+		NET_XP_FileWrite(cookie_s->path, -1, fp);
+		NET_XP_FileWrite("\t", 1, fp);
+
+		HG74640
+		    NET_XP_FileWrite("FALSE", -1, fp);
+		NET_XP_FileWrite("\t", 1, fp);
+
+		PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
+		NET_XP_FileWrite(date_string, -1, fp);
+		NET_XP_FileWrite("\t", 1, fp);
+
+		NET_XP_FileWrite(cookie_s->name, -1, fp);
+		NET_XP_FileWrite("\t", 1, fp);
+
+		NET_XP_FileWrite(cookie_s->cookie, -1, fp);
+ 		len = NET_XP_FileWrite(LINEBREAK, -1, fp);
+		if (len < 0)
+		{
+			NET_XP_FileClose(fp);
+			net_unlock_cookie_list();
+			return;
+		}
+      }
+
+	cookies_changed = FALSE;
+
+	NET_XP_FileClose(fp);
+	net_unlock_cookie_list();
+    return;
+}
+
+/* reads HTTP cookies from disk
+ *
+ * on entry pass in the name of the file to read
+ *
+ * returns 0 on success -1 on failure.
+ *
+ *
+ */
+#define LINE_BUFFER_SIZE 4096
+
+PRIVATE void
+net_ReadCookies()
+{
+    XP_List * list_ptr;
+    net_CookieStruct *new_cookie, *tmp_cookie_ptr;
+	size_t new_len;
+    XP_File fp;
+	char buffer[LINE_BUFFER_SIZE];
+	char *host, *is_domain, *path, *xxx, *expires, *name, *cookie;
+	Bool added_to_list;
+
+    net_ReadCookiePermissions(NULL);
+
+    if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookie, XP_FILE_READ)))
+        return);
+
+	net_lock_cookie_list();
+	list_ptr = net_cookie_list;
+
+    /* format is:
+     *
+     * host \t is_domain \t path \t xxx \t expires \t name \t cookie
+     *
+     * if this format isn't respected we move onto the next line in the file.
+     * is_domain is TRUE or FALSE	-- defaulting to FALSE
+     * xxx is TRUE or FALSE   -- should default to TRUE
+     * expires is a time_t integer
+     * cookie can have tabs
+     */
+    while(NET_XP_FileReadLine(buffer, LINE_BUFFER_SIZE, fp))
+      {
+		added_to_list = FALSE;
+
+		if (*buffer == '#' || *buffer == CR || *buffer == LF || *buffer == 0)
+		  continue;
+
+		host = buffer;
+		
+		if( !(is_domain = PL_strchr(host, '\t')) )
+			continue;
+		*is_domain++ = '\0';
+		if(*is_domain == CR || *is_domain == LF || *is_domain == 0)
+			continue;
+		
+		if( !(path = PL_strchr(is_domain, '\t')) )
+			continue;
+		*path++ = '\0';
+		if(*path == CR || *path == LF || *path == 0)
+			continue;
+
+		if( !(xxx = PL_strchr(path, '\t')) )
+			continue;
+		*xxx++ = '\0';
+		if(*xxx == CR || *xxx == LF || *xxx == 0)
+			continue;
+
+		if( !(expires = PL_strchr(xxx, '\t')) )
+			continue;
+		*expires++ = '\0';
+		if(*expires == CR || *expires == LF || *expires == 0)
+			continue;
+
+        if( !(name = PL_strchr(expires, '\t')) )
+			continue;
+		*name++ = '\0';
+		if(*name == CR || *name == LF || *name == 0)
+			continue;
+
+        if( !(cookie = PL_strchr(name, '\t')) )
+			continue;
+		*cookie++ = '\0';
+		if(*cookie == CR || *cookie == LF || *cookie == 0)
+			continue;
+
+		/* remove the '\n' from the end of the cookie */
+		XP_StripLine(cookie);
+
+        /* construct a new cookie_struct
+         */
+        new_cookie = PR_NEW(net_CookieStruct);
+        if(!new_cookie)
+          {
+			net_unlock_cookie_list();
+            return;
+          }
+
+		memset(new_cookie, 0, sizeof(net_CookieStruct));
+    
+        /* copy
+         */
+        StrAllocCopy(new_cookie->cookie, cookie);
+        StrAllocCopy(new_cookie->name, name);
+        StrAllocCopy(new_cookie->path, path);
+        StrAllocCopy(new_cookie->host, host);
+        new_cookie->expires = atol(expires);
+
+		HG87365
+
+        if(!PL_strcmp(is_domain, "TRUE"))
+        	new_cookie->is_domain = TRUE;
+        else
+        	new_cookie->is_domain = FALSE;
+
+		if(!net_cookie_list)
+		  {
+			net_cookie_list = XP_ListNew();
+		    if(!net_cookie_list)
+			  {
+				net_unlock_cookie_list();
+				return;
+			  }
+		  }		
+
+		/* add it to the list so that it is before any strings of
+		 * smaller length
+		 */
+		new_len = PL_strlen(new_cookie->path);
+		while((tmp_cookie_ptr = (net_CookieStruct *) XP_ListNextObject(list_ptr)) != NULL)
+		  { 
+			if(new_len > PL_strlen(tmp_cookie_ptr->path))
+			  {
+				XP_ListInsertObject(net_cookie_list, tmp_cookie_ptr, new_cookie);
+				added_to_list = TRUE;
+				break;
+			  }
+		  }
+
+		/* no shorter strings found in list */	
+		if(!added_to_list)
+		    XP_ListAddObjectToEnd(net_cookie_list, new_cookie);
+	  }
+
+    NET_XP_FileClose(fp);
+	net_unlock_cookie_list();
+
+	cookies_changed = FALSE;
+
+    return;
+}
+#endif
 
 PUBLIC int
 NET_SaveCookies(char * filename)
