@@ -249,26 +249,6 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
 }
 
 
-
-/**
- * 
- * @update	gess7/5/98
- * @param 
- * @return
- */
-void WriteSingleton(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
-  const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,PR_TRUE);
-
-  if(theContent.Length()) {
-    theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
-    aStream << gBuffer;
-  }
-  aStream << endl;
-}
-
-
-
 /**
   * This method gets called by the parser when it encounters
   * a title tag and wants to set the document title in the sink.
