@@ -165,6 +165,14 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
 		PRUint32 				inbuflen,
 		PRUint32*				inscanlen
 );
+PRIVATE PRBool uCnSAlways8BytesComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+);
 
 PRIVATE PRBool uScanAlways2Byte(
 		unsigned char*		in,
@@ -210,6 +218,7 @@ PRIVATE uScannerFunc m_scanner[uNumOfCharsetType] =
 	uCheckAndScan2ByteGRPrefix8EA6,
 	uCheckAndScan2ByteGRPrefix8EA7,
 	uCheckAndScanAlways1ByteShiftGL,
+        uCnSAlways8BytesComposedHangul
 };
 
 /*=================================================================================
@@ -634,6 +643,86 @@ PRIVATE PRBool uCheckAndScanAlways1ByteShiftGL(
 	/*	Don't check inlen. The caller should ensure it is larger than 0 */
 	*inscanlen = 1;
 	*out = (PRUint16) in[0] | 0x80;
+
+	return PR_TRUE;
+}
+/*=================================================================================
+
+=================================================================================*/
+#define SBase 0xAC00
+#define SCount 11172
+#define LCount 19
+#define VCount 21
+#define TCount 28
+#define NCount (VCount * TCount)
+PRIVATE PRBool uCnSAlways8BytesComposedHangul(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		unsigned char		*in,
+		PRUint16				*out,
+		PRUint32 				inbuflen,
+		PRUint32*				inscanlen
+)
+{
+        
+        PRUint16 LIndex, VIndex, TIndex;
+        /* no 8 bytes, not in a4 range, or the first 2 byte are not a4d4 */
+        if((inbuflen < 8) || (0xa4 != in[0]) || (0xd4 != in[1]) ||
+           (0xa4 != in[2] ) || (0xa4 != in[4]) || (0xa4 != in[6]))
+		return PR_FALSE;
+
+        /* Compute LIndex  */
+        if((in[3] < 0xa1) && (in[3] > 0xbe)) { /* illegal leading consonant */
+ 	  return PR_FALSE;
+        } else {
+          static PRUint8 lMap[] = {
+          /*        A1   A2   A3   A4   A5   A6   A7  */
+                     0,   1,0xff,   2,0xff,0xff,   3,
+          /*   A8   A9   AA   AB   AC   AD   AE   AF  */
+                4,   5,0xff,0xff,0xff,0xff,0xff,0xff,
+          /*   B0   B1   B2   B3   B4   B5   B6   B7  */
+             0xff,   6,   7,   8,0xff,   9,  10,  11,
+          /*   B8   B9   BA   BB   BC   BD   BE       */
+               12,  13,  14,  15,  16,  17,  18     
+          };
+
+          LIndex = lMap[in[3] - 0xa1];
+          if(0xff == (0xff & LIndex))
+ 	    return PR_FALSE;
+        }
+        
+        /* Compute VIndex  */
+        if((in[5] < 0xbf) && (in[5] > 0xd3)) { /* illegal medial vowel */
+ 	  return PR_FALSE;
+        } else {
+          VIndex = in[5] - 0xbf;
+        }
+
+        /* Compute TIndex  */
+        if(0xd4 == in[7])  
+        {
+          TIndex = 0;
+        } else if((in[7] < 0xa1) && (in[7] > 0xbe)) {/* illegal trailling consonant */
+ 	  return PR_FALSE;
+        } else {
+          static PRUint8 tMap[] = {
+          /*        A1   A2   A3   A4   A5   A6   A7  */
+                     1,   2,   3,   4,   5,   6,   7,
+          /*   A8   A9   AA   AB   AC   AD   AE   AF  */
+             0xff,   8,   9,  10,  11,  12,  13,  14,
+          /*   B0   B1   B2   B3   B4   B5   B6   B7  */
+               15,  16,  17,0xff,  18,  19,  20,  21,
+          /*   B8   B9   BA   BB   BC   BD   BE       */
+               22,0xff,  23,  24,  25,  26,  27     
+          };
+          TIndex = tMap[in[3] - 0xa1];
+          if(0xff == (0xff & TIndex))
+ 	    return PR_FALSE;
+        }
+
+	*inscanlen = 8;
+        /* the following line is from Unicode 2.0 page 3-13 item 5 */
+        *out = ( LIndex * VCount + VIndex) * TCount + TIndex + SBase;
 
 	return PR_TRUE;
 }
