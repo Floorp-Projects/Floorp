@@ -2762,7 +2762,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   PRInt32 cattrs;
   rv = content->GetAttrCount(cattrs);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (cattrs < 0xFFFF)
+  if (cattrs < 0x0000FFFF)
     mNumCachedAttrs = NS_STATIC_CAST(PRUint16, cattrs);  // signed 32 bits to unsigned 16 bits conversion
   else 
     mNumCachedParams = 0x0000FFFF;
@@ -2832,7 +2832,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   }
   PRUint32 cparams;
   ourParams->Count(&cparams); // unsigned 32 bits to unsigned 16 bits conversion
-  if (cparams < 0xFFFF)
+  if (cparams < 0x0000FFFF)
     mNumCachedParams = NS_STATIC_CAST(PRUint16, cparams);
   else 
     mNumCachedParams = 0x0000FFFF;
