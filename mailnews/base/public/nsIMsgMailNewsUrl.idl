@@ -64,6 +64,11 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	readonly attribute nsILoadGroup loadGroup;
 	attribute boolean updatingFolder;
 	attribute boolean addToMemoryCache; 
+
+	const unsigned long eCopy     = 0;
+	const unsigned long eMove     = 1;
+	const unsigned long eDisplay     = 2;
+	boolean IsUrlType(in unsigned long type);
 };
 
 //////////////////////////////////////////////////////////////////////////////////

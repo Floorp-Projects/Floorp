@@ -48,6 +48,7 @@ public:
     NS_IMETHOD GetMessageSize(PRUint32 *aMessageSize);
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
+	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 
     // nsMailboxUrl
     nsMailboxUrl();

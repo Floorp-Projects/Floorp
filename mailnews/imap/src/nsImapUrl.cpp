@@ -1008,6 +1008,30 @@ NS_IMETHODIMP nsImapUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsImapUrl::IsUrlType(PRUint32 type, PRBool *isType)
+{
+	NS_ENSURE_ARG(isType);
+
+	switch(type)
+	{
+		case nsIMsgMailNewsUrl::eCopy:
+			*isType = ((m_imapAction == nsIImapUrl::nsImapOnlineCopy) ||
+				(m_imapAction == nsIImapUrl::nsImapOnlineToOfflineCopy) ||
+				(m_imapAction == nsIImapUrl::nsImapOfflineToOnlineCopy));
+			break;
+		case nsIMsgMailNewsUrl::eMove:
+			*isType = ((m_imapAction == nsIImapUrl::nsImapOnlineMove) ||
+				(m_imapAction == nsIImapUrl::nsImapOnlineToOfflineMove) ||
+				(m_imapAction == nsIImapUrl::nsImapOfflineToOnlineMove));
+			break;
+		default:
+			*isType = PR_FALSE;
+	};				
+
+	return NS_OK;
+
+}
+
 char *nsImapUrl::ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar)
 {	
 	char oldCharString[2];

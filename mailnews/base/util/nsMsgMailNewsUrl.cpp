@@ -286,6 +286,14 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetAddToMemoryCache(PRBool aAddToCache)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::IsUrlType(PRUint32 type, PRBool *isType)
+{
+	//base class doesn't know about any specific types
+	NS_ENSURE_ARG(isType);
+	*isType = PR_FALSE;
+	return NS_OK;
+
+}
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMsgMailNewsUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

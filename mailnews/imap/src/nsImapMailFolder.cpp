@@ -3445,7 +3445,7 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
             srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
-                                      PR_FALSE, PR_TRUE);
+                                      PR_TRUE, PR_TRUE);
         }
     }
     return rv;

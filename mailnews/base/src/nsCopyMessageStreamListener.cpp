@@ -69,28 +69,6 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 	return rv;
 }
 
-static nsresult IsMoveMessage(nsIURI *aURL, PRBool *isMoveMessage)
-{
-	if(!isMoveMessage)
-		return NS_ERROR_NULL_POINTER;
-
-	*isMoveMessage = PR_FALSE;
-
-	nsresult rv;
-	nsCOMPtr<nsIMailboxUrl> mailboxURL(do_QueryInterface(aURL, &rv));
-	if(NS_SUCCEEDED(rv))
-	{
-		nsMailboxAction mailboxAction;
-		rv = mailboxURL->GetMailboxAction(&mailboxAction);
-
-		if(NS_SUCCEEDED(rv))
-			*isMoveMessage = (mailboxAction == nsIMailboxUrl::ActionMoveMessage);
-	}
-
-
-	return rv;
-
-}
 
 static nsresult DeleteMessage(nsIURI *aURL, nsIMsgFolder *srcFolder)
 {
@@ -180,10 +158,15 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 	//If this is a move and we finished the copy, delete the old message.
 	if(NS_SUCCEEDED(rv) && copySucceeded)
 	{
-		PRBool moveMessage;
-		// this only happens for local messages, because it checks for a
-		// mailbox uri. Seems wrong.
-		IsMoveMessage(uri, &moveMessage);
+		PRBool moveMessage = PR_FALSE;
+
+		nsCOMPtr<nsIMsgMailNewsUrl> mailURL(do_QueryInterface(uri));
+		if(mailURL)
+			rv = mailURL->IsUrlType(nsIMsgMailNewsUrl::eMove, &moveMessage);
+
+		if(NS_FAILED(rv))
+			moveMessage = PR_FALSE;
+
 		// OK, this is wrong if we're moving to an imap folder, for example. This really says that
 		// we were able to pull the message from the source, NOT that we were able to
 		// put it in the destination!

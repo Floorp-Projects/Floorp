@@ -100,6 +100,9 @@ public:
 
 	NS_IMETHOD AddChannelToLoadGroup();
 	NS_IMETHOD RemoveChannel(nsresult status);
+
+	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
+
     // nsIMsgMessageUrl
     NS_DECL_NSIMSGMESSAGEURL
 

@@ -404,3 +404,21 @@ NS_IMETHODIMP nsNntpUrl::GetMessageKey(nsMsgKey * aKey)
     *aKey = m_messageKey;
     return NS_OK;
 }
+
+NS_IMETHODIMP nsNntpUrl::IsUrlType(PRUint32 type, PRBool *isType)
+{
+	NS_ENSURE_ARG(isType);
+
+	switch(type)
+	{
+		case nsIMsgMailNewsUrl::eDisplay:
+			*isType = (m_newsAction == nsINntpUrl::ActionDisplayArticle);
+			break;
+		default:
+			*isType = PR_FALSE;
+	};				
+
+	return NS_OK;
+
+}
+

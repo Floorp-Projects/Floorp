@@ -35,6 +35,8 @@ public:
     NS_DECL_NSINNTPURL
     NS_DECL_NSIMSGMESSAGEURL
 
+	NS_IMETHOD nsNntpUrl::IsUrlType(PRUint32 type, PRBool *isType);
+
     // nsNntpUrl
     nsNntpUrl();
     virtual ~nsNntpUrl();
