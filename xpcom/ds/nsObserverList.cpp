@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+#define NS_WEAK_OBSERVERS
+
 #define NS_IMPL_IDS
 #include "pratom.h"
 #include "nsIObserverList.h"
@@ -74,16 +76,8 @@ nsObserverListEnumerator::GetTargetArraySize() const
 nsresult
 nsObserverListEnumerator::MoveToIndex( PRUint32 aNewIndex )
 	{
-		nsresult status;
-		if ( aNewIndex < GetTargetArraySize() )
-			{
-				mCurrentItemIndex = aNewIndex;
-				status = NS_OK;
-			}
-		else
-			status = NS_ERROR_FAILURE; // array bounds violation
-
-		return status;
+		mCurrentItemIndex = aNewIndex;
+		return (aNewIndex < GetTargetArraySize()) ? NS_OK : NS_ERROR_FAILURE;
 	}
 
 
@@ -125,13 +119,23 @@ nsObserverListEnumerator::CurrentItem( nsISupports** aItemPtr )
 		NS_ASSERTION(mTargetArray, "must enumerate over an non-null list");
 		NS_ASSERTION(aItemPtr, "must supply a place to put the result");
 
-		nsWeakPtr weakPtr = getter_AddRefs(NS_REINTERPRET_CAST(nsIWeakReference*, mTargetArray->ElementAt(mCurrentItemIndex)));
+		if ( mCurrentItemIndex >= GetTargetArraySize() )
+			return NS_ERROR_FAILURE;
 
-		if ( !aItemPtr || !weakPtr )
+		nsCOMPtr<nsISupports> elementPtr = getter_AddRefs(mTargetArray->ElementAt(mCurrentItemIndex));
+
+		if ( !aItemPtr || !elementPtr )
 			return NS_ERROR_NULL_POINTER;
 
-		return weakPtr->QueryReferent(NS_GET_IID(nsIObserver),
-                                      (void **)aItemPtr);
+		nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(elementPtr);
+
+    nsresult status;
+    if ( weakRef )
+      status = weakRef->QueryReferent(NS_GET_IID(nsIObserver), NS_REINTERPRET_CAST(void**, aItemPtr));
+    else
+      status = elementPtr->QueryInterface(NS_GET_IID(nsIObserver), NS_REINTERPRET_CAST(void**, aItemPtr));
+
+    return status;
 	}
 
 NS_IMETHODIMP
@@ -139,7 +143,7 @@ nsObserverListEnumerator::IsDone()
 	{
 		NS_ASSERTION(mTargetArray, "must enumerate over an non-null list");
 
-		return  (mCurrentItemIndex == (GetTargetArraySize()-1)) ? NS_OK : NS_ENUMERATOR_FALSE;
+		return  (mCurrentItemIndex >= GetTargetArraySize()) ? NS_OK : NS_ENUMERATOR_FALSE;
 	}
 
 
@@ -198,10 +202,16 @@ nsresult nsObserverList::AddObserver(nsIObserver** anObserver)
 		if (NS_FAILED(rv)) return rv;
     }
 
-#if NS_WEAK_OBSERVERS
-	nsWeakPtr observer_ref = getter_AddRefs(NS_GetWeakReference(*anObserver));
-	if(observer_ref) {
-		inserted = mObserverList->AppendElement(observer_ref); 
+#ifdef NS_WEAK_OBSERVERS
+  nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(*anObserver);
+  nsCOMPtr<nsISupports> observerRef;
+  if ( weakRefFactory )
+  	observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
+  else
+  	observerRef = *anObserver;
+
+	if(observerRef) {
+		inserted = mObserverList->AppendElement(observerRef); 
 #else
 	if(*anObserver) {
 		inserted = mObserverList->AppendElement(*anObserver);
@@ -227,10 +237,16 @@ nsresult nsObserverList::RemoveObserver(nsIObserver** anObserver)
         return NS_ERROR_FAILURE;
     }
 
-#if NS_WEAK_OBSERVERS
-	nsWeakPtr observer_ref = getter_AddRefs(NS_GetWeakReference(*anObserver));
-	if(observer_ref) {
-		removed = mObserverList->RemoveElement(observer_ref);  
+#ifdef NS_WEAK_OBSERVERS
+  nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(*anObserver);
+  nsCOMPtr<nsISupports> observerRef;
+  if ( weakRefFactory )
+  	observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
+  else
+  	observerRef = *anObserver;
+
+	if(observerRef) {
+		removed = mObserverList->RemoveElement(observerRef);  
 #else
 	if(*anObserver) {
 		removed = mObserverList->RemoveElement(*anObserver);
@@ -255,7 +271,7 @@ NS_IMETHODIMP nsObserverList::EnumerateObserverList(nsIEnumerator** anEnumerator
         return NS_ERROR_FAILURE;
     }
 
-#if NS_WEAK_OBSERVERS
+#ifdef NS_WEAK_OBSERVERS
 	nsCOMPtr<nsIBidirectionalEnumerator> enumerator = new nsObserverListEnumerator(mObserverList);
 	if ( !enumerator )
 		return NS_ERROR_OUT_OF_MEMORY;
