@@ -217,7 +217,6 @@ function searchOnLoad()
 
   onMore(null);
   document.commandDispatcher.updateCommands('mail-search');
-  moveToAlertPosition();
 
   // hide and remove these columns from the column picker.  you can't thread search results
   HideSearchColumn("threadCol"); // since you can't thread search results
