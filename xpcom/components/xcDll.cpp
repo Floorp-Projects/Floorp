@@ -57,6 +57,23 @@ nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation)
 {
     m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
+    // Populate m_modDate and m_size
+    if (NS_FAILED(Sync()))
+    {
+        m_status = DLL_INVALID_PARAM;
+    }
+}
+
+nsDll::nsDll(nsIFileSpec *dllSpec, const char *registryLocation, PRUint32 modDate, PRUint32 fileSize)
+  : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
+    m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
+    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
+
+{
+    m_registryLocation = nsCRT::strdup(registryLocation);
+    Init(dllSpec);
+    m_modDate = modDate;
+    m_size = fileSize;
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor)
@@ -66,6 +83,11 @@ nsDll::nsDll(const char *libPersistentDescriptor)
 
 {
     Init(libPersistentDescriptor);
+    // Populate m_modDate and m_size
+    if (NS_FAILED(Sync()))
+    {
+        m_status = DLL_INVALID_PARAM;
+    }
 }
 
 nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
@@ -123,14 +145,6 @@ nsDll::Init(nsIFileSpec *dllSpec)
       return;
     }
     
-    // Populate m_modDate and m_size
-    if (NS_FAILED(m_dllSpec->GetModDate(&m_modDate)) ||
-        NS_FAILED(m_dllSpec->GetFileSize(&m_size)))
-    {
-        m_status = DLL_INVALID_PARAM;
-        return;
-    }
-
 	m_status = DLL_OK;			
 }
 
@@ -182,6 +196,19 @@ nsDll::~nsDll(void)
     if (m_registryLocation)
         nsCRT::free(m_registryLocation);
 
+}
+
+nsresult
+nsDll::Sync()
+{
+    if (!m_dllSpec)
+        return NS_ERROR_FAILURE;
+
+    // Populate m_modDate and m_size
+    nsresult rv = m_dllSpec->GetModDate(&m_modDate);
+    if (NS_FAILED(rv)) return rv;
+    rv = m_dllSpec->GetFileSize(&m_size);
+    return rv;
 }
 
 const char *
