@@ -16,6 +16,16 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/12/2000       IBM Corp.      Changed params on DispatchMouseEvent to match Windows..
  *
  */
 
@@ -49,8 +59,7 @@ class nsCanvas : public nsWindow
    virtual PRBool OnPaint();
    virtual PRBool OnKey( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnRealizePalette();
-   virtual PRBool DispatchMouseEvent( PRUint32 msg, int clickcount,
-                                      MPARAM mp1, MPARAM mp2);
+   virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
    virtual PCSZ  WindowClass();
    virtual ULONG WindowStyle();
 

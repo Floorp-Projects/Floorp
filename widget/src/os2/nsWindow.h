@@ -26,6 +26,8 @@
  *
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Added InvalidateRegion method.
+ * 04/12/2000       IBM Corp.      Changed params on DispatchMouseEvent to match Windows..
+ * 04/14/2000       IBM Corp.      Declared EventIsInsideWindow for CaptureRollupEvents
  *
  */
 
@@ -151,6 +153,8 @@ class nsWindow : public nsBaseWidget,
    void   SetContextMenu( nsContextMenu *aMenu);
 
  protected:
+   static  nsWindow*   gCurrentWindow;
+   static  PRBool      EventIsInsideWindow(nsWindow* aWindow); 
    // nsWindow methods subclasses must provide for creation to work
    virtual PCSZ  WindowClass() = 0;
    virtual ULONG WindowStyle() = 0;
@@ -255,8 +259,7 @@ class nsWindow : public nsBaseWidget,
    void    InitEvent( nsGUIEvent &event, PRUint32 aEventType, nsPoint *pt = 0);
    PRBool  DispatchEventInternal( struct nsGUIEvent *event);
    PRBool  DispatchStandardEvent( PRUint32 aMsg, PRUint8 aStructType = NS_GUI_EVENT);
-   virtual PRBool DispatchMouseEvent( PRUint32 msg, int clickcount,
-                                      MPARAM mp1, MPARAM mp2);
+   virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
 
