@@ -39,6 +39,8 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsNetModRegEntry.obj           \
         .\$(OBJDIR)\nsLoadGroup.obj                \
         .\$(OBJDIR)\nsInputStreamChannel.obj       \
+        .\$(OBJDIR)\nsFileTransportService.obj     \
+        .\$(OBJDIR)\nsFileTransport.obj            \
         $(NULL)
 
 INCS = $(INCS)                  \
