@@ -56,6 +56,7 @@ CPPSRCS		= \
 		nsPersistentProperties.cpp \
 		nsQuickSort.cpp \
 		nsSizeOfHandler.cpp \
+		nsStatistics.cpp \
 		nsStr.cpp \
 		nsString.cpp \
 		nsString2.cpp \
@@ -64,12 +65,13 @@ CPPSRCS		= \
 		nsSupportsPrimitives.cpp \
 		nsUnicharBuffer.cpp \
 		nsVoidArray.cpp \
+		nsVoidBTree.cpp \
 		nsXPIDLString.cpp \
 		nsTextFormatter.cpp \
 		$(NULL)
 
 EXPORTS		= \
-    nsAlgorithm.h \
+		nsAlgorithm.h \
 		nsAVLTree.h \
 		nsAtomService.h \
 		nsCppSharedAllocator.h \
@@ -86,10 +88,11 @@ EXPORTS		= \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
 		nsQuickSort.h \
-    nsCharTraits.h \
-    nsAReadableString.h \
-    nsAWritableString.h \
-    nsSharedString.h \
+		nsCharTraits.h \
+		nsAReadableString.h \
+		nsAWritableString.h \
+		nsSharedString.h \
+		nsStatistics.h \
 		nsStr.h \
 		nsString.h \
 		nsString2.h \
@@ -99,6 +102,7 @@ EXPORTS		= \
 		nsUnitConversion.h \
 		nsVector.h \
 		nsVoidArray.h \
+		nsVoidBTree.h \
 		nsXPIDLString.h \
 		plvector.h \
 		nsTextFormatter.h \
