@@ -1057,10 +1057,10 @@ nsEventStateManager::CheckDisabled(nsIContent* aContent)
   nsCOMPtr<nsIAtom> tag;
   aContent->GetTag(*getter_AddRefs(tag));
 
-  if (nsHTMLAtoms::input == tag ||
-      nsHTMLAtoms::select == tag ||
-      nsHTMLAtoms::textarea == tag ||
-      nsHTMLAtoms::button == tag) {
+  if (nsHTMLAtoms::input == tag.get() ||
+      nsHTMLAtoms::select == tag.get() ||
+      nsHTMLAtoms::textarea == tag.get() ||
+      nsHTMLAtoms::button == tag.get()) {
     nsAutoString empty;
     if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, 
                                                            nsHTMLAtoms::disabled,
@@ -1738,7 +1738,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       PRBool hidden = PR_FALSE;
 
       child->GetTag(*getter_AddRefs(tag));
-      if (nsHTMLAtoms::input==tag) {
+      if (nsHTMLAtoms::input==tag.get()) {
         nsIDOMHTMLInputElement *nextInput;
         if (NS_OK == child->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
           nextInput->GetDisabled(&disabled);
@@ -1752,7 +1752,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
           NS_RELEASE(nextInput);
         }
       }
-      else if (nsHTMLAtoms::select==tag) {
+      else if (nsHTMLAtoms::select==tag.get()) {
         nsIDOMHTMLSelectElement *nextSelect;
         if (NS_OK == child->QueryInterface(kIDOMHTMLSelectElementIID,(void **)&nextSelect)) {
           nextSelect->GetDisabled(&disabled);
@@ -1760,7 +1760,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
           NS_RELEASE(nextSelect);
         }
       }
-      else if (nsHTMLAtoms::textarea==tag) {
+      else if (nsHTMLAtoms::textarea==tag.get()) {
         nsIDOMHTMLTextAreaElement *nextTextArea;
         if (NS_OK == child->QueryInterface(kIDOMHTMLTextAreaElementIID,(void **)&nextTextArea)) {
           nextTextArea->GetDisabled(&disabled);
@@ -1769,7 +1769,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         }
 
       }
-      else if(nsHTMLAtoms::a==tag) {
+      else if(nsHTMLAtoms::a==tag.get()) {
         nsIDOMHTMLAnchorElement *nextAnchor;
         if (NS_OK == child->QueryInterface(kIDOMHTMLAnchorElementIID,(void **)&nextAnchor)) {
           nextAnchor->GetTabIndex(&tabIndex);
@@ -1777,7 +1777,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         }
         disabled = PR_FALSE;
       }
-      else if(nsHTMLAtoms::button==tag) {
+      else if(nsHTMLAtoms::button==tag.get()) {
         nsIDOMHTMLButtonElement *nextButton;
         if (NS_OK == child->QueryInterface(kIDOMHTMLButtonElementIID,(void **)&nextButton)) {
           nextButton->GetTabIndex(&tabIndex);
@@ -1785,7 +1785,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
           NS_RELEASE(nextButton);
         }
       }
-      else if(nsHTMLAtoms::area==tag) {
+      else if(nsHTMLAtoms::area==tag.get()) {
         nsIDOMHTMLAreaElement *nextArea;
         if (NS_OK == child->QueryInterface(kIDOMHTMLAreaElementIID,(void **)&nextArea)) {
           nextArea->GetTabIndex(&tabIndex);
@@ -1793,7 +1793,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
         }
         disabled = PR_FALSE;
       }
-      else if(nsHTMLAtoms::object==tag) {
+      else if(nsHTMLAtoms::object==tag.get()) {
         nsIDOMHTMLObjectElement *nextObject;
         if (NS_OK == child->QueryInterface(kIDOMHTMLObjectElementIID,(void **)&nextObject)) {
           nextObject->GetTabIndex(&tabIndex);
