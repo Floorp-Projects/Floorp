@@ -16,7 +16,8 @@
  * Reserved.
  */
 
-
+#include "nsCOMPtr.h"
+#include "nsIPresShell.h"
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID       \
@@ -40,11 +41,6 @@ public:
    */
   NS_IMETHOD SetCaretReadOnly(PRBool inMakeReadonly) = 0;
 
-  /** Refresh
-   *  Refresh the caret after the frame it is being drawn in has painted
-   */
-  NS_IMETHOD Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect) = 0;
-
   /** GetWindowRelativeCoordinates
    *  Get the position of the caret in (top-level) window coordinates.
    *  If the selection is collapsed, this returns the caret location
@@ -63,4 +59,38 @@ public:
 };
 
 extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);
+
+
+// handy stack-based class for temporarily disabling the caret
+
+class StCaretHider
+{
+public:
+               StCaretHider(nsIPresShell* aPresShell)
+               :  mPresShell(nsnull)
+               ,  mWasVisible(PR_FALSE)
+               {
+                 mPresShell = aPresShell;		// addrefs
+                 if (mPresShell)
+                 {
+                   mPresShell->GetCaretEnabled(&mWasVisible);
+                   if (mWasVisible)
+                     mPresShell->SetCaretEnabled(PR_FALSE);
+                 }
+               }
+               
+               ~StCaretHider()
+               {
+                 if (mPresShell && mWasVisible)
+                   mPresShell->SetCaretEnabled(PR_TRUE);
+                 // nsCOMPtr releases mPresShell
+               }
+
+protected:
+
+    PRBool                  mWasVisible;
+    nsCOMPtr<nsIPresShell>  mPresShell;
+
+};
+
 

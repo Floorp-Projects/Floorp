@@ -49,7 +49,6 @@ class nsCaret : public nsICaret,
 
  		NS_IMETHOD    SetCaretVisible(PRBool inMakeVisible);
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
-  	NS_IMETHOD    Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
 		NS_IMETHOD 		GetWindowRelativeCoordinates(nsPoint& outCoordinates, PRBool& outIsCollapsed);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 	
@@ -73,8 +72,9 @@ class nsCaret : public nsICaret,
 		
 		void					GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsIView* &outView);
 		PRBool				SetupDrawingFrameAndOffset();
+		PRBool				MustDrawCaret();
 		void					RefreshDrawCaret(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect);
-		void 					DrawCaretWithContext(nsIRenderingContext& inRendContext);
+		void 					DrawCaretWithContext(nsIRenderingContext* inRendContext);
 
 		void					DrawCaret();
 		void					ToggleDrawnStatus()	{ 	mDrawn = !mDrawn; }
@@ -93,8 +93,6 @@ class nsCaret : public nsICaret,
 		PRBool								mDrawn;							// this should be mutable
 		
 		nsRect								mCaretRect;					// the last caret rect
-		nsIRenderingContext*	mRendContext;				// rendering context. We have to keep this around so that we can
-																							// erase the caret without doing all the frame searching again
 		nsIFrame*							mLastCaretFrame;		// store the frame the caret was last drawn in.
 		PRInt32								mLastContentOffset;
 };
