@@ -36,7 +36,7 @@
 #include "nsIButton.h"
 #include "nsITextWidget.h"
 #include "nsILookAndFeel.h"
-#include "nscolor.h"
+#include "nsColor.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -694,8 +694,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   mVerDirTxt->SetBackgroundColor(textBGColor);
   mVerDirTxt->SetForegroundColor(textFGColor);
   mVerDirTxt->SetFont(font);
-  nsString verStr(DEBUG_EMPTY);
-  mVerDirTxt->SetText(verStr);
+  mVerDirTxt->SetText(DEBUG_EMPTY);
   mVerDirTxt->Show(PR_TRUE);
 
   nsString str(DEBUG_EMPTY);
@@ -723,8 +722,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   mStopAfterTxt->SetFont(font);
   mStopAfterTxt->Show(PR_TRUE);
 
-  nsString str5000("5000");
-  mStopAfterTxt->SetText(str5000);
+  mStopAfterTxt->SetText("5000");
   x += 75 + 2;
 
   w = 75;
