@@ -278,7 +278,6 @@ void ExprLexer::parse(const String& pattern)
       start = iter;
       while (++iter < size && 
              XMLUtils::isNCNameChar(pattern.charAt(iter))) /* just go */ ;
-      PRUint32 end = iter;
       if (iter < size && pattern.charAt(iter)==COLON) {
         // try QName or wildcard, might need to step back for axis
         if (++iter < size)
@@ -292,13 +291,13 @@ void ExprLexer::parse(const String& pattern)
             iter--; // step back
       }
       if (nextIsOperatorToken(prevToken)) {
-        if (pattern.subString(start,end,subStr).isEqual(AND))
+        if (pattern.subString(start,iter,subStr).isEqual(AND))
           defType = Token::AND_OP;
-        else if (pattern.subString(start,end,subStr).isEqual(OR))
+        else if (pattern.subString(start,iter,subStr).isEqual(OR))
           defType = Token::OR_OP;
-        else if (pattern.subString(start,end,subStr).isEqual(MODULUS))
+        else if (pattern.subString(start,iter,subStr).isEqual(MODULUS))
           defType = Token::MODULUS_OP;
-        else if (pattern.subString(start,end,subStr).isEqual(DIVIDE))
+        else if (pattern.subString(start,iter,subStr).isEqual(DIVIDE))
           defType = Token::DIVIDE_OP;
         else {
           // Error "operator expected"
