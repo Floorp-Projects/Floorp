@@ -1,0 +1,14 @@
+# script to watch for cores during QA runs, so they won't overwrite one
+# another
+
+echo $$ >>"${KILLPIDS}"     #so Exit() can hopefully kill this shell
+while [ 1 ]
+do
+	for w in `find $1 -name "core" -print`
+	do
+		echo "Found core $w"
+		mv $w $w.`date +%H%M%S`
+	done
+	sleep 30
+done
+
