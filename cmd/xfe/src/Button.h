@@ -135,6 +135,34 @@ protected:
 	
 	static  void tip_cb(Widget, XtPointer, XtPointer cb_data);
 	virtual void tipCB(Widget, XtPointer cb_data);
+
+ 	virtual void	tipStringObtain	(XmString *		stringReturn,
+ 									 Boolean *		needToFreeString);
+	
+ 	virtual void	docStringObtain	(XmString *		stringReturn,
+ 									 Boolean *		needToFreeString);
+	
+ 	virtual void	docStringSet	(XmString		string);
+ 	virtual void	docStringClear	(XmString		string);
+
+
+private:
+
+ 	static void		tipStringObtainCB	(Widget			w,
+ 										 XtPointer		clientData,
+ 										 XmString *		stringReturn,
+ 										 Boolean *		needToFreeString);
+
+ 	static void		docStringObtainCB	(Widget			w,
+ 										 XtPointer		clientData,
+ 										 XmString *		stringReturn,
+ 										 Boolean *		needToFreeString);
+
+ 	static void		docStringCB			(Widget			w,
+ 										 XtPointer		clientData,
+ 										 unsigned char	reason,
+ 										 XmString		string);
+
 };
 
 extern void fe_buttonSetPixmaps(Widget button,IconGroup * group);

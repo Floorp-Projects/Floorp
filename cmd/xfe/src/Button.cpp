@@ -34,6 +34,8 @@
 #include <Xfe/BmCascade.h>
 #include <Xm/XmAll.h>
 
+#include <Xfe/ToolTip.h>
+
 #include "xpgetstr.h"			// for XP_GetString()
 extern int XFE_UNTITLED;
 
@@ -230,13 +232,24 @@ XFE_Button::createButton(Widget parent,WidgetClass wc)
 				  &XFE_Button::activate_cb,
 				  (XtPointer) this);
 
-	/* Add tooltip to button */
-#if 1
-	fe_AddTipStringCallback(button, XFE_Button::tip_cb, this);
-#else
-	// Add tooltip to button
-	fe_WidgetAddToolTips(button);
-#endif
+	// Add tip string support
+	XfeTipStringAdd(button);
+
+	XfeTipStringSetObtainCallback(button,
+								  &XFE_Button::tipStringObtainCB,
+								  (XtPointer) this);
+
+	// Add doc string support
+	XfeDocStringAdd(button);
+
+	XfeDocStringSetObtainCallback(button,
+								  &XFE_Button::docStringObtainCB,
+								  (XtPointer) this);
+    
+	XfeDocStringSetCallback(button,
+							&XFE_Button::docStringCB,
+							(XtPointer) this);
+
 	return button;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -669,6 +682,90 @@ fe_buttonSetPixmaps(Widget button,IconGroup * ig)
 	if (ac)
 	{
 		XtSetValues(button,av,ac);
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Tool tip support
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_Button::tipStringObtain(XmString *	stringReturn,
+							Boolean *	needToFreeString)
+{
+// 	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+// 	char *		psz = frame->getTipString(m_cmd);
+
+	*stringReturn = XfeTipStringGetFromAppDefaults(m_widget);
+	*needToFreeString = False;
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_Button::docStringObtain(XmString *	stringReturn,
+							Boolean *	needToFreeString)
+{
+//	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+//	char *		psz = frame->getDocString(m_cmd);
+
+	*stringReturn = XfeDocStringGetFromAppDefaults(m_widget);
+	*needToFreeString = False;
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_Button::docStringSet(XmString /* string */)
+{
+	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+
+	frame->notifyInterested(Command::commandArmedCallback,(void*) m_cmd);
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_Button::docStringClear(XmString /* string */)
+{
+	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+
+	frame->notifyInterested(Command::commandDisarmedCallback, (void*) m_cmd);
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_Button::tipStringObtainCB(Widget		/* w */,
+							  XtPointer		clientData,
+							  XmString *	stringReturn,
+							  Boolean *		needToFreeString)
+{
+	XFE_Button * button = (XFE_Button *) clientData;
+
+	button->tipStringObtain(stringReturn,needToFreeString);
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_Button::docStringObtainCB(Widget		/* w */,
+							  XtPointer		clientData,
+							  XmString *	stringReturn,
+							  Boolean *		needToFreeString)
+{
+	XFE_Button * button = (XFE_Button *) clientData;
+
+	button->docStringObtain(stringReturn,needToFreeString);
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_Button::docStringCB(Widget			/* w */,
+						XtPointer		clientData,
+						unsigned char	reason,
+						XmString		string)
+{
+	XFE_Button * button = (XFE_Button *) clientData;
+
+	if (reason == XfeDOC_STRING_SET)
+	{
+ 		button->docStringSet(string);
+	}
+	else if (reason == XfeDOC_STRING_CLEAR)
+	{
+ 		button->docStringClear(string);
 	}
 }
 //////////////////////////////////////////////////////////////////////////

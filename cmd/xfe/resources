@@ -5244,10 +5244,27 @@ from the network, or save to a file and then play from the file?
 @CLASS@*tipShell.borderColor: Black
 @CLASS@*tipShell.borderWidth: 1
 
+!!
+!! Tool Tips
+!!
+@CLASS@*ToolTipShell*background:		#FFFFCC
+@CLASS@*ToolTipShell*foreground:		black
+@CLASS@*ToolTipShell.borderColor:		black
+@CLASS@*ToolTipShell.borderWidth:		1
+@CLASS@*ToolTipShell.shadowThickness:	0
+
+@CLASS@*ToolTipLabel.fontList:			-*-helvetica-medium-r-*-*-*-120-*-*-*-*-iso8859-*
+@CLASS@*ToolTipLabel.marginLeft:		2
+@CLASS@*ToolTipLabel.marginRight:		2
+@CLASS@*ToolTipLabel.marginTop:			2
+@CLASS@*ToolTipLabel.marginBottom:		2
+
+@CLASS@*ToolTipLabel.shadowThickness:	1
+
+
 !
 ! Browser documentation and tip strings
 !
-
 ! Navigator/Toolbar (tip strings and special documentation strings)
 *back.tipString:		            Go to previous page
 *forward.tipString:		            Go to next page
