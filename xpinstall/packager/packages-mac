@@ -99,6 +99,7 @@ viewer:Components:universalchardet.shlb
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
 viewer:Components:Composer.shlb 
+viewer:Components:composer.xpt
 viewer:Components:content.shlb
 viewer:Components:content.xpt
 viewer:Components:cookie.xpt 
