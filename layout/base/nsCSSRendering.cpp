@@ -2438,12 +2438,15 @@ FindCanvasBackground(nsIPresContext* aPresContext,
           nsCOMPtr<nsIDOMHTMLElement> body;
           htmlDoc->GetBody(getter_AddRefs(body));
           nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
-          nsCOMPtr<nsIPresShell> shell;
-          aPresContext->GetShell(getter_AddRefs(shell));
-          nsIFrame *bodyFrame;
-          shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
-          if (bodyFrame)
-            ::GetStyleData(bodyFrame, &result);
+          NS_ASSERTION(bodyContent, "no body node"); // bug 118829
+          if (bodyContent) {
+            nsCOMPtr<nsIPresShell> shell;
+            aPresContext->GetShell(getter_AddRefs(shell));
+            nsIFrame *bodyFrame;
+            nsresult rv = shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
+            if (NS_SUCCEEDED(rv) && bodyFrame)
+              ::GetStyleData(bodyFrame, &result);
+          }
         }
       }
     }
