@@ -25,7 +25,7 @@
 
 #define     APPLICATION_LANGUAGE    "en"
 
-#define		VERSION_MAJOR_STR		"5.0 Development"
+#define		VERSION_MAJOR_STR		"5.0a1 Development"
 #define		VERSION_MINOR_STR		""
 #define		VERSION_STRING			VERSION_MAJOR_STR VERSION_MINOR_STR
 #define 	VERSION_LANG			"en"	// e.g. en, ja, de, fr
