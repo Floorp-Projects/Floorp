@@ -37,7 +37,6 @@ test();
 //-----------------------------------------------------------------------------
 
 
-
 function test()
 {
   enterFunc ('test');
@@ -63,7 +62,7 @@ function test()
 // Try to provoke a crash -
 function tryThis(sCode)
 {
-  // sometimes more than one attempt was necessary -
+  // sometimes more than one attempt is necessary -
   for (var i=0; i<cnUBOUND; i++)
   {
     try
