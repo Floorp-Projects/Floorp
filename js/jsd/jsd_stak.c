@@ -298,6 +298,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  const jschar *bytes, uintN length,
                                  const char *filename, uintN lineno, jsval *rval)
 {
+#if HAVE_PATCH_FROM_77081
     JSBool retval;
     JSBool valid;
     JSExceptionState* exceptionState;
@@ -323,6 +324,9 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
     JS_RestoreExceptionState(cx, exceptionState);
 
     return retval;
+#else
+    return JS_FALSE;
+#endif
 }
 
 JSBool
