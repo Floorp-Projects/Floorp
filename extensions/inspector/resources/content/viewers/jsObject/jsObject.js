@@ -51,7 +51,6 @@ var viewer;
 //////////// global constants ////////////////////
 
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
-const kGlobalClipboard     = Components.interfaces.nsIClipboard.kGlobalClipboard;
 
 //////////////////////////////////////////////////
 
@@ -137,7 +136,7 @@ JSObjectViewer.prototype =
       var val = sel.__JSValue__;
       if (val) {
         var helper = XPCU.getService(kClipboardHelperCID, "nsIClipboardHelper");
-        helper.copyStringToClipboard(val, kGlobalClipboard);    
+        helper.copyString(val);
       }
     }
   },
