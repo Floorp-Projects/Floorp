@@ -1295,6 +1295,14 @@ NS_IMETHODIMP nsScrollingView :: GetControlInsets(nsMargin &aInsets) const
   return NS_OK;
 }
 
+NS_IMETHODIMP nsScrollingView :: GetScrollbarVisibility(PRBool *aVerticalVisible,
+                                                        PRBool *aHorizontalVisible) const
+{
+  *aVerticalVisible = mVScrollBarView && ViewIsShowing(mVScrollBarView);
+  *aHorizontalVisible = mHScrollBarView && ViewIsShowing(mHScrollBarView);
+  return NS_OK;
+}
+
 void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
 {
   PRInt32           numkids;

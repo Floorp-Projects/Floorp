@@ -60,6 +60,8 @@ public:
   NS_IMETHOD  ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
   NS_IMETHOD  SetControlInsets(const nsMargin &aInsets);
   NS_IMETHOD  GetControlInsets(nsMargin &aInsets) const;
+  NS_IMETHOD  GetScrollbarVisibility(PRBool *aVerticalVisible,
+                                     PRBool *aHorizontalVisible) const;
 
   //private
   virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
