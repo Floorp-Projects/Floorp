@@ -1163,6 +1163,7 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
     fputs(buf, out);
     NS_RELEASE(tag);
   }
+  fprintf(out, "@%p", mContent);
 
   ListAttributes(out);
 
