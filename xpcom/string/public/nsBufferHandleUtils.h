@@ -66,7 +66,7 @@ template <class HandleT, class CharT>
 HandleT*
 NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const basic_nsAReadableString<CharT>& aDataSource, PRUint32 aAdditionalCapacity=1 )
   {
-    typedef const CharT* CharT_ptr;
+    typedef CharT* CharT_ptr;
 
       // figure out the number of bytes needed the |HandleT| part, including padding to correctly align the data part
     size_t handle_size    = NS_AlignedHandleSize(aDummyHandlePtr, CharT_ptr(0));
@@ -84,7 +84,6 @@ NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, const basic
 
     if ( handle_ptr )
       {
-        typedef CharT* CharT_ptr;
         CharT* data_start_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, handle_ptr) + handle_size);
         CharT* data_end_ptr   = data_start_ptr + data_length;
         CharT* buffer_end_ptr = data_start_ptr + buffer_length;
