@@ -51,7 +51,7 @@ interface nsIDOMElement;
  */
 
 [scriptable, uuid(99ec6694-535f-11d4-9a58-000064657374)]
-interface nsISOAPFault:nsISupports {
+interface nsISOAPFault : nsISupports {
   /**
    * The DOM element representing the fault in the response SOAP message.
    * This must be set for the rest of the interface to function correctly.

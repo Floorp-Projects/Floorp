@@ -38,10 +38,6 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsISchemaType;
 interface nsISOAPEncoding;
 interface nsIVariant;
@@ -53,7 +49,7 @@ interface nsISOAPAttachments;
  */
 
 [scriptable, uuid(fc33ffd6-1dd1-11b2-8750-fa62430a38b4)]
-interface nsISOAPEncoder:nsISupports {
+interface nsISOAPEncoder : nsISupports {
 
   /**
    * Encode the source variant.
@@ -79,10 +75,10 @@ interface nsISOAPEncoder:nsISupports {
    * @param aAttachments Accumulates any attachments.
    */
   nsIDOMElement encode(in nsISOAPEncoding aEncoding,
-		       in nsIVariant aSource,
-		       in AString aNamespaceURI,
-		       in AString aName,
-		       in nsISchemaType aSchemaType,
-		       in nsISOAPAttachments aAttachments,
-		       in nsIDOMElement aDestination);
+                       in nsIVariant aSource,
+                       in AString aNamespaceURI,
+                       in AString aName,
+                       in nsISchemaType aSchemaType,
+                       in nsISOAPAttachments aAttachments,
+                       in nsIDOMElement aDestination);
 };

@@ -51,7 +51,7 @@ interface nsISOAPAttachments;
  */
 
 [scriptable, uuid(4c2e02ae-1dd2-11b2-b1cd-c79dea3d46db)]
-interface nsISOAPDecoder:nsISupports {
+interface nsISOAPDecoder : nsISupports {
 
   /**
    * Decode the source DOM node
@@ -70,7 +70,7 @@ interface nsISOAPDecoder:nsISupports {
    *   the operation failed or did not return a result.
    */
   nsIVariant decode(in nsISOAPEncoding aEncoding,
-		    in nsIDOMElement aSource,
-		    in nsISchemaType aSchemaType,
-		    in nsISOAPAttachments aAttachments);
+                    in nsIDOMElement aSource,
+                    in nsISchemaType aSchemaType,
+                    in nsISOAPAttachments aAttachments);
 };

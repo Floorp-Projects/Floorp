@@ -38,16 +38,12 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 /**
  * This interface permits attachment of SOAP attachments.
  */
 
 [scriptable, uuid(6192dcbe-1dd2-11b2-81ad-a4597614c4ae)]
-interface nsISOAPAttachments:nsISupports {
+interface nsISOAPAttachments : nsISupports {
 
   /**
    * Get the attachment associated with a particular identifier.

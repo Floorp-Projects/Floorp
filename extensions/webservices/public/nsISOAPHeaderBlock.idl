@@ -38,10 +38,6 @@
 
 #include "nsISOAPBlock.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsIDOMElement;
 interface nsIVariant;
 interface nsISOAPEncoding;
@@ -55,7 +51,7 @@ interface nsISchemaType;
  */
 
 [scriptable, uuid(063d4a4e-1dd2-11b2-a365-cbaf1651f140)]
-interface nsISOAPHeaderBlock:nsISOAPBlock {
+interface nsISOAPHeaderBlock : nsISOAPBlock {
   /**
    * The actor URI of the header block.  If element is set,
    *   then this is a computed value.  If this is modified,

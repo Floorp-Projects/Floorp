@@ -49,7 +49,7 @@ interface nsISOAPResponseListener;
  */
 
 [scriptable, uuid(86114dd8-1dd2-11b2-ab2b-91d0c995e03a)]
-interface nsISOAPCallCompletion:nsISupports {
+interface nsISOAPCallCompletion : nsISupports {
 
   /**
    * The call which was invoked (may have changed since

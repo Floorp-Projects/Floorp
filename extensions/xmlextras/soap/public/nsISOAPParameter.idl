@@ -50,7 +50,7 @@ interface nsISchemaType;
  */
 
 [scriptable, uuid(99ec6690-535f-11d4-9a58-000064657374)]
-interface nsISOAPParameter:nsISOAPBlock {
+interface nsISOAPParameter : nsISOAPBlock {
 };
 
 %{C++

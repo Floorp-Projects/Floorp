@@ -38,10 +38,6 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsIDOMElement;
 interface nsISOAPService;
 interface nsISOAPEncodingRegistry;

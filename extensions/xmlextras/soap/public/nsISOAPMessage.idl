@@ -38,10 +38,6 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsIDOMDocument;
 interface nsIDOMElement;
 interface nsISOAPEncoding;
@@ -61,7 +57,7 @@ interface nsIVariant;
  */
 
 [scriptable, uuid(3970815e-1dd2-11b2-a475-db4dac6826f1)]
-interface nsISOAPMessage:nsISupports {
+interface nsISOAPMessage : nsISupports {
 
   const unsigned short VERSION_1_1 = 0;
   const unsigned short VERSION_1_2 = 1;
@@ -173,14 +169,14 @@ interface nsISOAPMessage:nsISupports {
    *   encoded, which may null if there are no parameters.
    */
   void encode(in unsigned short aVersion,
-	      in AString aMethodName, in AString aTargetObjectURI,
-	      in unsigned long aHeaderBlockCount,
-	      [array,
-	       size_is(aHeaderBlockCount)] in nsISOAPHeaderBlock
-	      aHeaderBlocks, in unsigned long aParameterCount,[array,
-							  size_is
-							  (aParameterCount)]
-	      in nsISOAPParameter aParameters);
+              in AString aMethodName, in AString aTargetObjectURI,
+              in unsigned long aHeaderBlockCount,
+              [array,
+               size_is(aHeaderBlockCount)] in nsISOAPHeaderBlock
+              aHeaderBlocks, in unsigned long aParameterCount,[array,
+                                                          size_is
+                                                          (aParameterCount)]
+              in nsISOAPParameter aParameters);
 
   /**
    * Gathers the header blocks of a message so that they can be
@@ -192,8 +188,8 @@ interface nsISOAPMessage:nsISupports {
    * @return Array of header blocks found in the message.
    */
   void getHeaderBlocks(out unsigned long aCount,
-		       [array, size_is(aCount),
-			retval] out nsISOAPHeaderBlock aHeaderBlocks);
+                       [array, size_is(aCount),
+                        retval] out nsISOAPHeaderBlock aHeaderBlocks);
 
   /**
    * Gathers the parameters of a message so that they can be
@@ -210,9 +206,9 @@ interface nsISOAPMessage:nsISupports {
    * @return Array of parameters found in the message.
    */
   void getParameters(in boolean aDocumentStyle,
-		     out unsigned long aCount,
-		     [array, size_is(aCount),
-		      retval] out nsISOAPParameter aParameters);
+                     out unsigned long aCount,
+                     [array, size_is(aCount),
+                     retval] out nsISOAPParameter aParameters);
 
   /**
    * The primary encoding of the message, which is established

@@ -38,10 +38,6 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsIDOMElement;
 interface nsIVariant;
 interface nsISOAPEncoding;
@@ -69,7 +65,7 @@ interface nsISOAPAttachments;
  */
 
 [scriptable, uuid(843afaa8-1dd2-11b2-8b0d-9b5d16fe64ea)]
-interface nsISOAPBlock:nsISupports {
+interface nsISOAPBlock : nsISupports {
   /**
    *  Initialize the block for additional decoding information.
    *
@@ -78,7 +74,7 @@ interface nsISOAPBlock:nsISupports {
    * @param aVersion SOAP version for decoding special header attributes.
    */
   void init(in nsISOAPAttachments aAttachments,
-	    in unsigned short aVersion);
+            in unsigned short aVersion);
 
   /**
    *  The namespace URI of the block.  Ignored if name is null.

@@ -38,10 +38,6 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsIPropertyBag;
 interface nsIVariant;
 
@@ -52,7 +48,7 @@ interface nsIVariant;
  */
 
 [scriptable, uuid(f34cb3c8-1dd1-11b2-8a18-a93a99d92c08)]
-interface nsISOAPPropertyBagMutator:nsISupports {
+interface nsISOAPPropertyBagMutator : nsISupports {
   /**
    * The property bag that is being constructed.
    * After the mutator is destroyed, this is

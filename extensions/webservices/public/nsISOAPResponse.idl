@@ -50,7 +50,7 @@ interface nsISOAPFault;
  */
 
 [scriptable, uuid(99ec6691-535f-11d4-9a58-000064657374)]
-interface nsISOAPResponse:nsISOAPMessage {
+interface nsISOAPResponse : nsISOAPMessage {
   /**
    * The fault returned in the response, if one was generated. NULL
    * if there was no fault.  This does not rely on the response

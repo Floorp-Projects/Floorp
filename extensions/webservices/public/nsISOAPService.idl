@@ -49,7 +49,7 @@ interface nsISOAPResponseListener;
  *   if it is not.  Services may be chained.
  */
 [scriptable, uuid(9927fa40-1dd1-11b2-a8d1-857ad21b872c)]
-interface nsISOAPService:nsISupports {
+interface nsISOAPService : nsISupports {
   /**
    * Configuration object that may contain more info on the service
    */
@@ -68,7 +68,7 @@ interface nsISOAPService:nsISupports {
    *   recorded in the message.
    */
   boolean process(in nsISOAPMessage aMessage,
-		  in nsISOAPResponseListener aListener);
+                  in nsISOAPResponseListener aListener);
 };
 
 %{C++

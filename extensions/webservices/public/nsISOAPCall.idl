@@ -39,10 +39,6 @@
 #include "nsISupports.idl"
 #include "nsISOAPMessage.idl"
 
-%{ C++
-#include "nsAWritableString.h"
-%} 
-
 interface nsISOAPResponse;
 interface nsISOAPResponseListener;
 interface nsISOAPCallCompletion;
@@ -57,7 +53,7 @@ interface nsISOAPCallCompletion;
  */
 
 [scriptable, uuid(a8fefe40-52bc-11d4-9a57-000064657374)]
-interface nsISOAPCall:nsISOAPMessage {
+interface nsISOAPCall : nsISOAPMessage {
 
   /**
    * The URI to which the message will be sent, identifying the

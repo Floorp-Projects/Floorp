@@ -45,7 +45,7 @@ interface nsISOAPResponseListener;
 interface nsISOAPCallCompletion;
 
 [scriptable, uuid(99ec6695-535f-11d4-9a58-000064657374)]
-interface nsISOAPTransport:nsISupports {
+interface nsISOAPTransport : nsISupports {
 
   /**
    * Send the specified message to the specified destination.
@@ -76,8 +76,8 @@ interface nsISOAPTransport:nsISupports {
    *   null if listener is null.
    */
   nsISOAPCallCompletion asyncCall(in nsISOAPCall aCall,
-				  in nsISOAPResponseListener aListener,
-				  in nsISOAPResponse aResponse);
+                                  in nsISOAPResponseListener aListener,
+                                  in nsISOAPResponse aResponse);
 
   /**
    * Add listener for unsolicited messages arriving on the transport.  Listeners
@@ -95,7 +95,7 @@ interface nsISOAPTransport:nsISupports {
    *   later-declared services.
    */
   void addListener(in nsISOAPTransportListener aListener,
-		   in boolean aCapture);
+                   in boolean aCapture);
 
   /**
    * Remove listener for unsolicited messages arriving on the transport.  This
@@ -110,7 +110,7 @@ interface nsISOAPTransport:nsISupports {
    *   may be registered as both).
    */
   void removeListener(in nsISOAPTransportListener aListener,
-		      in boolean aCapture);
+                      in boolean aCapture);
 };
 
 %{C++

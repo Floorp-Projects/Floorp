@@ -63,7 +63,7 @@ interface nsISchemaCollection;
  */
 
 [scriptable, uuid(9ae49600-1dd1-11b2-877f-e62f620c5e92)]
-interface nsISOAPEncoding:nsISupports {
+interface nsISOAPEncoding : nsISupports {
 
   /**
    * The name of the encoding as it is known to SOAP.
@@ -88,7 +88,7 @@ interface nsISOAPEncoding:nsISupports {
    *   does not exist and it was not requested that it be created.
    */
   nsISOAPEncoding getAssociatedEncoding(in AString aStyleURI,
-					in boolean aCreateIf);
+                                        in boolean aCreateIf);
 
   /**
     * Set an encoder in the encoding.
@@ -171,11 +171,11 @@ interface nsISOAPEncoding:nsISupports {
    * @return The element which was inserted and encoded.
    */
   nsIDOMElement encode(in nsIVariant aSource,
-		       in AString aNamespaceURI,
-		       in AString aName,
-		       in nsISchemaType aSchemaType,
-		       in nsISOAPAttachments aAttachments,
-		       in nsIDOMElement aDestination);
+                       in AString aNamespaceURI,
+                       in AString aName,
+                       in nsISchemaType aSchemaType,
+                       in nsISOAPAttachments aAttachments,
+                       in nsIDOMElement aDestination);
 
   /**
    * Decode the source DOM node
@@ -194,8 +194,8 @@ interface nsISOAPEncoding:nsISupports {
    *   the operation failed or did not return a result.
    */
   nsIVariant decode(in nsIDOMElement aSource,
-		    in nsISchemaType aSchemaType,
-		    in nsISOAPAttachments aAttachments);
+                    in nsISchemaType aSchemaType,
+                    in nsISOAPAttachments aAttachments);
   /**
    * Map an external schema URI to an internal one.  In an
    * ideal world, we don't need this, but schemas change URIs,
