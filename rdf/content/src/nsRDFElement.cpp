@@ -1519,7 +1519,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     //
     // XXX Changing the object's identity is a big deal: we actually need to
     // toss the kids and recreate them. We don't do that here.
-    if (mDocument && aName == kIdAtom) { // XXX regardless of namespace
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kIdAtom) { // XXX regardless of namespace
       nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
       NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
       if (rdfDoc) {
@@ -1560,7 +1560,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
     // XXX Changing the object's identity is a big deal: we actually need to
     // toss the kids and recreate them. We don't do that here.
-    if (mDocument && aName == kIdAtom) { // XXX regardless of namespace
+    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && aName == kIdAtom) { // XXX regardless of namespace
       nsCOMPtr<nsIRDFDocument> rdfDoc( do_QueryInterface(mDocument) );
       NS_ASSERTION(rdfDoc != nsnull, "not an RDF document");
       if (rdfDoc) {

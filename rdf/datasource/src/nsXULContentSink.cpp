@@ -971,7 +971,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
         SplitQualifiedName(key, nameSpaceID, attr);
 
 		// Look for XUL:ID
-        if (nameSpaceID != kNameSpaceID_XUL)
+        if (nameSpaceID != kNameSpaceID_None)
             continue;
 
         if (attr == kXULID) {
@@ -1027,8 +1027,8 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
         // skip xul:id (and potentially others in the future). These
         // are all "special" and should've been dealt with by the
         // caller.
-        if ((nameSpaceID == kNameSpaceID_XUL) &&
-            (attr.EqualsIgnoreCase(kXULID)))
+        if ((nameSpaceID == kNameSpaceID_None) &&
+            (attr == kXULID))
             continue;
 
         v = aNode.GetValueAt(i);
