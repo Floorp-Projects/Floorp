@@ -31,8 +31,7 @@
 #include "nsLayoutAtoms.h"
 
 #undef NOISY_MAX_ELEMENT_SIZE
-
-static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
+#undef NOISY_SPACEMANAGER
 
 nsresult
 NS_NewAreaFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
@@ -68,7 +67,7 @@ nsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kAreaFrameIID)) {
+  if (aIID.Equals(kIAreaFrameIID)) {
     nsIAreaFrame* tmp = (nsIAreaFrame*)this;
     *aInstancePtr = (void*)tmp;
     return NS_OK;
@@ -210,7 +209,7 @@ nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
   return nsBlockFrame::FirstChild(aListName, aFirstChild);
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 NS_IMETHODIMP
 nsAreaFrame::Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -295,6 +294,18 @@ nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
 }
 
 NS_IMETHODIMP
+nsAreaFrame::GetSpaceManager(nsISpaceManager** aSpaceManagerResult)
+{
+  if (!aSpaceManagerResult) {
+    NS_WARNING("null ptr");
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aSpaceManagerResult = mSpaceManager;
+  NS_IF_ADDREF(mSpaceManager);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -336,12 +347,32 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
     reflowState.mSpaceManager = mSpaceManager;
 
-    // Clear the spacemanager's regions.
+    // Clear the spacemanager's regions
     mSpaceManager->ClearRegions();
   }
 
+#ifdef NOISY_SPACEMANAGER
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    if (mSpaceManager) {
+      ListTag(stdout);
+      printf(": space-manager before reflow\n");
+      mSpaceManager->List(stdout);
+    }
+  }
+#endif
+
   // Let the block frame do its reflow first
   rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+#ifdef NOISY_SPACEMANAGER
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    if (mSpaceManager) {
+      ListTag(stdout);
+      printf(": space-manager after reflow\n");
+      mSpaceManager->List(stdout);
+    }
+  }
+#endif
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage

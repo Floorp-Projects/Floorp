@@ -88,7 +88,7 @@ public:
   NS_IMETHOD  DidReflow(nsIPresContext&   aPresContext,
                         nsDidReflowStatus aStatus);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
@@ -110,6 +110,8 @@ public:
 
   // nsIAreaFrame
   NS_IMETHOD GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
+
+  NS_IMETHOD GetSpaceManager(nsISpaceManager** aSpaceManagerResult);
 
 protected:
   nsAreaFrame();
