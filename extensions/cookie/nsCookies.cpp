@@ -81,6 +81,7 @@
 #endif
 
 static const char *kCookiesFileName = "cookies.txt";
+static const char* kWhitespace="\b\t\r\n ";
 
 MODULE_PRIVATE time_t 
 cookie_ParseDate(char *date_string);
@@ -1178,7 +1179,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     ptr = PL_strcasestr(semi_colon, "path=");
     if(ptr) {
       nsCAutoString path(ptr+5);
-      path.CompressWhitespace();
+      path.Trim(kWhitespace);
       CKutil_StrAllocCopy(path_from_header, path.get());
       /* terminate at first space or semi-colon */
       for(ptr=path_from_header; *ptr != '\0'; ptr++) {
@@ -1216,7 +1217,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       }
       domain.Append(ptr);
 
-      domain.CompressWhitespace();
+      domain.Trim(kWhitespace);
       CKutil_StrAllocCopy(domain_from_header, domain.get());
 
       /* terminate at first space or semi-colon */
@@ -1346,11 +1347,11 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       *equal = '\0';
 
   nsCAutoString cookieHeader(setCookieHeaderInternal);
-  cookieHeader.CompressWhitespace();
+  cookieHeader.Trim(kWhitespace);
   if(equal) {
     CKutil_StrAllocCopy(name_from_header, cookieHeader.get());
     nsCAutoString value(equal+1);
-    value.CompressWhitespace();
+    value.Trim(kWhitespace);
     CKutil_StrAllocCopy(cookie_from_header, value.get());
   } else {
     CKutil_StrAllocCopy(cookie_from_header, cookieHeader.get());
