@@ -24,6 +24,7 @@
    -                 Colin Phillips <colinp@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 Karl Guertin <grayrest@grayrest.com> 
+   -                 Dan Parent <danp@oeone.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -85,6 +86,7 @@
 <broadcasterset>
   <broadcaster id="delete_command" disabled="true"/>
   <broadcaster id="modify_command" disabled="true"/>
+  <broadcaster id="send_event_command" disabled="true"/>
 </broadcasterset>
 
 
@@ -100,6 +102,8 @@
 
 <!-- Javascript includes -->
 
+<!-- NEEDED FOR MAIL SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
