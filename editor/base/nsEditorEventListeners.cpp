@@ -26,6 +26,7 @@
 #include "nsIEditProperty.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
+#include "nsIStringStream.h"
 
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
@@ -230,10 +231,12 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   PRUint32 keyCode;
   PRBool isShift;
   PRBool ctrlKey;
+  PRBool altKey;
   
   if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
       NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
-      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey))
+      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
+      NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey))
       ) 
   {
     // XXX: please please please get these mappings from an external source!
@@ -308,6 +311,28 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           if (mEditor)
           {
             mEditor->SetTextProperty(nsIEditProperty::italic);
+          }
+        }
+
+      // Hardcoded Insert Arbitrary HTML
+        else if (PR_TRUE==altKey)
+        {
+          printf("Trying to insert HTML\n");
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsString nsstr ("<b>This is bold <em>and emphasized</em></b>");
+            nsCOMPtr<nsISupports> supp;
+            nsresult res = NS_NewStringInputStream(getter_AddRefs(supp),
+                                                   nsstr);
+            if (NS_SUCCEEDED(res))
+            {
+              nsCOMPtr<nsIInputStream> stream = do_QueryInterface(supp);
+              res = mEditor->Insert(stream);
+              if (!NS_SUCCEEDED(res))
+                printf("nsTextEditor::Insert(stream) failed\n");
+            }
+            else printf("Couldn't create the input stream\n");
           }
         }
         break;
