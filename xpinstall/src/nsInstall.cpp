@@ -2520,23 +2520,32 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
     }
     else
     {
-        // extract to the final destination.
         nsCOMPtr<nsIFile> temp;
         aSuggestedName->Clone(getter_AddRefs(temp));
-        tempFile = do_QueryInterface(temp, &rv);
+        tempFile = do_QueryInterface(temp, &rv); //convert to an nsILocalFile
         if (tempFile == nsnull)
             return nsInstall::OUT_OF_MEMORY;
+    
+        //get the leafname so we can convert its extension to .new
+        nsXPIDLCString leafName;
+        tempFile->GetLeafName(getter_Copies(leafName));
+        nsCString newLeafName (leafName);
+
+        PRInt32 extpos = newLeafName.RFindChar('.');
+        if (extpos != -1)
+        {
+            // We found the extension; 
+            newLeafName.Truncate(extpos + 1); //strip off the old extension
+        }
+        newLeafName.Append("new");
+    
+        //Now reset the leafname
+        tempFile->SetLeafName(newLeafName.get());
 
         MakeUnique(tempFile);
         extractHereSpec = tempFile;
     }
 
-    // We will overwrite what is in the way.  is this something that we want to do?  
-    extractHereSpec->Delete(PR_FALSE);
-
-    //nsCOMPtr<nsILocalFile> file;
-    //rv = NS_NewLocalFile(*extractHereSpec, PR_TRUE, getter_AddRefs(file));
-    //if (NS_SUCCEEDED(rv))
     rv = mJarFileData->Extract(nsAutoCString(aJarfile), extractHereSpec);
     if (NS_FAILED(rv)) 
     {
