@@ -309,7 +309,7 @@ DWORD nsListBox::WindowStyle()
 {
   DWORD style = (LBS_NOINTEGRALHEIGHT | WS_BORDER | WS_CHILD | WS_CLIPSIBLINGS | WS_VSCROLL);
   if (mMultiSelect) 
-    style = LBS_MULTIPLESEL | style;
+    style = LBS_MULTIPLESEL | LBS_EXTENDEDSEL | style;
 
   return style;
 }
