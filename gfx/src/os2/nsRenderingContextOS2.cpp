@@ -54,10 +54,9 @@
 #include "prprf.h"
 
 // helper clip region functions - defined at the bottom of this file.
-LONG GpiCombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lOp);
-HRGN GpiCopyClipRegion( HPS hps);
-#define GpiDestroyClipRegion(hps) GpiCombineClipRegion(hps, 0, CRGN_COPY)
-#define GpiSetClipRegion2(hps,hrgn) GpiCombineClipRegion(hps, hrgn, CRGN_COPY)
+LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode);
+HRGN OS2_CopyClipRegion( HPS hps);
+#define OS2_SetClipRegion2(hps,hrgn) OS2_CombineClipRegion(hps, hrgn, CRGN_COPY)
 
 // Use these instead of native GpiSave/RestorePS because: need to store ----
 // more information, and need to be able to push from onscreen & pop onto
@@ -510,7 +509,7 @@ nsresult nsRenderingContextOS2::PushState()
    NS_IF_ADDREF( mFontMetrics);
 
    // clip region: get current & copy it.
-   state->mClipRegion = GpiCopyClipRegion( mSurface->mPS);
+   state->mClipRegion = OS2_CopyClipRegion( mSurface->mPS);
 
    // push state onto stack
    state->mNext = mStateStack;
@@ -540,7 +539,7 @@ nsresult nsRenderingContextOS2::PopState( PRBool &aClipEmpty)
    state->mFontMetrics = nsnull;
 
    // Clip region
-   GpiSetClipRegion2( mSurface->mPS, state->mClipRegion);
+   OS2_SetClipRegion2( mSurface->mPS, state->mClipRegion);
    if( state->mClipRegion != 0)
    {
       state->mClipRegion = 0;
@@ -649,9 +648,9 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
          NS2PM_INEX( trect, rcl);
          HRGN hrgn = GpiCreateRegion( mSurface->mPS, 1, &rcl);
          if( hrgn && aCombine == nsClipCombine_kReplace)
-            lrc = GpiSetClipRegion2( mSurface->mPS, hrgn);
+            lrc = OS2_SetClipRegion2( mSurface->mPS, hrgn);
          else if( hrgn)
-            lrc = GpiCombineClipRegion( mSurface->mPS, hrgn, CRGN_OR);
+            lrc = OS2_CombineClipRegion( mSurface->mPS, hrgn, CRGN_OR);
          break;
       }
       default:
@@ -718,7 +717,7 @@ nsresult nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, nsClipC
          break;
    }
 
-   long lrc = GpiCombineClipRegion( mSurface->mPS, hrgn, cmode);
+   long lrc = OS2_CombineClipRegion( mSurface->mPS, hrgn, cmode);
 
    aClipEmpty = (lrc == RGN_NULL) ? PR_TRUE : PR_FALSE;
 
@@ -764,7 +763,7 @@ nsresult nsRenderingContextOS2::GetClipRegion( nsIRegion **aRegion)
  */
 nsresult nsRenderingContextOS2::CopyClipRegion(nsIRegion &aRegion)
 {
-  HRGN hr = GpiCopyClipRegion(mSurface->mPS);
+  HRGN hr = OS2_CopyClipRegion(mSurface->mPS);
 
   if (hr == HRGN_ERROR)
     return NS_ERROR_FAILURE;
@@ -883,7 +882,7 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
       areaBundle.lColor = lColor;
       lineBundle.lColor = lColor;
 
-      if (((nsDeviceContextOS2 *) mContext)->mDC )
+      if (((nsDeviceContextOS2 *) mContext)->mPrintDC )
       {
 
          areaBundle.lBackColor = CLR_BACKGROUND;
@@ -1160,8 +1159,7 @@ nsresult nsRenderingContextOS2::DrawArc( const nsRect& aRect,
                                          float aStartAngle, float aEndAngle)
 {
    nsRect tRect( aRect);
-   PMDrawArc( tRect, PR_FALSE, PR_FALSE,
-              (PRInt32)aStartAngle, (PRInt32)aEndAngle);
+   PMDrawArc( tRect, PR_FALSE, PR_FALSE, aStartAngle, aEndAngle);
    return NS_OK;
 }
 
@@ -1169,8 +1167,7 @@ nsresult nsRenderingContextOS2::DrawArc( nscoord aX, nscoord aY, nscoord aWidth,
                                          float aStartAngle, float aEndAngle)
 {
    nsRect tRect( aX, aY, aWidth, aHeight);
-   PMDrawArc( tRect, PR_FALSE, PR_FALSE,
-              (PRInt32)aStartAngle, (PRInt32)aEndAngle);
+   PMDrawArc( tRect, PR_FALSE, PR_FALSE, aStartAngle, aEndAngle);
    return NS_OK;
 }
 
@@ -1178,8 +1175,7 @@ nsresult nsRenderingContextOS2::FillArc( const nsRect& aRect,
                                          float aStartAngle, float aEndAngle)
 {
    nsRect tRect( aRect);
-   PMDrawArc( tRect, PR_TRUE, PR_FALSE,
-              (PRInt32)aStartAngle, (PRInt32)aEndAngle);
+   PMDrawArc( tRect, PR_TRUE, PR_FALSE, aStartAngle, aEndAngle);
    return NS_OK;
 }
 
@@ -1187,14 +1183,12 @@ nsresult nsRenderingContextOS2::FillArc( nscoord aX, nscoord aY, nscoord aWidth,
                                          float aStartAngle, float aEndAngle)
 {
    nsRect tRect( aX, aY, aWidth, aHeight);
-   PMDrawArc( tRect, PR_TRUE, PR_FALSE,
-              (PRInt32)aStartAngle, (PRInt32)aEndAngle);
+   PMDrawArc( tRect, PR_TRUE, PR_FALSE, aStartAngle, aEndAngle);
    return NS_OK;
 }
 
-void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
-                                       PRBool bFull,
-                                       PRInt32 start, PRInt32 end)
+void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFull,
+                                       float start, float end)
 {
    // convert coords
    mTMatrix.TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
@@ -1203,10 +1197,6 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
    NS2PM_ININ( rect, rcl);
 
    SetupDrawingColor();
-
-   long lOps = DRO_OUTLINE;
-   if( bFilled)
-      lOps |= DRO_FILL;
 
    // set arc params.
    long lWidth = rect.width / 2;
@@ -1219,23 +1209,27 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
    rcl.yBottom += lHeight;
    GpiMove( mSurface->mPS, (PPOINTL)&rcl);
 
+
    if( bFull)
    {
+      long lOps = (bFilled) ? DRO_OUTLINEFILL : DRO_OUTLINE;
+
       // draw ellipse
       GpiFullArc( mSurface->mPS, lOps, MAKEFIXED(1,0));
    }
    else
    {
-      PRInt32 Sweep = (end % 360) - (start % 360);
+      FIXED StartAngle = (FIXED)(start * 65536.0) % MAKEFIXED (360, 0);
+      FIXED EndAngle   = (FIXED)(end * 65536.0) % MAKEFIXED (360, 0);
+      FIXED SweepAngle = EndAngle - StartAngle;
 
-      if (Sweep < 0) Sweep += 360;
+      if (SweepAngle < 0) SweepAngle += MAKEFIXED (360, 0);
 
       // draw an arc or a pie
       if( bFilled)
       {
          GpiBeginArea( mSurface->mPS, BA_BOUNDARY);
-         GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0),
-                        MAKEFIXED(start,0), MAKEFIXED(Sweep,0));
+         GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0), StartAngle, SweepAngle);
          GpiEndArea( mSurface->mPS);
       }
       else
@@ -1243,12 +1237,10 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
          // draw an invisible partialarc to get to the start of the arc.
          long lLineType = GpiQueryLineType( mSurface->mPS);
          GpiSetLineType( mSurface->mPS, LINETYPE_INVISIBLE);
-         GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0),
-                        MAKEFIXED(0,0), MAKEFIXED(start,0));
+         GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0), StartAngle, MAKEFIXED (0,0));
          // now draw a real arc
          GpiSetLineType( mSurface->mPS, lLineType);
-         GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0),
-                        MAKEFIXED(start,0), MAKEFIXED(Sweep,0));
+         GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0), StartAngle, SweepAngle);
       }
    }
 }
@@ -1262,141 +1254,211 @@ NS_IMETHODIMP nsRenderingContextOS2::GetHints(PRUint32& aResult)
   return NS_OK;
 }
 
-nsresult nsRenderingContextOS2::DrawString( const char *aString,
-                                            PRUint32 aLength,
-                                            nscoord aX, nscoord aY,
-                                            const nscoord* aSpacing)
+NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(char ch, nscoord& aWidth)
 {
-   mTMatrix.TransformCoord( &aX, &aY);
-   POINTL ptl = { aX, aY };
-   NS2PM( &ptl, 1);
-
-   SetupFontAndColor();
-
-   // the pointl we are at is the top of the charbox.  We need to find the
-   // baseline for output, so dec by the lMaxAscender.
-   ptl.y -= ((nsFontMetricsOS2*)mFontMetrics)->GetDevMaxAscender();
-
-   // there's clearly a conspiracy to make this method as slow as is
-   // humanly possible...
-   int dxMem[200];
-   int *dx0 = 0;
-   if( aSpacing)
-   {
-      dx0 = dxMem;
-      if( aLength > 500)
-         dx0 = new int[ aLength];
-      mTMatrix.ScaleXCoords( aSpacing, aLength, dx0);
-   }
-
-   GpiMove( mSurface->mPS, &ptl);
-
-   PRUint32 lLength = aLength;
-   const char *aStringTemp = aString;
-   // GpiCharString has a max length of 512 chars at a time...
-   while( lLength)
-   {
-      ULONG thislen = min( lLength, 512);
-      GpiCharStringPos( mSurface->mPS, nsnull,
-                        aSpacing == nsnull ? 0 : CHS_VECTOR,
-                        thislen, (PCH)aStringTemp,
-                        aSpacing == nsnull ? nsnull : (PLONG) dx0);
-      lLength -= thislen;
-      aStringTemp += thislen;
-      dx0 += thislen;
-   }
-
-   return NS_OK;
+  char buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth);
 }
 
-nsresult nsRenderingContextOS2::DrawString( const PRUnichar *aString, PRUint32 aLength,
-                                            nscoord aX, nscoord aY,
-                                            PRInt32 aFontID,
-                                            const nscoord* aSpacing)
+NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
-  char buf[1024];
-
-  int newLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
-
-  return DrawString( buf, newLength, aX, aY, aSpacing);
+  PRUnichar buf[1];
+  buf[0] = ch;
+  return GetWidth(buf, 1, aWidth, aFontID);
 }
 
-nsresult nsRenderingContextOS2::DrawString( const nsString& aString,
-                                            nscoord aX, nscoord aY,
-                                            PRInt32 aFontID,
-                                            const nscoord* aSpacing)
+NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString, nscoord& aWidth)
 {
-   return DrawString( aString.GetUnicode(), aString.Length(),
-                      aX, aY, aFontID, aSpacing);
+  return GetWidth(aString, strlen(aString), aWidth);
 }
 
-// Width-getting methods for string-drawing.  Finally in a sensible place!
-NS_IMETHODIMP nsRenderingContextOS2::GetWidth( char ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString,
+                                                PRUint32 aLength,
+                                                nscoord& aWidth)
 {
-   // Optimize spaces; happens *very* often!
-   if( ch == ' ' && mFontMetrics)
-   {
-      aWidth = ((nsFontMetricsOS2*)mFontMetrics)->GetSpaceWidth(this);
-      return NS_OK;
-   }
+  if (nsnull != mFontMetrics)
+  {
+    // Check for the very common case of trying to get the width of a single
+    // space.
+    if ((1 == aLength) && (aString[0] == ' '))
+    {
+      nsFontMetricsOS2* fontMetricsOS2 = (nsFontMetricsOS2*)mFontMetrics;
+      return fontMetricsOS2->GetSpaceWidth(aWidth);
+    }
 
-   char buf[1];
-   buf[0] = ch;
-   return GetWidth( buf, 1, aWidth);
+    SIZEL size;
+
+    SetupFontAndColor();
+    ::GetTextExtentPoint32(mSurface->mPS, aString, aLength, &size);
+    aWidth = NSToCoordRound(float(size.cx) * mP2T);
+
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2::GetWidth( PRUnichar ch, nscoord &aWidth,
-                                               PRInt32 */*aFontID*/)
+NS_IMETHODIMP
+nsRenderingContextOS2::GetWidth(const char *aString,
+                                PRInt32     aLength,
+                                PRInt32     aAvailWidth,
+                                PRInt32*    aBreaks,
+                                PRInt32     aNumBreaks,
+                                nscoord&    aWidth,
+                                PRInt32&    aNumCharsFit,
+                                PRInt32*    aFontID = nsnull)
 {
-   if( ch == 32 && mFontMetrics)
-   {
-      aWidth = ((nsFontMetricsOS2*)mFontMetrics)->GetSpaceWidth(this);
-      return NS_OK;
-   }
+  NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
 
-   PRUnichar buf[1];
-   buf[0] = ch;
-   return GetWidth( buf, 1, aWidth);
+  if (nsnull != mFontMetrics) {
+    // If we need to back up this state represents the last place we could
+    // break. We can use this to avoid remeasuring text
+    struct PrevBreakState {
+      PRInt32   mBreakIndex;
+      nscoord   mWidth;    // accumulated width to this point
+
+      PrevBreakState() {
+        mBreakIndex = -1;  // not known (hasn't been computed)
+        mWidth = 0;
+      }
+    };
+
+    // Initialize OUT parameter
+    aNumCharsFit = 0;
+
+    // Setup the font and foreground color
+    SetupFontAndColor();
+
+    // Iterate each character in the string and determine which font to use
+    nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
+    PrevBreakState    prevBreakState;
+    nscoord           width = 0;
+    PRInt32           start = 0;
+    nscoord           aveCharWidth;
+    metrics->GetAveCharWidth(aveCharWidth);
+
+    while (start < aLength) {
+      // Estimate how many characters will fit. Do that by diving the available
+      // space by the average character width. Make sure the estimated number
+      // of characters is at least 1
+      PRInt32 estimatedNumChars = 0;
+      if (aveCharWidth > 0) {
+        estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+      }
+      if (estimatedNumChars < 1) {
+        estimatedNumChars = 1;
+      }
+
+      // Find the nearest break offset
+      PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+      PRInt32 breakIndex;
+      nscoord numChars;
+
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      if (aLength < estimatedBreakOffset) {
+        // All the characters should fit
+        numChars = aLength - start;
+        breakIndex = aNumBreaks - 1;
+
+      } else {
+        breakIndex = prevBreakState.mBreakIndex;
+        while (((breakIndex + 1) < aNumBreaks) &&
+               (aBreaks[breakIndex + 1] <= estimatedBreakOffset)) {
+          breakIndex++;
+        }
+        if (breakIndex == prevBreakState.mBreakIndex) {
+          breakIndex++; // make sure we advanced past the previous break index
+        }
+        numChars = aBreaks[breakIndex] - start;
+      }
+
+      // Measure the text
+      nscoord twWidth;
+      if ((1 == numChars) && (aString[start] == ' ')) {
+        metrics->GetSpaceWidth(twWidth);
+
+      } else {
+        SIZEL size;
+        ::GetTextExtentPoint32(mSurface->mPS, &aString[start], numChars, &size);
+        twWidth = NSToCoordRound(float(size.cx) * mP2T);
+      }
+
+      // See if the text fits
+      PRBool  textFits = (twWidth + width) <= aAvailWidth;
+
+      // If the text fits then update the width and the number of
+      // characters that fit
+      if (textFits) {
+        aNumCharsFit += numChars;
+        width += twWidth;
+        start += numChars;
+
+        // This is a good spot to back up to if we need to so remember
+        // this state
+        prevBreakState.mBreakIndex = breakIndex;
+        prevBreakState.mWidth = width;
+
+      } else {
+        // See if we can just back up to the previous saved state and not
+        // have to measure any text
+        if (prevBreakState.mBreakIndex > 0) {
+          // If the previous break index is just before the current break index
+          // then we can use it
+          if (prevBreakState.mBreakIndex == (breakIndex - 1)) {
+            aNumCharsFit = aBreaks[prevBreakState.mBreakIndex];
+            width = prevBreakState.mWidth;
+            break;
+          }
+        }
+          
+        // We can't just revert to the previous break state
+        if (0 == breakIndex) {
+          // There's no place to back up to so even though the text doesn't fit
+          // return it anyway
+          aNumCharsFit += numChars;
+          width += twWidth;
+          break;
+        }
+
+        // Repeatedly back up until we get to where the text fits or we're all
+        // the way back to the first word
+        width += twWidth;
+        while ((breakIndex >= 1) && (width > aAvailWidth)) {
+          start = aBreaks[breakIndex - 1];
+          numChars = aBreaks[breakIndex] - start;
+          
+          if ((1 == numChars) && (aString[start] == ' ')) {
+            metrics->GetSpaceWidth(twWidth);
+
+          } else {
+            SIZEL size;
+            ::GetTextExtentPoint32(mSurface->mPS, &aString[start], numChars, &size);
+            twWidth = NSToCoordRound(float(size.cx) * mP2T);
+          }
+
+          width -= twWidth;
+          aNumCharsFit = start;
+          breakIndex--;
+        }
+        break;
+      }
+    }
+
+    aWidth = width;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const char *aString,
-                                               nscoord &aWidth)
-{
-   return GetWidth( aString, strlen(aString), aWidth);
-}
 
 NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const nsString &aString,
                                                nscoord &aWidth,
-                                               PRInt32 */*aFontID*/)
+                                               PRInt32 *aFontID)
 {
-   return GetWidth( aString.GetUnicode(), aString.Length(), aWidth);
-}
-
-NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const char* aString,
-                                               PRUint32 aLength,
-                                               nscoord &aWidth)
-{
-   PRUint32 sum = 0;
-   PRUint32 lLength = aLength;
-
-   SetupFontAndColor(); // select font
-
-   POINTL ptls[ 5];
-
-   const char* aStringTemp = aString;
-
-   while( lLength) // max data to gpi function is 512 chars.
-   {
-      ULONG thislen = min( lLength, 512);
-      GpiQueryTextBox( mSurface->mPS, thislen, (PCH) aStringTemp, 5, ptls);
-      sum += ptls[ TXTBOX_CONCAT].x;
-      lLength -= thislen;
-      aStringTemp += thislen;
-   }
-
-   aWidth = NSToCoordRound(float(sum) * mP2T);
-
-   return NS_OK;
+   return GetWidth( aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
@@ -1411,6 +1473,67 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
   temp = GetWidth( buf, newLength, aWidth);
   return temp;
 }
+
+
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 aLength,
+                                                  nscoord aX, nscoord aY,
+                                                  const nscoord* aSpacing)
+{
+  NS_PRECONDITION(mFontMetrics,"Something is wrong somewhere");
+
+  // Take care of ascent and specifies the drawing on the baseline
+  nscoord ascent;
+  mFontMetrics->GetMaxAscent(ascent);
+  aY += ascent;
+
+  PRInt32 x = aX;
+  PRInt32 y = aY;
+
+  SetupFontAndColor();
+
+  INT dxMem[500];
+  INT* dx0;
+  if (nsnull != aSpacing) {
+    dx0 = dxMem;
+    if (aLength > 500) {
+      dx0 = new INT[aLength];
+    }
+    mTMatrix.ScaleXCoords(aSpacing, aLength, dx0);
+  }
+  mTMatrix.TransformCoord(&x, &y);
+
+  POINTL ptl = { x, y };
+  NS2PM( &ptl, 1);
+
+  ::ExtTextOut(mSurface->mPS, ptl.x, ptl.y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
+
+  if ((nsnull != aSpacing) && (dx0 != dxMem)) {
+    delete [] dx0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
+{
+  char buf[1024];
+
+  int newLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
+
+  return DrawString( buf, newLength, aX, aY, aSpacing);
+}
+
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
+{
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
+}
+
 
 // Image drawing: just proxy on to the image object, so no worries yet.
 nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY)
@@ -1521,7 +1644,7 @@ nsresult nsRenderingContextOS2::CopyOffScreenBits(
    {
       // Set clip region on dest surface to be that from the hps
       // in the passed-in drawing surface.
-      GpiSetClipRegion2( hpsTarget, GpiCopyClipRegion( theSurf->mPS));
+      OS2_SetClipRegion2( hpsTarget, OS2_CopyClipRegion( theSurf->mPS));
    }
 
    // Windows wants to select palettes here.  I don't think I do.
@@ -1571,55 +1694,46 @@ nsresult nsRenderingContextOS2::RetrieveCurrentNativeGraphicData(PRUint32* ngd)
 /* hrgnCombine becomes the clip region.  Any current clip region is       */
 /* dealt with.  hrgnCombine may be NULLHANDLE.                            */
 /* Return value is lComplexity.                                           */
-/* lOp should be CRGN_*                                                   */
-LONG GpiCombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lOp)
+/* lMode should be CRGN_*                                                 */
+LONG OS2_CombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lMode)
 {
-   if( !hps) return RGN_ERROR;
+   if (!hps) return RGN_ERROR;
 
-   /* Get current hps clip region */
-   HRGN hrgnClip = 0;
-   if( GpiQueryClipRegion( hps))
+   HRGN hrgnClip = NULL;
+   LONG rc;
+
+   GpiSetClipRegion (hps, NULL, &hrgnClip);    // Get the current clip region and deselect it
+
+   if (hrgnClip && hrgnClip != HRGN_ERROR)
    {
-      GpiSetClipRegion( hps, 0, &hrgnClip);
-
-      if( hrgnClip && hrgnClip != HRGN_ERROR)
-      {
-         /* There is a clip region; combine it with new one if necessary */
-         if( lOp != CRGN_COPY)
-            GpiCombineRegion( hps, hrgnCombine, hrgnClip, hrgnCombine, lOp);
-         if( !GpiDestroyRegion( hps, hrgnClip))
-            PMERROR( "GpiDestroyRegion");
-      }
+      if (lMode != CRGN_COPY)    // If necessarry combine with previous clip region
+         GpiCombineRegion (hps, hrgnCombine, hrgnClip, hrgnCombine, lMode);
+      
+      if (!GpiDestroyRegion (hps, hrgnClip))
+         PMERROR( "GpiDestroyRegion [Gpi_CombineClipRegion]");
    }
 
-   /* hrgnCombine is the correct clip region, & hrgnClip is invalid */
-   hrgnClip = 0;
-   return GpiSetClipRegion( hps, hrgnCombine, &hrgnClip);
+   rc = GpiSetClipRegion (hps, hrgnCombine, NULL);  // Set new clip region
+
+   return rc;
 }
 
 /* Return value is HRGN_                                                  */
-HRGN GpiCopyClipRegion( HPS hps)
+HRGN OS2_CopyClipRegion( HPS hps)
 {
-   if( !hps) return HRGN_ERROR;
+  if (!hps) return HRGN_ERROR;
 
-   HRGN hrgn = 0;
-   if( GpiQueryClipRegion( hps))
-   {
-      HRGN hrgnClip = 0;
-      GpiSetClipRegion( hps, 0, &hrgnClip);
-      if( hrgnClip != HRGN_ERROR)
-      {
-         hrgn = GpiCreateRegion( hps, 0, 0);
-         GpiCombineRegion( hps, hrgn, hrgnClip, 0, CRGN_COPY);
-         /* put the current clip back */
-         HRGN hrgnDummy = 0;
-         GpiSetClipRegion( hps, hrgnClip, &hrgnDummy);
-      }
-      else
-         hrgn = HRGN_ERROR;
-   }
+  HRGN hrgn, hrgnClip;
 
-   return hrgn;
+  GpiSetClipRegion (hps, 0, &hrgnClip);        // Get current clip region
+  if (hrgnClip && hrgnClip != HRGN_ERROR)
+  {
+     hrgn = GpiCreateRegion (hps, 0, NULL);    // Create empty region and combine with current
+     GpiCombineRegion (hps, hrgn, hrgnClip, 0, CRGN_COPY);
+     GpiSetClipRegion (hps, hrgnClip, NULL);   // restore current clip region
+  }
+
+  return hrgn;
 }
 
 // Keep coordinate within 32-bit limits

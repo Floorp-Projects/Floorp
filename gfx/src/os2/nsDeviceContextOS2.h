@@ -102,8 +102,8 @@ protected:
   static PRUint32 sNumberOfScreens;
 
 public:
-  HDC                   mDC;
-  HPS                   mPS;
+  HDC                   mPrintDC;
+  HPS                   mPrintPS;
 
   static PRBool gRound;
   static int    PrefChanged(const char* aPref, void* aClosure);

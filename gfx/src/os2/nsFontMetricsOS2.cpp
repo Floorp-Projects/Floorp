@@ -181,10 +181,11 @@ InitGlobals(void)
 
 nsFontMetricsOS2::nsFontMetricsOS2()
 {
-   NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
+  mSpaceWidth = 0;
   ++gFontMetricsOS2Count;
-   // members are zeroed by new operator (hmm) - yeah right
-   mTriedAllGenerics = 0;
+  // members are zeroed by new operator (hmm) - yeah right
+  mTriedAllGenerics = 0;
 }
   
 nsFontMetricsOS2::~nsFontMetricsOS2()
@@ -287,7 +288,6 @@ static nsFontFamilyName gFamilyNameTable[] =
   { "times roman",     "Times New Roman" },
   { "times new roman", "Times New Roman" },
   { "arial",           "Arial" },
-  { "helvetica",       "Helv" },
   { "courier",         "Courier" },
   { "courier new",     "Courier New" },
 
@@ -304,7 +304,6 @@ static nsFontFamilyName gFamilyNameTableDBCS[] =
   { "times roman",     "Times New Roman" },
   { "times new roman", "Times New Roman" },
   { "arial",           "Arial" },
-  { "helvetica",       "Helv Combined" },
   { "courier",         "Courier" },
   { "courier new",     "Courier New" },
 
@@ -567,8 +566,8 @@ nsresult res;
 HWND  win = NULL;
 HDC   ps = NULL;
   
-  if (NULL != mDeviceContext->mDC){
-    ps = mDeviceContext->mPS;
+  if (NULL != mDeviceContext->mPrintDC){
+    ps = mDeviceContext->mPrintPS;
   } else {
     win = (HWND)mDeviceContext->mWidget;
     ps = ::WinGetPS(win);
@@ -645,19 +644,10 @@ HDC   ps = NULL;
    if (!fh)
      return NS_ERROR_OUT_OF_MEMORY;
 
-   // 2) Get a representative PS for doing font queries into
-   HPS hps;
-
-   if (NULL != mDeviceContext->mDC){
-     hps = mDeviceContext->mPS;
-   } else {
-     hps = WinGetPS((HWND)mDeviceContext->mWidget);
-   }
-
    // 3) Work out what our options are wrt. image/outline, prefer image.
    BOOL bOutline = FALSE, bImage = FALSE;
    long lFonts = 0; int i;
-   PFONTMETRICS pMetrics = getMetrics( lFonts, szFamily, hps);
+   PFONTMETRICS pMetrics = getMetrics( lFonts, szFamily, ps);
 
    for( i = 0; i < lFonts && !(bImage && bOutline); i++)
       if( pMetrics[ i].fsDefn & FM_DEFN_OUTLINE) bOutline = TRUE;
@@ -676,7 +666,7 @@ HDC   ps = NULL;
                         0,
                         bItalic ? FTYPE_ITALIC : 0 };
    
-   ULONG rc = GpiQueryFaceString( hps, szFamily, &fnd,
+   ULONG rc = GpiQueryFaceString( ps, szFamily, &fnd,
                                   FACESIZE, fh->fattrs.szFacename);
    if( rc == GPI_ERROR)
    {  // no real font, fake it
@@ -704,6 +694,7 @@ HDC   ps = NULL;
           if (!strcmp(name, gCharSetInfo[j].mLangGroup)) {
             fh->fattrs.usCodePage = gCharSetInfo[j].mCodePage;
             mCodePage = gCharSetInfo[j].mCodePage;
+            break;
           } /* endif */
        } /* endif */
     } /* endfor */
@@ -738,10 +729,10 @@ HDC   ps = NULL;
    //    required, substituting an outline if necessary.
    if( bImage)
    {
-      HDC    hdc = GpiQueryDevice( hps);
+      HDC    hdc = GpiQueryDevice( ps);
       long   res[ 2];
       DevQueryCaps( hdc, CAPS_HORIZONTAL_FONT_RES, 2, res);
-      pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, hps);
+      pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, ps);
 
       
       int curPoints = 0;
@@ -775,12 +766,12 @@ HDC   ps = NULL;
 
    // 9) Record font handle & record various font metrics to cache
    mFontHandle = fh;
-   if( GPI_ERROR == GpiCreateLogFont( hps, 0, 1, &fh->fattrs))
+   if( GPI_ERROR == GpiCreateLogFont( ps, 0, 1, &fh->fattrs))
       PMERROR( "GpiCreateLogFont");
-   fh->SelectIntoPS( hps, 1);
+   fh->SelectIntoPS( ps, 1);
 
    FONTMETRICS fm;
-   GpiQueryFontMetrics( hps, sizeof fm, &fm);
+   GpiQueryFontMetrics( ps, sizeof fm, &fm);
 
    float dev2app;
    mDeviceContext->GetDevUnitsToAppUnits( dev2app);
@@ -814,29 +805,26 @@ HDC   ps = NULL;
    mUnderlinePosition  = NSToCoordRound( -fm.lUnderscorePosition * dev2app);
    mUnderlineSize      = NSToCoordRound( fm.lUnderscoreSize * dev2app);
 
-   // OS/2 field (needs to be kept in sync with mMaxAscent)
-   mDevMaxAscent       = fm.lMaxAscender;
+   mAveCharWidth       = NSToCoordRound( fm.lAveCharWidth * dev2app);
+
+   // Cache the width of a single space.
+  SIZEL  size;
+  ::GetTextExtentPoint32(ps, " ", 1, &size);
+  mSpaceWidth = NSToCoordRound(float(size.cx) * dev2app);
 
    // 10) Clean up
-   GpiSetCharSet( hps, LCID_DEFAULT);
-   if( !GpiDeleteSetId( hps, 1))
+   GpiSetCharSet( ps, LCID_DEFAULT);
+   if( !GpiDeleteSetId( ps, 1))
       PMERROR( "GpiDeleteSetID (FM)");
-   if (NULL == mDeviceContext->mDC)
-      WinReleasePS(hps);
+   if (NULL == mDeviceContext->mPrintDC)
+      WinReleasePS(ps);
 
    return NS_OK;
 }
 
-nscoord nsFontMetricsOS2::GetSpaceWidth( nsIRenderingContext *aRContext)
+nsresult nsFontMetricsOS2 :: GetSpaceWidth(nscoord &aSpaceWidth)
 {
-   if( !mSpaceWidth)
-   {
-      char buf[1];
-      buf[0] = ' ';
-      aRContext->GetWidth( buf, 1, mSpaceWidth);
-   }
-
-   return mSpaceWidth;
+  aSpaceWidth = mSpaceWidth;
 }
 
 // Other metrics
@@ -958,6 +946,13 @@ NS_IMETHODIMP
 nsFontMetricsOS2::GetMaxHeight(nscoord &aHeight)
 {
   aHeight = mMaxHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsOS2::GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
   return NS_OK;
 }
 

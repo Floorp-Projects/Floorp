@@ -131,15 +131,23 @@ public:
                      float aStartAngle, float aEndAngle);
 
   NS_IMETHOD GetWidth(char aC, nscoord& aWidth);
-  NS_IMETHOD GetWidth( PRUnichar aC, nscoord& aWidth,
-                      PRInt32 *aFontID = nsnull);
-  NS_IMETHOD GetWidth( const nsString& aString, nscoord& aWidth,
-                      PRInt32 *aFontID = nsnull);
+  NS_IMETHOD GetWidth(PRUnichar aC, nscoord& aWidth,
+                      PRInt32 *aFontID);
+  NS_IMETHOD GetWidth(const nsString& aString, nscoord& aWidth,
+                      PRInt32 *aFontID);
   NS_IMETHOD GetWidth(const char* aString, nscoord& aWidth);
   NS_IMETHOD GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
-  NS_IMETHOD GetWidth( const PRUnichar* aString, PRUint32 aLength,
-                      nscoord& aWidth, PRInt32 *aFontID = nsnull);
-#if 0 // OS2TODO
+  NS_IMETHOD GetWidth(const char *aString,
+                      PRInt32     aLength,
+                      PRInt32     aAvailWidth,
+                      PRInt32*    aBreaks,
+                      PRInt32     aNumBreaks,
+                      nscoord&    aWidth,
+                      PRInt32&    aNumCharsFit,
+                      PRInt32*    aFontID);
+  NS_IMETHOD GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                      nscoord& aWidth, PRInt32 *aFontID);
+#ifndef XP_OS2
   NS_IMETHOD GetWidth(const PRUnichar *aString,
                       PRInt32          aLength,
                       PRInt32          aAvailWidth,
@@ -222,7 +230,7 @@ private:
   // Primitive draw-ers
   void PMDrawRect( nsRect &rect, BOOL fill);
   void PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoints, PRBool bFilled);
-  void PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFull, PRInt32 start=0, PRInt32 end=0);
+  void PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFull, float start=0, float end=0);
 
 protected:
 
