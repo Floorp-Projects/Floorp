@@ -28,6 +28,7 @@
 #include "nsIFileTransportService.h"
 #include "nsConnectionGroup.h"
 #include <ctype.h>      // for isalpha
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -148,24 +149,25 @@ nsNetService::MakeAbsoluteUrl(const char* aSpec,
 
 NS_IMETHODIMP
 nsNetService::NewUrl(const char* aSpec,
-                     nsIUrl* aBaseUrl,
-                     nsIUrl* *result)
+                     nsIUrl* *result,
+                     nsIUrl* aBaseUrl)
 {
     nsresult rv;
     char schemeBuf[MAX_SCHEME_LENGTH];
     const char* scheme = schemeBuf;
     rv = GetScheme(aSpec, schemeBuf);
     if (NS_FAILED(rv)) {
-        rv = aBaseUrl->GetScheme(&scheme);
+        if (aBaseUrl)
+            rv = aBaseUrl->GetScheme(&scheme);
         if (NS_FAILED(rv)) return rv;
     }
     
-    nsIProtocolHandler* handler;
-    rv = GetProtocolHandler(scheme, &handler);
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
     rv = handler->NewUrl(aSpec, aBaseUrl, result);
-    NS_RELEASE(handler);
+    //NS_RELEASE(handler);
     return rv;
 }
 
@@ -243,7 +245,7 @@ nsresult NS_NewURL(nsIUrl** aInstancePtrResult,
                                                (nsISupports **)&inet);
     if (NS_FAILED(rv)) return rv;
 
-    rv = inet->NewUrl(aSpec, aBaseUrl, aInstancePtrResult);
+    rv = inet->NewUrl(aSpec, aInstancePtrResult, aBaseUrl);
 
     if (NS_FAILED(rv)) return rv;
 

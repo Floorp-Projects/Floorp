@@ -39,13 +39,13 @@ class nsIProtocolHandler : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROTOCOLHANDLER_IID);
 
-    NS_IMETHOD GetScheme(const char* *result) = 0;
+    NS_IMETHOD GetScheme(const char* *result) const = 0;
 
-    NS_IMETHOD GetDefaultPort(PRInt32 *result) = 0;    
+    NS_IMETHOD GetDefaultPort(PRInt32 *result) const = 0;    
 
     NS_IMETHOD MakeAbsoluteUrl(const char* aSpec,
                                nsIUrl* aBaseUrl,
-                               char* *result) = 0;
+                               char* *result) const = 0;
 
     /**
      * Makes a URL object that is suitable for loading by this protocol.
@@ -55,7 +55,7 @@ public:
      */
     NS_IMETHOD NewUrl(const char* aSpec,
                       nsIUrl* aBaseUrl,
-                      nsIUrl* *result) = 0;
+                      nsIUrl* *result) const = 0;
 
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,

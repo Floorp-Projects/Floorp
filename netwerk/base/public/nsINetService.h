@@ -67,8 +67,8 @@ public:
      * on the resulting URL object to obtain a more specific type of URL.
      */
     NS_IMETHOD NewUrl(const char* aSpec,
-                      nsIUrl* aBaseUrl,
-                      nsIUrl* *result) = 0;
+                        nsIUrl* *result,
+                        nsIUrl* aBaseUrl=0) = 0;
 
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
