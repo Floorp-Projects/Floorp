@@ -105,6 +105,10 @@ pref("font.name.serif.x-central-euro", "times");
 pref("font.name.sans-serif.x-central-euro", "helvetica");
 pref("font.name.monospace.x-central-euro", "courier");
 
+pref("font.name.serif.x-unicode", "times");
+pref("font.name.sans-serif.x-unicode", "helvetica");
+pref("font.name.monospace.x-unicode", "courier");
+
 pref("font.name.serif.x-western", "times");
 pref("font.name.sans-serif.x-western", "helvetica");
 pref("font.name.monospace.x-western", "courier");
