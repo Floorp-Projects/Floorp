@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:41:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.2 $ $Date: 2000/04/04 02:36:46 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "seccomon.h"
@@ -65,29 +65,38 @@ static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.1 $ $Date: 
  * W2 = 110111xxxxxxxxxx
  */
 
-#if !defined(IS_BIG_ENDIAN) && !defined(IS_LITTLE_ENDIAN)
-#error "NSPR should be defining IS_BIG_ENDIAN or IS_LITTLE_ENDIAN"
-#endif
+/*
+ * This code is assuming NETWORK BYTE ORDER for the 16- and 32-bit
+ * character values.  If you wish to use this code for working with
+ * host byte order values, define the following:
+ *
+ * #if IS_BIG_ENDIAN
+ * #define L_0 0
+ * #define L_1 1
+ * #define L_2 2
+ * #define L_3 3
+ * #define H_0 0
+ * #define H_1 1
+ * #else / * not everyone has elif * /
+ * #if IS_LITTLE_ENDIAN
+ * #define L_0 3
+ * #define L_1 2
+ * #define L_2 1
+ * #define L_3 0
+ * #define H_0 1
+ * #define H_1 0
+ * #else
+ * #error "PDP and NUXI support deferred"
+ * #endif / * IS_LITTLE_ENDIAN * /
+ * #endif / * IS_BIG_ENDIAN * /
+ */
 
-#if IS_BIG_ENDIAN
 #define L_0 0
 #define L_1 1
 #define L_2 2
 #define L_3 3
 #define H_0 0
 #define H_1 1
-#else /* not everyone has elif */
-#if IS_LITTLE_ENDIAN
-#define L_0 3
-#define L_1 2
-#define L_2 1
-#define L_3 0
-#define H_0 1
-#define H_1 0
-#else
-#error "PDP and NUXI support deferred"
-#endif /* IS_LITTLE_ENDIAN */
-#endif /* IS_BIG_ENDIAN */
 
 PR_IMPLEMENT(PRBool)
 sec_port_ucs4_utf8_conversion_function
@@ -539,6 +548,7 @@ sec_port_ucs2_utf8_conversion_function
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <netinet/in.h> /* for htonl and htons */
 
 /*
  * UCS-4 vectors
@@ -1984,6 +1994,45 @@ test_multichars
   return result;
 }
 
+void
+byte_order
+(
+  void
+)
+{
+  /*
+   * The implementation (now) expects the 16- and 32-bit characters
+   * to be in network byte order, not host byte order.  Therefore I
+   * have to byteswap all those test vectors above.  hton[ls] may be
+   * functions, so I have to do this dynamically.  If you want to 
+   * use this code to do host byte order conversions, just remove
+   * the call in main() to this function.
+   */
+
+  int i;
+
+  for( i = 0; i < sizeof(ucs4)/sizeof(ucs4[0]); i++ ) {
+    struct ucs4 *e = &ucs4[i];
+    e->c = htonl(e->c);
+  }
+
+  for( i = 0; i < sizeof(ucs2)/sizeof(ucs2[0]); i++ ) {
+    struct ucs2 *e = &ucs2[i];
+    e->c = htons(e->c);
+  }
+
+#ifdef UTF16
+  for( i = 0; i < sizeof(utf16)/sizeof(utf16[0]); i++ ) {
+    struct utf16 *e = &utf16[i];
+    e->c = htonl(e->c);
+    e->w[0] = htons(e->w[0]);
+    e->w[1] = htons(e->w[1]);
+  }
+#endif /* UTF16 */
+
+  return;
+}
+
 int
 main
 (
@@ -1991,6 +2040,8 @@ main
   char *argv[]
 )
 {
+  byte_order();
+
   if( test_ucs4_chars() &&
       test_ucs2_chars() &&
 #ifdef UTF16
