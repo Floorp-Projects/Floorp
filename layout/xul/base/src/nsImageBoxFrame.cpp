@@ -762,8 +762,10 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request, nsIPresCont
 
 NS_IMETHODIMP nsImageBoxFrame::OnStopDecode(imgIRequest *request, nsIPresContext *aPresContext, nsresult aStatus, const PRUnichar *statusArg)
 {
-  if (NS_FAILED(aStatus))
+  if (NS_SUCCEEDED(aStatus))
     // Fire an onerror DOM event.
+    FireDOMEvent(mContent, NS_IMAGE_LOAD);
+  else // Fire an onload DOM event.
     FireDOMEvent(mContent, NS_IMAGE_ERROR);
 
   return NS_OK;
