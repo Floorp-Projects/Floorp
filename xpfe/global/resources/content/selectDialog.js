@@ -108,29 +108,6 @@ function commonDialogOnCancel() {
 }
 
 // following routine should really be in a global utilities package
-function AppendStringToMenulist(menulist, string) {
-  if (menulist) {
-    var menupopup = menulist.firstChild;
-    // May not have any popup yet -- so create one
-    if (!menupopup)
-    {
-      menupopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menupopup");
-      if (menupopup) {
-        menulist.appendChild(menupopup);
-      } else {
-        dump("Failed to create menupoup\n");
-        return null;
-      }
-    }
-    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
-    if (menuItem) {
-      menuItem.setAttribute("value", string);
-      menupopup.appendChild(menuItem);
-      return menuItem;
-    }
-  }
-  return null;
-}
 
 function AppendStringToTreelist(tree, string)
 {
