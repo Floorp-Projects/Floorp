@@ -84,12 +84,6 @@ WIN_LIBS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-include <$(DEPTH)\java\config\localdefs.mak>
-
-!ifdef CLASSPATH
-JAVAC_CLASSPATH=$(JAVAC_CLASSPATH);$(CLASSPATH)
-!endif
-
 !ifdef BAL_INTERFACE
 INCS = \
 	-I..\bal\ \
@@ -112,47 +106,7 @@ INCS = \
 !CMDSWITCHES -S
 
 # generate the jni header
-export:: BookmarksImpl.h CurrentPageImpl.h HistoryImpl.h WrapperFactoryImpl.h WindowControlImpl.h NavigationImpl.h NativeEventThread.h RDFEnumeration.h RDFTreeNode.h ISupportsPeer.h nsSetupRegistry.cpp 
-
-BookmarksImpl.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.BookmarksImpl is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.BookmarksImpl
-
-CurrentPageImpl.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.CurrentPageImpl is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.CurrentPageImpl
-
-HistoryImpl.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.HistoryImpl is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.HistoryImpl
-
-WrapperFactoryImpl.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.WrapperFactoryImpl is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.WrapperFactoryImpl
-
-NavigationImpl.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.NavigationImpl is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.NavigationImpl
-
-RDFEnumeration.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.RDFEnumeration is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.RDFEnumeration
-
-RDFTreeNode.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.RDFTreeNode is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.RDFTreeNode
-
-ISupportsPeer.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.ISupportsPeer is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.ISupportsPeer
-
-WindowControlImpl.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.WindowControlImpl is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.WindowControlImpl
-
-NativeEventThread.h:
-	@echo Assuming class org.mozilla.webclient.wrapper_native.NativeEventThread is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.wrapper_native.NativeEventThread
+export:: nsSetupRegistry.cpp 
 
 nsSetupRegistry.cpp:
 	copy $(MOZ_SRC)\mozilla\xpfe\bootstrap\nsSetupRegistry.cpp
@@ -162,7 +116,7 @@ buildRunems:
 !else
 	@echo +++ Creating runem.bat.  Use this to run the test browser.
 	rm -f runem.bat
-	@echo $(PERL) runem.pl $(DIST)\bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
+	@echo $(PERL) ..\src_share\runem.pl $(DIST)\bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem.bat
 !endif
 
 install:: $(DLL) buildRunems
@@ -173,16 +127,6 @@ clobber_all:: clobber
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f BookmarksImpl.h
-	rm -f CurrentPageImpl.h
-	rm -f HistoryImpl.h
-	rm -f WrapperFactoryImpl.h
-	rm -f NavigationImpl.h
-	rm -f WindowControlImpl.h
-	rm -f NativeEventThread.h
-	rm -f RDFEnumeration.h
-	rm -f RDFTreeNode.h
-	rm -f ISupportsPeer.h
 	rm -f nsSetupRegistry.cpp
 	rm -f runem.bat
 
