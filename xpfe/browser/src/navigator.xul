@@ -69,10 +69,15 @@
 
   function BrowserBack()
   {
+     // Get a handle to the back-button
+     var bb = document.getElementById("back-button");
+     // If the button is disabled, don't bother calling in to Appcore
+     if ( (bb.getAttribute("disable")) == "true" ) 
+        return;
+
     if (appCore != null) {
 	    dump("Going Back\n");
       appCore.back();
-      RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -80,10 +85,15 @@
 
   function BrowserForward()
   {
+     // Get a handle to the back-button
+     var fb = document.getElementById("forward-button");
+     // If the button is disabled, don't bother calling in to Appcore
+     if ( (fb.getAttribute("disable")) == "true" ) 
+        return;
+
     if (appCore != null) {
 	    dump("Going Forward\n");
       appCore.forward();
-	  RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
