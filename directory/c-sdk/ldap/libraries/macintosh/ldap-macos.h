@@ -67,7 +67,7 @@ int getopt(int nargc, char **nargv, char *ostr);
 #include <time.h>
 #include <stdlib.h>
 
-#include "macsock.h"
+#include "macsocket.h"
 #include "tcp.h"
 #if 0
 		/*------------------*/

@@ -32,27 +32,7 @@ extern "C" {
 #  endif
 #elif defined(macintosh)
 #include <utime.h>
-#include "macsock.h"
-#if 0
-		/*------------------*/
-		#if !defined(FD_SET)
-		#define	NBBY	8
-		typedef long	fd_mask;
-		#define NFDBITS	(sizeof(fd_mask) * NBBY)	/* bits per mask */
-		#ifndef howmany
-		#define	howmany(x, y)	(((x)+((y)-1))/(y))
-		#endif
-		#define FD_SETSIZE 64
-		typedef	struct fd_set{
-			fd_mask	fds_bits[howmany(FD_SETSIZE, NFDBITS)];
-		} fd_set;
-		#define	FD_SET(n, p)	((p)->fds_bits[(n)/NFDBITS] |= (1 << ((n) % NFDBITS)))
-		#define	FD_CLR(n, p)	((p)->fds_bits[(n)/NFDBITS] &= ~(1 << ((n) % NFDBITS)))
-		#define	FD_ISSET(n, p)	((p)->fds_bits[(n)/NFDBITS] & (1 << ((n) % NFDBITS)))
-		#define	FD_ZERO(p)		memset (p, 0, sizeof(*(p)))
-		#endif /* !FD_SET */
-		/*------------------*/
-#endif
+#include "macsocket.h"
 #else
 #include <sys/time.h>
 #include <sys/types.h>
