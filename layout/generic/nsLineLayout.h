@@ -23,6 +23,7 @@
 #include "nsVoidArray.h"
 
 struct nsBlockReflowState;
+class nsInlineReflow;
 class nsPlaceholderFrame;
 struct nsStyleDisplay;
 struct nsStylePosition;
@@ -101,6 +102,20 @@ public:
     return mBRFrame;
   }
 
+  void PushInline(nsInlineReflow* aInlineReflow) {
+    mInlineStack.AppendElement(aInlineReflow);
+  }
+
+  void PopInline() {
+    PRInt32 n = mInlineStack.Count();
+    if (n > 0) {
+      mInlineStack.RemoveElementAt(n - 1);
+    }
+  }
+
+  void UpdateInlines(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                     PRBool aPlacedLeftFloater);
+
   //  --------------------------------------------------
 
   // Reset the text-run information in preparation for a FindTextRuns
@@ -160,6 +175,8 @@ protected:
 #ifdef NS_DEBUG
   nsVoidArray mPlacedFrames;
 #endif
+
+  nsVoidArray mInlineStack;
 
   // These slots are used during FindTextRuns
   nsTextRun* mTextRuns;

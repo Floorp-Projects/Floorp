@@ -36,13 +36,17 @@
 // XXX move the nsCSSLayout alignment code here? Will body frame be
 // using it?
 
+// XXX handle DIR=right-to-left
+
 nsInlineReflow::nsInlineReflow(nsLineLayout& aLineLayout,
                                nsFrameReflowState& aOuterReflowState,
-                               nsHTMLContainerFrame* aOuterFrame)
+                               nsHTMLContainerFrame* aOuterFrame,
+                               PRBool aOuterIsBlock)
   : mLineLayout(aLineLayout),
     mPresContext(aOuterReflowState.mPresContext),
     mOuterReflowState(aOuterReflowState),
-    mComputeMaxElementSize(aOuterReflowState.mComputeMaxElementSize)
+    mComputeMaxElementSize(aOuterReflowState.mComputeMaxElementSize),
+    mOuterIsBlock(aOuterIsBlock)
 {
   mSpaceManager = aLineLayout.mSpaceManager;
   NS_ASSERTION(nsnull != mSpaceManager, "caller must have space manager");
@@ -58,6 +62,7 @@ nsInlineReflow::~nsInlineReflow()
 void
 nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+mOuterFrame->ListTag(stdout); printf(": IR: init: %d,%d,%d,%d\n", aX, aY, aWidth, aHeight);
   mLeftEdge = aX;
   mX = aX;
   if (NS_UNCONSTRAINEDSIZE == aWidth) {
@@ -85,12 +90,16 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
   mFrameNum = 0;
   mMaxElementSize.width = 0;
   mMaxElementSize.height = 0;
+  mUpdatedBand = PR_FALSE;
+  mPlacedLeftFloater = PR_FALSE;
 }
 
 void
 nsInlineReflow::UpdateBand(nscoord aX, nscoord aY,
-                           nscoord aWidth, nscoord aHeight)
+                           nscoord aWidth, nscoord aHeight,
+                           PRBool aPlacedLeftFloater)
 {
+mOuterFrame->ListTag(stdout); printf(": IR: update: %d,%d,%d,%d\n", aX, aY, aWidth, aHeight, aPlacedLeftFloater ? "left" : "right");
   NS_PRECONDITION(mX == mLeftEdge, "update-band called after place-frame");
 
   mLeftEdge = aX;
@@ -108,6 +117,29 @@ nsInlineReflow::UpdateBand(nscoord aX, nscoord aY,
   }
   else {
     mBottomEdge = aY + aHeight;
+  }
+  mUpdatedBand = PR_TRUE;
+  mPlacedLeftFloater = aPlacedLeftFloater;
+}
+
+void
+nsInlineReflow::UpdateFrames()
+{
+  if (NS_STYLE_DIRECTION_LTR == mOuterReflowState.mDirection) {
+    if (mPlacedLeftFloater) {
+      nsIFrame* frame = mFirstFrame;
+      PRInt32 n = mFrameNum;
+      while (--n >= 0) {
+        nsRect r;
+        frame->GetRect(r);
+        r.x = mX;
+        frame->SetRect(r);
+        frame->GetNextSibling(frame);
+      }
+    }
+  }
+  else if (!mPlacedLeftFloater) {
+    // XXX handle DIR=right-to-left
   }
 }
 
@@ -416,21 +448,22 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
     mFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
   }
 
-  // If frame is complete and has a next-in-flow, we need to delete
-  // them now. Do not do this when a break-before is signaled because
-  // the frame is going to get reflowed again (and may end up wanting
-  // a next-in-flow where it ends up).
-  if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
-      NS_FRAME_IS_COMPLETE(aStatus)) {
-    nsIFrame* kidNextInFlow;
-    mFrame->GetNextInFlow(kidNextInFlow);
-    if (nsnull != kidNextInFlow) {
-      // Remove all of the childs next-in-flows. Make sure that we ask
-      // the right parent to do the removal (it's possible that the
-      // parent is not this because we are executing pullup code)
-      nsHTMLContainerFrame* parent;
-      mFrame->GetGeometricParent((nsIFrame*&) parent);
-      parent->DeleteChildsNextInFlow(mPresContext, mFrame);
+  if (!NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
+    // If frame is complete and has a next-in-flow, we need to delete
+    // them now. Do not do this when a break-before is signaled because
+    // the frame is going to get reflowed again (and may end up wanting
+    // a next-in-flow where it ends up).
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+      nsIFrame* kidNextInFlow;
+      mFrame->GetNextInFlow(kidNextInFlow);
+      if (nsnull != kidNextInFlow) {
+        // Remove all of the childs next-in-flows. Make sure that we ask
+        // the right parent to do the removal (it's possible that the
+        // parent is not this because we are executing pullup code)
+        nsHTMLContainerFrame* parent;
+        mFrame->GetGeometricParent((nsIFrame*&) parent);
+        parent->DeleteChildsNextInFlow(mPresContext, mFrame);
+      }
     }
   }
 
@@ -475,6 +508,15 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
       mRightMargin = mMargin.right;
       break;
     }
+  }
+
+  // If the frame is a block frame but the parent frame is not a block
+  // frame and the frame count is not zero then break before the block
+  // frame. This forces blocks that are children of inlines to be the
+  // one and only child of the inline frame.
+  if (mTreatFrameAsBlock && !mOuterIsBlock && (0 != mFrameNum)) {
+    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    return PR_FALSE;
   }
 
   // If this is the first frame going into this inline reflow or it's
@@ -531,6 +573,13 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
   if (aMetrics.descent > mMaxDescent) {
     mMaxDescent = aMetrics.descent;
   }
+
+  // If the band was updated during the reflow of that frame then we
+  // need to adjust any prior frames that were reflowed.
+  if (mUpdatedBand && mOuterIsBlock) {
+    UpdateFrames();
+  }
+  mUpdatedBand = PR_FALSE;
 
   // Save carried out information for caller
   mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;

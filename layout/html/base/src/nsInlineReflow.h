@@ -29,6 +29,9 @@ struct nsStyleDisplay;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
+// XXX Make this class handle x,y offsets from the outer state's
+// borderpadding value.
+
 /** A class that implements a css compatible horizontal reflow
  * algorithm. Frames are stacked left to right (or right to left)
  * until the horizontal space runs out. Then the 1 or more frames are
@@ -38,7 +41,8 @@ class nsInlineReflow {
 public:
   nsInlineReflow(nsLineLayout& aLineLayout,
                  nsFrameReflowState& aOuterReflowState,
-                 nsHTMLContainerFrame* aOuter);
+                 nsHTMLContainerFrame* aOuter,
+                 PRBool aOuterIsBlock);
   ~nsInlineReflow();
 
   void Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -47,7 +51,8 @@ public:
     mIsFirstChild = aValue;
   }
 
-  void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+                  PRBool aPlacedLeftFloater);
 
   nsReflowStatus ReflowFrame(nsIFrame* aFrame);
 
@@ -62,6 +67,11 @@ public:
   nscoord GetMaxDescent() const { return mMaxDescent; }
 
   PRInt32 GetCurrentFrameNum() const { return mFrameNum; }
+
+  void ChangeFrameCount(PRInt32 aCount) {
+    NS_ASSERTION(aCount <= mFrameNum, "bad change frame count");
+    mFrameNum = aCount;
+  }
 
   PRBool GetIsBlock() const { return mIsBlock; }
 
@@ -119,12 +129,15 @@ protected:
 
   nsresult SetFrameData(const nsHTMLReflowMetrics& aMetrics);
 
+  void UpdateFrames();
+
   // The outer frame that contains the frames that we reflow.
   nsHTMLContainerFrame* mOuterFrame;
   nsISpaceManager* mSpaceManager;
   nsLineLayout& mLineLayout;
   nsFrameReflowState& mOuterReflowState;
   nsIPresContext& mPresContext;
+  PRBool mOuterIsBlock;
 
   nsIFrame* mFirstFrame;
   PRIntn mFrameNum;
@@ -182,6 +195,9 @@ protected:
   nscoord mTopEdge;
   nscoord mY;
   nscoord mBottomEdge;
+
+  PRBool mUpdatedBand;
+  PRBool mPlacedLeftFloater;
 };
 
 inline nscoord
