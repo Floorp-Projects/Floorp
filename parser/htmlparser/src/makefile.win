@@ -17,6 +17,7 @@
 
 DEPTH=..\..
 IGNORE_MANIFEST=1
+include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
