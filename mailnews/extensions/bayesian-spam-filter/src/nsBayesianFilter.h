@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -126,7 +126,7 @@ public:
 protected:
     Tokenizer mGoodTokens, mBadTokens;
     PRUint32 mGoodCount, mBadCount;
-    PRPackedBool mBatchUpdate;
+    PRUint32 mBatchLevel;  // allow for nested batches to happen
     PRPackedBool mTrainingDataDirty;
 };
 

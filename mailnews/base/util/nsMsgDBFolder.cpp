@@ -1748,17 +1748,20 @@ nsMsgDBFolder::CallFilterPlugins()
       // if we can't get the db, we probably want to continue firing spam filters.
     }
 
-    // tell the plugin this is the beginning of a batch
+    // tell the plugin this is the beginning of a batch.  this is an 
+    // optimization, so if it fails, try to continue anyway.
     //
-    (void)filterPlugin->SetBatchUpdate(PR_TRUE);
+    rv = filterPlugin->StartBatch();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("nsMsgDBFilter::CallFilterPlugins(): "
+                 "filterPlugin->StartBatch failed");
+    }
 
     // for each message...
     //
     nsXPIDLCString uri;
-    nsXPIDLCString url;
 
     PRUint32 numNewMessages = newMessageKeys->GetSize();
-    PRInt32 numClassifyRequests = 0;
     for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
     {
         nsXPIDLCString junkScore;
@@ -1807,7 +1810,12 @@ nsMsgDBFolder::CallFilterPlugins()
     }
 
     // this batch is done
-    (void)filterPlugin->SetBatchUpdate(PR_FALSE);
+    // 
+    rv = filterPlugin->EndBatch();
+    if (NS_FAILED(rv)) {
+      NS_WARNING("nsMsgDBFilter::CallFilterPlugins(): "
+                 "filterPlugin->EndBatch() failed");
+    }
 
     NS_DELETEXPCOM(newMessageKeys);
     return rv;

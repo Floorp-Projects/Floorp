@@ -1435,11 +1435,9 @@ Rights Reserved.
               accesskey="&junkMailCmd.accesskey;" 
               oncommand="MsgJunkMail()"/>
     <menuseparator/>
-    <menuitem label="Mark All Messages In Folder As Junk" oncommand="markFolderAsJunk(true);"/>
-    <menuitem label="Mark All Messages In Folder As Not Junk" oncommand="markFolderAsJunk(false);"/>
-    <menuitem label="Analyze Folder" oncommand="analyzeFolder();"/>
+    <menuitem label="Mark Selected Messages As Junk" oncommand="JunkSelectedMessages(true);"/>
+    <menuitem label="Mark Selected Messages As Not Junk" oncommand="JunkSelectedMessages(false);"/>
     <menuitem label="Analyze Messages" oncommand="analyzeMessages();"/>
-    <menuitem label="Write DB" oncommand="writeHash();"/>
     <menuseparator/>
 -->
     <menuitem label="&filtersApply.label;"

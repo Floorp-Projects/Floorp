@@ -3408,6 +3408,7 @@ nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus a
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDatabase->SetStringProperty(msgKey, "junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
+  mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
 
   nsCOMPtr<nsISpamSettings> spamSettings;
   nsXPIDLCString spamFolderURI;

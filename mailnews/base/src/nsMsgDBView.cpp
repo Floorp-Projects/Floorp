@@ -115,6 +115,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
    NS_INTERFACE_MAP_ENTRY(nsITreeView)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIJunkMailClassificationListener)
 NS_INTERFACE_MAP_END
 
 nsMsgDBView::nsMsgDBView()
@@ -133,6 +134,7 @@ nsMsgDBView::nsMsgDBView()
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingRows = PR_FALSE;
+  mOutstandingJunkBatches = 0;
 
   /* mCommandsNeedDisablingBecauseOffline - A boolean that tell us if we needed to disable commands because we're offline w/o a downloaded msg select */
   
@@ -680,7 +682,8 @@ nsresult nsMsgDBView::FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString)
   NS_ENSURE_ARG_POINTER(aHdr);  
   NS_ENSURE_ARG_POINTER(aLabelString);  
 
-  aHdr->GetLabel(&label);
+  rv = aHdr->GetLabel(&label);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // we don't care if label is not between 1 and PREF_LABELS_MAX inclusive.
   if ((label < 1) || (label > PREF_LABELS_MAX))
@@ -2066,7 +2069,16 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
 {
   nsresult rv = NS_OK;
   nsMsgKeyArray imapUids;
-  
+
+  // if numIndices == 0, return quietly, just in case
+  //
+  if (numIndices == 0) {
+      return NS_OK;
+  }
+
+  NS_ASSERTION(numIndices >= 0, "nsMsgDBView::ApplyCommandToIndices(): "
+               "numIndices is negative!");
+
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
   PRBool thisIsImapFolder = (imapFolder != nsnull);
 
@@ -2076,6 +2088,39 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
     rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_TRUE);
   else
   {
+    nsCOMPtr<nsIJunkMailPlugin> junkPlugin;
+
+    // if this is a junk command, start a batch.  The batch will be ended
+    // in the last callback.
+    //  
+    if ( command == nsMsgViewCommandType::junk
+         || command == nsMsgViewCommandType::unjunk ) {
+
+        // get the folder from the first item (if it's the search view, 
+        // only one item can be touched at a time; if a regular folder view,
+        // all items will have the same folder).
+        //
+        nsCOMPtr<nsIMsgFolder> folder;
+        rv = GetFolderForViewIndex(GetAt(indices[0]), getter_AddRefs(folder));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        rv = folder->GetServer(getter_AddRefs(server));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
+        rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        junkPlugin = do_QueryInterface(filterPlugin, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = junkPlugin->StartBatch();
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mOutstandingJunkBatches++;
+    }
+           
     for (int32 i = 0; i < numIndices; i++)
     {
       if (thisIsImapFolder && command != nsMsgViewCommandType::markThreadRead)
@@ -2110,10 +2155,12 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label0));
         break;
       case nsMsgViewCommandType::junk:
-        rv = SetStringPropertyByIndex(indices[i], "junkscore", "100");
+        rv = SetJunkScoreByIndex(junkPlugin.get(), indices[i],
+                                 nsIJunkMailPlugin::JUNK, (i == numIndices-1));
         break;
       case nsMsgViewCommandType::unjunk:
-        rv = SetStringPropertyByIndex(indices[i], "junkscore", "0");
+        rv = SetJunkScoreByIndex(junkPlugin.get(), indices[i], 
+                                 nsIJunkMailPlugin::GOOD, (i == numIndices-1));
         break;
       case nsMsgViewCommandType::undeleteMsg:
         break; // this is completely handled in the imap code below.
@@ -2122,7 +2169,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
         break;
       }
     }
-    
+
     if (thisIsImapFolder)
     {
       imapMessageFlagsType flags = kNoImapMsgFlag;
@@ -2388,6 +2435,120 @@ nsresult nsMsgDBView::SetStringPropertyByIndex(nsMsgViewIndex index, const char 
   return rv;
 }
 
+nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
+                                          nsMsgViewIndex aIndex,
+                                          nsMsgJunkStatus aNewClassification, 
+                                          PRBool aIsLastInBatch)
+{
+
+    // get the message header (need this to get string properties)
+    //
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    nsresult rv = GetMsgHdrForViewIndex(aIndex, getter_AddRefs(msgHdr));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // get the old junk score
+    //
+    nsXPIDLCString junkScoreStr;
+    rv = msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+
+    // and the old origin
+    //
+    nsXPIDLCString oldOriginStr;
+    rv = msgHdr->GetStringProperty("junkscoreorigin", 
+                                   getter_Copies(oldOriginStr));
+
+    // if this was not classified by the user, say so
+    //
+    nsMsgJunkStatus oldUserClassification;
+    if (oldOriginStr.get()[0] != 'u') {
+        oldUserClassification = nsIJunkMailPlugin::UNCLASSIFIED;
+    } else {
+        // otherwise, pass the actual user classification
+        //
+        if (junkScoreStr.IsEmpty()) {
+            oldUserClassification = nsIJunkMailPlugin::UNCLASSIFIED;
+        } else if (atoi(junkScoreStr) > 50) {
+            oldUserClassification = nsIJunkMailPlugin::JUNK;
+        } else {
+            oldUserClassification = nsIJunkMailPlugin::GOOD;
+        }
+    }
+
+    // get the URI for this message so we can pass it to the plugin
+    //
+    nsXPIDLCString uri;
+    rv = GetURIForViewIndex(aIndex, getter_Copies(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if ( aIsLastInBatch ) {
+        // if there's already a batch in progress, just replace the URI,
+        // thus causing the batches to be coalesced
+        //
+        mLastJunkUriInBatch = uri;
+    }
+
+    // tell the plugin about this change, so that it can (potentially)
+    // adjust its database appropriately
+    //
+    rv = aJunkPlugin->SetMessageClassification(
+        uri, oldUserClassification, aNewClassification, this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // set the junk score on the message itself
+    // 
+    rv = SetStringPropertyByIndex(
+        aIndex, "junkscore", 
+        aNewClassification == nsIJunkMailPlugin::JUNK ? "100" : "0");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // this routine is only reached if the user someone touched the UI
+    // and told us the junk status of this message.
+    //
+    rv = SetStringPropertyByIndex(aIndex, "junkscoreorigin", "user");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::OnMessageClassified(const char *aMsgUrl,
+                                 nsMsgJunkStatus aClassification)
+{
+    // is this the last url in the batch?
+    //
+    if ( mLastJunkUriInBatch.Equals(aMsgUrl) )  {
+
+        // XXX are we allowed to assume m_folder exists here?
+        //
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        nsresult rv = m_folder->GetServer(getter_AddRefs(server));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // get the filter, and QI to the interface we want
+        //
+        nsCOMPtr<nsIMsgFilterPlugin> filterPlugin;
+        rv = server->GetSpamFilterPlugin(getter_AddRefs(filterPlugin));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIJunkMailPlugin> junkPlugin = 
+            do_QueryInterface(filterPlugin, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // close out existing coalesced junk batches 
+        //
+        for ( ; mOutstandingJunkBatches > 0 ; --mOutstandingJunkBatches ) {
+            
+            // tell the plugin that all outstanding batches from us
+            // have finished.
+            //
+            rv = junkPlugin->EndBatch();
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
+    return NS_OK;
+}
 
 // reversing threads involves reversing the threads but leaving the
 // expanded messages ordered relative to the thread, so we
@@ -5114,7 +5275,6 @@ PRBool nsMsgDBView::OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndi
   if (localFolder)
     return PR_TRUE;
 
-  nsresult rv = NS_OK;
   for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
   {
     PRUint32 flags = m_flags.GetAt(indices[index]);

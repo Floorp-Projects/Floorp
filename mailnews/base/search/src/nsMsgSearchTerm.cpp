@@ -1243,10 +1243,14 @@ nsresult nsMsgSearchTerm::MatchJunkStatus(const char *aJunkScore, PRBool *pResul
 
   nsMsgJunkStatus junkStatus;  
   if (aJunkScore && *aJunkScore) {
-    // I set the cut off at 50. this may change
-    // it works for our bayesian plugin, as "0" is good, and "100" is junk
-    // but it might need tweaking for other plugins
-    junkStatus = (atoi(aJunkScore) > 50) ? nsIJunkMailPlugin::JUNK : nsIJunkMailPlugin::GOOD;
+      // cut off set at 50. this may change
+      // it works for our bayesian plugin, as "0" is good, and "100" is junk
+      // but it might need tweaking for other plugins
+      if ( atoi(aJunkScore) > 50 ) {
+          junkStatus = nsIJunkMailPlugin::JUNK;
+      } else {
+          junkStatus = nsIJunkMailPlugin::GOOD;
+      }
   }
   else
     junkStatus = nsIJunkMailPlugin::UNCLASSIFIED;

@@ -444,50 +444,33 @@ function getJunkmailComponent()
     }
 }
 
-function analyze(aMessage, aNextFunction)
+function analyze(aMsgHdr, aNextFunction)
 {
     var listener = {
         onMessageClassified: function(aMsgURL, aClassification)
         {
-            dump(aMsgURL + ' is ' + (aClassification == nsIJunkMailPlugin.JUNK ? 'JUNK' : 'GOOD') + '\n');
+            dump(aMsgURL + ' is ' 
+                 + (aClassification == nsIJunkMailPlugin.JUNK
+                    ? 'JUNK' : 'GOOD') + '\n');
+
             // XXX TODO, make the cut off 50, like in nsMsgSearchTerm.cpp
-            var score = (aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0");
-            aMessage.setStringProperty("junkscore", score);
+            var score = 
+                aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0";
+
+            // set these props via the db (instead of the message header
+            // directly) so that the nsMsgDBView knows to update the UI
+            //
+            var db = aMsgHdr.folder.getMsgDatabase(msgWindow);
+            db.setStringProperty(aMsgHdr.messageKey, "junkscore", score);
+            db.setStringProperty(aMsgHdr.messageKey, "junkscoreorigin", 
+                                 "plugin");
             aNextFunction();
         }
     };
 
-    // XXX TODO jumping through hoops here.
-    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
+    var messageURI = aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey)
+        + "?fetchCompleteMessage=true";
     gJunkmailComponent.classifyMessage(messageURI, listener);
-}
-
-function analyzeFolder()
-{
-    function processNext()
-    {
-        if (messages.hasMoreElements()) {
-            // XXX TODO jumping through hoops here.
-            var message = messages.getNext().QueryInterface(nsIMsgDBHdr);
-            while (!message.isRead) {
-                if (!messages.hasMoreElements()) {
-                    gJunkmailComponent.batchUpdate = false;
-                    return;
-                }
-                message = messages.getNext().QueryInterface(nsIMsgDBHdr);
-            }
-            analyze(message, processNext);
-        }
-        else {
-            gJunkmailComponent.batchUpdate = false;
-        }
-    }
-
-    getJunkmailComponent();
-    var folder = GetFirstSelectedMsgFolder();
-    var messages = folder.getMessages(msgWindow);
-    gJunkmailComponent.batchUpdate = true;
-    processNext();
 }
 
 function analyzeMessages()
@@ -495,133 +478,27 @@ function analyzeMessages()
     function processNext()
     {
         if (counter < messages.length) {
-            // XXX TODO jumping through hoops here.
             var messageUri = messages[counter];
             var message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
-
             ++counter;
-            while (!message.isRead) {
-                if (counter == messages.length) {
-                    dump('[bayesian filter message analysis complete.]\n');
-                    gJunkmailComponent.mBatchUpdate = false;
-                    return;
-                }
-                messageUri = messages[counter];
-                message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
-                ++counter;
-            }
             analyze(message, processNext);
         }
         else {
             dump('[bayesian filter message analysis complete.]\n');
-            gJunkmailComponent.batchUpdate = false;
+            gJunkmailComponent.endBatch();
         }
     }
 
     getJunkmailComponent();
     var messages = GetSelectedMessages();
     var counter = 0;
-    gJunkmailComponent.batchUpdate = true;
+    gJunkmailComponent.startBatch();
     dump('[bayesian filter message analysis begins.]\n');
     processNext();
 }
 
-function writeHash()
-{
-    getJunkmailComponent();
-    gJunkmailComponent.mTable.writeHash();
-}
-
-function mark(aMessage, aSpam, aNextFunction)
-{
-    // XXX TODO jumping through hoops here.
-    var score = aMessage.getStringProperty("junkscore");
-
-    var oldClassification = ((score == "100") ? nsIJunkMailPlugin.JUNK :
-                             (score == "0") ? nsIJunkMailPlugin.GOOD : nsIJunkMailPlugin.UNCLASSIFIED);
-    
-    var newClassification = (aSpam ? nsIJunkMailPlugin.JUNK : nsIJunkMailPlugin.GOOD);
-
-    var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
-    
-    var listener = (aNextFunction == null ? null :
-                    {
-                        onMessageClassified: function(aMsgURL, aClassification)
-                        {
-                            aNextFunction();
-                        }
-                    });
-    
-    gJunkmailComponent.setMessageClassification(messageURI, oldClassification, newClassification, listener);
-}
-
 function JunkSelectedMessages(setAsJunk)
 {
-    getJunkmailComponent();
-    var messages = GetSelectedMessages();
-
-    // start the batch of messages
-    //
-    gJunkmailComponent.batchUpdate = true;
-
-    // mark each one
-    //
-    for ( var msg in messages ) {
-        var message = messenger.messageServiceFromURI(messages[msg])
-            .messageURIToMsgHdr(messages[msg]);
-        mark(message, setAsJunk, null);
-    }
-
-    // end the batch (tell the component to write out its data)
-    //
-    gJunkmailComponent.batchUpdate = false;
-
-    // this actually sets the score on the selected messages
-    // so we need to call it after we call mark()
     gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
                       : nsMsgViewCommandType.unjunk);
-}
-
-// temporary
-function markFolderAsJunk(aSpam)
-{
-    getJunkmailComponent();
-    
-    var listener = {
-        messageCount: 0,
-        onMessageClassified: function(aMsgURL, aClassification)
-        {
-            if (--this.messageCount == 0) {
-                dump('[folder marking complete.]\n');
-                gJunkmailComponent.batchUpdate = false;
-            }
-        }
-    };
-
-    var process = function(aMessage)
-    {
-        var score = aMessage.getStringProperty("junkscore");
-        var oldClassification = ((score == "100") ? nsIJunkMailPlugin.JUNK :
-                                 (score == "0") ? nsIJunkMailPlugin.GOOD : nsIJunkMailPlugin.UNCLASSIFIED);
-        var newClassification = (aSpam ? nsIJunkMailPlugin.JUNK : nsIJunkMailPlugin.GOOD);
-        var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
-        
-        ++listener.messageCount;
-        gJunkmailComponent.setMessageClassification(messageURI, oldClassification, newClassification, listener);
-    }
-
-    var folder = GetFirstSelectedMsgFolder();
-    var messages = folder.getMessages(msgWindow);
-    var newScore = (aSpam ? "100" : "0");
-    
-    gJunkmailComponent.batchUpdate = true;
-    dump('[folder marking starting.]\n');
-    
-    while (messages.hasMoreElements()) {
-        var message = messages.getNext().QueryInterface(nsIMsgDBHdr);
-        process(message);
-        // now set the score
-        // XXX TODO invalidate the row
-        message.setStringProperty("junkscore", newScore);
-    }
 }

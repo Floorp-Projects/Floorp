@@ -7121,6 +7121,7 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClas
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDatabase->SetStringProperty(msgKey, "junkscore", (aClassification == nsIJunkMailPlugin::JUNK) ? "100" : "0");
+  mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
 
   if (aClassification == nsIJunkMailPlugin::JUNK)
   {
@@ -7141,7 +7142,9 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURL, nsMsgJunkStatus aClas
       if (moveOnSpam)
       {
         spamSettings->GetSpamFolderURI(getter_Copies(spamFolderURI));
-        if (!spamFolderURI.IsEmpty())
+        nsXPIDLCString uri;
+        GetURI(getter_Copies(uri));
+        if (!spamFolderURI.IsEmpty() && !spamFolderURI.Equals(uri))
         {
           nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
           NS_ENSURE_SUCCESS(rv, rv);

@@ -63,10 +63,11 @@ interface nsIMsgFilterPlugin : nsISupports
     /**
      * When a large number of messages are going to be trained or filtered,
      * it's typically not worth it to write everything to disk after
-     * each message.  The calling code will set batchUpdate to true before
-     * starting a set messages, and then to false once it has finished.
+     * each message.  The calling code will call startBatch() before
+     * starting a set messages, and then endBatch() once it has finished.
      */
-    attribute boolean batchUpdate;
+    void startBatch();
+    void endBatch();
 };
 
 /**
@@ -104,9 +105,15 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
     /**
      * Called when a user forces the classification of a message. Should
      * cause the training set to be updated appropriately.
+     *
+     * @arg aMsgURI                     URI of the message to be classified
+     * @arg aOldUserClassification      Was it previous manually classified 
+     *                                  by the user?  If so, how?
+     * @arg aNewClassification          New manual classification.
+     * @arg aListener                   Callback
      */
-    void setMessageClassification(in string aMsgURI,
-                                  in nsMsgJunkStatus aOldClassification,
-                                  in nsMsgJunkStatus aNewClassification,
-                                  in nsIJunkMailClassificationListener aListener);
+    void setMessageClassification(
+        in string aMsgURI, in nsMsgJunkStatus aOldUserClassification,
+        in nsMsgJunkStatus aNewClassification,
+        in nsIJunkMailClassificationListener aListener);
 };

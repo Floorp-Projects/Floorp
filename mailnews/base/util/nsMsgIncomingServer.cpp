@@ -1992,11 +1992,10 @@ nsMsgIncomingServer::GetSpamFilterPlugin(nsIMsgFilterPlugin **aFilterPlugin)
     mFilterPlugin = do_GetService("@mozilla.org/messenger/filter-plugin;1?name=bayesianfilter", &rv);
 
     if (NS_FAILED(rv)) {
-        NS_ERROR("nsMsgIncomingServer::InitializeFilterPlugins():" 
-                 " error creating filter plugin");
         return rv;
     }
   }
+
   NS_IF_ADDREF(*aFilterPlugin = mFilterPlugin);
   return NS_OK;
 }

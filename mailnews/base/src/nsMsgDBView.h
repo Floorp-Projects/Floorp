@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,12 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 2001-2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *  Seth Spitzer <sspitzer@netscape.com>
+ *  Dan Mosedale <dmose@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -61,7 +62,7 @@
 #include "nsIPref.h"
 #include "nsIWeakReference.h"
 #include "nsIObserver.h"
-
+#include "nsIMsgFilterPlugin.h"
 #include "nsIStringBundle.h"
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
@@ -88,7 +89,9 @@ enum eFieldType {
 // I think this will be an abstract implementation class.
 // The classes that implement the tree support will probably
 // inherit from this class.
-class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsITreeView, public nsIObserver
+class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener,
+                    public nsITreeView, public nsIObserver,
+                    public nsIJunkMailClassificationListener
 {
 public:
   nsMsgDBView();
@@ -99,6 +102,7 @@ public:
   NS_DECL_NSIDBCHANGELISTENER
   NS_DECL_NSITREEVIEW
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIJUNKMAILCLASSIFICATIONLISTENER
 
 protected:
   static nsrefcnt gInstanceCount;
@@ -243,6 +247,10 @@ protected:
   virtual nsresult CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder);
   virtual nsresult DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage);
   nsresult SetStringPropertyByIndex(nsMsgViewIndex index, const char *aProperty, const char *aValue);
+  nsresult SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin, 
+                               nsMsgViewIndex aIndex,
+                               nsMsgJunkStatus aNewClassification,
+                               PRBool aIsLastInBatch);
   nsresult ToggleReadByIndex(nsMsgViewIndex index);
   nsresult SetReadByIndex(nsMsgViewIndex index, PRBool read);
   nsresult SetThreadOfMsgReadByIndex(nsMsgViewIndex index, nsMsgKeyArray &keysMarkedRead, PRBool read);
@@ -354,6 +362,12 @@ protected:
   nsString mLabelPrefColors[PREF_LABELS_MAX];
   // used to cache the atoms created for each color to be displayed
   static nsIAtom* mLabelPrefColorAtoms[PREF_LABELS_MAX];
+
+  // used to know to finish out the junk mail classification batch when the 
+  // last classification callback happens
+  //
+  nsCString mLastJunkUriInBatch;
+  PRUint8 mOutstandingJunkBatches;
 };
 
 #endif

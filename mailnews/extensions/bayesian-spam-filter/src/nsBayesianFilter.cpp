@@ -439,7 +439,7 @@ NS_IMPL_ISUPPORTS2(nsBayesianFilter, nsIMsgFilterPlugin, nsIJunkMailPlugin)
 
 nsBayesianFilter::nsBayesianFilter()
     :   mGoodCount(0), mBadCount(0),
-        mBatchUpdate(PR_FALSE), mTrainingDataDirty(PR_FALSE)
+        mBatchLevel(0), mTrainingDataDirty(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
     
@@ -591,17 +591,25 @@ NS_IMETHODIMP nsBayesianFilter::GetShouldDownloadAllHeaders(PRBool *aShouldDownl
     return NS_OK;
 }
 
-/* attribute boolean batchUpdate; */
-NS_IMETHODIMP nsBayesianFilter::GetBatchUpdate(PRBool *aBatchUpdate)
+NS_IMETHODIMP nsBayesianFilter::StartBatch(void)
 {
-    *aBatchUpdate = mBatchUpdate;
+#ifdef DEBUG_dmose
+    printf("StartBatch() entered with mBatchLevel=%d\n", mBatchLevel);
+#endif
+    ++mBatchLevel;
     return NS_OK;
 }
-NS_IMETHODIMP nsBayesianFilter::SetBatchUpdate(PRBool aBatchUpdate)
+
+NS_IMETHODIMP nsBayesianFilter::EndBatch(void)
 {
-    mBatchUpdate = aBatchUpdate;
+#ifdef DEBUG_dmose
+    printf("EndBatch() entered with mBatchLevel=%d\n", mBatchLevel);
+#endif
+    NS_ASSERTION(mBatchLevel > 0, "nsBayesianFilter::EndBatch() called with"
+                 " mBatchLevel <= 0");
+    --mBatchLevel;
     
-    if (!mBatchUpdate && mTrainingDataDirty)
+    if (!mBatchLevel && mTrainingDataDirty)
         writeTrainingData();
     
     return NS_OK;
@@ -709,8 +717,8 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
     
     if (listener)
         listener->OnMessageClassified(messageURL, newClassification);
-    
-    if (mTrainingDataDirty && !mBatchUpdate)
+
+    if (mTrainingDataDirty && !mBatchLevel)
         writeTrainingData();
 }
 
@@ -827,6 +835,9 @@ static const char kMagicCookie[] = { '\xFE', '\xED', '\xFA', '\xCE' };
 
 void nsBayesianFilter::writeTrainingData()
 {
+#ifdef DEBUG_dmose
+    printf("writeTrainingData() entered\n");
+#endif
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = getTrainingFile(file);
     if (NS_FAILED(rv)) return;
