@@ -673,13 +673,17 @@ NS_IMETHODIMP DeviceContextImpl::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 
 /////////////////////////////////////////////////////////////
 
+MOZ_DECL_CTOR_COUNTER(nsFontCache);
+
 nsFontCache :: nsFontCache()
 {
+  MOZ_COUNT_CTOR(nsFontCache);
   mContext = nsnull;
 }
 
 nsFontCache :: ~nsFontCache()
 {
+  MOZ_COUNT_DTOR(nsFontCache);
   Flush();
 }
 
