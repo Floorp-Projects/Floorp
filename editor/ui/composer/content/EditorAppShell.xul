@@ -366,7 +366,7 @@
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="EditorStatusBar">
       <titledbutton value="[Notification Component]" onclick="doTests()"/>
-	    <box align="vertical" style="min-width:10px" flex="100%">
+	    <box id="EditorProgressBox" align="vertical" flex="100%">
 		    <spring flex="100%"/>
 		    <progressmeter mode="normal" value="0">
 		    </progressmeter>
