@@ -194,12 +194,12 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
     bindingManager->GetXBLChildNodesFor(aParent, getter_AddRefs(kids));
     if (!kids) return;
 
-    PRUint32 count;
-    kids->GetLength(&count);
+    PRUint32 i;
+    kids->GetLength(&i);
     // start from the end, cuz we're smart and we know the listboxbody is probably at the end
-    for (PRUint32 i = count-1; i >= 0; --i) {
+    while (i > 0) {
       nsCOMPtr<nsIDOMNode> childNode;
-      kids->Item(i, getter_AddRefs(childNode));
+      kids->Item(--i, getter_AddRefs(childNode));
       nsCOMPtr<nsIContent> childContent(do_QueryInterface(childNode));
       FindBodyContent(childContent, aResult);
       if (*aResult)
