@@ -111,9 +111,6 @@ public:
 	virtual		~InternetSearchContext(void);
 	NS_METHOD	Init();
 
-friend	NS_IMETHODIMP	NS_NewInternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
-							nsIInternetSearchContext **aResult);
-
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIINTERNETSEARCHCONTEXT
 };
@@ -1478,8 +1475,11 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		return(rv);
 	if (!context)	return(NS_ERROR_UNEXPECTED);
 
+	char	*actionStr = action.ToNewCString();
+	if (!actionStr)	return(NS_ERROR_UNEXPECTED);
+
 	nsCOMPtr<nsIURI>	url;
-	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), nsCAutoString(action))))
+	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), actionStr)))
 	{
 		nsCOMPtr<nsIChannel>	channel;
 		// XXX: Null LoadGroup ?
@@ -1516,6 +1516,9 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			}
 		}
 	}
+
+	nsCRT::free(actionStr);
+	actionStr = nsnull;
 
 	// dispose of any last HTML results page
 	if (mInner)
