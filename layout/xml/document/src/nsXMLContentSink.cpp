@@ -699,22 +699,22 @@ nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
   // XXX For now, all leaf content is character data
   // XXX make sure to push/pop name spaces here too (for attributes)
   switch (aNode.GetTokenType()) {
-  case eToken_text:
-  case eToken_whitespace:
-  case eToken_newline:
-    AddText(aNode.GetText());
-    break;
+    case eToken_text:
+    case eToken_whitespace:
+    case eToken_newline:
+    case eToken_cdatasection:
+      AddText(aNode.GetText());
+      break;
 
-  case eToken_entity:
-  {
-    nsAutoString tmp;
-    PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
-    if (unicode < 0) {
-      return AddText(aNode.GetText());
+    case eToken_entity:
+    {
+      nsAutoString tmp;
+      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
+      if (unicode < 0) {
+        return AddText(aNode.GetText());
+      }
+      return AddText(tmp);
     }
-    return AddText(tmp);
-  }
-
   }
   return NS_OK;
 }
