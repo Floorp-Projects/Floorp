@@ -265,20 +265,21 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           "CurrentState = %d\n",
           this, aSelectFlags, mCurrentState));
 
-  //
-  // If the transport has been suspended, then return NS_OK immediately...
-  // This removes the transport from the select list...
-  //
-  if (mSuspendCount) {
-    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-           ("Transport [this=%x] is suspended.\n", this));
-
-    done = PR_TRUE;
-    rv = NS_OK;
-  }
-
   while (!done)
   {
+    //
+    // If the transport has been suspended, then return NS_OK immediately...
+    // This removes the transport from the select list...
+    //
+    if (mSuspendCount) {
+      PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+             ("Transport [this=%x] is suspended.\n", this));
+  
+      done = PR_TRUE;
+      rv = NS_OK;
+      continue;
+    }
+
     switch (mCurrentState) {
       case eSocketState_Created:
       case eSocketState_Closed:
@@ -644,12 +645,10 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     // Since, the data is being read into a global buffer from the net, unless
     // it can all be pushed into the stream it will be lost!
     //
-    mReadStream->GetLength(&size);
-    size = MAX_IO_BUFFER_SIZE - size;
+    rv = mReadStream->GetWriteAmount(&size);
     if (size > MAX_IO_BUFFER_SIZE) {
       size = MAX_IO_BUFFER_SIZE;
     }
-
     if (size > 0) {
       len = PR_Read(mSocketFD, gIOBuffer, size);
       if (len > 0) {
@@ -693,8 +692,10 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     // resumed...
     //
     else {
-      mSuspendCount += 1;
-      mReadStream->BlockTransport();
+      if (0 == totalBytesWritten) {
+        mSuspendCount += 1;
+        mReadStream->BlockTransport();
+      }
       rv = NS_BASE_STREAM_WOULD_BLOCK;
     }
   }
