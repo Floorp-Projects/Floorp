@@ -158,7 +158,7 @@ protected:
 
 	static nsICollation	*collationService;
 
-	friend NS_IMETHODIMP	NS_NewXULSortService(nsIXULSortService** mgr);
+	friend nsresult		NS_NewXULSortService(nsIXULSortService** mgr);
 
 private:
 	static nsrefcnt		gRefCnt;
@@ -1508,7 +1508,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 
 
-NS_IMETHODIMP
+nsresult
 NS_NewXULSortService(nsIXULSortService** mgr)
 {
 	XULSortServiceImpl	*sortService = new XULSortServiceImpl();
