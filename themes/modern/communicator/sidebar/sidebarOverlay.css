@@ -171,19 +171,52 @@ sidebarheader[type="splitter"] {
       behavior            : url("chrome://global/content/globalBindings.xml#texttab");
       background-color    : #99CCCC;
       color               : #003366;
-      padding             : 2px 5px 2px 5px;
       margin-top          : 1px;
       border              : 1px solid #99CCCC;
-      border-bottom       : none;
     }
 
-  .box-texttab[selected="true"]
+  .box-texttab:hover
+    {
+      border              : 1px outset #99CCCC;
+    }
+
+  .box-texttab:hover:active
+    {
+      border              : 1px inset #99CCCC;
+    }
+
+  .box-texttab > .texttab-internal-box
+    {
+      border              : 1px solid #99CCCC;
+      padding             : 1px 4px 1px 4px;
+    }   
+
+  .box-texttab[selected="true"], .box-texttab[selected="true"]:hover,
+  .box-texttab[selected="true"]:hover:active
     {
       border-top          : 1px solid #003366;
       border-left         : 1px solid #003366;
       border-right        : 1px solid #003366;
+      border-bottom       : none;
       font-weight         : bold;
     }
+
+  .box-texttab[selected="true"] > .texttab-internal-box
+    {
+      border              : 1px solid #99CCCC;
+    }
+
+  .box-texttab[selected="true"]:hover > .texttab-internal-box
+    {
+      border              : 1px outset #99CCCC;
+    }
+
+  .box-texttab[selected="true"]:hover:active > .texttab-internal-box
+    {
+      border              : 1px inset #99CCCC;
+    }
+
+
   
   .iframe-panel
     {

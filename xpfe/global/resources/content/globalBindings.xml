@@ -12,7 +12,9 @@
   
   <binding id="texttab">
     <content>
-      <xul:text inherits="value,accesskey,crop"/>
+      <xul:box allowevents="true" class="texttab-internal-box" flex="1">
+        <xul:text inherits="value,accesskey,crop"/>
+      </xul:box>
     </content>
   </binding>
   
