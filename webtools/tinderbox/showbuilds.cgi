@@ -71,6 +71,7 @@ $rel_path = '';
 &do_static,           exit if $form{static};
 &do_flash,            exit if $form{flash};
 &do_panel,            exit if $form{panel};
+&do_hdml,             exit if $form{hdml};
 &do_tinderbox,        exit;
 
 # end of main
@@ -123,7 +124,8 @@ sub do_static {
 
   my @pages = ( ['index.html', 'do_tinderbox'],
                 ['flash.rdf',  'do_flash'],
-                ['panel.html', 'do_panel'] );
+                ['panel.html', 'do_panel'],
+                ['stats.hdml', 'do_hdml'] );
   
   $rel_path = '../';
   while (($key, $value) = each %images) {
@@ -828,3 +830,41 @@ sub do_rdf {
   print "</rdf:RDF>\n";
 }
 
+# This is for Sprint phones
+sub do_hdml {
+  print "Content-type: text/hdml\n\n" unless $form{static};
+
+  print q{<hdml version=2.0 ttl=0>
+    <display title=Tinderbox>
+      <action type=help task=go dest=#help>
+  };
+  %state_symbols = (success=>'+',busted=>'!',testfailed=>'~');
+
+  my @treelist = split /,/, $tree;
+  foreach my $t (@treelist) {
+    $bonsai_tree = "";
+    require "$t/treedata.pl";
+    if ($bonsai_tree ne "") {
+      my $state = tree_open() ? "Open" : "Close";
+      print "<LINE>$t is $state";
+    }
+    my (%build, %times);
+    tb_loadquickparseinfo($t, \%build, \%times);
+    
+    foreach my $buildname (sort keys %build) {
+      print "<LINE>$state_symbols{$build{$buildname}} $buildname\n";
+    }
+  }
+
+   print q{
+    </display>
+    <DISPLAY NAME=help>
+      Legend:<BR>
+      + : Good Build<BR>
+      ! : Broken Build<BR>
+      ~ : Tests Failed
+    </DISPLAY>
+   </HDML>
+  };
+
+}
