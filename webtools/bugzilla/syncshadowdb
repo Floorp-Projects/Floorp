@@ -177,7 +177,8 @@ if ($syncall) {
     
     
     $::dbwritesallowed = 1;
-    SendSQL("UPDATE shadowlog SET reflected = 1 WHERE reflected = 0", 1);
+#    SendSQL("UPDATE shadowlog SET reflected = 1 WHERE reflected = 0", 1);
+    SendSQL("DELETE FROM shadowlog", 1);
     SendSQL("UNLOCK TABLES");
     if ($wasusing) {
         Verbose("Reenabling other processes to read from the shadow db");
