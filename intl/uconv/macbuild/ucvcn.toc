@@ -1,0 +1,4 @@
+mozilla/intl/uconv/ucvcn/nsBIG5ToUnicode.cpp
+mozilla/intl/uconv/ucvcn/nsUCvCnDll.cpp
+mozilla/intl/uconv/ucvcn/nsUCvCnSupport.cpp
+mozilla/intl/uconv/ucvcn/nsUnicodeToBIG5.cpp
