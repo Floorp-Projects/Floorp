@@ -31,7 +31,6 @@ toolkit.jar:
 *+ content/global/viewZoomOverlay.js
 *  content/global/widgets/autocomplete.xml    (widgets/autocomplete.xml)
 *  content/global/widgets/browser.xml         (widgets/browser.xml)
-*  content/global/widgets/browserUtils.xml    (widgets/browserUtils.xml)
 *  content/global/widgets/button.xml          (widgets/button.xml)
 *  content/global/widgets/checkbox.xml        (widgets/checkbox.xml)
 *  content/global/widgets/colorpicker.xml     (widgets/colorpicker.xml)
