@@ -295,3 +295,40 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
 }
 
+// Functions to convert from HSL color space to RGB color space.
+// This is the algorithm described in the CSS3 specification
+
+// helper
+static float
+HSL_HueToRGB(float m1, float m2, float h)
+{
+  if (h < 0.0f)
+    h += 1.0f;
+  if (h > 1.0f)
+    h -= 1.0f;
+  if (h < (float)(1.0/6.0))
+    return m1 + (m2 - m1)*h*6.0f;
+  if (h < (float)(1.0/2.0))
+    return m2;
+  if (h < (float)(2.0/3.0))
+    return m1 + (m2 - m1)*((float)(2.0/3.0) - h)*6.0f;
+  return m1;      
+}
+
+// The float parameters are all expected to be in the range 0-1
+extern "C" NS_GFX_(nscolor)
+NS_HSL2RGB(float h, float s, float l)
+{
+  PRUint8 r, g, b;
+  float m1, m2;
+  if (l <= 0.5f) {
+    m2 = l*(s+1);
+  } else {
+    m2 = l + s - l*s;
+  }
+  m1 = l*2 - m2;
+  r = PRUint8(255 * HSL_HueToRGB(m1, m2, h + 1.0f/3.0f));
+  g = PRUint8(255 * HSL_HueToRGB(m1, m2, h));
+  b = PRUint8(255 * HSL_HueToRGB(m1, m2, h - 1.0f/3.0f));
+  return NS_RGB(r, g, b);  
+}

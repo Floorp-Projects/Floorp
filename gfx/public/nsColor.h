@@ -105,4 +105,8 @@ extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
 // darkest component underflows
 extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor);
 
+// function to convert from HSL color space to RGB color space
+// the float parameters are all expected to be in the range 0-1
+extern "C" NS_GFX_(nscolor) NS_HSL2RGB(float h, float s, float l);
+
 #endif /* nsColor_h___ */

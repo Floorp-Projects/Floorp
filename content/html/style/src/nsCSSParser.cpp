@@ -306,6 +306,11 @@ protected:
   PRBool ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseColorComponent(PRInt32& aErrorCode, PRUint8& aComponent,
                              PRInt32& aType, char aStop);
+  // ParseHSLColor parses everything starting with the opening '(' up through
+  // and including the aStop char.
+  PRBool ParseHSLColor(PRInt32& aErrorCode, nscolor& aColor, char aStop);
+  // ParseColorOpacity will enforce that the color ends with a ')' after the opacity
+  PRBool ParseColorOpacity(PRInt32& aErrorCode, PRUint8& aOpacity);
   PRBool ParseEnum(PRInt32& aErrorCode, nsCSSValue& aValue, const PRInt32 aKeywordTable[]);
   PRInt32 SearchKeywordTable(nsCSSKeyword aKeyword, const PRInt32 aTable[]);
   PRBool ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
@@ -2454,7 +2459,6 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
     return PR_FALSE;
   }
 
-
   nsCSSToken* tk = &mToken;
   nscolor rgba;
   switch (tk->mType) {
@@ -2491,11 +2495,46 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
             ParseColorComponent(aErrorCode, r, type, ',') &&
             ParseColorComponent(aErrorCode, g, type, ',') &&
             ParseColorComponent(aErrorCode, b, type, ')')) {
-          rgba = NS_RGB(r,g,b);
-          aValue.SetColorValue(rgba);
+          aValue.SetColorValue(NS_RGB(r,g,b));
           return PR_TRUE;
         }
         return PR_FALSE;  // already pushed back
+      }
+      else if (mToken.mIdent.EqualsIgnoreCase("-moz-rgba")) {
+        // rgba ( component , component , component , opacity )
+        PRUint8 r, g, b, a;
+        PRInt32 type = COLOR_TYPE_UNKNOWN;
+        if (ExpectSymbol(aErrorCode, '(', PR_FALSE) && // this won't fail
+            ParseColorComponent(aErrorCode, r, type, ',') &&
+            ParseColorComponent(aErrorCode, g, type, ',') &&
+            ParseColorComponent(aErrorCode, b, type, ',') &&
+            ParseColorOpacity(aErrorCode, a)) {
+          aValue.SetColorValue(NS_RGBA(r, g, b, a));
+          return PR_TRUE;
+        }
+        return PR_FALSE;  // already pushed back
+      }
+      else if (mToken.mIdent.EqualsIgnoreCase("-moz-hsl")) {
+        // hsl ( hue , saturation , lightness )
+        // "hue" is a number, "saturation" and "lightness" are percentages.
+        if (ParseHSLColor(aErrorCode, rgba, ')')) {
+          aValue.SetColorValue(rgba);
+          return PR_TRUE;
+        }
+        return PR_FALSE;
+      }
+      else if (mToken.mIdent.EqualsIgnoreCase("-moz-hsla")) {
+        // hsla ( hue , saturation , lightness , opacity )
+        // "hue" is a number, "saturation" and "lightness" are percentages,
+        // "opacity" is a number.
+        PRUint8 a;
+        if (ParseHSLColor(aErrorCode, rgba, ',') &&
+            ParseColorOpacity(aErrorCode, a)) {
+          aValue.SetColorValue(NS_RGBA(NS_GET_R(rgba), NS_GET_G(rgba),
+                                       NS_GET_B(rgba), a));
+          return PR_TRUE;
+        }
+        return PR_FALSE;
       }
       break;
     default:
@@ -2627,10 +2666,119 @@ PRBool CSSParserImpl::ParseColorComponent(PRInt32& aErrorCode,
   PRUnichar stopString[2];
   stopString[0] = PRUnichar(aStop);
   stopString[1] = PRUnichar(0);
-  REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ") +
+  REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected '") +
                           nsDependentString(stopString, 1) +
-                          NS_LITERAL_STRING(" but found"));
+                          NS_LITERAL_STRING("' but found"));
   return PR_FALSE;
+}
+
+
+PRBool CSSParserImpl::ParseHSLColor(PRInt32& aErrorCode, nscolor& aColor,
+                                    char aStop)
+{
+  float h, s, l;
+  if (!ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
+    NS_ERROR("How did this get to be a function token?");
+    return PR_FALSE;
+  }
+
+  // Get the hue
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("hue"));
+    return PR_FALSE;
+  }
+  if (mToken.mType != eCSSToken_Number) {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Expected a number but found"));
+    UngetToken();
+    return PR_FALSE;
+  }
+  h = mToken.mNumber;
+  h /= 360.0f;
+  // hue values are wraparound
+  h = h - floorf(h);
+  
+  if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ',' but found"));
+    return PR_FALSE;
+  }
+  
+  // Get the saturation
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("saturation"));
+    return PR_FALSE;
+  }
+  if (mToken.mType != eCSSToken_Percentage) {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Expected a percentage but found"));
+    UngetToken();
+    return PR_FALSE;
+  }
+  s = mToken.mNumber;
+  if (s < 0.0f) s = 0.0f;
+  if (s > 1.0f) s = 1.0f;
+  
+  if (!ExpectSymbol(aErrorCode, ',', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ',' but found"));
+    return PR_FALSE;
+  }
+
+  // Get the lightness
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("lightness"));
+    return PR_FALSE;
+  }
+  if (mToken.mType != eCSSToken_Percentage) {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Expected a percentage but found"));
+    UngetToken();
+    return PR_FALSE;
+  }
+  l = mToken.mNumber;
+  if (l < 0.0f) l = 0.0f;
+  if (l > 1.0f) l = 1.0f;
+        
+  if (ExpectSymbol(aErrorCode, aStop, PR_TRUE)) {
+    aColor = NS_HSL2RGB(h, s, l);
+    return PR_TRUE;
+  }
+  
+  PRUnichar stopString[2];
+  stopString[0] = PRUnichar(aStop);
+  stopString[1] = PRUnichar(0);
+  REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected '") +
+                          nsDependentString(stopString, 1) +
+                          NS_LITERAL_STRING("' but found"));
+  return PR_FALSE;
+}
+ 
+ 
+PRBool CSSParserImpl::ParseColorOpacity(PRInt32& aErrorCode, PRUint8& aOpacity)
+{
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("opacity in color value"));
+    return PR_FALSE;
+  }
+
+  if (mToken.mType != eCSSToken_Number) {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Expected a number but found"));
+    UngetToken();
+    return PR_FALSE;
+  }
+
+  PRUint32 value = (PRUint32)round(mToken.mNumber*255);
+
+  if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected ')' but found"));
+    return PR_FALSE;
+  }
+  
+  if (value < 0) value = 0;
+  if (value > 255) value = 255;
+  aOpacity = (PRUint8)value;
+
+  return PR_TRUE;
 }
 
 #ifdef INCLUDE_XUL
@@ -3095,7 +3243,10 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
     		(eCSSToken_ID == tk->mType) || 
         (eCSSToken_Ident == tk->mType) ||
         ((eCSSToken_Function == tk->mType) && 
-         (tk->mIdent.EqualsIgnoreCase("rgb")))) {
+         (tk->mIdent.EqualsIgnoreCase("rgb") ||
+          tk->mIdent.EqualsIgnoreCase("-moz-hsl") ||
+          tk->mIdent.EqualsIgnoreCase("-moz-rgba") ||
+          tk->mIdent.EqualsIgnoreCase("-moz-hsla")))) {
       // Put token back so that parse color can get it
       UngetToken();
       if (ParseColor(aErrorCode, aValue)) {
