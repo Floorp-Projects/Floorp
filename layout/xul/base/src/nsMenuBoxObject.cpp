@@ -83,6 +83,31 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
   return menuFrame->OpenMenu(aOpenFlag);
 }
 
+NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(frame));
+  if (!menuFrame)
+    return NS_OK;
+
+  return menuFrame->GetActiveChild(aResult);
+}
+
+NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(frame));
+  if (!menuFrame)
+    return NS_OK;
+
+  return menuFrame->SetActiveChild(aResult);
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

@@ -16,7 +16,7 @@
       <xul:image class="menu-dropmarker"/>
     </content>
 	  <handlers>
-      <handler type="command" capturer="true" value="this.selectedItem = event.target; this.data = this.selectedItem.data;"/>
+      <handler type="command" capturer="true" value="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
 	  </handlers>
     <interface>
       <property name="data" onset="this.setAttribute('data',val); return val;"
@@ -35,7 +35,7 @@
       <xul:image class="menu-dropmarker"/>
     </content>
 	  <handlers>
-      <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
+      <handler type="command" capturer="true" value="if (event.target.localName == 'menuitem') { this.selectedItem = event.target; this.data = this.selectedItem.data; }"/>
 	  </handlers>
   </binding>
   

@@ -99,6 +99,8 @@ public:
 
   NS_IMETHOD HidePopup();
   NS_IMETHOD DestroyPopup();
+  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult);
+  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild);
 
   PRBool OnCreate(nsIContent* aPopupContent);
   PRBool OnDestroy();

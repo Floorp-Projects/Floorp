@@ -139,6 +139,32 @@ nsPopupSetBoxObject::CreatePopup(nsIDOMElement* aSrcContent,
   return popupFrame->CreatePopup(srcContent, popupContent, aXPos, aYPos, aPopupType, anAnchorAlignment, aPopupAlignment);
 }
 
+NS_IMETHODIMP nsPopupSetBoxObject::GetActiveChild(nsIDOMElement** aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsCOMPtr<nsIPopupSetFrame> popupFrame(do_QueryInterface(frame));
+  if (!popupFrame)
+    return NS_OK;
+
+  return popupFrame->GetActiveChild(aResult);
+}
+
+NS_IMETHODIMP nsPopupSetBoxObject::SetActiveChild(nsIDOMElement* aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsCOMPtr<nsIPopupSetFrame> popupFrame(do_QueryInterface(frame));
+  if (!popupFrame)
+    return NS_OK;
+
+  return popupFrame->SetActiveChild(aResult);
+}
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult

@@ -29,6 +29,7 @@
 
 class nsIFrame;
 class nsIContent;
+class nsIDOMElement;
 
 #include "nsString.h"
 
@@ -44,6 +45,9 @@ public:
 
   NS_IMETHOD HidePopup() = 0;
   NS_IMETHOD DestroyPopup() = 0;
+
+  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult)=0;
+  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild)=0;
 };
 
 #endif

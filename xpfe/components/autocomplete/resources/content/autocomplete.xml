@@ -153,17 +153,16 @@
 //					dump("  match=" + item.value + "\n");
                 }
 //				dump("  count=" + result.items.Count() + ", default=" + result.defaultItemIndex + "\n");
-				if (result.defaultItemIndex != -1)
-				{
-//TODO: Select the default item
-//                popupset.selectedItem = result.defaultItemIndex;
-				}
+				
 				me.privatefunc.selectedItemIndex = result.defaultItemIndex;
 				if (result.defaultItemIndex != 0 || result.items.Count() != 1)
 				{
 //					me.privatefunc.closePopupMenu(me); //Close it first as openPopup seems to work as a toggle!
 					popupset.firstChild.openPopup(document.getAnonymousNodes(me)[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
-				}
+				  
+          if (result.defaultItemIndex != -1)
+				    popupElement.activeChild = popupElement.childNodes[result.defaultItemIndex];
+        }
             },
 
             param: this

@@ -29,6 +29,8 @@
 interface nsIMenuBoxObject : nsISupports
 {
   void openMenu(in boolean openFlag);
+
+  attribute nsIDOMElement activeChild;
 };
 
 %{C++

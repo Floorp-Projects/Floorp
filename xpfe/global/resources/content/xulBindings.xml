@@ -370,6 +370,32 @@
         ]]>
         </body>
       </method>
+      <property name="activeChild">
+        <getter>
+          <![CDATA[
+            try {
+              var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+              var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            } catch(e) {}
+            if (popupSetBox)
+              return popupSetBox.activeChild;
+            else if (menuBox)
+              return menuBox.activeChild;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            try {
+              var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+              var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
+            } catch(e) {}
+            if (popupSetBox)
+              return popupSetBox.activeChild = val;
+            else if (menuBox)
+              return menuBox.activeChild = val;
+          ]]>
+        </setter>
+      </property>
     </interface>     
   </binding>
   

@@ -35,6 +35,8 @@ interface nsIPopupSetBoxObject : nsISupports
 
   void hidePopup();
   void destroyPopup();
+
+  attribute nsIDOMElement activeChild;
 };
 
 %{C++

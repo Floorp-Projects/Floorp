@@ -63,6 +63,9 @@ public:
   NS_IMETHOD GetMenuType(nsMenuType &aType) = 0;
 
   NS_IMETHOD MarkAsGenerated() = 0;
+
+  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult)=0;
+  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild)=0;
 };
 
 #endif
