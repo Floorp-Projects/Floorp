@@ -1146,12 +1146,12 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Enable(PRBool bState)
+NS_METHOD nsWindow::Enable(PRBool aState)
 {
     if(mView && mView->LockLooper()) {
         if (mView->Window()) {
             uint flags = mView->Window()->Flags();
-            if (bState == PR_TRUE) {
+            if (aState == PR_TRUE) {
                flags &= ~(B_AVOID_FRONT|B_AVOID_FOCUS);
             } else {
                flags |= B_AVOID_FRONT|B_AVOID_FOCUS;
@@ -1161,6 +1161,13 @@ NS_METHOD nsWindow::Enable(PRBool bState)
         mView->UnlockLooper();
     }
     return NS_OK;
+}
+
+    
+NS_METHOD nsWindow::IsEnabled(PRBool *aState)
+{
+    // looks easy enough, but...
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
     
