@@ -1189,33 +1189,29 @@ void nsSocketTransport::SetSocketTimeout(PRIntervalTime aTimeInterval)
 
 NS_IMPL_THREADSAFE_ADDREF(nsSocketTransport);
 NS_IMPL_THREADSAFE_RELEASE(nsSocketTransport);
+NS_IMPL_QUERY_INTERFACE5(nsSocketTransport, 
+                         nsIRequest, nsIChannel, 
+                         nsIDNSListener, nsIPipeObserver,
+                         nsISocketTransport);
 
+//
+// --------------------------------------------------------------------------
+// nsISocketTransport implementation...
+// --------------------------------------------------------------------------
+//
 NS_IMETHODIMP
-nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
+nsSocketTransport::GetReuseConnection(PRBool *_retval)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIChannel)) ||
-      aIID.Equals(NS_GET_IID(nsIRequest)) ||
-      aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIChannel*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  } 
-  if (aIID.Equals(NS_GET_IID(nsIDNSListener))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIDNSListener*, this);
-    NS_ADDREF_THIS();
+    *_retval = !mCloseConnectionOnceDone;
     return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIPipeObserver))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIPipeObserver*, this); 
-    NS_ADDREF_THIS(); 
-    return NS_OK; 
-  }
-  return NS_NOINTERFACE; 
 }
 
+NS_IMETHODIMP
+nsSocketTransport::SetReuseConnection(PRBool aReuse)
+{
+    mCloseConnectionOnceDone = !aReuse;
+    return NS_OK;
+}
 
 
 //

@@ -51,6 +51,7 @@ XPIDLSRCS =                             \
         .\nsIFileSystem.idl             \
         .\nsIUnicharStreamLoader.idl    \
          .\nsINetPrompt.idl    		\
+         .\nsISocketTransport.idl       \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

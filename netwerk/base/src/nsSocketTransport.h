@@ -27,8 +27,8 @@
 #include "prio.h"
 #include "prnetdb.h"
 #include "prinrval.h"
-
 #include "nsCOMPtr.h"
+#include "nsISocketTransport.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
@@ -110,12 +110,14 @@ enum nsSocketReadWriteInfo {
 class nsSocketTransportService;
 class nsIInterfaceRequestor;
 
-class nsSocketTransport : public nsIChannel, 
+class nsSocketTransport : public nsISocketTransport,
+                          public nsIChannel, 
                           public nsIDNSListener,
                           public nsIPipeObserver
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSISOCKETTRANSPORT
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
   NS_DECL_NSIPIPEOBSERVER

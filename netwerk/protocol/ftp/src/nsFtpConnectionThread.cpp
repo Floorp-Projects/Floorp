@@ -23,6 +23,7 @@
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIStringStream.h"
+#include "nsISocketTransport.h"
 #include "nsIPipe.h"
 #include "nsIMIMEService.h"
 #include "nsIStreamConverterService.h"
@@ -1525,6 +1526,11 @@ nsFtpConnectionThread::R_pasv() {
                                mBufferSegmentSize, mBufferMaxSize,
                                getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
+
+    nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mDPipe, &rv);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+
+    if (NS_FAILED(sTrans->SetReuseConnection(PR_FALSE))) return FTP_ERROR;
 
     // The FTP connection thread will receive transport leve
     // AsyncOpen notifications.
