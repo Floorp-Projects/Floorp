@@ -17,7 +17,6 @@
  */
 #include "nsPageFrame.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsIReflowCommand.h"

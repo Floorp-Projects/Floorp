@@ -19,7 +19,6 @@
 #include "nsGenericHTMLElement.h"
 
 #include "nsIAtom.h"
-#include "nsIContentDelegate.h"
 #include "nsICSSParser.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
@@ -76,7 +75,6 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 //NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
-static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 static NS_DEFINE_IID(kIDOMAttributeIID, NS_IDOMATTRIBUTE_IID);
 static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);

@@ -18,7 +18,6 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIStyleSet.h"

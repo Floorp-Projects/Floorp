@@ -17,7 +17,6 @@
  */
 #include "nsPlaceholderFrame.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsIFloaterContainer.h"
 #include "nsBodyFrame.h"
 #include "nsIStyleContext.h"

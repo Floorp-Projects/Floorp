@@ -25,7 +25,6 @@
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsCSSLayout.h"
 #include "nsVoidArray.h"
 #include "nsIReflowCommand.h"

@@ -20,7 +20,6 @@
 #include "nsIArena.h"
 #include "nsIAtom.h"
 #include "nsIHTMLAttributes.h"
-#include "nsIContentDelegate.h"
 #include "nsFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsISupportsArray.h"
@@ -32,7 +31,6 @@
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 
-static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);

@@ -23,7 +23,6 @@
 #include "nsStyleConsts.h"
 #include "nsViewsCID.h"
 
-#include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"

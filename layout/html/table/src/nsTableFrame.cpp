@@ -19,7 +19,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
-#include "nsIContentDelegate.h"
 #include "nsCellMap.h"
 #include "nsTableCellFrame.h"
 #include "nsHTMLParts.h"

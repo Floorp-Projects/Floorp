@@ -22,7 +22,6 @@
 #include "nsIRunaround.h"
 #include "nsISpaceManager.h"
 #include "nsIStyleContext.h"
-#include "nsIContentDelegate.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
