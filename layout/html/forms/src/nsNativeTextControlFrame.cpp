@@ -563,7 +563,10 @@ void nsNativeTextControlFrame::SetTextControlFrameState(const nsString& aValue)
       NS_RELEASE(textArea);
     }
   } else {
+    if (mCachedState) delete mCachedState;
     mCachedState = new nsString(aValue);
+    // XXX if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
+    NS_ASSERTION(mCachedState, "Error: new nsString failed!");
   }
 }
 
