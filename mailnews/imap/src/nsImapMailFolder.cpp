@@ -344,6 +344,12 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
             SetFlag(newFlags);
             rv = CreateSubFolders(path);
         }
+		PRUint32 count;
+		if (isServer && NS_SUCCEEDED(mSubFolders->Count(&count)) && count == 0)
+		{
+			// create an inbox...
+			CreateClientSubfolderInfo("INBOX");
+		}
         UpdateSummaryTotals(PR_FALSE);
 
         if (NS_FAILED(rv)) return rv;
