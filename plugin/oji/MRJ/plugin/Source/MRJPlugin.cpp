@@ -765,21 +765,7 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
 NS_METHOD MRJPluginInstance::Print(nsPluginPrint* platformPrint)
 {
 	if (platformPrint->mode == nsPluginMode_Embedded) {
-		MRJFrame* frame = mContext->findFrame(WindowRef(NULL));
-		if (frame != NULL) {
-#if 0		
-			Point frameOrigin = { 0, 0 };
-			GrafPtr printingPort;
-			::GetPort(&printingPort);
-			frame->print(printingPort, frameOrigin);
-#else
-			nsPluginPort* npPort = platformPrint->print.embedPrint.window.window;
-			Point frameOrigin = { -npPort->porty, -npPort->portx };
-			GrafPtr printingPort;
-			::GetPort(&printingPort);
-			mContext->printApplet(printingPort, frameOrigin);
-#endif
-		}
+		mContext->printApplet(&platformPrint->print.embedPrint.window);
 		return NS_OK;
 	}
 	return NS_ERROR_NOT_IMPLEMENTED;
