@@ -16,8 +16,18 @@
  * Reserved.
  */
 
+#ifndef nsICaret_h__
+#define nsICaret_h__
+
+#include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
+
+class nsIRenderingContext;
+class nsIFrame;
+class nsIView;
+struct nsRect;
+struct nsPoint;
 
 // IID for the nsICaret interface
 #define NS_ICARET_IID       \
@@ -92,4 +102,6 @@ protected:
 
 };
 
+
+#endif  // nsICaret_h__
 
