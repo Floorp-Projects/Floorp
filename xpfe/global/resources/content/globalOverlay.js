@@ -107,7 +107,9 @@ function goUpdateCommand(command)
 	
 	if ( controller )
 		enabled = controller.IsCommandEnabled(command);
-	
+	else
+		goSetMenuValue(command, 'valueDefault');
+		
 	goSetCommandEnabled(command, enabled);
 }
 
@@ -133,4 +135,10 @@ function goSetCommandEnabled(id, enabled)
 	}
 }
 
-
+function goSetMenuValue(command, valueAttribute)
+{
+	var commandNode = document.getElementById(command);
+	var value = commandNode.getAttribute(valueAttribute);
+	if ( commandNode && value )
+		commandNode.setAttribute('value', value);
+}
