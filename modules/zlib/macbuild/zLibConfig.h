@@ -15,8 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#define EDITOR 1
-//#define JAVA 1
-#define Z_PREFIX 
-#include "NSCrossProductDefines.h"
-#include "IDE_Options.h"
+
+/* Nothing to do here. Define zlib specific stuff here if necessary */
+
+/* I don't think we need this any more. If we do, it needs to be
+	globally defined. */
+//#define Z_PREFIX 
