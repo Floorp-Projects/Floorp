@@ -20,6 +20,7 @@ IGNORE_MANIFEST=1
 
 MODULE=util 
 DEPTH=..\..\.. 
-EXPORTS=xp_obs.h 
+EXPORTS=xp_obs.h \
+        stopwatch.h
 
 !include $(DEPTH)\config\rules.mak
