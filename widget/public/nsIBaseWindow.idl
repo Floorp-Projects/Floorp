@@ -90,13 +90,14 @@ interface nsIBaseWindow : nsISupports
 	void create();
 
 	/*
-	Tell the window that it can destroy itself.  This allows re-using the same
-	object without re-doing a lot of setup.  This is not a required call 
-	before a release.
+	Tell the window that it should destroy itself.  This call should not be
+	necessary as it will happen implictly when final release occurs on the
+	object.  If for some reaons you want the window destroyed prior to release
+	due to cycle or ordering issues, then this call provides that ability.
 
 	@return	NS_OK - Everything destroyed properly.
-				NS_ERROR_NOT_IMPLEMENTED - State preservation is not supported.
-					Release the interface and create a new object.
+				NS_ERROR_UNEXPECTED - This call was unexpected at this time.
+					Perhaps create() has not been called yet.
 	*/
 	void destroy();
 
