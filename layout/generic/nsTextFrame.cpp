@@ -5272,6 +5272,8 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
   RevertSpacesToNBSP(aWordBuf, (PRInt32) aWordLen);
 
   nscoord addedWidth = 0;
+  PRUnichar *newWordBuf = aWordBuf;
+  PRUint32 newWordBufSize = aWordBufSize;
   while (nsnull != aNextFrame) {
     nsIContent* content = nsnull;
     if ((NS_OK == aNextFrame->GetContent(&content)) && (nsnull != content)) {
@@ -5283,15 +5285,38 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
       nsITextContent* tc;
       if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
         PRBool stop = PR_FALSE;
-        nscoord moreWidth = ComputeWordFragmentWidth(aPresContext,
-                                                     aLineBreaker,
-                                                     aLineLayout,
-                                                     aReflowState,
-                                                     aNextFrame, content, tc,
-                                                     &stop,
-                                                     aWordBuf,
-                                                     aWordLen,
-                                                     aWordBufSize);
+        nscoord moreWidth;
+        moreWidth = ComputeWordFragmentWidth(aPresContext,
+                                                   aLineBreaker,
+                                                   aLineLayout,
+                                                   aReflowState,
+                                                   aNextFrame, content, tc,
+                                                   &stop,
+                                                   newWordBuf,
+                                                   aWordLen,
+                                                   newWordBufSize);
+        if (moreWidth < 0) {
+          PRUint32 moreSize = -moreWidth;
+          //Oh, wordBuf is too small, we have to grow it
+          newWordBufSize += moreSize;
+          if (newWordBuf != aWordBuf) {
+            newWordBuf = (PRUnichar*)nsMemory::Realloc(newWordBuf, sizeof(PRUnichar)*newWordBufSize);
+          } else {
+            newWordBuf = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*newWordBufSize);
+            nsCRT::memcpy((void*)newWordBuf, aWordBuf, sizeof(PRUnichar)*newWordBufSize-moreSize);
+          }
+          moreWidth = ComputeWordFragmentWidth(aPresContext,
+                                                   aLineBreaker,
+                                                   aLineLayout,
+                                                   aReflowState,
+                                                   aNextFrame, content, tc,
+                                                   &stop,
+                                                   newWordBuf,
+                                                   aWordLen,
+                                                   newWordBufSize);
+          NS_ASSERTION((moreWidth >= 0), "ComputeWordFragmentWidth is returning negative");
+        }
+
         NS_RELEASE(tc);
         NS_RELEASE(content);
         addedWidth += moreWidth;
@@ -5320,6 +5345,8 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
 #ifdef DEBUG_WORD_WRAPPING
   printf("  total word width=%d\n", aBaseWidth + addedWidth);
 #endif
+  if (newWordBuf != aWordBuf)
+    nsMemory::Free(newWordBuf);
   return aBaseWidth + addedWidth;
 }
                                     
@@ -5346,22 +5373,21 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
     *aStop = PR_TRUE;
     return 0;
   }
+
+  // We need to adjust the length by look at the two pieces together
+  // but if we have to grow aWordBuf, ask caller do it by return a negative value of size
+  if ((wordLen + aRunningWordLen) > aWordBufSize)
+    return aWordBufSize - wordLen - aRunningWordLen; 
+ 
   *aStop = contentLen < tx.GetContentLength();
 
   // Convert any spaces in the current word back to nbsp's. This keeps
   // the breaking logic happy.
   RevertSpacesToNBSP(bp, wordLen);
 
-  // We need to adjust the length by look at the two pieces together
-  // XXX this should grow aWordBuf if necessary
-  PRUint32 copylen = sizeof(PRUnichar) *
-    ( ((wordLen + aRunningWordLen) > aWordBufSize)
-      ? (aWordBufSize - aRunningWordLen)
-      : wordLen
-      );
-  if((aWordBufSize > aRunningWordLen) && (copylen > 0))
+  if(wordLen > 0)
   {
-    nsCRT::memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, copylen);
+    nsCRT::memcpy((void*)&(aWordBuf[aRunningWordLen]), bp, sizeof(PRUnichar)*wordLen);
 
     PRUint32 breakP=0;
     PRBool needMore=PR_TRUE;
