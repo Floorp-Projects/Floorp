@@ -26,7 +26,7 @@
 # Make it harder for us to do dangerous things in Perl.
 use strict;
 
-# Bundle the functions in this file together into the "Token" package.
+# Bundle the functions in this file together into the "Bugzilla::Token" package.
 package Bugzilla::Token;
 
 use Bugzilla::Config;
@@ -247,7 +247,7 @@ sub DeletePasswordTokens {
                             "WHERE userid=? AND tokentype='password'");
     $sth->execute($userid);
     while (my $token = $sth->fetchrow_array) {
-        Token::Cancel($token, $reason);
+        Bugzilla::Token::Cancel($token, $reason);
     }
 }
 

@@ -50,8 +50,8 @@ sub authenticate {
 
     # The user's credentials are okay, so delete any outstanding
     # password tokens they may have generated.
-    require Token;
-    Token::DeletePasswordTokens($userid, "user_logged_in");
+    require Bugzilla::Token;
+    Bugzilla::Token::DeletePasswordTokens($userid, "user_logged_in");
 
     # Account may have been disabled
     my $disabledtext = $class->get_disabled($userid);

@@ -175,7 +175,7 @@ argument is a string, not a tag.
 This determines if the user's account details can be modified. If this
 method returns a C<true> value, then accounts can be created and modified
 through the Bugzilla user interface. Forgotten passwords can also be
-retrieved through the L<Token interface|Token>.
+retrieved through the L<Token interface|Bugzilla::Token>.
 
 =back
 
