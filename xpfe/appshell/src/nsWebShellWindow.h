@@ -128,7 +128,8 @@ public:
 	  nsIDOMNode  * aMenuNode, 
 	  nsIWidget   * aParentWindow,
 	  PRInt32       aX,
-	  PRInt32       aY);
+	  PRInt32       aY,
+    const nsString& aPopupAlignment);
   
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 

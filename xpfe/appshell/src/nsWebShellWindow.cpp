@@ -859,7 +859,8 @@ void nsWebShellWindow::DoContextMenu(
   nsIDOMNode  * aMenuNode, 
   nsIWidget   * aParentWindow,
   PRInt32       aX,
-  PRInt32       aY) 
+  PRInt32       aY,
+  const nsString& aPopupAlignment) 
 {
   if (aMenuNode) {
     nsIContextMenu * pnsContextMenu;
@@ -1078,7 +1079,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if (tagName == "menu") {
       
     // XXX Need to distinguish between popup menus and context menus?
-    DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos);
+    DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos, aPopupAlignment);
 
     // Fire the DESTRUCT DOM event to give JS/C++ a chance to destroy the popup contents
     nsEventStatus status = nsEventStatus_eIgnore;
