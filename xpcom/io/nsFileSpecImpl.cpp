@@ -525,7 +525,7 @@ NS_IMETHODIMP nsFileSpecImpl::readLine(char** line, PRInt32 bufferSize, PRBool *
 	if (!mInputStream)
 		return NS_ERROR_NULL_POINTER;
 	nsInputFileStream s(mInputStream);
-	*wasTruncated = s.readline(*line, bufferSize);
+	*wasTruncated = !s.readline(*line, bufferSize);
 	return s.error();
 }
 
