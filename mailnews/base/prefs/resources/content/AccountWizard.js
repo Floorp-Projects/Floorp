@@ -450,8 +450,11 @@ function finishAccount(account, accountData) {
 
         dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
         //set the smtp server to be the default only if it is not a redirectorType
-        if (accountData.smtp.redirectorType == null)
-          smtpService.defaultServer = smtpServer;
+        if (accountData.smtp.redirectorType == null) 
+        {
+          if ((smtpService.defaultServer.hostname == null) || (smtpService.defaultServer.redirectorType != null))
+            smtpService.defaultServer = smtpServer;
+        }
 
         copyObjectToInterface(smtpServer, accountData.smtp);
 
@@ -681,7 +684,8 @@ function AccountToAccountData(account, defaultAccountData)
     
     accountData.incomingServer = account.incomingServer;
     accountData.identity = account.identities.QueryElementAt(0, nsIMsgIdentity);
-    accountData.smtp = smtpService.defaultServer;
+    try {accountData.smtp = smtpService.defaultServer;}
+    catch (ex){}
 
     return accountData;
 }

@@ -130,7 +130,11 @@ function serverPageInit() {
   }
 
   gPrefsBundle = document.getElementById("bundle_prefs");
-  var smtpServer = parent.smtpService.defaultServer;
+  var smtpServer = null;
+  try {
+    smtpServer = parent.smtpService.defaultServer;
+  }
+  catch(ex){}
 
   // modify the value in the smtp display if we already have a 
   // smtp server so that the single string displays the 

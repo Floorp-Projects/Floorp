@@ -115,15 +115,17 @@ function updateButtons()
 
         // can't delete default server
         var server = getSelectedServer();
-        if (smtpService.defaultServer == server) {
-            dump("Selected default server!\n");
-            setDefaultButton.setAttribute("disabled", "true");
-            deleteButton.setAttribute("disabled", "true");
-        }
-        else {
-            setDefaultButton.removeAttribute("disabled");
-            deleteButton.removeAttribute("disabled");
-        }
+        try{
+          if (smtpService.defaultServer == server) {
+              dump("Selected default server!\n");
+              setDefaultButton.setAttribute("disabled", "true");
+              deleteButton.setAttribute("disabled", "true");
+          }
+          else {
+              setDefaultButton.removeAttribute("disabled");
+              deleteButton.removeAttribute("disabled");
+          }
+        } catch(ex){}
     }
 
 }
@@ -140,16 +142,17 @@ function refreshServerList()
     // remove all children
     while (serverList.hasChildNodes())
         serverList.removeChild(serverList.lastChild);
+    try{
+      var defaultServer = smtpService.defaultServer;
+      fillSmtpServers(serverList,smtpService.smtpServers, defaultServer);
 
-    var defaultServer = smtpService.defaultServer;
-    fillSmtpServers(serverList,smtpService.smtpServers, defaultServer);
-
-    // restore selection
-    for (i=0; i< oldSelectedIds.length; i++) {
-        var element = document.getElementById(oldSelectedIds[i]);
-        if (element)
-            serverList.selectItem(element);
-    }
+      // restore selection
+      for (i=0; i< oldSelectedIds.length; i++) {
+          var element = document.getElementById(oldSelectedIds[i]);
+          if (element)
+              serverList.selectItem(element);
+      }
+    } catch(ex){}
 }
 
 // helper functions

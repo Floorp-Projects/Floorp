@@ -81,7 +81,8 @@ function updateElementWithKeys(account, element, type) {
       element["serverkey"] = account.incomingServer.key;
       break;
     case "smtp":
-      element["serverkey"] = smtpService.defaultServer.key;
+      try {element["serverkey"] = smtpService.defaultServer.key;}
+      catch(ex){}
       break;
     default:
 //      dump("unknown element type! "+type+"\n");

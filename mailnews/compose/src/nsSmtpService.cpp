@@ -695,7 +695,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
           // nothing in the array, we had better create a new server
           // (which will add it to the array & prefs anyway)
           if (count == 0)
-              rv = CreateSmtpServer(getter_AddRefs(mDefaultSmtpServer));
+              return nsnull;//if there are no smtp servers then dont create one for the default.
           else
               rv = mSmtpServers->QueryElementAt(0, NS_GET_IID(nsISmtpServer),
                                                 (void **)getter_AddRefs(mDefaultSmtpServer));
