@@ -241,7 +241,7 @@ static JSPropertySpec textProperties[] =
 static JSFunctionSpec textMethods[] = {
   {"append",          Append,     1},
   {"insert",          Insert,     2},
-  {"delete",          Delete,     2},
+  {"remove",          Delete,     2},
   {"replace",         Replace,    3},
   {"splice",          Splice,     3},
   {0}
