@@ -638,7 +638,8 @@ protected:
                                  nsAbsoluteItems& aAbsoluteItems,
                                  nsIFrame*&       aNewFrame,
                                  nsAbsoluteItems& aFixedItems,
-                                 PRBool           isAbsolutelyPositioned,
+                                 PRBool           aIsAbsolutelyPositioned,
+                                 PRBool           aIsFixedPositioned,
                                  PRBool           aCreateBlock);
 protected:
   PRUint32 mInHeap : 1;
@@ -3107,12 +3108,18 @@ HTMLStyleSheetImpl::InitializeScrollFrame(nsIFrame*        scrollFrame,
                                           nsAbsoluteItems& aAbsoluteItems,
                                           nsIFrame*&       aNewFrame,
                                           nsAbsoluteItems& aFixedItems,
-                                          PRBool           isAbsolutelyPositioned,
+                                          PRBool           aIsAbsolutelyPositioned,
+                                          PRBool           aIsFixedPositioned,
                                           PRBool           aCreateBlock)
 {
     // Initialize it
-    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
-                                                         aParentFrame;
+    nsIFrame* geometricParent = aParentFrame;
+    
+    if (aIsAbsolutelyPositioned) {
+      geometricParent = aAbsoluteItems.containingBlock;
+    } else if (aIsFixedPositioned) {
+      geometricParent = aFixedItems.containingBlock;
+    }
     scrollFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
 
     // The scroll frame gets the original style context, and the scrolled
@@ -3132,11 +3139,11 @@ HTMLStyleSheetImpl::InitializeScrollFrame(nsIFrame*        scrollFrame,
     NS_RELEASE(scrolledPseudoStyle);
 
     // Process children
-    if (isAbsolutelyPositioned) {
+    if (aIsAbsolutelyPositioned | aIsFixedPositioned) {
       // The area frame becomes a container for child frames that are
       // absolutely positioned
       nsAbsoluteItems  absoluteItems(scrolledFrame);
-      nsFrameItems  childItems;
+      nsFrameItems     childItems;
       ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
                       childItems, aFixedItems);
   
@@ -3197,10 +3204,12 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
   if ((isBlock && (aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE)) &&
       IsScrollable(aPresContext, aDisplay)) {
 
-    // XXX This needs to handle fixed position as well...
-
-    // See if it's absolutely positioned
-    isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
+    // See if it's absolute positioned or fixed positioned
+    if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+      isAbsolutelyPositioned = PR_TRUE;
+    } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+      isFixedPositioned = PR_TRUE;
+    }
 
     // Create a scroll frame
     nsIFrame* scrollFrame;
@@ -3209,7 +3218,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     // Initialize it
     InitializeScrollFrame(scrollFrame, aPresContext, aContent, aParentFrame,  aStyleContext,
                           aAbsoluteItems,  newFrame, aFixedItems,
-                          isAbsolutelyPositioned, PR_FALSE);
+                          isAbsolutelyPositioned, isFixedPositioned, PR_FALSE);
 
 #if 0 // XXX The following "ifdef" could has been moved to the method "InitializeScrollFrame"
     nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
@@ -3260,7 +3269,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     aNewFrame = scrollFrame;
 #endif
 
-  // See if the frame is absolutely positioned
+  // See if the frame is absolute or fixed positioned
   } else if (position->IsAbsolutelyPositioned() &&
              ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
               (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
