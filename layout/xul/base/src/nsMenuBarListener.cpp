@@ -87,11 +87,6 @@ nsMenuBarListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
     *aInstancePtr = (void*)(nsISupports*)(nsIDOMMouseMotionListener*)this;                        
     NS_ADDREF_THIS();                                                    
