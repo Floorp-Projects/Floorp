@@ -24,9 +24,6 @@ pref("editor.html_editor",                  "");
 pref("editor.image_editor",                 "");
 pref("editor.author",                       "");
 pref("editor.auto_save_delay",              10);    // minutes
-pref("editor.html_editor",                  "");
-pref("editor.image_editor",                 "");
-pref("editor.fontsize_mode",                0);
 pref("editor.template_location",            "http://home.netscape.com/home/gold3.0_templates.html");
 pref("editor.default_template_location",    "http://home.netscape.com/home/gold3.0_templates.html");
 pref("editor.template_last_loc",            "");
@@ -82,7 +79,7 @@ pref("editor.last_text_page",               0);
 pref("editor.last_doc_page",                0);
 pref("editor.last_table_page",              0);
 pref("editor.use_custom_colors",            false);
-pref("editor.use_background_image",         true);
+pref("editor.use_background_image",         false);
 pref("editor.publish_keep_links",           true);
 pref("editor.publish_keep_images",          true);
 pref("editor.show_copyright",               true);
