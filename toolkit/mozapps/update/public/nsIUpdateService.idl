@@ -74,6 +74,27 @@ interface nsIUpdateItem : nsISupports
   readonly attribute wstring objectSource;
 };
 
+[scriptable, uuid(24aee3ca-a274-4247-bd3b-d0acbb5a98aa)]
+interface nsIAppUpdateInfoItem : nsISupports
+{
+  readonly attribute wstring internalName;
+  readonly attribute wstring name;
+  readonly attribute wstring URL;
+  readonly attribute wstring infoURL;
+  readonly attribute wstring description;
+};
+
+[scriptable, uuid(2daab124-9bc7-4c35-bb7b-0fecdea03ce8)]
+interface nsIAppUpdateInfo : nsISupports
+{
+  readonly attribute wstring updateVersion;
+  readonly attribute wstring updateDisplayVersion;
+  readonly attribute wstring updateInfoURL;
+
+  void getCollection(in string aCollectionName, out unsigned long aItemCount,
+                     [retval, array, size_is(aItemCount)] out nsIAppUpdateInfoItem aItems);
+};
+
 [scriptable, uuid(c8a2339e-770a-417d-ab9c-efde1f23ba24)]
 interface nsIUpdateService : nsISupports
 {
@@ -96,13 +117,16 @@ interface nsIUpdateService : nsISupports
   readonly attribute long updateCount;
   readonly attribute unsigned short updateSeverity;
 
-  readonly attribute string appUpdateVersion;
-  readonly attribute wstring appUpdateDescription;
-  readonly attribute wstring appUpdateURL;
-
   // these are per-session settings
   attribute boolean appUpdatesAvailable;
   attribute long extensionUpdatesAvailable;
+
+  readonly attribute nsIAppUpdateInfo newestVersion;
+  readonly attribute nsIAppUpdateInfo currentVersion;
+
+  const unsigned short SEVERITY_HIGH    = 2;
+  const unsigned short SEVERITY_MEDIUM  = 1;
+  const unsigned short SEVERITY_LOW     = 0;
 };
 
 [scriptable, uuid(22d35700-5765-42e1-914b-a0da7c911a8c)]

@@ -321,6 +321,7 @@ function upgradeCleanup()
   deleteThisFile("Chrome",	"en-win.jar");
   deleteThisFile("Components", 	"compreg.dat");
   deleteThisFile("Components", 	"xpti.dat");
+  deleteThisFile("Components", "nsBackgroundUpdateService.js");
   deleteThisFile("Program",	"defaults/pref/all.js");
   deleteThisFile("Program",	"defaults/pref/security-prefs.js");
   deleteThisFile("Program",	"defaults/pref/winpref.js");
@@ -351,7 +352,7 @@ if(args == "-greLocal")
   gGreLocal = true;
 
 srDest = $SpaceRequired$:bin;
-err    = initInstall("$ProductName$", "Browser", "$Version$"); 
+err    = initInstall("$ProductName$", "Firefox", "$Version$"); 
 logComment("initInstall: " + err);
 
 fProgram  = getFolder("Program");

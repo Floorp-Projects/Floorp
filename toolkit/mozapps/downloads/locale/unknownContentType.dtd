@@ -55,3 +55,9 @@
 
 <!ENTITY  whichIsA.label              "which is a:">
 
+<!ENTITY  chooseHandlerMac.label      "Choose...">
+<!ENTITY  chooseHandlerMac.accesskey  "C">
+<!ENTITY  chooseHandler.label         "Browse...">
+<!ENTITY  chooseHandler.accesskey     "B">
+
+

@@ -106,68 +106,195 @@
       </handler>
     </handlers>
   </binding>
-         
-  <binding id="updateItem">
+  
+  <binding id="updateCategorySet" extends="chrome://global/content/bindings/radio.xml#radiogroup">
+    <implementation>
+      <method name="computeSizes">
+        <body>
+        <![CDATA[
+          var kids = this._getRadioChildren();
+          for (var i = 0; i < kids.length; ++i)
+            kids[i].expandedHeight = kids[i]._content.boxObject.height;
+          this.removeAttribute("_uninitialized");
+        ]]>
+        </body>
+      </method>
+      <field name="lastSelectedItem">null</field>
+    </implementation>
+  </binding>
+  
+  <binding id="updateCategory" extends="chrome://global/content/bindings/radio.xml#radio">
     <resources>
+      <stylesheet src="chrome://global/skin/radio.css"/>
       <stylesheet src="chrome://mozapps/skin/update/update.css"/>
     </resources>
     <content>
-      <xul:hbox flex="1">
-        <xul:stack>
-          <xul:vbox align="center">
-            <xul:image class="updateItemIcon" xbl:inherits="src=icon"/>
-          </xul:vbox>
-          <xul:vbox align="right">
-            <xul:checkbox class="updateItemChecked" anonid="updateItemChecked" xbl:inherits="checked"/>
-          </xul:vbox>
-        </xul:stack>
-        <xul:vbox flex="1">
-          <xul:hbox class="updateItemNameRow" align="center">
-            <xul:label class="updateItemName" xbl:inherits="value=name" flex="1" crop="right"/>
+      <xul:hbox class="updateCategoryBox" xbl:inherits="selected,checked,disabled">
+        <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
+          <xul:hbox class="radio-check-box2" flex="1">
+            <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
           </xul:hbox>
-          <xul:hbox class="updateItemInfoRow" anonid="updateItemInfoRow" align="center" hidden="true">
-            <xul:label class="updateItemInfo" anonid="updateItemText" flex="1" crop="right">&appInfo.label;</xul:label>
-          </xul:hbox>
-          <xul:hbox class="updateItemDetailsRow" align="center">
-            <xul:label class="updateItemFromLabel">&from.label;</xul:label>
-            <xul:textbox class="updateItemURL" xbl:inherits="value=url" flex="1" readonly="true" crop="right"/>
-          </xul:hbox>
-        </xul:vbox> 
+        </xul:hbox>
+        <xul:image class="updateCategoryIcon" xbl:inherits="src"/>
+        <xul:label class="updateCategoryLabel" xbl:inherits="xbl:text=label,accesskey,crop,selected" flex="1"/>
+      </xul:hbox>
+      <xul:vbox flex="1" class="updateCategoryContent">
+        <children/>
+      </xul:vbox>
+    </content>  
+    <implementation implements="nsITimerCallback">
+      <property name="expandedHeight" 
+                onget="return this.getAttribute('expandedHeight');"
+                onset="this.setAttribute('expandedHeight', val); return val;"/>
+      
+      <method name="notify">
+        <parameter name="aTimer"/>
+        <body>
+        <![CDATA[
+            var newHeight;
+            if (this._destinationSize == 0) {
+              if (this._content.boxObject.height > 0) {
+                newHeight = this._content.boxObject.height - this._animateIncrement;
+                newHeight = newHeight < 0 ? 0 : newHeight;
+                this._content.style.height = newHeight + "px";
+                this._timer.initWithCallback(this, this._animateDelay, 
+                                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+              }
+              else {
+                this._timer.cancel();
+                this._content.style.visibility = "collapse";
+              }
+            }
+            else {
+              if (this._content.boxObject.height <= this._destinationSize) {
+                newHeight = this._content.boxObject.height + this._animateIncrement;
+                newHeight = newHeight > this.expandedHeight ? this.expandedHeight : newHeight;
+                this._content.style.height = newHeight + "px";
+                this._timer.initWithCallback(this, this._animateDelay, 
+                                             Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+              }
+              else
+                this._timer.cancel();
+            }
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_setUpTimer">
+        <parameter name="aSelected"/>
+        <body>
+        <![CDATA[
+          if (!this._timer) 
+            this._timer = Components.classes["@mozilla.org/timer;1"]
+                                    .createInstance(Components.interfaces.nsITimer);
+          else
+            this._timer.cancel();
+          
+          this._content.style.visibility = "visible";
+
+          this._destinationSize = aSelected ? this.expandedHeight : 0;
+          this._timer.initWithCallback(this, this._animateDelay, 
+                                       Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+        ]]>
+        </body>
+      </method>
+      
+      <field name="_content">
+        document.getAnonymousElementByAttribute(this, "class", "updateCategoryContent");
+      </field>
+      <field name="_timer">null</field>
+      <field name="_animateDelay">50</field>
+      <field name="_animateIncrement">25</field>
+      <field name="_destinationSize">0</field>
+    </implementation>
+    <handlers>
+      <handler event="RadioStateChange">
+      <![CDATA[
+      /*
+        this._content.style.height = "0px";
+        
+        if (this.radioGroup.lastSelectedItem)
+          this.radioGroup.lastSelectedItem._setUpTimer(false);
+        this.radioGroup.lastSelectedItem = this;
+        
+        this._setUpTimer(true);*/
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="updateItem" extends="chrome://global/content/bindings/checkbox.xml#checkbox">
+    <content>
+      <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
+      <xul:hbox class="checkbox-label-box" flex="1">
+        <xul:label class="checkbox-label foundLabel" xbl:inherits="xbl:text=label,accesskey" flex="1"/>
+        <xul:label class="checkbox-label" value="&from.label;"/>
+        <xul:label class="checkbox-label foundSource" xbl:inherits="xbl:text=source,infoURL,accesskey,crop"/>
       </xul:hbox>
     </content>
     <implementation>
-      <property name="name"     onset="this.setAttribute('name', val); return val;"
-                                onget="return this.getAttribute('name');"/>
-      <property name="url"      onset="this.setAttribute('url', val); return val;"
-                                onget="return this.getAttribute('url');"/>
-      <property name="icon"     onset="this.setAttribute('icon', val); return val;"
-                                onget="return this.getAttribute('icon');"/>
-      <property name="type"     onget="return parseInt(this.getAttribute('type'));">
-        <setter>
-        <![CDATA[
-          this.setAttribute("type", val);
-          if (val == Components.interfaces.nsIUpdateItem.TYPE_APP) {
-            var infoRow = document.getAnonymousElementByAttribute(this, "anonid", "updateItemInfoRow");
-            infoRow.removeAttribute("hidden");
-          }          
-          return val;
-        ]]> 
-        </setter>               
-      </property>
-      <property name="checked">
-        <setter>
-          var checkbox = document.getAnonymousElementByAttribute(this, "anonid", "updateItemChecked");
-          checkbox.checked = val;
-          return val;
-        </setter>
-        <getter>
-          var checkbox = document.getAnonymousElementByAttribute(this, "anonid", "updateItemChecked");
-          return checkbox.checked;
-        </getter>
-      </property>
-      
+      <property name="type" 
+                onget="return this.getAttribute('type');"
+                onset="this.setAttribute('type', val); return val;"/>
+      <property name="source" 
+                onget="return this.getAttribute('source');"
+                onset="this.setAttribute('source', val); return val;"/>
+      <property name="URL" 
+                onget="return this.getAttribute('URL');"
+                onset="this.setAttribute('URL', val); return val;"/>
+      <property name="infoURL" 
+                onget="return this.getAttribute('infoURL');"
+                onset="this.setAttribute('infoURL', val); return val;"/>
+      <property name="internalName" 
+                onget="return this.getAttribute('internalName');"
+                onset="this.setAttribute('internalName', val); return val;"/>
     </implementation>
   </binding>
 
+  <binding id="link" extends="chrome://global/content/bindings/text.xml#text-base">
+    <content>
+      <xul:label xbl:inherits="value=label,crop" class="linkLabel" flex="1"/>
+    </content>
+    <implementation>
+      <property name="href"
+                onget="return this.getAttribute('href');"
+                onset="this.setAttribute('href', val); return val;"/>
+    </implementation>
+    <handlers>
+      <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
+      <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
+      <handler event="click">
+      <![CDATA[
+        if (event.button != 0)
+          return;
+          
+# If we're not a browser, use the external protocol service to load the URI.
+#ifndef MOZ_PHOENIX
+        var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                            .createInstance(Components.interfaces.nsIURI);
+        uri.spec = this.getAttribute("href");
+
+        var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                    .getService(Components.interfaces.nsIExternalProtocolService);
+        if (protocolSvc.isExposedProtocol(uri.scheme))
+          protocolSvc.loadUrl(uri);
+# If we're a browser, open a new browser window instead.    
+#else
+        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                           .getService(Components.interfaces.nsIWindowWatcher);
+        var ary = Components.classes["@mozilla.org/supports-array;1"]
+                            .createInstance(Components.interfaces.nsISupportsArray);
+        var url = Components.classes["@mozilla.org/supports-string;1"]
+                            .createInstance(Components.interfaces.nsISupportsString);
+        url.data = this.getAttribute("href")
+        ary.AppendElement(url);
+        
+        ww.openWindow(null, "chrome://browser/content/browser.xul",
+                      "_blank", "chrome,all,dialog=no", ary);
+#endif
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
 </bindings>
 

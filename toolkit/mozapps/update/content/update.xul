@@ -53,7 +53,8 @@
         onload="gUpdateWizard.init();"
         onunload="gUpdateWizard.uninit();"
         onwizardfinish="gUpdateWizard.onWizardFinish();"
-        style="width: 40em;"
+        onclose="return gUpdateWizard.onWizardClose(event);"
+        style="width: 47em; min-height: 35em;"
         buttons="accept,cancel">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/update/update.js"/>
@@ -150,42 +151,75 @@
               onpageshow="gFoundPage.onPageShow();">
 
     <label>&found.intro.label;</label>
-    
-    <vbox id="foundList" flex="1" style="height: 16em; overflow: auto;"
-          oncommand="gFoundPage.onCommand(event);"/>
+    <separator class="thin"/>
+    <radiogroup type="update-types" id="found.updates" flex="1" _uninitialized="true"
+                onselect="gFoundPage.onSelect(event);">
+      <radio type="update-type" id="patches" accesskey="&found.updatetype.patches.accesskey;" collapsed="true">
+        <description>&found.criticalUpdates.label;</description>
+        <separator class="thin"/>        
+        <vbox id="found.criticalUpdates.list"/>
+        <separator class="thin"/>        
+        <description>&found.criticalUpdates.info;</description>
+        <label>.</label>
+      </radio>
+      <radio type="update-type" id="app" collapsed="true">
+        <label id="found.app.label"/>
+        <separator class="thin"/>        
+        <label id="found.app.features" hidden="true"/>
+        <vbox id="found.app.featuresList"/>
+        <separator class="thin"/>        
+        <link id="found.app.infoLink" label="&found.app.infoLink;"/>
+        <label>.</label>
+      </radio>
+      <radio type="update-type" id="components" accesskey="&found.updatetype.components.accesskey;" collapsed="true">
+        <description>&found.components.label;</description>
+        <separator class="thin"/>        
+        <vbox id="found.components.list"/>
+        <separator class="thin"/>        
+        <description>&found.components.info;</description>
+        <label>.</label>
+      </radio>
+      <radio type="update-type" id="addons" accesskey="&found.updatetype.addons.accesskey;" collapsed="true">
+        <description>&found.addons.label;</description>
+        <separator class="thin"/>        
+        <vbox id="found.addons.list"/>
+        <label>.</label>
+      </radio>
+      <radio type="update-type" id="found.languages.header" accesskey="&found.updatetype.languages.accesskey;" collapsed="true">
+        <description>&found.languages.label;</description>
+        <separator class="thin"/>        
+        <vbox id="found.languages.list"/>
+        <label>.</label>
+      </radio>
+    </radiogroup>
+    <separator class="thin"/>
+    <label id="foundInstructions"/>
 
-    <label>&found.instructions.label;</label>
-
-    <hbox id="updateCheckErrorFound" hidden="true" align="center">
-      <description flex="1">
-        &updateCheckError.description;
-      </description>
-      <button label="&updateCheckError.label;" accesskey="&updateCheckError.accesskey;"
-              oncommand="gUpdateWizard.showUpdateCheckErrors();"/>
-    </hbox>
   </wizardpage>
 
-  <wizardpage id="appupdate" pageid="appupdate"
-              label="&appupdate.title;"
-              onpageshow="gAppUpdatePage.onPageShow();">
-    
-    <hbox>
-      <label flex="1">&appupdate.intro.label;</label>
-      <separator/>
-      <image src="chrome://mozapps/skin/update/icon32.png"/>
-    </hbox>
-    
+  <wizardpage id="optional" pageid="optional" next="installing"
+              label="&optional.title;"
+              onpageshow="gOptionalPage.onPageShow();">
+    <label>&optional.intro.label;</label>
+    <separator class="thin"/>
+    <vbox id="optionalItemsList" flex="1" align="left"
+          style="overflow: auto;"
+          onmouseover="gOptionalPage.onListMouseOver(event);"
+          onmouseout="gOptionalPage.onListMouseOut(event);"
+          oncommand="gOptionalPage.onCommand(event);"/>
     <separator/>
-    
+    <description id="optionalDescription" style="height: 3em;"/>
   </wizardpage>
 
   <wizardpage id="installing" pageid="installing" next="finished"
               label="&installing.title;"
               onpageshow="gInstallingPage.onPageShow();">
     <label>&installing.intro.label;</label>
-    <label id="actionItem"/>
     <progressmeter id="downloadProgress"/>
-    
+    <hbox align="center">
+      <image id="installing.throbber" class="throbber"/>
+      <label id="actionItem" flex="1" crop="right"/>
+    </hbox>
     <separator/>
   </wizardpage>
   
@@ -216,6 +250,14 @@
     </vbox>
     <separator flex="1"/>
     <label id="finishedMismatch" hidden="true">&finished.mismatch.label;</label>
+
+  </wizardpage>
+  
+  <wizardpage id="restart" pageid="restart"
+              label="&restart.title;"
+              onpageshow="gRestartPage.onPageShow();">
+
+    <label>&restart.updated.label;</label>
 
   </wizardpage>
   

@@ -188,7 +188,7 @@ bin/components/nsSidebar.js
 ; bin/components/nsUpdateNotifier.js not needed for firefox
 bin/components/nsXmlRpcClient.js
 bin/components/nsExtensionManager.js
-bin/components/nsBackgroundUpdateService.js
+bin/components/nsUpdateService.js
 bin/components/extensions.xpt
 bin/components/update.xpt
 

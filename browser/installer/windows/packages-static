@@ -185,7 +185,7 @@ bin\components\nsProxyAutoConfig.js
 bin\components\nsSidebar.js
 bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
-bin\components\nsBackgroundUpdateService.js
+bin\components\nsUpdateService.js
 bin\components\extensions.xpt
 bin\components\update.xpt
 

@@ -217,6 +217,8 @@ private:
                              const nsACString& aBaseURL,
                              PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
   nsresult UninstallProvider(const nsACString& aProviderType, const nsACString& aProviderName, PRBool aUseProfile);
+  nsresult UninstallFromDynamicDataSource(const nsACString& aPackageName,
+                                          PRBool aIsOverlay, PRBool aUseProfile);
 
   nsresult ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 

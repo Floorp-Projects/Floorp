@@ -1927,7 +1927,7 @@ nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
   
   if (aUseProfile && !mProfileInitialized) {
     rv = LoadProfileDataSource();
-    NS_ENSURE_TRUE(rv, rv);
+    if (NS_FAILED(rv)) return rv;
   }
 
   // Figure out which file we're needing to modify, e.g., is it the install
@@ -1952,42 +1952,42 @@ nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
 
 NS_IMETHODIMP nsChromeRegistry::SelectSkinForPackage(const nsACString& aSkin,
                                                      const PRUnichar *aPackageName,
-                                                  PRBool aUseProfile)
+                                                     PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("skin"), aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SelectLocaleForPackage(const nsACString& aLocale,
                                                        const PRUnichar *aPackageName,
-                                                    PRBool aUseProfile)
+                                                       PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("locale"), aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectSkinForPackage(const nsACString& aSkin,
-                                                  const PRUnichar *aPackageName,
-                                                  PRBool aUseProfile)
+                                                       const PRUnichar *aPackageName,
+                                                       PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("skin"), aSkin, aPackageName, mSelectedSkin, aUseProfile, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectLocaleForPackage(const nsACString& aLocale,
-                                                    const PRUnichar *aPackageName,
-                                                    PRBool aUseProfile)
+                                                         const PRUnichar *aPackageName,
+                                                         PRBool aUseProfile)
 {
   return SelectProviderForPackage(NS_LITERAL_CSTRING("locale"), aLocale, aPackageName, mSelectedLocale, aUseProfile, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::IsSkinSelectedForPackage(const nsACString& aSkin,
-                                                  const PRUnichar *aPackageName,
-                                                  PRBool aUseProfile, PRBool* aResult)
+                                                         const PRUnichar *aPackageName,
+                                                         PRBool aUseProfile, PRBool* aResult)
 {
   return IsProviderSelectedForPackage(NS_LITERAL_CSTRING("skin"), aSkin, aPackageName, mSelectedSkin, aUseProfile, aResult);
 }
 
 NS_IMETHODIMP nsChromeRegistry::IsLocaleSelectedForPackage(const nsACString& aLocale,
-                                                    const PRUnichar *aPackageName,
-                                                    PRBool aUseProfile, PRBool* aResult)
+                                                           const PRUnichar *aPackageName,
+                                                           PRBool aUseProfile, PRBool* aResult)
 {
   return IsProviderSelectedForPackage(NS_LITERAL_CSTRING("locale"), aLocale, aPackageName, mSelectedLocale, aUseProfile, aResult);
 }
@@ -2221,7 +2221,7 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
                                   PRBool aRemove)
 {
   // XXX don't allow local chrome overrides of install chrome!
-#ifdef DEBUG
+#ifdef DEBUG2
   printf("*** Chrome Registration of %-7s: Checking for contents.rdf at %s\n", PromiseFlatCString(aProviderType).get(), PromiseFlatCString(aBaseURL).get());
 #endif
 
@@ -2665,7 +2665,7 @@ NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const nsACString& aSkinName, PRBoo
   DeselectSkin(aSkinName, aUseProfile);
 
   // Now uninstall it.
-  return UninstallProvider(NS_LITERAL_CSTRING("skin"), aSkinName, aUseProfile);
+  return  UninstallProvider(NS_LITERAL_CSTRING("skin"), aSkinName, aUseProfile);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const nsACString& aLocaleName, PRBool aUseProfile)
@@ -2676,41 +2676,49 @@ NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const nsACString& aLocaleName, P
   return UninstallProvider(NS_LITERAL_CSTRING("locale"), aLocaleName, aUseProfile);
 }
 
-static void GetURIForPackage(nsIIOService* aIOService, const nsACString& aPackageName, nsIURI** aResult)
+static void GetURIForProvider(nsIIOService* aIOService, const nsACString& aProviderName, 
+                              const nsACString& aProviderType, nsIURI** aResult)
 {
   nsCAutoString chromeURL("chrome://");
-  chromeURL += aPackageName;
-  chromeURL += "/content/";
+  chromeURL += aProviderName;
+  chromeURL += "/";
+  chromeURL += aProviderType;
+  chromeURL += "/";
 
   nsCOMPtr<nsIURI> uri;
   aIOService->NewURI(chromeURL, nsnull, nsnull, aResult);
 }
 
-NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName, PRBool aUseProfile)
+nsresult nsChromeRegistry::UninstallFromDynamicDataSource(const nsACString& aPackageName,
+                                                          PRBool aIsOverlay, PRBool aUseProfile)
 {
-  // Remove the package from the package list
-  nsresult rv = UninstallProvider(NS_LITERAL_CSTRING("package"), aPackageName, aUseProfile);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv;
 
-  // Now disconnect any overlay entries that this package may have supplied.
-  // This is a little tricky - the chrome registry identifies that packages may have
-  // dynamic overlays specified like so: 
-  // - each package entry in the chrome registry datasource has a "chrome:hasOverlays"
-  //   property set to "true"
+  // Disconnect any overlay/stylesheet entries that this package may have 
+  // supplied. This is a little tricky - the chrome registry identifies 
+  // that packages may have dynamic overlays/stylesheets specified like so: 
+  // - each package entry in the chrome registry datasource has a 
+  //   "chrome:hasOverlays"/"chrome:hasStylesheets" property set to "true"
   // - if this property is set, the chrome registry knows to load a dynamic overlay
-  //   datasource over in <profile>/chrome/overlayinfo/<package_name>/overlays.rdf
+  //   datasource over in 
+  //    <profile>/chrome/overlayinfo/<package_name>/content/overlays.rdf
+  //   or
+  //    <profile>/chrome/overlayinfo/<package_name>/skin/stylesheets.rdf
   // To remove this dynamic overlay info when we disable a package:
-  // - first get an enumeration of all the packages that have the "hasOverlays" 
-  //   property set. 
-  // - walk this list, loading the Dynamic Datasource (overlays.rdf) for each
-  //   package
+  // - first get an enumeration of all the packages that have the 
+  //   "hasOverlays" and "hasStylesheets" properties set. 
+  // - walk this list, loading the Dynamic Datasource (overlays.rdf/
+  //   stylesheets.rdf) for each package
   // - enumerate the Seqs in each Dynamic Datasource
   // - for each seq, remove entries that refer to chrome URLs that are supplied
   //   by the package we're removing.
   nsCOMPtr<nsIIOService> ioServ(do_GetService(NS_IOSERVICE_CONTRACTID));
 
   nsCOMPtr<nsIURI> uninstallURI;
-  GetURIForPackage(ioServ, aPackageName, getter_AddRefs(uninstallURI));
+  const nsACString& providerType = aIsOverlay ? NS_LITERAL_CSTRING("content") 
+                                              : NS_LITERAL_CSTRING("skin");
+  GetURIForProvider(ioServ, aPackageName, providerType,
+                    getter_AddRefs(uninstallURI));
   if (!uninstallURI) return NS_ERROR_OUT_OF_MEMORY;
   nsCAutoString uninstallHost;
   uninstallURI->GetHost(uninstallHost);
@@ -2719,7 +2727,8 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
   mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(trueLiteral));
   
   nsCOMPtr<nsISimpleEnumerator> e;
-  mChromeDataSource->GetSources(mHasOverlays, trueLiteral, PR_TRUE, getter_AddRefs(e));
+  mChromeDataSource->GetSources(aIsOverlay ? mHasOverlays : mHasStylesheets, 
+                                trueLiteral, PR_TRUE, getter_AddRefs(e));
   do {
     PRBool hasMore;
     e->HasMoreElements(&hasMore);
@@ -2735,13 +2744,13 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
 
     val.Cut(0, NS_LITERAL_CSTRING("urn:mozilla:package:").Length());
     nsCOMPtr<nsIURI> sourcePackageURI;
-    GetURIForPackage(ioServ, val, getter_AddRefs(sourcePackageURI));
+    GetURIForProvider(ioServ, val, providerType, getter_AddRefs(sourcePackageURI));
     if (!sourcePackageURI) return NS_ERROR_OUT_OF_MEMORY;
 
     PRBool states[] = { PR_FALSE, PR_TRUE };
     for (PRInt32 i = 0; i < 2; ++i) {
       nsCOMPtr<nsIRDFDataSource> overlayDS;
-      rv = GetDynamicDataSource(sourcePackageURI, PR_TRUE, states[i], PR_FALSE,
+      rv = GetDynamicDataSource(sourcePackageURI, aIsOverlay, states[i], PR_FALSE,
                                 getter_AddRefs(overlayDS));
       if (NS_FAILED(rv) || !overlayDS) continue;
 
@@ -2814,6 +2823,125 @@ NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName,
   while (PR_TRUE);
 
   return rv;
+}
+
+static nsresult CleanResource(nsIRDFDataSource* aDS, nsIRDFResource* aResource)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  for (PRInt32 i = 0; i < 2; ++i) {
+    rv = i == 0 ? aDS->ArcLabelsOut(aResource, getter_AddRefs(arcs)) 
+                : aDS->ArcLabelsIn(aResource, getter_AddRefs(arcs)) ;
+    if (NS_FAILED(rv)) return rv;
+    do {
+      PRBool hasMore;
+      arcs->HasMoreElements(&hasMore);
+
+      if (!hasMore)
+        break;
+
+      nsCOMPtr<nsISupports> supp;
+      arcs->GetNext(getter_AddRefs(supp));
+
+      nsCOMPtr<nsIRDFResource> prop(do_QueryInterface(supp));
+      nsCOMPtr<nsIRDFNode> target;
+      rv = aDS->GetTarget(aResource, prop, PR_TRUE, getter_AddRefs(target));
+      if (NS_FAILED(rv)) continue;
+
+      aDS->Unassert(aResource, prop, target);
+    }
+    while (1);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const nsACString& aPackageName, PRBool aUseProfile)
+{
+  nsresult rv;
+
+  // Uninstalling a package is a three step process:
+  //
+  // 1) Unhook all secondary resources
+  // 2) Remove the package from the package list
+  // 3) Remove references in the Dynamic Datasources (overlayinfo).
+  //
+  // Details:
+  // 1) The Chrome Registry holds information about a package like this:
+  //
+  //   urn:mozilla:package:root
+  //   --> urn:mozilla:package:newext1
+  //       --> c:baseURL = <BASEURL>
+  //       --> c:locType = "install"
+  //       --> c:name    = "newext1"
+  //
+  //   urn:mozilla:skin:classic/1.0:packages
+  //   --> urn:mozilla:skin:classic/1.0:newext1
+  //       --> c:baseURL = <BASEURL>
+  //       --> c:package = urn:mozilla:package:newext1
+  //
+  //   urn:mozilla:locale:en-US:packages
+  //   --> urn:mozilla:locale:en-US:newext1
+  //       --> c:baseURL = <BASEURL>
+  //       --> c:package = urn:mozilla:package:newext1
+  //
+  // We need to follow chrome:package arcs from the package resource to 
+  // secondary resources and then clean them. This is so that a subsequent
+  // installation of the same package into the opposite datasource (profile
+  // vs. install) does not result in the chrome registry telling the necko
+  // to load from the wrong location by "hitting" on redundant entries in
+  // the opposing datasource first.
+  //
+  // 2) Then we have to clean the resource and remove it from the package list.
+  // 3) Then update the dynamic datasources.
+  //
+
+  nsCAutoString packageResourceURI("urn:mozilla:package:");
+  packageResourceURI += aPackageName;
+
+  nsCOMPtr<nsIRDFResource> packageResource;
+  GetResource(packageResourceURI, getter_AddRefs(packageResource));
+
+  // Instantiate the data source we wish to modify.
+  nsCOMPtr<nsIRDFDataSource> installSource;
+  rv = LoadDataSource(kChromeFileName, getter_AddRefs(installSource), aUseProfile, nsnull);
+  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(installSource, "failed to get installSource");
+
+  nsCOMPtr<nsISimpleEnumerator> sources;
+  rv = installSource->GetSources(mPackage, packageResource, PR_TRUE, 
+                                 getter_AddRefs(sources));
+  if (NS_FAILED(rv)) return rv;
+
+  do {
+    PRBool hasMore;
+    sources->HasMoreElements(&hasMore);
+
+    if (!hasMore)
+      break;
+
+    nsCOMPtr<nsISupports> supp;
+    sources->GetNext(getter_AddRefs(supp));
+
+    nsCOMPtr<nsIRDFResource> res(do_QueryInterface(supp));
+    rv = CleanResource(installSource, res);
+    if (NS_FAILED(rv)) continue;
+  }
+  while (1);
+
+  // Clean the package resource
+  rv = CleanResource(installSource, packageResource);
+  if (NS_FAILED(rv)) return rv;
+
+  // Remove the package from the package list
+  rv = UninstallProvider(NS_LITERAL_CSTRING("package"), aPackageName, aUseProfile);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = UninstallFromDynamicDataSource(aPackageName, PR_TRUE, aUseProfile);
+  if (NS_FAILED(rv)) return rv;
+
+  return UninstallFromDynamicDataSource(aPackageName, PR_FALSE, aUseProfile);
 }
 
 nsresult
@@ -3341,7 +3469,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       if (isSelection) {
 
         rv = SelectSkin(nsDependentCString(chromeLocation), isProfile);
-#ifdef DEBUG
+#ifdef DEBUG2
         printf("***** Chrome Registration: Selecting skin %s as default\n", (const char*)chromeLocation);
 #endif
       }
@@ -3354,7 +3482,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       if (isSelection) {
 
         rv = SelectLocale(nsDependentCString(chromeLocation), isProfile);
-#ifdef DEBUG
+#ifdef DEBUG2
         printf("***** Chrome Registration: Selecting locale %s as default\n", (const char*)chromeLocation);
 #endif
       }
