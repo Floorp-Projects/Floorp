@@ -118,7 +118,7 @@ public:
   virtual void SetQuality(nsContentQuality aQuality);
 
 private:
-  ~nsViewManager();
+  virtual ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);
   void AddRectToDirtyRegion(nsRect &aRect);
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);

@@ -49,7 +49,9 @@ class nsViewFactory : public nsIFactory
     NS_IMETHOD LockFactory(PRBool aLock);   
 
     nsViewFactory(const nsCID &aClass);   
-    ~nsViewFactory();   
+
+  protected:
+    virtual ~nsViewFactory();   
 
   private:   
     nsrefcnt  mRefCnt;   
