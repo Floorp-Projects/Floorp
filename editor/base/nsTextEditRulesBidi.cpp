@@ -88,7 +88,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   nsCOMPtr<nsIAtom> baseLevel = getter_AddRefs(NS_NewAtom("BaseLevel"));
 
   // Get the bidi level of the frame before the caret
-  res = frameBefore->GetBidiProperty(context, embeddingLevel, (void**)&levelBefore);
+  res = frameBefore->GetBidiProperty(context, embeddingLevel, (void**)&levelBefore,sizeof(PRUint8));
   if (NS_FAILED(res))
     return res;
 
@@ -108,13 +108,13 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
     {
       // there was no frameAfter, i.e. the caret is at the end of the
       // document -- use the base paragraph level
-      res = frameBefore->GetBidiProperty(context, baseLevel, (void**)&levelAfter);
+      res = frameBefore->GetBidiProperty(context, baseLevel, (void**)&levelAfter,sizeof(PRUint8));
       if (NS_FAILED(res))
         return res;
     }
     else
     {
-      res = frameAfter->GetBidiProperty(context, embeddingLevel, (void**)&levelAfter);
+      res = frameAfter->GetBidiProperty(context, embeddingLevel, (void**)&levelAfter,sizeof(PRUint8));
       if (NS_FAILED(res))
         return res;
     }
