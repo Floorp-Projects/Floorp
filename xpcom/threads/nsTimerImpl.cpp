@@ -280,6 +280,11 @@ NS_IMETHODIMP nsTimerImpl::Cancel()
 
 NS_IMETHODIMP_(void) nsTimerImpl::SetDelay(PRUint32 aDelay)
 {
+  // If we're already repeating precisely, update mTimeout now so that the
+  // new delay takes effect in the future.
+  if (mTimeout != 0 && mType == NS_TYPE_REPEATING_PRECISE)
+    mTimeout = PR_IntervalNow();
+
   SetDelayInternal(aDelay);
 
   if (!mFiring && gThread)
@@ -328,7 +333,7 @@ void nsTimerImpl::Fire()
   if (mType == NS_TYPE_REPEATING_PRECISE) {
     // Precise repeating timers advance mTimeout by mDelay without fail before
     // calling Fire().
-    timeout -= mDelay;
+    timeout -= PR_MillisecondsToInterval(mDelay);
   }
   gThread->UpdateFilter(mDelay, timeout, now);
 
@@ -454,17 +459,19 @@ void nsTimerImpl::PostTimerEvent()
 
 void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
 {
+  PRIntervalTime delayInterval = PR_MillisecondsToInterval(aDelay);
+  if (delayInterval > DELAY_INTERVAL_MAX) {
+    delayInterval = DELAY_INTERVAL_MAX;
+    aDelay = PR_IntervalToMilliseconds(delayInterval);
+  }
+
   mDelay = aDelay;
 
   PRIntervalTime now = PR_IntervalNow();
-  if (mTimeout == 0 || mType == NS_TYPE_REPEATING_SLACK)
+  if (mTimeout == 0 || mType != NS_TYPE_REPEATING_PRECISE)
     mTimeout = now;
 
-  mTimeout += PR_MillisecondsToInterval(aDelay);
-
-  if (mTimeout < now) { // we overflowed
-    mTimeout = PRIntervalTime(-1);
-  }
+  mTimeout += delayInterval;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
