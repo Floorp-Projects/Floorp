@@ -37,6 +37,25 @@
 namespace JavaScript {
 namespace JSTypes {
 
+// the canonical undefined value.
+const JSValue kUndefinedValue;
+
+int JSValue::operator==(const JSValue& value) const
+{
+    if (this->tag == value.tag) {
+        #define CASE(T) case T##_tag: return (this->T == value.T)
+        switch (tag) {
+        CASE(i8); CASE(u8);
+        CASE(i16); CASE(u16);
+        CASE(i32); CASE(u32); CASE(f32);
+        CASE(i64); CASE(u64); CASE(f64);
+        CASE(object); CASE(array); CASE(function);
+        #undef CASE
+        }
+    }
+    return 0;
+}
+
 Formatter& operator<<(Formatter& f, const JSValue& value)
 {
     switch (value.tag) {
