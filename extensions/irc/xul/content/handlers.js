@@ -698,6 +698,8 @@ function onMultilineSend(e)
 {
     var multiline = document.getElementById("multiline-input");
     e.line = multiline.value;
+    if (e.line.search(/\S/) == -1)
+        return;
     onInputCompleteLine (e);
     multiline.value = "";
 }
@@ -1620,9 +1622,10 @@ function cli_inames (e)
             return false;
         }
 
-        var encodeName = fromUnicode(e.inputData + " ");
-        encodeName = encodeName.substr(0, encodeName.length -1);
-        chan = encodeName;
+        var encodedName = fromUnicode(e.inputData + " ",
+                                      client.currentObject.charset);
+        encodedName = encodedName.substr(0, encodedName.length -1);
+        chan = encodedName;
 
     }
     else
@@ -1633,7 +1636,7 @@ function cli_inames (e)
             return false;
         }
         
-        chan = e.channel.name;
+        chan = e.channel.encodedName;
     }
     
     client.currentObject.pendingNamesReply = true;
@@ -3196,10 +3199,10 @@ function my_366 (e)
         /* redisplay the tree */
         client.rdf.setTreeRoot("user-list", this.getGraphResource());
     
-    if ("pendingNamesReply" in e.channel)
-    {       
-        display (e.params[3], "366");
-        e.channel.pendingNamesReply = false;
+    if ("pendingNamesReply" in client.currentObject)
+    {
+        display (e.channel.unicodeName + ": " + e.params[3], "366");
+        client.currentObject.pendingNamesReply = false;
     }
 }    
 
@@ -3238,8 +3241,8 @@ function my_topicinfo (e)
 CIRCChannel.prototype.on353 = /* names reply */
 function my_topic (e)
 {
-    if ("pendingNamesReply" in e.channel)
-        e.channel.display (e.params[4], "NAMES");
+    if ("pendingNamesReply" in client.currentObject)
+        display (e.channel.unicodeName + ": " + e.params[4], "NAMES");
 }
 
 

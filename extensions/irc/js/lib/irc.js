@@ -125,8 +125,6 @@ function net_conenct()
     if ("primServ" in this && this.primServ.connection.isConnected)
         return;
 
-    this.connecting = true; /* connection is considered "made" when serve
-                             * sends a 001 message (see server.on001) */
     this.connectAttempt = 0;
     this.nextHost = 0;
     var ev = new CEvent ("network", "do-connect", this, "onDoConnect");
@@ -162,6 +160,9 @@ function net_doconnect(e)
         this.eventPump.addEvent (ev);        
         return false;
     }
+
+    this.connecting = true; /* connection is considered "made" when serve
+                             * sends a 001 message (see server.on001) */
 
     try
     {
@@ -822,7 +823,8 @@ function serv_001 (e)
      */
     if (e.params[1] != e.server.me.properNick)
     {
-        renameProperty (e.server.users, e.server.me.nick, e.params[1]);
+        renameProperty (e.server.users, e.server.me.nick,
+                        e.params[1].toLowerCase());
         e.server.me.changeNick(e.params[1]);
     }
     

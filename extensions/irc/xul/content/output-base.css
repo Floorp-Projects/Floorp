@@ -403,6 +403,7 @@ a.chatzilla-link:hover {
     padding-right: 10px;
     text-align: right;
     vertical-align: top;
+    white-space: nowrap;
 }
 
 .msg-user {                                 /* msg-user = nickname portion of */

@@ -64,7 +64,7 @@
 <!ENTITY userDetails.title "User Identification">
 <!ENTITY userDetails.help.label "What do these mean?">
 <!ENTITY userDetails.help.accesskey "W">
-<!ENTITY userDetails.help.desc "Your hostmask, which is used to identify you to other clients and the server, places your user name before the host you are connecting from. So a user name of 'myself' would mean you would be identified as 'myself@host.tld', where 'host.tld' would be dependant on your internet service provider.">
+<!ENTITY userDetails.help.desc "Your hostmask, which is used to identify you to other clients and the server, places your user name before the host you are connecting from. So a user name of 'myself' would mean you would be identified as 'myself@host.tld', where 'host.tld' would be dependent on your internet service provider.">
 
 <!ENTITY userDetails.nick.label "Nick name:">
 <!ENTITY userDetails.nick.accesskey "N">
@@ -133,7 +133,7 @@
 <!ENTITY stalkWords.title "Stalk Words">
 <!ENTITY stalkWords.accesskey "S">
 
-<!ENTITY stalkWords.label1 "When ChatZilla sees an 'important' message, it will highlight the line and the channel's tab. If you have 'aggressive notify' enabled, ChatZilla will also use an OS-dependant method to grab your attention.">
+<!ENTITY stalkWords.label1 "When ChatZilla sees an 'important' message, it will highlight the line and the channel's tab. If you have 'aggressive notify' enabled, ChatZilla will also use an OS-dependent method to grab your attention.">
 <!ENTITY stalkWords.label2 "Your nickname is always considered 'important', but you can add more words; just add them to the list below.">
 
 <!ENTITY list.up.label "Move Up">

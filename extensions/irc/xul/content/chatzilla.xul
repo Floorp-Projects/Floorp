@@ -39,7 +39,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical" onload="onLoad();" onunload="onUnload();"
   onclose="return onClose();" onmouseover="onMouseOver(event);"
-  persist="width height screenX screenY" windowtype="irc:chatzilla">
+  persist="width height screenX screenY sizemode" windowtype="irc:chatzilla">
 
   <overlaytarget id="scripts-overlay-target"/>
   <overlaytarget id="menu-overlay-target"/>

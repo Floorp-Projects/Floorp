@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg("defaultNick");
 
-client.version = "0.8.23";
+client.version = "0.8.25";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -68,6 +68,10 @@ client.DOUBLETAB_TIME = 500;
 client.IMAGEDIR = "chrome://chatzilla/skin/images/";
 client.HIDE_CODES = true;      /* true if you'd prefer to show numeric response 
                                 * codes as some default value (ie, "===") */
+/* true if the browser widget shouldn't be allowed to take focus.  windows, and
+ * probably the mac, need to be able to give focus to the browser widget for
+ * copy to work properly. */
+client.NO_BROWSER_FOCUS = (navigator.platform.search(/mac|win/i) == -1);
 client.DEFAULT_RESPONSE_CODE = "===";
 
 
@@ -220,6 +224,8 @@ function initStatic()
 
     if (client.CHARSET)
         setCharset(client.CHARSET);
+
+    multilineInputMode(client.MULTILINE);
     
     var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
     if (ary)
@@ -414,7 +420,7 @@ function initHost(obj)
     }
 
     obj.linkRE =
-        /((\w[\w-]+):[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
+        /((\w[\w-]+):[^<>\[\]()\'\"\s\u201d]+|www(\.[^.<>\[\]()\'\"\s\u201d]+){2,})/;
 
     obj.munger = new CMunger();
     obj.munger.enabled = true;
@@ -437,12 +443,12 @@ function initHost(obj)
     obj.munger.addRule ("ctrl-char", /([\x01-\x1f])/, showCtrlChar);
     obj.munger.addRule ("link", obj.linkRE, insertLink);
     obj.munger.addRule ("mailto",
-       /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s]+@[^.<>\[\]()\'\"\s]+\.[^<>\[\]()\'\"\s]+)/i,
+       /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s\u201d]+@[^.<>\[\]()\'\"\s\u201d]+\.[^<>\[\]()\'\"\s\u201d]+)/i,
                         insertMailToLink);
     obj.munger.addRule ("bugzilla-link", /(?:\s|\W|^)(bug\s+#?\d{3,6})/i,
                         insertBugzillaLink);
     obj.munger.addRule ("channel-link",
-                /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s]*[^:,.<>\[\](){}\'\"\s])/i,
+                /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s\u201d]*[^:,.<>\[\](){}\'\"\s\u201d])/i,
                         insertChannelLink);
     
     obj.munger.addRule ("face",
@@ -459,7 +465,6 @@ function initHost(obj)
     obj.rdf.initTree("user-list");
     obj.rdf.setTreeRoot("user-list", obj.rdf.resNullChan);
 
-    multilineInputMode(false);
 }
 
 function insertLink (matchText, containerTag)
@@ -468,7 +473,7 @@ function insertLink (matchText, containerTag)
     var linkText;
     
     var trailing;
-    ary = matchText.match(/([.,]+)$/);
+    ary = matchText.match(/([.,?]+)$/);
     if (ary)
     {
         linkText = RegExp.leftContext;
@@ -1637,6 +1642,7 @@ function multilineInputMode (state)
         client.input = singleInput;
     }
 
+    client.MULTILINE = state; 
     client.input.focus();
 }
 
@@ -2100,7 +2106,8 @@ function getTabForObject (source, create)
         browser.setAttribute ("tooltip", "aHTMLTooltip");
         browser.setAttribute ("context", "outputContext");
         //browser.setAttribute ("onload", "scrollDown(true);");
-        //browser.setAttribute ("onclick", "focusInput()");
+        if (client.NO_BROWSER_FOCUS)
+            browser.setAttribute ("onclick", "focusInput()");
         browser.setAttribute ("ondragover", "nsDragAndDrop.dragOver(event, contentDropObserver);");
         browser.setAttribute ("ondragdrop", "nsDragAndDrop.drop(event, contentDropObserver);");
         browser.setAttribute ("ondraggesture", "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);");
@@ -2246,6 +2253,7 @@ function cli_connet (netname, pass)
     
     if (!("connecting" in netobj))
         netobj.display (getMsg("cli_attachWorking",netobj.name), "INFO");
+    netobj.connecting = true;
     netobj.connect(pass);
     return true;
 }
@@ -2951,7 +2959,7 @@ function my_graphres ()
         this.rdfRes = 
             client.rdf.GetResource(RES_PFX + "CHANNEL:" +
                                    this.parent.parent.name +
-                                   ":" + this.name);
+                                   ":" + escape(this.name));
             //dd ("created channel resource " + this.rdfRes.Value);
 
     }
@@ -2974,7 +2982,7 @@ function usr_graphres()
         
         this.rdfRes = rdf.GetResource (RES_PFX + "CUSER:" + 
                                        this.parent.parent.parent.name + ":" +
-                                       this.parent.name + ":" +
+                                       escape(this.parent.name) + ":" +
                                        CIRCUser.nextResID++);
 
             //dd ("created cuser resource " + this.rdfRes.Value);
