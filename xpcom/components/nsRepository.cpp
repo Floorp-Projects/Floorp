@@ -860,6 +860,17 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 	return NS_OK;
 }
 
+
+nsresult nsRepository::RegisterFactory(const nsCID &aClass,
+                                       const char *aClassName,
+                                       const char *aProgID,
+                                       nsIFactory *aFactory, 
+                                       PRBool aReplace)
+{
+	return (RegisterFactory(aClass, aFactory, aReplace));
+}
+
+
 nsresult nsRepository::RegisterFactory(const nsCID &aClass,
                                        const char *aLibrary,
                                        PRBool aReplace,
