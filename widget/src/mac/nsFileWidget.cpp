@@ -28,7 +28,7 @@
 #endif
 #include "nsMacControl.h"
 #include "nsCarbonHelpers.h"
-
+#include "nsWatchTask.h"
 #include "nsFileSpec.h"
 
 #define DBG 0
@@ -205,6 +205,8 @@ PRBool nsFileWidget::Show()
 //-------------------------------------------------------------------------
 static pascal void myProc ( NavEventCallbackMessage msg, NavCBRecPtr cbRec, NavCallBackUserData data )
 {
+  nsWatchTask::GetTask().EventLoopReached();
+  
 	switch ( msg ) {
 	case kNavCBEvent:
 		switch ( cbRec->eventData.eventDataParms.event->what ) {
