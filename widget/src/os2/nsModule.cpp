@@ -269,7 +269,8 @@ PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText,
    size_t   ucsLen = ulSize;
    size_t   cSubs = 0;
 
-   PRUnichar *tmp = pBuffer; // function alters the out pointer
+   // function alters the out pointer
+   UniChar *tmp = NS_REINTERPRET_CAST(UniChar *,pBuffer);
 
    int unirc = UniUconvToUcs( converter, (void **)&szText, &szLen,
                               &tmp, &ucsLen, &cSubs);
