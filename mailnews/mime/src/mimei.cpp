@@ -1577,8 +1577,12 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
         }
 			  
         if (!(obj->options->override_charset)) {
-          PR_FREEIF(obj->options->default_charset);
-          obj->options->default_charset = MimeHeaders_get_parameter(ct, "charset", nsnull, nsnull);
+          char *charset = MimeHeaders_get_parameter(ct, "charset", nsnull, nsnull);
+          if (charset)
+          {
+            PR_FREEIF(obj->options->default_charset);
+            obj->options->default_charset = charset;
+          }
         }
 			  PR_Free(ct);
 			}
