@@ -2857,7 +2857,8 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
     nsAutoString  styleType;
     mDocument->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
     if (0 < styleType.Length()) {
-      isCSS = styleType.EqualsIgnoreCase("text/css");
+      static const char* textCssStr = "text/css";
+      isCSS = styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr));
     }
 
     if (isCSS) {
@@ -2872,6 +2873,14 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
       }
       if (NS_SUCCEEDED(result) && cssLoader) {
         result = cssLoader->GetParserFor(nsnull, &cssParser);
+
+        static const char* charsetStr = "charset=";
+        PRInt32 charsetOffset = styleType.Find(charsetStr,PR_TRUE);
+        if (charsetOffset > 0) {
+          nsString charset;
+          styleType.Mid(charset, charsetOffset + sizeof(charsetStr), -1);
+          (void)cssLoader->SetCharset(charset);
+        }
       }
       else {
         result = NS_NewCSSParser(&cssParser);
