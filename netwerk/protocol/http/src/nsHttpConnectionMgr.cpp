@@ -86,6 +86,10 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
 {
     LOG(("nsHttpConnectionMgr::Init\n"));
 
+    nsresult rv;
+    nsCOMPtr<nsIEventTarget> sts = do_GetService(kSocketTransportServiceCID, &rv);
+    if NS_FAILED(rv) return rv;
+
     nsAutoMonitor mon(mMonitor);
 
     // do nothing if already initialized
@@ -102,8 +106,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     mMaxRequestDelay = maxRequestDelay;
     mMaxPipelinedRequests = maxPipelinedRequests;
 
-    nsresult rv;
-    mSTEventTarget = do_GetService(kSocketTransportServiceCID, &rv);
+    mSTEventTarget = sts;
     return rv;
 }
 
