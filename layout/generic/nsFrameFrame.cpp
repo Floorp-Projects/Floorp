@@ -185,8 +185,8 @@ public:
   nsHTMLFrameInnerFrame();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void) { return nsFrame::AddRef(); }
-  NS_IMETHOD_(nsrefcnt) Release(void) { return nsFrame::Release(); }
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return 2; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
 
   NS_DECL_NSIWEBPROGRESSLISTENER
 
