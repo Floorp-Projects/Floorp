@@ -176,6 +176,7 @@ BEGIN_MSG_MAP(CMozillaBrowser)
     COMMAND_ID_HANDLER(ID_LINK_PROPERTIES, OnLinkProperties)
 END_MSG_MAP()
 
+	static HRESULT _stdcall PrintHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 	static HRESULT _stdcall EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 	static HRESULT _stdcall EditCommandHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
 
@@ -184,7 +185,7 @@ END_MSG_MAP()
 
 BEGIN_OLECOMMAND_TABLE()
 	// Standard "common" commands
-	OLECOMMAND_MESSAGE(OLECMDID_PRINT, NULL, ID_PRINT, L"Print", L"Print the page")
+	OLECOMMAND_HANDLER(OLECMDID_PRINT, NULL, PrintHandler, L"Print", L"Print the page")
 	OLECOMMAND_MESSAGE(OLECMDID_PAGESETUP, NULL, ID_PAGESETUP, L"Page Setup", L"Page Setup")
 	OLECOMMAND_MESSAGE(OLECMDID_UNDO, NULL, 0, L"Undo", L"Undo")
 	OLECOMMAND_MESSAGE(OLECMDID_REDO, NULL, 0, L"Redo", L"Redo")
@@ -385,6 +386,7 @@ protected:
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
 	virtual HRESULT SetEditorMode(BOOL bEnabled);
 	virtual HRESULT OnEditorCommand(DWORD nCmdID);
+    virtual HRESULT PrintDocument(BOOL promptUser);
 
     virtual HRESULT LoadBrowserHelpers();
 	virtual HRESULT UnloadBrowserHelpers();
