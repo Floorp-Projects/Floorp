@@ -1504,8 +1504,10 @@ main(int argc, char **argv)
 	return 1;
     JSDJ_SetJSDContext(_jsdjc, _jsdc);
     java_env = JSDJ_CreateJavaVMAndStartDebugger(_jsdjc);
+#ifdef LIVECONNECT
     if (java_env)
 	(*java_env)->GetJavaVM(java_env, &java_vm);
+#endif
     /*
     * XXX This would be the place to wait for the debugger to start.
     * Waiting would be nice in general, but especially when a js file
