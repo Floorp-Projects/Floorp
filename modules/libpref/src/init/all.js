@@ -43,7 +43,6 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
-pref("general.useragent.override", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:0.9.5+) Gecko/20011010 Netscape6/6.1b1");
 pref("general.useragent.misc", "rv:0.9.6+");
 
 pref("general.startup.browser",             true);
