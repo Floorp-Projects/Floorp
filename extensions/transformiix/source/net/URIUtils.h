@@ -31,7 +31,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.h,v 1.12 2001/04/08 14:33:35 peterv%netscape.com Exp $
+ * $Id: URIUtils.h,v 1.13 2001/04/12 10:13:12 peterv%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_URIUTILS_H
@@ -41,14 +41,6 @@
 #include "baseutils.h"
 #ifndef MOZ_XSL
 #include <fstream.h>
-#else
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsXPIDLString.h"
-#include "nsCOMPtr.h"
-
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 #endif
 
 
@@ -56,7 +48,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
  * A utility class for URI handling
  * Not yet finished, only handles file URI at this point
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.12 $ $Date: 2001/04/08 14:33:35 $
+ * @version $Revision: 1.13 $ $Date: 2001/04/12 10:13:12 $
  *
 **/
 
