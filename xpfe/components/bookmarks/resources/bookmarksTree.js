@@ -269,6 +269,7 @@ BookmarksTree.prototype = {
       var stringValue   = { value: defaultValue };
       if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
         var relativeNode = gBookmarksShell.tree;
+        var parentNode;
         if (aSelectedItem && aSelectedItem.localName != "tree") {
           // By default, create adjacent to the selected item
           relativeNode = aSelectedItem;
@@ -276,21 +277,12 @@ BookmarksTree.prototype = {
               relativeNode.getAttribute("open") == "true") {
             // But if it's an open container, the relative node should be the last child. 
             var treechildren = ContentUtils.childByLocalName(relativeNode, "treechildren");
-            if (treechildren && treechildren.hasChildNodes()) 
-              relativeNode = treechildren.lastChild;
+            if (treechildren && treechildren.hasChildNodes())
+              relativeNode = treechildren.lastChild; // folder non-empty, set relativeNode
+            parentNode = aSelectedItem; // no matter what, folder is open, so make it parent
+          } else {
+            parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.tree;
           }
-        }
-
-        var parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.tree;
-        if (relativeNode) {
-          // If we're attempting to create a folder as a subfolder of an open folder,
-          // we need to set the parentFolder to be relativeNode, which will be the
-          // parent of the new folder, rather than the parent of the relativeNode,
-          // which will result in the folder being created in an incorrect position
-          // (adjacent to the relativeNode).
-          var selKids = ContentUtils.childByLocalName(relativeNode, "treechildren");
-          if (selKids && selKids.hasChildNodes() && selKids.lastChild == dummyItem)
-            parentNode = relativeNode;
         }
 
         var args = [{ property: NC_NS + "parent",
