@@ -1619,7 +1619,7 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
     if (ok) {
       const char* baseName = aLibraryName;
       // just get the base name of the library if a full path was given:
-      PRInt32 len = nsCRT::strlen(aLibraryName);
+      PRInt32 len = strlen(aLibraryName);
       for (PRInt32 i = len - 1; i >= 0; i--) {
         if (aLibraryName[i] == '\\') {
           baseName = &aLibraryName[i + 1];

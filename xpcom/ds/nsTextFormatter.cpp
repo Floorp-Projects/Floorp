@@ -666,7 +666,7 @@ static int cvt_s(SprintfState *ss, const char *s, int width,
     PRUnichar *retbuf = nsnull;
 
     if (s) {
-        retbuf = UTF8ToUCS2(s, nsCRT::strlen(s), buf, 256);        
+        retbuf = UTF8ToUCS2(s, strlen(s), buf, 256);        
         if(nsnull == retbuf) {
             return -1;
         }

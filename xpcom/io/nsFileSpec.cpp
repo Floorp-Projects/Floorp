@@ -83,7 +83,7 @@ nsSimpleCharString::nsSimpleCharString(const char* inString)
 :   mData(nsnull)
 {
     if (inString)
-        CopyFrom(inString, nsCRT::strlen(inString));
+        CopyFrom(inString, strlen(inString));
 } // nsSimpleCharString::nsSimpleCharString
 
 //----------------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ void nsSimpleCharString::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
     if (inString)
-        CopyFrom(inString, nsCRT::strlen(inString));
+        CopyFrom(inString, strlen(inString));
     else
         SetToEmpty();
 } // nsSimpleCharString::operator =
@@ -155,7 +155,7 @@ void nsSimpleCharString::operator += (const char* inOther)
 {
     if (!inOther)
         return;
-    int newLength = Length() + nsCRT::strlen(inOther);
+    int newLength = Length() + strlen(inOther);
     ReallocData(newLength);
     strcat(mData->mString, inOther);
 } // nsSimpleCharString::operator =
@@ -178,7 +178,7 @@ void nsSimpleCharString::Catenate(const char* inString1, const char* inString2)
         *this += inString1;
         return;
     }
-    int newLength = Length() + nsCRT::strlen(inString1) + nsCRT::strlen(inString2);
+    int newLength = Length() + strlen(inString1) + strlen(inString2);
     ReallocData(newLength);
     strcat(mData->mString, inString1);
     strcat(mData->mString, inString2);
@@ -216,7 +216,7 @@ void nsSimpleCharString::Unescape()
     if (!mData)
         return;
     nsUnescape(mData->mString);
-    mData->mLength = nsCRT::strlen(mData->mString);       
+    mData->mLength = strlen(mData->mString);       
 } // nsSimpleCharString::Unescape
 
 
@@ -357,7 +357,7 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
 
     PRUint32 savedLastSeparatorOffset = (lastSeparator - chars);
     int newLength =
-        (lastSeparator - chars) + nsCRT::strlen(inLeafName) + (trailingSeparator != 0);
+        (lastSeparator - chars) + strlen(inLeafName) + (trailingSeparator != 0);
     ReallocData(newLength);
 
     chars = mData->mString; // it might have moved.
@@ -457,7 +457,7 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
         */
         if (pathCopy[0] == '/' && pathCopy[2] == '|')
         {
-            char* startDir = (char*)PR_Malloc(nsCRT::strlen(pathCopy) + 2);
+            char* startDir = (char*)PR_Malloc(strlen(pathCopy) + 2);
             strcpy(startDir, pathCopy);
             strcat(startDir, "/");
 
@@ -908,8 +908,8 @@ void nsFileSpec::MakeUnique()
         *lastDot = '\0'; // strip suffix and dot.
     }
     const int kMaxRootLength
-        = nsFileSpecHelpers::kMaxCoreLeafNameLength - nsCRT::strlen(suffix) - 1;
-    if ((int)nsCRT::strlen(leafName) > (int)kMaxRootLength)
+        = nsFileSpecHelpers::kMaxCoreLeafNameLength - strlen(suffix) - 1;
+    if ((int)strlen(leafName) > (int)kMaxRootLength)
         leafName[kMaxRootLength] = '\0';
     for (short indx = 1; indx < 1000 && Exists(); indx++)
     {
@@ -1260,7 +1260,7 @@ nsNSPRPath::operator const char*() const
              modifiedNSPRPath[1] = ':';
         
         // Remove the ending separator only if it is not the last separator
-        int len = nsCRT::strlen(modifiedNSPRPath);
+        int len = strlen(modifiedNSPRPath);
         if (modifiedNSPRPath[len - 1 ] == '/' && modifiedNSPRPath[len - 2 ] != ':')
             modifiedNSPRPath[len - 1 ] = '\0';     
     }
