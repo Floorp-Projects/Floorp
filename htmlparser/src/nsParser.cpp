@@ -1058,7 +1058,10 @@ nsresult nsParser::OnStartBinding(nsIURI* aURL, const char *aSourceType)
   rv = aContext->QueryInterface(nsIChannel::GetIID(), (void**)&channel);
   if (NS_SUCCEEDED(rv)) {
     char* contentType;
-    (void)channel->GetContentType(&contentType); // XXX ignore error?
+    rv = channel->GetContentType(&contentType);
+    if (NS_FAILED(rv)) {
+        NS_ASSERTION(contentType, "parser needs a content type to find a dtd");
+    }
     mParserContext->mSourceType = contentType;
     nsCRT::free(contentType);
     NS_RELEASE(channel);
