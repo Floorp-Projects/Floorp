@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.37 2002/12/12 06:05:43 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.38 2002/12/13 01:25:45 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -98,30 +98,32 @@ DigestFile(PLArenaPool *poolp, SECItem ***digests, SECItem *input,
 static void
 Usage(char *progName)
 {
-    fprintf(stderr, "Usage:  %s [-D|-S|-E] [<options>] [-d dbdir] [-u certusage]\n", progName);
-    fprintf(stderr, " -i infile     use infile as source of data (default: stdin)\n");
-    fprintf(stderr, " -o outfile    use outfile as destination of data (default: stdout)\n");
-    fprintf(stderr, " -d dbdir      key/cert database directory (default: ~/.netscape)\n");
-    fprintf(stderr, " -p password   use password as key db password (default: prompt)\n");
-    fprintf(stderr, " -u certusage  set type of certificate usage (default: certUsageEmailSigner)\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, " -D            decode a CMS message\n");
-    fprintf(stderr, "  -c content   use this detached content\n");
-    fprintf(stderr, "  -n           suppress output of content\n");
-    fprintf(stderr, "  -h num       generate email headers with info about CMS message\n");
-    fprintf(stderr, " -S            create a CMS signed message\n");
-    fprintf(stderr, "  -N nick      use certificate named \"nick\" for signing\n");
-    fprintf(stderr, "  -T           do not include content in CMS message\n");
-    fprintf(stderr, "  -G           include a signing time attribute\n");
-    fprintf(stderr, "  -H hash      use hash (default:SHA1)\n");
-    fprintf(stderr, "  -P           include a SMIMECapabilities attribute\n");
-    fprintf(stderr, "  -Y nick      include a EncryptionKeyPreference attribute with cert\n");
-    fprintf(stderr, "                 (use \"NONE\" to omit)\n");
-    fprintf(stderr, " -E            create a CMS enveloped message (NYI)\n");
-    fprintf(stderr, "  -r id,...    create envelope for these recipients,\n");
-    fprintf(stderr, "               where id can be a certificate nickname or email address\n");
-    fprintf(stderr, " -v            print debugging information\n");
-    fprintf(stderr, "\nCert usage codes:\n");
+    fprintf(stderr, 
+"Usage:  %s [-D|-S|-E] [<options>] [-d dbdir] [-u certusage]\n", 
+	    progName);
+    fprintf(stderr, 
+" -D            decode a CMS message\n"
+"  -c content   use this detached content\n"
+"  -n           suppress output of content\n"
+"  -h num       generate email headers with info about CMS message\n"
+" -S            create a CMS signed message\n"
+"  -G           include a signing time attribute\n"
+"  -H hash      use hash (default:SHA1)\n"
+"  -N nick      use certificate named \"nick\" for signing\n"
+"  -P           include a SMIMECapabilities attribute\n"
+"  -T           do not include content in CMS message\n"
+"  -Y nick      include a EncryptionKeyPreference attribute with cert\n"
+"                 (use \"NONE\" to omit)\n"
+" -E            create a CMS enveloped message (NYI)\n"
+"  -r id,...    create envelope for these recipients,\n"
+"               where id can be a certificate nickname or email address\n"
+" -d dbdir      key/cert database directory (default: ~/.netscape)\n"
+" -i infile     use infile as source of data (default: stdin)\n"
+" -o outfile    use outfile as destination of data (default: stdout)\n"
+" -p password   use password as key db password (default: prompt)\n"
+" -u certusage  set type of certificate usage (default: certUsageEmailSigner)\n"
+" -v            print debugging information\n"
+"\nCert usage codes:\n");
     fprintf(stderr, "%-25s  0 - certUsageSSLClient\n", " ");
     fprintf(stderr, "%-25s  1 - certUsageSSLServer\n", " ");
     fprintf(stderr, "%-25s  2 - certUsageSSLServerWithStepUp\n", " ");
@@ -1027,73 +1029,15 @@ main(int argc, char **argv)
 				 "CDEGH:N:OPSTY:c:d:e:h:i:no:p:r:s:u:v");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
-	case '?':
-	    Usage(progName);
-	    break;
-	
 	case 'C':
 	    mode = ENCRYPT;
 	    break;
 	case 'D':
 	    mode = DECODE;
 	    break;
-	case 'S':
-	    mode = SIGN;
-	    break;
 	case 'E':
 	    mode = ENVELOPE;
 	    break;
-	case 'O':
-	    mode = CERTSONLY;
-	    break;
-	case 'v':
-	    cms_verbose = 1;
-	    break;
-
-	case 'n':
-	    if (mode != DECODE) {
-		fprintf(stderr, 
-		        "%s: option -n only supported with option -D.\n", 
-		        progName);
-		Usage(progName);
-		exit(1);
-	    }
-	    decodeOptions.suppressContent = PR_TRUE;
-	    break;
-
-	case 'N':
-	    if (mode != SIGN) {
-		fprintf(stderr, 
-		        "%s: option -N only supported with option -S.\n", 
-		        progName);
-		Usage(progName);
-		exit(1);
-	    }
-	    signOptions.nickname = strdup(optstate->value);
-	    break;
-
-	case 'Y':
-	    if (mode != SIGN) {
-		fprintf(stderr, 
-		        "%s: option -Y only supported with option -S.\n", 
-		        progName);
-		Usage(progName);
-		exit(1);
-	    }
-	    signOptions.encryptionKeyPreferenceNick = strdup(optstate->value);
-	    break;
-
-	case 'T':
-	    if (mode != SIGN) {
-		fprintf(stderr, 
-		        "%s: option -T only supported with option -S.\n", 
-		        progName);
-		Usage(progName);
-		exit(1);
-	    }
-	    signOptions.detached = PR_TRUE;
-	    break;
-
 	case 'G':
 	    if (mode != SIGN) {
 		fprintf(stderr, 
@@ -1104,7 +1048,6 @@ main(int argc, char **argv)
 	    }
 	    signOptions.signingTime = PR_TRUE;
 	    break;
-
        case 'H':
            if (mode != SIGN) {
                fprintf(stderr,
@@ -1136,7 +1079,19 @@ main(int argc, char **argv)
                exit(1);
            }
            break;
-
+	case 'N':
+	    if (mode != SIGN) {
+		fprintf(stderr, 
+		        "%s: option -N only supported with option -S.\n", 
+		        progName);
+		Usage(progName);
+		exit(1);
+	    }
+	    signOptions.nickname = strdup(optstate->value);
+	    break;
+	case 'O':
+	    mode = CERTSONLY;
+	    break;
 	case 'P':
 	    if (mode != SIGN) {
 		fprintf(stderr, 
@@ -1147,39 +1102,28 @@ main(int argc, char **argv)
 	    }
 	    signOptions.smimeProfile = PR_TRUE;
 	    break;
-
-	case 'h':
-	    if (mode != DECODE) {
+	case 'S':
+	    mode = SIGN;
+	    break;
+	case 'T':
+	    if (mode != SIGN) {
 		fprintf(stderr, 
-		        "%s: option -h only supported with option -D.\n", 
+		        "%s: option -T only supported with option -S.\n", 
 		        progName);
 		Usage(progName);
 		exit(1);
 	    }
-	    decodeOptions.headerLevel = atoi(optstate->value);
-	    if (decodeOptions.headerLevel < 0) {
-		fprintf(stderr, "option -h cannot have a negative value.\n");
-		exit(1);
-	    }
+	    signOptions.detached = PR_TRUE;
 	    break;
-
-	case 'p':
-	    if (!optstate->value) {
-		fprintf(stderr, "%s: option -p must have a value.\n", progName);
+	case 'Y':
+	    if (mode != SIGN) {
+		fprintf(stderr, 
+		        "%s: option -Y only supported with option -S.\n", 
+		        progName);
 		Usage(progName);
 		exit(1);
 	    }
-		
-	    options.password = strdup(optstate->value);
-	    break;
-
-	case 'i':
-	    inFile = PR_Open(optstate->value, PR_RDONLY, 00660);
-	    if (inFile == NULL) {
-		fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
-			progName, optstate->value);
-		exit(1);
-	    }
+	    signOptions.encryptionKeyPreferenceNick = strdup(optstate->value);
 	    break;
 
 	case 'c':
@@ -1197,7 +1141,47 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	    break;
+	case 'd':
+	    SECU_ConfigDirectory(optstate->value);
+	    break;
+	case 'e':
+	    envFileName = strdup(optstate->value);
+	    encryptOptions.envFile = PR_Open(envFileName, PR_RDONLY, 00660);
+	    break;
 
+	case 'h':
+	    if (mode != DECODE) {
+		fprintf(stderr, 
+		        "%s: option -h only supported with option -D.\n", 
+		        progName);
+		Usage(progName);
+		exit(1);
+	    }
+	    decodeOptions.headerLevel = atoi(optstate->value);
+	    if (decodeOptions.headerLevel < 0) {
+		fprintf(stderr, "option -h cannot have a negative value.\n");
+		exit(1);
+	    }
+	    break;
+	case 'i':
+	    inFile = PR_Open(optstate->value, PR_RDONLY, 00660);
+	    if (inFile == NULL) {
+		fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
+			progName, optstate->value);
+		exit(1);
+	    }
+	    break;
+
+	case 'n':
+	    if (mode != DECODE) {
+		fprintf(stderr, 
+		        "%s: option -n only supported with option -D.\n", 
+		        progName);
+		Usage(progName);
+		exit(1);
+	    }
+	    decodeOptions.suppressContent = PR_TRUE;
+	    break;
 	case 'o':
 	    outFile = fopen(optstate->value, "wb");
 	    if (outFile == NULL) {
@@ -1205,6 +1189,15 @@ main(int argc, char **argv)
 			progName, optstate->value);
 		exit(1);
 	    }
+	    break;
+	case 'p':
+	    if (!optstate->value) {
+		fprintf(stderr, "%s: option -p must have a value.\n", progName);
+		Usage(progName);
+		exit(1);
+	    }
+		
+	    options.password = strdup(optstate->value);
 	    break;
 
 	case 'r':
@@ -1226,15 +1219,6 @@ main(int argc, char **argv)
 	    certsonlyOptions.recipients = envelopeOptions.recipients;
 	    break;
 
-	case 'd':
-	    SECU_ConfigDirectory(optstate->value);
-	    break;
-
-	case 'e':
-	    envFileName = strdup(optstate->value);
-	    encryptOptions.envFile = PR_Open(envFileName, PR_RDONLY, 00660);
-	    break;
-
 	case 'u': {
 	    int usageType;
 
@@ -1244,9 +1228,15 @@ main(int argc, char **argv)
 	    options.certUsage = (SECCertUsage)usageType;
 	    break;
 	  }
-	      
+	case 'v':
+	    cms_verbose = 1;
+	    break;
+
 	}
     }
+    if (status == PL_OPT_BAD)
+	Usage(progName);
+    PL_DestroyOptState(optstate);
 
     if (mode == UNKNOWN)
 	Usage(progName);
