@@ -104,7 +104,8 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_FOLDER_BUSY NS_MSG_GENERATE_FAILURE(10)
 
 #ifdef XP_MAC
-#  define LINEBREAK             "\015"
+#  define LINEBREAK             "\012"		/* ducarroz: it must be defined to \012 to avoid
+														 definition conflit with fe_proto.h */
 #  define LINEBREAK_LEN 1
 #else
 #  ifdef XP_WIN
