@@ -514,3 +514,15 @@ NS_METHOD nsScrollbar::GetBounds(nsRect &aRect)
 }
 
 
+#ifdef MOZ_UNICODE
+//-------------------------------------------------------------------------
+//
+// return the window class name and initialize the class if needed
+//
+//-------------------------------------------------------------------------
+LPCWSTR nsScrollbar::WindowClassW()
+{
+    return L"SCROLLBAR";
+}
+
+#endif
