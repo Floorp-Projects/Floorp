@@ -58,7 +58,7 @@ public:
 
     PRBool CanUnload(void) { return mOutstandingInstances == 0; }
 
-    friend MyService;
+    friend class MyService;
 
 protected:
     PRBool      mStarted;
