@@ -11,28 +11,31 @@
 # 
 # The Original Code is the Mozilla browser.
 # 
-# The Initial Developer of the Original Code is Netscape
-# Communications, Inc.  Portions created by Netscape are
+# The Initial Developer of the Original Code is Christopher
+# Blizzard. Portions created by Christopher Blizzard are
 # Copyright (C) 1999, Mozilla.  All Rights Reserved.
 # 
 # Contributor(s):
-#   Travis Bogard <travis@netscape.com>
+#   Christopher Blizzard <blizzard@mozilla.org>
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=webBrowser setup build chrome
+DIRS		= \
+		content \
+		locale \
+		skin
 
-ifdef MOZ_ENABLE_GTK
-DIRS += gtk
-endif
+CHROME_DIR	= packages
+CHROME_MISC_DIR = .
+CHROME_TYPE     = content locale skin
 
-ifdef MOZ_ENABLE_PHOTON
-DIRS += photon
-endif
+CHROME_MISC	= \
+		manifest.rdf \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

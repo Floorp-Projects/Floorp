@@ -11,28 +11,36 @@
 # 
 # The Original Code is the Mozilla browser.
 # 
-# The Initial Developer of the Original Code is Netscape
-# Communications, Inc.  Portions created by Netscape are
+# The Initial Developer of the Original Code is Christopher
+# Blizzard. Portions created by Christopher Blizzard are
 # Copyright (C) 1999, Mozilla.  All Rights Reserved.
 # 
 # Contributor(s):
-#   Travis Bogard <travis@netscape.com>
+#   Christopher Blizzard <blizzard@mozilla.org>
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=webBrowser setup build chrome
+CHROME_DIR	= packages/embedding
+CHROME_CONTENT_DIR = browser/content
 
-ifdef MOZ_ENABLE_GTK
-DIRS += gtk
-endif
+CHROME_CONTENT 	= \
+		$(NULL)
 
-ifdef MOZ_ENABLE_PHOTON
-DIRS += photon
-endif
+SKINFILES 	= \
+		$(srcdir)/embedding.css \
+		$(srcdir)/back.gif \
+		$(srcdir)/forward.gif \
+		$(srcdir)/reload.gif \
+		$(srcdir)/stop.gif
 
 include $(topsrcdir)/config/rules.mk
+
+INSTALLROOT = $(DIST)/bin/chrome/packages/embedding/browser
+
+install::
+	$(INSTALL) $(SKINFILES) $(INSTALLROOT)/skin
