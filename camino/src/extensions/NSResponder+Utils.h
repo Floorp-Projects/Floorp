@@ -15,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *      Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "NSMenu+Utils.h"
+#import <AppKit/AppKit.h>
 
+@interface NSResponder(ChimeraResponderUtils)
 
-@implementation NSMenu(ChimeraMenuUtils)
-
-- (void)checkItemWithTag:(int)tag uncheckingOtherItems:(BOOL)uncheckOthers
-{
-  if (uncheckOthers)
-  {
-    NSEnumerator* itemsEnum = [[self itemArray] objectEnumerator];
-    NSMenuItem* curItem;
-    while ((curItem = (NSMenuItem*)[itemsEnum nextObject]))
-      [curItem setState:NSOffState];
-  }
-  [[self itemWithTag:tag] setState:NSOnState];
-}
-
-- (void)checkItemWithTag:(int)unmaskedTag inGroupWithMask:(int)tagMask
-{
-  NSEnumerator* itemsEnum = [[self itemArray] objectEnumerator];
-  NSMenuItem* curItem;
-  while ((curItem = (NSMenuItem*)[itemsEnum nextObject]))
-  {
-    int itemTag = [curItem tag];
-    if ((itemTag & tagMask) == tagMask)
-    {
-      int rawTag = (itemTag & ~tagMask);
-      [curItem setState:(rawTag == unmaskedTag) ? NSOnState : NSOffState];
-    }
-  }
-}
-
-- (void)setAllItemsEnabled:(BOOL)inEnable startingWithItemAtIndex:(int)inFirstItem includingSubmenus:(BOOL)includeSubmenus
-{
-  NSArray* menuItems = [self itemArray];
-
-  int i;
-  for (i = inFirstItem; i < [menuItems count]; i ++)
-  {
-    id<NSMenuItem> curItem = [self itemAtIndex:i];
-    [curItem setEnabled:inEnable];
-    if (includeSubmenus && [curItem hasSubmenu])
-    {
-      [[curItem submenu] setAllItemsEnabled:inEnable startingWithItemAtIndex:0 includingSubmenus:includeSubmenus];
-    }
-  }
-}
-
-@end
-
-
-@implementation NSMenuItem(ChimeraMenuItemUtils)
-
-- (int)tagRemovingMask:(int)tagMask
-{
-  return ([self tag] & ~tagMask);
-}
+- (NSResponder*)responderForAction:(SEL)inAction;
+- (id)instanceOfClassInResponderChain:(Class)inClass;
 
 @end

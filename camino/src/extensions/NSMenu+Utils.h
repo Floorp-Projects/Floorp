@@ -46,6 +46,10 @@
 // turning on the one with the given unmasked tag value.
 - (void)checkItemWithTag:(int)unmaskedTag inGroupWithMask:(int)tagMask;
 
+// enable or disable all items in the menu including and after inFirstItem,
+// optionally recursing into submenus.
+- (void)setAllItemsEnabled:(BOOL)inEnable startingWithItemAtIndex:(int)inFirstItem includingSubmenus:(BOOL)includeSubmenus;
+
 @end
 
 

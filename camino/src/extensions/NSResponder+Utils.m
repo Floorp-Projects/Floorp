@@ -15,11 +15,11 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
+ *      Simon Fraser <smfr@smfr.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +35,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "NSMenu+Utils.h"
 
+#import "NSResponder+Utils.h"
 
-@implementation NSMenu(ChimeraMenuUtils)
+@implementation NSResponder(ChimeraResponderUtils)
 
-- (void)checkItemWithTag:(int)tag uncheckingOtherItems:(BOOL)uncheckOthers
+- (NSResponder*)responderForAction:(SEL)inAction
 {
-  if (uncheckOthers)
+  if (!inAction) return nil;
+
+  NSResponder* curResponder = self;
+  while (curResponder)
   {
-    NSEnumerator* itemsEnum = [[self itemArray] objectEnumerator];
-    NSMenuItem* curItem;
-    while ((curItem = (NSMenuItem*)[itemsEnum nextObject]))
-      [curItem setState:NSOffState];
+    if ([curResponder respondsToSelector:inAction])
+      return curResponder;
+      
+    curResponder = [curResponder nextResponder];
   }
-  [[self itemWithTag:tag] setState:NSOnState];
+  return nil;
 }
 
-- (void)checkItemWithTag:(int)unmaskedTag inGroupWithMask:(int)tagMask
+- (id)instanceOfClassInResponderChain:(Class)inClass
 {
-  NSEnumerator* itemsEnum = [[self itemArray] objectEnumerator];
-  NSMenuItem* curItem;
-  while ((curItem = (NSMenuItem*)[itemsEnum nextObject]))
+  NSResponder* curResponder = self;
+  while (curResponder)
   {
-    int itemTag = [curItem tag];
-    if ((itemTag & tagMask) == tagMask)
-    {
-      int rawTag = (itemTag & ~tagMask);
-      [curItem setState:(rawTag == unmaskedTag) ? NSOnState : NSOffState];
-    }
+    if ([curResponder isKindOfClass:inClass])
+      return curResponder;
+      
+    curResponder = [curResponder nextResponder];
   }
-}
-
-- (void)setAllItemsEnabled:(BOOL)inEnable startingWithItemAtIndex:(int)inFirstItem includingSubmenus:(BOOL)includeSubmenus
-{
-  NSArray* menuItems = [self itemArray];
-
-  int i;
-  for (i = inFirstItem; i < [menuItems count]; i ++)
-  {
-    id<NSMenuItem> curItem = [self itemAtIndex:i];
-    [curItem setEnabled:inEnable];
-    if (includeSubmenus && [curItem hasSubmenu])
-    {
-      [[curItem submenu] setAllItemsEnabled:inEnable startingWithItemAtIndex:0 includingSubmenus:includeSubmenus];
-    }
-  }
-}
-
-@end
-
-
-@implementation NSMenuItem(ChimeraMenuItemUtils)
-
-- (int)tagRemovingMask:(int)tagMask
-{
-  return ([self tag] & ~tagMask);
+  return nil;
 }
 
 @end
