@@ -151,6 +151,8 @@ static PRBool QuitOnTimeout = PR_FALSE;
 static SSL3Statistics * ssl3stats;
 
 static int failed_already = 0;
+static PRBool disableSSL3     = PR_FALSE;
+static PRBool disableTLS      = PR_FALSE;
 
 
 char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
@@ -176,7 +178,7 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n nickname] [-p port] [-d dbdir] [-c connections]\n"
-	"          [-DNovq] [-2 filename]\n"
+	"          [-3DNTovq] [-2 filename]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
 	" where -v means verbose\n"
 	"       -o means override server certificate validation\n"
@@ -1084,6 +1086,16 @@ client_main(
 	errExit("SSL_OptionSet SSL_SECURITY");
     }
 
+    rv = SSL_OptionSet(model_sock, SSL_ENABLE_SSL3, !disableSSL3);
+    if (rv != SECSuccess) {
+	errExit("error enabling SSLv3 ");
+    }
+
+    rv = SSL_OptionSet(model_sock, SSL_ENABLE_TLS, !disableTLS);
+    if (rv != SECSuccess) {
+	errExit("error enabling TLS ");
+    }
+
     if (bigBuf.data) { /* doing FDX */
 	rv = SSL_OptionSet(model_sock, SSL_ENABLE_FDX, 1);
 	if (rv < 0) {
@@ -1198,17 +1210,21 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:C:DNc:d:n:op:qt:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:3C:DNTc:d:n:op:qt:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
 	case '2': fileName = optstate->value; break;
+
+	case '3': disableSSL3 = PR_TRUE; break;
 
 	case 'C': cipherString = optstate->value; break;
 
 	case 'D': NoDelay = PR_TRUE; break;
 
 	case 'N': NoReuse = 1; break;
+
+	case 'T': disableTLS = PR_TRUE; break;
 
 	case 'c': connections = PORT_Atoi(optstate->value); break;
 
