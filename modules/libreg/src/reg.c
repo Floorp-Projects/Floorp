@@ -1439,7 +1439,7 @@ static REGERR nr_RemoveName(char *path)
  * --------------------------------------------------------------------
  */
 static REGERR nr_Find(REGFILE *reg, REGOFF offParent, char *pPath,
-    REGDESC *pDesc,	REGOFF *pPrev, REGOFF *pParent);
+    REGDESC *pDesc,	REGOFF *pPrev, REGOFF *pParent, Bool raw);
 
 static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, char *pName,
 	REGDESC *pDesc, REGOFF *pOffPrev);
@@ -1458,7 +1458,8 @@ static REGERR nr_Find(REGFILE *reg,
 			char *pPath,
 			REGDESC *pDesc,
 			REGOFF *pPrev,
-			REGOFF *pParent)
+			REGOFF *pParent,
+			Bool raw)
 {
 
 	REGERR  err;
@@ -1479,21 +1480,30 @@ static REGERR nr_Find(REGFILE *reg,
     /* read starting desc */
 	err = nr_ReadDesc( reg, offParent, &desc);
 
-   	/* Walk 'path', reading keys into 'desc' */
-    p = pPath;
-    while ( err == REGERR_OK ) {
+	if (raw == TRUE) {
+		/* save current location as parent of next segment */
+		offParent = desc.location;
+		/* look for name at next level down */
+		err = nr_FindAtLevel(reg, desc.down, pPath, &desc, &offPrev);
+	}
+	else {
+		/* Walk 'path', reading keys into 'desc' */
+		p = pPath;
+		while ( err == REGERR_OK ) {
+			
+			err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
+			
+			if ( err == REGERR_OK ) {
+				/* save current location as parent of next segment */
+				offParent = desc.location;
+				/* look for name at next level down */
+				err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, &offPrev);
+			}
+		}
+	}
 
-        err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
-
-        if ( err == REGERR_OK ) {
-            /* save current location as parent of next segment */
-            offParent = desc.location;
-            /* look for name at next level down */
-            err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, &offPrev);
-        }
-  	}
-
-    if ( err == REGERR_NOMORE ) {
+    if ( (raw == FALSE && err == REGERR_NOMORE) ||
+		 (raw == TRUE && err == REGERR_OK) ) {
         /* we found all the segments of the path--success! */
         err = REGERR_OK;
 
@@ -1707,7 +1717,7 @@ VR_INTERFACE(REGERR) NR_RegRename(RKEY key, char *path, char *newname)
 
 	/* Find the key or entry to rename (and validate the
 		incoming parameters) */
-	err = nr_Find((REGOFF)key, path, &desc, 0, 0);
+	err = nr_Find((REGOFF)key, path, &desc, 0, 0, FALSE);
 	if (err != REGERR_OK)
 		goto cleanup;
 
@@ -1800,7 +1810,7 @@ cleanup:
 static REGOFF nr_TranslateKey( REGFILE *reg, RKEY key );
 static void   nr_InitStdRkeys( REGFILE *reg );
 static Bool   nr_ProtectedNode( REGFILE *reg, REGOFF key );
-static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey );
+static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bool raw );
 static void   nr_Upgrade_1_1( REGFILE *reg );
 static char*  nr_GetUsername();
 static char*  nr_GetRegName (char *name);
@@ -1849,12 +1859,12 @@ static REGOFF nr_TranslateKey( REGFILE *reg, RKEY key )
                         {
                             err = REGERR_FAIL;
                         } else {
-                            err = nr_RegAddKey( reg, reg->rkeys.users, profName, &userkey );
+                            err = nr_RegAddKey( reg, reg->rkeys.users, profName, &userkey, FALSE );
                         }
                         XP_FREE(profName);
                     }
                     else {
-                        err = nr_RegAddKey( reg, reg->rkeys.users, "default", &userkey );
+                        err = nr_RegAddKey( reg, reg->rkeys.users, "default", &userkey, FALSE );
                     }
 
                     if ( err == REGERR_OK ) {
@@ -1899,19 +1909,19 @@ static void   nr_InitStdRkeys( REGFILE *reg )
      */
 
     /* ROOTKEY_USERS */
-    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_USERS_STR, &key );
+    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_USERS_STR, &key, FALSE );
     if ( err == REGERR_OK ) {
         reg->rkeys.users = key;
     }
 
     /* ROOTKEY_COMMON */
-    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_COMMON_STR, &key );
+    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_COMMON_STR, &key, FALSE );
     if ( err == REGERR_OK ) {
         reg->rkeys.common = key;
     }
 
     /* ROOTKEY_VERSIONS */
-    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_VERSIONS_STR, &key );
+    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_VERSIONS_STR, &key, FALSE );
     if ( err == REGERR_OK ) {
         reg->rkeys.versions = key;
     }
@@ -1920,7 +1930,7 @@ static void   nr_InitStdRkeys( REGFILE *reg )
 	/* delay until first use -- see nr_TranslateKey */
 
     /* ROOTKEY_PRIVATE */
-    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_PRIVATE_STR, &key );
+    err = nr_RegAddKey( reg, reg->hdr.root, ROOTKEY_PRIVATE_STR, &key, FALSE );
     if ( err == REGERR_OK ) {
         reg->rkeys.privarea = key;
     }
@@ -1944,7 +1954,7 @@ static Bool nr_ProtectedNode( REGFILE *reg, REGOFF key )
 
 
 
-static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey )
+static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, Bool raw )
 {
     REGERR      err;
     REGDESC     desc;
@@ -1965,28 +1975,40 @@ static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey )
 	/* Get starting desc */
 	err = nr_ReadDesc( reg, key, &desc );
 
-    /* Walk 'path', reading keys into 'desc' */
-    p = path;
-    while ( err == REGERR_OK ) {
+	if (raw == TRUE) {
+		/* look for name at next level down */
+		err = nr_FindAtLevel(reg, desc.down, path, &desc, 0);
+		
+		/* if key is not found */
+		if ( err == REGERR_NOFIND ) {
+			/* add it as a sub-key to the last found key */
+			err = nr_CreateSubKey(reg, &desc, path);
+		}
+	}
+	else {
+		/* Walk 'path', reading keys into 'desc' */
+		p = path;
+		while ( err == REGERR_OK ) {
+			
+			/* get next name on the path */
+			err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
+			if ( err == REGERR_OK ) {
+				
+				/* look for name at next level down */
+				err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, 0);
+				
+				/* if key is not found */
+				if ( err == REGERR_NOFIND ) {
+					/* add it as a sub-key to the last found key */
+					err = nr_CreateSubKey(reg, &desc, namebuf);
+				}
+			}
+		}
+	}
 
-        /* get next name on the path */
-        err = nr_NextName(p, namebuf, sizeof(namebuf), &p);
-        if ( err == REGERR_OK ) {
-
-            /* look for name at next level down */
-            err = nr_FindAtLevel(reg, desc.down, namebuf, &desc, 0);
-
-            /* if key is not found */
-            if ( err == REGERR_NOFIND ) {
-        		/* add it as a sub-key to the last found key */
-    		    err = nr_CreateSubKey(reg, &desc, namebuf);
-    	    }
-        }
-    }
-
-    XP_ASSERT( err != REGERR_OK );
     /* it's good to have processed the whole path */
-    if ( err == REGERR_NOMORE ) {
+    if ( (raw == FALSE && err == REGERR_NOMORE) ||
+		 (raw == TRUE && err == REGERR_OK) ) {
         err = REGERR_OK;
 
         /* return new key if the caller wants it */
@@ -2399,7 +2421,7 @@ static REGERR nr_addNodesToNewReg( HREG hReg, RKEY rootkey, HREG hRegNew, void *
         err = NR_RegEnumSubkeys( hReg, rootkey, &state, keyname, sizeof(keyname), REGENUM_DESCEND );
         if ( err != REGERR_OK )
     	    break;
-        err = NR_RegAddKey( hRegNew, rootkey, keyname, &newKey);
+        err = NR_RegAddKey( hRegNew, rootkey, keyname, &newKey );
         if ( err != REGERR_OK )
     	    break;
         cnt++;
@@ -2611,9 +2633,54 @@ VR_INTERFACE(REGERR) NR_RegAddKey( HREG hReg, RKEY key, char *path, RKEY *newKey
         return REGERR_PARAM;
 
     /* call the real routine */
-    return nr_RegAddKey( reg, start, path, newKey );
+    return nr_RegAddKey( reg, start, path, newKey, FALSE );
 }   /* NR_RegAddKey */
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegAddKeyRaw - Add a key node to the registry
+ *
+ *      This routine is simply a wrapper to perform user input
+ *      validation and translation from HREG and standard key
+ *      values into the internal format. It is different from
+ *		NR_RegAddKey() in that it takes a keyname rather than
+ *		a path.
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - registry key obtained from NR_RegGetKey(),
+ *               or one of the standard top-level keys
+ *    keyname  - name of key to be added. No parsing of this
+ *				 name happens.
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegAddKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *newKey )
+{
+    REGERR      err;
+    REGOFF      start;
+    REGFILE*    reg;
+
+    XP_ASSERT(bRegStarted);
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+
+    start = nr_TranslateKey( reg, key );
+
+    /* ... don't allow additional children of ROOTKEY */
+    if ( start == reg->hdr.root )
+        return REGERR_PARAM;
+
+    if ( keyname == NULL || *keyname == '\0' || start == 0 || reg == NULL )
+        return REGERR_PARAM;
+
+    /* call the real routine */
+    return nr_RegAddKey( reg, start, keyname, newKey, TRUE );
+}   /* NR_RegAddKeyRaw */
 
 
 /* ---------------------------------------------------------------------
@@ -2628,7 +2695,7 @@ VR_INTERFACE(REGERR) NR_RegAddKey( HREG hReg, RKEY key, char *path, RKEY *newKey
  *    path     - relative path of key to delete
  * ---------------------------------------------------------------------
  */
-VR_INTERFACE(REGERR) NR_RegDeleteKey( HREG hReg, RKEY key, char *path )
+VR_INTERFACE(REGERR) nr_RegDeleteKey( HREG hReg, RKEY key, char *path, Bool raw )
 {
     REGERR      err;
     REGOFF      start;
@@ -2658,7 +2725,7 @@ VR_INTERFACE(REGERR) NR_RegDeleteKey( HREG hReg, RKEY key, char *path )
     	return err;
 
     /* find the specified key */
-	err = nr_Find( reg, start, path, &desc, &offPrev, &offParent );
+	err = nr_Find( reg, start, path, &desc, &offPrev, &offParent, raw );
     if ( err == REGERR_OK ) {
 
         XP_ASSERT( !TYPE_IS_ENTRY( desc.type ) );
@@ -2707,9 +2774,17 @@ VR_INTERFACE(REGERR) NR_RegDeleteKey( HREG hReg, RKEY key, char *path )
 
 	return err;
 
+}   /* nr_RegDeleteKey */
+
+VR_INTERFACE(REGERR) NR_RegDeleteKey( HREG hReg, RKEY key, char *path )
+{
+	return (nr_RegDeleteKey(hReg, key, path, FALSE));
 }   /* NR_RegDeleteKey */
 
-
+VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw( HREG hReg, RKEY key, char *path )
+{
+	return (nr_RegDeleteKey(hReg, key, path, TRUE));
+}   /* NR_RegDeleteKey */
 
 /* ---------------------------------------------------------------------
  * NR_RegGetKey - Get the RKEY value of a node from its path
@@ -2742,7 +2817,7 @@ VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result
         return REGERR_PARAM;
 
     /* find the specified key */
-	err = nr_Find( reg, start, path, &desc, 0, 0 );
+	err = nr_Find( reg, start, path, &desc, 0, 0, FALSE );
     if ( err == REGERR_OK ) {
     	*result = (RKEY)desc.location;
     }
@@ -2750,6 +2825,47 @@ VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result
 	return err;
 
 }   /* NR_RegGetKey */
+
+
+/* ---------------------------------------------------------------------
+ * NR_RegGetKeyRaw - Get the RKEY value of a node from its keyname
+ *
+ * Parameters:
+ *    hReg     - handle of open registry
+ *    key      - starting node RKEY, typically one of the standard ones.
+ *    keyname  - keyname of key to find.  (a blank keyname just gives you
+ *               the starting key--useful for verification, VersionRegistry)
+ * ---------------------------------------------------------------------
+ */
+VR_INTERFACE(REGERR) NR_RegGetKeyRaw( HREG hReg, RKEY key, char *keyname, RKEY *result )
+{
+    REGERR      err;
+    REGOFF      start;
+    REGFILE*    reg;
+    REGDESC     desc;
+
+    XP_ASSERT(bRegStarted);
+
+    /* verify parameters */
+    err = VERIFY_HREG( hReg );
+    if ( err != REGERR_OK )
+        return err;
+
+    reg = ((REGHANDLE*)hReg)->pReg;
+    start = nr_TranslateKey( reg, key );
+
+    if ( keyname == NULL || start == 0 || result == NULL )
+        return REGERR_PARAM;
+
+    /* find the specified key */
+	err = nr_Find( reg, start, keyname, &desc, 0, 0, TRUE );
+    if ( err == REGERR_OK ) {
+    	*result = (RKEY)desc.location;
+    }
+
+	return err;
+
+}   /* NR_RegGetKeyRaw */
 
 
 
