@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.32"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.33"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -68,7 +68,6 @@ my %pubcmds = (
                "moon" => \&bot_moon,
                "up" => \&bot_up,
                "trees" => \&bot_tinderbox,
-               "(mozillazine|zine|mz)" => \&bot_mozillazine,
                "debug" => \&bot_debug,
                "stocks" => \&bot_stocks,
                );
@@ -87,6 +86,7 @@ my %rdfcmds = (
                "(newsbot|nb)" => "http://www.mozilla.org/newsbot/newsbot.rdf",
                "(xptoolkit|xpfe)" => "http://www.mozilla.org/xpfe/toolkit.rdf",
                "(freshmeat|fm)" => "http://freshmeat.net/files/freshmeat/fm.rdf",
+               "(mozillazine|zine|mz)" => "http://www.mozillazine.org/contents.rdf",
                );
 
 my %rdf_title;
@@ -153,14 +153,6 @@ my @greetings =
 	"ciao"
 	);
 
-# leave $mozillazine undef'd if you don't want mozillazine
-# headlines checked every eight hours
-
-my $mozillazine = "http://www.mozillazine.org/index.html";
-my @mozillazine;
-my $last_mozillazine = 0;
-
-
 
 my $irc = new Net::IRC or confess "$0: duh?";
 
@@ -188,7 +180,6 @@ $bot->add_handler ('join',   \&on_join);
 &debug ("scheduling stuff");
 $bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
-$bot->schedule (0, \&mozillazine);
 $bot->schedule (0, \&stocks);
 
 foreach my $i (keys %rdfcmds) {
@@ -452,7 +443,6 @@ sub bot_debug
 	my @list;
 	my %last = 
 		(
-		"mozillazine" => $last_mozillazine,
 		"tinderbox" => $last_tree,
 		"moon" => $last_moon,
 		);
@@ -489,13 +479,6 @@ sub bot_rdfchannel {
     }
 }
 
-
-sub bot_mozillazine{
-    my ($nick, $cmd, $rest) = (@_);
-    do_headlines($nick,
-                 "Headlines from mozillaZine (http://www.mozillazine.org/)",
-                 \@mozillazine);
-}
 
 
 sub bot_hi {
@@ -812,41 +795,6 @@ sub create_pid_file
 	}
 
 
-# fetches headlines from mozillaZine
-#
-# this should be a more general feature, to grab
-# content.
-
-
-sub mozillazine
-	{
-	return if (! defined $mozillazine);
-	&debug ("fetching mozillazine headlines");
-	
-	my $output = get $mozillazine;
-	return if (! $output);
-	$last_mozillazine = time;
-	my @mz = split /\n/, $output;
-	
-	@mozillazine = ();
-
-	foreach (@mz)
-		{
-		if (m@<!--head-->([^<>]+)<!--head-end-->@)
-			{
-			my $h = $1;
-            $h =~ s/&nbsp;//g;
-			push @mozillazine, $h; 
-			}
-		}
-
-    $bot->schedule (60 * 60 + 60, \&mozillazine);
-	push @mozillazine, "last updated: " . &logdate ($last_mozillazine);
-    reportDiffs("mozillaZine", "http://www.mozillazine.org/", \@mozillazine);
-	}
-
-
-
 sub rdfchannel {
     my ($foo, $url) = (@_);
     debug("fetching rdfchannel $url");
@@ -967,7 +915,7 @@ sub stocks {
 
     my $url = "http://quote.yahoo.com/d/quotes.csv?f=sl1d1t1c1ohgv&e=.csv&s=" .
         join("+", sort(keys %stocklist));
-    &debug ("fetching stock quotes");
+    &debug ("fetching stock quotes  $url");
     my $output = get $url;
     return if (!$output);
     %stockvals = ();
@@ -975,7 +923,7 @@ sub stocks {
         my @list = split(/,/, $line);
         my $name = shift(@list);
         $name =~ s/"(.*)"/$1/;
-        &debug ("parsing stock quote $name ($list[0])");
+        &debug ("parsing stock quote $name ($list[0]) $line");
         $stockvals{$name} = \@list;
         foreach my $ref (@{$stockhist{$name}}) {
             my $oldval = $ref->[0];
@@ -1001,17 +949,18 @@ sub stocks {
 
 
 sub LoadStockList {
-     %stocklist = ("AOL" => [$channel]);
+    %stocklist = ("AOL"  => [$channel],
+                  "^DJI" => [$channel]);
 
-     if (open(LIST, $stockf)) {
-         %stocklist = ();
-         while (<LIST>) {
-             my @list = split(/\|/, $_);
-             my $name = shift(@list);
-             $stocklist{$name} = \@list;
-         }
-     }
- }
+    if (open(LIST, $stockf)) {
+        %stocklist = ();
+        while (<LIST>) {
+            my @list = split(/\|/, $_);
+            my $name = shift(@list);
+            $stocklist{$name} = \@list;
+        }
+    }
+}
 
 
 sub FracStr {
@@ -1021,8 +970,10 @@ sub FracStr {
         $sign = "-";
         $num = - $num;
     } else {
-         $sign = $needplus ? "+" : "";
-     }
+        $sign = $needplus ? "+" : "";
+        $num =~ s/^\+//;
+    }
+    my $orignum = $num;
     
     my $bdot = int($num);
     my $adot = $num - $bdot;
@@ -1047,6 +998,7 @@ sub FracStr {
         }
         return "$sign$bdot$num/$base";
     }
+    return "$sign$orignum";
 }
 
 
