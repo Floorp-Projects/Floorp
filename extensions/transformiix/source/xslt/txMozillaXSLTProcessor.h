@@ -64,7 +64,7 @@ class nsIXMLContentSink;
 { 0xbacd8ad0, 0x552f, 0x11d3, {0xa9, 0xf7, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} }
 
 #define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
-"@mozilla.org/document-transformer;1?type=text/xslt"
+"@mozilla.org/document-transformer;1?type=xslt"
 
 class txVariable : public txIGlobalParameter
 {
