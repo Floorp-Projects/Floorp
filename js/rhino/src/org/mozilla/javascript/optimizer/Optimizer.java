@@ -1031,17 +1031,46 @@ public class Optimizer {
 
     private Node[] buildStatementList(FunctionNode theFunction)
     {
-        ObjArray nodeList = new ObjArray();
+        ObjArray statements = new ObjArray();
+        ObjArray blockStack = new ObjArray();
 
-        StmtNodeIterator iterator = new StmtNodeIterator(theFunction);
-        Node node = iterator.nextNode();
-        while (node != null) {
-            nodeList.add(node);
-            node = iterator.nextNode();
+        Node node = theFunction;
+        for (;;) {
+            node = findNextStatementNode(node, blockStack);
+            if (node == null) { break; }
+            statements.add(node);
+            node = node.getNext();
+            if (node == null) {
+                if (blockStack.isEmpty()) { break; }
+                node = (Node)(blockStack.pop());
+            }
         }
-        Node[] result = new Node[nodeList.size()];
-        nodeList.toArray(result);
+
+        Node[] result = new Node[statements.size()];
+        statements.toArray(result);
         return result;
+    }
+
+    private static Node findNextStatementNode(Node node, ObjArray blockStack)
+    {
+        for (;;) {
+            int type = node.getType();
+            boolean blockType = (type == TokenStream.BLOCK
+                                 || type == TokenStream.LOOP
+                                 || type == TokenStream.FUNCTION);
+            if (!blockType) { return node; }
+            Node first = node.getFirstChild();
+            Node next = node.getNext();
+            if (first == null) {
+                if (next == null) { return null; }
+                node = next;
+            } else {
+                if (next != null) {
+                    blockStack.push(next);
+                }
+                node = first;
+            }
+        }
     }
 
     int itsOptLevel;
