@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Ryan Cassin <rcassin@supernova.org>
  */
 
 #include "nsIComponentManager.h"
@@ -289,8 +290,6 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   nsresult rv;
   
   // File menu
-  NS_REGISTER_ONE_COMMAND(nsSaveCommand, "cmd_save");
-  NS_REGISTER_ONE_COMMAND(nsSaveAsCommand, "cmd_saveAs");
   NS_REGISTER_ONE_COMMAND(nsCloseCommand, "cmd_close");
   
   NS_REGISTER_FIRST_COMMAND(nsPrintingCommands, "cmd_print");
