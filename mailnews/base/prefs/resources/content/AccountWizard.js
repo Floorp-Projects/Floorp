@@ -19,12 +19,12 @@
  */
 
 var wizardMap = {
-    accounttype: { next: "identity" },
-    identity: { next: "server", previous: "accounttype" },
+    accounttype: { next: "identity", finish: false},
+    identity: { next: "server", previous: "accounttype"},
     server:   { next: "login", previous: "identity"},
     login:    { next: "accname", previous: "server"},
     accname:  { next: "done", previous: "login" },
-    done:     { previous: "accname" }
+    done:     { previous: "accname", finish: true }
 }
 
 var pagePrefix="chrome://messenger/content/aw-";
@@ -34,171 +34,35 @@ var currentPageTag;
 
 var contentWindow;
 
-var wizardContents;
 var smtpService;
 
-function init() {
-    if (!contentWindow) contentWindow = window.frames["wizardContents"];
-    if (!wizardContents) wizardContents = new Array;
-}
 // event handlers
 function onLoad() {
-    if (!smtpService)
+    // wizard stuff
+    // instantiate the Wizard Manager
+    wizardManager = new WizardManager( "wizardContents", null, null,
+                                       wizardMap );
+    wizardManager.URL_PagePrefix = "chrome://messenger/content/aw-";
+    wizardManager.URL_PagePostfix = ".xul"; 
+    wizardManager.SetHandlers(null, null, onFinish, null, null, null);
+
+    // load up the SMTP service for later
+    if (!smtpService) {
         smtpService =
             Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);;
-
-    init();
-    try {
-        wizardContents["smtp.hostname"] = smtpService.defaultServer.hostname;
-        dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
-    }
-    catch (ex) {
-        dump("failed to get the smtp hostname:" + ex + "\n");
-    }
-}
-
-function wizardPageLoaded(tag) {
-    init();
-    currentPageTag=tag;
-    initializePage(contentWindow, wizardContents);
-    updateButtons(wizardMap[currentPageTag], window.parent);
-}
-
-function onNext(event) {
-
-    if (!wizardMap[currentPageTag]) {
-        dump("Error, could not find entry for current page: " +
-             currentPageTag + "\n");
-        return;
     }
     
-    // only run validation routine if it's there
-    if (contentWindow.validate)
-        if (!contentWindow.validate(wizardContents)) return;
-
-    saveContents(contentWindow, wizardContents);
-    
-    nextPage(contentWindow);
-
-}
-
-function onCancel(event) {
-    window.close();
-}
-
-function onLoadPage(event) {
-    contentWindow.location = getUrlFromTag(document.getElementById("newPage").value);
-}
-
-function onBack(event) {
-    previousPage(contentWindow);
-}
-
-// utility functions
-function getUrlFromTag(title) {
-    return pagePrefix + title + pagePostfix;
-}
-
-
-function setNextText(doc, hasNext) {
-    if (hasNext)
-        doc.getElementById("nextButton").setAttribute("value", "Next >");
-    else
-        doc.getElementById("nextButton").setAttribute("value", "Finish");
-
-}
-function setNextEnabled(doc, enabled) {
-    if (enabled)
-        doc.getElementById("nextButton").removeAttribute("disabled");
-    else
-        doc.getElementById("nextButton").setAttribute("disabled", "true");
-}
-
-function setBackEnabled(doc, enabled) {
-    if (enabled)
-        doc.getElementById("backButton").removeAttribute("disabled");
-    else
-        doc.getElementById("backButton").setAttribute("disabled", "true");
-}
-
-function nextPage(win) {
-    var nextPageTag = wizardMap[currentPageTag].next;
-    if (nextPageTag)
-        win.location=getUrlFromTag(nextPageTag);
-    else
-        onFinish();
-}
-
-function previousPage(win) {
-    previousPageTag = wizardMap[currentPageTag].previous;
-    if (previousPageTag)
-        win.location=getUrlFromTag(previousPageTag)
-}
-
-function initializePage(win, hash) {
-    var inputs= win.document.controls;
-    for (var i=0; i<inputs.length; i++) {
-        restoreValue(hash, inputs[i]);
-    }
-
-    if (win.onInit) win.onInit();
-}
-
-
-function updateButtons(mapEntry, wizardWindow) {
-
-    //setNextEnabled(wizardWindow.document, mapEntry.next ? true : false);
-    setNextText(wizardWindow.document, mapEntry.next ? true : false);
-    setBackEnabled(wizardWindow.document, mapEntry.previous ? true : false);
-}
-
-function saveContents(win, hash) {
-
-    var inputs = win.document.controls;
-    for (var i=0 ; i<inputs.length; i++) {
-        saveValue(hash, inputs[i])
-   }
-
-}
-
-function restoreValue(hash, element) {
-    if (!hash[element.name]) return;
-    if (element.type=="radio") {
-        if (hash[element.name] == element.value)
-            element.checked=true;
-        else
-            element.checked=false;
-    } else if (element.type=="checkbox") {
-        element.checked=hash[element.name];
-    } else {
-        element.value=hash[element.name];
-    }
-
-}
-
-function saveValue(hash, element) {
-
-    if (element.type=="radio") {
-        if (element.checked) {
-            hash[element.name] = element.value;
-        }
-    } else if (element.type == "checkbox") {
-        hash[element.name] = element.checked;
-    }
-    else {
-        hash[element.name] = element.value;
-    }
-
+    wizardManager.LoadPage("accounttype", false);
 }
 
 function onFinish() {
-    var i;
-    dump("There are " + wizardContents.length + " elements\n");
-    for (i in wizardContents) {
-        dump("wizardContents[" + i + "] = " + wizardContents[i] + "\n");
-    }
-    if (createAccount(wizardContents))
-        window.arguments[0].refresh = true;
+    var pageData = parent.wizardManager.WSM.PageData;
+
+    dump(parent.wizardManager.WSM);
+    var account = createAccount(pageData);
+
+    if (account)
+        verifyLocalFoldersAccount(account);
 
     // hack hack - save the prefs file NOW in case we crash
     try {
@@ -211,47 +75,71 @@ function onFinish() {
     window.close();
 }
 
-function createAccount(hash) {
+function createAccount(pageData) {
 
-    try {
-        var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+  try {
+    var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
-        var username = hash["server.username"];
-        var hostname = hash["server.hostName"];
-
+    // the following fields are used to create the account
+    var fullname = pageData.identity.fullName.value; 
+    var email    = pageData.identity.email.value;
+    var hostname = pageData.server.hostname.value;
+    var servertype = pageData.server.servertype.value;
+    var smtphostname = pageData.server.smtphostname.value;
+    var username = pageData.login.username.value;
+    var rememberPassword = pageData.login.rememberPassword.value;
+    var password = pageData.login.password.value;
+    var prettyName = pageData.accname.prettyName.value;
+        
     // workaround for lame-ass combo box bug
-    var serverType = hash["server.type"];
-    if (!serverType  || serverType == "")
-        serverType = "pop3";
-    var server = am.createIncomingServer(username, hostname, serverType);
+    if (!servertype  || servertype == "")
+        servertype = "pop3";
+        
+    dump("am.createIncomingServer(" + username + "," +
+                                      hostname + "," +
+                                      servertype + "\n");
+    var server = am.createIncomingServer(username, hostname, servertype);
+    server.rememberPassword = rememberPassword;
+    server.password = password;
+    server.prettyName = prettyName;
     
+    dump("am.createIdentity()\n");
     var identity = am.createIdentity();
+    identity.email = email;
+    identity.fullName = fullname;
 
-    for (var i in hash) {
-        var vals = i.split(".");
-        var type = vals[0];
-        var slot = vals[1];
-
-        if (type == "identity")
-            identity[slot] = hash[i];
-        else if (type == "server")
-            server[slot] = hash[i];
-        else if (type == "smtp")
-            smtpService.defaultServer.hostname = hash[i];
-    }
-    
     /* new nntp identities should use plain text by default
      * we wan't that GNKSA (The Good Net-Keeping Seal of Approval) */
-    if (serverType == "nntp") {
+    if (servertype == "nntp") {
 			identity.composeHtml = false;
     }
 
+    dump("am.createAccount()\n");
     var account = am.createAccount();
     account.incomingServer = server;
     account.addIdentity(identity);
 
-    // check if there already is a "none" account. (aka "Local Folders")
-    // if not, create it.
+    dump("Setting SMTP server..\n");
+    smtpService.defaultServer.hostname = smtphostname;
+  }
+  
+  catch (ex) {
+      dump("Error creating account: " + ex + "\n");
+      return null;
+  }
+  
+  return account;
+}
+
+// check if there already is a "none" account. (aka "Local Folders")
+// if not, create it.
+function verifyLocalFoldersAccount(account) {
+    
+    dump("Account is " + account + "\n");
+    dump("Server is " + account.server + "\n");
+    dump("Identity is " + account.identity + "\n");
+    
+    var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
     dump("Looking for local mail..\n");
 	var localMailServer = null;
 	try {
@@ -263,6 +151,10 @@ function createAccount(hash) {
         // dump("exception in findserver: " + ex + "\n");
 		localMailServer = null;
 	}
+
+    try {
+    var server = account.incomingServer;
+    var identity = account.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
 
 	// use server type to get the protocol info
 	var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
@@ -295,9 +187,10 @@ function createAccount(hash) {
     } catch (ex) {
         // return false (meaning we did not create the account)
         // on any error
-        dump("Error creating account:\n" + ex);
+        dump("Error creating local mail: " + ex + "\n");
         return false;
     }
+return true;
 }
 
 function setDefaultCopiesAndFoldersPrefs(identity, server)

@@ -26,9 +26,9 @@ var protocolinfo = null;
 var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate() {
-  var username = document.getElementById("server.username").value;
+  var username = document.getElementById("username").value;
 
-  if (protocolinfo.requiresUsername && (!username || username == "")) { 
+  if (protocolinfo && protocolinfo.requiresUsername && (!username || username == "")) { 
       var alertText = Bundle.GetStringFromName("enterUserName");
       window.alert(alertText);
       return false;
@@ -38,15 +38,19 @@ function validate() {
 }
 
 function onInit() {
-    var loginNameInput = document.getElementById("server.username");
-    var type = document.getElementById("server.type").value;
-
-    protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
-
+    var loginNameInput = document.getElementById("username");
+    
     if (loginNameInput.value == "") {
+      // retrieve data from previously entered pages
+      var pageData = parent.wizardManager.WSM.PageData;
+      var type = pageData.server.servertype.value;
+
+      dump("type = " + type + "\n");
+      protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+
       if (protocolinfo.requiresUsername) {
         // since we require a username, use the uid from the email address
-        var email = document.getElementById("identity.email").value;
+        var email = pageData.identity.email.value;
         var emailParts = email.split("@");
         loginNameInput.value = emailParts[0];
       }

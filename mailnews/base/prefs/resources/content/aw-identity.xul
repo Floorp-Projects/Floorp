@@ -27,7 +27,7 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
-    onload="parent.wizardPageLoaded('identity');">
+    onload="parent.wizardManager.onPageLoad('identity');">
 
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
@@ -41,8 +41,8 @@ Rights Reserved.
   <html:div>
     <html:div>&fullnameDesc.label; &fullnameExample.label;</html:div>
     <box align="horizontal">
-      <html:div>&fullnameLabel.label;</html:div>
-      <html:input type="text" name="identity.fullName" id="identity.fullName"/>
+      <html:label for="fullName">&fullnameLabel.label;</html:label><html:spacer/>
+      <html:input type="text" mailtype="identity" name="fullName" id="fullName"/>
       <spring flex="100%"/>
     </box>
   </html:div>
@@ -50,8 +50,8 @@ Rights Reserved.
   <html:div>
     <html:div>&emailDesc.label; &emailExample.label;</html:div>
     <box align="horizontal">
-      <html:div>&emailLabel.label;</html:div>
-      <html:input type="text" name="identity.email" id="identity.email"/>
+      <html:label for="email">&emailLabel.label;</html:label><html:spacer/>
+      <html:input type="text" mailtype="identity" name="email" id="email"/>
       <spring flex="100%"/>
     </box>
   </html:div>

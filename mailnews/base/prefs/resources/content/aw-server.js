@@ -25,8 +25,8 @@
 var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate() {
-  var servername = document.getElementById("server.hostName").value;
-  var smtpserver = document.getElementById("smtp.hostname").value;
+  var servername = document.getElementById("hostname").value;
+  var smtpserver = document.getElementById("smtphostname").value;
 
   if (!servername || !smtpserver || servername == "" || smtpserver=="") {
     var alertText = Bundle.GetStringFromName("enterValidHostname");
@@ -34,4 +34,12 @@ function validate() {
     return false;
   }
   return true;
+}
+
+function onInit() {
+
+  var smtpserver = document.getElementById("smtphostname");
+  
+  if (smtpserver.value == "")
+    smtpserver.value = parent.smtpService.defaultServer.hostname;
 }

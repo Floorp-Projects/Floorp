@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -25,7 +25,7 @@
 var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate() {
-  var accountname = document.getElementById("server.prettyName").value;
+  var accountname = document.getElementById("prettyName").value;
 
   if (!accountname || accountname =="") {
       var alertText = Bundle.GetStringFromName("enterAccountName");
@@ -36,17 +36,18 @@ function validate() {
 }
 
 function onInit() {
-    var accountNameInput = document.getElementById("server.prettyName");
+    var accountNameInput = document.getElementById("prettyName");
     if (accountNameInput.value=="") {
-        var type = document.getElementById("server.type").value;
+        var pageData = parent.wizardManager.WSM.PageData;
+        var type = pageData.server.servertype.value;
+        dump(parent.wizardManager.WSM);
         var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
-	if (protocolinfo.preflightPrettyNameWithEmailAddress) {
-		var email = document.getElementById("identity.email").value;
-		accountNameInput.value = email;
-	}
-	else {
-		var hostname = document.getElementById("server.hostName").value;
-		accountNameInput.value = hostname;
-	}
+        var accountName;
+        if (type == "nntp") {
+            accountName = pageData.server.hostName.value;
+        } else {
+            accountName = pageData.identity.email.value;
+        }
+        accountNameInput.value = accountName;
     }
 }

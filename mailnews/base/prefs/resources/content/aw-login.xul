@@ -27,13 +27,10 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
-    onload="parent.wizardPageLoaded('login');">
+    onload="parent.wizardManager.onPageLoad('login');">
 
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/aw-login.js"/>
-
-  <html:input type="hidden" name="identity.email" id="identity.email"/>
-  <html:input type="hidden" name="server.type" id="server.type"/>
 
   <box id="wizardHeader">
     <html:div class="title">&loginTitle.label;</html:div>
@@ -43,7 +40,7 @@ Rights Reserved.
     <html:div>&usernameDesc.label; &usernameExample.label;</html:div>
     <html:div>
       &usernameLabel.label;
-      <html:input type="text" name="server.username" id="server.username"/>
+      <html:input type="text" name="username" id="username"/>
     </html:div>
   </box>
 
@@ -52,9 +49,9 @@ Rights Reserved.
     <html:div>&savePasswordDesc.label;</html:div>
     <html:div>&savePasswordLabel.label;</html:div>
     <html:div>
-      <html:input type="checkbox" name="server.rememberPassword"
+      <html:input type="checkbox" name="rememberPassword"
                   onchange="onSavePassword(event.target);"
-                  id="server.rememberPassword"/>
+                  id="rememberPassword"/>
       &savePasswordCheckbox.label;
     </html:div>
     <html:div style="padding-left: 15px">
@@ -62,7 +59,7 @@ Rights Reserved.
       <html:div>
         &passwordLabel.label;
         <html:input type="password" 
-                    name="server.password" id="server.password"/>
+                    name="password" id="password"/>
       </html:div>
     </html:div>
   </box>

@@ -19,19 +19,24 @@
  */
 
 function onInit() {
-    setDivTextFromForm("identity.email.text", "identity.email");
-    setDivTextFromForm("server.username.text", "server.username");
+    var pageData = parent.wizardManager.WSM.PageData;
+    var email = pageData.identity.email.value;
+    setDivTextFromForm("identity.email.text", email);
+
+    var username = pageData.login.username.value;
+    setDivTextFromForm("server.username.text", username);
 }
 
-function setDivTextFromForm(divid, elementid) {
+function setDivTextFromForm(divid, value) {
     var div = document.getElementById(divid);
     if (!div) return;
-
-    var element = document.getElementById(elementid);
-    var value=element.value;
-
+    
     if (div.firstChild)
         div.removeChild(div.firstChild);
     div.appendChild(document.createTextNode(value));
+}
 
+function setupAnother(event)
+{
+    window.alert("Unimplemented, see bug #19982");
 }

@@ -26,8 +26,8 @@ var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate(data)
 {
-  var email = document.getElementById("identity.email").value;
-  var name = document.getElementById("identity.fullName").value;
+  var email = document.getElementById("email").value;
+  var name = document.getElementById("fullName").value;
 
   if (! name || name=="") {
     var alertText = Bundle.GetStringFromName("enterName");

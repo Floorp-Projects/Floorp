@@ -26,26 +26,35 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
-    onload="parent.wizardPageLoaded('done');">
+    onload="parent.wizardManager.onPageLoad('done');">
   <html:script src="chrome://messenger/content/aw-done.js"/>
   <box id="wizardHeader">
     <html:div class="title">&completionTitle.label;</html:div>
   </box>
 
-<html:input type="hidden" name="server.username" id="server.username"/>
-<html:input type="hidden" name="identity.email" id="identity.email"/>
 <html:div>&completionText.label;</html:div>
 <html:p/>
 <box align="horizontal">
+  <spring class="spacer"/>
   <html:div>&userNamePrefix.label;</html:div>
+  <spring class="spacer"/>
   <html:div id="server.username.text"/>
 </box>
 <box align="horizontal">
+  <spring class="spacer"/>
   <html:div>&emailPrefix.label;</html:div>
+  <spring class="spacer"/>
   <html:div id="identity.email.text"/>
 </box>
 <html:p/>
-<html:div>&setupAnother.label;</html:div>
+<!-- <html:div>&setupAnother.label;</html:div> -->
 <spring class="spacer"/>
 <html:div>&clickFinish.label;</html:div>
+<html:p/>
+<!--
+<box align="horizontal">
+  <titledbutton class="dialog push" value="&setupAnotherButton.label;" onclick="setupAnother(event);"/>
+  <spring flex="100%"/>
+</box>
+-->
 </window>

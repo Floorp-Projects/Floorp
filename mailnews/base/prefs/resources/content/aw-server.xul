@@ -28,7 +28,7 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     class="dialog"
-    onload="parent.wizardPageLoaded('server');">
+    onload="parent.wizardManager.onPageLoad('server');">
 
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
@@ -42,7 +42,7 @@ Rights Reserved.
     <html:div>&incomingServerTypeDesc.label;</html:div>
     <html:div>
       &incomingServerTypeLabel.label;
-      <html:select id="server.type" name="server.type">
+      <html:select id="servertype" name="servertype">
         <html:option value="pop3">&popType.label;</html:option>
         <html:option value="imap">&imapType.label;</html:option>
         <html:option value="nntp">&nntpType.label;</html:option>
@@ -52,7 +52,7 @@ Rights Reserved.
     <html:div>&incomingServerNameDesc.label;</html:div>
     <html:div>
       &incomingServerLabel.label;
-      <html:input type="text" id="server.hostName" name="server.hostName"/>
+      <html:input type="text" id="hostname" name="hostname"/>
     </html:div>
   </box>
 
@@ -61,7 +61,7 @@ Rights Reserved.
     <html:div>&smtpServerDesc.label;</html:div>
     <html:div>
       &smtpServerLabel.label;
-      <html:input type="text" id="smtp.hostname" name="smtp.hostname"/>
+      <html:input type="text" id="smtphostname" name="smtphostname"/>
     </html:div>
   </box>
 </window>

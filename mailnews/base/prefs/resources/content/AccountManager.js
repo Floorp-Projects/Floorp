@@ -83,14 +83,33 @@ function onLoad() {
 function selectFirstAccount()
 { 
   //dump("selectFirstAccount\n");
-  var items = accounttree.getElementsByTagName("treeitem");
-  if (items && items.length>0) {
-    // skip the template?
-    accounttree.selectItem(items[1]);
-    var result = getServerIdAndPageIdFromTree(accounttree);
-	if (result) {
-		updateButtons(accounttree,result.serverId);
-	}
+  var tree = document.getElementById("accounttree");
+  var firstItem = findFirstTreeItem(tree);
+
+  if (firstItem) accounttree.selectItem(firstItem);
+  var result = getServerIdAndPageIdFromTree(accounttree);
+  if (result) {
+    updateButtons(accounttree,result.serverId);
+  }
+}
+
+function findFirstTreeItem(tree) {
+  var children = tree.childNodes;
+  
+  var treechildren;
+  for (var i=0;i<children.length; i++) {
+    if (children[i].tagName == "treechildren") {
+      treechildren = children[i];
+      dump("Found treechildren, item " + i + "\n");
+      break;
+    }
+  }
+
+  var children = treechildren.childNodes;
+  for (var i=0; i<children.length; i++) {
+    if (children[i].tagName == "treeitem")
+      dump("Found treeitem, item " + i + "\n");
+      return children[i];
   }
 }
 
@@ -120,12 +139,7 @@ function onSave() {
 }
 
 function onNewAccount() {
-  var result = { refresh: false };
-  window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome,modal", result);
-  if (result.refresh) {
-    refreshAccounts();
-  }
-
+  window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome,modal");
 }
 
 function onDuplicateAccount() {
@@ -151,7 +165,6 @@ function onDuplicateAccount() {
         if (canDuplicate) {
 			try {
               accountManager.duplicateAccount(account);
-              refreshAccounts();
             }
 			catch (ex) {
 				var alertText = Bundle.GetStringFromName("failedDuplicateAccount");
@@ -184,28 +197,15 @@ function onDeleteAccount() {
 		if (canDelete) {
 			try {
 				accountManager.removeAccount(account);
-				refreshAccounts();
 				selectFirstAccount();
 			}
 			catch (ex) {
+                dump("failure to delete account: " + ex + "\n");
 				var alertText = Bundle.GetStringFromName("failedDeleteAccount");
 				window.alert(alertText);
 			}
 		}
 	}
-}
-
-// another temporary hack until the account manager
-// can refresh the account list itself.
-function refreshAccounts()
-{
-  //dump("refreshAccounts\n");
-  accounttree.clearItemSelection();
-  accounttree.setAttribute('ref', accounttree.getAttribute('ref'));
-
-  // propagate refresh if it's not already on
-  // i.e. we'll never turn off refresh once it's on.
-  window.arguments[0].refresh = true;
 }
 
 function saveAccount(accountValues, account)
