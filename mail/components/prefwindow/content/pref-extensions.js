@@ -34,6 +34,10 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+const nsIIOService = Components.interfaces.nsIIOService;
+const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+const nsIURL = Components.interfaces.nsIURL;
+
 try {
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
   if (chromeRegistry)
@@ -165,30 +169,15 @@ function installExtension()
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK) 
   {
-    var file = '';
-    // XXX To fix : see bugzilla 225695 comment #43
-    file = encodeURI('file:///' + fp.file.path.replace(/\\/g,'/'));
-    doXPIInstall(file, getName(file));
+    var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
+    var fileProtocolHandler =
+    ioService.getProtocolHandler("file").QueryInterface(nsIFileProtocolHandler);
+    var url = fileProtocolHandler.newFileURI(fp.file).QueryInterface(nsIURL);
+    var xpi = {};
+    xpi[decodeURIComponent(url.fileBaseName)] = url.spec;
+    InstallTrigger.install(xpi);
   }
 }
 
-// shamlessly rip code from the firbird theme site for installing themes given a url
 
-function doneFn(name,result) {}
 
-function doXPIInstall(file,name) {
-  var xpi = new Object();
-  xpi[name] = file;
-  InstallTrigger.install(xpi,doneFn);
-}
-
-// Finds the name of the theme from the filename
-function getName(raw) 
-{
-  var grabFileStart = raw.lastIndexOf('/');
-  var grabFileEnd = raw.lastIndexOf('.');
-  if (grabFileStart >= grabFileEnd) 
-    return 'Invalid file name';
-  else 
-    return raw.substring(grabFileStart + 1,grabFileEnd);
-}

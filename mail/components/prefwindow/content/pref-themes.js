@@ -36,6 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+const nsIIOService = Components.interfaces.nsIIOService;
+const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+const nsIURL = Components.interfaces.nsIURL;
+
 var gData;
 
 try {
@@ -244,31 +248,14 @@ function installSkin()
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK) 
   {
-    dump(fp.file.path + '\n');
-    installTheme(fp.file.path);
+    var ioService =
+    Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
+    var fileProtocolHandler =
+    ioService.getProtocolHandler("file").QueryInterface(nsIFileProtocolHandler);
+    var url = fileProtocolHandler.newFileURI(fp.file).QueryInterface(nsIURL);
+    InstallTrigger.installChrome(InstallTrigger.SKIN, url.spec, decodeURIComponent(url.fileBaseName));
   }
 }
 
-// shamlessly rip code from the firbird theme site for installing themes given a url
 
-// Functions needed for JAR install
-// Author: Alan Starr 20021210
-function installTheme(filePath) 
-{
-  var file = '';
-  // XXX To fix : see bugzilla 225695 comment #43
-  file = encodeURI('file:///' + filePath.replace(/\\/g,'/'));
-  InstallTrigger.installChrome(InstallTrigger.SKIN, file, getName(file));
-}
-
-// Finds the name of the theme from the filename
-function getName(raw) 
-{
-  var grabFileStart = raw.lastIndexOf('/');
-  var grabFileEnd = raw.lastIndexOf('.');
-  if (grabFileStart >= grabFileEnd) 
-    return 'Invalid file name';
-  else 
-    return raw.substring(grabFileStart + 1,grabFileEnd);
-}
 
