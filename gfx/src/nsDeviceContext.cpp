@@ -101,12 +101,6 @@ NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
 
   CommonInit();
 
-  // register as a memory-pressure observer to free font resources
-  // in low-memory situations.
-  nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
-  if (obs)
-    obs->AddObserver(this, "memory-pressure", PR_FALSE);
-
   return NS_OK;
 }
 
@@ -114,6 +108,12 @@ void DeviceContextImpl :: CommonInit(void)
 {
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
+
+  // register as a memory-pressure observer to free font resources
+  // in low-memory situations.
+  nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+  if (obs)
+    obs->AddObserver(this, "memory-pressure", PR_FALSE);
 }
 
 NS_IMETHODIMP DeviceContextImpl :: GetTwipsToDevUnits(float &aTwipsToDevUnits) const
