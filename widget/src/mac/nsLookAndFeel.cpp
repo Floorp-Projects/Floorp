@@ -103,7 +103,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 4;
         break;
     case eMetric_TextFieldHeight:
-        aMetric = 30;
+        aMetric = 16;
         break;
     default:
         aMetric = 0;
