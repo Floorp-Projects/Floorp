@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.46 2003/07/28 22:55:16 bishakhabanerjee%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.47 2003/12/06 06:41:51 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -1038,12 +1038,29 @@ CreateCertEntry(void)
 	entryListCount--;
 	entryListHead = entry->next;
     }
+    PORT_Assert(entryListCount >= 0);
     nsslowcert_UnlockFreeList();
     if (entry) {
 	return entry;
     }
 
     return PORT_ZAlloc(sizeof(certDBEntryCert));
+}
+
+static void
+DestroyCertEntryFreeList(void)
+{
+    certDBEntryCert *entry;
+
+    nsslowcert_LockFreeList();
+    while (NULL != (entry = entryListHead)) {
+	entryListCount--;
+	entryListHead = entry->next;
+	PORT_Free(entry);
+    }
+    PORT_Assert(!entryListCount);
+    entryListCount = 0;
+    nsslowcert_UnlockFreeList();
 }
 
 /*
@@ -2681,7 +2698,7 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
     } 
 
     if ( entry->emailAddrs ) {
-	for (i=0; i < entry->nemailAddrs; i++) {
+	for (i=0; i < (int)(entry->nemailAddrs); i++) {
 	    if (PORT_Strcmp(entry->emailAddrs[i],emailAddr) == 0) {
 		index = i;
 	    }
@@ -2695,7 +2712,7 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	}
 
 	entry->nemailAddrs--;
-	for (i=index; i < entry->nemailAddrs; i++) {
+	for (i=index; i < (int)(entry->nemailAddrs); i++) {
 	   entry->emailAddrs[i] = entry->emailAddrs[i+1];
 	}
     } else {
@@ -2708,7 +2725,7 @@ nsslowcert_UpdateSubjectEmailAddr(NSSLOWCERTCertDBHandle *dbhandle,
 	if (!newAddrs) {
 	    goto loser;
 	}
-	for (i=0; i < entry->nemailAddrs; i++) {
+	for (i=0; i < (int)(entry->nemailAddrs); i++) {
 	   newAddrs[i] = entry->emailAddrs[i];
 	}
 	newAddrs[entry->nemailAddrs] = 
@@ -4296,6 +4313,7 @@ CreateTrust(void)
 	trustListCount--;
 	trustListHead = trust->next;
     }
+    PORT_Assert(trustListCount >= 0);
     nsslowcert_UnlockFreeList();
     if (trust) {
 	return trust;
@@ -4304,9 +4322,25 @@ CreateTrust(void)
     return PORT_ZAlloc(sizeof(NSSLOWCERTTrust));
 }
 
+static void
+DestroyTrustFreeList(void)
+{
+    NSSLOWCERTTrust *trust;
+
+    nsslowcert_LockFreeList();
+    while (NULL != (trust = trustListHead)) {
+	trustListCount--;
+	trustListHead = trust->next;
+	PORT_Free(trust);
+    }
+    PORT_Assert(!trustListCount);
+    trustListCount = 0;
+    nsslowcert_UnlockFreeList();
+}
 
 static NSSLOWCERTTrust * 
-DecodeTrustEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry,				SECItem *dbKey)
+DecodeTrustEntry(NSSLOWCERTCertDBHandle *handle, certDBEntryCert *entry, 
+                 SECItem *dbKey)
 {
     NSSLOWCERTTrust *trust = CreateTrust();
     if (trust == NULL) {
@@ -5000,12 +5034,28 @@ nsslowcert_CreateCert(void)
 	certListHead = cert->next;
 	certListCount--;
     }
+    PORT_Assert(certListCount >= 0);
     nsslowcert_UnlockFreeList();
-
     if (cert) {
 	return cert;
     }
     return (NSSLOWCERTCertificate *) PORT_ZAlloc(sizeof(NSSLOWCERTCertificate));
+}
+
+static void
+DestroyCertFreeList(void)
+{
+    NSSLOWCERTCertificate *cert;
+
+    nsslowcert_LockFreeList();
+    while (NULL != (cert = certListHead)) {
+	certListCount--;
+	certListHead = cert->next;
+	PORT_Free(cert);
+    }
+    PORT_Assert(!certListCount);
+    certListCount = 0;
+    nsslowcert_UnlockFreeList();
 }
 
 void
@@ -5248,8 +5298,21 @@ nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr,
     return(rv);
 }
 
+/* If the freeListLock doesn't exist when this function is called,
+** this function will create it, use it 3 times, and delete it.
+*/
 void
-nsslowcert_DestroyGlobalLocks()
+nsslowcert_DestroyFreeLists(void)
+{
+    DestroyCertEntryFreeList();
+    DestroyTrustFreeList();
+    DestroyCertFreeList();
+    PZ_DestroyLock(freeListLock);
+    freeListLock = NULL;
+}
+
+void
+nsslowcert_DestroyGlobalLocks(void)
 {
     if (dbLock) {
 	PZ_DestroyLock(dbLock);

@@ -45,6 +45,7 @@
 #include "secasn1.h"
 #include "blapi.h"
 #include "secerr.h"
+#include "prnetdb.h" /* for PR_ntohl */
 
 /*
  * ******************** Attribute Utilities *******************************
@@ -1323,7 +1324,6 @@ pk11_ConstrainAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
     PK11Attribute *attribute;
     unsigned int size;
     unsigned char *ptr;
-    int i,j;
 
     attribute = pk11_FindAttribute(object, type);
     if (!attribute) {
@@ -1922,7 +1922,6 @@ CK_RV
 pk11_GetULongAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
 							 CK_ULONG *longData)
 {
-    int len;
     PK11Attribute *attribute;
 
     attribute = pk11_FindAttribute(object, type);
