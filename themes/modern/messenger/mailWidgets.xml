@@ -133,7 +133,6 @@
         </body>
       </method>
     </interface>
-    <handler type="command" value="dump('onCommand!\n');"/>
   </binding>
 
   <!-- searchattribute - Subject, Sender, To, CC, etc. -->
@@ -259,11 +258,17 @@
       <!-- the three tags that make up a term - to use, set the
            attribute in the XUL to the ID of the term.
         -->
-      <property name="searchattribute" readonly="true" onget="return document.getElementById(this.getAttribute('searchattribute'));"/>
+      <property name="searchattribute" 
+                onget="return document.getElementById(this.getAttribute('searchattribute'));"
+                onset="this.setAttribute('searchattribute',val.id)"/>
 
-      <property name="searchoperator" readonly="true" onget="return document.getElementById(this.getAttribute('searchoperator'));"/>
+      <property name="searchoperator" 
+                onget="return document.getElementById(this.getAttribute('searchoperator'));"
+                onset="this.setAttribute('searchoperator',val.id)"/>
 
-      <property name="searchvalue" readonly="true" onget="return document.getElementById(this.getAttribute('searchvalue'));"/>
+      <property name="searchvalue" 
+                onget="return document.getElementById(this.getAttribute('searchvalue'));"
+                onset="this.setAttribute('searchvalue',val.id)"/>
 
       <!-- takes an nsIMsgSearchValue and initializes the appropriate widget
            with the right value
@@ -285,12 +290,6 @@
             var searchOperator=this.searchoperator;
             var searchValue=this.searchvalue;
 
-            dump("searchAttribute=" + searchAttribute + "\n");
-            dump("searchOperator=" + searchOperator + "\n");
-            dump("searchValue=" + searchValue + "\n");
-
-            dump("Setting " + attrib.value + ", " +
-                 op.value + ", " + value.value + "\n");
             if (searchAttribute) searchAttribute.value = attrib.value;
             if (searchOperator) searchOperator.value = op.value;
             if (searchValue) searchValue.value = value.value;

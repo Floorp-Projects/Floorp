@@ -21,9 +21,21 @@
  */
 
 @import url(chrome://communicator/skin/);
+/* Note: most of our styles are in EditorToolbars.css 
+   in order to share with all users of editor
+*/
 
 iframe#content-frame { 
   min-width: 10px; 
   min-height: 10px;
   height: 400px;
 } 
+
+.source-editor, .source-editor:focus {
+  margin: 0px 5px 5px 0px;
+  border: 0px;
+  border-top: 1px solid black;
+  /* Scroll bars are in content, 
+     so we can't use right and bottom padding! */
+  padding: 5px 0px 0px 5px;
+}

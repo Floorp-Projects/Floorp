@@ -28,10 +28,6 @@
 
 @import url(chrome://communicator/skin/);
 
-treecol[sortActive="true"] {
-  background-color: lightgray;
-}
-
 /* Hide the twisty when type != DIRECTORY (XXX is there a '!=' in CSS?) */
 treeitem[type="FILE"] > treerow > treecell > .twisty {
   list-style-image: none;
