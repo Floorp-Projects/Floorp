@@ -31,16 +31,15 @@
 #if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX) || defined(NTO)
 #include <sys/statvfs.h> /* for statvfs() */
 #define STATFS statvfs
-#elif defined(SCO_SV)
+#if defined(SCO_SV)
 #define _SVID3/* for statvfs.h */
-#include <sys/statvfs.h>  /* for statvfs() */
-#define STATFS statvfs
+#endif /* SCO_SV */
 #elif defined(HPUX) || defined(LINUX)
 #include <sys/vfs.h>      /* for statfs() */
 #define STATFS statfs
 #if defined(SUNOS4)
   extern "C" int statfs(char *, struct statfs *);
-#endif
+#endif /* SUNOS4 */
 #else
 #if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY) || defined(FREEBSD)
 #include <sys/mount.h>/* for statfs() */
