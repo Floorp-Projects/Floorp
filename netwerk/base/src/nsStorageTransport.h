@@ -51,7 +51,7 @@ public:
     nsresult Init(PRUint32 aSegmentSize = DEFAULT_SEGMENT_SIZE,
                   PRUint32 aBufferSize = DEFAULT_BUFFER_SIZE);
 
-private:
+public: /* internal */
 
     /**
      * The transport request object returned by AsyncRead
@@ -142,11 +142,6 @@ private:
         nsOutputStream();
         virtual ~nsOutputStream();
     };
-
-    friend class nsReadRequest;
-    friend class nsBlockingStream;
-    friend class nsInputStream;
-    friend class nsOutputStream;
 
     /**
      * Methods called from the friend classes
