@@ -197,8 +197,10 @@ sub GetCwd
     # verify the existance of path
     if(!(-e "$depthPath\\dist\\inst_mre"))
     {
-      print "path not found: $depthPath\\dist\\inst_mre\n";
-      exit(1);
+      mkdir("$depthPath\\dist\\inst_mre", 775);
+
+#      print "path not found: $depthPath\\dist\\inst_mre\n";
+#      exit(1);
     }
 
     $distPath = "$depthPath\\dist\\inst_mre";
