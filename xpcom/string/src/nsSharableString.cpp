@@ -124,9 +124,8 @@ nsSharableString::do_AssignFromReadable( const abstract_string_type& aReadable )
       {
         // null-check |mBuffer.get()| here only for the constructor
         // taking |const abstract_string_type&|
-        size_type inLength;
         if ( mBuffer.get() && !mBuffer->IsShared() &&
-             mBuffer->StorageLength() > (inLength = aReadable.Length()) &&
+             mBuffer->StorageLength() > aReadable.Length() &&
              !aReadable.IsDependentOn(*this) )
           {
             abstract_string_type::const_iterator fromBegin, fromEnd;
@@ -134,7 +133,7 @@ nsSharableString::do_AssignFromReadable( const abstract_string_type& aReadable )
             *copy_string( aReadable.BeginReading(fromBegin),
                           aReadable.EndReading(fromEnd),
                           storage_start ) = char_type(0);
-            mBuffer->DataEnd(storage_start + inLength);
+            mBuffer->DataEnd(storage_start); // modified by |copy_string|
             return; // don't want to assign to |mBuffer| below
           }
         else
@@ -270,9 +269,8 @@ nsSharableCString::do_AssignFromReadable( const abstract_string_type& aReadable 
       {
         // null-check |mBuffer.get()| here only for the constructor
         // taking |const abstract_string_type&|
-        size_type inLength;
         if ( mBuffer.get() && !mBuffer->IsShared() &&
-             mBuffer->StorageLength() > (inLength = aReadable.Length()) &&
+             mBuffer->StorageLength() > aReadable.Length() &&
              !aReadable.IsDependentOn(*this) )
           {
             abstract_string_type::const_iterator fromBegin, fromEnd;
@@ -280,7 +278,7 @@ nsSharableCString::do_AssignFromReadable( const abstract_string_type& aReadable 
             *copy_string( aReadable.BeginReading(fromBegin),
                           aReadable.EndReading(fromEnd),
                           storage_start ) = char_type(0);
-            mBuffer->DataEnd(storage_start + inLength);
+            mBuffer->DataEnd(storage_start); // modified by |copy_string|
             return; // don't want to assign to |mBuffer| below
           }
         else
