@@ -1184,6 +1184,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   InlineReflowState irs;
   irs.mPrevFrame = nsnull;
   irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
+  irs.mNextRCFrame = nsnull;
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Peel off the next frame in the path if this is an incremental
     // reflow aimed at one of the children.
@@ -1192,9 +1193,6 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
     if (this != target) {
       aReflowState.reflowCommand->GetNext(irs.mNextRCFrame);
     }
-  }
-  else {
-    irs.mNextRCFrame = nsnull;
   }
 
   nsresult rv;
