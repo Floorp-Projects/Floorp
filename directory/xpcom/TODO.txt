@@ -1,9 +1,7 @@
 implementation
 --------------
-* finish wiring up the unix build glue into the seamonkey build-glue
-  (in progress, dmose)
-
-* get the mac build glue wired up, and make the mac build work
+* get the mac build glue wired up, and make the mac build work (in
+  progress: Peter.VanderBeken)
 
 * get the windows build glue wired up, and make the windows build work
 
@@ -52,9 +50,13 @@ housecleaning
 * figure out our strategy for LDAPv2 vs. LDAPv3
 
 * the LDAP SDK returns UTF8, but I think nsILDAPChannel is handing it
-  off to callers as ASCII.
+  off to callers as ASCII.  How does this all relate to the stated
+  UTF16 (referred to as UCS2 in Mozilla) policy for Mozilla?
 
 * get rid of "friend"liness of nsLDAP{Message,Connection,Operation} classes?
+
+* investigate use of DNS in LDAP sdk.  are sync functions used in the 
+  wrong places (eg they end up getting called from Mozilla on the UI thread)?
 
 * investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
   want the reference to "xp_sort.h"?
@@ -76,13 +78,12 @@ housecleaning
 * shouldn't be casting results of nsILDAPConnection::GetErrorString to void
   in ldapSearch
 
-* finish XPCOMifying nsLDAP{Message,Connection,Operation} and check 
-  thread-safety in order to allow XPCOM proxies to be used for
-  thread-crossing operations (side benefit: also exposes more LDAPy
-  goodness to JS) 
-
 * are we using the right constructs for -lldap40 and -llber40 in 
   Makefile.in?  (maybe should set up MOZ_LDAP_LIBS?)
+
+* verify that ldap_parse_result() isn't required to be called from the same
+  thread as ldap_result() and before the threads-specific ldaperrno has a 
+  chance to change.
 
 misc
 ----
@@ -103,23 +104,24 @@ rdf datasource
 
   * expose directory entries & attrs via interfaces (cachable?) 
 
-  * nsILDAPURI (see nsIIOService.idl: extractScheme())
+  * nsILDAPURL (see nsIIOService.idl: extractScheme())
 
 
 perf
 ----
-* rather than having one thread per URL, probably should (at least)
-  have one thread per LDAP server, perhaps chosen from an already
-  spun-up thread pool
+
+* rather than having one thread per nsILDAPConnection, have identical
+  nsILDAPConnections share the same thread.  possibly pre-spin up a
+  thread-pool to handle this?
 
 * nsLDAPService: assuming that we do the above and start using
   nsLDAPService again, need to implement shutdown for nsLDAPService
   (probably analogous to the way nsSocketTransportService shuts down.
   but how does nsIShutdownListener fit in here? and CanUnload?)
 
-* remove unnecessary thread-safety code (NS_IMPL_THREADSAFE) to avoid
-  locking overhead
-
+* remove any unnecessary thread-safety code (NS_IMPL_THREADSAFE) to avoid
+  locking overhead.  need to figure out if everything must be
+  threadsafe or not.
 
 later
 -----
@@ -133,4 +135,3 @@ later
   nsprpub build infrastructure.  requires work with the LDAP C SDK
   owners, and shouldn't this shouldn't happen until after the most
   current ldap SDK code lands in mozilla.org anyway.
-
