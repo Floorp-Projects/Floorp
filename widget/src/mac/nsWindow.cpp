@@ -711,7 +711,9 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-	nsWindow::Invalidate(mBounds, aIsSynchronous);
+	nsRect area = mBounds;
+	area.x = area.y = 0;
+	nsWindow::Invalidate(area, aIsSynchronous);
 	return NS_OK;
 }
 
