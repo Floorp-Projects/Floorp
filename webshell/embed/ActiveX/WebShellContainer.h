@@ -67,13 +67,13 @@ public:
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
 	// nsIDocumentLoaderObserver 
-	NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
-	NS_IMETHOD OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus); 
-	NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);   
-	NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax); 
-	NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg); 
-	NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus); 
-	NS_IMETHOD HandleUnknownContentType( nsIURL *aURL,const char *aContentType,const char *aCommand );		
+	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand);
+	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus);
+	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);
+	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
+	NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, nsString& aMsg);
+	NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRInt32 aStatus);
+	NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIURL *aURL,const char *aContentType,const char *aCommand );		
 };
 
 #endif

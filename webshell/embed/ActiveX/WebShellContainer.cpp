@@ -340,15 +340,16 @@ CWebShellContainer::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnicha
 // nsIDocumentLoaderObserver implementation 
 
 
-NS_IMETHODIMP 
-CWebShellContainer::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand) 
+
+NS_IMETHODIMP
+CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand)
 { 
 	return NS_OK; 
 } 
 
 // we need this to fire the document complete 
-NS_IMETHODIMP 
-CWebShellContainer::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus) 
+NS_IMETHODIMP
+CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
 {
 	PRUnichar* wString = nsnull;    
 
@@ -371,37 +372,35 @@ CWebShellContainer::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
 	return NS_OK; 
 } 
 
+NS_IMETHODIMP
+CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
+{ 
+	return NS_OK; 
+} 
+
+NS_IMETHODIMP
+CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+{ 
+	return NS_OK; 
+} 
+
 // we don't care about these. 
-NS_IMETHODIMP 
-CWebShellContainer::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer) 
+NS_IMETHODIMP
+CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, nsString& aMsg)
 { 
 	return NS_OK; 
 } 
 
 
-NS_IMETHODIMP 
-CWebShellContainer::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
-{ 
+NS_IMETHODIMP
+CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRInt32 aStatus)
+{
 	return NS_OK; 
 } 
 
 
 NS_IMETHODIMP 
-CWebShellContainer::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg) 
-{ 
-	return NS_OK; 
-} 
-
-
-NS_IMETHODIMP 
-CWebShellContainer::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus) 
-{ 
-	return NS_OK; 
-} 
-
-
-NS_IMETHODIMP 
-CWebShellContainer::HandleUnknownContentType( nsIURL *aURL, const char *aContentType, const char *aCommand ) 
+CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIURL *aURL, const char *aContentType, const char *aCommand ) 
 { 
 	return NS_OK; 
 } 
