@@ -137,7 +137,7 @@ function onload()
         document.getElementById('ifl_path').setAttribute("value",cookie.path);
         document.getElementById('ifl_isSecure').setAttribute("value",
                                                                  cookie.isSecure ?
-                                                                    cookieBundle.getString("yes") : cookieBundle.getString("no")
+                                                                    cookieBundle.getString("forSecureOnly") : cookieBundle.getString("forAnyConnection")
                                                           );
         document.getElementById('ifl_expires').setAttribute("value",GetExpiresString(cookie.expires));
         document.getElementById('ifl_isDomain').setAttribute("value",

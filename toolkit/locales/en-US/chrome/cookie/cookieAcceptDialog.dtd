@@ -3,7 +3,7 @@
 <!ENTITY     props.value.label              "Content:">
 <!ENTITY     props.domain.label             "Host:">
 <!ENTITY     props.path.label               "Path:">
-<!ENTITY     props.secure.label             "Server Secure:">
+<!ENTITY     props.secure.label             "Send For:">
 <!ENTITY     props.expires.label            "Expires:">
 <!ENTITY     props.policy.label             "Policy:"> 
 
@@ -14,7 +14,7 @@
 <!ENTITY     button.deny.label              "Deny">
 <!ENTITY     button.deny.accesskey          "D">
 
-<!ENTITY     dialog.title                   "Confirm">
+<!ENTITY     dialog.title                   "Confirm setting cookie">
 <!ENTITY     dialog.remember.label          "Use my choice for all cookies from this site">
 <!ENTITY     dialog.remember.accesskey      "U">
 

@@ -332,7 +332,8 @@ function CookieSelected() {
     {id: "ifl_path", value: cookies[idx].path},
     {id: "ifl_isSecure",
      value: cookies[idx].isSecure ?
-            cookieBundle.getString("yes") : cookieBundle.getString("no")},
+            cookieBundle.getString("forSecureOnly") : 
+            cookieBundle.getString("forAnyConnection")},
     {id: "ifl_expires", value: GetExpiresString(cookies[idx].expires)},
     {id: "ifl_policy", value: GetPolicyString(cookies[idx].policy)}
   ];
