@@ -95,6 +95,8 @@ static NS_DEFINE_IID(kIWebShellWindowIID,     NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID,		  NS_IBROWSER_WINDOW_IID);
+
 static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,           NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetControllerIID,   NS_IWIDGETCONTROLLER_IID);
@@ -177,6 +179,11 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDocumentLoaderObserverIID)) {
     *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+	if ( aIID.Equals(kIBrowserWindowIID) ) {
+    *aInstancePtr = (void*) (nsIBrowserWindow*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -686,7 +693,37 @@ NS_IMETHODIMP
 nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
                               nsIWebShell *&aNewWebShell)
 {
-  return NS_ERROR_FAILURE;
+  // Create a new browser window. That's what this method is here for.
+	nsresult           rv;
+  nsString           controllerCID;
+  nsIAppShellService *appShell;
+  
+  nsCOMPtr<nsIURL> urlObj;
+  rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
+                                    (nsISupports**) &appShell);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // hardwired temporary hack.  See nsAppRunner.cpp at main()
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+
+	nsCOMPtr<nsIWebShellWindow> newWindow;
+  appShell->CreateTopLevelWindow(nsnull, urlObj, controllerCID, *getter_AddRefs(newWindow),
+                                 nsnull, nsnull, 615, 480);
+  nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
+  if (aVisible)
+    newWindow->Show(PR_TRUE);
+
+	// XXX Return our outermost webshell. We know this is wrong, since it means new windows
+	// won't have chrome, but it's going to take a little while for me to figure this out.
+	NS_IF_ADDREF(mWebShell);
+	aNewWebShell = mWebShell;
+  return rv;
 }
 
 NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
@@ -1491,4 +1528,106 @@ NS_IMETHODIMP
 nsWebShellWindow::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
   return NS_OK;
+}
+
+/**************** nsIBrowserWindow interface ********************/
+NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
+                   nsIPref* aPrefs,
+                   const nsRect& aBounds,
+                   PRUint32 aChromeMask,
+                   PRBool aAllowPlugins)
+{
+   nsresult rv;
+   nsCOMPtr<nsIURL> urlObj;
+ 
+   // (temporary)
+   rv = NS_NewURL(getter_AddRefs(urlObj), "chrome://navigator/content/");
+   if (NS_FAILED(rv))
+     return rv;
+ 
+   // Note: null nsIStreamObserver means this window won't be able to answer FE_callback-type
+   // questions from netlib.  Observers are generally appcores.  We'll have to supply
+   // a generic browser appcore here someday.
+   rv = Initialize(nsnull, aAppShell, urlObj,
+       nsAutoString("43147b80-8a39-11d2-9938-0080c7cb1081"), // time for this hack to die, or what?
+       nsnull, nsnull, aBounds.width, aBounds.height);
+   if (NS_SUCCEEDED(rv))
+     MoveTo(aBounds.x, aBounds.y);
+   return rv;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::MoveTo(PRInt32 aX, PRInt32 aY)
+{
+   mWindow->Move(aX, aY);
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+   mWindow->Resize(aWidth, aHeight, PR_TRUE);
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::GetBounds(nsRect& aResult)
+{
+   mWindow->GetClientBounds(aResult);
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::GetWindowBounds(nsRect& aResult)
+{
+   mWindow->GetBounds(aResult);
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::SetChrome(PRUint32 aNewChromeMask)
+{
+   // yeah sure. we got your chrome changes.
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::GetChrome(PRUint32& aChromeMaskResult)
+{
+   // Do our best to fake an interesting, rather inapplicable concept from the old world.
+   // We can't tell what sort of chrome features we have until we invent a standard
+   // for XUL chrome elements, and then go looking for them.  For now, take a guess...
+   aChromeMaskResult = NS_CHROME_WINDOW_BORDERS_ON | NS_CHROME_WINDOW_CLOSE_ON |
+                       NS_CHROME_WINDOW_RESIZE_ON | NS_CHROME_MENU_BAR_ON |
+                       NS_CHROME_TOOL_BAR_ON | NS_CHROME_LOCATION_BAR_ON |
+                       NS_CHROME_STATUS_BAR_ON | NS_CHROME_PERSONAL_TOOLBAR_ON |
+                       NS_CHROME_SCROLLBARS_ON | NS_CHROME_TITLEBAR_ON;
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
+{
+   nsIWidget *windowWidget = GetWidget();
+ 
+   if (windowWidget)
+     windowWidget->SetTitle(aTitle);
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::GetTitle(const PRUnichar** aResult)
+{
+   // no, we didn't store the title for you. why so nosy?
+   return NS_ERROR_FAILURE;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::SetStatus(const PRUnichar* aStatus)
+{
+   // yup. got it.
+   return NS_OK;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::GetStatus(const PRUnichar** aResult)
+{
+   // didn't store the status string, either.
+   return NS_ERROR_FAILURE;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
+{
+   // oh yeah. we're on it.
+	 return NS_OK;
 }
