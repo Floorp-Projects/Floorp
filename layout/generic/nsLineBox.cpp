@@ -34,6 +34,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
 //XXX  mCarriedOutTopMargin = 0;
   mCarriedOutBottomMargin = 0;
   mBreakType = NS_STYLE_CLEAR_NONE;
+  mMaxElementWidth = 0;
 }
 
 nsLineBox::~nsLineBox()

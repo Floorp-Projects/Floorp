@@ -716,7 +716,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   // in this line.
   mPrevChild = aLine->LastChild();
 
-  // Recover mKidXMost
+  // Recover mKidXMost and max element width
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > mKidXMost) {
 #ifdef DEBUG
@@ -726,6 +726,9 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     }
 #endif
     mKidXMost = xmost;
+  }
+  if (mComputeMaxElementSize) {
+    UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
   }
 
   // The line may have clear before semantics.
@@ -1500,10 +1503,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // contents (CSS2 section XXX)
         computedWidth = borderPadding.left + aState.mContentArea.width +
           borderPadding.right;
-//        maxWidth = aState.mMaxElementSize.width +
-//          borderPadding.left + borderPadding.right;
       }
-      else if (aState.mComputeMaxElementSize) {
+
+      // See if we should compute our max element size
+      if (aState.mComputeMaxElementSize) {
         if (aState.mNoWrap) {
           // When no-wrap is true the max-element-size.width is the
           // width of the widest line plus the right border. Note that
@@ -3648,6 +3651,9 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // Update max-element-size
   if (aState.mComputeMaxElementSize) {
     aState.UpdateMaxElementSize(aMaxElementSize);
+    // We also cache the max element width in the line. This is needed for
+    // incremental reflow
+    aLine->mMaxElementWidth = aMaxElementSize.width;
   }
 
 #if XXX_need_line_outside_children
