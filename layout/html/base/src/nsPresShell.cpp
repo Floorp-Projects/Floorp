@@ -64,6 +64,8 @@
 #include "nsXIFDTD.h"
 #include "nsIFrameSelection.h"
 #include "nsViewsCID.h"
+#include "nsLayoutAtoms.h"
+#include "nsPlaceholderFrame.h"
 
 #include "nsIDataFlavor.h"
 
@@ -1811,35 +1813,35 @@ static nsIFrame*
 FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
 {
   nsIContent* frameContent;
+  PRBool      hasSameContent;
    
+  // See if the frame points to the same content object
   aFrame->GetContent(&frameContent);
-  if (frameContent == aContent) {
-    nsIStyleContext*  styleContext;
-    nsIAtom*          pseudoTag;
-    PRBool            isPlaceholder = PR_FALSE;
+  hasSameContent = (frameContent == aContent);
+  NS_IF_RELEASE(frameContent);
 
-    // If it's a placeholder frame, then ignore it and keep looking for the
-    // primary frame
-    aFrame->GetStyleContext(&styleContext);
-    styleContext->GetPseudoType(pseudoTag);
-    if (pseudoTag == nsHTMLAtoms::placeholderPseudo) {
-      isPlaceholder = PR_TRUE;
+  if (hasSameContent) {
+    nsIAtom*  frameType;
+    PRBool    isPlaceholder;
+
+    // See if it's a placeholder frame
+    aFrame->GetFrameType(&frameType);
+    isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType);
+    NS_IF_RELEASE(frameType);
+
+    if (isPlaceholder) {
+      // Ignore the placeholder and return the out-of-flow frame instead
+      return ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
     }
-    NS_RELEASE(styleContext);
-    NS_IF_RELEASE(pseudoTag);
 
     // Also ignore frames associated with generated content
     nsFrameState  frameState;
-    PRBool        isGeneratedContent;
+    
     aFrame->GetFrameState(&frameState);
-    isGeneratedContent = (frameState & NS_FRAME_GENERATED_CONTENT) == NS_FRAME_GENERATED_CONTENT;
-
-    if (!isPlaceholder && !isGeneratedContent) {
-      NS_IF_RELEASE(frameContent);
+    if ((frameState & NS_FRAME_GENERATED_CONTENT) == 0) {
       return aFrame;
     }
   }
-  NS_IF_RELEASE(frameContent);
 
   // Search for the frame in each child list that aFrame supports
   nsIAtom* listName = nsnull;
@@ -1930,6 +1932,16 @@ PresShell::SetPlaceholderFrameFor(nsIFrame* aFrame,
                                   nsIFrame* aPlaceholderFrame)
 {
   NS_PRECONDITION(nsnull != aFrame, "no frame");
+#ifdef NS_DEBUG
+  // Verify that the placeholder frame is of the correct type
+  if (aPlaceholderFrame) {
+    nsIAtom*  frameType;
+  
+    aPlaceholderFrame->GetFrameType(&frameType);
+    NS_PRECONDITION(nsLayoutAtoms::placeholderFrame == frameType, "unexpected frame type");
+    NS_IF_RELEASE(frameType);
+  }
+#endif
 
   if (nsnull == mPlaceholderMap) {
     mPlaceholderMap = new FrameHashTable;
