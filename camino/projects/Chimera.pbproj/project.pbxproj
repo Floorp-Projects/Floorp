@@ -24,6 +24,8 @@
 				F59E9F3F0237E43401A967DF,
 				F52D5CD0027A887001A80166,
 				F52D5CD4027A88C601A80166,
+				F52F87CD027D75C301A80165,
+				F52F87CE027D75C301A80165,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -400,6 +402,8 @@
 				F52D5CD1027A887001A80166,
 				F52D5CD5027A88C601A80166,
 				F52D5CD9027D3D5001A80166,
+				F52F87CF027D75C301A80165,
+				F52F87D0027D75C301A80165,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -492,6 +496,8 @@
 				F52D5CD2027A887001A80166,
 				F52D5CD6027A88C601A80166,
 				F52D5CDA027D3D5001A80166,
+				F52F87D1027D75C301A80165,
+				F52F87D2027D75C301A80165,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -896,6 +902,8 @@
 				F5137A1102676B9101026D05,
 				F52D5CCF027A887001A80166,
 				F52D5CD3027A88C601A80166,
+				F52F87CB027D75C301A80165,
+				F52F87CC027D75C301A80165,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -1478,6 +1486,50 @@
 		};
 		F52D5CE0027D412A01A80166 = {
 			fileRef = F52D5CDD027D412A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52F87CB027D75C301A80165 = {
+			isa = PBXFileReference;
+			path = CHHistoryDataSource.h;
+			refType = 4;
+		};
+		F52F87CC027D75C301A80165 = {
+			isa = PBXFileReference;
+			path = CHRDFOutlineViewDataSource.h;
+			refType = 4;
+		};
+		F52F87CD027D75C301A80165 = {
+			isa = PBXFileReference;
+			path = CHHistoryDataSource.mm;
+			refType = 4;
+		};
+		F52F87CE027D75C301A80165 = {
+			isa = PBXFileReference;
+			path = CHRDFOutlineViewDataSource.mm;
+			refType = 4;
+		};
+		F52F87CF027D75C301A80165 = {
+			fileRef = F52F87CB027D75C301A80165;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52F87D0027D75C301A80165 = {
+			fileRef = F52F87CC027D75C301A80165;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52F87D1027D75C301A80165 = {
+			fileRef = F52F87CD027D75C301A80165;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52F87D2027D75C301A80165 = {
+			fileRef = F52F87CE027D75C301A80165;
 			isa = PBXBuildFile;
 			settings = {
 			};

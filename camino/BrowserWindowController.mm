@@ -203,6 +203,8 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 - (void)drawerWillOpen: (NSNotification*)aNotification
 {
   [mSidebarBookmarksDataSource ensureBookmarks];
+  
+  [mHistoryDataSource ensureDataSourceLoaded];
 
   // Force the window to shrink and move if necessary in order to accommodate the sidebar.
   NSRect screenFrame = [[[self window] screen] visibleFrame];
