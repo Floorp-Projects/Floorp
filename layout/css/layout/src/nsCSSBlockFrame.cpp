@@ -213,6 +213,7 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext*      aPresContext,
   }
 
   mCurrentLine = nsnull;
+  mChildPrevInFlow = nsnull;
 
   // Setup initial list ordinal value
 
@@ -260,7 +261,7 @@ nsCSSBlockReflowState::GetAvailableSpace()
   mCurrentBand.availSpace.MoveBy(mBorderPadding.left, mY);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-               ("nsCSSBlockFrame::GetAvailableSpace: band={%d,%d,%d,%d}",
+               ("nsCSSBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d}",
                 mCurrentBand.availSpace.x,
                 mCurrentBand.availSpace.y,
                 mCurrentBand.availSpace.width,
@@ -487,7 +488,7 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
     }
 
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                 ("nsCSSBlockFrame::ClearFloaters: mY=%d clearYMost=%d",
+                 ("nsCSSBlockReflowState::ClearFloaters: mY=%d clearYMost=%d",
                   mY, clearYMost));
 
     mY = clearYMost + 1;
@@ -1147,10 +1148,9 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
                               aState.mY,
                               aState.mCurrentBand.availSpace.width,
                               aState.mCurrentBand.availSpace.height);
+
   // XXX yuck; and there are lots of returns below that don't undo this!
   aState.mCurrentLine = &inlineLayout;
-
-  // XXX get prev-in-flow setup
 
   // Reflow each child on this line
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
@@ -1163,11 +1163,11 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
     if (IS_REFLOW_ERROR(rs)) {
       return nsresult(rs);
     }
-printf("reflow-mapped: rs=%x\n", rs);
     switch (rs & NS_INLINE_REFLOW_REFLOW_MASK) {
     case NS_INLINE_REFLOW_COMPLETE:
       prevChild = child;
       child->GetNextSibling(child);
+      aState.mChildPrevInFlow = nsnull;
       break;
 
     case NS_INLINE_REFLOW_NOT_COMPLETE:
@@ -1177,11 +1177,13 @@ printf("reflow-mapped: rs=%x\n", rs);
       // FALL THROUGH
 
     case NS_INLINE_REFLOW_BREAK_AFTER:
+      aState.mChildPrevInFlow = nsnull;
       prevChild = child;
       child->GetNextSibling(child);
       // FALL THROUGH
 
     case NS_INLINE_REFLOW_BREAK_BEFORE:
+      aState.mChildPrevInFlow = nsnull;
       rv = SplitLine(aState, inlineLayout, ild, child);
       if (IS_REFLOW_ERROR(rv)) {
         return rv;
@@ -1206,7 +1208,6 @@ printf("reflow-mapped: rs=%x\n", rs);
       if (IS_REFLOW_ERROR(rs)) {
         return nsresult(rs);
       }
-printf("pullup: rs=%x\n", rs);
       switch (rs & NS_INLINE_REFLOW_REFLOW_MASK) {
       case NS_INLINE_REFLOW_COMPLETE:
         // Pullup succeeded
@@ -1217,11 +1218,13 @@ printf("pullup: rs=%x\n", rs);
         if (--nextLine->mChildCount == 0) {
           ild->mNext = nextLine->mNext;
           delete nextLine;
+          nextLine = nsnull;
         }
         else {
           child->GetNextSibling(nextLine->mFirstChild);
         }
         prevChild = child;
+        aState.mChildPrevInFlow = nsnull;
         break;
 
       case NS_INLINE_REFLOW_BREAK_AFTER:
@@ -1233,14 +1236,17 @@ printf("pullup: rs=%x\n", rs);
         if (--nextLine->mChildCount == 0) {
           ild->mNext = nextLine->mNext;
           delete nextLine;
+          nextLine = nsnull;
         }
         else {
           child->GetNextSibling(nextLine->mFirstChild);
         }
+        aState.mChildPrevInFlow = nsnull;
         goto done;
 
       case NS_INLINE_REFLOW_BREAK_BEFORE:
         // The child can't fit on this line so never mind
+        aState.mChildPrevInFlow = nsnull;
         goto done;
 
       case NS_INLINE_REFLOW_NOT_COMPLETE:
@@ -1252,6 +1258,7 @@ printf("pullup: rs=%x\n", rs);
         if (--nextLine->mChildCount == 0) {
           ild->mNext = nextLine->mNext;
           delete nextLine;
+          nextLine = nsnull;
         }
         else {
           child->GetNextSibling(nextLine->mFirstChild);
@@ -1307,31 +1314,22 @@ printf("pullup: rs=%x\n", rs);
   return PlaceLine(aState, inlineLayout, ild, rs);
 }
 
-// XXX should probably be a method on nsCSSInlineLayout?
 nsresult
 InlineFrameData::MaybeCreateNextInFlow(nsCSSBlockReflowState&  aState,
                                        nsCSSInlineLayout& aInlineLayout,
                                        InlineLineData*    ild,
                                        nsIFrame*          aFrame)
 {
-  nsIFrame* nextInFlow;
-  aFrame->GetNextInFlow(nextInFlow);
-  if (nsnull == nextInFlow) {
-    // Create a continuation frame for the child frame and insert it
-    // into our lines child list.
-    nsIFrame* nextFrame;
-    aFrame->GetNextSibling(nextFrame);
-    nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(aState.mPresContext, kidSC);
-    aFrame->CreateContinuingFrame(aState.mPresContext, aState.mBlock,
-                                  kidSC, nextInFlow);
-    NS_RELEASE(kidSC);
-    if (nsnull == nextInFlow) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    aFrame->SetNextSibling(nextInFlow);
-    nextInFlow->SetNextSibling(nextFrame);
+  // Remember prev-in-flow for the next line
+  aState.mChildPrevInFlow = aFrame;
 
+  // Maybe create the next-in-flow
+  nsIFrame* nextInFlow;
+  nsresult rv = aInlineLayout.MaybeCreateNextInFlow(aFrame, nextInFlow);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  if (nsnull != nextInFlow) {
     // Let container know it has a new child
     aState.mBlock->UpdateChildCount(1);
 
@@ -1349,7 +1347,7 @@ InlineFrameData::SplitLine(nsCSSBlockReflowState&  aState,
 {
   PRInt32 pushCount = ild->mChildCount - aInlineLayout.mFrameNum;
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-               ("LineLayout::SplitLine: pushing %d frames",
+               ("InlineFrameData::SplitLine: pushing %d frames",
                 pushCount));
 
   if (0 != pushCount) {
@@ -1405,21 +1403,11 @@ InlineFrameData::PlaceLine(nsCSSBlockReflowState&    aState,
                            InlineLineData*           ild,
                            nsInlineReflowStatus      aReflowStatus)
 {
-#if XXX_use_me
-  // XXX This doesn't help because VerticallyAlignChildren doesn't
-  // take the max descent argument. It should and it should compute
-  // the final max descent and max ascent.
-  nsIFontMetrics* fm =
-    mLineLayout.mPresContext->GetMetricsFor(mContainerFont->mFont);
-  mMaxAscent = fm->GetMaxAscent();
-  mMaxDescent = fm->GetMaxDescent();
-  NS_RELEASE(fm);
-#endif
-
-  nscoord lineHeight =
-    aInlineLayout.AlignFrames(ild->mFirstChild, ild->mChildCount,
-                              ild->mBounds);
-  aState.mY += lineHeight;
+  // Align the children. This also determines the actual height and
+  // width of the line.
+  aInlineLayout.AlignFrames(ild->mFirstChild, ild->mChildCount,
+                            ild->mBounds);
+  aState.mY += ild->mBounds.height;
 
   // XXX will the line fit??? check...if the line is pushed, so must
   // it's below current line floaters too.
@@ -1497,9 +1485,9 @@ InlineFrameData::PlaceLine(nsCSSBlockReflowState&    aState,
 // coarse grain incremental reflow (block children)
 
 nsresult
-nsCSSBlockFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                       nsIContent* aContent,
-                       nsIFrame*   aParent)
+NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
+                    nsIContent* aContent,
+                    nsIFrame*   aParent)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -1672,6 +1660,14 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
                         nsRect&              aDesiredRect,
                         nsReflowStatus&      aStatus)
 {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("enter nsCSSBlockFrame::Reflow: maxSize=%d,%d reason=%d [%d,%d,%c]",
+      aReflowState.maxSize.width,
+      aReflowState.maxSize.height,
+      aReflowState.reason,
+      mFirstContentOffset, mLastContentOffset,
+      mLastContentIsComplete?'T':'F'));
+
   // If this is the initial reflow, generate any synthetic content
   // that needs generating.
   if (eReflowReason_Initial == aReflowState.reason) {
@@ -1722,6 +1718,11 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   }
   ComputeFinalSize(state, aMetrics, aDesiredRect);
 
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("exit nsCSSBlockFrame::Reflow: size=%d,%d rv=%x [%d,%d,%c]",
+      aMetrics.width, aMetrics.height, rv,
+      mFirstContentOffset, mLastContentOffset,
+      mLastContentIsComplete?'T':'F'));
   return rv;
 }
 
@@ -1787,12 +1788,14 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
   aMetrics.descent = 0;
 }
 
+// XXX move this somewhere else!!!
 static PRBool
 IsBlock(PRUint8 aDisplay)
 {
   switch (aDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
+  case NS_STYLE_DISPLAY_TABLE:
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -1825,15 +1828,32 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
     ((InlineFrameData*)fd)->MarkDirty();
   }
 
-  // XXX pagination: if we are a next-in-flow, find prev-in-flow's
-  // last child and continue from there if our prev-in-flow's
-  // last-content-is-complete is false
+  PRInt32 kidContentIndex = NextChildOffset();
+
+  // Get the childPrevInFlow for our eventual first child if we are a
+  // continuation and we have no children and the last child in our
+  // prev-in-flow is incomplete.
+  nsIFrame* childPrevInFlow = nsnull;
+  if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
+    nsCSSBlockFrame* prev = (nsCSSBlockFrame*)mPrevInFlow;
+    NS_ASSERTION(prev->mLastContentOffset >= prev->mFirstContentOffset,
+                 "bad prevInFlow");
+
+    kidContentIndex = prev->NextChildOffset();
+    if (!prev->mLastContentIsComplete) {
+      // Our prev-in-flow's last child is not complete
+      prev->LastChild(childPrevInFlow);
+    }
+  }
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("enter nsCSSBlockFrame::FrameAppendedReflow: kci=%d fd=%p childPrevInFlow=%p",
+      kidContentIndex, fd, childPrevInFlow));
 
   // XXX pagination: set our last-content-is-complete correctly
 
   // Create frames for each new piece of content
   nsresult rv = NS_FRAME_COMPLETE;
-  PRInt32 kidContentIndex = NextChildOffset();
   PRInt32 lastContentIndex;
   lastContentIndex = mContent->ChildCount();
   for (; kidContentIndex < lastContentIndex; kidContentIndex++) {
@@ -1845,8 +1865,8 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
 
     // Create frame for our new child and add it to our child list
     nsIFrame* kidFrame;
-    rv = nsHTMLBase::CreateFrame(aState.mPresContext, this, kid, nsnull,
-                                 kidFrame);
+    rv = nsHTMLBase::CreateFrame(aState.mPresContext, this, kid,
+                                 childPrevInFlow, kidFrame);
     NS_RELEASE(kid);
     if (NS_OK != rv) {
       return rv;
@@ -1860,6 +1880,7 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
     }
     mChildCount++;
     lastKid = kidFrame;
+    childPrevInFlow = nsnull;
 
     // Get display style for the new child frame
     const nsStyleDisplay* kidDisplay;
@@ -1922,7 +1943,11 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
   }
 
   mLastContentIsComplete = PR_TRUE;
-  mLastContentOffset = lastContentIndex - 1;
+  if (lastContentIndex == 0) {
+    mLastContentOffset = 0;
+  } else {
+    mLastContentOffset = lastContentIndex - 1;
+  }
 
   // Reflow last InlineFrameData now that we are done
   if (nsnull != ild) {

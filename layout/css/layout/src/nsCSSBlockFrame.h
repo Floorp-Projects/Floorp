@@ -97,6 +97,7 @@ struct nsCSSBlockReflowState : public nsReflowState {
   nsVoidArray mPendingFloaters;
 
   nsCSSInlineLayout* mCurrentLine;
+  nsIFrame* mChildPrevInFlow;
 
   // XXX The next list ordinal for counting list bullets
   PRInt32 mNextListOrdinal;
@@ -109,9 +110,6 @@ class nsCSSBlockFrame : public nsCSSContainerFrame,
                         public nsIFloaterContainer
 {
 public:
-  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -169,6 +167,14 @@ protected:
 
   // placeholder frames for floaters to display at the top line
   nsVoidArray* mRunInFloaters;
+
+  friend nsresult NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
+                                      nsIContent* aContent,
+                                      nsIFrame*   aParent);
 };
+
+extern nsresult NS_NewCSSBlockFrame(nsIFrame**  aInstancePtrResult,
+                                    nsIContent* aContent,
+                                    nsIFrame*   aParent);
 
 #endif /* nsCSSBlockFrame_h___ */

@@ -108,11 +108,17 @@ nsCSSInlineLayout::SetReflowSpace(nscoord aX, nscoord aY,
 nsInlineReflowStatus
 nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
 {
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsCSSInlineLayout::ReflowAndPlaceFrame: frame=%p x=%d",
+                aFrame, mX));
+
   // Compute the maximum size of the frame. If there is no room at all
   // for it, then trigger a line-break before the frame.
   nsSize maxSize;
   nsMargin margin;
   if (!ComputeMaxSize(aFrame, margin, maxSize)) {
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                 ("nsCSSInlineLayout::ReflowAndPlaceFrame: break-before"));
     return NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
   }
 
@@ -152,7 +158,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
       // We are out of room.
       // XXX mKidPrevInFlow
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                   ("LineLayout::ReflowChild: !fit size=%d,%d",
+                   ("nsCSSInlineLayout::ReflowAndPlaceFrame: !fit size=%d,%d",
                     metrics.width, metrics.height));
       return NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
     }
@@ -192,6 +198,9 @@ nsCSSInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
       return PR_FALSE;
     }
   }
+
+  // Give the child a limited height in case it's a block child and
+  // our height was limited.
   aResult.height = mAvailHeight;
   return PR_TRUE;
 }
@@ -248,6 +257,9 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
     }
   }
 
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+     ("nsCSSInlineLayout::ReflowFrame: frame=%p reflowStatus=%x %saware",
+      aKidFrame, rv, aInlineAware ? "" :"not "));
   return rv;
 }
 
@@ -306,7 +318,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
 
     case NS_STYLE_FLOAT_LEFT:
     case NS_STYLE_FLOAT_RIGHT:
-      // When something is floated, it's margin's are applied there
+      // When something is floated, its margins are applied there
       // not here.
       break;
 
@@ -319,7 +331,7 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-               ("CSSLineLayout::PlaceChild: frame=%p {%d, %d, %d, %d}",
+               ("nsCSSInlineLayout::PlaceFrame: frame=%p {%d, %d, %d, %d}",
                 aFrame,
                 aFrameRect.x, aFrameRect.y,
                 aFrameRect.width, aFrameRect.height));
@@ -368,48 +380,43 @@ nsCSSInlineLayout::PlaceFrame(nsIFrame* aFrame,
   }
 #endif
 
-  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-               ("CSSLineLayout::PlaceChild: aFrameReflowStatus=%x",
-                aFrameReflowStatus));
   return aFrameReflowStatus;
 }
 
-nscoord
+void
 nsCSSInlineLayout::AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount,
                                nsRect& aBounds)
 {
   NS_PRECONDITION(aFrameCount == mFrameNum, "bogus reflow");
 
-  nscoord lineHeight;
+  // Vertically align the children on the line; this will compute
+  // the actual line height for us.
 
-  if (PR_TRUE /*XXX !mLine->mIsBlock*/) {
-    // Vertically align the children on the line; this will compute
-    // the actual line height for us.
-    lineHeight =
-      nsCSSLayout::VerticallyAlignChildren(mLineLayout.mPresContext,
-                                           mContainerFrame, mContainerFont,
-                                           mY, aFrame, aFrameCount,
-                                           mAscents, mMaxAscent); 
-  }
-  else {
-    // The line height of a block is just the block's height
-    lineHeight = mMaxAscent;
-  }
+  // XXX Fold in vertical alignment code here and make it update the
+  // max ascent and max descent values properly. When line-height is
+  // involved, give half of it to ascent and half to descent
+
+  nscoord lineHeight =
+    nsCSSLayout::VerticallyAlignChildren(mLineLayout.mPresContext,
+                                         mContainerFrame, mContainerFont,
+                                         mY, aFrame, aFrameCount,
+                                         mAscents, mMaxAscent/* XXX maxDescent */);
+  nscoord lineWidth = mX - mLeftEdge;
 
   // Save away line bounds before other adjustments
   aBounds.x = mLeftEdge;
   aBounds.y = mY;
-  aBounds.width = mX - mLeftEdge;
+  aBounds.width = lineWidth;
   aBounds.height = lineHeight;
 
   // Now horizontally place the children
-  if (!mUnconstrainedWidth) {
+  if (!mUnconstrainedWidth && (mAvailWidth > lineWidth)) {
     nsCSSLayout::HorizontallyPlaceChildren(mLineLayout.mPresContext,
                                            mContainerFrame,
                                            mContainerText->mTextAlign,
                                            mDirection,
                                            aFrame, aFrameCount,
-                                           mX - mLeftEdge,
+                                           lineWidth,
                                            mAvailWidth);
   }
 
@@ -417,6 +424,37 @@ nsCSSInlineLayout::AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount,
   nsCSSLayout::RelativePositionChildren(mLineLayout.mPresContext,
                                         mContainerFrame,
                                         aFrame, aFrameCount);
+}
 
-  return lineHeight;
+nsresult
+nsCSSInlineLayout::MaybeCreateNextInFlow(nsIFrame*  aFrame,
+                                         nsIFrame*& aNextInFlowResult)
+{
+  aNextInFlowResult = nsnull;
+
+  nsIFrame* nextInFlow;
+  aFrame->GetNextInFlow(nextInFlow);
+  if (nsnull == nextInFlow) {
+    // Create a continuation frame for the child frame and insert it
+    // into our lines child list.
+    nsIFrame* nextFrame;
+    aFrame->GetNextSibling(nextFrame);
+    nsIStyleContext* kidSC;
+    aFrame->GetStyleContext(mLineLayout.mPresContext, kidSC);
+    aFrame->CreateContinuingFrame(mLineLayout.mPresContext, mContainerFrame,
+                                  kidSC, nextInFlow);
+    NS_RELEASE(kidSC);
+    if (nsnull == nextInFlow) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aFrame->SetNextSibling(nextInFlow);
+    nextInFlow->SetNextSibling(nextFrame);
+
+    NS_FRAME_LOG(NS_FRAME_TRACE_NEW_FRAMES,
+       ("nsCSSInlineLayout::MaybeCreateNextInFlow: frame=%p nextInFlow=%p",
+        aFrame, nextInFlow));
+
+    aNextInFlowResult = nextInFlow;
+  }
+  return NS_OK;
 }
