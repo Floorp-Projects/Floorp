@@ -164,8 +164,6 @@ public:
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD JoinTableCells(PRBool aCellToRight);
 
-  NS_IMETHOD GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn);
-
 // Data members
 
 protected:

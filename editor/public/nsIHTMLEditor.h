@@ -107,8 +107,6 @@ public:
   NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
   NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
-  NS_IMETHOD GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)=0;
-
 // Miscellaneous Methods
   /** Set the background color of the selected table cell, row, columne, or table,
     * or the document background if not in a table

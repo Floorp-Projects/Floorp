@@ -1946,7 +1946,7 @@ nsHTMLEditor::InsertImage(nsString& aURL,
 
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offsetOfNewNode;
-  res = nsEditor::DeleteSelectionAndPrepareToCreateNode(parentNode,
+  res = DeleteSelectionAndPrepareToCreateNode(parentNode,
                                                         offsetOfNewNode);
   if (NS_SUCCEEDED(res))
   {
@@ -2168,7 +2168,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     mJSEditorLog->InsertElement(aElement, aDeleteSelection);
 #endif // ENABLE_JS_EDITOR_LOG
 
-  nsresult res=NS_ERROR_NOT_INITIALIZED;
+  nsresult res = NS_ERROR_NOT_INITIALIZED;
   
   if (!aElement)
     return NS_ERROR_NULL_POINTER;
@@ -2483,65 +2483,6 @@ NS_IMETHODIMP nsHTMLEditor::EndComposition(void)
 NS_IMETHODIMP nsHTMLEditor::SetCompositionString(const nsString& aCompositionString)
 {
 	return nsTextEditor::SetCompositionString(aCompositionString);
-}
-
-// Call the platform-specific file picker and convert it to URL format
-NS_IMETHODIMP nsHTMLEditor::GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)
-{
-  PRBool htmlFilter = aFilterType.EqualsIgnoreCase("html");
-  PRBool imgFilter = aFilterType.EqualsIgnoreCase("img");
-
-  aReturn = "";
-
-  // TODO: DON'T ACCEPT NULL PARENT AFTER WIDGET IS FIXED
-  if (/*!aParent||*/ !(htmlFilter || imgFilter))
-    return NS_ERROR_NOT_INITIALIZED;
-
-
-  nsCOMPtr<nsIFileWidget>  fileWidget;
-  // TODO: WHERE TO WE PUT GLOBAL STRINGS TO BE LOCALIZED?
-  nsString title(htmlFilter ? "Open HTML file" : "Select Image File");
-  nsFileSpec fileSpec;
-  // TODO: GET THE DEFAULT DIRECTORY FOR DIFFERENT TYPES FROM PREFERENCES
-  nsFileSpec aDisplayDirectory;
-
-  nsresult res = nsComponentManager::CreateInstance(kFileWidgetCID,
-					     nsnull,
-					     nsIFileWidget::GetIID(),
-					     (void**)&fileWidget);
-
-  if (NS_SUCCEEDED(res))
-  {
-    nsFileDlgResults dialogResult;
-    if (htmlFilter)
-    {
-      nsAutoString titles[] = {"HTML Files"};
-      nsAutoString filters[] = {"*.htm; *.html; *.shtml"};
-      fileWidget->SetFilterList(1, titles, filters);
-      dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
-    } else {
-      nsAutoString titles[] = {"Image Files"};
-      nsAutoString filters[] = {"*.gif; *.jpg; *.jpeg; *.png"};
-      fileWidget->SetFilterList(1, titles, filters);
-      dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
-    }
-    // Do this after we get this from preferences
-    //fileWidget->SetDisplayDirectory(aDisplayDirectory);
-    // First param should be Parent window, but type is nsIWidget*
-    // Bug is filed to change this to a more suitable window type
-    if (dialogResult != nsFileDlgResults_Cancel) 
-    {
-      // Get the platform-specific format
-      // Convert it to the string version of the URL format
-      // NOTE: THIS CRASHES IF fileSpec is empty
-      nsFileURL url(fileSpec);
-      aReturn = url.GetURLString();
-    }
-    // TODO: SAVE THIS TO THE PREFS?
-    fileWidget->GetDisplayDirectory(aDisplayDirectory);
-  }
-
-  return res;
 }
 
 NS_IMETHODIMP
