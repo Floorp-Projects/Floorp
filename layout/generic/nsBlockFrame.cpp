@@ -1114,9 +1114,21 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.width = borderPadding.left + aReflowState.mComputedWidth +
       borderPadding.right;
 
-    // When style defines the width use it for the max-element-width
-    // because we can't shrink any smaller.
-    maxWidth = aMetrics.width;
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
+      if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Percent) {
+        // for percentage widths, |HaveAutoWidth| is sometimes true and
+        // sometimes false (XXXldb check that this is really true), and
+        // we want the max-element-width to be the same either way
+        // (i.e., whether it's an uncontsrained reflow or a fixed-width
+        // reflow).  Thus, do the same thing we do below.
+        maxWidth = aState.mMaxElementWidth +
+          borderPadding.left + borderPadding.right;
+      } else {
+        // When style defines the width use it for the max-element-width
+        // because we can't shrink any smaller.
+        maxWidth = aMetrics.width;
+      }
+    }
   }
   else {
     nscoord computedWidth;
