@@ -284,6 +284,8 @@ class nsFastLoadFileReader
     struct nsObjectMapEntry : public nsFastLoadSharpObjectInfo {
         nsCOMPtr<nsISupports>   mReadObject;
         PRUint32                mSkipOffset;
+        PRUint16                mSaveStrongRefCnt;      // saved for an Update
+        PRUint16                mSaveWeakRefCnt;        // after a Read
     };
 
     /**
