@@ -42,6 +42,12 @@ public:
    *  @param aAnchorFrame will be the anchor frame
    */
   NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame) = 0;
+
+  /** ScrollFrameIntoView
+   *  limited version of nsPresShell::ScrollFrameIntoView
+   *  @param aFrame will be the frame to scroll into view.
+   */
+  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame) = 0;
 };
 
 
