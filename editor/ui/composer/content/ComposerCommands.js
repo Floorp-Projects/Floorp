@@ -753,7 +753,14 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
     // for 4.x parity as well as improving readability of file locally on server
     // this will always send crlf for upload (http/ftp)
     if (!isLocalFile) // if we aren't saving locally then send both cr and lf
+    {
       outputFlags |= webPersist.ENCODE_FLAGS_CR_LINEBREAKS | webPersist.ENCODE_FLAGS_LF_LINEBREAKS;
+
+      // we want to serialize the output for all remote publishing
+      // some servers can handle only one connection at a time
+      // some day perhaps we can make this user-configurable per site?
+      persistObj.persistFlags = persistObj.persistFlags | webPersist.PERSIST_FLAGS_SERIALIZE_OUTPUT;
+    }
 
     // note: we always want to set the replace existing files flag since we have
     // already given user the chance to not replace an existing file (file picker)
@@ -1271,41 +1278,78 @@ function PromptUsernameAndPassword(dlgTitle, text, savePW, userObj, pwObj)
 }
 
 const kErrorBindingAborted = 2152398850;
-const kErrorBindingRedirected = 2152398851;
 
 function DumpDebugStatus(aStatus)
 {
+  // see nsError.h and netCore.h and ftpCore.h
+  const kErrorBindingRedirected = 2152398851;
+
   if (aStatus == kErrorBindingAborted)
     dump("*****        status is NS_BINDING_ABORTED\n");
   else if (aStatus == kErrorBindingRedirected)
     dump("*****        status is NS_BINDING_REDIRECTED\n");
-  else if (aStatus == 2152398852)
+  else if (aStatus == 2152398859) // in netCore.h
+    dump("*****        status is ALREADY_CONNECTED\n");
+  else if (aStatus == 2152398860) // in netCore.h
+    dump("*****        status is NOT_CONNECTED\n");
+  else if (aStatus == 2152398861) // in nsISocketTransportService.idl
+    dump("*****        status is NO_SERVER_ON_THIS_PORT\n");
+  else if (aStatus == 2152398862) // in nsISocketTransportService.idl
+    dump("*****        status is TIMEOUT_ERROR\n");
+  else if (aStatus == 2152398863) // in netCore.h
+    dump("*****        status is IN_PROGRESS\n");
+  else if (aStatus == 2152398864) // 0x804b0010 in netCore.h
+    dump("*****        status is OFFLINE\n");
+  else if (aStatus == 2152398865) // in netCore.h
+    dump("*****        status is NO_CONTENT\n");
+  else if (aStatus == 2152398867) // in netCore.h
+    dump("*****        status is NO_ACCESS_TO_PORT\n");
+  else if (aStatus == 2152398868) // in nsISocketTransportService.idl
+    dump("*****        status is NETWORK_RESET\n");
+  else if (aStatus == 2152398869) // in ftpCore.h
+    dump("*****        status is FTP_LOGIN_ERROR\n");
+  else if (aStatus == 2152398870) // in ftpCore.h
+    dump("*****        status is FTP_CHANGE_DIR_ERROR\n");
+  else if (aStatus == 2152398871) // in ftpCore.h
+    dump("*****        status is FTP_PASV_ERROR\n");
+  else if (aStatus == 2152398872) // in ftpCore.h
+    dump("*****        status is FTP_PWD_ERROR\n");
+
+  else if (aStatus == 2152857601)
+    dump("*****        status is UNRECOGNIZED_PATH\n");
+  else if (aStatus == 2152857602)
+    dump("*****        status is UNRESOLABLE SYMLINK\n");
+  else if (aStatus == 2152857604)
     dump("*****        status is UNKNOWN_TYPE\n");
-  else if (aStatus == 2152398853)
+  else if (aStatus == 2152857605)
     dump("*****        status is DESTINATION_NOT_DIR\n");
-  else if (aStatus == 2152398854)
+  else if (aStatus == 2152857606)
     dump("*****        status is TARGET_DOES_NOT_EXIST\n");
-  else if (aStatus == 2152398856)
+  else if (aStatus == 2152857608)
     dump("*****        status is ALREADY_EXISTS\n");
-  else if (aStatus == 2152398858)
+  else if (aStatus == 2152857609)
+    dump("*****        status is INVALID_PATH\n");
+  else if (aStatus == 2152857610)
     dump("*****        status is DISK_FULL\n");
-  else if (aStatus == 2152398860)
+  else if (aStatus == 2152857612)
     dump("*****        status is NOT_DIRECTORY\n");
-  else if (aStatus == 2152398861)
+  else if (aStatus == 2152857613)
     dump("*****        status is IS_DIRECTORY\n");
-  else if (aStatus == 2152398862)
+  else if (aStatus == 2152857614)
     dump("*****        status is IS_LOCKED\n");
-  else if (aStatus == 2152398863)
+  else if (aStatus == 2152857615)
     dump("*****        status is TOO_BIG\n");
-  else if (aStatus == 2152398865)
+  else if (aStatus == 2152857616)
+    dump("*****        status is NO_DEVICE_SPACE\n");
+  else if (aStatus == 2152857617)
     dump("*****        status is NAME_TOO_LONG\n");
-  else if (aStatus == 2152398866)
-    dump("*****        status is NOT_FOUND\n");
-  else if (aStatus == 2152398867)
+  else if (aStatus == 2152857618) // 0x80520012
+    dump("*****        status is FILE_NOT_FOUND\n");
+  else if (aStatus == 2152857619)
     dump("*****        status is READ_ONLY\n");
-  else if (aStatus == 2152398868)
+  else if (aStatus == 2152857620)
     dump("*****        status is DIR_NOT_EMPTY\n");
-  else if (aStatus == 2152398869)
+  else if (aStatus == 2152857621)
     dump("*****        status is ACCESS_DENIED\n");
   else
     dump("*****        status is " + aStatus + "\n");
