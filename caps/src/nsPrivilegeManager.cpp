@@ -1277,10 +1277,10 @@ nsPrivilegeManager::getClassPrincipalsFromStack(void* context, PRInt32 callerDep
   int depth = 0;
   struct NSJSJavaFrameWrapper *wrapper = NULL;
 
-  if (*nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
+  if (nsCapsNewNSJSJavaFrameWrapperCallback == NULL) {
     return NULL;
   }
-  wrapper = (nsCapsNewNSJSJavaFrameWrapperCallback)(context);
+  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
   if (wrapper == NULL)
     return NULL;
 
