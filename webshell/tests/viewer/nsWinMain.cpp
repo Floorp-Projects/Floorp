@@ -127,7 +127,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 int main(int argc, char **argv)
 {
   nsresult rv;
-  nsIServiceManager* servMgr;
   rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   nsViewerApp* app = new nsNativeViewerApp();
