@@ -30,7 +30,7 @@ LIBRARY_NAME = plugingate_s
 NO_DIST_INSTALL = 1
 
 REQUIRES = plugin \
-           java
+           java \
            $(NULL)
 
 CPPSRCS = npn_gate.cpp \
