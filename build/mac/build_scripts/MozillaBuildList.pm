@@ -778,16 +778,6 @@ sub BuildClientDist()
     #UCONV
     InstallFromManifest(":mozilla:intl:uconv:idl:MANIFEST_IDL",                    "$distdirectory:idl:");
     InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",                     "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",                   "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",                      "$distdirectory:uconv:");
-#   InstallFromManifest(":mozilla:intl:uconv:ucvja2:MANIFEST",                     "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvtw:MANIFEST",                      "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvtw2:MANIFEST",                     "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvcn:MANIFEST",                      "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvko:MANIFEST",                      "$distdirectory:uconv:");
-#   InstallFromManifest(":mozilla:intl:uconv:ucvth:MANIFEST",                      "$distdirectory:uconv:");
-#   InstallFromManifest(":mozilla:intl:uconv:ucvvt:MANIFEST",                      "$distdirectory:uconv:");
-    InstallFromManifest(":mozilla:intl:uconv:ucvibm:MANIFEST",                     "$distdirectory:uconv:");
     if ($main::options{mathml})
     {
         InstallFromManifest(":mozilla:intl:uconv:ucvmath:MANIFEST",                "$distdirectory:uconv:");
@@ -1756,10 +1746,6 @@ sub BuildInternationalProjects()
     BuildOneProject(":mozilla:intl:locale:macbuild:locale.xml",                 "nslocale$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:intl:lwbrk:macbuild:lwbrk.xml",                   "lwbrk$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:intl:strres:macbuild:strres.xml",                 "strres$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
-# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja2.mcp",                    "ucvja2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvvt.mcp",                 "ucvvt$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-# BuildOneProject(":mozilla:intl:uconv:macbuild:ucvth.mcp",                 "ucvth$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     EndBuildModule("intl");
 } # intl
