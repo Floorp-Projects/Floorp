@@ -54,6 +54,7 @@ CPPSRCS= \
 	nsTextWidget.cpp \
 	nsFileWidget.cpp \
 	nsMenuItem.cpp \
+	nsTabWidget.cpp \
 	nsToolkit.cpp \
 	nsGtkEventHandler.cpp \
 	nsRadioButton.cpp \
