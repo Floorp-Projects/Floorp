@@ -60,17 +60,15 @@ while ($line = <>) {
 foreach $deps (@alldeps) {
   $obj = shift @{$deps};
 
-  ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-   $atime,$mtime,$ctime,$blksize,$blocks) = stat($obj)
-      or next;
+  $mtime = (stat $obj)[9] or next;
 
   foreach $dep_file (@{$deps}) {
     if (not defined($dep_mtime = $modtimes{$dep_file})) {
-      ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-       $atime,$dep_mtime,$ctime,$blksize,$blocks) = stat($dep_file);
+      $dep_mtime = (stat $dep_file)[9];
       $modtimes{$dep_file} = $dep_mtime;
     }
     if ($dep_mtime eq '' or $dep_mtime > $mtime) {
+      print "$obj($mtime) older than $dep_file($dep_mtime)\n";
       push @objs, $obj;
       last;
     }
@@ -87,11 +85,21 @@ if ($#objs > 0) {
 
   # Only write out the dependencies if they are different.
   if ($new_output ne $old_output) {
-    open(OUT, ">$outfile") and print OUT $new_output;
-    print "Updating dependencies ($outfile).\n";
+    open(OUT, ">$outfile") and print OUT "$new_output";
+    print "Updating dependencies file, $outfile.\n";
+    if ($debug) {
+      print "new: $new_output.\n";
+      print "was: $old_output.\n" if $old_output ne '';
+    }
   }
 } elsif (-s $outfile) {
+  if ($debug) {
+    open(OLD, "<$outfile") and $old_output = <OLD>;
+    close(OLD);
+  }
+
   # Remove the old dependencies because all objects are up to date.
   unlink $outfile;
-  print "Removing old dependencies ($outfile).\n";
+  print "Removing old dependencies file, $outfile.\n";
+  print "was: $old_output.\n" if $debug;
 }
