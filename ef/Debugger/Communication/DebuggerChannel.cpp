@@ -294,8 +294,8 @@ requestAddressToMethod(const void* inAddress, Int32& outOffset)
 
 DebuggerClientChannel::
 DebuggerClientChannel(PRFileDesc* inSync, PRFileDesc* inAsync) :
-	mAsync(inAsync),
 	mSync(inSync),
+	mAsync(inAsync),
 	mCompLoadHandler(0) 
 { 
 	mLock = PR_NewLock();
