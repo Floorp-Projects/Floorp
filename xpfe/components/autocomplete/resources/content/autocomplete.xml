@@ -859,8 +859,14 @@
               break;
 
             case KeyEvent.DOM_VK_DOWN:
-              if (!aEvent.altKey)
+              if (!aEvent.altKey) {
+                this.clearTimer();
+                killEvent = true;
+                this.keyNavigation(aEvent);
                 break;
+              }
+            // Alt+Down falls through to history popup toggling code
+              
             case KeyEvent.DOM_VK_F4:
               if (!aEvent.ctrlKey && !aEvent.shiftKey && this.getAttribute("disablehistory") != "true") {
                 var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
@@ -868,8 +874,8 @@
                   historyPopup.showPopup();
                 else
                   historyPopup.hidePopup();
-                break;
               }
+              break;
             case KeyEvent.DOM_VK_PAGE_UP:
             case KeyEvent.DOM_VK_PAGE_DOWN:
             case KeyEvent.DOM_VK_UP:
