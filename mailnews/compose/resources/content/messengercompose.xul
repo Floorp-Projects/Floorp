@@ -200,6 +200,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 	<!-- menu comes from editorOverlay -->
 	<menu id="insertMenu"/>
+	
 	<!-- menu items come from editorOverlay -->
     <menu value="&formatMenu.label;">
     <menupopup>
