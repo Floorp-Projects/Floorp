@@ -1500,8 +1500,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget,
     aView->HasWidget(&hasWidget);
   }
 
-  PRUint32 flags = 0;
-  aView->GetViewFlags(&flags);
+  PRUint32 flags = aView->GetViewFlags();
   PRBool isBlittable = (flags & NS_VIEW_FLAG_DONT_BITBLT) == 0;
     
   nsView* childView = aView->GetFirstChild();
@@ -2422,7 +2421,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, nsIRegion *a
   nsView* view = NS_STATIC_CAST(nsView*, aView);
  
   NS_ASSERTION(!(nsnull == view), "no view");
-   
+
   // XXX Shouldn't we repaint the view here?
 
   if (aRegion != nsnull) {

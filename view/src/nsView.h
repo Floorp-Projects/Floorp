@@ -258,24 +258,6 @@ public:
    */
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
   /**
-   * Set flags on view to allow customization of view behavior during
-   * event handling
-   * @param aFlags flags to be added to view
-   */
-  NS_IMETHOD  SetViewFlags(PRUint32 aFlags);
-  /**
-   * Remove flags from view to allow customization of view behavior during
-   * event handling
-   * @param aFlags flags to be removed from view
-   */
-  NS_IMETHOD  ClearViewFlags(PRUint32 aFlags);
-  /**
-   * Get flags on view to allow customization of view behavior during
-   * event handling
-   * @param aFlags out parameter for view flags
-   */
-  NS_IMETHOD  GetViewFlags(PRUint32 *aFlags) const;
-  /**
    * Used by the compositor for temporary marking of a view during
    * compositing. This will eventually replace GetScratchPoint above.
    */
@@ -329,6 +311,7 @@ public: // NOT in nsIView, so only available in view module
   void SetNextSibling(nsView *aSibling) { mNextSibling = aSibling; }
 
   PRUint32 GetViewFlags() const { return mVFlags; }
+  void SetViewFlags(PRUint32 aFlags) { mVFlags = aFlags; }
 
   void ConvertToParentCoords(nscoord* aX, nscoord* aY) { *aX += mPosX; *aY += mPosY; }
   void ConvertFromParentCoords(nscoord* aX, nscoord* aY) { *aX -= mPosX; *aY -= mPosY; }
