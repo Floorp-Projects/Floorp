@@ -334,8 +334,8 @@ static int cvt_f(SprintfState *ss, double d, const PRUnichar *fmt0, const PRUnic
     int amount = fmt1 - fmt0;
     int i;
 
-    PR_ASSERT((amount > 0) && (amount < sizeof(fin)));
-    if (amount >= sizeof(fin)) {
+    PR_ASSERT((amount > 0) && (amount < (int)sizeof(fin)));
+    if (amount >= (int)sizeof(fin)) {
 	/* Totally bogus % command to sprintf. Just ignore it */
 	return 0;
     }
@@ -446,7 +446,7 @@ static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, PRUnichar* aDes
   for(in=aSrc,state=0,ucs4=0;in < inend; in++)
   {
      if(0 == state) {
-        if( 0 == 0x80 & (*in)) {
+        if( 0 == (0x80 & (*in))) {
             // ASCII
             *out++ = (PRUnichar)*in;
         } else if( 0xC0 == (0xE0 & (*in))) {
@@ -504,6 +504,7 @@ static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, PRUnichar* aDes
         }
     }
   }
+  *out = 0x0000;
   return aDest;
 }
 /*
@@ -580,8 +581,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 		if( c == '$' ){		/* numbered argument csae */
 		    if( i > 0 ){
 			*rv = -1;
-			if( l10n_debug )
-			    printf( "either no *OR* all arguments are numbered \"%s\"\n", fmt );
 			return NULL;
 		    }
 		    number++;
@@ -589,8 +588,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 
 		} else{			/* non-numbered argument case */
 		    if( number > 0 ){
-			if( l10n_debug )
-			    printf( "either no *OR* all arguments are numbered \"%s\"\n", fmt );
 			*rv = -1;
 			return NULL;
 		    }
@@ -612,8 +609,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 	nas = (struct NumArgState*)PR_MALLOC( number * sizeof( struct NumArgState ) );
 	if( !nas ){
 	    *rv = -1;
-	    if( l10n_debug )
-		printf( "PR_MALLOC() error for \"%s\"\n", fmt );
 	    return NULL;
 	}
     } else {
@@ -644,8 +639,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 
 	if( !c || cn < 1 || cn > number ){
 	    *rv = -1;
-	    if( l10n_debug )
-		printf( "invalid argument number (valid range [1, %d]), \"%s\"\n", number, fmt );
 	    break;
         }
 
@@ -660,8 +653,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
         if (c == '*') {
 	    /* not supported feature, for the argument is not numbered */
 	    *rv = -1;
-	    if( l10n_debug )
-		printf( "* width specifier not support for numbered arguments \"%s\"\n", fmt );
 	    break;
 	} else {
 	    while ((c >= '0') && (c <= '9')) {
@@ -674,8 +665,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 	    c = *p++;
 	    if (c == '*') {
 	        /* not supported feature, for the argument is not numbered */
-		if( l10n_debug )
-		    printf( "* precision specifier not support for numbered arguments \"%s\"\n", fmt );
 	        *rv = -1;
 	        break;
 	    } else {
@@ -762,8 +751,6 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 
 	/* get a legal para. */
 	if( nas[ cn ].type == TYPE_UNKNOWN ){
-	    if( l10n_debug )
-		printf( "unknown type \"%s\"\n", fmt );
 	    *rv = -1;
 	    break;
 	}
@@ -901,8 +888,6 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    }
 
 	    if( nas[i-1].type == TYPE_UNKNOWN ){
-		if( l10n_debug )
-		    printf( "numbered argument type unknown\n" );
 		if( nas && ( nas != nasArray ) )
 		    PR_DELETE( nas );
 		return -1;
@@ -1068,7 +1053,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    u.d = va_arg(ap, double);
 	    if( nas != NULL ){
 		i = fmt - dolPt;
-		if( i < sizeof( pattern ) ){
+		if( i < (int)sizeof( pattern ) ){
 		    pattern[0] = '%';
 		    memcpy( &pattern[1], dolPt, i*sizeof(PRUnichar) );
 		    rv = cvt_f(ss, u.d, pattern, &pattern[i+1] );
@@ -1183,6 +1168,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
 /************************************************************************/
 
+#if 0
 static int FuncStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
 {
     int rv;
@@ -1196,7 +1182,6 @@ static int FuncStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
 }
 
 
-#if 0
 PRUint32 nsTextFormater::sxprintf(PRStuffFunc func, void *arg, 
                                  const PRUnichar *fmt, ...)
 {
@@ -1405,17 +1390,16 @@ PRUnichar * nsTextFormater::vsprintf_append(PRUnichar *last, const PRUnichar *fm
 PRBool nsTextFormater::SelfTest()
 { 
    PRBool passed = PR_TRUE ;
-   nsAutoString fmt("%3$s %4$S %1$d %2$.5 %.5f");
+   nsAutoString fmt("%3$s %4$S %1$d %2$d");
    char utf8[] = "Hello";
    PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103};
    int d=3;
-   double f=4.5467;
 
 
    PRUnichar buf[256];
    int ret;
-   ret = nsTextFormater::snprintf(buf, 256, fmt.GetUnicode(), d, f, utf8, ucs2, f);
-   printf("ret = %d\n");
+   ret = nsTextFormater::snprintf(buf, 256, fmt.GetUnicode(), d, 333, utf8, ucs2);
+   printf("ret = %d\n", ret);
    nsAutoString out(buf);
    printf("%s \n",out.ToNewCString());
    const PRUnichar *uout = out.GetUnicode();
