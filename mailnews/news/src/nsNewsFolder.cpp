@@ -398,34 +398,43 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
 nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
-  nsresult rv = GetDatabase(aWindow);	// want this cached...
-  if (NS_SUCCEEDED(rv))
-  {
-    if (mDatabase)
-    {
-      nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
-      nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
-      if (NS_SUCCEEDED(rv))
-        rv = mDatabase->ApplyRetentionSettings(retentionSettings);
-    }
-    rv = AutoCompact(aWindow);
-    NS_ENSURE_SUCCESS(rv,rv);
-    // GetNewMessages has to be the last rv set before we get to the next check, so
-    // that we'll have rv set to NS_MSG_ERROR_OFFLINE when offline and send
-    // a folder loaded notification to the front end.
-    rv = GetNewMessages(aWindow, nsnull);
-  }
-  if (rv == NS_MSG_ERROR_OFFLINE)
-  {
-    rv = NS_OK;
-    NotifyFolderEvent(mFolderLoadedAtom);
-  }
-
-  return rv;
+  // Get news.get_messages_on_select pref
+  nsresult rv;
+  PRBool getMessagesOnSelect = PR_TRUE;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if NS_SUCCEEDED(rv)
+    prefBranch->GetBoolPref("news.get_messages_on_select", &getMessagesOnSelect);
+  
+  // Only if news.get_messages_on_select is true do we get new messages automatically
+  if (getMessagesOnSelect) 
+  { 
+    rv = GetDatabase(aWindow);	// want this cached...
+    if (NS_SUCCEEDED(rv))
+    { 
+      if (mDatabase)
+      {
+        nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
+        nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
+        if (NS_SUCCEEDED(rv))
+          rv = mDatabase->ApplyRetentionSettings(retentionSettings);
+      }
+      rv = AutoCompact(aWindow);
+      NS_ENSURE_SUCCESS(rv,rv);
+      // GetNewMessages has to be the last rv set before we get to the next check, so
+      // that we'll have rv set to NS_MSG_ERROR_OFFLINE when offline and send
+      // a folder loaded notification to the front end.
+      rv = GetNewMessages(aWindow, nsnull);
+    } 
+    if (rv != NS_MSG_ERROR_OFFLINE)
+      return rv;
+  } 
+  // We're not getting messages because either get_messages_on_select is
+  // false or we're offline. Send an immediate folder loaded notification.
+  NotifyFolderEvent(mFolderLoadedAtom);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

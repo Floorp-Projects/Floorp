@@ -592,22 +592,31 @@ NS_IMETHODIMP nsNntpIncomingServer::RemoveConnection(nsINNTPProtocol *aNntpConne
 NS_IMETHODIMP 
 nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
-  nsresult rv;
-
-  // a user might have a new server without any groups.
-  // if so, bail out.  no need to establish a connection to the server
-  PRInt32 numGroups = 0;
-  rv = GetNumGroupsNeedingCounts(&numGroups);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  if (!numGroups)
-    return NS_OK;
-
-  nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = nntpService->UpdateCounts(this, aMsgWindow);
-  NS_ENSURE_SUCCESS(rv,rv);
+  // Get news.update_unread_on_expand pref
+  nsresult rv; 
+  PRBool updateUnreadOnExpand = PR_TRUE;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if NS_SUCCEEDED(rv)
+    prefBranch->GetBoolPref("news.update_unread_on_expand", &updateUnreadOnExpand);
+  
+  // Only if news.update_unread_on_expand is true do we update the unread counts
+  if (updateUnreadOnExpand) 
+  {
+    // a user might have a new server without any groups.
+    // if so, bail out.  no need to establish a connection to the server
+    PRInt32 numGroups = 0;
+    rv = GetNumGroupsNeedingCounts(&numGroups);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    if (!numGroups)
+      return NS_OK;
+    
+    nsCOMPtr<nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+  
+    rv = nntpService->UpdateCounts(this, aMsgWindow);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
   return NS_OK;
 }
 

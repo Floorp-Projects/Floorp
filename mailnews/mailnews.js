@@ -174,6 +174,8 @@ pref("news.notify.on",                      true);
 pref("news.max_articles",                   500);
 pref("news.mark_old_read",                  false);
 pref("news.show_size_in_lines",             true);
+pref("news.update_unread_on_expand",        true);
+pref("news.get_messages_on_select",         true);
 
 pref("mailnews.wraplength",                 72);
 pref("mail.compose.wrap_to_window_width",   false);
