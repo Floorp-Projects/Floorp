@@ -39,9 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMEventListener.h"
-#include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIWebProgressListener.h"
 #include "nsIScrollPositionListener.h"
 #include "nsISelectionListener.h"
 #include "nsISelectionController.h"
@@ -73,10 +71,8 @@ enum {
 }; 
 
 class nsTypeAheadFind : public nsITypeAheadFind,
-                        public nsIDOMFocusListener,
                         public nsIDOMKeyListener,
                         public nsIObserver,
-                        public nsIWebProgressListener,
                         public nsIScrollPositionListener,
                         public nsISelectionListener,
                         public nsITimerCallback,
@@ -89,15 +85,10 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_TYPEAHEADFIND_CID);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSITYPEAHEADFIND
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSISELECTIONLISTENER
-
-  // ----- nsIDOMFocusListener --------------------------
-  NS_IMETHOD Focus(nsIDOMEvent* aEvent);
-  NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
   // ----- nsIDOMKeyListener ----------------------------
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
@@ -122,17 +113,18 @@ protected:
   // Helper methods
   nsresult Init();
   nsresult UseInWindow(nsIDOMWindow *aDomWin);
-  void SetCaretEnabled(nsIPresShell *aPresShell, PRBool aEnabled);
+  void SetSelectionLook(nsIPresShell *aPresShell, PRBool aChangeColor, 
+                        PRBool aEnabled);
   void AttachNewSelectionListener();
   void RemoveCurrentSelectionListener();
   void AttachNewScrollPositionListener(nsIPresShell *aPresShell);
   void RemoveCurrentScrollPositionListener();
-  void AttachNewKeypressListener(nsIDOMEventTarget *aTarget);
-  void RemoveCurrentKeypressListener();
+  void AttachKeypressListener(nsIDOMWindow *aDOMWin);
+  void RemoveKeypressListener(nsIDOMWindow *aDOMWin);
   void GetChromeEventHandler(nsIDOMWindow *aDOMWin, 
                              nsIDOMEventTarget **aChromeTarget);
-  void AttachWindowFocusListener(nsIDOMWindow *aDOMWin);
-  void RemoveWindowFocusListener(nsIDOMWindow *aDOMWin);
+  //void AttachWindowFocusListener(nsIDOMWindow *aDOMWin);
+  //void RemoveWindowFocusListener(nsIDOMWindow *aDOMWin);
 
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
@@ -160,6 +152,7 @@ protected:
 
   // Current find state
   nsString mTypeAheadBuffer;
+  nsString mFindNextBuffer;
   PRBool mLinksOnlyPref;
   PRBool mStartLinksOnlyPref;
   PRPackedBool mLinksOnly;
@@ -167,10 +160,16 @@ protected:
   PRBool mCaretBrowsingOn;
   PRPackedBool mLiteralTextSearchOnly;
   PRPackedBool mDontTryExactMatch;
+  // mLinksOnlyManuallySet = PR_TRUE when the user has already 
+  // typed / or '. This allows the next / or ' to get searched for.
+  PRPackedBool mLinksOnlyManuallySet;
+  // mIsFindingText = PR_TRUE when we need to prevent listener callbacks 
+  // from resetting us during typeahead find processing
+  PRPackedBool mIsFindingText; 
+  PRBool mIsFindAllowedInWindow;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
 
-  static PRBool sIsFindingText; 
 
   static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
