@@ -538,9 +538,11 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_form:
     // the form was already created 
-    *aResult = nsnull;
     if (aForm) {
       rv = aForm->QueryInterface(kIHTMLContentIID, (void**)aResult);
+    }
+    else {
+      rv = NS_NewHTMLFormElement(aResult, aAtom);
     }
     break;
   case eHTMLTag_frame:

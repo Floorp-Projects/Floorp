@@ -265,6 +265,9 @@ NS_IMETHODIMP
 nsXMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
 {
+  // XXX Should actually check parse namespace, determine
+  // current namespace scope and, potentially, create new
+  // HTML content form tags with a HTML prefix.
   nsIXMLContent* content;
   nsIAtom* tag = NS_NewAtom(aTagName);
   nsresult rv = NS_NewXMLElement(&content, tag);
