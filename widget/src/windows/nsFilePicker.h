@@ -46,9 +46,9 @@ public:
 
 protected:
   /* method from nsBaseFilePicker */
-  NS_IMETHOD CreateNative(nsIWidget *aParent,
-                          const PRUnichar *aTitle,
-                          PRInt16 aMode);
+  NS_IMETHOD InitNative(nsIWidget *aParent,
+                        const PRUnichar *aTitle,
+                        PRInt16 aMode);
 
 
   void GetFilterListArray(nsString& aFilterList);
