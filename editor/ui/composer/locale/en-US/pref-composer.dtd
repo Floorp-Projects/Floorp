@@ -9,7 +9,7 @@
 
 <!ENTITY  tableEditing.label                    "Table Editing">
 <!ENTITY  maintainTableStructure.label          "Maintain table layout when inserting or deleting cells">
-<!ENTITY  maintainTableStructure.tooltip        "Preserves table's rectangular shape by automatically adding cells after inserting or deleting cells"
+<!ENTITY  maintainTableStructure.tooltip        "Preserves table's rectangular shape by automatically adding cells after inserting or deleting cells">
 <!ENTITY  maintainStructure.accesskey           "m">
 
 <!ENTITY  savingFiles.title           "When Saving Files">
