@@ -1406,7 +1406,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrameManager* aFrameManager)
     nsIFrame* rootFrame;
 
     aFrameManager->GetRootFrame(&rootFrame);
-    aFrameManager->DebugVerifyStyleTree(aPresContext, rootFrame);
+    aFrameManager->DebugVerifyStyleTree(rootFrame);
   }
 }
 #define VERIFY_STYLE_TREE VerifyStyleTree(mPresContext, mFrameManager)
