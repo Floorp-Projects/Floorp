@@ -99,7 +99,7 @@
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="customize-toolbar" nc:name="Toolbar Customization" nc:link="customization.xhtml"/> </rdf:li>
           <rdf:li> <rdf:Description ID="customize-toolbar-can-i-customize" nc:name="Can I customize my toolbars?" nc:link="customization.xhtml#can_i_customize_my_toolbars"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize" nc:name="How do I customize the toolbars?" nc:link="toolbar_customization.xhtml#how_do_i_customize_the_toolbars"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize" nc:name="How do I customize the toolbars?" nc:link="customization.xhtml#how_do_i_customize_the_toolbars"/> </rdf:li>
           <rdf:li> <rdf:Description ID="themes" nc:name="Themes" nc:link="customization.xhtml#themes"/> </rdf:li>
           <rdf:li> <rdf:Description ID="extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/> </rdf:li>
         </rdf:Seq>
