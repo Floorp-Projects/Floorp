@@ -153,7 +153,8 @@ nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
 }
 
 nsJAR::~nsJAR()
-{ 
+{
+  Close();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsJAR, nsIZipReader);
@@ -1146,16 +1147,16 @@ nsZipReaderCache::~nsZipReaderCache()
 NS_METHOD
 nsZipReaderCache::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
 
-    nsZipReaderCache* cache = new nsZipReaderCache();
-    if (cache == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(cache);
-    nsresult rv = cache->QueryInterface(aIID, aResult);
-    NS_RELEASE(cache);
-    return rv;
+  nsZipReaderCache* cache = new nsZipReaderCache();
+  if (cache == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(cache);
+  nsresult rv = cache->QueryInterface(aIID, aResult);
+  NS_RELEASE(cache);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1172,14 +1173,14 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
   if (entry) {
     *result = entry->mZip;
-    NS_ADDREF(*result);
+    NS_ADDREF(*result);         // addref for the caller
     if (entry->mUseCount++ == 0) {
       // remove from free list
       nsZipCacheEntry** entryPtr = &mFreeList;
       NS_ASSERTION(*entryPtr, "null free list");
-      while ((*entryPtr)->mNextOlder != nsnull) {
-        if ((*entryPtr)->mNextOlder == entry) {
-          (*entryPtr)->mNextOlder = entry->mNextOlder;
+      while (*entryPtr != nsnull) {
+        if (*entryPtr == entry) {
+          *entryPtr = entry->mNextOlder;
           entry->mNextOlder = nsnull;
           --mFreeCount;
           return NS_OK;
@@ -1208,7 +1209,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   entry->mUseCount++;
   (void)mZips.Put(&key, entry);
   *result = zip;
-  NS_ADDREF(*result);
+  NS_ADDREF(*result);   // addref for the caller
   return rv;
 }
 
@@ -1252,10 +1253,11 @@ nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
       nsZipCacheEntry* elt = (nsZipCacheEntry*)mZips.Remove(&key);
       NS_ASSERTION(elt == entry, "Remove failed");
       --mFreeCount;
+      delete oldest;    // release zip for good
     }
   }
 
-  NS_RELEASE(zip);
+//  NS_RELEASE(zip);      // release for the caller
   return NS_OK;
 }
 
