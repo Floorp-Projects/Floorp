@@ -36,7 +36,7 @@ public:
   LoadPlugins(void) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(char *aMimeType, nsISupports ** aPluginInst) = 0;
+  InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst) = 0;
 };
 
 #endif

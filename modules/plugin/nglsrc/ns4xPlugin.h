@@ -21,7 +21,8 @@
 
 #include "nsplugin.h"
 #include "prlink.h"  // for PRLibrary
-#include "../src/npupp.h"
+#include "npupp.h"
+#include "nsIMalloc.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -128,8 +129,6 @@ protected:
   _posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
               const char *buf, NPBool file);
 
-#if 0
-
   static nsresult NP_EXPORT
   _newstream(NPP npp, NPMIMEType type, const char* window, NPStream** pstream);
 
@@ -142,6 +141,8 @@ protected:
   static void NP_EXPORT
   _status(NPP npp, const char *message);
 
+#if 0
+
   static void NP_EXPORT
   _registerwindow(NPP npp, void* window);
 
@@ -150,6 +151,8 @@ protected:
 
   static int16 NP_EXPORT
   _allocateMenuID(NPP npp, NPBool isSubmenu);
+
+#endif
 
   static void NP_EXPORT
   _memfree (void *ptr);
@@ -187,13 +190,15 @@ protected:
   static JRIEnv* NP_EXPORT
   _getJavaEnv(void);
 
+#if 0
+
   static jref NP_EXPORT
   _getJavaPeer(NPP npp);
 
-#if defined(XP_MAC) && !defined(powerc)
-#pragma pointers_in_A0
 #endif
 
+#if defined(XP_MAC) && !defined(powerc)
+#pragma pointers_in_A0
 #endif
 
   /**
@@ -207,7 +212,9 @@ protected:
    */
   static NPNetscapeFuncs CALLBACKS;
 
-  static nsIPluginManager  *mManager;
+  static nsIPluginManager   *mPluginManager;
+  static nsINetworkManager  *mNetworkManager;
+  static nsIMalloc          *mMalloc;
 };
 
 #endif // ns4xPlugin_h__
