@@ -3051,7 +3051,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (NS_FAILED(rv)) return rv;
 #endif
 
-
   if (!mProcessedEndDocumentLoad) {
     mProcessedEndDocumentLoad = PR_TRUE;    
 
@@ -3167,11 +3166,10 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             if (NS_FAILED(rv)) return rv;
             nsString2 newURL(aSpec);
             // reload the url
-            //const PRUnichar *spec = newURL.GetUnicode();
-            //if (spec) {
-                //rv = LoadURL(spec, "load");
-                rv = DoLoadURL(newURL,"view", nsnull, nsIChannel::LOAD_NORMAL, 0);
-            //}
+            const PRUnichar *spec = newURL.GetUnicode();
+            if (spec) {
+                rv = LoadURL(spec, "view");
+            }
         } // retry
     } // unknown host
 #endif //NECKO
