@@ -179,3 +179,4 @@ nsCertificatePrincipal::GetPeer(void)
 {
    return m_pNSPrincipal;
 }
+
