@@ -51,6 +51,9 @@ endif
 
 # Make sure that the existing rulesets work
 DIRS = $(NSPRPUB_DIR) $(tier_0_dirs) $(tier_1_dirs) $(tier_9_dirs)
+ifdef MOZ_LDAP_XPCOM
+DIRS += directory/c-sdk/ldap
+endif
 
 #
 # tier 0 - base build config dirs
