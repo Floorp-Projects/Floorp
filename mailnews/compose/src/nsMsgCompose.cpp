@@ -1016,6 +1016,9 @@ nsresult nsMsgCompose::Abort()
   if (mMsgSend)
     mMsgSend->Abort();
 
+  if (mProgress)
+    mProgress->CloseProgressDialog(PR_TRUE);
+
   return NS_OK;
 }
 
