@@ -38,5 +38,8 @@ EXTRA_DEPS = $(wildcard $(DIST)/lib/libxpt.*)
 # Build xpt_link and xpt_dump early.  (libs creates .deps used by install.)
 export:: libs install
 
+# We are building a build tool
+INTERNAL_TOOLS = 1
+
 include $(topsrcdir)/config/rules.mk
 
