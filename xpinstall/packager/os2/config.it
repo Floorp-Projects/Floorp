@@ -13,10 +13,8 @@ Product NameInternal=$ProductName$
 User Agent=$UserAgent$
 
 ; Destination Path values:
-;   PROGRAMFILESDIR
-;   WINDISK
-;   WINDIR
-;   WINSYSDIR
+;   OS2DISK
+;   OS2DIR
 Path=[OS2DISK]\$CompanyName$\$ProductName$
 
 ; Sub Path, when set will indicate to Setup to create a subfolder from
@@ -36,40 +34,12 @@ Lock Path=FALSE
 Program Name=$MainExeFile$
 
 ; Program Folder Path values:
-;   COMMON_STARTUP
-;   COMMON_PROGRAMS
-;   COMMON_STARTMENU
-;   COMMON_DESKTOP
-;
-;   PERSONAL_STARTUP
-;   PERSONAL_PROGRAMS
-;   PERSONAL_STARTMENU
-;   PERSONAL_DESKTOP
-;
-;   PERSONAL_APPDATA
-;   PERSONAL_CACHE
-;   PERSONAL_COOKIES
-;   PERSONAL_FAVORITES
-;   PERSONAL_FONTS
-;   PERSONAL_HISTORY
-;   PERSONAL_NETHOOD
-;   PERSONAL_PERSONAL
-;   PERSONAL_PRINTHOOD (supported only under Windows NT)
-;   PERSONAL_RECENT
-;   PERSONAL_SENDTO
-;   PERSONAL_TEMPLATES
-;
-;   PROGRAMS (Default value is the same as COMMON_PROGRAMS, but if the user
-;             has restricted access to the system, then it's the same as
-;             PERSONAL_PROGRAMS)
-;
-;   PROGRAMFILESDIR
-;   COMMONFILESDIR
-;   MEDIAPATH
-;   CONFIGPATH (supported only under Windows95 and Windows98)
-;   DEVICEPATH
+;   STARTUP
+;   DESKTOP
+;   WARPCENTER
 Program Folder Name=$ProductName$
-Program Folder Path=[PROGRAMS]
+Program Folder Path=[DESKTOP]
+Program Folder Object ID=<MOZ_FOLDER>
 
 ;Uninstall Filename=$UninstallFile$
 
@@ -109,16 +79,16 @@ Confirmation Message=There was an error encountered during installation of $Prod
 
 
 
-; HApp:              valid decryptable setup key is [Product CurrentVersion] or [Product PreviousVersion]
-; Decrypt HApp:      there are times when '[' and ']' are valid part of windows registry key names.
+; App:               valid decryptable setup app is [Product CurrentVersion] or [Product PreviousVersion]
+; Decrypt App:       there are times when '[' and ']' are valid part of OS/2 INI app names.
 ; Contains Filename: tells setup that the path contains filename needed to be removed before
 ;                    using it as a path.
 ; Verify Existence:  FILE or PATH
 ;
 [Locate Previous Product Path0]
-HApp=[Product CurrentVersion]
+App=[Product CurrentVersion]
 Name=Install Directory
-Decrypt HApp=TRUE
+Decrypt App=TRUE
 Contains Filename=FALSE
 Verify Existence=
 
@@ -129,7 +99,7 @@ Title=$ProductName$ Setup - Welcome
 ;*** LOCALIZE ME BABY ***
 Message0=Welcome to %s Setup.  You are about to install %s version $Version$.
 ;*** LOCALIZE ME BABY ***
-Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
+Message1=It is strongly recommended that you exit all OS/2 programs before running this Setup program.
 ;*** LOCALIZE ME BABY ***
 Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
 
@@ -172,7 +142,7 @@ C5=Component US region pack
 ;C6=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C7=Component QFA
+;C7=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -192,11 +162,11 @@ C5=Component Venkman
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
-;C9=Component Uninstaller
+C9=Component DOM Inspector
+;C10=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C10=Component DOM Inspector
-C11=Component QFA
+;C11=Component QFA
 
 [Setup Type2]
 ;*** LOCALIZE ME BABY ***
@@ -218,11 +188,11 @@ C5=Component Venkman
 C6=Component US English Profile Defaults
 C7=Component En US lang pack
 C8=Component US region pack
-;C9=Component Uninstaller
+C9=Component DOM Inspector
+;C10=Component Uninstaller
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C10=Component DOM Inspector
-C11=Component QFA
+;C11=Component QFA
 
 
 
@@ -242,36 +212,26 @@ Message0=Select or clear the additional components you want to install.
 
 ;*** DO NOT LOCALIZE - BEGIN ***
 ; do not localize this part because it is not currently being used
-[Dialog Windows Integration]
+[Dialog OS/2 Integration]
 Show Dialog=FALSE
-Title=$ProductName$ Setup - Windows Integration
+Title=$ProductName$ Setup - OS/2 Integration
 Message0=Check the options you would like Setup to perform.
-Message1=These settings allow you to set default Internet preferences for browsing and searching.  They affect browsers installed on your machine, including Mozilla, Netscape and Microsoft Internet Explorer.
+Message1=These settings allow you to set default operating system preferences for browsing.
 
-; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
-; shows up as a checkbox in the Windows Integration dialog.
-[Windows Integration-Item0]
+; Only a maximum of 4 OS/2 Integration-Items are allowed.  Each Item
+; shows up as a checkbox in the OS/2 Integration dialog.
+[OS/2 Integration-Item0]
 CheckBoxState=FALSE
-Description=Make Mozilla my default Internet browser
+;Would you like to change your default browser for desktop URL objects to $ProductName$?
+Description=Make $ProductName$ my default Internet browser
 Archive=
 
-[Windows Integration-Item1]
+[OS/2 Integration-Item1]
 CheckBoxState=FALSE
-Description=Make Mozilla Netcenter my home page
-Archive=
-
-[Windows Integration-Item2]
-CheckBoxState=FALSE
-Description=Use Mozilla Netcenter to search the Web
+;Would you like to associate HTML files with $ProductName$?
+Description=Associate HTML files with $ProductName$
 Archive=
 ;*** DO NOT LOCALIZE - END ***
-
-[Dialog Program Folder]
-Show Dialog=TRUE
-;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Select Program Folder
-;*** LOCALIZE ME BABY ***
-Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
 [Dialog Additional Options]
 Show Dialog=TRUE
@@ -312,7 +272,7 @@ Use Protocol Settings=ENABLED
 Show Protocols=TRUE
 
 [Dialog Quick Launch]
-Show Dialog=TRUE
+Show Dialog=FALSE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup - Quick Launch
 ;*** LOCALIZE ME BABY ***
@@ -358,23 +318,6 @@ Message Retry0=Some files have failed the CRC check and are being downloaded aga
 ;           TRUE or there was at least one file in use and a reboot is
 ;           is required for the file to be replaced correctly.
 Show Dialog=AUTO
-
-; These SmartDownload sections contain information to configure SmartDownload.
-; The info is applied to all components to be downloaded.
-[SmartDownload-Netscape Install]
-;core_file=base.zip
-;core_dir=[SETUP PATH]
-no_ads=true
-silent=false
-execution=false
-confirm_install=false
-;extract_msg=Uncompressing Seamonkey.  Please wait...
-
-[SmartDownload-Proxy]
-
-[SmartDownload-Execution]
-exe=
-exe_param=
 
 [Check Instance0]
 Class Name=MozillaMessageWindow
@@ -690,21 +633,9 @@ Timing=post download
 Destination=[SETUP PATH]\Plugins
 
 
-;Delete FileX sections
-[Delete File0]
-Timing=post download
-Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
-
 [Delete File1]
 Timing=post launchapp
 Destination=[SETUP PATH]\install_wizard.log
-
-
-;Remove DirectoryX sections
-;[Remove Directory0]
-;Timing=post launchapp
-;Destination=[TEMP]\xtratest
-;Remove subdirs=TRUE
 
 
 ;RunAppX sections
@@ -741,49 +672,31 @@ Decrypt Key=FALSE
 Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
-[OS2 INI1]
-App=$ProductName$ $UserAgent$
-Key=Program Folder Path
-Key Value=[Default Folder]
-Decrypt App=FALSE
-Decrypt Key=FALSE
-Decrypt Key Value=TRUE
-Timing=pre smartupdate
-
 [Cleanup Previous Product RegKeys]
 Product Name0=Mozilla
 Product Reg Key0=Software\Mozilla.org\Mozilla
 Current Version0=$UserAgent$
 
-; Values for Show Folder:
-;   HIDE             Hides the window and activates another window.
-;   MAXIMIZE         Maximizes the specified window.
-;   MINIMIZE         Minimizes the specified window and activates the next
-;                    top-level window in the z-order.
-;   RESTORE          Activates and displays the window. If the window is
-;                    minimized or maximized, Windows restores it to its
-;                    original size and position. An application should specify
-;                    this flag when restoring a minimized window.
-;   SHOW             Activates the window and displays it in its current size
-;                    and position.
-;   SHOWMAXIMIZED    Activates the window and displays it as a maximized
-;                    window.
-;   SHOWMINIMIZED    Activates the window and displays it as a minimized
-;                    window.
-;   SHOWMINNOACTIVE  Displays the window as a minimized window. The active
-;                    window remains active.
-;   SHOWNA           Displays the window in its current state. The active
-;                    window remains active.
-;   SHOWNOACTIVATE   Displays a window in its most recent size and position.
-;                    The active window remains active.
-;   SHOWNORMAL       Activates and displays a window. If the window is
-;                    minimized or maximized, Windows restores it to its
-;                    original size and position. An application should specify
-;                    this flag when displaying the window for the first time.
+; Open Folder indicates whether to open the program folder after the install
+;
+; Default value is TRUE if nothing is set.
 [Program Folder0]
 Timing=post smartupdate
-Show Folder=HIDE
+Open Folder=TRUE
 Program Folder=[Default Folder]
+
+[Program Folder0-Object0]
+ClassName=WPProgram
+Title=$ProductName$
+SetupString=EXENAME=[SETUP PATH]\$MainExeFile$
+Location=[Default Folder]
+
+[Program Folder0-Object1]
+ClassName=WPProgram
+;*** LOCALIZE ME BABY ***
+Title=$ProductName$ Profile Manager
+SetupString=EXENAME=[SETUP PATH]\$MainExeFile$;PARAMETERS=-ProfileManager
+Location=[Default Folder]
 
 ;[Program Folder0-Shortcut0]
 ;File=[SETUP PATH]\Uninstall\$UninstallFile$
@@ -791,43 +704,6 @@ Program Folder=[Default Folder]
 ;Working Dir=[SETUP PATH]
 ;Description=Uninstall $ProductName$
 ;Icon Path=[SETUP PATH]\Uninstall\$UninstallFile$
-;Icon Id=0
-
-;[Program Folder0-Shortcut1]
-;File=[SETUP PATH]\$MainExeFile$
-;Arguments=-ProfileManager
-;Working Dir=[SETUP PATH]
-;Description=Profile Manager
-;Icon Path=[SETUP PATH]\$MainExeFile$
-;Icon Id=0
-
-;[Program Folder0-Shortcut2]
-;File=[SETUP PATH]\bin\Net2fone.exe
-;Arguments=
-;Working Dir=[SETUP PATH]
-;Description=Net2Fone
-;Icon Path=[SETUP PATH]\bin\Net2fone.exe
-;Icon Id=0
-
-;[Program Folder1]
-;Timing=post download
-;Show Folder=SHOW
-;Program Folder=[Default Folder]\lala land
-
-;[Program Folder1-Shortcut0]
-;File=c:\bin\getver.exe
-;Arguments=
-;Working Dir=[TEMP]
-;Description=Getver Test
-;Icon Path=[WINDISK]\4nt\4nt.exe
-;Icon Id=0
-
-;[Program Folder1-Shortcut1]
-;File=c:\perl\bin\perl.exe
-;Arguments=
-;Working Dir=[WINSYS]
-;Description=Perl
-;Icon Path=c:\perl\bin\perl.exe
 ;Icon Id=0
 
 [Strings]

@@ -12,7 +12,7 @@ BEGIN
   WS_VISIBLE | FS_DLGBORDER | FS_SCREENALIGN,
   FCF_TITLEBAR | FCF_SYSMENU | FCF_NOMOVEWITHOWNER | FCF_TASKLIST
   BEGIN
-    CONTROL             "",     IDC_STATIC,     5,   24,  303,   1, WC_STATIC, SS_FGNDFRAME | WS_VISIBLE
+    CONTROL             "",     IDC_STATIC,     5,   24,  303,   1, WC_STATIC, SS_FGNDRECT | WS_VISIBLE
     CONTROL            108,     IDC_MOZILLA,    7,   32,    1,   1, WC_STATIC, SS_BITMAP | WS_VISIBLE
     LTEXT               "",     IDC_STATIC0,    96,  139, 212,  24, DT_WORDBREAK
     LTEXT               "",     IDC_STATIC1,    96,  109, 212,  24, DT_WORDBREAK
@@ -32,7 +32,7 @@ BEGIN
     LTEXT               "",     IDC_MESSAGE0,     5, 147, 303,  16, DT_WORDBREAK
     MLE                 "",     IDC_EDIT_LICENSE, 5,  61, 303,  80, WS_GROUP | MLS_READONLY | MLS_VSCROLL | MLS_HSCROLL
     LTEXT               "",     IDC_MESSAGE1,     5,  31, 303,  24, DT_WORDBREAK
-    CONTROL             "",     IDC_STATIC,       5,  24, 303,   1, WC_STATIC, SS_FGNDFRAME | WS_VISIBLE
+    CONTROL             "",     IDC_STATIC,       5,  24, 303,   1, WC_STATIC, SS_FGNDRECT | WS_VISIBLE
     PUSHBUTTON          "",     IDWIZBACK,      142,   4,  50,  14, WS_GROUP
     DEFPUSHBUTTON       "",     IDWIZNEXT,      200,   4,  50,  14
     PUSHBUTTON          "",     DID_CANCEL,     258,   4,  50,  14
@@ -63,7 +63,7 @@ BEGIN
     DEFPUSHBUTTON "",              IDWIZNEXT, 200,   4,  50,  14
     PUSHBUTTON    "",             DID_CANCEL, 258,   4,  50,  14
     LTEXT         "",        IDC_STATIC_MSG0, 127, 177, 255,  17, NOT WS_GROUP | SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
-    CONTROL       "",            IDC_STATIC3,  5,  31, 83, 132, WC_STATIC, SS_FGNDFRAME | WS_VISIBLE
+    CONTROL       "",            IDC_STATIC3,  5,  31, 83, 132, WC_STATIC, SS_FGNDRECT | WS_VISIBLE
     CONTROL       108,            IDC_MOZILLA,  7,  32, 1, 1, WC_STATIC, SS_BITMAP | WS_VISIBLE
     CONTROL       "",             IDC_STATIC,  5,  24, 303,   1, WC_STATIC, SS_FGNDFRAME | WS_VISIBLE
   END
@@ -203,9 +203,11 @@ BEGIN
   FCF_TITLEBAR | FCF_SYSMENU | FCF_NOMOVEWITHOWNER
   BEGIN
     CONTROL       "",            IDC_STATUS0,  15,  82, 358,   8, WC_STATIC, DT_LEFT | WS_GROUP | SS_TEXT | WS_VISIBLE
-    CONTROL       "",      IDC_GAUGE_ARCHIVE,  15,  66, 358,  11, "GaugeArchive", WS_VISIBLE
+    SLIDER        IDC_GAUGE_ARCHIVE, 15, 47, 358, 30, SLS_RIBBONSTRIP | SLS_READONLY
+                  CTLDATA 12, 0, 100, 0, 0, 0
     CONTROL       "",            IDC_STATUS3,  15,  48, 358,   8, WC_STATIC, DT_LEFT | WS_GROUP | SS_TEXT | WS_VISIBLE
-    CONTROL       "",         IDC_GAUGE_FILE,  15,  33, 358,  11, "GaugeFile", WS_VISIBLE
+//    SLIDER        IDC_GAUGE_FILE, 15, 33, 358, 11, SLS_RIBBONSTRIP | SLS_READONLY
+//                  CTLDATA 12, 0, 100, 0, 0, 0
     CONTROL       114,            IDC_STATIC,   0, 120, 390,  34, WC_STATIC, SS_BITMAP | SS_TEXT | DT_WORDBREAK | DT_MNEMONIC | WS_VISIBLE
   END
 END

@@ -28,9 +28,7 @@
 #include "ifuncns.h"
 
 /* global variables */
-HINSTANCE       hInst;
 HINSTANCE       hSetupRscInst;
-HINSTANCE       hSDInst;
 HINSTANCE       hXPIStubInst;
 
 HWND            hDlgCurrent;
@@ -86,7 +84,6 @@ diAS            diAdvancedSettings;
 diSI            diStartInstall;
 diD             diDownload;
 diR             diReboot;
-siSD            siSDObject;
 siCF            siCFXpcomFile;
 siC             *siComponents;
 ssi             *ssiSiteSelector;
@@ -133,7 +130,7 @@ int main(int argc, char *argv[], char *envp[])
   }
   else if(Initialize(0, argv[0]))
     WinPostQueueMsg(0, WM_QUIT, 1, 0);
-  else if(!InitApplication(0, hSetupRscInst))
+  else if(!InitApplication())
   {
     char szEFailed[MAX_BUF];
 
@@ -144,7 +141,7 @@ int main(int argc, char *argv[], char *envp[])
     }
     WinPostQueueMsg(0, WM_QUIT, 1, 0);
   }
-  else if(!InitInstance(0))
+  else if(!InitInstance())
   {
     char szEFailed[MAX_BUF];
 

@@ -393,20 +393,6 @@ typedef struct setupStruct
   BOOL      bLockPath;
 } setupGen;
 
-typedef struct sinfoSmartDownload
-{
-  LPSTR szXpcomFile;
-  LPSTR szXpcomDir;
-  LPSTR szNoAds;
-  LPSTR szSilent;
-  LPSTR szExecution;
-  LPSTR szConfirmInstall;
-  LPSTR szExtractMsg;
-  LPSTR szExe;
-  LPSTR szExeParam;
-  LPSTR szXpcomFilePath;
-} siSD;
-
 typedef struct sinfoXpcomFile
 {
   LPSTR       szSource;

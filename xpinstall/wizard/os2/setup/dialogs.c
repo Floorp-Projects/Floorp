@@ -80,6 +80,8 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       /* Initialize controls */
       WinSetWindowText(hDlg, diWelcome.szTitle);
       sprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName, sgProduct.szProductName);
@@ -150,6 +152,8 @@ MRESULT EXPENTRY DlgProcLicense(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       /* Initialize controls */
       WinSetWindowText(hDlg, diLicense.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diLicense.szMessage0);
@@ -246,6 +250,8 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          HWND hwndOK;
          HWND hwndCancel;
 
+      WinSetPresParam(hwndDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
          hwndFileST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
          hwndDirST = WinWindowFromID(hwndDlg, DID_DIRECTORY_TXT);
          hwndDirLB = WinWindowFromID(hwndDlg, DID_DIRECTORY_LB);
@@ -501,6 +507,8 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diSetupType.szTitle);
 
       hDestinationPath = WinWindowFromID(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
@@ -605,24 +613,6 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
       WinSetDlgItemText(hDlg, IDC_README, sgInstallGui.szReadme_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_STATIC_MSG0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_ST0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_ST1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_ST2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_ST3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_ST0_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_ST1_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_ST2_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_ST3_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_DESTINATION, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_BUTTON_BROWSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_README, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
 
       if(sgProduct.bLockPath)
         WinEnableWindow(WinWindowFromID(hDlg, IDC_BUTTON_BROWSE), FALSE);
@@ -964,6 +954,8 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diSelectComponents.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0, diSelectComponents.szMessage0);
 
@@ -1013,20 +1005,6 @@ MRESULT EXPENTRY DlgProcSelectComponents(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST_COMPONENTS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_DOWNLOAD_SIZE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_SPACE_AVAILABLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
 
       gdwACFlag = AC_COMPONENTS;
       OldListBoxWndProc = WinSubclassWindow(hwndLBComponents, (PFNWP)NewListBoxWndProc);
@@ -1115,6 +1093,8 @@ MRESULT EXPENTRY DlgProcAdvancedSettings(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diAdvancedSettings.szTitle);
       WinSetDlgItemText(hDlg, IDC_MESSAGE0,          diAdvancedSettings.szMessage0);
       WinSetDlgItemText(hDlg, IDC_EDIT_PROXY_SERVER, diAdvancedSettings.szProxyServer);
@@ -1143,22 +1123,6 @@ MRESULT EXPENTRY DlgProcAdvancedSettings(HWND hDlg, ULONG msg, MPARAM mp1, MPARA
       WinSetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szPassword);
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szOk_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_SERVER, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_PORT, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_USER, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_PROXY_PASSWD, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_USE_FTP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_USE_HTTP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
 
       switch(diAdditionalOptions.dwUseProtocol)
       {
@@ -1257,6 +1221,8 @@ MRESULT EXPENTRY DlgProcAdditionalOptions(HWND hDlg, ULONG msg, MPARAM mp1, MPAR
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
 //      if(gdwSiteSelectorStatus == SS_HIDE)
 //      {
 //        WinShowWindow(WinWindowFromID(hDlg, IDC_MESSAGE0),  FALSE);
@@ -1293,18 +1259,6 @@ MRESULT EXPENTRY DlgProcAdditionalOptions(HWND hDlg, ULONG msg, MPARAM mp1, MPAR
       WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_BUTTON_PROXY_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST_SITE_SELECTOR, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-#endif
 
       WinQueryWindowPos(hDlg, &swpDlg);
       WinSetWindowPos(hDlg,
@@ -1655,20 +1609,14 @@ MRESULT EXPENTRY DlgProcStartInstall(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       WinSetWindowText(hDlg, diStartInstall.szTitle);
 
       WinSetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
       WinSetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szInstall_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CURRENT_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-#endif
  
       WinQueryWindowPos(hDlg, &swpDlg);
       WinSetWindowPos(hDlg,
@@ -1740,6 +1688,8 @@ MRESULT EXPENTRY DlgProcReboot(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       WinCheckButton(hDlg, IDC_RADIO_YES, 1);
       WinSetFocus(HWND_DESKTOP, hRadioYes);
 
@@ -1756,12 +1706,6 @@ MRESULT EXPENTRY DlgProcReboot(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       WinSetDlgItemText(hDlg, IDC_RADIO_YES, sgInstallGui.szYesRestart);
       WinSetDlgItemText(hDlg, IDC_RADIO_NO, sgInstallGui.szNoRestart);
       WinSetDlgItemText(hDlg, DID_OK, sgInstallGui.szOk);
-#ifdef OLDCODE
-      SendDlgItemMessage (hDlg, 202, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_YES, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_NO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, DID_OK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
       break;
 
     case WM_CLOSE:
@@ -1817,6 +1761,8 @@ MRESULT EXPENTRY DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch(msg)
   {
     case WM_INITDLG:
+      WinSetPresParam(hDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont), sgInstallGui.szDefinedFont);
       if(GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf2, sizeof(szBuf2), szFileIniInstall))
       {
         if((sgProduct.szProductName != NULL) && (*sgProduct.szProductName != '\0'))
@@ -1886,15 +1832,12 @@ MRESULT EXPENTRY DlgProcMessage(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 
 void ProcessWindowsMessages()
 {
-#ifdef OLDCODE /* @MAK no idea what this does */
-  MSG msg;
+  QMSG qmsg;
 
-  while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+  while(WinPeekMsg((HAB)0, &qmsg, 0, 0, 0, PM_REMOVE))
   {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+    WinDispatchMsg((HAB)0, &qmsg );
   }
-#endif
 }
 
 void ShowMessage(PSZ szMessage, BOOL bShow)
@@ -1940,7 +1883,6 @@ HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgP
   return(hDlg);
 }
 
-#ifdef OLDCODE
 /*
  * Check to see if turbo is enabled.  If so, do the following:
  *   * Log the turbo status that use had chosen.
@@ -1949,7 +1891,8 @@ HWND InstantiateDialog(HWND hParent, ULONG ulDlgID, PSZ szTitle, PFNWP pfnwpDlgP
 void SetTurboArgs(void)
 {
   char szData[MAX_BUF];
-  char szKey[MAX_BUF];
+  char szBuf[MAX_BUF];
+  char szApp[MAX_BUF];
 
   if(diQuickLaunch.bTurboModeEnabled)
   {
@@ -1962,23 +1905,16 @@ void SetTurboArgs(void)
     else
       strcpy( szData, "turbo=no" );
 
-    sprintf(szKey,
-             SETUP_STATE_REG_KEY,
-             sgProduct.szCompanyName,
+    sprintf(szApp, "%s %s",
              sgProduct.szProductNameInternal,
              sgProduct.szUserAgent);
-    AppendWinReg(HKEY_CURRENT_USER,
-                 szKey,
-                 "browserargs",
-                 REG_SZ,
-                 szData,
-                 0,
-                 strlen( szData ) + 1,
-                 FALSE,
-                 FALSE );
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, "browserargs", "", szBuf, sizeof(szBuf));
+
+    if ( szBuf[0] != '\0' )
+       strcat(szBuf, " ");
+    strcat(szBuf, szData);
   }
 }
-#endif
 
 void DlgSequence(int iDirection)
 {
@@ -2303,9 +2239,7 @@ void CommitInstall(void)
         {
           bSDUserCanceled = TRUE;
           CleanupXpcomFile();
-#ifdef OLDCODE
           CleanupArgsRegistry();
-#endif
           WinPostQueueMsg(0, WM_QUIT, 0, 0);
         }
         gbProcessingXpnstallFiles = FALSE;

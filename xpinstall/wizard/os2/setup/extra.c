@@ -38,15 +38,7 @@ char *ArchiveExtensions[] = {"zip",
                              "jar",
                              ""};
 
-typedef struct structVer
-{
-  ULONGLONG ullMajor;
-  ULONGLONG ullMinor;
-  ULONGLONG ullRelease;
-  ULONGLONG ullBuild;
-} verBlock;
-
-BOOL InitDialogClass(HMODULE hInstance, HMODULE hSetupRscInst)
+BOOL InitApplication()
 {
   CLASSINFO classinfo;
   WinQueryClassInfo((HAB)0, WC_FRAME, &classinfo);
@@ -54,17 +46,11 @@ BOOL InitDialogClass(HMODULE hInstance, HMODULE hSetupRscInst)
                            CS_SAVEBITS, classinfo.cbWindowData));
 }
 
-BOOL InitApplication(HMODULE hInstance, HMODULE hSetupRscInst)
-{
-  return(InitDialogClass(hInstance, hSetupRscInst));
-}
-
-BOOL InitInstance(HMODULE hInstance)
+BOOL InitInstance()
 {
   gSystemInfo.lScreenX = WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN);
   gSystemInfo.lScreenY = WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN);
 
-  hInst = hInstance;
   hWndMain = NULL;
 
   return(TRUE);
@@ -191,7 +177,7 @@ void UnsetSetupState(void)
            "%s %s",
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
-  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup State", "");
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup State", NULL);
 }
 
 void SetSetupState(char *szState)
@@ -240,7 +226,7 @@ void UnsetSetupCurrentDownloadFile(void)
            "%s %s",
            sgProduct.szProductNameInternal,
            sgProduct.szUserAgent);
-  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup Current Download", "");
+  PrfWriteProfileString(HINI_USERPROFILE, szApp, "Setup Current Download", NULL);
 }
 
 void SetSetupCurrentDownloadFile(char *szCurrentFilename)
@@ -2264,46 +2250,6 @@ void DeInitSetupGeneral()
   FreeMemory(&(szSiteSelectorDescription));
 }
 
-HRESULT InitSDObject()
-{
-  if((siSDObject.szXpcomFile = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szXpcomDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szNoAds = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szSilent = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szExecution = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szConfirmInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szExtractMsg = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szExe = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szExeParam = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((siSDObject.szXpcomFilePath = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-
-  return(0);
-}
-
-void DeInitSDObject()
-{
-  FreeMemory(&(siSDObject.szXpcomFile));
-  FreeMemory(&(siSDObject.szXpcomDir));
-  FreeMemory(&(siSDObject.szNoAds));
-  FreeMemory(&(siSDObject.szSilent));
-  FreeMemory(&(siSDObject.szExecution));
-  FreeMemory(&(siSDObject.szConfirmInstall));
-  FreeMemory(&(siSDObject.szExtractMsg));
-  FreeMemory(&(siSDObject.szExe));
-  FreeMemory(&(siSDObject.szExeParam));
-  FreeMemory(&(siSDObject.szXpcomFilePath));
-}
-
 HRESULT InitSXpcomFile()
 {
   if((siCFXpcomFile.szSource = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3580,8 +3526,6 @@ BOOL ResolveSupersede(siC *siCObject)
   char  szSupersedeVersion[MAX_BUF];
   char  szType[MAX_BUF_TINY];
   char  szKey[MAX_BUF_TINY];
-  verBlock  vbVersionNew;
-  verBlock  vbVersionOld;
 
   siCObject->bSupersede = FALSE;
   if(siCObject->dwAttributes & SIC_SUPERSEDE)
@@ -5047,8 +4991,6 @@ HRESULT ParseConfigIni(int argc, char *argv[])
     return(1);
   if(InitDlgReboot(&diReboot))
     return(1);
-  if(InitSDObject())
-    return(1);
   if(InitSXpcomFile())
     return(1);
  
@@ -5448,17 +5390,6 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   else
     siCFXpcomFile.ulInstallSize = 0;
 
-  GetPrivateProfileString("SmartDownload-Netscape Install", "core_file",        "", siSDObject.szXpcomFile,       MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "core_file_path",   "", siSDObject.szXpcomFilePath,   MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "xpcom_dir",        "", siSDObject.szXpcomDir,        MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "no_ads",           "", siSDObject.szNoAds,           MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "silent",           "", siSDObject.szSilent,          MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "execution",        "", siSDObject.szExecution,       MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "confirm_install",  "", siSDObject.szConfirmInstall,  MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Netscape Install", "extract_msg",      "", siSDObject.szExtractMsg,      MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Execution",        "exe",              "", siSDObject.szExe,             MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("SmartDownload-Execution",        "exe_param",        "", siSDObject.szExeParam,        MAX_BUF, szFileIniConfig);
-
   GetPrivateProfileString("Core",                           "Source",           "", szBuf,                        sizeof(szBuf), szFileIniConfig);
   DecryptString(siCFXpcomFile.szSource, szBuf);
   GetPrivateProfileString("Core",                           "Destination",      "", szBuf,                        sizeof(szBuf), szFileIniConfig);
@@ -5616,7 +5547,7 @@ BOOL LocatePreviousPath(PSZ szMainSectionName, PSZ szPath, ULONG ulPathSize)
       bFound = LocatePathNscpReg(szSection, szPath, ulPathSize);
     else
     {
-      GetPrivateProfileString(szSection, "HApp", "", szValue, sizeof(szValue), szFileIniConfig);
+      GetPrivateProfileString(szSection, "App", "", szValue, sizeof(szValue), szFileIniConfig);
       if(*szValue != '\0')
         bFound = LocatePathOS2INI(szSection, szPath, ulPathSize);
       else
@@ -5694,7 +5625,7 @@ DWORD GetTotalArchivesToDownload()
 
 BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
 {
-  char  szHApp[MAX_BUF];
+  char  szApp[MAX_BUF];
   char  szHRoot[MAX_BUF];
   char  szName[MAX_BUF];
   char  szVerifyExistence[MAX_BUF];
@@ -5704,14 +5635,14 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
   BOOL  bReturn;
 
   bReturn = FALSE;
-  GetPrivateProfileString(szSection, "HApp", "", szHApp, sizeof(szHApp), szFileIniConfig);
-  if(*szHApp != '\0')
+  GetPrivateProfileString(szSection, "App", "", szApp, sizeof(szApp), szFileIniConfig);
+  if(*szApp != '\0')
   {
     bReturn = FALSE;
     memset(szPath, 0, ulPathSize);
 
     GetPrivateProfileString(szSection, "Name",         "", szName,  sizeof(szName),  szFileIniConfig);
-    GetPrivateProfileString(szSection, "Decrypt HApp", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
+    GetPrivateProfileString(szSection, "Decrypt App", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
     if(strcmpi(szBuf, "FALSE") == 0)
       bDecryptKey = FALSE;
     else
@@ -5730,11 +5661,11 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
 
     if(bDecryptKey == TRUE)
     {
-      DecryptString(szBuf, szHApp);
-      strcpy(szHApp, szBuf);
+      DecryptString(szBuf, szApp);
+      strcpy(szApp, szBuf);
     }
 
-    PrfQueryProfileString(HINI_USERPROFILE, szHApp, szName, "", szBuf, sizeof(szBuf));
+    PrfQueryProfileString(HINI_USERPROFILE, szApp, szName, "", szBuf, sizeof(szBuf));
     if(*szBuf != '\0')
     {
       if(strcmpi(szVerifyExistence, "FILE") == 0)
@@ -5825,9 +5756,6 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
   char szName[MAX_BUF];
   char szValue[MAX_BUF];
   char szLookupSection[MAX_BUF];
-  char szWRMSCurrentVersion[] = "Software\\Microsoft\\Windows\\CurrentVersion";
-  char szWRMSShellFolders[]   = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-  char szWRMSMapGroup[]       = "Software\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroup";
   HKEY hkeyRoot;
 
   /* zero out the memory allocations */
@@ -5842,10 +5770,6 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
   {
     /* @MAK Needed for install */
   }
-  else if(strcmpi(szVariable, "PROGRAMFILESPATH") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
   else if(strcmpi(szVariable, "INSTALLDRIVE") == 0)
   {
     /* parse for "C:" */
@@ -5853,125 +5777,23 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     szVariable[1] = sgProduct.szPath[1];
     szVariable[2] = '\0';
   }
-  else if(strcmpi(szVariable, "COMMONFILESDIR") == 0)
+  else if(strcmpi(szVariable, "STARTUP") == 0)
   {
-    /* Not valid on OS/2 */
+    HOBJECT hobj;
+    hobj = WinQueryObject("<WP_STARTUP>");
+    WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "MEDIAPATH") == 0)
+  else if(strcmpi(szVariable, "DESKTOP") == 0)
   {
-    /* Not valid on OS/2 */
+    HOBJECT hobj;
+    hobj = WinQueryObject("<WP_DESKTOP>");
+    WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "CONFIGPATH") == 0)
+  else if(strcmpi(szVariable, "WARPCENTER") == 0)
   {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "DEVICEPATH") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "COMMON_STARTUP") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PROGRAMS") == 0)
-  {
-    /* @MAK Needed for install */
-  }
-  else if(strcmpi(szVariable, "COMMON_PROGRAMS") == 0)
-  {
-    /* @MAK Needed for install */
-  }
-  else if(strcmpi(szVariable, "COMMON_STARTMENU") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "COMMON_DESKTOP") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "QUICK_LAUNCH") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_STARTUP") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_PROGRAMS") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_STARTMENU") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_DESKTOP") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_APPDATA") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_CACHE") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_COOKIES") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_FAVORITES") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_FONTS") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_HISTORY") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_NETHOOD") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_PERSONAL") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_PRINTHOOD") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_RECENT") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_SENDTO") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PERSONAL_TEMPLATES") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PROGRAMFOLDERNAME") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PROGRAMFOLDERPATH") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PROGRAMFOLDERPATHNAME") == 0)
-  {
-    /* Not valid on OS/2 */
-  }
-  else if(strcmpi(szVariable, "PROGRAMFOLDERPATH") == 0)
-  {
-    /* Not valid on OS/2 */
+    HOBJECT hobj;
+    hobj = WinQueryObject("<WP_WARPCENTER????>");
+    WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
   else if(strcmpi(szVariable, "WIZTEMP") == 0)
   {
@@ -6007,10 +5829,6 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
                     &ulBootDrive, sizeof(ulBootDrive));
     buffer[0] = 'A' - 1 + ulBootDrive;
     strcpy(szVariable, buffer);
-  }
-  else if(strcmpi(szVariable, "WINSYSDIR") == 0)
-  {
-    /* Not valid on OS/2 */
   }
   else if(  (strcmpi(szVariable, "JRE LIB PATH") == 0)
          || (strcmpi(szVariable, "JRE BIN PATH") == 0) )
@@ -6055,7 +5873,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
 
     sprintf(szApp, "%s", sgProduct.szProductNameInternal);
 
-    /* parse for the current Netscape WinReg key */
+    /* parse for the current Netscape INI entry */
     PrfQueryProfileString(HINI_USERPROFILE, szApp, "CurrentVersion", "",
                           szBuf, sizeof(szBuf));
 
@@ -6070,7 +5888,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
 
     sprintf(szApp, "%s", sgProduct.szProductNamePrevious);
 
-    /* parse for the current Netscape WinReg key */
+    /* parse for the current Netscape INI entry */
     PrfQueryProfileString(HINI_USERPROFILE, szApp, "CurrentVersion", "",
                           szBuf, sizeof(szBuf));
 
@@ -6624,7 +6442,6 @@ void DeInitialize()
 
   DeInitSiComponents(&siComponents);
   DeInitSXpcomFile();
-  DeInitSDObject();
   DeInitDlgReboot(&diReboot);
   DeInitDlgDownload(&diDownload);
   DeInitDlgStartInstall(&diStartInstall);
