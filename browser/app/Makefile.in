@@ -213,23 +213,23 @@ endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 ICON_FILES	= \
-		$(srcdir)/mozicon50.xpm \
-		$(srcdir)/mozicon16.xpm \
+		mozicon50.xpm \
+		mozicon16.xpm \
 		$(NULL)
 
-libs::
-	$(INSTALL) $(ICON_FILES) $(DIST)/bin/icons
+libs:: $(ICON_FILES)
+	$(INSTALL) $^ $(DIST)/bin/icons
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-libs::
-	$(INSTALL) $(srcdir)/default.xpm $(DIST)/bin/chrome/icons/default
+libs:: default.xpm
+	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
 
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/default.xpm $(DESTDIR)$(mozappdir)/icons
+install:: default.xpm
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/icons
 endif
 
 export:: brand.dtd.in
