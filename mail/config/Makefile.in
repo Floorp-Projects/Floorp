@@ -92,7 +92,7 @@ ifneq (,$(findstring inspector,$(MOZ_EXTENSIONS)))
 endif
 	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(MOZILLA_DIR)/mail/config/installed-chrome.txt > $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt
-#	rm $(DIST)/$(APP_NAME)/components/compreg.dat
+	rm -f $(DIST)/$(APP_NAME)/components/compreg.dat
 
 libs::
 	$(MAKE) mail_chrome
