@@ -173,7 +173,7 @@ nsNSSSocketInfo::SetFirstWrite(PRBool aFirstWrite)
 nsresult
 nsNSSSocketInfo::SetHostName(const char* host)
 {
-  mHostName.Adopt(nsCRT::strdup(host));
+  mHostName.Adopt(host ? nsCRT::strdup(host) : 0);
   return NS_OK;
 }
 
@@ -201,7 +201,7 @@ nsNSSSocketInfo::GetPort(PRInt32 *aPort)
 nsresult
 nsNSSSocketInfo::SetProxyHost(const char* aProxyHost)
 {
-  mProxyHostName.Adopt(nsCRT::strdup(aProxyHost));
+  mProxyHostName.Adopt(aProxyHost ? nsCRT::strdup(aProxyHost) : 0);
   return NS_OK;
 }
 
