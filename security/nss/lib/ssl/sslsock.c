@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.2 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.3 2000/09/09 06:08:46 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -285,11 +285,10 @@ ssl_DupSocket(sslSocket *os)
 	    int i;
 
 	    for (i=kt_null; i < kt_kea_size; i++) {
-		if (os->serverCert[i]) {
+		if (os->serverCert[i] && os->serverCertChain[i]) {
 		    ss->serverCert[i] = CERT_DupCertificate(os->serverCert[i]);
-		    ss->serverCertChain[i] = CERT_CertChainFromCert
-				(ss->serverCert[i], certUsageSSLServer, 
-				 PR_TRUE);
+		    ss->serverCertChain[i] = CERT_DupCertList(
+		                                       os->serverCertChain[i]);
 		} else {
 		    ss->serverCert[i]      = NULL;
 		    ss->serverCertChain[i] = NULL;

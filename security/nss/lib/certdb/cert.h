@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.2 2000/06/13 21:56:19 chrisk%netscape.com Exp $
+ * $Id: cert.h,v 1.3 2000/09/09 06:08:43 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -904,6 +904,9 @@ CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
 
 extern CERTCertificateList *
 CERT_CertListFromCert(CERTCertificate *cert);
+
+extern CERTCertificateList *
+CERT_DupCertList(CERTCertificateList * oldList);
 
 extern void CERT_DestroyCertificateList(CERTCertificateList *list);
 
