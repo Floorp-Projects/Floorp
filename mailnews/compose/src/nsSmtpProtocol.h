@@ -88,8 +88,7 @@ SMTP_AUTH_PROCESS_STATE                             // 21
 
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
-    PREF_AUTH_ANY = 1,
-    PREF_AUTH_LOGIN = 2
+    PREF_AUTH_ANY = 1
 } PrefAuthMethod;
 
 typedef enum _PrefTrySSL {

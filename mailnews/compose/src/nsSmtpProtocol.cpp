@@ -713,9 +713,7 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
     {
       /* EHLO must not be implemented by the server so fall back to the HELO case */
 
-        if (m_prefAuthMethod == PREF_AUTH_ANY ||
-            m_prefAuthMethod == PREF_AUTH_LOGIN ||
-            m_prefTrySSL == PREF_SSL_ALWAYS)
+        if (m_prefTrySSL == PREF_SSL_ALWAYS)
         {
             m_nextState = SMTP_ERROR_DONE;
             m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
@@ -823,8 +821,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
         }
         if ((TestFlag(SMTP_AUTH_PLAIN_ENABLED) ||
              TestFlag(SMTP_AUTH_LOGIN_ENABLED)) &&
-            (m_prefAuthMethod == PREF_AUTH_ANY ||
-             m_prefAuthMethod == PREF_AUTH_LOGIN))
+            (m_prefAuthMethod == PREF_AUTH_ANY))
         {
             m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
             m_nextStateAfterResponse = SMTP_AUTH_LOGIN_RESPONSE;
@@ -1757,7 +1754,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   // currently the account manager isn't properly setting the authMethod
   // preference for servers which require redirectors. This is another 
   // HACK ALERT....we'll force it to be set...
-  m_prefAuthMethod = PREF_AUTH_LOGIN;
+  m_prefAuthMethod = PREF_AUTH_ANY;
 
   // now that we have a host and port to connect to, 
   // open up the channel...
