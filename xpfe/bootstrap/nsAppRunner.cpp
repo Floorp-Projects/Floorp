@@ -27,6 +27,7 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
+#include "nsCRT.h"
 
 #if defined(XP_MAC)
 #include "macstdlibextras.h"
@@ -145,8 +146,31 @@ int main(int argc, char* argv[])
     goto done;
   }
   // Default URL if one was not provided in the cmdline
-  if (nsnull == urlstr)
+  // Changed by kostello on 2/10/99 to look for -editor
+  // or -
+  if (nsnull == urlstr){
+    char* cmdResult = nsnull;
+
+    rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
+    if (NS_SUCCEEDED(rv))
+    {
+      if (cmdResult && (strcmp("1",cmdResult)==0))
+        urlstr = "resource:/res/samples/EditorAppShell.xul";
+    }
+    if (nsnull == urlstr)
+    {
+      rv = cmdLineArgs->GetCmdLineValue("-mail", &cmdResult);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (cmdResult && (strcmp("1",cmdResult)==0))
+          urlstr = "resource:/res/samples/MailAppShell.html";
+      }
+    }
+    if (nsnull == urlstr)
+    {    
       urlstr = "resource:/res/samples/navigator.xul";
+    }
+  }
   else
       fprintf(stderr, "URL to load is %s\n", urlstr);
 
