@@ -47,9 +47,9 @@ public:
   nsBoxSize* next;
 
   void Clear();
-  void Add(nsSize minSize, 
-           nsSize prefSize,
-           nsSize maxSize,
+  void Add(const nsSize& minSize, 
+           const nsSize& prefSize,
+           const nsSize& maxSize,
            nscoord ascent,
            nscoord flex,
            PRBool aIsHorizontal);

@@ -53,7 +53,7 @@ protected:
                          nsBoxLayoutState& aState, 
                          nscoord& aGivenSize, 
                          nsBoxSize* aBoxSizes, 
-                         nsComputedBoxSize* aComputedBoxSizes);
+                         nsComputedBoxSize*& aComputedBoxSizes);
 
 nsObeliskLayout(nsIPresShell* aShell);
 

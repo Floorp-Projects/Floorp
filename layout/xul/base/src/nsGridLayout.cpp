@@ -118,7 +118,7 @@ nsGridLayout::CastToObelisk(nsObeliskLayout** aObelisk)
 }
 
 NS_IMETHODIMP
-nsGridLayout::GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument)
+nsGridLayout::GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument)
 {
   NS_ERROR("Should not be called");
   return NS_ERROR_FAILURE;

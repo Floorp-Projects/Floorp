@@ -590,22 +590,22 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   PRInt32 count = 0;
   aFlexes = 0;
   nsBoxSize*         currentBox = nsnull;
-  nsComputedBoxSize* currentComputed = nsnull;
+  //nsComputedBoxSize* currentComputed = nsnull;
 
   while(child)
   {
     if (!currentBox) {
       aBoxSizes      = new (aState) nsBoxSizeSpecial();
-      aComputedBoxSizes = new (aState) nsComputedBoxSizeSpecial();
+      //aComputedBoxSizes = new (aState) nsComputedBoxSizeSpecial();
 
       currentBox      = aBoxSizes;
-      currentComputed = aComputedBoxSizes;
+      //currentComputed = aComputedBoxSizes;
     } else {
       currentBox->next      = new (aState) nsBoxSizeSpecial();
-      currentComputed->next = new (aState) nsComputedBoxSizeSpecial();
+      //currentComputed->next = new (aState) nsComputedBoxSizeSpecial();
 
       currentBox      = currentBox->next;
-      currentComputed = currentComputed->next;
+      //currentComputed = currentComputed->next;
     }
 
     nscoord flex = 0;    
@@ -615,8 +615,8 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
     currentBox->flex = flex;
     currentBox->collapsed = collapsed;
-    currentComputed->resized = PR_FALSE;
-    currentComputed->size = 0;
+    //currentComputed->resized = PR_FALSE;
+    //currentComputed->size = 0;
 
     if (flex > 0) 
        aFlexes++;
@@ -1306,11 +1306,11 @@ nsSprocketLayout::GetDefaultFlex(PRInt32& aFlex)
 }
 
 void
-nsBoxSize::Add(nsSize minSize, 
-               nsSize prefSize,
-               nsSize maxSize,
-               nscoord ascent,
-               nscoord flex,
+nsBoxSize::Add(const nsSize& minSize, 
+               const nsSize& prefSize,
+               const nsSize& maxSize,
+               nscoord aAscent,
+               nscoord aFlex,
                PRBool aIsHorizontal)
 {
   nscoord pref2;
@@ -1335,6 +1335,10 @@ nsBoxSize::Add(nsSize minSize,
 
   if (max2 < max)
     max = max2;
+
+  flex = aFlex;
+  if (aAscent > ascent)
+    ascent = aAscent;
 }
 
 void
