@@ -3291,7 +3291,6 @@ nsChromeRegistry::CheckForNewChrome()
     if (dataBuffer) {
       PRInt32 bufferSize = PR_Read(file, dataBuffer, finfo.size);
       if (bufferSize > 0) {
-        dataBuffer[bufferSize] = '\r'; //  be sure to terminate in a delimiter
         rv = ProcessNewChromeBuffer(dataBuffer, bufferSize);
       }
       delete [] dataBuffer;
@@ -3333,32 +3332,32 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
     chromeType = aBuffer;
     while (aBuffer < bufferEnd && *aBuffer != ',')
       ++aBuffer;
-    if (aBuffer >= bufferEnd)
-      break;
     *aBuffer = '\0';
 
     chromeProfile = ++aBuffer;
-    while (aBuffer < bufferEnd && *aBuffer != ',')
-      ++aBuffer;
     if (aBuffer >= bufferEnd)
       break;
+
+    while (aBuffer < bufferEnd && *aBuffer != ',')
+      ++aBuffer;
     *aBuffer = '\0';
 
     chromeLocType = ++aBuffer;
-    while (aBuffer < bufferEnd && *aBuffer != ',')
-      ++aBuffer;
     if (aBuffer >= bufferEnd)
       break;
+
+    while (aBuffer < bufferEnd && *aBuffer != ',')
+      ++aBuffer;
     *aBuffer = '\0';
 
     chromeLocation = ++aBuffer;
-    while (aBuffer < bufferEnd && (*aBuffer != '\r' && *aBuffer != '\n'))
-      ++aBuffer;
     if (aBuffer >= bufferEnd)
       break;
-    while (*--aBuffer == ' ')
-      ;
-    *++aBuffer = '\0';
+
+    while (aBuffer < bufferEnd &&
+           (*aBuffer != '\r' && *aBuffer != '\n' && *aBuffer != ' '))
+      ++aBuffer;
+    *aBuffer = '\0';
 
     // process the parsed line
     isSelection = select.Equals(chromeLocType);
