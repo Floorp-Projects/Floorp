@@ -22,7 +22,8 @@
 
 /*
 
-
+  A "prototype" document that stores shared document information
+  for the XUL cache.
 
 */
 
@@ -35,6 +36,7 @@
 #include "nsISupportsArray.h"
 #include "nsIURI.h"
 #include "nsIXULPrototypeDocument.h"
+#include "nsJSUtils.h"
 #include "nsString2.h"
 #include "nsVoidArray.h"
 #include "nsXULElement.h"
@@ -112,16 +114,13 @@ protected:
     NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
     static JSClass gSharedGlobalClass;
-
-    static void PR_CALLBACK
-    FinalizeScriptObject(JSContext* cx, JSObject* obj);
 };
 
 JSClass nsXULPrototypeDocument::gSharedGlobalClass = {
     "nsXULPrototypeScript compilation scope",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  nsXULPrototypeDocument::FinalizeScriptObject
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  nsJSUtils::nsGenericFinalize
 };
 
 
@@ -388,6 +387,8 @@ nsXULPrototypeDocument::SetContext(nsIScriptContext *aContext)
 NS_IMETHODIMP
 nsXULPrototypeDocument::GetContext(nsIScriptContext **aContext)
 {
+    // This whole fragile mess is predicated on the fact that
+    // GetContext() will be called before GetScriptObject() is.
     if (! mScriptContext) {
         nsresult rv;
         rv = NS_CreateScriptContext(this, getter_AddRefs(mScriptContext));
@@ -470,21 +471,3 @@ nsXULPrototypeDocument::GetPrincipal(nsIPrincipal** aPrincipal)
     return GetDocumentPrincipal(aPrincipal);
 }
 
-//----------------------------------------------------------------------
-//
-// Implementation methods
-//
-
-void PR_CALLBACK
-nsXULPrototypeDocument::FinalizeScriptObject(JSContext* cx, JSObject* obj)
-{
-    nsXULPrototypeDocument* native =
-        NS_STATIC_CAST(nsXULPrototypeDocument*, ::JS_GetPrivate(cx, obj));
-
-    if (native) {
-        // Clear the native object's reference back to us, and release
-        // our ownership of it.
-        native->SetScriptObject(nsnull);
-        NS_RELEASE(native);
-    }
-}
