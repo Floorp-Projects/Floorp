@@ -89,6 +89,7 @@ public:
     PRBool m_isMoveOrDraftOrTemplate;
     PRBool m_allowUndo;
     PRBool m_processed;
+    nsString m_dstFolderName;      // used for copy folder.
     nsVoidArray m_copySourceArray; // array of nsCopySource
 };
 

@@ -123,6 +123,18 @@ nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
     if (m_allowUndo)
 		msgWindow->GetTransactionManager(getter_AddRefs(m_txnMgr));
 	}
+  if (type == nsCopyFoldersType)
+  {
+    // To support multiple copy folder operations to the same destination, we 
+    // need to save the leaf name of the src file spec so that FindRequest() is
+    // able to find the right request when copy finishes.
+    nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(aSupport, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsXPIDLString folderName;
+    rv = srcFolder->GetName(getter_Copies(folderName));
+    NS_ENSURE_SUCCESS(rv, rv);
+    m_dstFolderName = folderName;
+  }
   
   return rv;
 }
@@ -310,7 +322,27 @@ nsMsgCopyService::FindRequest(nsISupports* aSupport,
   for (i=0; i < cnt; i++)
   {
     copyRequest = (nsCopyRequest*) m_copyRequests.ElementAt(i);
-    if (copyRequest->m_srcSupport.get() == aSupport &&
+    if (copyRequest->m_requestType == nsCopyFoldersType)
+    {
+        // If the src is different then check next request. 
+        if (copyRequest->m_srcSupport.get() != aSupport)
+          continue;
+
+        // See if the parent of the copied folder is the same as the one when the request was made.
+        nsCOMPtr <nsIMsgFolder> parentMsgFolder;
+        nsresult rv = dstFolder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
+        if ((NS_FAILED(rv)) || !parentMsgFolder || (copyRequest->m_dstFolder.get() != parentMsgFolder))
+          continue;
+
+        // Now checks if the folder name is the same.
+        nsXPIDLString folderName;
+        rv = dstFolder->GetName(getter_Copies(folderName));
+        if (NS_FAILED(rv))
+          continue;
+        if (copyRequest->m_dstFolderName == folderName)
+          break;
+    }
+    else if (copyRequest->m_srcSupport.get() == aSupport &&
         copyRequest->m_dstFolder.get() == dstFolder)
         break;
     else
