@@ -414,7 +414,7 @@ PRInt32     cliptype;
     NS_ASSERTION(FALSE, "illegal clip combination");
   }
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
   if (cliptype == NULLREGION)
     aClipEmpty = PR_TRUE;
   else
