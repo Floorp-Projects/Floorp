@@ -173,7 +173,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   // Get the node that was clicked on.
-  nsCOMPtr<nsIDOMNode> targetNode;        
+  nsCOMPtr<nsIDOMNode> targetNode;
   mouseEvent->GetTarget( getter_AddRefs( targetNode ) );
 
   // Get the document with the popup.
@@ -205,19 +205,12 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
       }
       break;
     case eXULPopupType_context:
-#ifdef	XP_MAC
-      // XXX: Handle Mac (currently checks if CTRL key is down)
-	    PRBool	ctrlKey = PR_FALSE;
-	    mouseEvent->GetCtrlKey(&ctrlKey);
-	    if (ctrlKey == PR_TRUE)
-#else
       // Check for right mouse button down
       mouseEvent->GetButton(&button);
-      if (button == 3)
-#endif
-      {
+      if (button == 3) {
         // Time to launch a context menu.
         LaunchPopup(aMouseEvent);
+        aMouseEvent->PreventBubble();
       }
       break;
     
