@@ -19,7 +19,6 @@
 #ifndef _NS_CERTIFICATE_PRINCIPAL_H_
 #define _NS_CERTIFICATE_PRINCIPAL_H_
 #include "jsapi.h"
-#include "nsVector.h"
 #include "nsICertificatePrincipal.h"
 
 #define NS_CERTIFICATEPRINCIPALMANAGER_CID \
@@ -41,7 +40,6 @@ public:
 protected:
 	PRInt16 itsType;
 	const char * itsKey;
-	nsVector * itsCertificateArray;
 	char * itsCompanyName;
 	char * itsCertificateAuthority;
 	char * itsSerialNumber;

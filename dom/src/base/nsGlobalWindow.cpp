@@ -2971,11 +2971,9 @@ GlobalWindowImpl::GetPrincipal(nsIPrincipal **result)
                       NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
       if (NS_FAILED(rv)) 
           return NS_ERROR_FAILURE;
-      nsCOMPtr<nsIPrincipal> principal;
       if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, &mPrincipal)))
           return NS_ERROR_FAILURE;
     }
-    NS_ADDREF(mPrincipal);
   }
   *result = mPrincipal;
   NS_ADDREF(*result);

@@ -107,7 +107,18 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
                                   nsIURI *aURI,
                                   PRBool *aResult)
 {
-#if 0
+    // Temporary: only enforce if security.checkuri pref is enabled
+    nsIPref *mPrefs;
+    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
+                                 (nsISupports**) &mPrefs);
+    PRBool enabled;
+    if (NS_FAILED(mPrefs->GetBoolPref("security.checkuri", &enabled)) ||
+        !enabled) 
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
@@ -170,10 +181,6 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
             return NS_ERROR_FAILURE;
 	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
     }
-
-#else
-    *aResult = PR_TRUE;
-#endif
     return NS_OK;
 }
 
@@ -205,6 +212,44 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI,
     NS_ADDREF(*result);
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanEnableCapability(nsIPrincipal *principal, 
+                                             const char *capability, 
+                                             PRBool *result)
+{
+    return NS_ERROR_FAILURE;    // not yet implemented
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::SetCanEnableCapability(nsIPrincipal *principal, 
+                                                const char *capability, 
+                                                PRBool canEnable)
+{
+    return NS_ERROR_FAILURE;    // not yet implemented
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::EnableCapability(nsIScriptContext *cx, 
+                                          const char *capability)
+{
+    return NS_ERROR_FAILURE;    // not yet implemented
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::RevertCapability(nsIScriptContext *cx, 
+                                          const char *capability)
+{
+    return NS_ERROR_FAILURE;    // not yet implemented
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::DisableCapability(nsIScriptContext *cx, 
+                                           const char *capability)
+{
+    return NS_ERROR_FAILURE;    // not yet implemented
+}
+
 
 ////////////////////////////////////////////////
 // Methods implementing nsIXPCSecurityManager //
@@ -310,6 +355,7 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
         }
     }
 #else
+    fp = nsnull; // indicate to JS_FrameIterator to start from innermost frame
     JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
     JSStackFrame *pFrameToEndLooking   = nsnull;
 #endif
@@ -380,8 +426,20 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
                                           const char *aCapability,
-                                          PRBool* aReturn)
+                                          PRBool* aResult)
 {
+    // Temporary: only enforce if security.checkdomprops pref is enabled
+    nsIPref *mPrefs;
+    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
+                                 (nsISupports**) &mPrefs);
+    PRBool enabled;
+    if (NS_FAILED(mPrefs->GetBoolPref("security.checkdomprops", &enabled)) ||
+        !enabled) 
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
     /*
     ** Get origin of subject and object and compare.
     */
@@ -392,16 +450,19 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     nsCOMPtr<nsIPrincipal> object;
     if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))
         return NS_ERROR_FAILURE;
-
+    if (subject == object) {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
     nsCOMPtr<nsICodebasePrincipal> subjectCodebase;
     if (NS_SUCCEEDED(subject->QueryInterface(
                         NS_GET_IID(nsICodebasePrincipal),
 	                (void **) getter_AddRefs(subjectCodebase))))
     {
-        if (NS_FAILED(subjectCodebase->SameOrigin(object, aReturn)))
+        if (NS_FAILED(subjectCodebase->SameOrigin(object, aResult)))
             return NS_ERROR_FAILURE;
 
-        if (*aReturn)
+        if (*aResult)
             return NS_OK;
     }
 
@@ -410,9 +471,9 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     ** are a signed script and have permissions to do this operation.
     ** Check for that here
     */
-    if (NS_FAILED(subject->CanAccess(aCapability, aReturn)))
+    if (NS_FAILED(subject->CanAccess(aCapability, aResult)))
         return NS_ERROR_FAILURE;
-    if (*aReturn)
+    if (*aResult)
         return NS_OK;
     
     /*
@@ -426,7 +487,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
         return NS_ERROR_FAILURE;
     JS_ReportError(aCx, accessErrorMessage, spec);
     nsCRT::free(spec);
-    *aReturn = PR_FALSE;
+    *aResult = PR_FALSE;
     return NS_OK;
 }
 
@@ -451,9 +512,9 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name,
         PR_FREEIF(tmp_prop_name);
         if (PL_strcmp(secLevelString, "sameOrigin") == 0)
             secLevel = SCRIPT_SECURITY_SAME_DOMAIN_ACCESS;
-        else if (PL_strcmp(secLevelString, "all") == 0)
+        else if (PL_strcmp(secLevelString, "allAccess") == 0)
             secLevel = SCRIPT_SECURITY_ALL_ACCESS;
-        else if (PL_strcmp(secLevelString, "none") == 0)
+        else if (PL_strcmp(secLevelString, "noAccess") == 0)
             secLevel = SCRIPT_SECURITY_NO_ACCESS;
         else
             secLevel = SCRIPT_SECURITY_NO_ACCESS;
@@ -502,7 +563,17 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
 {
-#if 0
+    // Temporary: only enforce if security.checkxpconnect pref is enabled
+    nsIPref *mPrefs;
+    nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
+                                 (nsISupports**) &mPrefs);
+    PRBool enabled;
+    if (NS_FAILED(mPrefs->GetBoolPref("security.checkxpconnect", &enabled)) ||
+        !enabled) 
+    {
+        return NS_OK;
+    }
+    
     nsCOMPtr<nsIPrincipal> subject;
     if (NS_FAILED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
@@ -513,7 +584,186 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
         JS_ReportError(aJSContext, "Access denied to XPConnect service.");
         return NS_ERROR_FAILURE;
     }
-#endif
     return NS_OK;
 }
 
+
+#if 0
+static JSBool
+callCapsCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+             jsval *rval, nsCapsFn fn, char *name)
+{
+    JSString *str;
+    char *cstr;
+    struct nsTarget *target;
+
+    if (argc == 0 || !JSVAL_IS_STRING(argv[0])) {
+        JS_ReportError(cx, "String argument expected for %s.", name);
+        return JS_FALSE;
+    }
+    /*
+     * We don't want to use JS_ValueToString because we want to be able
+     * to have an object to represent a target in subsequent versions.
+     * XXX but then use of an object will cause errors here....
+     */
+    str = JSVAL_TO_STRING(argv[0]);
+    if (!str)
+        return JS_FALSE;
+
+    cstr = JS_GetStringBytes(str);
+    if (cstr == NULL)
+        return JS_FALSE;
+
+    target = nsCapsFindTarget(cstr);
+    if (target == NULL)
+        return JS_FALSE;
+    /* stack depth of 1: first frame is for the native function called */
+    if (!(*fn)(cx, target, 1)) {
+        /* XXX report error, later, throw exception */
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+ 
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
+                                        jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsIsPrivilegeEnabled,
+                        isPrivilegeEnabledStr);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                     jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsEnablePrivilege,
+                        enablePrivilegeStr);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                      jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsDisablePrivilege,
+                        disablePrivilegeStr);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                     jsval *argv, jsval *rval)
+{
+    return callCapsCode(cx, obj, argc, argv, rval, nsCapsRevertPrivilege,
+                        revertPrivilegeStr);
+}
+
+static JSFunctionSpec PrivilegeManager_static_methods[] = {
+    { isPrivilegeEnabledStr, netscape_security_isPrivilegeEnabled,   1},
+    { enablePrivilegeStr,    netscape_security_enablePrivilege,      1},
+    { disablePrivilegeStr,   netscape_security_disablePrivilege,     1},
+    { revertPrivilegeStr,    netscape_security_revertPrivilege,      1},
+    {0}
+};
+
+JSBool
+lm_InitSecurity(MochaDecoder *decoder)
+{
+    JSContext  *cx;
+    JSObject   *obj;
+    JSObject   *proto;
+    JSClass    *objectClass;
+    jsval      v;
+    JSObject   *securityObj;
+
+    /*
+     * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege,
+     * et. al. so that code that worked with 4.0 can still work.
+     */
+
+    /*
+     * Find Object.prototype's class by walking up the window object's
+     * prototype chain.
+     */
+    cx = decoder->js_context;
+    obj = decoder->window_object;
+    while (proto = JS_GetPrototype(cx, obj))
+        obj = proto;
+    objectClass = JS_GetClass(cx, obj);
+
+    if (!JS_GetProperty(cx, decoder->window_object, "netscape", &v))
+        return JS_FALSE;
+    if (JSVAL_IS_OBJECT(v)) {
+        /*
+         * "netscape" property of window object exists; must be LiveConnect
+         * package. Get the "security" property.
+         */
+        obj = JSVAL_TO_OBJECT(v);
+        if (!JS_GetProperty(cx, obj, "security", &v) || !JSVAL_IS_OBJECT(v))
+            return JS_FALSE;
+        securityObj = JSVAL_TO_OBJECT(v);
+    } else {
+        /* define netscape.security object */
+        obj = JS_DefineObject(cx, decoder->window_object, "netscape",
+                              objectClass, NULL, 0);
+        if (obj == NULL)
+            return JS_FALSE;
+        securityObj = JS_DefineObject(cx, obj, "security", objectClass,
+                                      NULL, 0);
+        if (securityObj == NULL)
+            return JS_FALSE;
+    }
+
+    /* Define PrivilegeManager object with the necessary "static" methods. */
+    obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass,
+                          NULL, 0);
+    if (obj == NULL)
+        return JS_FALSE;
+
+    return JS_DefineFunctions(cx, obj, PrivilegeManager_static_methods);
+}
+
+JSBool lm_CheckSetParentSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSObject *newParent;
+
+    if (!JSVAL_IS_OBJECT(*vp))
+        return JS_TRUE;
+    newParent = JSVAL_TO_OBJECT(*vp);
+    if (newParent) {
+        const char *oldOrigin = lm_GetObjectOriginURL(cx, obj);
+        const char *newOrigin = lm_GetObjectOriginURL(cx, newParent);
+        if (!sameOrigins(cx, oldOrigin, newOrigin))
+            return JS_TRUE;
+    } else {
+        if (!JS_InstanceOf(cx, obj, &lm_layer_class, 0) &&
+            !JS_InstanceOf(cx, obj, &lm_window_class, 0))
+        {
+            return JS_TRUE;
+        }
+        if (lm_GetContainerPrincipals(cx, obj) == NULL) {
+            JSPrincipals *principals;
+            principals = lm_GetInnermostPrincipals(cx, obj, NULL);
+            if (principals == NULL)
+                return JS_FALSE;
+            lm_SetContainerPrincipals(cx, obj, principals);
+        }
+    }
+    return JS_TRUE;
+}
+
+752 JSBool win_check_access(JSContext *cx, JSObject *obj, jsval id,
+753                         JSAccessMode mode, jsval *vp)
+754 {
+755     if(mode == JSACC_PARENT)  {
+756         return lm_CheckSetParentSlot(cx, obj, id, vp);
+757     }
+758     return JS_TRUE;
+759 }
+760 
+761 JSClass lm_window_class = {
+762     "Window", JSCLASS_HAS_PRIVATE,
+763     JS_PropertyStub, JS_PropertyStub, win_getProperty, win_setProperty,
+764     win_list_properties, win_resolve_name, JS_ConvertStub, win_finalize,
+765     NULL, win_check_access
+766 };
+#endif

@@ -25,6 +25,16 @@ interface nsIURI;
 [uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
 interface nsIScriptSecurityManager : nsISupports
 {
+    /**
+     * Checks whether the currently executing script can access the given 
+     * property.
+     *
+     * @param cx The current active script context
+     * @param obj The object that is being accessed
+     * @param prop The property being accessed
+     * @param isWrite True if write access is being attempted
+     * @return True if access is granted
+     */
 	boolean CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
 	                          [const] in string prop, in boolean isWrite);
 
@@ -33,6 +43,17 @@ interface nsIScriptSecurityManager : nsISupports
     nsIPrincipal GetSystemPrincipal();
 
     nsIPrincipal CreateCodebasePrincipal(in nsIURI aURI);
+
+    boolean CanEnableCapability(in nsIPrincipal principal, in string capability);
+
+    void SetCanEnableCapability(in nsIPrincipal principal, in string capability,
+                                in boolean canEnable);
+
+    void EnableCapability(in nsIScriptContext cx, in string capability);
+
+    void RevertCapability(in nsIScriptContext cx, in string capability);
+
+    void DisableCapability(in nsIScriptContext cx, in string capability);
 };
 
 %{C++
