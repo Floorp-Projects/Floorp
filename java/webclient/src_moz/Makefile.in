@@ -1,0 +1,86 @@
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH		= ../../..
+topsrcdir	= $(DEPTH)
+srcdir		= $(topsrcdir)/java/webclient/src_moz
+VPATH		= $(topsrcdir)/java/webclient/src_moz
+
+JAVAHOME        = $(JDKHOME)
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME	= webclient
+
+CPPSRCS		= \
+    jni_util.cpp  \
+    jni_util_export.cpp  \
+    rdf_util.cpp  \
+    dom_util.cpp  \
+    nsActions.cpp  \
+    CurrentPageImpl.cpp  \
+    HistoryImpl.cpp  \
+    BookmarksImpl.cpp  \
+    WrapperFactoryImpl.cpp  \
+    WindowControlImpl.cpp  \
+    NavigationImpl.cpp  \
+    CBrowserContainer.cpp  \
+    NativeEventThread.cpp  \
+    RDFEnumeration.cpp  \
+    RDFTreeNode.cpp  \
+    ISupportsPeer.cpp  \
+    nsSetupRegistry.cpp  \
+    $(NULL)
+
+include $(topsrcdir)/config/config.mk
+
+include $(topsrcdir)/config/rules.mk
+
+JAVA_CLS= \
+	org.mozilla.webclient.wrapper_native.BookmarksImpl \
+	org.mozilla.webclient.wrapper_native.CurrentPageImpl \
+	org.mozilla.webclient.wrapper_native.HistoryImpl \
+	org.mozilla.webclient.wrapper_native.WrapperFactoryImpl \
+	org.mozilla.webclient.wrapper_native.NavigationImpl \
+	org.mozilla.webclient.wrapper_native.RDFEnumeration \
+	org.mozilla.webclient.wrapper_native.RDFTreeNode \
+	org.mozilla.webclient.wrapper_native.ISupportsPeer \
+	org.mozilla.webclient.wrapper_native.WindowControlImpl \
+	org.mozilla.webclient.wrapper_native.NativeEventThread \
+	$(NULL)
+
+JAVAH_PROG=$(JDKHOME)/bin/javah
+JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
+
+export::
+	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
+
+clobber::
+	rm -f BookmarksImpl.h
+	rm -f CurrentPageImpl.h
+	rm -f HistoryImpl.h
+	rm -f WrapperFactoryImpl.h
+	rm -f NavigationImpl.h
+	rm -f WindowControlImpl.h
+	rm -f NativeEventThread.h
+	rm -f RDFEnumeration.h
+	rm -f RDFTreeNode.h
+	rm -f ISupportsPeer.h
+	rm -f nsSetupRegistry.cpp
+

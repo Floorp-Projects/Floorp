@@ -2,6 +2,6 @@ java/Makefile
 java/util/Makefile
 java/util/classes/Makefile
 java/webclient/Makefile
-java/webclient/classes/Makefile
-java/webclient/src/Makefile
-java/webclient/src/motif/Makefile
+java/webclient/classes_spec/Makefile
+java/webclient/src_moz/Makefile
+java/webclient/src_moz/motif/Makefile
