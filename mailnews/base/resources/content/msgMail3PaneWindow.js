@@ -592,7 +592,6 @@ function GetSelectedMessage()
 
 function ThreadPaneOnClick(event)
 {
-dump("YUMMY!\n");
     var targetclass = event.target.getAttribute('class');
     debug('targetclass = ' + targetclass + '\n');
 
@@ -612,8 +611,7 @@ dump("YUMMY!\n");
     }
 	else if(event.detail == 2)
 	{
-    dump("Howdy partner.\n");
-		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
+    ThreadPaneDoubleClick(event.target.parentNode.parentNode);
 	}
 }
 
