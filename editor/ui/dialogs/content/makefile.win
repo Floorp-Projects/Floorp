@@ -20,6 +20,7 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
+	$(MAKE_INSTALL) EdDialogCommon.js     $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdLinkProps.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdLinkProps.js        $(DIST)\bin\chrome\editor\dialogs\content\default
 	$(MAKE_INSTALL) EdImageProps.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
@@ -28,6 +29,7 @@ install::
 	$(MAKE_INSTALL) EdCharacterProps.js   $(DIST)\bin\chrome\editor\dialogs\content\default
 
 clobber::
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDialogCommon.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdLinkProps.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdLinkProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdImageProps.xul	

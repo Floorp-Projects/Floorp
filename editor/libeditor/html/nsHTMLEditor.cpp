@@ -1439,8 +1439,10 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
             
             iter->Next();
           }
-          if (!bNodeFound)
-            printf("No nodes of tag name = %s were found in selection\n", aTagName);
+          if (!bNodeFound) {
+            char TagBuf[50] = "";
+            printf("No nodes of tag name = %s were found in selection\n", aTagName.ToCString(TagBuf, 50));
+          }
         }
       } else {
         // Should never get here?
@@ -1525,7 +1527,20 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   nsCOMPtr<nsIDOMNode> parentSelectedNode;
   PRInt32 offsetOfNewNode;
 
+  // Clear current selection.
+  // Should put caret at anchor point?
+  if (!aDeleteSelection)
+  {
+    nsCOMPtr<nsIDOMSelection>selection;
+    nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(res) && selection)
+    {
+      selection->ClearSelection();    
+    }
+  }
+
   DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
+  
   if (NS_SUCCEEDED(result))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
