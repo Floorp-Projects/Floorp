@@ -145,8 +145,9 @@ nsHTMLLIElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (nsGenericHTMLElement::ParseEnumValue(aValue, kListItemTypeTable,
-                                             aResult)) {
+    if (nsGenericHTMLElement::ParseCaseSensitiveEnumValue(aValue,
+                                                          kListItemTypeTable,
+                                                          aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
