@@ -51,10 +51,6 @@
 #include "netCore.h"
 #include "prprf.h"
 
-#if defined(XP_WIN)
-#include <windows.h> // ::IsDBCSLeadByte need
-#endif
-
 //----------------------------------------------------------------------------
 // Init/Shutdown
 //----------------------------------------------------------------------------
@@ -292,17 +288,6 @@ net_CoalesceDirs(netCoalesceFlags flags, char* path)
             (*fwdPtr != '?') && 
             (*fwdPtr != '#'); ++fwdPtr)
     {
-
-#if defined(XP_WIN)
-        // At first, If this is DBCS character, it skips next character.
-        if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') 
-        {
-            *urlPtr++ = *fwdPtr++;
-            *urlPtr++ = *fwdPtr;
-            continue;
-        }
-#endif
-
         if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/' )
         {
             // remove . followed by slash

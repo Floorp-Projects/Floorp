@@ -83,7 +83,7 @@ NS_HIDDEN_(nsresult) net_ParseFileURL(const nsACString &inURL,
                                       nsACString &outFileBaseName,
                                       nsACString &outFileExtension);
 
-/* handle .. in dirs while resolving URLs */
+/* handle .. in dirs while resolving URLs (path is UTF-8) */
 NS_HIDDEN_(void) net_CoalesceDirs(netCoalesceFlags flags, char* path);
 
 /**
