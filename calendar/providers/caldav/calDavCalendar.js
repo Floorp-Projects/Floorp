@@ -608,15 +608,13 @@ calDavCalendar.prototype = {
             // (think of the children!!)  This is a gross hack, but it'll go
             // away once we start using REPORT or SEARCH
             // 
-            if (aResource.path ==
-                eventDirUri.path.substr(0, eventDirUri.path.length)) {
+            if (aResource.path == eventDirUri.path) {
                 return;
             }
 
             // make a note that this request is pending
             ++itemsPending;
             
-            // XXX doesn't exist yet
             webSvc.getToString(new WebDavResource(aResource), getListener, 
                                null);
 
