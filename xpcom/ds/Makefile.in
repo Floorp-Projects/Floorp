@@ -84,6 +84,9 @@ EXPORTS		= \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
 		nsQuickSort.h \
+    nsAReadableString.h \
+    nsAWritableString.h \
+    nsSharedString.h \
 		nsStr.h \
 		nsString.h \
 		nsString2.h \
