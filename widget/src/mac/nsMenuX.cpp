@@ -60,6 +60,12 @@
 
 #include "nsDynamicMDEF.h"
 
+
+// keep track of the menuID of the menu the mouse is currently over. Yes, this is ugly,
+// but necessary to work around bugs in Carbon with ::MenuSelect() sometimes returning
+// the wrong menuID.
+static MenuID gCurrentlyTrackedMenuID = 0;
+
 const PRInt16 kMacMenuIDX = nsMenuBarX::kAppleMenuID + 1;
 static PRInt16 gMacMenuIDCountX = kMacMenuIDX;
 static PRBool gConstructingMenu = PR_FALSE;
@@ -190,8 +196,6 @@ NS_METHOD nsMenuX::SetLabel(const nsAReadableString &aText)
     mMacMenuHandle = NSStringNewMenu(mMacMenuID, mLabel);
   }
   
-  //printf("MacMenuID = %d", mMacMenuID);
-
   return NS_OK;
 }
 
@@ -415,8 +419,11 @@ nsEventStatus nsMenuX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   //printf("MenuItemSelected called \n");
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
-  // Determine if this is the correct menu to handle the event
-  PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
+  // Determine if this is the correct menu to handle the event. We can't use
+  // the HiWord of the command because of MenuSelect bugs in Carbon. Use
+  // the menuID we've been tracking manually instead.
+  // PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
+  MenuID menuID = gCurrentlyTrackedMenuID;
 
   if( menuID == nsMenuBarX::kAppleMenuID ) {
     PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
@@ -471,6 +478,7 @@ nsEventStatus nsMenuX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
     PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
     
     nsCOMPtr<nsISupports>     menuSupports = getter_AddRefs(mMenuItemsArray.ElementAt(menuItemID - 1));
+    NS_ASSERTION(menuSupports, "Somehow our item list was torn down prematurely");
     nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menuSupports);
     if (menuListener)
     {
@@ -522,7 +530,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
     if (mIsHelpMenu && mConstructed){
       RemoveAll();
       mConstructed = false;
-      mNeedsRebuild = PR_TRUE;
+      SetRebuild(PR_TRUE);
     }
 
     // Open the node.
@@ -688,12 +696,10 @@ nsEventStatus nsMenuX::MenuDestruct(const nsMenuEvent & aMenuEvent)
   PRBool keepProcessing = OnDestroy();
   if ( keepProcessing ) {
     if(mNeedsRebuild) {
-        RemoveAll();
         mConstructed = false;
         //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
-        // Close the node.
-        mNeedsRebuild = PR_TRUE;
     } 
+    // Close the node.
     mMenuContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::open, PR_TRUE);
 
     OnDestroyed();
@@ -798,11 +804,19 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
       menuEvent.widget = nsnull;
       menuEvent.time = PR_IntervalNow();
       menuEvent.mCommand = (PRUint32) menuRef;
-      if (kind == kEventMenuOpening)
+      if (kind == kEventMenuOpening) {
+        gCurrentlyTrackedMenuID = ::GetMenuID(menuRef);    // remember which menu ID we're over for later
         listener->MenuSelected(menuEvent);
+      }
       else
         listener->MenuDeselected(menuEvent);
     }
+  }
+  else if ( kind == kEventMenuTargetItem ) {
+    // remember which menu ID we're over for later
+    MenuRef menuRef;
+    ::GetEventParameter(event, kEventParamDirectObject, typeMenuRef, NULL, sizeof(menuRef), NULL, &menuRef);
+    gCurrentlyTrackedMenuID = ::GetMenuID(menuRef);
   }
   
   return result;
@@ -1319,7 +1333,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
   nsCOMPtr<nsIMenuBar> menubarParent = do_QueryInterface(mParent);
 
   if(aAttribute == nsWidgetAtoms::disabled) {
-    mNeedsRebuild = PR_TRUE;
+    SetRebuild(PR_TRUE);
    
     nsAutoString valueString;
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, valueString);
@@ -1331,7 +1345,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     ::DrawMenuBar();
   } 
   else if(aAttribute == nsWidgetAtoms::label) {
-    mNeedsRebuild = PR_TRUE;
+    SetRebuild(PR_TRUE);
     
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
 
@@ -1348,7 +1362,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
 
   }
   else if(aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
-      mNeedsRebuild = PR_TRUE;
+    SetRebuild(PR_TRUE);
       
       nsAutoString hiddenValue, collapsedValue;
       mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
@@ -1398,7 +1412,7 @@ nsMenuX :: ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aI
   if (gConstructingMenu)
     return NS_OK;
 
-  mNeedsRebuild = PR_TRUE;
+    SetRebuild(PR_TRUE);
 
   RemoveItem(aIndexInContainer);
   mManager->Unregister(aChild);
@@ -1414,7 +1428,7 @@ nsMenuX :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 a
   if(gConstructingMenu)
     return NS_OK;
 
-  mNeedsRebuild = PR_TRUE;
+    SetRebuild(PR_TRUE);
   
   return NS_OK;
   
