@@ -25,8 +25,7 @@
 #include "nsFrame.h"
 #include "nsVoidArray.h"
 #include "nsTextRun.h"
-#include "nsIFontMetrics.h"
-#include "nsCOMPtr.h"
+#include "nsLineBox.h"
 
 class nsISpaceManager;
 class nsBlockReflowState;
@@ -110,7 +109,7 @@ public:
     PushFrame(aFrame);
   }
 
-  void VerticalAlignFrames(nsRect& aLineBoxResult,
+  void VerticalAlignFrames(nsLineBox* aLineBox,
                            nsSize& aMaxElementSizeResult);
 
   PRBool TrimTrailingWhiteSpace();
@@ -234,6 +233,7 @@ protected:
   nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
+  nsLineBox* mLineBox;
   PRPackedBool mEndsInWhiteSpace;
   PRPackedBool mUnderstandsWhiteSpace;
   PRPackedBool mTextStartsWithNBSP;
@@ -300,6 +300,7 @@ protected:
     PRUint8 mVerticalAlign;
     PRPackedBool mIsTextFrame;
     PRPackedBool mIsNonEmptyTextFrame;
+    PRPackedBool mIsNonWhitespaceTextFrame;
     PRPackedBool mIsLetterFrame;
     PRPackedBool mIsSticky;
 
@@ -333,8 +334,6 @@ public:
     PRPackedBool mChangedFrameDirection;
     PRPackedBool mZeroEffectiveSpanBox;
     PRPackedBool mContainsFloater;
-    PRPackedBool mIgnoreMinLineHeight;
-    nsCOMPtr<nsIFontMetrics> mQuirksModeFontMetrics;
 
     nscoord mLeftEdge;
     nscoord mX;
@@ -401,19 +400,6 @@ protected:
   void UpdateFrames();
 
   void VerticalAlignFrames(PerSpanData* psd);
-
-  /** compute the data needed to adjust the line height (in VerticalAlignFrames)
-    * primarily in quirks (Nav4 compatibility) mode.
-    * @param aRC      the rendering context for the span
-    * @param aPSD     PerSpanData object for the current span
-    * @param aFrame   the frame at which the computation should begin
-    * @param aIgnore  [OUT] PR_TRUE indicates that the block's min height should be ignored
-    *                       PR_FALSE indicates that the block's min height still has effect
-    */
-  void ComputeQuirksModeLineHeightData(nsIRenderingContext *aRC, 
-                                       PerSpanData *aPSD, 
-                                       nsIFrame    *aFrame, 
-                                       PRBool      *aIgnore);
 
   void PlaceTopBottomFrames(PerSpanData* psd,
                             nscoord aDistanceFromTop,

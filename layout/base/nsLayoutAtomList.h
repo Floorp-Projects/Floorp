@@ -84,6 +84,7 @@ LAYOUT_ATOM(selectScrolledContentPseudo, ":-moz-select-scrolled-content")
   // Alphabetical list of frame types
 LAYOUT_ATOM(areaFrame, "AreaFrame")
 LAYOUT_ATOM(blockFrame, "BlockFrame")
+LAYOUT_ATOM(brFrame, "BRFrame")
 LAYOUT_ATOM(bulletFrame, "BulletFrame")
 LAYOUT_ATOM(hrFrame, "HRFrame")
 LAYOUT_ATOM(htmlFrameInnerFrame, "htmlFrameInnerFrame")
