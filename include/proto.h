@@ -271,7 +271,7 @@ extern void SI_RestoreOldSignonData
 extern int SI_LoadSignonData(char *filename);
 extern int SI_SaveSignonData(char *filename);
 extern void SI_RemoveAllSignonData();
-extern void SI_RemoveUser(char *URLName, char *userName, Bool save);
+extern Bool SI_RemoveUser(char *URLName, char *userName, Bool save);
 extern int SI_PromptUsernameAndPassword
     (MWContext *context, char *buf,
     char **username, char **password, char *URLName);
