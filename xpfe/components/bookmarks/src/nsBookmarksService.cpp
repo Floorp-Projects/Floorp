@@ -1243,6 +1243,10 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 		}
 		nsCRT::free(cURL);
 	}
+	if (docCharset)
+	{
+		nsCRT::free(docCharset);
+	}
 	return(rv);
 }
 
