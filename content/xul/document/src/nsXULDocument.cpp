@@ -1683,10 +1683,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
 
     result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
     if (NS_SUCCEEDED(result) && frame) {
-        nsCOMPtr<nsIPresContext>  presContext;
-
-        aShell->GetPresContext(getter_AddRefs(presContext));
-        nsIView* view = frame->GetView(presContext);
+        nsIView* view = frame->GetView();
         // If we have a view check if it's scrollable. If not,
         // just use the view size itself
         if (view) {
@@ -1696,31 +1693,25 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
                 scrollableView->GetScrolledView(view);
             }
 
-            nsRect r;
-            result = view->GetBounds(r);
-            if (NS_SUCCEEDED(result)) {
-                size.height = r.height;
-                size.width = r.width;
-            }
+            nsRect r = view->GetBounds();
+            size.height = r.height;
+            size.width = r.width;
         }
         // If we don't have a view, use the frame size
         else {
-            result = frame->GetSize(size);
+            size = frame->GetSize();
         }
 
         // Convert from twips to pixels
+        nsCOMPtr<nsIPresContext> context;
+        result = aShell->GetPresContext(getter_AddRefs(context));
+
         if (NS_SUCCEEDED(result)) {
-            nsCOMPtr<nsIPresContext> context;
-
-            result = aShell->GetPresContext(getter_AddRefs(context));
-
-            if (NS_SUCCEEDED(result)) {
-                float scale;
-                context->GetTwipsToPixels(&scale);
-
-                *aWidth = NSTwipsToIntPixels(size.width, scale);
-                *aHeight = NSTwipsToIntPixels(size.height, scale);
-            }
+            float scale;
+            context->GetTwipsToPixels(&scale);
+            
+            *aWidth = NSTwipsToIntPixels(size.width, scale);
+            *aHeight = NSTwipsToIntPixels(size.height, scale);
         }
     }
     else {
@@ -2268,8 +2259,7 @@ nsXULDocument::StartLayout(void)
         // dropping dirty rects if refresh is disabled rather than
         // accumulating them until refresh is enabled and then
         // triggering a repaint...
-        nsCOMPtr<nsIViewManager> vm;
-        shell->GetViewManager(getter_AddRefs(vm));
+        nsIViewManager* vm = shell->GetViewManager();
         if (vm) {
             nsCOMPtr<nsIContentViewer> contentViewer;
             nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));

@@ -330,14 +330,14 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
         if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
             (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) 
         {
-          currFrame->GetContent(getter_AddRefs(newFocus));
+          newFocus = currFrame->GetContent();
           nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
           if (domElement) {
             element = domElement;
             break;
           }
         }
-        currFrame->GetParent(&currFrame);
+        currFrame = currFrame->GetParent();
     } 
     nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
     nsCOMPtr<nsIEventStateManager> esm;

@@ -1334,12 +1334,10 @@ nsXMLContentSink::StartLayout()
       shell->InitialReflow(r.width, r.height);
 
       // Now trigger a refresh
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
+      nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
         RefreshIfEnabled(vm);
       }
-
     }
   }
 
@@ -1387,8 +1385,7 @@ nsXMLContentSink::StartLayout()
       nsCOMPtr<nsIPresShell> shell;
       mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
-        nsCOMPtr<nsIViewManager> vm;
-        shell->GetViewManager(getter_AddRefs(vm));
+        nsIViewManager* vm = shell->GetViewManager();
         if (vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);

@@ -584,11 +584,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   nsIFrame* next = frame;
 
   do {
-    nsRect rect;
-    next->GetRect(rect);
-
-    rcFrame.UnionRect(rcFrame, rect);
-
+    rcFrame.UnionRect(rcFrame, next->GetRect());
     next->GetNextInFlow(&next);
   } while (next);
 
@@ -598,12 +594,11 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
   // Find the frame parent whose content's tagName either matches
   // the tagName passed in or is the document element.
-  nsCOMPtr<nsIContent> content;
   nsIFrame* parent = nsnull;
   PRBool done = PR_FALSE;
   nsCOMPtr<nsIAtom> tag;
 
-  frame->GetContent(getter_AddRefs(content));
+  nsIContent* content = frame->GetContent();
 
   if (content) {
     content->GetTag(getter_AddRefs(tag));
@@ -621,7 +616,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
     PRBool is_absolutely_positioned = PR_FALSE;
     PRBool is_positioned = PR_FALSE;
 
-    frame->GetOrigin(origin);
+    origin = frame->GetPosition();
 
     const nsStyleDisplay* display = frame->GetStyleDisplay();
 
@@ -638,7 +633,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
       is_positioned = PR_TRUE;
     }
 
-    frame->GetParent(&parent);
+    parent = frame->GetParent();
 
     while (parent) {
       display = parent->GetStyleDisplay();
@@ -647,7 +642,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
         // Stop at the first *parent* that is positioned (fixed,
         // absolute, or relatiive)
 
-        parent->GetContent(aOffsetParent);
+        *aOffsetParent = parent->GetContent();
+        NS_IF_ADDREF(*aOffsetParent);
 
         break;
       }
@@ -656,12 +652,10 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
       // right coordinate system
 
       if (!is_absolutely_positioned) {
-        nsPoint parentOrigin;
-        parent->GetOrigin(parentOrigin);
-        origin += parentOrigin;
+        origin += parent->GetPosition();
       }
 
-      parent->GetContent(getter_AddRefs(content));
+      content = parent->GetContent();
 
       if (content) {
         // If we've hit the document element, break here
@@ -682,7 +676,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
         }
       }
 
-      parent->GetParent(&parent);
+      parent = parent->GetParent();
     }
 
     if (is_absolutely_positioned && !*aOffsetParent) {
@@ -1013,7 +1007,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
       // the root scrollable frame.
 
       do {
-        frame->GetParent(&frame);
+        frame = frame->GetParent();
 
         if (!frame) {
           break;
@@ -1177,8 +1171,7 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
 const nsSize
 nsGenericHTMLElement::GetClientAreaSize(nsIFrame *aFrame)
 {
-  nsRect rect;
-  aFrame->GetRect(rect);
+  nsRect rect = aFrame->GetRect();
 
   const nsStyleBorder* border = aFrame->GetStyleBorder();
 
@@ -1204,10 +1197,9 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
 
   if (scrollView) {
     const nsIView *view = nsnull;
-    nsRect r;
 
     scrollView->GetClipView(&view);
-    view->GetBounds(r);
+    nsRect r = view->GetBounds();
 
     *aClientHeight = NSTwipsToIntPixels(r.height, t2p);
   } else if (mNodeInfo->Equals(nsHTMLAtoms::body) && frame) {
@@ -1236,10 +1228,9 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
 
   if (scrollView) {
     const nsIView *view = nsnull;
-    nsRect r;
 
     scrollView->GetClipView(&view);
-    view->GetBounds(r);
+    nsRect r = view->GetBounds();
 
     *aClientWidth = NSTwipsToIntPixels(r.width, t2p);
   } else if (mNodeInfo->Equals(nsHTMLAtoms::body) && frame) {

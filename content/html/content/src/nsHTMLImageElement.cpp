@@ -408,8 +408,7 @@ nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
   if (frame) {
     // XXX we could put an accessor on nsIImageFrame to return its
     // mComputedSize.....
-    nsSize size;
-    frame->GetSize(size);
+    nsSize size = frame->GetSize();
 
     nsMargin margin;
     frame->CalcBorderPadding(margin);

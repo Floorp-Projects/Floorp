@@ -4002,8 +4002,7 @@ HTMLContentSink::DidProcessAToken(void)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager* vm = shell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     PRUint32 eventTime;
     nsCOMPtr<nsIWidget> widget;
@@ -4193,8 +4192,7 @@ HTMLContentSink::StartLayout()
       shell->InitialReflow(r.width, r.height);
 
       // Now trigger a refresh
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
+      nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
         RefreshIfEnabled(vm);
       }
@@ -4236,8 +4234,7 @@ HTMLContentSink::StartLayout()
       nsCOMPtr<nsIPresShell> shell;
       mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
-        nsCOMPtr<nsIViewManager> vm;
-        shell->GetViewManager(getter_AddRefs(vm));
+        nsIViewManager* vm = shell->GetViewManager();
         if (vm) {
           nsIView* rootView = nsnull;
           vm->GetRootView(rootView);
