@@ -60,6 +60,10 @@
         <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
         <textbox id="name" oninput="onFieldInput();"/>
       </row>
+      <row align="center" id="keywordRow">
+        <label value="&keyword.label;" accesskey="&keyword.accesskey;" control="keyword"/>
+        <textbox id="keyword" oninput="onFieldInput();"/>
+      </row>
       <row align="center">
         <label id="createinlabel" value="&createin.label;" accesskey="&createin.accesskey;" control="select-menu"/>
         <menulist id="select-menu" class="folder-icon"

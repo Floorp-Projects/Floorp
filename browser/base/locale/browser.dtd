@@ -107,16 +107,25 @@
 <!ENTITY toolsMenu.label              "Tools">
 <!ENTITY toolsMenu.accesskey          "T"> 
 
+<!ENTITY keywordfield.label           "Add a Keyword for this Search...">
+<!ENTITY keywordfield.accesskey       "K">
+<!ENTITY search.label                 "Web Search">
+<!ENTITY search.accesskey             "S">
 <!ENTITY downloads.label              "Downloads">
 <!ENTITY downloads.tooltip            "Display the progress of ongoing downloads">
 <!ENTITY downloads.accesskey          "D">
-<!ENTITY downloads.commandkey         "e">
+<!ENTITY downloads.commandkey         "y">
+<!ENTITY extensions.label             "Extensions">
+<!ENTITY extensions.tooltip           "Show and Manage installed Extensions">
+<!ENTITY extensions.accesskey         "E">
+<!ENTITY themes.label                 "Themes">
+<!ENTITY themes.tooltip               "Change the Theme">
+<!ENTITY themes.accesskey             "T">
 
 <!ENTITY javaConsoleCmd.label         "Java Console">
 <!ENTITY javaConsoleCmd.accesskey     "J">
-
 <!ENTITY javaScriptConsoleCmd.label   "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey "S">
+<!ENTITY javaScriptConsoleCmd.accesskey "C">
 
 <!ENTITY fileMenu.label         "File"> 
 <!ENTITY fileMenu.accesskey       "F">

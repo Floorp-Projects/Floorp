@@ -2714,6 +2714,7 @@ function nsContextMenu( xulMenu ) {
     this.target         = null;
     this.menu           = null;
     this.onTextInput    = false;
+    this.onKeywordField = false;
     this.onImage        = false;
     this.onLink         = false;
     this.onMailtoLink   = false;
@@ -2826,6 +2827,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-bookmarkpage", !( this.isTextSelected || this.onTextInput || this.onLink ) );
         this.showItem( "context-bookmarklink", this.onLink && !this.onMailtoLink );
         this.showItem( "context-searchselect", this.isTextSelected );
+        this.showItem( "context-keywordfield", this.onTextInput && this.onKeywordField );
         this.showItem( "frame", this.inFrame );
         this.showItem( "frame-sep", this.inFrame );
         this.showItem( "context-blockimage", this.onImage);
@@ -2901,6 +2903,7 @@ nsContextMenu.prototype = {
         this.onImage    = false;
         this.onMetaDataItem = false;
         this.onTextInput = false;
+        this.onKeywordField = false;
         this.imageURL   = "";
         this.onLink     = false;
         this.onMathML   = false;
@@ -2972,6 +2975,7 @@ nsContextMenu.prototype = {
                                                   this.target.src );
                } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
                  this.onTextInput = this.isTargetATextBox(this.target);
+                 this.onKeywordField = this.isTargetAKeywordField(this.target);
                }
             } else if ( this.target.localName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
@@ -3486,6 +3490,14 @@ nsContextMenu.prototype = {
       } else  {
         return(node.localName.toUpperCase() == "TEXTAREA");
       }
+    },
+    isTargetAKeywordField : function ( node )
+    {
+      var form = node.form;
+      if (!form)
+        return false;
+      var method = form.method.toUpperCase();
+      return (method == "GET" || method == "") 
     },
     
     // Determines whether or not the separator with the specified ID should be 
@@ -4408,3 +4420,53 @@ var MailIntegration = {
   }
 #endif
 };
+
+function BrowserOpenExtensions(aOpenMode)
+{
+  const EMTYPE = "Extension:Manager";
+  
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var lastEM = wm.getMostRecentWindow(EMTYPE);
+
+  var needToOpen = true;
+  var windows = wm.getEnumerator(EMTYPE);
+  while (windows.hasMoreElements()) {
+    var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
+    if (theEM.gWindowType == aOpenMode) {
+      theEM.focus();
+      needToOpen = false;
+      break;
+    }
+  }
+
+  if (needToOpen) {
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMFEATURES = "chrome,dialog=no,resizable";
+    window.openDialog(EMURL, "", EMFEATURES, aOpenMode);
+  }
+}
+
+function AddKeywordForSearchField()
+{
+  var node = document.popupNode;
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                            .getService(Components.interfaces.nsIIOService);
+  var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                      .getService(Components.interfaces.nsIURI);
+  uri.spec = node.ownerDocument.URL;
+  var keywordURL = ioService.newURI(node.form.action, node.ownerDocument.characterSet, uri);
+  var spec = keywordURL.spec;
+  spec += "?" + escape(node.name) + "=%s";
+  for (var i = 0; i < node.form.elements.length; ++i) {
+    var e = node.form.elements[i];
+    if (e.type.toLowerCase() == "text" || e.type.toLowerCase() == "hidden")
+      spec += "&" + escape(e.name) + "=" + escape(e.value);
+  }
+  dump("*** SPEC = " + spec + "\n");
+  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+             "centerscreen,chrome,dialog,resizable,dependent",
+             "", spec, null, node.ownerDocument.characterSet, null, null, 
+             false, "", true);
+}
+
