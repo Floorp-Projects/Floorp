@@ -39,10 +39,8 @@
 //#define DONT_INFORM_WEBSHELL
 
 #include "nsIServiceManager.h"
-#include "nsIDocumentLoader.h"
 #include "nsIWebShellServices.h"
 #include "nsIContentViewerContainer.h"
-#include "nsCURILoader.h"
 #include "nsObserverBase.h"
 #include "nsIParser.h"
 #include "nsString.h"
@@ -52,8 +50,6 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIWebShellServicesIID, NS_IWEB_SHELL_SERVICES_IID);
 
 //-------------------------------------------------------------------------
