@@ -1725,9 +1725,9 @@ PresShell::ContentAppended(nsIDocument *aDocument,
     // If history state has been set by session history, ask the frame manager 
     // to restore frame state for the frame hierarchy created for the chunk of
     // content that just came in.
-    nsIFrame* frame = nsnull;
+    nsIFrame* frame;
     rv = GetPrimaryFrameFor(aContainer, &frame);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && nsnull != frame)
       mFrameManager->RestoreFrameState(frame, mHistoryState);
   }
 
