@@ -120,7 +120,7 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-nsresult ns4xPluginStreamListener::CleanUpStream()
+nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
 {
   if(!mStreamStarted || mStreamCleanedUp)
     return NS_OK;
@@ -141,18 +141,17 @@ nsresult ns4xPluginStreamListener::CleanUpStream()
 
   if (callbacks->destroystream != NULL)
   {
-    // XXX need to convert status to NPReason
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
 
     NS_TRY_SAFE_CALL_RETURN(error, CallNPP_DestroyStreamProc(callbacks->destroystream,
                                                                npp,
                                                                &mNPStream,
-                                                               NPRES_DONE), lib);
+                                                               reason), lib);
 
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-    ("NPP DestroyStream called: this=%p, npp=%p, return=%d, url=%s\n",
-    this, npp, error, mNPStream.url));
+    ("NPP DestroyStream called: this=%p, npp=%p, reason=%d, return=%d, url=%s\n",
+    this, npp, reason, error, mNPStream.url));
 
     if(error != NPERR_NO_ERROR)
       return NS_ERROR_FAILURE;
@@ -607,7 +606,7 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   // see bug 91140    
   nsresult rv = NS_OK;
   if(mStreamType != nsPluginStreamType_Seek)
-    rv = CleanUpStream();
+    rv = CleanUpStream(NPRES_DONE);
   
   if(rv != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
@@ -771,7 +770,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
   // clean up open streams
   for(nsInstanceStream *is = mStreams; is != nsnull;) {
     if(is->mPluginStreamListener)
-      is->mPluginStreamListener->CleanUpStream();
+      is->mPluginStreamListener->CleanUpStream(NPRES_USER_BREAK);
 
     nsInstanceStream *next = is->mNext;
     delete is;
