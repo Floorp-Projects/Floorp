@@ -6346,6 +6346,9 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     nsCOMPtr<nsILineIterator> it; 
     nsIFrame *mainframe = this;
     nsCOMPtr<nsIFocusTracker> tracker;
+	aPresContext->GetShell(getter_AddRefs(shell));
+    if (!shell)
+      return NS_OK;
     result = shell->QueryInterface(NS_GET_IID(nsIFocusTracker),getter_AddRefs(tracker));
 
     result = mainframe->QueryInterface(NS_GET_IID(nsILineIterator),getter_AddRefs(it));
