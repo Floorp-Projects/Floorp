@@ -1,4 +1,3 @@
-# Generated automatically from Makefile.in by configure.
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -43,6 +42,10 @@ VPATH   = /cygdrive/c/photon/mozilla/toolkit
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = skin
+DIRS	= skin/win
+
+ifeq (,$(filter OS2 WINNT,$(OS_ARCH)))
+DIRS	+= skin/unix
+endif
 
 include $(topsrcdir)/config/rules.mk
