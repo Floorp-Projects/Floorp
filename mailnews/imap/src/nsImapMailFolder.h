@@ -42,8 +42,6 @@
 #include "nsMsgDBFolder.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
-#include "nsIImapExtensionSink.h"
-#include "nsIImapMiscellaneousSink.h"
 #include "nsICopyMessageListener.h"
 #include "nsIImapService.h"
 #include "nsIUrlListener.h"
@@ -193,8 +191,6 @@ class nsImapMailFolder :  public nsMsgDBFolder,
                           public nsIMsgImapMailFolder,
                           public nsIImapMailFolderSink,
                           public nsIImapMessageSink,
-                          public nsIImapExtensionSink,
-                          public nsIImapMiscellaneousSink,
                           public nsICopyMessageListener,
                           public nsIMsgFilterHitNotify,
                           public nsIJunkMailClassificationListener
@@ -300,32 +296,9 @@ public:
   NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
   NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
   
-  // nsIImapExtensionSink methods
-  NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-                                nsIMAPACLRightsInfo* aclRights);
-  
-  NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
-                                nsMsgKeyArray* keyArray,
-                                const char* msgIdString,
-                                nsIImapUrl * aUrl);
-  NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
-                              nsMsgKey aKey,
-                              nsIImapUrl * aUrl);
-  NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
-                          nsCString* messageId,
-                          nsIImapUrl * aUrl);
-  
   // nsIImapMiscellaneousSink methods
   NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
                               const char* searchHitLine);
-  NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
-  // ****
-  NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-                                    nsMsgBiffState biffState);
-  NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                            PRUint32 aMsgId, const PRUnichar *extraInfo);
-  NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
-                              ProgressInfo* aInfo);
   NS_IMETHOD MatchName(nsString *name, PRBool *matches);
   
   NS_DECL_NSIMSGFILTERHITNOTIFY

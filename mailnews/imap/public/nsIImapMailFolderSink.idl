@@ -78,28 +78,15 @@ interface nsIImapMailFolderSink : nsISupports {
   attribute boolean folderQuotaCommandIssued;
 
   /**
-   * Indicates whether the server has provided quota information on this folder.
-   * This attribute can be false if the server does not supports quotas, if the folder
-   * has never been opened, or if there are no storage quotas on this folder.
-   * If it is true, the folder has a storage quota and the folderQuotaUsedKB and
-   * folderQuotaMaxKB attributes are set to the values provided by the server.
-   */
-  attribute boolean folderQuotaDataIsValid;
+   * Set FolderQuotaData information
+   * @param aFolderQuotaRoot    The IMAP quota root for this folder, 
+   *                            as returned by the GETQUOTAROOT IMAP command.
+   * @param aFolderQuotaUsedKB  Used space, in KB, on this folder's quota root.
+   * @param aFolderQuotaMaxKB   Size, in KB, of this folder's quota root.
+   **/
+  void setFolderQuotaData(in ACString aFolderQuotaRoot, in unsigned long aFolderQuotaUsedKB, 
+                          in unsigned long aFolderQuotaMaxKB);
 
-  /**
-   * The IMAP quota root for this folder, as returned by the GETQUOTAROOT IMAP command.
-   */
-  attribute ACString folderQuotaRoot;
-
-  /**
-   * Used space, in kilobytes, on this folder's quota root.
-   */
-  attribute unsigned long folderQuotaUsedKB;
-
-  /**
-   * Size, in kilobytes, of this folder's quota root.
-   */
-  attribute unsigned long folderQuotaMaxKB;
   readonly attribute boolean shouldDownloadAllHeaders;
   string GetOnlineDelimiter();
   void OnNewIdleMessages();
@@ -126,4 +113,17 @@ interface nsIImapMailFolderSink : nsISupports {
   void closeMockChannel(in nsIImapMockChannel aChannel);
   void setUrlState(in nsIImapProtocol aProtocol, in nsIMsgMailNewsUrl aUrl, in boolean isRunning, in nsresult status);
   void releaseUrlCacheEntry(in nsIMsgMailNewsUrl aUrl);
+
+  void headerFetchCompleted(in nsIImapProtocol aProtocol);
+  void setBiffStateAndUpdate(in long biffState);
+  void progressStatus(in nsIImapProtocol aProtocol, in unsigned long aMsgId, in wstring extraInfo);
+  void percentProgress(in nsIImapProtocol aProtocol, in wstring aMessage, 
+                       in long aCurrentProgress, in long aMaxProgressProgressInfo);
+
+  void clearFolderRights();
+  void setCopyResponseUid(in string msgIdString,
+                                in nsIImapUrl aUrl);
+  void setAppendMsgUid(in nsMsgKey newKey,
+                             in nsIImapUrl aUrl);
+  ACString getMessageId(in nsIImapUrl aUrl);
 };

@@ -1779,20 +1779,6 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
   NS_IF_RELEASE (aInst);
   aInst = nsnull;
   
-  rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapExtensionSink), 
-                                 (void**)&aInst);
-  if (NS_SUCCEEDED(rv) && aInst)
-      aImapUrl->SetImapExtensionSink((nsIImapExtensionSink*) aInst);
-  NS_IF_RELEASE (aInst);
-  aInst = nsnull;
-  
-  rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMiscellaneousSink), 
-                                 (void**)&aInst);
-  if (NS_SUCCEEDED(rv) && aInst)
-      aImapUrl->SetImapMiscellaneousSink((nsIImapMiscellaneousSink*) aInst);
-  NS_IF_RELEASE (aInst);
-  aInst = nsnull;
-
   nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
   mailnewsUrl->SetFolder(aMsgFolder);
 
@@ -2053,7 +2039,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         urlSpec.Append(messageIds);
         urlSpec.Append('>');
         urlSpec.Append(char(hierarchySeparator));
-        folderName.Adopt(nsCRT::strdup(""));
+        folderName.Adopt(strdup(""));
         GetFolderName(aDstFolder, getter_Copies(folderName));
         urlSpec.Append((const char *) folderName);
 
@@ -2322,7 +2308,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append(hierarchySeparator);
             urlSpec.Append((const char *) folderName);
             urlSpec.Append('>');
-            folderName.Adopt(nsCRT::strdup(""));
+            folderName.Adopt(strdup(""));
             GetFolderName(dstFolder, getter_Copies(folderName));
             if ( folderName && folderName[0])
             {

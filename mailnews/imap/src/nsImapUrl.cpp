@@ -101,8 +101,6 @@ nsImapUrl::nsImapUrl()
   m_fileSpec = nsnull;
   m_imapMailFolderSink = nsnull;
   m_imapMessageSink = nsnull;
-  m_imapExtensionSink = nsnull;
-  m_imapMiscellaneousSink = nsnull;
   m_addDummyEnvelope = PR_FALSE;
   m_canonicalLineEnding = PR_FALSE;
 }
@@ -273,44 +271,6 @@ NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
 {
   nsresult rv;
   m_imapServerSink = do_GetWeakReference(aImapServerSink, &rv);
-  return rv;
-}
-
-NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExtensionSink)
-{
-    NS_ENSURE_ARG_POINTER(aImapExtensionSink);
-    NS_ENSURE_ARG_POINTER(m_imapExtensionSink);
-
-    nsCOMPtr<nsIImapExtensionSink> extensionSink = do_QueryReferent(m_imapExtensionSink);
-    *aImapExtensionSink = extensionSink;
-    NS_IF_ADDREF(*aImapExtensionSink);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
-{
-  nsresult rv;
-  m_imapExtensionSink = do_GetWeakReference(aImapExtensionSink, &rv);
-  return rv;
-}
-
-NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
-                                              aImapMiscellaneousSink)
-{
-    NS_ENSURE_ARG_POINTER(aImapMiscellaneousSink);
-    NS_ENSURE_ARG_POINTER(m_imapMiscellaneousSink);
-
-    nsCOMPtr<nsIImapMiscellaneousSink> miscSink = do_QueryReferent(m_imapMiscellaneousSink);
-    *aImapMiscellaneousSink = miscSink;
-    NS_IF_ADDREF(*aImapMiscellaneousSink);
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
-                                              aImapMiscellaneousSink)
-{
-  nsresult rv;
-  m_imapMiscellaneousSink = do_GetWeakReference(aImapMiscellaneousSink, &rv);
   return rv;
 }
 

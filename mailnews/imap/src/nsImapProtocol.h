@@ -356,8 +356,7 @@ public:
   void HandleCurrentUrlError();
   
   // UIDPLUS extension
-  void SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
-    const char* msgIdString);
+  void SetCopyResponseUid(const char* msgIdString);
   
   // Quota support
   void UpdateFolderQuotaData(nsCString& aQuotaRoot, PRUint32 aUsed, PRUint32 aMax);
@@ -597,7 +596,7 @@ private:
   nsCOMPtr <nsIImapHeaderInfo> m_curHdrInfo;
   
   nsIImapHostSessionList * m_hostSessionList;
-  
+
   PRBool m_fromHeaderSeen;
   
   // these settings allow clients to override various pieces of the connection info from the url

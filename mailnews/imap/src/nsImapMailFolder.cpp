@@ -109,6 +109,7 @@
 #include "nsISpamSettings.h"
 #include "nsInt64.h"
 #include <time.h>
+#include "nsIMsgMailNewsUrl.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -258,8 +259,6 @@ NS_IMPL_QUERY_HEAD(nsImapMailFolder)
     NS_IMPL_QUERY_BODY(nsICopyMessageListener)
     NS_IMPL_QUERY_BODY(nsIImapMailFolderSink)
     NS_IMPL_QUERY_BODY(nsIImapMessageSink)
-    NS_IMPL_QUERY_BODY(nsIImapExtensionSink)
-    NS_IMPL_QUERY_BODY(nsIImapMiscellaneousSink)
     NS_IMPL_QUERY_BODY(nsIUrlListener)
     NS_IMPL_QUERY_BODY(nsIMsgFilterHitNotify)
     NS_IMPL_QUERY_BODY(nsIJunkMailClassificationListener)
@@ -4846,8 +4845,7 @@ void nsImapMailFolder::UpdatePendingCounts()
     // nsIImapExtensionSink methods
 
 NS_IMETHODIMP
-nsImapMailFolder::ClearFolderRights(nsIImapProtocol* aProtocol,
-                                    nsIMAPACLRightsInfo* aclRights)
+nsImapMailFolder::ClearFolderRights()
 {
   SetFolderNeedsACLListed(PR_FALSE);
   delete m_folderACL;
@@ -4874,9 +4872,7 @@ nsImapMailFolder::RefreshFolderRights()
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
-                                     nsMsgKeyArray* aKeyArray,
-                                     const char* msgIdString,
+nsImapMailFolder::SetCopyResponseUid(const char* msgIdString,
                                      nsIImapUrl * aUrl)
 {   // CopyMessages() only
   nsresult rv = NS_OK;
@@ -4895,7 +4891,7 @@ nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
           msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
   }
   if (msgTxn)
-      msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
+      msgTxn->SetCopyResponseUid(msgIdString);
   
   return NS_OK;
 }    
@@ -4996,8 +4992,7 @@ nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl,
 
 
 NS_IMETHODIMP
-nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
-                                  nsMsgKey aKey,
+nsImapMailFolder::SetAppendMsgUid(nsMsgKey aKey,
                                   nsIImapUrl * aUrl)
 {
   nsresult rv = NS_OK;
@@ -5025,9 +5020,8 @@ nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
 }    
 
 NS_IMETHODIMP
-nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
-                               nsCString* messageId,
-                               nsIImapUrl * aUrl)
+nsImapMailFolder::GetMessageId(nsIImapUrl * aUrl,
+                               nsACString &messageId)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsISupports> copyState;
@@ -5040,18 +5034,22 @@ nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
         do_QueryInterface(copyState, &rv);
     if (NS_FAILED(rv)) return rv;
     if (mailCopyState->m_listener)
-        rv = mailCopyState->m_listener->GetMessageId(messageId);
+    {
+      nsCAutoString tempMessageId;
+        rv = mailCopyState->m_listener->GetMessageId(&tempMessageId);
+        messageId.Assign(tempMessageId);
+    }
   }
-  if (NS_SUCCEEDED(rv) && messageId->Length() > 0)
+  if (NS_SUCCEEDED(rv) && messageId.Length() > 0)
   {
-      if (messageId->First() == '<')
-          messageId->Cut(0, 1);
-      if (messageId->Last() == '>')
-          messageId->SetLength(messageId->Length() -1);
+      if (messageId.First() == '<')
+          messageId.Cut(0, 1);
+      if (messageId.Last() == '>')
+          messageId.SetLength(messageId.Length() -1);
   }  
   return rv;
 }
-    // nsIImapMiscellaneousSink methods
+
 NS_IMETHODIMP
 nsImapMailFolder::AddSearchResult(nsIImapProtocol* aProtocol, 
                                   const char* searchHitLine)
@@ -5142,8 +5140,7 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-                                        nsMsgBiffState biffState)
+nsImapMailFolder::SetBiffStateAndUpdate(nsMsgBiffState biffState)
 {
   SetBiffState(biffState);
   return NS_OK;
@@ -5908,7 +5905,8 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
-                                  ProgressInfo* aInfo)
+                                  const PRUnichar *aMessage, 
+                       PRInt32 aCurrentProgress, PRInt32 aMaxProgress)
 {
   if (aProtocol)
   {
@@ -5929,11 +5927,10 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
 
             // XXX handle 64-bit ints for real
             progressSink->OnProgress(request, nsnull,
-                                     nsUint64(aInfo->currentProgress),
-                                     nsUint64(aInfo->maxProgress));
-          if (aInfo->message)
-            progressSink->OnStatus(request, nsnull, NS_OK, aInfo->message);      // XXX i18n message
-
+                                     nsUint64(aCurrentProgress),
+                                     nsUint64(aMaxProgress));
+            if (aMessage)
+              progressSink->OnStatus(request, nsnull, NS_OK, aMessage);      // XXX i18n message
         }
 
       }
@@ -7258,55 +7255,15 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaCommandIssued(PRBool aCmdIssued)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaDataIsValid(PRBool *aIsValid)
+NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaData(const nsACString &aFolderQuotaRoot, 
+                                                   PRUint32 aFolderQuotaUsedKB, 
+                                                    PRUint32 aFolderQuotaMaxKB)
 {
-    NS_ENSURE_ARG_POINTER(aIsValid);
-    *aIsValid = m_folderQuotaDataIsValid;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaDataIsValid(PRBool aIsValid)
-{
-    m_folderQuotaDataIsValid = aIsValid;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaRoot(nsACString &aQuotaRoot)
-{
-    aQuotaRoot = m_folderQuotaRoot;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaRoot(const nsACString &aQuotaRoot)
-{
-    m_folderQuotaRoot = aQuotaRoot;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaUsedKB(PRUint32 *aUsedKB)
-{
-    NS_ENSURE_ARG_POINTER(aUsedKB);
-    *aUsedKB = m_folderQuotaUsedKB;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaUsedKB(PRUint32 aUsedKB)
-{
-    m_folderQuotaUsedKB = aUsedKB;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::GetFolderQuotaMaxKB(PRUint32 *aMaxKB)
-{
-    NS_ENSURE_ARG_POINTER(aMaxKB);
-    *aMaxKB = m_folderQuotaMaxKB;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::SetFolderQuotaMaxKB(PRUint32 aMaxKB)
-{
-    m_folderQuotaMaxKB = aMaxKB;
-    return NS_OK;
+  m_folderQuotaDataIsValid = PR_TRUE;
+  m_folderQuotaRoot = aFolderQuotaRoot;
+  m_folderQuotaUsedKB = aFolderQuotaUsedKB;
+  m_folderQuotaMaxKB = aFolderQuotaMaxKB;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)

@@ -113,7 +113,6 @@ nsImapServerResponseParser::~nsImapServerResponseParser()
   PR_Free(fAuthChallenge);
 
   NS_IF_RELEASE (fHostSessionList);
-  fCopyResponseKeyArray.RemoveAll();
 }
 
 PRBool nsImapServerResponseParser::LastCommandSuccessful()
@@ -1928,20 +1927,7 @@ void nsImapServerResponseParser::resp_text_code()
           // either uid or uid1:uid2
           AdvanceToNextToken();
           // clear copy response uid
-          fCopyResponseKeyArray.RemoveAll();
-          PRUint32 startKey = atoi(fNextToken);
-          fCopyResponseKeyArray.Add(startKey);
-          char *colon = PL_strchr(fNextToken, ':');
-          if (colon)
-          {
-            PRUint32 endKey= atoi(colon+1);
-            NS_ASSERTION (endKey > startKey, 
-              "Oops ... invalid message set");
-            for (startKey++; startKey <= endKey; startKey++)
-              fCopyResponseKeyArray.Add(startKey);
-          }
-          fServerConnection.SetCopyResponseUid(
-            &fCopyResponseKeyArray, fNextToken);
+          fServerConnection.SetCopyResponseUid(fNextToken);
         }
         if (ContinueParse())
           AdvanceToNextToken();
@@ -2899,19 +2885,6 @@ nsImapServerResponseParser::GetHostSessionList()
     NS_IF_ADDREF(fHostSessionList);
     return fHostSessionList;
 }
-
-void
-nsImapServerResponseParser::CopyResponseUID(nsMsgKeyArray& keyArray)
-{
-    keyArray.CopyArray(fCopyResponseKeyArray);
-}
-
-void
-nsImapServerResponseParser::ClearCopyResponseUID()
-{
-    fCopyResponseKeyArray.RemoveAll();
-}
-
 
 void nsImapServerResponseParser::SetSyntaxError(PRBool error)
 {

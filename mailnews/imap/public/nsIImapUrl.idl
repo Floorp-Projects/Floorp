@@ -39,8 +39,6 @@
 
 interface nsIImapMailFolderSink;
 interface nsIImapMessageSink;
-interface nsIImapExtensionSink;
-interface nsIImapMiscellaneousSink;
 interface nsIImapServerSink;
 interface nsIImapMockChannel;
 interface nsIFileSpec;
@@ -74,8 +72,6 @@ interface nsIImapUrl : nsISupports
 	///////////////////////////////////////////////////////////////////////////////
   attribute nsIImapMailFolderSink imapMailFolderSink;
   attribute nsIImapMessageSink imapMessageSink;
-  [noscript] attribute nsIImapExtensionSink imapExtensionSink;
-  [noscript] attribute nsIImapMiscellaneousSink imapMiscellaneousSink;
   attribute nsIImapServerSink imapServerSink;
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state

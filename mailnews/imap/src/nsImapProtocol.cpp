@@ -59,7 +59,6 @@
 #include "nsImapProtocol.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nscore.h"
-#include "nsImapProxyEvent.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
 #include "nsImapMailFolder.h"
@@ -617,7 +616,6 @@ void
 nsImapProtocol::SetupSinkProxy()
 {
   nsresult res = NS_ERROR_FAILURE;
-//  NS_ASSERTION(!m_imapMiscellaneousSink, "shouldn't be non-null here");
 
   if (m_runningUrl)
   {
@@ -648,33 +646,6 @@ nsImapProtocol::SetupSinkProxy()
                                              aImapMessageSink,
                                              PROXY_SYNC | PROXY_ALWAYS,
                                              getter_AddRefs(m_imapMessageSink));
-      }
-      if (!m_imapExtensionSink)
-      {
-        nsCOMPtr<nsIImapExtensionSink> aImapExtensionSink;
-        res = m_runningUrl->GetImapExtensionSink(getter_AddRefs(aImapExtensionSink));
-        if(NS_SUCCEEDED(res) && aImapExtensionSink)
-        {
-          nsImapExtensionSinkProxy * extensionSink = new nsImapExtensionSinkProxy(aImapExtensionSink,
-                                                     this,
-                                                     m_sinkEventQueue,
-                                                     m_thread);
-          m_imapExtensionSink = do_QueryInterface(extensionSink);
-        }
-      }
-      if (!m_imapMiscellaneousSink)
-      {
-        nsCOMPtr<nsIImapMiscellaneousSink> aImapMiscellaneousSink;
-        res = m_runningUrl->GetImapMiscellaneousSink(getter_AddRefs(aImapMiscellaneousSink));
-        if (NS_SUCCEEDED(res) && aImapMiscellaneousSink)
-        {
-           nsImapMiscellaneousSinkProxy * miscSink = new nsImapMiscellaneousSinkProxy(aImapMiscellaneousSink,
-                                                                                      this,
-                                                                                      m_sinkEventQueue,
-                                                                                      m_thread);
-           m_imapMiscellaneousSink = do_QueryInterface(miscSink);
-        }
-        NS_ASSERTION(NS_SUCCEEDED(res), "couldn't get proxies");
       }
       if (!m_imapServerSink)
       {
@@ -890,8 +861,6 @@ void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
   }
   m_channelContext = nsnull; // this might be the url - null it out before the final release of the url
   m_imapMessageSink = nsnull;
-  m_imapExtensionSink = nsnull;
-  m_imapMiscellaneousSink = nsnull;
   m_channelListener = nsnull;
   
   m_channelInputStream = nsnull;
@@ -993,9 +962,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
   me->m_sinkEventQueue = nsnull;
   me->m_server = nsnull;
   me->m_imapMailFolderSink = nsnull;
-  me->m_imapExtensionSink = nsnull;
   me->m_imapMessageSink = nsnull;
-  me->m_imapMiscellaneousSink = nsnull;
   m_iThread = nsnull;
 
   return NS_OK;
@@ -1328,10 +1295,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     }
   }
 
-#ifdef DEBUG_bienvenu   
-  NS_ASSERTION(m_imapMiscellaneousSink, "null sink");
-#endif
-  if (!m_imapMiscellaneousSink || !m_imapMailFolderSink)
+  if (!m_imapMailFolderSink)
     SetupSinkProxy(); // try this again. Evil, but I'm desperate.
 
   // Reinitialize the parser
@@ -3724,11 +3688,8 @@ void nsImapProtocol::HeaderFetchCompleted()
     m_imapMailFolderSink->ParseMsgHdrs(this, &m_hdrDownloadCache);
   m_hdrDownloadCache.ReleaseAll();
 
-  if (m_imapMiscellaneousSink)
-  {
-    m_imapMiscellaneousSink->HeaderFetchCompleted(this);
-    WaitForFEEventCompletion();
-  }
+  if (m_imapMailFolderSink)
+    m_imapMailFolderSink->HeaderFetchCompleted(this);
 }
 
 
@@ -3781,10 +3742,8 @@ void nsImapProtocol::PeriodicBiff()
 
 void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
 {
-    if (m_imapMiscellaneousSink) {
-      m_imapMiscellaneousSink->SetBiffStateAndUpdate(this, newState);
-      WaitForFEEventCompletion();
-    }
+    if (m_imapMailFolderSink) 
+      m_imapMailFolderSink->SetBiffStateAndUpdate(newState);
 }
 
 
@@ -4160,15 +4119,10 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
     HandleMemoryFailure();
 }
 
-void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
-                                        const char *msgIdString)
+void nsImapProtocol::SetCopyResponseUid(const char *msgIdString)
 {
-  if (m_imapExtensionSink)
-  {
-    m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString,
-                                            m_runningUrl);
-    WaitForFEEventCompletion();
-  }
+  if (m_imapMailFolderSink)
+    m_imapMailFolderSink->SetCopyResponseUid(msgIdString, m_runningUrl);
 }
 
 void nsImapProtocol::CommitNamespacesForHostEvent()
@@ -4211,14 +4165,9 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
     aclRightsInfo->rights = NULL;
     aclRightsInfo->userName = NULL;
 
-    if (aclRightsInfo->hostName && aclRightsInfo->mailboxName)
-    {
-      if (m_imapExtensionSink)
-      {
-        m_imapExtensionSink->ClearFolderRights(this, aclRightsInfo);
-        WaitForFEEventCompletion();
-      }
-    }
+    if (aclRightsInfo->hostName && aclRightsInfo->mailboxName && m_imapMailFolderSink)
+        m_imapMailFolderSink->ClearFolderRights();
+
     PR_Free(aclRightsInfo->hostName);
     PR_Free(aclRightsInfo->mailboxName);
     
@@ -4607,9 +4556,9 @@ nsImapProtocol::ShowProgress()
 void
 nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
-  if (m_imapMiscellaneousSink && aMsgId != m_lastProgressStringId)
+  if (m_imapMailFolderSink && aMsgId != m_lastProgressStringId)
   {
-    m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, nsnull);
+    m_imapMailFolderSink->ProgressStatus(this, aMsgId, nsnull);
     m_lastProgressStringId = aMsgId;
     // who's going to free this? Does ProgressStatus complete synchronously?
   }
@@ -4619,12 +4568,12 @@ void
 nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
                                                        char * aExtraInfo)
 {
-  if (m_imapMiscellaneousSink)
+  if (m_imapMailFolderSink)
   {
     nsXPIDLString unicodeStr;
     nsresult rv = CopyMUTF7toUTF16(nsDependentCString(aExtraInfo), unicodeStr);
     if (NS_SUCCEEDED(rv))
-      m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, unicodeStr);
+      m_imapMailFolderSink->ProgressStatus(this, aMsgId, unicodeStr);
   }
 }
 
@@ -4650,10 +4599,6 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
       return;
   }
 
-  ProgressInfo aProgressInfo;
-  aProgressInfo.message = message;
-  aProgressInfo.currentProgress = currentProgress;
-  aProgressInfo.maxProgress = maxProgress;
   m_lastPercent = percent;
   m_lastProgressTime = nowMS;
 
@@ -4662,8 +4607,8 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
       m_mockChannel->SetContentLength(maxProgress);
       
 
-  if (m_imapMiscellaneousSink)
-      m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
+  if (m_imapMailFolderSink)
+      m_imapMailFolderSink->PercentProgress(this, message, currentProgress, maxProgress);
 }
 
   // imap commands issued by the parser
@@ -5262,10 +5207,9 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           kUidplusCapability)
         {
           nsMsgKey newKey = GetServerStateParser().CurrentResponseUID();
-          if (m_imapExtensionSink)
+          if (m_imapMailFolderSink)
           {
-            m_imapExtensionSink->SetAppendMsgUid(this, newKey,
-              m_runningUrl);
+            m_imapMailFolderSink->SetAppendMsgUid(newKey, m_runningUrl);
             WaitForFEEventCompletion();
           }
           nsXPIDLCString oldMsgId;
@@ -5284,14 +5228,12 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         // as when copying messages to an imap folder from local folders or an other imap server.
         // This made sending a message slow when there was a large sent folder. I don't believe
         // this code worked anyway.
-        else if (m_imapExtensionSink && imapAction == nsIImapUrl::nsImapAppendDraftFromFile )
+        else if (m_imapMailFolderSink && imapAction == nsIImapUrl::nsImapAppendDraftFromFile )
         {   // *** code me to search for the newly appended message
           // go to selected state
           AutoSubscribeToMailboxIfNecessary(mailboxName);
           nsCString messageId;
-          rv = m_imapExtensionSink->GetMessageId(this, &messageId,
-            m_runningUrl);
-          WaitForFEEventCompletion();
+          rv = m_imapMailFolderSink->GetMessageId(m_runningUrl, messageId);
           if (NS_SUCCEEDED(rv) && !messageId.IsEmpty() &&
             GetServerStateParser().LastCommandSuccessful())
           {
@@ -5317,11 +5259,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                 newkey = searchResult->GetNextMessageNumber();
                 delete searchResult;
                 if (newkey != nsMsgKey_None)
-                {
-                  m_imapExtensionSink->SetAppendMsgUid
-                    (this, newkey, m_runningUrl);
-                  WaitForFEEventCompletion();
-                }
+                  m_imapMailFolderSink->SetAppendMsgUid(newkey, m_runningUrl);
               }
             }
           }
@@ -7517,10 +7455,7 @@ void nsImapProtocol::UpdateFolderQuotaData(nsCString& aQuotaRoot, PRUint32 aUsed
 {
   NS_ASSERTION(m_imapMailFolderSink, "m_imapMailFolderSink is null!");
 
-  m_imapMailFolderSink->SetFolderQuotaDataIsValid(PR_TRUE);
-  m_imapMailFolderSink->SetFolderQuotaRoot(aQuotaRoot);
-  m_imapMailFolderSink->SetFolderQuotaUsedKB(aUsed);
-  m_imapMailFolderSink->SetFolderQuotaMaxKB(aMax);
+  m_imapMailFolderSink->SetFolderQuotaData(aQuotaRoot, aUsed, aMax);
 }
 
 void nsImapProtocol::GetQuotaDataIfSupported(const char *aBoxName)

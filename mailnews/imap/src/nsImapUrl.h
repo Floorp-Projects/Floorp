@@ -46,8 +46,6 @@
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
 #include "nsIImapMessageSink.h"
-#include "nsIImapExtensionSink.h"
-#include "nsIImapMiscellaneousSink.h"
 
 #include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
@@ -139,8 +137,6 @@ protected:
   nsWeakPtr m_imapFolder;
   nsWeakPtr m_imapMailFolderSink;
   nsWeakPtr m_imapMessageSink;
-  nsWeakPtr m_imapExtensionSink;
-  nsWeakPtr m_imapMiscellaneousSink;
 
   nsWeakPtr m_imapServerSink;
 

@@ -217,7 +217,7 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
         PR_TRUE); 
     }
   }
-  if (m_dstKeyArray.GetSize() > 0)
+  if (!m_dstMsgIdString.IsEmpty())
   {
     nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
     if (NS_FAILED(rv) || !dstFolder) return rv;
@@ -294,7 +294,7 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
                                           kImapMsgDeletedFlag, m_idsAreUids);
     }
   }
-  if (m_dstKeyArray.GetSize() > 0)
+  if (!m_dstMsgIdString.IsEmpty())
   {
     nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
     if (NS_FAILED(rv) || !dstFolder) return rv;
@@ -329,11 +329,9 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
 }
 
 nsresult
-nsImapMoveCopyMsgTxn::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
-                                         const char* aMsgIdString)
+nsImapMoveCopyMsgTxn::SetCopyResponseUid(const char* aMsgIdString)
 {
-  if (!aKeyArray || !aMsgIdString) return NS_ERROR_NULL_POINTER;
-  m_dstKeyArray.CopyArray(aKeyArray);
+  if (!aMsgIdString) return NS_ERROR_NULL_POINTER;
   m_dstMsgIdString = aMsgIdString;
   if (m_dstMsgIdString.Last() == ']')
   {
@@ -351,16 +349,8 @@ nsImapMoveCopyMsgTxn::GetSrcKeyArray(nsMsgKeyArray& srcKeyArray)
 }
 
 nsresult
-nsImapMoveCopyMsgTxn::GetDstKeyArray(nsMsgKeyArray& dstKeyArray)
-{
-    dstKeyArray.CopyArray(&m_dstKeyArray);
-    return NS_OK;
-}
-
-nsresult
 nsImapMoveCopyMsgTxn::AddDstKey(nsMsgKey aKey)
 {
-    m_dstKeyArray.Add(aKey);
     if (!m_dstMsgIdString.IsEmpty())
         m_dstMsgIdString.Append(",");
     m_dstMsgIdString.AppendInt((PRInt32) aKey);

@@ -44,7 +44,6 @@
 #include "nsIURL.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
-#include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
 #include "nsIImapIncomingServer.h"
 #include "nsImapCore.h"
@@ -67,57 +66,6 @@ public:
     nsIImapProtocol* m_protocol;
 };
 
-class nsImapExtensionSinkProxy : public nsIImapExtensionSink, 
-                             public nsImapProxyBase
-{
-public:
-    nsImapExtensionSinkProxy(nsIImapExtensionSink* aImapExtensionSink,
-                         nsIImapProtocol* aProtocol,
-                         nsIEventQueue* aEventQ,
-                         PRThread* aThread);
-    virtual ~nsImapExtensionSinkProxy();
-
-    NS_DECL_ISUPPORTS
-  
-    NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
-                                  nsMsgKeyArray* aKeyArray,
-                                  const char* msgIdString,
-                                  nsIImapUrl * aUrl);
-    NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
-                               nsMsgKey aKey,
-                               nsIImapUrl * aUrl);
-    NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
-                            nsCString* messageId,
-                            nsIImapUrl * aUrl);
-    
-    nsIImapExtensionSink* m_realImapExtensionSink;
-};
-
-class nsImapMiscellaneousSinkProxy : public nsIImapMiscellaneousSink, 
-                                 public nsImapProxyBase
-{
-public:
-    nsImapMiscellaneousSinkProxy (nsIImapMiscellaneousSink* aImapMiscellaneousSink,
-                              nsIImapProtocol* aProtocol,
-                              nsIEventQueue* aEventQ,
-                              PRThread* aThread);
-    ~nsImapMiscellaneousSinkProxy ();
-
-    NS_DECL_ISUPPORTS
-	
-    NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
-    // ****
-    NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-                                     nsMsgBiffState biffState);
-	  NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              PRUint32 statusMsgId, const PRUnichar *extraInfo);
-    NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
-                               ProgressInfo* aInfo);
-    nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
-};
-
 /* ******* Imap Base Event struct ******** */
 struct nsImapEvent : public PLEvent
 {
@@ -134,95 +82,5 @@ struct nsImapEvent : public PLEvent
   PRBool m_notifyCompletion;
 };
 
-struct nsImapExtensionSinkProxyEvent : nsImapEvent
-{
-    nsImapExtensionSinkProxyEvent(nsImapExtensionSinkProxy* aProxy);
-    virtual ~nsImapExtensionSinkProxyEvent();
-    nsImapExtensionSinkProxy* m_proxy;
-};
-
-struct ClearFolderRightsProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    ClearFolderRightsProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                nsIMAPACLRightsInfo* aclRights);
-    virtual ~ClearFolderRightsProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsIMAPACLRightsInfo m_aclRightsInfo;
-};
-
-struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
-{
-  SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                               nsMsgKeyArray* aKeyArray, 
-                               const char* msgIdString,
-                               nsIImapUrl * aUr);
-  virtual ~SetCopyResponseUidProxyEvent();
-  NS_IMETHOD HandleEvent();
-  nsMsgKeyArray m_copyKeyArray;
-  nsCString m_msgIdString;
-  nsCOMPtr<nsIImapUrl> m_Url;
-};
-
-struct SetAppendMsgUidProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    SetAppendMsgUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                              nsMsgKey aKey, nsIImapUrl * aUrl);
-    virtual ~SetAppendMsgUidProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsMsgKey m_key;
-    nsCOMPtr<nsIImapUrl> m_Url;
-};
-
-struct GetMessageIdProxyEvent : nsImapExtensionSinkProxyEvent
-{
-    GetMessageIdProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                           nsCString* messageId, nsIImapUrl * aUrl);
-    virtual ~GetMessageIdProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsCString* m_messageId;
-    nsCOMPtr<nsIImapUrl> m_Url;
-};
-
-struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent
-{
-    nsImapMiscellaneousSinkProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
-    virtual ~nsImapMiscellaneousSinkProxyEvent();
-    nsImapMiscellaneousSinkProxy* m_proxy;
-};
-
-struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    HeaderFetchCompletedProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
-    virtual ~HeaderFetchCompletedProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct SetBiffStateAndUpdateProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    SetBiffStateAndUpdateProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                    nsMsgBiffState biffState);
-    virtual ~SetBiffStateAndUpdateProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsMsgBiffState m_biffState;
-};
-
-struct ProgressStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    ProgressStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                            PRUint32 statusMsgId, const PRUnichar *extraInfo);
-    virtual ~ProgressStatusProxyEvent();
-    NS_IMETHOD HandleEvent();
-    PRUint32 m_statusMsgId;
-	PRUnichar	*m_extraInfo;
-};
-
-struct PercentProgressProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    PercentProgressProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                              ProgressInfo* aInfo);
-    virtual ~PercentProgressProxyEvent();
-    NS_IMETHOD HandleEvent();
-    ProgressInfo m_progressInfo;
-};
 
 #endif

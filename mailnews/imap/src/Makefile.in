@@ -101,7 +101,6 @@ CPPSRCS		= \
 		nsImapIncomingServer.cpp \
 		nsImapMailFolder.cpp \
 		nsImapProtocol.cpp \
-		nsImapProxyEvent.cpp \
 		nsImapSearchResults.cpp \
 		nsImapServerResponseParser.cpp \
 		nsImapService.cpp \

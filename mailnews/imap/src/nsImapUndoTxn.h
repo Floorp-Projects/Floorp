@@ -74,10 +74,8 @@ public:
   NS_IMETHOD RedoTransaction(void);
 
   // helper
-  nsresult SetCopyResponseUid(nsMsgKeyArray* keyArray,
-                              const char *msgIdString);
+  nsresult SetCopyResponseUid(const char *msgIdString);
   nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);
-  nsresult GetDstKeyArray(nsMsgKeyArray& dstKeyArray);
   nsresult AddDstKey(nsMsgKey aKey);
   nsresult UndoMailboxDelete();
   nsresult RedoMailboxDelete();
@@ -95,7 +93,6 @@ protected:
   nsMsgKeyArray m_srcKeyArray;
   nsCString m_srcMsgIdString;
   nsWeakPtr m_dstFolder;
-  nsMsgKeyArray m_dstKeyArray;
   nsCString m_dstMsgIdString;
   nsCOMPtr<nsIEventQueue> m_eventQueue;
   nsCOMPtr<nsIUrlListener> m_urlListener;
