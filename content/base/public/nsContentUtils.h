@@ -69,6 +69,22 @@ public:
   static PRBool   InSameDoc(nsIDOMNode *aNode,
                             nsIDOMNode *aOther);
 
+  /**
+   * Do not ever pass null pointers to this method.  If one of your
+   * nsIContents is null, you have to decide for yourself what
+   * "IsDescendantOf" really means.
+   *
+   * @param  aPossibleDescendant node to test for being a descendant of
+   *         aPossibleAncestor
+   * @param  aPossibleAncestor node to test for being an ancestor of
+   *         aPossibleDescendant
+   * @return PR_TRUE if aPossibleDescendant is a descendant of
+   *         aPossibleAncestor (or is aPossibleAncestor).  PR_FALSE
+   *         otherwise.
+   */   
+  static PRBool ContentIsDescendantOf(nsIContent* aPossibleDescendant,
+                                      nsIContent* aPossibleAncestor);
+  
   /*
    * This method fills the |aArray| with all ancestor nodes of |aNode|
    * including |aNode| at the zero index.

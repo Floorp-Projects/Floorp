@@ -90,6 +90,10 @@ public:
   NS_IMETHOD Reset();
 };
 
+/**
+ * Class that's used as the key to hash nsContentList implementations
+ * for fast retrieval
+ */
 class nsContentListKey
 {
 public:
@@ -133,9 +137,15 @@ protected:
   nsCOMPtr<nsIAtom> mMatchAtom;
   PRInt32 mMatchNameSpaceId;
   nsIDocument* mDocument;   // Weak ref
+  // XXX What if the mRootContent is detached from the doc and _then_
+  // goes away (so we never get notified)?
   nsIContent* mRootContent; // Weak ref
 };
 
+/**
+ * Class that implements a live NodeList that matches nodes in the
+ * tree based on some criterion
+ */
 class nsContentList : public nsBaseContentList,
                       protected nsContentListKey,
                       public nsIDOMHTMLCollection,
@@ -145,8 +155,6 @@ class nsContentList : public nsBaseContentList,
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsContentList(const nsContentList& aContentList);
-  nsContentList(nsIDocument *aDocument);
   nsContentList(nsIDocument *aDocument, 
                 nsIAtom* aMatchAtom, 
                 PRInt32 aMatchNameSpaceId,
@@ -234,21 +242,134 @@ public:
   }
   
 protected:
-  nsresult Match(nsIContent *aContent, PRBool *aMatch);
   void Init(nsIDocument *aDocument);
-  void PopulateWith(nsIContent *aContent, PRBool aIncludeRoot);
+  /**
+   * Returns whether the content element matches our criterion
+   *
+   * @param  aContent the content to attempt to match
+   * @return whether we match
+   */
+  PRBool Match(nsIContent *aContent);
+  /**
+   * Match recursively. See if anything in the subtree rooted at
+   * aContent matches our criterion.
+   *
+   * @param  aContent the root of the subtree to match against
+   * @return whether we match something in the tree rooted at aContent
+   */
   PRBool MatchSelf(nsIContent *aContent);
-  void PopulateSelf();
+
+  /**
+   * Add elements in the subtree rooted in aContent that match our
+   * criterion to our list until we've picked up aElementsToAppend
+   * elements.  This function enforces the invariant that
+   * |aElementsToAppend + mElements.Count()| is a constant.
+   *
+   * @param aContent the root of the subtree we want to traverse
+   * @param aIncludeRoot whether to include the root in the traversal
+   * @param aElementsToAppend how many elements to append to the list
+   *        before stopping
+   */
+  void PopulateWith(nsIContent *aContent, PRBool aIncludeRoot,
+                    PRUint32 & aElementsToAppend);
+  /**
+   * Populate our list starting at the child of aStartRoot that comes
+   * after aStartChild (if such exists) and continuing in document
+   * order. Stop once we've picked up aElementsToAppend elements.
+   * This function enforces the invariant that |aElementsToAppend +
+   * mElements.Count()| is a constant.
+   *
+   * @param aStartRoot the node with whose children we want to start traversal
+   * @param aStartChild the child after which we want to start
+   * @param aElementsToAppend how many elements to append to the list
+   *        before stopping
+   */
+  void PopulateWithStartingAfter(nsIContent *aStartRoot,
+                                 nsIContent *aStartChild,
+                                 PRUint32 & aElementsToAppend);
+  /**
+   * Populate our list.  Stop once we have at least aNeededLength
+   * elements.  At the end of PopulateSelf running, either the last
+   * node we examined is the last node in our array or we have
+   * traversed the whole document (or both).
+   *
+   * @param aNeededLength the length the list should have when we are
+   *        done (unless it exhausts the document)   
+   */
+  void PopulateSelf(PRUint32 aNeededLength);
+
+  /**
+   * Our root content has been disconnected from the document, so stop
+   * observing. From this point on, if someone asks us something we
+   * walk the tree rooted at mRootContent starting at the beginning
+   * and going as far as we need to to answer the question.
+   */
   void DisconnectFromDocument();
+
+  /**
+   * @param  aContainer a content node which could be a descendant of
+   *         mRootContent
+   * @return PR_TRUE if mRootContent is null, PR_FALSE if aContainer
+   *         is null, PR_TRUE if aContainer is a descendant of mRootContent,
+   *         PR_FALSE otherwise
+   */
   PRBool IsDescendantOfRoot(nsIContent* aContainer);
+  /**
+   * Does this subtree contain our mRootContent?
+   *
+   * @param  aContainer the root of the subtree
+   * @return PR_FALSE if mRootContent is null, otherwise whether
+   *         mRootContent is a descendant of aContainer
+   */
   PRBool ContainsRoot(nsIContent* aContent);
+  /**
+   * If we have no document and we have a root content, then check if
+   * our content has been added to a document. If so, we'll become an
+   * observer of the document.
+   */
   nsresult CheckDocumentExistence();
   void RemoveFromHashtable();
+  inline void BringSelfUpToDate(PRBool aDoFlush);
 
+  /**
+   * Function to use to determine whether a piece of content matches
+   * our criterion
+   */
   nsContentListMatchFunc mFunc;
+  /**
+   * Closure data to pass to mFunc when we call it
+   */
   nsString* mData;
-  PRBool mMatchAll;
+  /**
+   * True if we are looking for elements named "*"
+   */
+  PRPackedBool mMatchAll;
+  /**
+   * The current state of the list (possible values are:
+   * LIST_UP_TO_DATE, LIST_LAZY, LIST_DIRTY
+   */
+  PRUint8 mState;
 };
+
+/**
+ * LIST_UP_TO_DATE means that the list is up to date and need not do
+ * any walking to be able to answer any questions anyone may have.
+ */
+#define LIST_UP_TO_DATE 0
+/**
+ * LIST_DIRTY means that the list contains no useful information and
+ * if anyone asks it anything it will have to populate itself before
+ * answering.
+ */
+#define LIST_DIRTY 1
+/**
+ * LIST_LAZY means that the list has populated itself to a certain
+ * extent and that that part of the list is still valid.  Requests for
+ * things outside that part of the list will require walking the tree
+ * some more.  When a list is in this state, the last thing in
+ * mElements is the last node in the tree that the list looked at.
+ */
+#define LIST_LAZY 2
 
 extern nsresult
 NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,

@@ -585,6 +585,26 @@ nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
 }
 
 // static
+PRBool
+nsContentUtils::ContentIsDescendantOf(nsIContent* aPossibleDescendant,
+                                      nsIContent* aPossibleAncestor)
+{
+  NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
+  NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
+
+  nsCOMPtr<nsIContent> parent;
+  do {
+    if (aPossibleDescendant == aPossibleAncestor)
+      return PR_TRUE;
+    aPossibleDescendant->GetParent(*getter_AddRefs(parent));
+    aPossibleDescendant = parent;
+  } while (aPossibleDescendant);
+
+  return PR_FALSE;
+}
+
+
+// static
 nsresult
 nsContentUtils::GetAncestors(nsIDOMNode* aNode,
                              nsVoidArray* aArray)
