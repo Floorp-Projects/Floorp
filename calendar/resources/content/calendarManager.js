@@ -281,19 +281,20 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       CalendarObject.path = profileFile.path;
    }
    
-   node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarObject.path)
-
-   if( CalendarObject.path.indexOf( "http://" ) != -1 )
+   node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarObject.remotePath)
+   
+   if( CalendarObject.remotePath.indexOf( "http://" ) != -1 ||
+       CalendarObject.remotePath.indexOf( "https://" ) != -1 ||
+       CalendarObject.remotePath.indexOf( "ftp://" ) != -1 )
    {
       profileFile = this.getProfileDirectory();
       profileFile.append( "Calendar" );
       profileFile.append("RemoteCalendar"+this.rootContainer.getSubNodes().length+".ics");
 
       node.setAttribute("http://home.netscape.com/NC-rdf#remote", "true");
-      node.setAttribute("http://home.netscape.com/NC-rdf#remotePath", CalendarObject.path);
+      node.setAttribute("http://home.netscape.com/NC-rdf#remotePath", CalendarObject.remotePath);
       node.setAttribute("http://home.netscape.com/NC-rdf#path", profileFile.path);
       node.setAttribute("http://home.netscape.com/NC-rdf#publishAutomatically", CalendarObject.publishAutomatically);
-      
       this.retrieveAndSaveRemoteCalendar( node );
       
       dump( "Remote Calendar Number "+this.rootContainer.getSubNodes().length+" Added" );
