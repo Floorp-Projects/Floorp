@@ -40,3 +40,8 @@ aw-identity.xul
 aw-server.xul
 aw-smtp.xul
 aw-done.xul
+aw-accounttype.xul
+aw-mailtype.xul
+aw-fullname.xul
+aw-email.xul
+aw-login.xul
