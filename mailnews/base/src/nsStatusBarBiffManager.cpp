@@ -35,6 +35,7 @@
 #include "nsMsgFolderDataSource.h"
 #include "MailNewsTypes.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nsIFileChannel.h"
 #include "nsISound.h"
 #include "nsIPref.h"
 #include "nsXPIDLString.h"

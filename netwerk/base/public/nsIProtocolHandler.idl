@@ -24,13 +24,17 @@
 #include "nsIChannel.idl"
 
 interface nsIURI;
-interface nsIInterfaceRequestor;
-interface nsILoadGroup;
 
 [scriptable, uuid(15fd6940-8ea7-11d3-93ad-00104ba0fd40)]
 interface nsIProtocolHandler : nsISupports
 {
     readonly attribute string scheme;
+
+	/** 
+	 * Default Port will be the port that this protocol normally
+	 * uses.  If a port does not make sense for the protocol (eg about://)
+	 * -1 will be returned.
+	 */
 
     readonly attribute long defaultPort;
 
@@ -38,7 +42,7 @@ interface nsIProtocolHandler : nsISupports
      * Makes a URI object that is suitable for loading by this protocol.
      * In the usual case (when only the accessors provided by nsIURI are 
      * needed), this method just constructs a standard URI using the
-     * component manager with kStandardURLCID.
+     * component manager with kStandardURLCID.  aBaseURI may be nsnull.
      */
     nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
 

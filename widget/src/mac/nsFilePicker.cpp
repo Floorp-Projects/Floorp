@@ -30,6 +30,7 @@
 #include "nsIURL.h"
 #include "nsVoidArray.h"
 #include "nsStringUtil.h"
+#include "nsIFileChannel.h"
 
 #include <InternetConfig.h>
 

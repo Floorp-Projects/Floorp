@@ -28,6 +28,7 @@
 #include "nsISupportsArray.h"
 #include "prinrval.h"
 #include "nsIFileStreams.h"
+#include "nsIFileChannel.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include <stdio.h>

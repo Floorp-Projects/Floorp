@@ -53,6 +53,7 @@
 #include "nsIURI.h"
 #include "nsCURILoader.h"
 #include "nsNetUtil.h"
+#include "nsIFileChannel.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"

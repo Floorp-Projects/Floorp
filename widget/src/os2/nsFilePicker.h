@@ -30,6 +30,7 @@
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsdefs.h"
+#include "nsIFileChannel.h"
 
 /**
  * Native Windows FileSelector wrapper

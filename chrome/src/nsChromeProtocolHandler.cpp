@@ -30,6 +30,7 @@
 #include "nsCRT.h"
 #include "nsChromeProtocolHandler.h"
 #include "nsIChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsIEventQueue.h"

@@ -24,9 +24,6 @@
 
 #include "nsIURI.idl"
 
-interface nsIChannel;
-interface nsIEventSinkGetter;
-
 /**
  * The nsIURL interface provides convenience methods that further
  * break down the path portion of nsIURI:
@@ -160,14 +157,3 @@ interface nsIStandardURL : nsISupports
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface nsIFile;
-
-/**
- * nsIFileURL is used for the file: protocol, and gives access to the
- * underlying nsIFile object.
- */
-[scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
-interface nsIFileURL : nsIURL
-{
-    attribute nsIFile file;
-};

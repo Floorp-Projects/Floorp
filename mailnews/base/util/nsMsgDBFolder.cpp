@@ -26,6 +26,7 @@
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIPref.h"
+#include "nsIFileChannel.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "nsMsgBaseCID.h"

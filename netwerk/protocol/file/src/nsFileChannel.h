@@ -37,6 +37,7 @@
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"        /* Solaris/gcc needed this here. */
+#include "nsIFileChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
 

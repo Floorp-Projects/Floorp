@@ -26,6 +26,7 @@
 #undef NS_IMPL_IDS
 
 #include "nsCOMPtr.h"
+#include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
 #include "nsHTMLDocument.h"
 #include "nsIParser.h"

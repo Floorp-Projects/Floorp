@@ -36,6 +36,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsIStreamIOChannel.h"
 #include "nsITransport.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"

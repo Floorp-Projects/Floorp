@@ -39,7 +39,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsIURL.h"
 #include "nsImageClipboard.h"
-
+#include "nsIFileChannel.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"

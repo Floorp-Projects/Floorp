@@ -25,6 +25,7 @@
 #include "nsIURL.h"
 #include "nsIFile.h"
 #include "nsIChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"

@@ -21,6 +21,7 @@
  */
 
 #include "nsFileChannel.h"
+#include "nsIFileChannel.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"

@@ -34,6 +34,7 @@ EXPORTS =                           \
 XPIDLSRCS =                             \
 	.\nsIAuthenticator.idl          \
         .\nsIChannel.idl                \
+        .\nsIFileChannel.idl	        \
         .\nsIFileStreams.idl            \
         .\nsIFileTransportService.idl   \
         .\nsIIOService.idl              \
@@ -54,6 +55,7 @@ XPIDLSRCS =                             \
         .\nsISocketTransport.idl        \
         .\nsISocketTransportService.idl \
         .\nsIStreamIO.idl               \
+	.\nsIStreamIOChannel.idl	\
         .\nsIStreamObserver.idl         \
         .\nsIStreamListener.idl         \
         .\nsIStreamProvider.idl         \

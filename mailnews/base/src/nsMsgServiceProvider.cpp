@@ -31,7 +31,7 @@
 #include "nsIRDFRemoteDataSource.h"
 
 #include "nsIChromeRegistry.h" // for chrome registry
-
+#include "nsIFileChannel.h"
 #include "nsIFileSpec.h"
 #include "nsAppDirectoryServiceDefs.h"
 

@@ -29,6 +29,7 @@
 #include "nsILoadGroup.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsIFileChannel.h"
 #include "nsFileStream.h"
 #include "nsIFileTransportService.h"
 #include "nsINetSupportDialogService.h"

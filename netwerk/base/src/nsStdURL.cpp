@@ -24,6 +24,7 @@
 
 #include "nsIIOService.h"
 #include "nsURLHelper.h"
+#include "nsIFileChannel.h"
 #include "nsStdURL.h"
 #include "nsStdURLParser.h"
 #include "nscore.h"

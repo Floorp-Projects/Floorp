@@ -61,6 +61,7 @@
 #include "nsRepeater.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
+#include "nsIFileChannel.h"
 #include "nsIFileSpec.h"
 #include "nsEmbedAPI.h"
 #include "nsMPFileLocProvider.h"

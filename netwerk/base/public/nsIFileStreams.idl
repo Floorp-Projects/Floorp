@@ -119,7 +119,7 @@ interface nsIBufferedOutputStream : nsIOutputStream
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIChannel.h"
+#include "nsIFileChannel.h"
 #include "nsILocalFile.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"

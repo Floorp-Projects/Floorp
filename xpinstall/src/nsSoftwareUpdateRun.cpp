@@ -36,6 +36,7 @@
 #include "nsProxiedService.h"
 #include "nsFileStream.h"
 #include "nsIURI.h"
+#include "nsIFileChannel.h"
 #include "nsNetUtil.h"
 
 #include "nspr.h"
