@@ -16,7 +16,7 @@
 * Copyright (C) 1998 Netscape Communications Corporation. All
 * Rights Reserved.
 *
-* Contributor(s): pschwartau@netscape.com
+* Contributor(s): pschwartau@netscape.com, jim@jibbering.com
 * Date: 30 May 2001
 *
 * SUMMARY:  Regression test for bug 83293
