@@ -19,6 +19,7 @@
 
 #if defined(SingleSignon)
 
+#define alphabetize 1
 #include "libi18n.h"            /* For the character code set conversions */
 #include "secnav.h"             /* For SECNAV_UnMungeString and SECNAV_MungeString */
 
@@ -41,6 +42,11 @@ extern int MK_SIGNON_PASSWORDS_GENERATE;
 extern int MK_SIGNON_PASSWORDS_REMEMBER;
 extern int MK_SIGNON_PASSWORDS_FETCH;
 extern int MK_SIGNON_YOUR_SIGNONS;
+extern int MK_SIGNON_YOUR_SIGNON_REJECTS;
+extern int MK_SIGNON_NOTIFICATION;
+extern int MK_SIGNON_NOTIFICATION_1;
+extern int MK_SIGNON_NAG;
+extern int MK_SIGNON_REMEMBER;
 
 /* locks for signon cache */
 
@@ -48,6 +54,21 @@ static PRMonitor * signon_lock_monitor = NULL;
 static PRThread  * signon_lock_owner = NULL;
 static int signon_lock_count = 0;
 static Bool si_anonymous = FALSE;
+
+/*
+ * temporary UI until FE implements this function as a single dialog box
+ */
+PRIVATE XP_Bool FE_CheckConfirm (
+	MWContext *pContext,
+	char* pConfirmMessage,
+	char* pCheckMessage,
+	XP_Bool* pChecked) {
+
+    Bool userHasAccepted = FE_Confirm(pContext, pConfirmMessage);
+    *pChecked = FE_Confirm (pContext, pCheckMessage);
+    return userHasAccepted;
+}
+/* end of temporary UI */
 
 PRIVATE void
 si_lock_signon_list(void)
@@ -185,10 +206,19 @@ typedef struct _SignonURLStruct {
     XP_List * signonUser_list;
 } si_SignonURLStruct;
 
+
+typedef struct _RejectStruct {
+    char * URLName;
+    char * userName;
+} si_Reject;
+
 PRIVATE XP_List * si_signon_list=0;
+PRIVATE XP_List * si_reject_list=0;
+
 PRIVATE Bool si_signon_list_changed = FALSE;
 PRIVATE int si_TagCount = 0;
 PRIVATE si_SignonURLStruct * lastURL = NULL;
+PRIVATE Bool si_NoticeGiven = FALSE;
 
 
 /* Remove misleading portions from URL name */
@@ -385,6 +415,45 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
     return TRUE;
 }
 
+/* Determine if a specified url/user exists */
+PRIVATE Bool
+si_CheckForUser(char *URLName, char *userName) {
+    si_SignonURLStruct * URL;
+    si_SignonUserStruct * user;
+    si_SignonDataStruct * data;
+    XP_List * user_ptr;
+    XP_List * data_ptr;
+
+    /* do nothing if signon preference is not enabled */
+    if (!si_GetSignonRememberingPref()) {
+	return FALSE;
+    }
+
+    si_lock_signon_list();
+
+    /* get URL corresponding to URLName */
+    URL = si_GetURL(URLName);
+    if (!URL) {
+	/* URL not found */
+	si_unlock_signon_list();
+	return FALSE;
+    }
+
+    /* find the specified user */
+    user_ptr = URL->signonUser_list;
+    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+	data_ptr = user->signonData_list;
+	while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+	    if (XP_STRCMP(data->value, userName)==0) {
+		si_unlock_signon_list();
+		return TRUE;
+	    }
+	}
+    }
+    si_unlock_signon_list();
+    return FALSE; /* user not found */
+}
+
 /*
  * temporary UI until FE implements this function as a single dialog box
  */
@@ -551,6 +620,160 @@ si_GetUserForChangeForm(MWContext *context, char* URLName, int messageNumber)
     return NULL;
 }
 
+PRIVATE void
+si_FreeReject(si_Reject * reject) {
+
+    /*
+     * This routine should only be called while holding the
+     * signon list lock
+     */
+
+    if(!reject) {
+	return;
+    }
+    XP_ListRemoveObject(si_reject_list, reject);
+    PR_FREEIF(reject->URLName);
+    PR_FREEIF(reject->userName);
+    PR_Free(reject);
+}
+
+PRIVATE Bool
+si_CheckForReject(char * URLName, char * userName) {
+    XP_List * list_ptr;
+    si_Reject * reject;
+
+    si_lock_signon_list();
+    if (si_reject_list) {
+	list_ptr = si_reject_list;
+	while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
+	    if(!PL_strcmp(userName, reject->userName) &&
+		    !PL_strcmp(URLName, reject->URLName)) {
+		si_unlock_signon_list();
+		return TRUE;
+	   }
+	}
+    }
+    si_unlock_signon_list();
+    return FALSE;
+}
+
+PRIVATE void
+si_PutReject(char * URLName, char * userName, Bool save) {
+    si_Reject * reject;
+    char * URLName2=NULL;
+    char * userName2=NULL;
+
+    reject = PR_NEW(si_Reject);
+    if (reject) {
+	/*
+	 * lock the signon list
+	 *  Note that, for efficiency, SI_LoadSignonData already sets the lock
+	 *  before calling this routine whereas none of the other callers do.
+	 *  So we need to determine whether or not we were called from
+	 *  SI_LoadSignonData before setting or clearing the lock.  We can
+         *  determine this by testing "save" since only SI_LoadSignonData
+         *  passes in a value of FALSE for "save".
+	 */
+	XP_List * list_ptr;
+	if (save) {
+	    si_lock_signon_list();
+	}
+	list_ptr = si_reject_list;
+
+	StrAllocCopy(URLName2, URLName);
+	StrAllocCopy(userName2, userName);
+	reject->URLName = URLName2;
+	reject->userName = userName2;
+
+	if(!si_reject_list) {
+	    si_reject_list = XP_ListNew();
+	    if(!si_reject_list) {
+		PR_Free(reject->URLName);
+		PR_Free(reject->userName);
+		PR_Free(reject);
+		if (save) {
+		    si_unlock_signon_list();
+		}
+		return;
+	    }
+	}
+#ifdef alphabetize
+	/* add it to the list in alphabetical order */
+	{
+	    si_Reject * tmp_reject;
+	    Bool rejectAdded = FALSE;
+	    while((tmp_reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
+		if (PL_strcmp (reject->URLName, tmp_reject->URLName)<0) {
+		    XP_ListInsertObject (si_reject_list, tmp_reject, reject);
+		    rejectAdded = TRUE;
+		    break;
+		}
+	    }
+	    if (!rejectAdded) {
+		XP_ListAddObjectToEnd (si_reject_list, reject);
+	    }
+	}
+#else
+	/* add it to the end of the list */
+	XP_ListAddObjectToEnd (si_reject_list, reject);
+#endif
+
+	if (save) {
+	    si_signon_list_changed = TRUE;
+	    SI_SaveSignonData(NULL);
+	}
+	if (save) {
+	    si_unlock_signon_list();
+	}
+    }
+}
+
+/* Ask user if it is ok to save the signon data */
+PRIVATE Bool
+si_OkToSave(MWContext *context, char *URLName, char *userName) {
+    Bool remember_checked = TRUE;
+    char *strippedURLName = 0;
+
+    /* if url/user already exists, then it is safe to save it again */
+    if (si_CheckForUser(URLName, userName)) {
+	return TRUE;
+    }
+
+    if (!si_NoticeGiven) {
+	char* notification = 0;
+	si_NoticeGiven = TRUE;
+	si_signon_list_changed = TRUE;
+	SI_SaveSignonData(NULL);
+	StrAllocCopy(notification, XP_GetString(MK_SIGNON_NOTIFICATION));
+	StrAllocCat(notification, XP_GetString(MK_SIGNON_NOTIFICATION_1));
+	if (!FE_Confirm(context, notification)) {
+	    XP_FREE (notification);
+	    PREF_SetBoolPref(pref_rememberSignons, FALSE);
+	    return FALSE;
+	}
+	XP_FREE (notification);
+    }
+
+    strippedURLName = si_StrippedURL(URLName);
+    if (si_CheckForReject(strippedURLName, userName)) {
+	XP_FREE(strippedURLName);
+	return FALSE;
+    }
+
+    if (!FE_CheckConfirm(context,
+	    XP_GetString(MK_SIGNON_NAG),
+	    XP_GetString(MK_SIGNON_REMEMBER),
+	    &remember_checked)) {
+	if (remember_checked) {
+	    si_PutReject(strippedURLName, userName, TRUE);
+	}
+	XP_FREE(strippedURLName);
+	return FALSE;
+    }
+    XP_FREE(strippedURLName);
+    return TRUE;
+}
+
 /*
  * Put data obtained from a submit form into the data structure for
  * the specified URL
@@ -572,7 +795,6 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
     XP_List * user_ptr;
     XP_List * data_ptr;
     si_SignonURLStruct * tmp_URL_ptr;
-    size_t new_len;
     Bool mismatch;
     int i;
 
@@ -636,25 +858,28 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 	    XP_FREE(URL);
 	}
 
-	/* put new node into signon list so that it is before any
-	 * strings of smaller length
-	 */
-	new_len = XP_STRLEN(URL->URLName);
+	/* put new node into signon list */
+
+#ifdef alphabetize
+	/* add it to the list in alphabetical order */
 	list_ptr = si_signon_list;
 	while((tmp_URL_ptr =
 		(si_SignonURLStruct *) XP_ListNextObject(list_ptr))!=0) {
-	    if(new_len > XP_STRLEN (tmp_URL_ptr->URLName)) {
+	    if(PL_strcmp(URL->URLName,tmp_URL_ptr->URLName)<0) {
 		XP_ListInsertObject
 		    (si_signon_list, tmp_URL_ptr, URL);
 		added_to_list = TRUE;
 		break;
 	    }
 	}
-	/* no shorter strings found in list */
 	if (!added_to_list) {
 	    XP_ListAddObjectToEnd (si_signon_list, URL);
 	}
     }
+#else
+	/* add it to the end of the list */
+	XP_ListAddObjectToEnd (si_signon_list, URL);
+#endif
 
     /* initialize state variables in URL node */
     URL->chosen_user = NULL;
@@ -862,8 +1087,32 @@ SI_LoadSignonData(char * filename) {
     }
 
     /* open the signon file */
-    if(!(fp = XP_FileOpen(filename, xpHTTPSingleSignon, XP_FILE_READ)))
+    if(!(fp = XP_FileOpen(filename, xpHTTPSingleSignon, XP_FILE_READ))) {
 	return(-1);
+    }
+
+    /* skip the initial comment lines */
+    do {
+	XP_FileReadLine(buffer, BUFFER_SIZE, fp);
+    } while (buffer[0] == '#');
+
+    /* first line after comment indicates if notice was given */
+    si_NoticeGiven = (buffer[0] == 'T');
+
+    /* read the reject list */
+    si_lock_signon_list();
+    while(XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
+        if (buffer[0] == '.') {
+	    break; /* end of reject list */
+	}
+	si_StripLF(buffer);
+	URLName = NULL;
+	StrAllocCopy(URLName, buffer);
+	XP_FileReadLine(buffer, BUFFER_SIZE, fp); /* get username */
+	si_StripLF(buffer);
+	si_PutReject(URLName, buffer, FALSE);
+	XP_FREE (URLName);
+    }
 
     /* initialize the submit structure */
     submit.name_array = (PA_Block)name_array;
@@ -871,13 +1120,8 @@ SI_LoadSignonData(char * filename) {
     submit.type_array = (PA_Block)type_array;
 
     /* read the URL line */
-    si_lock_signon_list();
     while(XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
 
-	/* ignore comment lines at head of file */
-        if (buffer[0] == '#') {
-	    continue;
-	}
 	si_StripLF(buffer);
 	URLName = NULL;
 	StrAllocCopy(URLName, buffer);
@@ -947,6 +1191,7 @@ SI_LoadSignonData(char * filename) {
 	    XP_FREE(value_array[i]);
 	}
 	if (badInput) {
+	    si_unlock_signon_list();
 	    return (1);
 	}
     }
@@ -972,16 +1217,11 @@ si_SaveSignonDataLocked(char * filename) {
     si_SignonURLStruct * URL;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
+    si_Reject * reject;
     XP_File fp;
 
     /* do nothing if signon list has not changed */
-    list_ptr = si_signon_list;
     if(!si_signon_list_changed) {
-	return(-1);
-    }
-
-    /* do nothing is signon list doesn't exist */
-    if(!(si_signon_list)) {
 	return(-1);
     }
 
@@ -995,55 +1235,90 @@ si_SaveSignonDataLocked(char * filename) {
 	return(-1);
     }
 
+    /* format for head of file shall be:
+     * # comment
+     * # comment
+     * # comment
+     * TRUE -- indicates if notification has already been given to user
+     * URLName -- first url/username on reject list
+     * userName
+     * URLName -- second url/username on reject list
+     * userName
+     * ...     -- etc.
+     * .       -- end of list
+     */
+
     /* write out leading comments */
     XP_FileWrite("# Netscape HTTP Signons File" LINEBREAK
                   "# This is a generated file!  Do not edit."
                   LINEBREAK "#" LINEBREAK, -1, fp);
 
-    /* format shall be:
+    /* write out si_NoticeGiven */
+    if (si_NoticeGiven) {
+        XP_FileWrite("TRUE" LINEBREAK, -1, fp);
+    } else {
+        XP_FileWrite("FALSE" LINEBREAK, -1, fp);
+    }
+
+    /* write out reject list */
+    if (si_reject_list) {
+	list_ptr = si_reject_list;
+	while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
+	    XP_FileWrite(reject->URLName, -1, fp);
+	    XP_FileWrite(LINEBREAK, -1, fp);
+	    XP_FileWrite(reject->userName, -1, fp);
+	    XP_FileWrite(LINEBREAK, -1, fp);
+	}
+    }
+    XP_FileWrite("." LINEBREAK, -1, fp);
+
+    /* format for cached logins shall be:
      * url LINEBREAK {name LINEBREAK value LINEBREAK}*	. LINEBREAK
-     * if type is signon, name is preceded by an asterisk (*)
+     * if type is password, name is preceded by an asterisk (*)
      */
 
     /* write out each URL node */
-    while((URL = (si_SignonURLStruct *)
-	    XP_ListNextObject(list_ptr)) != NULL) {
+    if((si_signon_list)) {
+	list_ptr = si_signon_list;
+	while((URL = (si_SignonURLStruct *)
+		XP_ListNextObject(list_ptr)) != NULL) {
 
-	user_ptr = URL->signonUser_list;
+	    user_ptr = URL->signonUser_list;
 
-	/* write out each user node of the URL node */
-	while((user = (si_SignonUserStruct *)
-		XP_ListNextObject(user_ptr)) != NULL) {
-	    XP_FileWrite(URL->URLName, -1, fp);
-	    XP_FileWrite(LINEBREAK, -1, fp);
-
-	    data_ptr = user->signonData_list;
-
-	    /* write out each data node of the user node */
-	    while((data = (si_SignonDataStruct *)
-		    XP_ListNextObject(data_ptr)) != NULL) {
-		char* mungedValue;
-		if (data->isPassword) {
-                    XP_FileWrite("*", -1, fp);
-		}
-		XP_FileWrite(data->name, -1, fp);
+	    /* write out each user node of the URL node */
+	    while((user = (si_SignonUserStruct *)
+		    XP_ListNextObject(user_ptr)) != NULL) {
+		XP_FileWrite(URL->URLName, -1, fp);
 		XP_FileWrite(LINEBREAK, -1, fp);
-                XP_FileWrite("=", -1, fp); /* precede values with '=' */
-		if (data->isPassword) {
-		    if ((mungedValue = SECNAV_MungeString(data->value))) {
-			XP_FileWrite(mungedValue, -1, fp);
-			XP_FREE(mungedValue);
+
+		data_ptr = user->signonData_list;
+
+		/* write out each data node of the user node */
+		while((data = (si_SignonDataStruct *)
+			XP_ListNextObject(data_ptr)) != NULL) {
+		    char* mungedValue;
+		    if (data->isPassword) {
+                        XP_FileWrite("*", -1, fp);
+		    }
+		    XP_FileWrite(data->name, -1, fp);
+		    XP_FileWrite(LINEBREAK, -1, fp);
+                    XP_FileWrite("=", -1, fp); /* precede values with '=' */
+		    if (data->isPassword) {
+			if ((mungedValue = SECNAV_MungeString(data->value))) {
+			    XP_FileWrite(mungedValue, -1, fp);
+			    XP_FREE(mungedValue);
+			} else {
+			    /* in free source, passwords are not obscured */
+			    XP_FileWrite(data->value, -1, fp);
+			}
 		    } else {
-			/* this is the free source and passwords are not obscured */
 			XP_FileWrite(data->value, -1, fp);
 		    }
-		} else {
-		    XP_FileWrite(data->value, -1, fp);
+		    XP_FileWrite(LINEBREAK, -1, fp);
 		}
+                XP_FileWrite(".", -1, fp);
 		XP_FileWrite(LINEBREAK, -1, fp);
 	    }
-            XP_FileWrite(".", -1, fp);
-	    XP_FileWrite(LINEBREAK, -1, fp);
 	}
     }
 
@@ -1092,7 +1367,7 @@ SI_RemoveAllSignonData() {
 PUBLIC void
 SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 {
-    int i;
+    int i, j;
     int passwordCount = 0;
     int pswd[3];
 
@@ -1114,8 +1389,19 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
     /* process the form according to how many passwords it has */
     if (passwordCount == 1) {
 	/* one-password form is a log-in so remember it */
-	si_PutData(context->hist.cur_doc_ptr->address, submit, TRUE);
 
+	/* obtain the index of the first input field (that is the username) */
+	for (j=0; j<submit->value_cnt; j++) {
+	    if (((uint8 *)submit->type_array)[j] == FORM_TYPE_TEXT) {
+		break;
+	    }
+	}
+
+	if (si_OkToSave(context,
+		context->hist.cur_doc_ptr->address, /* urlname */
+		(char *)(submit->value_array[j]) /* username */)) {
+	    si_PutData(context->hist.cur_doc_ptr->address, submit, TRUE);
+	}
     } else if (passwordCount == 2) {
 	/* two-password form is a registration */
 
@@ -1386,7 +1672,7 @@ SI_PromptUsernameAndPassword
 		 (context, copyOfPrompt, username, password);
 
     /* remember these values for next time */
-    if (status) {
+    if (status && si_OkToSave(context, URLName, *username)) {
 	si_RememberSignonDataFromBrowser (URLName, *username, *password);
     }
 
@@ -1467,7 +1753,8 @@ SI_PromptPassword
     }
 
     /* remember these values for next time */
-    if (password && XP_STRLEN(password)) {
+    if (password && XP_STRLEN(password) &&
+	    si_OkToSave(context, urlname, username)) {
 	si_RememberSignonDataFromBrowser (urlname, username, password);
     }
 
@@ -1511,20 +1798,20 @@ SI_Prompt (MWContext *context, char *prompt,
 
     /* remember this username for next time */
     if (result && XP_STRLEN(result)) {
-        if (username && (XP_STRCMP(username, result) == 0)) {
-            /*
-             * User is re-using the same user name as from previous time
-             * so keep the previous password as well
-             */
-            si_RememberSignonDataFromBrowser (URLName, result, password);
-        } else {
-            /*
+	if (username && (XP_STRCMP(username, result) == 0)) {
+	    /*
+	     * User is re-using the same user name as from previous time
+	     * so keep the previous password as well
+	     */
+	    si_RememberSignonDataFromBrowser (URLName, result, password);
+	} else {
+	    /*
              * We put in a dummy password of " " which we will test
-             * for in a following call to SI_PromptPassword.  See comments
-             * in that routine.
-             */
+	     * for in a following call to SI_PromptPassword.  See comments
+	     * in that routine.
+	     */
             si_RememberSignonDataFromBrowser (URLName, result, " ");
-        }
+	}
     }
 
     /* cleanup and return */
@@ -1693,14 +1980,18 @@ si_SignonInfoDialogDone
     XP_List *URL_ptr;
     XP_List *user_ptr;
     XP_List *data_ptr;
+    XP_List *reject_ptr;
     si_SignonURLStruct *URL;
     si_SignonURLStruct *URLToDelete = 0;
     si_SignonUserStruct* user;
     si_SignonUserStruct* userToDelete = 0;
     si_SignonDataStruct* data;
+    si_Reject* reject;
+    si_Reject* rejectToDelete = 0;
 
     char *buttonName, *userNumberAsString;
     int userNumber;
+    int rejectNumber;
     char* gone;
 
     /* test for cancel */
@@ -1744,8 +2035,8 @@ si_SignonInfoDialogDone
 
     /* OK was pressed, do the deletions */
 
-    /* first get the comma-separated sequence of signons to be deleted */
-    gone = XP_FindValueInArgs("goneC", argv, argc);
+    /* get the comma-separated sequence of signons to be deleted */
+    gone = XP_FindValueInArgs("goneS", argv, argc);
     XP_ASSERT(gone);
     if (!gone) {
 	return PR_FALSE;
@@ -1787,6 +2078,36 @@ si_SignonInfoDialogDone
 	si_SaveSignonDataLocked(NULL);
     }
 
+    /* get the comma-separated sequence of rejects to be deleted */
+    gone = XP_FindValueInArgs("goneR", argv, argc);
+    XP_ASSERT(gone);
+    if (!gone) {
+	return PR_FALSE;
+    }
+
+    /* step through all rejects and delete those that are in the sequence
+     * Note: we can't delete reject while "reject_ptr" is pointing to it because
+     * that would destroy "reject_ptr". So we do a lazy deletion
+     */
+    rejectNumber = 0;
+    si_lock_signon_list();
+    reject_ptr = si_reject_list;
+    while ((reject = (si_Reject *) XP_ListNextObject(reject_ptr))) {
+	if (si_InSequence(gone, rejectNumber)) {
+	    if (rejectToDelete) {
+		si_FreeReject(rejectToDelete);
+	    }
+	    rejectToDelete = reject;
+	}
+	rejectNumber++;
+    }
+    if (rejectToDelete) {
+	si_FreeReject(rejectToDelete);
+	si_signon_list_changed = TRUE;
+	si_SaveSignonDataLocked(NULL);
+    }
+    si_unlock_signon_list();
+
     return PR_FALSE;
 }
 
@@ -1799,14 +2120,16 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     XP_List *URL_ptr;
     XP_List *user_ptr;
     XP_List *data_ptr;
+    XP_List *reject_ptr;
     si_SignonURLStruct *URL;
     si_SignonUserStruct * user;
     si_SignonDataStruct* data;
+    si_Reject* reject;
 
     static XPDialogInfo dialogInfo = {
 	XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON,
 	si_SignonInfoDialogDone,
-	300,
+	600,
 	420
     };
 
@@ -1818,15 +2141,30 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "<script>\n"
 "function DeleteSignonSelected() {\n"
 "  selname = document.theform.selname;\n"
-"  goneC = document.theform.goneC;\n"
-"  var p;\n"
+"  goneS = document.theform.goneS;\n"
 "  var i;\n"
+"  var j;\n"
 "  for (i=selname.options.length-1 ; i>=0 ; i--) {\n"
 "    if (selname.options[i].selected) {\n"
 "      selname.options[i].selected = 0;\n"
-"      goneC.value = goneC.value + \",\" + selname.options[i].value;\n"
+"      goneS.value = goneS.value + \",\" + selname.options[i].value;\n"
 "      for (j=i ; j<selname.options.length ; j++) {\n"
 "        selname.options[j] = selname.options[j+1];\n"
+"      }\n"
+"    }\n"
+"  }\n"
+"}\n"
+"function DeleteRejectSelected() {\n"
+"  selname2 = document.theform.selname2;\n"
+"  goneR = document.theform.goneR;\n"
+"  var i;\n"
+"  var j;\n"
+"  for (i=selname2.options.length-1 ; i>=0 ; i--) {\n"
+"    if (selname2.options[i].selected) {\n"
+"      selname2.options[i].selected = 0;\n"
+"      goneR.value = goneR.value + \",\" + selname2.options[i].value;\n"
+"      for (j=i ; j<selname2.options.length ; j++) {\n"
+"        selname2.options[j] = selname2.options[j+1];\n"
 "      }\n"
 "    }\n"
 "  }\n"
@@ -1838,11 +2176,11 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     /* force loading of the signons file */
     si_RegisterSignonPrefCallbacks();
     si_lock_signon_list();
-    URL_ptr = si_signon_list;
 
     /* Write out each URL */
+    URL_ptr = si_signon_list;
     g += PR_snprintf(buffer+g, BUFLEN-g,
-"<FORM><TABLE>\n"
+"<FORM><TABLE COLS=2>\n"
 "<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname\" MULTIPLE SIZE=15>\n",
 	XP_GetString(MK_SIGNON_YOUR_SIGNONS));
     FLUSH_BUFFER
@@ -1860,7 +2198,6 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 	    userNumber++;
 	}
     }
-    si_unlock_signon_list();
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "</SELECT></CENTER>\n"
 	);
@@ -1870,12 +2207,41 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "<CENTER>\n"
 "<INPUT TYPE=\"BUTTON\" VALUE=%s ONCLICK=\"DeleteSignonSelected();\">\n"
 "<INPUT TYPE=\"BUTTON\" NAME=\"view\" VALUE=%s ONCLICK=\"parent.clicker(this,window.parent)\">\n"
-"<INPUT TYPE=\"HIDDEN\" NAME=\"goneC\" VALUE=\"\">\n"
-"</CENTER></TH>\n"
-"</TABLE></FORM>\n",
+"<INPUT TYPE=\"HIDDEN\" NAME=\"goneS\" VALUE=\"\">\n"
+"</CENTER></TH>\n",
 	XP_GetString(SA_REMOVE_BUTTON_LABEL),
 	XP_GetString(SA_VIEW_BUTTON_LABEL) );
     FLUSH_BUFFER
+
+    /* Write out each reject */
+    reject_ptr = si_reject_list;
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname2\" MULTIPLE SIZE=15>\n",
+	XP_GetString(MK_SIGNON_YOUR_SIGNON_REJECTS));
+    FLUSH_BUFFER
+    userNumber = 0;
+    while ( (reject=(si_Reject *) XP_ListNextObject(reject_ptr)) ) {
+	g += PR_snprintf(buffer+g, BUFLEN-g,
+"<OPTION VALUE=%d>%s: %s</OPTION>",
+	    userNumber, reject->URLName, reject->userName);
+	FLUSH_BUFFER
+	userNumber++;
+    }
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"</SELECT></CENTER>\n"
+	);
+    FLUSH_BUFFER
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<CENTER>\n"
+"<INPUT TYPE=\"BUTTON\" VALUE=%s ONCLICK=\"DeleteRejectSelected();\">\n"
+"<INPUT TYPE=\"HIDDEN\" NAME=\"goneR\" VALUE=\"\">\n"
+"</CENTER></TH>\n"
+"</TABLE></FORM>\n",
+	XP_GetString(SA_REMOVE_BUTTON_LABEL) );
+    FLUSH_BUFFER
+
+    si_unlock_signon_list();
 
     /* free buffer since it is no longer needed */
     if (buffer) {
