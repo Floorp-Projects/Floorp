@@ -49,7 +49,7 @@ nsStreamObject::~nsStreamObject()
   NS_IF_RELEASE(mUrl);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mSink);
-  NS_IF_RELEASE(mDTD);
+  //NS_IF_RELEASE(mDTD);
   NS_IF_RELEASE(mStreamListener);
 }
 
