@@ -30,9 +30,14 @@
 #include "nsIStreamListener.h"
 #include "nsIAllocator.h"
 
-nsCacheEntryChannel::nsCacheEntryChannel(nsCachedNetData* aCacheEntry, nsIChannel* aChannel,
-                                         nsILoadGroup* aLoadGroup):
-    nsChannelProxy(aChannel), mCacheEntry(aCacheEntry), mLoadGroup(aLoadGroup), mLoadAttributes(0)
+nsCacheEntryChannel::nsCacheEntryChannel(
+        nsCachedNetData* aCacheEntry, 
+        nsIChannel* aChannel,
+        nsILoadGroup* aLoadGroup):
+    nsChannelProxy(aChannel), 
+    mCacheEntry(aCacheEntry), 
+    mLoadGroup(aLoadGroup), 
+    mLoadAttributes(0)
 {
     NS_ASSERTION(aCacheEntry->mChannelCount < 0xFF, "Overflowed channel counter");
     mCacheEntry->mChannelCount++;
@@ -44,14 +49,20 @@ nsCacheEntryChannel::~nsCacheEntryChannel()
     mCacheEntry->mChannelCount--;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsCacheEntryChannel, nsISupports, nsIChannel, nsIRequest)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsCacheEntryChannel, 
+        nsISupports, 
+        nsIChannel, 
+        nsIRequest)
 
 // A proxy for nsIOutputStream
 class CacheOutputStream : public nsIOutputStream {
 
 public:
-    CacheOutputStream(nsIOutputStream *aOutputStream, nsCachedNetData *aCacheEntry):
-        mOutputStream(aOutputStream), mCacheEntry(aCacheEntry), mStartTime(PR_IntervalNow())
+    CacheOutputStream(nsIOutputStream *aOutputStream, 
+            nsCachedNetData *aCacheEntry):
+        mOutputStream(aOutputStream), 
+        mCacheEntry(aCacheEntry), 
+        mStartTime(PR_IntervalNow())
         { NS_INIT_REFCNT(); }
 
     virtual ~CacheOutputStream() {
@@ -90,12 +101,14 @@ protected:
 NS_IMPL_THREADSAFE_ISUPPORTS1(CacheOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
-nsCacheEntryChannel::OpenOutputStream(PRUint32 aStartPosition, nsIOutputStream* *aOutputStream)
+nsCacheEntryChannel::OpenOutputStream(PRUint32 aStartPosition, 
+        nsIOutputStream* *aOutputStream)
 {
     nsresult rv;
     nsCOMPtr<nsIOutputStream> baseOutputStream;
     
-    rv = mChannel->OpenOutputStream(aStartPosition, getter_AddRefs(baseOutputStream));
+    rv = mChannel->OpenOutputStream(aStartPosition, 
+            getter_AddRefs(baseOutputStream));
     if (NS_FAILED(rv)) return rv;
 
     mCacheEntry->NoteUpdate();
@@ -110,16 +123,19 @@ nsCacheEntryChannel::OpenOutputStream(PRUint32 aStartPosition, nsIOutputStream* 
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::OpenInputStream(PRUint32 aStartPosition, PRInt32 aReadCount,
-				     nsIInputStream* *aInputStream)
+nsCacheEntryChannel::OpenInputStream(PRUint32 aStartPosition, 
+        PRInt32 aReadCount,
+        nsIInputStream* *aInputStream)
 {
     mCacheEntry->NoteAccess();
     return mChannel->OpenInputStream(aStartPosition, aReadCount, aInputStream);
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
-                               nsISupports *aContext, nsIStreamListener *aListener)
+nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, 
+        PRInt32 aReadCount,
+        nsISupports *aContext, 
+        nsIStreamListener *aListener)
 {
     nsresult rv;
 
@@ -138,9 +154,11 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
 
 // No async writes allowed to the cache yet
 NS_IMETHODIMP
-nsCacheEntryChannel::AsyncWrite(nsIInputStream *aFromStream, PRUint32 aStartPosition,
-				PRInt32 aWriteCount, nsISupports *aContext,
-				nsIStreamObserver *aObserver)
+nsCacheEntryChannel::AsyncWrite(nsIInputStream *aFromStream, 
+        PRUint32 aStartPosition,
+        PRInt32 aWriteCount, 
+        nsISupports *aContext,
+        nsIStreamObserver *aObserver)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

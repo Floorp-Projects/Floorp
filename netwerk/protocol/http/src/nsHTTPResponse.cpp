@@ -57,8 +57,7 @@ nsHTTPResponse::~nsHTTPResponse()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPResponse, NS_GET_IID(nsISupports))
-
+NS_IMPL_THREADSAFE_ISUPPORTS(nsHTTPResponse, NS_GET_IID(nsISupports))
 
 nsresult nsHTTPResponse::GetCharset(char* *o_Charset)
 {
