@@ -14,6 +14,7 @@ my $SIZE      = lc($req->param('size'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
+my $SHOWPOINT = lc($req->param('showpoint'));
 my $AVG       = lc($req->param('avg'));
 
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
@@ -159,6 +160,18 @@ sub show_graph {
 	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype";
   }
 
+  # Highlight a point, e.g. 2002:03:21:06:52:28,4087
+  if($SHOWPOINT) {
+    my @xy = split(",",$SHOWPOINT);
+
+    open POINTFILE, ">db/$TESTNAME/point.txt";
+    print POINTFILE "$xy[0]\t$xy[1]\n";
+    close POINTFILE;
+
+    $plot_cmd .= ", \"db/$TESTNAME/point.txt\" using 1:2 with points ls 4";
+  }
+
+
   if (($AVG) and (-e $DATAFILE_AVG)) {
     $plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 with lines ls 3";
     #$plot_cmd .= ", \"$DATAFILE_AVG\" using 1:2 smooth bezier ls 3";
@@ -181,6 +194,7 @@ sub show_graph {
 				set linestyle 1 lt 3 lw 1 pt 7 ps .5
 				set linestyle 2 lt 3 lw 1 pt 7 ps 1
 				set linestyle 3 lt 3 lw 1
+				set linestyle 4 lt 7 lw 1 pt 7 ps 3
 				set data style points
 				set timefmt "%Y:%m:%d:%H:%M:%S"
 				set xdata time
@@ -191,6 +205,7 @@ sub show_graph {
 				set nokey
 				set grid
 				$plot_cmd
+                $plot_cmd2
 			   };
 
 # plot "$DATAFILE" using 1:2 with points ps 1, "$DATAFILE" using 1:2 with lines ls 2
@@ -206,6 +221,12 @@ sub show_graph {
   close (GNUPLOT) || die "can't close: $!";
   unlink $PNGFILE || die "can't unlink $PNGFILE: $!";
   
+
+  # Cleanup generated files.
+  if($SHOWPOINT) {
+    unlink("db/$TESTNAME/point.txt");
+  }
+
   print "Content-type: image/png\n\n";
   print $blob;
 }

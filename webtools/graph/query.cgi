@@ -14,6 +14,7 @@ my $SIZE      = lc($req->param('size'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
+my $SHOWPOINT = lc($req->param('showpoint'));
 my $AVG       = lc($req->param('avg'));
 
 
@@ -62,7 +63,7 @@ sub print_testnames {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg>$_</a>\n";
+	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&showpoint=$showpoint&avg=$avg>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -86,7 +87,7 @@ sub print_machines {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg>$_</a>\n";
+	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg&showpoint=$showpoint>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -111,11 +112,11 @@ sub show_graph {
   print "<font size=\"-1\">\n";
   if($AUTOSCALE) {
 	print "Y-axis: (<b>zoom</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">100%</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">100%</a>";
 	print ") \n";
   } else {
 	print "Y-axis: (";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">zoom</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">zoom</a>";
 	print "|<b>100%</b>) \n";
   }
   print "</font>\n";
@@ -132,11 +133,12 @@ sub show_graph {
   print "<input type=hidden name=\"units\" value=\"$UNITS\">";
   print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
   print "<input type=hidden name=\"points\" value=\"$POINTS\">";
+  print "<input type=hidden name=\"showpoint\" value=\"$SHOWPOINT\">";
   print "<input type=hidden name=\"avg\" value=\"$AVG\">";
 
   print "Days:";
   if($DAYS) {
-	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">all data</a>|";
+	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">all data</a>|";
     print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>";
 	print ")\n";
   } else {
@@ -154,12 +156,12 @@ sub show_graph {
   print "Style:";
   if($LTYPE eq "steps") {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS&avg=$AVG\">lines</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">lines</a>";
 	print "|<b>steps</b>";
 	print ")";
   } else {
 	print "(<b>lines</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS&avg=$AVG\">steps</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\">steps</a>";
 	print ")";
   }
   print "</font>\n";
@@ -171,11 +173,11 @@ sub show_graph {
   print "Points:";
   if($POINTS) {
 	print "(<b>on</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=0&avg=$AVG\">off</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=0&showpoint=$SHOWPOINT&avg=$AVG\">off</a>";
 	print ")\n";
   } else {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=1&avg=$AVG\">on</a>";	
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=1&showpoint=$SHOWPOINT&avg=$AVG\">on</a>";	
     print "|<b>off</b>)\n";
   }
   print "</font>\n";
@@ -188,11 +190,11 @@ sub show_graph {
   print "<A title=\"Moving average of last 10 points\">Average:</a>";
   if($AVG) {
 	print "(<b>on</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=0\">off</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=0\">off</a>";
 	print ")\n";
   } else {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=1\">on</a>";	
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=1\">on</a>";	
     print "|<b>off</b>)\n";
   }
   print "</font>\n";
@@ -206,7 +208,7 @@ sub show_graph {
 
 
   # graph
-  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\" alt=\"$TBOX $TESTNAME graph\">";
+  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&showpoint=$SHOWPOINT&avg=$AVG\" alt=\"$TBOX $TESTNAME graph\">";
 
   print "<br>\n";
   print "<br>\n";
@@ -273,6 +275,7 @@ sub show_graph {
   print "<input type=hidden name=\"units\" value=\"$UNITS\">";
   print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
   print "<input type=hidden name=\"points\" value=\"$POINTS\">";
+  print "<input type=hidden name=\"showpoint\" value=\"$SHOWPOINT\">";
   print "<input type=hidden name=\"avg\" value=\"$AVG\">";
 
   print "Graph size:";
