@@ -42,8 +42,8 @@
 #include "EditTxn.h"
 #include "nsIPref.h"
 #ifdef IBMBIDI
+#include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIFrameSelection.h"
 #endif // IBMBIDI
 
 static NS_DEFINE_CID(kContentIteratorCID,   NS_CONTENTITERATOR_CID);
@@ -774,6 +774,8 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
   }
   
   nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> startNode;
+  PRInt32 startOffset;
   
   if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
   {
@@ -800,8 +802,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     res = aSelection->GetIsCollapsed(&bCollapsed);
     if (NS_FAILED(res)) return res;
   
-    nsCOMPtr<nsIDOMNode> startNode, nextNode, selNode;
-    PRInt32 startOffset;
+    nsCOMPtr<nsIDOMNode> nextNode, selNode;
   
     res = mEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
     if (NS_FAILED(res)) return res;
@@ -809,6 +810,13 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     
     if (bCollapsed)
     {
+#ifdef IBMBIDI
+      // Test for distance between caret and text that will be deleted
+      res = CheckBidiLevelForDeletion(startNode, startOffset, aCollapsedAction, aCancel);
+      if (NS_FAILED(res)) return res;
+      if (*aCancel) return NS_OK;
+#endif // IBMBIDI
+
       nsCOMPtr<nsIDOMText> textNode;
       PRUint32 strLength;
       
@@ -876,62 +884,6 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
       }
     }
   }
-
-#ifdef IBMBIDI // Test for distance between caret and text that will be deleted
-  nsCOMPtr<nsIDOMNode> node;
-  PRInt32 offset;
-
-  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(node), &offset);
-  if (NS_FAILED(res)) return res;
-  if (!node) return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresShell> shell;
-  mEditor->GetPresShell(getter_AddRefs(shell));
-  if (shell)
-  {
-    nsCOMPtr<nsIPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
-    if (context)
-    {
-      PRBool bidiEnabled;
-      context->GetBidiEnabled(&bidiEnabled);
-      if (bidiEnabled)
-      {
-        nsCOMPtr<nsIFrameSelection> frameSelection;
-        shell->GetFrameSelection(getter_AddRefs(frameSelection));
-        if (frameSelection)
-        {
-          nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-          if (content)
-          {
-            nsIFrame *deleteInFrame;
-            PRInt32 frameOffset;
-
-            shell->GetPrimaryFrameFor(content, &deleteInFrame);
-            if (deleteInFrame)
-            {
-              PRUint8 currentCursorLevel;
-              long frameLevel;
-
-              res = deleteInFrame->GetChildFrameContainingOffset(offset, nsIEditor::eNext==aCollapsedAction, &frameOffset, &deleteInFrame);
-              if (NS_SUCCEEDED(res) && deleteInFrame)
-              {
-                shell->GetCursorBidiLevel(&currentCursorLevel);
-                nsCOMPtr<nsIAtom> embeddingLevel = NS_NewAtom("EmbeddingLevel");
-                deleteInFrame->GetBidiProperty(context, embeddingLevel, (void**)&frameLevel);
-                shell->SetCursorBidiLevel(frameLevel);
-                if (currentCursorLevel != frameLevel)
-                {
-                  *aCancel = PR_TRUE;
-                  return NS_OK;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-#endif // IBMBIDI
 
   return res;
 }

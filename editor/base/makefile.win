@@ -59,6 +59,9 @@ CPPSRCS =                         \
       nsSelectionState.cpp        \
       nsStyleSheetTxns.cpp        \
       nsTextEditRules.cpp         \
+!ifdef IBMBIDI
+     nsTextEditRulesBidi.cpp      \
+!endif        
       nsTextEditUtils.cpp         \
       nsWrapUtils.cpp             \
       PlaceholderTxn.cpp          \
@@ -94,6 +97,9 @@ CPP_OBJS =                                \
   .\$(OBJDIR)\nsSelectionState.obj        \
   .\$(OBJDIR)\nsStyleSheetTxns.obj        \
   .\$(OBJDIR)\nsTextEditRules.obj         \
+!ifdef IBMBIDI
+  .\$(OBJDIR)\nsTextEditRulesBidi.obj     \
+!endif        
   .\$(OBJDIR)\nsTextEditUtils.obj         \
   .\$(OBJDIR)\PlaceholderTxn.obj          \
   .\$(OBJDIR)\SplitElementTxn.obj         \

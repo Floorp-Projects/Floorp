@@ -150,10 +150,10 @@ protected:
 
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
-  nsresult TruncateInsertionIfNeeded(nsISelection *aSelection, 
-                                           const nsAReadableString  *aInString,
-                                           nsAWritableString        *aOutString,
-                                           PRInt32          aMaxLength);
+  nsresult TruncateInsertionIfNeeded(nsISelection             *aSelection, 
+                                     const nsAReadableString  *aInString,
+                                     nsAWritableString        *aOutString,
+                                     PRInt32                   aMaxLength);
   
   /** Echo's the insertion text into the password buffer, and converts
       insertion text to '*'s */                                        
@@ -162,6 +162,13 @@ protected:
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
   PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
+
+#ifdef IBMBIDI
+  nsresult CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode, 
+                                     PRInt32               aSelOffset, 
+                                     nsIEditor::EDirection aAction,
+                                     PRBool               *aCancel);
+#endif // IBMBIDI
 
   // data members
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
