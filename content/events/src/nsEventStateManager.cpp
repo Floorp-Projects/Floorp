@@ -51,6 +51,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIEditorDocShell.h"
 #include "nsIFormControl.h"
+#include "nsIComboboxControlFrame.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
@@ -77,7 +78,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIEnumerator.h"
-#include "nsFrameTraversal.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
@@ -1632,15 +1632,13 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
     }
 }
 
-//
 nsresult
 nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                   nsIFrame* aTargetFrame,
                                   nsInputEvent* aEvent,
                                   PRInt32 aNumLines,
                                   PRBool aScrollHorizontal,
-                                  PRBool aScrollPage,
-                                  PRBool aUseTargetFrame)
+                                  PRBool aScrollPage)
 {
   nsCOMPtr<nsIContent> targetContent = aTargetFrame->GetContent();
   if (!targetContent)
@@ -1684,106 +1682,93 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
     }
   }
 
-  nsIView* focusView = nsnull;
-  nsIScrollableView* sv = nsnull;
-  nsIFrame* focusFrame = nsnull;
+  nsIFrame* scrollFrame = aTargetFrame;
+  nsIScrollableView* scrollView = nsnull;
+  PRBool passToParent = PR_TRUE;
 
-  nsIPresShell *presShell = aPresContext->PresShell();
-
-  // Otherwise, check for a focused content element
-  nsCOMPtr<nsIContent> focusContent;
-  if (mCurrentFocus) {
-    GetFocusedFrame(&focusFrame);
-  }
-  else {
-    // If there is no focused content, get the document content
-    EnsureDocument(presShell);
-    focusContent = mDocument->GetRootContent();
-    if (!focusContent)
-      return NS_ERROR_FAILURE;
-  }
-
-  if (aUseTargetFrame)
-    focusFrame = aTargetFrame;
-  else if (!focusFrame)
-    presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
-
-  if (!focusFrame)
-    return NS_ERROR_FAILURE;
-
-  // Now check whether this frame wants to provide us with an
-  // nsIScrollableView to use for scrolling.
-
-  nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(focusFrame);
-  if (svp) {
-    svp->GetScrollableView(aPresContext, &sv);
-    if (sv)
-      CallQueryInterface(sv, &focusView);
-  } else {
-    focusView = focusFrame->GetClosestView();
-    if (!focusView)
-      return NS_ERROR_FAILURE;
-
-    sv = nsLayoutUtils::GetNearestScrollingView(focusView);
-  }
-
-  PRBool passToParent;
-  if (sv) {
-    // If we're already at the scroll limit for this view, scroll the
-    // parent view instead.
-
-    // If the view has a 0 line height, it will not scroll.
+  while (scrollFrame && passToParent) {
+    // Check whether the frame wants to provide us with a scrollable view.
+    scrollView = nsnull;
+    nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(scrollFrame);
+    if (svp) {
+      svp->GetScrollableView(aPresContext, &scrollView);
+    }
+    if (!scrollView) {
+      scrollFrame = scrollFrame->GetParent();
+      continue;
+    }
+    
+    // Check if the scrollable view can be scrolled any further.
     nscoord lineHeight;
-    sv->GetLineHeight(&lineHeight);
+    scrollView->GetLineHeight(&lineHeight);
 
-    if (lineHeight == 0) {
-      passToParent = PR_TRUE;
-    } else {
+    if (lineHeight != 0) {
       nscoord xPos, yPos;
-      sv->GetScrollPosition(xPos, yPos);
+      scrollView->GetScrollPosition(xPos, yPos);
 
       if (aNumLines < 0) {
         passToParent = aScrollHorizontal ? (xPos <= 0) : (yPos <= 0);
       } else {
         nsSize scrolledSize;
-        sv->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
+        scrollView->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
 
         nsIView* portView = nsnull;
-        CallQueryInterface(sv, &portView);
-        if (!portView)
-          return NS_ERROR_FAILURE;
-        nsRect portRect = portView->GetBounds();
+        CallQueryInterface(scrollView, &portView);
+        if (portView) {
+          nsRect portRect = portView->GetBounds();
 
-        passToParent = (aScrollHorizontal ?
-                        (xPos + portRect.width >= scrolledSize.width) :
-                        (yPos + portRect.height >= scrolledSize.height));
+          passToParent = (aScrollHorizontal ?
+                          (xPos + portRect.width >= scrolledSize.width) :
+                          (yPos + portRect.height >= scrolledSize.height));
+        } else {
+          NS_WARNING("failed to get view from scrollview");
+        }
+      }
+
+      // Comboboxes need special care.
+      nsIComboboxControlFrame* comboBox = nsnull;
+      CallQueryInterface(scrollFrame, &comboBox);
+      if (comboBox) {
+        PRBool isDroppedDown = PR_FALSE;
+        comboBox->IsDroppedDown(&isDroppedDown);
+        if (isDroppedDown) {
+          // Don't propagate to parent when drop down menu is active.
+          if (passToParent) {
+            passToParent = PR_FALSE;
+            scrollView = nsnull;
+          }
+        } else {
+          // Always propagate when not dropped down (even if focused).
+          passToParent = PR_TRUE;
+        }
       }
     }
 
-    if (!passToParent) {
-      PRInt32 scrollX = 0;
-      PRInt32 scrollY = aNumLines;
+    scrollFrame = scrollFrame->GetParent();
+  }
 
-      if (aScrollPage)
-        scrollY = (scrollY > 0) ? 1 : -1;
+  if (!passToParent && scrollView) {
+    PRInt32 scrollX = 0;
+    PRInt32 scrollY = aNumLines;
 
-      if (aScrollHorizontal)
-        {
-          scrollX = scrollY;
-          scrollY = 0;
-        }
-
-      if (aScrollPage)
-        sv->ScrollByPages(scrollX, scrollY);
-      else
-        sv->ScrollByLines(scrollX, scrollY);
-
-      if (focusView)
-        ForceViewUpdate(focusView);
+    if (aScrollPage)
+      scrollY = (scrollY > 0) ? 1 : -1;
+      
+    if (aScrollHorizontal) {
+      scrollX = scrollY;
+      scrollY = 0;
     }
-  } else
-    passToParent = PR_TRUE;
+    
+    if (aScrollPage)
+      scrollView->ScrollByPages(scrollX, scrollY);
+    else
+      scrollView->ScrollByLines(scrollX, scrollY);
 
+    nsIView* updateView = nsnull;
+    CallQueryInterface(scrollView, &updateView);
+    if (updateView)
+      ForceViewUpdate(updateView);
+  }
   if (passToParent) {
     nsresult rv;
     nsIFrame* newFrame = nsnull;
@@ -1793,7 +1778,7 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
                                 *getter_AddRefs(newPresContext));
     if (NS_SUCCEEDED(rv) && newFrame)
       return DoScrollText(newPresContext, newFrame, aEvent, aNumLines,
-                          aScrollHorizontal, aScrollPage, PR_TRUE);
+                          aScrollHorizontal, aScrollPage);
     else
       return NS_ERROR_FAILURE;
   }
@@ -2062,7 +2047,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         {
           DoScrollText(aPresContext, aTargetFrame, msEvent, numLines,
                        (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
-                       (action == MOUSE_SCROLL_PAGE), PR_FALSE);
+                       (action == MOUSE_SCROLL_PAGE));
         }
 
         break;

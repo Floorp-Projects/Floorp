@@ -216,8 +216,7 @@ protected:
                         nsInputEvent* aEvent,
                         PRInt32 aNumLines,
                         PRBool aScrollHorizontal,
-                        PRBool aScrollPage,
-                        PRBool aUseTargetFrame);
+                        PRBool aScrollPage);
   void ForceViewUpdate(nsIView* aView);
   void DoScrollHistory(PRInt32 direction);
   void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);
