@@ -28,6 +28,7 @@ CPPSRCS =nsBaseWidget.cpp      \
 	nsBaseClipboard.cpp         \
 	nsDataFlavor.cpp         \
 	nsTransferable.cpp         \
+	nsXIFFormatConverter.cpp         \
 	$(NULL)
 
 MODULE=raptor 
@@ -38,6 +39,7 @@ OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsDataFlavor.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
+	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
 	$(NULL)
 
 LINCS=                                  \
