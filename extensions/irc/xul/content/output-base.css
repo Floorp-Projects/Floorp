@@ -196,6 +196,143 @@ a.chatzilla-link:hover {
     font-weight: bold;
 }
 
+/* mirc colors */
+.chatzilla-fg00 {
+    color: #000000;
+}
+
+.chatzilla-fg01 {
+    color: #c8c8c8;
+}
+
+.chatzilla-fg02 {
+    color: #0000c8;
+}
+
+.chatzilla-fg03 {
+    color: #00c800;
+}
+
+.chatzilla-fg04 {
+    color: #c80000;
+}
+
+.chatzilla-fg05 {
+    color: #c8c800;
+}
+
+.chatzilla-fg06 {
+    color: #c800c8;
+}
+
+.chatzilla-fg07 {
+    color: #ffb000;
+}
+
+.chatzilla-fg08 {
+    color: #ffff00;
+}
+
+.chatzilla-fg09 {
+    color: #00ff00;
+}
+
+.chatzilla-fg10 {
+    color: #00c8c8;
+}
+
+.chatzilla-fg11 {
+    color: #00ffff;
+}
+
+.chatzilla-fg12 {
+    color: #0000ff;
+}
+
+.chatzilla-fg13 {
+    color: #ff00ff;
+}
+
+.chatzilla-fg14 {
+    color: #808080;
+}
+
+.chatzilla-fg15 {
+    color: #989898;
+}
+
+.chatzilla-bg00 {
+    background: #000000;
+}
+
+.chatzilla-bg01 {
+    background: #c8c8c8;
+}
+
+.chatzilla-bg02 {
+    background: #0000c8;
+}
+
+.chatzilla-bg03 {
+    background: #00c800;
+}
+
+.chatzilla-bg04 {
+    background: #c80000;
+}
+
+.chatzilla-bg05 {
+    background: #c8c800;
+}
+
+.chatzilla-bg06 {
+    background: #c800c8;
+}
+
+.chatzilla-bg07 {
+    background: #ffb000;
+}
+
+.chatzilla-bg08 {
+    background: #ffff00;
+}
+
+.chatzilla-bg09 {
+    background: #00ff00;
+}
+
+.chatzilla-bg10 {
+    background: #00c8c8;
+}
+
+.chatzilla-bg11 {
+    background: #00ffff;
+}
+
+.chatzilla-bg12 {
+    background: #0000ff;
+}
+
+.chatzilla-bg13 {
+    background: #ff00ff;
+}
+
+.chatzilla-bg14 {
+    background: #808080;
+}
+
+.chatzilla-bg15 {
+    background: #989898;
+}
+
+.chatzilla-control-char:before {
+    content: "[\\";
+}
+
+.chatzilla-control-char:after {
+    content: "]";
+}
+
 /* smiley faces */
 .chatzilla-emote-txt {              /* emoticon text inside                    */
     display: none;
@@ -337,10 +474,10 @@ a.chatzilla-link:hover {
 .msg-user[important="true"]:after {
     font-weight: bold;
 }
-.msg-user[msg-user="ME!"]:before {
+.msg-user[msg-user$="ME!"]:before {
     content: "<";
 }
-.msg-user[msg-user="ME!"]:after {
+.msg-user[msg-user$="ME!"]:after {
     content: ">";
 }
 .msg-user[msg-type="ACTION"]:before,
@@ -358,13 +495,10 @@ a.chatzilla-link:hover {
 .msg-user[dest-type="IRCUser"]:before {
     content: "to(";
 }
-.msg-user[dest-type="IRCUser"]:after {
-    content: ")";
-}
-.msg-user[msg-dest="ME!"]:before {
+.msg-user[msg-dest$="ME!"]:before {
     content: "from(";
 }
-.msg-user[msg-dest="ME!"]:after {
+.msg-user[dest-type="IRCUser"]:after {
     content: ")";
 }
 
@@ -375,9 +509,9 @@ a.chatzilla-link:hover {
 .msg-user[view-type="IRCUser"]:after {
     content: "}";
 }
-.msg-user[view-type="IRCUser"][msg-user="ME!"]:before {
+.msg-user[view-type="IRCUser"][msg-user$="ME!"]:before {
     content: "{";
 }
-.msg-user[view-type="IRCUser"][msg-user="ME!"]:after {
+.msg-user[view-type="IRCUser"][msg-user$="ME!"]:after {
     content: "}";
 }

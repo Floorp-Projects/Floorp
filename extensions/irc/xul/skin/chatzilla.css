@@ -40,6 +40,10 @@ window {
     margin: 3px;
 }
 
+#header-url:hover {
+    text-decoration: underline;
+}
+
 #outer-box {
     margin: 5px;
 }
@@ -77,27 +81,33 @@ window {
     margin-left: 5px;
 }
 
-.status-box {
-
+.header-box, .usercount-data {
     padding-top: 2px;
     padding-bottom: 2px;
     padding-right: 10px;
-
 }
 
-.status-label {
-    
+#server-nick {
+    padding-top: 5px;
+}
+
+.header-label {
+    font-weight: bold;
     text-align: right;
     margin-left: 10px;
-
 }
 
-.status-data {
-
+.header-data {
     text-align: left;
-    color: darkslategrey;
     margin-left: 5px;
+}
 
+#channel-topic {
+    cursor: default;
+}
+
+#channel-topic[editable="true"] {
+    cursor: text;
 }
 
 .output-container {

@@ -1,4 +1,147 @@
 #################################################################################
+# 12/03/01, ChatZilla 0.8.5-rc1, <rginda@netscape.com>
+
+Currently in the release candidate stage, this should be 0.8.5 final by mozilla
+0.9.7.  Again, thanks to Samuel Sieb <samuel@sieb.net> for contributing
+many of the fixes (most obvious of which is mIRC color code support), reviews,
+and driving the release candidate process.  Thanks to Casey Hutchinson
+<nnooiissee@yahoo.com> for mac accelerator cleanup, help and edit menus, xul
+refactoring work, statusbar, and motivation.
+
+* strict warning cleanup.
+* add "open at startup" item to view menus.
+* implement urls for /query views (isnick urls.)
+* make nicknames in output window isnick urls.
+* add mozilla statusbar.
+* add chatzilla icon to mozilla statusbar.
+* move "statusbar" to top of message window, rename to "header".
+* add mirc color code handling.
+* show long topics in multiple lines is header, instead of cropping.
+* add bugzilla munger rule, links "bug 12345" and "bug #12345" to appropriate
+  bugzilla bugs.
+* add channel munger rule to link #channelname to the channel.
+* add edit and help menus.
+* make /attach accept urls and url "fragments",
+  /attach moznet, /attach moznet/chatzilla, and /attach irc://moznet/chatzilla
+  are all valid commands.
+* add prefs for when to beep, new msg, msg in existing query view, and stalk
+  matches.
+* allow for space seperated list of sounds to play, like "beep beep", or
+  "file:/foo.wav"
+* fix bogus "connection refused" error when disconnecting.
+* add editable topic in header area.
+* implement server passowrds (they were way broke.)
+* add ctrl-tab and ctrl-shift-tab handlers to switch views.
+* fix tab complete behavior, so it works for words in the middle of the line.
+* add /about command to get version info.
+* add "collapse consecutive messages" option, useful for motifs with faces.
+* mac s/ctrl/meta/ fixes.
+* add default completions per view, as described in bug 63621.
+* add whowas help info.
+* format responses from WHO queries.
+* add network view maxlines pref.
+* only print "attampting to connect" message once per network.
+* add target in Kick item of message pane context menu.
+* remove timestamp tooltips, use status text instead.
+* show message source in status bar, after timestamp.
+* remove usage warning from /quit command.
+* change max connect attempts from 20 to 5.
+* remove unused listbox.js file from chatzilla.jar.
+* add help menu.
+* allow params in /ctcp commands.
+* UNTESTED - add input/output charset support.
+
+
+=================================================================================
+= Bugs fixed
+
+41564,63621,71549,86032,88438,91399,92080,95913,97288,98244,99612,100159,100704,101942,102377,103104,103598,104114,105343,105604,105881,105882,106349,107148,108061,110006,111546,111565
+
+http://bugzilla.mozilla.org/buglist.cgi?bug_id=41564%2C63621%2C71549%2C86032%2C88438%2C91399%2C92080%2C95913%2C97288%2C98244%2C99612%2C100159%2C100704%2C101942%2C102377%2C103104%2C103598%2C104114%2C105343%2C105604%2C105881%2C105882%2C106349%2C107148%2C108061%2C110006%2C111546%2C111565
+
+28 bugs found.
+ID Opened Summary
+63621 2000-12-22 [RFE] Shortcut to reply to the last IRC message
+98244 2001-09-04 Add "Leave this channel" to channel popup menu
+101942 2001-09-27 whowas command said unknown even though it exists
+92080 2001-07-24 Enter key to navigate menus also sends commmand
+105604 2001-10-18 chatzilla should have a status bar (and component bar)
+99612 2001-09-14 Chatzilla window id should not be "main-window"
+102377 2001-09-29 Chatzilla does not handle server passwords
+103104 2001-10-04 implement isnick urls
+103598 2001-10-07 JavaScript strict mode patch for Chatzilla
+91399 2001-07-18 Missing "screen buffer length" pref setting in prefs.js
+104114 2001-10-10 Can't localize some strings in Chatzilla.
+100704 2001-09-20 chatzilla needs an easy way to edit the topic
+105882 2001-10-21 Chatzilla keyboard shortcuts use wrong modifier key
+100159 2001-09-17 hiding a minimized userlist expands it instead
+105343 2001-10-17 chatzilla should have /about command
+106349 2001-10-23 [rfe]show a check beside selected motif in the view menu.
+107148 2001-10-27 chatzilla menus should move to an overlay
+105881 2001-10-21 `Edit' menu is missing in Chatzilla
+88438 2001-06-29 2xAlt-Tab will bring up unexpected "user-match"-message
+110006 2001-11-13 view/hide status bar is not saved
+71549 2001-03-09 [RFE] add mIRC and IrcII color code support
+86032 2001-06-14 [RFE] Ctrl+[shift]+tab and [shift]+F6 to switch channel view
+95913 2001-08-18 Include Chatzilla icon in Component Bar
+111565 2001-11-23 /query command no longer sends second argument
+111546 2001-11-22 User list doesn't repopulate correctly after rejoining chann
+108061 2001-11-01 /stalk won't stalk nicknames
+41564 2000-06-05 Internationalize ChatZilla to handle different language scri
+97288 2001-08-28 Chatzilla gets disconnected w/o indicating anything is wrong
+
+#################################################################################
+# 8/23/01, ChatZilla 0.8.4, <rginda@netscape.com>
+
+Shipped with Mozilla 0.9.4, 0.9.5, and 0.9.6, introduced motifs, channel and
+mailto links, and other things that were only availble in the 0.8.1a/b releases,
+which were not checked in.  Thanks to Samuel Sieb <samuel@sieb.net> for
+contributing many of the fixes, and reviewing the rest.
+
+=================================================================================
+= Bugs fixed
+
+41337,44447,69296,72272,72702,73652,73767,74408,79322,85573,89692,89717,92327,92403,95781,96567
+
+http://bugzilla.mozilla.org/buglist.cgi?bugidtype=include&bug_id=41337%2C44447%2C69296%2C72272%2C72702%2C73652%2C73767%2C74408%2C79322%2C85573%2C89692%2C89717%2C92327%2C92403%2C95781%2C96567
+
+SuperBug: http://bugzilla.mozilla.org/show_bug.cgi?id=89713
+
+16 bugs found.
+ID    Opened     Summary
+92403 2001-07-26 mozilla -help displays >>>>>>>>>>>> chatzilla-service loaded
+96567 2001-08-22 long nicks cause extra-high lines
+95781 2001-08-17 Chatzilla text is black-on-black
+74408 2001-04-02 Typing in Chatzilla should give Textbox at bottom focus
+                 automatically.
+89692 2001-07-06 /away command only uses first word for reason
+85573 2001-06-12 [RFE] support for mailto:
+72272 2001-03-16 irc urls don't detect server/network names correctly
+72702 2001-03-20 need UI for adding irc:// bookmarks
+89717 2001-07-06 header text not visible for op and voice
+73652 2001-03-27 Missing support for !-Channels
+41337 2000-06-02 /join should join the current window if it is a channel and you
+                 are not currently in it
+79322 2001-05-07 [RFE] Make chatzilla user scriptable
+73767 2001-03-28 Confusing behaviour if nick already in use
+44447 2000-07-02 no ctcp ping results
+69296 2001-02-18 irc URL with # doesn't work
+92327 2001-07-25 [RFE] Have ops' names in red
+
+#################################################################################
+# 07/01/01, ChatZilla 0.8.3, <rginda@netscape.com>
+
+Revision 0.8.3 removed hardcoded strings, in favor of the Mozilla i18n/l10n api.
+RTL languages may still have some issues.  Many thanks to Chiaki Koufugata
+<chiaki@mozilla.gr.jp> for doing the heavy lifting.
+
+=================================================================================
+= Bugs fixed
+
+http://bugzilla.mozilla.org/show_bug.cgi?id=27805
+Bug 27805, "ChatZilla needs i18n"
+
+#################################################################################
 # 06/03/01, ChatZilla 0.8.2, <rginda@netscape.com>
 
 =================================================================================

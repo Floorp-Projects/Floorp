@@ -56,18 +56,6 @@ a.chatzilla-link:visited {
     color: magenta !important;
 }
 
-.chatzilla-highlight[name="Large"] {
-    font-size: 12pt;
-}
-
-.chatzilla-highlight[name="Small"] {
-    font-size: 8pt;
-}
-
-.chatzilla-highlight[name="Bold text"] {
-    font-weight: bold;
-}
-
 .chatzilla-highlight[name="Slate"] {
     color: white;
     background: #15272d;
@@ -87,10 +75,11 @@ a.chatzilla-link:visited {
     color: silver;                          /* indicator                      */
 }
 
+.msg-user a.chatzilla-link,
 .msg-user {                                 /* msg-user = nickname portion of */
-    color: white;                           /* a message (channel and query   */
+    color: white !important;                /* a message (channel and query   */
 }                                           /* views)                         */
- 
+
 .msg-data[mark="even"] {                    /* use even/odd marks to create a */
     color: white;                           /* subtle brightness change when  */
 }                                           /* the speaker changes.           */
@@ -146,8 +135,9 @@ a.chatzilla-link:visited {
 /* important="true" means that the message has text from your /stalk list in
  * it, has your nickname in it, or was spoken by someone in your /stalk list.
  */
-.msg[important="true"] {
-    background: #333333;
+.msg-user[important="true"],
+.msg-data[important="true"] {
+    background: #333333 !important;
 }
 
 .msg-user:before,
@@ -155,8 +145,8 @@ a.chatzilla-link:visited {
     color: blue;
 }
 
-.msg-user[msg-user="ME!"]:before,
-.msg-user[msg-user="ME!"]:after {
+.msg-user[msg-user$="ME!"]:before,
+.msg-user[msg-user$="ME!"]:after {
     color: #6afc73;
 }
 
@@ -176,8 +166,8 @@ a.chatzilla-link:visited {
     color: #6afc73;
 }
 
-.msg-user[msg-dest="ME!"]:before,
-.msg-user[msg-dest="ME!"]:after {
+.msg-user[msg-dest$="ME!"]:before,
+.msg-user[msg-dest$="ME!"]:after {
     color: magenta;
 }
 
@@ -187,7 +177,7 @@ a.chatzilla-link:visited {
     color: white;
 }
 
-.msg-user[view-type="IRCUser"][msg-user="ME!"]:before,
-.msg-user[view-type="IRCUser"][msg-user="ME!"]:after {
+.msg-user[view-type="IRCUser"][msg-user$="ME!"]:before,
+.msg-user[view-type="IRCUser"][msg-user$="ME!"]:after {
     color: #6afc73;
 }

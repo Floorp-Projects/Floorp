@@ -21,15 +21,13 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  */
 
-var debugData = {lastEventType: "", lastEventData: ""};
-
 /*
  * Hook used to trace events.
  */
 function event_tracer (e)
 {
     var name = "";
-    var data = (e.debug) ? e.debug : "";
+    var data = ("debug" in e) ? e.debug : "";
     
     switch (e.set)
     {
@@ -41,18 +39,15 @@ function event_tracer (e)
             {
                 var nextLine =
                     e.destObject.sendQueue[e.destObject.sendQueue.length - 1];
-                if (nextLine)
-                    data = "'" + nextLine.replace ("\n", "\\n")
-                        + "' (may retry a few times)";
-                else
-                    data = "!!! Nothing to send !!!";
-                if (debugData.lastEventType == "senddata"  &&
-                    debugData.lastEventData == data)
-                {
-                    /* don't keep printing this event */
-                    return;
-                }
+                if ("logged" in nextLine)
+                    return true; /* don't print again */
                 
+                if (nextLine) {
+                    data = "'" + nextLine.replace ("\n", "\\n") + "'";
+                    nextLine.logged = true;
+                }
+                else
+                    data = "!!! Nothing to send !!!";                
             }
             break;
 
@@ -96,16 +91,13 @@ function event_tracer (e)
     if (e.type == "info")
         data = "'" + e.msg + "'";
     
-    str = "Level " + e.level + ": '" + e.type + "', " +
+    var str = "Level " + e.level + ": '" + e.type + "', " +
         e.set + name + "." + e.destMethod;
 	if (data)
 	  str += "\ndata   : " + data;
 
     dd (str);
 
-    debugData.lastEventType = e.type;
-    debugData.lastEventData = data;
-    
     return true;
 
 }

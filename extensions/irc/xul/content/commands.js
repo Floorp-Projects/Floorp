@@ -28,13 +28,14 @@
 function addCommands(commandObject)
 {
 
-    function add (name, func, usage, help)
+    function add (name, func)
     {
         var usage = getMsg (name + "Usage");
         var help = getMsg(name + "Help");
         commandObject.add (name, func, usage, help);
     }
     
+    add ("about", "onInputAbout");
     add ("attach", "onInputAttach");
     add ("away", "onInputAway");
     add ("cancel", "onInputCancel");
@@ -52,6 +53,7 @@ function addCommands(commandObject)
     add ("eval", "onInputEval");
     add ("exit", "onInputExit");
     add ("help", "onInputHelp");
+    add ("headers", "onInputHeaders");
     add ("hide", "onInputHide");
     add ("infobar", "onInputInfobar");
     add ("invite", "onInputInvite"); 
@@ -85,6 +87,7 @@ function addCommands(commandObject)
     add ("voice", "onInputVoice");
     add ("who", "onInputSimpleCommand");
     add ("whois", "onInputWhoIs");
+    add ("whowas", "onInputSimpleCommand");
     
 }
 

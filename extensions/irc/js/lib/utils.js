@@ -277,11 +277,21 @@ function getCommonPfx (list)
     var pfx = list[0];
     var l = list.length;
     
-    for (var i = 1; i < l; i++)
+    for (var i = 0; i < l; i++)
     {
-        for (var c = 0; c < pfx.length; c++)
-            if (pfx[c] != list[i][c])
+        for (var c = 0; c < pfx.length; ++c)
+        {
+            if (c >= list[i].length)
+            {
                 pfx = pfx.substr (0, c);
+                break;
+            }
+            else
+            {
+                if (pfx[c] != list[i][c])
+                    pfx = pfx.substr (0, c);
+            }
+        }
     }
 
     return pfx;

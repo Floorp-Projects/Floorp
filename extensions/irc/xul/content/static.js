@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  *  Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n 
+ *  Samuel Sieb, samuel@sieb.net, MIRC color code, munger menu, and various
  */
 
 if (DEBUG)
@@ -29,9 +30,13 @@ else
 
 var client = new Object();
 
+const MSG_CSP       = getMsg ("commaSpace", " ");
+const MSG_NONE      = getMsg ("none");
+const MSG_UNKNOWN   = getMsg ("unknown");
+
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.4";
+client.version = "0.8.5-rc1";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -44,9 +49,14 @@ client.MAX_NICK_DISPLAY = 14;
 /* longest word to show in display before abbreviating */
 client.MAX_WORD_DISPLAY = 20;
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
-client.ADDRESSED_NICK_SEP = ": ";
+client.ADDRESSED_NICK_SEP = ":";
 
-client.NOTIFY_TIMEOUT = 5 * 60 * 100; /* update notify list every 5 minutes */
+client.MAX_MSG_PER_ROW = 3; /* default number of messages to collapse into a
+                             * single row, max. */
+client.INITIAL_COLSPAN = 5; /* MAX_MSG_PER_ROW cannot grow to greater than 
+                             * one half INITIAL_COLSPAN + 1. */
+client.COLLAPSE_ROWS = false;
+client.NOTIFY_TIMEOUT = 5 * 60 * 1000; /* update notify list every 5 minutes */
 
 client.SLOPPY_NETWORKS = true; /* true if msgs from a network can be displayed
                                 * on the current object if it is related to
@@ -67,6 +77,7 @@ client.responseCodeMap["HELLO"]  = getMsg("responseCodeMapHello");
 client.responseCodeMap["HELP"]  = getMsg("responseCodeMapHelp");
 client.responseCodeMap["USAGE"]  = getMsg("responseCodeMapUsage");
 client.responseCodeMap["ERROR"]  = getMsg("responseCodeMapError");
+client.responseCodeMap["WARNING"]  = getMsg("responseCodeMapWarning");
 client.responseCodeMap["INFO"]  = getMsg("responseCodeMapInfo");
 client.responseCodeMap["EVAL-IN"]  = getMsg("responseCodeMapEvalIn");
 client.responseCodeMap["EVAL-OUT"]  = getMsg("responseCodeMapEvalOut");
@@ -78,9 +89,10 @@ client.responseCodeMap["TOPIC"] = "=-=";
 client.responseCodeMap["KICK"]  = "=-=";
 client.responseCodeMap["MODE"]  = "=-=";
 client.responseCodeMap["END_STATUS"] = "---";
-client.responseCodeMap["376"]  = "---"; /* end of MOTD */
+client.responseCodeMap["315"]  = "---"; /* end of WHO */
 client.responseCodeMap["318"]  = "---"; /* end of WHOIS */
 client.responseCodeMap["366"]  = "---"; /* end of NAMES */
+client.responseCodeMap["376"]  = "---"; /* end of MOTD */
 
 client.name = getMsg("clientname");
 client.viewsArray = new Array();
@@ -115,6 +127,49 @@ function ()
     scrollDown();
 }
 
+function ucConvertIncomingMessage (e)
+{
+    e.meat = client.ucConverter.ConvertToUnicode(e.meat);
+    return true;
+}
+
+function ucConvertOutgoingMessage (msg)
+{
+    if (client.ucConverter)
+        return client.ucConverter.ConvertFromUnicode(msg);
+
+    return msg;
+}
+
+function setCharset (charset)
+{
+    client.CHARSET = charset;
+    
+    if (!charset)
+    {
+        delete client.ucConverter;
+        client.eventPump.removeHookByName("uc-hook");
+        return;
+    }
+    
+    if (!("ucConverter" in client))
+    {
+        const UC_CTRID = "@mozilla.org/intl/scriptableunicodeconverter";
+        const nsIUnicodeConverter = 
+            Components.interfaces.nsIScriptableUnicodeConverter;
+        client.ucConverter =
+            Components.classes[UC_CTRID].createInstance(nsIUnicodeConverter);
+    }
+
+    client.ucConverter.charset = charset;
+
+    if (!client.eventPump.getHook("uc-hook"))
+    {
+        client.eventPump.addHook ([{type: "privmsg", set: "server"}],
+                                  ucConvertIncomingMessage, "uc-hook");
+    }
+}
+
 function initStatic()
 {
     var obj;
@@ -122,25 +177,32 @@ function initStatic()
     const nsISound = Components.interfaces.nsISound;
     client.sound =
         Components.classes["@mozilla.org/sound;1"].createInstance(nsISound);
+
+    if (client.CHARSET)
+        setCharset(client.CHARSET);
     
     var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
     if (ary)
         client.userAgent = "ChatZilla " + client.version + " [Mozilla " + 
             ary[1] + "/" + ary[2] + "]";
     else
-        client.userAgent = "ChatZilla " + client.version + "[" + 
+        client.userAgent = "ChatZilla " + client.version + " [" + 
             navigator.userAgent + "]";
 
     obj = document.getElementById("input");
-    obj.addEventListener("keyup", onInputKeyUp, false);
+    obj.addEventListener("keypress", onInputKeyPress, false);
     obj = document.getElementById("multiline-input");
-    obj.addEventListener("keyup", onMultilineInputKeyUp, false);
+    obj.addEventListener("keypress", onMultilineInputKeyPress, false);
+    obj = document.getElementById("channel-topicedit");
+    obj.addEventListener("keypress", onTopicKeyPress, false);
+    obj.active = false;
 
     window.onkeypress = onWindowKeyPress;
 
-    setMenuCheck ("menu-dmessages", 
+    setMenuCheck ("menu-dmessages",
                   client.eventPump.getHook ("event-tracer").enabled);
     setMenuCheck ("menu-munger-global", !client.munger.enabled);
+    setMenuCheck ("menu-colors", client.enableColors);
 
     setupMungerMenu(client.munger);
 
@@ -148,36 +210,29 @@ function initStatic()
         setMenuCheck ("menu-view-tabstrip", isVisible("view-tabs"));
     client.uiState["info"] =
         setMenuCheck ("menu-view-info", isVisible("user-list-box"));
+    client.uiState["header"] =
+        setMenuCheck ("menu-view-header", isVisible("header-bar-tbox"));
     client.uiState["status"] =
-        setMenuCheck ("menu-view-status", isVisible("status-bar-tbar"));
+        setMenuCheck ("menu-view-status", isVisible("status-bar"));
 
     client.statusBar = new Object();
     
-    client.statusBar["net-name"] =
-        document.getElementById ("net-name");
-    client.statusBar["server-name"] =
-        document.getElementById ("server-name");
+    client.statusBar["header-url"] =
+        document.getElementById ("header-url");
     client.statusBar["server-nick"] =
         document.getElementById ("server-nick");
-    client.statusBar["server-lag"] =
-        document.getElementById ("server-lag");
-    client.statusBar["last-ping"] =
-        document.getElementById ("last-ping");
-    client.statusBar["channel-name"] =
-        document.getElementById ("channel-name");
-    client.statusBar["channel-limit"] =
-        document.getElementById ("channel-limit");
-    client.statusBar["channel-key"] =
-        document.getElementById ("channel-key");
     client.statusBar["channel-mode"] =
         document.getElementById ("channel-mode");
     client.statusBar["channel-users"] =
         document.getElementById ("channel-users");
     client.statusBar["channel-topic"] =
         document.getElementById ("channel-topic");
-    client.statusBar["channel-topicby"] =
-        document.getElementById ("channel-topicby");
+    client.statusBar["channel-topicedit"] =
+        document.getElementById ("channel-topicedit");
 
+    client.statusElement = document.getElementById ("status-text");
+    client.defaultStatus = getMsg ("defaultStatus");
+    
     onSortCol ("usercol-nick");
 
     client.display (getMsg("welcome"), "HELLO");
@@ -198,8 +253,10 @@ function initStatic()
     m.setAttribute ("checked", String(client.SAVE_SETTINGS));
      
     var wentSomewhere = false;
-    
-    if (window.arguments && window.arguments[0] && window.arguments[0].url)
+
+    if ("arguments" in window &&
+        0 in window.arguments && typeof window.arguments[0] == "object" &&
+        "url" in window.arguments[0])
     {
         url = window.arguments[0].url;
         if (url.search(/^irc:\/?\/?$/i) == -1)
@@ -213,15 +270,40 @@ function initStatic()
     if (!wentSomewhere)
     {
         /* if we had nowhere else to go, connect to any default urls */
-        var ary = client.INITIAL_URLS.split(";");
+        ary = client.INITIAL_URLS.split(";");
         for (var i in ary)
-            if ((ary[i] = stringTrim(ary[i])))
+        {
+            if ((ary[i] = stringTrim(ary[i])) && ary[i] != "irc://")
+            {
                 gotoIRCURL (ary[i]);
+            }
+        }
     }
-
+    
+    if (client.viewsArray.length > 1 && !isStartupURL("irc://"))
+    {
+        var tb = getTabForObject (client);
+        deleteTab(tb);
+    }
+        
     setInterval ("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
     
 }
+
+function setStatus (str)
+{
+    client.statusElement.setAttribute ("label", str);
+    return str;
+}
+
+client.__defineSetter__ ("status", setStatus);
+
+function getStatus ()
+{
+    return client.statusElement.getAttribute ("label");
+}
+
+client.__defineGetter__ ("status", getStatus);
 
 function setMenuCheck (id, state)
 {
@@ -245,13 +327,14 @@ function isVisible (id)
 
 function initHost(obj)
 {
-
-    client.commands = new CCommandManager();
+    obj.commands = new CCommandManager();
     addCommands (obj.commands);
     
     obj.networks = new Object();
     obj.eventPump = new CEventPump (200);
-    
+
+    obj.defaultCompletion = client.COMMAND_CHAR + "help ";
+
     obj.networks["efnet"] =
         new CIRCNetwork ("efnet",
                          [{name: "irc.mcs.net", port: 6667},
@@ -282,7 +365,7 @@ function initHost(obj)
                          obj.eventPump);
     obj.networks["opennet"] =
         new CIRCNetwork ("opennet",         
-                         [{name:"irc.openprojects.net", port:6667},
+                         [{name: "irc.openprojects.net", port:6667},
                           {name: "eu.opirc.nu", port:6667},
                           {name: "au.opirc.nu", port:6667},
                           {name: "us.opirc.nu", port:6667}],
@@ -297,20 +380,26 @@ function initHost(obj)
                                {type: "event-end"}], event_tracer,
                                "event-tracer", true /* negate */,
                                false /* disable */);
+
     obj.linkRE = /((\w+):\/\/[^<>\[\]()\'\"\s]+|www(\.[^.<>\[\]()\'\"\s]+){2,})/;
 
     obj.munger = new CMunger();
     obj.munger.enabled = true;
-    obj.munger.addRule ("mailto", /((mailto:)?[^<>\[\]()\'\"\s]+@[^.<>\[\]()\'\"\s]+\.[^<>\[\]()\'\"\s]+)/i,
+    obj.munger.addRule ("mailto",
+       /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s]+@[^.<>\[\]()\'\"\s]+\.[^<>\[\]()\'\"\s]+)/i,
                         insertMailToLink);
     obj.munger.addRule ("link", obj.linkRE, insertLink);
-    obj.munger.addRule ("channel-link", /[@+]?(#[^<>\[\]()\'\"\s]+[^:,.<>\[\]()\'\"\s])/i,
+    obj.munger.addRule ("bugzilla-link", /(?:\s|\W|^)(bug\s+#?\d{3,6})/i,
+                        insertBugzillaLink);
+    obj.munger.addRule ("channel-link",
+                    /(?:\s|\W|^)[@+]?(#[^<>\[\]()\'\"\s]+[^:,.<>\[\]()\'\"\s])/i,
                         insertChannelLink);
+    
     obj.munger.addRule ("face",
          /((^|\s)[\<\>]?[\;\=\:]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\](\s|$))/,
          insertSmiley);
     obj.munger.addRule ("ear", /(?:\s|^)(\(\*)(?:\s|$)/, insertEar, false);
-    obj.munger.addRule ("rheet", /(?:\s|^)(rhee+t\!*)(?:\s|$)/i, insertRheet);
+    obj.munger.addRule ("rheet", /(?:\s|\W|^)(rhee+t\!*)(?:\s|$)/i, insertRheet);
     obj.munger.addRule ("bold", /(?:\s|^)(\*[^*,.()]*\*)(?:[\s.,]|$)/, 
                         "chatzilla-bold");
     obj.munger.addRule ("italic", /(?:\s|^)(\/[^\/,.()]*\/)(?:[\s.,]|$)/,
@@ -320,6 +409,13 @@ function initHost(obj)
                         "chatzilla-teletype");
     obj.munger.addRule ("underline", /(?:\s|^)(\_[^_,.()]*\_)(?:[\s.,]|$)/,
                         "chatzilla-underline");
+    obj.munger.addRule (".mirc-colors", /(\x03((\d{1,2})(,\d{1,2}|)|))/,
+                         mircChangeColor);
+    obj.munger.addRule (".mirc-bold", /(\x02)/, mircToggleBold);
+    obj.munger.addRule (".mirc-underline", /(\x1f)/, mircToggleUnder);
+    obj.munger.addRule (".mirc-color-reset", /(\x0f)/, mircResetColor);
+    obj.munger.addRule (".mirc-reverse", /(\x16)/, mircReverseColor);
+    obj.munger.addRule ("ctrl-char", /([\x01-\x1f])/, showCtrlChar);
     obj.munger.addRule ("word-hyphenator",
                         new RegExp ("(\\S{" + client.MAX_WORD_DISPLAY + ",})"),
                         insertHyphenatedWord);
@@ -330,7 +426,6 @@ function initHost(obj)
     obj.rdf.setTreeRoot("user-list", obj.rdf.resNullChan);
 
     multilineInputMode(false);
-    
 }
 
 function insertLink (matchText, containerTag)
@@ -375,9 +470,9 @@ function insertMailToLink (matchText, containerTag)
 
 function insertChannelLink (matchText, containerTag, eventData)
 {
-    if (!eventData.network || 
+    if (!("network" in eventData) || 
         matchText.search
-            (/^#(include|error|define|if|ifdef|else|elsif|endif)$/i) != -1)
+            (/^#(include|error|define|if|ifdef|else|elsif|endif|\d+)$/i) != -1)
 
     {
         containerTag.appendChild (document.createTextNode(matchText));
@@ -386,10 +481,27 @@ function insertChannelLink (matchText, containerTag, eventData)
     
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
-    anchor.setAttribute ("href", "irc://" + eventData.network.name + "/" +
-                         matchText);
+    anchor.setAttribute ("href", "irc://" + escape(eventData.network.name) +
+                         "/" + escape (matchText));
     anchor.setAttribute ("class", "chatzilla-link");
     //anchor.setAttribute ("target", "_content");
+    insertHyphenatedWord (matchText, anchor);
+    containerTag.appendChild (anchor);
+    
+}
+
+function insertBugzillaLink (matchText, containerTag)
+{
+
+    var number = matchText.match (/(\d+)/)[1];
+    
+    var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                           "html:a");
+    anchor.setAttribute ("href",
+                         "http://bugzilla.mozilla.org/show_bug.cgi?id=" + 
+                         number);
+    anchor.setAttribute ("class", "chatzilla-link");
+    anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);
     containerTag.appendChild (anchor);
     
@@ -466,6 +578,109 @@ function insertSmiley (emoticon, containerTag)
     
 }
 
+function mircChangeColor (colorInfo, containerTag, data)
+{
+    if (!client.enableColors)
+        return;
+
+    var ary = colorInfo.match (/.(\d{1,2}|)(,(\d{1,2})|)/);
+
+    var fgColor = ary[1];
+    if (fgColor > 16)
+        fgColor &= 16;
+    switch (fgColor.length)
+    {
+        case 0:
+            delete data.currFgColor;
+            delete data.currBgColor;
+            return;
+        case 1:
+            data.currFgColor = "0" + fgColor;
+            break;
+        case 2:
+            data.currFgColor = fgColor;
+            break;
+    }
+    if (fgColor == 1)
+        delete data.currFgColor;
+    if (ary.length >= 4)
+    {
+        bgColor = ary[3];
+        if (bgColor > 16)
+            bgColor &= 16;
+        if (bgColor.length == 1)
+            data.currBgColor = "0" + bgColor;
+        else
+            data.currBgColor = bgColor;
+        if (bgColor == 0)
+            delete data.currBgColor;
+    }
+    data.hasColorInfo = true;
+}
+
+function mircToggleBold (colorInfo, containerTag, data)
+{
+    if (!client.enableColors)
+        return;
+
+    if ("isBold" in data)
+        delete data.isBold;
+    else
+        data.isBold = true;
+    data.hasColorInfo = true;
+}
+
+function mircToggleUnder (colorInfo, containerTag, data)
+{
+    if (!client.enableColors)
+        return;
+
+    if ("isUnderline" in data)
+        delete data.isUnderline;
+    else
+        data.isUnderline = true; 
+    data.hasColorInfo = true;
+}
+
+function mircResetColor (text, containerTag, data)
+{
+    if (!client.enableColors || !("hasColorInfo" in data))
+        return;
+
+    delete data.currFgColor;
+    delete data.currBgColor;
+    delete data.isBold;
+    delete data.isUnder;
+    delete data.hasColorInfo;
+}
+
+function mircReverseColor (text, containerTag, data)
+{
+    if (!client.enableColors)
+        return;
+
+    var tempColor = ("currFgColor" in data ? data.currFgColor : "01");
+
+    if ("currBgColor" in data)
+        data.currFgColor = data.currBgColor;
+    else
+        data.currFgColor = "00";
+    data.currBgColor = tempColor;
+    data.hasColorInfo = true;
+}
+
+function showCtrlChar(c, containerTag)
+{
+    var span = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                         "html:span");
+    span.setAttribute ("class", "chatzilla-control-char");
+    var ctrlStr = c.charCodeAt(0).toString(16);
+    if (ctrlStr.length < 2)
+        ctrlStr = "0" + ctrlStr;
+    span.appendChild (document.createTextNode ("0x" + ctrlStr));
+    containerTag.appendChild (span);
+}
+
 function insertHyphenatedWord (longWord, containerTag)
 {
     var wordParts = splitLongWord (longWord, client.MAX_WORD_DISPLAY);
@@ -474,10 +689,9 @@ function insertHyphenatedWord (longWord, containerTag)
         containerTag.appendChild (document.createTextNode (wordParts[i]));
         if (i != wordParts.length)
         {
-            var img = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                                "html:img");
-            img.setAttribute ("style", "border: none; width: 0px; height: 0px;");
-            containerTag.appendChild (img);
+            var wbr = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                                "html:wbr");
+            containerTag.appendChild (wbr);
         }
     }
 }
@@ -491,12 +705,79 @@ function msgIsImportant (msg, sourceNick, myNick)
     var str = "(^|[\\W\\s])" + sv + "([\\W\\s]|$)";
     var re = new RegExp(str, "i");
     if (msg.search(re) != -1 || sourceNick && sourceNick.search(re) != -1)
+    {
+        playSounds(client.STALK_BEEP);
         return true;
+    }
 
     return false;    
 }
 
-function fillInHTMLTooltip(tipElement)
+function isStartupURL(url)
+{
+    var ary = client.INITIAL_URLS.split(/\s*;\s*/);
+    return arrayContains(ary, url);
+}
+    
+function cycleView (amount)
+{
+    var len = client.viewsArray.length;
+    if (len <= 1)
+        return;
+    
+    if (amount > len)
+        amount = amount % client.viewsArray.length;
+
+    var tb = getTabForObject (client.currentObject);
+    if (!tb)
+        return;
+    
+    var vk = Number(tb.getAttribute("viewKey"));
+    var destKey = vk + amount;
+    if (destKey > len - 1)
+    {
+        /* wrap past max */
+        destKey -= client.viewsArray.length;
+    }
+    else if (destKey < 0)
+    {
+        /* wrap past 0 */
+        destKey += client.viewsArray.length;
+    }
+    
+    setCurrentObject (client.viewsArray[destKey].source);
+}
+
+function playSounds (list)
+{
+    ary = list.split (" ");
+    if (ary.length == 0)
+        return;
+    
+    playSound (ary[0]);
+    for (var i = 1; i < ary.length; ++i)
+        setTimeout (playSound, 250 * i, ary[i]);
+}
+
+function playSound (file)
+{
+    if (!client.sound || !file)
+        return;
+    
+    if (file == "beep")
+    {
+        client.sound.beep();
+    }
+    else
+    {
+        var uri = Components.classes["@mozilla.org/network/standard-url;1"];
+        uri = uri.createInstance(Components.interfaces.nsIURI);
+        uri.spec = file;
+        client.sound.play (uri);
+    }
+}
+
+function fillInTooltip(tipElement, id)
 {
     const XULNS =
         "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -504,31 +785,28 @@ function fillInHTMLTooltip(tipElement)
     const Node = { ELEMENT_NODE : 1 }; // XXX Components.interfaces.Node;
     
     var retVal = false;
-    var tipNode = document.getElementById("HTML_TOOLTIP_tooltipBox");
-    try {
-        while (tipNode.hasChildNodes())
-            tipNode.removeChild(tipNode.firstChild);
-        var titleText = "";
-        var XLinkTitleText = "";
-        while (!titleText && !XLinkTitleText && tipElement) {
-            if (tipElement.nodeType == Node.ELEMENT_NODE) {
-                titleText = tipElement.getAttribute("title");
-                XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
-            }
-            tipElement = tipElement.parentNode;
+    var tipNode = document.getElementById(id);
+    while (tipNode.hasChildNodes())
+        tipNode.removeChild(tipNode.firstChild);
+    var titleText = "";
+    var XLinkTitleText = "";
+    while (!titleText && !XLinkTitleText && tipElement) {
+        if (tipElement.nodeType == Node.ELEMENT_NODE) {
+            titleText = tipElement.getAttribute("title");
+            XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
         }
-        var texts = [titleText, XLinkTitleText];
-        for (var i = 0; i < texts.length; ++i) {
-            var t = texts[i];
-            if (t.search(/\S/) >= 0) {
-                var tipLineElem =
-                    tipNode.ownerDocument.createElementNS(XULNS, "text");
-                tipLineElem.setAttribute("value", t);
-                tipNode.appendChild(tipLineElem);
-                retVal = true;
-            }
+        tipElement = tipElement.parentNode;
+    }
+    var texts = [titleText, XLinkTitleText];
+    for (var i = 0; i < texts.length; ++i) {
+        var t = texts[i];
+        if (t && t.search(/\S/) >= 0) {
+            var tipLineElem =
+                tipNode.ownerDocument.createElementNS(XULNS, "text");
+            tipLineElem.setAttribute("value", t);
+            tipNode.appendChild(tipLineElem);
+            retVal = true;
         }
-    } catch (e) {
     }
     return retVal;
 }
@@ -536,7 +814,7 @@ function fillInHTMLTooltip(tipElement)
 /* timer-based mainloop */
 function mainStep()
 {
-    if (!frames[0].initialized)
+    if (!("initialized" in frames[0]))
     {  /* voodoo required for skin switching.  When the user changes a skin,
         * the output document is reloaded. this document *cannot* tell us
         * it has been reloaded, because the type="content" attribute used
@@ -563,7 +841,7 @@ function getMsg (msgName)
 {
     var restCount = arguments.length - 1;
 
-    if (!client.bundle)
+    if (!("bundle" in client))
     {       
         client.bundle = 
             srGetStrBundle("chrome://chatzilla/locale/chatzilla.properties");
@@ -593,6 +871,15 @@ function getMsg (msgName)
             "\n" + getStackTrace());
         return msgName;
     }
+}
+
+function openQueryTab (server, nick)
+{    
+    var usr = server.addUser(nick.toLowerCase());
+    if (!("messages" in usr))
+        usr.displayHere (getMsg("cli_imsgMsg3", usr.properNick), "INFO");
+    server.sendData ("WHO " + nick + "\n");
+    return usr;
 }
 
 function arraySpeak (ary, single, plural)
@@ -651,9 +938,9 @@ function getObjectDetails (obj, rv)
         dd ("** INVALID OBJECT passed to getObjectDetails (" + obj + "). **");
         dd (getStackTrace());
     }
-    
+
     rv.orig = obj;
-    rv.parent = obj.parent;
+    rv.parent = ("parent" in obj) ? obj.parent : null;
     
     switch (obj.TYPE)
     {
@@ -678,12 +965,12 @@ function getObjectDetails (obj, rv)
 
         case "IRCNetwork":
             rv.network = obj;
-            if (rv.network.isConnected())
+            if ("primServ" in rv.network)
                 rv.server = rv.network.primServ;
             break;
 
         case "IRCClient":
-            if (obj.lastNetwork)
+            if ("lastNetwork" in obj)
             {
                 rv.network = obj.lastNetwork;
                 if (rv.network.isConnected())
@@ -731,19 +1018,28 @@ function addDynamicRule (rule)
 function setClientOutput(doc) 
 {
     client.output = frames[0].document.getElementById("output");
-    //createHighlightMenu();
+    //XXXcreateHighlightMenu();
 }
 
 function createHighlightMenu()
 {
+    /* Look for "special" highlighting rules int he motif.  These special rules
+     * are in the format ``.chatzilla-highlight[name="<display-name>"] { ... }''
+     * where <display-name> is a textual description to be placed in the
+     * Highlight submenu of the message area context menu.  The body of
+     * these rules can be applied by the user to different irc messages.  They
+     * are special becaus they do not actually match an element in the content
+     * model.  The style body is copied into a new rule that matches a pettern
+     * determined by the user.
+     */
     function processStyleRules(rules)
     {
         for (var i = 0; i < rules.length; ++i)
         {
             var rule = rules.item(i);
-            if (rule.selectorText)
+            if (rule instanceof CSSStyleRule)
             {
-                ary = rule.selectorText.
+                var ary = rule.selectorText.
                     match(/\.chatzilla-highlight\[name=\"?([^\"]+)\"?\]/i);
                 if (ary)
                 {
@@ -756,9 +1052,9 @@ function createHighlightMenu()
                     menu.appendChild(menuitem);
                 }
             }
-            else if (rule.styleSheet)
+            else if (rule instanceof CSSImportRule)
             {
-                processStyleRules(rule.styleSheet.rules);
+                processStyleRules(rule.styleSheet.cssRules);
             }
         }
     }
@@ -766,13 +1062,14 @@ function createHighlightMenu()
     var menu = document.getElementById("highlightMenu");
     while (menu.firstChild)
         menu.removeChild(menu.firstChild);
+
     var menuitem = document.createElement("menuitem");
     menuitem.setAttribute ("label", getMsg("noStyle"));
     menuitem.setAttribute ("class", "highlight-menu-item");
     menuitem.setAttribute ("oncommand", "onPopupHighlight('');");
     menu.appendChild(menuitem);
     
-    //processStyleRules(frames[0].document.styleSheets[0].cssRules);
+    processStyleRules(frames[0].document.styleSheets[0].cssRules);
 }
 
 function setupMungerMenu(munger)
@@ -780,15 +1077,18 @@ function setupMungerMenu(munger)
     var menu = document.getElementById("menu-munger");
     for (var entry in munger.entries)
     {
-        var menuitem = document.createElement("menuitem");
-        menuitem.setAttribute ("label", munger.entries[entry].description);
-        menuitem.setAttribute ("id", "menu-munger-" + entry);
-        menuitem.setAttribute ("type", "checkbox");
-        if (munger.entries[entry].enabled)
-            menuitem.setAttribute ("checked", "true");
-        menuitem.setAttribute ("oncommand", "onToggleMungerEntry('" + 
-                               entry + "');");
-        menu.appendChild(menuitem);
+        if (entry[0] != ".")
+        {
+            var menuitem = document.createElement("menuitem");
+            menuitem.setAttribute ("label", munger.entries[entry].description);
+            menuitem.setAttribute ("id", "menu-munger-" + entry);
+            menuitem.setAttribute ("type", "checkbox");
+            if (munger.entries[entry].enabled)
+                menuitem.setAttribute ("checked", "true");
+            menuitem.setAttribute ("oncommand", "onToggleMungerEntry('" + 
+                                   entry + "');");
+            menu.appendChild(menuitem);
+        }
     }
 }
     
@@ -847,7 +1147,7 @@ function parseIRCURL (url)
         return null;
     }
     var host = ary[1];
-    var rest = ary[2];
+    var rest = (2 in ary) ? ary[2] : "";
 
     /* split <host> into server (or network) / port */
     ary = host.match (/^([^\s\:]+)?(\:\d+)?$/);
@@ -857,9 +1157,9 @@ function parseIRCURL (url)
         return null;
     }
     
-    if (ary[2])
+    if (2 in ary)
     {
-        if (!ary[1])
+        if (!(1 in ary))
         {
             dd ("parseIRCURL: port with no host");
             return null;
@@ -868,7 +1168,7 @@ function parseIRCURL (url)
         rv.isserver = true;
         rv.port = parseInt(ary[2].substr(1));
     }
-    else if (ary[1])
+    else if (1 in ary)
     {
         specifiedHost = rv.host = ary[1].toLowerCase();
         if (specifiedHost.indexOf(".") != -1)
@@ -884,10 +1184,10 @@ function parseIRCURL (url)
             return null;
         }
         
-        rv.target = (ary[1]) ? 
+        rv.target = (1 in ary) ? 
             unescape(ary[1]).toLowerCase().replace("\n", "\\n"): "";
-        var params = (ary[2]) ? ary[2].toLowerCase() : "";
-        var query = (ary[3]) ? ary[3] : "";
+        var params = (2 in ary) ? ary[2].toLowerCase() : "";
+        var query = (3 in ary) ? ary[3] : "";
 
         if (params)
         {
@@ -923,7 +1223,7 @@ function parseIRCURL (url)
                 (/^\?msg=([^\&]*)$|^\?msg=([^\&]*)\&|\&msg=([^\&]*)\&|\&msg=([^\&]*)$/);
             if (ary)
                 for (var i = 1; i < ary.length; i++)
-                    if (ary[i])
+                    if (i in ary)
                     {
                         rv.msg = unescape(ary[i]).replace ("\n", "\\n");
                         break;
@@ -943,7 +1243,7 @@ function gotoIRCURL (url)
     
     if (!url)
     {
-        window.alert (getMsg("gotoIRCURLMsg",url));
+        window.alert (getMsg("badIRCURL",url));
         return;
     }
 
@@ -1004,8 +1304,8 @@ function gotoIRCURL (url)
             dd ("gotoIRCURL: not already connected to " +
                 "network " + url.host + " trying to connect...");
             */
-            client.onInputAttach ({inputData: url.host + " " + pass});
-            if (!net.pendingURLs)
+            client.connectToNetwork (url.host, pass);
+            if (!("pendingURLs" in net))
                 net.pendingURLs = new Array();
             net.pendingURLs.push (url);            
             return;
@@ -1016,37 +1316,51 @@ function gotoIRCURL (url)
     //dd ("gotoIRCURL: connected, time to finish parsing ``" + url + "''");
     if (url.target)
     {
-        var key = "";
-        if (url.needkey)
-            key = window.prompt (getMsg("gotoIRCURLMsg3",url.spec));
-
+        var targetObject;
+        var ev;
         if (url.isnick)
         {
-                /* eek, do nick stuff here */
+            /* url points to a person. */
+            var nick = url.target;
+            var ary = url.target.split("!");
+            if (ary)
+            {
+                nick = ary[0];
+            }    
+
+            ev =  {inputData: nick, network: net, server: net.primServ};
+            client.onInputQuery(ev);
+            targetObject = ev.user;
         }
         else
         {
-            var ev = {inputData: url.target + " " + key,
-                      network: net, server: net.primServ}
+            /* url points to a channel */
+            var key = "";
+            if (url.needkey)
+                key = window.prompt (getMsg("gotoIRCURLMsg3", url.spec));
+            ev = {inputData: url.target + " " + key,
+                  network: net, server: net.primServ};
             client.onInputJoin (ev);
-            if (url.msg)
+            targetObject = ev.channel;
+        }
+
+        if (url.msg)
+        {
+            var msg;
+            if (url.msg.indexOf("\01ACTION") == 0)
             {
-                var msg;
-                if (url.msg.indexOf("\01ACTION") == 0)
-                {
-                    msg = filterOutput (url.msg, "ACTION", "ME!");
-                    ev.channel.display (msg, "ACTION", "ME!",
-                                        client.currentObject);
-                }
-                else
-                {
-                    msg = filterOutput (url.msg, "PRIVMSG", "ME!");
-                    ev.channel.display (msg, "PRIVMSG", "ME!",
-                                        client.currentObject);
-                }
-                ev.channel.say (msg);
-                setCurrentObject (ev.channel);
+                msg = filterOutput (url.msg, "ACTION", "ME!");
+                targetObject.display (msg, "ACTION", "ME!",
+                                      client.currentObject);
             }
+            else
+            {
+                msg = filterOutput (url.msg, "PRIVMSG", "ME!");
+                targetObject.display (msg, "PRIVMSG", "ME!",
+                                      client.currentObject);
+            }
+            targetObject.say (msg);
+            setCurrentObject (targetObject);
         }
     }
     else
@@ -1059,41 +1373,36 @@ function gotoIRCURL (url)
 
 }
 
+function setTopicText (text)
+{
+    var topic = client.statusBar["channel-topic"];
+    var span = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                         "html:span");
+    
+    span.appendChild(stringToMsg(text, client.currentObject));
+    topic.removeChild(topic.firstChild);
+    topic.appendChild(span);
+}
+    
 function updateNetwork(obj)
 {
-    var o = new Object();
-    getObjectDetails (client.currentObject, o);
+    var o = getObjectDetails (client.currentObject);
 
-    if (obj && obj != o.network)
-        return;
-    
-    var net = o.network ? o.network.name : "(none)";
-    var serv = "(none)", nick = "(unknown)", lag = "(unknown)",
-        ping = "(never)";
-    if (o.server)
+    var lag = MSG_UNKNOWN;
+    var nick = "";
+    if ("server" in o)
     {
-        serv  = o.server.connection.host;
         if (o.server.me)
             nick = o.server.me.properNick;
-        lag = (o.server.lag != -1) ? o.server.lag : "(unknown)";
-        
-        if (o.server.lastPing)
-        {
-            var mins = String(o.server.lastPing.getMinutes());
-            if (mins.length == 1)
-                mins = "0" + mins;
-            ping = o.server.lastPing.getHours() + ":" + mins;
-        }
-        else
-            ping = "(never)";
+        lag = (o.server.lag != -1) ? o.server.lag : MSG_UNKNOWN;
     }
-
-    client.statusBar["net-name"].setAttribute("value", net);
-    client.statusBar["server-name"].setAttribute("value", serv);
+    client.statusBar["header-url"].setAttribute("value", 
+                                                 client.currentObject.getURL());
+    client.statusBar["header-url"].setAttribute("href", 
+                                                 client.currentObject.getURL());
+    client.statusBar["header-url"].setAttribute("name", 
+                                                 client.currentObject.name);
     client.statusBar["server-nick"].setAttribute("value", nick);
-    client.statusBar["server-lag"].setAttribute("value", lag);
-    client.statusBar["last-ping"].setAttribute("value", ping);
-
 }
 
 function updateChannel (obj)
@@ -1101,49 +1410,42 @@ function updateChannel (obj)
     if (obj && obj != client.currentObject)
         return;
     
-    var o = new Object();
-    getObjectDetails (client.currentObject, o);
+    var o = getObjectDetails (client.currentObject);
 
-    var chan = "(none)", l = "(none)", k = "(none)", mode = "(none)",
-        users = 0, topicBy = "(nobody)", topic = "(unknown)";
+    var mode = MSG_NONE, users = MSG_NONE, topic = MSG_UNKNOWN;
 
-    if (o.channel)
+    if ("channel" in o)
     {
-        chan = o.channel.name;
-        l = (o.channel.mode.limit != -1) ? o.channel.mode.limit : "(none)";
-        k = o.channel.mode.key ? o.channel.mode.key : "(none)";
         mode = o.channel.mode.getModeStr();
         if (!mode)
-            mode = "(none)";
-        users = o.channel.getUsersLength();
-        topic = o.channel.topic ? o.channel.topic : "(none)";
-        topicBy = o.channel.topicBy ? o.channel.topicBy : "(nobody)";
+            mode = MSG_NONE;
+        users = getMsg("userCountDetails",
+                       [o.channel.getUsersLength(), o.channel.opCount,
+                        o.channel.voiceCount]);
+        topic = o.channel.topic ? o.channel.topic : MSG_NONE;
     }
     
-    client.statusBar["channel-name"].setAttribute("value", chan);
-    client.statusBar["channel-limit"].setAttribute("value", l);
-    client.statusBar["channel-key"].setAttribute("value", k);
     client.statusBar["channel-mode"].setAttribute("value", mode);
     client.statusBar["channel-users"].setAttribute("value", users);
-    client.statusBar["channel-topic"].setAttribute("value", topic);
-    client.statusBar["channel-topicby"].setAttribute("value", topicBy);
+    client.statusBar["channel-topic"].firstChild.data = topic;
 
 }
 
 function updateTitle (obj)
 {
-    if ((obj && obj != client.currentObject) || !client.currentObject)
+    if (!("currentObject" in client) || (obj && obj != client.currentObject))
         return;
 
     var tstring;
     var o = getObjectDetails (client.currentObject);
-    var net = o.network ? o.network.name : "";
-
+    var net = "network" in o ? o.network.name : "";
+    var nick = "";
+    
     switch (client.currentObject.TYPE)
     {
         case "IRCNetwork":
-            var serv = "", port = "", nick = "";
-            if (o.server)
+            var serv = "", port = "";
+            if ("server" in o)
             {
                 serv = o.server.connection.host;
                 port = o.server.connection.port;
@@ -1160,8 +1462,8 @@ function updateTitle (obj)
             
         case "IRCChannel":
             var chan = "", mode = "", topic = "";
-            var nick = o.parent.me ? o.parent.me.properNick : 
-                                     getMsg ("updateTitleNoNick");
+            nick = "me" in o.parent ? o.parent.me.properNick : 
+                getMsg ("updateTitleNoNick");
             chan = o.channel.name;
             mode = o.channel.mode.getModeStr();
             if (!mode)
@@ -1173,7 +1475,16 @@ function updateTitle (obj)
             break;
 
         case "IRCUser":
-            tstring = getMsg("updateTitleUser", client.currentObject.properNick);
+            nick = client.currentObject.properNick;
+            var source = "";
+            if (client.currentObject.name)
+            {
+                source = client.currentObject.name + "@" +
+                    client.currentObject.host;
+            }
+            tstring = getMsg("updateTitleUser", [nick, source]);
+            //client.statusBar["channel-topic"].setAttribute("value", tstring);
+            client.statusBar["channel-topic"].firstChild.data = tstring;
             break;
 
         default:
@@ -1189,7 +1500,7 @@ function updateTitle (obj)
                        (Number(i) + 1) + "!" : (Number(i) + 1));
         if (actl.length > 0)
             tstring = getMsg("updateTitleWithActivity",
-                              [tstring, actl.join (", ")]);
+                              [tstring, actl.join (MSG_CSP)]);
     }
 
     document.title = tstring;
@@ -1245,7 +1556,8 @@ function newInlineText (data, className, tagName)
     
     var a = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                       tagName);
-    a.setAttribute ("class", className);
+    if (className)
+        a.setAttribute ("class", className);
 
     switch (typeof data)
     {
@@ -1307,12 +1619,13 @@ function setCurrentObject (obj)
         return;
     }
 
-    if (client.currentObject == obj)
+    if (("currentObject" in client && client.currentObject == obj) ||
+        !("output" in client) || !client.output)
         return;
         
     var tb, userList;
 
-    if (client.currentObject)
+    if ("currentObject" in client && client.currentObject)
     {
         tb = getTabForObject(client.currentObject);
     }
@@ -1328,12 +1641,9 @@ function setCurrentObject (obj)
 
     /* Unselect currently selected users. */
     userList = document.getElementById("user-list");
-    if (userList) 
-        /* Remove curently selection items before this tree gets rerooted,
-         * because it seems to remember the selections for eternity if not. */
-        userList.clearItemSelection ();    
-    else
-        dd ("setCurrentObject: could not find element with ID='user-list'");
+    /* Remove curently selection items before this tree gets rerooted,
+     * because it seems to remember the selections for eternity if not. */
+    userList.clearItemSelection ();    
 
     if (obj.TYPE == "IRCChannel")
         client.rdf.setTreeRoot ("user-list", obj.getGraphResource());
@@ -1356,73 +1666,39 @@ function setCurrentObject (obj)
     updateTitle ();
 
     if (client.PRINT_DIRECTION == 1)
+    {
         scrollDown();
+        setTimeout ("scrollDown()", 500);
+        setTimeout ("scrollDown()", 1000);
+        setTimeout ("scrollDown()", 2000);
+    }
+    
+    onTopicEditEnd();
 
-    focusInput();
+    if (client.currentObject.TYPE == "IRCChannel")
+        client.statusBar["channel-topic"].setAttribute ("editable", "true");
+    else
+        client.statusBar["channel-topic"].removeAttribute ("editable");
+
+    var status = document.getElementById("offline-status");
+    if (client.currentObject == client)
+    {
+        status.setAttribute ("hidden", "true");
+    }
+    else
+    {
+        status.removeAttribute ("hidden");
+        var details = getObjectDetails(client.currentObject);
+        if ("network" in details && details.network.isConnected())
+            status.removeAttribute ("offline");    
+        else
+            status.setAttribute ("offline", "true");
+    }
 }
 
 function scrollDown ()
 {
     window.frames[0].scrollTo(0, window.frames[0].document.height);
-}
-
-function addHistory (source, obj)
-{
-    var tbody;
-    
-    if (!source.messages)
-    {
-        source.messages =
-            document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                      "html:table");
-
-        source.messages.setAttribute ("class", "msg-table");
-        source.messages.setAttribute ("view-type", source.TYPE);
-        if (0) /*XXX*/ {
-            tbody = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                              "html:tbody");
-            source.messages.appendChild (tbody);
-        } else {
-            tbody = source.messages;
-        }
-    }
-    else
-        if (0) /*XXX*/ {        
-            tbody = source.messages.firstChild;
-        } else {
-            tbody = source.messages;
-        }
-
-    var needScroll = false;
-    var w = window.frames[0];
-    
-    if (client.PRINT_DIRECTION == 1)
-    {
-        if ((w.document.height - (w.innerHeight + w.pageYOffset)) <
-            (w.innerHeight / 3))
-            needScroll = true;
-        tbody.appendChild (obj);
-    }
-    else
-        tbody.insertBefore (obj, source.messages.firstChild);
-    
-    if (source.MAX_MESSAGES)
-    {
-        if (typeof source.messageCount != "number")
-            source.messageCount = 1;
-        else
-            source.messageCount++;
-
-        if (source.messageCount > source.MAX_MESSAGES)
-            if (client.PRINT_DIRECTION == 1)
-                tbody.removeChild (tbody.firstChild);
-            else
-                tbody.removeChild (tbody.lastChild);
-    }
-
-    if (needScroll && client.currentObject == source)
-        w.scrollTo (w.pageXOffset, w.document.height);
-    
 }
 
 function notifyActivity (source)
@@ -1433,12 +1709,12 @@ function notifyActivity (source)
     var tb = getTabForObject (source, true);
     var vk = Number(tb.getAttribute("viewKey"));
     
-    if (client.currentObject != source)
+    if ("currentObject" in client && client.currentObject != source)
     {
         if (tb.getAttribute ("state") == "normal")
         {       
             tb.setAttribute ("state", "activity");
-            if (!client.activityList[vk])
+            if (!(vk in client.activityList))
             {
                 client.activityList[vk] = "+";
                 updateTitle();
@@ -1483,7 +1759,7 @@ function getTabForObject (source, create)
 
     if (!source)
     {
-        dd ("** UNDEFINED  passed to getTabForObject **");
+        dd ("** UNDEFINED passed to getTabForObject **");
         dd (getStackTrace());
         return null;
     }
@@ -1648,7 +1924,13 @@ function deleteTab (tb)
     
     if (!isNaN(key))
     {
-        if (!client.viewsArray[key].source.isPermanent)
+        if ("isPermanent" in client.viewsArray[key].source &&
+            client.viewsArray[key].source.isPermanent)
+        {
+            window.alert (getMsg("deleteTabMsg"));
+            return -1;
+        }
+        else
         {
             /* re-index higher toolbuttons */
             for (i = key + 1; i < client.viewsArray.length; i++)
@@ -1656,18 +1938,12 @@ function deleteTab (tb)
                 client.viewsArray[i].tb.setAttribute ("viewKey", i - 1);
                 client.viewsArray[i].spacer.setAttribute ("index", i - 1);
             }
-            spacer = client.viewsArray[key].spacer;
+            var spacer = client.viewsArray[key].spacer;
             arrayRemoveAt(client.viewsArray, key);
             var tbinner = document.getElementById("views-tbar-inner");
             tbinner.removeChild(tb);
             tbinner.removeChild(spacer);
         }
-        else
-        {
-            window.alert (getMsg("deleteTabMsg"));
-            return -1;
-        }
-            
     }
     else
         dd  ("*** INVALID OBJECT passed to deleteTab (" + tb + ") " +
@@ -1679,14 +1955,49 @@ function deleteTab (tb)
 
 function filterOutput (msg, msgtype)
 {
+    if ("outputFilters" in client)
+    {
+        for (var f in client.outputFilters)
+        {
+            if (client.outputFilters[f].enabled)
+                msg = client.outputFilters[f].func(msg, msgtype);
+        }
+    }
 
-    for (var f in client.outputFilters)
-        if (client.outputFilters[f].enabled)
-            msg = client.outputFilters[f].func(msg, msgtype);
-
-    return msg;
-    
+    return ucConvertOutgoingMessage(msg);
 }
+
+client.connectToNetwork =
+function cli_connet (netname, pass)
+{
+    if (!(netname in client.networks))
+    {
+        display (getMsg("cli_attachNoNet", netname), "ERROR");
+        return false;
+    }
+    
+    var netobj = client.networks[netname];
+
+    if (!("messages" in netobj))
+        netobj.displayHere (getMsg("cli_attachOpened", netname), "INFO");
+    setCurrentObject(netobj);
+
+    if (netobj.isConnected())
+    {
+        netobj.display (getMsg("cli_attachAlreadyThere", netname), "ERROR");
+        return true;
+    }
+    
+    if (CIRCNetwork.prototype.INITIAL_NICK == client.defaultNick)
+        CIRCNetwork.prototype.INITIAL_NICK =
+            prompt (getMsg("cli_attachGetNick"), client.defaultNick);
+    
+    if (!("connecting" in netobj))
+        netobj.display (getMsg("cli_attachWorking",netobj.name), "INFO");
+    netobj.connect(pass);
+    return true;
+}
+
 
 client.getURL =
 function cli_geturl ()
@@ -1723,7 +2034,6 @@ function cli_load(url, obj)
 client.sayToCurrentTarget =
 function cli_say(msg)
 {
-
     switch (client.currentObject.TYPE)
     {
         case "IRCChannel":
@@ -1764,7 +2074,7 @@ function n_display (message, msgtype, sourceObj, destObj)
 CIRCUser.prototype.display =
 function u_display(message, msgtype, sourceObj, destObj)
 {
-    if (this.messages)
+    if ("messages" in this)
         this.displayHere (message, msgtype, sourceObj, destObj);
     else
     {
@@ -1785,52 +2095,56 @@ function display (message, msgtype, sourceObj, destObj)
 }
 
 client.display =
+client.displayHere =
 CIRCNetwork.prototype.displayHere =
 CIRCChannel.prototype.display =
+CIRCChannel.prototype.displayHere =
 CIRCUser.prototype.displayHere =
 function __display(message, msgtype, sourceObj, destObj)
 {            
-    var d = new Date();
-    var mins = d.getMinutes();
-    if (mins < 10)
-        mins = "0" + mins;
-    var dateString = getMsg("cli_dateString", [d.getMonth() + 1, d.getDate(),
-                                               d.getHours(), mins]);
- 
+    var canMergeData = false;
+    var canCollapseRow = false;
+
     function setAttribs (obj, c, attrs)
     {
         for (var a in attrs)
             obj.setAttribute (a, attrs[a]);
         obj.setAttribute ("class", c);
         obj.setAttribute ("msg-type", msgtype);
-        obj.setAttribute ("msg-user", fromAttr);
         obj.setAttribute ("msg-dest", toAttr);
         obj.setAttribute ("dest-type", toType);
-        obj.setAttribute ("view-type", viewType);
-    }
+        obj.setAttribute ("view-type", viewType); 
+        if (fromAttr)
+            if (fromUser)
+                obj.setAttribute ("msg-user", fromAttr);
+            else
+                obj.setAttribute ("msg-source", fromAttr);
+   }
 
     var blockLevel = false; /* true if this row should be rendered at block
                              * level, (like, if it has a really long nickname
                              * that might disturb the rest of the layout)     */
     var o = getObjectDetails (this);          /* get the skinny on |this|     */
-    var me = (o.server) ? o.server.me : null; /* get the object representing
-                                               * the user
-                                               */
+    var me;
+    if ("server" in o && "me" in o.server)
+    {
+        me = o.server.me;    /* get the object representing the user           */
+    }
     if (sourceObj == "ME!") sourceObj = me;   /* if the caller to passes "ME!"*/
     if (destObj == "ME!") destObj = me;       /* substitute the actual object */
 
     var fromType = (sourceObj && sourceObj.TYPE) ? sourceObj.TYPE : "unk";
+    var fromUser = (fromType.search(/IRC.*User/) != -1);    
     var fromAttr;
-    
-    if      (sourceObj && sourceObj == me)       fromAttr = "ME!";
-    else if (fromType.search(/IRC.*User/) != -1) fromAttr = sourceObj.nick;
-    else if (typeof sourceObj == "object")       fromAttr = sourceObj.name;
+    if      (fromUser && sourceObj == me)  fromAttr = me.nick + " ME!";
+    else if (fromUser)                     fromAttr = sourceObj.nick;
+    else if (typeof sourceObj == "object") fromAttr = sourceObj.name;
         
     var toType = (destObj) ? destObj.TYPE : "unk";
     var toAttr;
     
-    if (destObj == me)
-        toAttr = "ME!";
+    if (destObj && destObj == me)
+        toAttr = me.nick + " ME!";
     else if (toType == "IRCUser")
         toAttr = destObj.nick;
     else if (typeof destObj == "object")
@@ -1846,41 +2160,73 @@ function __display(message, msgtype, sourceObj, destObj)
     setAttribs(msgRow, "msg");
 
     //dd ("fromType is " + fromType + ", fromAttr is " + fromAttr);
+    var d = new Date();
+    var mins = d.getMinutes();
+    if (mins < 10)
+        mins = "0" + mins;
+    var statusString;
+    
+    if (fromUser)
+    {
+        statusString =
+            getMsg("cli_statusString", [d.getMonth() + 1, d.getDate(),
+                                        d.getHours(), mins,
+                                        sourceObj.nick + "!" + 
+                                        sourceObj.name + "@" + sourceObj.host]);
+    }
+    else
+    {
+        statusString =
+            getMsg("cli_statusString", [d.getMonth() + 1, d.getDate(),
+                                        d.getHours(), mins,
+                                        sourceObj ? sourceObj.name : this.name]);
+    }
     
     if (fromType.search(/IRC.*User/) != -1 &&
         msgtype.search(/PRIVMSG|ACTION|NOTICE/) != -1)
     {
         /* do nick things here */
         var nick;
+        var nickURL;
         
         if (sourceObj != me)
         {
+            nick = sourceObj.properNick;
+            if ("getURL" in sourceObj)
+                nickURL = sourceObj.getURL();
             if (toType == "IRCUser") /* msg from user to me */
             {
                 getAttention = true;
-                nick = sourceObj.properNick;
+                this.defaultCompletion = "/msg " + nick + " ";
             }
             else /* msg from user to channel */
             {
                 if (typeof (message == "string") && me)
+                {
                     isImportant = msgIsImportant (message, nick, me.nick);
-                nick = sourceObj.properNick;
+                    if (isImportant)
+                        this.defaultCompletion = nick +
+                            client.ADDRESSED_NICK_SEP + " ";
+                }
             }
         }
         else if (toType == "IRCUser") /* msg from me to user */
         {
-            nick = (this.TYPE == "IRCUser") ? sourceObj.properNick :
-                destObj.properNick;
+            if (this.TYPE == "IRCUser")
+                nick    = sourceObj.properNick;
+            else
+                nick    = destObj.properNick;
         }
         else /* msg from me to channel */
         {
             nick = sourceObj.properNick;
         }
         
-        if (typeof this.mark == "undefined") 
+        if (!("mark" in this))
             this.mark = "odd";
         
-        if (this.lastNickDisplayed != nick)
+        if (!("lastNickDisplayed" in this) ||
+            this.lastNickDisplayed != nick)
         {
             this.lastNickDisplayed = nick;
             this.mark = (this.mark == "even") ? "odd" : "even";
@@ -1888,28 +2234,49 @@ function __display(message, msgtype, sourceObj, destObj)
 
         var msgSource = document.createElementNS("http://www.w3.org/1999/xhtml",
                                                  "html:td");
-        setAttribs (msgSource, "msg-user", {title: dateString});
+        setAttribs (msgSource, "msg-user", {statusText: statusString});
         if (isImportant)
             msgSource.setAttribute ("important", "true");
         if (nick.length > client.MAX_NICK_DISPLAY)
             blockLevel = true;
-        msgSource.appendChild (newInlineText (nick));
+        if (nickURL)
+        {
+            var nick_anchor =
+                document.createElementNS("http://www.w3.org/1999/xhtml",
+                                         "html:a");
+            nick_anchor.setAttribute ("class", "chatzilla-link");
+            nick_anchor.setAttribute ("href", nickURL);
+            nick_anchor.appendChild (newInlineText (nick));
+            msgSource.appendChild (nick_anchor);
+        }
+        else
+        {
+            msgSource.appendChild (newInlineText (nick));
+        }
         msgRow.appendChild (msgSource);
+        canMergeData = client.COLLAPSE_MSGS;
+        canCollapseRow = client.COLLAPSE_ROWS;
 
     }
-    else if ((client.debugMode && (code = "[" + msgtype + "]")) ||
-             (code = client.responseCodeMap[msgtype]) != "none")
+    else
     {
-        /* Display the message code */
-        var msgType = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                               "html:td");
-        setAttribs (msgType, "msg-type", {title: dateString});
-
-        if (!code)
-            if (client.HIDE_CODES)
+        if (!client.debugMode && msgtype in client.responseCodeMap)
+        {
+            code = client.responseCodeMap[msgtype];
+        }
+        else
+        {
+            if (!client.debugMode && client.HIDE_CODES)
                 code = client.DEFAULT_RESPONSE_CODE;
             else
                 code = "[" + msgtype + "]";
+        }
+        
+        /* Display the message code */
+        var msgType = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                               "html:td");
+        setAttribs (msgType, "msg-type", {statusText: statusString});
+
         msgType.appendChild (newInlineText (code));
         msgRow.appendChild (msgType);
     }
@@ -1918,11 +2285,12 @@ function __display(message, msgtype, sourceObj, destObj)
     {
         var msgData = document.createElementNS("http://www.w3.org/1999/xhtml",
                                                "html:td");
-        setAttribs (msgData, "msg-data");
+        setAttribs (msgData, "msg-data", {statusText: statusString, 
+                                          colspan: client.INITIAL_COLSPAN});
         if (isImportant)
             msgData.setAttribute ("important", "true");
 
-        if (this.mark)
+        if ("mark" in this)
             msgData.setAttribute ("mark", this.mark);
         
         if (typeof message == "string")
@@ -1957,24 +2325,192 @@ function __display(message, msgtype, sourceObj, destObj)
         table.setAttribute ("cellpadding", "0");
         
         td.appendChild (table);
-        if (0) /*XXX*/ {
-            var tbody =  document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                                   "html:tbody");
-        } else {
-            tbody = table;
-        }
+        var tbody =  document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                               "html:tbody");
         
         tbody.appendChild (msgRow);
-        //XXXtable.appendChild (tbody);
+        table.appendChild (tbody);
         msgRow = tr;
+        canMergeData = false;
+        canCollapseRow = false;
     }
 
-    addHistory (this, msgRow);
+    addHistory (this, msgRow, canMergeData, canCollapseRow);
     if (isImportant || getAttention)
         notifyAttention(this);
     else
         notifyActivity (this);
 }
+
+function addHistory (source, obj, mergeData, collapseRow)
+{
+    var tbody;
+    
+    if (!("messages" in source) || source.messages == null)
+    {
+        source.messages =
+            document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                      "html:table");
+
+        source.messages.setAttribute ("class", "msg-table");
+        source.messages.setAttribute ("view-type", source.TYPE);
+        tbody = document.createElementNS ("http://www.w3.org/1999/xhtml",
+                                          "html:tbody");
+        source.messages.appendChild (tbody);
+    }
+    else
+    {
+        tbody = source.messages.firstChild;
+    }
+
+    var needScroll = false;
+    var w = window.frames[0];
+    
+    if (client.PRINT_DIRECTION == 1)
+    {
+        if (mergeData || collapseRow)
+        {
+            var thisUserCol = obj.firstChild;
+            var thisMessageCol = thisUserCol.nextSibling;
+            var ci = findPreviousColumnInfo(source.messages);
+            var nickColumns = ci.nickColumns;
+            var rowExtents = ci.extents;
+            var nickColumnCount = nickColumns.length;
+            var sameNick = (nickColumnCount > 0 &&
+                            nickColumns[nickColumnCount - 1].
+                            getAttribute("msg-user") ==
+                            thisUserCol.getAttribute("msg-user"));
+            var lastRowSpan = (nickColumnCount > 0) ?
+                Number(nickColumns[0].getAttribute("rowspan")) : 0;
+            if (sameNick && mergeData)
+            {
+                if (obj.getAttribute("important"))
+                {
+                    nickColumns[nickColumnCount - 1].setAttribute ("important",
+                                                                   true);
+                }
+                /* message is from the same person as last time,
+                 * strip the nick first... */
+                obj.removeChild(obj.firstChild);
+                /* Adjust height of previous cells, maybe. */
+                for (i = 0; i < rowExtents.length - 1; ++i)
+                {
+                    var myLastData = 
+                        rowExtents[i].childNodes[nickColumnCount - 1];
+                    var myLastRowSpan = (myLastData) ?
+                        myLastData.getAttribute("rowspan") : 0;
+                    if (myLastData && myLastRowSpan > 1)
+                    {
+                        myLastData.removeAttribute("rowspan");
+                    }
+                }
+                /* then add one to the colspan for the previous user columns */
+                if (!lastRowSpan)
+                    lastRowSpan = 1;
+                for (var i = 0; i < nickColumns.length; ++i)
+                    nickColumns[i].setAttribute ("rowspan", lastRowSpan + 1);
+            }
+            else if (!sameNick && collapseRow && nickColumnCount > 0 &&
+                     nickColumnCount < client.MAX_MSG_PER_ROW)
+            {
+                /* message is from a different person, but is elegible to
+                 * be contained by the previous row. */
+                var tr = nickColumns[0].parentNode;
+                for (i = 0; i < rowExtents.length; ++i)
+                    rowExtents[i].lastChild.removeAttribute("colspan");
+                obj.firstChild.setAttribute ("rowspan", lastRowSpan);
+                tr.appendChild (obj.firstChild);
+                var lastColSpan =
+                    Number(rowExtents[0].lastChild.getAttribute("colspan"));
+                obj.lastChild.setAttribute ("colspan", lastColSpan - 2);
+                obj.lastChild.setAttribute ("rowspan", lastRowSpan);
+                tr.appendChild (obj.lastChild);
+                obj = null;
+            }   
+        }
+        
+        if ((w.document.height - (w.innerHeight + w.pageYOffset)) <
+            (w.innerHeight / 3))
+            needScroll = true;
+        if (obj)
+            tbody.appendChild (obj);
+    }
+    else
+        tbody.insertBefore (obj, source.messages.firstChild);
+    
+    if (source.MAX_MESSAGES)
+    {
+        if (typeof source.messageCount != "number")
+            source.messageCount = 1;
+        else
+            source.messageCount++;
+
+        if (source.messageCount > source.MAX_MESSAGES)
+            if (client.PRINT_DIRECTION == 1)
+            {
+                tbody.removeChild (tbody.firstChild);
+                --source.messageCount;
+                while (tbody.firstChild &&
+                       tbody.firstChild.firstChild.getAttribute("class") ==
+                       "msg-data")
+                {
+                    --source.messageCount;
+                    tbody.removeChild (tbody.firstChild);
+                }
+            }
+            else
+            {
+                tbody.removeChild (tbody.lastChild);
+                --source.messageCount;
+                while (tbody.lastChild &&
+                       tbody.lastChild.firstChild.getAttribute("class") ==
+                       "msg-data")
+                {
+                    --source.messageCount;
+                    tbody.removeChild (tbody.lastChild);
+                }
+            }
+    }
+
+    if ("currentObject" in client && client.currentObject == source &&
+        needScroll)
+    {
+        scrollDown();
+        setTimeout ("scrollDown()", 500);
+        setTimeout ("scrollDown()", 1000);
+        setTimeout ("scrollDown()", 2000);
+    }                    
+    
+}
+
+function findPreviousColumnInfo (table)
+{
+    var extents = new Array();
+    var tr = table.firstChild.lastChild;
+    var className = tr ? tr.firstChild.getAttribute("class") : "";
+    while (tr && className.search(/msg-user|msg-type|msg-nested-td/) == -1)
+    {
+        extents.push(tr);
+        tr = tr.previousSibling;
+        if (tr)
+            className = tr.firstChild.getAttribute("class");
+    }
+    
+    if (!tr || className != "msg-user")
+        return {extents: [], nickColumns: []};
+    
+    extents.push(tr);
+    var nickCol = tr.firstChild;
+    var nickCols = new Array();
+    while (nickCol)
+    {
+        if (nickCol.getAttribute("class") == "msg-user")
+            nickCols.push (nickCol);
+        nickCol = nickCol.nextSibling.nextSibling;
+    }
+
+    return {extents: extents, nickColumns: nickCols};
+}    
 
 client.getConnectionCount =
 function cli_gccount ()
@@ -1990,12 +2526,70 @@ function cli_gccount ()
 
 client.quit =
 function cli_quit (reason)
-{
-    
+{    
     for (var n in client.networks)
-        if (client.networks[n].primServ)
-            client.networks[n].quit (reason);
+        if ("primServ" in client.networks[n])
+            client.networks[n].quit (reason);   
+}
+
+/* gets a tab-complete match for the line of text specified by |line|.  wordStart
+ * is the position within |line| that starts the word being matched, wordEnd
+ * marks the end position.  |cursorPos| marks the position of the caret in the
+ * textbox.
+ */
+client.performTabMatch =
+function gettabmatch_usr (line, wordStart, wordEnd, word, cursorPos)
+{
+    if (wordStart != 0 || line[0] != client.COMMAND_CHAR)
+        return null;
+
+    var matches = client.commands.listNames(word.substr(1));
+    if (matches.length == 1 && wordEnd == line.length)
+    {
+        matches[0] = client.COMMAND_CHAR + matches[0] + " ";
+    }
+    else
+    {
+        for (var i in matches)
+            matches[i] = client.COMMAND_CHAR + matches[i];
+    }
+
+    return matches;
+}
+
+CIRCChannel.prototype.performTabMatch =
+CIRCNetwork.prototype.performTabMatch =
+CIRCUser.prototype.performTabMatch    =
+function gettabmatch_usr (line, wordStart, wordEnd, word, cursorpos)
+{
+    if (wordStart == 0 && line[0] == client.COMMAND_CHAR)
+        return client.performTabMatch (line, wordStart, wordEnd, word,
+                                       cursorpos);
     
+    if (!("users" in this))
+        return [];
+    
+    var users = this.users;
+    var nicks = new Array();
+        
+    for (var n in users)
+        nicks.push (users[n].nick);
+        
+    var matches = matchEntry (word, nicks);
+    if (matches.length == 1)
+    {
+        matches[0] = this.users[matches[0]].properNick;
+        if (wordStart == 0)
+            matches[0] += client.ADDRESSED_NICK_SEP;
+
+        if (wordEnd == line.length)
+        {
+            /* add a space if the word is at the end of the line. */
+            matches[0] += " ";
+        }
+    }
+
+    return matches;
 }
 
 /**
@@ -2038,7 +2632,7 @@ function my_getselectedusers ()
 CIRCChannel.prototype.getGraphResource =
 function my_graphres ()
 {
-    if (!this.rdfRes)
+    if (!("rdfRes" in this))
     {
         this.rdfRes = 
             client.rdf.GetResource(RES_PFX + "CHANNEL:" +
@@ -2059,9 +2653,9 @@ function usr_graphres()
     
     var rdf = client.rdf;
     
-    if (!this.rdfRes)
+    if (!("rdfRes" in this))
     {
-        if (!CIRCUser.nextResID)
+        if (!("nextResID" in CIRCUser))
             CIRCUser.nextResID = 0;
         
         this.rdfRes = rdf.GetResource (RES_PFX + "CUSER:" + 
@@ -2097,7 +2691,7 @@ function usr_updres()
     if (this.TYPE != "IRCChanUser")
         dd ("** WARNING: cuser.updateGraphResource called on wrong object **");
 
-    if (!this.rdfRes)
+    if (!("rdfRes" in this))
         this.getGraphResource();
     
     var rdf = client.rdf;

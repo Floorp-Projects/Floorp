@@ -89,10 +89,10 @@
 }
 
 .msg-user[dest-type="IRCUser"],
-.msg-user[dest-type="IRCUser"][msg-dest="ME!"] {
+.msg-user[dest-type="IRCUser"][msg-dest$="ME!"] {
     font-style: italic;
 }
 
-.msg-user[msg-user="ME!"] {
+.msg-user[msg-user$="ME!"] {
     font-weight: bold;
 }

@@ -30,435 +30,176 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://chatzilla/content/scripts.xul"?>
+<?xul-overlay href="chrome://chatzilla/content/menus.xul"?>
+<?xul-overlay href="chrome://chatzilla/content/popups.xul"?>
 
-<window id="main-window"
-        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoad();" onunload="onUnload();"
-        onclose="return onClose();"
-        persist="width height" windowtype="irc:chatzilla">
+<window id="chatzilla-window"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  orient="vertical" onload="onLoad();" onunload="onUnload();"
+  onclose="return onClose();" onmouseover="onMouseOver(event);"
+  persist="width height" windowtype="irc:chatzilla">
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://global/content/nsJSSupportsUtils.js"/>
-<script src="chrome://global/content/nsJSComponentManager.js"/>
-<script src="chrome://global/content/nsUserSettings.js"/>
-<script src="chrome://global/content/nsTransferable.js"/>
-<script src="chrome://global/content/nsClipboard.js"/>
-<script src="chrome://global/content/nsDragAndDrop.js"/>
-<script src="chrome://communicator/content/contentAreaUtils.js"/>
-<script src="chrome://communicator/content/contentAreaDD.js"/>
+  <overlaytarget id="scripts-overlay-target"/>
+  <overlaytarget id="menu-overlay-target"/>
+  <overlaytarget id="popup-overlay-target"/>
 
-<script src="chrome://chatzilla/content/lib/js/utils.js"/>
-<script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
-<script src="chrome://chatzilla/content/lib/js/events.js"/>
-<script src="chrome://chatzilla/content/lib/js/command-manager.js"/>
-<script src="chrome://chatzilla/content/lib/js/irc.js"/>
-<script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
-<script src="chrome://chatzilla/content/lib/xul/munger.js"/>
+  <vbox id="outer-box" flex="1">
+    <vbox id="upper-box" flex="1">
+      <hbox id="tabpanels-contents-box" flex="1">
+        <vbox id="user-list-box" width="20%" persist="collapsed width">
+ 
+          <tree id="user-list" container="true" datasources="rdf:null" flex="1"
+            containment="http://home.netscape.com/NC-irc#chanuser"
+            multiple="true" context="userlistPopup">
 
-<script src="chrome://chatzilla/content/commands.js"/>
-<script src="chrome://chatzilla/content/readprefs.js"/>
-<script src="chrome://chatzilla/content/static.js"/>
-<script src="chrome://chatzilla/content/handlers.js"/>
-<script src="chrome://chatzilla/content/rdf.js"/>
-
-<commandset id="tasksCommands">
-  <command id="cmd_close" oncommand="window.close();"/>
-  <command id="cmd_quit"/>
-</commandset>
-
-<commandset id="chatzillaCommands">
-  <command id="cmd_focus_input" oncommand="focusInput();"/>
-  <command id="cmd_debug" oncommand="onToggleTraceHook()"/>
-  <command id="cmd_toggletabstrip" oncommand="onToggleVisibility('tabstrip');"/>
-  <command id="cmd_togglelist" oncommand="onToggleVisibility('info');"/>
-  <command id="cmd_togglestatus" oncommand="onToggleVisibility('status');"/>
-  <command id="cmd_clearview" oncommand="onClearCurrentView();"/>
-  <command id="cmd_deleteview" oncommand="onDeleteCurrentView();"/>
-  <command id="cmd_status" oncommand="client.onInputStatus();"/>
-  <command id="cmd_popup_query"
-    oncommand="onPopupSimulateCommand('/query $nick');"/>
-  <command id="cmd_popup_whois"
-    oncommand="onPopupSimulateCommand('/whois $nick');"/>
-  <command id="cmd_popup_ping"
-    oncommand="onPopupSimulateCommand('/ctcp $nick PING');"/>
-  <command id="cmd_popup_version"
-    oncommand="onPopupSimulateCommand('/ctcp $nick VERSION');"/>
-  <command id="cmd_popup_highlight"
-    oncommand="onPopupHighlight(true);"/>
-  <command id="cmd_popup_nohighlight"
-    oncommand="onPopupHighlight(false);"/>
-  <command id="cmd_popup_giveop"
-    oncommand="onPopupSimulateCommand('/op $nick');"/>
-  <command id="cmd_popup_takeop"
-    oncommand="onPopupSimulateCommand('/deop $nick');"/>
-  <command id="cmd_popup_givevoice"
-    oncommand="onPopupSimulateCommand('/voice $nick');"/>
-  <command id="cmd_popup_takevoice"
-    oncommand="onPopupSimulateCommand('/devoice $nick');"/>
-  <command id="cmd_popup_kick"
-    oncommand="onPopupSimulateCommand('/kick $nick');"/>
-</commandset>
-
-<keyset id="chatzillaKeys">
-  <key id="key_focus_input" observes="cmd_focus_input" keycode="VK_ESCAPE"/>
-
-  <key id="key_debug" observes="cmd_debug"
-    modifiers="control shift" key="D"/>
-  <key id="key_clearview" observes="cmd_clearview"
-    modifiers="control" key="R"/>
-  <key id="key_deleteview" observes="cmd_deleteview"
-    modifiers="control" key="D"/>
-  <key id="key_toggletabstrip" observes="cmd_toggletabstrip"
-    modifiers="control" key="T"/>
-  <key id="key_togglelist" observes="cmd_togglelist"
-    modifiers="control" key="L"/>
-  <key id="key_togglestatus" observes="cmd_togglestatus"
-    modifiers="control" key="S"/>
-  <key id="key_status" observes="cmd_status"
-    modifiers="control shift" key="S"/>
-</keyset>
-
-<keyset id="tasksKeys">
-  <key id="key_close"/>
-  <!-- nobody needs to quit that quickly.  key id="key_quit"/ -->
-</keyset>
-
-<popupset id="aHTMLTooltipSet">
-  <popup id="aHTMLTooltip" class="tooltip" 
-    onpopupshowing="return fillInHTMLTooltip(document.tooltipNode);">
-    <vbox id="HTML_TOOLTIP_tooltipBox"/>
-  </popup>
-</popupset>
-
-<popupset id="aTooltipSet"/>
-
-<popupset id="contextMenus">
-    <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
-        <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op"/>
-        <menuitem label="&deop.value;" accesskey="&deop.accesskey;"
-          code="/deop"/>
-        <menuitem label="&voice.value;" accesskey="&voice.accesskey;"
-          code="/voice"/>
-        <menuitem label="&devoice.value;" accesskey="&devoice.accesskey;"
-          code="/devoice"/>  
-        <menuitem label="&kick.value;" accesskey="&kick.accesskey;"
-          code="/kick"/>
-        <menuitem label="&whois.value;" accesskey="&whois.accesskey;" code="/whois"/>
-    </popup>
-
-    <popup id="outputContext"
-        onpopupshowing="if (event.originalTarget == this) onOutputContextMenuCreate(event);"
-        onpopuphiding="if (event.originalTarget == this) delete client._popupContext;">
-        <menuitem format="&PopupQueryCmd.label;" accesskey="&PopupQueryCmd.aKey;"
-          observes="cmd_popup_query"
-          showfor="targetUser != 'undefined'"/>
-        <menuitem format="&PopupWhoisCmd.label;" accesskey="&PopupWhoisCmd.aKey;"
-          observes="cmd_popup_whois"
-          showfor="targetUser != 'undefined'"/>
-        <menuitem format="&PopupPingCmd.label;" accesskey="&PopupPingCmd.aKey;"
-          observes="cmd_popup_ping"
-          showfor="targetUser != 'undefined'"/>
-        <menuitem format="&PopupVersionCmd.label;"
-          accesskey="&PopupVersionCmd.aKey;"
-          observes="cmd_popup_version"
-          showfor="targetUser != 'undefined'"/>
-
-    <!-- css bugs keep this from working for now, see bug 91447
-        <menu format="&PopupHighlightStyle.label;" 
-          accesskey="&PopupHighlightStyle.aKey;"
-          showfor="targetUser != 'undefined'">
-          <menupopup id="highlightMenu"><menuitem/></menupopup>
-        </menu>
-    -->
-        <menuseparator
-          showfor="targetUser != 'undefined'"/>
-
-        <menuitem label="&PopupGiveOp.label;" accesskey="&PopupGiveOp.aKey;"
-          observes="cmd_popup_giveop"
-          showfor="iAmOp is 'yes' and targetIsOp is 'no'"/>
-        <menuitem label="&PopupTakeOp.label;" accesskey="&PopupTakeOp.aKey;"
-          observes="cmd_popup_takeop"
-          showfor="iAmOp is 'yes' and targetIsOp is 'yes'"/>
-        <menuitem label="&PopupGiveVoice.label;"
-          accesskey="&PopupGiveVoice.aKey;"
-          observes="cmd_popup_givevoice"
-          showfor="iAmOp is 'yes' and targetIsVoice is 'no'"/>
-        <menuitem label="&PopupTakeVoice.label;"
-          accesskey="&PopupTakeVoice.aKey;"
-          observes="cmd_popup_takevoice"
-          showfor="iAmOp is 'yes' and targetIsVoice is 'yes'"/>
-        <menuitem label="&PopupKick.label;" accesskey="&PopupKick.aKey;"
-          observes="cmd_popup_kick"
-          showfor="iAmOp is 'yes' and targetUser != 'undefined'"/>
-
-        <menuseparator
-          showfor="targetUser != 'undefined' and iAmOp is 'yes'"/>
-
-        <menuitem label="&ClearViewCmd.label;" accesskey="&ClearViewCmd.aKey;"
-          observes="cmd_clearview" key="key_clearview"/>
-        <menuitem label="&DeleteViewCmd.label;" accesskey="&DeleteViewCmd.aKey;"
-          observes="cmd_deleteview" key="key_deleteview"/>
-        <menuseparator/>
-
-        <menuitem label="&StatusCmd.label;" accesskey="&StatusCmd.aKey;"
-          observes="cmd_status" key="key_status"/>
-    </popup>
-
-</popupset>
-
-<toolbox>
-  <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
-    <menu id="menu_File">
-      <menupopup id="menu_FilePopup">
-        <menu label="&OptionsCmd.label;">
-          <menupopup>
-
-            <menu label="&MungerCmd.label;">
-              <menupopup id="menu-munger">
-                <menuitem id="menu-munger-global" label="&DisableMunger.label;"
-                  oncommand="onToggleMunger()" type="checkbox"/>
-                <menuseparator/>
-              </menupopup>
-            </menu>
-
-            <menuseparator/>
-
-            <menuitem id="menu-dmessages" label="&DebugMsgCmd.label;"
-              accesskey="&DebugMsgCmd.aKey;" type="checkbox"
-              observes="cmd_debug" key="key_debug"/>
-
-            <menuseparator/>
-
-            <menuitem id="menu-settings-save-now" label="&SaveSetNowCmd.label;"
-              oncommand="writeIRCPrefs()"/>
-            <menuitem id="menu-settings-autosave" label="&SaveSetExitCmd.label;"
-              oncommand="onToggleSaveOnExit()" type="checkbox"/>
-
-          </menupopup>
-        </menu>
-
-        <menuseparator/>
-        <menuitem id="menu_close"/>
-      </menupopup>
-    </menu>
-    <menu label="&ViewCmd.label;" accesskey="&ViewCmd.aKey;">
-      <menupopup>
-
-        <menuitem id="menu-view-tabstrip" label="&ShowTabStripCmd.label;" 
-          accesskey="&ShowTabStripCmd.aKey;" type="checkbox"
-          key="key_toggletabstrip" observes="cmd_toggletabstrip"/>
-        <menuitem id="menu-view-info" label="&ShowUserlistCmd.label;" 
-          accesskey="&ShowUserlistCmd.aKey;" type="checkbox"
-          key="key_togglelist" observes="cmd_togglelist"/>
-        <menuitem id="menu-view-status" label="&ShowStatusbarCmd.label;" 
-          accesskey="&ShowStatusbarCmd.aKey;" type="checkbox"
-          key="key_togglestatus" observes="cmd_togglestatus"/>
-        <menuseparator/>
-
-        <menuitem id="menu-view-none" label="&NoneCmd.label;" 
-          accesskey="&NoneCmd.aKey;"
-          oncommand="onSimulateCommand('/css none');"/>
-        <menuitem id="menu-view-default" label="&DefaultCmd.label;" 
-          accesskey="&DefaultCmd.aKey;"
-          oncommand="onSimulateCommand('/css default');"/>
-        <menuitem id="menu-view-dark" label="&DarkCmd.label;" 
-          accesskey="&DarkCmd.aKey;"
-          oncommand="onSimulateCommand('/css dark');"/>
-        <menuitem id="menu-view-light" label="&LightCmd.label;" 
-          accesskey="&LightCmd.aKey;"
-          oncommand="onSimulateCommand('/css light');"/>
-
-        <menuseparator/>
-
-       <!-- hide vs delete nuances are too vague
-        <menuitem label="&HideCmd.label;" oncommand="onHideCurrentView();"/>
-       -->
-        <menuitem label="&ClearViewCmd.label;" accesskey="&ClearViewCmd.aKey;"
-          observes="cmd_clearview" key="key_clearview"/>
-        <menuitem label="&DeleteViewCmd.label;" accesskey="&DeleteViewCmd.aKey;"
-          observes="cmd_deleteview" key="key_deleteview"/>
-        <menuseparator/>
-        <menuitem label="&StatusCmd.label;" accesskey="&StatusCmd.aKey;"
-          observes="cmd_status" key="key_status"/>
-      </menupopup>
-
-    </menu>
-    <menu id="tasksMenu"/>
-  </menubar>
+            <template>
+              <treechildren flex="1">
+                <treeitem uri="..." flex="1">
+                  <treerow crop="right">
+                      <treecell align="center">
+                        <image class="op-image"
+                          state="rdf:http://home.netscape.com/NC-irc#op"/>
+                      </treecell>
+                      <treecell align="center">
+                        <image class="voice-image"
+                          state="rdf:http://home.netscape.com/NC-irc#voice"/>
+                      </treecell>
+                      <treecell flex="1">
+                        <text class="user-nick"
+                          isop="rdf:http://home.netscape.com/NC-irc#op"
+                          isvoice="rdf:http://home.netscape.com/NC-irc#voice"
+                          value="rdf:http://home.netscape.com/NC-irc#nick"
+                          flex="1" crop="right"/>
+                      </treecell>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </template>
+    
+            <treecolgroup flex="1">
+              <treecol align="center"
+                resource="http://home.netscape.com/NC-irc#op" width="25"/>
+              <splitter class="tree-splitter"/>
+              <treecol align="center"
+                resource="http://home.netscape.com/NC-irc#voice" width="25"/>
+              <splitter class="tree-splitter"/>
+              <treecol flex="1"
+                resource="http://home.netscape.com/NC-irc#nick"/>
+            </treecolgroup>
+    
+            <treehead>
+              <treerow crop="right">
+                <treecell id="usercol-op"
+                  resource="http://home.netscape.com/NC-irc#op"
+                  class="treecell-header" label="O"
+                  onclick="return onSortCol('usercol-op');"/>
+                <treecell id="usercol-voice"
+                  resource="http://home.netscape.com/NC-irc#voice"
+                  class="treecell-header" label="V"
+                  onclick="return onSortCol('usercol-voice');"/>
+                <treecell id="usercol-nick"
+                  resource="http://home.netscape.com/NC-irc#nick"
+                  class="treecell-header sortDirectionIndicator" label="Nick"
+                  onclick="return onSortCol('usercol-nick');"/>
+              </treerow>
+            </treehead>
+    
+          </tree>
+    
+        </vbox> <!-- user-list-box -->
   
-</toolbox>
-
-<vbox id="outer-box" flex="1">
-  <vbox id="upper-box" flex="1">
-    <hbox id="tabpanels-contents-box" flex="1">
-      <vbox id="user-list-box" width="20%" persist="collapsed width">
+        <splitter id="main-splitter" collapse="before" persist="collapsed left">
+          <grippy/>
+        </splitter>
   
-        <tree id="user-list" container="true" datasources="rdf:null" flex="1"
-         containment="http://home.netscape.com/NC-irc#chanuser"
-         multiple="true" context="userlistPopup">
-
-          <template>
-            <treechildren flex="1">
-              <treeitem uri="..." flex="1">
-                <treerow >
-                    <treecell align="center">
-                      <image class="op-image"
-                        state="rdf:http://home.netscape.com/NC-irc#op"/>
-                    </treecell>
-                    <treecell align="center">
-                      <image class="voice-image"
-                        state="rdf:http://home.netscape.com/NC-irc#voice"/>
-                    </treecell>
-                    <treecell flex="1">
-                      <label class="user-nick"
-                        isop="rdf:http://home.netscape.com/NC-irc#op"
-                        isvoice="rdf:http://home.netscape.com/NC-irc#voice"
-                        value="rdf:http://home.netscape.com/NC-irc#nick"
-                        flex="1"/>
-                    </treecell>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </template>
+        <vbox flex="1">
+          <toolbox id="header-bar-tbox" crop="right" persist="collapsed">
+            <toolbar id="header-bar-tbar"
+              grippytooltip="aTooltip"
+              grippytooltiptext="&header.tooltip;" crop="right">
+              <hbox flex="1" class="header-box">
+                <vbox flex="1%">
+                  <label class="header-label" value="&url.label;"/>
+                  <label class="header-label" value="&topic.label;"/>
+                </vbox>
+                <vbox flex="99%">
+                  <hbox flex="1">
+                    <hbox flex="1">
+                      <label class="header-data" id="header-url"
+                        ondraggesture="nsDragAndDrop.startDrag(event, tabDNDObserver);"
+                        crop="right"/>
+                    </hbox>
+                    <hbox flex="1">
+                      <label class="header-label" value="&mode.label;"/>
+                      <label class="header-data" id="channel-mode"
+                        crop="right"/>
+                    </hbox>
+                    <hbox flex="1">
+                      <label class="header-label" value="&users.label;"/>
+                      <label class="header-data" id="channel-users"/>
+                    </hbox>
+                  </hbox>
+                  <hbox flex="1">
+                    <hbox flex="1">
+                      <label class="header-data" id="channel-topic" flex="1"
+                        crop="right" onclick="onTopicEditStart()">text</label>
+                      <textbox flex="1" id="channel-topicedit" collapsed="true"/>
+                    </hbox>
+                  </hbox>
+                </vbox>
+              </hbox>
   
-          <treecolgroup flex="1">
-            <treecol align="center"
-              resource="http://home.netscape.com/NC-irc#op" width="25"/>
-            <splitter class="tree-splitter"/>
-            <treecol align="center"
-              resource="http://home.netscape.com/NC-irc#voice" width="25"/>
-            <splitter class="tree-splitter"/>
-            <treecol flex="1"
-              resource="http://home.netscape.com/NC-irc#nick"/>
-          </treecolgroup>
+            </toolbar>
+          </toolbox>
   
-          <treehead>
-            <treerow >
-              <treecell id="usercol-op"
-                resource="http://home.netscape.com/NC-irc#op"
-                class="treecell-header" label="O"
-                onclick="return onSortCol('usercol-op');"/>
-              <treecell id="usercol-voice"
-                resource="http://home.netscape.com/NC-irc#voice"
-                class="treecell-header" label="V"
-                onclick="return onSortCol('usercol-voice');"/>
-              <treecell id="usercol-nick"
-                resource="http://home.netscape.com/NC-irc#nick"
-                class="treecell-header sortDirectionIndicator" label="Nick"
-                onclick="return onSortCol('usercol-nick');"/>
-            </treerow>
-          </treehead>
+          <iframe id="output-iframe" class="output-container" type="content"
+            flex="1" tooltip="aHTMLTooltip" context="outputContext"
+            onload="scrollDown();"
+            onclick="focusInput()"
+            ondragover="nsDragAndDrop.dragOver(event, contentDropObserver);"
+            ondragdrop="nsDragAndDrop.drop(event, contentDropObserver);"
+            ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
+            src="chrome://chatzilla/content/outputwindow.html"/>
+        </vbox>
   
-        </tree>
+      </hbox> <!-- tabpanels-contents-box -->
+    
+      <hbox id="tabstrip-box" flex="0" crop="right">
+        <scrollbox id="view-tabs" persist="collapsed" orient="horizontal"
+          flex="1">
   
-      </vbox> <!-- user-list-box -->
-
-      <splitter id="main-splitter" collapse="before" persist="collapsed left">
-        <grippy/>
-      </splitter>
-
-      <vbox flex="1">
-        <iframe id="output-iframe" class="output-container" type="content"
-          flex="1" tooltip="aHTMLTooltip" context="outputContext"
-          ondragover="nsDragAndDrop.dragOver(event, contentDropObserver);"
-          ondragdrop="nsDragAndDrop.drop(event, contentDropObserver);"
-          ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
-          src="chrome://chatzilla/content/outputwindow.html?chrome://chatzilla/skin/output-dark.css"/>
-      </vbox>
-
-    </hbox> <!-- tabpanels-contents-box -->
+          <hbox>
+          <tabs class="tabs-bottom" id="views-tbar-inner" flex="1" crop="right">
+            <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from 
+                                         causing an exception -->
+          </tabs>
+          </hbox>
+        </scrollbox>
+      </hbox>
   
-    <hbox id="tabstrip-box" flex="0" >
-      <scrollbox id="view-tabs" persist="collapsed" orient="horizontal"
-        flex="1">
-
-        <tabs class="tabs-bottom" id="views-tbar-inner" flex="1"
-          >
-          <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from 
-                                       causing an exception -->
-        </tabs>
-      </scrollbox>
+    </vbox> <!-- upper-box -->
+  
+    <splitter id="input-splitter" orient="vertical" collapse="after"
+      collapsed="true"/>
+  
+    <hbox id="input-widgets">
+      <text id="server-nick" value=""/>
+      <textbox id="multiline-input" multiline="true" flex="1" height="100px"
+        class="multiline-input-widget" collapsed="true" autostretch="true"
+        onfocus="onInputFocus();"/>
+      <textbox id="input" class="input-widget" flex="1" autostretch="true"
+        onfocus="onInputFocus();"/>
     </hbox>
-
-  </vbox> <!-- upper-box -->
-
-  <splitter id="input-splitter" collapse="after" collapsed="true"/>
-
-  <vbox id="input-widgets">
-    <textbox id="multiline-input" multiline="true" flex="1" height="100px"
-      class="multiline-input-widget" collapsed="true"/>
-    <textbox id="input" class="input-widget"/>
-  </vbox>
-
-</vbox> <!-- outer-box -->
-
-<toolbox id="status-bar-tbox">
-  <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed" grippytooltip="aTooltip"
-    grippytooltiptext="&statusBar.tooltip;">
-    <hbox class="status-box" flex="20%" >
-      <vbox class="status-label" >
-        <label value="&network.label;"/>
-        <label value="&channel.label;"/>
-        <label value="&topicBy.label;"/>
-      </vbox>
-      <vbox class="status-data" >
-         <label id="net-name" value="(one)"/> 
-         <label id="channel-name" value="(none)"/>
-         <label id="channel-topicby" value="(nobody)"/>
-      </vbox>
-      <spacer flex="20%"/>
-      <vbox class="status-label" >
-         <label value="&server.label;"/>
-         <label value="&mode.label;"/>
-         <label value="&topic.label;"/>
-      </vbox>
-      <vbox flex="80%" >
-        <hbox flex="1" >
-          <vbox class="status-data" >
-            <label id="server-name" value="(none)"/>
-            <label id="channel-mode" value="(none)"/>
-          </vbox>
-          <spacer flex="100%"/>
-          <vbox class="status-label" >
-            <label value="&nickname.label;"/>
-            <label value="&users.label;"/>
-          </vbox>
-          <vbox class="status-data" >
-            <label id="server-nick" value="(unknown)"/>
-            <label id="channel-users" value="(none)"/>
-          </vbox>
-          <spacer flex="100%"/>
-          <vbox class="status-label" >
-            <label value="&lag.label;"/>
-            <label value="&limit.label;"/>
-          </vbox>
-          <vbox class="status-data" >
-            <label id="server-lag" value="-1"/>
-            <label id="channel-limit" value="(none)"/>
-          </vbox>
-          <spacer flex="100%"/>
-          <vbox class="status-label" 
-            collapsed="true">
-            <label value="&lastPing.label;"/>
-            <label value="&key.label;"/>
-          </vbox>
-          <vbox class="status-data" 
-            collapsed="true">
-            <label id="last-ping" value="(never)"/>
-          <label id="channel-key" value="(none)"/>
-          </vbox>
-        </hbox>
-        <hbox flex="1">
-          <vbox class="status-data" flex="1">
-            <label id="channel-topic" value="(none)"/>
-          </vbox>
-        </hbox>
-      </vbox>
-    </hbox>
-  </toolbar>
-</toolbox>
-
-
+  </vbox> <!-- outer-box -->
+  
+  <statusbar id="status-bar" persist="collapsed">
+    <hbox id="component-bar"/>
+    <statusbarpanel id="status-text" label="&StatusText.label;" flex="1"
+      crop="right"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"
+      hidden="true" offline="true"/>
+  </statusbar>  
+  
 </window>

@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+
+<!--
+   -
+   - The contents of this file are subject to the Mozilla Public License
+   - Version 1.1 (the "License"); you may not use this file except in
+   - compliance with the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/ 
+   - 
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License. 
+   -
+   - The Original Code is Chatzilla
+   - 
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation
+   - Portions created by Netscape are
+   - Copyright (C) 1998 Netscape Communications Corporation.
+   - All Rights Reserved.
+   -
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU Public License (the "GPL"), in which case the
+   - provisions of the GPL are applicable instead of those above.
+   - If you wish to allow use of your version of this file only
+   - under the terms of the GPL and not to allow others to use your
+   - version of this file under the MPL, indicate your decision by
+   - deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL.  If you do not delete
+   - the provisions above, a recipient may use your version of this
+   - file under either the MPL or the GPL.
+   -
+   - Contributor(s):
+   -  Robert Ginda, <rginda@netscape.com>, original author
+   -
+   -->
+
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd" >
+
+<overlay id="chatzilla-popup-overlay"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <overlaytarget id="popup-overlay-target">
+
+    <commandset id="chatzillaPopupCommands">
+      <!-- Context menu commands -->
+      <command id="cmd_leaveview" oncommand="onPopupSimulateCommand('/part');"/>
+      <command id="cmd_clearview" oncommand="onClearCurrentView();"/>
+      <command id="cmd_deleteview" oncommand="onDeleteCurrentView();"/>
+      <command id="cmd_status" oncommand="client.onInputStatus();"/>
+      <command id="cmd_popup_query"
+        oncommand="onPopupSimulateCommand('/query $nick');"/>
+      <command id="cmd_popup_whois"
+        oncommand="onPopupSimulateCommand('/whois $nick');"/>
+      <command id="cmd_popup_ping"
+        oncommand="onPopupSimulateCommand('/ctcp $nick PING');"/>
+      <command id="cmd_popup_version"
+        oncommand="onPopupSimulateCommand('/ctcp $nick VERSION');"/>
+      <command id="cmd_popup_highlight"
+        oncommand="onPopupHighlight(true);"/>
+      <command id="cmd_popup_nohighlight"
+        oncommand="onPopupHighlight(false);"/>
+      <command id="cmd_popup_giveop"
+        oncommand="onPopupSimulateCommand('/op $nick');"/>
+      <command id="cmd_popup_takeop"
+        oncommand="onPopupSimulateCommand('/deop $nick');"/>
+      <command id="cmd_popup_givevoice"
+        oncommand="onPopupSimulateCommand('/voice $nick');"/>
+      <command id="cmd_popup_takevoice"
+        oncommand="onPopupSimulateCommand('/devoice $nick');"/>
+      <command id="cmd_popup_kick"
+        oncommand="onPopupSimulateCommand('/kick $nick');"/>
+    </commandset>
+
+    <!-- xul tooltips -->
+    <popupset id="aTooltipSet"/>
+  
+    <!-- html tooltips -->
+    <popupset id="aHTMLTooltipSet">
+      <popup id="aHTMLTooltip" class="tooltip" 
+        onpopupshowing="return fillInTooltip(document.tooltipNode,'htmlTTBox');">
+        <vbox id="htmlTTBox"/>
+      </popup>
+    </popupset>
+  
+    <!--
+     tab tooltips, always show above the tab, so we don't draw over the input box
+     -->
+    <popupset id="aTabTooltipSet">
+      <popup id="aTabTooltip" class="tooltip" position="end_after"
+        onpopupshowing="return fillInTooltip(document.tooltipNode,'tabTTBox');">
+        <vbox id="tabTTBox"/>
+      </popup>
+    </popupset>
+  
+    <popupset id="contextMenus">
+      <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
+        <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op" />
+        <menuitem label="&deop.value;" accesskey="&deop.accesskey;"
+          code="/deop" />
+        <menuitem label="&voice.value;" accesskey="&voice.accesskey;"
+          code="/voice" />
+        <menuitem label="&devoice.value;" accesskey="&devoice.accesskey;"
+          code="/devoice" />  
+        <menuitem label="&kick.value;" accesskey="&kick.accesskey;"
+          code="/kick" />
+        <menuitem label="&whois.value;" accesskey="&whois.accesskey;"
+          code="/whois" />
+      </popup>
+  
+      <popup id="outputContext"
+        onpopupshowing="if (event.originalTarget == this) return onOutputContextMenuCreate(event); else return true;"
+        onpopuphiding="if (event.originalTarget == this) delete client._popupContext;">
+        <menuitem format="&PopupQueryCmd.label;" accesskey="&PopupQueryCmd.aKey;"
+          observes="cmd_popup_query"
+          visibleif="targetUser"/>
+        <menuitem format="&PopupWhoisCmd.label;" accesskey="&PopupWhoisCmd.aKey;"
+          observes="cmd_popup_whois"
+          visibleif="targetUser"/>
+        <menuitem format="&PopupPingCmd.label;" accesskey="&PopupPingCmd.aKey;"
+          observes="cmd_popup_ping"
+          visibleif="targetUser"/>
+        <menuitem format="&PopupVersionCmd.label;"
+          accesskey="&PopupVersionCmd.aKey;"
+          observes="cmd_popup_version"
+          visibleif="targetUser"/>
+  
+     <!--
+        <menu format="&PopupHighlightStyle.label;" 
+          accesskey="&PopupHighlightStyle.aKey;"
+          visibleif="targetUser">
+          <menupopup id="highlightMenu">
+            <menuitem/>
+          </menupopup>
+        </menu>
+      -->
+  
+        <menuseparator
+          visibleif="targetUser"/>
+  
+        <menuitem label="&PopupGiveOp.label;" accesskey="&PopupGiveOp.aKey;"
+          observes="cmd_popup_giveop"
+          visibleif="iAmOp == 'yes' and targetIsOp == 'no'"/>
+        <menuitem label="&PopupTakeOp.label;" accesskey="&PopupTakeOp.aKey;"
+          observes="cmd_popup_takeop"
+          visibleif="iAmOp == 'yes' and targetIsOp == 'yes'"/>
+        <menuitem label="&PopupGiveVoice.label;"
+          accesskey="&PopupGiveVoice.aKey;"
+          observes="cmd_popup_givevoice"
+          visibleif="iAmOp == 'yes' and targetIsVoice == 'no'"/>
+        <menuitem label="&PopupTakeVoice.label;"
+          accesskey="&PopupTakeVoice.aKey;"
+          observes="cmd_popup_takevoice"
+          visibleif="iAmOp == 'yes' and targetIsVoice == 'yes'"/>
+        <menuitem format="&PopupKick.label;" accesskey="&PopupKick.aKey;"
+          observes="cmd_popup_kick"
+          visibleif="iAmOp == 'yes' and targetUser != 'undefined'"/>
+  
+        <menuseparator
+          visibleif="targetUser != 'undefined' and iAmOp == 'yes'"/>
+  
+        <menuitem label="&StartupVisitCmd.label;" type="checkbox"
+          accesskey="&StartupVisitCmd.aKey;" observes="cmd_toggle_startup_visit"
+          checkedif="isStartupURL(client.currentObject.getURL())"/>
+        <menuitem format="&LeaveViewCmd.label;" accesskey="&LeaveViewCmd.aKey;"
+          observes="cmd_leaveview" key="key_deleteview"
+          visibleif="client.currentObject.TYPE == 'IRCChannel'"/>
+        <menuitem label="&DeleteViewCmd.label;" accesskey="&DeleteViewCmd.aKey;"
+          observes="cmd_deleteview" key="key_deleteview"
+          visibleif="client.currentObject.TYPE != 'IRCChannel'"/>
+        <menuitem label="&ClearViewCmd.label;" accesskey="&ClearViewCmd.aKey;"
+          observes="cmd_clearview" key="key_clearview"/>
+        <menuseparator/>
+  
+        <menuitem label="&StatusCmd.label;" accesskey="&StatusCmd.aKey;"
+         observes="cmd_status"/>
+      </popup>
+  
+    </popupset>
+  
+  </overlaytarget>
+
+</overlay>  

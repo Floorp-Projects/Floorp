@@ -168,7 +168,7 @@ function rdf_cleart (n1, a, recurse)
 
                 while (arcs.hasMoreElements())
                 {
-                    arc = arcs.getNext().QueryInterface(nsIRDFNode);
+                    var arc = arcs.getNext().QueryInterface(nsIRDFNode);
                     this.clearTargets (resN2, arc, true);
                 }
             }

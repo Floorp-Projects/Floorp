@@ -26,4 +26,12 @@
         command="Tasks:IRC"/>
 </menupopup>
 
+<hbox id="component-bar">
+  <toolbarbutton class="taskbutton" id="mini-irc" oncommand="toIRC()"
+    image="chrome://chatzilla/skin/images/taskbar-irc.gif"
+    position="5" tooltip="aTooltip" tooltiptext="&ircCmd.label;"/>
+</hbox>
+
+
+
 </overlay>

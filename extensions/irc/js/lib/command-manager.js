@@ -65,10 +65,6 @@ function cmgr_list (partialName)
     for (var i in this.commands)
     {
         if (this.commands[i].name.indexOf(partialName) == 0)
-            if (partialName.length == this.commands[i].name.length)
-                /* exact match */
-                return [this.commands[i]];
-            else
                 ary.push (this.commands[i]);
     }
 
@@ -84,6 +80,6 @@ function cmgr_listnames (partialName)
     
     for (var c in cmds)
         cmdNames.push (cmds[c].name);
-
-    return cmdNames.sort();
+    
+    return (cmdNames.length > 0) ? cmdNames.sort() : [];
 }

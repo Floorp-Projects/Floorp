@@ -60,22 +60,6 @@ a.chatzilla-link {
     color: #e25e00 !important;
 }
 
-a.chatzilla-link:visited {
-    color: ;
-}
-
-.chatzilla-highlight[name="Bold text"] {
-    font-weight: bold;
-}
-
-.chatzilla-highlight[name="Large"] {
-    font-size: 12pt;
-}
-
-.chatzilla-highlight[name="Small"] {
-    font-size: 8pt;
-}
-
 .chatzilla-highlight[name="Slate"] {
     color: black;
     background: #b8c4e0;
@@ -95,8 +79,9 @@ a.chatzilla-link:visited {
     color: #202020;                         /* indicator                      */
 }
 
+.msg-user a.chatzilla-link,
 .msg-user {                                 /* msg-user = nickname portion of */
-    color: black;                           /* a message (channel and query   */
+    color: black !important;                /* a message (channel and query   */
     font-weight: bold;                      /* views)                         */
 }                     
  
@@ -197,7 +182,7 @@ a.chatzilla-link:visited {
     color: #777499;
 }
 
-.msg-user[msg-user="ME!"]:before,                /* the decoration around MY   */
-.msg-user[msg-user="ME!"]:after {                /* nick                       */
+.msg-user[msg-user$="ME!"]:before,               /* the decoration around MY   */
+.msg-user[msg-user$="ME!"]:after {               /* nick                       */
     color: #843c6c;
 }

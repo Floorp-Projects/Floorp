@@ -103,7 +103,7 @@ CIRCNetwork.prototype.INITIAL_DESC = "INITIAL_DESC";
 CIRCNetwork.prototype.INITIAL_CHANNEL = "#jsbot"; 
 /* set INITIAL_CHANNEL to "" if you don't want a primary channel */
 
-CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = 20;
+CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = 5;
 CIRCNetwork.prototype.stayingPower = false; 
 
 CIRCNetwork.prototype.TYPE = "IRCNetwork";
@@ -111,17 +111,21 @@ CIRCNetwork.prototype.TYPE = "IRCNetwork";
 CIRCNetwork.prototype.getURL =
 function net_geturl ()
 {
-    return "irc://" + this.name + "/";
+    return "irc://" + escape(this.name) + "/";
 }
 
 CIRCNetwork.prototype.connect =
-function net_conenct(pass)
+function net_conenct()
 {
 
+    if ("primServ" in this && this.primServ.connection.isConnected)
+        return;
+
+    this.connecting = true; /* connection is considered "made" when serve
+                             * sends a 001 message (see server.on001) */
     this.connectAttempt = 0;
     this.nextHost = 0;
     var ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-    ev.password = pass;
     this.eventPump.addEvent (ev);
 
 }
@@ -144,11 +148,8 @@ function net_doconnect(e)
 {
     var c;
     
-    if ((this.primServ) && (this.primServ.connection.isConnected))
+    if ("primServ" in this && this.primServ.connection.isConnected)
         return true;
-
-    this.connecting = true; /* connection is considered "made" when server
-                             * sends a 001 message (see server.on001 */
 
     var ev;
 
@@ -177,7 +178,7 @@ function net_doconnect(e)
         return false;
     }
 
-    host = this.nextHost++;
+    var host = this.nextHost++;
     if (host >= this.serverList.length)
     {
         this.nextHost = 1;
@@ -202,7 +203,10 @@ function net_doconnect(e)
         ev = new CEvent ("network", "connect", this, "onConnect");
         try
         {
-            ev.server = this.primServ = new CIRCServer (this, c);
+            var password = ("password" in this.serverList[host]) ?
+                this.serverList[host].password : "";
+                
+            ev.server = this.primServ = new CIRCServer (this, c, password);
             this.eventPump.addEvent (ev);
             connected = true;
         }
@@ -231,10 +235,9 @@ function net_doconnect(e)
 CIRCNetwork.prototype.onConnect = 
 function net_connect (e)
 {
-
     this.primServ = e.server;
     this.primServ.login (this.INITIAL_NICK, this.INITIAL_NAME,
-                         this.INITIAL_DESC, e.pass);
+                         this.INITIAL_DESC);
     return true;
 
 }
@@ -242,17 +245,21 @@ function net_connect (e)
 CIRCNetwork.prototype.isConnected = 
 function net_connected (e)
 {
-    return (this.primServ && this.primServ.connection.isConnected);   
+    return ("primServ" in this && this.primServ.connection.isConnected);   
 }
 
 /*
  * irc server
  */ 
-function CIRCServer (parent, connection)
+function CIRCServer (parent, connection, password)
 {
     var serverName = connection.host + ":" + connection.port;
-    var s = parent.servers[serverName];
-    if (!s)
+    var s;
+    if (serverName in parent.servers)
+    {
+        s = parent.servers[serverName];
+    }
+    else
     {
         s = this;
         s.channels = new Object();
@@ -261,6 +268,7 @@ function CIRCServer (parent, connection)
     
     s.name = serverName;
     s.parent = parent;
+    s.password = password;
     s.connection = connection;
     s.sendQueue = new Array();
     s.lastSend = new Date("1/1/1980");
@@ -280,7 +288,7 @@ function CIRCServer (parent, connection)
     
 }
 
-CIRCServer.prototype.MAX_LINES_PER_SEND = 5;
+CIRCServer.prototype.MAX_LINES_PER_SEND = 0; /* unlimited */
 CIRCServer.prototype.MS_BETWEEN_SENDS = 1500;
 CIRCServer.prototype.READ_TIMEOUT = 100;
 CIRCServer.prototype.TOO_MANY_LINES_MSG = "\01ACTION has said too much\01";
@@ -336,12 +344,12 @@ function serv_flush()
 }
 
 CIRCServer.prototype.login =
-function serv_login(nick, name, desc, pass)
+function serv_login(nick, name, desc)
 {
 
     this.me = new CIRCUser (this, nick, name);
-    if (pass)
-       this.sendData ("PASS " + pass + "\n");
+    if (this.password)
+       this.sendData ("PASS " + this.password + "\n");
     this.sendData ("NICK " + nick + "\n");
     this.sendData ("USER " + name + " foo bar :" + desc + "\n");
     
@@ -413,7 +421,7 @@ function serv_senddata (msg)
     if (this.sendQueue.length == 0)
         this.parent.eventPump.addEvent (new CEvent ("server", "senddata",
                                                     this, "onSendData"));
-    arrayInsertAt (this.sendQueue, 0, msg);
+    arrayInsertAt (this.sendQueue, 0, new String(msg));
         
 }
 
@@ -428,7 +436,8 @@ function serv_messto (code, target, msg, ctcpCode)
     var sendable = 0, i;
     var pfx = "", sfx = "";
 
-    if (this.sendsThisRound > this.MAX_LINES_PER_SEND)
+    if (this.MAX_LINES_PER_SEND &&
+        this.sendsThisRound > this.MAX_LINES_PER_SEND)
         return false;
 
     if (ctcpCode)
@@ -442,9 +451,10 @@ function serv_messto (code, target, msg, ctcpCode)
 
     for (i in lines)
     {
-        if (((this.sendsThisRound == this.MAX_LINES_PER_SEND - 1) &&
+        if (this.MAX_LINES_PER_SEND && (
+            ((this.sendsThisRound == this.MAX_LINES_PER_SEND - 1) &&
              (sendable > this.MAX_LINES_PER_SEND)) ||
-            (this.sendsThisRound == this.MAX_LINES_PER_SEND))
+            this.sendsThisRound == this.MAX_LINES_PER_SEND))
         {
             this.sendData ("PRIVMSG " + target + " :" +
                            this.TOO_MANY_LINES_MSG + "\n");
@@ -526,7 +536,7 @@ CIRCServer.prototype.onDisconnect =
 function serv_disconnect(e)
 {
 
-    if ((this.parent.connecting) ||
+    if (("connecting" in this.parent) ||
         /* fell off while connecting, try again */
         (this.parent.primServ == this) && (this.parent.stayingPower))
     { /* fell off primary server, reconnect to any host in the serverList */
@@ -538,6 +548,9 @@ function serv_disconnect(e)
     e.server = this;
     e.set = "network";
     e.destObject = this.parent;
+
+    for (var c in this.channels)
+        this.channels[c].users = new Object();
 
     return true;
 
@@ -733,6 +746,12 @@ function serv_onParsedData(e)
 {
 
     e.type = e.code.toLowerCase();
+    if (!e.code[0])
+    {
+        dd (dumpObjectTree (e));
+        return false;
+    }
+    
     e.destMethod = "on" + e.code[0].toUpperCase() +
         e.code.substr (1, e.code.length).toLowerCase();
 
@@ -777,7 +796,7 @@ CIRCServer.prototype.on001 =
 function serv_001 (e)
 {
     this.parent.connectAttempt = 0;
-    this.parent.connecting = false;
+    delete this.parent.connecting;
 
     /* servers wont send a nick change notification if user was forced
      * to change nick while logging in (eg. nick already in use.)  We need
@@ -796,6 +815,7 @@ function serv_001 (e)
         this.parent.primChan.join();
     }
 
+    this.parent.users = this.users;
     e.destObject = this.parent;
     e.set = "network";
 }
@@ -861,6 +881,30 @@ function serv_333 (e)
 
 }
 
+/* who reply */
+CIRCServer.prototype.on352 = 
+function serv_352 (e)
+{
+    e.user = new CIRCUser (this, e.params[6], e.params[3], e.params[4]);
+    e.user.connectionHost = e.params[5];
+    e.destObject = this.parent;
+    e.set = "network";
+
+    return true;
+}
+
+/* end of who */
+CIRCServer.prototype.on315 = 
+function serv_315 (e)
+{
+
+    e.user = new CIRCUser (this, e.params[2]);
+    e.destObject = this.parent;
+    e.set = "network";
+
+    return true;
+}
+
 /* name reply */
 CIRCServer.prototype.on353 = 
 function serv_353 (e)
@@ -880,7 +924,7 @@ function serv_353 (e)
 
     for (var n in nicks)
     {
-        nick = nicks[n];
+        var nick = nicks[n];
         if (nick == "")
             break;
         
@@ -961,7 +1005,7 @@ function serv_mode (e)
     if ((e.params[1][0] == "#") || (e.params[1][0] == "&"))
     {
         e.channel = new CIRCChannel (this, e.params[1]);
-        if (e.user)
+        if ("user" in e && e.user)
             e.user = new CIRCChanUser (e.channel, e.user.nick);
         e.type = "chanmode";
         e.destMethod = "onChanMode";
@@ -1168,6 +1212,7 @@ function serv_nick (e)
     var newNick = (e.meat) ? e.meat : e.params[1]; 
     var newKey = newNick.toLowerCase();
     var oldKey = e.user.nick;
+    var ev;
     
     renameProperty (this.users, oldKey, newKey);
     e.oldNick = e.user.properNick;
@@ -1175,12 +1220,11 @@ function serv_nick (e)
     
     for (var c in this.channels)
     {
-        var cuser = this.channels[c].users[oldKey];
-
-        if (typeof cuser != "undefined")
+        if (oldKey in this.channels[c].users)
         {
+            var cuser = this.channels[c].users[oldKey];
             renameProperty (this.channels[c].users, oldKey, newKey);
-            var ev = new CEvent ("channel", "nick", this.channels[c],
+            ev = new CEvent ("channel", "nick", this.channels[c],
                                  "onNick");
             ev.channel = this.channels[c];
             ev.user = cuser;
@@ -1194,7 +1238,7 @@ function serv_nick (e)
     if (e.user == this.me)
     {
         /* if it was me, tell the network about the nick change as well */
-        var ev = new CEvent ("network", "nick", this.parent, "onNick");
+        ev = new CEvent ("network", "nick", this.parent, "onNick");
         ev.user = e.user;
         ev.server = this;
         ev.oldNick = e.oldNick;
@@ -1214,7 +1258,8 @@ function serv_quit (e)
 
     for (var c in e.server.channels)
     {
-        if (e.server.channels[c].users[e.user.nick])
+        if (e.server.channels[c].active &&
+            e.user.nick in e.server.channels[c].users)
         {
             var ev = new CEvent ("channel", "quit", e.server.channels[c],
                                  "onQuit");
@@ -1244,6 +1289,8 @@ function serv_part (e)
 
     e.channel = new CIRCChannel (this, e.params[1]);    
     e.user = new CIRCChanUser (e.channel, e.user.nick);
+    if (userIsMe(e.user))
+        e.channel.active = false;
     e.channel.removeUser(e.user.nick);
     e.destObject = e.channel;
     e.set = "channel";
@@ -1259,6 +1306,8 @@ function serv_kick (e)
     e.channel = new CIRCChannel (this, e.params[1]);
     e.lamer = new CIRCChanUser (e.channel, e.params[2]);
     delete e.channel.users[e.lamer.nick];
+    if (userIsMe(e.lamer))
+        e.channel.active = false;
     e.reason = e.meat;
     e.destObject = e.channel;
     e.set = "channel"; 
@@ -1276,6 +1325,8 @@ function serv_join (e)
         e.server.sendData ("MODE " + e.channel.name + "\n" /* +
                            "BANS " + e.channel.name + "\n" */);
     e.user = new CIRCChanUser (e.channel, e.user.nick);
+    if (userIsMe(e.user))
+        e.channel.active = true;
 
     e.destObject = e.channel;
     e.set = "channel";
@@ -1290,7 +1341,7 @@ function serv_ping (e)
 
     /* non-queued send, so we can calcualte lag */
     this.connection.sendData ("PONG :" + e.meat + "\n");
-    this.connection.sendData ("PING :" + e.meat + "\n");
+    this.connection.sendData ("PING :LAGTIMER\n");
     this.lastPing = this.lastPingSent = new Date();
 
     e.destObject = this.parent;
@@ -1303,7 +1354,9 @@ function serv_ping (e)
 CIRCServer.prototype.onPong = 
 function serv_pong (e)
 {
-
+    if (e.meat != "LAGTIMER")
+        return true;
+    
     if (this.lastPingSent)
         this.lag = roundTo ((new Date() - this.lastPingSent) / 1000, 1);
 
@@ -1320,7 +1373,7 @@ CIRCServer.prototype.onNotice =
 function serv_notice (e)
 {
 
-    if (!e.user)
+    if (!("user" in e))
     {
         e.set = "network";
         e.destObject = this.parent;
@@ -1340,7 +1393,7 @@ function serv_notice (e)
         e.destMethod = "onCTCPReply";
         e.set = "server";
         e.destObject = this;
-        return;
+        return true;
     }
     else
     {
@@ -1411,7 +1464,7 @@ function serv_ctcpr (e)
         { /* if there's no place to forward it, send it to unknownCTCP */
             e.type = "unk-ctcp-reply";
             e.destMethod = "onUnknownCTCPReply";
-            if (this[e.destMethod])
+            if (e.destMethod in this)
             {
                 e.set = "server";
                 e.destObject = this;
@@ -1570,16 +1623,15 @@ function CIRCChannel (parent, name)
 
     name = name.toLowerCase();
     
-    var existingChannel = parent.channels[name];
-
-    if (typeof existingChannel == "object")
-        return existingChannel;
+    if (name in parent.channels)
+        return parent.channels[name];
     
     this.parent = parent;
     this.name = name;
     this.users = new Object();
     this.bans = new Object();
     this.mode = new CIRCChanMode (this);
+    this.usersStable = true;
     
     parent.channels[name] = this;
 
@@ -1588,11 +1640,17 @@ function CIRCChannel (parent, name)
 }
 
 CIRCChannel.prototype.TYPE = "IRCChannel";
+CIRCChannel.prototype.topic = "";
 
 CIRCChannel.prototype.getURL =
 function chan_geturl ()
 {
-    return this.parent.parent.getURL() + this.name + "/";
+    var target;
+    if (this.name[0] == "#")
+        target = this.name.substr(1);
+    else
+        target = escape(this.name);
+    return this.parent.parent.getURL() + target;
 }
 
 CIRCChannel.prototype.addUser = 
@@ -1761,7 +1819,11 @@ function chan_modestr (f)
         str += "t";
     if (this.pvt)
         str += "p";
-
+    if (this.key)
+        str += "k";
+    if (this.limit != -1)
+        str += "l " + this.limit;
+    
     if (str)
         str = "+" + str;
 
@@ -1915,10 +1977,9 @@ function CIRCUser (parent, nick, name, host)
     var properNick = nick;
     nick = nick.toLowerCase();
     
-    var existingUser = parent.users[nick];
-
-    if (typeof existingUser == "object")
+    if (nick in parent.users)
     {
+        var existingUser = parent.users[nick];
         if (name) existingUser.name = name;
         if (host) existingUser.host = host;
         return existingUser;
@@ -1941,7 +2002,7 @@ CIRCUser.prototype.TYPE = "IRCUser";
 CIRCUser.prototype.getURL =
 function usr_geturl ()
 {
-    return this.parent.getURL() + this.nick + "/";
+    return this.parent.getURL() + this.nick + ",isnick";
 }
 
 CIRCUser.prototype.changeNick =
@@ -2019,16 +2080,15 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     var properNick = nick;
     nick = nick.toLowerCase();    
 
-    var existingUser = parent.users[nick];
-
-    if (typeof existingUser != "undefined")
+    if (nick in parent.users)
     {
+        var existingUser = parent.users[nick];
         if (typeof isOp != "undefined") existingUser.isOp = isOp;
         if (typeof isVoice != "undefined") existingUser.isVoice = isVoice;
         return existingUser;
     }
         
-    protoUser = new CIRCUser (parent.parent, properNick);
+    var protoUser = new CIRCUser (parent.parent, properNick);
         
     this.__proto__ = protoUser;
     this.getURL = cusr_geturl;
@@ -2053,7 +2113,7 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
 
 function cusr_geturl ()
 {
-    return this.parent.parent.getURL() + this.nick + "/";
+    return this.parent.parent.getURL() + escape(this.nick) + ",isnick";
 }
 
 function cusr_setop (f)

@@ -126,8 +126,9 @@ function bc_connect(host, port, bind, tcp_flag, observer)
 
 CBSConnection.prototype.disconnect =
 function bc_disconnect()
-{    
-    this._inputStream.close();
+{
+    if ("_inputStream" in this && this._inputStream)
+        this._inputStream.close();
     /*
     this._streamProvider.close();
     if (this._streamProvider.isBlocked)
@@ -249,7 +250,7 @@ function sp_datawrite (request, ctxt, ostream, offset, count)
     //dd ("StreamProvider.prototype.onDataWritable");
  
     if (this.isClosed)
-        return Components.results.NS_BASE_STREAM_CLOSED;
+        throw Components.results.NS_BASE_STREAM_CLOSED;
     
     if (!this.pendingData)
     {
