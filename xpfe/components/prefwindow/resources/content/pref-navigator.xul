@@ -73,7 +73,7 @@
 					</html:legend>
 			<html:div>&clickRadio;</html:div>
 			&location;
-			<html:input name="homepage" type="text"	id="pref:char:browser.startup.homepage" size="30" /> 
+			<html:input name="homepage" type="text"	id="pref:string:browser.startup.homepage" size="30" /> 
 			<html:div>
 				<spring flex="100%"/>
 				<titledbutton name="starts" type="button" value="&useCurrent;" />
