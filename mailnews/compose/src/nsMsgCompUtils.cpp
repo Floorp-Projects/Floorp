@@ -432,7 +432,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     nsXPIDLString userAgentString;
     nsCAutoString   cStr;
     pHTTPHandler->GetUserAgent(getter_Copies(userAgentString));
-    cStr = userAgentString;
+    cStr.Assign(userAgentString);
 
 		if (!cStr.IsEmpty()) 
 		{
@@ -1886,7 +1886,7 @@ nsMsgGetExtensionFromFileURL(nsString aUrl)
   char *rightDot = nsnull;
   char *rightSlash = nsnull;
 
-  if (aUrl == "")
+  if (aUrl.IsEmpty())
     return nsnull;
 
   url = aUrl.ToNewCString();
@@ -1936,7 +1936,7 @@ ConvertBufToPlainText(nsString &aConBuf)
   nsString    convertedText;
   nsIParser   *parser;
 
-  if (aConBuf == "")
+  if (aConBuf.IsEmpty())
     return NS_OK;
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);

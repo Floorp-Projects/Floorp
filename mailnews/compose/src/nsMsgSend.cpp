@@ -1270,7 +1270,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 	char      *outCString;
   nsString  aCharset = mCompFields->GetCharacterSet();
 
-  if (aCharset != "")
+  if (!aCharset.IsEmpty())
   {
     // Convert to entities.
     // If later Editor generates entities then we can remove this.

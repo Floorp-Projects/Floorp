@@ -223,7 +223,7 @@ nsresult nsMailtoUrl::ParseUrl()
   nsXPIDLCString aPath;
   m_baseURL->GetPath(getter_Copies(aPath));
   if (aPath)
-    m_toPart = aPath;
+    m_toPart.Assign(aPath);
 
   PRInt32 startOfSearchPart = m_toPart.FindChar('?');
   if (startOfSearchPart > 0)

@@ -248,7 +248,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
 
     if (!aBuf.IsEmpty())
     {
-      if (mCiteReference != "")
+      if (!mCiteReference.IsEmpty())
         aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(), mCiteReference.GetUnicode(),
                                              PR_TRUE,
                                              nsString("UTF-8").GetUnicode(), getter_AddRefs(nodeInserted));
@@ -534,7 +534,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
         char      *outCString;
         nsString  aCharset = m_compFields->GetCharacterSet();
       
-        if (  aCharset != "")
+        if (  !aCharset.IsEmpty() )
         {
           // Apply entity conversion then convert to a mail charset. 
           char charset[65];
@@ -1209,7 +1209,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
     MSG_ComposeType type = mComposeObj->GetMessageType();
     
     // Assign cite information if available...
-    if (mCiteReference != "")
+    if (!mCiteReference.IsEmpty())
       mComposeObj->mCiteReference = mCiteReference;
 
     if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll ||
@@ -1984,7 +1984,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   //
   char      *htmlBreak = "<BR>";
   char      *dashes = "--";
-  if (sigData != "")
+  if (!sigData.IsEmpty())
   {
     if (m_composeHTML)
     {
@@ -2280,7 +2280,7 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
         if (! recipientStr.IsEmpty())
             recipientStr += ',';
         noHTMLArray->StringAt(i, getter_Copies(emailAddr));
-        recipientStr += emailAddr;
+        recipientStr.Append(emailAddr);
     }
     //Remaining recipients which do not have an entry in the AB are considered as non HTML compliant
     array->GetCount(&nbrRecipients);
@@ -2289,7 +2289,7 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
         if (! recipientStr.IsEmpty())
             recipientStr += ',';
         array->StringAt(i, getter_Copies(emailAddr));
-        recipientStr += emailAddr;
+        recipientStr.Append(emailAddr);
     }
     *_retval = recipientStr.ToNewUnicode();
     

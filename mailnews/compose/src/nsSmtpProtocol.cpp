@@ -831,7 +831,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   if (!TestFlag(SMTP_USE_LOGIN_REDIRECTION))
   {
     rv = GetPassword(getter_Copies(origPassword));
-    password = origPassword;
+    password.Assign(origPassword);
     if (password.IsEmpty())
       return NS_ERROR_SMTP_PASSWORD_UNDEFINED;
 

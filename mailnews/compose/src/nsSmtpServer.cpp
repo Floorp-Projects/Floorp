@@ -273,7 +273,7 @@ nsSmtpServer::GetServerURI(char **aResult)
             nsEscape(username, url_XAlphas);
 //            nsEscape(username, url_Path);
         // not all servers have a username 
-        uri += escapedUsername;
+        uri.Append(escapedUsername);
         uri += '@';
     }
 
@@ -285,7 +285,7 @@ nsSmtpServer::GetServerURI(char **aResult)
         *((char **)getter_Copies(escapedHostname)) =
             nsEscape(hostname, url_Path);
         // not all servers have a hostname
-        uri += escapedHostname;
+        uri.Append(escapedHostname);
     }
 
     *aResult = uri.ToNewCString();
