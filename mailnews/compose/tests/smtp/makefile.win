@@ -26,7 +26,16 @@ OBJS =                          \
 	.\$(OBJDIR)\smtpTest.obj    \
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\mailnews -I$(PUBLIC)\security -I$(PUBLIC)\pref -I$(PUBLIC)\rdf
+LINCS=							\
+		-I$(PUBLIC)\raptor		\
+		-I$(PUBLIC)\xpcom		\
+		-I$(PUBLIC)\netlib		\
+		-I$(PUBLIC)\mailnews	\
+		-I$(PUBLIC)\security	\
+		-I$(PUBLIC)\pref		\
+		-I$(PUBLIC)\rdf			\
+		-I$(PUBLIC)\js			\
+		$(NULL)
 
 MYLIBS=							\
  $(DIST)\lib\xpcom32.lib		\

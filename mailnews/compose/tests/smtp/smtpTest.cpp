@@ -45,17 +45,20 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
+#include "nsIPref.h"
 #include "nsFileSpec.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
+#define PREF_DLL   "xppref32.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
+#define PREF_DLL	 "pref.so"   // mscott: is this right?
 #endif
 #endif
 
@@ -66,7 +69,7 @@
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
 /////////////////////////////////////////////////////////////////////////////////
@@ -422,6 +425,7 @@ int main()
 
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
