@@ -292,10 +292,12 @@ CheckFinalReturn(JSParseNode *pn)
         if (!pn->pn_head)
             return JS_FALSE;
         return CheckFinalReturn(PN_LAST(pn));
+
       case TOK_IF:
         ok = CheckFinalReturn(pn->pn_kid2);
         ok &= pn->pn_kid3 && CheckFinalReturn(pn->pn_kid3);
         return ok;
+
 #if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
         ok = JS_TRUE;
@@ -312,10 +314,36 @@ CheckFinalReturn(JSParseNode *pn)
         ok &= hasDefault;
         return ok;
 #endif /* JS_HAS_SWITCH_STATEMENT */
+
       case TOK_WITH:
         return CheckFinalReturn(pn->pn_right);
+
       case TOK_RETURN:
         return JS_TRUE;
+
+#if JS_HAS_EXCEPTIONS
+      case TOK_THROW:
+        return JS_TRUE;
+
+      case TOK_TRY:
+        /* If we have a finally block that returns, we are done. */
+        if (pn->pn_kid3 && CheckFinalReturn(pn->pn_kid3))
+            return JS_TRUE;
+
+        /* Else check the try block and any and all catch statements. */
+        ok = CheckFinalReturn(pn->pn_kid1);
+        if (pn->pn_kid2)
+            ok &= CheckFinalReturn(pn->pn_kid2);
+        return ok;
+
+      case TOK_CATCH:
+        /* Check this block's code and iterate over further catch blocks. */
+        ok = CheckFinalReturn(pn->pn_kid3);
+        for (pn2 = pn->pn_kid2; pn2; pn2 = pn2->pn_kid2)
+            ok &= CheckFinalReturn(pn2->pn_kid3);
+        return ok;
+#endif
+
       default:
         return JS_FALSE;
     }
@@ -1191,15 +1219,15 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_TRY);
 
-        pn->pn_kid2 = NULL;
         catchtail = pn;
-        while(js_PeekToken(cx, ts) == TOK_CATCH) {
+        while (js_PeekToken(cx, ts) == TOK_CATCH) {
             /* check for another catch after unconditional catch */
-            if (!catchtail->pn_kid1->pn_expr) {
+            if (catchtail != pn && !catchtail->pn_kid1->pn_expr) {
                 js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                             JSMSG_CATCH_AFTER_GENERAL);
                 return NULL;
             }
+
             /*
              * legal catch forms are:
              * catch (v)
@@ -1502,7 +1530,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
 #if JS_HAS_DEBUGGER_KEYWORD
       case TOK_DEBUGGER:
-        if(!WellTerminated(cx, ts, TOK_ERROR))
+        if (!WellTerminated(cx, ts, TOK_ERROR))
             return NULL;
         pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_NULLARY);
         if (!pn)
