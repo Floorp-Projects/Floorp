@@ -41,6 +41,9 @@ public:
   NS_DECL_NSICOLORPICKER
 
 private:
+  char  **mPalette;
+  PRInt32 mColors;
+
   PRInt32 mNumCols;
   PRInt32 mNumRows;
   PRInt32 mBlockWidth;
