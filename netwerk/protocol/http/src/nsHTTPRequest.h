@@ -111,6 +111,9 @@ public:
     nsresult            GetPostDataStream(nsIInputStream* *aResult);
     nsresult            SetPostDataStream(nsIInputStream* aStream);
 
+    nsresult            SetOverrideRequestSpec(const char* i_Spec);
+    nsresult            GetOverrideRequestSpec(char** o_Spec);
+
 protected:
     virtual ~nsHTTPRequest();
 
@@ -146,6 +149,7 @@ protected:
 
     nsCString                       mRequestBuffer;
     nsCOMPtr<nsIInputStream>        mPostDataStream;
+    char*                       mRequestSpec; 
 };
 
 #define NS_HTTP_REQUEST_SEGMENT_SIZE     (4*1024)

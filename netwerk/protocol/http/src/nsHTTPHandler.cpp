@@ -571,7 +571,7 @@ nsHTTPHandler::nsHTTPHandler():
     mDoKeepAlive(PR_FALSE),
     mNoProxyFor(0),
     mProxy(0),
-    mProxyPort(0),
+    mProxyPort(-1),
     mUseProxy(PR_FALSE)
 {
     NS_INIT_REFCNT();
