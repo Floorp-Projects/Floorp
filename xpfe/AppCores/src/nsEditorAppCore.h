@@ -76,6 +76,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    Copy();
     NS_IMETHOD    Paste();
     NS_IMETHOD    SelectAll();
+    NS_IMETHOD    ShowClipboard();
 
     NS_IMETHOD		InsertText(const nsString& textToInsert);
     

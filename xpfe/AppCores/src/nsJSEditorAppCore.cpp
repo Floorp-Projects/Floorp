@@ -29,7 +29,7 @@
 #include "nsIDOMEditorAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsDOMCID.h"
 
 
@@ -396,6 +396,39 @@ EditorAppCoreSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
 
 //
+// Native method ShowClipboard
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreShowClipboard(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->ShowClipboard()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function showClipboard requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method InsertText
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -631,6 +664,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"copy",          EditorAppCoreCopy,     0},
   {"paste",          EditorAppCorePaste,     0},
   {"selectAll",          EditorAppCoreSelectAll,     0},
+  {"showClipboard",          EditorAppCoreShowClipboard,     0},
   {"insertText",          EditorAppCoreInsertText,     1},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
@@ -666,7 +700,7 @@ EditorAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     return JS_FALSE;
   }
 
-  result = nsRepository::CreateInstance(classID,
+  result = nsComponentManager::CreateInstance(classID,
                                         nsnull,
                                         kIDOMEditorAppCoreIID,
                                         (void **)&nativeThis);
