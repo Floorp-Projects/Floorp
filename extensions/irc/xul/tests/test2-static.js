@@ -21,6 +21,12 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  */
 
+CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
+CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
+CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
+CIRCNetwork.prototype.INITIAL_CHANNEL = "";
+CIRCServer.prototype.READ_TIMEOUT = 0;
+
 var client = new Object();
 
 client.COMMAND_CHAR = "/";
@@ -34,9 +40,6 @@ client.INITIAL_ALIASES =
  {name: "connect", value: "e.network.connect();"},
  {name: "quit",
   value: "client.quit(e.inputData ? e.inputData : 'no reason');"},
- {name: "nick",
-  value: "if (e.server && e.inputData) " +
-  "e.server.sendData ('NICK ' + e.inputData + '\\n');"},
  {name: "network", value: "setCurrentNetwork(e.inputData); onListChannels();"},
  {name: "channel", value: "setCurrentChannel(e.inputData); onListUsers();"},
 ];
@@ -282,13 +285,6 @@ CIRCChannel.prototype.display = function chan_display (message, msgtype, nick)
 function initStatic()
 {
     
-    CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
-    CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
-    CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
-    /* it's a Charles Mingus tune, in case you're wondering */
-    CIRCNetwork.prototype.INITIAL_CHANNEL = "";
-    CIRCServer.prototype.READ_TIMEOUT = 0;
-
     var list = document.getElementById("QuickList");
     list.onclick = onListClick;
 

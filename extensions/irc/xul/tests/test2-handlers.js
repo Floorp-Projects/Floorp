@@ -224,6 +224,39 @@ client.onInputMe = function cli_ime (e)
     }
 }
 
+client.onInputNick = function cli_inick (e)
+{
+
+    if (!e.inputData)
+        return false;
+    
+    if (e.server) 
+        e.server.sendData ('NICK ' + e.inputData + '\\n');
+    else
+        CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
+    
+}
+
+client.onInputName = function cli_iname (e)
+{
+
+    if (!e.inputData)
+        return false;
+    
+    CIRCNetwork.prototype.INITIAL_NAME = e.inputData;
+    
+}
+
+client.onInputDesc = function cli_idesc (e)
+{
+
+    if (!e.inputData)
+        return false;
+    
+    CIRCNetwork.prototype.INITIAL_DESC = e.inputData;
+    
+}
+    
 client.onInputAlias = function cli_ialias (e)
 {
     var ary = e.inputData.match (/(\S+)? ?(.*)/);
