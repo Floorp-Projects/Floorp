@@ -109,7 +109,10 @@ sub build_project ($;$$$) {
 	while (1) {
 		$p = _get_project($full_path);
 		if (!$p) {
-			return if ($project_was_closed);
+			if ($project_was_closed) {
+				print "### Error - request for project document failed after opening\n";
+				die "### possibly CW Pro 4 bug: be sure to close your Find window\n";
+			}
 			$project_was_closed = 1;
 			_open_file($full_path);
 		} else {
