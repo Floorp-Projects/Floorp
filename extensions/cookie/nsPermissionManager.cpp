@@ -36,35 +36,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIServiceManager.h"
 #include "nsPermissionManager.h"
 #include "nsPermission.h"
 #include "nsCRT.h"
-#include "nsIGenericFactory.h"
-#include "nsXPIDLString.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIPrompt.h"
 #include "nsNetUtil.h"
 #include "nsILineInputStream.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
-#include "nsIPrefService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prprf.h"
 
-static NS_NAMED_LITERAL_CSTRING(kPermissionsFileName, "cookperm.txt");
-static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
+////////////////////////////////////////////////////////////////////////////////
 
-typedef struct {
-  nsCString     host;
-  nsVoidArray   permissionList;
-} permission_HostStruct;
+// XXX how do we choose this number?
+#define PL_ARENA_CONST_ALIGN_MASK 3
+#include "plarena.h"
 
-typedef struct {
-  PRUint32  type;
-  PRUint32  permission;
-} permission_TypeStruct;
+static PLArenaPool *gHostArena = nsnull;
+
+// making sHostArena 512b for nice allocation
+// growing is quite cheap
+#define HOST_ARENA_SIZE 512
+
+// equivalent to strdup() - does no error checking,
+// we're assuming we're only called with a valid pointer
+static char *
+ArenaStrDup(const char* str, PLArenaPool* aArena)
+{
+  void* mem;
+  const PRUint32 size = strlen(str) + 1;
+  PL_ARENA_ALLOCATE(mem, aArena, size);
+  if (mem)
+    memcpy(mem, str, size);
+  return NS_STATIC_CAST(char*, mem);
+}
+
+nsHostEntry::nsHostEntry(const char* aHost)
+{
+  mHost = ArenaStrDup(aHost, gHostArena);
+}
+
+nsHostEntry::nsHostEntry(const nsHostEntry& toCopy)
+{
+  mHost = ArenaStrDup(toCopy.mHost, gHostArena);
+}
+
+inline void 
+nsHostEntry::SetPermission(PRUint32 aType, PRUint32 aPermission)
+{
+  mPermissions[aType] = (PRUint8)aPermission;
+}
+
+inline PRUint32 
+nsHostEntry::GetPermission(PRUint32 aType) const
+{
+  return (PRUint32)mPermissions[aType];
+}
+
+inline PRBool 
+nsHostEntry::PermissionsAreEmpty() const
+{
+  // Cast to PRUint32, to make this faster. Only 2 checks instead of 8
+  return (*NS_REINTERPRET_CAST(const PRUint32*, &mPermissions[0])==0 && 
+          *NS_REINTERPRET_CAST(const PRUint32*, &mPermissions[4])==0 );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,70 +106,94 @@ class nsPermissionEnumerator : public nsISimpleEnumerator
   public:
     NS_DECL_ISUPPORTS
     
-    nsPermissionEnumerator(const nsVoidArray &aPermissionList)
-      : mHostCount(aPermissionList.Count()),
+    nsPermissionEnumerator(const nsTHashtable<nsHostEntry> *aHostTable, const char* *aHostList, const PRUint32 aHostCount)
+      : mHostCount(aHostCount),
         mHostIndex(0),
         mTypeIndex(0),
-        mPermissionList(aPermissionList)
+        mHostTable(aHostTable),
+        mHostList(aHostList)
     {
+      Prefetch();
     }
     
-    NS_IMETHOD GetNext(nsISupports **result);
-
     NS_IMETHOD HasMoreElements(PRBool *aResult) 
     {
-      *aResult = mHostCount > mHostIndex;
+      *aResult = (mNextPermission != nsnull);
+      return NS_OK;
+    }
+
+    NS_IMETHOD GetNext(nsISupports **aResult) 
+    {
+      *aResult = mNextPermission;
+      if (!mNextPermission)
+        return NS_ERROR_FAILURE;
+
+      NS_ADDREF(*aResult);
+      
+      Prefetch();
+
       return NS_OK;
     }
 
     virtual ~nsPermissionEnumerator() 
     {
+      delete[] mHostList;
     }
 
   protected:
+    void Prefetch();
+
     PRInt32 mHostCount;
     PRInt32 mHostIndex;
     PRInt32 mTypeIndex;
-    const nsVoidArray &mPermissionList;
+    
+    const nsTHashtable<nsHostEntry> *mHostTable;
+    const char*                     *mHostList;
+    nsCOMPtr<nsIPermission>          mNextPermission;
 };
 
-NS_IMPL_ISUPPORTS1(nsPermissionEnumerator, nsISimpleEnumerator);
+NS_IMPL_ISUPPORTS1(nsPermissionEnumerator, nsISimpleEnumerator)
 
-NS_IMETHODIMP
-nsPermissionEnumerator::GetNext(nsISupports **aResult) 
+// Sets mNextPermission to a new nsIPermission on success,
+// to nsnull when no new permissions are present.
+void
+nsPermissionEnumerator::Prefetch() 
 {
-  if (mHostIndex >= mHostCount) {
-    *aResult = nsnull;
-    return NS_ERROR_FAILURE;
-  }
+  // init to null, so we know when we've prefetched something
+  mNextPermission = nsnull;
 
-  permission_HostStruct *hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(mHostIndex));
-  NS_ASSERTION(hostStruct, "corrupt permission list");
+  // check we have something more to get
+  PRUint32 permission;
+  while (mHostIndex < mHostCount && !mNextPermission) {
+    // loop over the types to find it
+    nsHostEntry *entry = mHostTable->GetEntry(mHostList[mHostIndex]);
+    if (entry) {
+      // see if we've found it
+      permission = entry->GetPermission(mTypeIndex);
+      if (permission != nsIPermissionManager::UNKNOWN_ACTION) {
+        mNextPermission = new nsPermission(entry->GetHost(), mTypeIndex, permission);
+      }
+    }
 
-  permission_TypeStruct *typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(mTypeIndex++));
-  if (mTypeIndex == hostStruct->permissionList.Count()) {
-    mTypeIndex = 0;
-    mHostIndex++;
+    // increment mTypeIndex/mHostIndex as required
+    ++mTypeIndex;
+    if (mTypeIndex == NUMBER_OF_TYPES) {
+      mTypeIndex = 0;
+      ++mHostIndex;
+    }
   }
-
-  nsIPermission *permission =
-      new nsPermission(hostStruct->host, typeStruct->type, typeStruct->permission);
-  if (!permission) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aResult = permission;
-  NS_ADDREF(permission);
-  return NS_OK;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsPermissionManager Implementation
 
-NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference);
+static const char kPermissionsFileName[] = "cookperm.txt";
+static const char kPermissionChangeNotification[] = PERM_CHANGE_NOTIFICATION;
+
+NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
+ : mHostCount(0)
 {
 }
 
@@ -149,10 +206,14 @@ nsresult nsPermissionManager::Init()
 {
   nsresult rv;
 
+  if (!mHostTable.Init()) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   // Cache the permissions file
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mPermissionsFile));
   if (NS_SUCCEEDED(rv)) {
-    rv = mPermissionsFile->AppendNative(kPermissionsFileName);
+    rv = mPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
   }
 
   // Ignore an error. That is not a problem. No cookperm.txt usually.
@@ -192,68 +253,36 @@ nsPermissionManager::Add(nsIURI *aURI,
   NotifyObservers(hostPort);
 
   mChangedList = PR_TRUE;
-  return Write();
+  Write();
+  return NS_OK;
 }
 
 //Only add to memory, don't save. That's up to the caller.
 nsresult
-nsPermissionManager::AddInternal(const nsACString &aHost,
+nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
                                  PRUint32 aType,
                                  PRUint32 aPermission)
 {
-  // find existing entry for host
-  permission_HostStruct *hostStruct;
-  PRBool hostFound = PR_FALSE;
-  PRInt32 hostCount = mPermissionList.Count();
-  PRInt32 hostIndex;
-  for (hostIndex = 0; hostIndex < hostCount; ++hostIndex) {
-    hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(hostIndex));
-    NS_ASSERTION(hostStruct, "corrupt permission list");
-    if (aHost.Equals(hostStruct->host)) {
-      // host found in list
-      hostFound = PR_TRUE;
-      break;
-    } else if (aHost < hostStruct->host) {
-      // Need to insert new entry here for alphabetized list
-      break;
-    }
+  if (aType > NUMBER_OF_TYPES) {
+    return NS_ERROR_FAILURE;
   }
 
-  if (!hostFound) {
-    // create a host structure for the host
-    hostStruct = new permission_HostStruct;
-    if (!hostStruct) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    
-    hostStruct->host = aHost;
-
-    // Insert host structure into the list
-    if (hostIndex < hostCount) {
-      mPermissionList.InsertElementAt(hostStruct, hostIndex);
-    } else {
-      mPermissionList.AppendElement(hostStruct);
-    }
+  if (!gHostArena) {
+    gHostArena = new PLArenaPool;
+    if (!gHostArena)
+      return NS_ERROR_OUT_OF_MEMORY;    
+    PL_INIT_ARENA_POOL(gHostArena, "PermissionHostArena", HOST_ARENA_SIZE);
   }
 
-  // See if host already has an entry for this type
-  permission_TypeStruct *typeStruct;
-  PRInt32 typeCount = hostStruct->permissionList.Count();
-  for (PRInt32 typeIndex=0; typeIndex < typeCount; ++typeIndex) {
-    typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
-    NS_ASSERTION(typeStruct, "corrupt permission list");
-    if (typeStruct->type == aType) {
-      // Type found. Modify the corresponding permission
-      typeStruct->permission = aPermission;
-      return NS_OK;
-    }
-  }
+  // When an entry already exists, AddEntry will return that, instead
+  // of adding a new one
+  nsHostEntry *entry = mHostTable.PutEntry(aHost.get());
+  if (!entry) return NS_ERROR_FAILURE;
 
-  // Create a type structure and attach it to the host structure
-  typeStruct = new permission_TypeStruct;
-  typeStruct->type = aType;
-  typeStruct->permission = aPermission;
-  hostStruct->permissionList.AppendElement(typeStruct);
+  if (entry->PermissionsAreEmpty()) {
+    ++mHostCount;
+  }
+  entry->SetPermission(aType, aPermission);
 
   return NS_OK;
 }
@@ -262,46 +291,25 @@ NS_IMETHODIMP
 nsPermissionManager::Remove(const nsACString &aHost,
                             PRUint32 aType)
 {
-  nsresult rv;
+  if (aType > NUMBER_OF_TYPES) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // Find existing entry for host
-  permission_HostStruct *hostStruct;
+  nsHostEntry* entry = mHostTable.GetEntry(PromiseFlatCString(aHost).get());
+  if (entry) {
+    entry->SetPermission(aType, nsIPermissionManager::UNKNOWN_ACTION);
 
-  PRInt32 hostCount = mPermissionList.Count();
-  for (PRInt32 hostIndex = 0; hostIndex < hostCount; ++hostIndex) {
-    hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(hostIndex));
-    NS_ASSERTION(hostStruct, "corrupt permission list");
-
-    if (aHost.Equals(hostStruct->host)) {
-      // Host found in list, see if it has an entry for this type
-      permission_TypeStruct *typeStruct;
-
-      PRInt32 typeCount = hostStruct->permissionList.Count();
-      for (PRInt32 typeIndex = 0; typeIndex < typeCount; ++typeIndex) {
-        typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
-        NS_ASSERTION(typeStruct, "corrupt permission list");
-        if (typeStruct->type == aType) {
-          delete typeStruct;
-          hostStruct->permissionList.RemoveElementAt(typeIndex);
-          --typeCount;
-
-          // If no more types are present, remove the entry
-          if (typeCount == 0) {
-            mPermissionList.RemoveElementAt(hostIndex);
-            delete hostStruct;
-          }
-          mChangedList = PR_TRUE;
-          Write();
-
-          // Notify Observers
-          NotifyObservers(aHost);
-
-          return NS_OK;
-        }
-      }
-
-      break;
+    // If no more types are present, remove the entry
+    if (entry->PermissionsAreEmpty()) {
+      //XXX Use RawRemove here, when bug 201034 is fixed
+      mHostTable.RemoveEntry(PromiseFlatCString(aHost).get());
+      --mHostCount;
     }
+    mChangedList = PR_TRUE;
+    Write();
+
+    // Notify Observers
+    NotifyObservers(aHost);
   }
   return NS_OK;
 }
@@ -332,33 +340,17 @@ nsPermissionManager::TestPermission(nsIURI *aURI,
     return NS_OK;
   }
   
-  permission_HostStruct *hostStruct;
-  permission_TypeStruct *typeStruct;
+  if (aType > NUMBER_OF_TYPES) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // find host name within list
-  PRInt32 hostCount = mPermissionList.Count();
   PRUint32 offset = 0;
-
   do {
-    nsDependentCSubstring hostTail(hostPort, offset, hostPort.Length() - offset);
-    for (PRInt32 i = 0; i < hostCount; ++i) {
-      hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(i));
-      NS_ASSERTION(hostStruct, "corrupt permission list");
-
-      if (hostStruct->host.Equals(hostTail)) {
-        // search for type in the permission list for this host
-        PRInt32 typeCount = hostStruct->permissionList.Count();
-        for (PRInt32 typeIndex = 0; typeIndex < typeCount; ++typeIndex) {
-          typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
-          NS_ASSERTION(typeStruct, "corrupt permission list");
-
-          if (typeStruct->type == aType) {
-            // type found.  Obtain the corresponding permission
-            *aPermission = typeStruct->permission;
-            return NS_OK;
-          }
-        }
-      }
+    nsHostEntry *entry = mHostTable.GetEntry(hostPort.get() + offset);
+    if (entry) {
+      *aPermission = entry->GetPermission(aType);
+      if (*aPermission != nsIPermissionManager::UNKNOWN_ACTION)
+        break;
     }
     offset = hostPort.FindChar('.', offset) + 1;
 
@@ -371,12 +363,38 @@ nsPermissionManager::TestPermission(nsIURI *aURI,
   return NS_OK;
 }
 
+// A little helper function to add the hostname to the list.
+// The hostname comes from an arena, and so it won't go away
+PR_STATIC_CALLBACK(PLDHashOperator)
+AddHostToList(nsHostEntry *entry, void *arg)
+{
+  // arg is a double-ptr to an string entry in the hostList array,
+  // so we dereference it twice to assign the |const char*| string
+  // and once so we can increment the |const char**| array location
+  // ready for the next assignment.
+  const char*** elementPtr = NS_STATIC_CAST(const char***, arg);
+  **elementPtr = entry->GetKey();
+  ++(*elementPtr);
+  return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
 {
+  *aEnum = nsnull;
+  // get the host list, to hand to the enumerator.
+  // the enumerator takes ownership of the list.
 
-  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(mPermissionList);
+  // create a new host list. enumerator takes ownership of it.
+  const char* *hostList = new const char*[mHostCount];
+  if (!hostList) return NS_ERROR_OUT_OF_MEMORY;
+
+  // Make a copy of the pointer, so we can increase it without loosing
+  // the original pointer
+  const char** hostListCopy = hostList;
+  mHostTable.EnumerateEntries(AddHostToList, &hostListCopy);
+
+  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount);
   if (!permissionEnum) {
-    *aEnum = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(permissionEnum);
@@ -392,7 +410,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     // The profile is about to change.
     
     // Dump current permission.  This will be done by calling 
-    // PERMISSION_RemoveAll which clears the memory-resident
+    // RemoveAllFromMemory which clears the memory-resident
     // permission table.  The reason the permission file does not
     // need to be updated is because the file was updated every time
     // the memory-resident table changed (i.e., whenever a new permission
@@ -412,7 +430,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     // Re-get the permissions file
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mPermissionsFile));
     if (NS_SUCCEEDED(rv)) {
-      rv = mPermissionsFile->AppendNative(kPermissionsFileName);
+      rv = mPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
     }
     Read();
   }
@@ -427,29 +445,18 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
 nsresult
 nsPermissionManager::RemoveAllFromMemory()
 {
-  permission_HostStruct *hostStruct;
-  permission_TypeStruct *typeStruct;
-
-  PRInt32 hostCount = mPermissionList.Count();
-  for (PRInt32 hostIndex = hostCount-1; hostIndex >= 0; --hostIndex) {
-    hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(hostIndex));
-    NS_ASSERTION(hostStruct, "corrupt permission list");
-
-    PRInt32 typeCount = hostStruct->permissionList.Count();
-    for (PRInt32 typeIndex = typeCount-1; typeIndex >= 0; --typeIndex) {
-      typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
-      delete typeStruct;
-      hostStruct->permissionList.RemoveElementAt(typeIndex);
-    }
-    // no more types are present, remove the entry
-    mPermissionList.RemoveElementAt(hostIndex);
-    delete hostStruct;
+  mHostTable.Clear();
+  mHostCount = 0;
+  if (gHostArena) {
+    PL_FinishArenaPool(gHostArena);
+    delete gHostArena;
   }
-
+  gHostArena = nsnull;
+  mChangedList = PR_TRUE;
   return NS_OK;
 }
 
-// broadcast a notification that a permission pref has changed
+// broadcast a notification that a permission has changed
 nsresult
 nsPermissionManager::NotifyObservers(const nsACString &aHost)
 {
@@ -489,6 +496,7 @@ nsPermissionManager::Read()
 
   nsAutoString bufferUnicode;
   nsCAutoString buffer;
+  nsASingleFragmentCString::char_iterator iter;
   PRBool isMore = PR_TRUE;
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
     CopyUCS2toASCII(bufferUnicode, buffer);
@@ -509,7 +517,10 @@ nsPermissionManager::Read()
       ++hostIndex;
     }
 
-    nsDependentCSubstring host(buffer, hostIndex, permissionIndex - hostIndex - 1);
+    // nullstomp the trailing tab, to get a flat string
+    buffer.BeginWriting(iter);
+    *(iter += permissionIndex - 1) = char(0);
+    nsDependentCString host(buffer.get() + hostIndex, iter);
 
     for (;;) {
       if (nextPermissionIndex == buffer.Length()+1) {
@@ -552,6 +563,23 @@ nsPermissionManager::Read()
   return NS_OK;
 }
 
+// A helper function that adds the pointer to the entry to the list.
+// This is not threadsafe, and only safe if the consumer does not 
+// modify the list. It is only used in Write() where we are sure
+// that nothing else changes the list while we are saving.
+PR_STATIC_CALLBACK(PLDHashOperator)
+AddEntryToList(nsHostEntry *entry, void *arg)
+{
+  // arg is a double-ptr to an entry in the hostList array,
+  // so we dereference it twice to assign the |nsHostEntry*|
+  // and once so we can increment the |nsHostEntry**| array location
+  // ready for the next assignment.
+  nsHostEntry*** elementPtr = NS_STATIC_CAST(nsHostEntry***, arg);
+  **elementPtr = entry;
+  ++(*elementPtr);
+  return PL_DHASH_NEXT;
+}
+
 nsresult
 nsPermissionManager::Write()
 {
@@ -574,9 +602,6 @@ nsPermissionManager::Write()
   rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream), fileOutputStream, 4096);
   if (NS_FAILED(rv)) return rv;
 
-  permission_HostStruct *hostStruct;
-  permission_TypeStruct *typeStruct;
-
   static const char kHeader[] = 
     "# HTTP Permission File\n"
     "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
@@ -592,33 +617,42 @@ nsPermissionManager::Write()
   static const char kTrue[] = "T";
   static const char kFalse[] = "F";
 
-  PRInt32 hostCount = mPermissionList.Count();
-  for (PRInt32 i = 0; i < hostCount; ++i) {
-    hostStruct = NS_STATIC_CAST(permission_HostStruct*, mPermissionList.ElementAt(i));
-    NS_ASSERTION(hostStruct, "corrupt permission list");
+  // create a new host list
+  nsHostEntry* *hostList = new nsHostEntry*[mHostCount];
+  if (!hostList) return NS_ERROR_OUT_OF_MEMORY;
 
-    bufferedOutputStream->Write(hostStruct->host.get(), hostStruct->host.Length(), &rv);
+  // Make a copy of the pointer, so we can increase it without loosing
+  // the original pointer
+  nsHostEntry** hostListCopy = hostList;
+  mHostTable.EnumerateEntries(AddEntryToList, &hostListCopy);
 
-    PRUint32 typeCount = hostStruct->permissionList.Count();
-    for (PRUint32 typeIndex = 0; typeIndex < typeCount; ++typeIndex) {
-      typeStruct = NS_STATIC_CAST(permission_TypeStruct*, hostStruct->permissionList.ElementAt(typeIndex));
-      NS_ASSERTION(typeStruct, "corrupt permission list");
+  for (PRUint32 i = 0; i < mHostCount; ++i) {
+    nsHostEntry *entry = NS_STATIC_CAST(nsHostEntry*, hostList[i]);
+    NS_ASSERTION(entry, "corrupt permission list");
 
-      bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
+    bufferedOutputStream->Write(entry->GetHost().get(), entry->GetHost().Length(), &rv);
 
-      char typeString[5];
-      PRUint32 len = PR_snprintf(typeString, sizeof(typeString), "%u", typeStruct->type);
-      bufferedOutputStream->Write(typeString, len, &rv);
+    for (PRInt32 type = 0; type < NUMBER_OF_TYPES; ++type) {
+    
+      PRUint32 permission = entry->GetPermission(type);
+      if (permission) {
+        bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
 
-      if (typeStruct->permission == nsIPermissionManager::ALLOW_ACTION) {
-        bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
-      } else if (typeStruct->permission == nsIPermissionManager::DENY_ACTION) {
-        bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
+        char typeString[5];
+        PRUint32 len = PR_snprintf(typeString, sizeof(typeString), "%u", type);
+        bufferedOutputStream->Write(typeString, len, &rv);
+
+        if (permission == nsIPermissionManager::ALLOW_ACTION) {
+          bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
+        } else if (permission == nsIPermissionManager::DENY_ACTION) {
+          bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
+        }
       }
     }
     bufferedOutputStream->Write(kNew, sizeof(kNew) - 1, &rv);
   }
 
+  delete[] hostList;
   mChangedList = PR_FALSE;
 
   return NS_OK;
