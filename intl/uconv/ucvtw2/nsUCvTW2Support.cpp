@@ -21,7 +21,7 @@
 #include "nsIComponentManager.h"
 #include "nsICharRepresentable.h"
 #include "nsUCvTW2Support.h"
-#include "nsUCVTW2Dll.h"
+#include "nsUCvTW2Dll.h"
 
 #define DEFAULT_BUFFER_CAPACITY 16
 
