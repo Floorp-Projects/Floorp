@@ -1454,6 +1454,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
     int matchRENodes(MatchState state, RENode ren, RENode stop, int index)
     {
+        int num;
 		char[] input = state.input;
         while ((ren != stop) && (ren != null))
         {
@@ -1466,14 +1467,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             continue;
                         }
                         else {
+                            num = state.parenCount;
                             int kidMatch = matchRENodes(state, (RENode)ren.kid,
                                                             stop, index);
                             if (kidMatch != -1) return kidMatch;
+                            for (int i = num; i < state.parenCount; i++)
+                                state.parens[i].length = 0;
+                            state.parenCount = num;
                         }
                     }
                     break;
                 case REOP_QUANT: {
-                        int num;
                         int lastKid = -1;
                         for (num = 0; num < ren.min; num++) {
                             int kidMatch = matchRENodes(state, (RENode)ren.kid,
@@ -1548,7 +1552,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 case REOP_RPARENNON:
                     break;
                 case REOP_LPAREN: {
-                        int num = ren.num;
+                        num = ren.num;
                         ren = (RENode)ren.kid;
                         SubString parsub = state.parens[num];
                         if (parsub == null) {
@@ -1562,7 +1566,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         continue;
                     }
                 case REOP_RPAREN: {
-                        int num = ren.num;
+                        num = ren.num;
                         SubString parsub = state.parens[num];
                         if (parsub == null)
                                 throw new RuntimeException("Paren problem");
@@ -1583,7 +1587,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     }
                     
                 case REOP_BACKREF: {
-                        int num = ren.num;
+                        num = ren.num;
                         if (num >= state.parens.length) {
                             Context.reportError(
                                 ScriptRuntime.getMessage(
