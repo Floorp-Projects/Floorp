@@ -889,10 +889,12 @@ nsIOService::ResolveRelativePath(const char *relativePath, const char* basePath,
             // delimiter found
             if (name.Equals("..")) {
                 // pop path
-                PRInt32 pos = path.RFind("/");
+                // If we already have the delim at end, then
+                //  skip over that when searching for next one to the left
+                PRInt32 offset = path.Length() - (needsDelim ? 1 : 2);
+                PRInt32 pos = path.RFind("/", PR_FALSE, offset);
                 if (pos > 0) {
                     path.Truncate(pos + 1);
-                    path += name;
                 }
                 else {
                     return NS_ERROR_MALFORMED_URI;
