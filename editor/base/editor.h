@@ -23,6 +23,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 #include "editorInterfaces.h"
+#include "nsITransactionManager.h"
 //#include "nsISelection.h"
 
 
@@ -42,6 +43,9 @@ private:
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 //  nsCOMPtr<nsISelection>        mSelectionP;
+  //nsCOMPtr<nsITransactionManager> mTxnMgrP;
+  nsITransactionManager * mTxnMgr;
+
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
@@ -66,9 +70,22 @@ public:
 
   virtual nsresult GetProperties(PROPERTIES **);
 
+  virtual nsresult SetAttribute(nsIDOMElement * aElement, 
+                                const nsString& aAttribute, 
+                                const nsString& aValue);
+
+  virtual nsresult GetAttributeValue(nsIDOMElement * aElement, 
+                                     const nsString& aAttribute, 
+                                     nsString&       aResultValue, 
+                                     PRBool&         aResultIsSet);
+
+  virtual nsresult RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
+
   virtual nsresult InsertString(nsString *aString);
   
   virtual nsresult Commit(PRBool aCtrlKey);
+
+
 
 /*END nsIEditor interfaces*/
 
@@ -111,6 +128,42 @@ public:
    *  @param nsIDOMNode **aRetNode is the return location of the text dom node
    */
   nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
+
+  /** GetFirstNodeOfType ADDREFFS and will get the next available node from the passed
+   *  in aStartNode parameter of type aTag.
+   *  It can also return NS_ERROR_FAILURE if no such nodes are available
+   *  @param nsIDOMNode *aStartNode is the node to start looking from
+   *  @param nsIAtom *aTag is the type of node we are searching for
+   *  @param nsIDOMNode **aResult is the node we found, or nsnull if there is none
+   */
+  nsresult GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult);
+
+  /** ExecuteTransaction fires a transaction.  It is provided here so 
+    * clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is used.  
+    * Otherwise, the transaction is just executed directly.
+    *
+    * @param aTxn the transaction to execute
+    */
+  nsresult ExecuteTransaction(nsITransaction *aTxn);
+
+  /** Undo reverses the effects of the last ExecuteTransaction operation
+    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to undo and the result of
+    * that undo is returned.  
+    * Otherwise, the Undo request is ignored.
+    *
+    */
+  nsresult Undo();
+
+  /** Redo reverses the effects of the last Undo operation
+    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to redo and the result of
+    * that redo is returned.  
+    * Otherwise, the Redo request is ignored.
+    *
+    */
+  nsresult Redo();
 
 /*END private methods of nsEditor*/
 };
