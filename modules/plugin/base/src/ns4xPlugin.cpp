@@ -140,7 +140,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
 #else
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
-#endif // !TARGET_CARBON
+
 
   if(pfnMain == NULL)
   {
@@ -159,6 +159,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   {
     return;
   }
+#endif // !TARGET_CARBON
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
