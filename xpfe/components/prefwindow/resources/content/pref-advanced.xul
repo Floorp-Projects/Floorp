@@ -19,70 +19,106 @@
    
    Contributor(s): 
   -->
-
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-advanced.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+        class="color-dialog"
         align="vertical" title="&window.title;"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-advanced' ); else parent.queuedTag = 'pref-advanced';">
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-advanced.xul');">
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["advancedAlwaysLoadImages", "advancedJavaAllow", "javascriptAllowMailNews", "javascriptEnabled", "CSSAllow", "advancedMailFTP", "networkImageBehaviour", "networkImageWarnAboutImages", "networkCookieBehaviour", "networkWarnAboutCookies"];
+  ]]>
+  </script>
+          
+  <script>
+  <![CDATA[
+  
+  function displayImageDialog()
+  {
+    window.openDialog("chrome://pref/content/pref-advanced-imageblocking.xul", "", "chrome,resizable=no");
+  }
 
-<titledbox orient="vertical">
-	<html:div>
- 		<html:input type="checkbox" id="advancedAlwaysLoadImages"
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="advanced.always_load_images"/>
- 		<html:label for="advancedAlwaysLoadImages" accesskey="&autoLoadImgCheck.accesskey;" tabindex="0">
-		  &autoLoadImgCheck.label;
-  	</html:label>
-	</html:div>
-	<html:div >
-    <html:input type="checkbox" id="advancedJavaAllow" 
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="security.enable_java"/>
-		<html:label for="advancedJavaAllow" accesskey="&enbJavaCheck.accesskey;" tabindex="0">
-			&enbJavaCheck.label;
-		</html:label>
-	</html:div>
-	<html:div >
-		<html:input type="checkbox" id="javascriptEnabled" 
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="javascript.enabled"/>
-		<html:label for="javascriptEnabled" accesskey="&enbJsCheck.accesskey;" tabindex="0">	
-			&enbJsCheck.label;
-		</html:label>
-	</html:div>
-	<html:div >
-		<html:input type="checkbox" id="javascriptAllowMailNews"
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="javascript.allow.mailnews" />
-		<html:label for="javascriptAllowMailNews" accesskey="&enbJsCheck.accesskeyforMailNews;" tabindex="0">
-			&enbJsCheck.labelforMailNNews;
-		</html:label>
-	</html:div>
-	<html:div >
-		<html:input type="checkbox" id="CSSAllow" 
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="css.allow" />
-		<html:label for="CSSAllow" accesskey="&enbCssCheck.accesskey;" tabindex="0">
-			&enbCssCheck.label;
-		</html:label>
-	</html:div>
-	<html:div >
-		<html:input type="checkbox" id="advancedMailFTP"
-                prefdefval="true"
-                pref="true" preftype="bool" prefstring="advanced.mailftp"/>
-		<html:label for="advancedMailFTP" accesskey="&sendAddFtpCheck.accesskey;" tabindex="0">
-			&sendAddFtpCheck.label;
-		</html:label>
-	</html:div>
+  function updateImageFields( aInteger, aBoolean )
+  {
+    var imageBehaviourField = document.getElementById("networkImageBehaviour");
+    var imageBehaviourCheckbox = document.getElementById("networkImageWarnAboutImages");
+    
+    imageBehaviourField.value = aInteger;
+    imageBehaviourCheckbox.checked = aBoolean;
+  }
+
+  function viewCookies() 
+  {
+    window.openDialog("chrome://wallet/content/CookieViewer.xul","","modal=yes,chrome,resizable=no", 0);
+  }  
+
+  ]]>
+  </script>        
+        
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
+
+  <titledbox orient="vertical" id="advancedSettings">
+	
+    <box autostretch="never">
+      <checkbox id="advancedAlwaysLoadImages" value="&autoLoadImgCheck.label;" accesskey="&autoLoadImgCheck.accesskey;"
+                pref="true" preftype="bool" prefstring="advanced.always_load_images"
+                prefattribute="checked"/>
+      <spring flex="1"/>                
+      <button class="dialog" value="&imageBlocking.label;" accesskey="&imageBlocking.accesskey;"
+              oncommand="displayImageDialog();"/>             
+    </box>            
+    <checkbox id="advancedJavaAllow" value="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="security.enable_java"
+              prefattribute="checked"/>
+    <checkbox id="javascriptEnabled" value="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="javascript.enabled"
+              prefattribute="checked"/>
+
+    <!-- XXX remove when overlays.rdf for messenger works -->
+    <checkbox class="indent" id="javascriptAllowMailNews" position="4"
+              value="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
+              pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
+              prefattribute="checked"/>
+    <!-- XXX -->              
+              
+    <checkbox id="CSSAllow" value="&enbCssCheck.label;" accesskey="&enbCssCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="css.allow"
+              prefattribute="checked"/>
+    <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
+              pref="true" preftype="bool" prefstring="advanced.mailftp"
+              prefattribute="checked"/>
 	</titledbox>
 
+  <!-- hidden elements to contain image blocking prefs -->
+  <broadcaster id="networkImageBehaviour" pref="true" preftype="int" prefstring="network.image.imageBehavior" prefattribute="value" wsm_attributes="value"/>
+  <broadcaster id="networkImageWarnAboutImages" pref="true" preftype="bool" prefstring="network.image.warnAboutImages" prefattribute="checked" wsm_attributes="checked"/>
+
+ 	<titledbox orient="vertical">
+  	<title><text value="&cookies;"/></title>  
+
+    <html>&cookieDetails;</html>
+
+    <radiogroup id="networkCookieBehaviour" orient="vertical" autostretch="never"
+                pref="true" preftype="int" prefstring="network.cookie.cookieBehavior"
+                prefattribute="data">
+      <radio data="0" value="&accAllCookiesRadio.label;" accesskey="&accAllCookiesRadio.accesskey;"/>
+      <radio data="1" value="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
+      <radio data="2" value="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
+    </radiogroup>
+    <checkbox class="indent" id="networkWarnAboutCookies" value="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
+              pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
+              prefattribute="checked"/>
+    <box autostretch="never" halign="right">
+      <button class="dialog" value="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
+    </box>              
+  </titledbox>
+            
+            
 </window>

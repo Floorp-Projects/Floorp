@@ -1,33 +1,38 @@
 /**  
  * Small Dialog Header (without icon)
  **/
-box[type="smallheader"] {
-  behavior: url(chrome://global/content/dialogBindings.xml#smallheader);
-  border: 1px inset #CCCCCC;
-  margin-bottom: 5px;
-}
+.box-smallheader 
+  {
+    behavior              : url(chrome://global/content/dialogBindings.xml#smallheader);
+    border                : 1px inset #CCCCCC;
+    margin                : 0px 5px 6px 5px;
+  }
 
-box[type="smallheader"] > toolbar.decorated > .left {
-  font-size: larger;
-  font-weight: bold;
-  color: #FFFFFF;
-  padding-left: 6px;
-}
+.box-smallheader > .decorated 
+  {
+    padding               : 0px 0px 3px 0px;
+  }
 
-box[type="smallheader"] > toolbar.decorated > .right {
-  color: #FFFFFF;
-  padding-right: 6px;
-}
+.box-smallheader > .decorated > .box-smallheader-left 
+  {
+    font-size             : larger;
+    font-weight           : bold;
+    color                 : #FFFFFF;
+    padding-left          : 6px;
+  }
 
-box[type="smallheader"] {
+.box-smallheader > .decorated > .box-smallheader-right 
+  {
+    color                 : #FFFFFF;
+    padding-right         : 6px;
+  }
 
-}
-
-box[type="smallheader"] > toolbar.decorated {
-  border: 1px solid #000000;
-  vertical-align: middle;
-  padding-top: 3px;
-}
+.box-smallheader > .decorated 
+  {
+    border                : 1px solid #000000;
+    vertical-align        : middle;
+    padding-top           : 3px;
+  }
 
 /** 
  * Large Dialog Header (with icon) 

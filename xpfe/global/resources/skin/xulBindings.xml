@@ -58,6 +58,10 @@
         <xul:image/>
       </xul:box>
     </content>
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+    </interface>  
   </binding>
 
   <binding id="menulist">
@@ -67,8 +71,12 @@
       <xul:image class="menu-dropmarker"/>
     </content>
 	  <handlers>
-      <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
+      <handler type="command" capturer="true" value="this.selectedItem = event.target; this.data = this.selectedItem.data;"/>
 	  </handlers>
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+    </interface>  
   </binding>
 
   <binding id="menubutton">
@@ -97,7 +105,7 @@
       <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
     </content>
   </binding>
-
+  
   <binding id="treecell-iconic">
     <content autostretch="never">
       <xul:image class="tree-cell-icon" inherits="src"/>
@@ -110,13 +118,13 @@
       <xul:image class="tree-cell-image" inherits="src"/>
     </content>
   </binding>
-
+  
   <binding id="treecell">
     <content autostretch="never">
       <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
     </content>
   </binding>
-
+  
   <binding id="treecell-header">
     <content autostretch="never">
       <xul:image class="tree-header-image" inherits="src"/>
@@ -178,15 +186,64 @@
     </content>
   </binding>
   
+  <!-- radio/radiogroup code -->
+  <xul:script language="javascript">
+  <![CDATA[
+    var XULRadioGroup = 
+    {
+      setSelectedItem:
+        function ( aDOMElement )
+          {
+            dump("*** setting the selected item\n");
+            // set information on the group node
+            dump("*** current group is: " + aDOMElement.group + "\n");
+            var currentGroup = document.getElementById( aDOMElement.group );
+            currentGroup.selectedItem = aDOMElement;
+            currentGroup.data = aDOMElement.data;
+            dump("*** setting data: " + aDOMElement.data + "\n");
+            
+            // uncheck all other group nodes
+            var groupElements = currentGroup.getElementsByAttribute( "group", aDOMElement.group );
+            for( var i = 0; i < groupElements.length; i++ )
+              {
+                dump("*** unchecking element " + i + "\n");
+                if( groupElements[i] != this && groupElements[i].checked )
+                  {
+                    groupElements[i].checked = false;
+                    groupElements[i].removeAttribute( "checked" );
+                  }
+              }
+          },
+      
+      getSelectedItem:
+        function ( aRadioGroupElement )
+          {
+            var groupElements = aRadioGroupElement.getElementsByAttribute( "group", aRadioGroupElement.id );
+            for( var i = 0; i < groupElements.length; i++ )
+              {
+                if( groupElements[i].checked || 
+                    groupElements[i].getAttribute( "checked" ) == "true" )
+                  return groupElements[i];
+              }
+          }
+    };
+  ]]>
+  </xul:script>
+  
   <binding id="radio" extends="resource:/chrome/xulBindings.xml#checkbox">
-    <content>
-      <xul:box flex="1" class="internal-box" autostretch="never">
-        <xul:box class="checkmark-box" autostretch="never">
-          <xul:image inherits="src"/>
-        </xul:box>
-        <xul:html inherits="value" flex="1"/>
-      </xul:box>
-    </content>  
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+      <property name="group" onset="this.setAttribute('group',val); return val;"
+                            onget="return this.getAttribute('group');"/>
+      <property name="checked" onset="this.setAttribute('checked',val); return val;"
+                            onget="return this.getAttribute('checked');"/>
+    </interface>
+<!--
+    <handlers>
+      <handler type="command" value="document.getElementById(this.group).selectedItem = this;"/>
+    </handlers>
+-->
   </binding>
   
   <binding id="radio-iconic" extends="resource:/chrome/xulBindings.xml#radio">
@@ -195,16 +252,24 @@
         <xul:box class="checkmark-box" autostretch="never">
           <xul:image/>
         </xul:box>
-        <xul:image inherits="src" class="icon"/>
+        <xul:image inherits="src" class="icon" />
         <xul:html inherits="value" flex="1"/>
       </xul:box>
-    </content>  
-  </binding>  
+    </content>
+  </binding>
 
   <binding id="radiogroup">
+    <interface>
+      <property name="data" onset="this.setAttribute('data',val); return val;"
+                            onget="return this.getAttribute('data');"/>
+<!--
+      <property name="selectedItem" onset="XULRadioGroup.setSelectedItem(val); return val;" 
+                                    onget="return XULRadioGroup.getSelectedItem(this);"/>
+-->
+    </interface>
   	<handlers>
-      <handler type="mouseup" value="try { this.selectedItem = event.target; } catch (e) {}"/>
-	    <handler type="keypress" key=" " value="try { this.selectedItem = event.target; } catch (e) {}"/>
+      <handler type="mouseup" value="try { this.selectedItem = event.target; this.data = event.target.data; } catch (e) {}"/>
+	    <handler type="keypress" key=" " value="try { this.selectedItem = event.target; this.data = event.target.data; } catch (e) {}"/>
 	  </handlers>
   </binding>
 
@@ -279,7 +344,10 @@
                                   onget="return this.anonymousContent[0].firstChild.readonly;"/>
     </interface>
     <handlers>
-      <handler type="focus" value="this.setAttribute('focused','true'); this.anonymousContent[0].firstChild.focus();"/>
+      <handler type="focus" value="this.setAttribute('focused','true'); 
+                                   this.anonymousContent[0].firstChild.focus();
+                                   if(this.getAttribute('selectall') == 'true') 
+                                     this.anonymousContent[0].firstChild.setSelectionRange(0,this.value.length);"/>
       <handler type="blur" value="this.removeAttribute('focused'); this.anonymousContent[0].firstChild.blur();"/>
     </handlers>    
   </binding>
@@ -294,7 +362,13 @@
 
   <binding id="text">
     <handlers>
-      <handler type="click" value="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
+      <handler type="click" value="var forElementID = this.getAttribute('for'); 
+                                   if(forElementID) 
+                                     var forElement = document.getElementById(forElementID); 
+                                   if(forElement) 
+                                     forElement.focus();
+                                   if(forElement && forElement.nodeName == "textfield")
+                                     forElement.anonymousContent[0].firstChild.setSelectionRange(0,forElement.value.length);"/>
     </handlers>
   </binding>
   
@@ -478,5 +552,8 @@
       </xul:box>
     </content>
   </binding>
+
+  <binding id="data" extends="xul:spring"/>
+  
 </bindings>
 

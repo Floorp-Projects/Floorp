@@ -21,118 +21,105 @@
    Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-colors.dtd" >
-<window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        title="&window.title;" align="vertical"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-colors' ); else parent.queuedTag = 'pref-colors'; InitColors();">
+        class="color-dialog"
+        title="&window.title;" 
+        orient="vertical"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-colors.xul');">
 
-<html:script language="JavaScript" src="chrome://communicator/content/pref/pref-colors.js"/>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["foregroundText", "background", "browserUseWindowsColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+  ]]>
+  </script>
+  
+  <script language="JavaScript" src="chrome://communicator/content/pref/pref-colors.js"></script>
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-  <box align="horizontal">
-    <!-- back and foreground colors -->
-		<titledbox  orient="vertical" flex="1">
-			<title><html:div> &color;</html:div></title>
-    		<box>
-          <html:label>&text;</html:label>
-          <spring flex="1"/>
-    			<menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
-    				<html:div id="browserForegroundColorDiv" style="width:30px; background-color:white"/>
-    				<titledbutton class="popup" align="right"/>
-    				<menupopup id="foregroundMenuPopup">
-    					<colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="foregroundText"
-                      pref="true" preftype="color" prefstring="browser.foreground_color"/>
-    		</box>
-    		<box>
-          <html:label>&background;</html:label>
-          <spring flex="1"/>
-    			<menu id="backgroundmenu" allowevents="true" class="colorpicker">
-    				<html:div id="browserBackgroundColorDiv" style="width:30px; background-color:white"/>
-            <spring flex="1"/>
-    				<titledbutton class="popup" align="right"/>
-    				<menupopup id="backgroundMenuPopup">
-    					<colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="background"
-                      pref="true" preftype="color" prefstring="browser.background_color"/>
-    		</box>
-    		<html:div class="vspace hspace-both">
-		  		<html:input type="checkbox" id="browserWFEUseWindowsColors"
-                      pref="true" preftype="bool" prefstring="browser.wfe.use_windows_colors"/>
-    			<html:label for="browserWFEUseWindowsColors" accesskey="&useWinColorsCheck.accesskey;" tabindex="0">
-		    		&useWinColorsCheck.label;
-    			</html:label>
-		  	</html:div> 
-	    </titledbox>
-      
-      <!-- links -->
-			<titledbox flex="1"  orient="vertical">
-				<title><text value="&links;"/></title>
-    		<box class="hspace-both">
-          <html:label>&unvisit;</html:label>
-          <spring flex="1"/>
-    			<menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
-    				<html:div id="browserUnvisitedLinksColorDiv" style="width:30px; background-color:white"/>
-            <spring flex="1"/>
-    				<titledbutton class="popup" align="right" flex="1"/>
-    				<menupopup id="unvisitedLinksMenuPopup">
-    					<colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="unvisitedLinks"
-                      pref="true" preftype="string" prefstring="browser.anchor_color"/>
-    		</box>
-    		<box class="hspace-both">
-          <html:label>&visit;</html:label>
-          <spring flex="1"/>
-    			<menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
-    				<html:div id="browserVisitedLinksColorDiv" style="width:30px; background-color:white"/>
-            <spring flex="1"/>
-    				<titledbutton class="popup" align="right"/>
-    				<menupopup id="visitedLinksMenuPopup">
-    					<colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
-    				</menupopup>
-    			</menu>
-    			<html:input type="hidden" id="visitedLinks"
-                      pref="true" preftype="string" prefstring="browser.visited_color"/>
-    		</box>
-  			<html:div class="vspace hspace-both">
-          <html:input type="checkbox" id="browserUnderlineAnchors" pref="true"
-                      preftype="bool" prefstring="browser.underline_anchors"/>
-			  	<html:label for="browserUnderlineAnchors" accesskey="&underLinksCheck.accesskey;" tabindex="0">				
-				    &underLinksCheck.label;
-  				</html:label>
-  			</html:div>		
-	  	</titledbox>
-    </box>
-
-		<titledbox orient="vertical">
-			<title><text value="&someProvColors;"/></title>
- 			<html:div>
-        <html:input type="radio" id="browserUseDocumentColors0" name="browserUseDocumentColors"
-                    pref="true" preftype="bool" prefindex="true" prefstring="browser.use_document_colors"/>
-				<html:label for="browserUseDocumentColors0" accesskey="&alwaysUseDocColors.accesskey;" tabindex="0">
-	  			&alwaysUseDocColors.label;
-  			</html:label>
-      </html:div>
-			<html:div>
-        <html:input type="radio" id="browserUseDocumentColors1" name="browserUseDocumentColors"
-                    pref="true" preftype="bool" prefindex="false" prefstring="browser.use_document_colors"/>
-				<html:label for="browserUseDocumentColors1" accesskey="&ignoreDocColors.label;" tabindex="0">
-	  			&ignoreDocColors.label;
-  			</html:label>
-      </html:div>
+  <box>
+		<titledbox orient="vertical" flex="1">
+			<title><text value="&color;"/></title>
+      <box>
+        <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
+        <spring flex="1"/>
+        <menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
+          <html:div id="browserForegroundColorDiv" style="width:30px; background-color:white"/>
+          <titledbutton class="popup" align="right"/>
+          <menupopup id="foregroundMenuPopup">
+            <colorpicker allowevents="true" id="foregroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'foregroundtext', false);"/>
+          </menupopup>
+        </menu>
+        <textfield collapsed="true" id="foregroundText" pref="true" preftype="color"
+                   prefstring="browser.foreground_color" prefattribute="value"/>
+      </box>
+      <box>
+        <text class="label" value="&backgroundColor.label;" accesskey="&backgroundColor.label;" for="backgroundmenu"/>
+        <spring flex="1"/>
+        <menu id="backgroundmenu" allowevents="true" class="colorpicker">
+          <html:div id="browserBackgroundColorDiv" style="width:30px; background-color:white"/>
+          <titledbutton class="popup" align="right"/>
+          <menupopup id="backgroundMenuPopup">
+            <colorpicker allowevents="true" id="backgroundColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
+          </menupopup>
+        </menu>
+        <textfield collapsed="true" id="background" pref="true" preftype="color"
+                   prefstring="browser.background_color" prefattribute="value"/>
+      </box>
+      <checkbox id="browserUseWindowsColors" value="&useWindowsColors.label;" accesskey="&useWindowsColors.accesskey;"
+                pref="true" preftype="bool" prefstring="browser.wfe.use_windows_colors" prefattribute="checked"/>
     </titledbox>
+      
+    <titledbox orient="vertical" flex="1">
+      <title><text value="&links;"/></title>
+      <box>
+        <text class="label" value="&linkColor.label;" accesskey="&linkColor.accesskey;" for="unvisitedlinkmenu"/>
+        <spring flex="1"/>
+        <menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
+          <html:div id="browserUnvisitedLinksColorDiv" style="width:30px; background-color:white"/>
+          <titledbutton class="popup" align="right" flex="1"/>
+          <menupopup id="unvisitedLinksMenuPopup">
+            <colorpicker allowevents="true" id="unvisitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
+          </menupopup>
+        </menu>
+        <textfield collapsed="true" id="unvisitedLinks" pref="true" preftype="string"
+                   prefstring="browser.anchor_color" prefattribute="value"/>
+      </box>
+    	<box>
+        <text class="label" value="&visitedLinkColor.label;" accesskey="&visitedLinkColor.accesskey;" for="visitedlinkmenu"/>
+        <spring flex="1"/>
+        <menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
+          <html:div id="browserVisitedLinksColorDiv" style="width:30px; background-color:white"/>
+          <titledbutton class="popup" align="right"/>
+          <menupopup id="visitedLinksMenuPopup">
+            <colorpicker allowevents="true" id="visitedLinksColorpicker" palettename="standard" onclick="setColorWell(this.parentNode.parentNode, 'background', false);"/>
+          </menupopup>
+        </menu>
+        <textfield collapsed="true" id="visitedLinks" pref="true" preftype="string"
+                   prefstring="browser.visited_color" prefattribute="value"/>
+      </box>
+  		<checkbox id="browserUnderlineAnchors" value="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
+                pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
+    </titledbox>
+  </box>
+  
+  <titledbox orient="vertical">
+  	<html>&someProvColors;</html>
+  
+    <radiogroup id="browserUseDocumentColors" orient="vertical" autostretch="never" 
+                pref="true" preftype="bool" prefstring="browser.use_document_colors"
+                prefattribute="data">
+      <radio data="true" value="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
+      <radio data="false" value="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
+    </radiogroup>
+    
+  </titledbox>
 
 </window>

@@ -19,28 +19,38 @@
    
    Contributor(s): 
   -->
-
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-wallet.dtd" >
-
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % prefWalletDTD SYSTEM "chrome://communicator/locale/pref/pref-wallet.dtd" >
+%prefWalletDTD;
+]>
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
 	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        align="vertical" title="&window.title;"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-wallet' ); else parent.queuedTag = 'pref-wallet';">
+        class="color-dialog"
+        orient="vertical" title="&window.title;"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-wallet.xul');">
 
-  <html:script language="JavaScript">
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["walletServer", "walletCaptureForms", "signonRememberSignons"];
+  ]]>
+  </script>
+          
+  <script language="JavaScript">
+  <![CDATA[
     function viewSignons()
     {
-      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://wallet/content/SignonViewer.xul","","modal=yes,chrome,resizable=no");
     }
     
     function viewWallet()
     {
-      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://wallet/content/WalletEditor.xul","","modal=yes,chrome,resizable=no");
     }
 
     function changePasswords()
@@ -50,61 +60,52 @@
       wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
       wallet.WALLET_ChangePassword();
     }
-
-  </html:script>
+  ]]>
+  </script>
         
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-  <!--should use titledbox instead of fieldset, but that was causing an assertion
-      when pref.js was setting it to display:none--> 
-  <titledbox orient="vertical" id="walletAreax">
-    <title><text value="&walletHeader;"/></title>
-    <html:div>&walletDetails;</html:div>
-    <spring class="vgap"/>
-    <box align="horizontal" vertical-align="baseline" >
-      <spring flex="1"/>
-      <html:div>
-        <html:label for="walletServer" accesskey="c" tabindex="0">
-          &server.label;
-        </html:label> 
-      </html:div> 
-      <html:input name="Wallet Server:" type="text" id="walletServer" 
-        pref="true" preftype="string" prefstring="wallet.Server" flex="1"/> 
+  <titledbox orient="vertical">
+    <title><text value="&walletHeader.label;"/></title>
+    <html>&walletDescription.label;</html>
+    <box autostretch="never">
+      <text class="label" for="walletServer" value="&walletServer.label;" accesskey="&walletServer.accesskey;"/>
+      <textfield id="walletServer" flex="1"
+                 pref="true" preftype="string" prefstring="wallet.Server"
+                 prefattribute="value"/>
     </box>
-    <box align="horizontal">
-      <html:input type="checkbox" id="walletCaptureForms" prefdefval="true"
-            pref="true" preftype="bool" prefstring="wallet.captureForms" />
-      <html:label for="walletCaptureForms" accesskey="&walletEnabledCheck.accesskey;"
-                  tabindex="0">
-        &walletEnabledCheck.label; 
-      </html:label>
-      <spring flex="1"/>
-      <titledbutton value="&viewWallet.label;" class="dialog push" onclick="viewWallet();"/>
+    <checkbox id="walletCaptureForms" value="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
+              pref="true" preftype="bool" prefstring="wallet.captureForms"
+              prefattribute="checked"/>
+    
+    <separator/>
+
+    <box autostretch="never" halign="right">
+      <button class="dialog" value="&viewWallet.label;" accesskey="&viewWallet.accesskey;" 
+              oncommand="viewWallet();"/>
     </box>
   </titledbox>
 
-  <titledbox orient="vertical" id="signonArea">
-    <title><text value="&signonHeader;"/></title>
-    <html:div>&signonDetails;</html:div>
-    <spring class="vgap"/>
-    <box align="horizontal" vertical-align="baseline" >
-      <html:input type="checkbox" id="signonRememberSignons" prefdefval="true"
-            pref="true" preftype="bool" prefstring="signon.rememberSignons" />
-      <html:label for="signonEnabledCheck" accesskey="&signonEnabledCheck.accesskey;"
-                  tabindex="0">
-        &signonEnabledCheck.label; 
-      </html:label>
-      <spring flex="1"/>
-      <titledbutton value="&viewSignons.label;" class="dialog push" onclick="viewSignons();"/>
+  <titledbox orient="vertical">
+    <title><text value="&signonHeader.label;"/></title>
+    <html flex="1">&signonDescription.label;</html>
+    <checkbox id="signonRememberSignons" value="&signonEnabled.label;" accesskey="&signonEnabled.accesskey;"
+              pref="true" preftype="bool" prefstring="signon.rememberSignons"
+              prefattribute="checked"/>
+
+    <separator/>
+
+    <box autostretch="never" halign="right">
+      <button class="dialog" value="&viewSignons.label;" accesskey="&viewSignons.accesskey;"
+              oncommand="viewSignons();"/>
     </box>
-    <spring class="vgap"/>
   </titledbox>
 
-  <spring class="vgap"/>
-  <box align="horizontal">
-    <spring flex="50%"/>
-    <titledbutton value="&changePasswords.label;" class="dialog push"
-                  onclick="changePasswords();"/>
-    <spring flex="50%"/>
+  <separator/>
+  
+  <box autostretch="never" halign="right">
+    <button class="dialog" value="&changePasswords.label;" accesskey="&changePasswords.accesskey;"
+            oncommand="changePasswords();"/>
   </box>
+  
 </window>

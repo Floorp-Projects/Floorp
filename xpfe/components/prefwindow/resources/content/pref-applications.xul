@@ -21,7 +21,7 @@
    Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -29,9 +29,9 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
     		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+        class="color-dialog"
         title="&window.title;" align="vertical"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-applications' ); else parent.queuedTag = 'pref-applications';">
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');">
 
   <!-- NOTE to owner of this panel 
             - this panel is quite complex. It will probably require a getfields 
@@ -41,15 +41,11 @@
               from the list as appropriate to pass to the Data Manager
       -->              
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-  <html:fieldset flex="100%" style="width: 100%">
-    <html:legend align="left">&descript;</html:legend>
-    <box align="horizontal" 
-         class="hspace-both vspace" 
-         flex="100%" 
-         style="width: 93%; height: 100%;">
-      <tree id="appTree" class="inset" flex="100%" style="height: 55%;">
+  <titledbox>
+    <title><text value="&descript;"/></title>
+      <tree id="appTree" class="inset" flex="1">
         <treecol/>
         <treechildren>
           <treeitem>
@@ -59,21 +55,18 @@
           </treeitem>
         </treechildren>
       </tree>
-      <spring flex="5%"/>
-	  	<box align="vertical">
-  	  	<titledbutton class="dialog push" id="newTypeButton" value="&newTypeButton.label;" />
- 	  		<titledbutton class="dialog push" id="editButton" value="&editButton.label;" />
-  	  	<titledbutton class="dialog push" id="removeButton" value="&removeButton.label;" />
-        <spring flex="100%"/>
+	  	<box orient="vertical" halign="top">
+  	  	<button class="dialog push" id="newTypeButton" value="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" />
+ 	  		<button class="dialog push" id="editButton" value="&editButton.label;" accesskey="&editButton.accesskey;" />
+  	  	<button class="dialog push" id="removeButton" value="&removeButton.label;" accesskey="&removeButton.accesskey;" />
    	  </box>
-    </box>
-  </html:fieldset>
+  </titledbox>
     
-  <html:fieldset class="vspace">
-	  <html:legend align="left">&file;</html:legend>
-		<html:div class="hspace-both">&exten;</html:div>
-		<html:div class="hspace-both">&mimeType;</html:div>
-		<html:div class="hspace-both">&handle;</html:div>
-	</html:fieldset>
-
+  <titledbox orient="vertical">
+    <title><text value="&file;"/></title>
+    <text class="label" value="&exten;"/>
+    <text class="label" value="&mimeType;"/>
+    <text class="label" value="&handle;"/>
+  </titledbox>
+  
 </window>

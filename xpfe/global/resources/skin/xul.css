@@ -23,11 +23,11 @@
   display: none;
 }
 
-/* Focus rules for XUL widgets */
 checkbox,radio,tree,menulist {
   user-focus: normal;
 }
 
+  
 menupopup, splitter {
   user-focus: ignore;
 }
@@ -104,8 +104,6 @@ box.toolbar-holder[collapsed="true"] {
 }
 
 /****** Progress Meter ********/
-
-/****** TitledBox ******/
 
 /********* XP Menus ***********/
 
@@ -197,13 +195,13 @@ treecell {
 } 
 
 .treecell-indent {
- behavior: url("resource:/chrome/xulBindings.xml#treecell-indented");
+  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented");
 }
 
 .treecell-iconic {
  behavior: url("resource:/chrome/xulBindings.xml#treecell-iconic");
 }
-
+  
 .treecell-image {
  behavior: url("resource:/chrome/xulBindings.xml#treecell-image");
 }
@@ -304,3 +302,9 @@ textfield[autocomplete="true"] {
 colorpicker {
   behavior: url(resource:/chrome/xulBindings.xml#colorpicker);
 }
+
+data {
+  display: none;
+  behaviour: url(resource:/chrome/xulBindings.xml#data);
+}
+

@@ -20,7 +20,6 @@
    
    Contributor(s): Robert John Churchill (rjc@netscape.com)
   -->
-
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -29,80 +28,39 @@
 <window debug="false" xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="if( parent.handle ) parent.handle.onpageload( 'pref-search' ); else parent.queuedTag = 'pref-search'; InitSingleEngineList(); "  title="&title.label;"
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');"  title="&title.label;"
 	      orient="vertical">
 
-	<html:script language="javascript" src="chrome://communicator/content/pref/pref-search.js"/>
-
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
-
-	<box orient="vertical">
-		<titledbox orient="vertical" flex="1">
-			<title><text value="&legendHeader;"/></title>
-
-            <html:div>
-				<html:input name="powermode" type="radio" id="browserSearchPowermode0"
-              pref="true" preftype="int" prefindex="0" prefstring="browser.search.powermode"/>
-				<html:label for="browserSearchPowermode0" accesskey="t" tabindex="0">
-					&browserSearchButtonText.label;
-				</html:label>
-
-				<html:select id="engineList" ref="NC:SearchEngineRoot"
-					datasources="rdf:internetsearch"
-					sortResource="http://home.netscape.com/NC-rdf#Name" sortDirection="ascending"
-					onchange="return setDefaultSearchEngine(this)" >
-
-					<html:option value="" selected="true">
-						&defaultengine.label;
-					</html:option>
-
-					<template>
-						<html:option uri="..." value="..." >
-							<text value="rdf:http://home.netscape.com/NC-rdf#Name" />
-						</html:option>
-					</template>
-
-				</html:select>
-
-			</html:div>
-
-<!--			<html:div>
-				<html:input name="powermode" type="radio" id="browserSearchPowermode1"
-              pref="true" preftype="int" prefindex="1" prefstring="browser.search.powermode"/>
-				<html:label for="browserSearchPowermode1" accesskey="t" tabindex="1">
-					&enablePowerSearch.label;
-				</html:label>
-			</html:div -->	
-		</titledbox>
-
-    <titledbox orient="vertical">
-      <title><text value="&searchResults.label;"/></title>
-  		<html:div>
-  			<html:input name="opensearchpanel" type="checkbox" id="browserSearchOpenSidebarSearchPanel"
-              pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"/>
-		  	<html:label for="browserSearchOpenSidebarSearchPanel" accesskey="t" tabindex="2">
-			  	&openSidebarSearchPanel.label;
-  			</html:label>
-	  	</html:div>
-        <html:div>
-            &sidebarClickMode.label;
-        </html:div>	
-  		<html:div>
-  			<html:input name="clickCount" type="radio" id="browserSearchSidebarClickCount0"
-              pref="true" preftype="bool" prefindex="false" prefstring="browser.search.use_double_clicks"/>
-		  	<html:label for="browserSearchSidebarClickCount0" accesskey="t" tabindex="2">
-			  	&useSingleClicks.label;
-  			</html:label>
-	  	</html:div>
-  		<html:div>
-  			<html:input name="clickCount" type="radio" id="browserSearchSidebarClickCount1"
-              pref="true" preftype="bool" prefindex="true" prefstring="browser.search.use_double_clicks"/>
-		  	<html:label for="browserSearchSidebarClickCount1" accesskey="t" tabindex="2">
-			  	&useDoubleClicks.label;
-  			</html:label>
-	  	</html:div>
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["engineList","openSidebarPanel"];
+  ]]>
+  </script>        
         
-    </titledbox>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-	</box>
+  <titledbox>
+    <title><text value="&legendHeader;"/></title>
+
+    <text class="label" value="&defaultSearchEngine.label;" accesskey="&defaultSearchEngine.accesskey;" for="engineList"/>
+    <menulist id="engineList" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch"
+              sortResource="http://home.netscape.com/NC-rdf#Name" sortDirection="ascending"
+              pref="true" preftype="string" prefstring="browser.search.defaultengine"
+              prefattribute="data">
+              
+      <template>
+        <menupopup>
+          <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+        </menupopup>
+      </template>
+    </menulist>                      
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="&searchResults.label;"/></title>
+    <checkbox id="openSidebarPanel" value="&openSidebarSearchPanel.label;" accesskey="&openSidebarSearchPanel.accesskey;"
+              pref="true" preftype="bool" prefstring="browser.search.opensidebarsearchpanel"
+              prefattribute="checked"/>
+  </titledbox>
+
 </window>

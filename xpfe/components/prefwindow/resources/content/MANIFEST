@@ -1,4 +1,5 @@
 pref-advanced.xul
+pref-advanced-imageblocking.xul
 pref-appearance.xul
 pref-applications.xul
 pref-charset.js
@@ -10,7 +11,6 @@ pref-colors.xul
 pref-themes.xul
 pref-composer.js
 pref-composer.xul
-pref-cookies.xul
 pref-debug.xul
 pref-download.xul
 pref-editing.xul
@@ -20,6 +20,7 @@ pref-languages.xul
 pref-navigator.js
 pref-navigator.xul
 pref-offline.xul
+pref-policies.xul
 pref-proxies.js
 pref-proxies.xul
 pref-proxy-manual.xul
@@ -28,12 +29,10 @@ pref-search.js
 pref-search.xul
 pref-smart_browsing.xul
 pref-smartupdate.xul
-PrefsWindow.js
-pref.js
+nsPrefWindow.js
 pref.xul
 preftree.xul
 pref-mousewheel.xul
 pref-mousewheel.js
-fontScalingOverlay.xul
 pref-wallet.xul
 prefutilities.js

@@ -21,7 +21,6 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function getFileOrFolderSpec( aTitle, aFolder )
@@ -56,7 +55,8 @@ function getFileOrFolderSpec( aTitle, aFolder )
 function prefNavSelectFile(folderFieldId, stringId, useNative)
 {
   var folderField = document.getElementById(folderFieldId);
-  var file = getFileOrFolderSpec( bundle.GetStringFromName(stringId), false );
+  var dlgString = stringId ? bundle.GetStringFromName(stringId) : '';
+  var file = getFileOrFolderSpec( dlgString, false );
   if( file != -1 )
   {
     /* XXX nsILocalFile doesn't have a URL string */
@@ -70,7 +70,13 @@ function prefNavSelectFile(folderFieldId, stringId, useNative)
       var tempFileSpec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
       tempFileSpec.nativePath = file.path;
 
-      folderField.value = tempFileSpec.URLString;
+      try {
+        var url = tempFileSpec.URLString;
+        if( url )
+          folderField.value = url;
+      }
+      catch(e) {
+      }
     }
   }
 }
@@ -84,3 +90,5 @@ function setHomePageToCurrentPage(folderFieldId)
   if( url )
     homePageField.value = url;
 }
+
+var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");

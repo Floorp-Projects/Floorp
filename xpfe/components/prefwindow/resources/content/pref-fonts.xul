@@ -22,158 +22,175 @@
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
-<?xul-overlay href="chrome://communicator/content/pref/fontScalingOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
-<window debug="false" id="fontPanel"
+<window id="fontPanel"
         xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        title="&window.title;" orient="vertical"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-fonts' ); else parent.queuedTag = 'pref-fonts';startUp()">
+        class="color-dialog"
+        title="&window.title;" 
+        orient="vertical"
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-fonts.xul');">
 
+  <script language="javascript" src="chrome://communicator/content/pref/pref-fonts.js"></script>
 
-<html:script language="javascript" src="pref-fonts.js"/>
-
-  <box type="smallheader" title="&lHeader;" description="&rHeader;"/>
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
   
-		<titledbox orient="vertical">
-      <title><html:div>&displayFonts;</html:div></title>
-	  <html:div  style="width: 50px; height: 50px">
-	  <html:table>
-	      <html:tr valign="baseline">
-			    <html:td>&fontsFor.select;</html:td>
-				  <html:td>
-		  			<html:select class="Font" id="selectLangs" onchange = "selectLang();" width = "10">
-					    <html:option value="x-western">&font.langGroup.latin1;</html:option>
-					    <html:option value="x-central-euro">&font.langGroup.latin2;</html:option>
-					    <html:option value="ja">&font.langGroup.japanese;</html:option>
-					    <html:option value="zh-TW">&font.langGroup.trad-chinese;</html:option>
-					    <html:option value="zh-CN">&font.langGroup.simpl-chinese;</html:option>
-					    <html:option value="ko">&font.langGroup.korean;</html:option>
-					    <html:option value="x-cyrillic">&font.langGroup.cyrillic;</html:option>
-					    <html:option value="x-baltic">&font.langGroup.baltic;</html:option>
-					    <html:option value="el">&font.langGroup.el;</html:option>
-					    <html:option value="tr">&font.langGroup.turkish;</html:option>
-					    <html:option value="x-unicode">&font.langGroup.unicode;</html:option>
-					    <html:option value="x-user-def">&font.langGroup.user-def;</html:option>
-					    <html:option value="th">&font.langGroup.thai;</html:option>
-					    <html:option value="he">&font.langGroup.hebrew;</html:option>
-					    <html:option value="ar">&font.langGroup.arabic;</html:option>
-					</html:select>						
-				  </html:td>
-		   </html:tr>
 
-		  <html:tr>
-          <html:td>&serif.select;</html:td>
-  			  <html:td>
-	  				<html:select class="Font" id="serif" pref="true" preftype="string" prefstring="">			   
-			    	</html:select>
-				  </html:td>
-				   <html:td>&varFont.select;</html:td>
-				  <html:td>
-				  
-	  			<html:select class="FontSize" id="size" pref="true" preftype="int">
-					<html:option value="12" >12</html:option>
-					<html:option value="13" >13</html:option>
-					<html:option value="14" >14</html:option>
-					<html:option value="15" >15</html:option>
-					<html:option value="16" >16</html:option>
-					<html:option value="18" >18</html:option>
-					<html:option value="20" >20</html:option>
-					<html:option value="24" >24</html:option>
-     				</html:select> 
-				  </html:td>
-			  </html:tr>
-			 
-		 <html:tr>
-           <html:td>&sans-serif.select;</html:td>
-  			  <html:td>
-	  				<html:select class="Font" id="sans-serif" pref="true" preftype="string" prefstring="">			   
-			    	</html:select>
-				  </html:td>
-			  </html:tr>
+  <titledbox orient="vertical">
+    <title><text value="&displayFonts;"/></title>
 
-	<!--	 <html:tr>
-          <html:td>&cursive.select;</html:td>
-  			  <html:td>
-	  				<html:select id="cursive" pref="true" preftype="string" prefstring="">			   
-			    	</html:select>
-				  </html:td>
-			  </html:tr>
+    <box autostretch="never">
+      <text class="label" value="&language.label;" accesskey="&language.accesskey;" for="selectLangs"/>
+      <menulist id="selectLangs" oncommand="selectLanguage();">
+        <menupopup>
+          <menuitem data="x-western" value="&font.langGroup.latin1;"/>
+          <menuitem data="x-central-euro" value="&font.langGroup.latin2;"/>
+          <menuitem data="ja" value="&font.langGroup.japanese;"/>
+          <menuitem data="zh-TW" value="&font.langGroup.trad-chinese;"/>
+          <menuitem data="zh-CN" value="&font.langGroup.simpl-chinese;"/>
+          <menuitem data="ko" value="&font.langGroup.korean;"/>
+          <menuitem data="x-cyrillic" value="&font.langGroup.cyrillic;"/>
+          <menuitem data="x-baltic" value="&font.langGroup.baltic;"/>
+          <menuitem data="el" value="&font.langGroup.el;"/>
+          <menuitem data="tr" value="&font.langGroup.turkish;"/>
+          <menuitem data="x-unicode" value="&font.langGroup.unicode;"/>
+          <menuitem data="x-user-def" value="&font.langGroup.user-def;"/>
+          <menuitem data="th" value="&font.langGroup.thai;"/>
+          <menuitem data="he" value="&font.langGroup.hebrew;"/>
+          <menuitem data="ar" value="&font.langGroup.arabic;"/>
+        </menupopup>
+      </menulist>
+      <spring flex="1"/>
+    </box>
 
-			   <html:tr>
-          <html:td>&fantasy.select;</html:td>
-  			  <html:td>
-	  				<html:select id="fantasy" pref="true" preftype="string" prefstring="">			   
-			    	</html:select>
-				  </html:td>
+    <separator/>
+        
+    <text class="label" value="&variableFonts.label;"/>
 
-			  </html:tr>  -->
+    <separator class="thin"/>
 
-			   <html:tr>
-          <html:td>&monospace.select;</html:td>
-  			  <html:td>
-	  				<html:select class="Font" id="monospace" pref="true" preftype="string" prefstring="">			   
-			    	</html:select>
-				  </html:td>
-	            <html:td>&fixedFont.Select;</html:td>
-				  <html:td>
-	  			<html:select class="FontSize" id="sizeFixed" pref="true" preftype="int">
-					<html:option value="12" >12</html:option>
-					<html:option value="13" >13</html:option>
-					<html:option value="14" >14</html:option>
-					<html:option value="15" >15</html:option>
-					<html:option value="16" >16</html:option>
-					<html:option value="18" >18</html:option>
-					<html:option value="20" >20</html:option>
-					<html:option value="24" >24</html:option>
-     				</html:select> 
-				  </html:td>
-			  </html:tr> 
-              <html:tr>
-                <html:td>
-                  <box align="vertical" flex="1">
-	                  <html:div class="vertical-gap">
-                      </html:div>
-                  </box>
-   	          	</html:td>
-	          </html:tr> 
-              <html:tr>
-       	              <html:td>
-                         <html:label>&default.type.label;</html:label>
-                      </html:td>
-       	              <html:td>
-                              <html:input name="DefaultFontRadio" type="radio" id="DefaultFontSerif" pref="true" prefindex="serif" preftype="string" prefstring="font.default"/>
-    		                  <html:label for="DefaultFontSerif" accesskey="t" tabindex="0">
-                               &useDefaultFontSerif;
-       		                  </html:label>
-                  	          <html:input name="DefaultFontRadio" type="radio" id="DefaultFontSansSerif" pref="true" prefindex="sans-serif" preftype="string" prefstring="font.default"/>
-    		                  <html:label for="DefaultFontSansSerif" accesskey="t" tabindex="0">
-    	    	               &useDefaultFontSansSerif;
-    		                  </html:label> 
-                      </html:td>
-    	      </html:tr>  
-			</html:table>  
-			</html:div>
-    </titledbox>	
-    <!-- fonts with webpages -->
-    <titledbox  orient="vertical">
-      <title><text value="&header2;"/></title>
-    	<html:div>
-      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts1"
-                    pref="true" preftype="int" prefindex="1"  prefstring="browser.use_document_fonts"/>
-    		<html:label for="browserUseDocumentFonts1" accesskey="t" tabindex="0">
-		    	&useDocFontNonDynamic;
-    		</html:label>
-    	</html:div>	
-    	<html:div>
-      	<html:input name="fonts" type="radio" id="browserUseDocumentFonts0"
-                    pref="true" preftype="int" prefindex="0"  prefstring="browser.use_document_fonts"/>
-    		<html:label for="browserUseDocumentFonts0" accesskey="t" tabindex="0">
-		    	&useDefaultFont;
-    		</html:label> 
-    	</html:div>	
-		</titledbox>
+    <grid class="indent">
+      <columns>
+        <column/>
+        <column flex="1"/>
+        <column/>
+        <column/>
+      </columns>
+      
+      <rows>
+        <row>
+          <text class="label" value="&serif.label;" accesskey="&serif.accesskey;" for="serif"/>
+          <menulist id="serif">
+            <menupopup/>
+          </menulist>
+          <text class="label" value="&size.label;" accesskey="&sizeVar.accesskey;" for="sizeVar"/>
+          <menulist id="sizeVar">
+            <menupopup>
+              <menuitem data="12" value="12"/>
+              <menuitem data="13" value="13"/>
+              <menuitem data="14" value="14"/>
+              <menuitem data="15" value="15"/>
+              <menuitem data="16" value="16"/>
+              <menuitem data="18" value="18"/>
+              <menuitem data="20" value="20"/>
+              <menuitem data="24" value="24"/>
+            </menupopup>
+          </menulist>
+        </row>
+        <row>
+          <text class="label" value="&sans-serif.label;" accesskey="&sans-serif.accesskey;" for="sans-serif"/>
+          <menulist id="sans-serif">
+            <menupopup/>
+          </menulist>
+          <spring/>
+          <spring/>
+        </row>
+        <!--
+        <row>
+          <text class="label" value="&cursive.label;" accesskey="&cursive.accesskey;" for="cursive"/>
+          <menulist id="cursive">
+            <menupopup/>
+          </menulist>
+          <spring/>
+          <spring/>
+        </row>
+        <row>
+          <text class="label" value="&fantasy.label;" accesskey="&fantasy.accesskey;" for="fantasy"/>
+          <menulist id="fantasy">
+            <menupopup/>
+          </menulist>
+          <spring/>
+          <spring/>
+        </row>
+        -->
+      </rows>
+    </grid>
+    
+    <separator/>
+
+    <box autostretch="never" class="indent">
+      <text class="label" value="&default.type.label;"/>
+      <radiogroup id="defaultFont" autostretch="never" preftype="string" prefstring="font.default">
+        <radio data="serif" value="&useDefaultFontSerif.label;" accesskey="&useDefaultFontSerif.accesskey;"/>
+        <radio data="sans-serif" value="&useDefaultFontSansSerif.label;" accesskey="&useDefaultFontSansSerif.accesskey;"/>
+      </radiogroup>
+    </box>
+
+    <separator/>
+    
+    <text class="label" value="&fixedFonts.label;"/>
+    
+    <separator class="thin"/>
+    
+    <grid class="indent">
+      <columns>
+        <column/>
+        <column flex="1"/>
+        <column/>
+        <column/>
+      </columns>
+      <rows>
+        <row>
+          <text class="label" value="&monospace.label;" accesskey="&monospace.accesskey;" for="monospace"/>
+          <menulist id="monospace">
+            <menupopup/>
+          </menulist>
+          <text class="label" value="&size.label;" accesskey="&sizeMono.accesskey;" for="sizeMono"/>
+          <menulist id="sizeMono">
+            <menupopup>
+              <menuitem data="12" value="12"/>
+              <menuitem data="13" value="13"/>
+              <menuitem data="14" value="14"/>
+              <menuitem data="15" value="15"/>
+              <menuitem data="16" value="16"/>
+              <menuitem data="18" value="18"/>
+              <menuitem data="20" value="20"/>
+              <menuitem data="24" value="24"/>
+            </menupopup>
+          </menulist>
+        </row>
+      </rows>
+    </grid>
+
+    <separator/>
+    
+    <!-- note that this removes the ability to select dynamic fonts -->
+    <checkbox id="browserUseDocumentFonts" 
+              value="&useDocumentFonts.label;" accesskey="&useDocumentFonts.accesskey;"
+              preftype="int" prefstring="browser.use_document_fonts"/>
+
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="&fontScaling;"/></title>
+    <html>&fontScalingIntro;</html>
+    <box autostretch="never">
+      <text class="label" value="&resolution.label;" accesskey="&resolution.accesskey;" for="browserScreenResolution"/>
+      <textfield id="browserScreenResolution" size="4" maxlength="3" value="&defaultScaling;" preftype="int" prefstring="browser.screen_resolution"/>
+      <text class="label" value="&fontScalingExample;"/>
+    </box>
+  </titledbox>  
+
 </window>

@@ -30,7 +30,7 @@
     }
   }
   
-  function InitColors()
+  function Startup()
   {
     getColorFromWellAndSetValue("foregroundtextmenu");
     getColorFromWellAndSetValue("backgroundmenu");

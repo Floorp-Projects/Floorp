@@ -21,186 +21,89 @@
    Contributor(s): 
   -->
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-composer.dtd" >
 
-<window debug="false"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-        align="vertical" title="&title.label;"
-        onload="if( parent.handle ) parent.handle.onpageload( 'pref-composer' ); else parent.queuedTag = 'pref-composer'">
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical" 
+  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-composer.xul');">
 
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["maintainTableStructure", "tableDeleteKey"];
+  ]]>
+  </script>        
+        
+  <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 
-  <box type="smallheader" title="&lHeader;" description="&rHeader2;"/>
-
-<!-- Take out Auto-Save; not supported at this time
-    <titledbox orient="vertical">
-    <box align="horizontal" valign="middle">
-      <checkbox 
-        pref       = "true" 
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring = "editor.auto_save"
-        value="&AutoSaveCheck.label;"
-        name="autosave" 
-      />
-      <textfield 
-        name="time" 
-        type="text" 
-        size="3" 
-        value="5" 
-        pref="true" 
-        preftype="int" 
-        prefindex="5" 
-        prefstring="editor.auto_save_delay"
-      />
-      <text value="&minText;" />
-    </box>
-  </titledbox>
--->
-
-<!-- External Editors are not supported at this time
-    <titledbox orient="vertical">
-          <title><text value="&exterLegend.label;"/></title> 
-    <box>
-      <checkbox 
-        name  = "htmlSourceEditorCheckbox"
-        value = "&htmlSource;"
-        pref       = "true" 
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring = "editor.use_html_editor"
-      />
-      <textfield 
-        name = "&chooseButton.label;"
-        pref       = "true" 
-        preftype   = "string" 
-        prefstring = "editor.html_editor"
-      />
-      <button 
-        class = "dialog" 
-        name  = ""
-        value = "&chooseButton.label;"
-      />
-    </box>
-
-    <box>
-      <checkbox 
-        name  = "htmlImageEditorCheckbox" 
-        value = "&imageeditor.label;"
-        pref       = "true" 
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring ="editor.use_image_editor"
-      />
-
-      <textfield 
-        name="chooseButton.label" 
-        pref       = "true" 
-        preftype   = "string" 
-        prefstring = "editor.image_editor"
-      />
-      <button class="dialog" value="&chooseButton.label;" />
-    </box> 
-
-  </titledbox>
-  -->
-
-  <titledbox  orient="vertical">
-    <title><text value="Table Editing"/></title>
-    <box>
-      <checkbox 
-        name  = "maintainTable"
-        value = "&maintainTableStructure.label;" 
-        pref       = "true" 
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring ="editor.maintain_table_structure"
-      />
-    </box>
-    <box valign="middle">
-      <text value="Pressing [delete] key should " />
-      <radiogroup orient="vertical">
-        pref       = "true" 
-        preftype   = "int" 
-        prefindex  = "0" 
-        prefstring ="editor.table_delete_key"
-      >
-        <radio value = "delete cell (content and structure)" />
-        <radio value = "delete only cell content" />
+  <titledbox orient="vertical" autostretch="never">
+    <title><text value="&tableEditing.label;"/></title>
+  
+    <checkbox id="maintainTableStructure" value="&maintainTableStructure.label;" accesskey="&maintainStructure.accesskey;"
+              pref="true" preftype="bool" prefstring="editor.maintain_table_structure"
+              prefattribute="checked"/>
+              
+    <separator/>
+              
+    <box autostretch="never" valign="top">
+      <text class="label" value="&pressingTheDeleteKey.label;" for="tableDeleteKey" />
+      <radiogroup id="tableDeleteKey" orient="vertical" autostretch="never" 
+                  pref="true" preftype="int" prefstring="editor.table_delete_key"
+                  prefattribute="data">
+        <radio data="0" value="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
+        <radio data="1" value="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
       </radiogroup>
     </box>
-  </titledbox>  
-<!--
-    <html:div >
-      &returnkey.label;
-    </html:div>
-    <html:div class="vertical-gap">
-      <radio name="returnkey" type="" id="returnkey0"
-                  pref="true" preftype="int" prefindex="0" prefstring="editor.returnkey_mapping"/>
-      <html:label for="returnkey0" accesskey="" tabindex="0">
-        &returnkeyradio0.label;
-      </html:label>
-    </html:div>
-    <html:div >
-      <radio name="returnkey" id="returnkey1"
-                  pref="true" preftype="int" prefindex="1" prefstring="editor.returnkey_mapping"/>
-      <html:label for="returnkey1" accesskey="" tabindex="0">
-        &returnkeyradio1.label;
-      </html:label>
-    </html:div>
-    <html:div >
-      <radio name="returnkey" id="returnkey2"
-                  pref="true" preftype="int" prefindex="2" prefstring="editor.returnkey_mapping"/>
-      <html:label for="returnkey2" accesskey="" tabindex="0">      
-        &returnkeyradio2.label;
-      </html:label>
-    </html:div>
-    <html:div >
-      <radio name="returnkey" id="returnkey3"
-                  pref="true" preftype="int" prefindex="3" prefstring="editor.returnkey_mapping"/>
-      <html:label for="returnkey3" accesskey="" tabindex="0">      
-        &returnkeyradio3.label;
-      </html:label>
-    </html:div>
 
-    <spring style="height: 10px;"/>
+  </titledbox>
 
-    <html:div >
-      &enterkey.label;
-    </html:div>
-    <html:div  class="vertical-gap">
-      <radio name="enterkey" id="enterkey0"
-                  pref="true" preftype="int" prefindex="0" prefstring="editor.enterkey_mapping"/>
-      <html:label for="enterkey0" accesskey="" tabindex="0">
-        &returnkeyradio0.label;
-      </html:label>
-    </html:div>
-    <html:div >
-      <radio name="enterkey" id="enterkey1"
-                  pref="true" preftype="int" prefindex="1" prefstring="editor.enterkey_mapping"/>
-      <html:label for="enterkey1" accesskey="" tabindex="0">
-        &returnkeyradio1.label;
-      </html:label>
-    </html:div>
-    <html:div >
-      <radio name="enterkey" id="enterkey2"
-                  pref="true" preftype="int" prefindex="2" prefstring="editor.enterkey_mapping"/>
-      <html:label for="enterkey2" accesskey="" tabindex="0">      
-        &returnkeyradio2.label;
-      </html:label>
-    </html:div>
-    <html:div >
-      <radio name="enterkey" id="enterkey3"
-                  pref="true" preftype="int" prefindex="3" prefstring="editor.enterkey_mapping"/>
-      <html:label for="enterkey3" accesskey="" tabindex="0">      
-        &returnkeyradio3.label;
-      </html:label>
-    </html:div>
+  
+  
+  
+<!-- Take out Auto-Save; not supported at this time
+		<titledbox orient="vertical">
+		<html:div>
+			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save" />
+			<html:label for="pref:0:int:editor.auto_save" accesskey="a" tabindex="0">
+				&AutoSaveCheck.label;
+			</html:label>		
+			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
+			<html:label for="pref:5:int:editor.auto_save_delay">
+	  		&minText;	
+			</html:label>		
+		</html:div>
+	</titledbox>
   -->
 
+<!-- External Editors are not supported at this time
+		<titledbox orient="vertical">
+					<title><text value="&exterLegend.label;"/></title> 
+		<html:input name="htmlSourceEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_html_editor" />
+	 	<html:div>
+			&htmlSource;
+		</html:div>
+		<html:div>
+			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_editor" />
+			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
+		</html:div>
+		<html:input name="htmlImageEditorCheckbox" type="checkbox" id="pref:0:int:editor.use_image_editor" />
+	<html:div>
+			&img;
+		</html:div>
+		<html:div>
+			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" />
+			<titledbutton class="dialog push" name=""  value="&chooseButton.label;" />
+		</html:div> 
+
+	</titledbox>
+  -->
+
+  
+  
 </window>
 
