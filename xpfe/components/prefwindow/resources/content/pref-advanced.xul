@@ -149,6 +149,7 @@
       <html>&description.label;</html>
       <separator/>
     </vbox>
+    <vbox>
     <vbox align="start">
       <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="advanced.mailftp"
@@ -158,8 +159,8 @@
       <textbox id="advancedMailFTPAddress"
                  pref="true" preftype="string" prefstring="network.ftp.anonymous_password"
                  prefattribute="value" flex="2"/>
-      <spring flex="1"/>
     </hbox>
+    </vbox>
     <separator/>
   </groupbox>
   <groupbox orient="vertical" id="perfSettings">
