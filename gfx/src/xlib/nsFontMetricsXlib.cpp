@@ -2156,9 +2156,14 @@ SetUpFontCharSetInfo(nsFontCharSetInfoXlib* aSelf)
       if (mapper) {
         aSelf->mCCMap = MapperToCCMap(mapper);
         if (aSelf->mCCMap) {
-          //DEBUG_PRINTF(("\n\ncharset = %s", atomToName(charset)));
-          NS_WARNING(nsPrintfCString(256, "SetUpFontCharSetInfo: charset = '%s'", atomToName(charset)).get());
-  
+#ifdef DEBUG
+          char *atomname = atomToName(charset);
+          if (atomname) {
+            NS_WARNING(nsPrintfCString(256, "SetUpFontCharSetInfo: charset = '%s'", atomname).get());
+            nsMemory::Free(atomname);
+          }
+#endif /* DEBUG */
+
           /*
            * We used to disable special characters like smart quotes
            * in CJK fonts because if they are quite a bit larger than
