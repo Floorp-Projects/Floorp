@@ -73,9 +73,9 @@
 <!ENTITY translateSpantoGermCmd.label "Spanish to German">
 <!ENTITY dcharMenu.label "Default Character Set">
 <!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
-<!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-1)">
-<!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-1)">
-<!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-1)">
+<!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-2)">
+<!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-3)">
+<!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-4)">
 <!ENTITY dcharIso9Cmd.label "ISO Latin 5 (ISO-8859-9)">
 <!ENTITY dcharIso14Cmd.label "ISO Latin 8 (ISO-8859-14)">
 <!ENTITY dcharIso15Cmd.label "ISO Latin 9 (ISO-8859-15)">
