@@ -46,6 +46,10 @@
   list-style-image: url("chrome://communicator/skin/taskbar/navigator-hov.gif");
 }
 
+.icon-navigator16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator-16.gif");
+}
+
 #mini-mail {
   list-style-image: url("chrome://communicator/skin/taskbar/mail.gif");
 }
@@ -62,6 +66,10 @@
   list-style-image: url("chrome://communicator/skin/taskbar/mailnew-hov.gif");
 }
 
+.icon-mail16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail-16.gif");
+}
+
 #mini-addr {
   list-style-image: url("chrome://communicator/skin/taskbar/addressbook.gif");
 }
@@ -70,12 +78,19 @@
   list-style-image: url("chrome://communicator/skin/taskbar/addressbook-hov.gif");
 }
 
+.icon-addressbook16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-16.gif");
+}
+
 #mini-comp {
   list-style-image: url("chrome://communicator/skin/taskbar/composer.gif");
 }
 
 #mini-comp:hover {
   list-style-image: url("chrome://communicator/skin/taskbar/composer-hov.gif");
+}
+.icon-composer16 {
+  list-style-image: url("chrome://communicator/skin/taskbar/composer-16.gif");
 }
 
 /* ::::: component bar ::::: */

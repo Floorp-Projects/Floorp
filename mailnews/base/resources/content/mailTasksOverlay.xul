@@ -105,9 +105,9 @@
   </menupopup>
 
   <menupopup id="windowPopup">
-    <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" insertafter="tasksMenuNavigator"/>
+    <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" insertafter="tasksMenuNavigator" class="menuitem-iconic icon-mail16 menu-iconic"/>
     <menuitem id="tasksMenuEditor" insertafter="tasksMenuMail"/>
-    <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" insertafter="tasksMenuEditor"/>
+    <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" insertafter="tasksMenuEditor" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
   </menupopup>
   
 </overlay>         
