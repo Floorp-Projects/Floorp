@@ -467,7 +467,7 @@ nsContainerBox::CheckBoxOrder(nsBoxLayoutState& aState)
     // turn the array back into linked list, with first and last cached
     mFirstChild = boxes[0];
     mLastChild = boxes[mChildCount-1];
-    for (PRInt32 i = 0; i < mChildCount; ++i) {
+    for (i = 0; i < mChildCount; ++i) {
       if (i <= mChildCount-2)
         boxes[i]->SetNextBox(boxes[i+1]);
       else
