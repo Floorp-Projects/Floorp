@@ -21,8 +21,8 @@
 class CIEHtmlNode :	public CComObjectRootEx<CComSingleThreadModel>
 {
 protected:
-	nsIDOMNode  *m_pIDOMNode;
-	CIEHtmlNode *m_pParent;
+	nsIDOMNode *m_pIDOMNode;
+	IDispatch  *m_pIDispParent;
 
 public:
 	CIEHtmlNode();
@@ -32,7 +32,9 @@ protected:
 public:
 	virtual HRESULT SetDOMNode(nsIDOMNode *pIDOMNode);
 	virtual HRESULT GetDOMNode(nsIDOMNode **pIDOMNode);
-	virtual HRESULT SetParentNode(CIEHtmlNode *pParent);
+	virtual HRESULT GetDOMElement(nsIDOMElement **pIDOMElement);
+	virtual HRESULT SetParentNode(IDispatch *pIDispParent);
+	virtual HRESULT GetIDispatch(IDispatch **pDispatch);
 };
 
 typedef CComObject<CIEHtmlNode> CIEHtmlNodeInstance;

@@ -19,11 +19,12 @@
 #include "IEHtmlNode.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 
 CIEHtmlNode::CIEHtmlNode()
 {
 	m_pIDOMNode = nsnull;
-	m_pParent = NULL;
+	m_pIDispParent = NULL;
 }
 
 CIEHtmlNode::~CIEHtmlNode()
@@ -31,9 +32,9 @@ CIEHtmlNode::~CIEHtmlNode()
 	SetDOMNode(nsnull);
 }
 
-HRESULT CIEHtmlNode::SetParentNode(CIEHtmlNode *pParent)
+HRESULT CIEHtmlNode::SetParentNode(IDispatch *pIDispParent)
 {
-	m_pParent = pParent;
+	m_pIDispParent = pIDispParent;
 	return S_OK;
 }
 
@@ -69,4 +70,32 @@ HRESULT CIEHtmlNode::GetDOMNode(nsIDOMNode **pIDOMNode)
 	}
 
 	return S_OK;
+}
+
+HRESULT CIEHtmlNode::GetDOMElement(nsIDOMElement **pIDOMElement)
+{
+	if (pIDOMElement == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	if (m_pIDOMNode == nsnull)
+	{
+		return E_NOINTERFACE;
+	}
+
+	*pIDOMElement = nsnull;
+	m_pIDOMNode->QueryInterface(kIDOMElementIID, (void **) pIDOMElement);
+	return (*pIDOMElement) ? S_OK : E_NOINTERFACE;
+}
+
+HRESULT CIEHtmlNode::GetIDispatch(IDispatch **pDispatch)
+{
+	if (pDispatch == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	
+	*pDispatch = NULL;
+	return E_NOINTERFACE;
 }

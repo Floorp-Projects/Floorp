@@ -104,6 +104,9 @@ typedef long int32;
 // Define some string classes
 typedef std::basic_string<TCHAR> tstring;
 
+#define CIPtr(iface) \
+	CComQIPtr< iface, &IID_ ## iface >
+
 #include "BrowserDiagnostics.h"
 #include "PropertyList.h"
 #include "MozillaControl.h"
