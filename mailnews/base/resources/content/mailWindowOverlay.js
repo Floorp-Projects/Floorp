@@ -22,6 +22,7 @@
  *               Håkan Waara <hwaara@chello.se>
  *               Jan Varga <varga@utcru.sk>
  *               Seth Spitzer <sspitzer@netscape.com>
+ *               David Bienvenu <bienvenu@netscape.com>
  */
 
 var gMessengerBundle;
@@ -397,8 +398,18 @@ function InitViewBodyMenu()
 
 function IsNewsMessage(messageUri)
 {
-    if (!messageUri) return false;
-    return (messageUri.substring(0,14) == "news-message:/")
+    if (!messageUri) 
+      return false;
+    else 
+      return (messageUri.substring(0,14) == "news-message:/");
+}
+
+function IsImapMessage(messageUri)
+{
+    if (!messageUri) 
+      return false;
+    else
+      return (messageUri.substring(0,14) == "imap-message:/");
 }
 
 function SetMenuItemLabel(menuItemId, customLabel)
@@ -644,7 +655,7 @@ function MsgGetMessagesForAllServers(defaultServer)
             {
                 if (defaultServer && defaultServer.equals(currentServer))
                 {
-                    dump(currentServer.serverURI + "...skipping, already opened\n");
+                    //dump(currentServer.serverURI + "...skipping, already opened\n");
                 }
                 else
                 {
@@ -853,8 +864,11 @@ function MsgForwardMessage(event)
 {
   var forwardType = 0;
   try {
-      forwardType = gPrefs.getIntPref("mail.forward_message_mode");
-  } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
+    forwardType = gPrefs.getIntPref("mail.forward_message_mode");
+  }
+  catch (ex) {
+    dump("failed to retrieve pref mail.forward_message_mode");
+  }
 
   // mail.forward_message_mode could be 1, if the user migrated from 4.x
   // 1 (forward as quoted) is obsolete, so we treat is as forward inline
@@ -1482,7 +1496,7 @@ function getMarkupDocumentViewer()
 
 function MsgSynchronizeOffline()
 {
-    dump("in MsgSynchronize() \n"); 
+    //dump("in MsgSynchronize() \n"); 
     window.openDialog("chrome://messenger/content/msgSynchronize.xul",
           "", "centerscreen,chrome,modal,titlebar,resizable=yes",{msgWindow:msgWindow}); 		     
 }
@@ -1705,6 +1719,57 @@ function SetupUndoRedoCommand(command)
         goSetMenuValue(command, 'valueDefault');
     }
     return canUndoOrRedo;
+}
+
+function OnMsgLoaded(folder, msgURI)
+{
+    var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+    if (!IsImapMessage(msgURI))
+      return;
+    var imapServer = currentMsgFolder.server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
+    var storeReadMailInPFC = imapServer.storeReadMailInPFC;
+    if (storeReadMailInPFC)
+    {
+      var messageID;
+
+      var copyToOfflineFolder = true;
+
+      // look in read mail PFC for msg with same msg id - if we find one,
+      // don't put this message in the read mail pfc.
+      var outputPFC = imapServer.GetReadMailPFC(true);
+      var messageURI = GetLoadedMessage();
+      if (messageURI != msgURI)
+      {
+//        XXX TODO
+//        bienvenu tells me:  
+//        if you have two message windows open, you can get multiple attempts
+//        to copy into the pfc.  the second will fail and assert.
+          dump("not loading msg into this window - loaded message = " + messageURI + "loading " + msgURI + "\n");
+//        return;
+      }
+      var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
+      if (msgHdr)
+      {
+        messageID = msgHdr.messageId;
+        if (messageID.length > 0)
+        {
+          var readMailDB = outputPFC.getMsgDatabase(msgWindow);
+          if (readMailDB)
+          {
+            var hdrInDestDB = readMailDB.getMsgHdrForMessageID(messageID);
+            if (hdrInDestDB)
+              copyToOfflineFolder = false;
+          }
+        }
+      }
+      if (copyToOfflineFolder)
+      {
+        var messages = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+        messages.AppendElement(msgHdr);
+
+        res = outputPFC.copyMessages(currentMsgFolder, messages, false /*isMove*/, msgWindow /* nsIMsgWindow */, null /* listener */, false /* isFolder */, false /*allowUndo*/ );
+      }
+     }
 }
 
 function MsgSearchMessages()

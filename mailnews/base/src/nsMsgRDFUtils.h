@@ -81,6 +81,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_FOLDER				NC_NAMESPACE_URI "Folder"
 #define NC_RDF_SPECIALFOLDER		NC_NAMESPACE_URI "SpecialFolder"
 #define NC_RDF_SERVERTYPE			NC_NAMESPACE_URI "ServerType"
+#define NC_RDF_REDIRECTORTYPE			NC_NAMESPACE_URI "RedirectorType"
 #define NC_RDF_CANCREATEFOLDERSONSERVER	NC_NAMESPACE_URI "CanCreateFoldersOnServer"
 #define NC_RDF_CANFILEMESSAGESONSERVER	NC_NAMESPACE_URI "CanFileMessagesOnServer"
 #define NC_RDF_ISSERVER				NC_NAMESPACE_URI "IsServer"

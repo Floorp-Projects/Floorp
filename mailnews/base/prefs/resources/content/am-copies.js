@@ -25,6 +25,8 @@ var gDefaultPickerMode = "1";
 
 var gFccFolderWithDelim, gDraftsFolderWithDelim, gTemplatesFolderWithDelim;
 
+var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+
 // Picker IDs
 var fccAccountPickerId = "msgFccAccountPicker";
 var fccFolderPickerId = "msgFccFolderPicker";
@@ -61,6 +63,30 @@ function onInit() {
     initBccSelf();
     setupFccItems();
     SetSpecialFolderNamesWithDelims();
+    SetupStoreReadMail();
+}
+
+function SetupStoreReadMail()
+{
+  var groupbox = document.getElementById("store_read_mail_in_pfc");
+
+  var serverId = GetCurrentServerId();
+  var account = parent.getAccountFromServerId(serverId);
+  if (!account) 
+    return;
+
+  var server = account.incomingServer;
+  var prefString = server.type + "." + server.redirectorType + ".showStoreReadMailInPFC";
+
+  try {
+    if (gPrefBranch.getBoolPref(prefString))
+      groupbox.removeAttribute("hidden");
+    else
+      groupbox.setAttribute("hidden","true");
+  }
+  catch (ex) {
+    groupbox.setAttribute("hidden","true");
+  }
 }
 
 // Initialize the picker mode choices (account/folder picker) into global vars
@@ -260,23 +286,27 @@ function SaveFolderSettings(radioElemChoice,
                             folderElementId,
                             folderPickerModeId)
 {
+    var formElement;
+    var uri;
+    var picker;
+
     switch (radioElemChoice) 
     {
         case "0" :
-            var picker = document.getElementById(accountPickerId);
-            var uri = picker.getAttribute("uri");
+            picker = document.getElementById(accountPickerId);
+            uri = picker.getAttribute("uri");
             if (uri) {
                 // Create  Folder URI
                 uri = uri + folderSuffix;
 
-                var formElement = document.getElementById(folderElementId);
+                formElement = document.getElementById(folderElementId);
                 formElement.setAttribute("value",uri);
             }
             break;
 
         case "1" : 
-            var picker = document.getElementById(folderPickerId);
-            var uri = picker.getAttribute("uri");
+            picker = document.getElementById(folderPickerId);
+            uri = picker.getAttribute("uri");
             if (uri) {
                 SaveUriFromPicker(folderElementId, folderPickerId);
             }
@@ -287,7 +317,7 @@ function SaveFolderSettings(radioElemChoice,
             return;
     }
 
-    var formElement = document.getElementById(folderPickerModeId);
+    formElement = document.getElementById(folderPickerModeId);
     formElement.setAttribute("value", radioElemChoice);
 }
 

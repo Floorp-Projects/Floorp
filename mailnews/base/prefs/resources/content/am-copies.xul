@@ -95,6 +95,17 @@
     </hbox>
 
   </groupbox>
+
+  <groupbox id="store_read_mail_in_pfc">
+    <caption label="&readingPrefix.label;"/>
+
+    <hbox align="center">
+      <checkbox hidable="true" wsm_persist="true" id="imap.storeReadMailInPFC" 
+                label="&readingMailFolder.label;"
+                prefattribute="value"
+                prefstring="mail.server.%serverkey%.store_read_mail_in_pfc"/>
+    </hbox>
+  </groupbox>
   
   <groupbox>
     <caption label="&specialFoldersTitle.label;"/>

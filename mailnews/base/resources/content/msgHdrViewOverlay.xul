@@ -22,6 +22,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
 
 <?xml-stylesheet href="chrome://messenger/skin/messageHeader.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messageKeywords.css" type="text/css"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -54,9 +55,9 @@ Rights Reserved.
 <tooltip id="attachmentListTooltip"
          onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
 
-<hbox id="msgHeaderView" persist="state">
+<hbox id="msgHeaderView" originalclass="none" persist="state">
 
-<grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
+<grid id="collapsedHeaderView" class="header-part1" originalclass="header-part1" flex="1" collapsed="true">
   <rows>
     <row flex="1"/>
   </rows>
@@ -88,6 +89,12 @@ Rights Reserved.
       </hbox>
     </column>
 
+    <column id="collapsedKeywordBox">
+      <hbox align="start">
+      <image id="collapsedKeywordImage" originalclass="none"/>  
+      </hbox>
+    </column>
+
     <column id="collapsedAttachmentBox" collapsed="true">
       <hbox align="start">
       <image id="collapsedAttachment" class="collapsedAttachmentButton" onclick="ToggleHeaderView();" />  
@@ -96,7 +103,7 @@ Rights Reserved.
   </columns>
 </grid>
 
-<hbox id="expandedHeaderView" class="header-part1" flex="1" collapsed="true">
+<hbox id="expandedHeaderView" class="header-part1" originalclass="header-part1" flex="1" collapsed="true">
   <vbox id="expandedHeaders" flex="1">
     <mail-toggle-headerfield id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
     
@@ -115,11 +122,19 @@ Rights Reserved.
    
    </vbox>
 
-   <vbox id="editMessageBox" class="header-part1" collapsed="true">
+   <vbox id="expandedKeywordBox">
+     <spacer flex="1"/>
+     <image id="expandedKeywordImage" originalclass="none" />
+     <spacer flex="1"/>  
+   </vbox>
+   
+   <vbox id="editMessageBox" class="header-part1" originalclass="header-part1" collapsed="true">
+     <spacer flex="1"/>
      <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
+     <spacer flex="1"/>
    </vbox> 
 
-   <vbox id="expandedAttachmentBox" class="header-part1" collapsed="true">
+   <vbox id="expandedAttachmentBox" class="header-part1" originalclass="header-part1" collapsed="true">
      <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
      <listbox id="attachmentList" flex="2"
               onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext"/>

@@ -1728,6 +1728,10 @@ function GenericSendMessage( msgType )
         }
       }
 
+      // hook for extra compose pre-processing
+      var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      observerService.notifyObservers(window, "mail:composeOnSend", null);
+
       // Check if the headers of composing mail can be converted to a mail charset.
       if (msgType == nsIMsgCompDeliverMode.Now || 
         msgType == nsIMsgCompDeliverMode.Later ||

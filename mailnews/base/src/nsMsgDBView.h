@@ -332,6 +332,7 @@ protected:
 
   nsCOMPtr <nsIMsgDatabase> m_db;
   nsCOMPtr <nsIMsgFolder> m_folder;
+  nsCOMPtr <nsIAtom> mRedirectorTypeAtom;
   nsWeakPtr m_searchSession;
   nsMsgViewSortTypeValue  m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;

@@ -76,6 +76,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_RedirectorType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateFoldersOnServer = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanFileMessagesOnServer = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsServer = nsnull;
@@ -140,6 +141,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
+    rdf->GetResource(NC_RDF_REDIRECTORTYPE, &kNC_RedirectorType);
     rdf->GetResource(NC_RDF_CANCREATEFOLDERSONSERVER, &kNC_CanCreateFoldersOnServer);
     rdf->GetResource(NC_RDF_CANFILEMESSAGESONSERVER, &kNC_CanFileMessagesOnServer);
     rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
@@ -208,6 +210,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_FolderTreeNameSort, refcnt);
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
+    NS_RELEASE2(kNC_RedirectorType, refcnt);
 		NS_RELEASE2(kNC_CanCreateFoldersOnServer, refcnt);
 		NS_RELEASE2(kNC_CanFileMessagesOnServer, refcnt);
 		NS_RELEASE2(kNC_IsServer, refcnt);
@@ -453,6 +456,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
              (kNC_CanRename == property) ||
              (kNC_CanCompact == property) ||
              (kNC_ServerType == property) ||
+             (kNC_RedirectorType == property) ||
              (kNC_CanCreateFoldersOnServer == property) ||
              (kNC_CanFileMessagesOnServer == property) ||
              (kNC_NoSelect == property) ||
@@ -542,6 +546,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
                aArc == kNC_FolderTreeSimpleName ||
                aArc == kNC_SpecialFolder ||
                aArc == kNC_ServerType ||
+               aArc == kNC_RedirectorType ||
                aArc == kNC_CanCreateFoldersOnServer ||
                aArc == kNC_CanFileMessagesOnServer ||
                aArc == kNC_IsServer ||
@@ -608,6 +613,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_FolderTreeSimpleName);
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_ServerType);
+  (*arcs)->AppendElement(kNC_RedirectorType);
   (*arcs)->AppendElement(kNC_CanCreateFoldersOnServer);
   (*arcs)->AppendElement(kNC_CanFileMessagesOnServer);
   (*arcs)->AppendElement(kNC_IsServer);
@@ -1009,6 +1015,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderSpecialNode(folder,target);
   else if ((kNC_ServerType == property))
     rv = createFolderServerTypeNode(folder, target);
+  else if ((kNC_RedirectorType == property))
+    rv = createFolderRedirectorTypeNode(folder, target);
   else if ((kNC_CanCreateFoldersOnServer == property))
     rv = createFolderCanCreateFoldersOnServerNode(folder, target);
   else if ((kNC_CanFileMessagesOnServer == property))
@@ -1173,10 +1181,24 @@ nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
   rv = server->GetType(getter_Copies(serverType));
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString type;
-  type.AssignWithConversion(serverType.get());
+  createNode(NS_ConvertASCIItoUCS2(serverType).get(), target, getRDFService());
+  return NS_OK;
+}
 
-  createNode(type.get(), target, getRDFService());
+nsresult
+nsMsgFolderDataSource::createFolderRedirectorTypeNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
+
+  nsXPIDLCString redirectorType;
+  rv = server->GetRedirectorType(getter_Copies(redirectorType));
+  if (NS_FAILED(rv)) return rv;
+
+  createNode(NS_ConvertASCIItoUCS2(redirectorType).get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -2100,6 +2122,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_FolderTreeSimpleName == property) ||
            (kNC_SpecialFolder == property) ||
            (kNC_ServerType == property) ||
+           (kNC_RedirectorType == property) ||
            (kNC_CanCreateFoldersOnServer == property) ||
            (kNC_CanFileMessagesOnServer == property) ||
            (kNC_IsServer == property) ||

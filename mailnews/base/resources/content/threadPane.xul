@@ -21,6 +21,7 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/threadPaneExtras.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/threadPaneLabels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/threadpane.dtd">

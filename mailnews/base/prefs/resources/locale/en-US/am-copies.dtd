@@ -3,6 +3,8 @@
 <!ENTITY copyAndFolderTitle.label "Copies &amp; Folders">
 <!ENTITY sendingPrefix.label "When sending messages, automatically: ">
 <!ENTITY fccMailFolder.label "Place a copy in:">
+<!ENTITY readingPrefix.label "When reading messages, automatically: ">
+<!ENTITY readingMailFolder.label "Place a copy in my &quot;Read Mail&quot; folder on Local Folders">
 <!ENTITY chooseFolderButton.label "Choose Folder...">
 <!-- LOCALIZATION NOTE (bccAccount.label): do not translate "Bcc" in below line -->
 <!ENTITY bccAccount.label "Bcc ">

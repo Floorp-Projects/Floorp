@@ -321,7 +321,7 @@ NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, co
   nsresult rv = NS_OK;
   PRBool matchFound = PR_FALSE;
 
-  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
   {
     nsCString prefName;
     nsCString indexStr;
@@ -1116,6 +1116,9 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   if ((mDeleteModel == nsMsgImapDeleteModels::IMAPDelete) && (flags & MSG_FLAG_IMAP_DELETED)) 
     properties->AppendElement(kImapDeletedMsgAtom);
 
+  if (mRedirectorTypeAtom)
+    properties->AppendElement(mRedirectorTypeAtom);
+
   if (mIsNews)
     properties->AppendElement(kNewsMsgAtom);
 
@@ -1604,7 +1607,17 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     nsXPIDLCString type;
     rv = server->GetType(getter_Copies(type));
     NS_ENSURE_SUCCESS(rv,rv);
-    mIsNews = !nsCRT::strcmp("nntp",type.get());
+
+    // turn the redirector type into an atom
+    nsXPIDLCString redirectorType;
+    rv = server->GetRedirectorType(getter_Copies(redirectorType));
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (redirectorType.IsEmpty())
+      mRedirectorTypeAtom = nsnull;
+    else
+      mRedirectorTypeAtom = getter_AddRefs(NS_NewAtom(redirectorType.get()));
+
+    mIsNews = !strcmp("nntp",type.get());
     GetImapDeleteModel(nsnull);
   }
   return NS_OK;

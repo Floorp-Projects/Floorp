@@ -439,7 +439,7 @@ nsMsgSearchCommandUpdater.prototype =
       // when the # of items in the selection has actually changed.
       document.commandDispatcher.updateCommands('mail-search');
     },
-  displayMessageChanged : function(aFolder, aSubject)
+  displayMessageChanged : function(aFolder, aSubject, aKeywords)
   {
   },
 
