@@ -2692,6 +2692,30 @@ INTL_ResourceCharSet(void);
 /*@}*/
 /*=======================================================*/
 
+
+/* Definition for the charset ID selector. 
+ */ 
+typedef enum { 
+    INTL_FileNameCsidSel = 1, 
+    INTL_DefaultTextWidgetCsidSel = 2 
+} INTL_CharSetID_Selector; 
+
+/* Typedef for charset ID. 
+ */ 
+typedef int16 INTLCharSetID; 
+
+/** 
+ * Get charset ID using a given selector. 
+ * 
+ * Using a given selector, this returns a charset ID. 
+ * Designed to retrieve a non-context dependent charset ID (e.g file system). 
+ * 
+ * @param     selector    Specification for a charset ID to get. 
+ * @return Charset ID for the input selector. Returns CS_DEFUALT in case of error (e.g. selector invalid). 
+ */ 
+
+INTLCharSetID INTL_GetCharSetID(INTL_CharSetID_Selector selector); 
+
 XP_END_PROTOS
 
 #endif /* INTL_LIBI18N_H */
