@@ -14,7 +14,7 @@ function upgradeCleanup()
 
 var srDest = $SpaceRequired$;
 
-var err = initInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
+var err = initInstall("Mozilla Navigator", "Browser", "$Version$"); 
 logComment("initInstall: " + err);
 
 var fProgram = getFolder("Program");
@@ -83,7 +83,7 @@ if (verifyDiskSpace(fProgram, srDest))
         if (! ('buildID' in Install))
         {
           logComment("Running Pre-Mozilla 0.9.1");
-          initInstall("Post-install Cleanup Utility", "xpicleanup", "$Version$");
+          initInstall("Post-install Cleanup Utility", "Browser/xpicleanup", "$Version$");
           fEssentialFiles = getFolder(fProgram, "Essential Files");
           cleanupUtility = getFolder(fEssentialFiles, "XPICleanup");
           err = File.execute(cleanupUtility);

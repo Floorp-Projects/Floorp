@@ -1,15 +1,13 @@
 function upgradeCleanup()
 {
-  // Obsolete files from Netscape 6.0 and Netscape 6.01 that
-  // need to be cleaned up.
+  // Obsolete files that need to be cleaned up.
   deleteThisFolder("Communicator", "psm");
 }
 
 var srDest = $SpaceRequired$;
 var err;
 
-err = initInstall("Netscape Personal Security Manager",
-                  "Netscape Personal Security Manager", "$Version$"); 
+err = initInstall("Personal Security Manager", "Personal Security Manager", "$Version$");
 logComment("initInstall: " + err);
 
 var communicatorFolder = getFolder("Communicator");

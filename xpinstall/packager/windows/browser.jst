@@ -232,7 +232,7 @@ function createShortcuts()
                 {
                     fTemp = fileExe;
                     fileExe = getFolder("file:///", fTemp);
-                    newKey = fileExe + ' -turbo';
+                    newKey = '"' + fileExe + '"' + ' -turbo';
                     winreg.createKey(subkey,"");
                     winreg.setValueString(subkey, valname, newKey);
                 } 
@@ -497,24 +497,22 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
     logComment("Create Folder: " + fProgram + "chrome");
     logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
-    logComment("Installing: "    + fProgram + "chrome\\all-locales.rdf");
-    logComment("Installing: "    + fProgram + "chrome\\all-packages.rdf");
-    logComment("Installing: "    + fProgram + "chrome\\all-skins.rdf");
-    logComment("Installing: "    + fProgram + "chrome\\user-locales.rdf");
-    logComment("Installing: "    + fProgram + "chrome\\user-skins.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor\\content");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\editor\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger\\content");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\messenger\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\content");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\skin");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\skin\\stylesheets.rdf");
 
     err = getLastError();
     if (err == SUCCESS)
@@ -524,7 +522,7 @@ if(verifyDiskSpace(fProgram, srDest))
       if (! ('buildID' in Install))
       {
         logComment("Running Pre-Mozilla 0.9.1");
-        initInstall("Post-install Cleanup Utility", "xpicleanup", "$Version$");
+        initInstall("Post-install Cleanup Utility", "Browser/xpicleanup", "$Version$");
         cleanupUtility = getFolder(fProgram, "xpicleanup.exe");
         err = File.execute(cleanupUtility);
         logComment("execute() returned: " + err);
