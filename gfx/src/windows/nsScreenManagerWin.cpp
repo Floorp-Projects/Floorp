@@ -77,7 +77,6 @@ nsScreenManagerWin :: nsScreenManagerWin ( )
     if ( mGetMonitorInfoProc && mMonitorFromRectProc && mEnumDisplayMonitorsProc )
       mHasMultiMonitorAPIs = PR_TRUE;
   }
-  printf("has multiple monitor apis is %ld\n", mHasMultiMonitorAPIs);
 
   // nothing else to do. I guess we could cache a bunch of information
   // here, but we want to ask the device at runtime in case anything
@@ -156,7 +155,6 @@ nsScreenManagerWin :: ScreenForRect ( PRInt32 inLeft, PRInt32 inTop, PRInt32 inW
   if ( mHasMultiMonitorAPIs ) {
     MonitorFromRectProc proc = (MonitorFromRectProc)mMonitorFromRectProc;
     HMONITOR screen = (*proc)( &globalWindowBounds, MONITOR_DEFAULTTOPRIMARY );
-printf("*** found screen %x\n", screen);
     genScreen = screen;
 
     //XXX find the DC for this screen??
@@ -217,21 +215,15 @@ nsScreenManagerWin :: GetNumberOfScreens(PRUint32 *aNumberOfScreens)
     *aNumberOfScreens = mNumberOfScreens;
 #if _MSC_VER >= 1200
   else if ( mHasMultiMonitorAPIs ) {
-      // use a rect that spans a HUGE area to pick up all screens
-      // using a null RECT didn't appear reliable, MS docs to the contrary
-      RECT largeArea = { -32767, -32767, 32767, 32767 };
       PRUint32 count = 0;
       EnumDisplayMonitorsProc proc = (EnumDisplayMonitorsProc)mEnumDisplayMonitorsProc;
-      BOOL result = (*proc)(nsnull, &largeArea, (MONITORENUMPROC)CountMonitors, (LPARAM)&count);
+      BOOL result = (*proc)(nsnull, nsnull, (MONITORENUMPROC)CountMonitors, (LPARAM)&count);
       *aNumberOfScreens = mNumberOfScreens = count;      
   } // if there can be > 1 screen
 #endif
   else
     *aNumberOfScreens = mNumberOfScreens = 1;
 
-#ifdef DEBUG
-  printf("****** number of screens %ld\n", mNumberOfScreens);
-#endif
   return NS_OK;
   
 } // GetNumberOfScreens
