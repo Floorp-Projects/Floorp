@@ -1944,9 +1944,12 @@ IL_GetImage(const char* image_url,
             break;
             
         default:
-            PR_ASSERT(0);
-            NS_RELEASE(image_req->net_cx);
-            PR_FREEIF(image_req);
+             PR_ASSERT(0); 
+            /*  NS_RELEASE(image_req->net_cx);*/
+            /*  PR_FREEIF(image_req);*/
+            /* This takes the image_req out of the ic client list,
+                frees image_req->new_cx, frees image_req.*/
+            int ret = il_delete_client(ic, image_req);
             return NULL;
         }
 
@@ -1978,14 +1981,12 @@ IL_GetImage(const char* image_url,
 
     if (!url)
     {
-#ifndef M12N /* XXXM12N fix me. */
-        /* xxx clean up previously allocated objects */
-        return MK_OUT_OF_MEMORY;
-#else
-        NS_RELEASE(image_req->net_cx);
-        PR_FREEIF(image_req);
+        /* NS_RELEASE(image_req->net_cx);*/
+        /* PR_FREEIF(image_req); */
+        /* This takes the image_req out of the ic client list,
+                frees image_req->new_cx, frees image_req. */
+        int ret = il_delete_client(ic, image_req);
         return NULL;
-#endif /* M12N */
     }        
     
 #if 0
@@ -2001,9 +2002,12 @@ IL_GetImage(const char* image_url,
     /* save away the container */
 	reader = IL_NewNetReader(ic);
 	if (!reader) {
-        NS_RELEASE(image_req->net_cx);
-        PR_FREEIF(image_req);
-        return NULL;
+           /* NS_RELEASE(image_req->net_cx); */
+           /* PR_FREEIF(image_req);*/
+           /* This takes the image_req out of the ic client list,
+            frees image_req->new_cx, frees image_req.*/
+           int ret = il_delete_client(ic, image_req);
+           return NULL;
 	}
     err = ic->net_cx->GetURL(url, cache_reload_policy, reader);
     /* Release reader, GetURL will keep a ref to it. */
