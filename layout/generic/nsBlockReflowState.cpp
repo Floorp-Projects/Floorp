@@ -548,7 +548,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
       aState.mPrevMaxNegBottomMargin;
     if (0 != bottomMargin) {
       aLine->MoveLineBy(0, bottomMargin);
-      aState.mY += topMargin;
+      aState.mY += bottomMargin;
     }
   }
 
