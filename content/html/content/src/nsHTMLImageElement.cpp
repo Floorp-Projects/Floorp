@@ -245,19 +245,30 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
-      // XXX This should ONLY be done if the margin is auto!!!
       float p2t = aPresContext->GetPixelsToTwips();
       nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         display->mFloats = NS_STYLE_FLOAT_LEFT;
-        spacing->mMargin.SetLeft(three);
-        spacing->mMargin.SetRight(three);
+        // XXX This should end up in ua.css when we can support css2
+        // attribute selectors (e.g. IMG.align[left])
+        if (eStyleUnit_Auto >= spacing->mMargin.GetLeftUnit()) {
+          spacing->mMargin.SetLeft(three);
+        }
+        if (eStyleUnit_Auto >= spacing->mMargin.GetRightUnit()) {
+          spacing->mMargin.SetRight(three);
+        }
         break;
       case NS_STYLE_TEXT_ALIGN_RIGHT:
         display->mFloats = NS_STYLE_FLOAT_RIGHT;
-        spacing->mMargin.SetLeft(three);
-        spacing->mMargin.SetRight(three);
+        // XXX This should end up in ua.css when we can support css2
+        // attribute selectors (e.g. IMG.align[left])
+        if (eStyleUnit_Auto >= spacing->mMargin.GetLeftUnit()) {
+          spacing->mMargin.SetLeft(three);
+        }
+        if (eStyleUnit_Auto >= spacing->mMargin.GetRightUnit()) {
+          spacing->mMargin.SetRight(three);
+        }
         break;
       default:
         text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
