@@ -128,45 +128,52 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, 
-                                            nsHTMLAtoms::fieldsetContentPseudo,
-                                            mStyleContext, PR_FALSE,
-                                            &styleContext);
+  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fieldsetContentPseudo,
+                                            mStyleContext, PR_FALSE, &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
+  mFrames.FirstChild()->SetNextSibling(nsnull);
   NS_RELEASE(styleContext);                                           
 
   nsIFrame* newChildList = aChildList;
 
-  // XXX this just tosses any extra frames passed in onto the floor;
-  // this is a memory leak!!!
-  mFrames.FirstChild()->SetNextSibling(nsnull);
-
-  // Set the geometric and content parent for each of the child frames. 
-  // The legend is handled differently and removed from aChildList
-  nsIFrame* lastFrame = nsnull;
+  // Set the geometric and content parent for each of the child frames 
+  // that will go into the area frame's child list.
+  // The legend frame does not go into the list
+  nsIFrame* lastNewFrame = nsnull;
   for (nsIFrame* frame = aChildList; nsnull != frame;) {
     nsIFrame* legendFrame = nsnull;
     nsresult result = frame->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
-    if ((NS_OK == result) && legendFrame) {
-      nsIFrame* nextFrame;
-      frame->GetNextSibling(&nextFrame);
-      if (lastFrame) {
-        lastFrame->SetNextSibling(nextFrame);
-      } else {
-        newChildList = nextFrame;
+    if (NS_SUCCEEDED(result) && legendFrame) {
+      if (mLegendFrame) { // we already have a legend, destroy it
+        frame->GetNextSibling(&frame);
+        if (lastNewFrame) {
+          lastNewFrame->SetNextSibling(frame);
+        } 
+        else {
+          aChildList = frame;
+        }
+        legendFrame->DeleteFrame(aPresContext);
+      } 
+      else {
+        nsIFrame* nextFrame;
+        frame->GetNextSibling(&nextFrame);
+        if (lastNewFrame) {
+          lastNewFrame->SetNextSibling(nextFrame);
+        } else {
+          newChildList = nextFrame;
+        }
+        frame->SetParent(this);
+        mFrames.FirstChild()->SetNextSibling(frame);
+        mLegendFrame = frame;
+        mLegendFrame->SetNextSibling(nsnull);
+        frame = nextFrame;
       }
-      frame->SetParent(this);
-      mFrames.FirstChild()->SetNextSibling(frame);
-      mLegendFrame = frame;
-      mLegendFrame->SetNextSibling(nsnull);
-      frame = nextFrame;
-     } else {
+    } else {
       frame->SetParent(mFrames.FirstChild());
+      lastNewFrame = frame;
       frame->GetNextSibling(&frame);
     }
-    lastFrame = frame;
   }
-
   // Queue up the frames for the content frame
   return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, newChildList);
 }
