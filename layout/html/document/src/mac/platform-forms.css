@@ -136,14 +136,10 @@ button,
 button[disabled],
 button:active:hover,
 button[disabled]:active {
-  -moz-appearance: button-bevel;
-  margin: 5px 2px 0px 2px;
-  padding: 0px;
-  border-width: 2px 4px 4px 4px;
+  -moz-appearance: none;
 }
 
 /* this turns off the mozilla focus ring shown inside clicked or selecetd buttons */
-button::-moz-focus-inner,
 input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
