@@ -29,6 +29,9 @@
 #include "nsISupports.h"
 #include "nsHTMLTokenizer.h"
 #include "prtypes.h"
+
+// Enable unicode characters in expat.
+#define XML_UNICODE_WCHAR_T
 #include "xmlparse.h"
 
 #define NS_EXPATTOKENIZER_IID      \

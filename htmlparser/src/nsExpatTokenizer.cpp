@@ -27,11 +27,8 @@
 #include "nsScanner.h"
 #include "nsDTDUtils.h"
 #include "nsParserError.h"
-// #include "nsParser.h"
 #include "nsIParser.h"
 #include "prlog.h"
-#include <string.h>
-
 
  /************************************************************************
   And now for the main class -- nsExpatTokenizer...
@@ -130,15 +127,19 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
  *  @param   
  *  @return  
  */
-nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
+nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {  
   NS_INIT_REFCNT();
   mBytesParsed = 0;
   mSeenError = PR_FALSE;
-  mExpatParser = XML_ParserCreate(NULL);
-  gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
-  if (mExpatParser) {
-    SetupExpatCallbacks();
-  }
+  nsAutoString buffer("UTF-16");
+  const PRUnichar* encoding = buffer.GetUnicode();
+  if (encoding) {
+    mExpatParser = XML_ParserCreate((const XML_Char*) encoding);
+    gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
+    if (mExpatParser) {
+      SetupExpatCallbacks();
+    }
+  }  
 }
 
 /**
@@ -231,10 +232,9 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
   AddToken(theToken, NS_OK, *gTokenDeque,gTokenRecycler);
 }
 
-nsresult nsExpatTokenizer::ParseXMLBuffer(const char *aBuffer, PRUint32 aLength){
+nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength){
   nsresult result=NS_OK;
-  if (mExpatParser) {
-    PR_ASSERT(aLength == strlen(aBuffer));
+  if (mExpatParser) {    
     if (!mSeenError) {
       if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
         PushXMLErrorToken(aBuffer, aLength);
@@ -272,14 +272,14 @@ nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner) {
   nsString& theBuffer = aScanner.GetBuffer();
   PRInt32 length = theBuffer.Length();
   if(0 < length) {
-    char* expatBuffer = theBuffer.ToNewCString();
-    if (expatBuffer) {      
+    const PRUnichar* expatBuffer = theBuffer.GetUnicode();
+    PRUint32 bufLength = theBuffer.Length() * 2;
+    if (expatBuffer) {
       gTokenDeque=&mTokenDeque;
       gExpatParser = mExpatParser;
-      result = ParseXMLBuffer(expatBuffer, length);
-      delete [] expatBuffer;
+      result = ParseXMLBuffer((const char *)expatBuffer, bufLength);
     }
-    theBuffer.Truncate(0);    
+    theBuffer.Truncate(0);
   }
   if(NS_OK==result)
     result=aScanner.Eof();
