@@ -25,8 +25,8 @@
 
 nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
                PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize)
-  : name(aName)
 {
+  name.AssignWithConversion(aName);
   style = aStyle;
   variant = aVariant;
   weight = aWeight;

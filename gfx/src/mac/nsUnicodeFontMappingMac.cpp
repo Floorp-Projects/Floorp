@@ -313,9 +313,9 @@ nsUnicodeFontMappingMac* nsUnicodeFontMappingMac::GetCachedInstance(
 
 	nsUnicodeFontMappingMac* obj = nsnull;
 	nsAutoString key = aFont->name;
-	key.Append(":");
+	key.AppendWithConversion(":");
 	key.Append(aLangGroup);
-	key.Append(":");
+	key.AppendWithConversion(":");
 	key.Append(aLANG);
 	if(! gCache->Get ( key, &obj )){
 		obj = new nsUnicodeFontMappingMac(aFont, aDeviceContext, aLangGroup, aLANG);
