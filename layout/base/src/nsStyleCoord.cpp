@@ -167,7 +167,11 @@ void nsStyleCoord::SetInheritValue(void)
 void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
 {
   mUnit = aUnit;
+#if PR_BYTES_PER_INT == PR_BYTES_PER_FLOAT
+  mValue.mInt = aValue.mInt;
+#else
   nsCRT::memcpy(&mValue, &aValue, sizeof(nsStyleUnion));
+#endif
 }
 
 void nsStyleCoord::AppendToString(nsString& aBuffer) const
