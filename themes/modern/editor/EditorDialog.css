@@ -77,6 +77,10 @@
   width: 1em;
 }
 
+.menuitem-highlight-1 {
+  font-weight: bold;
+}
+
 /* ::::: common buttons ::::: */
 
 #MoreFewerButton[more="0"] {
@@ -186,6 +190,10 @@ button.color-button {
 
 /* ::::: color picker dialog ::::: */
 
+#ColorPicker {
+  -moz-user-focus: normal;
+}
+
 #ColorPickerSwatch {
   margin: 0px 3px 0px 0px;
   border: 2px outset #B4C3D4;
@@ -256,15 +264,6 @@ button.color-button {
 .AttributesTree {
   min-width: 200px;
   min-height: 200px;
-}
-
-.AttributesTree > treechildren > treeitem > treerow > treecell.value {
-  padding: 0px 0px 0px 2px;
-}
-
-treeitem.ae-selection[selected="true"] > treerow {
-  background-color: #D0E7E7;
-  color: inherit;
 }
 
 /* ::::: Editor pref panels ::::: */

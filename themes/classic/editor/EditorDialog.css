@@ -78,6 +78,10 @@ titledbox {
  width: 1em;
 }
 
+.menuitem-highlight-1 {
+  font-weight : bold;
+}
+
 /* Use this with groove-thin in dialogs 
    to add margins to top and bottom
 */
@@ -108,6 +112,10 @@ button.color-button {
 
 .menu-list[focused="true"] {
   color: white;
+}
+
+#ColorPicker {
+  -moz-user-focus: normal;
 }
 
 #ColorPickerSwatch {
@@ -292,26 +300,3 @@ tree.AttributesTree {
   min-width : 200px;
   min-height: 200px;
 }
-
-tree.AttributesTree > treechildren > treeitem > treerow > treecell.value {
-    padding     : 0px 0px 0px 2px;
-    margin-left : 0px;
-}
-
-/* Selection color for "name" column */
-treeitem.ae-selection[selected="true"] > treerow { 
-  color : inherit;
-  background-color : #DDDDDD;
-}
-
-.AttributesCell {
-  border: none;
-  width: 100%;
-  background-color: #FFFFFF;
-  font-weight: normal;
-  border: none;
-  outline: none;
-  margin: 0px;
-  width: 100%;
-}
-
