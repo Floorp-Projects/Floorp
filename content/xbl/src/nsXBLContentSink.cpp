@@ -87,6 +87,7 @@ nsXBLContentSink::nsXBLContentSink()
   mProperty = nsnull;
   mMethod = nsnull;
   mField = nsnull;
+  mPrettyPrintXML = PR_FALSE;
 }
 
 nsXBLContentSink::~nsXBLContentSink()

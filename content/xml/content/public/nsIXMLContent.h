@@ -103,6 +103,10 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsAString& aData);
 
 extern nsresult
+NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
+                                         const nsAString& aData);
+
+extern nsresult
 NS_NewXMLEntity(nsIContent** aInstancePtrResult,
                 const nsAString& aName,
                 const nsAString& aPublicId,

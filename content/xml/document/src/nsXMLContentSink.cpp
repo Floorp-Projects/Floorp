@@ -107,6 +107,13 @@
 #include "nsIPrincipal.h"
 #include "nsIAggregatePrincipal.h"
 #include "nsICodebasePrincipal.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMViewCSS.h"
+#include "nsXBLAtoms.h"
+#include "nsIPref.h"
+#include "nsIDOMDocumentXBL.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -183,6 +190,9 @@ nsXMLContentSink::nsXMLContentSink()
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
   mNeedToBlockParser = PR_FALSE;
+  mPrettyPrintXML = PR_TRUE;
+  mPrettyPrintHasSpecialRoot = PR_FALSE;
+  mPrettyPrintHasFactoredElements = PR_FALSE;
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -234,7 +244,10 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   mDocumentBaseURL = aURL;
   NS_ADDREF(aURL);
   mWebShell = aContainer;
-  NS_IF_ADDREF(aContainer);
+  NS_IF_ADDREF(mWebShell);
+  if (!mWebShell) {
+    mPrettyPrintXML = PR_FALSE;
+  }
 
   nsCOMPtr<nsIScriptLoader> loader;
   nsresult rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
@@ -333,9 +346,82 @@ nsXMLContentSink::ScrollToRef()
   }
 }
 
+PRBool
+nsXMLContentSink::ShouldPrettyPrint()
+{
+  if (!mPrettyPrintXML || (mPrettyPrintHasFactoredElements &&
+                           !mPrettyPrintHasSpecialRoot)) {
+    mPrettyPrintXML = PR_FALSE;
+
+    return PR_FALSE;
+  }
+
+  // Check for correct load-command or if we're in a display:none iframe
+  nsAutoString command;
+  mParser->GetCommand(command);
+  if (!command.Equals(NS_LITERAL_STRING("view")) ||
+      !mDocument->GetNumberOfShells()) {
+    mPrettyPrintXML = PR_FALSE;
+
+    return PR_FALSE;
+  }
+
+  // check if we're in an invisible iframe
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  mDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
+  nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(sgo);
+  nsCOMPtr<nsIDOMElement> frameElem;
+  if (internalWin) {
+    internalWin->GetFrameElement(getter_AddRefs(frameElem));
+  }
+
+  if (frameElem) {
+    nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
+    nsCOMPtr<nsIDOMDocument> frameOwnerDoc;
+    frameElem->GetOwnerDocument(getter_AddRefs(frameOwnerDoc));
+    nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(frameOwnerDoc);
+    if (docView) {
+      nsCOMPtr<nsIDOMAbstractView> defaultView;
+      docView->GetDefaultView(getter_AddRefs(defaultView));
+      nsCOMPtr<nsIDOMViewCSS> defaultCSSView = do_QueryInterface(defaultView);
+      if (defaultCSSView) {
+        defaultCSSView->GetComputedStyle(frameElem, NS_LITERAL_STRING(""),
+                                         getter_AddRefs(computedStyle));
+      }
+    }
+
+    if (computedStyle) {
+      nsAutoString visibility;
+      computedStyle->GetPropertyValue(NS_LITERAL_STRING("visibility"), visibility);
+      if (!visibility.Equals(NS_LITERAL_STRING("visible"))) {
+        mPrettyPrintXML = PR_FALSE;
+
+        return PR_FALSE;
+      }
+    }
+  }
+  
+  // check the pref
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (prefs) {
+    PRBool pref = PR_FALSE;
+    prefs->GetBoolPref("layout.xml.prettyprint", &pref);
+    if (!pref) {
+      mPrettyPrintXML = PR_FALSE;
+
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
+
 NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
+  nsresult rv = NS_OK;
+
   // XXX this is silly; who cares?
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
@@ -359,7 +445,17 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
   mDocument->SetRootContent(mDocElement);
 
-  nsresult rv = NS_OK;
+  // Check if we want to prettyprint
+  if (ShouldPrettyPrint()) {
+    NS_ASSERTION(!mXSLTransformMediator, "Prettyprinting an XSLT styled document");
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri),
+                   NS_LITERAL_STRING("resource:///res/xml/XMLPrettyPrint.xsl"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    LoadXSLStyleSheet(uri);
+  }
+
   if (mXSLTransformMediator) {
     rv = SetupTransformMediator();
   }
@@ -567,16 +663,28 @@ nsresult
 nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount, PRInt32 aNameSpaceID, 
                                 nsINodeInfo* aNodeInfo, nsIContent** aResult)
 {
+  nsresult rv = NS_OK;
   // The first step here is to see if someone has provided their
   // own content element implementation (e.g., XUL or MathML).  
   // This is done based off a contractid/namespace scheme. 
   nsCOMPtr<nsIElementFactory> elementFactory;
-  GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
-  if (elementFactory)
+  gNameSpaceManager->GetElementFactory(aNameSpaceID,
+                                       getter_AddRefs(elementFactory));
+  if (elementFactory) {
     // Create the content element using the element factory.
     elementFactory->CreateInstanceByTag(aNodeInfo, aResult);
+  }
   else {
     NS_NewXMLElement(aResult, aNodeInfo);
+  }
+
+  // If we care, find out if we just used a special factory.
+  if (!mPrettyPrintHasFactoredElements && !mPrettyPrintHasSpecialRoot &&
+      mPrettyPrintXML) {
+    PRBool hasFactory = PR_FALSE;
+    rv = gNameSpaceManager->HasRegisteredFactory(aNameSpaceID, &hasFactory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mPrettyPrintHasFactoredElements = hasFactory;
   }
 
   return NS_OK;
@@ -674,6 +782,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
                                    const nsString& aMedia)
 {
   nsresult rv = NS_OK;
+  mPrettyPrintXML = PR_FALSE;
 
   if (aType.EqualsIgnoreCase(kXSLType) ||
       aType.EqualsIgnoreCase(kXMLTextContentType) ||
@@ -936,6 +1045,9 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
   nsresult rv=NS_OK;
   // XXX necko isn't going to process headers coming in from the parser          
   //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
+
+  // If we add support for linking scripts here then we have to remember to
+  // turn off prettyprinting
 
   mDocument->SetHeaderData(aHeader, aValue);
   
@@ -1548,13 +1660,6 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
 
 ////////////////////////////////////////////////////////////////////////
 
-void 
-nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID,
-                                    nsIElementFactory** aResult)
-{
-  gNameSpaceManager->GetElementFactory(aNameSpaceID, aResult);
-}
-
 NS_IMETHODIMP 
 nsXMLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
@@ -1600,6 +1705,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   const PRBool isXHTML = nameSpaceID == kNameSpaceID_XHTML;
 
   if (isXHTML) {
+    mPrettyPrintHasFactoredElements = PR_TRUE;
     if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessStartSCRIPTTag(aLineNumber);
       // Don't append the content to the tree until we're all
@@ -1651,6 +1757,17 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     if (NS_OK == result) {
       // If this is the document element
       if (!mDocElement) {
+        
+        // check for root elements that needs special handling for
+        // prettyprinting
+        if ((nameSpaceID == kNameSpaceID_XBL &&
+             tagAtom == nsXBLAtoms::bindings) ||
+            (nameSpaceID == kNameSpaceID_XSLT &&
+             (tagAtom == nsLayoutAtoms::stylesheet ||
+              tagAtom == nsLayoutAtoms::transform))) {
+          mPrettyPrintHasSpecialRoot = PR_TRUE;
+        }
+
         mDocElement = content;
         NS_ADDREF(mDocElement);
 
@@ -1908,6 +2025,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     if (ssle) {
       ssle->InitStyleLinkElement(mParser, PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
+      mPrettyPrintXML = PR_FALSE;
     }
 
     result = AddContentAsLeaf(node);

@@ -19,14 +19,23 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public resources src
-
 include $(topsrcdir)/config/rules.mk
 
+EXPORT_RESOURCE_CONTENT = \
+		$(srcdir)/XMLPrettyPrint.xsl \
+		$(srcdir)/XMLPrettyPrint.xml \
+		$(srcdir)/XMLPrettyPrint.bmp \
+		$(srcdir)/XMLPrettyPrint.css \
+		$(NULL)
+libs::
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/xml
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/xml

@@ -62,10 +62,11 @@ static const char kMathMLNameSpaceURI[] = "http://www.w3.org/1998/Math/MathML";
 //-----------------------------------------------------------
 // Name Space ID table support
 
-static PRBool            gNameSpaceManagerIsInitialized = PR_FALSE;
-static nsHashtable*      gURIToIDTable;
-static nsVoidArray*      gURIArray;
-static nsISupportsArray* gElementFactoryArray;
+static PRBool             gNameSpaceManagerIsInitialized = PR_FALSE;
+static nsHashtable*       gURIToIDTable;
+static nsVoidArray*       gURIArray;
+static nsISupportsArray*  gElementFactoryArray;
+static nsIElementFactory* gDefaultElementFactory;
 
 #ifdef NS_DEBUG
 static PRBool            gNameSpaceManagerWasShutDown = PR_FALSE;
@@ -116,6 +117,7 @@ static void InitializeNameSpaceManager()
   gURIToIDTable->Put(&mathmlKey, NS_INT32_TO_PTR(kNameSpaceID_MathML));
 
   NS_NewISupportsArray(&gElementFactoryArray);
+  NS_NewXMLElementFactory(&gDefaultElementFactory);
 
   NS_ASSERTION(gURIToIDTable, "no URI table");
   NS_ASSERTION(gURIArray, "no URI array");
@@ -137,6 +139,7 @@ void NS_NameSpaceManagerShutdown()
   gURIArray = nsnull;
 
   NS_IF_RELEASE(gElementFactoryArray);
+  NS_IF_RELEASE(gDefaultElementFactory);
 
 #ifdef NS_DEBUG
   gNameSpaceManagerWasShutDown = PR_TRUE;
@@ -393,6 +396,8 @@ public:
                             PRInt32& aNameSpaceID);
   NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
                                nsIElementFactory **aElementFactory);
+  NS_IMETHOD HasRegisteredFactory(PRInt32 aNameSpaceID,
+                                  PRBool* aHasFactory);
 private:
   // These are not supported and are not implemented!
   NameSpaceManagerImpl(const NameSpaceManagerImpl& aCopy);
@@ -530,11 +535,7 @@ NameSpaceManagerImpl::GetElementFactory(PRInt32 aNameSpaceID,
   }
 
   if (!ef) {
-    nsresult rv = NS_NewXMLElementFactory(getter_AddRefs(ef));
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    ef = gDefaultElementFactory;
   }
 
   PRUint32 count = 0;
@@ -557,6 +558,18 @@ NameSpaceManagerImpl::GetElementFactory(PRInt32 aNameSpaceID,
   *aElementFactory = ef;
   NS_ADDREF(*aElementFactory);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NameSpaceManagerImpl::HasRegisteredFactory(PRInt32 aNameSpaceID,
+                                           PRBool* aHasFactory)
+{
+  *aHasFactory = PR_FALSE;
+  nsCOMPtr<nsIElementFactory> ef;
+  GetElementFactory(aNameSpaceID, getter_AddRefs(ef));
+  NS_ENSURE_TRUE(gDefaultElementFactory, NS_ERROR_FAILURE);
+  *aHasFactory = ef != gDefaultElementFactory;
   return NS_OK;
 }
 

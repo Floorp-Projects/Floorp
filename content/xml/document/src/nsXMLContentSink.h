@@ -173,6 +173,8 @@ protected:
 
   void ScrollToRef();
   
+  PRBool ShouldPrettyPrint();
+  
   static nsINameSpaceManager* gNameSpaceManager;
   static PRUint32 gRefCnt;
 
@@ -200,6 +202,9 @@ protected:
   PRPackedBool mConstrainSize;
   PRPackedBool mInTitle;
   PRPackedBool mNeedToBlockParser;
+  PRPackedBool mPrettyPrintXML;
+  PRPackedBool mPrettyPrintHasSpecialRoot;
+  PRPackedBool mPrettyPrintHasFactoredElements;
 
   nsCOMPtr<nsISupportsArray>          mContentStack;
   nsCOMPtr<nsINodeInfoManager>        mNodeInfoManager;

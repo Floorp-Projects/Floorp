@@ -261,6 +261,9 @@ enum nsDOMClassInfoID {
   // ContentList object used for various live NodeLists
   eDOMClassInfo_ContentList_id,
   
+  // Processing-instruction with target "xml-stylesheet"
+  eDOMClassInfo_XMLStylesheetProcessingInstruction_id,
+  
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
