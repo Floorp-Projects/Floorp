@@ -36,7 +36,7 @@ public:
   }
 
   // nsISupports
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
   // nsILinkHandler
   NS_IMETHOD Init(nsIWebWidget* aWidget);
