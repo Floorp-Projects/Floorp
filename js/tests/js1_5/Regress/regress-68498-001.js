@@ -31,7 +31,7 @@
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 68498;
-var summary ='Testing  that variable statement outside any eval creates'  + 
+var summary ='Testing that variable statement outside any eval creates'  + 
                           ' a DontDelete property of the global object';
 
 
