@@ -49,40 +49,40 @@
 
   <binding name="menus">
     <content excludes="template,observes,menupopup">
-      <xul:titledbutton class="menu-left"/>
+      <xul:image class="menu-left"/>
       <xul:titledbutton class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:titledbutton class="menu-accel" inherits="acceltext:value"/>
-      <xul:titledbutton class="menu-right"/>
+      <xul:text class="menu-accel" inherits="acceltext:value"/>
+      <xul:image class="menu-right"/>
     </content>
   </binding>
 
   <binding name="menulist">
     <content excludes="template,observes,menupopup">
       <xul:image class="menu-icon" inherits="src"/>
-      <xul:titledbutton class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:titledbutton class="menu-dropmarker"/>
+      <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
+      <xul:image class="menu-dropmarker"/>
     </content>
-	<handlers>
+	  <handlers>
       <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
-	</handlers>
+	  </handlers>
   </binding>
 
   <binding name="menubutton">
     <content excludes="template,observes,menupopup">
-      <xul:titledbutton class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
-      <xul:titledbutton class="menu-dropmarker"/>
+      <xul:labelledimage class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
+      <xul:image class="menu-dropmarker"/>
     </content>
   </binding>
 
   <binding name="menulist-editable">
     <content excludes="template,observes,menupopup">
       <xul:image class="menu-icon" inherits="src"/>
-	  <html:input type="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
-      <xul:titledbutton class="menu-dropmarker"/>
+	    <html:input type="text" flex="1" class="menu-text" allowevents="true" inherits="value,disabled"/>
+      <xul:image class="menu-dropmarker"/>
     </content>
-	<handlers>
+	  <handlers>
       <handler type="command" capturer="true" value="this.selectedItem = event.target"/>
-	</handlers>
+	  </handlers>
   </binding>
 
   <binding name="treecell-indented-folder">
@@ -112,71 +112,84 @@
 
   <binding name="checkbox">
     <content>
-	  <xul:box flex="1" class="internal-box" autostretch="never">
-        <xul:image inherits="src"/>
+      <xul:box class="internal-box" autostretch="never">
+        <xul:box class="checkmark-box" autostretch="never">
+          <xul:image inherits="src"/>
+        </xul:box>
         <xul:html flex="1" inherits="value"/>
       </xul:box>
     </content>
-	<handlers>
+    <handlers>
       <handler type="mouseup" value="this.checked = !this.checked;"/>
-	  <handler type="keypress" key=" " value="this.checked = !this.checked;"/>
-	</handlers>
+      <handler type="keypress" key=" " value="this.checked = !this.checked;"/>
+    </handlers>
   </binding>
 
   <binding name="radio">
     <content>
-	  <xul:box flex="1" class="internal-box" autostretch="never">
-        <xul:image inherits="src"/>
+      <xul:box class="internal-box" autostretch="never">
+        <xul:box class="checkmark-box" autostretch="never">
+          <xul:image inherits="src"/>
+        </xul:box>
         <xul:html flex="1" inherits="value"/>
       </xul:box>
-    </content>
+    </content>  
   </binding>
 
   <binding name="radiogroup">
-	<handlers>
+  	<handlers>
       <handler type="mouseup" value="try { this.selectedItem = event.target; } catch (e) {}"/>
-	  <handler type="keypress" key=" " value="try { this.selectedItem = event.target; } catch (e) {}"/>
-	</handlers>
+	    <handler type="keypress" key=" " value="try { this.selectedItem = event.target; } catch (e) {}"/>
+	  </handlers>
   </binding>
 
   <binding name="buttonleft" excludes="observes,template">
     <content>
-	  <xul:box flex="1" class="internal-box" autostretch="never">
+  	  <xul:box class="internal-box" autostretch="never" flex="1">
         <xul:image inherits="src"/>
-        <xul:text inherits="value,accesskey,crop"/>
+        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
+          <xul:text inherits="value,accesskey,crop"/>
+        </xul:box>
       </xul:box>
     </content>
   </binding>
   
   <binding name="buttontop" excludes="observes,template">
     <content>
-	  <xul:box flex="1" orient="vertical" autostretch="never" class="internal-box">
+	    <xul:box orient="vertical" autostretch="never" class="internal-box" flex="1">
         <xul:image inherits="src"/>
-        <xul:text inherits="value,accesskey,crop"/>
-	  </xul:box>
-	</content>
+        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
+          <xul:text inherits="value,accesskey,crop"/>
+        </xul:box>
+	    </xul:box>
+	  </content>
   </binding>
 
   <binding name="buttonright" excludes="observes,template">
     <content>
-	  <xul:box flex="1" autostretch="never" class="internal-box">
-	    <xul:text inherits="value,accesskey,crop"/>
+	    <xul:box autostretch="never" class="internal-box" flex="1">
+        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
+  	      <xul:text inherits="value,accesskey,crop"/>
+        </xul:box>
         <xul:image inherits="src"/>
       </xul:box>
-	</content>
+	  </content>
   </binding>
 
   <binding name="buttonbottom" excludes="observes,template">
     <content>
-	  <xul:box flex="1" orient="vertical" autostretch="never" class="internal-box">
-	    <xul:text inherits="value,accesskey,crop"/>
+	    <xul:box orient="vertical" autostretch="never" class="internal-box" flex="1">
+        <xul:box orient="vertical" class="text-container" autostretch="never" flex="1">
+  	      <xul:text inherits="value,accesskey,crop"/>
+        </xul:box>
         <xul:image inherits="src"/>
-	  </xul:box>
-	</content>
+	    </xul:box>
+	  </content>
   </binding>
 
   <binding name="separator" extends="xul:spring"/>
 
+  <!-- appending to the end so we don't make hyatt cry -->
   <binding name="progressmeter" extends="xul:box">
     <content excludes="observes,template">
       <xul:box class="internal-box" flex="1">
@@ -194,6 +207,5 @@
       </xul:box>
     </content>
   </binding>
-
 
 </bindings>
