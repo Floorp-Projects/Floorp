@@ -724,10 +724,12 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
             //quick fix for the recurrence getting out of the end of the month into the next month
             //like 31st of each month but when you get February
             if( recur.freq == ICAL_MONTHLY_RECURRENCE && !m_recurweeknumber && next.day != m_start->m_datetime.day) {
-#ifdef ICAL_DEBUG
-                printf( "Wrong day in month\n" );
-#endif
-                continue;
+//#ifdef ICAL_DEBUG
+//                printf( "Wrong day in month\n" );
+//#endif
+//                continue;
+                next.day = 0;
+                icaltime_normalize( next );
             }
             PRTime nextinms = ConvertToPrtime( next );
             if( LL_CMP(nextinms, > ,begin) && !IsExcepted( nextinms ) ) {
