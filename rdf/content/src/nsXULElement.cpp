@@ -2944,7 +2944,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID,
             if (broadcaster) {
                 nsCOMPtr<nsIDOMXULElement> xulBroadcaster = do_QueryInterface(broadcaster);
                 if (xulBroadcaster) {
-                    xulBroadcaster->RemoveBroadcastListener(NS_ConvertASCIItoUCS2("*"), this);
+                    xulBroadcaster->RemoveBroadcastListener(NS_LITERAL_STRING("*"), this);
                 }
             }
         }
@@ -3207,8 +3207,8 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
             aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
             aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
             aEvent->message == NS_DRAGDROP_GESTURE ||
-            tagName.EqualsWithConversion("menu") || tagName.EqualsWithConversion("menuitem") || tagName.EqualsWithConversion("menulist") ||
-            tagName.EqualsWithConversion("menubar") || tagName.EqualsWithConversion("menupopup") || tagName.EqualsWithConversion("key") || tagName.EqualsWithConversion("keyset")) {
+            tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") || tagName == NS_LITERAL_STRING("menulist") ||
+            tagName == NS_LITERAL_STRING("menubar") || tagName == NS_LITERAL_STRING("menupopup") || tagName == NS_LITERAL_STRING("key") || tagName == NS_LITERAL_STRING("keyset")) {
             nsCOMPtr<nsIEventListenerManager> listenerManager;
             if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
                 NS_ERROR("Unable to instantiate a listener manager on this event.");
@@ -3593,7 +3593,7 @@ nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReada
     // observer. We need to find the observer in order to
     // execute the handler.
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    if (NS_SUCCEEDED(anElement->GetElementsByTagName(NS_ConvertASCIItoUCS2("observes"),
+    if (NS_SUCCEEDED(anElement->GetElementsByTagName(NS_LITERAL_STRING("observes"),
                                                      getter_AddRefs(nodeList)))) {
         // We have a node list that contains some observes nodes.
         PRUint32 length;
@@ -3606,14 +3606,14 @@ nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReada
             if (domElement) {
                 // We have a domElement. Find out if it was listening to us.
                 nsAutoString listeningToID;
-                domElement->GetAttribute(NS_ConvertASCIItoUCS2("element"), listeningToID);
+                domElement->GetAttribute(NS_LITERAL_STRING("element"), listeningToID);
                 nsAutoString broadcasterID;
-                GetAttribute(NS_ConvertASCIItoUCS2("id"), broadcasterID);
+                GetAttribute(NS_LITERAL_STRING("id"), broadcasterID);
                 if (listeningToID == broadcasterID) {
                     // We are observing the broadcaster, but is this the right
                     // attribute?
                     nsAutoString listeningToAttribute;
-                    domElement->GetAttribute(NS_ConvertASCIItoUCS2("attribute"), listeningToAttribute);
+                    domElement->GetAttribute(NS_LITERAL_STRING("attribute"), listeningToAttribute);
                     if (listeningToAttribute.Equals(attrName)) {
                         // This is the right observes node.
                         // Execute the onchange event handler
@@ -4134,7 +4134,7 @@ nsXULElement::Click()
     nsCOMPtr<nsIPresShell> shell; // Strong
     nsCOMPtr<nsIPresContext> context;
     nsAutoString tagName;
-    PRBool isButton = NodeInfo()->Equals(NS_ConvertASCIItoUCS2("button"));
+    PRBool isButton = NodeInfo()->Equals(NS_LITERAL_STRING("button"));
 
     for (PRInt32 i=0; i<numShells; i++) {
       shell = getter_AddRefs(doc->GetShellAt(i));
@@ -4171,8 +4171,8 @@ NS_IMETHODIMP
 nsXULElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsAutoString disabled;
-  GetAttribute(NS_ConvertASCIItoUCS2("disabled"), disabled);
-  if (disabled.EqualsWithConversion("true"))
+  GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
+  if (disabled == NS_LITERAL_STRING("true"))
     return NS_OK;
  
   nsIEventStateManager* esm;
@@ -4255,11 +4255,11 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
 
     if (popupType == eXULPopupType_tooltip) {
-        AddEventListener(NS_ConvertASCIItoUCS2("mouseout"), eventListener, PR_FALSE);
-        AddEventListener(NS_ConvertASCIItoUCS2("mousemove"), eventListener, PR_FALSE);
+        AddEventListener(NS_LITERAL_STRING("mouseout"), eventListener, PR_FALSE);
+        AddEventListener(NS_LITERAL_STRING("mousemove"), eventListener, PR_FALSE);
     }
     else {
-        AddEventListener(NS_ConvertASCIItoUCS2("mousedown"), eventListener, PR_FALSE); 
+        AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE); 
     }
 
     return NS_OK;
@@ -4368,7 +4368,7 @@ nsXULElement::Slots::~Slots()
             XULBroadcastListener* xulListener =
                 NS_REINTERPRET_CAST(XULBroadcastListener*, mBroadcastListeners->ElementAt(0));
 
-            mElement->RemoveBroadcastListener(NS_ConvertASCIItoUCS2("*"), xulListener->mListener);
+            mElement->RemoveBroadcastListener(NS_LITERAL_STRING("*"), xulListener->mListener);
         }
 
         delete mBroadcastListeners;

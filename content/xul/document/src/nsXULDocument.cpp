@@ -1639,7 +1639,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
         if (NS_FAILED(rv)) return rv;
 
-        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open.EqualsWithConversion("true"))) {
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (open == NS_LITERAL_STRING("true"))) {
             OpenWidgetItem(aElement);
         }
         else {
@@ -2276,7 +2276,7 @@ nsXULDocument::SetForm(nsIDOMHTMLFormElement* aForm)
 
     // Forms are containers, and as such take up a bit of space.
     // Set a style attribute to keep the hidden form from showing up.
-    mHiddenForm->SetAttribute(NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin:0em"));
+    mHiddenForm->SetAttribute(NS_LITERAL_STRING("style"), NS_LITERAL_STRING("margin:0em"));
     return NS_OK;
 }
 
@@ -3269,7 +3269,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
     // document's command dispatcher
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.EqualsWithConversion("true")) {
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value == NS_LITERAL_STRING("true")) {
         rv = gXULUtils->SetCommandUpdater(this, aElement);
         if (NS_FAILED(rv)) return rv;
     }
@@ -3339,7 +3339,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // element from the document's command dispatcher.
     nsAutoString value;
     rv = aElement->GetAttribute(kNameSpaceID_None, kCommandUpdaterAtom, value);
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value.EqualsWithConversion("true")) {
+    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value == NS_LITERAL_STRING("true")) {
         nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
         NS_ASSERTION(domelement != nsnull, "not a DOM element");
         if (! domelement)
@@ -3933,8 +3933,8 @@ nsXULDocument::Init()
 
         if (CommandDispatcher) {
             // Take the focus tracker and add it as an event listener for focus and blur events.
-            AddEventListener(NS_ConvertASCIItoUCS2("focus"), CommandDispatcher, PR_TRUE);
-            AddEventListener(NS_ConvertASCIItoUCS2("blur"), CommandDispatcher, PR_TRUE);
+            AddEventListener(NS_LITERAL_STRING("focus"), CommandDispatcher, PR_TRUE);
+            AddEventListener(NS_LITERAL_STRING("blur"), CommandDispatcher, PR_TRUE);
         }
     }
     // Get the local store. Yeah, I know. I wish GetService() used a
@@ -4708,7 +4708,7 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
       eViewSource);
 
-    nsAutoString charset(NS_ConvertASCIItoUCS2("UTF-8"));
+    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
     parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 
@@ -5045,7 +5045,7 @@ nsXULDocument::PrepareToWalk()
         SetRootContent(root);
 
         nsCOMPtr<nsINodeInfo> nodeInfo;
-        mNodeInfoManager->GetNodeInfo(NS_ConvertASCIItoUCS2("form"), nsnull,
+        mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("form"), nsnull,
                                       kNameSpaceID_HTML,
                                       *getter_AddRefs(nodeInfo));
         // Create the document's "hidden form" element which will wrap all
@@ -5472,7 +5472,6 @@ nsXULDocument::ResumeWalk()
 
         mPlaceholderChannel = nsnull;
     }
-
     return rv;
 }
 
@@ -5738,9 +5737,9 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
                 nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(result);
                 keyListener->Init(domElement, this);
 
-                AddEventListener(NS_ConvertASCIItoUCS2("keypress"), domEventListener, PR_FALSE);
-                AddEventListener(NS_ConvertASCIItoUCS2("keydown"),  domEventListener, PR_FALSE);
-                AddEventListener(NS_ConvertASCIItoUCS2("keyup"),    domEventListener, PR_FALSE);
+                AddEventListener(NS_LITERAL_STRING("keypress"), domEventListener, PR_FALSE);
+                AddEventListener(NS_LITERAL_STRING("keydown"),  domEventListener, PR_FALSE);
+                AddEventListener(NS_LITERAL_STRING("keyup"),    domEventListener, PR_FALSE);
             }
         }
     }
@@ -5847,12 +5846,12 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
 	// check for magical attributes
 	nsAutoString		attrib;
 	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kCoalesceAtom, attrib))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.EqualsWithConversion("false")))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib == NS_LITERAL_STRING("false")))
 	{
 		db->SetCoalesceDuplicateArcs(PR_FALSE);
 	}
 	if (NS_SUCCEEDED(rv = aElement->GetAttribute(kNameSpaceID_None, kAllowNegativesAtom, attrib))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib.EqualsWithConversion("false")))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrib == NS_LITERAL_STRING("false")))
 	{
 		db->SetAllowNegativeAssertions(PR_FALSE);
 	}
@@ -5899,7 +5898,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         first = last + 1;
 
         // A special 'dummy' datasource
-        if (uriStr.EqualsWithConversion("rdf:null"))
+        if (uriStr == NS_LITERAL_STRING("rdf:null"))
             continue;
 
         rv = rdf_MakeAbsoluteURI(docurl, uriStr);
