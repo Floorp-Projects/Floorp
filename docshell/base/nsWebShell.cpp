@@ -2269,13 +2269,14 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURL* aURL)
   aURL->GetSpec(&spec);
   nsString* newURL = (nsString*) new nsString(spec);
 
-  if (newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
+  if (newURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
     // Replace the top most history entry with the new url
     if (nsnull != historyURL) {
       delete historyURL;
     }
     mHistory.ReplaceElementAt(newURL, mHistoryIndex);
-  }
+  } else
+    delete newURL;
 
   return NS_OK;
 }
