@@ -104,6 +104,7 @@ function Startup()
     if (mapCollection[0] != null)
     {
       imageMap = mapCollection[0];
+      globalMap = imageMap;
       canRemoveImageMap = true;
       insertNewIMap = false;
       dump(imageMap.childNodes.length+"\n");
