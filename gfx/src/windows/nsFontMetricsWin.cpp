@@ -234,11 +234,41 @@ nscoord nsFontMetricsWin :: GetWidth(const char *aString)
   while ((ch = PRUint8(*aString++)) != 0) {
     sum += mCharWidths[ch];
   }
+
   return sum;
+}
+
+nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+{
+  char * str = aString.ToNewCString();
+  //if (str) {
+  //  nscoord width = GetWidth(str);
+  //  delete[] str;
+  //  return width;
+  //}
+  // Find font metrics and character widths
+  HWND win = (HWND)aContext->GetNativeWidget();
+  HDC  hdc = ::GetDC(win);
+  HFONT oldfont = ::SelectObject(hdc, (HGDIOBJ) mFontHandle);
+
+  SIZE size;
+
+  BOOL status = GetTextExtentPoint32(hdc, str, strlen(str), &size);
+
+  ::ReleaseDC(win, hdc);
+
+
+  float app2dev = aContext->GetAppUnitsToDevUnits();
+  float app2twip = app2dev * aContext->GetDevUnitsToTwips();
+  printf("[%s] %d  %d = %d\n", str, size.cx, nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips()), GetWidth(str));
+
+  delete[] str;
+  return nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips());
 }
 
 nscoord nsFontMetricsWin :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 {
+
   // XXX use native text measurement routine
   nscoord sum = 0;
   while (aLength != 0) {

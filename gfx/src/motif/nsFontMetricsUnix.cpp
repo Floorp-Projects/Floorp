@@ -308,6 +308,12 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
   return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
 }
 
+// XXX this needs to be implemented
+nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+{
+  return GetWidth(aString.GetUnicode(), aString.Length());
+}
+
 nscoord nsFontMetricsUnix :: GetHeight()
 {
   return mHeight;

@@ -60,6 +60,8 @@ public:
   //get the width of a Unicode character string
   virtual nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength) = 0;
 
+  virtual nscoord GetWidth(nsIDeviceContext *aContext, const nsString& aString) = 0;
+
   //get the height as this font
   virtual nscoord GetHeight() = 0;
 

@@ -297,6 +297,12 @@ nscoord nsFontMetricsMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
   return width;
 }
 
+// XXX this needs to be implemented correctly
+nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+{
+  return GetWidth(aString.GetUnicode(), aString.Length());
+}
+
 nscoord nsFontMetricsMac :: GetHeight()
 {
   //return mHeight;
