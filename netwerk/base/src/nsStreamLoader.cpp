@@ -47,7 +47,7 @@ nsStreamLoader::Init(nsIURI* aURL,
     // semantics of nsIStreamLoader
     nsresult rv2 = NS_OK;
     NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-                    kProxyObjectManagerCID, &rv);
+                    kProxyObjectManagerCID, &rv2);
     if (NS_FAILED(rv2)) return rv2;
 
     nsCOMPtr<nsIStreamLoaderObserver> pObserver;
