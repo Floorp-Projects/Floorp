@@ -608,9 +608,12 @@ ssm_GetSlotWithPwd(PK11SlotList * slotlist, PK11SlotListElement * current,
     next = PK11_GetFirstSafe(slotlist);
   else
     next = PK11_GetNextSafe(slotlist, current, PR_FALSE);
-  while (next && PK11_NeedUserInit(next->slot) && !PK11_NeedLogin(next->slot))
-    
+
+  while (next                          && 
+         PK11_NeedUserInit(next->slot) && 
+         !PK11_NeedLogin(next->slot)     )
     next = PK11_GetNextSafe(slotlist, next, PR_FALSE);
+
   return next;
 }
 
@@ -625,6 +628,55 @@ ssm_NumSlotsWithPassword(PK11SlotList * slotList)
     element = PK11_GetNextSafe(slotList, element,PR_FALSE);
   }
   return numslots;
+}
+
+char*
+SSM_GetSlotNameForPasswordChange(HTTPRequest * req)
+{
+    PK11SlotList *slotList = NULL;
+    PK11SlotInfo *slot=NULL;
+    PK11SlotListElement *listElem = NULL;
+    SSMResource *target;
+    char *slotName=NULL;
+    SSMStatus rv;
+    
+    slotName = NULL;
+    target = REQ_TARGET(req);
+    slotList = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_TRUE, 
+                                 PR_TRUE, target);
+    if (!slotList || !slotList->head)
+      goto loser;
+    if (ssm_NumSlotsWithPassword(slotList)>1) {
+      char * mech = PR_smprintf("mech=%d&unused1=unused1&unused2=unused2",
+                                CKM_INVALID_MECHANISM);
+      SSM_LockUIEvent(target);
+      rv = SSMControlConnection_SendUIEvent(req->ctrlconn,
+                                            "get", "select_token",
+                                            target,mech,
+                                            &target->m_clientContext, 
+                                              PR_TRUE);
+      SSM_WaitUIEvent(target, PR_INTERVAL_NO_TIMEOUT);
+      slot = (PK11SlotInfo *) target->m_uiData;
+      if (!slot) 
+        goto loser;
+    } else {
+      listElem = ssm_GetSlotWithPwd(slotList, NULL, PR_TRUE);
+      slot = listElem->slot;
+    }
+
+    if (!slot) {
+      goto loser;
+    }
+    slotName = PK11_GetTokenName(slot);
+    PK11_FreeSlot(slot);
+    PK11_FreeSlotList(slotList);
+    return PL_strdup(slotName);
+ loser:
+    if (slot)
+      PK11_FreeSlot(slot);
+    if (slotList)
+      PK11_FreeSlotList(slotList);
+    return NULL;
 }
 
 SSMStatus SSM_ReSetPasswordKeywordHandler(SSMTextGenContext * cx)
@@ -646,27 +698,15 @@ SSMStatus SSM_ReSetPasswordKeywordHandler(SSMTextGenContext * cx)
   if (!slotname || strcmp(slotname, "")== 0) 
     slot = PK11_GetInternalKeySlot();
   else if (strcmp(slotname, "all") == 0) {
-    /* ask user */
-    slotList = PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_TRUE, PR_TRUE, target);
-    if (!slotList || !slotList->head)
-      goto loser;
-    if (ssm_NumSlotsWithPassword(slotList)>1) {
-      char * mech = PR_smprintf("mech=%d&unused1=unused1&unused2=unused2",CKM_INVALID_MECHANISM);
-      SSM_LockUIEvent(target);
-      rv = SSMControlConnection_SendUIEvent(cx->m_request->ctrlconn,
-                                            "get", "select_token",
-                                            target,mech,
-                                            &target->m_clientContext, PR_TRUE);
-      SSM_WaitUIEvent(target, PR_INTERVAL_NO_TIMEOUT);
-      slot = (PK11SlotInfo *) target->m_uiData;
-      if (!slot) 
+      char *userSlotName = NULL;
+
+      /* ask user */
+      userSlotName = SSM_GetSlotNameForPasswordChange(cx->m_request);
+      if (!userSlotName) 
         goto cancel;
-    } else {
-      /* only one interesting slot in the list */
-      el = ssm_GetSlotWithPwd(slotList, NULL, PR_TRUE);
-      slot = el->slot;
-    }
-  }
+      slot = PK11_FindSlotByName(userSlotName);
+      PR_Free(userSlotName);
+  } 
   else 
     slot = PK11_FindSlotByName(slotname);
   if (!slot) {
@@ -923,6 +963,8 @@ SSMStatus SSM_ProcessPasswordWindow(HTTPRequest * req)
 {
   SSMStatus rv = SSM_FAILURE;
   SSMResource * target = NULL;
+  char *slotName = NULL, *slotHTMLName = NULL;
+  char *extraParams = NULL;
   
   if (!req || !req->ctrlconn) 
     goto loser;
@@ -932,18 +974,32 @@ SSMStatus SSM_ProcessPasswordWindow(HTTPRequest * req)
    */
   rv = SSM_HTTPReportError(req, HTTP_NO_CONTENT);
   target = (req->target ? req->target : (SSMResource *) req->ctrlconn);
+  /* First let's figure out if there are more than one token installed,
+   * if so ask the user which one to change the password on
+   */
+  slotName = SSM_GetSlotNameForPasswordChange(req);
   /* send UI event to bring up the dialog */
-  SSM_LockUIEvent(&req->ctrlconn->super.super);
+  if (slotName == NULL) {
+    goto loser;
+  }
+  slotHTMLName = SSM_ConvertStringToHTMLString(slotName);
+  PR_FREEIF(slotName);
+  if (slotHTMLName == NULL) {
+    goto loser;
+  }
+  extraParams = PR_smprintf("slot=%s&mech=1", slotHTMLName);
+  SSM_LockUIEvent(target);
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
                                         "set_password", target, 
-                                        "slot=all&mech=1", 
+                                        extraParams, 
                                         &target->m_clientContext,
                                         PR_TRUE);
+  PR_FREEIF(extraParams);
   if (rv != SSM_SUCCESS) { 
     SSM_UnlockUIEvent(&req->ctrlconn->super.super);
     goto loser;
   }
-  SSM_WaitUIEvent(&req->ctrlconn->super.super, PR_INTERVAL_NO_TIMEOUT);
+  SSM_WaitUIEvent(target, PR_INTERVAL_NO_TIMEOUT);
  loser:
   return rv;
 }
