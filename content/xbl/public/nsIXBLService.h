@@ -55,6 +55,9 @@ public:
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushStyleBindings(nsIContent* aContent) = 0;
 
+  // This method loads a binding doc and then builds the specific binding required.
+  NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult) = 0;
+
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
   NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement, 

@@ -52,6 +52,7 @@
 
 #include "nsIXULContentUtils.h"
 #include "nsIXULPrototypeCache.h"
+#include "nsIXBLStreamListener.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -62,40 +63,118 @@ static NS_DEFINE_CID(kChromeRegistryCID,          NS_CHROMEREGISTRY_CID);
 // Individual binding requests.
 struct nsXBLBindingRequest
 {
-  nsCOMPtr<nsIURL> mURL;
+  nsCString mBindingURL;
+  nsCOMPtr<nsIContent> mBoundElement;
+
+  nsXBLBindingRequest(const nsCString& aURL, nsIContent* aBoundElement)
+  {
+    mBindingURL = aURL;
+    mBoundElement = aBoundElement;
+
+    gRefCnt++;
+    if (gRefCnt == 1) {
+      nsServiceManager::GetService("component://netscape/xbl",
+                                   NS_GET_IID(nsIXBLService),
+                                   (nsISupports**) &gXBLService);
+    }
+  }
+
+  ~nsXBLBindingRequest()
+  {
+    gRefCnt--;
+    if (gRefCnt == 0) {
+      nsServiceManager::ReleaseService("component://netscape/xbl", gXBLService);
+      gXBLService = nsnull;
+    }
+  }
+
+  void DocumentLoaded(nsIDocument* aBindingDoc)
+  {
+    // Get the binding.
+    nsCOMPtr<nsIXBLBinding> newBinding;
+    gXBLService->GetBinding(mBoundElement, mBindingURL, getter_AddRefs(newBinding));
+
+    // XXX Deal with layered bindings.
+    // XXX Deal with cross-site inheritance (e.g., http://a/a.xml inheriting from http://b/b.xml)
+    // Install the binding on the content node.
+    nsCOMPtr<nsIDocument> doc;
+    mBoundElement->GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      return;
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    doc->GetBindingManager(getter_AddRefs(bindingManager));
+    bindingManager->SetBinding(mBoundElement, newBinding);
+
+    // Set the binding's bound element.
+    newBinding->SetBoundElement(mBoundElement);
+
+    // Tell the binding to build the anonymous content.
+    newBinding->GenerateAnonymousContent(mBoundElement);
+
+    // Tell the binding to install event handlers
+    nsCOMPtr<nsIXBLBinding> attachReq;
+    newBinding->InstallEventHandlers(mBoundElement, getter_AddRefs(attachReq));
+
+    // Set up our properties
+    newBinding->InstallProperties(mBoundElement);
+
+    if (attachReq) {
+      attachReq->ExecuteAttachedHandler();
+    }
+
+    // Now do a ContentInserted notification to cause the frames to get installed finally,
+    nsCOMPtr<nsIContent> parent;
+    mBoundElement->GetParent(*getter_AddRefs(parent));
+    PRInt32 index = 0;
+    if (parent)
+      parent->IndexOf(mBoundElement, index);
+    if (index == -1)
+      return;
+    doc->ContentInserted(parent, mBoundElement, index);
+  }
+
+  static nsIXBLService* gXBLService;
+  static int gRefCnt;
 };
+
+nsIXBLService* nsXBLBindingRequest::gXBLService = nsnull;
+int nsXBLBindingRequest::gRefCnt = 0;
 
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
 /* Header file */
-class nsXBLStreamListener : public nsIStreamListener
+class nsXBLStreamListener : public nsIStreamListener, public nsIXBLStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSISTREAMOBSERVER
 
-  nsXBLStreamListener(nsIStreamListener* aInner);
+  nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument* aDocument, nsIDocument* aBindingDocument);
   virtual ~nsXBLStreamListener();
-  /* additional members */
+  
+  void AddRequest(nsXBLBindingRequest* aRequest) { mBindingRequests.AppendElement(aRequest); };
+
+private:
   nsCOMPtr<nsIStreamListener> mInner;
-
   nsVoidArray mBindingRequests;
+  
   nsCOMPtr<nsIDocument> mDocument;
-
-  static nsIXBLService* gXBLService;
+  nsCOMPtr<nsIDocument> mBindingDocument;
 };
 
-nsIXBLService* nsXBLStreamListener::gXBLService = nsnull;
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS2(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_ISUPPORTS3(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver, nsIXBLStreamListener)
 
-nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner)
+nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument* aDocument,
+                                         nsIDocument* aBindingDocument)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   mInner = aInner;
+  mDocument = aDocument;
+  mBindingDocument = aBindingDocument;
 }
 
 nsXBLStreamListener::~nsXBLStreamListener()
@@ -117,16 +196,9 @@ nsXBLStreamListener::OnDataAvailable(nsIChannel* aChannel, nsISupports* aCtxt, n
 NS_IMETHODIMP
 nsXBLStreamListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aCtxt)
 {
-  nsresult rv;
-  if (mInner) {
-    rv = mInner->OnStartRequest(aChannel, aCtxt);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // 
-
-  }
-
+  if (mInner)
+    return mInner->OnStartRequest(aChannel, aCtxt);
+    
   return NS_ERROR_FAILURE;
 }
 
@@ -134,8 +206,39 @@ nsXBLStreamListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aCtxt)
 NS_IMETHODIMP 
 nsXBLStreamListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aCtxt, nsresult aStatus, const PRUnichar* aStatusArg)
 {
-  if (mInner)
-    return mInner->OnStopRequest(aChannel, aCtxt, aStatus, aStatusArg);
+  if (mInner) {
+    nsresult rv = mInner->OnStopRequest(aChannel, aCtxt, aStatus, aStatusArg);
+    if (NS_FAILED(rv))
+      return NS_ERROR_FAILURE;
+
+    // Remove ourselves from the set of pending docs.
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIURI> uri(mBindingDocument->GetDocumentURL());
+    nsXPIDLCString str;
+    uri->GetSpec(getter_Copies(str));
+    bindingManager->RemoveLoadingDocListener((const char*)str);
+
+    PRUint32 count = mBindingRequests.Count();
+    
+    if (NS_SUCCEEDED(aStatus)) {
+      // Put our doc in the doc table.
+      bindingManager->PutXBLDocument(mBindingDocument);
+
+      // Notify all pending requests that their bindings are
+      // ready and can be installed.
+      for (PRUint32 i = 0; i < count; i++) {
+        nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
+        req->DocumentLoaded(mBindingDocument);
+      }
+    }
+
+    for (PRUint32 i = 0; i < count; i++) {
+      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
+      delete req;
+    }
+  }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -560,7 +663,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsIContent* aBoundElement, const nsCStrin
 
   nsCOMPtr<nsIDocument> doc;
   
-  GetBindingDocument(aBoundElement, uri, getter_AddRefs(doc));
+  GetBindingDocument(aBoundElement, uri, ref, getter_AddRefs(doc));
   if (!doc)
     return NS_ERROR_FAILURE;
 
@@ -637,7 +740,8 @@ static PRBool IsChromeOrResourceURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aURLStr, nsIDocument** aResult)
+nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aURLStr, const nsCString& aRef,
+                                 nsIDocument** aResult)
 {
   nsresult rv;
 
@@ -660,53 +764,69 @@ nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aUR
     nsCOMPtr<nsIBindingManager> bindingManager;
     boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
     bindingManager->GetXBLDocument(aURLStr, getter_AddRefs(document));
-  }
-
-  if (!document) {
-    // XXX The third line of defense is to investigate whether or not the
-    // document is currently being loaded asynchronously.  If so, there's no
-    // document yet, but we need to glom on our request so that it will be
-    // processed whenever the doc does finish loading.
-
-    // Finally, if all lines of defense fail, we go and fetch the binding
-    // document.
-    nsCOMPtr<nsIURL> uri;
-    nsComponentManager::CreateInstance("component://netscape/network/standard-url",
-                                       nsnull,
-                                       NS_GET_IID(nsIURL),
-                                       getter_AddRefs(uri));
-    uri->SetSpec(aURLStr);
-
-    FetchBindingDocument(uri, getter_AddRefs(document));
-    if (document) {
-      // If the doc is a chrome URI, then we put it into the XUL cache.
-      PRBool cached = PR_FALSE;
-      if (IsChromeOrResourceURI(uri) && gXULUtils->UseXULCache()) {
-        cached = PR_TRUE;
-        gXULCache->PutXBLDocument(document);
-
-        // Cache whether or not this chrome XBL can execute scripts.
-        nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
-        if (NS_SUCCEEDED(rv) && reg) {
-          PRBool allow;
-          reg->AllowScriptsForSkin(uri, &allow);
-          if (!allow)
-            gXULCache->PutXBLDocScriptAccess(document);
-        }
-      }
-          
-      if (!cached) {
-        // Otherwise we put it in our binding manager's document table.
-        nsCOMPtr<nsIDocument> boundDocument;
-        aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
-        nsCOMPtr<nsIBindingManager> bindingManager;
-        boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
-        bindingManager->PutXBLDocument(document);
+ 
+    if (!document) {
+      // The third line of defense is to investigate whether or not the
+      // document is currently being loaded asynchronously.  If so, there's no
+      // document yet, but we need to glom on our request so that it will be
+      // processed whenever the doc does finish loading.
+      nsCOMPtr<nsIXBLStreamListener> listener;
+      bindingManager->GetLoadingDocListener(aURLStr, getter_AddRefs(listener));
+      if (listener) {
+        // Create a new load observer.
+        nsCAutoString bindingURI(aURLStr);
+        bindingURI += "#";
+        bindingURI += aRef;
+        nsXBLBindingRequest* req = new nsXBLBindingRequest(aRef, aBoundElement);
+        nsIXBLStreamListener* ilist = listener.get();
+        nsXBLStreamListener* xblListener = NS_STATIC_CAST(nsXBLStreamListener*, ilist);
+        xblListener->AddRequest(req);
       }
     }
-    else return NS_OK;
+     
+    if (!document) {
+      // Finally, if all lines of defense fail, we go and fetch the binding
+      // document.
+      nsCOMPtr<nsIURL> uri;
+      nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+                                         nsnull,
+                                         NS_GET_IID(nsIURL),
+                                         getter_AddRefs(uri));
+      uri->SetSpec(aURLStr);
+      FetchBindingDocument(aBoundElement, uri, aRef, getter_AddRefs(document));
+   
+      if (document) {
+        // If the doc is a chrome URI, then we put it into the XUL cache.
+        PRBool cached = PR_FALSE;
+        if (IsChromeOrResourceURI(uri) && gXULUtils->UseXULCache()) {
+          cached = PR_TRUE;
+          gXULCache->PutXBLDocument(document);
+
+          // Cache whether or not this chrome XBL can execute scripts.
+          nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+          if (NS_SUCCEEDED(rv) && reg) {
+            PRBool allow;
+            reg->AllowScriptsForSkin(uri, &allow);
+            if (!allow)
+              gXULCache->PutXBLDocScriptAccess(document);
+          }
+        }
+        
+        if (!cached) {
+          // Otherwise we put it in our binding manager's document table.
+          nsCOMPtr<nsIDocument> boundDocument;
+          aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+          nsCOMPtr<nsIBindingManager> bindingManager;
+          boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          bindingManager->PutXBLDocument(document);
+        }
+      }
+    }
   }
 
+  if (!document)
+    return NS_OK;
+ 
   *aResult = document;
   NS_IF_ADDREF(*aResult);
 
@@ -714,7 +834,7 @@ nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aUR
 }
 
 NS_IMETHODIMP
-nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
+nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, nsIDocument** aResult)
 {
   // Initialize our out pointer to nsnull
   *aResult = nsnull;
@@ -749,8 +869,28 @@ nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
   nsCOMPtr<nsIHTTPChannel> http(do_QueryInterface(channel));
   if (http) {
     // Need to be asynchronous
-    nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener);
+    nsCOMPtr<nsIDocument> boundDoc;
+    aBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+    nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, boundDoc, doc);
     NS_ADDREF(xblListener);
+
+    // Add ourselves to the list of loading docs.
+    nsCOMPtr<nsIDocument> boundDocument;
+    aBoundElement->GetDocument(*getter_AddRefs(boundDocument));
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsXPIDLCString uri;
+    aURI->GetSpec(getter_Copies(uri));
+    bindingManager->PutLoadingDocListener((const char*)uri, xblListener);
+
+    // Add our request.
+    nsCAutoString bindingURI(uri);
+    bindingURI += "#";
+    bindingURI += aRef;
+    nsXBLBindingRequest* req = new nsXBLBindingRequest(bindingURI, aBoundElement);
+    xblListener->AddRequest(req);
+
+    // Now kick off the async read.
     http->AsyncRead(xblListener, nsnull);
     return NS_OK;
   }

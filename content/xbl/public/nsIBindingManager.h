@@ -37,6 +37,7 @@
 class nsIContent;
 class nsIXBLBinding;
 class nsIAtom;
+class nsIXBLStreamListener;
 
 // {55D70FE0-C8E5-11d3-97FB-00400553EEF0}
 #define NS_IBINDING_MANAGER_IID \
@@ -66,6 +67,9 @@ public:
   NS_IMETHOD PutXBLDocument(nsIDocument* aDocument) = 0;
   NS_IMETHOD GetXBLDocument(const nsCString& aURL, nsIDocument** aResult) = 0;
 
+  NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener* aListener) = 0;
+  NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIXBLStreamListener** aResult) = 0;
+  NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL)=0;
 };
 
 #endif // nsIBinding_Manager_h__

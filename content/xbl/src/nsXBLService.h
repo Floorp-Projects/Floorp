@@ -50,6 +50,9 @@ class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
   NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag,
                           nsIXBLBinding** aBinding);
 
+  // This method loads a binding doc and then builds the specific binding required.
+  NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
+
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushStyleBindings(nsIContent* aContent);
 
@@ -69,14 +72,12 @@ public:
   nsXBLService();
   virtual ~nsXBLService();
 
-  // This method loads a binding doc and then builds the specific binding required.
-  NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
-
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocument(nsIContent* aBoundElement, const nsCString& aURI, nsIDocument** aResult);
+  NS_IMETHOD GetBindingDocument(nsIContent* aBoundElement, const nsCString& aURI, const nsCString& aRef,
+                                nsIDocument** aResult);
 
   // This method synchronously loads and parses an XBL file.
-  NS_IMETHOD FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult);
+  NS_IMETHOD FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, nsIDocument** aResult);
 
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
