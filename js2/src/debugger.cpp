@@ -43,44 +43,32 @@ namespace Debugger {
 
     using namespace Interpreter;
 
-    enum ShellCommand {
-        ASSEMBLE,
-        AMBIGUOUS,
-        AMBIGUOUS2,
-        CONTINUE,
-        DISSASSEMBLE,
-        EXIT,
-        HELP,
-        LET,
-        PRINT,
-        REGISTER,
-        STEP,
-        COMMAND_COUNT
-    };    
-
+    /* keep in sync with list in debugger.h */
     static const char *shell_cmds[][3] = {
-        {"assemble", "    ", "nyi"},
-        {"ambiguous", "   ", "Test command for ambiguous command detection"},
-        {"ambiguous2", "  ", "Test command for ambiguous command detection"},
-        {"continue", "    ", "Continue execution until complete."},
-        {"dissassemble", "", "nyi"},
-        {"exit", "        ", "nyi"},
-        {"help", "        ", "Display this message."},
-        {"let", "         ", "Set a debugger environment variable."},
-        {"print", "       ", "nyi"},
-        {"register", "    ", "Show the value of a single register or all \
-registers, or set the value of a single register."},
-        {"step", "        ", "Execute the current opcode."},
+        {"assemble", "", 0},
+        {"ambiguous", "", "Test command for ambiguous command detection"},
+        {"ambiguous2", "", "Test command for ambiguous command detection"},
+        {"continue", "", "Continue execution until complete."},
+        {"dissassemble", "[start_pc] [end_pc]", "Dissassemble entire module, or subset of module."},
+        {"exit", "", 0},
+        {"help", "", "Display this message."},
+        {"istep", "", "Execute the current opcode and stop."},
+        {"let", "", "Set a debugger environment variable."},
+        {"print", "", 0},
+        {"register", "", "(nyi) Show the value of a single register or all registers, or set the value of a single register."},
+        {"step", "", "Execute the current JS statement and stop."},
         {0, 0} /* sentry */
     };
 
     enum ShellVariable {
-        TRACE,
+        TRACE_SOURCE,
+        TRACE_ICODE,
         VARIABLE_COUNT
     };
     
     static const char *shell_vars[][3] = {
-        {"trace", "", "(bool) always show opcode before execution."},
+        {"tracesource", "", "(bool) Show JS source while executing."},
+        {"traceicode", " ", "(bool) Show opcodes while executing."},
         {0, 0} /* sentry */
     };
     
@@ -139,27 +127,49 @@ registers, or set the value of a single register."},
         else
             return length + ambig_matches;
         
-    }
-    
-    
+    }    
 
     static void
     showHelp(Formatter &out)
     {
         int i;
         
+        out << "JavaScript 2.0 Debugger Help...\n\n";
+        
         for (i = 0; shell_cmds[i][0] != 0; i++)
-            out << shell_cmds[i][0]  << shell_cmds[i][1] << "\t" <<
-                shell_cmds[i][2] << "\n";
+        {
+            out << "Command : " << shell_cmds[i][0] << " " << 
+                shell_cmds[i][1] << "\n";
+
+            if (shell_cmds[i][2])
+                out << "Help    : " << shell_cmds[i][2] << "\n";
+            else
+                out << "Help    : (probably) Not Implemented.\n";
+        }
     }
+
+    static uint32
+    getClosestSourcePosForPC (Context *cx, InstructionIterator pc)
+    {
+        ICodeModule *iCode = cx->getICode();
+        
+        if (iCode->mInstructionMap->begin() == iCode->mInstructionMap->end())
+            NOT_REACHED ("Instruction map is empty, waah.");
+
+        InstructionMap::iterator pos_iter =
+            iCode->mInstructionMap->upper_bound (pc - iCode->its_iCode->begin());
+        if (pos_iter != iCode->mInstructionMap->begin())
+            --pos_iter;
     
+        return pos_iter->second;
+    }
+        
     void
     Shell::showSourceAtPC (Context *cx, InstructionIterator pc)
     {
         if (!mResolveFileCallback)
         {
-            mErr << 
-                "Source not available.  (Debugger not properly initialized.)\n";
+            mErr << "Source not available (Debugger was improperly initialized.)\n";
             return;
         }
 
@@ -172,22 +182,27 @@ registers, or set the value of a single register."},
             mErr << "Source not available.\n";
             return;
         }
-
-        InstructionMap::iterator pos_iter =
-            iCode->mInstructionMap->find (pc - iCode->its_iCode->begin());
-        if (pos_iter == iCode->mInstructionMap->end())
-        {
-            mErr << "Can't find that PC in the map.\n";
-            return;
-        }
         
-        uint32 lineNum = reader->posToLineNum (pos_iter->second);
+        uint32 pos = getClosestSourcePosForPC(cx, pc);
+        uint32 lineNum = reader->posToLineNum (pos);
         const char16 *lineBegin, *lineEnd;
 
-        reader->getLine (lineNum, lineBegin, lineEnd);
+        uint32 lineStartPos = reader->getLine (lineNum, lineBegin, lineEnd);
         String sourceLine (lineBegin, lineEnd);
         
-        mOut << fn << ":" << lineNum << "  " << sourceLine << "\n";
+        mOut << fn << ":" << lineNum << " " << sourceLine << "\n";
+
+        uint padding = fn.length() + (uint32)(lineNum / 10) + 3;
+        uint i;        
+
+        for (i = 0; i < padding; i++)
+            mOut << " ";
+        
+        padding = (pos - lineStartPos);
+        for (i = 0; i < padding; i++)
+            mOut << ".";
+        
+        mOut << "^\n";
         
     }
 
@@ -221,27 +236,34 @@ registers, or set the value of a single register."},
     void
     Shell::listen(Context* cx, Context::Event event)
     {
-
-        if (mTraceFlag)
-        {
-            showSourceAtPC (cx, cx->getPC());
-            showOpAtPC (cx, cx->getPC());
-        }
+        InstructionIterator pc = cx->getPC();
+        
+        if (mTraceSource)
+            showSourceAtPC (cx, pc);
+        if (mTraceICode)
+            showOpAtPC (cx, pc);
             
         if (!(mStopMask & event))
             return;
 
+        if ((mLastCommand == STEP) && (mLastICodeID == cx->getICode()->mID) &&
+            (mLastSourcePos == getClosestSourcePosForPC (cx, cx->getPC())))
+            /* we're in source-step mode, and the source position hasn't
+             * changed yet */
+            return;
+
+        if (!mTraceSource && !mTraceICode)
+            showSourceAtPC (cx, pc);
+                
         static String lastLine(widenCString("help\n"));
         String line;
         LineReader reader(mIn);
 
-        do {            
-            ICodeModule *iCode = cx->getICode();
-            InstructionIterator pc = cx->getPC();
-
-            stdOut << "jsd [pc:";
-            printFormat (stdOut, "%04X", (pc - iCode->its_iCode->begin()));
-            stdOut << "]> ";
+        do {
+            stdOut << "jsd";
+            if (mLastCommand != COMMAND_COUNT)
+                stdOut << " (" << shell_cmds[mLastCommand][0] << ") ";
+            stdOut << "> ";
         
             reader.readLine(line);
 
@@ -280,6 +302,7 @@ registers, or set the value of a single register."},
         match = matchElement (*cmd, shell_cmds, (size_t)COMMAND_COUNT);
         
         if (match <= (uint32)COMMAND_COUNT)
+        {
             switch ((ShellCommand)match)
             {
                 case COMMAND_COUNT:
@@ -323,7 +346,12 @@ registers, or set the value of a single register."},
                     break;
                     
             }
-        else
+
+            mLastSourcePos = getClosestSourcePosForPC (cx, cx->getPC());
+            mLastICodeID = cx->getICode()->mID;
+            mLastCommand = (ShellCommand)match;
+
+        } else
             mErr << "Ambiguous command '" << *cmd << "', " <<
                 (match - (uint32)COMMAND_COUNT + 1) << " similar commands.\n";
 
@@ -354,15 +382,28 @@ registers, or set the value of a single register."},
                     mErr << "Unknown variable '" << *varname << "'.\n";
                     break;
                     
-                case TRACE:
+                case TRACE_SOURCE:
                     t = &(lex.get(true));
                     if (t->hasKind(Token::assignment))
                         t = &(lex.get(true)); /* optional = */
 
                     if (t->hasKind(Token::True))
-                        mTraceFlag = true;
+                        mTraceSource = true;
                     else if (t->hasKind(Token::False))
-                        mTraceFlag = false;
+                        mTraceSource = false;
+                    else
+                        goto badval;
+                    break;
+
+                case TRACE_ICODE:
+                    t = &(lex.get(true));
+                    if (t->hasKind(Token::assignment))
+                        t = &(lex.get(true)); /* optional = */
+
+                    if (t->hasKind(Token::True))
+                        mTraceICode = true;
+                    else if (t->hasKind(Token::False))
+                        mTraceICode = false;
                     else
                         goto badval;
                     break;
@@ -381,7 +422,6 @@ registers, or set the value of a single register."},
     badval:
         mErr << "Invalid value for variable '" <<
             shell_vars[(ShellVariable)match][0] << "'\n";
-        
 
     }
     

@@ -45,9 +45,12 @@ namespace JavaScript {
 namespace Debugger {
 
     using namespace Interpreter;
+
+    class Shell;
     
     typedef const Reader *ResolveFileCallback (const String &fileName);
-    
+    typedef bool DebuggerCommandCallback (Shell &debugger, const Lexer &lex);
+
     class Breakpoint {
     public:
         /* representation of a breakpoint */
@@ -57,77 +60,51 @@ namespace Debugger {
         InstructionIterator getPC();
     };    
 
-    class ICodeDebugger {
-    public:
-        /**
-         * install an icdebugger on a context
-         */
-        static bool attachToContext (Context *aContext);
+    struct DebuggerCommand
+    {
+        DebuggerCommand(String aName, String aParamDesc, String aShortHelp,
+                        String aLongHelp = widenCString("No more help available."),
+                        DebuggerCommandCallback *aCommandFunction = 0) 
+            : mName(aName), mParamDesc(aParamDesc), mShortHelp(aShortHelp),
+              mLongHelp(aLongHelp), mCommandFunction(aCommandFunction) {}
 
-        /**
-         * detach an icdebugger from a context
-         */
-        static bool detachFromContext (Context *aContext);
+        String mName;
+        String mParamDesc;
+        String mShortHelp;
+        String mLongHelp;
+        DebuggerCommandCallback *mCommandFunction;
+    };
 
-        enum DebuggerAction {
-            /* step to next instruction */
-            STEP, 
-            /* step until current block returns or execution completes */
-            STEP_OUT,
-            /* execute next instruction, treat CALLs as a single instruction */
-            NEXT,
-            /* resume normal execution */
-            CONT,
-            /* restart the program from the top */
-            RUN,
-            /* clear current execution, prepare to step from top */
-            KILL
-        };
-
-        /**
-         * tell the debugger what to do when the debuggerCallback returns
-         */
-        void setNextAction (DebuggerAction aAction);
-
-        /**
-         * evaluate an expression within the current execution state
-         */
-        JSValue evaluate (ICodeModule *aICode);
-
-        /**
-         * create a break at a desired pc
-         */
-        Breakpoint *createBreakpoint (InstructionIterator aPC);
-        /**
-         * destroy a breakpoint
-         */
-        void destroyBreakpoint (Breakpoint *aBreak);        
-
-        /**
-         * get the current pc
-         */
-        InstructionIterator getPC() const;
-        /**
-         * set next statement to a desired pc, return the last pc
-         */
-        InstructionIterator setNextStatement(InstructionIterator aPC);
+    /* keep in sync with list in debugger.cpp */
+    enum ShellCommand {
+        ASSEMBLE,
+        AMBIGUOUS,
+        AMBIGUOUS2,
+        CONTINUE,
+        DISSASSEMBLE,
+        EXIT,
+        HELP,
+        ISTEP,
+        LET,
+        PRINT,
+        REGISTER,
+        STEP,
+        COMMAND_COUNT
+    };
         
-    }; /* class ICodeDebugger */
-
     class Shell : public Context::Listener {
     public:        
         Shell (World &aWorld, FILE *aIn, Formatter &aOut, Formatter &aErr,
                ResolveFileCallback *aCallback = 0) :
             mWorld(aWorld), mIn(aIn), mOut(aOut), mErr(aErr),
             mResolveFileCallback(aCallback), mStopMask(Context::EV_DEBUG),
-            mTraceFlag(true)
+            mTraceSource(false), mTraceICode(false), mLastSourcePos(0),
+            mLastICodeID(NotABanana), mLastCommand(COMMAND_COUNT)
         {
-            mDebugger = new ICodeDebugger();
         }
 
         ~Shell ()
         {
-            delete mDebugger;
         }
         
         ResolveFileCallback
@@ -158,6 +135,10 @@ namespace Debugger {
             return true;
         }
 
+        FILE *getIStream() { return mIn; }
+        Formatter &getOStream() { return mOut; }
+        Formatter &getEStream() { return mErr; }
+
     private:
         bool doCommand (Context *cx, const String &aSource);
         void doSetVariable (Lexer &lex);
@@ -170,9 +151,10 @@ namespace Debugger {
         FILE *mIn;
         Formatter &mOut, &mErr;
         ResolveFileCallback *mResolveFileCallback;
-        ICodeDebugger *mDebugger;
         uint32 mStopMask;
-        bool mTraceFlag;
+        bool mTraceSource, mTraceICode;
+        uint32 mLastSourcePos, mLastICodeID;
+        ShellCommand mLastCommand;
     };    
 
 } /* namespace Debugger */

@@ -23,7 +23,7 @@
 //
 
 #if 1
-//#define DEBUGGER_FOO
+#define DEBUGGER_FOO
 #define INTERPRET_INPUT
 #else
 #undef DEBUGGER_FOO
@@ -123,6 +123,7 @@ static JSValue print(const JSValues &argv)
 }
 
 
+#ifdef INTERPRET_INPUT
 static void genCode(Context &cx, StmtNode *p, const String &fileName)
 {
     ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
@@ -145,6 +146,7 @@ static void genCode(Context &cx, StmtNode *p, const String &fileName)
     delete icm;
     
 }
+#endif
 
 static void readEvalPrint(FILE *in, World &world)
 {
@@ -260,7 +262,7 @@ static void testCompile()
     StringAtom& printName = world.identifiers[widenCString("print")];
     glob.defineNativeFunction(printName, print);
 
-    for (int i = 0; i < sizeof(tests) / sizeof(char *); i++) {
+    for (uint i = 0; i < sizeof(tests) / sizeof(char *); i++) {
         String testScript = widenCString(tests[i]);
         Arena a;
         Parser p(world, a, testScript, widenCString("testCompile"));
@@ -286,17 +288,20 @@ static void testCompile()
 } /* namespace JavaScript */
 
 
-
+#if defined(XP_MAC) && !defined(XP_MAC_MPW)
 int main(int argc, char **argv)
 {
-  #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
-  #endif
+#else
+int main(int , char **)
+{
+#endif
+
     using namespace JavaScript;
     using namespace Shell;
-  #if 1
+#if 1
     testCompile();
-  #endif
+#endif
     readEvalPrint(stdin, world);
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);
