@@ -71,6 +71,7 @@ public:
   NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
   NS_IMETHOD RemoveItem(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
+  NS_IMETHOD SetNativeData(void* aData);
   NS_IMETHOD GetNativeData(void** aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);

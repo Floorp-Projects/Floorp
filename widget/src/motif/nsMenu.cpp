@@ -288,6 +288,11 @@ NS_METHOD nsMenu::RemoveAll()
   return NS_OK;
 }
 
+NS_METHOD nsMenu::SetNativeData(void * aData)
+{
+  return NS_OK;
+}
+
 NS_METHOD nsMenu::GetNativeData(void ** aData)
 {
   aData = (void **)mMenu;

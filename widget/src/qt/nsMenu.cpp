@@ -338,6 +338,11 @@ NS_METHOD nsMenu::RemoveAll()
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetNativeData(void * aData)
+{
+  return NS_OK;
+}
+
 NS_METHOD nsMenu::GetNativeData(void ** aData)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenu::GetNativeData()\n"));
