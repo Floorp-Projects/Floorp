@@ -48,6 +48,7 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kHTMLTextContentType = "text/html";
+static const char* kXMLTextContentType = "text/xml";
 static char* kVerificationDir = "c:/temp";
 
 static nsAutoString gEmpty;
@@ -442,6 +443,8 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
  */
 PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
   PRBool result=aContentType.Equals(kHTMLTextContentType);
+  if(!result)
+    result=aContentType.Equals(kXMLTextContentType);
   return result;
 }
 
@@ -454,6 +457,8 @@ PRBool CNavDTD::CanParse(nsString& aContentType, PRInt32 aVersion){
 eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
   if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
+    result=eValidDetect;
+  if(PR_TRUE==aType.Equals(kXMLTextContentType)) 
     result=eValidDetect;
   return result;
 }
