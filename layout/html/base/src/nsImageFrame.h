@@ -82,7 +82,7 @@ protected:
                             const nsPoint& aPoint,
                             nsPoint& aResult);
 
-  void GetAnchorHREF(nsString& aResult);
+  PRBool GetAnchorHREF(nsString& aResult);
 
   PRIntn GetSuppress();
 
