@@ -274,7 +274,7 @@ mySSLAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
     rv = SSL_AuthCertificate(arg, fd, checkSig, isServer);
 
     if (rv == SECSuccess) {
-	fputs("selfserv: -- SSL3: Certificate Validated.\n", stderr);
+	PRINTF("selfserv: -- SSL3: Certificate Validated.\n");
     } else {
     	int err = PR_GetError();
 	FPRINTF(stderr, "selfserv: -- SSL3: Certificate Invalid, err %d.\n%s\n", 
