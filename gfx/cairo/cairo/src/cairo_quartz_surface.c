@@ -35,7 +35,19 @@
 
 #include "cairoint.h"
 #include "cairo-quartz.h"
-#include "cairo-quartz-private.h"
+
+typedef struct cairo_quartz_surface {
+    cairo_surface_t base;
+
+    CGContextRef context;
+
+    int width;
+    int height;
+
+    cairo_image_surface_t *image;
+
+    CGImageRef cgImage;
+} cairo_quartz_surface_t;
 
 static void
 ImageDataReleaseFunc(void *info, const void *data, size_t size)

@@ -37,7 +37,6 @@
 #include <math.h>
 #include "cairo-atsui.h"
 #include "cairoint.h"
-#include "cairo-quartz-private.h"
 #include <iconv.h>
 
 typedef struct {
@@ -459,7 +458,6 @@ _cairo_atsui_font_show_glyphs(void *abstract_font,
     cairo_atsui_font_t *font = abstract_font;
     CGContextRef myBitmapContext;
     CGColorSpaceRef colorSpace;
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *)generic_surface;
     cairo_image_surface_t *destImageSurface;
     int i;
 
