@@ -338,7 +338,10 @@ nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
   NS_ENSURE_ARG(retval);
 
   GetIsAOLServer(&isAOLServer);
-  if (isAOLServer)
+  nsXPIDLCString hostName;
+  GetHostName(getter_Copies(hostName));
+
+  if (isAOLServer && ((const char *) hostName) && !nsCRT::strcmp(hostName, "imap.mail.aol.com"))
   {
     *retval = nsMsgImapDeleteModels::DeleteNoTrash;
     return NS_OK;

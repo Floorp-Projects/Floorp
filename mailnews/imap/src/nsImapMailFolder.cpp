@@ -3148,7 +3148,11 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
     {
       PRBool isAOLServer = PR_FALSE;
       imapServer->GetIsAOLServer(&isAOLServer);
-      if (isAOLServer)
+      nsCOMPtr<nsIMsgIncomingServer> incomingServer (do_QueryInterface(imapServer));
+      nsXPIDLCString hostName;
+      incomingServer->GetHostName(getter_Copies(hostName));
+      
+      if (isAOLServer && ((const char *) hostName) && !nsCRT::strcmp(hostName, "imap.mail.aol.com"))
       {
         nsXPIDLString folderName;
         GetName(getter_Copies(folderName));
