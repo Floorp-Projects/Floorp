@@ -695,6 +695,7 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
 NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
 {
    if (aTileRect.IsEmpty ())
@@ -703,6 +704,7 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    PRBool didTile = PR_FALSE;
    PRInt32 ImageWidth = mInfo->cx;
    PRInt32 ImageHeight = mInfo->cy;
+   PRBool padded = (aPadX || aPadY);
 
    // Get the scale - if greater than 1 then do slow tile which
    nsIDeviceContext *theDeviceContext;
@@ -724,7 +726,8 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
    // Can't tile with 8bit alpha masks because need access destination bitmap values
    if ((ImageWidth < DrawRect.width / 2 || ImageHeight < DrawRect.height / 2) &&
        (ImageWidth <= MAX_BUFFER_WIDTH) && (ImageHeight <= MAX_BUFFER_HEIGHT) &&
-        mAlphaDepth <= 1)
+       mAlphaDepth <= 1 &&
+       !padded)
    {
       nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
 
@@ -845,9 +848,9 @@ NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
       nscoord ScaledTileWidth = PR_MAX(PRInt32(ImageWidth*scale), 1);
       nscoord ScaledTileHeight = PR_MAX(PRInt32(ImageHeight*scale), 1);
 
-      for (PRInt32 y = y0; y < y1; y += ScaledTileHeight)
+      for (PRInt32 y = y0; y < y1; y += ScaledTileHeight + aPadY * scale)
       {
-        for (PRInt32 x = x0; x < x1;  x += ScaledTileWidth)
+        for (PRInt32 x = x0; x < x1;  x += ScaledTileWidth + aPadX * scale)
         {
           Draw(aContext, aSurface,
                0, 0, PR_MIN(ValidRect.width, x1 - x), PR_MIN(ValidRect.height, y1 - y),

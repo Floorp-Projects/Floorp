@@ -1332,6 +1332,7 @@ void nsImageXlib::TilePixmap(Pixmap src, Pixmap dest, PRInt32 aSXOffset,
 NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     nsDrawingSurface aSurface,
                                     PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                    PRInt32 aPadX, PRInt32 aPadY,
                                     const nsRect &aTileRect)
 {
   if (mPendingUpdate)
@@ -1382,7 +1383,7 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
    
-  if (partial || ((mAlphaDepth == 8) && mAlphaValid)) {
+  if (partial || ((mAlphaDepth == 8) && mAlphaValid) || (aPadX || aPadY)) {
     PRInt32 aY0 = aTileRect.y - aSYOffset,
             aX0 = aTileRect.x - aSXOffset,
             aY1 = aTileRect.y + aTileRect.height,
@@ -1394,8 +1395,8 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
     ((nsRenderingContextXlib&)aContext).SetClipRectInPixels(
       aTileRect, nsClipCombine_kIntersect, clipState);
     ((nsRenderingContextXlib&)aContext).UpdateGC();
-    for (PRInt32 y = aY0; y < aY1; y += mHeight)
-      for (PRInt32 x = aX0; x < aX1; x += mWidth)
+    for (PRInt32 y = aY0; y < aY1; y += mHeight + aPadY)
+      for (PRInt32 x = aX0; x < aX1; x += mWidth + aPadX)
         Draw(aContext,aSurface, x, y,
              PR_MIN(validWidth, aX1 - x),
              PR_MIN(validHeight, aY1 - y));

@@ -1663,6 +1663,7 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
 NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
 {
 #ifdef DEBUG_TILING
@@ -1715,7 +1716,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     return NS_OK;
   }
 
-  if (partial || (mAlphaDepth == 8)) {
+  if (partial || (mAlphaDepth == 8) || (aPadX || aPadY)) {
     PRInt32 aY0 = aTileRect.y - aSYOffset,
             aX0 = aTileRect.x - aSXOffset,
             aY1 = aTileRect.y + aTileRect.height,
@@ -1737,8 +1738,8 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 #ifdef DEBUG_TILING
       printf("Warning: using slow tiling\n");
 #endif
-      for (PRInt32 y = aY0; y < aY1; y += mHeight)
-        for (PRInt32 x = aX0; x < aX1; x += mWidth)
+      for (PRInt32 y = aY0; y < aY1; y += mHeight + aPadY)
+        for (PRInt32 x = aX0; x < aX1; x += mWidth + aPadX)
           Draw(aContext,aSurface, x,y,
                PR_MIN(validWidth, aX1-x),
                PR_MIN(validHeight, aY1-y));

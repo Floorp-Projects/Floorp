@@ -911,7 +911,16 @@ nsRenderingContextImpl::DrawTile(imgIContainer *aImage,
   GetDrawingSurface((void**)&surface);
   if (!surface) return NS_ERROR_FAILURE;
 
-  return img->DrawTile(*this, surface, xOffset, yOffset, dr);
+  /* bug 113561 - frame can be smaller than container */
+  nsRect iframeRect;
+  iframe->GetRect(iframeRect);
+  PRInt32 padx = width - iframeRect.width;
+  PRInt32 pady = height - iframeRect.height;
+
+  return img->DrawTile(*this, surface,
+                       xOffset - iframeRect.x, yOffset - iframeRect.y,
+                       padx, pady,
+                       dr);
 }
 
 NS_IMETHODIMP

@@ -797,6 +797,7 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aDestRect)
 {
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
@@ -810,13 +811,14 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   nsCOMPtr<nsIDeviceContext> theDeviceContext;
   HDC             theHDC;
   nscoord         ScaledTileWidth,ScaledTileHeight;
+  PRBool          padded = (aPadX || aPadY);
 
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
   // We can Progressive Double Blit if we aren't printing to a printer, and
   // we aren't in 256 color mode, and we don't have an unoptimized 8 bit alpha.
   if ((canRaster != DT_RASPRINTER) && (256 != mNumPaletteColors) &&
-      !(mAlphaDepth == 8 && !mIsOptimized))
+      !(mAlphaDepth == 8 && !mIsOptimized) && !padded)
     if (ProgressiveDoubleBlit(aSurface, aSXOffset, aSYOffset, aDestRect))
       return NS_OK;
 
@@ -865,7 +867,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   ScaledTileHeight = PR_MAX(PRInt32(mBHead->biHeight*scale), 1);
 
   // do alpha depth equal to 8 here.. this needs some special attention
-  if (mAlphaDepth == 8 && !mIsOptimized) {
+  if (mAlphaDepth == 8 && !mIsOptimized && !padded) {
     unsigned char *screenBits=nsnull,*adjAlpha,*adjImage,*adjScreen;
     HDC           memDC=nsnull;
     HBITMAP       tmpBitmap=nsnull,oldBitmap;
@@ -961,8 +963,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
 
   // if we got to this point.. everything else failed.. and the slow blit backstop
   // will finish this tiling
-  for (y=y0;y<y1;y+=ScaledTileHeight) {
-    for (x=x0;x<x1;x+=ScaledTileWidth) {
+  for (y=y0;y<y1;y+=ScaledTileHeight+aPadY*scale) {
+    for (x=x0;x<x1;x+=ScaledTileWidth+aPadX*scale) {
     Draw(aContext, aSurface,
          0, 0, PR_MIN(validWidth, x1-x), PR_MIN(validHeight, y1-y),
          x, y, PR_MIN(destScaledWidth, x1-x), PR_MIN(destScaledHeight, y1-y));
