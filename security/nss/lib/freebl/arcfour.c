@@ -355,7 +355,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 	register PRUint8 tmpj = cx->j;
 	unsigned int byteCount;
 	unsigned int bufShift, invBufShift;
-	unsigned int i;
+	int i;
 
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
@@ -398,7 +398,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 			ARCFOUR_NEXT_BYTE();
 			streamWord |= (WORD)(cx->S[t]) << 8*i;
 			mask |= MASK1BYTE << 8*i;
-		}
+		} /* } */
 		inWord = *pInWord++;
 		/* If buffers are relatively misaligned, shift the bytes in inWord
 		 * to be aligned to the output buffer.
@@ -514,7 +514,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 		ARCFOUR_NEXT_BYTE();
 		streamWord |= (WORD)(cx->S[t]) << 8*i;
 		mask |= MASK1BYTE << 8*i;
-	}
+	} /* } */
 	*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
 	cx->i = tmpi;
 	cx->j = tmpj;
