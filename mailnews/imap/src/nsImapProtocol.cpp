@@ -809,6 +809,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
           // open buffered, blocking output stream
           rv = m_transport->OpenOutputStream(nsITransport::OPEN_BLOCKING, 0, 0, getter_AddRefs(m_outputStream));
           if (NS_FAILED(rv)) return rv;
+          SetFlag(IMAP_CONNECTION_IS_OPEN);
         }
       }
     } // if m_runningUrl
@@ -1024,6 +1025,9 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
 
   if (m_currentServerCommandTagNumber > 0)
   {
+    if (TestFlag(IMAP_CONNECTION_IS_OPEN) && m_idle)
+      EndIdle();
+
     if (closeNeeded && GetDeleteIsMoveToTrash() &&
         TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
     {
