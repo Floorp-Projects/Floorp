@@ -191,7 +191,24 @@ nsTreeColFrame::AttributeChanged(nsPresContext* aPresContext,
                                              aNameSpaceID, aAttribute,
                                              aModType);
 
-  if (aAttribute == nsHTMLAtoms::width || aAttribute == nsHTMLAtoms::hidden) {
+  if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
+    EnsureColumns();
+    if (mColumns)
+      mColumns->InvalidateColumns();
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTreeColFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState,
+                          const nsRect& aRect,
+                          PRBool aRemoveOverflowArea) {
+  nscoord oldWidth = mRect.width;
+
+  nsresult rv = nsBoxFrame::SetBounds(aBoxLayoutState, aRect,
+                                      aRemoveOverflowArea);
+  if (mRect.width != oldWidth) {
     EnsureColumns();
     if (mColumns) {
       nsCOMPtr<nsITreeBoxObject> tree;
@@ -200,12 +217,6 @@ nsTreeColFrame::AttributeChanged(nsPresContext* aPresContext,
         tree->Invalidate();
     }
   }
-  else if (aAttribute == nsXULAtoms::ordinal || aAttribute == nsXULAtoms::primary) {
-    EnsureColumns();
-    if (mColumns)
-      mColumns->InvalidateColumns();
-  }
-
   return rv;
 }
 

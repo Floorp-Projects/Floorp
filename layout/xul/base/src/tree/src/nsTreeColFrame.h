@@ -69,6 +69,9 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                       PRBool aRemoveOverflowArea = PR_FALSE);
+
   friend nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
                                      nsIFrame** aNewFrame, 
                                      PRBool aIsRoot,
