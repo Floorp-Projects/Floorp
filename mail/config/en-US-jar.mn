@@ -26,7 +26,6 @@ locale/en-US/mozapps/contents.rdf,                        en-US/locale/en-US/moz
 
 locale/en-US/navigator/contents.rdf,                      en-US/locale/en-US/navigator/contents.rdf
 locale/en-US/navigator/navigator.properties,              en-US/locale/en-US/navigator/navigator.properties
-locale/en-US/navigator/viewSource.dtd,                    en-US/locale/en-US/navigator/viewSource.dtd
 
 #################################################################################################
 # global

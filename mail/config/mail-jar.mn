@@ -44,7 +44,6 @@ content/communicator/contentAreaDD.js,                comm/content/communicator/
 content/communicator/contentAreaClick.js,             comm/content/communicator/contentAreaClick.js 
 content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/contentAreaContextOverlay.xul 
 content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
-content/communicator/findUtils.js,                    comm/content/communicator/findUtils.js
 content/communicator/printPreviewBindings.xml,        comm/content/communicator/printPreviewBindings.xml
 content/communicator/printing.js,                     comm/content/communicator/printing.js
 content/communicator/XPCNativeWrapper.js,             comm/content/communicator/XPCNativeWrapper.js
@@ -90,9 +89,6 @@ content/mozldap,                                      comm/content/mozldap
 
 # from navigator
 content/navigator-region,                             comm/content/navigator-region
-content/navigator/viewSource.xul,                     comm/content/navigator/viewSource.xul
-content/navigator/viewsource.js,                      comm/content/navigator/viewsource.js
-content/navigator/contents.rdf,                       comm/content/navigator/contents.rdf
 
 # from xpinstall for theme installations
 content/communicator/xpinstall,                       comm/content/communicator/xpinstall
@@ -148,6 +144,13 @@ content/global/customizeToolbar.css,                  toolkit/content/global/cus
 content/global/customizeCharset.xul,                  toolkit/content/global/customizeCharset.xul
 content/global/customizeCharset.js,                   toolkit/content/global/customizeCharset.js
 content/global/viewZoomOverlay.js,                    toolkit/content/global/viewZoomOverlay.js
+content/global/viewSource.css,                        toolkit/content/global/viewSource.css
+content/global/viewSource.xul,                        toolkit/content/global/viewSource.xul
+content/global/viewSource.js,                         toolkit/content/global/viewSource.js
+content/global/findUtils.js,                          toolkit/content/global/findUtils.js
+content/global/printUtils.js,                         toolkit/content/global/printUtils.js
+content/global/editMenuOverlay.xul,                   toolkit/content/global/editMenuOverlay.xul
+content/global/editMenuOverlay.js,                    toolkit/content/global/editMenuOverlay.js
 
 #from mozapps
 content/mozapps/downloads,                            toolkit/content/mozapps/downloads
@@ -168,9 +171,6 @@ content/global/filepicker.xul,                        toolkit/content/global/fil
 # embedding\components\ui
 content/global/nsHelperAppDlg.xul,                    toolkit/content/global/nsHelperAppDlg.xul
 content/global/nsProgressDialog.xul,                  toolkit/content/global/nsProgressDialog.xul
-
-# from mozilla\toolkit
-content/global/widgets,                               toolkit/content/global/widgets
 
 #################################################################################################
 # Files we need from pipnss and pippki jars

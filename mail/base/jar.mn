@@ -15,6 +15,7 @@ messenger.jar:
 *+  content/messenger/msgHdrViewOverlay.xul         (content/msgHdrViewOverlay.xul)
 *+  content/messenger/msgMail3PaneWindow.js         (content/msgMail3PaneWindow.js)
 *+  content/messenger/mail3PaneWindowCommands.js    (content/mail3PaneWindowCommands.js)
+*+  content/messenger/mailCommands.js               (content/mailCommands.js)
 *+  content/messenger/mailCore.js                   (content/mailCore.js)
 *+  content/messenger/commandglue.js                (content/commandglue.js)
 *+  content/messenger/widgetglue.js                 (content/widgetglue.js)
@@ -98,9 +99,6 @@ classic.jar:
     skin/classic/messenger/icons/unreadmail.png            (skin/icons/unreadmail.png)
               
 comm.jar:
-*+  content/navigator/viewSource.xul                (content/viewSource.xul)
-+   content/navigator/contents.rdf                  (content/navigator.rdf)
-*+  content/communicator/askViewZoom.xul            (content/askViewZoom.xul)
     content/help/contents.rdf                       (content/help.rdf)
     content/help/contextHelp.js                     (content/contextHelp.js)
 *+  content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
