@@ -70,7 +70,7 @@ nsEventQueueImpl::nsEventQueueImpl()
 {
   NS_ADDREF_THIS();
   /* The slightly weird ownership model for eventqueues goes like this:
-   
+
      General:
        There's an addref from the factory generally held by whoever asked for
      the queue. The queue addrefs itself (right here) and releases itself
@@ -142,7 +142,7 @@ nsEventQueueImpl::~nsEventQueueImpl()
   }
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsEventQueueImpl::Init(PRBool aNative)
 {
   PRThread *thread = PR_GetCurrentThread();
@@ -150,34 +150,39 @@ nsEventQueueImpl::Init(PRBool aNative)
     mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", thread);
   else
     mEventQueue = PL_CreateMonitoredEventQueue("Thread event queue...", thread);
+  if (!mEventQueue)
+    return NS_ERROR_FAILURE;
   NotifyObservers(gActivatedNotification);
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsEventQueueImpl::InitFromPRThread(PRThread* thread, PRBool aNative)
 {
-  if (thread == NS_CURRENT_THREAD) 
+  if (thread == NS_CURRENT_THREAD)
   {
      thread = PR_GetCurrentThread();
   }
-  else if (thread == NS_UI_THREAD) 
+  else if (thread == NS_UI_THREAD)
   {
     nsCOMPtr<nsIThread>  mainIThread;
     nsresult rv;
-  
+
     // Get the primordial thread
     rv = nsIThread::GetMainThread(getter_AddRefs(mainIThread));
     if (NS_FAILED(rv)) return rv;
 
     rv = mainIThread->GetPRThread(&thread);
     if (NS_FAILED(rv)) return rv;
-  }  
+  }
 
   if (aNative)
     mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", thread);
   else
     mEventQueue = PL_CreateMonitoredEventQueue("Thread event queue...", thread);
+  if (!mEventQueue)
+    return NS_ERROR_FAILURE;
+
   NotifyObservers(gActivatedNotification);
   return NS_OK;
 }
@@ -254,12 +259,12 @@ nsEventQueueImpl::CheckForDeactivation()
 
 NS_IMETHODIMP
 nsEventQueueImpl::InitEvent(PLEvent* aEvent,
-                            void* owner, 
+                            void* owner,
                             PLHandleEventProc handler,
                             PLDestroyEventProc destructor)
 {
-	PL_InitEvent(aEvent, owner, handler, destructor);
-	return NS_OK;
+  PL_InitEvent(aEvent, owner, handler, destructor);
+  return NS_OK;
 }
 
 
@@ -393,7 +398,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
-  
+
   NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
 
   if (!correctThread)
@@ -480,24 +485,24 @@ nsEventQueueImpl::HandleEvent(PLEvent* aEvent)
 NS_IMETHODIMP
 nsEventQueueImpl::WaitForEvent(PLEvent** aResult)
 {
-    PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
-    NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
-    if (!correctThread)
-      return NS_ERROR_FAILURE;
+  PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
+  NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
+  if (!correctThread)
+    return NS_ERROR_FAILURE;
 
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
-  PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
-         ("EventQueue: wait for event [queue=%lx, accept=%d, could=%d]",
-         (long)mEventQueue,(int)mAcceptingEvents,(int)mCouldHaveEvents));
-  ++gEventQueueLogCount;
+PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+       ("EventQueue: wait for event [queue=%lx, accept=%d, could=%d]",
+       (long)mEventQueue,(int)mAcceptingEvents,(int)mCouldHaveEvents));
+++gEventQueueLogCount;
 #endif
-    *aResult = PL_WaitForEvent(mEventQueue);
-    CheckForDeactivation();
-    return NS_OK;
+  *aResult = PL_WaitForEvent(mEventQueue);
+  CheckForDeactivation();
+  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRInt32) 
-nsEventQueueImpl::GetEventQueueSelectFD() 
+NS_IMETHODIMP_(PRInt32)
+nsEventQueueImpl::GetEventQueueSelectFD()
 {
   return PL_GetEventQueueSelectFD(mEventQueue);
 }
