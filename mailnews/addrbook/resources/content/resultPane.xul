@@ -19,13 +19,14 @@
 <html:script language="javascript" src="chrome://addressbook/content/addressbook.js"/>
 
 
-<tree rdf:datasources="rdf:addressdirectory rdf:addresscard" id="resultTree" onclick="DisplayCardViewPane(event.target.parentNode)">
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
-  <treecol id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
-  <treecol id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
-  <treecol id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Organization"/>
-  <treecol id="NicknameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Nickname"/>
-  <treecol id="CityColumn" rdf:resource="http://home.netscape.com/NC-rdf#City"/>
+<tree rdf:datasources="rdf:addressdirectory rdf:addresscard" id="resultTree" 
+	  onclick="DisplayCardViewPane(event.target.parentNode)">
+  <treecol style="width:13%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
+  <treecol style="width:21%" id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
+  <treecol style="width:13%" id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+  <treecol style="width:20%" id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Organization"/>
+  <treecol style="width:13%" id="NicknameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Nickname"/>
+  <treecol style="width:20%" id="CityColumn" rdf:resource="http://home.netscape.com/NC-rdf#City"/>
   <treehead>
     <treeitem>
 		<treecell>&nameColumn.label;</treecell>

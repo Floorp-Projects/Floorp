@@ -10,6 +10,7 @@ tree {
  border-spacing: 0px;
  //border-collapse: collapse;
  width: 100%;
+ table-layout: fixed;
 }
 
 treeitem { 
@@ -24,20 +25,22 @@ treebody {
  display: table-row-group; 
 } 
 
+treeitem[selected="true"] { 
+ color: white;
+ background-color: #666699; 
+}
+
+treeitem[selected="false"] { 
+ color: green;
+}
+
 treecell { 
  display: table-cell; 
- color: black;
+ //color: black;
  font-family: Verdana;
  font-size: 10pt;
+ white-space: nowrap;
 } 
-
-treecell[selectedcell] { 
- background-color: blue; 
-} 
-
-treeitem[Status="new"] {
-	font-weight: bold;
-}
 
 treehead treeitem treecell { 
  font-size: 8pt;
@@ -51,5 +54,9 @@ treeitem > treecell > titledbutton {
  height: 16px;
  width: 16px;
  list-style-image: url("chrome://addressbook/skin/person.gif");
+}
+
+treecol {
+ display: table-column;
 }
 

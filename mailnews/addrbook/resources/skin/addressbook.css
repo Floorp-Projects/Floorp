@@ -55,3 +55,8 @@ spring[class="PromptEditSpacing"] {
 	width: 5px;
 }
 
+treeitem[selected="true"] { 
+ color: white;
+ background-color: #666699; 
+}
+

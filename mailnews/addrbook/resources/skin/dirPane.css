@@ -32,7 +32,8 @@ treecell {
 } 
 
 treecell[selectedcell] { 
- background-color: blue; 
+ color: white;
+ background-color: #666699; 
 } 
 
 treehead treeitem treecell { 
