@@ -273,6 +273,10 @@ pref("network.http.pipelining.maxrequests" , 4);
 pref("network.http.proxy.ssl.connect",true);
 // </ruslan>
 
+// until the directory view has an owner
+// necko will produce html -- dougt
+pref("network.dir.generate_html", true);
+
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
 // post to the server specified by this pref.
