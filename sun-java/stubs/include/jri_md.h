@@ -43,7 +43,7 @@
 #define JRI_MD_H
 
 #include <assert.h>
-#include "prtypes.h" /* Needed for HAS_LONG_LONG ifdefs & _declspec */
+#include "prtypes.h" /* Needed for HAS_LONG_LONG ifdefs */
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,11 +83,11 @@ extern "C" {
 #	include <windows.h>
 #	if defined(_MSC_VER) || defined(__GNUC__)
 #		if defined(WIN32) || defined(_WIN32)
-#			define JRI_PUBLIC_API(ResultType)	_declspec(dllexport) ResultType
-#			define JRI_PUBLIC_VAR(VarType)		VarType
-#			define JRI_PUBLIC_VAR_EXP(VarType)	_declspec(dllexport) VarType
-#			define JRI_PUBLIC_VAR_IMP(VarType)	_declspec(dllimport) VarType
-#			define JRI_NATIVE_STUB(ResultType)	_declspec(dllexport) ResultType
+#			define JRI_PUBLIC_API(ResultType)  __declspec(dllexport) ResultType
+#			define JRI_PUBLIC_VAR(VarType)	   VarType
+#			define JRI_PUBLIC_VAR_EXP(VarType) __declspec(dllexport) VarType
+#			define JRI_PUBLIC_VAR_IMP(VarType) __declspec(dllimport) VarType
+#			define JRI_NATIVE_STUB(ResultType) __declspec(dllexport) ResultType
 #			define JRI_CALLBACK
 #		else /* !_WIN32 */
 #		    if defined(_WINDLL)

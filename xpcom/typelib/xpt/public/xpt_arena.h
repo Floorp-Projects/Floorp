@@ -57,8 +57,8 @@
 #define XPT_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
 #else
 #ifdef _WIN32
-#    define XPT_PUBLIC_API(t)    _declspec(dllimport) t
-#    define XPT_PUBLIC_DATA(t)   _declspec(dllimport) t
+#    define XPT_PUBLIC_API(t)    __declspec(dllimport) t
+#    define XPT_PUBLIC_DATA(t)   __declspec(dllimport) t
 #else
 #    define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
 #    define XPT_PUBLIC_DATA(t)   t
