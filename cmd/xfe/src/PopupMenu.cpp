@@ -190,7 +190,9 @@ XFE_PopupMenu::XFE_PopupMenu(String			name,
 							 Widget			parent,
 							 MenuSpec *		spec,
 							 XFE_Component *cmdDispatcher)
-    : XFE_Menu(parent_frame,NULL,NULL, cmdDispatcher), XFE_PopupMenuBase(name,parent)
+  : XFE_Menu(parent_frame, (MenuSpec *) NULL,
+             (Widget) NULL, cmdDispatcher), 
+    XFE_PopupMenuBase(name,parent)
 {
     setBaseWidget(m_popup_menu);
 	setMenuSpec(spec);
