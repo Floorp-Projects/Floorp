@@ -37,9 +37,14 @@
 
 package org.mozilla.javascript;
 
-/*
- * @deprecated  As of Rhino 1.5 Release 4, use {@link WrapFactory}
- */
+/**
+@deprecated  As of Rhino 1.5 Release 4, use {@link WrapFactory}.
+Note that when extending {@link WrapFactory} you should call
+<code>super.wrap(...)</code> instead of returning null to get default behavior.
+You should also take into account that
+{@link WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class cls)}
+can be called when <code>obj == null</code>
+*/
 public interface WrapHandler {
 
     public Object wrap(Scriptable scope, Object obj, Class staticType);
