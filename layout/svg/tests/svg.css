@@ -1,0 +1,29 @@
+
+polygon {
+  color: black;
+}
+
+polygon[id="grid"] {
+  color: black;
+}
+
+polygon[id="bar1"] {
+  color: green;
+}
+
+polygon[id="rect"] {
+  color: blue;
+}
+
+polygon[id="bg"] {
+  color: #DDDDDD;
+}
+
+polygon[id="bar2"] {
+  color: #6F00DD;
+}
+
+polygon[id="poly"] {
+  color: #c0d0f0;
+}
+

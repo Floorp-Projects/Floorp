@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="svg.css" type="text/css"?>
+<!DOCTYPE svg SYSTEM "SVG-20000202.dtd" > 
+<!--<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 10 January 2000//EN" --> 
+<!--  "http://www.w3.org/Graphics/SVG/SVG-19991203.dtd"> --> 
+<svg xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.svg" 
+     xmlns:html="http://www.w3.org/TR/REC-html40">
+
+  <html:script>
+<![CDATA[
+function moveit(node)
+{
+  var elementName = "rect";
+  var node = findNode(document.documentElement, elementName);
+  dump("Node: "+node+"\n");
+
+  //var node = document.getContentById("rect");
+  dump("-----------\n"+node.x);
+  node.x = 10;
+  //node.y = "10";
+  //node.points = "10 10";
+}
+
+function findNode(node, nodename)
+{
+  var type = node.nodeType;
+  if (type == Node.ELEMENT_NODE) {
+
+      // open tag
+      //dump("\<" + node.tagName);
+
+      // dump the attributes if any
+      attributes = node.attributes;
+      if (null != attributes) {
+        var countAttrs = attributes.length;
+        var index = 0;
+        while(index < countAttrs) {
+          att = attributes[index];
+          if (null != att) {
+            //dump(" " + att.name + "=" + att.value+" ["+nodename+"]\n");
+            if (att.name == "id" && att.value == nodename) {
+              //dump("Found it!\n");
+              return node;
+            }
+          }
+          index++;
+        }
+      }
+
+      // recursively dump the children
+      if (node.hasChildNodes()) {
+	      // close tag
+        //dump(">");
+
+        // get the children
+        var children = node.childNodes;
+        var length = children.length;
+        var count = 0;
+        while(count < length) {
+          child = children[count];
+          fndNode = findNode(child, nodename);
+          if (fndNode != null) {
+            return fndNode;
+          }
+          count++;
+        }
+        //dump("</" + node.tagName + ">");
+      } else {
+	      // close tag
+        //dump("/>");
+      }
+
+      
+  }
+  // if it's a piece of text just dump the text
+  else if (type == Node.TEXT_NODE) {
+      //dump(node.data);
+  }
+  return null;
+}
+
+]]>
+  </html:script>	
+
+  <g>
+
+    <polygon x="200" y="10" id="rect" points="10 10 50 10 50 50"/> 
+    <polygon x="200" y="40" id="poly" points="10 10 50 10 50 50 45 70 32 32 80 20"/> 
+    <polyline x="200" y="80" id="poly" points="10 10 50 10 50 50 45 70 32 32 80 20"/> 
+
+    <polyline x="55" y="10" id="bg" points="20 0 220 0 220 200 20 200"/> 
+    <polyline x="55" y="10" id="bg" points="20 0 20 200 0 220 0 20 0 20  20 0"/> 
+    <polyline x="55" y="10" id="bg" points="20 200 220 200 200 220 0 220"/> 
+
+    <polyline x="55" y="10" id="grid" points="20 0 220 0 220 200 20 200"/> 
+    <polyline x="55" y="10" id="grid" points="20 0 20 200 0 220 0 20 0 20"/> 
+    <polyline x="55" y="10" id="grid" points="20 200 220 200 200 220 0 220"/> 
+
+    <polyline x="55" y="10" id="grid" points="20  220 40  200  40   0"/> 
+    <polyline x="55" y="10" id="grid" points="40  220 60  200  60   0"/> 
+    <polyline x="55" y="10" id="grid" points="60  220 80  200  80   0"/> 
+    <polyline x="55" y="10" id="grid" points="80  220 100 200  100  0"/> 
+    <polyline x="55" y="10" id="grid" points="100 220 120 200  120  0"/> 
+    <polyline x="55" y="10" id="grid" points="120 220 140 200  140  0"/> 
+    <polyline x="55" y="10" id="grid" points="140 220 160 200  160  0"/> 
+    <polyline x="55" y="10" id="grid" points="160 220 180 200  180  0"/> 
+    <polyline x="55" y="10" id="grid" points="180 220 200 200  200  0"/> 
+
+    <polygon x="55" y="10" id="bar1" points="30 60 30 210 50 210 50 60"/> 
+    <polygon x="55" y="10" id="bar1" points="30 60 50 60 60 50 40 50"/> 
+    <polygon x="55" y="10" id="bar1" points="50 60 60 50 60 200 50 210"/> 
+
+    <polyline x="55" y="10" id="grid" points="30 60 30 210 50 210 50 60"/> 
+    <polyline x="55" y="10" id="grid" points="30 60 50 60 60 50 40 50"/> 
+    <polyline x="55" y="10" id="grid" points="50 60 60 50 60 200 50 210"/> 
+
+
+    <polygon x="75" y="10" id="bar2" points="30 80 30 210 50 210 50 80"/> 
+    <polygon x="75" y="10" id="bar2" points="30 80 50 80  60 70  40 70"/> 
+    <polygon x="75" y="10" id="bar2" points="50 80 60 70  60 200 50 210"/> 
+
+    <polyline x="75" y="10" id="grid" points="30 80 30 210 50 210 50 80"/> 
+    <polyline x="75" y="10" id="grid" points="30 80 50 80  60 70  40 70"/> 
+    <polyline x="75" y="10" id="grid" points="50 80 60 70  60 200 50 210"/> 
+  </g>
+  <foreignobject>
+    <html:div style="position:absolute;top:5px;left:385px;">Simple Polygons</html:div>
+    <html:div style="position:absolute;top:250px;left:165px;">A Simple Graph</html:div>
+  </foreignobject>
+</svg> 
