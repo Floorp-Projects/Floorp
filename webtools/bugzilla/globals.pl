@@ -516,6 +516,17 @@ sub CanEnterProduct {
     return ($ret);
 }
 
+sub GetEnterableProducts {
+    my @products;
+    # XXX rewrite into pure SQL instead of relying on legal_products?
+    foreach my $p (@::legal_product) {
+        if (CanEnterProduct($p)) {
+            push @products, $p;
+        }
+    }
+    return (@products);
+}
+
 #
 # This function returns an alphabetical list of product names to which
 # the user can enter bugs.  If the $by_id parameter is true, also retrieves IDs

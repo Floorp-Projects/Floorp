@@ -875,7 +875,8 @@ if ($dotweak) {
     $vars->{'dotweak'} = 1;
     $vars->{'use_keywords'} = 1 if @::legal_keywords;
 
-    $vars->{'products'} = \@::legal_product;
+    my @enterable_products = GetEnterableProducts();
+    $vars->{'products'} = \@enterable_products;
     $vars->{'platforms'} = \@::legal_platform;
     $vars->{'priorities'} = \@::legal_priority;
     $vars->{'severities'} = \@::legal_severity;
