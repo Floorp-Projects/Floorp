@@ -1516,7 +1516,7 @@ function AttachPage()
 {
     if (promptService)
     {
-        var result = {value:0};
+        var result = {value:""};
         if (promptService.prompt(
         	window,
         	gComposeMsgsBundle.getString("attachPageDlogTitle"),
