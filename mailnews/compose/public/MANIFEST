@@ -28,3 +28,5 @@ nsISmtpUrl.h
 nsISmtpService.h
 MsgCompGlue.h
 nsIComposer.h
+nsIMsgSendLater.h
+nsIMsgSendLaterFact.h
