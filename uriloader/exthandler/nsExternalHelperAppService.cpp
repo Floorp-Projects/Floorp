@@ -90,7 +90,7 @@ static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closur
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
 {
   { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
-  { TEXT_HTML, "htm,html,shtml,ehtml", "Hyper Text Markup Language", 'TEXT', 'MOSS' },
+  { TEXT_HTML, "htm,html,shtml,ehtml", "HyperText Markup Language", 'TEXT', 'MOSS' },
   { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
   { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
   { TEXT_XML,          "xml,xsl", "Extensible Markup Language", 'TEXT', 'ttxt' },
