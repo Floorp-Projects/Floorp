@@ -124,10 +124,17 @@ interface nsIBaseWindow : nsISupports
 
 	/*
 	Convenience function combining the SetPosition and SetSize into one call.
+	Also is more efficient than calling both.
 	*/
 	void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
-		in boolean fRepaint); 
-
+		in boolean fRepaint);
+		
+	/*
+	Convenience function combining the GetPosition and GetSize into one call.
+	Also is more efficient than calling both.
+	*/
+	void getPositionAndSize(out long x, out long y, out long cx, out long cy);
+	 
 	/** 
 	 * Tell the window to repaint itself
 	 * @param aForce - if true, repaint immediately
