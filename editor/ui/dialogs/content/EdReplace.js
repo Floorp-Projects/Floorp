@@ -254,122 +254,136 @@ function onReplaceAll()
   finder.caseSensitive = gReplaceDialog.caseSensitive.checked;
   finder.findBackwards = gReplaceDialog.searchBackwards.checked;
 
-  // Make a range containing the current selection, 
-  // so we don't go past it when we wrap.
-  var selection = gEditor.selection;
-  var selecRange;
-  if (selection.rangeCount > 0)
-    selecRange = selection.getRangeAt(0);
-  var origRange = selecRange.cloneRange();
+  // We want the whole operation to be undoable in one swell foop,
+  // so start a transaction:
+  gEditor.beginTransaction();
 
-  // We'll need a range for the whole document:
-  var wholeDocRange = gEditor.document.createRange();
-  var rootNode = gEditor.rootElement.QueryInterface(Components.interfaces.nsIDOMNode);
-  wholeDocRange.selectNodeContents(rootNode);
-
-  // And start and end points:
-  var endPt = gEditor.document.createRange();
-
-  if (gReplaceDialog.searchBackwards.checked)
-  {
-    endPt.setStart(wholeDocRange.startContainer, wholeDocRange.startOffset);
-    endPt.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
-  }
-  else
-  {
-    endPt.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
-    endPt.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
-  }
-
-  // Find and replace from here to end (start) of document:
-  var foundRange;
-  var searchRange = wholeDocRange.cloneRange();
-  while ((foundRange = finder.Find(findStr, searchRange,
-                                   selecRange, endPt)) != null)
-  {
-    gEditor.selection.removeAllRanges();
-    gEditor.selection.addRange(foundRange);
-
-    // The editor will leave the caret at the end of the replaced text.
-    // For reverse finds, we need it at the beginning,
-    // so save the next position now.
-    if (gReplaceDialog.searchBackwards.checked)
-    {
-      selecRange = foundRange.cloneRange();
-      selecRange.setEnd(selecRange.startContainer, selecRange.startOffset);
-    }
-
-    // nsPlaintextEditor::InsertText fails if the string is empty,
-    // so make that a special case:
-    if (repStr == "")
-      gEditor.deleteSelection(0);
-    else
-      gEditor.insertText(repStr);
-
-    // If we're going forward, we didn't save selecRange before, so do it now:
-    if (!gReplaceDialog.searchBackwards.checked)
-    {
-      selection = gEditor.selection;
-      if (selection.rangeCount <= 0) {
-        return;
-      }
-      selecRange = selection.getRangeAt(0).cloneRange();
-    }
-  }
-
-  // If no wrapping, then we're done
-  if (!gReplaceDialog.wrap.checked)
-    return;
-
-  // If wrapping, find from start/end of document back to start point.
-  if (gReplaceDialog.searchBackwards.checked)
-  {
-    // Collapse origRange to end
-    origRange.setStart(origRange.endContainer, origRange.endOffset);
-    // Set current position to document end
-    selecRange.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
-    selecRange.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
-  }
-  else
-  {
-    // Collapse origRange to start
-    origRange.setEnd(origRange.startContainer, origRange.startOffset);
-    // Set current position to document start
-    selecRange.setStart(wholeDocRange.startContainer,
-                        wholeDocRange.startOffset);
-    selecRange.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
-  }
-
-  while ((foundRange = finder.Find(findStr, wholeDocRange,
-                                   selecRange, origRange)) != null)
-  {
-    gEditor.selection.removeAllRanges();
-    gEditor.selection.addRange(foundRange);
-
-    // Save insert point for backward case
-    if (gReplaceDialog.searchBackwards.checked)
-    {
-      selecRange = foundRange.cloneRange();
-      selecRange.setEnd(selecRange.startContainer, selecRange.startOffset);
-    }
-
-    // nsPlaintextEditor::InsertText fails if the string is empty,
-    // so make that a special case:
-    if (repStr == "")
-      gEditor.deleteSelection(0);
-    else
-      gEditor.insertText(repStr);
-
-    // Get insert point for forward case
-    if (!gReplaceDialog.searchBackwards.checked)
-    {
-      selection = gEditor.selection;
-      if (selection.rangeCount <= 0) {
-        return;
-      }
+  // and to make sure we close the transaction, guard against exceptions:
+  try {
+    // Make a range containing the current selection, 
+    // so we don't go past it when we wrap.
+    var selection = gEditor.selection;
+    var selecRange;
+    if (selection.rangeCount > 0)
       selecRange = selection.getRangeAt(0);
+    var origRange = selecRange.cloneRange();
+
+    // We'll need a range for the whole document:
+    var wholeDocRange = gEditor.document.createRange();
+    var rootNode = gEditor.rootElement.QueryInterface(Components.interfaces.nsIDOMNode);
+    wholeDocRange.selectNodeContents(rootNode);
+
+    // And start and end points:
+    var endPt = gEditor.document.createRange();
+
+    if (gReplaceDialog.searchBackwards.checked)
+    {
+      endPt.setStart(wholeDocRange.startContainer, wholeDocRange.startOffset);
+      endPt.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
     }
-  }
+    else
+    {
+      endPt.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
+      endPt.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
+    }
+
+    // Find and replace from here to end (start) of document:
+    var foundRange;
+    var searchRange = wholeDocRange.cloneRange();
+    while ((foundRange = finder.Find(findStr, searchRange,
+                                     selecRange, endPt)) != null)
+    {
+      gEditor.selection.removeAllRanges();
+      gEditor.selection.addRange(foundRange);
+
+      // The editor will leave the caret at the end of the replaced text.
+      // For reverse finds, we need it at the beginning,
+      // so save the next position now.
+      if (gReplaceDialog.searchBackwards.checked)
+      {
+        selecRange = foundRange.cloneRange();
+        selecRange.setEnd(selecRange.startContainer, selecRange.startOffset);
+      }
+
+      // nsPlaintextEditor::InsertText fails if the string is empty,
+      // so make that a special case:
+      if (repStr == "")
+        gEditor.deleteSelection(0);
+      else
+        gEditor.insertText(repStr);
+
+      // If we're going forward, we didn't save selecRange before, so do it now:
+      if (!gReplaceDialog.searchBackwards.checked)
+      {
+        selection = gEditor.selection;
+        if (selection.rangeCount <= 0) {
+          gEditor.endTransaction();
+          return;
+        }
+        selecRange = selection.getRangeAt(0).cloneRange();
+      }
+    }
+
+    // If no wrapping, then we're done
+    if (!gReplaceDialog.wrap.checked) {
+      gEditor.endTransaction();
+      return;
+    }
+
+    // If wrapping, find from start/end of document back to start point.
+    if (gReplaceDialog.searchBackwards.checked)
+    {
+      // Collapse origRange to end
+      origRange.setStart(origRange.endContainer, origRange.endOffset);
+      // Set current position to document end
+      selecRange.setEnd(wholeDocRange.endContainer, wholeDocRange.endOffset);
+      selecRange.setStart(wholeDocRange.endContainer, wholeDocRange.endOffset);
+    }
+    else
+    {
+      // Collapse origRange to start
+      origRange.setEnd(origRange.startContainer, origRange.startOffset);
+      // Set current position to document start
+      selecRange.setStart(wholeDocRange.startContainer,
+                          wholeDocRange.startOffset);
+      selecRange.setEnd(wholeDocRange.startContainer, wholeDocRange.startOffset);
+    }
+
+    while ((foundRange = finder.Find(findStr, wholeDocRange,
+                                     selecRange, origRange)) != null)
+    {
+      gEditor.selection.removeAllRanges();
+      gEditor.selection.addRange(foundRange);
+
+      // Save insert point for backward case
+      if (gReplaceDialog.searchBackwards.checked)
+      {
+        selecRange = foundRange.cloneRange();
+        selecRange.setEnd(selecRange.startContainer, selecRange.startOffset);
+      }
+
+      // nsPlaintextEditor::InsertText fails if the string is empty,
+      // so make that a special case:
+      if (repStr == "")
+        gEditor.deleteSelection(0);
+      else
+        gEditor.insertText(repStr);
+
+      // Get insert point for forward case
+      if (!gReplaceDialog.searchBackwards.checked)
+      {
+        selection = gEditor.selection;
+        if (selection.rangeCount <= 0) {
+          gEditor.endTransaction();
+          return;
+        }
+        selecRange = selection.getRangeAt(0);
+      }
+    }
+  } // end try
+  catch (e) { }
+
+  gEditor.endTransaction();
 }
 
 function doEnabling()
