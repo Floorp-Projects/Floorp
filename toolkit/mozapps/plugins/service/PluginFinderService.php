@@ -160,7 +160,7 @@ if ($mimetype == "application/x-mtx") {
   $licenseURL = "";
 }
 
-header("Content-type: text/xml");
+header("Content-type: application/xml");
 print "<?xml version=\"1.0\"?>\n";
 print "<RDF:RDF xmlns:RDF=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:pfs=\"http://www.mozilla.org/2004/pfs-rdf#\">\n\n";
 

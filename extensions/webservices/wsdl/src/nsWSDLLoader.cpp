@@ -294,7 +294,7 @@ nsWSDLLoadRequest::LoadDefinition(const nsAString& aURI)
   }
 
   // Force the mimetype of the returned stream to be xml.
-  rv = mRequest->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+  rv = mRequest->OverrideMimeType(NS_LITERAL_CSTRING("application/xml"));
   if (NS_FAILED(rv)) {
     return rv;
   }

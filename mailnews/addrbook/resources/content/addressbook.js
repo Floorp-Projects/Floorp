@@ -454,7 +454,7 @@ function AbPrintPreviewCard()
 
 function CreatePrintCardUrl(card)
 {
-  var url = "data:text/xml;base64," + card.convertToBase64EncodedXML();
+  var url = "data:application/xml;base64," + card.convertToBase64EncodedXML();
   return url;
 }
 

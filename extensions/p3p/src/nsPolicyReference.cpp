@@ -245,7 +245,7 @@ nsPolicyReference::Load(const nsACString& aURI)
                                         aURI, PR_TRUE, empty, empty);
   NS_ENSURE_SUCCESS(result, result);
    
-  mXMLHttpRequest->OverrideMimeType(NS_LITERAL_CSTRING("text/xml"));
+  mXMLHttpRequest->OverrideMimeType(NS_LITERAL_CSTRING("application/xml"));
 
   return mXMLHttpRequest->Send(nsnull);
 

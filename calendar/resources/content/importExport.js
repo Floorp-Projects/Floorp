@@ -968,7 +968,7 @@ function parseIcalToDos( icalStr )
 function transformXCSData( xcsString )
 {
    var gParser = new DOMParser;
-   var xmlDocument = gParser.parseFromString(xcsString, 'text/xml');   
+   var xmlDocument = gParser.parseFromString(xcsString, 'application/xml');   
 
    return serializeDocument(xmlDocument, "xcs2ics.xsl");
 }
@@ -1660,8 +1660,8 @@ function xslt(xmlUri, xslUri)
    var xmlDoc = document.implementation.createDocument("", "", null);
    var xslDoc = document.implementation.createDocument("", "", null);
 
-   xmlDoc.load(xmlUri, "text/xml");
-   xslDoc.load(xslUri, "text/xml");
+   xmlDoc.load(xmlUri, "application/xml");
+   xslDoc.load(xslUri, "application/xml");
    xslProc.transformDocument(xmlDoc, xslDoc, result, null);
 
    return result;
@@ -1722,14 +1722,14 @@ function transformXML( xmlDocument, xslFilename )
    var gParser = new DOMParser;
    // .load isn't synchrone
    // var xslDoc = document.implementation.createDocument("", "", null);
-   // xslDoc.load(path, "text/xml");
+   // xslDoc.load(path, "application/xml");
 
    // if only passsed a filename, assume it is a file in the default directory
    if( xslFilename.indexOf( ":" ) == -1 )
      xslFilename = convertersDirectory + xslFilename;
 
    var xslContent = loadFile( xslFilename );
-   var xslDocument = gParser.parseFromString(xslContent, 'text/xml');
+   var xslDocument = gParser.parseFromString(xslContent, 'application/xml');
    var result = document.implementation.createDocument("", "", null);
 
    xslProc.transformDocument(xmlDocument, xslDocument, result, null);
@@ -1778,7 +1778,7 @@ function serializeDocument( xmlDocument, stylesheet )
 function deserializeDocument(text, stylesheet )
 {
    var gParser = new DOMParser;
-   var xmlDocument = gParser.parseFromString(text, 'text/xml');
+   var xmlDocument = gParser.parseFromString(text, 'application/xml');
 }
 
 /** PRIVATE
@@ -1986,7 +1986,7 @@ function getXmlDocument ( eventList )
     // use the domparser to create the XML 
     var domParser = new DOMParser;
     // start with one tag
-    var xmlDocument = domParser.parseFromString( "<libical/>", "text/xml" );
+    var xmlDocument = domParser.parseFromString( "<libical/>", "application/xml" );
     
     // get the top tag, there will only be one.
     var topNodeList = xmlDocument.getElementsByTagName( "libical" );

@@ -805,7 +805,7 @@ var gFeedSubscriptionsWindow = {
 
     var text = file.read();  
     var parser = new DOMParser();
-    var opmlDom = parser.parseFromString(text, 'text/xml');
+    var opmlDom = parser.parseFromString(text, 'application/xml');
 
     // return if the user didn't give us an OPML file
     if(!opmlDom || !(opmlDom.documentElement.tagName == "opml"))
