@@ -1029,8 +1029,9 @@ nsresult
 nsCachedNetData::Evict(PRUint32 aTruncatedContentLength)
 {
     nsCOMPtr<nsINetDataCacheRecord> record;
-    GetRecord(getter_AddRefs(record));
-
+    nsresult rv = GetRecord(getter_AddRefs(record));
+		if ( NS_FAILED( rv ) ) return rv;
+		if ( record.get() == NULL ) return NS_ERROR_FAILURE;
     // Tell observers about the eviction, so that they can release their
     // references to this cache object.
     Notify(nsIStreamAsFileObserver::REQUEST_DELETION, NS_OK);
