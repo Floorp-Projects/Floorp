@@ -85,9 +85,12 @@ function toggleAffectedChrome(aHide)
   //   (*) personal toolbar
   //   (*) tab browser ``strip''
   //   (*) sidebar
+  //   (*) statusbar
 
   if (!gChromeState)
     gChromeState = new Object;
+
+  var statusbar = document.getElementById("status-bar");
   var navToolbox = document.getElementById("navigator-toolbox");
   navToolbox.hidden = aHide;
   var theTabbrowser = document.getElementById("content"); 
@@ -111,20 +114,29 @@ function toggleAffectedChrome(aHide)
     }
     document.getElementById("sidebar-box").hidden = true;
     document.getElementById("sidebar-splitter").hidden = true;
-    //deal with tab browser
+
+    // deal with tab browser
     gChromeState.hadTabStrip = theTabbrowser.getStripVisibility();
     theTabbrowser.setStripVisibilityTo(false);
+
+    // deal with the Status Bar
+    gChromeState.statusbarWasHidden = statusbar.hidden;
+    statusbar.hidden = true;
   }
   else
   {
     // restoring normal mode (i.e., leaving print preview mode)
-    //restore tab browser
-    theTabbrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
     if (gChromeState.sidebar == "was-collapsed" ||
         gChromeState.sidebar == "was-visible")
       document.getElementById("sidebar-splitter").hidden = false;
     if (gChromeState.sidebar == "was-visible")
       document.getElementById("sidebar-box").hidden = false;
+
+    // restore tab browser
+    theTabbrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
+
+    // restore the Status Bar
+    statusbar.hidden = gChromeState.statusbarWasHidden;
   }
 
   // if we are unhiding and sidebar used to be there rebuild it
