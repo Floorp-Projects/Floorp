@@ -396,7 +396,7 @@ public:
       theGroup.mBits.mPhrase=1;
       theGroup.mBits.mSpecial=1;
       theGroup.mBits.mList=0;  //intentionally remove list from inline group
-      theGroup.mBits.mPreformatted=1;
+      theGroup.mBits.mPreformatted=0;
       theGroup.mBits.mSelf=1;
       theGroup.mBits.mLeaf=1;
       theGroup.mBits.mWhiteSpace=1;
@@ -759,6 +759,7 @@ public:
   virtual PRInt32   FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
 
     switch(aTag) {
+      case eHTMLTag_table:
       case eHTMLTag_caption:
       case eHTMLTag_col:
       case eHTMLTag_colgroup:
@@ -901,6 +902,61 @@ public:
 };
 
 /**********************************************************
+  This defines the counter element, and is for debug use.
+
+    Usage:  <counter name="xxx" reset=n>
+
+    if you leave off the name key/value pair, we'll use the
+    name of the element instead.
+ **********************************************************/
+class CCounterElement: public CInlineElement {
+public:
+
+  CCounterElement(eHTMLTags aTag=eHTMLTag_counter) : CInlineElement(aTag) {
+    CInlineElement::Initialize(*this,aTag);
+  }
+
+  /**********************************************************
+    handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+                                      eHTMLTags aTag,
+                                      nsDTDContext* aContext,
+                                      nsIHTMLContentSink* aSink) {
+    return CElement::HandleStartToken(aNode,aTag,aContext,aSink);
+  }
+
+  /**********************************************************
+    this gets called after each tag is opened in the given context
+   **********************************************************/
+  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+    OpenContext(aNode,aTag,aContext,aSink);
+    nsresult result=OpenContainer(aNode,aTag,aContext,aSink);
+    if(NS_SUCCEEDED(result)) {
+      PRInt32   theCount=aContext->GetCount();
+      eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
+      PRInt32   theCounter=aContext->IncrementCounter(theGrandParentTag);
+
+      nsString  theNumber;
+      theNumber.AppendInt(theCounter);
+      CTextToken theToken(theNumber);
+      PRInt32 theLineNumber=0;
+      nsCParserNode theNode(&theToken,theLineNumber);
+      result=aSink->AddLeaf(theNode);
+    }
+    return result;
+  }
+
+  /**********************************************************
+    handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
+  }
+
+};
+
+/**********************************************************
   This defines the heading element group (h1..h6)
  **********************************************************/
 class CHeadingElement: public CElement {
@@ -1039,7 +1095,9 @@ public:
       case eHTMLTag_isindex:
       case eHTMLTag_link:
       case eHTMLTag_meta:
+        aSink->OpenHead(*aNode);
         result=aSink->AddLeaf(*aNode);
+        aSink->CloseHead(*aNode);
       default:
         break;
     }
@@ -1264,6 +1322,14 @@ public:
   }
 
   /**********************************************************
+    this gets called after each tag is opened in the given context
+   **********************************************************/
+  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+    OpenContext(aNode,aTag,aContext,aSink);
+    return NS_OK;
+  }
+
+  /**********************************************************
     Call this for each element as it get's closed
    **********************************************************/
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
@@ -1276,9 +1342,10 @@ public:
     }
     else {
       //add the script to the body
-      CTextToken theToken(mText);
+      CScriptToken theToken(mText);  
       PRInt32 theLineNumber=0;
       nsCParserNode theNode(&theToken,theLineNumber);
+      theNode.SetSkippedContent(mText);
       result=aSink->AddLeaf(theNode);
     }
     mText.Truncate(0);
@@ -1325,7 +1392,7 @@ public:
 
     switch(aTag) {
       case eHTMLTag_newline:
-        mText.Append(kCR);
+        mText.Append(kNewLine);
         break;
 
       case eHTMLTag_whitespace:
@@ -1364,12 +1431,144 @@ public:
     Pre handles the closing of it's own children
    **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    mText.Append(aNode->GetText());
-    return NS_OK;
+    nsresult result=NS_OK;
+
+    switch(aTag) {
+      case eHTMLTag_newline:
+        mText.Append(kNewLine);
+        break;
+
+      case eHTMLTag_whitespace:
+      case eHTMLTag_text:
+        mText.Append(aNode->GetText());
+        break;
+
+      default:        
+        {
+          nsCParserNode *theNode=(nsCParserNode*)aNode;
+          theNode->mToken->GetSource(mText);
+        }
+        break;
+    }
+
+    return result;
   }
 
 };
 
+
+/**********************************************************
+  This is used for both applet and object elements
+ **********************************************************/
+class CAppletElement: public CSpecialElement {
+public:
+
+  static CGroupMembers& GetGroup(void) {
+    static CGroupMembers theGroup={0};
+    theGroup.mBits.mSpecial=1;
+    theGroup.mBits.mBlock=1;
+    return theGroup;
+  }
+
+  static CGroupMembers& GetContainedGroups(void) {
+    return CFlowElement::GetContainedGroups();
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
+
+    static eHTMLTags kSpecialKids[]={eHTMLTag_param,eHTMLTag_unknown};
+    anElement.mIncludeKids=kSpecialKids;
+    anElement.mProperties.mIsContainer=1;
+  }
+
+  CAppletElement(eHTMLTags aTag) : CSpecialElement(aTag) {
+    Initialize(*this,aTag);
+  }
+
+  /**********************************************************
+    handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    nsIParserNode *theNode=aContext->PeekNode();
+    if(theNode) {
+      PRBool  theContentsHaveArrived=theNode->GetGenericState();
+      switch(aTag) {
+        case eHTMLTag_param:
+          if(!theContentsHaveArrived) {
+            result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);  
+          }
+          break;
+           
+        case eHTMLTag_newline:
+        case eHTMLTag_whitespace:
+          result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);  
+          break;
+
+        default:
+          theNode->SetGenericState(PR_TRUE);
+          result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);  
+          break;
+      } //switch
+    }
+    return result;
+  }
+
+};
+
+/**********************************************************
+  This defines the fieldset element...
+ **********************************************************/
+class CFieldsetElement: public CBlockElement {
+public:
+
+  static CGroupMembers& GetGroup(void) {
+    static CGroupMembers theGroup={0};
+    theGroup.mBits.mBlock=1;
+    return theGroup;
+  }
+
+  static CGroupMembers& GetContainedGroups(void) {
+    return CFlowElement::GetContainedGroups();
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CElement::Initialize(anElement,aTag,GetGroup(),GetContainedGroups());
+  }
+
+  CFieldsetElement() : CBlockElement(eHTMLTag_fieldset) {
+    mGroup=GetGroup();
+    mContainsGroups=GetContainedGroups();
+    mProperties.mIsContainer=1;
+  }
+
+  /**********************************************************
+    fieldset  handles the opening of it's own children
+   **********************************************************/
+  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    nsresult result=NS_OK;
+    nsIParserNode *theNode=aContext->PeekNode();
+    if(theNode) {
+      PRBool  theLegendExists=theNode->GetGenericState();
+      switch(aTag) {
+        case eHTMLTag_legend:
+          if(!theLegendExists) {
+            theNode->SetGenericState(PR_TRUE);
+            result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
+          }
+          break;
+        default:
+          if(theLegendExists) {
+            result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);  //force the title onto the stack
+          }
+          break;
+      } //switch
+    }
+    return result;
+  }
+
+};
 
 /**********************************************************
   This is for FRAMESET, etc.
@@ -1650,7 +1849,11 @@ public:
     mTitleElement(),
     mTextAreaElement(),
     mPreElement(eHTMLTag_pre),
-    mLIElement(eHTMLTag_li)
+    mLIElement(eHTMLTag_li),
+    mAppletElement(eHTMLTag_applet),
+    mObjectElement(eHTMLTag_object),
+    mFieldsetElement(),
+    mCounterElement()
   {
     memset(mElements,0,sizeof(mElements));
     InitializeElements();
@@ -1677,12 +1880,15 @@ public:
   CPreformattedElement mPreElement;
   CTableElement     mTableElement;
   CLIElement        mLIElement;
+  CAppletElement    mAppletElement;
+  CAppletElement    mObjectElement;
+  CFieldsetElement  mFieldsetElement;
+  CCounterElement   mCounterElement;
 };
 
 
 static CElementTable *gElementTable = 0;
 
-static eHTMLTags kAppletKids[]={eHTMLTag_param,eHTMLTag_unknown};
 static eHTMLTags kDLKids[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_unknown};
 static eHTMLTags kAutoCloseDD[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_dl,eHTMLTag_unknown};
 static eHTMLTags kButtonExcludeKids[]={ eHTMLTag_a,eHTMLTag_button,eHTMLTag_select,eHTMLTag_textarea,
@@ -1724,8 +1930,6 @@ void CElementTable::InitializeElements() {
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_address],    eHTMLTag_address);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_applet],     eHTMLTag_applet,CSpecialElement::GetGroup(), CFlowElement::GetContainedGroups());
-  mDfltElements[eHTMLTag_applet].mGroup.mBits.mBlock=1;  //treat applet like a block, too.
-  mDfltElements[eHTMLTag_applet].mIncludeKids=kAppletKids;
 
   CElement::Initialize(             mDfltElements[eHTMLTag_area],       eHTMLTag_area);
   mDfltElements[eHTMLTag_area].mContainsGroups.mBits.mSelf=0;
@@ -1761,6 +1965,8 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_colgroup].mContainsGroups.mAllBits=0;
   mDfltElements[eHTMLTag_colgroup].mIncludeKids=kColgroupKids;
 
+  CElement::Initialize(             mDfltElements[eHTMLTag_counter],    eHTMLTag_counter);
+
   CElement::Initialize(             mDfltElements[eHTMLTag_dd],         eHTMLTag_dd,  CElement::GetEmptyGroup(),   CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_dd].mAutoClose=kAutoCloseDD;
   mDfltElements[eHTMLTag_dd].mContainsGroups.mBits.mSelf=0;
@@ -1785,7 +1991,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_dt].mAutoClose=kAutoCloseDD;
   
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_em],         eHTMLTag_em);
-  CElement::Initialize(   mDfltElements[eHTMLTag_embed],      eHTMLTag_embed);
+  CElement::Initialize(   mDfltElements[eHTMLTag_embed],                eHTMLTag_embed);
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_endnote],    eHTMLTag_endnote);
 
   CElement::Initialize(             mDfltElements[eHTMLTag_fieldset],   eHTMLTag_fieldset, CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
@@ -1857,7 +2063,7 @@ void CElementTable::InitializeElements() {
     
   CElement::Initialize(             mDfltElements[eHTMLTag_noframes],   eHTMLTag_noframes,  CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
   CElement::Initialize(             mDfltElements[eHTMLTag_nolayer],    eHTMLTag_nolayer);
-  CElement::Initialize(             mDfltElements[eHTMLTag_noscript],   eHTMLTag_noscript,  CBlockElement::GetGroup(),  CBlockElement::GetBlockGroupMembers());
+  CElement::Initialize(             mDfltElements[eHTMLTag_noscript],   eHTMLTag_noscript,  CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
 
   CElement::Initialize(             mDfltElements[eHTMLTag_object],     eHTMLTag_object,    CBlockElement::GetGroup(),  CFlowElement::GetContainedGroups());
   mDfltElements[eHTMLTag_object].mGroup.mBits.mBlock=1;  //make this a member of the block group.
@@ -1961,6 +2167,10 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_pre]=&mPreElement;
   mElements[eHTMLTag_table]=&mTableElement;
   mElements[eHTMLTag_li]=&mLIElement;
+  mElements[eHTMLTag_applet]=&mAppletElement;
+  mElements[eHTMLTag_object]=&mObjectElement;
+  mElements[eHTMLTag_fieldset]=&mFieldsetElement;
+  mElements[eHTMLTag_counter]=&mCounterElement;
 }
 
 void CElementTable::DebugDumpGroups(CElement* aTag){
@@ -2280,10 +2490,13 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
   PRInt32 theCloseTarget=FindAutoCloseTargetForEndTag(aNode,aTag,aContext,aSink,theIndex);
 
   if(-1!=theCloseTarget) {
-    while(theCloseTarget<aContext->GetCount()) {
+    PRInt32 theCount=aContext->GetCount();
+    while(theCloseTarget<theCount) {
       eHTMLTags theTag=aContext->Last();
-      CElement  *theElement=gElementTable->mElements[theTag];
-      result=theElement->HandleEndToken(aNode,theTag,aContext,aSink);
+      eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
+      CElement *theGrandParent=GetElement(theGrandParentTag);
+      result=theGrandParent->HandleEndToken(aNode,theTag,aContext,aSink);
+      theCount--;
     }
     return result;
   }

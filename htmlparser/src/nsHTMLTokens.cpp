@@ -287,7 +287,7 @@ void CStartToken::GetSource(nsString& anOutputString){
     anOutputString=mTrailingContent;
   else {
     if(mTextValue.Length()>0)
-      anOutputString=mTextValue;
+      anOutputString.Append(mTextValue);
     else
      anOutputString.AssignWithConversion(GetTagName(mTypeID));
     anOutputString.AppendWithConversion('>');
@@ -1781,6 +1781,17 @@ void CEntityToken::AppendSource(nsString& anOutputString){
  */
 CScriptToken::CScriptToken() : CHTMLToken(eHTMLTag_script) {
 }
+
+/*
+ *  default constructor
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CScriptToken::CScriptToken(const nsString& aString) : CHTMLToken(aString,eHTMLTag_script) {
+}
+                        
 
 /*
  *  

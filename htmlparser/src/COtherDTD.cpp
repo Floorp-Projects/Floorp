@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *                          
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or 
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or  
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *          
@@ -16,11 +16,11 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.  
- * 
+ *  
  * Contributor(s):     
  */          
     
-//#define ENABLE_CRC      
+//#define ENABLE_CRC       
 //#define RICKG_DEBUG     
  
       
@@ -413,7 +413,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
           }
         }
       }
-    }
+    } 
     return result;
   } 
   return result; 
@@ -454,6 +454,8 @@ nsresult COtherDTD::WillBuildModel(  const CParserContext& aParserContext,nsICon
 
     if(result==NS_OK) {
       result = aSink->WillBuildModel();
+
+      mBodyContext->ResetCounters();
 
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillBuildModel(), this=%p\n", this));
       START_TIMER();
@@ -764,7 +766,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       PRBool theTagWasHandled=PR_FALSE; 
  
       switch(theChildTag) {     
-      
+        
         case eHTMLTag_html: 
           if(!HasOpenContainer(theChildTag)) { 
             mSink->OpenHTML(*theNode);
@@ -819,12 +821,12 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
   switch(theChildTag) {    
  
     case eHTMLTag_body: //we intentionally don't let the user close HTML or BODY
-    case eHTMLTag_html:  
+    case eHTMLTag_html:   
       break;   
         
     case eHTMLTag_script:    
       mHasOpenScript=PR_FALSE;      
-     
+      
     default: 
       PRInt32 theCount=mBodyContext->GetCount();
       eHTMLTags theParent=mBodyContext->TagAt(theCount-1);
@@ -833,7 +835,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       }
       CElement* theElement=gElementTable->mElements[theParent];
       if(theElement) { 
-        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
+        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber); 
         result=theElement->HandleEndToken(&theNode,theChildTag,mBodyContext,mSink);  
       }   
       break;

@@ -173,13 +173,22 @@ class nsCParserNode :  public nsIParserNode {
      * @return  token at anIndex
      */
     virtual CToken* PopAttributeToken();
+
+    /**
+     * This pair of methods allows us to set a generic bit (for arbitrary use)
+     * on each node stored in the context.
+     * @update	gess 11May2000
+     */
+    virtual PRBool  GetGenericState(void) const {return mGenericState;}
+    virtual void    SetGenericState(PRBool aState) {mGenericState=aState;}
     
     PRInt32   mLineNumber;
     CToken*   mToken;
     nsDeque*  mAttributes;
     nsString* mSkippedContent;
     PRInt32   mUseCount;
-
+    PRBool    mGenericState;
+    
     nsITokenRecycler* mRecycler;
 };
 
