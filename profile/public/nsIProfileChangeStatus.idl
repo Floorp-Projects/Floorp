@@ -127,6 +127,17 @@
 interface nsIProfileChangeStatus : nsISupports {
         
     void vetoChange();
+    
+   /**
+    * Called by a profile change observer when a fatal error
+    * occurred during the attempt to switch the profile.
+    *
+    * The profile should be considered in an unsafe condition,
+    * and the profile manager should inform the user and
+    * exit immediately.
+    *
+    */
+    void changeFailed();
 
 };
 
