@@ -178,6 +178,18 @@ endif
 endif
 endif
 
+ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TEST),mips)
+CPPSRCS		:= xptcinvoke_mips.cpp xptcstubs_unsupported.cpp
+ASFILES		:= xptcinvoke_asm_mips.s
+#xptcstubs_mips.cpp
+# xptcstubs_asm_mips.s
+ifdef GNU_CC
+ASFLAGS		+= $(INCLUDES) -x assembler-with-cpp -D__GNUC__
+endif
+endif
+endif
+
 ######################################################################
 # PowerPC
 ######################################################################
