@@ -20,17 +20,20 @@
  *   if.c --- Top-level image library routines
  */
 
-
 #include "if.h"
 
 #include "merrors.h"
-#ifdef STANDALONE_IMAGE_LIB
+
+#include "nsIImgDecoder.h"
+#include "nsImgDCallbk.h"
 #include "xpcompat.h"
-#else
-#include "xpgetstr.h"
-#endif /* STANDALONE_IMAGE_LIB */
+
+#include "nsImgDecCID.h"
+#include "prtypes.h"
+
 
 #include "il_strm.h"
+
 
 PR_BEGIN_EXTERN_C
 extern int XP_MSG_IMAGE_PIXELS;
@@ -51,6 +54,185 @@ int il_debug=0;
 static IL_GroupContext *il_global_img_cx_list = NULL;
 
 
+/*-------------------------------------------------*/
+class ImgDecoder : public nsIImgDecoder {
+	
+public:
+
+  NS_DECL_ISUPPORTS
+  
+  il_container *GetContainer() {return mContainer;};
+  il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
+
+  ImgDecoder(il_container *aContainer){mContainer=aContainer;};
+  ~ImgDecoder();
+
+private:
+  il_container* mContainer;
+};
+
+NS_IMETHODIMP ImgDecoder::AddRef()
+{
+  NS_INIT_REFCNT();
+  return NS_OK;
+}
+
+NS_IMETHODIMP ImgDecoder::Release()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP ImgDecoder::QueryInterface(const nsIID& aIID, void** aResult)
+{   	
+  if (NULL == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+   
+  if (aIID.Equals(kImgDecoderIID)) {
+	  *aResult = (void*) this;
+    NS_INIT_REFCNT();
+    return NS_OK;
+  }
+  
+  return NS_NOINTERFACE;
+}
+
+/*-----------------------------------------*/
+/*-----------------------------------------*/
+NS_IMETHODIMP ImgDCallbk::ImgDCBSetupColorspaceConverter()
+{  
+  if( mContainer != NULL ) {
+    il_setup_color_space_converter(mContainer);
+  }
+  return 0;
+}
+
+NI_ColorSpace*
+ImgDCallbk::ImgDCBCreateGreyScaleColorSpace()
+{
+  if( mContainer != NULL ) {
+    return IL_CreateGreyScaleColorSpace(1,1);
+  }
+  return 0;
+}
+  
+NS_IMETHODIMP ImgDCallbk::ImgDCBResetPalette()
+{
+   if( mContainer != NULL ) {
+       il_reset_palette(mContainer);
+  }
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+ImgDCallbk::ImgDCBHaveHdr(int destwidth, int destheight)
+{
+  if( mContainer != NULL ) {
+    il_dimensions_notify(mContainer, destwidth, destheight);
+  }
+  return 0;
+
+}
+
+NS_IMETHODIMP
+ImgDCallbk::ImgDCBInitTransparentPixel()
+{
+    if( mContainer != NULL ) {
+      il_init_image_transparent_pixel(mContainer);
+  }
+  return 0;
+
+}
+
+NS_IMETHODIMP
+ImgDCallbk::ImgDCBDestroyTransparentPixel()
+{
+    if( mContainer != NULL ) {
+      il_destroy_image_transparent_pixel(mContainer);
+  }
+  return 0;
+
+}
+
+NS_IMETHODIMP 
+ImgDCallbk :: ImgDCBHaveRow(uint8 *rowbuf, uint8* rgbrow, 
+                            int x_offset, int len,
+                            int row, int dup_rowcnt, 
+                            uint8 draw_mode, 
+                            int pass )
+{
+  if( mContainer != NULL ) {
+    
+  	il_emit_row(mContainer, rowbuf, rgbrow, x_offset, len,
+                       row, dup_rowcnt, (il_draw_mode)draw_mode, pass );
+  }
+  return 0;
+
+}
+
+NS_IMETHODIMP 
+ImgDCallbk :: ImgDCBHaveImageFrame()
+{
+  if( mContainer != NULL ) {
+         il_frame_complete_notify(mContainer);
+  }
+  return 0;
+}
+
+NS_IMETHODIMP 
+ImgDCallbk::ImgDCBFlushImage()
+{
+  if( mContainer != NULL ) {
+	  il_flush_image_data(mContainer);
+  }
+  return 0;
+}
+
+NS_IMETHODIMP 
+ImgDCallbk:: ImgDCBImageSize()
+{ 
+  if( mContainer != NULL ) {
+    il_size(mContainer);
+  }
+  return 0;
+}
+
+NS_IMETHODIMP 
+ImgDCallbk :: ImgDCBHaveImageAll()
+{
+  if( mContainer != NULL ) {
+    il_image_complete(mContainer);
+  }
+  return 0;
+
+}
+
+NS_IMETHODIMP 
+ImgDCallbk :: ImgDCBError()
+{
+  if( mContainer != NULL ) {
+  }
+  return 0;
+
+}	
+
+void*
+ImgDCallbk :: ImgDCBSetTimeout(TimeoutCallbackFunction func, void* closure, uint32 msecs)
+{
+  return( IL_SetTimeout(func, closure, msecs ));
+
+}
+
+NS_IMETHODIMP
+ImgDCallbk :: ImgDCBClearTimeout(void *timer_id)
+{
+  IL_ClearTimeout(timer_id);
+  return 0;
+}
+
+/*-------------------------------------------------*/
+ImgDecoder *imgdec;
 /*********************** Image Observer Notification. *************************
 *
 * These functions are used to send messages to registered observers of an
@@ -174,7 +356,7 @@ il_image_complete_notify(il_container *ic)
                            &message_data);
     }
 }
-
+#if 1
 /* Notify observers that a frame of an image animation has finished
    decoding. */
 void
@@ -194,7 +376,33 @@ il_frame_complete_notify(il_container *ic)
                            &message_data);
     }
 }
+#endif
 
+int
+il_compute_percentage_complete(int row, il_container *ic)
+{
+    uint percent_height;
+    int percent_done = 0;
+    
+    percent_height = (uint)(row * (uint32)100 / ic->image->header.height);
+    switch(ic->pass) {
+    case 0: percent_done = percent_height; /* non-interlaced GIF */
+        break;
+    case 1: percent_done =      percent_height / 8;
+        break;
+    case 2: percent_done = 12 + percent_height / 8;
+        break;
+    case 3: percent_done = 25 + percent_height / 4;
+        break;
+    case 4: percent_done = 50 + percent_height / 2;
+        break;
+    default:
+        ILTRACE(0,("Illegal interlace pass"));
+        break;
+    }
+
+    return percent_done;
+}
 
 /* Notify observers of image progress. */
 void
@@ -228,7 +436,7 @@ il_progress_notify(il_container *ic)
 
         /* Interlaced GIFs are weird */
         if (ic->type == IL_GIF) {
-            percent_done = il_gif_compute_percentage_complete(row, ic);
+            percent_done = il_compute_percentage_complete(row, ic);
         }
         else
         {
@@ -593,7 +801,7 @@ il_size(il_container *ic)
 
     ic->sized = 1;
     /* Notify observers of the target dimensions of the image. */
-    il_dimensions_notify(ic, ic->dest_width, ic->dest_height);
+     ic->imgdcb->ImgDCBHaveHdr(ic->dest_width, ic->dest_height);
 
     /* Fabricate a title for the image and notify observers.  Image Plugins
        will need to supply information on the image type. */
@@ -696,8 +904,9 @@ IL_StreamWriteReady(il_container *ic)
 {
     uint request_size = 1;
 
-    if (ic->write_ready)
-        request_size = (*ic->write_ready)(ic);
+    if (ic->imgdec)
+  //      request_size = (*ic->write_ready)();
+    request_size = ((ic->imgdec->ImgDWriteReady))();
 
     if (!request_size)
         return 0;
@@ -787,7 +996,7 @@ IL_Type(const char *buf, int32 len)
 int 
 IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 {
-	int err = 0;
+	unsigned int err = 0;
 
     ILTRACE(4, ("il: write with %5d bytes for %s\n", len, ic->url_address));
 
@@ -806,9 +1015,14 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
     ic->bytes_consumed += len;
     
 	if (len)
-		err = (*ic->write)(ic, (unsigned char *)str, len);
 
-    /* Notify observers of image progress. */
+	//	err = (*ic->write)(ic, (unsigned char *)str, len);
+
+		err = (ic->imgdec->ImgDWrite)(str,  len);
+
+
+
+      /* Notify observers of image progress. */
     il_progress_notify(ic);
 
 	if (err < 0)
@@ -821,7 +1035,7 @@ IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len)
 int
 IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 {
-	int (*init)(il_container *);
+  int ret =0;
 
 	PR_ASSERT(ic);
 	PR_ASSERT(ic->image);
@@ -847,61 +1061,52 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
  
     /* Figure out the image type, possibly overriding the given MIME type */
     ic->type = il_type(ic->type, (const char*) str, len);
-    ic->write_ready = NULL;
+
 
 	/* Grab the URL's expiration date */
+	nsresult result;
+
 	if (ic->url)
 	  ic->expires = ic->url->GetExpires();
 
-	switch (ic->type) 
-	{
-		case IL_GIF:           
-			init = il_gif_init;
-			ic->write = il_gif_write;
-			ic->complete = il_gif_complete;
-            		ic->write_ready = il_gif_write_ready;
-            		ic->abort = il_gif_abort;
-			break;
 
-        case IL_XBM:
-			init = il_xbm_init;
-			ic->write = il_xbm_write;
-			ic->abort = il_xbm_abort;
-            ic->complete = il_xbm_complete;
-			break;
+  ImgDecoder *imgdec;	
 
-		case IL_JPEG:
-			init = il_jpeg_init;
-			ic->write = il_jpeg_write;
-			ic->abort = il_jpeg_abort;
-            		ic->complete = il_jpeg_complete;
-			break;
+  char imgtype[150];
+  char imgtypestr[200];
 
-   		case IL_PNG:
-			init = il_png_init;
-			ic->write = il_png_write;
-			ic->abort = il_png_abort;
-            		ic->complete = il_png_complete;
-			break;
+  switch (ic->type) {
+    case IL_GIF : PL_strcpy(imgtype, "gif"); break;
+    case IL_XBM : PL_strcpy(imgtype, "xbm"); break;
+    case IL_JPEG : PL_strcpy(imgtype, "jpeg"); break;
+    case IL_PNG : PL_strcpy(imgtype, "png"); break;
+    default : PL_strcpy(imgtype, "");
+    }
 
+    sprintf(imgtypestr, "component://netscape/image/decoder&type=image/%s"
+            , imgtype );
+ 
+  result = nsRepository::CreateInstance(imgtypestr,
+                                           NULL,    
+                                           kImgDecoderIID,
+                                       (void **)&imgdec);
 
-		case IL_NOTFOUND:
-			ILTRACE(1,("il: html image"));
-			return MK_IMAGE_LOSSAGE;
-
-		default: 
-			ILTRACE(1,("il: ignoring unknown image type (%d)", ic->type));
-			return MK_IMAGE_LOSSAGE;
-	}
-
-	if (!(*init)(ic))
-	{
-		ILTRACE(0,("il: image init failed"));
-		return MK_OUT_OF_MEMORY;
-	}
-	
+  if (NS_FAILED(result))
+    return MK_IMAGE_LOSSAGE;
+  
+  
+  imgdec->SetContainer(ic);
+  ic->imgdec = imgdec;
+  ret = imgdec->ImgDInit();
+  if(ret == 0)
+  {
+    ILTRACE(0,("il: image init failed"));
+    return MK_OUT_OF_MEMORY;
+  }
+		
 	return 0;
 }
+
 
 /* Called when a container is aborted by Netlib. */
 static void
@@ -1060,8 +1265,8 @@ IL_NetRequestDone(il_container *ic, ilIURL *url, int status)
 void
 il_image_abort(il_container *ic)
 {
-    if (ic->abort)
-        (*ic->abort)(ic); 
+  if (ic->imgdec)
+	  ic->imgdec->ImgDAbort();
 
     /* Clear any pending timeouts */
     if (ic->row_output_timeout) {
@@ -1090,8 +1295,8 @@ IL_StreamComplete(il_container *ic, PRBool is_multipart)
 
     ic->is_multipart = is_multipart;
 
-	if (ic->complete)
-        (*ic->complete)(ic);
+	if (ic->imgdec)
+        ic->imgdec->ImgDComplete();
     else
         il_image_complete(ic);
 }
@@ -1690,6 +1895,7 @@ IL_GetImage(const char* image_url,
     int is_internal_external_reconnect = FALSE;
 #endif /* STANDALONE_IMAGE_LIB */
     int is_view_image;
+    int is_internal_external_reconnect = FALSE;
 
     /* Create a new instance for this image request. */
     image_req = PR_NEWZAP(IL_ImageReq);
@@ -1779,6 +1985,7 @@ IL_GetImage(const char* image_url,
 #endif /* M12N */
 #else
     is_view_image = FALSE;
+  
 #endif /* STANDALONE_IMAGE_LIB */
 
     if (!il_add_client(img_cx, ic, image_req, is_view_image))
@@ -2319,38 +2526,8 @@ IL_GetNaturalDimensions(IL_ImageReq *image_req, int *width, int *height)
 	}
 }
 
-#ifndef STANDALONE_IMAGE_LIB
-#ifndef M12N                    /* XXXM12N Get rid of these functions */
-void
-IL_DisableScaling(MWContext *cx)
-{
-	il_process *ip;
-
-	if (!cx)
-		return;
-
-	if (!(ip=cx->imageProcess))
-		return;
-
-	ip->dontscale = 1;
-}
 
 
-void
-IL_DisableLowSrc(MWContext *cx)
-{
-	il_process *ip;
-
-	if (!cx)
-		return;
-
-	if (!(ip=cx->imageProcess))
-		return;
-
-	ip->nolowsrc = 1;
-}
-#endif /* M12N */
-#endif /* STANDALONE_IMAGE_LIB */
 #ifdef PROFILE
 #pragma profile off
 #endif
