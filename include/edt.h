@@ -1461,6 +1461,11 @@ PRBool EDT_EncryptState(MWContext *pContext);
 /* Used for QA only - Ctrl+Alt+Shift+N accelerator for automated testing */
 void EDT_SelectNextNonTextObject(MWContext *pContext);
 
+#ifdef ENDER
+/* Tell the backend that the editor is embedded in a page. */
+void EDT_SetEmbeddedEditorData(MWContext *pContext, void *pData);
+#endif /* ENDER */
+
 XP_END_PROTOS
 
 #endif  /* EDITOR   */
