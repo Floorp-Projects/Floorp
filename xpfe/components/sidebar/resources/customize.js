@@ -36,6 +36,8 @@ function debug(msg)
 
 function Init()
 {
+  doSetOKCancel(Save);
+  
   var all_panels_datasources = window.arguments[0];
   var all_panels_resource    = window.arguments[1];
   sidebarObj.datasource_uri     = window.arguments[2];

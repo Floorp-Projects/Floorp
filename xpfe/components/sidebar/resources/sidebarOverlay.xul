@@ -35,9 +35,9 @@
         &sidebar.panels.label;
       </html:div>
       <spring flex="100%"/>
-      <titledbutton class="borderless"
+      <titledbutton class="toolbar-flat"
         value="&sidebar.customize.label;" 
-        onclick="SidebarCustomize();"/>
+        oncommand="SidebarCustomize();"/>
     </splitter>
     <box id="sidebar-panels-box" align="vertical" flex="1*" persist="height collapsed">
       <box id="sidebar-panels" align="vertical"

@@ -20,6 +20,7 @@
 
 <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/customize.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/customize.dtd" >
 
@@ -27,37 +28,22 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();" 
-  id="main-box"
   class="dialog"
+  title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
   align="vertical">
 
   <html:script src="chrome://sidebar/content/customize.js" />
 
-  <!-- Dialog title -->
-  <html:div class="title">
-    &sidebar.customize.title.label;
-  </html:div>
+  <box id="header" type="largeheader" value="&sidebar.customize.title.label;"/>
 
-  <html:div>
-    <html:hr />
-  </html:div>
-
-  <!-- The two-pane -->
-  <box align="horizontal" flex="1*">
-
-    <!-- All of the panels that are available -->
-    <box align="vertical" flex="1*">
-
-      <html:div class="subtitle">
-      &sidebar.customize.additional.label;
-      </html:div>
-
+  <box id="contentarea" flex="1">
+    <box orient="vertical" flex="1">
+      <text value="&sidebar.customize.additional.label;"/>
       <tree id="other-panels" flex="1"
         datasources="rdf:null"
-        indent="true"
-        multiple="true"
-        style="height:20em">
+        indent="true" class="inset"
+        multiple="true">
   
         <template>
           <treechildren>
@@ -80,95 +66,65 @@
       </tree>
 
       <!-- xxxslamm Need to add descriptive panel text here -->
-      <box align="horizontal" class="button-group">
-        <titledbutton id="add_button" onclick="AddPanel()"
-          class="dialog push"
+      <box class="button-group">
+        <button id="add_button" oncommand="AddPanel()"
           value="&sidebar.customize.add.label;"
           disabled="true"/>
 
-        <titledbutton id="preview_button" onclick="PreviewPanel()"
-          class="dialog push"
+        <button id="preview_button" oncommand="PreviewPanel()"
           value="&sidebar.customize.preview.label;"
           disabled="true"/>
       </box>
     </box> 
     
-    <!-- Spacing between the left and right halves of the dialog -->
-    <spring style="width:2em"/>
+    <separator orient="vertical"/>    
 
     <!-- The panels that the user currently has chosen -->
-    <box align="vertical" flex="1*">
-      <html:div class="subtitle">
-      &sidebar.customize.current.label;
-      </html:div>
+    <box orient="vertical" flex="1">
+      <text value="&sidebar.customize.current.label;"/>
+      <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
+        datasources="rdf:null" class="inset" flex="1"
+        multiple="true">
 
-      <box align="horizontal" class="box-group" flex="1*">
-        <tree id="current-panels" onclick="SelectChangeForCurrentPanels();"
-          datasources="rdf:null"
-          multiple="true"
-          style="height:0px">
-          <template>
-           <treechildren>
-             <treeitem uri="rdf:*"
-               title="rdf:http://home.netscape.com/NC-rdf#title"
-               customize="rdf:http://home.netscape.com/NC-rdf#customize"
-               content="rdf:http://home.netscape.com/NC-rdf#content">
-               <treerow>
-                 <treecell
-                   value="rdf:http://home.netscape.com/NC-rdf#title" />
-               </treerow>
-             </treeitem>
-           </treechildren>
-         </template>
-         <treecol />
+        <template>
+          <treechildren>
+            <treeitem uri="rdf:*"
+              title="rdf:http://home.netscape.com/NC-rdf#title"
+              customize="rdf:http://home.netscape.com/NC-rdf#customize"
+              content="rdf:http://home.netscape.com/NC-rdf#content">
+              <treerow>
+                <treecell
+                  value="rdf:http://home.netscape.com/NC-rdf#title" />
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </template>
+        <treecol />
          <!-- We explicitly create a 'treechildren' so we can refer
               to it from the script -->
-         <treechildren id="current-panels-root"/> 
-       </tree>
-
-       <!-- Spacing between the right selector and "Reorder" -->
-       <spring style="width:5px"/>
-
-        <!-- The 'reorder' buttons -->
-        <box align="vertical">
-          <spring flex="50%"/>
-          <titledbutton onclick="MoveUp();" id="up" class="borderless up" />
-          <html:div>
-          &sidebar.customize.reorder.label;
-          </html:div>
-          <titledbutton onclick="MoveDown();" id="down"
-            class="borderless down" />
-          <spring flex="50%"/>
-        </box>
-      </box>
-
-      <box align="horizontal" class="button-group">
-        <titledbutton id="customize-button" onclick="CustomizePanel();" 
-          class="dialog push"
+        <treechildren id="current-panels-root"/> 
+      </tree>
+      <box class="button-group">
+        <button id="customize-button" oncommand="CustomizePanel();" 
           value="&sidebar.customize.customize.label;" />
-        <titledbutton id="remove-button" onclick="RemovePanel()"
-          class="dialog push"
+        <button id="remove-button" onclick="RemovePanel()"
           value="&sidebar.customize.remove.label;" />
-      </box>
+      </box>      
+    </box>
+
+    <separator orient="vertical" class="thin"/>
+
+    <!-- The 'reorder' buttons -->
+    <box id="reorder" align="vertical" autostretch="never">
+      <spring flex="1"/>
+      <button oncommand="MoveUp();" id="up" class="up small" />
+      <button oncommand="MoveDown();" id="down" class="down small" />
+      <spring flex="1"/>
     </box> 
+
   </box>
 
-  <html:div>
-    <html:hr />
-  </html:div>
+  <box id="okCancelButtons"/>
 
-  <!-- The 'Save' and 'Cancel' buttons -->
-  <box align="horizontal">
-    <spring flex="48%"/>
-    <titledbutton onclick="window.close()"
-       class="dialog push"
-       value="&sidebar.customize.cancel.label;" />
-    <spring flex="4%"/>
-    <titledbutton id="save_button" onclick="Save();"
-       class="dialog push"
-       value="&sidebar.customize.save.label;"
-       disabled="true"/>
-    <spring flex="48%"/>
-  </box>
 </window>
 
