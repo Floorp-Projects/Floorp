@@ -63,6 +63,13 @@ public:
     // Override RDFMenuToolbarBase methods
     virtual void notify(HT_Resource n, HT_Event whatHappened);
 
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// XFE_RDFToolbar notifications                                     //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	static const char *	navigateToUrlNotice;
+
 protected:
 	void	   setRaised                (XP_Bool);
     void       destroyToolbarWidgets    ();
@@ -98,6 +105,9 @@ private:
 
 	// update the icon appearance
     XFE_CALLBACK_DECL(updateIconAppearance)
+
+	// Url bar activated
+	XFE_CALLBACK_DECL(urlBarTextActivatedNotice)
 };
 
 #endif /*_xfe_rdftoolbar_*/

@@ -40,16 +40,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 const char *
-XFE_ToolbarUrlBar::doCommandNotice = "XFE_ToolbarUrlBar::doCommandNotice";
-
-const char *
-XFE_ToolbarUrlBar::navigateToUrlNotice = "XFE_ToolbarUrlBar::navigateToUrlNotice";
+XFE_ToolbarUrlBar::urlBarTextActivatedNotice = "XFE_ToolbarUrlBar::urlBarTextActivatedNotice";
 
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarUrlBar::XFE_ToolbarUrlBar(XFE_Frame *		frame,
 									 Widget				parent,
+									 HT_Resource		htResource,
 									 const String		name) :
-	XFE_ToolbarItem(frame,parent,name),
+	XFE_ToolbarItem(frame,parent,htResource,name),
 	m_proxyIcon(NULL),
 	m_proxyIconDragSite(NULL)
 {
@@ -75,6 +73,30 @@ XFE_ToolbarUrlBar::initialize()
     installDestroyHandler();
 
 	createProxyIcon(m_widget,"proxyIcon");
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Text string methods
+//
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_ToolbarUrlBar::setTextStringFromURL(URL_Struct * url)
+{
+	XP_ASSERT( isAlive() );
+	XP_ASSERT( url != NULL );
+
+	// Update the proxy icon
+	if (m_proxyIconDragSite != NULL)
+	{
+        m_proxyIconDragSite->setDragData(url);
+	}
+
+	// Lots of munging and sanitization need to happen here.  See
+	// URLBar.cpp for the insanity
+
+	XfeComboBoxSetTextString(m_widget,url->address);
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -172,7 +194,7 @@ XFE_ToolbarUrlBar::textActivate()
 
 		URL_Struct * url = NET_CreateURLStruct(text,NET_DONT_RELOAD);
 
-		notifyInterested(XFE_ToolbarUrlBar::navigateToUrlNotice,
+		notifyInterested(XFE_ToolbarUrlBar::urlBarTextActivatedNotice,
 						 (void *) url);
 		
 		XtFree(text);

@@ -41,6 +41,7 @@ public:
 
     XFE_ToolbarUrlBar(XFE_Frame *		frame,
 					  Widget			parent,
+                      HT_Resource		htResource,
 					  const String		name);
 
     virtual ~XFE_ToolbarUrlBar();
@@ -54,11 +55,17 @@ public:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
+	// Text string methods                                              //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	void setTextStringFromURL(URL_Struct * url);
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
 	// XFE_ToolbarUrlBar notifications                                  //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	static const char * doCommandNotice;
-	static const char *	navigateToUrlNotice;
+	static const char *	urlBarTextActivatedNotice;
 
 protected:
 

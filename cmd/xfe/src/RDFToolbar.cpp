@@ -20,6 +20,7 @@
    Created: Stephen Lamm <slamm@netscape.com>, 13-Aug-1998
  */
 
+#include "BrowserFrame.h"
 #include "RDFToolbar.h"
 #include "Logo.h"
 #include "MozillaApp.h"
@@ -46,6 +47,7 @@
 #define MAX_CHILD_WIDTH					100
 #define LOGO_NAME						"logo"
 
+
 extern "C"  {
 extern RDF_NCVocab  gNavCenter;
 extern XmString fe_ConvertToXmString(unsigned char *, int16, fe_Font, XmFontType, XmFontList * );
@@ -57,6 +59,14 @@ typedef struct _tbarTooltipCBStruct {
   XFE_RDFToolbar * obj;
 } tbarTooltipCBStruct;
 
+
+//////////////////////////////////////////////////////////////////////////
+//
+// XFE_RDFToolbar notifications
+//
+//////////////////////////////////////////////////////////////////////////
+const char *
+XFE_RDFToolbar::navigateToUrlNotice = "XFE_RDFToolbar::navigateToUrlNotice";
 
 XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame, 
                                XFE_Toolbox * toolbox,
@@ -587,7 +597,14 @@ XFE_RDFToolbar::createUrlBar(Widget parent,HT_Resource entry)
 
 	XFE_ToolbarUrlBar * urlbar = new XFE_ToolbarUrlBar(_frame,
 													   parent,
-													   "urlBar");
+													   entry,
+													   "toolbarUrlBar");
+
+	urlbar->registerInterest(XFE_ToolbarUrlBar::urlBarTextActivatedNotice,
+                             this,
+                             urlBarTextActivatedNotice_cb,
+							 (void *) urlbar);
+
 	urlbar->initialize();
 
 	return urlbar->getBaseWidget();
@@ -713,3 +730,43 @@ XFE_RDFToolbar::docStringCB(Widget w, XtPointer client_data, unsigned char reaso
     }
 
 }
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_RDFToolbar,urlBarTextActivatedNotice)
+    (XFE_NotificationCenter *    /* obj */, 
+     void *                      clientData, 
+     void *                      callData)
+{
+	URL_Struct *			url = (URL_Struct *) callData;
+	XFE_ToolbarUrlBar *		urlbar = (XFE_ToolbarUrlBar *) clientData;
+
+	XP_ASSERT( _frame != NULL );
+	XP_ASSERT( url != NULL );
+	XP_ASSERT( urlbar != NULL );
+
+	// Ask the frame to get the new url.
+	// If successfull, update the urlbar
+	if (_frame->getURL(url) >= 0)
+	{
+		// The way this should work is like this:
+		//
+		// 1.  XFE_BrowserFrame::XFE_BrowserFrame register a newPageLoading
+		//     notification with its XFE_HTMLView
+		//
+		// 2.  In that notification, the browser frame tells the toolbox
+		//     that urlbars needs to be updated
+		//
+		// 3.  The toolbox tells the toolbars that urlbar need to be 
+		//     updates
+		//
+		// 4.  The RDF_Toolbar looks for urlbar and it updates the
+		//     urlbar text with the following mehtod.
+		//
+		// Because im a lazy bastard, ill do this later and for 
+		// now ill do the following.
+		//
+		// Have a nive day -re
+		// 
+		urlbar->setTextStringFromURL(url);
+	}
+}
+//////////////////////////////////////////////////////////////////////////

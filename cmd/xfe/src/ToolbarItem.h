@@ -32,6 +32,7 @@
 
 #include "Component.h"
 #include "Frame.h"
+#include "htrdf.h"
 
 class XFE_ToolbarItem : public XFE_Component
 {
@@ -39,15 +40,22 @@ public:
 
     XFE_ToolbarItem(XFE_Frame *		frame,
 					Widget			parent,
+                    HT_Resource		htResource,
 					const String	name);
 
     virtual ~XFE_ToolbarItem();
 
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Accessors                                                        //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
 	const String	getName();
 	Widget			getParent();
-
 	XFE_Frame *		getAncestorFrame();
 	MWContext *		getAncestorContext();
+	HT_Resource		getHtResource();
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
@@ -103,6 +111,7 @@ private:
 	String			m_name;
 	Widget			m_parent;
 	XFE_Frame *		m_ancestorFrame;
+	HT_Resource		m_htResource;
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //

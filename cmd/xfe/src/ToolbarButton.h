@@ -38,6 +38,7 @@ public:
 
     XFE_ToolbarButton(XFE_Frame *		frame,
 					  Widget			parent,
+                      HT_Resource		htResource,
 					  const String		name);
 
     virtual ~XFE_ToolbarButton();

@@ -42,8 +42,9 @@ XFE_ToolbarButton::doCommandNotice = "XFE_ToolbarButton::doCommandNotice";
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarButton::XFE_ToolbarButton(XFE_Frame *		frame,
 									 Widget				parent,
+                                     HT_Resource		htResource,
 									 const String		name) :
-	XFE_ToolbarItem(frame,parent,name),
+	XFE_ToolbarItem(frame,parent,htResource,name),
 	m_command(NULL),
 	m_callData(NULL)
 {
