@@ -49,7 +49,11 @@ class URDFUtilities
 		static bool SetupBackgroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush ) ;
 		static bool SetupForegroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush ) ;
 		static bool SetupForegroundTextColor ( HT_Resource inNode, void* inHTToken, ThemeTextColor inBrush ) ;
+		static bool GetColor ( HT_Resource inNode, void* inHTToken, RGBColor * outColor ) ;
 
+			// true if property is "yes", false if value is "no"
+		static bool PropertyValueBool ( HT_Resource inNode, void* inHTToken );
+		
 			// call these before starting to load any URLs. HT may know how to handle them mo-better.
 		static bool LaunchNode ( HT_Resource inNode ) ;
 		static bool LaunchURL  ( const char* inURL, CBrowserWindow* inBrowser = NULL ) ;

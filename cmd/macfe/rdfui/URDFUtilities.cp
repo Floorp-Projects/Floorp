@@ -118,23 +118,12 @@ Uint32 URDFUtilities::GetContainerSize(HT_Resource container)
 bool
 URDFUtilities :: SetupBackgroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush )
 {
-	Assert_(inNode != NULL);
-
-	bool usingHTColor = false;
-	char* color = NULL;
-	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
-	if ( success && color ) {
-		uint8 red, green, blue;
-		if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
-			RGBColor theBackground = UGraphics::MakeRGBColor(red, green, blue);
-			::RGBBackColor ( &theBackground );
-			usingHTColor = true;
-		}
-		else
-			::SetThemeBackground ( inBrush, 8, false );		
-	}
+	RGBColor theBackground;
+	bool usingHTColor = GetColor(inNode, inHTToken, &theBackground);
+	if ( usingHTColor )
+		::RGBBackColor ( &theBackground );
 	else
-		::SetThemeBackground ( inBrush, 8, false );
+		::SetThemeBackground ( inBrush, 8, false );		
 
 	return usingHTColor;
 	
@@ -150,23 +139,12 @@ URDFUtilities :: SetupBackgroundColor ( HT_Resource inNode, void* inHTToken, The
 bool
 URDFUtilities :: SetupForegroundColor ( HT_Resource inNode, void* inHTToken, ThemeBrush inBrush )
 {
-	Assert_(inNode != NULL);
-
-	bool usingHTColor = false;
-	char* color = NULL;
-	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
-	if ( success && color ) {
-		uint8 red, green, blue;
-		if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
-			RGBColor theForeground = UGraphics::MakeRGBColor(red, green, blue);
-			::RGBForeColor ( &theForeground );
-			usingHTColor = true;
-		}
-		else
-			::SetThemePen ( inBrush, 8, false );		
-	}
+	RGBColor theForeground;
+	bool usingHTColor = GetColor(inNode, inHTToken, &theForeground);
+	if ( usingHTColor )
+		::RGBForeColor ( &theForeground );
 	else
-		::SetThemePen ( inBrush, 8, false );
+		::SetThemePen ( inBrush, 8, false );		
 
 	return usingHTColor;
 
@@ -182,27 +160,68 @@ URDFUtilities :: SetupForegroundColor ( HT_Resource inNode, void* inHTToken, The
 bool
 URDFUtilities :: SetupForegroundTextColor ( HT_Resource inNode, void* inHTToken, ThemeTextColor inBrush )
 {
-	Assert_(inNode != NULL);
-
-	bool usingHTColor = false;
-	char* color = NULL;
-	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
-	if ( success && color ) {
-		uint8 red, green, blue;
-		if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
-			RGBColor theForeground = UGraphics::MakeRGBColor(red, green, blue);
-			::RGBForeColor ( &theForeground );
-			usingHTColor = true;
-		}
-		else
-			::SetThemeTextColor ( inBrush, 8, false );		
-	}
+	RGBColor theForeground;
+	bool usingHTColor = GetColor(inNode, inHTToken, &theForeground);
+	if ( usingHTColor )
+		::RGBForeColor ( &theForeground );
 	else
-		::SetThemeTextColor ( inBrush, 8, false );
+		::SetThemeTextColor ( inBrush, 8, false );		
 
 	return usingHTColor;
 
 } // SetupForegroundTextColor
+
+
+//
+// GetColor
+//
+// Given a node and a property (that should be a color name), returns if this node has
+// that property set and if so, make an RGBColor out of it. |outColor| is not modified
+// unless this function returns true.
+//
+bool
+URDFUtilities :: GetColor ( HT_Resource inNode, void* inHTToken, RGBColor* outColor )
+{
+	Assert_(inNode != NULL);
+	Assert_(inHTToken != NULL);
+	
+	bool usingHTColor = false;
+
+	if ( inNode && inHTToken ) {
+		char* color = NULL;
+		PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
+		if ( success && color ) {
+			uint8 red, green, blue;
+			if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
+				*outColor = UGraphics::MakeRGBColor(red, green, blue);\
+				usingHTColor = true;
+			}	
+		}
+	}
+		
+	return usingHTColor;
+
+} // GetColor
+
+
+//
+// PropertyValueBool
+//
+// Gets the value of the given token and determines if it is "[Y|y]es" or "[N|n]o" based
+// on the first character. Returns the appropriate boolean value (yes = true).
+//
+bool
+URDFUtilities :: PropertyValueBool ( HT_Resource inNode, void* inHTToken )
+{
+	char* value = NULL;
+	
+	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &value );
+	if ( success && value )
+		return (*value == 'y' || *value == 'Y') ? true : false;
+
+	return false;
+	
+} // PropertyValueBool
 
 //
 // LaunchNode
