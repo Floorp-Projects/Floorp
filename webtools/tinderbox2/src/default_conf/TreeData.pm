@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2001/02/15 21:11:40 $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/02/16 00:09:54 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -216,7 +216,7 @@ foreach $tree (keys %VC_TREE) {
 # columns last, etc)
 
 sub sort_tree_buildnames {
-  my ($tree, $buildnames_ref);
+  my ($tree, $buildnames_ref) = @_;
 
   my (@out) = sort @{ $buildnames_ref };
 
