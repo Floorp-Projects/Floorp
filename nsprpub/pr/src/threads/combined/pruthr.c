@@ -1259,6 +1259,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             }
             thread->threadAllocatedOnStack = 0;
             stack = NULL;
+            top = NULL;
 #endif
 
             /* Initialize thread */
