@@ -1194,6 +1194,18 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
 {
   *aOpener = nsnull;
+  // First, check if we were called from a privileged chrome script
+  nsCOMPtr<nsIScriptSecurityManager> secMan(
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+  PRBool inChrome;
+  nsresult rv = secMan->SubjectPrincipalIsSystem(&inChrome);
+  if (NS_SUCCEEDED(rv) && inChrome) {
+    *aOpener = mOpener;
+    NS_IF_ADDREF(*aOpener);
+    return NS_OK;
+  }
+
   // We don't want to reveal the opener if the opener is a mail window,
   // because opener can be used to spoof the contents of a message (bug 105050).
   // So, we look in the opener's root docshell to see if it's a mail window.
