@@ -699,6 +699,23 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     rv = nsAbBoolExprToLDAPFilter::Convert (expression, filter);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    /*
+     * Mozilla itself cannot arrive here with a blank filter
+     * as the nsAbLDAPDirectory::StartSearch() disallows it.
+     * But 3rd party LDAP query integration with Mozilla begins 
+     * in this method.
+     *
+     * Default the filter string if blank, otherwise it gets
+     * set to (objectclass=*) which returns everything. Set 
+     * the default to (objectclass=inetorgperson) as this 
+     * is the most appropriate default objectclass which is 
+     * central to the makeup of the mozilla ldap address book 
+     * entries.
+    */
+    if(filter.IsEmpty())
+    {
+        filter += NS_LITERAL_CSTRING("(objectclass=inetorgperson)");
+    }
 
     // Set up the search ldap url
     rv = GetLDAPURL (getter_AddRefs (mDirectoryUrl));
