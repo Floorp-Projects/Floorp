@@ -811,6 +811,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
     SignonDataEntry* firstMatch = nsnull;
     nsCOMPtr<nsIDOMHTMLInputElement> userField, passField;
     nsCOMPtr<nsIDOMHTMLInputElement> temp;
+    nsAutoString fieldType;
 
     for (SignonDataEntry* e = hashEnt->head; e; e = e->next) {
       
@@ -821,6 +822,10 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       nsAutoString oldUserValue;
 
       if (temp) {
+        temp->GetType(fieldType);
+        if (!fieldType.Equals(NS_LITERAL_STRING("text")))
+          continue;
+
         temp->GetValue(oldUserValue);
         userField = temp;
       } else {
@@ -871,6 +876,10 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       nsAutoString oldPassValue;
 
       if (temp) {
+        temp->GetType(fieldType);
+        if (!fieldType.Equals(NS_LITERAL_STRING("password")))
+          continue;
+
         temp->GetValue(oldPassValue);
         passField = temp;
       } else {
