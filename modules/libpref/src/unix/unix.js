@@ -60,6 +60,9 @@ pref("autocomplete.ungrab_during_mode_switch", true);
 // Most Unix people think modal pref windows are stupid:
 pref("browser.prefWindowModal", false);
 
+// turn off scrollbar snapping
+pref("slider.snapMultiplier", 0);
+
 // Unix only
 pref("mail.use_movemail", true);
 pref("mail.use_builtin_movemail", true);

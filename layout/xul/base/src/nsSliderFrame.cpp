@@ -111,9 +111,12 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
 
   nsresult  rv2;
   mMiddlePref=PR_FALSE;
+  mSnapMultiplier = 6;
   nsCOMPtr<nsIPref> pref = do_GetService(kPrefCID, &rv2);
-  if(NS_SUCCEEDED(rv2))
+  if(NS_SUCCEEDED(rv2)) {
     pref->GetBoolPref("middlemouse.scrollbarPosition", &mMiddlePref);
+    pref->GetIntPref("slider.snapMultiplier", &mSnapMultiplier);
+  }
 
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
@@ -504,17 +507,21 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        // take our current position and substract the start location
        pos -= start;
        PRBool isMouseOutsideThumb = PR_FALSE;
-       nsSize thumbSize;
-       thumbFrame->GetSize(thumbSize);
-       if (isHorizontal) {
-         // horizontal scrollbar - check if mouse is above or below thumb
-         if (aEvent->point.y < (-6 * thumbSize.height) || aEvent->point.y > thumbSize.height + (6 * thumbSize.height))
-           isMouseOutsideThumb = PR_TRUE;
-       }
-       else {
-         // vertical scrollbar - check if mouse is left or right of thumb
-         if (aEvent->point.x < (-6 * thumbSize.width) || aEvent->point.x > thumbSize.width + (6 * thumbSize.width))
-           isMouseOutsideThumb = PR_TRUE;
+       if (mSnapMultiplier) {
+         nsSize thumbSize;
+         thumbFrame->GetSize(thumbSize);
+         if (isHorizontal) {
+           // horizontal scrollbar - check if mouse is above or below thumb
+           if (aEvent->point.y < (-mSnapMultiplier * thumbSize.height) || 
+               aEvent->point.y > thumbSize.height + (mSnapMultiplier * thumbSize.height))
+             isMouseOutsideThumb = PR_TRUE;
+         }
+         else {
+           // vertical scrollbar - check if mouse is left or right of thumb
+           if (aEvent->point.x < (-mSnapMultiplier * thumbSize.width) || 
+               aEvent->point.x > thumbSize.width + (mSnapMultiplier * thumbSize.width))
+             isMouseOutsideThumb = PR_TRUE;
+         }
        }
        if (isMouseOutsideThumb)
        {
