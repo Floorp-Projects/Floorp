@@ -27,7 +27,7 @@
 #include "nsParserTypes.h"
 #include "nsVoidArray.h"
 #include "nsTokenHandler.h"
-
+#include "nsIDTDDebug.h"
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
@@ -48,6 +48,7 @@ static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID);
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kHTMLTextContentType = "text/html";
+static char* kVerificationDir = "c:/temp";
 
 static nsAutoString gEmpty;
 
@@ -372,21 +373,28 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
 }
 
 /**
- * 
- * @update	jevering6/23/98
+ * Called by the parser to initiate dtd verification of the
+ * internal context stack.
+ * @update	gess 7/23/98
  * @param 
  * @return
  */
+PRBool CNavDTD::Verify(nsString& aURLRef){
+  PRBool result=PR_TRUE;
 
-void CNavDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug)
-{
-	if (mDTDDebug)
-		NS_RELEASE(mDTDDebug);
-	mDTDDebug = aDTDDebug;
-	if (mDTDDebug)
-		NS_ADDREF(mDTDDebug);
+  if(!mDTDDebug){;
+    nsresult rval = NS_NewDTDDebug(&mDTDDebug);
+    if (NS_OK != rval) {
+      fputs("Cannot create parser debugger.\n", stdout);
+      result=-PR_FALSE;
+    }
+    else mDTDDebug->SetVerificationDirectory(kVerificationDir);
+  }
+  if(mDTDDebug) {
+    mDTDDebug->Verify(this,mParser,mContextStack.mCount,mContextStack.mTags,aURLRef);
+  }
+  return result;
 }
-
 
 /**
  * This method is called to determine if the given DTD can parse
@@ -451,6 +459,9 @@ nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
     result = mSink->DidBuildModel(1);
   }
 
+  if(mDTDDebug) {
+    mDTDDebug->DumpVectorRecord();
+  }
   return result;
 }
 

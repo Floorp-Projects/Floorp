@@ -46,7 +46,6 @@ class nsIContentSink;
 class nsIStreamObserver;
 class nsString;
 class nsIURL;
-class nsIDTDDebug;
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -93,9 +92,9 @@ class nsIParser : public nsISupports {
      *  until you wind up being emitted to the given contentsink (which may or may not
 	   *  be a proxy for the NGLayout content model).
      ******************************************************************************************/
-    virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,nsIDTDDebug * aDTDDebug = 0) = 0;
-    virtual PRInt32 Parse(fstream& aStream)=0;
-    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString)=0;
+    virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual PRInt32 Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

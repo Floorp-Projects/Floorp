@@ -169,6 +169,7 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_ADDREF(myObserver);
   g_workList = workList;
 
+/*
   nsIDTDDebug * pIDTDDebug;
   nsresult rval = NS_NewDTDDebug(&pIDTDDebug);
   if (NS_OK != rval) {
@@ -177,6 +178,7 @@ extern "C" NS_EXPORT int DebugRobot(
     return -1;
   }
   pIDTDDebug->SetVerificationDirectory(verify_dir);
+*/
 
   for (;;) {
     PRInt32 n = g_workList->Count();
@@ -193,7 +195,6 @@ extern "C" NS_EXPORT int DebugRobot(
       printf("invalid URL: '");
       fputs(*urlName, stdout);
       printf("'\n");
-      NS_RELEASE(pIDTDDebug);
       NS_RELEASE(myObserver);
       return -1;
     }
@@ -212,7 +213,6 @@ extern "C" NS_EXPORT int DebugRobot(
     rv = NS_NewParser(&parser);
     if (NS_OK != rv) {
       printf("can't make parser\n");
-      NS_RELEASE(pIDTDDebug);
       NS_RELEASE(myObserver);
       return -1;
     }
@@ -221,7 +221,6 @@ extern "C" NS_EXPORT int DebugRobot(
     rv = NS_NewRobotSink(&sink);
     if (NS_OK != rv) {
       printf("can't make parser\n");
-      NS_RELEASE(pIDTDDebug);
       NS_RELEASE(myObserver);
       return -1;
     }
@@ -229,9 +228,9 @@ extern "C" NS_EXPORT int DebugRobot(
     sink->AddObserver(myObserver);
 
     parser->SetContentSink(sink);
-    g_bReadyForNextUrl = PR_FALSE;
+    g_bReadyForNextUrl = PR_FALSE; 
 
-    parser->Parse(url, pl, pIDTDDebug);/* XXX hook up stream listener here! */
+    parser->Parse(url, pl,PR_TRUE);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
        if (yieldProc != NULL)
           (*yieldProc)(url->GetSpec());
@@ -256,8 +255,8 @@ extern "C" NS_EXPORT int DebugRobot(
   NS_RELEASE(pl);
   NS_RELEASE(myObserver);
 
-  pIDTDDebug->DumpVectorRecord();
-  NS_RELEASE(pIDTDDebug);
+//  pIDTDDebug->DumpVectorRecord();
+  //NS_RELEASE(pIDTDDebug);
 
   return 0;
 }

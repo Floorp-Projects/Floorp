@@ -1740,18 +1740,25 @@ PRBool nsXIFDTD::VerifyContextVector(void) const {
 }
 
 /**
- * This debug method allows us to determine whether or not 
- * we've seen (and can handle) the given context vector.
- *
- * @update  gpk 06/18/98
- * @param   tags is an array of eXIFTags
- * @param   count represents the number of items in the tags array
- * @param   aDTD is the DTD we plan to ask for verification
- * @return  TRUE if we know how to handle it, else false
+ * Called by the parser to enable/disable dtd verification of the
+ * internal context stack.
+ * @update	gess 7/23/98
+ * @param 
+ * @return
  */
-PRBool nsXIFDTD::Verify(const char* anOutputDir,PRBool aRecordStats) {
+void nsXIFDTD::SetVerification(PRBool aEnabled){
+}
 
-  PRBool  result=PR_TRUE;
+
+/**
+ * Called by the parser to initiate dtd verification of the
+ * internal context stack.
+ * @update	gess 7/23/98
+ * @param 
+ * @return
+ */
+PRBool nsXIFDTD::Verify(nsString& aURLRef){
+  PRBool result=PR_TRUE;
   return result;
 }
 
@@ -1765,27 +1772,6 @@ PRBool nsXIFDTD::CanContain(PRInt32 aParent,PRInt32 aChild)
 void nsXIFDTD::SetURLRef(char * aURLRef)
 {
 }
-
-
-
-
-/**
- * 
- * @update	jevering6/23/98
- * @param 
- * @return
- */
-
-void nsXIFDTD::SetDTDDebug(nsIDTDDebug * aDTDDebug)
-{
-	if (mDTDDebug)
-		NS_RELEASE(mDTDDebug);
-	mDTDDebug = aDTDDebug;
-	if (mDTDDebug)
-		NS_ADDREF(mDTDDebug);
-}
-
-
 
 
 /*** CSS Methods ****/

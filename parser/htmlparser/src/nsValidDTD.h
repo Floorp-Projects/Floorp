@@ -183,12 +183,22 @@ class CValidDTD : public nsIDTD {
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
 
     /**
-     * 
-     * @update	jevering6/23/98
+     * Called by the parser to initiate dtd verification of the
+     * internal context stack.
+     * @update	gess 7/23/98
      * @param 
      * @return
      */
-	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
+    virtual PRBool Verify(nsString& aURLRef);
+
+    /**
+     * Set this to TRUE if you want the DTD to verify its
+     * context stack.
+     * @update	gess 7/23/98
+     * @param 
+     * @return
+     */
+    virtual void SetVerification(PRBool aEnable);
 
     /**
      *  This method is called to determine whether or not a tag

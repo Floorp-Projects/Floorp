@@ -859,7 +859,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
       //now it's time to Consume the (optional) value...
     if(NS_OK == (result=aScanner.SkipWhitespace())) { 
       //Skip ahead until you find an equal sign or a '>'...
-      if(NS_OK == (result=aScanner.SkipTo(kAllButEqualOrGT))) { 
+//    if(NS_OK == (result=aScanner.SkipTo(kAllButEqualOrGT))) { 
         if(NS_OK == (result=aScanner.Peek(aChar))) {  
           if(kEqual==aChar){
             result=aScanner.GetChar(aChar);  //skip the equal sign...
@@ -883,7 +883,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
             }//if
           }//if
         }//if
-      }//if
+//      }if
     }
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);

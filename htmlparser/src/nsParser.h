@@ -70,7 +70,6 @@
 class IContentSink;
 class nsIHTMLContentSink;
 class nsIDTD;
-class nsIDTDDebug;
 class CScanner;
 class nsIParserFilter;
 #include <fstream.h>
@@ -124,9 +123,7 @@ friend class CTokenHandler;
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsIURL* aURL,
-                          nsIStreamObserver* aListener, 
-                          nsIDTDDebug* aDTDDebug = 0);
+    virtual PRInt32 Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aEnableVerify=PR_FALSE);
 
     /**
      * Cause parser to parse input from given stream 
@@ -134,7 +131,7 @@ friend class CTokenHandler;
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(fstream& aStream);
+    virtual PRInt32 Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE);
 
     /**
      * @update	gess5/11/98
@@ -142,7 +139,7 @@ friend class CTokenHandler;
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString);
+    virtual PRInt32 Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE);
 
     /**
      * This method gets called (automatically) during incremental parsing
@@ -218,7 +215,7 @@ protected:
      * @return  YES if model building went well -- NO otherwise.
      */
     virtual PRInt32 BuildModel(void);
-  
+    
 private:
 
     /*******************************************
@@ -298,9 +295,7 @@ protected:
     nsIStreamObserver*  mObserver;
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
-
-	  nsIDTDDebug*		    mDTDDebug;
-
+    PRBool              mDTDVerification;
 };
 
 

@@ -207,12 +207,15 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
     /**
-     * Sets a debugger into the DTD to help up debug the process.
-     * @update	jevering6/23/98
-     * @param	aDTDDedug is a ptr to the debug object you want us to use
+     * Called by the parser to initiate dtd verification of the
+     * internal context stack.
+     * @update	gess 7/23/98
+     * @param 
+     * @return
      */
-	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug);
+    virtual PRBool Verify(nsString& aURLRef);
 
+   
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
       * the process begins, WillBuildModel() is called. Afterwards the parser
@@ -603,6 +606,7 @@ protected:
     nsString            mFilename;
     nsIDTDDebug*		    mDTDDebug;
     PRInt32             mLineNumber;
+
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);

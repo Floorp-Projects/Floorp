@@ -169,12 +169,14 @@ class nsIDTD : public nsISupports {
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild)=0;
 
     /**
-     * 
-     * @update	jevering6/23/98
+     * Called by the parser to initiate dtd verification of the
+     * internal context stack.
+     * @update	gess 7/23/98
      * @param 
      * @return
      */
-	  virtual void SetDTDDebug(nsIDTDDebug * aDTDDebug) = 0;
+    virtual PRBool Verify(nsString& aURLRef)=0;
+
 };
 
 #endif /* nsIDTD_h___ */
