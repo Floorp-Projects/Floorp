@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.60 2003/10/31 07:01:05 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.61 2003/11/05 06:22:57 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -8120,7 +8120,7 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 	*buf = *origBuf;
     }
     while (buf->len > 0) {
-	while (ssl3->hs.header_bytes < 4) {
+	if (ssl3->hs.header_bytes < 4) {
 	    uint8 t;
 	    t = *(buf->buf++);
 	    buf->len--;
@@ -8128,21 +8128,22 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 		ssl3->hs.msg_type = (SSL3HandshakeType)t;
 	    else
 		ssl3->hs.msg_len = (ssl3->hs.msg_len << 8) + t;
+	    if (ssl3->hs.header_bytes < 4)
+	    	continue;
 
 #define MAX_HANDSHAKE_MSG_LEN 0x1ffff	/* 128k - 1 */
-
-	    if (ssl3->hs.header_bytes == 4) {
-		if (ssl3->hs.msg_len > MAX_HANDSHAKE_MSG_LEN) {
-		    (void)ssl3_DecodeError(ss);
-		    PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
-		    return SECFailure;
-		}
+	    if (ssl3->hs.msg_len > MAX_HANDSHAKE_MSG_LEN) {
+		(void)ssl3_DecodeError(ss);
+		PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
+		return SECFailure;
 	    }
 #undef MAX_HANDSHAKE_MSG_LEN
-	    if (buf->len == 0 && ssl3->hs.msg_len > 0) {
-		buf->buf = NULL;
-		return SECSuccess;
-	    }
+
+	    /* If msg_len is zero, be sure we fall through, 
+	    ** even if buf->len is zero. 
+	    */
+	    if (ssl3->hs.msg_len > 0) 
+	    	continue;
 	}
 
 	/*
