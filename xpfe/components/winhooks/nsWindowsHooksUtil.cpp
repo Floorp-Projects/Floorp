@@ -40,6 +40,7 @@
 
 #include "nsString.h"
 #include "nsINativeAppSupportWin.h"
+#include "nsIStringBundle.h"
 
 // Where Mozilla stores its own registry values.
 const char * const mozillaKeyName = "Software\\Mozilla\\Desktop";
@@ -364,6 +365,26 @@ static void setWindowsXP() {
                            nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\open\\command" ) ).get(),
                            "", 
                            thisApplication().get() ).set();
+            // "Properties" verb.  The default value is the text that will appear in the menu.
+            // The default value under the command subkey is the name of this application, with
+            // arguments to cause the Preferences window to appear.
+            nsCOMPtr<nsIStringBundleService> bundleService( do_GetService( "@mozilla.org/intl/stringbundle;1" ) );
+            nsCOMPtr<nsIStringBundle> bundle;
+            nsXPIDLString label;
+            if ( bundleService &&
+                 NS_SUCCEEDED( bundleService->CreateBundle( "chrome://global-platform/locale/nsWindowsHooks.properties",
+                                                       getter_AddRefs( bundle ) ) ) &&
+                 NS_SUCCEEDED( bundle->GetStringFromName( NS_LITERAL_STRING( "prefsLabel" ).get(), getter_Copies( label ) ) ) ) {
+                // Set the label that will appear in the start menu context menu.
+                RegistryEntry( HKEY_LOCAL_MACHINE,
+                               nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties" ) ).get(),
+                               "", 
+                               NS_ConvertUCS2toUTF8( label ).get() ).set();
+            }
+            RegistryEntry( HKEY_LOCAL_MACHINE,
+                           nsCAutoString( subkey + NS_LITERAL_CSTRING( "\\shell\\properties\\command" ) ).get(),
+                           "", 
+                           nsCAutoString( thisApplication() + NS_LITERAL_CSTRING( "-chrome \"chrome://communicator/content/pref/pref.xul\"" ) ).get() ).set();
 
             // Now we need to select our application as the default start menu internet application.
             // This is accomplished by first trying to store our subkey name in 
@@ -412,7 +433,7 @@ nsresult RegistryEntry::reset() {
     if ( rc == ERROR_SUCCESS ) {
         rc = ::RegDeleteValue( key, valueNameArg() );
 #ifdef DEBUG_law
-if ( rc == ERROR_SUCCESS ) printf( "Deleting key=%s\n", (const char*)fullName() );
+if ( rc == ERROR_SUCCESS ) printf( "Deleting key=%s\n", (const char*)fullName().get() );
 #endif
     }
     return NS_OK;
