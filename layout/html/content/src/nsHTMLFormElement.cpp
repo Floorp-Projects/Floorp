@@ -25,7 +25,8 @@
 #include "nsIFormManager.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
-#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLFormControlList.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -41,6 +42,7 @@
 #include "nsIFrame.h"
 #include "nsISizeOfHandler.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsDOMError.h"
 #include "nsLayoutUtils.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -97,8 +99,8 @@ public:
 
   // nsIDOMNSHTMLFormElement
   NS_IMETHOD    GetEncoding(nsString& aEncoding);
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMElement** aReturn);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn);
+  NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);
   
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -138,12 +140,13 @@ protected:
 };
 
 // nsFormControlList
-class nsFormControlList : public nsIDOMHTMLCollection, public nsIScriptObjectOwner {
+class nsFormControlList : public nsIDOMHTMLFormControlList, public nsIScriptObjectOwner {
 public:
-  nsFormControlList();
+  nsFormControlList(nsIDOMHTMLFormElement* aForm);
   virtual ~nsFormControlList();
 
   void Clear();
+  void SetForm(nsIDOMHTMLFormElement* aForm);
 
   NS_DECL_ISUPPORTS
 
@@ -153,17 +156,16 @@ public:
 
   // nsIDOMHTMLCollection interface
   NS_DECL_IDOMHTMLCOLLECTION
-  
-  // Called to tell us that the form is going away and that we
-  // should drop our (non ref-counted) reference to it
-  void ReleaseForm();
+  NS_DECL_IDOMHTMLFORMCONTROLLIST
 
+  nsresult      GetNamedObject(JSContext* aContext, jsval aID, JSObject** aObj);
 #ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
   void        *mScriptObject;
   nsVoidArray  mElements;
+  nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
 };
 
 // nsHTMLFormElement implementation
@@ -188,7 +190,7 @@ nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
-  mControls = new nsFormControlList();
+  mControls = new nsFormControlList(this);
   NS_ADDREF(mControls);
 //nsTraceRefcnt::Create((nsIForm*)this, "nsHTMLFormElement", __FILE__, __LINE__);
 }
@@ -208,6 +210,7 @@ nsHTMLFormElement::~nsHTMLFormElement()
     }
   }
 
+  mControls->SetForm(nsnull);
   NS_RELEASE(mControls);
 
 //nsTraceRefcnt::Destroy((nsIForm*)this, __FILE__, __LINE__);
@@ -505,23 +508,61 @@ nsHTMLFormElement::GetLength(PRUint32* aLength)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP    
-nsHTMLFormElement::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
+nsHTMLFormElement::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)
 {
-  // XXX For now we just search our element list. In reality, we'll have
-  // to look at all of our children, including images, objects, etc.
-  nsIDOMNode *node;
-  nsresult result = mControls->NamedItem(aName, &node);
-  
-  if ((NS_OK == result) && (nsnull != node)) {
-    result = node->QueryInterface(kIDOMElementIID, (void **)aReturn);
-    NS_RELEASE(node);
-  }
-  else {
-    *aReturn = nsnull;
+  nsresult result = mControls->NamedItem(cx, argv, argc, aReturn);
+  if (NS_FAILED(result)) {
+    return result;
   }
 
-  return result;
+  // If we couldn't find it in our controls list, it may be
+  // a different type of element (IMG, OBJECT, etc.)
+  if ((nsnull == *aReturn) && (nsnull != mInner.mDocument) && (argc > 0)) {
+    char* str = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+    nsAutoString name(str); 
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mInner.mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      result = globalObject->GetContext(getter_AddRefs(scriptContext));
+    }
+    
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mInner.mDocument);
+    if (htmlDoc) {
+      nsCOMPtr<nsIDOMNodeList> list;
+      result = htmlDoc->GetElementsByName(name, getter_AddRefs(list));
+      if (NS_FAILED(result)) {
+        return result;
+      }
+    
+      if (list) {
+        PRUint32 count;
+        list->GetLength(&count);
+        if (count > 0) {
+          nsCOMPtr<nsIDOMNode> node;
+          
+          result = list->Item(0, getter_AddRefs(node));
+          if (NS_FAILED(result)) {
+            return result;
+          }
+          if (node) {
+            nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(node);
+            JSObject* obj;
+            
+            result = owner->GetScriptObject(scriptContext, (void**)&obj);
+            if (NS_FAILED(result)) {
+              return result;
+            }
+            *aReturn = OBJECT_TO_JSVAL(obj);
+          }
+        }
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 PRBool    
@@ -554,42 +595,72 @@ nsHTMLFormElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
   return mInner.EnumerateProperty(aContext, aObj);
 }
 
+
 PRBool    
 nsHTMLFormElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
 {
-  nsCOMPtr<nsIDOMElement> element;
+  PRBool ret;
+  JSObject* obj;
   char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
   nsAutoString name(str); 
+  nsCOMPtr<nsIScriptContext> scriptContext;
   nsresult result = NS_OK;
-  PRBool ret = PR_TRUE;
 
-  result = NamedItem(name, getter_AddRefs(element));
-  if (NS_SUCCEEDED(result) && element) {
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(element);
+  result = nsLayoutUtils::GetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptContext));
+
+  // If we can't get a script context, there's nothing we can do
+  if (!scriptContext || NS_FAILED(result)) {
+    return PR_FALSE;
+  }
+  
+  result = mControls->GetNamedObject(aContext, aID, &obj);
+  if (NS_FAILED(result)) {
+    return PR_FALSE;
+  }
+
+  if ((nsnull == obj) && (nsnull != mInner.mDocument)) {
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mInner.mDocument);
+    if (htmlDoc) {
+      nsCOMPtr<nsIDOMNodeList> list;
+      result = htmlDoc->GetElementsByName(name, getter_AddRefs(list));
+      if (NS_FAILED(result)) {
+        return PR_FALSE;
+      }
     
-    if (owner) {
-      nsCOMPtr<nsIScriptContext> scriptContext;
-      nsLayoutUtils::GetStaticScriptContext(aContext, aObj,
-                                            getter_AddRefs(scriptContext));
-      if (scriptContext) {
-        JSObject* obj;
-        result = owner->GetScriptObject(scriptContext, (void**)&obj);
-        if (NS_SUCCEEDED(result) && (nsnull != obj)) {
-          ret = ::JS_DefineProperty(aContext, aObj,
-                                    str, OBJECT_TO_JSVAL(obj),
-                                    nsnull, nsnull, 0);
+      if (list) {
+        PRUint32 count;
+        list->GetLength(&count);
+        if (count > 0) {
+          nsCOMPtr<nsIDOMNode> node;
+          
+          result = list->Item(0, getter_AddRefs(node));
+          if (NS_FAILED(result)) {
+            return PR_FALSE;
+          }
+          if (node) {
+            nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(node);
+            
+            result = owner->GetScriptObject(scriptContext, (void**)&obj);
+            if (NS_FAILED(result)) {
+              return PR_FALSE;
+            }
+          }
         }
       }
     }
   }
+
+  if (nsnull != obj) {
+    JSObject* myObj;
+    result = mInner.GetScriptObject(scriptContext, (void**)&myObj);
+    ret = ::JS_DefineProperty(aContext, myObj,
+                              str, OBJECT_TO_JSVAL(obj),
+                              nsnull, nsnull, 0);
+  }
   else {
     ret = mInner.Resolve(aContext, aObj, aID);
   }
-
-  if (NS_FAILED(result)) {
-    ret = PR_FALSE;
-  }
-
+  
   return ret;
 }
 
@@ -628,14 +699,16 @@ nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
 // nsFormControlList implementation, this could go away if there were a lightweight collection implementation somewhere
 
 
-nsFormControlList::nsFormControlList() 
+nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm) 
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
+  mForm = aForm; // WEAK - the form owns me
 }
 
 nsFormControlList::~nsFormControlList()
 {
+  mForm = nsnull;
   Clear();
 }
 
@@ -644,6 +717,12 @@ nsFormControlList::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = aScriptObject;
   return NS_OK;
+}
+
+void
+nsFormControlList::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  mForm = aForm; // WEAK - the form owns me
 }
 
 void
@@ -656,42 +735,13 @@ nsFormControlList::Clear()
   }
 }
 
-nsresult nsFormControlList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLCollection))) {
-    nsIDOMHTMLCollection* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    nsIDOMHTMLCollection* tmp = this;
-    nsISupports* tmp1 = tmp;
-    *aInstancePtr = (void*)tmp1;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsFormControlList)
-NS_IMPL_RELEASE(nsFormControlList)
-
+NS_IMPL_ISUPPORTS3(nsFormControlList, nsIDOMHTMLCollection, nsIDOMHTMLFormControlList, nsIScriptObjectOwner)
 
 nsresult nsFormControlList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLCollection(aContext, (nsISupports *)(nsIDOMHTMLCollection *)this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptHTMLFormControlList(aContext, (nsISupports *)(nsIDOMHTMLCollection *)this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -720,6 +770,181 @@ nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   }
   *aReturn = nsnull;
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsFormControlList::Item(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)
+{
+  nsCOMPtr<nsIDOMNode> element;
+  nsresult result;
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  nsCOMPtr<nsIScriptObjectOwner> owner;
+  PRInt32 index;
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIContent> content;
+
+  if (argc < 1) {
+    return NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR;
+  }
+  
+  *aReturn = nsnull;
+  if (!JS_ValueToInt32(cx, argv[0], (int32*)&index)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (nsnull == mForm) {
+    return NS_OK;
+  }
+  
+  content = do_QueryInterface(mForm);
+  if (content) {
+    result = content->GetDocument(*getter_AddRefs(document));
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }
+
+  if (document) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    document->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      result = globalObject->GetContext(getter_AddRefs(scriptContext));
+    }
+  }
+
+  // If we can't get a script context, there's nothing we can do
+  if (!scriptContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  result = Item((PRUint32)index, getter_AddRefs(element));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  if (element) {
+    owner = do_QueryInterface(element);
+
+    if (owner) {
+      JSObject* obj;
+      result = owner->GetScriptObject(scriptContext, (void**)&obj);
+      if (NS_FAILED(result)) {
+        return result;
+      }
+      *aReturn = OBJECT_TO_JSVAL(obj);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsFormControlList::GetNamedObject(JSContext* aContext, jsval aID, JSObject** aObj) 
+{
+  nsCOMPtr<nsIDOMNode> element;
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  nsCOMPtr<nsIScriptObjectOwner> owner;
+  char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+  nsAutoString name(str); 
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIContent> content;
+
+  *aObj = nsnull;
+  if (nsnull == mForm) {
+    return NS_OK;
+  }
+  
+  content = do_QueryInterface(mForm);
+  if (content) {
+    result = content->GetDocument(*getter_AddRefs(document));
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }
+
+  if (document) {
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    document->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      result = globalObject->GetContext(getter_AddRefs(scriptContext));
+    }
+  }
+
+  // If we can't get a script context, there's nothing we can do
+  if (!scriptContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // First see if it's a named element in the form
+  result = NamedItem(name, getter_AddRefs(element));
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  if (element) {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+    nsAutoString type;
+
+    // See if it is radio button
+    result = content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+
+    // If it is, then get all radio buttons or checkboxes with the same name
+    if (document && (type.Equals("Radio") || type.Equals("Checkbox"))) {
+      nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(document);
+      if (htmlDoc) {
+        nsCOMPtr<nsIDOMNodeList> list;
+        result = htmlDoc->GetElementsByName(name, getter_AddRefs(list));
+        if (NS_FAILED(result)) {
+          return result;
+        }
+
+        // Make sure that we have more than one element in the list
+        if (list) {
+          PRUint32 count;
+          list->GetLength(&count);
+          if (count > 1) {
+            owner = do_QueryInterface(list);
+          }
+        }
+      }
+    }
+
+    if (!owner) {
+      owner = do_QueryInterface(element);
+    }
+  }
+
+  if (owner) {
+    result = owner->GetScriptObject(scriptContext, (void**)aObj);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+  }  
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsFormControlList::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)
+{
+  JSObject *obj;
+  nsresult result = NS_OK;
+
+  if (argc > 0) {
+    result = GetNamedObject(cx, argv[0], &obj);
+    if (NS_SUCCEEDED(result) && (nsnull != obj)) {
+      *aReturn = OBJECT_TO_JSVAL(obj);
+    }
+  }
+  else {
+    result = NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR;
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP 

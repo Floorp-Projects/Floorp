@@ -58,6 +58,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLButtonElement.h"	   
 #include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLFormControlList.h"
 #include "nsIDOMHTMLDListElement.h"	   
 #include "nsIDOMHTMLDirectoryElement.h"	   
 #include "nsIDOMHTMLDivElement.h"
@@ -711,6 +712,7 @@ void XXXDomNeverCalled()
     NS_NewScriptRange(0, 0, 0, 0);
     NS_NewScriptSelection(0, 0, 0, 0);
     NS_NewScriptSelectionListener(0, 0, 0, 0);
+    NS_NewScriptHTMLFormControlList(0, 0, 0, 0);
     NS_InitDocumentClass(nsnull, nsnull);
   }
 }

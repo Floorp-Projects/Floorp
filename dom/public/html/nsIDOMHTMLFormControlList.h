@@ -21,43 +21,43 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMNSHTMLFormElement_h__
-#define nsIDOMNSHTMLFormElement_h__
+#ifndef nsIDOMHTMLFormControlList_h__
+#define nsIDOMHTMLFormControlList_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMHTMLCollection.h"
 #include "jsapi.h"
 
-class nsIDOMElement;
 
-#define NS_IDOMNSHTMLFORMELEMENT_IID \
- { 0xa6cf90c6, 0x15b3, 0x11d2, \
+#define NS_IDOMHTMLFORMCONTROLLIST_IID \
+ { 0xa6cf911a, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } 
 
-class nsIDOMNSHTMLFormElement : public nsISupports {
+class nsIDOMHTMLFormControlList : public nsIDOMHTMLCollection {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLFORMELEMENT_IID; return iid; }
-
-  NS_IMETHOD    GetEncoding(nsString& aEncoding)=0;
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFORMCONTROLLIST_IID; return iid; }
 
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD    Item(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 };
 
 
-#define NS_DECL_IDOMNSHTMLFORMELEMENT   \
-  NS_IMETHOD    GetEncoding(nsString& aEncoding);  \
+#define NS_DECL_IDOMHTMLFORMCONTROLLIST   \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    Item(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
 
 
 
-#define NS_FORWARD_IDOMNSHTMLFORMELEMENT(_to)  \
-  NS_IMETHOD    GetEncoding(nsString& aEncoding) { return _to GetEncoding(aEncoding); } \
+#define NS_FORWARD_IDOMHTMLFORMCONTROLLIST(_to)  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to NamedItem(cx, argv, argc, aReturn); }  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    Item(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to Item(cx, argv, argc, aReturn); }  \
 
 
-#endif // nsIDOMNSHTMLFormElement_h__
+extern "C" NS_DOM nsresult NS_InitHTMLFormControlListClass(nsIScriptContext *aContext, void **aPrototype);
+
+extern "C" NS_DOM nsresult NS_NewScriptHTMLFormControlList(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
+
+#endif // nsIDOMHTMLFormControlList_h__

@@ -369,6 +369,18 @@ static const char kPropFuncDefaultItemStr[] =
 "    }\n"
 "  }\n";
 
+static const char kPropFuncDefaultItemEllipsisStr[] = 
+"      default:\n"
+"      {\n"
+"        nsresult result = NS_OK;\n"
+"        result = a->Item(cx, &id, 1, vp);\n"
+"        if (NS_FAILED(result)) {\n"
+"          return nsJSUtils::nsReportError(cx, obj, result);\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n";
+
 static const char kPropFuncDefaultItemNonPrimaryStr[] = 
 "      default:\n"
 "      {\n"
@@ -383,6 +395,25 @@ static const char kPropFuncDefaultItemNonPrimaryStr[] =
 "          }\n"
 "          else {\n"
 "            NS_RELEASE(b);\n"
+"            return nsJSUtils::nsReportError(cx, obj, result);\n"
+"          }\n"
+"        }\n"
+"        else {\n"
+"          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"        }\n"
+"      }\n"
+"    }\n"
+"  }\n";
+
+static const char kPropFuncDefaultItemEllipsisNonPrimaryStr[] = 
+"      default:\n"
+"      {\n"
+"        nsIDOM%s* b;\n"
+"        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"          nsresult result = NS_OK;\n"
+"          result = b->Item(cx, &id, 1, vp);\n"
+"          NS_RELEASE(b);\n"
+"          if (NS_FAILED(result)) {\n"
 "            return nsJSUtils::nsReportError(cx, obj, result);\n"
 "          }\n"
 "        }\n"
@@ -430,6 +461,15 @@ static const char kPropFuncNamedItemStr[] =
 "    }\n"
 "  }\n";
 
+static const char kPropFuncNamedItemEllipsisStr[] = 
+"\n"
+"  if (checkNamedItem) {\n"
+"    nsresult result = a->NamedItem(cx, &id, 1, vp);\n"
+"    if (NS_FAILED(result)) {\n"
+"      return nsJSUtils::nsReportError(cx, obj, result);\n"
+"    }\n"
+"  }\n";
+
 static const char kPropFuncNamedItemNonPrimaryStr[] =
 "\n"
 "  if (checkNamedItem) {\n"
@@ -459,6 +499,23 @@ static const char kPropFuncNamedItemNonPrimaryStr[] =
 "      }\n"
 "      else {\n"
 "        NS_RELEASE(b);\n"
+"        return nsJSUtils::nsReportError(cx, obj, result);\n"
+"      }\n"
+"    }\n"
+"    else {\n"
+"      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
+"    }\n"
+"  }\n";
+
+static const char kPropFuncNamedItemEllipsisNonPrimaryStr[] = 
+"\n"
+"  if (checkNamedItem) {\n"
+"    nsIDOM%s* b;\n"
+"    nsresult result = NS_OK;\n"
+"    if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
+"      result = b->NamedItem(cx, &id, 1, vp);\n"
+"      NS_RELEASE(b);\n"
+"      if (NS_FAILED(result)) {\n"
 "        return nsJSUtils::nsReportError(cx, obj, result);\n"
 "      }\n"
 "    }\n"
@@ -507,6 +564,8 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   IdlFunction *named_item_func = NULL;
   IdlInterface *item_iface = NULL;
   IdlInterface *named_item_iface = NULL;
+  PRBool named_item_has_ellipsis = PR_FALSE;
+  PRBool item_has_ellipsis = PR_FALSE;
   
   int i, icount = aSpec.InterfaceCount();
   for (i = 0; i < icount; i++) {
@@ -519,10 +578,12 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
       if (strcmp(func->GetName(), "item") == 0) {
         item_func = func;
         item_iface = iface;
+        item_has_ellipsis = func->GetHasEllipsis();
       }
       else if (strcmp(func->GetName(), "namedItem") == 0) {
         named_item_func = func;
         named_item_iface = iface;
+        named_item_has_ellipsis = func->GetHasEllipsis();
       }
     }
   }
@@ -591,9 +652,16 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
   if (aIsGetter) {
     if (NULL != item_func) {
       IdlVariable *rval = item_func->GetReturnValue();
-      GeneratePropGetter(file, *item_iface, *rval, 
-                         item_iface == primary_iface ? 
-                         JSSTUBGEN_DEFAULT : JSSTUBGEN_DEFAULT_NONPRIMARY);
+      if (item_has_ellipsis) {
+        GeneratePropGetter(file, *item_iface, *rval, 
+                           item_iface == primary_iface ? 
+                           JSSTUBGEN_DEFAULT_ELLIPSIS : JSSTUBGEN_DEFAULT_NONPRIMARY_ELLIPSIS);
+      }
+      else {
+        GeneratePropGetter(file, *item_iface, *rval, 
+                           item_iface == primary_iface ? 
+                           JSSTUBGEN_DEFAULT : JSSTUBGEN_DEFAULT_NONPRIMARY);
+      }
     }
     else if (NULL != named_item_func) {
       *file << kPropFuncDefaultNamedItemStr;
@@ -610,9 +678,16 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 
   if (aIsGetter && (NULL != named_item_func)) {
     IdlVariable *rval = named_item_func->GetReturnValue();
-    GeneratePropGetter(file, *named_item_iface, *rval, 
-                       named_item_iface == primary_iface ? 
-                       JSSTUBGEN_NAMED_ITEM : JSSTUBGEN_NAMED_ITEM_NONPRIMARY);
+    if (named_item_has_ellipsis) {
+      GeneratePropGetter(file, *named_item_iface, *rval,
+                         named_item_iface == primary_iface ? 
+                         JSSTUBGEN_NAMED_ITEM_ELLIPSIS : JSSTUBGEN_NAMED_ITEM_NONPRIMARY_ELLIPSIS);
+    }
+    else {
+      GeneratePropGetter(file, *named_item_iface, *rval, 
+                         named_item_iface == primary_iface ? 
+                         JSSTUBGEN_NAMED_ITEM : JSSTUBGEN_NAMED_ITEM_NONPRIMARY);
+    }
   }
 
   if (aIsGetter) {
@@ -745,6 +820,13 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str);
   }
+  else if (JSSTUBGEN_DEFAULT_ELLIPSIS == aType) {
+    sprintf(buf, kPropFuncDefaultItemEllipsisStr);
+  }
+  else if (JSSTUBGEN_DEFAULT_NONPRIMARY_ELLIPSIS == aType) {
+    sprintf(buf, kPropFuncDefaultItemEllipsisNonPrimaryStr,
+            aInterface.GetName(), aInterface.GetName());
+  }
   else if (JSSTUBGEN_NAMED_ITEM == aType) {
     sprintf(buf, kPropFuncNamedItemStr, attr_type,
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
@@ -755,6 +837,13 @@ JSStubGen::GeneratePropGetter(ofstream *file,
             aInterface.GetName(), aInterface.GetName(),
             aAttribute.GetType() == TYPE_STRING ? "" : "&",
             case_str, "Get");
+  }
+  else if (JSSTUBGEN_NAMED_ITEM_ELLIPSIS == aType) {
+    sprintf(buf, kPropFuncNamedItemEllipsisStr);
+  }
+  else if (JSSTUBGEN_NAMED_ITEM_NONPRIMARY_ELLIPSIS == aType) {
+    sprintf(buf, kPropFuncNamedItemEllipsisNonPrimaryStr,
+            aInterface.GetName(), aInterface.GetName());
   }
 
   *file << buf;
