@@ -126,7 +126,7 @@ class nsIParserNode {
      * @update	gess7/24/98
      * @return  int containing the line number the token was found on
      */
-    virtual PRUint16 GetSourceLineNumber(void)=0;
+    virtual PRInt32 GetSourceLineNumber(void) const =0;
 
 };
 

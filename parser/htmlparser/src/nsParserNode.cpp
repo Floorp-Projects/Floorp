@@ -30,9 +30,10 @@ const nsAutoString nsCParserNode::mEmptyString("");
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken): nsIParserNode() {
+nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber): nsIParserNode() {
   NS_PRECONDITION(0!=aToken, "Null Token");
   mAttributeCount=0;
+  mLineNumber=aLineNumber;
   mToken=aToken;
   memset(mAttributes,0,sizeof(mAttributes));
 }
@@ -209,7 +210,7 @@ PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
  * @update	gess7/24/98
  * @return  int containing the line number the token was found on
  */
-PRUint16 nsCParserNode::GetSourceLineNumber(void){
-  return mToken->GetSourceLineNumber();
+PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
+  return mLineNumber;
 }
 

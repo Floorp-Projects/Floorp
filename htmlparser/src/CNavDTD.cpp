@@ -341,6 +341,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller),
   mParser=0;
   mSink = nsnull;
   mDTDDebug=0;
+  mLineNumber=1;
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
@@ -426,6 +427,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
+  mLineNumber=1;
 
   if((1==aLevel) && (mSink)) {
     result = mSink->WillBuildModel();
@@ -557,7 +559,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   eHTMLTags     tokenTagType=(eHTMLTags)st->GetTypeID();
 
   //Begin by gathering up attributes...
-  nsCParserNode attrNode((CHTMLToken*)aToken);
+  nsCParserNode attrNode((CHTMLToken*)aToken,mLineNumber);
   PRInt16       attrCount=aToken->GetAttributeCount();
   PRInt32       theCount;
   nsresult      result=(0==attrCount)
@@ -575,7 +577,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_title:
           {
-            nsCParserNode theNode(st);
+            nsCParserNode theNode(st,mLineNumber);
             result=OpenHead(theNode); //open the head...
             if(NS_OK==result) {
               result=mParser->CollectSkippedContent(attrNode,theCount);
@@ -599,7 +601,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         case eHTMLTag_meta:
         case eHTMLTag_link:
           {
-            nsCParserNode theNode((CHTMLToken*)aToken);
+            nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
             result=OpenHead(theNode);
             if(NS_OK==result)
               result=AddLeaf(attrNode);
@@ -610,7 +612,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_style:
           {
-            nsCParserNode theNode((CHTMLToken*)aToken);
+            nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
             result=OpenHead(theNode);
             if(NS_OK==result) {
               mParser->CollectSkippedContent(attrNode,theCount);
@@ -654,6 +656,10 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       } //switch
     } //if
   } //if
+
+  if(eHTMLTag_newline==tokenTagType)
+    mLineNumber++;
+
   return result;
 }
 
@@ -694,7 +700,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     return result;
   }
 
-  nsCParserNode theNode((CHTMLToken*)aToken);
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
   switch(tokenTagType) {
 
     case eHTMLTag_style:
@@ -708,14 +714,14 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_map:
       {
-        nsCParserNode aNode((CHTMLToken*)aToken);
+        nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
         result=CloseMap(aNode);
       }
       break;
 
     case eHTMLTag_form:
       {
-        nsCParserNode aNode((CHTMLToken*)aToken);
+        nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
         result=CloseForm(aNode);
       }
       break;
@@ -755,7 +761,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   eHTMLTags     tokenTagType=(eHTMLTags)et->GetTypeID();
 
   if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
-    nsCParserNode aNode((CHTMLToken*)aToken);
+    nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
     result=AddLeaf(aNode);
   }
   return result;
@@ -792,7 +798,7 @@ nsresult CNavDTD::HandleSkippedContentToken(CToken* aToken) {
   nsresult result=NS_OK;
 
   if(HasOpenContainer(eHTMLTag_body)) {
-    nsCParserNode aNode((CHTMLToken*)aToken);
+    nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
     result=AddLeaf(aNode);
   }
   return result;
@@ -830,8 +836,6 @@ nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
   nsresult result=NS_OK;
 
   PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
-//  nsCParserNode theNode((CHTMLToken*)aToken);
-//  nsCParserNode attrNode((CHTMLToken*)aToken);
   PRInt32 attrCount=aToken->GetAttributeCount();
 
   if (kNotFound == pos) {
@@ -1913,7 +1917,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
         if(PR_FALSE==HasOpenContainer(theTag)) {
 
           CStartToken   token(theTag);
-          nsCParserNode theNode(&token);
+          nsCParserNode theNode(&token,mLineNumber);
 
           switch(theTag) {
             case eHTMLTag_secret_h1style: case eHTMLTag_secret_h2style: 
@@ -2053,7 +2057,7 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
       result=CloseContainersTo(0,eHTMLTag_html,PR_TRUE);  //close current stack containers.
 
       CHTMLToken    token(gEmpty);
-      nsCParserNode htmlNode(&token);
+      nsCParserNode htmlNode(&token,mLineNumber);
 
       token.SetTypeID(eHTMLTag_html);  //open the html container...
       result=OpenHTML(htmlNode);
@@ -2195,6 +2199,7 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
   
   nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
+  PRInt32 num=aNode.GetSourceLineNumber();
 
 //  CloseTransientStyles(nodeType);
 
@@ -2302,7 +2307,7 @@ CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,
   nsresult result=NS_OK;
 
   CEndToken aToken(gEmpty);
-  nsCParserNode theNode(&aToken);
+  nsCParserNode theNode(&aToken,mLineNumber);
 
   if((anIndex<mContextStack.mCount) && (anIndex>=0)) {
     while(mContextStack.mCount>anIndex) {
@@ -2369,7 +2374,7 @@ nsresult CNavDTD::CloseTopmostContainer(){
   CEndToken aToken(gEmpty);
   eHTMLTags theTag=mContextStack.Last();
   aToken.SetTypeID(theTag);
-  nsCParserNode theNode(&aToken);
+  nsCParserNode theNode(&aToken,mLineNumber);
   return CloseContainer(theNode,theTag,PR_TRUE);
 }
 

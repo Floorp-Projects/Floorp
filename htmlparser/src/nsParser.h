@@ -301,6 +301,7 @@ protected:
     nsIParserFilter*    mParserFilter;
 
 	  nsIDTDDebug*		    mDTDDebug;
+
 };
 
 
