@@ -799,6 +799,8 @@ PK11_UnlinkGenericObject;
 ;+};
 ;+NSS_3.9.3 { 	# NSS 3.9.3 release
 ;+    global:
+PK11_PrivDecryptPKCS1;
+PK11_PubEncryptPKCS1;
 SECMOD_CancelWait;
 SECMOD_HasRemovableSlots;
 SECMOD_UpdateSlotList;

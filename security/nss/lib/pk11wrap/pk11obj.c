@@ -706,13 +706,12 @@ PK11_Sign(SECKEYPrivateKey *key, SECItem *sig, SECItem *hash)
  * then we need to move this check into some of PK11_PubDecrypt callers,
  * (namely SSL 2.0).
  */
-SECStatus
-PK11_PubDecryptRaw(SECKEYPrivateKey *key, unsigned char *data, 
+static SECStatus
+pk11_PrivDecryptRaw(SECKEYPrivateKey *key, unsigned char *data, 
 	unsigned *outLen, unsigned int maxLen, unsigned char *enc,
-							 unsigned encLen)
+				    unsigned encLen, CK_MECHANISM_PTR mech)
 {
     PK11SlotInfo *slot = key->pkcs11Slot;
-    CK_MECHANISM mech = {CKM_RSA_X_509, NULL, 0 };
     CK_ULONG out = maxLen;
     PRBool owner = PR_TRUE;
     CK_SESSION_HANDLE session;
@@ -732,15 +731,14 @@ PK11_PubDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
     }
     session = pk11_GetNewSession(slot,&owner);
     if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_DecryptInit(session,&mech,key->pkcs11ID);
+    crv = PK11_GETTAB(slot)->C_DecryptInit(session, mech, key->pkcs11ID);
     if (crv != CKR_OK) {
 	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
-    crv = PK11_GETTAB(slot)->C_Decrypt(session,enc, encLen,
-								data, &out);
+    crv = PK11_GETTAB(slot)->C_Decrypt(session,enc, encLen, data, &out);
     if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
     *outLen = out;
@@ -751,13 +749,30 @@ PK11_PubDecryptRaw(SECKEYPrivateKey *key, unsigned char *data,
     return SECSuccess;
 }
 
-/* The encrypt version of the above function */
 SECStatus
-PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
-		unsigned char *data, unsigned dataLen, void *wincx)
+PK11_PubDecryptRaw(SECKEYPrivateKey *key, unsigned char *data, 
+	unsigned *outLen, unsigned int maxLen, unsigned char *enc,
+				    unsigned encLen)
+{
+    CK_MECHANISM mech = {CKM_RSA_X_509, NULL, 0 };
+    return pk11_PrivDecryptRaw(key, data, outLen, maxLen, enc, encLen, &mech);
+}
+
+SECStatus
+PK11_PrivDecryptPKCS1(SECKEYPrivateKey *key, unsigned char *data, 
+	unsigned *outLen, unsigned int maxLen, unsigned char *enc,
+				    unsigned encLen)
+{
+    CK_MECHANISM mech = {CKM_RSA_PKCS, NULL, 0 };
+    return pk11_PrivDecryptRaw(key, data, outLen, maxLen, enc, encLen, &mech);
+}
+
+static SECStatus
+pk11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
+		    unsigned char *data, unsigned dataLen, 
+		    CK_MECHANISM_PTR mech, void *wincx)
 {
     PK11SlotInfo *slot;
-    CK_MECHANISM mech = {CKM_RSA_X_509, NULL, 0 };
     CK_OBJECT_HANDLE id;
     CK_ULONG out = dataLen;
     PRBool owner = PR_TRUE;
@@ -769,7 +784,7 @@ PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
 	return SECFailure;
     }
 
-    slot = PK11_GetBestSlot(mech.mechanism, wincx);
+    slot = PK11_GetBestSlot(mech->mechanism, wincx);
     if (slot == NULL) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
 	return SECFailure;
@@ -779,7 +794,7 @@ PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
 
     session = pk11_GetNewSession(slot,&owner);
     if (!owner || !(slot->isThreadSafe)) PK11_EnterSlotMonitor(slot);
-    crv = PK11_GETTAB(slot)->C_EncryptInit(session,&mech,id);
+    crv = PK11_GETTAB(slot)->C_EncryptInit(session, mech, id);
     if (crv != CKR_OK) {
 	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
@@ -796,6 +811,22 @@ PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
 	return SECFailure;
     }
     return SECSuccess;
+}
+
+SECStatus
+PK11_PubEncryptRaw(SECKEYPublicKey *key, unsigned char *enc,
+		unsigned char *data, unsigned dataLen, void *wincx)
+{
+    CK_MECHANISM mech = {CKM_RSA_X_509, NULL, 0 };
+    return pk11_PubEncryptRaw(key, enc, data, dataLen, &mech, wincx);
+}
+
+SECStatus
+PK11_PubEncryptPKCS1(SECKEYPublicKey *key, unsigned char *enc,
+		unsigned char *data, unsigned dataLen, void *wincx)
+{
+    CK_MECHANISM mech = {CKM_RSA_PKCS, NULL, 0 };
+    return pk11_PubEncryptRaw(key, enc, data, dataLen, &mech, wincx);
 }
 
 SECKEYPrivateKey *
