@@ -977,16 +977,21 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
 
     if( pDocData->edit_buffer == 0 )
     {
+#if 0
+// Don't do this - we end up here when using View | Reload 
+// TODO: NEED TO INVESTIGATE FURTHER - WE ARE CREATING A NEW DOC BEFORE
+//       DELETING THE OLD ONE when using reload.
         // We shouldn't have a buffer associated with a context and
         //  not have one in pDocData as well...
         // (This is needed because we now end up here when inserting images!)
         if( pEditBuffer )
         {
             // ...We should NEVER be in this situation
-            XP_ASSERT(FALSE);
+//            XP_ASSERT(FALSE);
             pDocData->edit_buffer = pEditBuffer;
         } 
         else 
+#endif
         {
             // HACK ALERT
             // Libnet does not seem to be able to supply us with a reliable
