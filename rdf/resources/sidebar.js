@@ -12,6 +12,21 @@ var profiledir = 'resource:/res/rdf/';
 var sidebardb = profiledir + 'sidebar-browser.rdf';
 var sidebar_resource = 'NC:BrowserSidebarRoot';
 
+function dumpTree(node, depth) {
+  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
+  var kids = node.childNodes;
+  dump(indent.substr(indent.length - depth*2));
+
+  // Print your favorite attributes here
+  dump(node.nodeName)
+  dump(" "+node.getAttribute('id'));
+  dump("\n");
+
+  for (var ii=0; ii < kids.length; ii++) {
+    dumpTree(kids[ii], depth + 1);
+  }
+}
+
 function Init(sidebardb, sidebar_resource)
 {
   // Initialize the Sidebar
@@ -52,8 +67,10 @@ function createPanel(registry, service) {
   var panel_content   = getAttr(registry, service, 'content');
 
   var box      = document.createElement('box');
-  var panelbar = createPanelTitle(panel_title, panel_customize);
   var iframe   = document.createElement('html:iframe');
+
+  var iframeId = iframe.getAttribute('id');
+  var panelbar = createPanelTitle(panel_title, panel_customize, iframeId);
 
   box.setAttribute('align', 'vertical');
   iframe.setAttribute('src', panel_content);
@@ -64,19 +81,35 @@ function createPanel(registry, service) {
   return box;
 }
 
-function createPanelTitle(titletext,customize)
+function resize(id) {
+  var box = document.getElementById('sidebox');
+  dumpTree(box, 0);
+  var iframe = document.getElementById(id);
+  dump(iframe.nodeName);
+  dump(" " + iframe.getAttribute('src'));
+  dump(" ID = "+id+"\n");
+  iframe.setAttribute('src', 'http://zeeb/');
+  dump("after " + iframe.getAttribute('src') +"\n");
+}
+
+function createPanelTitle(titletext,customize_url, id)
 {
   var panelbar  = document.createElement('box');
-  //var titletext = document.createTextNode(titletext);
   var title     = document.createElement('titledbutton');
   var customize = document.createElement('titledbutton');
   var spring     = document.createElement('spring');
 
   title.setAttribute('value', titletext);
   title.setAttribute('class', 'paneltitle');
+  title.setAttribute('onclick', 'resize("'+id+'")');
   spring.setAttribute('flex', '100%');
   customize.setAttribute('value', 'Customize');
-  customize.setAttribute('onclick', 'window.open("http://");');
+  if (customize_url) {
+    customize.setAttribute('onclick',
+	                   'window.open("'+customize_url+'");');
+  } else {
+    customize.setAttribute('disabled','true');
+  }
   panelbar.setAttribute('class', 'panelbar');
 
 
