@@ -36,8 +36,8 @@ tree {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  background-color: Window;
+  color: WindowText;
   -moz-appearance: listbox;
 }
 
@@ -137,7 +137,7 @@ treechildren:-moz-tree-cell-text(progressmeter) {
 /* ::::: tree columns ::::: */
 
 treecol,
-treecolpicker { 
+treecolpicker {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
@@ -266,29 +266,16 @@ treechildren:-moz-tree-image(Name) {
 
 treechildren:-moz-tree-image(Name) {
   margin: 0px 2px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-treechildren:-moz-tree-image(Name) {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-treechildren:-moz-tree-image(Name) {
-  -moz-image-region: rect(0px 48px 16px 32px);
+  list-style-image: url("chrome://global/skin/icons/Folder-item.png") !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 treechildren:-moz-tree-image(Name, container) {
-  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
-  -moz-image-region: rect(16px 16px 32px 0px);
-}
-
-treechildren:-moz-tree-image(Name, container) {
-  -moz-image-region: rect(16px 32px 32px 16px);
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
 treechildren:-moz-tree-image(Name, open) {
-  -moz-image-region: rect(16px 48px 32px 32px);
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 treechildren:-moz-tree-twisty(group, hidetwisty) {

@@ -2,9 +2,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .tabbrowser-strip {
-  padding-bottom: 3px;
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 tabpanels {
@@ -25,12 +23,12 @@ tabpanels {
   margin-right: 3px;
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png"); 
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("chrome://global/skin/icons/Folder-item.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 tab[busy] > .tab-icon {
-  list-style-image: url("chrome://global/skin/icons/loading-anim.gif");
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
 }
 
 tab[selected="true"] {
