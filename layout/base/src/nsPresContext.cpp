@@ -668,6 +668,9 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               nsIFrameImageLoader** aResult)
 {
   if (mStopped) {
+    if (aResult) {
+      *aResult = nsnull;
+    }
     return NS_OK;
   }
   if (nsnull == aTargetFrame) {
