@@ -810,8 +810,8 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 {
     PR_CEnterMonitor(this);
 
-    nsresult res;
-    m_runningUrl = do_QueryInterface(aURL, &res);
+    nsresult res = NS_OK;
+
 
     if(NS_SUCCEEDED(res) && aLength > 0)
     {
@@ -968,6 +968,31 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     PRBool inSelectedState = GetServerStateParser().GetIMAPstate() ==
         nsImapServerResponseParser::kFolderSelected;
     
+    nsString2 curUrlFolderName("", eOneByte);
+    if (inSelectedState)
+    {
+        curUrlFolderName = GetServerStateParser().GetSelectedMailboxName();
+    }
+    else if (isBusy)
+    {
+        nsIImapUrl::nsImapState curUrlImapState;
+        m_runningUrl->GetRequiredImapState(&curUrlImapState);
+        if (curUrlImapState == nsIImapUrl::nsImapSelectedState)
+        {
+            char *folderName = nsnull;
+            rv = m_runningUrl->CreateServerSourceFolderPathString(&folderName);
+            if (NS_SUCCEEDED(rv) && folderName)
+            {
+                char *convName = 
+                    CreateUtf7ConvertedString(folderName, TRUE);
+                curUrlFolderName = convName;
+                PR_FREEIF (folderName);
+                PR_FREEIF (convName);
+                inSelectedState = PR_TRUE;
+            }
+        }
+    }
+
     nsIImapUrl::nsImapState imapState;
     aImapUrl->GetRequiredImapState(&imapState);
     
@@ -1006,12 +1031,13 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
                         srcFolderName = convertedName;
                         PRBool isInbox = PL_strcasecmp("Inbox", srcFolderName)
                             == 0;
-                        if (GetServerStateParser().GetSelectedMailboxName())
+                        if (curUrlFolderName.Length() > 0)
                         {
                             PRBool matched = isInbox ?
-                                PL_strcasecmp(
-                                    GetServerStateParser().GetSelectedMailboxName(), srcFolderName) == 0 : 
-                                PL_strcmp(GetServerStateParser().GetSelectedMailboxName(), srcFolderName) == 0;
+                                PL_strcasecmp(curUrlFolderName.GetBuffer(),
+                                              srcFolderName) == 0 : 
+                                PL_strcmp(curUrlFolderName.GetBuffer(),
+                                          srcFolderName) == 0;
                             if (matched)
                             {
                                 if (isBusy)
