@@ -71,6 +71,11 @@ nsMessengerBootstrap::Initialize(nsIAppShellService*,
   return rv;
 }
 
+nsresult
+nsMessengerBootstrap::Shutdown()
+{
+  return NS_OK;
+}
 
 nsresult
 NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot)
