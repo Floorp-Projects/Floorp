@@ -372,6 +372,99 @@
         </listitem>
       </orderedlist>
     </section>
+
+    <section id="patchviewer">
+      <title>Patch Viewer</title>
+
+      <para>Viewing and reviewing patches in Bugzilla is often difficult due to
+      lack of context, improper format and the inherent readability issues that
+      raw patches present.  Patch Viewer is an enhancement to Bugzilla designed
+      to fix that by offering increased context, linking to sections, and
+      integrating with Bonsai, LXR and CVS.</para>
+
+      <para>Patch viewer allows you to:</para>
+
+      <simplelist>
+        <member>View patches in color, with side-by-side view rather than trying
+        to interpret the contents of the patch.</member>
+        <member>See the difference between two patches.</member>
+        <member>Get more context in a patch.</member>
+        <member>Collapse and expand sections of a patch for easy
+        reading.</member>
+        <member>Link to a particular section of a patch for discussion or
+        review</member>
+        <member>Go to Bonsai or LXR to see more context, blame, and
+        cross-references for the part of the patch you are looking at</member>
+        <member>Create a rawtext unified format diff out of any patch, no
+        matter what format it came from</member>
+      </simplelist>
+
+      <section id="patchviewer_view">
+        <title>Viewing Patches in Patch Viewer</title>
+        <para>The main way to view a patch in patch viewer is to click on the
+        "Diff" link next to a patch in the Attachments list on a bug. You may
+        also do this within the edit window by clicking the "View Attachment As
+        Diff" button in the Edit Attachment screen.</para>
+      </section>
+
+      <section id="patchviewer_diff">
+        <title>Seeing the Difference Between Two Patches</title>
+        <para>To see the difference between two patches, you must first view the
+        newer patch in Patch Viewer.  Then select the older patch from the
+        dropdown at the top of the page ("Differences between [dropdown] and
+        this patch") and click the "Diff" button. This will show you what
+        is new or changed in the newer patch.</para>
+      </section>
+
+      <section id="patchviewer_context">
+        <title>Getting More Context in a Patch</title>
+        <para>To get more context in a patch, you put a number in the textbox at
+        the top of Patch Viewer ("Patch / File / [textbox]") and hit enter.
+        This will give you that many lines of context before and after each
+        change. Alternatively, you can click on the "File" link there and it
+        will show each change in the full context of the file. This feature only
+        works against files that were diffed using "cvs diff".</para>
+      </section>
+
+      <section id="patchviewer_collapse">
+        <title>Collapsing and Expanding Sections of a Patch</title>
+        <para>To view only a certain set of files in a patch (for example, if a
+        patch is absolutely huge and you want to only review part of it at a
+        time), you can click the "(+)" and "(-)" links next to each file (to
+        expand it or collapse it). If you want to collapse all files or expand
+        all files, you can click the "Collapse All" and "Expand All" links at the
+        top of the page.</para>
+      </section>
+
+      <section id="patchviewer_link">
+        <title>Linking to a Section of a Patch</title>
+        <para>To link to a section of a patch (for example, if you want to be
+        able to give someone a URL to show them which part you are talking
+        about) you simply click the "Link Here" link on the section header. The
+        resulting URL can be copied and used in discussion. (Copy Link
+        Location in Mozilla works as well.)</para>
+      </section>
+
+      <section id="patchviewer_bonsai_lxr">
+        <title>Going to Bonsai and LXR</title>
+        <para>To go to Bonsai to get blame for the lines you are interested in,
+        you can click the "Lines XX-YY" link on the section header you are
+        interested in. This works even if the patch is against an old
+        version of the file, since Bonsai stores all versions of the file.</para>
+
+        <para>To go to LXR, you click on the filename on the file header
+        (unfortunately, since LXR only does the most recent version, line
+        numbers are likely to rot).</para>
+      </section>
+
+      <section id="patchviewer_unified_diff">
+        <title>Creating a Unified Diff</title>
+        <para>If the patch is not in a format that you like, you can turn it
+        into a unified diff format by clicking the "Raw Unified" link at the top
+        of the page.</para>
+      </section>
+
+    </section>
   </section>
 
   <section id="hintsandtips">
