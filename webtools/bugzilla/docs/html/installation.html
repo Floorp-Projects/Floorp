@@ -4,13 +4,15 @@
 >Installation</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="PREVIOUS"
-TITLE="User Preferences"
-HREF="userpreferences.html"><LINK
+TITLE="Reports"
+HREF="reporting.html"><LINK
 REL="NEXT"
 TITLE="Step-by-step Install"
 HREF="stepbystep.html"></HEAD
@@ -33,7 +35,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -41,7 +44,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="userpreferences.html"
+HREF="reporting.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -87,92 +90,109 @@ HREF="stepbystep.html"
 ><DL
 ><DT
 >4.1.1. <A
-HREF="stepbystep.html#install-mysql"
->MySQL</A
-></DT
-><DT
->4.1.2. <A
 HREF="stepbystep.html#install-perl"
 >Perl</A
 ></DT
 ><DT
->4.1.3. <A
-HREF="stepbystep.html#install-perlmodules"
->Perl Modules</A
+>4.1.2. <A
+HREF="stepbystep.html#install-mysql"
+>MySQL</A
 ></DT
 ><DT
->4.1.4. <A
+>4.1.3. <A
 HREF="stepbystep.html#install-webserver"
 >HTTP Server</A
 ></DT
 ><DT
->4.1.5. <A
+>4.1.4. <A
 HREF="stepbystep.html#install-bzfiles"
 >Bugzilla</A
 ></DT
 ><DT
->4.1.6. <A
-HREF="stepbystep.html#install-setupdatabase"
->Setting Up the MySQL Database</A
+>4.1.5. <A
+HREF="stepbystep.html#install-perlmodules"
+>Perl Modules</A
 ></DT
 ><DT
->4.1.7. <A
-HREF="stepbystep.html#AEN795"
+>4.1.6. <A
+HREF="stepbystep.html#AEN748"
 ><TT
 CLASS="filename"
 >checksetup.pl</TT
 ></A
 ></DT
 ><DT
->4.1.8. <A
-HREF="stepbystep.html#AEN826"
+>4.1.7. <A
+HREF="stepbystep.html#AEN778"
 >Configuring Bugzilla</A
 ></DT
 ></DL
 ></DD
 ><DT
 >4.2. <A
+HREF="http.html"
+>HTTP Server Configuration</A
+></DT
+><DD
+><DL
+><DT
+>4.2.1. <A
+HREF="http.html#http-apache"
+>Apache <SPAN
+CLASS="productname"
+>httpd</SPAN
+></A
+></DT
+><DT
+>4.2.2. <A
+HREF="http.html#http-iis"
+>Microsoft <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+></A
+></DT
+><DT
+>4.2.3. <A
+HREF="http.html#http-aol"
+>AOL Server</A
+></DT
+></DL
+></DD
+><DT
+>4.3. <A
 HREF="extraconfig.html"
 >Optional Additional Configuration</A
 ></DT
 ><DD
 ><DL
 ><DT
->4.2.1. <A
-HREF="extraconfig.html#AEN832"
+>4.3.1. <A
+HREF="extraconfig.html#AEN852"
 >Dependency Charts</A
 ></DT
 ><DT
->4.2.2. <A
-HREF="extraconfig.html#AEN847"
+>4.3.2. <A
+HREF="extraconfig.html#AEN867"
 >Bug Graphs</A
 ></DT
 ><DT
->4.2.3. <A
-HREF="extraconfig.html#AEN860"
+>4.3.3. <A
+HREF="extraconfig.html#AEN880"
 >The Whining Cron</A
 ></DT
 ><DT
->4.2.4. <A
+>4.3.4. <A
 HREF="extraconfig.html#bzldap"
 >LDAP Authentication</A
 ></DT
 ><DT
->4.2.5. <A
+>4.3.5. <A
 HREF="extraconfig.html#content-type"
 >Preventing untrusted Bugzilla content from executing malicious
       Javascript code</A
 ></DT
 ><DT
->4.2.6. <A
-HREF="extraconfig.html#directoryindex"
-><TT
-CLASS="filename"
->directoryindex</TT
-> for the Bugzilla default page.</A
-></DT
-><DT
->4.2.7. <A
+>4.3.6. <A
 HREF="extraconfig.html#mod_perl"
 >Bugzilla and <TT
 CLASS="filename"
@@ -180,7 +200,7 @@ CLASS="filename"
 ></A
 ></DT
 ><DT
->4.2.8. <A
+>4.3.7. <A
 HREF="extraconfig.html#mod-throttle"
 ><TT
 CLASS="filename"
@@ -192,19 +212,19 @@ CLASS="filename"
 ></DL
 ></DD
 ><DT
->4.3. <A
+>4.4. <A
 HREF="os-specific.html"
 >OS Specific Installation Notes</A
 ></DT
 ><DD
 ><DL
 ><DT
->4.3.1. <A
+>4.4.1. <A
 HREF="os-specific.html#os-win32"
 >Microsoft Windows</A
 ></DT
 ><DT
->4.3.2. <A
+>4.4.2. <A
 HREF="os-specific.html#os-macosx"
 ><SPAN
 CLASS="productname"
@@ -212,66 +232,65 @@ CLASS="productname"
 ></A
 ></DT
 ><DT
->4.3.3. <A
+>4.4.3. <A
 HREF="os-specific.html#os-mandrake"
 >Linux-Mandrake 8.0</A
 ></DT
 ></DL
 ></DD
 ><DT
->4.4. <A
-HREF="http.html"
->HTTP Server Configuration</A
+>4.5. <A
+HREF="security.html"
+>Bugzilla Security</A
 ></DT
 ><DD
 ><DL
 ><DT
->4.4.1. <A
-HREF="http.html#http-apache"
->Apache <SPAN
-CLASS="productname"
->httpd</SPAN
-></A
+>4.5.1. <A
+HREF="security.html#security-networking"
+>TCP/IP Ports</A
 ></DT
 ><DT
->4.4.2. <A
-HREF="http.html#http-iis"
->Microsoft <SPAN
-CLASS="productname"
->Internet Information Services</SPAN
-></A
+>4.5.2. <A
+HREF="security.html#security-mysql"
+>MySQL</A
 ></DT
 ><DT
->4.4.3. <A
-HREF="http.html#http-aol"
->AOL Server</A
+>4.5.3. <A
+HREF="security.html#security-daemon"
+>Daemon Accounts</A
+></DT
+><DT
+>4.5.4. <A
+HREF="security.html#security-access"
+>Web Server Access Controls</A
 ></DT
 ></DL
 ></DD
 ><DT
->4.5. <A
+>4.6. <A
 HREF="troubleshooting.html"
 >Troubleshooting</A
 ></DT
 ><DD
 ><DL
 ><DT
->4.5.1. <A
-HREF="troubleshooting.html#AEN1157"
+>4.6.1. <A
+HREF="troubleshooting.html#AEN1215"
 >Bundle::Bugzilla makes me upgrade to Perl 5.6.1</A
 ></DT
 ><DT
->4.5.2. <A
-HREF="troubleshooting.html#AEN1162"
+>4.6.2. <A
+HREF="troubleshooting.html#AEN1220"
 >DBD::Sponge::db prepare failed</A
 ></DT
 ><DT
->4.5.3. <A
+>4.6.3. <A
 HREF="troubleshooting.html#paranoid-security"
 >cannot chdir(/var/spool/mqueue)</A
 ></DT
 ><DT
->4.5.4. <A
+>4.6.4. <A
 HREF="troubleshooting.html#trouble-filetemp"
 >Your vendor has not defined Fcntl macro O_NOINHERIT</A
 ></DT
@@ -296,7 +315,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="userpreferences.html"
+HREF="reporting.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -324,7 +343,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->User Preferences</TD
+>Reports</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

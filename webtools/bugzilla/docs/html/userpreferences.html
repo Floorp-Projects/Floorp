@@ -4,9 +4,11 @@
 >User Preferences</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Using Bugzilla"
@@ -15,8 +17,8 @@ REL="PREVIOUS"
 TITLE="Hints and Tips"
 HREF="hintsandtips.html"><LINK
 REL="NEXT"
-TITLE="Installation"
-HREF="installation.html"></HEAD
+TITLE="Reports"
+HREF="reporting.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -36,7 +38,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -58,7 +61,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="installation.html"
+HREF="reporting.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -74,11 +77,11 @@ CLASS="section"
 ><A
 NAME="userpreferences"
 ></A
->3.3. User Preferences</H1
+>3.8. User Preferences</H1
 ><P
 >Once you have logged in, you can customise various aspects of 
     Bugzilla via the "Edit prefs" link in the page footer.
-    The preferences are split into four tabs:</P
+    The preferences are split into three tabs:</P
 ><DIV
 CLASS="section"
 ><H2
@@ -86,7 +89,7 @@ CLASS="section"
 ><A
 NAME="accountsettings"
 ></A
->3.3.1. Account Settings</H2
+>3.8.1. Account Settings</H2
 ><P
 >On this tab, you can change your basic account information,
       including your password, email address and real name. For security
@@ -111,13 +114,19 @@ CLASS="section"
 ><A
 NAME="emailsettings"
 ></A
->3.3.2. Email Settings</H2
+>3.8.2. Email Settings</H2
 ><P
 >On this tab you can reduce or increase the amount of email sent
       you from Bugzilla, opting in our out depending on your relationship to
-      the bug and the change that was made to it. (Note that you can also do
-      client-side filtering using the X-Bugzilla-Reason header which Bugzilla
-      adds to all bugmail.)</P
+      the bug and the change that was made to it. 
+      </P
+><P
+>&#13;      You can also do further filtering on the client side by 
+      using the X-Bugzilla-Reason mail header which Bugzilla
+      adds to all bugmail. This tells you what relationship you have to the
+      bug in question,
+      and can be any of Owner, Reporter, QAcontact, CClist, Voter and
+      WatchingComponent.</P
 ><P
 >By entering user email names, delineated by commas, into the
       "Users to watch" text entry box you can receive a copy of all the
@@ -158,23 +167,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="footersettings"
-></A
->3.3.3. Page Footer</H2
-><P
->On the Search page, you can store queries in Bugzilla, so if you
-      regularly run a particular query it is just a drop-down menu away. 
-      Once you have a stored query, you can come
-      here to request that it also be displayed in your page footer.</P
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
 NAME="permissionsettings"
 ></A
->3.3.4. Permissions</H2
+>3.8.3. Permissions</H2
 ><P
 >This is a purely informative page which outlines your current
       permissions on this installation of Bugzilla - what product groups you
@@ -216,7 +211,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="installation.html"
+HREF="reporting.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -240,7 +235,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Installation</TD
+>Reports</TD
 ></TR
 ></TABLE
 ></DIV

@@ -7,7 +7,7 @@
   <section id="copyright">
     <title>Copyright Information</title>
     <blockquote>
-      <attribution>Copyright (c) 2000-2003 Matthew P. Barnson and &bzg-auth;</attribution>
+      <attribution>Copyright (c) 2000-2004 The Bugzilla Team</attribution>
       <para>
 	Permission is granted to copy, distribute and/or modify this
 	document under the terms of the GNU Free Documentation
@@ -20,7 +20,7 @@
     <para>
       If you have any questions regarding this document, its
       copyright, or publishing this document in non-electronic form,
-      please contact &bzg-auth;. 
+      please contact the Bugzilla Team. 
     </para>
   </section>
 
@@ -28,7 +28,7 @@
     <title>Disclaimer</title>
     <para>
       No liability for the contents of this document can be accepted.
-      Use the concepts, examples, and other content at your own risk.
+      Follow the instructions herein at your own risk.
       This document may contain errors
       and inaccuracies that may damage your system, cause your partner 
       to leave you, your boss to fire you, your cats to
@@ -36,35 +36,20 @@
       war. Proceed with caution.
     </para>
     <para>
-      All copyrights are held by their respective owners, unless
-      specifically noted otherwise. Use of a term in this document
-      should not be regarded as affecting the validity of any
-      trademark or service mark.
-    </para>
-    <para>
       Naming of particular products or brands should not be seen as
       endorsements, with the exception of the term "GNU/Linux". We
-      wholeheartedly endorse the use of GNU/Linux in every situation
-      where it is appropriate. It is an extremely versatile, stable,
+      wholeheartedly endorse the use of GNU/Linux; it is an extremely 
+      versatile, stable,
       and robust operating system that offers an ideal operating
       environment for Bugzilla.
     </para>
     <para>
-      You are strongly recommended to make a backup of your system
-      before installing Bugzilla and at regular intervals thereafter.
-      If you implement any suggestion in this Guide, implement this one!
-    </para>
-    <para>
       Although the Bugzilla development team has taken great care to
-      ensure that all easily-exploitable bugs or options are
-      documented or fixed in the code, security holes surely exist.
-      Great care should be taken both in the installation and usage of
-      this software. Carefully consider the implications of installing
-      other network services with Bugzilla. The Bugzilla development
-      team members, Netscape Communications, America Online Inc., and
-      any affiliated developers or sponsors assume no liability for
-      your use of this product. You have the source code to this
-      product, and are responsible for auditing it yourself to ensure
+      ensure that all exploitable bugs or options have been
+      fixed, security holes surely exist. Great care should be taken both in 
+      the installation and usage of this software. The Bugzilla development
+      team members assume no liability for your use of this software. You have 
+      the source code, and are responsible for auditing it yourself to ensure
       your security needs are met.
     </para>
   </section>
@@ -77,24 +62,14 @@
       This is the &bz-ver; version of The Bugzilla Guide. It is so named 
       to match the current version of Bugzilla. 
       <![%bz-devel;[
-        This version of the guide, like its associated Bugzilla version is a
-        development version. Information is subject to change between now and
-        when &bz-nextver; is released.
+        This version of the guide, like its associated Bugzilla version, is a
+        development version. 
       ]]>
-      If you are
-      reading this from any source other than those below, please
-      check one of these mirrors to make sure you are reading an
-      up-to-date version of the Guide.
     </para>
     <para>
       The newest version of this guide can always be found at <ulink
-      url="http://www.bugzilla.org"/>; including
-      documentation for past releases and the current development version.
-    </para>
-    <para>
-      The documentation for the most recent stable release of Bugzilla can also
-      be found at
-      <ulink url="http://www.tldp.org">The Linux Documentation Project</ulink>.
+      url="http://www.bugzilla.org"/>; however, you should read the version
+      which came with the Bugzilla release you are using.
     </para>
     <para>
       The latest version of this document can always be checked out via CVS.
@@ -118,87 +93,33 @@
       contribution to the Bugzilla community:
     </para>
 
-    <!-- TODO: This is evil... there has to be a valid way to get this look -->
-    <variablelist>
-      <varlistentry>
-        <term>Matthew P. Barnson <email>mbarnson@sisna.com</email></term>
-        <listitem>
-          <para>for the Herculaean task of pulling together the Bugzilla Guide
-          and shepherding it to 2.14.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>Terry Weissman <email>terry@mozilla.org</email></term>
-        <listitem>
-          <para>for initially writing Bugzilla and creating the README upon
-          which the UNIX installation documentation is largely based.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>Tara Hernandez <email>tara@tequilarists.org</email></term>
-        <listitem>
-          <para>for keeping Bugzilla development going strong after Terry left
-          mozilla.org and for running landfill.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>Dave Lawrence <email>dkl@redhat.com</email></term>
-        <listitem>
-          <para>for providing insight into the key differences between Red
-          Hat's customized Bugzilla, and being largely responsible for
-          <xref linkend="variant-redhat"/>.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>Dawn Endico <email>endico@mozilla.org</email></term>
-        <listitem>
-          <para>for being a hacker extraordinaire and putting up with Matthew's
-          incessant questions and arguments on irc.mozilla.org in #mozwebtools
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>Jacob Steenhagen <email>jake@bugzilla.org</email></term>
-        <listitem>
-          <para>for taking over documentation during the 2.17 development
-          period.
-          </para>
-        </listitem>
-      </varlistentry>
-
-    </variablelist>
-
     <para>
-      Last but not least, all the members of the 
-      <ulink url="news://news.mozilla.org/netscape/public/mozilla/webtools"/>
-      newsgroup. Without your discussions, insight, suggestions, and patches,
-      this could never have happened.
-    </para>
-    <para>
-      Thanks also go to the following people for significant contributions 
-      to this documentation (in alphabetical order):
       <simplelist type="inline">
-        <member>Andrew Pearson</member>
+        <member>Matthew P. Barnson</member>
+        <member>Kevin Brannen</member>
+        <member>Dawn Endico</member>
         <member>Ben FrantzDale</member>
         <member>Eric Hanson</member>
+        <member>Tara Hernandez</member>
+        <member>Dave Lawrence</member>
+        <member>Zach Lipton</member>
         <member>Gervase Markham</member>
+        <member>Andrew Pearson</member>
         <member>Joe Robins</member>
-        <member>Kevin Brannen</member>
-        <member>Martin Wulffeld</member>
-        <member>Ron Teitelbaum</member>
         <member>Spencer Smith</member>
-        <member>Zach Liption</member>
-      </simplelist>
-      .
+        <member>Jacob Steenhagen</member>
+        <member>Ron Teitelbaum</member>
+        <member>Terry Weissman</member>
+        <member>Martin Wulffeld</member>
+      </simplelist>.
+    </para>
+    
+    <para>
+      Last but not least, all the members of the 
+      <ulink url="news://news.mozilla.org/netscape/public/mozilla/webtools">
+      netscape.public.mozilla.webtools</ulink>
+      newsgroup. Without your discussions, insight, suggestions, and patches,
+      this could never have happened.
     </para>
   </section>
 

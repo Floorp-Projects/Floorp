@@ -4,16 +4,18 @@
 >Optional Additional Configuration</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
 HREF="installation.html"><LINK
 REL="PREVIOUS"
-TITLE="Step-by-step Install"
-HREF="stepbystep.html"><LINK
+TITLE="HTTP Server Configuration"
+HREF="http.html"><LINK
 REL="NEXT"
 TITLE="OS Specific Installation Notes"
 HREF="os-specific.html"></HEAD
@@ -36,7 +38,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -44,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="stepbystep.html"
+HREF="http.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -74,15 +77,15 @@ CLASS="section"
 ><A
 NAME="extraconfig"
 ></A
->4.2. Optional Additional Configuration</H1
+>4.3. Optional Additional Configuration</H1
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN832"
+NAME="AEN852"
 ></A
->4.2.1. Dependency Charts</H2
+>4.3.1. Dependency Charts</H2
 ><P
 >As well as the text-based dependency graphs, Bugzilla also
       supports dependency graphing, using a package called 'dot'.
@@ -144,9 +147,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN847"
+NAME="AEN867"
 ></A
->4.2.2. Bug Graphs</H2
+>4.3.2. Bug Graphs</H2
 ><P
 >As long as you installed the GD and Graph::Base Perl modules you
       might as well turn on the nifty Bugzilla bug reporting graphs.</P
@@ -203,9 +206,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN860"
+NAME="AEN880"
 ></A
->4.2.3. The Whining Cron</H2
+>4.3.3. The Whining Cron</H2
 ><P
 >By now you have a fully functional Bugzilla, but what good are
       bugs if they're not annoying? To help make those bugs more annoying you
@@ -294,47 +297,11 @@ CLASS="section"
 ><A
 NAME="bzldap"
 ></A
->4.2.4. LDAP Authentication</H2
-><DIV
-CLASS="note"
+>4.3.4. LDAP Authentication</H2
 ><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->LDAP authentication has been rewritten for the 2.18 release of
-        Bugzilla. It no longer requires the Mozilla::LDAP module and now uses
-        Net::LDAP instead. This rewrite was part of a larger landing that
-        allowed for additional authentication schemes to be easily added
-        (<A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=180642"
-TARGET="_top"
->bug
-        180642</A
->).
-        </P
-><P
->This patch originally landed in 21-Mar-2003 and was included
-          in the 2.17.4 development release.
-          </P
-></TD
-></TR
-></TABLE
-></DIV
+>LDAP authentication is a module for Bugzilla's plugin 
+      authentication architecture.
+      </P
 ><P
 >&#13;      The existing authentication
       scheme for Bugzilla uses email addresses as the primary user ID, and a
@@ -544,26 +511,26 @@ CLASS="section"
 ><A
 NAME="content-type"
 ></A
->4.2.5. Preventing untrusted Bugzilla content from executing malicious
+>4.3.5. Preventing untrusted Bugzilla content from executing malicious
       Javascript code</H2
 ><P
->It is possible for a Bugzilla to execute malicious Javascript
-      code. Due to internationalization concerns, we are unable to
-      incorporate the code changes necessary to fulfill the CERT advisory
-      requirements mentioned in 
+>It is possible for a Bugzilla attachment to contain malicious 
+      Javascript
+      code, which would be executed in the domain of your Bugzilla, thereby
+      making it possible for the attacker to e.g. steal your login cookies. 
+      Due to internationalization concerns, we are unable to
+      incorporate by default the code changes necessary to fulfill the CERT 
+      advisory requirements mentioned in 
       <A
 HREF="http://www.cert.org/tech_tips/malicious_code_mitigation.html/#3"
 TARGET="_top"
 >http://www.cert.org/tech_tips/malicious_code_mitigation.html/#3</A
 >.
-      Making the change below will fix the problem if your installation is for
-      an English speaking audience.
+      If your installation is for an English speaking audience only, making the
+      change below will prevent this problem. 
       </P
 ><P
->Telling Bugzilla to output a charset as part of the HTTP header is
-      much easier in version 2.18 and higher (including any cvs
-      pull after 4-May-2003 and development release after 2.17.5) than it was
-      in previous versions. Simply locate the following line in
+>Simply locate the following line in
       <TT
 CLASS="filename"
 >Bugzilla/CGI.pm</TT
@@ -578,8 +545,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;    # Make sure that we don't send any charset headers
-    $self-&#62;charset('');
+>&#13;    $self-&#62;charset('');
       </PRE
 ></FONT
 ></TD
@@ -597,8 +563,7 @@ WIDTH="100%"
 COLOR="#000000"
 ><PRE
 CLASS="programlisting"
->&#13;    # Send all data using the ISO-8859-1 charset
-    $self-&#62;charset('ISO-8859-1');
+>&#13;    $self-&#62;charset('ISO-8859-1');
       </PRE
 ></FONT
 ></TD
@@ -606,69 +571,6 @@ CLASS="programlisting"
 ></TABLE
 >
       </P
-><DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->Using &#60;meta&#62; tags to set the charset is not
-        recommended, as there's a bug in Netscape 4.x which causes pages
-        marked up in this way to load twice. See  
-        <A
-HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=126266"
-TARGET="_top"
->bug 126266</A
->
-        for more information including progress toward making
-        bugzilla charset aware by default.
-        </P
-></TD
-></TR
-></TABLE
-></DIV
-></DIV
-><DIV
-CLASS="section"
-><H2
-CLASS="section"
-><A
-NAME="directoryindex"
-></A
->4.2.6. <TT
-CLASS="filename"
->directoryindex</TT
-> for the Bugzilla default page.</H2
-><P
->You should modify the &#60;DirectoryIndex&#62; parameter for
-      the Apache virtual host running your Bugzilla installation to
-      allow <TT
-CLASS="filename"
->index.cgi</TT
-> as the index page for a
-      directory, as well as the usual <TT
-CLASS="filename"
->index.html</TT
->,
-      <TT
-CLASS="filename"
->index.htm</TT
->, and so forth. </P
 ></DIV
 ><DIV
 CLASS="section"
@@ -677,7 +579,7 @@ CLASS="section"
 ><A
 NAME="mod_perl"
 ></A
->4.2.7. Bugzilla and <TT
+>4.3.6. Bugzilla and <TT
 CLASS="filename"
 >mod_perl</TT
 ></H2
@@ -694,7 +596,7 @@ CLASS="section"
 ><A
 NAME="mod-throttle"
 ></A
->4.2.8. <TT
+>4.3.7. <TT
 CLASS="filename"
 >mod_throttle</TT
 >
@@ -754,7 +656,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="stepbystep.html"
+HREF="http.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -782,7 +684,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Step-by-step Install</TD
+>HTTP Server Configuration</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

@@ -4,19 +4,21 @@
 >HTTP Server Configuration</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
 HREF="installation.html"><LINK
 REL="PREVIOUS"
-TITLE="OS Specific Installation Notes"
-HREF="os-specific.html"><LINK
+TITLE="Step-by-step Install"
+HREF="stepbystep.html"><LINK
 REL="NEXT"
-TITLE="Troubleshooting"
-HREF="troubleshooting.html"></HEAD
+TITLE="Optional Additional Configuration"
+HREF="extraconfig.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -36,7 +38,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -44,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="os-specific.html"
+HREF="stepbystep.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -58,7 +61,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="troubleshooting.html"
+HREF="extraconfig.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -74,7 +77,7 @@ CLASS="section"
 ><A
 NAME="http"
 ></A
->4.4. HTTP Server Configuration</H1
+>4.2. HTTP Server Configuration</H1
 ><P
 >The Bugzilla Team recommends Apache when using Bugzilla, however, any web server
     that can be configured to run <A
@@ -88,7 +91,7 @@ CLASS="glossterm"
     especially if you choose something other than Apache, you should be sure to read
     <A
 HREF="security.html#security-access"
->Section 5.6.4</A
+>Section 4.5.4</A
 >.
     </P
 ><P
@@ -102,13 +105,12 @@ CLASS="section"
 ><A
 NAME="http-apache"
 ></A
->4.4.1. Apache <SPAN
+>4.2.1. Apache <SPAN
 CLASS="productname"
 >httpd</SPAN
 ></H2
 ><P
->As mentioned above, the Bugzilla Team recommends Apache for use
-      with Bugzilla. You will have to make sure that Apache is properly
+>You will have to make sure that Apache is properly
       configured to run the Bugzilla CGI scripts. You also need to make sure
       that the <TT
 CLASS="filename"
@@ -117,41 +119,21 @@ CLASS="filename"
       <B
 CLASS="command"
 >./checksetup.pl</B
-> (shown in <A
-HREF="http.html#http-apache-htaccess"
->Example 4-2</A
->
-      for the curious) are allowed to override Apache's normal access
+> are allowed to override Apache's normal access
       permissions or else important password information may be exposed to the
       Internet.
       </P
 ><P
->Many Apache installations are not configured to run scripts
-        anywhere but in the <TT
-CLASS="filename"
->cgi-bin</TT
->
-        directory; however, we recommend that Bugzilla not be installed in the
+>You need to configure Apache to run .cgi files outside the
         <TT
 CLASS="filename"
 >cgi-bin</TT
->, otherwise the static
-        files such as images and <A
-HREF="glossary.html#gloss-javascript"
-><I
-CLASS="glossterm"
->JavaScript</I
-></A
->
-        will not work correctly. To allow scripts to run in the normal
-        web space, the following changes should be made to your
+> directory.
+        Open your
         <TT
 CLASS="filename"
 >httpd.conf</TT
-> file.
-        </P
-><P
->To allow files with a .cgi extension to be run, make sure the
+> file and make sure the
         following line exists and is uncommented:</P
 ><TABLE
 BORDER="0"
@@ -199,6 +181,21 @@ AllowOverride Limit
 ></TD
 ></TR
 ></TABLE
+><P
+>You should modify the &#60;DirectoryIndex&#62; parameter for
+        the Apache virtual host running your Bugzilla installation to
+        allow <TT
+CLASS="filename"
+>index.cgi</TT
+> as the index page for a
+        directory, as well as the usual <TT
+CLASS="filename"
+>index.html</TT
+>,
+        <TT
+CLASS="filename"
+>index.htm</TT
+>, and so forth. </P
 ><DIV
 CLASS="note"
 ><P
@@ -233,165 +230,6 @@ CLASS="glossterm"
 ></TR
 ></TABLE
 ></DIV
-><DIV
-CLASS="example"
-><A
-NAME="http-apache-htaccess"
-></A
-><P
-><B
->Example 4-2. <TT
-CLASS="filename"
->.htaccess</TT
-> files for Apache</B
-></P
-><P
-><TT
-CLASS="filename"
->$BUGZILLA_HOME/.htaccess</TT
->
-          <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;# don't allow people to retrieve non-cgi executable files or our private data
-&#60;FilesMatch ^(.*\.pl|.*localconfig.*|runtests.sh)$&#62;
-  deny from all
-&#60;/FilesMatch&#62;
-&#60;FilesMatch ^(localconfig.js|localconfig.rdf)$&#62;
-  allow from all
-&#60;/FilesMatch&#62;
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
-> 
-          </P
-><P
-><TT
-CLASS="filename"
->$BUGZILLA_HOME/data/.htaccess</TT
-> 
-          <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory; the only exception is duplicates.rdf, which is used by
-# duplicates.xul and must be loadable over the web
-deny from all
-&#60;Files duplicates.rdf&#62;
-  allow from all
-&#60;/Files&#62;
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-          </P
-><P
-><TT
-CLASS="filename"
->$BUGZILLA_HOME/data/webdot</TT
->
-          <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;# Restrict access to .dot files to the public webdot server at research.att.com 
-# if research.att.com ever changed their IP, or if you use a different
-# webdot server, you'll need to edit this
-&#60;FilesMatch ^[0-9]+\.dot$&#62;
-  Allow from 192.20.225.10
-  Deny from all
-&#60;/FilesMatch&#62;
-
-# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
-# .map files
-&#60;FilesMatch ^[0-9]+\.(png|gif|jpg|map)$&#62;
-  Allow from all
-&#60;/FilesMatch&#62;
-
-# And no directory listings, either.
-Deny from all
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-          </P
-><P
-><TT
-CLASS="filename"
->$BUGZILLA_HOME/Bugzilla/.htaccess</TT
->
-          <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-          </P
-><P
-><TT
-CLASS="filename"
->$BUGZILLA_HOME/template/.htaccess</TT
->
-          <TABLE
-BORDER="0"
-BGCOLOR="#E0E0E0"
-WIDTH="100%"
-><TR
-><TD
-><FONT
-COLOR="#000000"
-><PRE
-CLASS="programlisting"
->&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-          </PRE
-></FONT
-></TD
-></TR
-></TABLE
->
-          </P
-></DIV
 ></DIV
 ><DIV
 CLASS="section"
@@ -400,7 +238,7 @@ CLASS="section"
 ><A
 NAME="http-iis"
 ></A
->4.4.2. Microsoft <SPAN
+>4.2.2. Microsoft <SPAN
 CLASS="productname"
 >Internet Information Services</SPAN
 ></H2
@@ -446,7 +284,7 @@ CLASS="filename"
 >
       directory are secured as described in <A
 HREF="security.html#security-access"
->Section 5.6.4</A
+>Section 4.5.4</A
 >.
       </P
 ></DIV
@@ -457,7 +295,7 @@ CLASS="section"
 ><A
 NAME="http-aol"
 ></A
->4.4.3. AOL Server</H2
+>4.2.3. AOL Server</H2
 ><P
 >Ben FrantzDale reported success using AOL Server with Bugzilla. He
       reported his experience and what appears below is based on that.
@@ -646,7 +484,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="os-specific.html"
+HREF="stepbystep.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -664,7 +502,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="troubleshooting.html"
+HREF="extraconfig.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -674,7 +512,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->OS Specific Installation Notes</TD
+>Step-by-step Install</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
@@ -688,7 +526,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Troubleshooting</TD
+>Optional Additional Configuration</TD
 ></TR
 ></TABLE
 ></DIV

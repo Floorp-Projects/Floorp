@@ -4,18 +4,20 @@
 >Template Customization</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="UP"
-TITLE="Administering Bugzilla"
-HREF="administration.html"><LINK
+TITLE="Customising Bugzilla"
+HREF="customization.html"><LINK
 REL="PREVIOUS"
-TITLE="Bugzilla Security"
-HREF="security.html"><LINK
+TITLE="Customising Bugzilla"
+HREF="customization.html"><LINK
 REL="NEXT"
-TITLE="Change Permission Customization"
+TITLE="Customizing Who Can Change What"
 HREF="cust-change-permissions.html"></HEAD
 ><BODY
 CLASS="section"
@@ -36,7 +38,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -44,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="security.html"
+HREF="customization.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -52,7 +55,7 @@ ACCESSKEY="P"
 WIDTH="80%"
 ALIGN="center"
 VALIGN="bottom"
->Chapter 5. Administering Bugzilla</TD
+>Chapter 6. Customising Bugzilla</TD
 ><TD
 WIDTH="10%"
 ALIGN="right"
@@ -74,27 +77,19 @@ CLASS="section"
 ><A
 NAME="cust-templates"
 ></A
->5.7. Template Customization</H1
+>6.1. Template Customization</H1
 ><P
->&#13;      One of the large changes for 2.16 was the templatization of the
-      entire user-facing UI, using the 
-      <A
-HREF="http://www.template-toolkit.org"
-TARGET="_top"
->Template Toolkit</A
->.
-      Administrators can now configure the look and feel of Bugzilla without
+>&#13;      Administrators can configure the look and feel of Bugzilla without
       having to edit Perl files or face the nightmare of massive merge
       conflicts when they upgrade to a newer version in the future.
     </P
 ><P
 >&#13;      Templatization also makes localized versions of Bugzilla possible, 
-      for the first time. As of version 2.17.4 which will soon
-      become 2.18, it's possible to have Bugzilla's language determined by
-      the user's browser. More information is available in
+      for the first time. It's possible to have Bugzilla's UI language 
+      determined by the user's browser. More information is available in
       <A
 HREF="cust-templates.html#template-http-accept"
->Section 5.7.5</A
+>Section 6.1.5</A
 >.
     </P
 ><DIV
@@ -102,13 +97,11 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1606"
+NAME="AEN1597"
 ></A
->5.7.1. What to Edit</H2
+>6.1.1. What to Edit</H2
 ><P
->&#13;        There are two different ways of editing of Bugzilla's templates,
-        and which you use depends mainly on how you upgrade Bugzilla. The
-        template directory structure is that there's a top level directory,
+>&#13;        The template directory structure is that there's a top level directory,
         <TT
 CLASS="filename"
 >template</TT
@@ -137,7 +130,10 @@ CLASS="filename"
         must be created if you want to use it.
       </P
 ><P
->&#13;        The first method of making customizations is to directly edit the
+>&#13;        There are two different ways of editing Bugzilla's templates,
+        and which you use depends mainly on the method you plan to use to
+        upgrade Bugzilla. 
+        The first method of making customizations is to directly edit the
         templates in <TT
 CLASS="filename"
 >template/en/default</TT
@@ -155,7 +151,8 @@ CLASS="command"
         occur.
       </P
 ><P
->&#13;        The other method is to copy the templates into a mirrored directory
+>&#13;        The other method is to copy the templates to be modified into a 
+        mirrored directory
         structure under <TT
 CLASS="filename"
 >template/en/custom</TT
@@ -252,47 +249,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1629"
+NAME="AEN1620"
 ></A
->5.7.2. How To Edit Templates</H2
-><P
->&#13;        The syntax of the Template Toolkit language is beyond the scope of
-        this guide. It's reasonably easy to pick up by looking at the current 
-        templates; or, you can read the manual, available on the
-        <A
-HREF="http://www.template-toolkit.org"
-TARGET="_top"
->Template Toolkit home
-        page</A
->. However, you should particularly remember (for security
-        reasons) to always HTML filter things which come from the database or
-        user input, to prevent cross-site scripting attacks.
-      </P
-><P
->&#13;        However, one thing you should take particular care about is the need
-        to properly HTML filter data that has been passed into the template.
-        This means that if the data can possibly contain special HTML characters
-        such as &#60;, and the data was not intended to be HTML, they need to be
-        converted to entity form, ie &#38;lt;.  You use the 'html' filter in the
-        Template Toolkit to do this.  If you fail to do this, you may open up
-        your installation to cross-site scripting attacks.
-      </P
-><P
->&#13;        Also note that Bugzilla adds a few filters of its own, that are not
-        in standard Template Toolkit.  In particular, the 'url_quote' filter
-        can convert characters that are illegal or have special meaning in URLs,
-        such as &#38;, to the encoded form, ie %26.  This actually encodes most
-        characters (but not the common ones such as letters and numbers and so
-        on), including the HTML-special characters, so there's never a need to
-        HTML filter afterwards.
-      </P
-><P
->&#13;        Editing templates is a good way of doing a "poor man's custom fields".
-        For example, if you don't use the Status Whiteboard, but want to have
-        a free-form text entry box for "Build Identifier", then you can just
-        edit the templates to change the field labels. It's still be called
-        status_whiteboard internally, but your users don't need to know that.
-      </P
+>6.1.2. How To Edit Templates</H2
 ><DIV
 CLASS="note"
 ><P
@@ -328,15 +287,51 @@ TARGET="_top"
 ></TR
 ></TABLE
 ></DIV
+><P
+>&#13;        The syntax of the Template Toolkit language is beyond the scope of
+        this guide. It's reasonably easy to pick up by looking at the current 
+        templates; or, you can read the manual, available on the
+        <A
+HREF="http://www.template-toolkit.org"
+TARGET="_top"
+>Template Toolkit home
+        page</A
+>.
+      </P
+><P
+>&#13;        One thing you should take particular care about is the need
+        to properly HTML filter data that has been passed into the template.
+        This means that if the data can possibly contain special HTML characters
+        such as &#60;, and the data was not intended to be HTML, they need to be
+        converted to entity form, ie &#38;lt;.  You use the 'html' filter in the
+        Template Toolkit to do this.  If you forget, you may open up
+        your installation to cross-site scripting attacks.
+      </P
+><P
+>&#13;        Also note that Bugzilla adds a few filters of its own, that are not
+        in standard Template Toolkit.  In particular, the 'url_quote' filter
+        can convert characters that are illegal or have special meaning in URLs,
+        such as &#38;, to the encoded form, ie %26.  This actually encodes most
+        characters (but not the common ones such as letters and numbers and so
+        on), including the HTML-special characters, so there's never a need to
+        HTML filter afterwards.
+      </P
+><P
+>&#13;        Editing templates is a good way of doing a "poor man's custom fields".
+        For example, if you don't use the Status Whiteboard, but want to have
+        a free-form text entry box for "Build Identifier", then you can just
+        edit the templates to change the field labels. It's still be called
+        status_whiteboard internally, but your users don't need to know that.
+      </P
 ></DIV
 ><DIV
 CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1639"
+NAME="AEN1630"
 ></A
->5.7.3. Template Formats</H2
+>6.1.3. Template Formats</H2
 ><P
 >&#13;        Some CGIs have the ability to use more than one template. For
         example, buglist.cgi can output bug lists as RDF or two
@@ -350,9 +345,9 @@ CLASS="filename"
       </P
 ><P
 >&#13;        To see if a CGI supports multiple output formats, grep the
-        CGI for "ValidateOutputFormat". If it's not present, adding
+        CGI for "GetFormat". If it's not present, adding
         multiple format support isn't too hard - see how it's done in
-        other CGIs.
+        other CGIs, e.g. config.cgi.
       </P
 ><P
 >&#13;        To make a new format template for a CGI which supports this, 
@@ -396,9 +391,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN1652"
+NAME="AEN1643"
 ></A
->5.7.4. Particular Templates</H2
+>6.1.4. Particular Templates</H2
 ><P
 >&#13;        There are a few templates you may be particularly interested in
         customizing for your installation.
@@ -450,21 +445,6 @@ CLASS="command"
         This is a message that appears near the top of the bug reporting page.
         By modifying this, you can tell your users how they should report
         bugs.
-      </P
-><P
->&#13;        <B
-CLASS="command"
->bug/process/midair.html.tmpl</B
->:
-        This is the page used if two people submit simultaneous changes to the
-        same bug.  The second person to submit their changes will get this page
-        to tell them what the first person did, and ask if they wish to
-        overwrite those changes or go back and revisit the bug.  The default
-        title and header on this page read "Mid-air collision detected!"  If
-        you work in the aviation industry, or other environment where this
-        might be found offensive (yes, we have true stories of this happening)
-        you'll want to change this to something more appropriate for your
-        environment.
       </P
 ><P
 >&#13;        <B
@@ -587,13 +567,11 @@ CLASS="section"
 ><A
 NAME="template-http-accept"
 ></A
->5.7.5. Configuring Bugzilla to Detect the User's Language</H2
+>6.1.5. Configuring Bugzilla to Detect the User's Language</H2
 ><P
->Begining in version 2.18 (first introduced in version 
-      2.17.4), it's now possible to have the users web browser tell Bugzilla
-      which language templates to use for each visitor (using the HTTP_ACCEPT
-      header). For this to work, Bugzilla needs to have the correct language
-      templates installed for the version of Bugzilla you are using. Many
+>Bugzilla honours the user's Accept: HTTP header. You can install
+      templates in other languages, and Bugzilla will pick the most appropriate
+      according to a priority order defined by you. Many
       language templates can be obtained from <A
 HREF="http://www.bugzilla.org/download.html#localizations"
 TARGET="_top"
@@ -605,7 +583,7 @@ TARGET="_top"
 >After untarring the localizations (or creating your own) in the 
       <TT
 CLASS="filename"
->[Bugzilla_Root]/template</TT
+>$BUGZILLA_HOME/template</TT
 > directory,
       you must update the <TT
 CLASS="option"
@@ -639,7 +617,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="security.html"
+HREF="customization.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -667,13 +645,13 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->Bugzilla Security</TD
+>Customising Bugzilla</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="administration.html"
+HREF="customization.html"
 ACCESSKEY="U"
 >Up</A
 ></TD
@@ -681,7 +659,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->Change Permission Customization</TD
+>Customizing Who Can Change What</TD
 ></TR
 ></TABLE
 ></DIV

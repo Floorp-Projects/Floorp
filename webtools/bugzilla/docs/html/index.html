@@ -1,10 +1,12 @@
 <HTML
 ><HEAD
 ><TITLE
->The Bugzilla Guide - 2.17.5 Development Release</TITLE
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="NEXT"
 TITLE="About This Guide"
 HREF="about.html"><META
@@ -45,61 +47,36 @@ CLASS="title"
 ><A
 NAME="AEN2"
 ></A
->The Bugzilla Guide - 2.17.5 Development Release</H1
-><H3
-CLASS="author"
-><A
-NAME="AEN5"
-></A
->Matthew P. Barnson</H3
-><H3
-CLASS="author"
-><A
-NAME="AEN9"
-></A
->Jacob Steenhagen</H3
+>The Bugzilla Guide - 2.17.5 
+    Development Release</H1
 ><H3
 CLASS="corpauthor"
 >The Bugzilla Team</H3
 ><P
 CLASS="pubdate"
->2003-11-01<BR></P
+>2004-01-15<BR></P
 ><DIV
 ><DIV
 CLASS="abstract"
 ><A
-NAME="AEN14"
+NAME="AEN7"
 ></A
 ><P
 ></P
 ><P
->&#13;	      This is the documentation for Bugzilla, the mozilla.org
-	      bug-tracking system.
+>&#13;	      This is the documentation for Bugzilla, a 
+	      bug-tracking system from mozilla.org.
 	      Bugzilla is an enterprise-class piece of software
-	      that powers issue-tracking for hundreds of
-	      organizations around the world, tracking millions of bugs.
+	      that tracks millions of bugs and issues for hundreds of
+	      organizations around the world.
       </P
-><P
->  
-	      This documentation is maintained in DocBook 4.1.2 XML format.
-        Changes are best submitted as plain text or XML diffs, attached
-        to a bug filed in the <A
-HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
-TARGET="_top"
->Bugzilla Documentation</A
-> component.
-      </P
-><P
->This is a development version of this guide.  Information in it
-        is subject to change before the 2.18 release of this guide
-        (which will correspond with the 2.18 release of Bugzilla).
-        </P
 ><P
 >&#13;        The most current version of this document can always be found on the
         <A
 HREF="http://www.bugzilla.org/documentation.html"
 TARGET="_top"
->Bugzilla Documentation Page</A
+>Bugzilla 
+        Documentation Page</A
 >.
       </P
 ><P
@@ -157,13 +134,18 @@ HREF="introduction.html"
 ><DL
 ><DT
 >2.1. <A
-HREF="whatis.html"
+HREF="what-is-bugzilla.html"
 >What is Bugzilla?</A
 ></DT
 ><DT
 >2.2. <A
-HREF="why.html"
->Why Should We Use Bugzilla?</A
+HREF="why-tracking.html"
+>Why use a bug-tracking system?</A
+></DT
+><DT
+>2.3. <A
+HREF="why-bugzilla.html"
+>Why use Bugzilla?</A
 ></DT
 ></DL
 ></DD
@@ -176,18 +158,48 @@ HREF="using.html"
 ><DL
 ><DT
 >3.1. <A
-HREF="how.html"
->How do I use Bugzilla?</A
+HREF="myaccount.html"
+>Create a Bugzilla Account</A
 ></DT
 ><DT
 >3.2. <A
+HREF="bug_page.html"
+>Anatomy of a Bug</A
+></DT
+><DT
+>3.3. <A
+HREF="query.html"
+>Searching for Bugs</A
+></DT
+><DT
+>3.4. <A
+HREF="list.html"
+>Bug Lists</A
+></DT
+><DT
+>3.5. <A
+HREF="bugreports.html"
+>Filing Bugs</A
+></DT
+><DT
+>3.6. <A
+HREF="patchviewer.html"
+>Patch Viewer</A
+></DT
+><DT
+>3.7. <A
 HREF="hintsandtips.html"
 >Hints and Tips</A
 ></DT
 ><DT
->3.3. <A
+>3.8. <A
 HREF="userpreferences.html"
 >User Preferences</A
+></DT
+><DT
+>3.9. <A
+HREF="reporting.html"
+>Reports</A
 ></DT
 ></DL
 ></DD
@@ -205,21 +217,26 @@ HREF="stepbystep.html"
 ></DT
 ><DT
 >4.2. <A
-HREF="extraconfig.html"
->Optional Additional Configuration</A
-></DT
-><DT
->4.3. <A
-HREF="os-specific.html"
->OS Specific Installation Notes</A
-></DT
-><DT
->4.4. <A
 HREF="http.html"
 >HTTP Server Configuration</A
 ></DT
 ><DT
+>4.3. <A
+HREF="extraconfig.html"
+>Optional Additional Configuration</A
+></DT
+><DT
+>4.4. <A
+HREF="os-specific.html"
+>OS Specific Installation Notes</A
+></DT
+><DT
 >4.5. <A
+HREF="security.html"
+>Bugzilla Security</A
+></DT
+><DT
+>4.6. <A
 HREF="troubleshooting.html"
 >Troubleshooting</A
 ></DT
@@ -244,41 +261,70 @@ HREF="useradmin.html"
 ></DT
 ><DT
 >5.3. <A
-HREF="programadmin.html"
->Product, Component, Milestone, and Version Administration</A
+HREF="products.html"
+>Products</A
 ></DT
 ><DT
 >5.4. <A
+HREF="components.html"
+>Components</A
+></DT
+><DT
+>5.5. <A
+HREF="versions.html"
+>Versions</A
+></DT
+><DT
+>5.6. <A
+HREF="milestones.html"
+>Milestones</A
+></DT
+><DT
+>5.7. <A
 HREF="voting.html"
 >Voting</A
 ></DT
 ><DT
->5.5. <A
+>5.8. <A
 HREF="groups.html"
 >Groups and Group Security</A
-></DT
-><DT
->5.6. <A
-HREF="security.html"
->Bugzilla Security</A
-></DT
-><DT
->5.7. <A
-HREF="cust-templates.html"
->Template Customization</A
-></DT
-><DT
->5.8. <A
-HREF="cust-change-permissions.html"
->Change Permission Customization</A
 ></DT
 ><DT
 >5.9. <A
 HREF="upgrading.html"
 >Upgrading to New Releases</A
 ></DT
+></DL
+></DD
 ><DT
->5.10. <A
+>6. <A
+HREF="customization.html"
+>Customising Bugzilla</A
+></DT
+><DD
+><DL
+><DT
+>6.1. <A
+HREF="cust-templates.html"
+>Template Customization</A
+></DT
+><DT
+>6.2. <A
+HREF="cust-change-permissions.html"
+>Customizing Who Can Change What</A
+></DT
+><DT
+>6.3. <A
+HREF="dbmodify.html"
+>Modifying Your Running System</A
+></DT
+><DT
+>6.4. <A
+HREF="dbdoc.html"
+>MySQL Bugzilla Database Introduction</A
+></DT
+><DT
+>6.5. <A
 HREF="integration.html"
 >Integrating Bugzilla with Third-Party Tools</A
 ></DT
@@ -291,89 +337,20 @@ HREF="faq.html"
 ></DT
 ><DT
 >B. <A
-HREF="database.html"
->The Bugzilla Database</A
+HREF="patches.html"
+>Contrib</A
 ></DT
 ><DD
 ><DL
 ><DT
 >B.1. <A
-HREF="dbmodify.html"
->Modifying Your Running System</A
-></DT
-><DT
->B.2. <A
-HREF="dbdoc.html"
->MySQL Bugzilla Database Introduction</A
+HREF="cmdline.html"
+>Command-line Search Interface</A
 ></DT
 ></DL
 ></DD
 ><DT
 >C. <A
-HREF="patches.html"
->Useful Patches and Utilities for Bugzilla</A
-></DT
-><DD
-><DL
-><DT
->C.1. <A
-HREF="rewrite.html"
->Apache 
-    <TT
-CLASS="filename"
->mod_rewrite</TT
->
-
-    magic</A
-></DT
-><DT
->C.2. <A
-HREF="cmdline.html"
->Command-line Bugzilla Queries</A
-></DT
-></DL
-></DD
-><DT
->D. <A
-HREF="variants.html"
->Bugzilla Variants and Competitors</A
-></DT
-><DD
-><DL
-><DT
->D.1. <A
-HREF="variant-redhat.html"
->Red Hat Bugzilla</A
-></DT
-><DT
->D.2. <A
-HREF="variant-fenris.html"
->Loki Bugzilla (Fenris)</A
-></DT
-><DT
->D.3. <A
-HREF="variant-issuezilla.html"
->Issuezilla</A
-></DT
-><DT
->D.4. <A
-HREF="variant-scarab.html"
->Scarab</A
-></DT
-><DT
->D.5. <A
-HREF="variant-perforce.html"
->Perforce SCM</A
-></DT
-><DT
->D.6. <A
-HREF="variant-sourceforge.html"
->SourceForge</A
-></DT
-></DL
-></DD
-><DT
->E. <A
 HREF="gfdl.html"
 >GNU Free Documentation License</A
 ></DT
@@ -485,14 +462,6 @@ CLASS="LOT"
 >4-1. <A
 HREF="stepbystep.html#install-perlmodules-cpan"
 >Installing perl modules with CPAN</A
-></DT
-><DT
->4-2. <A
-HREF="http.html#http-apache-htaccess"
-><TT
-CLASS="filename"
->.htaccess</TT
-> files for Apache</A
 ></DT
 ><DT
 >5-1. <A

@@ -3,468 +3,461 @@
 <chapter id="using">
   <title>Using Bugzilla</title>
 
-  <section id="how">
-    <title>How do I use Bugzilla?</title>
+  <para>This section contains information for end-users of Bugzilla. 
+  There is a Bugzilla test installation, called 
+  <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">Landfill</ulink>, 
+  which you are welcome to play with (if it's up.) 
+  However, it does not necessarily
+  have all Bugzilla features enabled, and runs an up-to-the-minute version, 
+  so some things may not quite work as this document describes.</para>
+    
+  <section id="myaccount">
+    <title>Create a Bugzilla Account</title>
 
-    <para>This section contains information for end-users of Bugzilla. 
-    There is a Bugzilla test installation, called 
-    <ulink url="http://landfill.bugzilla.org/">Landfill</ulink>, 
-    which you are welcome to play with (if it's up.) 
-    However, it does not necessarily
-    have all Bugzilla features enabled, and often runs cutting-edge versions
-    of Bugzilla for testing, so some things may work slightly differently
-    than mentioned here.</para>
+    <para>If you want to use Bugzilla, first you need to create an account.
+    Consult with the administrator responsible for your installation of
+    Bugzilla for the URL you should use to access it. If you're
+    test-driving Bugzilla, use this URL: 
+    <ulink url="http://landfill.bugzilla.org/bugzilla-tip/"/>.
+    </para>
 
-    <section id="myaccount">
-      <title>Create a Bugzilla Account</title>
+    <orderedlist>
+      <listitem>
+        <para>Click the 
+        <quote>Open a new Bugzilla account</quote>
 
-      <para>If you want to use Bugzilla, first you need to create an account.
-      Consult with the administrator responsible for your installation of
-      Bugzilla for the URL you should use to access it. If you're
-      test-driving Bugzilla, use this URL: 
-      <ulink url="http://landfill.bugzilla.org/bugzilla-tip/"/>.
-      </para>
+        link, enter your email address and, optionally, your name in the
+        spaces provided, then click 
+        <quote>Create Account</quote>
 
-      <orderedlist>
-        <listitem>
-          <para>Click the 
-          <quote>Open a new Bugzilla account</quote>
+        .</para>
+      </listitem>
 
-          link, enter your email address and, optionally, your name in the
-          spaces provided, then click 
-          <quote>Create Account</quote>
+      <listitem>
+        <para>Within moments, you should receive an email to the address
+        you provided, which contains your login name (generally the
+        same as the email address), and a password. 
+        This password is randomly generated, but can be
+        changed to something more memorable.</para>
+      </listitem>
 
-          .</para>
-        </listitem>
+      <listitem>
+        <para>Click the 
+        <quote>Log In</quote>
+        link in the footer at the bottom of the page in your browser,
+        enter your email address and password into the spaces provided, and
+        click 
+        <quote>Login</quote>.
+        </para>
 
-        <listitem>
-          <para>Within moments, you should receive an email to the address
-          you provided above, which contains your login name (generally the
-          same as the email address), and a password you can use to access
-          your account. This password is randomly generated, and can be
-          changed to something more memorable.</para>
-        </listitem>
+      </listitem>
+    </orderedlist>
 
-        <listitem>
-          <para>Click the 
-          <quote>Log In</quote>
-          link in the yellow area at the bottom of the page in your browser,
-          enter your email address and password into the spaces provided, and
-          click 
-          <quote>Login</quote>.
-          </para>
-          
-        </listitem>
-      </orderedlist>
+    <para>You are now logged in. Bugzilla uses cookies to remember you are
+    logged in so, unless you have cookies disabled or your IP address changes, 
+    you should not have to log in again.</para>
+  </section>
 
-      <para>You are now logged in. Bugzilla uses cookies for authentication
-      so, unless your IP address changes, you should not have to log in
-      again.</para>
-    </section>
+  <section id="bug_page">
+    <title>Anatomy of a Bug</title>
 
-    <section id="bug_page">
-      <title>Anatomy of a Bug</title>
+    <para>The core of Bugzilla is the screen which displays a particular
+    bug. It's a good place to explain some Bugzilla concepts. 
+    <ulink
+    url="http://landfill.bugzilla.org/bugzilla-tip/show_bug.cgi?id=1">
+    Bug 1 on Landfill</ulink>
 
-      <para>The core of Bugzilla is the screen which displays a particular
-      bug. It's a good place to explain some Bugzilla concepts. 
-      <ulink
-      url="http://landfill.bugzilla.org/bugzilla-tip/show_bug.cgi?id=1">
-      Bug 1 on Landfill</ulink>
+    is a good example. Note that the labels for most fields are hyperlinks;
+    clicking them will take you to context-sensitive help on that
+    particular field. Fields marked * may not be present on every
+    installation of Bugzilla.</para>
 
-      is a good example. Note that the labels for most fields are hyperlinks;
-      clicking them will take you to context-sensitive help on that
-      particular field. Fields marked * may not be present on every
-      installation of Bugzilla.</para>
-
-      <orderedlist>
-        <listitem>
-          <para>
-          <emphasis>Product and Component</emphasis>: 
-          Bugs are divided up by Product and Component, with a Product
-          having one or more Components in it. For example,
-          bugzilla.mozilla.org's "Bugzilla" Product is composed of several
-          Components: 
-          <simplelist>
-          <member>
-          <emphasis>Administration:</emphasis>
-          Administration of a Bugzilla installation.</member>
-
-          <member>
-          <emphasis>Bugzilla-General:</emphasis>
-          Anything that doesn't fit in the other components, or spans
-          multiple components.</member>
-
-          <member>
-          <emphasis>Creating/Changing Bugs:</emphasis>
-          Creating, changing, and viewing bugs.</member>
-
-          <member>
-          <emphasis>Documentation:</emphasis>
-          The Bugzilla documentation, including The Bugzilla Guide.</member>
-
-          <member>
-          <emphasis>Email:</emphasis>
-          Anything to do with email sent by Bugzilla.</member>
-
-          <member>
-          <emphasis>Installation:</emphasis>
-          The installation process of Bugzilla.</member>
-
-          <member>
-          <emphasis>Query/Buglist:</emphasis>
-          Anything to do with searching for bugs and viewing the
-          buglists.</member>
-
-          <member>
-          <emphasis>Reporting/Charting:</emphasis>
-          Getting reports from Bugzilla.</member>
-
-          <member>
-          <emphasis>User Accounts:</emphasis>
-          Anything about managing a user account from the user's perspective.
-          Saved queries, creating accounts, changing passwords, logging in,
-          etc.</member>
-
-          <member>
-          <emphasis>User Interface:</emphasis>
-          General issues having to do with the user interface cosmetics (not
-          functionality) including cosmetic issues, HTML templates,
-          etc.</member>
-          </simplelist>
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Status and Resolution:</emphasis>
-
-          These define exactly what state the bug is in - from not even
-          being confirmed as a bug, through to being fixed and the fix
-          confirmed by Quality Assurance. The different possible values for
-          Status and Resolution on your installation should be documented in the
-          context-sensitive help for those items.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Assigned To:</emphasis>
-          The person responsible for fixing the bug.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>*URL:</emphasis>
-          A URL associated with the bug, if any.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Summary:</emphasis>
-          A one-sentence summary of the problem.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>*Status Whiteboard:</emphasis>
-          (a.k.a. Whiteboard) A free-form text area for adding short notes
-          and tags to a bug.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>*Keywords:</emphasis>
-          The administrator can define keywords which you can use to tag and
-          categorise bugs - e.g. The Mozilla Project has keywords like crash
-          and regression.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Platform and OS:</emphasis>
-          These indicate the computing environment where the bug was
-          found.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Version:</emphasis>
-          The "Version" field is usually used for versions of a product which
-          have been released, and is set to indicate which versions of a
-          Component have the particular problem the bug report is
-          about.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Priority:</emphasis>
-          The bug assignee uses this field to prioritise his or her bugs.
-          It's a good idea not to change this on other people's bugs.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Severity:</emphasis>
-          This indicates how severe the problem is - from blocker
-          ("application unusable") to trivial ("minor cosmetic issue"). You
-          can also use this field to indicate whether a bug is an enhancement
-          request.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>*Target:</emphasis>
-          (a.k.a. Target Milestone) A future version by which the bug is to
-          be fixed. e.g. The Bugzilla Project's milestones for future
-          Bugzilla versions are 2.18, 2.20, 3.0, etc. Milestones are not
-          restricted to numbers, thought - you can use any text strings, such
-          as dates.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Reporter:</emphasis>
-          The person who filed the bug.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>CC list:</emphasis>
-          A list of people who get mail when the bug changes.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Attachments:</emphasis>
-          You can attach files (e.g. testcases or patches) to bugs. If there
-          are any attachments, they are listed in this section.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>*Dependencies:</emphasis>
-          If this bug cannot be fixed unless other bugs are fixed (depends
-          on), or this bug stops other bugs being fixed (blocks), their
-          numbers are recorded here.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>*Votes:</emphasis>
-          Whether this bug has any votes.</para>
-        </listitem>
-
-        <listitem>
-          <para>
-          <emphasis>Additional Comments:</emphasis>
-          You can add your two cents to the bug discussion here, if you have
-          something worthwhile to say.</para>
-        </listitem>
-      </orderedlist>
-    </section>
-
-    <section id="query">
-      <title>Searching for Bugs</title>
-
-      <para>The Bugzilla Search page is is the interface where you can find
-      any bug report, comment, or patch currently in the Bugzilla system. You
-      can play with it here: 
-      <ulink url="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"/>.</para>
-
-      <para>The Search page has controls for selecting different possible
-      values for all of the fields in a bug, as described above. For some
-      fields, multiple values can be selected. In those cases, Bugzilla
-      returns bugs where the content of the field matches one of the selected
-      values. If none is selected, then the field can take any value.</para>
-      
-      <para>Once you've defined a search, you can either run it, or save it
-      as a Remembered Query, which can optionally appear in the footer of
-      your pages.</para>
-
-      <para>Highly advanced querying is done using Boolean Charts.</para>
-    </section>
-
-    <section id="list">
-      <title>Bug Lists</title>
-
-      <para>If you run a search, a list of matching bugs will be returned.
-      The default search is to return all open bugs on the system - don't try
-      running this search on a Bugzilla installation with a lot of
-      bugs!</para>
-
-      <para>The format of the list is configurable. For example, it can be
-      sorted by clicking the column headings. Other useful features can be
-      accessed using the links at the bottom of the list: 
-      <simplelist>
+    <orderedlist>
+      <listitem>
+        <para>
+        <emphasis>Product and Component</emphasis>: 
+        Bugs are divided up by Product and Component, with a Product
+        having one or more Components in it. For example,
+        bugzilla.mozilla.org's "Bugzilla" Product is composed of several
+        Components: 
+        <simplelist>
         <member>
-        <emphasis>Long Format:</emphasis>
-
-        this gives you a large page with a non-editable summary of the fields
-        of each bug.</member>
+        <emphasis>Administration:</emphasis>
+        Administration of a Bugzilla installation.</member>
 
         <member>
-        <emphasis>Change Columns:</emphasis>
-
-        change the bug attributes which appear in the list.</member>
-
-        <member>
-        <emphasis>Change several bugs at once:</emphasis>
-
-        If your account is sufficiently empowered, you can make the same
-        change to all the bugs in the list - for example, changing their
-        owner.</member>
+        <emphasis>Bugzilla-General:</emphasis>
+        Anything that doesn't fit in the other components, or spans
+        multiple components.</member>
 
         <member>
-        <emphasis>Send mail to bug owners:</emphasis>
-
-        Sends mail to the owners of all bugs on the list.</member>
+        <emphasis>Creating/Changing Bugs:</emphasis>
+        Creating, changing, and viewing bugs.</member>
 
         <member>
-        <emphasis>Edit this query:</emphasis>
+        <emphasis>Documentation:</emphasis>
+        The Bugzilla documentation, including The Bugzilla Guide.</member>
 
-        If you didn't get exactly the results you were looking for, you can
-        return to the Query page through this link and make small revisions
-        to the query you just made so you get more accurate results.</member>
-      </simplelist>
-      </para>
+        <member>
+        <emphasis>Email:</emphasis>
+        Anything to do with email sent by Bugzilla.</member>
+
+        <member>
+        <emphasis>Installation:</emphasis>
+        The installation process of Bugzilla.</member>
+
+        <member>
+        <emphasis>Query/Buglist:</emphasis>
+        Anything to do with searching for bugs and viewing the
+        buglists.</member>
+
+        <member>
+        <emphasis>Reporting/Charting:</emphasis>
+        Getting reports from Bugzilla.</member>
+
+        <member>
+        <emphasis>User Accounts:</emphasis>
+        Anything about managing a user account from the user's perspective.
+        Saved queries, creating accounts, changing passwords, logging in,
+        etc.</member>
+
+        <member>
+        <emphasis>User Interface:</emphasis>
+        General issues having to do with the user interface cosmetics (not
+        functionality) including cosmetic issues, HTML templates,
+        etc.</member>
+        </simplelist>
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Status and Resolution:</emphasis>
+
+        These define exactly what state the bug is in - from not even
+        being confirmed as a bug, through to being fixed and the fix
+        confirmed by Quality Assurance. The different possible values for
+        Status and Resolution on your installation should be documented in the
+        context-sensitive help for those items.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Assigned To:</emphasis>
+        The person responsible for fixing the bug.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>*URL:</emphasis>
+        A URL associated with the bug, if any.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Summary:</emphasis>
+        A one-sentence summary of the problem.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>*Status Whiteboard:</emphasis>
+        (a.k.a. Whiteboard) A free-form text area for adding short notes
+        and tags to a bug.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>*Keywords:</emphasis>
+        The administrator can define keywords which you can use to tag and
+        categorise bugs - e.g. The Mozilla Project has keywords like crash
+        and regression.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Platform and OS:</emphasis>
+        These indicate the computing environment where the bug was
+        found.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Version:</emphasis>
+        The "Version" field is usually used for versions of a product which
+        have been released, and is set to indicate which versions of a
+        Component have the particular problem the bug report is
+        about.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Priority:</emphasis>
+        The bug assignee uses this field to prioritise his or her bugs.
+        It's a good idea not to change this on other people's bugs.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Severity:</emphasis>
+        This indicates how severe the problem is - from blocker
+        ("application unusable") to trivial ("minor cosmetic issue"). You
+        can also use this field to indicate whether a bug is an enhancement
+        request.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>*Target:</emphasis>
+        (a.k.a. Target Milestone) A future version by which the bug is to
+        be fixed. e.g. The Bugzilla Project's milestones for future
+        Bugzilla versions are 2.18, 2.20, 3.0, etc. Milestones are not
+        restricted to numbers, thought - you can use any text strings, such
+        as dates.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Reporter:</emphasis>
+        The person who filed the bug.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>CC list:</emphasis>
+        A list of people who get mail when the bug changes.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Attachments:</emphasis>
+        You can attach files (e.g. testcases or patches) to bugs. If there
+        are any attachments, they are listed in this section.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>*Dependencies:</emphasis>
+        If this bug cannot be fixed unless other bugs are fixed (depends
+        on), or this bug stops other bugs being fixed (blocks), their
+        numbers are recorded here.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>*Votes:</emphasis>
+        Whether this bug has any votes.</para>
+      </listitem>
+
+      <listitem>
+        <para>
+        <emphasis>Additional Comments:</emphasis>
+        You can add your two cents to the bug discussion here, if you have
+        something worthwhile to say.</para>
+      </listitem>
+    </orderedlist>
+  </section>
+
+  <section id="query">
+    <title>Searching for Bugs</title>
+
+    <para>The Bugzilla Search page is is the interface where you can find
+    any bug report, comment, or patch currently in the Bugzilla system. You
+    can play with it here: 
+    <ulink url="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"/>.</para>
+
+    <para>The Search page has controls for selecting different possible
+    values for all of the fields in a bug, as described above. For some
+    fields, multiple values can be selected. In those cases, Bugzilla
+    returns bugs where the content of the field matches any one of the selected
+    values. If none is selected, then the field can take any value.</para>
+
+    <para>Once you've run a search, you can save it as a Saved Search, which 
+    appears in the page footer.</para>
+
+    <para>Highly advanced querying is done using Boolean Charts. See the
+    Boolean Charts help link on the Search page for more information.</para>
+  </section>
+
+  <section id="list">
+    <title>Bug Lists</title>
+
+    <para>If you run a search, a list of matching bugs will be returned.
+    </para>
+
+    <para>The format of the list is configurable. For example, it can be
+    sorted by clicking the column headings. Other useful features can be
+    accessed using the links at the bottom of the list: 
+    <simplelist>
+      <member>
+      <emphasis>Long Format:</emphasis>
+
+      this gives you a large page with a non-editable summary of the fields
+      of each bug.</member>
+
+      <member>
+      <emphasis>Change Columns:</emphasis>
+
+      change the bug attributes which appear in the list.</member>
+
+      <member>
+      <emphasis>Change several bugs at once:</emphasis>
+
+      If your account is sufficiently empowered, you can make the same
+      change to all the bugs in the list - for example, changing their
+      owner.</member>
+
+      <member>
+      <emphasis>Send mail to bug owners:</emphasis>
+
+      Sends mail to the owners of all bugs on the list.</member>
+
+      <member>
+      <emphasis>Edit this query:</emphasis>
+
+      If you didn't get exactly the results you were looking for, you can
+      return to the Query page through this link and make small revisions
+      to the query you just made so you get more accurate results.</member>
+    </simplelist>
+    </para>
+  </section>
+
+  <section id="bugreports">
+    <title>Filing Bugs</title>
+
+    <para>Years of bug writing experience has been distilled for your
+    reading pleasure into the 
+    <ulink
+    url="http://landfill.bugzilla.org/bugzilla-tip/bugwritinghelp.html">
+    Bug Writing Guidelines</ulink>. 
+    While some of the advice is Mozilla-specific, the basic principles of
+    reporting Reproducible, Specific bugs, isolating the Product you are
+    using, the Version of the Product, the Component which failed, the
+    Hardware Platform, and Operating System you were using at the time of
+    the failure go a long way toward ensuring accurate, responsible fixes
+    for the bug that bit you.</para>
+
+    <para>The procedure for filing a test bug is as follows:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Go to 
+        <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">
+        Landfill</ulink>
+        in your browser and click 
+        <ulink
+        url="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi">
+        Enter a new bug report</ulink>.
+        </para>
+      </listitem>
+
+      <listitem>
+        <para>Select a product - any one will do.</para>
+      </listitem>
+
+      <listitem>
+        <para>Fill in the fields. Bugzilla should have made reasonable
+        guesses, based upon your browser, for the "Platform" and "OS"
+        drop-down boxes. If they are wrong, change them.</para>
+      </listitem>
+
+      <listitem>
+        <para>Select "Commit" and send in your bug report.</para>
+      </listitem>
+    </orderedlist>
+  </section>
+
+  <section id="patchviewer">
+    <title>Patch Viewer</title>
+
+    <para>Viewing and reviewing patches in Bugzilla is often difficult due to
+    lack of context, improper format and the inherent readability issues that
+    raw patches present.  Patch Viewer is an enhancement to Bugzilla designed
+    to fix that by offering increased context, linking to sections, and
+    integrating with Bonsai, LXR and CVS.</para>
+
+    <para>Patch viewer allows you to:</para>
+
+    <simplelist>
+      <member>View patches in color, with side-by-side view rather than trying
+      to interpret the contents of the patch.</member>
+      <member>See the difference between two patches.</member>
+      <member>Get more context in a patch.</member>
+      <member>Collapse and expand sections of a patch for easy
+      reading.</member>
+      <member>Link to a particular section of a patch for discussion or
+      review</member>
+      <member>Go to Bonsai or LXR to see more context, blame, and
+      cross-references for the part of the patch you are looking at</member>
+      <member>Create a rawtext unified format diff out of any patch, no
+      matter what format it came from</member>
+    </simplelist>
+
+    <section id="patchviewer_view">
+      <title>Viewing Patches in Patch Viewer</title>
+      <para>The main way to view a patch in patch viewer is to click on the
+      "Diff" link next to a patch in the Attachments list on a bug. You may
+      also do this within the edit window by clicking the "View Attachment As
+      Diff" button in the Edit Attachment screen.</para>
     </section>
 
-    <section id="bugreports">
-      <title>Filing Bugs</title>
-
-      <para>Years of bug writing experience has been distilled for your
-      reading pleasure into the 
-      <ulink
-      url="http://landfill.bugzilla.org/bugzilla-tip/bugwritinghelp.html">
-      Bug Writing Guidelines</ulink>. 
-      While some of the advice is Mozilla-specific, the basic principles of
-      reporting Reproducible, Specific bugs, isolating the Product you are
-      using, the Version of the Product, the Component which failed, the
-      Hardware Platform, and Operating System you were using at the time of
-      the failure go a long way toward ensuring accurate, responsible fixes
-      for the bug that bit you.</para>
-
-      <para>The procedure for filing a test bug is as follows:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Go to 
-          <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">
-          Landfill</ulink>
-          in your browser and click 
-          <ulink
-          url="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi">
-          Enter a new bug report</ulink>.
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>Select a product - any one will do.</para>
-        </listitem>
-
-        <listitem>
-          <para>Fill in the fields. Bugzilla should have made reasonable
-          guesses, based upon your browser, for the "Platform" and "OS"
-          drop-down boxes. If they are wrong, change them.</para>
-        </listitem>
-
-        <listitem>
-          <para>Select "Commit" and send in your bug report.</para>
-        </listitem>
-      </orderedlist>
+    <section id="patchviewer_diff">
+      <title>Seeing the Difference Between Two Patches</title>
+      <para>To see the difference between two patches, you must first view the
+      newer patch in Patch Viewer.  Then select the older patch from the
+      dropdown at the top of the page ("Differences between [dropdown] and
+      this patch") and click the "Diff" button. This will show you what
+      is new or changed in the newer patch.</para>
     </section>
 
-    <section id="patchviewer">
-      <title>Patch Viewer</title>
-
-      <para>Viewing and reviewing patches in Bugzilla is often difficult due to
-      lack of context, improper format and the inherent readability issues that
-      raw patches present.  Patch Viewer is an enhancement to Bugzilla designed
-      to fix that by offering increased context, linking to sections, and
-      integrating with Bonsai, LXR and CVS.</para>
-
-      <para>Patch viewer allows you to:</para>
-
-      <simplelist>
-        <member>View patches in color, with side-by-side view rather than trying
-        to interpret the contents of the patch.</member>
-        <member>See the difference between two patches.</member>
-        <member>Get more context in a patch.</member>
-        <member>Collapse and expand sections of a patch for easy
-        reading.</member>
-        <member>Link to a particular section of a patch for discussion or
-        review</member>
-        <member>Go to Bonsai or LXR to see more context, blame, and
-        cross-references for the part of the patch you are looking at</member>
-        <member>Create a rawtext unified format diff out of any patch, no
-        matter what format it came from</member>
-      </simplelist>
-
-      <section id="patchviewer_view">
-        <title>Viewing Patches in Patch Viewer</title>
-        <para>The main way to view a patch in patch viewer is to click on the
-        "Diff" link next to a patch in the Attachments list on a bug. You may
-        also do this within the edit window by clicking the "View Attachment As
-        Diff" button in the Edit Attachment screen.</para>
-      </section>
-
-      <section id="patchviewer_diff">
-        <title>Seeing the Difference Between Two Patches</title>
-        <para>To see the difference between two patches, you must first view the
-        newer patch in Patch Viewer.  Then select the older patch from the
-        dropdown at the top of the page ("Differences between [dropdown] and
-        this patch") and click the "Diff" button. This will show you what
-        is new or changed in the newer patch.</para>
-      </section>
-
-      <section id="patchviewer_context">
-        <title>Getting More Context in a Patch</title>
-        <para>To get more context in a patch, you put a number in the textbox at
-        the top of Patch Viewer ("Patch / File / [textbox]") and hit enter.
-        This will give you that many lines of context before and after each
-        change. Alternatively, you can click on the "File" link there and it
-        will show each change in the full context of the file. This feature only
-        works against files that were diffed using "cvs diff".</para>
-      </section>
-
-      <section id="patchviewer_collapse">
-        <title>Collapsing and Expanding Sections of a Patch</title>
-        <para>To view only a certain set of files in a patch (for example, if a
-        patch is absolutely huge and you want to only review part of it at a
-        time), you can click the "(+)" and "(-)" links next to each file (to
-        expand it or collapse it). If you want to collapse all files or expand
-        all files, you can click the "Collapse All" and "Expand All" links at the
-        top of the page.</para>
-      </section>
-
-      <section id="patchviewer_link">
-        <title>Linking to a Section of a Patch</title>
-        <para>To link to a section of a patch (for example, if you want to be
-        able to give someone a URL to show them which part you are talking
-        about) you simply click the "Link Here" link on the section header. The
-        resulting URL can be copied and used in discussion. (Copy Link
-        Location in Mozilla works as well.)</para>
-      </section>
-
-      <section id="patchviewer_bonsai_lxr">
-        <title>Going to Bonsai and LXR</title>
-        <para>To go to Bonsai to get blame for the lines you are interested in,
-        you can click the "Lines XX-YY" link on the section header you are
-        interested in. This works even if the patch is against an old
-        version of the file, since Bonsai stores all versions of the file.</para>
-
-        <para>To go to LXR, you click on the filename on the file header
-        (unfortunately, since LXR only does the most recent version, line
-        numbers are likely to rot).</para>
-      </section>
-
-      <section id="patchviewer_unified_diff">
-        <title>Creating a Unified Diff</title>
-        <para>If the patch is not in a format that you like, you can turn it
-        into a unified diff format by clicking the "Raw Unified" link at the top
-        of the page.</para>
-      </section>
-
+    <section id="patchviewer_context">
+      <title>Getting More Context in a Patch</title>
+      <para>To get more context in a patch, you put a number in the textbox at
+      the top of Patch Viewer ("Patch / File / [textbox]") and hit enter.
+      This will give you that many lines of context before and after each
+      change. Alternatively, you can click on the "File" link there and it
+      will show each change in the full context of the file. This feature only
+      works against files that were diffed using "cvs diff".</para>
     </section>
+
+    <section id="patchviewer_collapse">
+      <title>Collapsing and Expanding Sections of a Patch</title>
+      <para>To view only a certain set of files in a patch (for example, if a
+      patch is absolutely huge and you want to only review part of it at a
+      time), you can click the "(+)" and "(-)" links next to each file (to
+      expand it or collapse it). If you want to collapse all files or expand
+      all files, you can click the "Collapse All" and "Expand All" links at the
+      top of the page.</para>
+    </section>
+
+    <section id="patchviewer_link">
+      <title>Linking to a Section of a Patch</title>
+      <para>To link to a section of a patch (for example, if you want to be
+      able to give someone a URL to show them which part you are talking
+      about) you simply click the "Link Here" link on the section header. The
+      resulting URL can be copied and used in discussion. (Copy Link
+      Location in Mozilla works as well.)</para>
+    </section>
+
+    <section id="patchviewer_bonsai_lxr">
+      <title>Going to Bonsai and LXR</title>
+      <para>To go to Bonsai to get blame for the lines you are interested in,
+      you can click the "Lines XX-YY" link on the section header you are
+      interested in. This works even if the patch is against an old
+      version of the file, since Bonsai stores all versions of the file.</para>
+
+      <para>To go to LXR, you click on the filename on the file header
+      (unfortunately, since LXR only does the most recent version, line
+      numbers are likely to rot).</para>
+    </section>
+
+    <section id="patchviewer_unified_diff">
+      <title>Creating a Unified Diff</title>
+      <para>If the patch is not in a format that you like, you can turn it
+      into a unified diff format by clicking the "Raw Unified" link at the top
+      of the page.</para>
+    </section>
+
   </section>
 
   <section id="hintsandtips">
@@ -475,15 +468,16 @@
 
     <section>
       <title>Autolinkification</title>
-      <para>Bugzilla comments are plain text - so posting HTML will result
-      in literal HTML tags rather than being interpreted by a browser.
+      <para>Bugzilla comments are plain text - so typing &lt;U&gt; will
+      produce less-than, U, greater-than rather than underlined text.
       However, Bugzilla will automatically make hyperlinks out of certain
       sorts of text in comments. For example, the text 
-      http://www.bugzilla.org will be turned into
+      "http://www.bugzilla.org" will be turned into a link:
       <ulink url="http://www.bugzilla.org"/>.
       Other strings which get linkified in the obvious manner are:
       <simplelist>
         <member>bug 12345</member>
+        <member>comment 7</member>
         <member>bug 23456, comment 53</member>
         <member>attachment 4321</member>
         <member>mailto:george@example.com</member>
@@ -532,7 +526,7 @@
       
       <para>
       Don't use sigs in comments. Signing your name ("Bill") is acceptable,
-      particularly if you do it out of habit, but full mail/news-style
+      if you do it out of habit, but full mail/news-style
       four line ASCII art creations are not.
       </para>      
     </section>
@@ -586,7 +580,7 @@
 
     <para>Once you have logged in, you can customise various aspects of 
     Bugzilla via the "Edit prefs" link in the page footer.
-    The preferences are split into four tabs:</para>
+    The preferences are split into three tabs:</para>
 
     <section id="accountsettings" xreflabel="Account Settings">
       <title>Account Settings</title>
@@ -608,9 +602,16 @@
 
       <para>On this tab you can reduce or increase the amount of email sent
       you from Bugzilla, opting in our out depending on your relationship to
-      the bug and the change that was made to it. (Note that you can also do
-      client-side filtering using the X-Bugzilla-Reason header which Bugzilla
-      adds to all bugmail.)</para>
+      the bug and the change that was made to it. 
+      </para>
+      
+      <para>
+      You can also do further filtering on the client side by 
+      using the X-Bugzilla-Reason mail header which Bugzilla
+      adds to all bugmail. This tells you what relationship you have to the
+      bug in question,
+      and can be any of Owner, Reporter, QAcontact, CClist, Voter and
+      WatchingComponent.</para>
 
       <para>By entering user email names, delineated by commas, into the
       "Users to watch" text entry box you can receive a copy of all the
@@ -625,15 +626,6 @@
       </note>
     </section>
 
-    <section id="footersettings">
-      <title>Page Footer</title>
-      
-      <para>On the Search page, you can store queries in Bugzilla, so if you
-      regularly run a particular query it is just a drop-down menu away. 
-      Once you have a stored query, you can come
-      here to request that it also be displayed in your page footer.</para>
-    </section>
-
     <section id="permissionsettings">
       <title>Permissions</title>
       
@@ -643,6 +635,11 @@
       functions.</para>
     </section>
   </section>
+  <section id="reporting">
+    <title>Reports</title>
+    <para><emphasis>To be written</emphasis></para>
+  </section>
+  
 </chapter>
 
 <!-- Keep this comment at the end of the file

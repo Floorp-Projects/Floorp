@@ -4,16 +4,18 @@
 >Hints and Tips</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Using Bugzilla"
 HREF="using.html"><LINK
 REL="PREVIOUS"
-TITLE="How do I use Bugzilla?"
-HREF="how.html"><LINK
+TITLE="Patch Viewer"
+HREF="patchviewer.html"><LINK
 REL="NEXT"
 TITLE="User Preferences"
 HREF="userpreferences.html"></HEAD
@@ -36,7 +38,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -44,7 +47,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="how.html"
+HREF="patchviewer.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -74,7 +77,7 @@ CLASS="section"
 ><A
 NAME="hintsandtips"
 ></A
->3.2. Hints and Tips</H1
+>3.7. Hints and Tips</H1
 ><P
 >This section distills some Bugzilla tips and best practices
     that have been developed.</P
@@ -83,15 +86,15 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN407"
+NAME="AEN358"
 ></A
->3.2.1. Autolinkification</H2
+>3.7.1. Autolinkification</H2
 ><P
->Bugzilla comments are plain text - so posting HTML will result
-      in literal HTML tags rather than being interpreted by a browser.
+>Bugzilla comments are plain text - so typing &#60;U&#62; will
+      produce less-than, U, greater-than rather than underlined text.
       However, Bugzilla will automatically make hyperlinks out of certain
       sorts of text in comments. For example, the text 
-      http://www.bugzilla.org will be turned into
+      "http://www.bugzilla.org" will be turned into a link:
       <A
 HREF="http://www.bugzilla.org"
 TARGET="_top"
@@ -106,6 +109,10 @@ BORDER="0"
 ><TR
 ><TD
 >bug 12345</TD
+></TR
+><TR
+><TD
+>comment 7</TD
 ></TR
 ><TR
 ><TD
@@ -150,7 +157,7 @@ CLASS="section"
 ><A
 NAME="quicksearch"
 ></A
->3.2.2. Quicksearch</H2
+>3.7.2. Quicksearch</H2
 ><P
 >Quicksearch is a single-text-box query tool which uses
       metacharacters to indicate what is to be searched. For example, typing
@@ -183,7 +190,7 @@ CLASS="section"
 ><A
 NAME="commenting"
 ></A
->3.2.3. Comments</H2
+>3.7.3. Comments</H2
 ><P
 >If you are changing the fields on a bug, only comment if
       either you have something pertinent to say, or Bugzilla requires it.
@@ -196,7 +203,7 @@ NAME="commenting"
       </P
 ><P
 >&#13;      Don't use sigs in comments. Signing your name ("Bill") is acceptable,
-      particularly if you do it out of habit, but full mail/news-style
+      if you do it out of habit, but full mail/news-style
       four line ASCII art creations are not.
       </P
 ></DIV
@@ -207,7 +214,7 @@ CLASS="section"
 ><A
 NAME="attachments"
 ></A
->3.2.4. Attachments</H2
+>3.7.4. Attachments</H2
 ><P
 >&#13;      Use attachments, rather than comments, for large chunks of ASCII data,
       such as trace, debugging output files, or log files. That way, it doesn't
@@ -231,9 +238,9 @@ CLASS="section"
 ><H2
 CLASS="section"
 ><A
-NAME="AEN436"
+NAME="AEN388"
 ></A
->3.2.5. Filing Bugs</H2
+>3.7.5. Filing Bugs</H2
 ><P
 >Try to make sure that everything said in the summary is also 
       said in the first comment. Summaries are often updated and this will
@@ -268,7 +275,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="how.html"
+HREF="patchviewer.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -296,7 +303,7 @@ ACCESSKEY="N"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->How do I use Bugzilla?</TD
+>Patch Viewer</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

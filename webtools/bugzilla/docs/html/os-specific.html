@@ -4,9 +4,11 @@
 >OS Specific Installation Notes</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="UP"
 TITLE="Installation"
@@ -15,8 +17,8 @@ REL="PREVIOUS"
 TITLE="Optional Additional Configuration"
 HREF="extraconfig.html"><LINK
 REL="NEXT"
-TITLE="HTTP Server Configuration"
-HREF="http.html"></HEAD
+TITLE="Bugzilla Security"
+HREF="security.html"></HEAD
 ><BODY
 CLASS="section"
 BGCOLOR="#FFFFFF"
@@ -36,7 +38,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -58,7 +61,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="http.html"
+HREF="security.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -74,7 +77,7 @@ CLASS="section"
 ><A
 NAME="os-specific"
 ></A
->4.3. OS Specific Installation Notes</H1
+>4.4. OS Specific Installation Notes</H1
 ><P
 >Many aspects of the Bugzilla installation can be affected by the
     the operating system you choose to install it on. Sometimes it can be made
@@ -97,9 +100,9 @@ CLASS="section"
 ><A
 NAME="os-win32"
 ></A
->4.3.1. Microsoft Windows</H2
+>4.4.1. Microsoft Windows</H2
 ><P
->Making Bugzilla work on windows is still a very painful processes.
+>Making Bugzilla work on windows is still a painful processes.
       The Bugzilla Team is working to make it easier, but that goal is not
       considered a top priority. If you wish to run Bugzilla, we still
       recommend doing so on a Unix based system such as GNU/Linux. As of this
@@ -123,7 +126,7 @@ CLASS="section"
 ><A
 NAME="win32-perl"
 ></A
->4.3.1.1. Win32 Perl</H3
+>4.4.1.1. Win32 Perl</H3
 ><P
 >Perl for Windows can be obtained from <A
 HREF="http://www.activestate.com/"
@@ -144,12 +147,12 @@ CLASS="section"
 ><A
 NAME="win32-perlmodules"
 ></A
->4.3.1.2. Perl Modules on Win32</H3
+>4.4.1.2. Perl Modules on Win32</H3
 ><P
 >Bugzilla on Windows requires the same perl modules found in
         <A
 HREF="stepbystep.html#install-perlmodules"
->Section 4.1.3</A
+>Section 4.1.5</A
 >. The main difference is that
         windows uses <A
 HREF="glossary.html#gloss-ppm"
@@ -256,18 +259,11 @@ CLASS="section"
 ><A
 NAME="win32-code-changes"
 ></A
->4.3.1.3. Code changes required to run on win32</H3
+>4.4.1.3. Code changes required to run on win32</H3
 ><P
->Unfortunately, Bugzilla still doesn't run "out of the box" on
-        Windows.  There is work in progress to make this easier, but until that
-        happens code will have to be modified. This section is an attempt to
-        list the required changes.  It is an attempt to be all inclusive, but
-        there may be other changes required.  If you find something is missing,
-        please file a bug in <A
-HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
-TARGET="_top"
->Bugzilla Documentation</A
->.
+>As Bugzilla still doesn't run "out of the box" on
+        Windows, code has to be modified. This section is an attempt to
+        list the required changes.
         </P
 ><DIV
 CLASS="section"
@@ -276,7 +272,7 @@ CLASS="section"
 ><A
 NAME="win32-code-checksetup"
 ></A
->4.3.1.3.1. Changes to <TT
+>4.4.1.3.1. Changes to <TT
 CLASS="filename"
 >checksetup.pl</TT
 ></H4
@@ -363,7 +359,7 @@ CLASS="section"
 ><A
 NAME="win32-code-bugmail"
 ></A
->4.3.1.3.2. Changes to <TT
+>4.4.1.3.2. Changes to <TT
 CLASS="filename"
 >BugMail.pm</TT
 ></H4
@@ -375,11 +371,8 @@ TARGET="_top"
 >bug
           84876</A
 > lands), the
-          simplest way is to have Net::SMTP installed and change this (in
-          <TT
-CLASS="filename"
->Bugzilla/BugMail.pm</TT
->):</P
+          simplest way is to have the Net::SMTP Perl module installed and 
+          change this:</P
 ><TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
@@ -444,19 +437,19 @@ CLASS="section"
 ><A
 NAME="win32-http"
 ></A
->4.3.1.4. Serving the web pages</H3
+>4.4.1.4. Serving the web pages</H3
 ><P
 >As is the case on Unix based systems, any web server should be
         able to handle Bugzilla; however, the Bugzilla Team still recommends
         Apache whenever asked. No matter what web server you choose, be sure
         to pay attention to the security notes in <A
 HREF="security.html#security-access"
->Section 5.6.4</A
+>Section 4.5.4</A
 >.
         More information on configuring specific web servers can be found in
         <A
 HREF="http.html"
->Section 4.4</A
+>Section 4.2</A
 >.
         </P
 ><DIV
@@ -505,7 +498,7 @@ CLASS="section"
 ><A
 NAME="os-macosx"
 ></A
->4.3.2. <SPAN
+>4.4.2. <SPAN
 CLASS="productname"
 >Mac OS X</SPAN
 ></H2
@@ -699,7 +692,7 @@ CLASS="section"
 ><A
 NAME="os-mandrake"
 ></A
->4.3.3. Linux-Mandrake 8.0</H2
+>4.4.3. Linux-Mandrake 8.0</H2
 ><P
 >Linux-Mandrake 8.0 includes every required and optional library
       for Bugzilla. The easiest way to install them is by using the
@@ -826,7 +819,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="http.html"
+HREF="security.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -850,7 +843,7 @@ ACCESSKEY="U"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->HTTP Server Configuration</TD
+>Bugzilla Security</TD
 ></TR
 ></TABLE
 ></DIV

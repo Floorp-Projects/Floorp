@@ -60,18 +60,10 @@
         </row>
 
         <row>
-          <entry>File Names</entry>
+          <entry>File and directory names</entry>
 
           <entry>
             <filename>filename</filename>
-          </entry>
-        </row>
-
-        <row>
-          <entry>Directory Names</entry>
-
-          <entry>
-            <filename class="directory">directory</filename>
           </entry>
         </row>
 
@@ -84,7 +76,7 @@
         </row>
 
         <row>
-          <entry>Applications Names</entry>
+          <entry>Applications names</entry>
 
           <entry>
             <application>application</application>
@@ -119,18 +111,10 @@
         </row>
 
         <row>
-          <entry>Environment Variables</entry>
+          <entry>Environment variables</entry>
 
           <entry>
             <envar>VARIABLE</envar>
-          </entry>
-        </row>
-
-        <row>
-          <entry>Emphasized word</entry>
-
-          <entry>
-            <emphasis>word</emphasis>
           </entry>
         </row>
 
@@ -143,7 +127,7 @@
         </row>
 
         <row>
-          <entry>Code Example</entry>
+          <entry>Code example</entry>
 
           <entry>
             <programlisting><sgmltag class="starttag">para</sgmltag>
@@ -154,6 +138,13 @@ Beginning and end of paragraph
       </tbody>
     </tgroup>
   </informaltable>
+
+  <para>  
+	  This documentation is maintained in DocBook 4.1.2 XML format.
+    Changes are best submitted as plain text or XML diffs, attached
+    to a bug filed in the &bzg-bugs; component.
+  </para>
+  
 </section>
 
 <!-- Keep this comment at the end of the file

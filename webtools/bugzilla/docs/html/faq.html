@@ -4,16 +4,18 @@
 >The Bugzilla FAQ</TITLE
 ><META
 NAME="GENERATOR"
-CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
 REL="HOME"
-TITLE="The Bugzilla Guide - 2.17.5 Development Release"
+TITLE="The Bugzilla Guide - 2.17.5 
+    Development Release"
 HREF="index.html"><LINK
 REL="PREVIOUS"
 TITLE="Integrating Bugzilla with Third-Party Tools"
 HREF="integration.html"><LINK
 REL="NEXT"
-TITLE="The Bugzilla Database"
-HREF="database.html"></HEAD
+TITLE="Contrib"
+HREF="patches.html"></HEAD
 ><BODY
 CLASS="appendix"
 BGCOLOR="#FFFFFF"
@@ -33,7 +35,8 @@ CELLSPACING="0"
 ><TH
 COLSPAN="3"
 ALIGN="center"
->The Bugzilla Guide - 2.17.5 Development Release</TH
+>The Bugzilla Guide - 2.17.5 
+    Development Release</TH
 ></TR
 ><TR
 ><TD
@@ -55,7 +58,7 @@ WIDTH="10%"
 ALIGN="right"
 VALIGN="bottom"
 ><A
-HREF="database.html"
+HREF="patches.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -86,56 +89,51 @@ HREF="faq.html#faq-general"
 ><DL
 ><DT
 >A.1.1. <A
-HREF="faq.html#faq-general-information"
->&#13;	    Where can I find information about Bugzilla?</A
-></DT
-><DT
->A.1.2. <A
 HREF="faq.html#faq-general-license"
 >&#13;	    What license is Bugzilla distributed under?
 	  </A
 ></DT
 ><DT
->A.1.3. <A
+>A.1.2. <A
 HREF="faq.html#faq-general-support"
 >&#13;	    How do I get commercial support for Bugzilla?
 	  </A
 ></DT
 ><DT
->A.1.4. <A
+>A.1.3. <A
 HREF="faq.html#faq-general-companies"
 >&#13;	    What major companies or projects are currently using Bugzilla
 	    for bug-tracking?
 	  </A
 ></DT
 ><DT
->A.1.5. <A
+>A.1.4. <A
 HREF="faq.html#faq-general-maintainers"
 >&#13;	    Who maintains Bugzilla?
 	  </A
 ></DT
 ><DT
->A.1.6. <A
+>A.1.5. <A
 HREF="faq.html#faq-general-compare"
 >&#13;	    How does Bugzilla stack up against other bug-tracking databases?
 	  </A
 ></DT
 ><DT
->A.1.7. <A
+>A.1.6. <A
 HREF="faq.html#faq-general-bzmissing"
 >&#13;	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
 	  </A
 ></DT
 ><DT
->A.1.8. <A
+>A.1.7. <A
 HREF="faq.html#faq-general-mysql"
 >&#13;	    Why MySQL?  I'm interested in seeing Bugzilla run on
 	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
 	  </A
 ></DT
 ><DT
->A.1.9. <A
+>A.1.8. <A
 HREF="faq.html#faq-general-bonsaitools"
 >&#13;	    What is <TT
 CLASS="filename"
@@ -144,7 +142,7 @@ CLASS="filename"
 	  </A
 ></DT
 ><DT
->A.1.10. <A
+>A.1.9. <A
 HREF="faq.html#faq-general-perlpath"
 >&#13;            My perl is not located at <TT
 CLASS="filename"
@@ -154,7 +152,7 @@ CLASS="filename"
           </A
 ></DT
 ><DT
->A.1.11. <A
+>A.1.10. <A
 HREF="faq.html#faq-general-cookie"
 >&#13;	    Is there an easy way to change the Bugzilla cookie name?
 	  </A
@@ -177,33 +175,6 @@ HREF="faq.html#faq-phb-client"
 ></DT
 ><DT
 >A.2.2. <A
-HREF="faq.html#faq-phb-integration"
->&#13;	    Can Bugzilla integrate with
-	    Perforce (SCM software)?
-	  </A
-></DT
-><DT
->A.2.3. <A
-HREF="faq.html#faq-phb-projects"
->&#13;	    Does Bugzilla allow the user to track multiple projects?
-	  </A
-></DT
-><DT
->A.2.4. <A
-HREF="faq.html#faq-phb-sorting"
->&#13;	    If I am on many projects, and search for all bugs assigned to me, will
-	    Bugzilla list them for me and allow me to sort by project, severity etc?
-	  </A
-></DT
-><DT
->A.2.5. <A
-HREF="faq.html#faq-phb-attachments"
->&#13;	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
-	    are there any that are NOT allowed?
-	  </A
-></DT
-><DT
->A.2.6. <A
 HREF="faq.html#faq-phb-priorities"
 >&#13;	    Does Bugzilla allow us to define our own priorities and levels? Do we
 	    have complete freedom to change the labels of fields and format of them, and
@@ -211,35 +182,28 @@ HREF="faq.html#faq-phb-priorities"
 	  </A
 ></DT
 ><DT
->A.2.7. <A
+>A.2.3. <A
 HREF="faq.html#faq-phb-reporting"
 >&#13;	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
 	    know, the type of stuff that management likes to see. :)
 	  </A
 ></DT
 ><DT
->A.2.8. <A
+>A.2.4. <A
 HREF="faq.html#faq-phb-email"
 >&#13;	    Is there email notification and if so, what do you see when you get an
 	    email?
 	  </A
 ></DT
 ><DT
->A.2.9. <A
-HREF="faq.html#faq-phb-cclist"
->&#13;	    Can email notification be set up to send to multiple
-	    people, some on the To List, CC List, BCC List etc?
-	  </A
-></DT
-><DT
->A.2.10. <A
+>A.2.5. <A
 HREF="faq.html#faq-phb-emailapp"
 >&#13;	    Do users have to have any particular
 	    type of email application?
 	  </A
 ></DT
 ><DT
->A.2.11. <A
+>A.2.6. <A
 HREF="faq.html#faq-phb-data"
 >&#13;	    Does Bugzilla allow data to be imported and exported? If I had outsiders
 	    write up a bug report using a MS Word bug template, could that template be
@@ -248,28 +212,21 @@ HREF="faq.html#faq-phb-data"
 	  </A
 ></DT
 ><DT
->A.2.12. <A
+>A.2.7. <A
 HREF="faq.html#faq-phb-l10n"
 >&#13;	    Has anyone converted Bugzilla to another language to be used in other
 	    countries? Is it localizable?
 	  </A
 ></DT
 ><DT
->A.2.13. <A
+>A.2.8. <A
 HREF="faq.html#faq-phb-reports"
 >&#13;	    Can a user create and save reports? Can they do this in Word format?
 	    Excel format?
 	  </A
 ></DT
 ><DT
->A.2.14. <A
-HREF="faq.html#faq-phb-searching"
->&#13;	    Does Bugzilla have the ability to search by word, phrase, compound
-	    search?
-	  </A
-></DT
-><DT
->A.2.15. <A
+>A.2.9. <A
 HREF="faq.html#faq-phb-midair"
 >&#13;	     Does Bugzilla provide record locking when there is simultaneous access
 	    to the same bug? Does the second person get a notice that the bug is in use
@@ -277,29 +234,29 @@ HREF="faq.html#faq-phb-midair"
 	  </A
 ></DT
 ><DT
->A.2.16. <A
+>A.2.10. <A
 HREF="faq.html#faq-phb-backup"
 >&#13;	    Are there any backup features provided?
 	  </A
 ></DT
 ><DT
->A.2.17. <A
+>A.2.11. <A
 HREF="faq.html#faq-phb-livebackup"
 >&#13;	    Can users be on the system while a backup is in progress?
 	  </A
 ></DT
 ><DT
->A.2.18. <A
+>A.2.12. <A
 HREF="faq.html#faq-phb-maintenance"
 >&#13;	    What type of human resources are needed to be on staff to install and
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
 	    have? I need to find out if we were to go with Bugzilla, what types of
 	    individuals would we need to hire and how much would that cost vs buying an
-	    "Out-of-the-Box" solution.
+	    "out-of-the-box" solution?
 	  </A
 ></DT
 ><DT
->A.2.19. <A
+>A.2.13. <A
 HREF="faq.html#faq-phb-installtime"
 >&#13;	    What time frame are we looking at if we decide to hire people to install
 	    and maintain the Bugzilla? Is this something that takes hours or weeks to
@@ -309,7 +266,7 @@ HREF="faq.html#faq-phb-installtime"
 	  </A
 ></DT
 ><DT
->A.2.20. <A
+>A.2.14. <A
 HREF="faq.html#faq-phb-cost"
 >&#13;	    Is there any licensing fee or other fees for using Bugzilla? Any
 	    out-of-pocket cost other than the bodies needed as identified above?
@@ -335,14 +292,6 @@ HREF="faq.html#faq-security-mysql"
 >A.3.2. <A
 HREF="faq.html#faq-security-knownproblems"
 >&#13;	    Are there any security problems with Bugzilla?
-	  </A
-></DT
-><DT
->A.3.3. <A
-HREF="faq.html#faq-security-mysqluser"
->&#13;	    I've implemented the security fixes mentioned in Chris Yeh's security
-	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
-	    problems with MySQL no longer working correctly.
 	  </A
 ></DT
 ></DL
@@ -371,32 +320,25 @@ HREF="faq.html#faq-email-testing"
 ><DT
 >A.4.3. <A
 HREF="faq.html#faq-email-whine"
->&#13;	    I want whineatnews.pl to whine at something more, or other than, only new
+>&#13;	    I want whineatnews.pl to whine at something different to only new
 	    bugs. How do I do it?
 	  </A
 ></DT
 ><DT
 >A.4.4. <A
-HREF="faq.html#faq-email-procmail"
->&#13;	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
-	    What alternatives do I have?
-	  </A
-></DT
-><DT
->A.4.5. <A
 HREF="faq.html#faq-email-mailif"
 >&#13;	    How do I set up the email interface to submit/change bugs via email?
 	  </A
 ></DT
 ><DT
->A.4.6. <A
+>A.4.5. <A
 HREF="faq.html#faq-email-sendmailnow"
 >&#13;	    Email takes FOREVER to reach me from Bugzilla -- it's extremely slow.
 	    What gives?
 	  </A
 ></DT
 ><DT
->A.4.7. <A
+>A.4.6. <A
 HREF="faq.html#faq-email-nonreceived"
 >&#13;	     How come email from Bugzilla changes never reaches me?
 	  </A
@@ -575,38 +517,10 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="faq-general-information"
-></A
-><B
->A.1.1. </B
->
-	    Where can I find information about Bugzilla?</P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    You can stay up-to-date with the latest Bugzilla
-	    information at <A
-HREF="http://www.bugzilla.org/"
-TARGET="_top"
->http://www.bugzilla.org/</A
->.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
 NAME="faq-general-license"
 ></A
 ><B
->A.1.2. </B
+>A.1.1. </B
 >
 	    What license is Bugzilla distributed under?
 	  </P
@@ -635,7 +549,7 @@ CLASS="question"
 NAME="faq-general-support"
 ></A
 ><B
->A.1.3. </B
+>A.1.2. </B
 >
 	    How do I get commercial support for Bugzilla?
 	  </P
@@ -655,16 +569,6 @@ TARGET="_top"
             as consultants for Bugzilla.
           </P
 ><P
->&#13;	    <A
-HREF="http://www.collab.net/"
-TARGET="_top"
->http://www.collab.net/</A
-> offers
-	    Bugzilla as part of their standard offering to large projects.
-	    They do have some minimum fees that are pretty hefty, and generally
-	    aren't interested in small projects.
-	  </P
-><P
 >&#13;	    There are several experienced
 	    Bugzilla hackers on the mailing list/newsgroup who are willing
 	    to make themselves available for generous compensation.
@@ -681,7 +585,7 @@ CLASS="question"
 NAME="faq-general-companies"
 ></A
 ><B
->A.1.4. </B
+>A.1.3. </B
 >
 	    What major companies or projects are currently using Bugzilla
 	    for bug-tracking?
@@ -699,9 +603,9 @@ CLASS="answer"
 	    Bugzilla sites to track bugs in their products. We have a fairly
             complete list available on our website at
             <A
-HREF="http://bugzilla.org/installation_list.html"
+HREF="http://bugzilla.org/installation-list/"
 TARGET="_top"
->http://bugzilla.org/installation_list.html</A
+>http://bugzilla.org/installation-list/</A
 >. If you
             have an installation of Bugzilla and would like to be added to the
             list, whether it's a public install or not, simply e-mail
@@ -711,11 +615,7 @@ CLASS="email"
 HREF="mailto:gerv@mozilla.org"
 >gerv@mozilla.org</A
 >&#62;</TT
->. Keep in mind that it's kinda
-            difficult to get onto the <SPAN
-CLASS="QUOTE"
->"high-profile"</SPAN
-> list ;).
+>.
 	  </P
 ></DIV
 ></DIV
@@ -728,7 +628,7 @@ CLASS="question"
 NAME="faq-general-maintainers"
 ></A
 ><B
->A.1.5. </B
+>A.1.4. </B
 >
 	    Who maintains Bugzilla?
 	  </P
@@ -758,7 +658,7 @@ CLASS="question"
 NAME="faq-general-compare"
 ></A
 ><B
->A.1.6. </B
+>A.1.5. </B
 >
 	    How does Bugzilla stack up against other bug-tracking databases?
 	  </P
@@ -796,7 +696,7 @@ CLASS="question"
 NAME="faq-general-bzmissing"
 ></A
 ><B
->A.1.7. </B
+>A.1.6. </B
 >
 	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
@@ -836,7 +736,7 @@ CLASS="question"
 NAME="faq-general-mysql"
 ></A
 ><B
->A.1.8. </B
+>A.1.7. </B
 >
 	    Why MySQL?  I'm interested in seeing Bugzilla run on
 	    Oracle/Sybase/Msql/PostgreSQL/MSSQL.
@@ -881,7 +781,7 @@ CLASS="question"
 NAME="faq-general-bonsaitools"
 ></A
 ><B
->A.1.9. </B
+>A.1.8. </B
 >
 	    What is <TT
 CLASS="filename"
@@ -923,7 +823,7 @@ CLASS="question"
 NAME="faq-general-perlpath"
 ></A
 ><B
->A.1.10. </B
+>A.1.9. </B
 >
             My perl is not located at <TT
 CLASS="filename"
@@ -972,7 +872,7 @@ CLASS="question"
 NAME="faq-general-cookie"
 ></A
 ><B
->A.1.11. </B
+>A.1.10. </B
 >
 	    Is there an easy way to change the Bugzilla cookie name?
 	  </P
@@ -995,36 +895,6 @@ CLASS="qandadiv"
 NAME="faq-phb"
 ></A
 >2. Managerial Questions</H3
-><P
->&#13;	<DIV
-CLASS="note"
-><P
-></P
-><TABLE
-CLASS="note"
-WIDTH="100%"
-BORDER="0"
-><TR
-><TD
-WIDTH="25"
-ALIGN="CENTER"
-VALIGN="TOP"
-><IMG
-SRC="../images/note.gif"
-HSPACE="5"
-ALT="Note"></TD
-><TD
-ALIGN="LEFT"
-VALIGN="TOP"
-><P
->&#13;	    Questions likely to be asked by managers. :-)
-	  </P
-></TD
-></TR
-></TABLE
-></DIV
->
-      </P
 ><DIV
 CLASS="qandaentry"
 ><DIV
@@ -1046,113 +916,7 @@ CLASS="answer"
 ><B
 > </B
 >
-	    It is web and e-mail based. You can edit bugs by sending specially
-	    formatted email to a properly configured Bugzilla, or control via the web.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="faq-phb-integration"
-></A
-><B
->A.2.2. </B
->
-	    Can Bugzilla integrate with
-	    Perforce (SCM software)?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Yes!  You can find more information elsewhere in "The Bugzilla
-	    Guide" in the "Integration with Third-Party Products" section.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="faq-phb-projects"
-></A
-><B
->A.2.3. </B
->
-	    Does Bugzilla allow the user to track multiple projects?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Absolutely!  You can track any number of Products that can each be
-            composed of any number of Components.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="faq-phb-sorting"
-></A
-><B
->A.2.4. </B
->
-	    If I am on many projects, and search for all bugs assigned to me, will
-	    Bugzilla list them for me and allow me to sort by project, severity etc?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Yes.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="faq-phb-attachments"
-></A
-><B
->A.2.5. </B
->
-	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
-	    are there any that are NOT allowed?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Yes - any sort of attachment is allowed, although administrators can
-      configure a maximum size.
-            Bugzilla gives the user the option of either using the MIME-type
-            supplied by the browser, choosing from a pre-defined list or
-            manually typing any arbitrary MIME-type. 
+	    It is web and e-mail based.
 	  </P
 ></DIV
 ></DIV
@@ -1165,7 +929,7 @@ CLASS="question"
 NAME="faq-phb-priorities"
 ></A
 ><B
->A.2.6. </B
+>A.2.2. </B
 >
 	    Does Bugzilla allow us to define our own priorities and levels? Do we
 	    have complete freedom to change the labels of fields and format of them, and
@@ -1202,7 +966,7 @@ CLASS="question"
 NAME="faq-phb-reporting"
 ></A
 ><B
->A.2.7. </B
+>A.2.3. </B
 >
 	    Does Bugzilla provide any reporting features, metrics, graphs, etc? You
 	    know, the type of stuff that management likes to see. :)
@@ -1240,7 +1004,7 @@ CLASS="question"
 NAME="faq-phb-email"
 ></A
 ><B
->A.2.8. </B
+>A.2.4. </B
 >
 	    Is there email notification and if so, what do you see when you get an
 	    email?
@@ -1253,33 +1017,8 @@ CLASS="answer"
 > </B
 >
 	    Email notification is user-configurable. By default, the bug id and 
-      Summary of the bug report accompany each email notification, along with
+      summary of the bug report accompany each email notification, along with
 	    a list of the changes made.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="faq-phb-cclist"
-></A
-><B
->A.2.9. </B
->
-	    Can email notification be set up to send to multiple
-	    people, some on the To List, CC List, BCC List etc?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    Yes.
 	  </P
 ></DIV
 ></DIV
@@ -1292,7 +1031,7 @@ CLASS="question"
 NAME="faq-phb-emailapp"
 ></A
 ><B
->A.2.10. </B
+>A.2.5. </B
 >
 	    Do users have to have any particular
 	    type of email application?
@@ -1351,7 +1090,7 @@ CLASS="question"
 NAME="faq-phb-data"
 ></A
 ><B
->A.2.11. </B
+>A.2.6. </B
 >
 	    Does Bugzilla allow data to be imported and exported? If I had outsiders
 	    write up a bug report using a MS Word bug template, could that template be
@@ -1368,7 +1107,7 @@ CLASS="answer"
             Bugzilla can output buglists as HTML (the default), CSV or RDF.
             The link for CSV can be found at the bottom of the buglist in HTML
             format. This CSV format can easily be imported into MS Excel or
-            other spread-sheet applications.
+            other spreadsheet applications.
           </P
 ><P
 >&#13;            To use the RDF format of the buglist it is necessary to append a
@@ -1377,7 +1116,7 @@ CLASS="computeroutput"
 >&#38;ctype=rdf</TT
 > to the URL. RDF
             is meant to be machine readable and thus it is assumed that the
-            URL would be generated progmatically so there is no user visible
+            URL would be generated programatically so there is no user visible
             link to this format.
           </P
 ><P
@@ -1413,7 +1152,7 @@ CLASS="question"
 NAME="faq-phb-l10n"
 ></A
 ><B
->A.2.12. </B
+>A.2.7. </B
 >
 	    Has anyone converted Bugzilla to another language to be used in other
 	    countries? Is it localizable?
@@ -1451,7 +1190,7 @@ CLASS="question"
 NAME="faq-phb-reports"
 ></A
 ><B
->A.2.13. </B
+>A.2.8. </B
 >
 	    Can a user create and save reports? Can they do this in Word format?
 	    Excel format?
@@ -1473,36 +1212,10 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="faq-phb-searching"
-></A
-><B
->A.2.14. </B
->
-	    Does Bugzilla have the ability to search by word, phrase, compound
-	    search?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    You have no idea. Bugzilla's query interface, particularly with the
-	    advanced Boolean operators, is incredibly versatile.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
 NAME="faq-phb-midair"
 ></A
 ><B
->A.2.15. </B
+>A.2.9. </B
 >
 	     Does Bugzilla provide record locking when there is simultaneous access
 	    to the same bug? Does the second person get a notice that the bug is in use
@@ -1529,7 +1242,7 @@ CLASS="question"
 NAME="faq-phb-backup"
 ></A
 ><B
->A.2.16. </B
+>A.2.10. </B
 >
 	    Are there any backup features provided?
 	  </P
@@ -1559,7 +1272,7 @@ CLASS="question"
 NAME="faq-phb-livebackup"
 ></A
 ><B
->A.2.17. </B
+>A.2.11. </B
 >
 	    Can users be on the system while a backup is in progress?
 	  </P
@@ -1585,13 +1298,13 @@ CLASS="question"
 NAME="faq-phb-maintenance"
 ></A
 ><B
->A.2.18. </B
+>A.2.12. </B
 >
 	    What type of human resources are needed to be on staff to install and
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
 	    have? I need to find out if we were to go with Bugzilla, what types of
 	    individuals would we need to hire and how much would that cost vs buying an
-	    "Out-of-the-Box" solution.
+	    "out-of-the-box" solution?
 	  </P
 ></DIV
 ><DIV
@@ -1620,7 +1333,7 @@ CLASS="question"
 NAME="faq-phb-installtime"
 ></A
 ><B
->A.2.19. </B
+>A.2.13. </B
 >
 	    What time frame are we looking at if we decide to hire people to install
 	    and maintain the Bugzilla? Is this something that takes hours or weeks to
@@ -1653,7 +1366,7 @@ CLASS="question"
 NAME="faq-phb-cost"
 ></A
 ><B
->A.2.20. </B
+>A.2.14. </B
 >
 	    Is there any licensing fee or other fees for using Bugzilla? Any
 	    out-of-pocket cost other than the bodies needed as identified above?
@@ -1735,34 +1448,6 @@ CLASS="answer"
 	  </P
 ></DIV
 ></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
-NAME="faq-security-mysqluser"
-></A
-><B
->A.3.3. </B
->
-	    I've implemented the security fixes mentioned in Chris Yeh's security
-	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
-	    problems with MySQL no longer working correctly.
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    This is a common problem, related to running out of file descriptors.
-	    Simply add "ulimit -n unlimited" to the script which starts
-	    mysqld.
-	  </P
-></DIV
-></DIV
 ></DIV
 ><DIV
 CLASS="qandadiv"
@@ -1838,7 +1523,7 @@ NAME="faq-email-whine"
 ><B
 >A.4.3. </B
 >
-	    I want whineatnews.pl to whine at something more, or other than, only new
+	    I want whineatnews.pl to whine at something different to only new
 	    bugs. How do I do it?
 	  </P
 ></DIV
@@ -1866,49 +1551,10 @@ CLASS="qandaentry"
 CLASS="question"
 ><P
 ><A
-NAME="faq-email-procmail"
-></A
-><B
->A.4.4. </B
->
-	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
-	    What alternatives do I have?
-	  </P
-></DIV
-><DIV
-CLASS="answer"
-><P
-><B
-> </B
->
-	    You can call bug_email.pl directly from your aliases file, with
-	    an entry like this:
-	    <A
-NAME="AEN2067"
-></A
-><BLOCKQUOTE
-CLASS="BLOCKQUOTE"
-><P
->&#13;		bugzilla-daemon: "|/usr/local/bin/bugzilla/contrib/bug_email.pl"
-	      </P
-></BLOCKQUOTE
->
-	    However, this is fairly nasty and subject to problems; you also
-	    need to set up your smrsh (sendmail restricted shell) to allow
-	    it. In a pinch, though, it can work.
-	  </P
-></DIV
-></DIV
-><DIV
-CLASS="qandaentry"
-><DIV
-CLASS="question"
-><P
-><A
 NAME="faq-email-mailif"
 ></A
 ><B
->A.4.5. </B
+>A.4.4. </B
 >
 	    How do I set up the email interface to submit/change bugs via email?
 	  </P
@@ -1933,7 +1579,7 @@ CLASS="question"
 NAME="faq-email-sendmailnow"
 ></A
 ><B
->A.4.6. </B
+>A.4.5. </B
 >
 	    Email takes FOREVER to reach me from Bugzilla -- it's extremely slow.
 	    What gives?
@@ -1945,7 +1591,21 @@ CLASS="answer"
 ><B
 > </B
 >
-	    If you are using an alternate <A
+	    If you are using <SPAN
+CLASS="application"
+>sendmail</SPAN
+>, try enabling
+            <TT
+CLASS="option"
+>sendmailnow</TT
+> in <TT
+CLASS="filename"
+>editparams.cgi</TT
+>.
+            
+	  </P
+><P
+>&#13;	    If you are using an alternate <A
 HREF="glossary.html#gloss-mta"
 ><I
 CLASS="glossterm"
@@ -1969,20 +1629,6 @@ CLASS="literal"
 >on</TT
 >.
 	  </P
-><P
->&#13;	    If you are using <SPAN
-CLASS="application"
->sendmail</SPAN
->, try enabling
-            <TT
-CLASS="option"
->sendmailnow</TT
-> in <TT
-CLASS="filename"
->editparams.cgi</TT
->.
-            
-	  </P
 ></DIV
 ></DIV
 ><DIV
@@ -1994,7 +1640,7 @@ CLASS="question"
 NAME="faq-email-nonreceived"
 ></A
 ><B
->A.4.7. </B
+>A.4.6. </B
 >
 	     How come email from Bugzilla changes never reaches me?
 	  </P
@@ -2011,7 +1657,7 @@ CLASS="answer"
 	    button after entering your email address.
 	  </P
 ><P
->&#13;	    If you never receive mail from Bugzilla, chances you do not have
+>&#13;	    If you never receive mail from Bugzilla, chances are you do not have
 	    sendmail in "/usr/lib/sendmail". Ensure sendmail lives in, or is symlinked
 	    to, "/usr/lib/sendmail".
 	  </P
@@ -2045,11 +1691,12 @@ CLASS="answer"
 ><B
 > </B
 >
-            Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle.
+            Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle,
+            but it is now so old as to be obsolete, and is totally unsupported.
             Red Hat's newer version (based on 2.17.1 and soon to be merged into
             the main distribution) runs on PostgreSQL. At this time we know of
-            no recent ports of Bugzilla to Oracle but do intend to support it
-            in the future (possibly the 2.20 time-frame).
+            no recent ports of Bugzilla to Oracle; to be honest, Bugzilla
+            doesn't need what Oracle offers.
 	  </P
 ></DIV
 ></DIV
@@ -2080,10 +1727,9 @@ CLASS="QUOTE"
 > utility
 	    (<TT
 CLASS="filename"
->./sanitycheck.cgi</TT
-> in the
-	    Bugzilla_home directory) from your web browser to see! If
-	    it finishes without errors, you're
+>sanitycheck.cgi</TT
+>) from your web browser to see! 
+      If it finishes without errors, you're
 	    <EM
 >probably</EM
 > OK. If it doesn't come back
@@ -2328,7 +1974,7 @@ CLASS="answer"
 ><P
 >&#13;	    Microsoft has some advice on this matter, as well:
 	    <A
-NAME="AEN2150"
+NAME="AEN2062"
 ></A
 ><BLOCKQUOTE
 CLASS="BLOCKQUOTE"
@@ -2876,7 +2522,7 @@ WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
 ><A
-HREF="database.html"
+HREF="patches.html"
 ACCESSKEY="N"
 >Next</A
 ></TD
@@ -2896,7 +2542,7 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="right"
 VALIGN="top"
->The Bugzilla Database</TD
+>Contrib</TD
 ></TR
 ></TABLE
 ></DIV

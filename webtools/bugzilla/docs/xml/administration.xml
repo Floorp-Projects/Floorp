@@ -71,7 +71,7 @@
         standard type, and Bugzilla does not yet take advantage of features
         such as transactions which would justify this speed decrease. The
         Bugzilla team are, however, happy to hear about any experiences with
-        row level locking and Bugzilla</para>
+        row level locking and Bugzilla.</para>
 
         <para>The <quote>shadowdb</quote>
         parameter was designed to get around this limitation. While only a
@@ -82,7 +82,7 @@
         high-traffic Bugzilla databases.</para>
         
         <para>
-        As a guide, mozilla.org began needing 
+        As a guide, on reasonably old hardware, mozilla.org began needing 
         <quote>shadowdb</quote>
         when they reached around 40,000 Bugzilla users with several hundred
         Bugzilla bug changes and comments per day.</para>
@@ -321,7 +321,7 @@
             they attempt to perform these actions, and should explain
             why the account was disabled.
             <warning>
-              <para>Don't disable the administrator account!</para>
+              <para>Don't disable all the administrator accounts!</para>
             </warning>
 
             <note>
@@ -418,178 +418,167 @@
     </section>
   </section>
 
-  <section id="programadmin">
-    <title>Product, Component, Milestone, and Version Administration</title>
+  <section id="products">
+    <title>Products</title>
 
-    <section id="products">
-      <title>Products</title>
+    <para>
+    <glossterm linkend="gloss-product" baseform="product">
+    Products</glossterm>
 
-      <para>
-      <glossterm linkend="gloss-product" baseform="product">
-      Products</glossterm>
+    are the broadest category in Bugzilla, and tend to represent real-world
+    shipping products. E.g. if your company makes computer games, 
+    you should have one product per game, perhaps a "Common" product for 
+    units of technology used in multiple games, and maybe a few special
+     products (Website, Administration...)</para>
 
-      are the broadest category in Bugzilla, and tend to represent real-world
-      shipping products. E.g. if your company makes computer games, 
-      you should have one product per game, perhaps a "Common" product for 
-      units of technology used in multiple games, and maybe a few special
-       products (Website, Administration...)</para>
+    <para>Many of Bugzilla's settings are configurable on a per-product
+    basis. The number of "votes" available to users is set per-product, 
+    as is the number of votes
+    required to move a bug automatically from the UNCONFIRMED status to the
+    NEW status.</para>
 
-      <para>Many of Bugzilla's settings are configurable on a per-product
-      basis. The number of "votes" available to users is set per-product, 
-      as is the number of votes
-      required to move a bug automatically from the UNCONFIRMED status to the
-      NEW status.</para>
+    <para>To create a new product:</para>
 
-      <para>To create a new product:</para>
+    <orderedlist>
+      <listitem>
+        <para>Select "products" from the footer</para>
 
-      <orderedlist>
-        <listitem>
-          <para>Select "products" from the footer</para>
+      </listitem>
 
-        </listitem>
+      <listitem>
+        <para>Select the "Add" link in the bottom right</para>
+      </listitem>
 
-        <listitem>
-          <para>Select the "Add" link in the bottom right</para>
-        </listitem>
+      <listitem>
+        <para>Enter the name of the product and a description. The
+        Description field may contain HTML.</para>
+      </listitem>
+    </orderedlist>
 
-        <listitem>
-          <para>Enter the name of the product and a description. The
-          Description field may contain HTML.</para>
-        </listitem>
-      </orderedlist>
+    <para>Don't worry about the "Closed for bug entry", "Maximum Votes
+    per person", "Maximum votes a person can put on a single bug",
+    "Number of votes a bug in this Product needs to automatically get out
+    of the UNCOMFIRMED state", and "Version" options yet. We'll cover
+    those in a few moments.
+    </para>
+  </section>
 
-      <para>Don't worry about the "Closed for bug entry", "Maximum Votes
-      per person", "Maximum votes a person can put on a single bug",
-      "Number of votes a bug in this Product needs to automatically get out
-      of the UNCOMFIRMED state", and "Version" options yet. We'll cover
-      those in a few moments.
-      </para>
-    </section>
+  <section id="components">
+    <title>Components</title>
 
-    <section id="components">
-      <title>Components</title>
+    <para>Components are subsections of a Product. E.g. the computer game 
+    you are designing may have a "UI"
+    component, an "API" component, a "Sound System" component, and a
+    "Plugins" component, each overseen by a different programmer. It
+    often makes sense to divide Components in Bugzilla according to the
+    natural divisions of responsibility within your Product or
+    company.</para>
 
-      <para>Components are subsections of a Product. E.g. the computer game 
-      you are designing may have a "UI"
-      component, an "API" component, a "Sound System" component, and a
-      "Plugins" component, each overseen by a different programmer. It
-      often makes sense to divide Components in Bugzilla according to the
-      natural divisions of responsibility within your Product or
-      company.</para>
-      
-      <para>
-      Each component has a owner and (if you turned it on in the parameters),
-      a QA Contact. The owner should be the primary person who fixes bugs in
-      that component. The QA Contact should be the person who will ensure
-      these bugs are completely fixed. The Owner, QA Contact, and Reporter
-      will get email when new bugs are created in this Component and when
-      these bugs change. Default Owner and Default QA Contact fields only
-      dictate the 
-      <emphasis>default assignments</emphasis>; 
-      these can be changed on bug submission, or at any later point in
-      a bug's life.</para>
+    <para>
+    Each component has a owner and (if you turned it on in the parameters),
+    a QA Contact. The owner should be the primary person who fixes bugs in
+    that component. The QA Contact should be the person who will ensure
+    these bugs are completely fixed. The Owner, QA Contact, and Reporter
+    will get email when new bugs are created in this Component and when
+    these bugs change. Default Owner and Default QA Contact fields only
+    dictate the 
+    <emphasis>default assignments</emphasis>; 
+    these can be changed on bug submission, or at any later point in
+    a bug's life.</para>
 
-      <para>To create a new Component:</para>
+    <para>To create a new Component:</para>
 
-      <orderedlist>
-        <listitem>
-          <para>Select the "Edit components" link from the "Edit product"
-          page</para>
-        </listitem>
+    <orderedlist>
+      <listitem>
+        <para>Select the "Edit components" link from the "Edit product"
+        page</para>
+      </listitem>
 
-        <listitem>
-          <para>Select the "Add" link in the bottom right.</para>
-        </listitem>
+      <listitem>
+        <para>Select the "Add" link in the bottom right.</para>
+      </listitem>
 
-        <listitem>
-          <para>Fill out the "Component" field, a short "Description", 
-          the "Initial Owner" and "Initial QA Contact" (if enabled.) 
-          The Component and Description fields may contain HTML; 
-          the "Initial Owner" field must be a login name
-          already existing in the database. 
-          </para>
-        </listitem>
-      </orderedlist>
-    </section>
-
-    <section id="versions">
-      <title>Versions</title>
-
-      <para>Versions are the revisions of the product, such as "Flinders
-      3.1", "Flinders 95", and "Flinders 2000". Version is not a multi-select
-      field; the usual practice is to select the most recent version with
-      the bug.
-      </para>
-
-      <para>To create and edit Versions:</para>
-
-      <orderedlist>
-        <listitem>
-          <para>From the "Edit product" screen, select "Edit Versions"</para>
-        </listitem>
-
-        <listitem>
-          <para>You will notice that the product already has the default
-          version "undefined". Click the "Add" link in the bottom right.</para>
-        </listitem>
-
-        <listitem>
-          <para>Enter the name of the Version. This field takes text only. 
-          Then click the "Add" button.</para>
-        </listitem>
-
-      </orderedlist>
-    </section>
-
-    <section id="milestones">
-      <title>Milestones</title>
-
-      <para>Milestones are "targets" that you plan to get a bug fixed by. For
-      example, you have a bug that you plan to fix for your 3.0 release, it
-      would be assigned the milestone of 3.0.</para>
-
-      <note>
-        <para>Milestone options will only appear for a Product if you turned
-        on the "usetargetmilestone" Param in the "Edit Parameters" screen.
+      <listitem>
+        <para>Fill out the "Component" field, a short "Description", 
+        the "Initial Owner" and "Initial QA Contact" (if enabled.) 
+        The Component and Description fields may contain HTML; 
+        the "Initial Owner" field must be a login name
+        already existing in the database. 
         </para>
-      </note>
+      </listitem>
+    </orderedlist>
+  </section>
 
-      <para>To create new Milestones, set Default Milestones, and set
-      Milestone URL:</para>
+  <section id="versions">
+    <title>Versions</title>
 
-      <orderedlist>
-        <listitem>
-          <para>Select "Edit milestones" from the "Edit product" page.</para>
-        </listitem>
+    <para>Versions are the revisions of the product, such as "Flinders
+    3.1", "Flinders 95", and "Flinders 2000". Version is not a multi-select
+    field; the usual practice is to select the earliest version known to have
+    the bug.
+    </para>
 
-        <listitem>
-          <para>Select "Add" in the bottom right corner.
-          text</para>
-        </listitem>
+    <para>To create and edit Versions:</para>
 
-        <listitem>
-          <para>Enter the name of the Milestone in the "Milestone" field. You
-          can optionally set the "sortkey", which is a positive or negative
-          number (-255 to 255) that defines where in the list this particular
-          milestone appears. This is because milestones often do not 
-          occur in alphanumeric order For example, "Future" might be
-          after "Release 1.2". Select "Add".</para>
-        </listitem>
+    <orderedlist>
+      <listitem>
+        <para>From the "Edit product" screen, select "Edit Versions"</para>
+      </listitem>
 
-        <listitem>
-          <para>From the Edit product screen, you can enter the URL of a 
-          page which gives information about your milestones and what
-          they mean. </para>
+      <listitem>
+        <para>You will notice that the product already has the default
+        version "undefined". Click the "Add" link in the bottom right.</para>
+      </listitem>
 
-        <tip>
-          <para>If you want your milestone document to be restricted so
-          that it can only be viewed by people in a particular Bugzilla
-          group, the best way is to attach the document to a bug in that
-          group, and make the URL the URL of that attachment.</para>
-        </tip>
-        </listitem>
-      </orderedlist>
-    </section>
+      <listitem>
+        <para>Enter the name of the Version. This field takes text only. 
+        Then click the "Add" button.</para>
+      </listitem>
+
+    </orderedlist>
+  </section>
+
+  <section id="milestones">
+    <title>Milestones</title>
+
+    <para>Milestones are "targets" that you plan to get a bug fixed by. For
+    example, you have a bug that you plan to fix for your 3.0 release, it
+    would be assigned the milestone of 3.0.</para>
+
+    <note>
+      <para>Milestone options will only appear for a Product if you turned
+      on the "usetargetmilestone" Param in the "Edit Parameters" screen.
+      </para>
+    </note>
+
+    <para>To create new Milestones, set Default Milestones, and set
+    Milestone URL:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Select "Edit milestones" from the "Edit product" page.</para>
+      </listitem>
+
+      <listitem>
+        <para>Select "Add" in the bottom right corner.
+        text</para>
+      </listitem>
+
+      <listitem>
+        <para>Enter the name of the Milestone in the "Milestone" field. You
+        can optionally set the "sortkey", which is a positive or negative
+        number (-255 to 255) that defines where in the list this particular
+        milestone appears. This is because milestones often do not 
+        occur in alphanumeric order For example, "Future" might be
+        after "Release 1.2". Select "Add".</para>
+      </listitem>
+
+      <listitem>
+        <para>From the Edit product screen, you can enter the URL of a 
+        page which gives information about your milestones and what
+        they mean. </para>
+      </listitem>
+    </orderedlist>
   </section>
   
   <section id="voting">
@@ -723,9 +712,10 @@
          place all users who fulfill the Regular Expression into the new group. 
          When you have finished, click <quote>Add</quote>.</para>
          <warning>
-           <para>The User Regexp is a perl regexp and, if not anchored, will match 
-           any part of an address.  So, if you do not want to grant access
-           into 'mycompany.com' to 'badperson@mycompany.com.hacker.net', use 
+           <para>If specifying a domain in the regexp, make sure you end
+           the regexp with a $. Otherwise, when granting access to 
+           "@mycompany\.com", you will allow access to 
+           'badperson@mycompany.com.cracker.net'. You need to use 
            '@mycompany\.com$' as the regexp.</para>
          </warning>
       </listitem>
@@ -749,705 +739,6 @@
     </para>    
   </section>
 
-
-  <section id="security">
-    <title>Bugzilla Security</title>
-
-    <warning>
-      <para>Poorly-configured MySQL and Bugzilla installations have
-      given attackers full access to systems in the past. Please take these
-      guidelines seriously, even for Bugzilla machines hidden away behind
-      your firewall. 80% of all computer trespassers are insiders, not
-      anonymous crackers.</para>
-    </warning>
-
-    <note>
-      <para>These instructions must, of necessity, be somewhat vague since
-      Bugzilla runs on so many different platforms. If you have refinements
-      of these directions, please submit a bug to &bzg-bugs;.
-      </para>
-    </note>
-
-    <warning>
-      <para>This is not meant to be a comprehensive list of every possible
-      security issue regarding the tools mentioned in this section. There is
-      no subsitute for reading the information written by the authors of any
-      software running on your system.
-      </para>
-    </warning>
-
-    <section id="security-networking">
-      <title>TCP/IP Ports</title>
-
-      <!-- TODO: Make this make sense (TCP/IP) -->
-      <para>TCP/IP defines 65,000 some ports for trafic. Of those, Bugzilla
-      only needs 1... 2 if you need to use features that require e-mail such
-      as bug moving or the e-mail interface from contrib. You should audit
-      your server and make sure that you aren't listening on any ports you
-      don't need to be. You may also wish to use some kind of firewall
-      software to be sure that trafic can only be recieved on ports you
-      specify.
-      </para>
-    </section>
-
-    <section id="security-mysql">
-      <title>MySQL</title>
-
-      <para>MySQL ships by default with many settings that should be changed.
-      By defaults it allows anybody to connect from localhost without a
-      password and have full administrative capabilities. It also defaults to
-      not have a root password (this is <emphasis>not</emphasis> the same as
-      the system root). Also, many installations default to running
-      <application>mysqld</application> as the system root.
-      </para>
-
-      <orderedlist>
-        <listitem>
-          <para>Consult the documentation that came with your system for
-          information on making <application>mysqld</application> run as an
-          unprivleged user.
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>You should also be sure to disable the anonymous user account
-          and set a password for the root user. This is accomplished using the
-          following commands:
-          </para>
-          <programlisting>
-<prompt>bash$</prompt> mysql mysql
-<prompt>mysql&gt;</prompt> DELETE FROM user WHERE user = '';
-<prompt>mysql&gt;</prompt> UPDATE user SET password = password('<replaceable>new_password</replaceable>') WHERE user = 'root';
-<prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;
-          </programlisting>
-          <para>From this point forward you will need to use
-          <command>mysql -u root -p</command> and enter
-          <replaceable>new_password</replaceable> when prompted when using the
-          mysql client.
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>If you run MySQL on the same machine as your httpd server, you
-          should consider disabling networking from within MySQL by adding
-          the following to your <filename>/etc/my.conf</filename>:
-          </para>
-          <programlisting>
-[myslqd]
-# Prevent network access to MySQL.
-skip-networking
-          </programlisting>
-        </listitem>
-
-        <listitem>
-          <para>You may also consider running MySQL, or even all of Bugzilla
-          in a chroot jail; however, instructions for doing that are beyond
-          the scope of this document.
-          </para>
-        </listitem>
-
-      </orderedlist>
-
-    </section>
-
-    <section id="security-daemon">
-      <title>Daemon Accounts</title>
-
-      <para>Many daemons, such as Apache's httpd and MySQL's mysqld default to
-      running as either <quote>root</quote> or <quote>nobody</quote>. Running
-      as <quote>root</quote> introduces obvious security problems, but the
-      problems introduced by running everything as <quote>nobody</quote> may
-      not be so obvious. Basically, if you're running every daemon as
-      <quote>nobody</quote> and one of them gets comprimised, they all get
-      comprimised. For this reason it is recommended that you create a user
-      account for each daemon.
-      </para>
-
-      <note>
-        <para>You will need to set the <varname>webservergroup</varname> to
-        the group you created for your webserver to run as in
-        <filename>localconfig</filename>. This will allow
-        <command>./checksetup.pl</command> to better adjust the file
-        permissions on your Bugzilla install so as to not require making
-        anything world-writable.
-        </para>
-      </note>
-
-    </section>
-
-    <section id="security-access">
-      <title>Web Server Access Controls</title>
-
-      <para>There are many files that are placed in the Bugzilla directory
-      area that should not be accessable from the web. Because of the way
-      Bugzilla is currently layed out, the list of what should and should
-      not be accessible is rather complicated. A new installation method
-      is currently in the works which should solve this by allowing files
-      that shouldn't be accessible from the web to be placed in directory
-      outside the webroot. See 
-      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">
-      bug 44659</ulink> for more information.
-      </para>
-
-      <itemizedlist spacing="compact">
-        <listitem>
-          <para>In the main Bugzilla directory, you should:</para>
-          <itemizedlist spacing="compact">
-            <listitem>
-              <para>Block:
-              <simplelist type="inline">
-                <member><filename>*.pl</filename></member>
-                <member><filename>*localconfig*</filename></member>
-                <member><filename>runtests.sh</filename></member>
-              </simplelist>
-              </para>
-            </listitem>
-            <listitem>
-              <para>But allow:
-              <simplelist type="inline">
-                <member><filename>localconfig.js</filename></member>
-                <member><filename>localconfig.rdf</filename></member>
-              </simplelist>
-              </para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>In <filename class="directory">data</filename>:</para>
-          <itemizedlist spacing="compact">
-            <listitem>
-              <para>Block everything</para>
-            </listitem>
-            <listitem>
-              <para>But allow:
-              <simplelist type="inline">
-                <member><filename>duplicates.rdf</filename></member>
-              </simplelist>
-              </para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>In <filename class="directory">data/webdot</filename>:</para>
-          <itemizedlist spacing="compact">
-            <listitem>
-              <para>If you use a remote webdot server:</para>
-              <itemizedlist spacing="compact">
-                <listitem>
-                  <para>Block everything</para>
-                </listitem>
-                <listitem>
-                  <para>But allow
-                  <simplelist type="inline">
-                    <member><filename>*.dot</filename></member>
-                  </simplelist>
-                  only for the remote webdot server</para>
-                </listitem>
-              </itemizedlist>
-            </listitem>
-            <listitem>
-              <para>Otherwise, if you use a local GraphViz:</para>
-              <itemizedlist spacing="compact">
-                <listitem>
-                  <para>Block everything</para>
-                </listitem>
-                <listitem>
-                  <para>But allow:
-                  <simplelist type="inline">
-                    <member><filename>*.png</filename></member>
-                    <member><filename>*.gif</filename></member>
-                    <member><filename>*.jpg</filename></member>
-                    <member><filename>*.map</filename></member>
-                  </simplelist>
-                  </para>
-                </listitem>
-              </itemizedlist>
-            </listitem>
-            <listitem>
-              <para>And if you don't use any dot:</para>
-              <itemizedlist spacing="compact">
-                <listitem>
-                  <para>Block everything</para>
-                </listitem>
-              </itemizedlist>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>In <filename class="directory">Bugzilla</filename>:</para>
-          <itemizedlist spacing="compact">
-            <listitem>
-              <para>Block everything</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>In <filename class="directory">template</filename>:</para>
-          <itemizedlist spacing="compact">
-            <listitem>
-              <para>Block everything</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-      </itemizedlist>
-
-      <tip>
-        <para>Bugzilla ships with the ability to generate
-        <filename>.htaccess</filename> files instructing
-        <glossterm linkend="gloss-apache">Apache</glossterm> which files
-        should and should not be accessible. For more information, see
-        <xref linkend="http-apache"/>.
-        </para>
-      </tip>
-
-      <para>You should test to make sure that the files mentioned above are
-      not accessible from the Internet, especially your
-      <filename>localconfig</filename> file which contains your database
-      password. To test, simply point your web browser at the file; for
-      example, to test mozilla.org's installation, we'd try to access
-      <ulink url="http://bugzilla.mozilla.org/localconfig"/>. You should
-      get a <errorcode>403</errorcode> <errorname>Forbidden</errorname>
-      error.
-      </para>
-
-      <caution>
-        <para>Not following the instructions in this section, including
-        testing, may result in sensitive information being globally
-        accessible.
-        </para>
-      </caution>
-
-      <tip>
-        <para>You should check <xref linkend="http"/> to see if instructions
-        have been included for your web server. You should also compare those
-        instructions with this list to make sure everything is properly
-        accounted for.
-        </para>
-      </tip>
-
-    </section>
-
-  </section>
-
-  <section id="cust-templates">
-    <title>Template Customization</title>
-    
-    <para>
-      One of the large changes for 2.16 was the templatization of the
-      entire user-facing UI, using the 
-      <ulink url="http://www.template-toolkit.org">Template Toolkit</ulink>.
-      Administrators can now configure the look and feel of Bugzilla without
-      having to edit Perl files or face the nightmare of massive merge
-      conflicts when they upgrade to a newer version in the future.
-    </para>
-    
-    <para>
-      Templatization also makes localized versions of Bugzilla possible, 
-      for the first time. As of version <![%bz-devel;[2.17.4 which will soon
-      become ]]>2.18, it's possible to have Bugzilla's language determined by
-      the user's browser. More information is available in
-      <xref linkend="template-http-accept"/>.
-    </para>
-    
-    <section>
-      <title>What to Edit</title>
-      <para>
-        There are two different ways of editing of Bugzilla's templates,
-        and which you use depends mainly on how you upgrade Bugzilla. The
-        template directory structure is that there's a top level directory,
-        <filename>template</filename>, which contains a directory for
-        each installed localization. The default English templates are
-        therefore in <filename>en</filename>. Underneath that, there
-        is the <filename>default</filename> directory and optionally the 
-        <filename>custom</filename> directory. The <filename>default</filename>
-        directory contains all the templates shipped with Bugzilla, whereas
-        the <filename>custom</filename> directory does not exist at first and
-        must be created if you want to use it.
-      </para>
-
-      <para>
-        The first method of making customizations is to directly edit the
-        templates in <filename>template/en/default</filename>. This is
-        probably the best method for small changes if you are going to use
-        the CVS method of upgrading, because if you then execute a
-        <command>cvs update</command>, any template fixes will get
-        automagically merged into your modified versions.
-      </para>
-
-      <para>
-        If you use this method, your installation will break if CVS conflicts
-        occur.
-      </para>
-
-      <para>
-        The other method is to copy the templates into a mirrored directory
-        structure under <filename>template/en/custom</filename>.  The templates
-        in this directory automatically override those in default.  
-        This is the technique you
-        need to use if you use the overwriting method of upgrade, because
-        otherwise your changes will be lost.  This method is also better if
-        you are using the CVS method of upgrading and are going to make major
-        changes, because it is guaranteed that the contents of this directory
-        will not be touched during an upgrade, and you can then decide whether
-        to continue using your own templates, or make the effort to merge your
-        changes into the new versions by hand.
-      </para>
-
-      <para>
-        If you use this method, your installation may break if incompatible
-        changes are made to the template interface.  If such changes are made
-        they will be documented in the release notes, provided you are using a
-        stable release of Bugzilla.  If you use using unstable code, you will
-        need to deal with this one yourself, although if possible the changes
-        will be mentioned before they occur in the deprecations section of the
-        previous stable release's release notes.
-      </para>
-
-      <note>
-        <para>
-          Don't directly edit the compiled templates in 
-          <filename class="directory">data/template/*</filename> - your
-          changes will be lost when Template Toolkit recompiles them.
-        </para>
-      </note>
-
-      <note>
-        <para>It is recommended that you run <command>./checksetup.pl</command>
-        after any template edits, especially if you've created a new file in
-        the <filename class="directory">custom</filename> directory.
-        </para>
-      </note>
-    </section>
-    
-    <section>
-      <title>How To Edit Templates</title>
-      
-     <para>
-        The syntax of the Template Toolkit language is beyond the scope of
-        this guide. It's reasonably easy to pick up by looking at the current 
-        templates; or, you can read the manual, available on the
-        <ulink url="http://www.template-toolkit.org">Template Toolkit home
-        page</ulink>. However, you should particularly remember (for security
-        reasons) to always HTML filter things which come from the database or
-        user input, to prevent cross-site scripting attacks.
-      </para>
-      
-      <para>
-        However, one thing you should take particular care about is the need
-        to properly HTML filter data that has been passed into the template.
-        This means that if the data can possibly contain special HTML characters
-        such as &lt;, and the data was not intended to be HTML, they need to be
-        converted to entity form, ie &amp;lt;.  You use the 'html' filter in the
-        Template Toolkit to do this.  If you fail to do this, you may open up
-        your installation to cross-site scripting attacks.
-      </para>
-
-      <para>
-        Also note that Bugzilla adds a few filters of its own, that are not
-        in standard Template Toolkit.  In particular, the 'url_quote' filter
-        can convert characters that are illegal or have special meaning in URLs,
-        such as &amp;, to the encoded form, ie %26.  This actually encodes most
-        characters (but not the common ones such as letters and numbers and so
-        on), including the HTML-special characters, so there's never a need to
-        HTML filter afterwards.
-      </para>
- 
-      <para>
-        Editing templates is a good way of doing a "poor man's custom fields".
-        For example, if you don't use the Status Whiteboard, but want to have
-        a free-form text entry box for "Build Identifier", then you can just
-        edit the templates to change the field labels. It's still be called
-        status_whiteboard internally, but your users don't need to know that.
-      </para>
-      
-      <note>
-        <para>
-          If you are making template changes that you intend on submitting back
-          for inclusion in standard Bugzilla, you should read the relevant
-          sections of the 
-          <ulink url="http://www.bugzilla.org/developerguide.html">Developers'
-          Guide</ulink>.
-        </para>
-      </note>
-    </section>
-            
-    
-    <section>
-      <title>Template Formats</title>
-      
-      <para>
-        Some CGIs have the ability to use more than one template. For
-        example, buglist.cgi can output bug lists as RDF or two
-        different forms of HTML (complex and simple). (Try this out
-        by appending <filename>&amp;format=simple</filename> to a buglist.cgi
-        URL on your Bugzilla installation.) This
-        mechanism, called template 'formats', is extensible.
-      </para>
-      
-      <para>
-        To see if a CGI supports multiple output formats, grep the
-        CGI for "ValidateOutputFormat". If it's not present, adding
-        multiple format support isn't too hard - see how it's done in
-        other CGIs.
-      </para>
-      
-      <para>
-        To make a new format template for a CGI which supports this, 
-        open a current template for
-        that CGI and take note of the INTERFACE comment (if present.) This 
-        comment defines what variables are passed into this template. If 
-        there isn't one, I'm afraid you'll have to read the template and
-        the code to find out what information you get. 
-      </para>     
-  
-      <para>
-        Write your template in whatever markup or text style is appropriate.
-      </para>
-      
-      <para>
-        You now need to decide what content type you want your template
-        served as. Open up the <filename>localconfig</filename> file and find the 
-        <filename>$contenttypes</filename>
-        variable. If your content type is not there, add it. Remember
-        the three- or four-letter tag assigned to you content type. 
-        This tag will be part of the template filename.
-      </para>
-      
-      <para>
-        Save the template as <filename>&lt;stubname&gt;-&lt;formatname&gt;.&lt;contenttypetag&gt;.tmpl</filename>. 
-        Try out the template by calling the CGI as 
-        <filename>&lt;cginame&gt;.cgi?format=&lt;formatname&gt;</filename> .
-      </para>       
-    </section>
-    
-    
-    <section>
-      <title>Particular Templates</title>
-      
-      <para>
-        There are a few templates you may be particularly interested in
-        customizing for your installation.
-      </para>
-      
-      <para>
-        <command>index.html.tmpl</command>:
-        This is the Bugzilla front page.
-      </para>      
-
-      <para>
-        <command>global/header.html.tmpl</command>:
-        This defines the header that goes on all Bugzilla pages.
-        The header includes the banner, which is what appears to users
-        and is probably what you want to edit instead.  However the
-        header also includes the HTML HEAD section, so you could for
-        example add a stylesheet or META tag by editing the header.
-      </para>
-
-      <para>
-        <command>global/banner.html.tmpl</command>:
-        This contains the "banner", the part of the header that appears
-        at the top of all Bugzilla pages.  The default banner is reasonably
-        barren, so you'll probably want to customize this to give your
-        installation a distinctive look and feel.  It is recommended you
-        preserve the Bugzilla version number in some form so the version 
-        you are running can be determined, and users know what docs to read.
-      </para>
-
-      <para>
-        <command>global/footer.html.tmpl</command>:
-        This defines the footer that goes on all Bugzilla pages.  Editing
-        this is another way to quickly get a distinctive look and feel for
-        your Bugzilla installation.
-      </para>
-
-      <para>
-        <command>bug/create/user-message.html.tmpl</command>:
-        This is a message that appears near the top of the bug reporting page.
-        By modifying this, you can tell your users how they should report
-        bugs.
-      </para>
-
-      <para>
-        <command>bug/process/midair.html.tmpl</command>:
-        This is the page used if two people submit simultaneous changes to the
-        same bug.  The second person to submit their changes will get this page
-        to tell them what the first person did, and ask if they wish to
-        overwrite those changes or go back and revisit the bug.  The default
-        title and header on this page read "Mid-air collision detected!"  If
-        you work in the aviation industry, or other environment where this
-        might be found offensive (yes, we have true stories of this happening)
-        you'll want to change this to something more appropriate for your
-        environment.
-      </para>
-        
-      <para>
-        <command>bug/create/create.html.tmpl</command> and
-        <command>bug/create/comment.txt.tmpl</command>:
-        You may wish to get bug submitters to give certain bits of structured
-        information, each in a separate input widget, for which there is not a
-        field in the database. The bug entry system has been designed in an
-        extensible fashion to enable you to define arbitrary fields and widgets,
-        and have their values appear formatted in the initial
-        Description, rather than in database fields. An example of this
-        is the mozilla.org 
-        <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?format=guided">guided 
-        bug submission form</ulink>.
-      </para>
-
-      <para>
-        To make this work, create a custom template for 
-        <filename>enter_bug.cgi</filename> (the default template, on which you
-        could base it, is <filename>create.html.tmpl</filename>),
-        and either call it <filename>create.html.tmpl</filename> or use a format and
-        call it <filename>create-&lt;formatname&gt;.html.tmpl</filename>.
-        Put it in the <filename class="directory">custom/bug/create</filename>
-        directory. In it, add widgets for each piece of information you'd like
-        collected - such as a build number, or set of steps to reproduce.
-      </para>
-
-      <para>
-        Then, create a template like 
-        <filename>custom/bug/create/comment.txt.tmpl</filename>, also named
-        after your format if you are using one, which
-        references the form fields you have created. When a bug report is
-        submitted, the initial comment attached to the bug report will be
-        formatted according to the layout of this template.
-      </para> 
-
-      <para>
-        For example, if your enter_bug template had a field
-        <programlisting>&lt;input type="text" name="buildid" size="30"&gt;</programlisting>
-        and then your comment.txt.tmpl had
-        <programlisting>BuildID: [% form.buildid %]</programlisting>
-        then
-        <programlisting>BuildID: 20020303</programlisting>
-        would appear in the initial checkin comment.
-      </para>        
-    </section>          
-    
-
-    <section id="template-http-accept">
-      <title>Configuring Bugzilla to Detect the User's Language</title>
-
-      <para>Begining in version 2.18<![%bz-devel;[ (first introduced in version 
-      2.17.4)]]>, it's now possible to have the users web browser tell Bugzilla
-      which language templates to use for each visitor (using the HTTP_ACCEPT
-      header). For this to work, Bugzilla needs to have the correct language
-      templates installed for the version of Bugzilla you are using. Many
-      language templates can be obtained from <ulink 
-      url="http://www.bugzilla.org/download.html#localizations"/>. Instructions
-      for submitting new languages are also available from that location.
-      </para>
-
-      <para>After untarring the localizations (or creating your own) in the 
-      <filename class="directory">[Bugzilla_Root]/template</filename> directory,
-      you must update the <option>languages</option> parameter to contain any
-      localizations you'd like to permit. You may also wish to set the
-      <option>defaultlanguage</option> parameter to something other than
-      <quote>en</quote> if you don't want Engish to be the default language.
-      </para>
-    </section>
-      
-  </section>
-
-  <section id="cust-change-permissions">
-    <title>Change Permission Customization</title>
-    
-    <warning>
-      <para>
-        This feature should be considered experimental; the Bugzilla code you
-        will be changing is not stable, and could change or move between 
-        versions. Be aware that if you make modifications to it, you may have
-        to re-make them or port them if Bugzilla changes internally between
-        versions.
-      </para>
-    </warning>
-       
-    <para>
-      Companies often have rules about which employees, or classes of employees,
-      are allowed to change certain things in the bug system. For example, 
-      only the bug's designated QA Contact may be allowed to VERIFY the bug.
-      Bugzilla has been
-      designed to make it easy for you to write your own custom rules to define
-      who is allowed to make what sorts of value transition.
-    </para>
-    
-    <para>
-      For maximum flexibility, customizing this means editing Bugzilla's Perl 
-      code. This gives the administrator complete control over exactly who is
-      allowed to do what. The relevant function is called 
-      <filename>CheckCanChangeField()</filename>,
-      and is found in <filename>process_bug.cgi</filename> in your 
-      Bugzilla directory. If you open that file and grep for 
-      "sub CheckCanChangeField", you'll find it.
-    </para>
-    
-    <para>
-      This function has been carefully commented to allow you to see exactly
-      how it works, and give you an idea of how to make changes to it. Certain
-      marked sections should not be changed - these are the "plumbing" which
-      makes the rest of the function work. In between those sections, you'll
-      find snippets of code like:
-      <programlisting>    # Allow the owner to change anything.
-    if ($ownerid eq $whoid) {
-        return 1;
-    }</programlisting>
-      It's fairly obvious what this piece of code does.
-    </para>      
-      
-    <para>
-      So, how does one go about changing this function? Well, simple changes
-      can be made just be removing pieces - for example, if you wanted to 
-      prevent any user adding a comment to a bug, just remove the lines marked
-      "Allow anyone to change comments." And if you want the reporter to have
-      no special rights on bugs they have filed, just remove the entire section
-      which refers to him.
-    </para>
-    
-    <para>
-      More complex customizations are not much harder. Basically, you add
-      a check in the right place in the function, i.e. after all the variables
-      you are using have been set up. So, don't look at $ownerid before 
-      $ownerid has been obtained from the database. You can either add a
-      positive check, which returns 1 (allow) if certain conditions are true,
-      or a negative check, which returns 0 (deny.) E.g.:
-      <programlisting>    if ($field eq "qacontact") {
-        if (Bugzilla->user->groups("quality_assurance")) {
-            return 1;
-        } 
-        else {
-            return 0;
-        }
-    }</programlisting>
-      This says that only users in the group "quality_assurance" can change
-      the QA Contact field of a bug. Getting more weird:
-      <programlisting>    if (($field eq "priority") &&
-        (Bugzilla->user->email =~ /.*\@example\.com$/))
-    {
-        if ($oldvalue eq "P1") {
-            return 1;
-        } 
-        else {
-            return 0;
-        }
-    }</programlisting>
-      This says that if the user is trying to change the priority field,
-      and their email address is @example.com, they can only do so if the
-      old value of the field was "P1". Not very useful, but illustrative.
-    </para>
-    
-    <para>
-      For a list of possible field names, look in 
-      <filename>data/versioncache</filename> for the list called 
-      <filename>@::log_columns</filename>. If you need help writing custom
-      rules for your organization, ask in the newsgroup.
-    </para>    
-  </section>   
-  
   <section id="upgrading">
     <title>Upgrading to New Releases</title>
 
@@ -1619,8 +910,8 @@ bash$ <command>./checksetup.pl</command>
       revisions to go from the most recent revision to the new one. You could
       also read the release notes and grab the patches attached to the
       mentioned bug, but it is safer to use the released patch file as
-      sometimes patches get changed before they get checked in (for minor
-      spelling fixes and the like). It is also theorectically possible to
+      sometimes patches get changed before they get checked in. 
+      It is also theoretically possible to
       scour the fixed bug list and pick and choose which patches to apply
       from a point release, but this is not recommended either as what you'll
       end up with is a hodge podge Bugzilla that isn't really any version.
@@ -1650,10 +941,6 @@ patching file globals.pl
     </example>
 
   </section>
-
-  <!-- Integrating Bugzilla with Third-Party Tools -->
-  &integration;
-
 </chapter>
 
 <!-- Keep this comment at the end of the file

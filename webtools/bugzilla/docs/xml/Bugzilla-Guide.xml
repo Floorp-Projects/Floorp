@@ -13,7 +13,7 @@
 <!ENTITY integration SYSTEM "integration.xml">
 <!ENTITY future SYSTEM "future.xml">
 <!ENTITY index SYSTEM "index.xml">
-<!ENTITY database SYSTEM "database.xml">
+<!ENTITY customization SYSTEM "customization.xml">
 <!ENTITY patches SYSTEM "patches.xml">
 <!ENTITY variants SYSTEM "variants.xml">
 <!ENTITY introduction SYSTEM "introduction.xml">
@@ -34,11 +34,10 @@
 
 <!ENTITY bz-ver "2.17.5">
 <!ENTITY bz-nextver "2.18">
-<!ENTITY bz-date "2003-11-01">
+<!ENTITY bz-date "2004-01-15">
 <!ENTITY % bz-devel "INCLUDE">
 
 <!ENTITY bz "http://www.bugzilla.org/">
-<!ENTITY bzg-auth "The Bugzilla Team">
 <!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
 <!ENTITY newest-perl-ver "5.8">
@@ -70,21 +69,23 @@
 
 <!-- Coding standards for this document 
 
-*  Other than the GFDL, please use the "section" tag instead of "sect1", "sect2", etc.
+*  Other than the GFDL, please use the "section" tag instead of "sect1", 
+   "sect2", etc.
 *  Use Entities to include files for new chapters in Bugzilla-Guide.xml.
 *  Try to use Entities for frequently-used passages of text as well.
 *  Ensure all documents compile cleanly to HTML after modification.
-The warning, "DTDDECL catalog types not supported" is normal.
+   The warning, "DTDDECL catalog types not supported" is normal.
 *  Try to index important terms wherever possible.
 *  Use "glossterm" whenever you introduce a new term.
 *  Follow coding standards at http://www.tldp.org, and
-check out the KDE guidelines (they are nice, too)
-http://i18n.kde.org/doc/markup.html
+   check out the KDE guidelines (they are nice, too)
+   http://i18n.kde.org/doc/markup.html
 *  All tags should be lowercase.
 *  Please use sensible spacing.  The comments at the very end of each
-file define reasonable defaults for PSGML mode in EMACS.
-Double-indent tags, use double spacing whenever possible, and
-try to avoid clutter and feel free to waste space in the code to make it more readable.
+   file define reasonable defaults for PSGML mode in EMACS.
+*  Double-indent tags, use double spacing whenever possible, and
+   try to avoid clutter and feel free to waste space in the code to make it 
+   more readable.
 
 -->
 
@@ -93,18 +94,10 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- Header -->
 
   <bookinfo>
-    <title>The Bugzilla Guide - &bz-ver; <![%bz-devel;[Development ]]>Release</title>
+    <title>The Bugzilla Guide - &bz-ver; 
+    <![%bz-devel;[Development ]]>Release</title>
 
     <authorgroup>
-      <author>
-        <firstname>Matthew</firstname>
-        <othername>P.</othername>
-        <surname>Barnson</surname>
-      </author>
-      <author>
-        <firstname>Jacob</firstname>
-        <surname>Steenhagen</surname>
-      </author>
       <corpauthor>The Bugzilla Team</corpauthor>
     </authorgroup>
 
@@ -112,28 +105,17 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 
     <abstract>
       <para>
-	      This is the documentation for Bugzilla, the mozilla.org
-	      bug-tracking system.
+	      This is the documentation for Bugzilla, a 
+	      bug-tracking system from mozilla.org.
 	      Bugzilla is an enterprise-class piece of software
-	      that powers issue-tracking for hundreds of
-	      organizations around the world, tracking millions of bugs.
+	      that tracks millions of bugs and issues for hundreds of
+	      organizations around the world.
       </para>
-
-      <para>  
-	      This documentation is maintained in DocBook 4.1.2 XML format.
-        Changes are best submitted as plain text or XML diffs, attached
-        to a bug filed in the &bzg-bugs; component.
-      </para>
-      <![%bz-devel;[
-        <para>This is a development version of this guide.  Information in it
-        is subject to change before the &bz-nextver; release of this guide
-        (which will correspond with the &bz-nextver; release of Bugzilla).
-        </para>
-      ]]>
 
       <para>
         The most current version of this document can always be found on the
-        <ulink url="http://www.bugzilla.org/documentation.html">Bugzilla Documentation Page</ulink>.
+        <ulink url="http://www.bugzilla.org/documentation.html">Bugzilla 
+        Documentation Page</ulink>.
       </para>
 
     </abstract>
@@ -166,17 +148,14 @@ try to avoid clutter and feel free to waste space in the code to make it more re
 <!-- Administering Bugzilla -->
 &administration;
 
+<!-- Customizing Bugzilla -->
+&customization;
+
 <!-- Appendix: The Frequently Asked Questions -->
 &faq;
 
-<!-- Appendix: The Database Schema -->
-&database;
-
 <!-- Appendix: Custom Patches -->
 &patches;
-
-<!-- Appendix: Major Bugzilla Variants -->
-&variants;
 
 <!-- Appendix: GNU Free Documentation License -->
 &gfdl;

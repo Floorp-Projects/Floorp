@@ -14,19 +14,6 @@
       <title>General Questions</title>
 
       <qandaentry>
-	<question id="faq-general-information">
-	  <para>
-	    Where can I find information about Bugzilla?</para>
-	</question>
-	<answer>
-	  <para>
-	    You can stay up-to-date with the latest Bugzilla
-	    information at <ulink url="http://www.bugzilla.org/"/>.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
 	<question id="faq-general-license">
 	  <para>
 	    What license is Bugzilla distributed under?
@@ -53,12 +40,6 @@
             as consultants for Bugzilla.
           </para>
 	  <para>
-	    <ulink url="http://www.collab.net/"/> offers
-	    Bugzilla as part of their standard offering to large projects.
-	    They do have some minimum fees that are pretty hefty, and generally
-	    aren't interested in small projects.
-	  </para>
-	  <para>
 	    There are several experienced
 	    Bugzilla hackers on the mailing list/newsgroup who are willing
 	    to make themselves available for generous compensation.
@@ -79,11 +60,10 @@
 	    There are <emphasis>dozens</emphasis> of major companies with public
 	    Bugzilla sites to track bugs in their products. We have a fairly
             complete list available on our website at
-            <ulink url="http://bugzilla.org/installation_list.html"/>. If you
+            <ulink url="http://bugzilla.org/installation-list/"/>. If you
             have an installation of Bugzilla and would like to be added to the
             list, whether it's a public install or not, simply e-mail
-            Gerv <email>gerv@mozilla.org</email>. Keep in mind that it's kinda
-            difficult to get onto the <quote>high-profile</quote> list ;).
+            Gerv <email>gerv@mozilla.org</email>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -241,13 +221,6 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 
     <qandadiv id="faq-phb">
       <title>Managerial Questions</title>
-      <para>
-	<note>
-	  <para>
-	    Questions likely to be asked by managers. :-)
-	  </para>
-	</note>
-      </para>
 
       <qandaentry>
 	<question id="faq-phb-client">
@@ -258,69 +231,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-	    It is web and e-mail based. You can edit bugs by sending specially
-	    formatted email to a properly configured Bugzilla, or control via the web.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-phb-integration">
-	  <para>
-	    Can Bugzilla integrate with
-	    Perforce (SCM software)?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes!  You can find more information elsewhere in "The Bugzilla
-	    Guide" in the "Integration with Third-Party Products" section.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-phb-projects">
-	  <para>
-	    Does Bugzilla allow the user to track multiple projects?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Absolutely!  You can track any number of Products that can each be
-            composed of any number of Components.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-phb-sorting">
-	  <para>
-	    If I am on many projects, and search for all bugs assigned to me, will
-	    Bugzilla list them for me and allow me to sort by project, severity etc?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-phb-attachments">
-	  <para>
-	    Does Bugzilla allow attachments (text, screenshots, URLs etc)? If yes,
-	    are there any that are NOT allowed?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes - any sort of attachment is allowed, although administrators can
-      configure a maximum size.
-            Bugzilla gives the user the option of either using the MIME-type
-            supplied by the browser, choosing from a pre-defined list or
-            manually typing any arbitrary MIME-type. 
+	    It is web and e-mail based.
 	  </para>
 	</answer>
       </qandaentry>
@@ -380,22 +291,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    Email notification is user-configurable. By default, the bug id and 
-      Summary of the bug report accompany each email notification, along with
+      summary of the bug report accompany each email notification, along with
 	    a list of the changes made.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-phb-cclist">
-	  <para>
-	    Can email notification be set up to send to multiple
-	    people, some on the To List, CC List, BCC List etc?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yes.
 	  </para>
 	</answer>
       </qandaentry>
@@ -439,13 +336,13 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
             Bugzilla can output buglists as HTML (the default), CSV or RDF.
             The link for CSV can be found at the bottom of the buglist in HTML
             format. This CSV format can easily be imported into MS Excel or
-            other spread-sheet applications.
+            other spreadsheet applications.
           </para>
           <para>
             To use the RDF format of the buglist it is necessary to append a
             <computeroutput>&amp;ctype=rdf</computeroutput> to the URL. RDF
             is meant to be machine readable and thus it is assumed that the
-            URL would be generated progmatically so there is no user visible
+            URL would be generated programatically so there is no user visible
             link to this format.
           </para>
           <para>
@@ -495,21 +392,6 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    Yes. No. Yes (using the CSV format).
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-phb-searching">
-	  <para>
-	    Does Bugzilla have the ability to search by word, phrase, compound
-	    search?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    You have no idea. Bugzilla's query interface, particularly with the
-	    advanced Boolean operators, is incredibly versatile.
 	  </para>
 	</answer>
       </qandaentry>
@@ -567,7 +449,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    maintain Bugzilla? Specifically, what type of skills does the person need to
 	    have? I need to find out if we were to go with Bugzilla, what types of
 	    individuals would we need to hire and how much would that cost vs buying an
-	    "Out-of-the-Box" solution.
+	    "out-of-the-box" solution?
 	  </para>
 	</question>
 	<answer>
@@ -657,24 +539,6 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	  </para>
 	</answer>
       </qandaentry>
-
-
-      <qandaentry>
-	<question id="faq-security-mysqluser">
-	  <para>
-	    I've implemented the security fixes mentioned in Chris Yeh's security
-	    advisory of 5/10/2000 advising not to run MySQL as root, and am running into
-	    problems with MySQL no longer working correctly.
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    This is a common problem, related to running out of file descriptors.
-	    Simply add "ulimit -n unlimited" to the script which starts
-	    mysqld.
-	  </para>
-	</answer>
-      </qandaentry>
     </qandadiv>
 
     <qandadiv id="faq-email">
@@ -714,7 +578,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
       <qandaentry>
 	<question id="faq-email-whine">
 	  <para>
-	    I want whineatnews.pl to whine at something more, or other than, only new
+	    I want whineatnews.pl to whine at something different to only new
 	    bugs. How do I do it?
 	  </para>
 	</question>
@@ -726,29 +590,6 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    patch is against an older version of Bugzilla, so you must apply
 	    the diffs manually.
             <!-- TODO: Mention Joel's "Fine Whine" patch. -->
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question id="faq-email-procmail">
-	  <para>
-	    I don't like/want to use Procmail to hand mail off to bug_email.pl.
-	    What alternatives do I have?
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    You can call bug_email.pl directly from your aliases file, with
-	    an entry like this:
-	    <blockquote>
-	      <para>
-		bugzilla-daemon: "|/usr/local/bin/bugzilla/contrib/bug_email.pl"
-	      </para>
-	    </blockquote>
-	    However, this is fairly nasty and subject to problems; you also
-	    need to set up your smrsh (sendmail restricted shell) to allow
-	    it. In a pinch, though, it can work.
 	  </para>
 	</answer>
       </qandaentry>
@@ -776,16 +617,16 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
+	    If you are using <application>sendmail</application>, try enabling
+            <option>sendmailnow</option> in <filename>editparams.cgi</filename>.
+            <!-- TODO provide more info about this, possibly a link to admin -->
+	  </para>
+	  <para>
 	    If you are using an alternate <glossterm linkend="gloss-mta">MTA</glossterm>,
             make sure the options given in <filename>Bugzilla/BugMail.pm</filename>
             and any other place where <application>sendmail</application> is called from
 	    are correct for your MTA. You should also ensure that the
             <option>sendmailnow</option> param is set to <literal>on</literal>.
-	  </para>
-	  <para>
-	    If you are using <application>sendmail</application>, try enabling
-            <option>sendmailnow</option> in <filename>editparams.cgi</filename>.
-            <!-- TODO provide more info about this, possibly a link to admin -->
 	  </para>
 	</answer>
       </qandaentry>
@@ -804,7 +645,7 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	    button after entering your email address.
 	  </para>
 	  <para>
-	    If you never receive mail from Bugzilla, chances you do not have
+	    If you never receive mail from Bugzilla, chances are you do not have
 	    sendmail in "/usr/lib/sendmail". Ensure sendmail lives in, or is symlinked
 	    to, "/usr/lib/sendmail".
 	  </para>
@@ -823,11 +664,12 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	</question>
 	<answer>
 	  <para>
-            Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle.
+            Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle,
+            but it is now so old as to be obsolete, and is totally unsupported.
             Red Hat's newer version (based on 2.17.1 and soon to be merged into
             the main distribution) runs on PostgreSQL. At this time we know of
-            no recent ports of Bugzilla to Oracle but do intend to support it
-            in the future (possibly the 2.20 time-frame).
+            no recent ports of Bugzilla to Oracle; to be honest, Bugzilla
+            doesn't need what Oracle offers.
 	  </para>
 	</answer>
       </qandaentry>
@@ -842,9 +684,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
 	<answer>
 	  <para>
 	    Run the <quote>sanity check</quote> utility
-	    (<filename>./sanitycheck.cgi</filename> in the
-	    Bugzilla_home directory) from your web browser to see! If
-	    it finishes without errors, you're
+	    (<filename>sanitycheck.cgi</filename>) from your web browser to see! 
+      If it finishes without errors, you're
 	    <emphasis>probably</emphasis> OK. If it doesn't come back
 	    OK (i.e. any red letters), there are certain things
 	    Bugzilla can recover from and certain things it can't. If

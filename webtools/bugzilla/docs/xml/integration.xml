@@ -70,7 +70,12 @@
   xreflabel="Tinderbox, the Mozilla automated build management system">
     <title>Tinderbox/Tinderbox2</title>
 
-    <para>We need Tinderbox integration information.</para>
+    <para>Tinderbox is a continuous-build system which can integrate with
+    Bugzilla - see
+    <ulink url="http://www.mozilla.org/projects/tinderbox"/> for details
+    of Tinderbox, and 
+    <ulink url="http://tinderbox.mozilla.org/showbuilds.cgi"/> to see it
+    in action.</para>
   </section>
 </section>
 
