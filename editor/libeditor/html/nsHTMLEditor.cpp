@@ -484,38 +484,8 @@ nsHTMLEditor::InsertImage(nsString& aURL,
   if (NS_SUCCEEDED(res))
   {
     // and insert it into the right place in the tree:
-    // this code kiped from what CreateElementTxn does
-
-    //
-    // XXX BUG!  This is not undoable since it's not its own transaction!
-    // Need to fix this after M4!
-    //
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    res = parentNode->GetChildNodes(getter_AddRefs(childNodes));
-    if ((NS_SUCCEEDED(res)) && (childNodes))
-    {
-      PRUint32 count;
-      childNodes->GetLength(&count);
-      if (offsetOfNewNode > (PRInt32)count)
-        offsetOfNewNode = count;
-      nsCOMPtr<nsIDOMNode> resultNode;
-      nsCOMPtr<nsIDOMNode> refNode;
-      res = childNodes->Item(offsetOfNewNode, getter_AddRefs(refNode));
-      if (NS_SUCCEEDED(res)) // note, it's ok for mRefNode to be null.  that means append
-      {
-        res = parentNode->InsertBefore(newNode, refNode,
-                                       getter_AddRefs(resultNode));
-        if (NS_SUCCEEDED(res))
-        {
-          nsCOMPtr<nsIDOMSelection> selection;
-          if (NS_SUCCEEDED(GetSelection(getter_AddRefs(selection))))
-            (void)selection->Collapse(parentNode, offsetOfNewNode);
-        }
-      }
-    }
+    res = InsertNode(newNode, parentNode, offsetOfNewNode);
   }
-//    res = nsEditor::CreateNode(aTag, parentSelectedNode, offsetOfNewNode,
-//                               getter_AddRefs(newNode));
 
   (void)nsEditor::EndTransaction();  // don't return this result!
 
