@@ -1792,32 +1792,41 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* SECURITY */
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
-    if (argc>0) {
+    if (argc=1) {
         if (JSVAL_IS_REGEXP(cx, argv[0])) {
             re = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
         }else
         if (JSVAL_IS_FUNCTION(cx, argv[0])) {
             func = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
         }else{
-            /* TODO: error */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_FUNCTION_OR_REGEX, argv[0]);
+            goto out;
         }
+    }else{
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_NUMBER, "skip", argv[0]);
+        goto out;
     }
 
     if (!js_isDirectory(file)) {
-        *rval = JSVAL_NULL;
-        return JS_FALSE; /* or return an empty array? or do a readAll?  */
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_CANNOT_DO_LIST_ON_A_FILE, file->path);
+        goto out;
     }
 
     /* TODO: native support? */
     if(file->isNative){
-        /* TODO: error */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_NATIVE_OPERATION_IS_NOT_SUPPORTED, "list", file->path);
+        goto out;
     }
 
     dir = PR_OpenDir(file->path);
     if(!dir){
-        /* TODO: */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_OPEN_FAILED, file->path);
+        goto out;
     }
 
     /* create JSArray here... */
@@ -1832,7 +1841,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             str = JS_NewStringCopyZ(cx, entry->name);
             if(!js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, &v)){
                 /* don't report anything here */
-                return JS_FALSE;
+                goto out;
             }
             /* not matched! */
             if (JSVAL_IS_NULL(v)) {
@@ -1843,7 +1852,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             str = JS_NewStringCopyZ(cx, entry->name);
             args[0] = STRING_TO_JSVAL(str);
             if(!JS_CallFunction(cx, obj, func, 1, args, &v)){
-                return JS_FALSE;
+                goto out;
             }
 
             if (v==JSVAL_FALSE) {
@@ -1857,7 +1866,7 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_free(cx, filePath);
         if (!eachFile){
             /* TODO: error */
-            return JS_FALSE;
+            goto out;
         }
         v = OBJECT_TO_JSVAL(eachFile);
         JS_SetElement(cx, array, len, &v);
@@ -1866,11 +1875,15 @@ file_list(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if(!PR_CloseDir(dir)){
-        /*  TODO: error */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_CLOSE_FAILED, file->path);
+        goto out;
     }
     *rval = OBJECT_TO_JSVAL(array);
     return JS_TRUE;
+out:
+    *rval = JSVAL_NULL;
+    return JS_FALSE;
 }
 
 static JSBool
@@ -1879,8 +1892,9 @@ file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSFile      *file;
 
     if (argc!=1){
-        /* TODO: error reporting */
-        return JS_FALSE;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_EXPECTS_ONE_ARG_ERROR, "mkdir", argc);
+        goto out;
     }
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
@@ -1895,7 +1909,7 @@ file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
         /* call file_mkdir with the right set of parameters if needed */
         if (!file_mkdir(cx, dirObj, argc, argv, rval)) {
-            return JS_FALSE;
+            goto out;
         }
     }else{
         char *dirName = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
@@ -1909,9 +1923,12 @@ file_mkdir(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }else{
             /* TODO: error */
             JS_free(cx, fullName);
-            return JS_FALSE;
+            goto out;
         }
     }
+out:
+    *rval = JSVAL_FALSE;
+    return JS_FALSE;
 }
 
 static JSBool
@@ -2119,11 +2136,13 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if(((file->isOpen)?
                             PR_GetOpenFileInfo(file->handle, &info):
                             PR_GetFileInfo(file->path, &info))!=PR_SUCCESS){
-                /* TODO: error */
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                    JSFILEMSG_CANNOT_ACCESS_FILE_STATUS, file->path);
                 return JS_FALSE;
             }
         }else{
-            /* TODO: error */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                JSFILEMSG_NATIVE_OPERATION_IS_NOT_SUPPORTED, "creationTime", file->path);
             return JS_FALSE;
         }
 
@@ -2140,11 +2159,13 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if(((file->isOpen)?
                             PR_GetOpenFileInfo(file->handle, &info):
                             PR_GetFileInfo(file->path, &info))!=PR_SUCCESS){
-                /* TODO: error */
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                    JSFILEMSG_CANNOT_ACCESS_FILE_STATUS, file->path);
                 return JS_FALSE;
             }
         }else{
-            /* TODO: error */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                JSFILEMSG_NATIVE_OPERATION_IS_NOT_SUPPORTED, "lastModified", file->path);
             return JS_FALSE;
         }
 
@@ -2173,7 +2194,9 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 }
 
                 if(!PR_CloseDir(dir)){
-                    /* TODO: error */
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                        JSFILEMSG_CLOSE_FAILED, file->path);
+
                     return JS_FALSE;
                 }
 
@@ -2184,13 +2207,15 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 if(((file->isOpen)?
                         PR_GetOpenFileInfo(file->handle, &info):
                         PR_GetFileInfo(file->path, &info))!=PR_SUCCESS){
-						/* TODO: error */
+                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                            JSFILEMSG_CANNOT_ACCESS_FILE_STATUS, file->path);
 						return JS_FALSE;
 					}
 					*vp = INT_TO_JSVAL(info.size);
             }
         }else{
-            /* TODO: error */
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                JSFILEMSG_NATIVE_OPERATION_IS_NOT_SUPPORTED, "length", file->path);
             return JS_FALSE;
         }
 
@@ -2204,7 +2229,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                         PR_Seek(file->handle, 0, PR_SEEK_CUR):
                         fseek(file->nativehandle, 0, SEEK_CUR));
         }else {
-            /* TODO: warning? */
+            JS_ReportWarning(cx, "File %s is closed, can't report the position, proceeding");
             *vp = JSVAL_VOID;
         }
         break;
@@ -2213,7 +2238,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 		if(js_isDirectory(file)){
 			PRDir *dir = NULL;
 			PRDirEntry *entry = NULL;
-			char* prop_name = JS_GetStringBytes(JS_ValueToString(cx, id));
+            char *prop_name = JS_GetStringBytes(JS_ValueToString(cx, id));
 
             dir = PR_OpenDir(file->path);
             if(!dir) {
@@ -2252,7 +2277,6 @@ file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
 
     slot = JSVAL_TO_INT(id);
-
 
     switch (slot) {
     /* File.position  = 10 */
@@ -2350,7 +2374,8 @@ file_init(JSContext *cx, JSObject *obj, char *bytes)
     js_ResetAttributes(file);
 
     if (!JS_SetPrivate(cx, obj, file)) {
-        /* TODO: report error */
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JSFILEMSG_CANNOT_SET_PRIVATE_FILE, file->path);
         JS_free(cx, file);
         return NULL;
     }else
@@ -2434,7 +2459,10 @@ js_InitFileClass(JSContext *cx, JSObject* obj)
 
     file = JS_InitClass(cx, obj, NULL, &file_class, File, 1,
         file_props, file_functions, NULL, NULL);
-    if (!file) return NULL;
+    if (!file) {
+        /* TODO: error */
+        return NULL;
+    }
 
     /* SECURITY -- need to make sure we want to have default streams */
     ctor = JS_GetConstructor(cx, file);

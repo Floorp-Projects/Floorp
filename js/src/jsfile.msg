@@ -47,6 +47,13 @@ MSG_DEF(JSFILEMSG_RENAME_FAILED,                                  24, 2, JSEXN_N
 MSG_DEF(JSFILEMSG_WRITE_FAILED,                                   25, 1, JSEXN_NONE, "Write failed on file {0}")
 MSG_DEF(JSFILEMSG_READ_FAILED,                                    26, 1, JSEXN_NONE, "Read failed on file {0}")
 MSG_DEF(JSFILEMSG_SKIP_FAILED,                                    27, 1, JSEXN_NONE, "Skip failed on file {0}")
+MSG_DEF(JSFILEMSG_FIRST_ARGUMENT_MUST_BE_A_FUNCTION_OR_REGEX,     28, 1, JSEXN_NONE, "The first argument to file.list must be a function or a regex")
+MSG_DEF(JSFILEMSG_CANNOT_DO_LIST_ON_A_FILE,                       29, 1, JSEXN_NONE, "{0} must be a directory, cannot do list")
+MSG_DEF(JSFILEMSG_NATIVE_OPERATION_IS_NOT_SUPPORTED,              30, 2, JSEXN_NONE, "Native operation {0} is not supported on {1}")
+MSG_DEF(JSFILEMSG_CANNOT_SET_PRIVATE_FILE,                        31, 1, JSEXN_NONE, "Cannot set private data for file {0}")
+
+
+
 
 
 
