@@ -809,6 +809,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
     nsCOMPtr<nsIForm> form = do_QueryInterface(formNode);
     SignonDataEntry* firstMatch = nsnull;
+    PRBool attachedToInput = PR_FALSE;
     nsCOMPtr<nsIDOMHTMLInputElement> userField, passField;
     nsCOMPtr<nsIDOMHTMLInputElement> temp;
     nsAutoString fieldType;
@@ -887,35 +888,56 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
         continue;
       }
 
-      if (firstMatch || !oldUserValue.IsEmpty() || !oldPassValue.IsEmpty()) {
-        // We've found more than one possible signon for this form, or
-        // the fields were already populated using the value attribute.
+      if (!oldUserValue.IsEmpty()) {
+        // The page has prefilled a username.
+        // If it matches any of our saved usernames, prefill the password
+        // for that username.  If there are multiple saved usernames,
+        // we will also attach the autocomplete listener.
+
+        nsAutoString userValue;
+        if (NS_FAILED(DecryptData(e->userValue, userValue)))
+          goto done;
+
+        if (userValue.Equals(oldUserValue)) {
+          nsAutoString passValue;
+          if (NS_FAILED(DecryptData(e->passValue, passValue)))
+            goto done;
+
+          passField->SetValue(passValue);
+        }
+      }
+
+      if (firstMatch && !attachedToInput) {
+        // We've found more than one possible signon for this form.
+
         // Listen for blur and autocomplete events on the username field so
         // that we can attempt to prefill the password after the user has
         // entered the username.
 
         AttachToInput(userField);
-        firstMatch = nsnull;
-        break;   // on to the next form
+        attachedToInput = PR_TRUE;
       } else {
         firstMatch = e;
       }
     }
 
-    if (firstMatch) {
+    if (firstMatch && !attachedToInput) {
       nsAutoString buffer;
 
-      if (NS_SUCCEEDED(DecryptData(firstMatch->userValue, buffer))) {
-        userField->SetValue(buffer);
+      if (NS_FAILED(DecryptData(firstMatch->userValue, buffer)))
+        goto done;
 
-        if (NS_SUCCEEDED(DecryptData(firstMatch->passValue, buffer)))
-          passField->SetValue(buffer);
-      }
+      userField->SetValue(buffer);
 
+      if (NS_FAILED(DecryptData(firstMatch->passValue, buffer)))
+        goto done;
+
+      passField->SetValue(buffer);
       AttachToInput(userField);
     }
   }
 
+ done:
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
   targ->AddEventListener(NS_LITERAL_STRING("unload"),
                          NS_STATIC_CAST(nsIDOMLoadListener*, this), PR_FALSE);
