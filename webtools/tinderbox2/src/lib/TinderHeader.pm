@@ -8,8 +8,8 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/30 02:23:59 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/09/01 18:39:19 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
@@ -226,7 +226,7 @@ sub get_alltree_headers {
 # parsable HTML form so that other programs can get at these values.
 
 sub export_alltree_headers {
-  my ($header_ref) = @_;
+  my ($tree, $header_ref) = @_;
 
   my @out = ("<pre>\n");
   foreach $impl (keys %{ $header_ref }) {
@@ -234,7 +234,7 @@ sub export_alltree_headers {
   }
 
   $outfile = FileStructure::get_filename($tree, 'alltree_headers');
-  overwrite_file($outfile, @out);
+  main::overwrite_file($outfile, @out);
 
   return 1;
 }
