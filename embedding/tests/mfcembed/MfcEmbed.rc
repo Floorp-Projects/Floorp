@@ -228,6 +228,19 @@ BEGIN
     END
 END
 
+IDR_CTXMENU_EDITOR MENU DISCARDABLE 
+BEGIN
+    POPUP "Editor Context Menu"
+    BEGIN
+        MENUITEM "Cu&t",                        ID_EDIT_CUT
+        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Paste",                      ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All",                 ID_EDIT_SELECT_ALL
+        MENUITEM "Select &None",                ID_EDIT_SELECT_NONE
+    END
+END
+
 IDR_EDITOR MENU PRELOAD DISCARDABLE 
 BEGIN
     POPUP "&File"
@@ -252,10 +265,6 @@ BEGIN
         MENUITEM "Select &None",                ID_EDIT_SELECT_NONE
         MENUITEM SEPARATOR
         MENUITEM "&Find in This Page...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM SEPARATOR
-        MENUITEM "Profiles...",                 ID_MANAGE_PROFILES
-        MENUITEM SEPARATOR
-        MENUITEM "Preferences...",              ID_EDIT_PREFERENCES
     END
     POPUP "&Help"
     BEGIN
