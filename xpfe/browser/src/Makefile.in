@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= browser
 LIBRARY_NAME	= mozbrwsr_s
-EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsBrowserModule
 REQUIRES	= xpcom \

@@ -64,6 +64,13 @@ CPPSRCS         += \
 		GtkPromptService.cpp
 endif
 
+# Force applications to be built non-statically
+# when building the mozcomps meta component
+ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+endif
+
 ifdef BUILD_STATIC_LIBS
 # Static build stuff
 DEFINES         += -D_BUILD_STATIC_BIN=1
