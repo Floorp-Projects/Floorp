@@ -60,6 +60,12 @@ protected:
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
 
+  nsresult FinishWithLength(char **_retval, PRInt32* aLength);
+  nsresult ConvertFromUnicodeWithLength(const PRUnichar *aSrc,
+                                        PRInt32* aOutLen,
+                                        char **_retval);
+
+
   nsresult InitConverter();
 };
 
