@@ -301,7 +301,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
       // Unfortunately Eudora stores HTML messages in the sent folder
       // without any content type header at all. If the first line of the message body is <html>
       // then mark the message as html internally...See Bug #258489
-      if (body.m_pBuffer && body.m_writeOffset > sizeof(kHTMLTag) && (strncmp(body.m_pBuffer, kHTMLTag, sizeof(kHTMLTag)) == 0))
+      if (body.m_pBuffer && (body.m_writeOffset > strlen(kHTMLTag)) && (strncmp(body.m_pBuffer, kHTMLTag, strlen(kHTMLTag)) == 0 ))
         bodyType = "text/html"; // ignore whatever body type we were given...force html
 
       compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1, bodyType);
