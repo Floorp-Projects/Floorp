@@ -94,3 +94,8 @@ NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const char *key,
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) rv = NS_OK;
     return rv;
 }
+
+NS_IMETHODIMP nsCacheSession::EvictEntries()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}

@@ -37,6 +37,7 @@ EXPORTS		= \
 		$(NULL)
 
 CPPSRCS		= \
+	nsANSIFileStreams.cpp \
 	nsCache.cpp \
 	nsCacheEntry.cpp \
 	nsCacheEntryDescriptor.cpp \
@@ -46,6 +47,7 @@ CPPSRCS		= \
 	nsCacheSession.cpp \
 	nsDiskCacheDevice.cpp \
 	nsDiskCacheEntry.cpp \
+	nsDiskCacheMap.cpp \
 	nsMemoryCacheDevice.cpp \
 	$(NULL)
 

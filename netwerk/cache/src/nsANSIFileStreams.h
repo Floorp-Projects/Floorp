@@ -26,24 +26,26 @@
 
 #include <stdio.h>
 
-#include "nsIInputStream.h"
-#include "nsIOutputStream.h"
+#include "nsIFileStreams.h"
 
-class nsANSIInputStream : public nsIInputStream {
-    FILE* mFile;
+class nsANSIInputStream : public nsIInputStream, public nsISeekableStream {
+    FILE*       mFile;
+    PRUint32    mSize;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
+    NS_DECL_NSISEEKABLESTREAM
     
     nsANSIInputStream(FILE* file);
     virtual ~nsANSIInputStream();
 };
 
-class nsANSIOutputStream : public nsIOutputStream {
+class nsANSIOutputStream : public nsIOutputStream, public nsISeekableStream {
     FILE* mFile;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
+    NS_DECL_NSISEEKABLESTREAM
     
     nsANSIOutputStream(FILE* file);
     virtual ~nsANSIOutputStream();

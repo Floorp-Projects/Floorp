@@ -42,6 +42,7 @@ public:
     virtual ~nsCacheDevice() {}
 
     virtual nsresult Init() = 0;
+    virtual nsresult Shutdown() = 0;
 
     virtual const char *   GetDeviceID(void) = 0;
     virtual nsCacheEntry * FindEntry( nsCString * key ) = 0;
@@ -59,9 +60,13 @@ public:
 
     virtual nsresult OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize ) = 0;
 
-    // XXX need to define methods for enumerating entries
-    
     virtual nsresult Visit(nsICacheVisitor * visitor) = 0;
+
+    /**
+     * Device must evict entries associated with clientID.  If clientID == nsnull, all
+     * entries must be evicted.  Active entries must be doomed, rather than evicted.
+     */
+    virtual nsresult EvictEntries(const char * clientID) = 0;
 };
 
 #endif // _nsCacheDevice_h_

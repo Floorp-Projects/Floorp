@@ -23,11 +23,16 @@
 
 #include "nsANSIFileStreams.h"
 
-NS_IMPL_ISUPPORTS1(nsANSIInputStream, nsIInputStream);
+NS_IMPL_ISUPPORTS2(nsANSIInputStream, nsIInputStream, nsISeekableStream);
 
-nsANSIInputStream::nsANSIInputStream(FILE* file) : mFile(file)
+nsANSIInputStream::nsANSIInputStream(FILE* file) : mFile(file), mSize(0)
 {
     NS_INIT_ISUPPORTS();
+    if (file) {
+        ::fseek(file, 0, SEEK_END);
+        mSize = ::ftell(file);
+        ::fseek(file, 0, SEEK_SET);
+    }
 }
 
 nsANSIInputStream::~nsANSIInputStream()
@@ -35,7 +40,6 @@ nsANSIInputStream::~nsANSIInputStream()
     Close();
 }
 
-/* void close (); */
 NS_IMETHODIMP nsANSIInputStream::Close()
 {
     if (mFile) {
@@ -46,13 +50,15 @@ NS_IMETHODIMP nsANSIInputStream::Close()
     return NS_BASE_STREAM_CLOSED;
 }
 
-/* unsigned long available (); */
-NS_IMETHODIMP nsANSIInputStream::Available(PRUint32 *_retval)
+NS_IMETHODIMP nsANSIInputStream::Available(PRUint32 * result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mFile) {
+        *result = (mSize - ::ftell(mFile));
+        return NS_OK;
+    }
+    return NS_BASE_STREAM_CLOSED;
 }
 
-/* [noscript] unsigned long read (in charPtr buf, in unsigned long count); */
 NS_IMETHODIMP nsANSIInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 {
     if (mFile) {
@@ -62,30 +68,46 @@ NS_IMETHODIMP nsANSIInputStream::Read(char * buf, PRUint32 count, PRUint32 *resu
     return NS_BASE_STREAM_CLOSED;
 }
 
-/* [noscript] unsigned long readSegments (in nsWriteSegmentFun writer, in voidPtr closure, in unsigned long count); */
 NS_IMETHODIMP nsANSIInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* readonly attribute boolean nonBlocking; */
 NS_IMETHODIMP nsANSIInputStream::GetNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
 }
 
-/* attribute nsIInputStreamObserver observer; */
 NS_IMETHODIMP nsANSIInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 NS_IMETHODIMP nsANSIInputStream::SetObserver(nsIInputStreamObserver * aObserver)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMPL_ISUPPORTS1(nsANSIOutputStream, nsIOutputStream);
+NS_IMETHODIMP nsANSIInputStream::Seek(PRInt32 whence, PRInt32 offset)
+{
+    if (mFile) {
+        ::fseek(mFile, offset, whence);
+        return NS_OK;
+    }
+    return NS_BASE_STREAM_CLOSED;
+}
+
+NS_IMETHODIMP nsANSIInputStream::Tell(PRUint32 * result)
+{
+    if (mFile) {
+        *result = ::ftell(mFile);
+        return NS_OK;
+    }
+    return NS_BASE_STREAM_CLOSED;
+}
+
+NS_IMPL_ISUPPORTS2(nsANSIOutputStream, nsIOutputStream, nsISeekableStream);
 
 nsANSIOutputStream::nsANSIOutputStream(FILE* file) : mFile(file)
 {
@@ -97,7 +119,6 @@ nsANSIOutputStream::~nsANSIOutputStream()
     Close();
 }
 
-/* void close (); */
 NS_IMETHODIMP nsANSIOutputStream::Close()
 {
     if (mFile) {
@@ -108,7 +129,6 @@ NS_IMETHODIMP nsANSIOutputStream::Close()
     return NS_BASE_STREAM_CLOSED;
 }
 
-/* void flush (); */
 NS_IMETHODIMP nsANSIOutputStream::Flush()
 {
     if (mFile) {
@@ -118,7 +138,6 @@ NS_IMETHODIMP nsANSIOutputStream::Flush()
     return NS_BASE_STREAM_CLOSED;
 }
 
-/* unsigned long write (in string buf, in unsigned long count); */
 NS_IMETHODIMP nsANSIOutputStream::Write(const char *buffer, PRUint32 count, PRUint32 *result)
 {
     if (mFile) {
@@ -128,7 +147,6 @@ NS_IMETHODIMP nsANSIOutputStream::Write(const char *buffer, PRUint32 count, PRUi
     return NS_BASE_STREAM_CLOSED;
 }
 
-/* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsANSIOutputStream::WriteFrom(nsIInputStream *input, PRUint32 count, PRUint32 *actualCount)
 {
     char buffer[BUFSIZ];
@@ -145,13 +163,11 @@ NS_IMETHODIMP nsANSIOutputStream::WriteFrom(nsIInputStream *input, PRUint32 coun
     return NS_OK;
 }
 
-/* [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count); */
 NS_IMETHODIMP nsANSIOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute boolean nonBlocking; */
 NS_IMETHODIMP nsANSIOutputStream::GetNonBlocking(PRBool *aNonBlocking)
 {
         *aNonBlocking = PR_FALSE;
@@ -162,7 +178,6 @@ NS_IMETHODIMP nsANSIOutputStream::SetNonBlocking(PRBool aNonBlocking)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute nsIOutputStreamObserver observer; */
 NS_IMETHODIMP nsANSIOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -170,4 +185,22 @@ NS_IMETHODIMP nsANSIOutputStream::GetObserver(nsIOutputStreamObserver * *aObserv
 NS_IMETHODIMP nsANSIOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsANSIOutputStream::Seek(PRInt32 whence, PRInt32 offset)
+{
+    if (mFile) {
+        ::fseek(mFile, offset, whence);
+        return NS_OK;
+    }
+    return NS_BASE_STREAM_CLOSED;
+}
+
+NS_IMETHODIMP nsANSIOutputStream::Tell(PRUint32 * result)
+{
+    if (mFile) {
+        *result = ::ftell(mFile);
+        return NS_OK;
+    }
+    return NS_BASE_STREAM_CLOSED;
 }

@@ -95,10 +95,9 @@ public:
     nsresult         DoomEntry_Locked(nsCacheEntry * entry);
 
     /**
-     * static utility methods
+     * Methods called by nsCachePrefObserver
      */
-    static nsresult  ClientID(const nsAReadableCString&  clientID, char **  result);
-    static nsresult  ClientKey(const nsAReadableCString& clientKey, char ** result);
+    void             SetCacheDevicesEnabled(PRBool  disk, PRBool  memory);
 
 private:
 
@@ -107,6 +106,7 @@ private:
      */
 
     nsresult         CreateDiskDevice();
+    nsresult         CreateMemoryDevice();
 
     nsresult         CreateRequest(nsCacheSession *   session,
                                    const char *       clientKey,
@@ -137,7 +137,7 @@ private:
     void             ClearActiveEntries(void);
 
     static
-    PLDHashOperator  PR_CALLBACK DeactivateAndClearEntry(PLDHashTable *    table,
+    PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
                                                          PLDHashEntryHdr * hdr,
                                                          PRUint32          number,
                                                          void *            arg);
@@ -154,6 +154,9 @@ private:
 
     PRLock*                 mCacheServiceLock;
     
+    PRBool                  mEnableMemoryDevice;
+    PRBool                  mEnableDiskDevice;
+
     nsCacheDevice *         mMemoryDevice;
     nsCacheDevice *         mDiskDevice;
 

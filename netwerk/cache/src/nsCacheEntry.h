@@ -53,46 +53,43 @@ public:
                  nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
-    nsCacheEntry *
-    Create(nsCString *           key,
-           PRBool                streamBased,
-           nsCacheStoragePolicy  storagePolicy,
-           nsCacheDevice *       cacheDevice);
 
-    nsCString *  Key(void)  { return mKey; }
+    nsCString *  Key()  { return mKey; }
 
-    PRInt32  FetchCount(void)                          { return mFetchCount;}
+    PRInt32  FetchCount()                              { return mFetchCount;}
     void     SetFetchCount( PRInt32   count)           { mFetchCount = count;}
-    void     IncrementFetchCount(void)                 { ++mFetchCount; }
+    void     Fetched();
 
-    PRUint32 LastFetched(void)                         { return mLastFetched;}
+    PRUint32 LastFetched()                             { return mLastFetched;}
     void     SetLastFetched( PRUint32  lastFetched)    { mLastFetched = lastFetched;}
 
-    PRUint32 LastModified(void)                        { return mLastModified;}
+    PRUint32 LastModified()                            { return mLastModified;}
     void     SetLastModified( PRUint32 lastModified)   { mLastModified = lastModified;}
 
-    PRUint32 LastValidated(void)                       { return mLastValidated;}
-    void     SetLastValidated( PRUint32 lastValidated) { mLastValidated = lastValidated;}
-
-    PRUint32 ExpirationTime(void)                 { return mExpirationTime;}
+    PRUint32 ExpirationTime()                     { return mExpirationTime;}
     void     SetExpirationTime( PRUint32 expires) { mExpirationTime = expires;}
 
-    PRUint32 DataSize(void)                       { return mDataSize;}
-    void     SetDataSize( PRUint32  size);
+    PRUint32 Size()                               { return mDataSize + mMetaSize; }
 
-    PRUint32 MetaDataSize(void)                   { return mMetaSize;}
-
-    PRUint32 Size(void)                           { return mDataSize + mMetaSize; }
-
-    nsCacheDevice * CacheDevice(void)                        { return mCacheDevice;}
+    nsCacheDevice * CacheDevice()                            { return mCacheDevice;}
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
 
-    nsresult GetSecurityInfo( nsISupports ** result);
-    nsresult SetSecurityInfo( nsISupports *  info);
 
+    /**
+     * Data accessors
+     */
     nsresult GetData( nsISupports ** result);
-    nsresult SetData( nsISupports *  data);
+    void     SetData( nsISupports *  data)        { mData = data; }
 
+    PRUint32 DataSize()                           { return mDataSize;}
+    void     SetDataSize( PRUint32  size)         { mDataSize = size;}
+
+    void     TouchData();
+
+
+    /**
+     * Meta data accessors
+     */
     nsresult GetMetaDataElement( const nsAReadableCString&  key,
                                  nsAReadableCString **      value);
     nsresult SetMetaDataElement( const nsAReadableCString&  key,
@@ -100,6 +97,18 @@ public:
 
     nsresult FlattenMetaData(char ** data, PRUint32 * size);
     nsresult UnflattenMetaData(char * data, PRUint32 size);
+
+    PRUint32 MetaDataSize()                       { return mMetaSize;}
+
+    void     TouchMetaData();
+
+
+    /**
+     * Security Info accessors
+     */
+    nsresult GetSecurityInfo( nsISupports ** result);
+    void     SetSecurityInfo( nsISupports *  info) { mSecurityInfo = info; }
+
 
     // XXX enumerate MetaData method
 
@@ -187,7 +196,6 @@ private:
     void     DetachDescriptors(void);
 
     // internal methods
-    nsresult CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted);
     void MarkDoomed()          { mFlags |=  eDoomedMask; }
     void MarkStreamBased()     { mFlags |=  eStreamDataMask; }
     void MarkInitialized()     { mFlags |=  eInitializedMask; }
@@ -227,7 +235,7 @@ public:
     }
 
     virtual ~nsCacheEntryInfo() {}
-    void    DetachEntry(void) { mCacheEntry = nsnull; }
+    void    DetachEntry() { mCacheEntry = nsnull; }
     
 private:
     nsCacheEntry * mCacheEntry;

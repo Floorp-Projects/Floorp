@@ -37,9 +37,120 @@
 #include "nsIEventQueue.h"
 #include "nsProxiedService.h"
 #include "nsIObserverService.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+
+
+
+
+/******************************************************************************
+ * nsCachePrefObserver
+ *****************************************************************************/
+
+#define ENABLE_MEMORY_CACHE_PREF    "browser.cache.enable"
+#define ENABLE_DISK_CACHE_PREF      "browser.cache.disk.enable"
+
+class nsCachePrefObserver : public nsIObserver
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    nsCachePrefObserver() :
+        mDiskCacheEnabled(PR_TRUE),
+        mMemoryCacheEnabled(PR_TRUE)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    virtual ~nsCachePrefObserver() {}
+    
+    nsresult  Install();
+    nsresult  Remove();
+
+private:
+    PRBool  mDiskCacheEnabled;
+    PRBool  mMemoryCacheEnabled;
+};
+
+NS_IMPL_ISUPPORTS1(nsCachePrefObserver, nsIObserver);
+
+
+nsresult
+nsCachePrefObserver::Install()
+{
+    nsresult rv, rv2;
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->AddObserver(ENABLE_MEMORY_CACHE_PREF, this);
+    if (NS_FAILED(rv)) rv2 = rv;
+
+    rv = prefs->AddObserver(ENABLE_DISK_CACHE_PREF, this);
+    if (NS_FAILED(rv)) rv2 = rv;
+
+    rv = prefs->GetBoolPref(ENABLE_DISK_CACHE_PREF, &mDiskCacheEnabled);
+    if (NS_FAILED(rv)) rv2 = rv;
+
+    rv = prefs->GetBoolPref(ENABLE_MEMORY_CACHE_PREF, &mMemoryCacheEnabled);
+    // if (NS_FAILED(rv)) rv2 = rv;
+
+    if (NS_SUCCEEDED(rv)) rv = rv2;
+    return rv;
+}
+
+
+nsresult
+nsCachePrefObserver::Remove()
+{
+    nsresult rv, rv2;
+
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv  = prefs->RemoveObserver(ENABLE_DISK_CACHE_PREF, this);
+    rv2 = prefs->RemoveObserver(ENABLE_MEMORY_CACHE_PREF, this);
+
+    if (NS_SUCCEEDED(rv)) rv = rv2;
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsCachePrefObserver::Observe(nsISupports *     subject,
+                             const PRUnichar * topic,
+                             const PRUnichar * data)
+{
+    nsresult rv;
+
+    if (NS_LITERAL_STRING("nsPref:changed").Equals(topic)) {
+        nsCOMPtr<nsIPref> prefs = do_QueryInterface(subject, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        // which preference changed?
+        if (NS_LITERAL_STRING(ENABLE_DISK_CACHE_PREF).Equals(data)) {
+
+            rv = prefs->GetBoolPref(ENABLE_DISK_CACHE_PREF, &mDiskCacheEnabled);
+
+        } else if (NS_LITERAL_STRING(ENABLE_MEMORY_CACHE_PREF).Equals(data)) {
+
+            rv = prefs->GetBoolPref(ENABLE_MEMORY_CACHE_PREF, &mMemoryCacheEnabled);
+        }
+
+        if (NS_FAILED(rv)) return rv;
+        nsCacheService::GlobalInstance()->SetCacheDevicesEnabled(mDiskCacheEnabled,
+                                                                 mMemoryCacheEnabled);
+    }
+    
+    return NS_OK;
+}
+
+
+/******************************************************************************
+ * nsCacheService
+ *****************************************************************************/
 
 nsCacheService *   nsCacheService::gService = nsnull;
 
@@ -47,6 +158,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsCacheService, nsICacheService, nsIObserver)
 
 nsCacheService::nsCacheService()
     : mCacheServiceLock(nsnull),
+      mEnableMemoryDevice(PR_TRUE),
+      mEnableDiskDevice(PR_TRUE),
       mMemoryDevice(nsnull),
       mDiskDevice(nsnull),
       mTotalEntries(0),
@@ -95,25 +208,40 @@ nsCacheService::Init()
     // initialize hashtable for active cache entries
     rv = mActiveEntries.Init();
     if (NS_FAILED(rv)) goto error;
-
-    // create memory cache
-    mMemoryDevice = new nsMemoryCacheDevice;
-    if (!mMemoryDevice) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto error;
+    
+    { // scope nsCOMPtr<nsIPref>
+        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv = prefs->GetBoolPref(ENABLE_DISK_CACHE_PREF, &mEnableDiskDevice);
+            rv = prefs->GetBoolPref(ENABLE_MEMORY_CACHE_PREF, &mEnableMemoryDevice);
+            // ignore errors
+        }
     }
-    rv = mMemoryDevice->Init();
-    if (NS_FAILED(rv)) goto error;
+
+    if (mEnableMemoryDevice) {   // create memory cache
+        mMemoryDevice = new nsMemoryCacheDevice;
+        if (!mMemoryDevice) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto error;
+        }
+        rv = mMemoryDevice->Init();
+        if (NS_FAILED(rv)) {
+            // XXX log error
+            delete mMemoryDevice;
+            mMemoryDevice = nsnull;
+        }
+    }
 
 #if EAGER_DISK_INIT
-    // create disk cache
-    mDiskDevice = new nsDiskCacheDevice;
-    if (!mDiskDevice) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto error;
+    if (mEnableDiskCache) {   // create disk cache
+        mDiskDevice = new nsDiskCacheDevice;
+        if (!mDiskDevice) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto error;
+        }
+        rv = mDiskDevice->Init();
+        if (NS_FAILED(rv)) goto error;
     }
-    rv = mDiskDevice->Init();
-    if (NS_FAILED(rv)) goto error;
 #endif
 
     // observer XPCOM shutdown.
@@ -194,6 +322,9 @@ nsCacheService::CreateSession(const char *          clientID,
 {
     *result = nsnull;
 
+    if (!(mEnableDiskDevice || mEnableMemoryDevice))
+        return NS_ERROR_NOT_AVAILABLE;
+
     nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
     if (!session)  return NS_ERROR_OUT_OF_MEMORY;
 
@@ -207,44 +338,89 @@ nsCacheService::CreateSession(const char *          clientID,
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
     nsAutoLock lock(mCacheServiceLock);
-     
+
+    if (!(mEnableDiskDevice || mEnableMemoryDevice))
+        return NS_ERROR_NOT_AVAILABLE;
+
     // XXX record the fact that a visitation is in progress, i.e. keep
     // list of visitors in progress.
     
-    nsresult rv = mMemoryDevice->Visit(visitor);
-    if (NS_FAILED(rv)) return rv;
-
-
-    if (!mDiskDevice) {
-        rv = CreateDiskDevice();
+    nsresult rv = NS_OK;
+    if (mEnableMemoryDevice) {
+        rv = mMemoryDevice->Visit(visitor);
         if (NS_FAILED(rv)) return rv;
     }
 
-    rv = mDiskDevice->Visit(visitor);
-    if (NS_FAILED(rv)) return rv;
-    
+    if (mEnableDiskDevice) {
+        if (!mDiskDevice) {
+            rv = CreateDiskDevice();
+            if (NS_FAILED(rv)) return rv;
+        }
+        rv = mDiskDevice->Visit(visitor);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     // XXX notify any shutdown process that visitation is complete for THIS visitor.
+    // XXX keep queue of visitors
 
     return NS_OK;
 }
 
 
+NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
+{
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+    
+    if (storagePolicy == nsICache::STORE_ON_DISK) {
+        if (mEnableDiskDevice) {
+            if (!mDiskDevice) {
+                rv = CreateDiskDevice();
+                if (NS_FAILED(rv)) return rv;
+            }
+            rv = mDiskDevice->EvictEntries(nsnull);
+        }
+    }
+    
+    return rv;
+}
+
+
+/**
+ * Internal Methods
+ */
 nsresult
 nsCacheService::CreateDiskDevice()
 {
-    nsresult rv = NS_OK;
-    if (!mDiskDevice) {
-        // create disk cache lazily
-        mDiskDevice = new nsDiskCacheDevice;
-        if (mDiskDevice) {
-            rv = mDiskDevice->Init();
-            if (NS_FAILED(rv)) {
-                delete mDiskDevice;
-                mDiskDevice = nsnull;
-            }
-        } else {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
+    if (!mEnableDiskDevice) return NS_ERROR_NOT_AVAILABLE;
+    if (mDiskDevice)        return NS_OK;
+
+    mDiskDevice = new nsDiskCacheDevice;
+    if (!mDiskDevice)       return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = mDiskDevice->Init();
+    if (NS_FAILED(rv)) {
+        // XXX log error
+        delete mDiskDevice;
+        mDiskDevice = nsnull;
+    }
+    return rv;
+}
+
+
+nsresult
+nsCacheService::CreateMemoryDevice()
+{
+    if (!mEnableMemoryDevice) return NS_ERROR_NOT_AVAILABLE;
+    if (mMemoryDevice)        return NS_OK;
+
+    mMemoryDevice = new nsMemoryCacheDevice;
+    if (!mMemoryDevice)       return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = mMemoryDevice->Init();
+    if (NS_FAILED(rv)) {
+        // XXX log error
+        delete mMemoryDevice;
+        mMemoryDevice = nsnull;
     }
     return rv;
 }
@@ -434,7 +610,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
 
     if (entry) {
         ++mCacheHits;
-        entry->IncrementFetchCount();
+        entry->Fetched();
     } else {
         ++mCacheMisses;
     }
@@ -465,6 +641,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         
+        entry->Fetched();
         ++mTotalEntries;
         
         // XXX  we could perform an early bind in some cases based on storage policy
@@ -494,19 +671,22 @@ nsCacheService::SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy)
     nsCacheEntry * entry = nsnull;
 
     if ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_IN_MEMORY)) {
-        entry = mMemoryDevice->FindEntry(key);
+        if (mEnableMemoryDevice)
+            entry = mMemoryDevice->FindEntry(key);
     }
 
     if (!entry && 
         ((policy == nsICache::STORE_ANYWHERE) || (policy == nsICache::STORE_ON_DISK))) {
 
-        if (!mDiskDevice) {
-            nsresult rv = CreateDiskDevice();
-            if (NS_FAILED(rv))
-                return nsnull;
+        if (mEnableDiskDevice) {
+            if (!mDiskDevice) {
+                nsresult rv = CreateDiskDevice();
+                if (NS_FAILED(rv))
+                    return nsnull;
+            }
+            
+            entry = mDiskDevice->FindEntry(key);
         }
-
-        entry = mDiskDevice->FindEntry(key);
     }
 
     return entry;
@@ -519,7 +699,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
     nsCacheDevice * device = entry->CacheDevice();
     if (device)  return device;
 
-    if (entry->IsStreamData() && entry->IsAllowedOnDisk()) {
+    if (entry->IsStreamData() && entry->IsAllowedOnDisk() && mEnableDiskDevice) {
         // this is the default
         if (!mDiskDevice) {
             nsresult rv = CreateDiskDevice();
@@ -528,10 +708,12 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
         }
 
         device = mDiskDevice;
-    } else {
+    } else if (mEnableMemoryDevice) {
         NS_ASSERTION(entry->IsAllowedInMemory(), "oops.. bad flags");
         device = mMemoryDevice;
     }
+
+    if (device == nsnull)  return nsnull;
 
     nsresult  rv = device->BindEntry(entry);
     if (NS_FAILED(rv)) return nsnull;
@@ -601,6 +783,24 @@ nsCacheService::DoomEntry_Locked(nsCacheEntry * entry)
 }
 
 
+void
+nsCacheService::SetCacheDevicesEnabled(PRBool  enableDisk, PRBool  enableMemory)
+{
+    if (this == nsnull) return;  // NS_ERROR_NOT_AVAILABLE;
+    nsAutoLock lock(mCacheServiceLock);
+    
+    if (enableDisk && !mDiskDevice) {
+        // disk device requires lazy activation
+    } else if (!enableDisk && mDiskDevice) {
+        // XXX deactivate disk
+    }
+
+    if (enableMemory && !mMemoryDevice) {
+        // XXX enable memory cache device
+    } else if (!enableMemory && mMemoryDevice) {
+        // XXX disable memory cache device
+    }
+}
 
 
 nsresult

@@ -26,83 +26,115 @@
 #ifndef _nsDiskCache_h_
 #define _nsDiskCache_h_
 
-enum {
-    eEvictionRankMask       = 0xFF000000;
-    eLocationSelectorMask   = 0x00C00000;
+#include "prtypes.h"
+#include "prnetdb.h"
+#include "nsDebug.h"
 
-    eExtraBlocksMask        = 0x00300000;
-    eBlockNumberMask        = 0x000FFFFF;
+class nsDiskCacheRecord {
+    enum {
+        eEvictionRankMask       = 0xFF000000,
+        eLocationSelectorMask   = 0x00C00000,
 
-    eFileReservedMask       = 0x003F0000;
-    eFileGenerationMask     = 0x0000FFFF;
-};
+        eExtraBlocksMask        = 0x00300000,
+        eBlockNumberMask        = 0x000FFFFF,
 
-class DiskCacheRecord {
+        eFileReservedMask       = 0x003F0000,
+        eFileGenerationMask     = 0x0000FFFF
+    };
+
 public:
-    PRUint32   HashNumber(void)       { return mHashNumber; }
-    void       SetHashNumber(PRUint32 hashNumber) { mHashNumber = hashNumber; }
-
-    PRUint8    EvictionRank(void)
+    nsDiskCacheRecord()
+        :   mHashNumber(0), mEvictionRank(0), mLocation(0), mUnused(0)
     {
-        return (PRUint8)(mInfo & eEvictionRankMask) >> 24;
+    }
+    
+    PRUint32   HashNumber()
+    {
+        return mHashNumber;
+    }
+    
+    void       SetHashNumber(PRUint32 hashNumber)
+    {
+        mHashNumber = hashNumber;
     }
 
-    void       SetEvictionRank(PRUint8 rank)
+    PRUint32   EvictionRank()
     {
-        mInfo &= ~eEvictionRankMask; // clear eviction rank bits
-        mInfo |=  rank << 24;
+        return mEvictionRank;
     }
 
-    PRUint32   LocationSelector(void)
+    void       SetEvictionRank(PRUint32 rank)
     {
-        return (PRUint32)(mInfo & eLocationSelectorMask) >> 22;
+        mEvictionRank = rank;
     }
 
-    void       SetLocationSelector(PRUint32  selector)
+    PRUint32   LocationSelector()
     {
-        mInfo &= ~eLocationSelectorMask; // clear location selector bits
-        mInfo |= (selector & eLocationSelectorMask) << 22;
+        return (PRUint32)(mLocation & eLocationSelectorMask) >> 22;
     }
 
-    PRUint32   BlockCount(void)
+    void       SetLocationSelector(PRUint32 selector)
     {
-        return (PRUint32)((mInfo & eExtraBlocksMask) >> 20) + 1;
+        mLocation &= ~eLocationSelectorMask; // clear location selector bits
+        mLocation |= (selector & eLocationSelectorMask) << 22;
     }
 
-    void       SetBlockCount(PRUint32  count)
+    PRUint32   BlockCount()
+    {
+        return (PRUint32)((mLocation & eExtraBlocksMask) >> 20) + 1;
+    }
+
+    void       SetBlockCount(PRUint32 count)
     {
         NS_ASSERTION( (count>=1) && (count<=4),"invalid block count");
         count = --count;
-        mInfo &= ~eExtraBlocksMask; // clear extra blocks bits
-        mInfo |= (count & eExtraBlocksMask) << 20;
+        mLocation &= ~eExtraBlocksMask; // clear extra blocks bits
+        mLocation |= (count & eExtraBlocksMask) << 20;
     }
 
-    PRUint32   BlockNumber(void)
+    PRUint32   BlockNumber()
     {
-        return mInfo & eBlockNumberMask;
+        return (mLocation & eBlockNumberMask);
     }
 
     void       SetBlockNumber(PRUint32  blockNumber)
     {
-        mInfo &= ~eBlockNumberMask;  // clear block number bits
-        mInfo |= blockNumber & eBlockNumberMask;
+        mLocation &= ~eBlockNumberMask;  // clear block number bits
+        mLocation |= blockNumber & eBlockNumberMask;
     }
 
-    PRUint16   FileGeneration(void)
+    PRUint16   FileGeneration()
     {
-        return mInfo & eFileGenerationMask;
+        return (mLocation & eFileGenerationMask);
     }
 
     void       SetFileGeneration(PRUint16 generation)
     {
-        mInfo &= ~eFileGenerationMask;  // clear file generation bits
-        mInfo |= generation & eFileGenerationMask;
+        mLocation &= ~eFileGenerationMask;  // clear file generation bits
+        mLocation |= generation & eFileGenerationMask;
     }
 
+    void        Swap()
+    {
+        mHashNumber = ::PR_htonl(mHashNumber);
+        mEvictionRank = ::PR_htonl(mEvictionRank);
+        mLocation = ::PR_htonl(mLocation);
+        mUnused = ::PR_htonl(mUnused);
+    }
+    
+    void        Unswap()
+    {
+        mHashNumber = ::PR_ntohl(mHashNumber);
+        mEvictionRank = ::PR_ntohl(mEvictionRank);
+        mLocation = ::PR_ntohl(mLocation);
+        mUnused = ::PR_ntohl(mUnused);
+    }
 
 private:
-    PRUint32   mHashNumber;
-    PRUint32   mInfo;
+    PRUint32    mHashNumber;
+    PRUint32    mEvictionRank;
+    PRUint32    mLocation;
+    PRUint32    mUnused;
 };
 
 

@@ -147,17 +147,6 @@ nsCacheEntryDescriptor::GetLastModified(PRUint32 *result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastValidated(PRUint32 *result)
-{
-    NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-
-    *result = mCacheEntry->LastValidated();
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsCacheEntryDescriptor::GetExpirationTime(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
@@ -174,6 +163,7 @@ nsCacheEntryDescriptor::SetExpirationTime(PRUint32 expirationTime)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     mCacheEntry->SetExpirationTime(expirationTime);
+    mCacheEntry->MarkEntryDirty();
     return NS_OK;
 }
 
@@ -207,6 +197,7 @@ nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
         // XXX review for signed/unsigned math errors
         PRUint32  newDataSize = mCacheEntry->DataSize() + deltaSize;
         mCacheEntry->SetDataSize(newDataSize);
+        mCacheEntry->TouchData();
     }
     return rv;
 }
@@ -256,7 +247,9 @@ nsCacheEntryDescriptor::SetCacheElement(nsISupports * cacheElement)
     if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
     if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
 
-    return mCacheEntry->SetData(cacheElement);
+    mCacheEntry->SetData(cacheElement);
+    mCacheEntry->TouchData();
+    return NS_OK;
 }
 
 
@@ -285,7 +278,7 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     // XXX validate policy against session?
     mCacheEntry->SetStoragePolicy(policy);
-
+    mCacheEntry->MarkEntryDirty();
     return NS_OK;
 }
 
@@ -316,6 +309,7 @@ nsCacheEntryDescriptor::SetSecurityInfo(nsISupports * securityInfo)
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     mCacheEntry->SetSecurityInfo(securityInfo);
+    mCacheEntry->MarkEntryDirty();
     return NS_OK;
 }
 
@@ -394,6 +388,8 @@ nsCacheEntryDescriptor::SetMetaDataElement(const char *key, const char *value)
     // XXX allow null value, for clearing key?
     nsresult rv = mCacheEntry->SetMetaDataElement(nsLiteralCString(key),
                                                   nsLiteralCString(value));
+    if (NS_SUCCEEDED(rv))
+        mCacheEntry->TouchMetaData();
     return rv;
 }
 

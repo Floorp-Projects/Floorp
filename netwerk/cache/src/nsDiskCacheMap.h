@@ -29,26 +29,62 @@
 class nsIInputStream;
 class nsIOutputStream;
 
+struct nsDiskCacheHeader {
+    enum { kCurrentVersion = 0x00010000 };
+
+    PRUint32    mVersion;                           // cache version.
+    PRUint32    mDataSize;                          // size of cache in bytes.
+    PRUint32    mEntryCount;                        // number of entries stored in cache.
+    // XXX need a bitmap?
+    
+    nsDiskCacheHeader()
+        :   mVersion(kCurrentVersion), mDataSize(0), mEntryCount(0)
+    {
+    }
+
+    void        Swap()
+    {
+        mVersion = ::PR_htonl(mVersion);
+        mDataSize = ::PR_htonl(mDataSize);
+        mEntryCount = ::PR_htonl(mEntryCount);
+    }
+    
+    void        Unswap()
+    {
+        mVersion = ::PR_ntohl(mVersion);
+        mDataSize = ::PR_ntohl(mDataSize);
+        mEntryCount = ::PR_ntohl(mEntryCount);
+    }
+};
+
 // XXX initial capacity, enough for 8192 distint entries.
-const PRUint32 kRecordsPerBucket = 256;
-const PRUint32 kBucketsPerTable = (1 << 4);       // must be a power of 2!
- 
 class nsDiskCacheMap {
 public:
     nsDiskCacheMap();
     ~nsDiskCacheMap();
+    
+    PRUint32& DataSize() { return mHeader.mDataSize; }
+
+    PRUint32& EntryCount() { return mHeader.mEntryCount; }
 
     nsDiskCacheRecord* GetRecord(PRUint32 hashNumber);
+    void DeleteRecord(PRUint32 hashNumber);
     
     nsresult Read(nsIInputStream* input);
     nsresult Write(nsIOutputStream* output);
     
-private:
-    // XXX need a bitmap?
-    struct nsDiskCacheBucket {
-        nsDiskCacheRecord mRecords[kRecordsPerBucket];
+    enum {
+        kRecordsPerBucket = 256,
+        kBucketsPerTable = (1 << 5)                 // must be a power of 2!
     };
-    nsDiskCacheBucket mBuckets[kBucketsPerTable];
+    
+private:
+    struct nsDiskCacheBucket {
+        nsDiskCacheRecord   mRecords[kRecordsPerBucket];
+    };
+    
+    nsDiskCacheHeader       mHeader;
+    nsDiskCacheBucket       mBuckets[kBucketsPerTable];
 };
 
 #endif // _nsDiskCacheMap_h_
