@@ -29,7 +29,7 @@ SIMPLE_PROGRAMS	= TestInterfaceInfo
 CPPSRCS		= TestInterfaceInfo.cpp
 
 ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
+LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
 endif
 
 LIBS		= \
