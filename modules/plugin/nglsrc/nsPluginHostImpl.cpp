@@ -3490,10 +3490,12 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
                          lpath, 
                          PR_TRUE);  // check for specific plugins
   }
+#endif
 
   mPluginsLoaded = PR_TRUE; // at this point 'some' plugins have been loaded,
                             // the rest is optional
  
+#ifdef XP_WIN
   // Check the windows registry for extra paths to scan for plugins
   //
   // We are going to get this registry key location from the pref:
