@@ -24,9 +24,11 @@
 #define nsImageMac_h___
 
 #include "nsIImage.h"
+#include "nsIImageMac.h"
 #include <QDOffscreen.h>
 
-class nsImageMac : public nsIImage
+
+class nsImageMac : public nsIImage, public nsIImageMac
 {
 public:
 											nsImageMac();
@@ -84,6 +86,11 @@ public:
 	NS_IMETHOD					LockImagePixels(PRBool aMaskPixels);
 	NS_IMETHOD					UnlockImagePixels(PRBool aMaskPixels);
 
+    // Convert to and from the os-native PICT format. Most likely
+    // used for clipboard.
+  NS_IMETHOD ConvertToPICT ( PicHandle* outPicture ) ;
+  NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) ;
+  
 protected:
 		
 	static OSErr			CreatePixMap(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, CTabHandle aColorTable,
