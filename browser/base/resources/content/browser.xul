@@ -1,0 +1,433 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-2000 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): ______________________________________. -->
+
+
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
+<?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
+<?xul-overlay href="chrome://navigator/content/linkToolbarOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
+
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
+%buildDTD;
+<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
+%navigatorDTD;
+]>
+
+<window id="main-window"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup()" onunload="Shutdown()"
+        contenttitlesetting="true"
+        title="&mainWindow.title;" 
+        titlemodifier="&mainWindow.titlemodifier;" 
+        titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
+        windowtype="navigator:browser"
+        width="610" height="450"
+        screenX="4" screenY="4"
+        persist="screenX screenY width height sizemode"> 
+
+  <!-- Generic Utility -->
+  <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/fullScreen.js"/>
+  
+  <!-- Content Area -->
+  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserStatusHandler.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/nsBrowserContentListener.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
+
+  <!-- Shared Bookmarks Utility Library -->
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/personalToolbar.js"/>
+  
+  <!-- Navigator -->
+  <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/navigator.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/navigatorDD.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+
+  <!-- hook for stringbundle overlays -->
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
+    <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
+    <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+  </stringbundleset>
+
+  <commandset id="commands">    
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
+    <!-- <command id="cmd_pageSetup"/> -->
+    <command id="toggleSidebar"/>
+  </commandset>
+    
+  <!-- broadcasters are appended from the overlay -->
+  <broadcasterset id="navBroadcasters"/>
+   
+  <!-- keys are appended from the overlay -->
+  <keyset id="navKeys">
+    <key id="showHideSidebar"/>
+  </keyset>
+  
+  <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
+  <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
+  <popup id="sidebarPopup"/>
+
+  <popupset id="bookmarksPopupset"/>
+ 
+  <!-- context menu -->
+  <popupset id="contentAreaContextSet"/>
+
+  <script type="application/x-javascript">
+    var gBookmarkPopup = null;
+  </script>
+
+  <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
+    <!-- Menu -->
+    <menubar id="main-menubar" persist="collapsed" grippytooltiptext="&menuBar.tooltip;"/>
+
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
+             grippytooltiptext="&navigationToolbar.tooltip;"
+             tbalign="stretch" fullscreentoolbar="true">
+      <hbox id="nav-bar-buttons">
+        <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
+                       label="&backButton.label;"
+                       oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
+                       observes="canGoBack" context="backMenu"
+                       tooltiptext="&backButton.tooltip;">
+          <menupopup context="" onpopupshowing="BrowserBackMenu(event);"/>
+        </toolbarbutton>
+        
+        <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
+                       label="&forwardButton.label;"
+                       oncommand="if (event.target==this) BrowserForward(); else gotoHistoryIndex(event);"
+                       observes="canGoForward" context="forwardMenu"
+                       tooltiptext="&forwardButton.tooltip;">
+          <menupopup context="" onpopupshowing="BrowserForwardMenu(event);"/>
+        </toolbarbutton>
+        
+        <toolbarbutton id="reload-button" class="toolbarbutton-1"
+                       label="&reloadButton.label;"
+                       oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
+                       tooltiptext="&reloadButton.tooltip;"/>
+                       
+        <toolbarbutton id="stop-button" class="toolbarbutton-1"
+                       label="&stopButton.label;"
+                       oncommand="BrowserStop();" observes="canStop"  
+                       tooltiptext="&stopButton.tooltip;"/>
+      </hbox>
+ 
+      <hbox id="nav-bar-inner" flex="1">
+        <textbox id="urlbar" class="chromeclass-location" flex="1"
+                 type="autocomplete" searchSessions="history" 
+                 timeout="50" maxrows="6" alwaysopenpopup="true"
+                 disablehistory="false"
+                 defaultSearchEngine="true" tabScrolling="true"
+                 showCommentColumn="true"
+                 inputtooltiptext="&locationBar.tooltip;"
+                 oninput="window.XULBrowserWindow.userTyped.value=true;"
+                 ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
+                 ontextrevert="return handleURLBarRevert();"
+                 onfocus="URLBarFocusHandler(event);"
+                 onblur="URLBarBlurHandler(event);">
+          <deck id="page-proxy-deck">
+            <image id="page-proxy-button"
+                   ondraggesture="PageProxyDragGesture(event);"
+                   tooltiptext="&proxyIcon.tooltip;"/>
+            <image id="page-proxy-favicon" validate="never"
+                   ondraggesture="PageProxyDragGesture(event);"
+                   onload="this.parentNode.selectedIndex = 1;
+                           event.stopPropagation();
+                           event.preventBubble();
+                           HandleBookmarkIcon(this.src, true);"
+                   onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"
+                   tooltiptext="&proxyIcon.tooltip;"/>
+          </deck>
+
+          <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+                     popupalign="topleft" popupanchor="bottomleft"
+                     onpopupshowing="createUBHistoryMenu(event.target);" 
+                     oncommand="executeUrlBarHistoryCommand(event.target);"/>
+        </textbox>
+
+        <button id="go-button" class="button-toolbar chromeclass-location"
+                label="&goButton.label;" hidden="true" persist="hidden"
+                oncommand="addToUrlbarHistory(); BrowserLoadURL();"
+                ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                tooltiptext="&goButton.tooltip;"/> 
+
+        <button id="search-button" class="button-toolbar chromeclass-location"
+                label="&searchButton.label;" persist="hidden"
+                oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
+                ondragover="nsDragAndDrop.dragOver(event, searchButtonObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, searchButtonObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, searchButtonObserver);"
+                tooltiptext="&searchButton.tooltip;"/> 
+      </hbox>
+
+      <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
+                     label="&printButton.label;" persist="hidden"
+                     oncommand="if (event.target==this) BrowserPrint();"
+                     tooltiptext="&printButton.tooltip;">  
+        <menupopup id="printMenu">
+          <menuitem id="printMenuItemToolbar" label="&printCmd.label;" accesskey="&printCmd.accesskey;"
+                    default="true" oncommand="BrowserPrint()"/>
+          <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"
+                    oncommand="setTimeout(BrowserPrintPreview, 0);"/>
+        </menupopup>
+      </toolbarbutton>
+
+      <hbox id="throbber-box" align="center">
+        <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+                tooltiptext="&throbber.tooltip;"/>
+      </hbox>
+      
+      <hbox id="window-controls" hidden="true" fullscreencontrol="true">
+        <toolbarbutton id="minimize-button" class="toolbarbutton-1"
+                       oncommand="window.minimize();"/>
+
+        <toolbarbutton id="restore-button" class="toolbarbutton-1"
+                       oncommand="BrowserFullScreen();"/>
+
+        <toolbarbutton id="close-button" class="toolbarbutton-1"
+                       oncommand="window.close();"/>
+      </hbox>
+    </toolbar>
+  
+    <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" dragdroparea="innermostBox"
+             ondragover="nsDragAndDrop.dragOver(event, personalToolbarObserver);"
+             ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
+             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
+             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
+             grippytooltiptext="&personalToolbar.tooltip;"
+             tbalign="stretch">
+
+      <toolbarbutton id="home-button" class="bookmark-item"
+                     label="&homeButton.label;" persist="hidden"
+                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
+                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                     oncommand="BrowserHome(); event.preventBubble();"/>
+  
+      <toolbarseparator id="home-bm-separator" persist="hidden"/>
+ 
+      <!-- "Bookmarks" button on personal toolbar -->                           
+      <toolbarbutton type="menu" id="bookmarks-button" class="bookmark-item"
+                     persist="hidden" label="&bookmarksButton.label;"
+                     datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+                     ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
+                     oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 
+                     ondragover="nsDragAndDrop.dragOver(event, folderObserver);"
+                     template="bookmarksMenuTemplate">
+        <menupopup onpopuphiding="gDidOpen = false;"
+                   onpopupshowing="checkBookmarksMenuTemplateBuilder();"
+                   ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                   ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                   ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+          <menuitem accesskey="&addCurPageCmd.accesskey;" key="addBookmarkKb" observes="Browser:AddBookmark"
+                    ondragover="event.preventBubble(); return false;"/>
+          <menuitem accesskey="&addCurPageAsCmd.accesskey;" key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"
+                    ondragover="event.preventBubble(); return false;"/>
+          <menuseparator ondragover="event.preventBubble(); return false;"/>
+          <menuitem accesskey="&manBookmarksCmd.accesskey;" key="manBookmarkKb" observes="Browser:ManageBookmark"
+                    ondragover="event.preventBubble(); return false;"/>
+          <menuseparator id="lastStaticSeparator"/>
+        </menupopup>
+      </toolbarbutton>
+
+      <!-- Personal toolbar items -->
+      <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
+           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+           ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+           oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)">
+        <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
+          <vbox id="ptTooltipTextBox" flex="1">  
+            <label id="ptTitleText" />
+            <label id="ptUrlText" />
+          </vbox>
+        </tooltip>
+        <template xmlns:nc="http://home.netscape.com/NC-rdf#">
+          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <toolbarseparator uri="rdf:*"
+                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+          </rule>
+
+          <!-- yes, the type attribute is necessary otherwise all leaves are 
+               treated as containers for some reason -->
+          <rule parent="hbox" iscontainer="true"
+                nc:FolderGroup="true">
+            <toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
+                           group="true"
+                           container="false"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </rule>
+          <rule parent="hbox" iscontainer="true" isempty="true"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <toolbarbutton type="menu" editable="true" class="bookmark-item"
+                           validate="never"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
+                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
+              <menupopup
+                         ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+                <menuitem label="&emptyItem.label;" disabled="true"/>
+              </menupopup>
+            </toolbarbutton>
+          </rule>
+
+          <rule parent="hbox" iscontainer="true">
+            <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"
+                           image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                           validate="never"
+                           ondraggesture="if (!event.altKey) { event.preventBubble(); return false; }"
+                           ondragover="nsDragAndDrop.dragOver(event, folderObserver);">
+              <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                         ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                         ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();"/>
+            </toolbarbutton>
+          </rule>
+
+          <rule parent="hbox">
+            <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
+                           validate="never"
+                           status="rdf:http://home.netscape.com/WEB-rdf#status"
+                           rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
+                           statustext="rdf:http://home.netscape.com/NC-rdf#URL"
+                           tooltip="ptTooltip"
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </rule>
+
+          <rule iscontainer="true" isempty="true"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <menupopup
+                       ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                  validate="never"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup>
+                  <menuitem label="&emptyItem.label;" disabled="true"
+                      src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                      validate="never"
+                      ondraggesture="event.preventBubble(); return false;"/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </rule>
+
+          <rule iscontainer="true">
+            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+              <menu class="menu-iconic bookmark-item" uri="rdf:*"
+                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    validate="never"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <menupopup/>
+              </menu>
+            </menupopup>
+          </rule>
+
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <menupopup>
+              <menuseparator uri="rdf:*"
+                             type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+            </menupopup>
+          </rule>
+          <rule>
+            <menupopup ondragdrop="nsDragAndDrop.drop(event, menuDNDObserver); event.preventBubble();"
+                       ondragexit="nsDragAndDrop.dragExit(event, menuDNDObserver); event.preventBubble();"
+                       ondragover="nsDragAndDrop.dragOver(event, menuDNDObserver); event.preventBubble();">
+              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                        validate="never"
+                        status="rdf:http://home.netscape.com/WEB-rdf#status"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </menupopup>
+          </rule>
+        </template>
+      </hbox>
+    </toolbar>
+
+  </toolbox>
+    
+  <hbox flex="1">
+    <vbox id="sidebar-box" class="chromeclass-extrachrome"/>
+    <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
+  
+    <!-- we only need to handle |ondragdrop| because everything else is
+          taken care of by the builtin behavior inside the tabbrowser -->
+    <vbox id="appcontent" flex="1"
+         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+
+      <!-- this box is temporary, pending XBLified <browser> -->
+      <hbox id="browser" flex="1">
+        <tabbrowser id="content"
+                 flex="1" contenttooltip="aHTMLTooltip"
+                 contentcontextmenu="contentAreaContextMenu"
+                 onclick="return contentAreaClick(event);"/>
+      </hbox>
+    </vbox>  
+  </hbox>
+
+  <statusbar id="status-bar" class="chromeclass-status"
+             ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+    <statusbarpanel id="component-bar"/>
+    <statusbarpanel id="statusbar-display" label="&statusText.label;" flex="1"/>
+    <statusbarpanel class="statusbarpanel-progress">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+    </statusbarpanel>
+    <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
+    <statusbarpanel class="statusbarpanel-iconic" id="security-button"/>
+  </statusbar> 
+
+</window>
