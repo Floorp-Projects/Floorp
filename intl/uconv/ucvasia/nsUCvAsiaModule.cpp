@@ -97,6 +97,21 @@
 #include "nsUnicodeToCP949.h"
 #include "nsISO2022KRToUnicode.h"
 
+// ucvcn
+#include "nsUCvCnCID.h"
+#include "nsUCvCnDll.h"
+#include "nsHZToUnicode.h"
+#include "nsUnicodeToHZ.h"
+#include "nsGBKToUnicode.h"
+#include "nsUnicodeToGBK.h"
+#include "nsUnicodeToGBKNoAscii.h"
+#include "nsCP936ToUnicode.h"
+#include "nsUnicodeToCP936.h"
+#include "nsGB2312ToUnicodeV2.h"
+#include "nsUnicodeToGB2312V2.h"
+#include "nsUnicodeToGB2312GL.h"
+#include "gbku.h"
+
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -216,7 +231,7 @@ PRUint16 g_ufKSC5601Mapping[] = {
 #include "u20kscgl.uf"
 };
 
-PRUint16 g_AsciiMapping[] = {
+PRUint16 g_ucvko_AsciiMapping[] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
 };
 PRUint16 g_HangulNullMapping[] ={
@@ -262,6 +277,17 @@ NS_UCONV_REG_UNREG_DECODER("ISO-2022-KR", NS_ISO2022KRTOUNICODE_CID)
 NS_UCONV_REG_UNREG_ENCODER("ks_c_5601-1987",  NS_UNICODETOKSC5601_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-x11johab",  NS_UNICODETOX11JOHAB_CID)
 NS_UCONV_REG_UNREG_ENCODER("x-johab-noascii",  NS_UNICODETOJOHABNOASCII_CID)
+
+// ucvcn
+NS_UCONV_REG_UNREG("GB2312", NS_GB2312TOUNICODE_CID, NS_UNICODETOGB2312_CID)
+NS_UCONV_REG_UNREG("windows-936", NS_CP936TOUNICODE_CID, NS_UNICODETOCP936_CID)
+NS_UCONV_REG_UNREG("x-gbk", NS_GBKTOUNICODE_CID, NS_UNICODETOGBK_CID)
+NS_UCONV_REG_UNREG_ENCODER("x-gbk-noascii",  NS_UNICODETOGBKNOASCII_CID)
+NS_UCONV_REG_UNREG("HZ-GB-2312", NS_HZTOUNICODE_CID, NS_UNICODETOHZ_CID)
+NS_UCONV_REG_UNREG_ENCODER("gb_2312-80",  NS_UNICODETOGB2312GL_CID)
+NS_UCONV_REG_UNREG("gb18030", NS_GB18030TOUNICODE_CID, NS_UNICODETOGB18030_CID)
+NS_UCONV_REG_UNREG_ENCODER("gb18030.2000-0",  NS_UNICODETOGB18030Font0_CID)
+NS_UCONV_REG_UNREG_ENCODER("gb18030.2000-1",  NS_UNICODETOGB18030Font1_CID)
 
 NS_CONVERTER_REGISTRY_END
 
@@ -309,6 +335,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP949ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP949);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022KRToUnicode);
 
+// ucvcn
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGB2312ToUnicodeV2);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB2312V2);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP936ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP936);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGBKToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGBK);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGBKNoAscii);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHZToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToHZ);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB2312GL);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGB18030ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030Font0);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB18030Font1);
 
 static const nsModuleComponentInfo components[] = 
 {
@@ -366,8 +407,6 @@ static const nsModuleComponentInfo components[] =
     DECODER_NAME_BASE "x-euc-tw" , NS_EUCTWTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "x-euc-tw",
     nsEUCTWToUnicodeConstructor,
-    // global converter registration
-    nsUConverterRegSelf, nsUConverterUnregSelf
   },
   { 
     ENCODER_NAME_BASE "x-euc-tw" , NS_UNICODETOEUCTW_CID, 
@@ -415,8 +454,6 @@ static const nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "Big5" , NS_UNICODETOBIG5_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "Big5",
     nsUnicodeToBIG5Constructor,
-    // global converter registration
-    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     ENCODER_NAME_BASE "x-x-big5" , NS_UNICODETOBIG5NOASCII_CID, 
@@ -449,8 +486,6 @@ static const nsModuleComponentInfo components[] =
     DECODER_NAME_BASE "EUC-KR" , NS_EUCKRTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "EUC-KR",
     nsEUCKRToUnicodeConstructor ,
-    // global converter registration
-    nsUConverterRegSelf, nsUConverterUnregSelf,
   },
   { 
     ENCODER_NAME_BASE "EUC-KR" , NS_UNICODETOEUCKR_CID, 
@@ -496,7 +531,79 @@ static const nsModuleComponentInfo components[] =
     DECODER_NAME_BASE "ISO-2022-KR" , NS_ISO2022KRTOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "ISO-2022-KR",
     nsISO2022KRToUnicodeConstructor ,
-  }
+  },
+  // ucvcn
+  { 
+    DECODER_NAME_BASE "GB2312" , NS_GB2312TOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "GB2312",
+    nsGB2312ToUnicodeV2Constructor ,
+  },
+  { 
+    ENCODER_NAME_BASE "GB2312" , NS_UNICODETOGB2312_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "GB2312",
+    nsUnicodeToGB2312V2Constructor, 
+  },
+  { 
+    DECODER_NAME_BASE "windows-936" , NS_CP936TOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "windows-936",
+    nsCP936ToUnicodeConstructor ,
+  },
+  { 
+    ENCODER_NAME_BASE "windows-936" , NS_UNICODETOCP936_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "windows-936",
+    nsUnicodeToCP936Constructor, 
+  },
+  { 
+    DECODER_NAME_BASE "x-gbk" , NS_GBKTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-gbk",
+    nsGBKToUnicodeConstructor ,
+  },
+  { 
+    ENCODER_NAME_BASE "x-gbk" , NS_UNICODETOGBK_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-gbk",
+    nsUnicodeToGBKConstructor, 
+  },  
+  { 
+    ENCODER_NAME_BASE "x-gbk-noascii" , NS_UNICODETOGBKNOASCII_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-gbk-noascii",
+    nsUnicodeToGBKNoAsciiConstructor, 
+  },  
+  { 
+    DECODER_NAME_BASE "HZ-GB-2312" , NS_HZTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "HZ-GB-2312",
+    nsHZToUnicodeConstructor ,
+  },  
+  { 
+    ENCODER_NAME_BASE "HZ-GB-2312" , NS_UNICODETOHZ_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "HZ-GB-2312",
+    nsUnicodeToHZConstructor, 
+  },  
+  { 
+    ENCODER_NAME_BASE "gb_2312-80" , NS_UNICODETOGB2312GL_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb_2312-80",
+    nsUnicodeToGB2312GLConstructor, 
+  },
+  { 
+    DECODER_NAME_BASE "gb18030" , NS_GB18030TOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "gb18030",
+    nsGB18030ToUnicodeConstructor ,
+  },  
+  { 
+    ENCODER_NAME_BASE "gb18030.2000-0" , NS_UNICODETOGB18030Font0_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb18030.2000-0",
+    nsUnicodeToGB18030Font0Constructor, 
+  },  
+  { 
+    ENCODER_NAME_BASE "gb18030.2000-1" , NS_UNICODETOGB18030Font1_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb18030.2000-1",
+    nsUnicodeToGB18030Font1Constructor, 
+  },  
+  { 
+    ENCODER_NAME_BASE "gb18030" , NS_UNICODETOGB18030_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "gb18030",
+    nsUnicodeToGB18030Constructor, 
+  },
+
 };
 
 NS_IMPL_NSGETMODULE(nsUCvAsiaModule, components);

@@ -42,13 +42,11 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)ucvutil_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)ucvcn_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvlatin_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ucvibm_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
-				-I$(srcdir)/../ucvcn \
 				-I$(srcdir)/../ucvlatin \
 				-I$(srcdir)/../ucvibm \
 				$(NULL)
