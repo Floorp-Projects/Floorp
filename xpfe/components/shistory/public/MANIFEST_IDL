@@ -1,3 +1,4 @@
 nsIShEntry.idl   \
 nsISHTransaction.idl \
-nsISHContainer.idl
+nsISHContainer.idl  \
+nsISHistory.idl 

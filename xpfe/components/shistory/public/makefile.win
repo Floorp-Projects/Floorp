@@ -27,6 +27,7 @@ XPIDLSRCS =                   \
     .\nsISHEntry.idl          \
     .\nsISHContainer.idl      \
     .\nsISHTransaction.idl    \
+    .\nsISHistory.idl         \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
