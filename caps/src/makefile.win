@@ -72,7 +72,6 @@ CPP_OBJS=                                       \
     .\$(OBJDIR)\nsCCodebasePrincipal.obj    \
     .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
     .\$(OBJDIR)\nsCCodeSourcePrincipal.obj  \
-    .\$(OBJDIR)\nsXPCSecurityManager.obj    \
     $(NULL)
 
 

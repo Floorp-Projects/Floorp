@@ -24,13 +24,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS	= \
-	nsIPrincipal.h \
 	nsICodebasePrincipal.h \
 	nsICertPrincipal.h \
 	nsICapsManager.h  \
 	nsICodeSourcePrincipal.h \
 	nsCapsPublicEnums.h \
-	nsICapsSecurityCallbacks.h \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

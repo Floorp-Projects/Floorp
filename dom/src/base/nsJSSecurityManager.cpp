@@ -12,7 +12,7 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
@@ -30,6 +30,7 @@
 #include "nsIPref.h"
 #include "nsIURL.h"
 
+static NS_DEFINE_IID(kIXPCSecurityManagerIID, NS_IXPCSECURITYMANAGER_IID);
 static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
 static NS_DEFINE_IID(kICapsSecurityCallbacksIID, NS_ICAPSSECURITYCALLBACKS_IID);
 static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
@@ -44,7 +45,7 @@ nsJSSecurityManager::nsJSSecurityManager()
   NS_INIT_REFCNT();
   mCapsManager = nsnull;
   mPrefs = nsnull;
-}
+ }
 
 nsJSSecurityManager::~nsJSSecurityManager()
 {
@@ -52,7 +53,8 @@ nsJSSecurityManager::~nsJSSecurityManager()
   NS_IF_RELEASE(mCapsManager);
 }
 
-nsresult nsJSSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+NS_IMETHODIMP
+nsJSSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -67,6 +69,11 @@ nsresult nsJSSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIXPCSecurityManagerIID)) {
+	*aInstancePtr = (void*)(nsIXPCSecurityManager*)this;
+	NS_ADDREF_THIS();
+	return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -80,26 +87,29 @@ nsJSSecurityManager::Init()
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::CheckScriptAccess(nsIScriptContext* aContext, 
-                                       void* aObj, 
-                                       const char* aProp, 
-                                       PRBool* aResult)
+nsJSSecurityManager::CheckScriptAccess(nsIScriptContext* aContext, void* aObj, 
+                                       const char* aProp, PRBool* aResult)
 {
-  /* temporarily disable security checks */
-  *aResult = PR_TRUE;
-  return NS_OK;
-#if 0
+#ifdef SECURITY_ENABLED
   *aResult = PR_FALSE;
   JSContext* cx = (JSContext*)aContext->GetNativeContext();
   PRInt32 secLevel = CheckForPrivilege(cx, (char*)aProp, nsnull);
 
-  if (SCRIPT_SECURITY_ALL_ACCESS == secLevel) {
-    *aResult = PR_TRUE;
+  switch (secLevel) {
+    case SCRIPT_SECURITY_ALL_ACCESS:
+      *aResult = PR_TRUE;
+      return NS_OK;
+
+    case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS:
+      return CheckPermissions(cx, (JSObject*)aObj, eJSTarget_Max, aResult);
+
+    default:
+      // Default is no access
+      *aResult = PR_FALSE;
+      return NS_OK;
   }
-  else if (SCRIPT_SECURITY_SAME_DOMAIN_ACCESS == secLevel) {
-    return CheckPermissions(cx, (JSObject*)aObj, eJSTarget_Max, aResult);
-  }
-  //Default is no access
+#else
+  *aResult = PR_TRUE;
   return NS_OK;
 #endif
 }
@@ -113,7 +123,6 @@ nsJSSecurityManager::InitCaps(void)
 
   nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID,
                                               (nsISupports**)&mCapsManager);
-
   if ((NS_OK == res) && (nsnull != mCapsManager)) {
     mCapsManager->InitializeFrameWalker(this);
   }
@@ -123,7 +132,7 @@ static nsString gUnknownOriginStr("[unknown origin]");
 static nsString gFileDoubleSlashUrlPrefix("file://");
 static nsString gFileUrlPrefix("file:");
 
-/* This array must be kept in sync with the eJSTarget enum in nsIScripSecurityManager.h */
+/* This array must be kept in sync with nsIScriptSecurityManager.idl */
 static char * targetStrings[] = {
   "UniversalBrowserRead",
   "UniversalBrowserWrite",
@@ -290,7 +299,7 @@ lm_InitSecurity(MochaDecoder *decoder)
   */
 
 NS_IMETHODIMP
-nsJSSecurityManager::GetSubjectOriginURL(JSContext *aCx, nsString* aOrigin)
+nsJSSecurityManager::GetSubjectOriginURL(JSContext *aCx, nsString **aOrigin)
 {
   /*
    * Get origin from script of innermost interpreted frame.
@@ -321,16 +330,17 @@ nsJSSecurityManager::GetSubjectOriginURL(JSContext *aCx, nsString* aOrigin)
     script = JS_GetFrameScript(aCx, fp);
     if (script) {
       principals = JS_GetScriptPrincipals(aCx, script);
-      aOrigin = new nsString(principals ? principals->codebase : JS_GetScriptFilename(aCx, script));
-      return NS_OK;
+      *aOrigin = new nsString(principals ? principals->codebase 
+                                         : JS_GetScriptFilename(aCx, script));
+      return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
     fp = JS_FrameIterator(aCx, &fp);
   }
 #ifdef OJI
   principals = JVM_GetJavaPrincipalsFromStack(pFrameToStartLooking);
-  if (nsnull == principals) {
-    aOrigin = new nsString(principals->codebase);
-    return NS_OK;
+  if (principals) {
+    *aOrigin = new nsString(principals->codebase);
+    return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
 #endif
 
@@ -342,12 +352,12 @@ nsJSSecurityManager::GetSubjectOriginURL(JSContext *aCx, nsString* aOrigin)
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::GetObjectOriginURL(JSContext *aCx, JSObject *aObj, nsString* aOrigin)
+nsJSSecurityManager::GetObjectOriginURL(JSContext *aCx, JSObject *aObj, nsString** aOrigin)
 {
   JSPrincipals *principals;
   GetContainerPrincipals(aCx, aObj, &principals);
-  aOrigin = new nsString(principals ? principals->codebase : nsnull);
-  return NS_OK;
+  *aOrigin = new nsString(principals ? principals->codebase : nsnull);
+  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 //+++
@@ -450,7 +460,7 @@ nsJSSecurityManager::GetCompilationPrincipals(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::CanAccessTarget(JSContext *aCx, eJSTarget aTarget, PRBool* aReturn)
+nsJSSecurityManager::CanAccessTarget(JSContext *aCx, PRInt16 aTarget, PRBool* aReturn)
 {
   JSPrincipals *principals;
   *aReturn = PR_TRUE;
@@ -480,7 +490,7 @@ nsJSSecurityManager::CanAccessTarget(JSContext *aCx, eJSTarget aTarget, PRBool* 
  * to the given target.
  */
 PRBool
-nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, eJSTarget aTarget)
+nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
 {
   struct nsPrivilegeTable *annotation;
   JSStackFrame *fp;
@@ -580,17 +590,20 @@ nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, eJSTarget aTarget
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, eJSTarget aTarget, PRBool* aReturn)
+nsJSSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, PRInt16 aTarget, PRBool* aReturn)
 {
   nsString* subjectOrigin = nsnull;
   nsString* objectOrigin = nsnull;
   nsISupports* running;
   nsIScriptGlobalObjectData *globalData;
   JSPrincipals *principals;
-
+  nsresult rv=NS_OK;
+  
   /* May be in a layer loaded from a different origin.*/
-  GetSubjectOriginURL(aCx, subjectOrigin);
-
+  rv = GetSubjectOriginURL(aCx, &subjectOrigin);
+  if(rv != NS_OK)
+    return rv;
+  
   /*
    * Hold onto reference to the running decoder's principals
    * in case a call to GetObjectOriginURL ends up
@@ -608,9 +621,9 @@ nsJSSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, eJSTarget 
     JSPRINCIPALS_HOLD(aCx, principals);
   }
 
-  GetObjectOriginURL(aCx, aObj, objectOrigin);
+  rv = GetObjectOriginURL(aCx, aObj, &objectOrigin);
 
-  if (!subjectOrigin || !objectOrigin) {
+  if (rv != NS_OK || !subjectOrigin || !objectOrigin) {
     *aReturn = PR_FALSE;
     goto out;
   }
@@ -655,7 +668,7 @@ out:
 
 NS_IMETHODIMP
 nsJSSecurityManager::CheckContainerAccess(JSContext *aCx, JSObject *aObj,
-                                eJSTarget aTarget, PRBool* aReturn)
+                                PRInt16 aTarget, PRBool* aReturn)
 {
   JSPrincipals *principals;
   nsJSPrincipalsData *data;
@@ -748,7 +761,7 @@ nsJSSecurityManager::CheckContainerAccess(JSContext *aCx, JSObject *aObj,
         *aReturn = PR_TRUE;
         return NS_OK;
       }
-      GetSubjectOriginURL(aCx, fn);
+      GetSubjectOriginURL(aCx, &fn);
       if (!fn) {
         *aReturn = PR_FALSE;
         return NS_OK;
@@ -776,14 +789,10 @@ nsJSSecurityManager::CheckContainerAccess(JSContext *aCx, JSObject *aObj,
 NS_IMETHODIMP
 nsJSSecurityManager::GetContainerPrincipals(JSContext *aCx, JSObject *container, JSPrincipals** aPrincipals)
 {
-  //Start from topmost item.
-  while (nsnull != (container = JS_GetParent(aCx, container)));
-
   *aPrincipals = nsnull;
 
   // Need to check that the origin hasn't changed underneath us
   char* originUrl = FindOriginURL(aCx, container);
-
   if (!originUrl) {
     return NS_ERROR_FAILURE;
   }
@@ -863,7 +872,7 @@ nsJSSecurityManager::CanCaptureEvent(JSContext *aCx, JSFunction *aFun, JSObject 
     *aReturn = PR_FALSE;
     return NS_OK;
   }
-  GetObjectOriginURL(aCx, aEventTarget, origin);
+  GetObjectOriginURL(aCx, aEventTarget, &origin);
   char* originChar;
   if (origin) {
     originChar = origin->ToNewCString();
@@ -914,7 +923,7 @@ nsJSSecurityManager::SetExternalCapture(JSContext *aCx, JSPrincipals *aPrincipal
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::CheckSetParentSlot(JSContext *aCx, JSObject *aObj, jsval aId, jsval *aVp, PRBool* aReturn)
+nsJSSecurityManager::CheckSetParentSlot(JSContext *aCx, JSObject *aObj, jsval *aVp, PRBool* aReturn)
 {
   JSObject *newParent;
   *aReturn = PR_TRUE;
@@ -927,11 +936,11 @@ nsJSSecurityManager::CheckSetParentSlot(JSContext *aCx, JSObject *aObj, jsval aI
     nsString* oldOrigin = nsnull;
     nsString* newOrigin = nsnull;
     
-    GetObjectOriginURL(aCx, aObj, oldOrigin);
+    GetObjectOriginURL(aCx, aObj, &oldOrigin);
     if (!oldOrigin) {
       return NS_ERROR_FAILURE;
     }
-    GetObjectOriginURL(aCx, newParent, newOrigin);
+    GetObjectOriginURL(aCx, newParent, &newOrigin);
     if (!newOrigin) {
       delete oldOrigin;
       return NS_ERROR_FAILURE;
@@ -964,6 +973,7 @@ nsJSSecurityManager::SetDocumentDomain(JSContext *aCx, JSPrincipals *aPrincipals
                                        nsString* aNewDomain, PRBool* aReturn)
 {
   nsJSPrincipalsData *data;
+  nsresult result;
 
   if (aNewDomain->Equals(aPrincipals->codebase)) {
     *aReturn = PR_TRUE;
@@ -976,7 +986,10 @@ nsJSSecurityManager::SetDocumentDomain(JSContext *aCx, JSPrincipals *aPrincipals
   else {
     delete aPrincipals->codebase;
   }
-  nsString* codebaseStr = GetOriginFromSourceURL(aNewDomain);
+
+  nsString* codebaseStr;
+  if ((result = GetOriginFromSourceURL(aNewDomain, &codebaseStr)) != NS_OK)
+      return result;
 
   if (!codebaseStr) {
     return NS_ERROR_FAILURE;
@@ -1115,11 +1128,12 @@ static nsJSPrincipalsData unknownPrincipals = {
   nsnull
 };
 
-nsString*
-nsJSSecurityManager::GetOriginFromSourceURL(nsString* aSourceURL)
+NS_IMETHODIMP
+nsJSSecurityManager::GetOriginFromSourceURL(nsString* aSourceURL, nsString **result)
 {
   if (aSourceURL->Length() == 0 || aSourceURL->EqualsIgnoreCase(gUnknownOriginStr)) {
-    return &gUnknownOriginStr;
+    *result = nsnull;
+    return NS_OK;
   }
 #if 0 //need to get url type 
   int urlType;
@@ -1127,7 +1141,8 @@ nsJSSecurityManager::GetOriginFromSourceURL(nsString* aSourceURL)
   urlType = NET_URL_Type(sourceURL);
   if (urlType == MOCHA_TYPE_URL) {
     NS_ASSERTION(PR_FALSE, "Invalid URL type");/* this shouldn't occur */
-    return &gUnknownOriginStr;
+    *result = nsnull;
+    return NS_OK;
   }
 #endif
   nsAutoString sourceURL(*aSourceURL);
@@ -1139,13 +1154,13 @@ nsJSSecurityManager::GetOriginFromSourceURL(nsString* aSourceURL)
 
   char* chS = sourceURL.ToNewCString();
   if (!chS) {
-    return &gUnknownOriginStr;
+    *result = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char *result = ParseURL(chS, GET_PROTOCOL_PART|GET_HOST_PART|GET_PATH_PART);
+  *result = new nsString(ParseURL(chS, GET_PROTOCOL_PART|GET_HOST_PART|GET_PATH_PART));
   delete chS;
-
-  return new nsString(result);
+  return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -1199,7 +1214,10 @@ nsJSSecurityManager::NewJSPrincipals(nsIURI *aURL, nsString* aName, nsString* aC
     return NS_ERROR_FAILURE;
   }
   
-  nsString* codebaseStr = GetOriginFromSourceURL(aCodebase);
+  nsString* codebaseStr;
+  nsresult rv;
+  if ((rv = GetOriginFromSourceURL(aCodebase, &codebaseStr)) != NS_OK)
+      return rv;
   
   if (!codebaseStr) {
     PR_Free(result);
@@ -1559,7 +1577,7 @@ NS_IMETHODIMP
 nsJSSecurityManager::CanAccessTargetStr(JSContext *aCx, const char *target, PRBool* aReturn)
 {
     int      intTarget = findTarget(target);
-    eJSTarget eJSTarget;
+    PRInt16 eJSTarget;
     if(intTarget < 0)
     {
       return PR_FALSE;
@@ -2110,16 +2128,16 @@ nsJSSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str)
   char *retval = 0;
 
   if ((policy_str = GetSitePolicy(subjectOrigin)) == 0) {
-  /* No site-specific policy.  Get global policy name. */
+    /* No site-specific policy.  Get global policy name. */
 
-	if (NS_OK != mPrefs->CopyCharPref("javascript.security_policy", (char**)&policy_str))
-    policy_str = PL_strcpy(policy_str, "default");
+    if (NS_OK != mPrefs->CopyCharPref("javascript.security_policy", &policy_str))
+      policy_str = PL_strdup("default");
   }
   if (policy_str) { //why can't this be default? && PL_strcasecmp(policy_str, "default") != 0) {
     retval = PR_sprintf_append(NULL, "js_security.%s.%s", policy_str, pref_str);
+    PR_Free(policy_str);
   }
 
-  PR_FREEIF(policy_str);
   return retval;
 }
 
@@ -2945,3 +2963,58 @@ extern "C" NS_DOM nsresult NS_NewScriptSecurityManager(nsIScriptSecurityManager 
   return ret;
 }
 
+NS_IMETHODIMP
+nsJSSecurityManager::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, 
+                                      nsISupports *aObj)
+{
+#if 0
+    nsString* aOrigin=nsnull;
+    nsresult rv=this->GetSubjectOriginURL(aJSContext, &aOrigin);
+#endif
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
+{
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanGetService(JSContext * aJSContext, const nsCID & aCID)
+{
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanCallMethod(JSContext * aJSContext, 
+                                   const nsIID & aIID, 
+                                   nsISupports *aObj, 
+                                   nsIInterfaceInfo *aInterfaceInfo, 
+                                   PRUint16 aMethodIndex, 
+                                   const jsid aName)
+{
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanGetProperty(JSContext * aJSContext, 
+                                    const nsIID & aIID, 
+                                    nsISupports *aObj, 
+                                    nsIInterfaceInfo *aInterfaceInfo, 
+                                    PRUint16 aMethodIndex, 
+                                    const jsid aName)
+{
+     return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsJSSecurityManager::CanSetProperty(JSContext * aJSContext, 
+                                    const nsIID & aIID, 
+                                    nsISupports *aObj, 
+                                    nsIInterfaceInfo *aInterfaceInfo, 
+                                    PRUint16 aMethodIndex, 
+                                    const jsid aName)
+{
+    return NS_OK;
+}
