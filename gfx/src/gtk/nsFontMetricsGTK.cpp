@@ -3966,7 +3966,12 @@ nsFontMetricsGTK::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCStr
       ffreName.Append(*aName);
       FFRESubstituteCharset(ffreName, charSetMap->mName); 
       FIND_FONT_PRINTF(("      %s ffre = %s", charSetMap->mName, ffreName.get()));
-      font = TryNode(&ffreName, aChar);
+      if(aName->First() == '*') {
+         // called from TryFamily()
+         font = TryNodes(ffreName, aChar);
+      } else {
+         font = TryNode(&ffreName, aChar);
+      }
       NS_ASSERTION(font ? font->SupportsChar(aChar) : 1, "font supposed to support this char");
     } else {
       // no name was specified so call TryNodes() for this charset
