@@ -20,6 +20,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -204,12 +205,54 @@ NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, Ch, ch, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, ChOff, choff, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign, eSetAttrNotify_Reflow)
 
+
 NS_IMETHODIMP
 nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
                                   const nsString& aValue,
                                   nsHTMLValue& aResult)
 {
-  // XXX write me
+  /* ignore these attributes, stored simply as strings
+     ch
+   */
+  /* attributes that resolve to integers */
+  if (aAttribute == nsHTMLAtoms::choff) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents */
+  else if (aAttribute == nsHTMLAtoms::height) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents or proportions */
+  else if (aAttribute == nsHTMLAtoms::width) {
+    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* other attributes */
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseTableHAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::background) {
+    nsAutoString href(aValue);
+    href.StripWhitespace();
+    aResult.SetStringValue(href);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::bgcolor) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -218,7 +261,22 @@ nsHTMLTableRowElement::AttributeToString(nsIAtom* aAttribute,
                                   nsHTMLValue& aValue,
                                   nsString& aResult) const
 {
-  // XXX write me
+  /* ignore these attributes, stored already as strings
+     ch
+   */
+  /* ignore attributes that are of standard types
+     choff, height, width, background, bgcolor
+   */
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -227,8 +285,44 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
+  if (nsnull!=aAttributes)
+  {
+    nsHTMLValue value;
+    nsHTMLValue widthValue;
+    nsStyleText* textStyle = nsnull;
+
+    // align: enum
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
+    }
+  
+    // valign: enum
+    aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+
+    // height: pixel
+    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      float p2t = aPresContext->GetPixelsToTwips();
+      nsStylePosition* pos = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mHeight.SetCoordValue(twips);
+    }
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+    nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  }
 }
 
 NS_IMETHODIMP

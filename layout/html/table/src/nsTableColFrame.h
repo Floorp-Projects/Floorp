@@ -29,11 +29,19 @@ public:
         eWIDTH_SOURCE_CELL_WITH_SPAN=2    // a cell implicitly specified a width via colspan
   };
 
-  void Init(PRInt32 aColIndex, PRInt32 aRepeat);
+  void InitColFrame(PRInt32 aColIndex, PRInt32 aRepeat);
 
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
+  /** instantiate a new instance of nsTableColFrame.
+    * @param aResult    the new object is returned in this out-param
+    * @param aContent   the table object to map
+    * @param aParent    the parent of the new frame
+    *
+    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    */
+  friend nsresult 
+  NS_NewTableColFrame(nsIContent* aContent,
+                      nsIFrame*   aParentFrame,
+                      nsIFrame*&  aResult);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -104,7 +112,7 @@ protected:
 };
 
 
-inline void nsTableColFrame::Init(PRInt32 aColIndex, PRInt32 aRepeat)
+inline void nsTableColFrame::InitColFrame(PRInt32 aColIndex, PRInt32 aRepeat)
 {
   NS_ASSERTION(0<=aColIndex, "bad col index param");
   NS_ASSERTION(0<=aRepeat, "bad repeat param");

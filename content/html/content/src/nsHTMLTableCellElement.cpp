@@ -16,10 +16,12 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -28,29 +30,40 @@
 #include "nsIPresContext.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
+static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
-class nsHTMLTableCellElement : public nsIDOMHTMLTableCellElement,
-                        public nsIScriptObjectOwner,
-                        public nsIDOMEventReceiver,
-                        public nsIHTMLContent
+class nsHTMLTableCellElement :  public nsIHTMLTableCellElement,
+                                public nsIDOMHTMLTableCellElement,
+                                public nsIScriptObjectOwner,
+                                public nsIDOMEventReceiver,
+                                public nsIHTMLContent
 {
 public:
   nsHTMLTableCellElement(nsIAtom* aTag);
   ~nsHTMLTableCellElement();
 
-  // nsISupports
+// nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIDOMNode
+// nsIHTMLTableCellElement
+
+  /** @return the starting column for this cell.  Always >= 1 */
+  NS_METHOD GetColIndex (PRInt32* aColIndex);
+
+  /** set the starting column for this cell.  Always >= 1 */
+  NS_METHOD SetColIndex (PRInt32 aColIndex);
+
+
+// nsIDOMNode
   NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
 
-  // nsIDOMElement
+// nsIDOMElement
   NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
 
-  // nsIDOMHTMLElement
+// nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
-  // nsIDOMHTMLTableCellElement
+// nsIDOMHTMLTableCellElement
   NS_IMETHOD GetCellIndex(PRInt32* aCellIndex);
   NS_IMETHOD SetCellIndex(PRInt32 aCellIndex);
   NS_IMETHOD GetAbbr(nsString& aAbbr);
@@ -82,20 +95,21 @@ public:
   NS_IMETHOD GetWidth(nsString& aWidth);
   NS_IMETHOD SetWidth(const nsString& aWidth);
 
-  // nsIScriptObjectOwner
+// nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
 
-  // nsIDOMEventReceiver
+// nsIDOMEventReceiver
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
-  // nsIContent
+// nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
 
-  // nsIHTMLContent
+// nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  PRInt32 mColIndex;
 };
 
 nsresult
@@ -116,6 +130,7 @@ nsHTMLTableCellElement::nsHTMLTableCellElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mColIndex=0;
 }
 
 nsHTMLTableCellElement::~nsHTMLTableCellElement()
@@ -136,6 +151,12 @@ nsHTMLTableCellElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     mRefCnt++;
     return NS_OK;
   }
+  else if (aIID.Equals(kIHTMLTableCellElementIID)) {
+    nsIHTMLTableCellElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    mRefCnt++;
+    return NS_OK;
+  }
   return NS_NOINTERFACE;
 }
 
@@ -148,6 +169,20 @@ nsHTMLTableCellElement::CloneNode(nsIDOMNode** aReturn)
   }
   mInner.CopyInnerTo(this, &it->mInner);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+}
+
+/** @return the starting column for this cell in aColIndex.  Always >= 1 */
+NS_METHOD nsHTMLTableCellElement::GetColIndex (PRInt32* aColIndex)
+{ 
+  *aColIndex = mColIndex;
+  return NS_OK;
+}
+
+/** set the starting column for this cell.  Always >= 1 */
+NS_METHOD nsHTMLTableCellElement::SetColIndex (PRInt32 aColIndex)
+{ 
+  mColIndex = aColIndex;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -179,12 +214,73 @@ NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Scope, scope, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, VAlign, valign, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Width, width, eSetAttrNotify_Reflow)
 
+
+static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
+  { "row",      NS_STYLE_CELL_SCOPE_ROW },
+  { "col",      NS_STYLE_CELL_SCOPE_COL },
+  { "rowgroup", NS_STYLE_CELL_SCOPE_ROWGROUP },
+  { "colgroup", NS_STYLE_CELL_SCOPE_COLGROUP },
+  { 0 }
+};
+
 NS_IMETHODIMP
 nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
                                    const nsString& aValue,
                                    nsHTMLValue& aResult)
 {
-  // XXX write me
+  /* ignore these attributes, stored simply as strings
+     abbr, axis, ch, headers
+   */
+  /* attributes that resolve to integers */
+  if ((aAttribute == nsHTMLAtoms::choff)   ||
+      (aAttribute == nsHTMLAtoms::colspan) ||
+      (aAttribute == nsHTMLAtoms::rowspan)) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents */
+  else if (aAttribute == nsHTMLAtoms::height) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+
+  /* attributes that resolve to integers or percents or proportions */
+  else if (aAttribute == nsHTMLAtoms::width) {
+    nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  
+  /* other attributes */
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseTableHAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::background) {
+    nsAutoString href(aValue);
+    href.StripWhitespace();
+    aResult.SetStringValue(href);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::bgcolor) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::nowrap) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  else if (aAttribute == nsHTMLAtoms::scope) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kCellScopeTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -193,7 +289,27 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
                                    nsHTMLValue& aValue,
                                    nsString& aResult) const
 {
-  // XXX write me
+  /* ignore these attributes, stored already as strings
+     abbr, axis, ch, headers
+   */
+  /* ignore attributes that are of standard types
+     choff, colspan, rowspan, height, width, nowrap, background, bgcolor
+   */
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::scope) {
+    if (nsGenericHTMLElement::EnumValueToString(aValue, kCellScopeTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -202,8 +318,68 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
+  if (nsnull!=aAttributes)
+  {
+    nsHTMLValue value;
+    nsHTMLValue widthValue;
+    nsStyleText* textStyle = nsnull;
+
+    // align: enum
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
+    }
+  
+    // valign: enum
+    aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+
+    // width: pixel
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStylePosition* pos = (nsStylePosition*)
+      aContext->GetMutableStyleData(eStyleStruct_Position);
+    aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
+    if (widthValue.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(widthValue.GetPixelValue(), p2t);
+      pos->mWidth.SetCoordValue(twips);
+    }
+    else if (widthValue.GetUnit() == eHTMLUnit_Percent) {
+      pos->mWidth.SetPercentValue(widthValue.GetPercentValue());
+    }
+
+    // height: pixel
+    aAttributes->GetAttribute(nsHTMLAtoms::height, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
+      pos->mHeight.SetCoordValue(twips);
+    }
+
+    // nowrap
+    // nowrap depends on the width attribute, so be sure to handle it after width is mapped!
+    aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
+    if (value.GetUnit() == eHTMLUnit_Empty)
+    {
+      if (widthValue.GetUnit() != eHTMLUnit_Pixel)
+      {
+        if (nsnull==textStyle)
+          textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+        textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
+      }
+    }
+
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+    nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  }
 }
 
 NS_IMETHODIMP

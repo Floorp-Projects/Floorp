@@ -31,9 +31,17 @@
 class nsTableColGroupFrame : public nsContainerFrame
 {
 public:
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
+  /** instantiate a new instance of nsTableColGroupFrame.
+    * @param aResult    the new object is returned in this out-param
+    * @param aContent   the table object to map
+    * @param aParent    the parent of the new frame
+    *
+    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    */
+  friend nsresult 
+  NS_NewTableColGroupFrame(nsIContent* aContent,
+                           nsIFrame*   aParentFrame,
+                           nsIFrame*&  aResult);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,

@@ -26,6 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIHTMLAttributes.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTableCaptionElementIID, NS_IDOMHTMLTABLECAPTIONELEMENT_IID);
 
@@ -124,12 +125,24 @@ nsHTMLTableCaptionElement::CloneNode(nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align, eSetAttrNotify_Reflow)
 
+static nsGenericHTMLElement::EnumTable kTableCaptionAlignTable[] = {
+  { "left",  NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "top",   NS_STYLE_VERTICAL_ALIGN_TOP},
+  { "bottom",NS_STYLE_VERTICAL_ALIGN_BOTTOM},
+  { 0 }
+};
+
 NS_IMETHODIMP
 nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
                                       const nsString& aValue,
                                       nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kTableCaptionAlignTable, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -138,7 +151,12 @@ nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
                                       nsHTMLValue& aValue,
                                       nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -147,7 +165,32 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  // XXX write me
+  if (nsnull != aAttributes) {
+    nsHTMLValue value;
+    aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRUint8 align = value.GetIntValue();
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      switch (align) {
+      case NS_STYLE_VERTICAL_ALIGN_TOP:
+      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
+        break;
+      // XXX: this is not right, it sets the content's h-align
+      //      what it should do is actually move the caption to the left or right of the table!
+      /*
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        text->mTextAlign = align;
+        break;
+        */
+      default:
+        // illegal value -- ignore it.
+        break;
+      }
+    }
+  }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 

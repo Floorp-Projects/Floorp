@@ -1866,6 +1866,32 @@ nsGenericHTMLElement::CreateFrame(nsIPresContext*  aPresContext,
     rv = NS_NewWBRFrame(mContent, aParentFrame, frame);
   }
 
+  // the table content frames...
+  else if (mTag == nsHTMLAtoms::caption) {
+    rv = NS_NewBodyFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::table) {
+    rv = NS_NewTableFrame(mContent, aParentFrame, frame);
+  }
+  else if ((mTag == nsHTMLAtoms::tbody) ||
+           (mTag == nsHTMLAtoms::thead) ||
+           (mTag == nsHTMLAtoms::tfoot))  {
+    rv = NS_NewTableRowGroupFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::tr) {
+    rv = NS_NewTableRowFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::colgroup) {
+    rv = NS_NewTableColGroupFrame(mContent, aParentFrame, frame);
+  }
+  else if (mTag == nsHTMLAtoms::col) {
+    rv = NS_NewTableColFrame(mContent, aParentFrame, frame);
+  }
+  else if ((mTag == nsHTMLAtoms::td) ||
+           (mTag == nsHTMLAtoms::th))  {
+    rv = NS_NewTableCellFrame(mContent, aParentFrame, frame);
+  }
+
   if (NS_OK != rv) {
     return rv;
   }
@@ -2489,6 +2515,23 @@ static nsGenericHTMLElement::EnumTable kScrollingStandardTable[] = {
   { 0 }
 };
 
+static nsGenericHTMLElement::EnumTable kTableHAlignTable[] = {
+  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
+  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
+  { 0 }
+};
+
+static nsGenericHTMLElement::EnumTable kTableVAlignTable[] = {
+  { "top",     NS_STYLE_VERTICAL_ALIGN_TOP },
+  { "middle",  NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+  { "bottom",  NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+  { "baseline",NS_STYLE_VERTICAL_ALIGN_BASELINE },
+  { 0 }
+};
+
 PRBool
 nsGenericHTMLElement::ParseAlignValue(const nsString& aString,
                                       nsHTMLValue& aResult)
@@ -2497,10 +2540,38 @@ nsGenericHTMLElement::ParseAlignValue(const nsString& aString,
 }
 
 PRBool
+nsGenericHTMLElement::ParseTableHAlignValue(const nsString& aString,
+                                            nsHTMLValue& aResult)
+{
+  return ParseEnumValue(aString, kTableHAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::ParseTableVAlignValue(const nsString& aString,
+                                            nsHTMLValue& aResult)
+{
+  return ParseEnumValue(aString, kTableVAlignTable, aResult);
+}
+
+PRBool
 nsGenericHTMLElement::AlignValueToString(const nsHTMLValue& aValue,
                                          nsString& aResult)
 {
   return EnumValueToString(aValue, kAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
+                                               nsString& aResult)
+{
+  return EnumValueToString(aValue, kTableHAlignTable, aResult);
+}
+
+PRBool
+nsGenericHTMLElement::TableVAlignValueToString(const nsHTMLValue& aValue,
+                                               nsString& aResult)
+{
+  return EnumValueToString(aValue, kTableVAlignTable, aResult);
 }
 
 PRBool

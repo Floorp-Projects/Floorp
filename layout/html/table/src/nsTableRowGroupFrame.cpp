@@ -1195,21 +1195,18 @@ nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_OK;
 }
 
-/* ----- static methods ----- */
+/* ----- global methods ----- */
 
-nsresult nsTableRowGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                                        nsIContent* aContent,
-                                        nsIFrame*   aParent)
+nsresult 
+NS_NewTableRowGroupFrame(nsIContent* aContent,
+                         nsIFrame*   aParentFrame,
+                         nsIFrame*&  aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableRowGroupFrame(aContent, aParent);
+  nsIFrame* it = new nsTableRowGroupFrame(aContent, aParentFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 

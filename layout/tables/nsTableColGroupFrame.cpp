@@ -18,7 +18,7 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
-#include "nsITableContent.h"
+#include "nsIHTMLTableColElement.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -30,7 +30,8 @@
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsIStyleContext);
 
-static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
+
 
 static PRBool gsDebug = PR_FALSE;
 
@@ -67,6 +68,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
 
   // for every content child that (is a column thingy and does not already have a frame)
   // create a frame and adjust it's style
+  nsresult rv;
   nsIFrame* kidFrame = nsnull;
   nsIFrame* prevKidFrame;
  
@@ -82,9 +84,11 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
       break;
     }
 
+//XXX: with the new content code, this check is no longer valid
+/*
     // verify that we're dealing with table content.  If so, we know it's a column
     nsITableContent *tableContentInterface = nsnull;
-    nsresult rv = kid->QueryInterface(kITableContentIID, 
+    rv = kid->QueryInterface(kITableContentIID, 
                                       (void **)&tableContentInterface);  // tableContentInterface: REFCNT++
     if (NS_FAILED(rv))
     {
@@ -92,7 +96,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
       continue;
     }
     NS_RELEASE(tableContentInterface);                                   // tableContentInterface: REFCNT--
-
+*/
     if (mChildCount<=colIndex)
     {
       // Resolve style
@@ -106,6 +110,21 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
       kidDel = kid->GetDelegate(&aPresContext);
       rv = kidDel->CreateFrame(&aPresContext, kid, this, kidSC, kidFrame);
       NS_RELEASE(kidDel);
+      if (NS_FAILED(rv))
+        return rv;
+
+      // set the preliminary values for the column frame
+      PRInt32 repeat=1;
+      nsIHTMLTableColElement* colContent = nsnull;
+      kid->QueryInterface(kIHTMLTableColElementIID, 
+                          (void**) &colContent); // colContent: ADDREF++
+      if (rv==NS_OK)
+      {
+        colContent->GetSpanValue(&repeat);
+        NS_RELEASE(colContent);
+      }
+      ((nsTableColFrame *)(kidFrame))->InitColFrame (mStartColIndex + mColCount, repeat);
+      mColCount+= repeat;
 
       // give the child frame a chance to reflow, even though we know it'll have 0 size
       nsReflowMetrics kidSize(nsnull);
@@ -238,21 +257,18 @@ int nsTableColGroupFrame::GetColumnCount ()
   return mColCount;
 }
 
-/* ----- static methods ----- */
+/* ----- global methods ----- */
 
-nsresult nsTableColGroupFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                                        nsIContent* aContent,
-                                        nsIFrame*   aParent)
+nsresult 
+NS_NewTableColGroupFrame(nsIContent* aContent,
+                         nsIFrame*   aParentFrame,
+                         nsIFrame*&  aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableColGroupFrame(aContent, aParent);
+  nsIFrame* it = new nsTableColGroupFrame(aContent, aParentFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 

@@ -41,11 +41,19 @@ class nsTableCellFrame : public nsContainerFrame
 {
 public:
 
-  void Init(PRInt32 aRowSpan, PRInt32 aColSpan, PRInt32 aColIndex);
+  void InitCellFrame(PRInt32 aColIndex);
 
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
+  /** instantiate a new instance of nsTableCellFrame.
+    * @param aResult    the new object is returned in this out-param
+    * @param aContent   the table object to map
+    * @param aParent    the parent of the new frame
+    *
+    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    */
+  friend nsresult 
+  NS_NewTableCellFrame(nsIContent* aContent,
+                       nsIFrame*   aParentFrame,
+                       nsIFrame*&  aResult);
 
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -206,11 +214,6 @@ protected:
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
 protected:
-  /** the number of rows spanned by this cell */
-  int          mRowSpan;
-    
-  /** the number of columns spanned by this cell */
-  int          mColSpan;
 
   /** the starting column for this cell */
   int          mColIndex;
@@ -232,18 +235,12 @@ protected:
 
 };
 
-inline void nsTableCellFrame::Init(PRInt32 aRowSpan, PRInt32 aColSpan, PRInt32 aColIndex)
+inline void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
-  NS_PRECONDITION(0<aRowSpan,  "bad row span arg");
-  NS_PRECONDITION(0<aColSpan,  "bad col span arg");
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
-  mRowSpan = aRowSpan;
-  mColSpan = aColSpan;
   mColIndex = aColIndex;
 }
 
-inline PRInt32 nsTableCellFrame::GetRowSpan()
-{  return mRowSpan;}
 
 inline PRInt32 nsTableCellFrame::GetRowIndex()
 {
@@ -254,9 +251,6 @@ inline PRInt32 nsTableCellFrame::GetRowIndex()
   else
     return 0;
 }
-
-inline PRInt32 nsTableCellFrame::GetColSpan()
-{  return mColSpan;}
 
 inline PRInt32 nsTableCellFrame::GetColIndex()
 {  return mColIndex;}

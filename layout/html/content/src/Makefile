@@ -76,6 +76,7 @@ CPPSRCS=				\
 	nsHTMLTableCaptionElement.cpp	\
 	nsHTMLTableCellElement.cpp	\
 	nsHTMLTableColElement.cpp	\
+	nsHTMLTableColGroupElement.cpp	\
 	nsHTMLTableRowElement.cpp	\
 	nsHTMLTableSectionElement.cpp	\
 	nsHTMLTextAreaElement.cpp	\

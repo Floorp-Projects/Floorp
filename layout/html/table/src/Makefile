@@ -25,20 +25,12 @@ LIBRARY_NAME = raptorhtmltable_s
 CPPSRCS =				\
     BasicTableLayoutStrategy.cpp \
 	nsCellMap.cpp			\
-	nsTableCaption.cpp		\
-	nsTableCell.cpp			\
 	nsTableCellFrame.cpp	\
-	nsTableCol.cpp			\
 	nsTableColFrame.cpp		\
-	nsTableColGroup.cpp		\
 	nsTableColGroupFrame.cpp	\
-	nsTableContent.cpp		\
 	nsTableFrame.cpp		\
 	nsTableOuterFrame.cpp	\
-	nsTablePart.cpp			\
-	nsTableRow.cpp			\
 	nsTableRowFrame.cpp		\
-	nsTableRowGroup.cpp		\
 	nsTableRowGroupFrame.cpp	\
 	$(NULL)
 

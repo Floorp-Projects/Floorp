@@ -37,7 +37,7 @@ nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
 {
   mColIndex = 0;
-  mRepeat = 0;
+  mRepeat = 1;
   mMaxColWidth = 0;
   mMinColWidth = 0;
   mMaxEffectiveColWidth = 0;
@@ -79,21 +79,18 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
 }
 
 
-/* ----- static methods ------ */
+/* ----- global methods ----- */
 
-nsresult nsTableColFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                                   nsIContent* aContent,
-                                   nsIFrame*   aParent)
+nsresult 
+NS_NewTableColFrame(nsIContent* aContent,
+                    nsIFrame*   aParentFrame,
+                    nsIFrame*&  aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* it = new nsTableColFrame(aContent, aParent);
+  nsIFrame* it = new nsTableColFrame(aContent, aParentFrame);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 
