@@ -1774,7 +1774,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
  
   PRBool doCollapse = PR_FALSE;
 
-  ComputePercentBasisForRows(aPresContext, aReflowState);
+  ComputePercentBasisForRows(aReflowState);
 
   aDesiredSize.width = aReflowState.availableWidth;
 
@@ -2040,10 +2040,9 @@ nsTableFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
 }
 
 
-void nsTableFrame::ComputePercentBasisForRows(nsIPresContext*          aPresContext,
-                                              const nsHTMLReflowState& aReflowState)
+void nsTableFrame::ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState)
 {
-  nscoord height = CalcBorderBoxHeight(aPresContext, aReflowState);
+  nscoord height = CalcBorderBoxHeight(aReflowState);
   if ((height > 0) && (height != NS_UNCONSTRAINEDSIZE)) {
     // exclude our border and padding
     nsMargin borderPadding = aReflowState.mComputedBorderPadding;
@@ -3369,7 +3368,7 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
   nscoord desiredHeight = naturalHeight;
 
   // see if a specified table height requires diving additional space to rows
-  nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aPresContext, aReflowState);
+  nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
   if ((tableSpecifiedHeight > 0) && 
       (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE) &&
       (tableSpecifiedHeight > naturalHeight)) {
@@ -3934,10 +3933,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
   }
   else if (width != NS_UNCONSTRAINEDSIZE) {
     nsMargin border(0,0,0,0);
-    aState.mStyleBorder->GetBorder(border);
-    nsMargin borderPadding(0,0,0,0);
-    aState.mStylePadding->GetPadding(borderPadding);
-    borderPadding += border;
+    nsMargin borderPadding = aState.mComputedBorderPadding;
     width += borderPadding.left + borderPadding.right;
   }
   width = PR_MAX(width, 0);
@@ -3946,8 +3942,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
 }
 
 nscoord 
-nsTableFrame::CalcBorderBoxHeight(nsIPresContext*  aPresContext,
-                                  const            nsHTMLReflowState& aState)
+nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState)
 {
   nscoord height = aState.mComputedHeight;
   if (NS_AUTOHEIGHT != height) {

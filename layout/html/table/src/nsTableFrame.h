@@ -594,13 +594,12 @@ protected:
 public:
 
   // calculate the computed width of aFrame including its border and padding given 
-  // given its reflow state.
+  // its reflow state.
   nscoord CalcBorderBoxWidth(const nsHTMLReflowState& aReflowState);
 
   // calculate the computed height of aFrame including its border and padding given 
   // its reflow state.
-  nscoord CalcBorderBoxHeight(nsIPresContext*          aPresContext,
-                              const nsHTMLReflowState& aReflowState);
+  nscoord CalcBorderBoxHeight(const nsHTMLReflowState& aReflowState);
   void CalcMinAndPreferredWidths(const nsHTMLReflowState& aReflowState,
                                  nscoord&                 aMinWidth,
                                  nscoord&                 aPreferredWidth);
@@ -802,8 +801,7 @@ public: /* ----- Cell Map public methods ----- */
 
   // compute the height of the table to be used as the basis for 
   // percentage height cells
-  void ComputePercentBasisForRows(nsIPresContext*          aPresContext,
-                                  const nsHTMLReflowState& aReflowState);
+  void ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState);
 
   nscoord GetPercentBasisForRows();
 
