@@ -65,6 +65,8 @@ public:
 
   NS_IMETHOD    Replace(const nsAReadableString& aUrl)=0;
 
+  NS_IMETHOD    Assign(const nsAReadableString& aUrl)=0;
+
   NS_IMETHOD    ToString(nsAWritableString& aReturn)=0;
 };
 
@@ -88,6 +90,7 @@ public:
   NS_IMETHOD    SetSearch(const nsAReadableString& aSearch);  \
   NS_IMETHOD    Reload(PRBool aForceget);  \
   NS_IMETHOD    Replace(const nsAReadableString& aUrl);  \
+  NS_IMETHOD    Assign(const nsAReadableString& aUrl);  \
   NS_IMETHOD    ToString(nsAWritableString& aReturn);  \
 
 
@@ -111,6 +114,7 @@ public:
   NS_IMETHOD    SetSearch(const nsAReadableString& aSearch) { return _to SetSearch(aSearch); } \
   NS_IMETHOD    Reload(PRBool aForceget) { return _to Reload(aForceget); }  \
   NS_IMETHOD    Replace(const nsAReadableString& aUrl) { return _to Replace(aUrl); }  \
+  NS_IMETHOD    Assign(const nsAReadableString& aUrl) { return _to Assign(aUrl); }  \
   NS_IMETHOD    ToString(nsAWritableString& aReturn) { return _to ToString(aReturn); }  \
 
 

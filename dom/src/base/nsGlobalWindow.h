@@ -348,6 +348,7 @@ public:
    NS_IMETHOD    SetSearch(const nsAReadableString& aSearch);
    NS_IMETHOD    Reload(PRBool aForceget);
    NS_IMETHOD    Replace(const nsAReadableString& aUrl);
+   NS_IMETHOD    Assign(const nsAReadableString& aUrl);
    NS_IMETHOD    ToString(nsAWritableString& aReturn);
 
    // nsIDOMNSLocation
