@@ -32,11 +32,13 @@
 #include "nsCoord.h"
 #include "nsString.h"
 
+#include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsHashtable.h"
 #include "nsIUnicodeEncoder.h"
 
 #include "nsIDeviceContextSpecPS.h"
+#include "nsIPersistentProperties2.h"
 
 class nsIImage;
 #endif
@@ -397,10 +399,15 @@ public:
    *	@update 6/1/2000 katakai
    */
   void preshow(const PRUnichar* aText, int aLen);
+
+  XP_File GetPrintFile();
+  PRBool  InitUnixPrinterProps();
+  PRBool  GetUnixPrinterSetting(const nsCAutoString&, char**);
 private:
   PSContext             *mPrintContext;
   PrintSetup            *mPrintSetup;
   PRUint16              mPageNumber;
+  nsCOMPtr<nsIPersistentProperties> mPrinterProps;
 
 
 
