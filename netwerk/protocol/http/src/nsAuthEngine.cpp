@@ -166,6 +166,9 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
     if (!i_URI || !i_AuthString)
         return NS_ERROR_NULL_POINTER;
 
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     nsISupportsArray* list = bProxyAuth ? mProxyAuthList : mAuthList; 
 
     // list may have been cleared by Logout...
@@ -177,7 +180,14 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
         return rv;
 
     // TODO Extract user/pass info if available
-    nsAuth* auth = new nsAuth(i_URI, i_AuthString);
+    char *unescaped_AuthString = nsnull;
+    rv = serv->Unescape(i_AuthString, &unescaped_AuthString);
+    if (NS_FAILED(rv)) {
+        CRTFREEIF(unescaped_AuthString);
+        return rv;
+    }
+    nsAuth* auth = new nsAuth(i_URI, unescaped_AuthString);
+    CRTFREEIF(unescaped_AuthString);
     if (!auth)
         return NS_ERROR_OUT_OF_MEMORY;
     

@@ -1671,8 +1671,10 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
         {
             if ((const char*)prehost) {
-                if (!(newUserPass = nsCRT::strdup(prehost)))
-                    return NS_ERROR_OUT_OF_MEMORY;
+                NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+                if (NS_FAILED(rv)) return rv;
+                rv = serv->Unescape(prehost, &newUserPass);
+                if (NS_FAILED(rv)) return rv;
             }
         }
     }
