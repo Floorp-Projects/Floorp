@@ -72,6 +72,7 @@
 #include "nsIFrameManager.h"
 #include "nsIAttributeContent.h"
 #include "nsIPref.h"
+#include "nsLegendFrame.h"
 
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
@@ -3282,6 +3283,191 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
   return NS_OK;
 }
 
+/**
+ * Used to be InitializeScrollFrame but now its only used for the select tag
+ * But the select tag should really be fixed to use GFX scrollbars that can
+ * be create with BuildScrollFrame.
+ */
+nsresult
+nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell, 
+                                            nsIPresContext*          aPresContext,
+                                            nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIFrame*                aParentFrame,
+                                            nsIAtom*                 aTag,
+                                            nsIStyleContext*         aStyleContext,
+                                            nsIFrame*&               aNewFrame,
+                                            PRBool&                  aProcessChildren,
+                                            PRBool                   aIsAbsolutelyPositioned,
+                                            PRBool&                  aFrameHasBeenInitialized,
+                                            PRBool                   aIsFixedPositioned)
+{
+  nsIFrame * newFrame;
+  nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame);
+
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
+  // Initialize it
+  nsIFrame* geometricParent = aParentFrame;
+    
+  if (aIsAbsolutelyPositioned) {
+    geometricParent = aState.mAbsoluteItems.containingBlock;
+  } else if (aIsFixedPositioned) {
+    geometricParent = aState.mFixedItems.containingBlock;
+  }
+  
+  InitAndRestoreFrame(aPresContext, aState, aContent, 
+                      geometricParent, aStyleContext, nsnull, newFrame);
+
+  // See if we need to create a view, e.g. the frame is absolutely
+  // positioned
+  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
+                                           aStyleContext, PR_FALSE);
+
+    // cache our display type
+  const nsStyleDisplay* styleDisplay;
+  newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
+  
+  PRUint8 flags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
+
+  nsIFrame * areaFrame;
+  NS_NewAreaFrame(shell, &areaFrame, flags);
+
+  // Resolve style and initialize the frame
+  nsIStyleContext* styleContext;
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::fieldsetContentPseudo,
+                                             aStyleContext, PR_FALSE, &styleContext);
+  InitAndRestoreFrame(aPresContext, aState, aContent, 
+                      newFrame, styleContext, nsnull, areaFrame);
+
+  NS_RELEASE(styleContext);          
+  
+
+    // The area frame is a floater container
+    PRBool haveFirstLetterStyle, haveFirstLineStyle;
+    HaveSpecialBlockStyle(aPresContext, aContent, aStyleContext,
+                          &haveFirstLetterStyle, &haveFirstLineStyle);
+    nsFrameConstructorSaveState floaterSaveState;
+    aState.PushFloaterContainingBlock(areaFrame, floaterSaveState,
+                                      haveFirstLetterStyle,
+                                      haveFirstLineStyle);
+
+    // Process children
+    nsFrameConstructorSaveState absoluteSaveState;
+    nsFrameItems                childItems;
+    PRBool                      isPositionedContainingBlock = aIsAbsolutelyPositioned ||
+                                                              aIsFixedPositioned;
+
+    if (isPositionedContainingBlock) {
+      // The area frame becomes a container for child frames that are
+      // absolutely positioned
+      aState.PushAbsoluteContainingBlock(areaFrame, absoluteSaveState);
+    }
+     
+    ProcessChildren(aPresShell, aPresContext, aState, aContent, areaFrame, PR_FALSE,
+                    childItems, PR_TRUE);
+
+    static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
+    nsIFrame * child      = childItems.childList;
+    nsIFrame * previous   = nsnull;
+    nsIFrame* legendFrame = nsnull;
+    while (nsnull != child) {
+      nsresult result = child->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
+      if (NS_SUCCEEDED(result) && legendFrame) {
+        if (nsnull != previous) {
+          nsIFrame * nxt;
+          legendFrame->GetNextSibling(&nxt);
+          previous->SetNextSibling(nxt);
+          areaFrame->SetNextSibling(legendFrame);
+          legendFrame->SetParent(newFrame);
+          legendFrame->SetNextSibling(nsnull);
+          break;
+        } else {
+          nsIFrame * nxt;
+          legendFrame->GetNextSibling(&nxt);
+          childItems.childList = nxt;
+          areaFrame->SetNextSibling(legendFrame);
+          legendFrame->SetParent(newFrame);
+          legendFrame->SetNextSibling(nsnull);
+          break;
+        }
+      }
+      child->GetNextSibling(&child);
+    }
+
+    // Set the scrolled frame's initial child lists
+    areaFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+    if (isPositionedContainingBlock && aState.mAbsoluteItems.childList) {
+      areaFrame->SetInitialChildList(aPresContext,
+                                         nsLayoutAtoms::absoluteList,
+                                         aState.mAbsoluteItems.childList);
+    }
+
+    if (aState.mFloatedItems.childList) {
+      areaFrame->SetInitialChildList(aPresContext,
+                                         nsLayoutAtoms::floaterList,
+                                         aState.mFloatedItems.childList);
+    }
+
+  // Set the scroll frame's initial child list
+  newFrame->SetInitialChildList(aPresContext, nsnull, areaFrame);
+
+  // our new frame retured is the top frame which is the list frame. 
+  aNewFrame = newFrame; 
+
+  // yes we have already initialized our frame 
+  aFrameHasBeenInitialized = PR_TRUE; 
+
+  return NS_OK;
+
+#if 0
+
+  nsIFrame* newChildList = aChildList;
+
+  // Set the geometric and content parent for each of the child frames 
+  // that will go into the area frame's child list.
+  // The legend frame does not go into the list
+  nsIFrame* lastNewFrame = nsnull;
+  for (nsIFrame* frame = aChildList; nsnull != frame;) {
+    nsIFrame* legendFrame = nsnull;
+    nsresult result = frame->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
+    if (NS_SUCCEEDED(result) && legendFrame) {
+      if (mLegendFrame) { // we already have a legend, destroy it
+        frame->GetNextSibling(&frame);
+        if (lastNewFrame) {
+          lastNewFrame->SetNextSibling(frame);
+        } 
+        else {
+          aChildList = frame;
+        }
+        legendFrame->Destroy(aPresContext);
+      } 
+      else {
+        nsIFrame* nextFrame;
+        frame->GetNextSibling(&nextFrame);
+        if (lastNewFrame) {
+          lastNewFrame->SetNextSibling(nextFrame);
+        } else {
+          newChildList = nextFrame;
+        }
+        frame->SetParent(this);
+        mFrames.FirstChild()->SetNextSibling(frame);
+        mLegendFrame = frame;
+        mLegendFrame->SetNextSibling(nsnull);
+        frame = nextFrame;
+      }
+    } else {
+      frame->SetParent(mFrames.FirstChild());
+      lastNewFrame = frame;
+      frame->GetNextSibling(&frame);
+    }
+  }
+  // Queue up the frames for the content frame
+  return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, newChildList);  
+#endif
+}
 
 nsresult
 nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell, 
@@ -3378,8 +3564,17 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
         rv = NS_NewObjectFrame(aPresShell, &newFrame);
       }
       else if (nsHTMLAtoms::fieldset == aTag) {
+//#define DO_NEWFIELDSET
+#ifdef DO_NEWFIELDSET
+        rv = ConstructFieldSetFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                                    aTag, aStyleContext, newFrame,  processChildren,
+                                    isAbsolutelyPositioned, frameHasBeenInitialized,
+                                    isFixedPositioned);
+        processChildren = PR_FALSE;
+#else
         rv = NS_NewFieldSetFrame(aPresShell, &newFrame);
         processChildren = PR_TRUE;
+#endif
       }
       else if (nsHTMLAtoms::legend == aTag) {
         rv = NS_NewLegendFrame(aPresShell, &newFrame);

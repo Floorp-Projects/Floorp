@@ -498,6 +498,19 @@ protected:
                                 PRBool                   aIsFixedPositioned,
                                 nsFrameItems&            aFrameItems);
 
+  nsresult ConstructFieldSetFrame(nsIPresShell*        aPresShell, 
+                                  nsIPresContext*          aPresContext,
+                                  nsFrameConstructorState& aState,
+                                  nsIContent*              aContent,
+                                  nsIFrame*                aParentFrame,
+                                  nsIAtom*                 aTag,
+                                  nsIStyleContext*         aStyleContext,
+                                  nsIFrame*&               aNewFrame,
+                                  PRBool&                  aProcessChildren,
+                                  PRBool                   aIsAbsolutelyPositioned,
+                                  PRBool&                  aFrameHasBeenInitialized,
+                                  PRBool                   aIsFixedPositioned);
+
   nsresult ConstructFrameByTag(nsIPresShell*        aPresShell, 
                                nsIPresContext*          aPresContext,
                                nsFrameConstructorState& aState,
