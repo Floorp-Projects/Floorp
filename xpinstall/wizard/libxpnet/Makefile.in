@@ -28,7 +28,12 @@ VPATH			= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS			= src test
+DIRS			= src
+
+# solaris tbox doesn't like this!
+ifneq (,$(filter Linux,$(OS_ARCH)))
+DIRS			+= test
+endif
 
 include $(topsrcdir)/config/rules.mk
 
