@@ -52,7 +52,6 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"
-#include "nsIClipView.h"
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
@@ -86,7 +85,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
 MOZ_DECL_CTOR_COUNTER(nsView)
 
-nsView :: nsView()
+nsView::nsView()
 {
   MOZ_COUNT_CTOR(nsView);
 
@@ -97,11 +96,9 @@ nsView :: nsView()
   mCompositorFlags = 0;
 }
 
-nsView :: ~nsView()
+nsView::~nsView()
 {
   MOZ_COUNT_DTOR(nsView);
-
-  mVFlags |= NS_VIEW_PUBLIC_FLAG_DYING;
 
   while (GetFirstChild() != nsnull)
   {
@@ -123,7 +120,7 @@ nsView :: ~nsView()
       {
         if (nsnull != mParent)
         {
-          mViewManager->RemoveChild(mParent, this);
+          mViewManager->RemoveChild(this);
         }
       }
     } 
@@ -210,7 +207,7 @@ nsView* nsView::GetViewFor(nsIWidget* aWidget)
   return nsnull;
 }
 
-NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
+NS_IMETHODIMP nsView::Init(nsIViewManager* aManager,
                              const nsRect &aBounds,
                              const nsIView *aParent,
                              nsViewVisibility aVisibilityFlag)
@@ -249,23 +246,22 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: Destroy()
+NS_IMETHODIMP nsView::Destroy()
 {
   delete this;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetViewManager(nsIViewManager *&aViewMgr) const
+NS_IMETHODIMP nsView::GetViewManager(nsIViewManager *&aViewMgr) const
 {
   NS_IF_ADDREF(mViewManager);
   aViewMgr = mViewManager;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
+NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsRect& rect,
                               PRUint32 aPaintFlags, PRBool &aResult)
 {
-	NS_ASSERTION(aPaintFlags & NS_VIEW_FLAG_JUST_PAINT, "Only simple painting supported by nsView");
     // Just paint, assume compositor knows what it's doing.
     if (nsnull != mClientData) {
       nsCOMPtr<nsIViewObserver> observer;
@@ -276,7 +272,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region,
+NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsIRegion& region,
                               PRUint32 aPaintFlags, PRBool &aResult)
 {
   // XXX apply region to rc
@@ -295,7 +291,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
+NS_IMETHODIMP nsView::HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
                                     nsEventStatus* aStatus, PRBool aForceHandle, PRBool& aHandled)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
@@ -319,7 +315,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   *aStatus = nsEventStatus_eIgnore;
 
   //see if any of this view's children can process the event
-  if ( !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN) ) {
+  if ( !(mVFlags & NS_VIEW_FLAG_DONT_CHECK_CHILDREN) ) {
     PRInt32 numkids = GetChildCount();
     nsRect  trect;
     nscoord x, y;
@@ -343,7 +339,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
         event->point.x -= trect.x;
         event->point.y -= trect.y;
 
-        pKid->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN, aStatus, PR_FALSE, aHandled);
+        pKid->HandleEvent(event, 0, aStatus, PR_FALSE, aHandled);
 
         event->point.x += trect.x;
         event->point.y += trect.y;
@@ -376,7 +372,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 }
 
 // XXX Start Temporary fix for Bug #19416
-NS_IMETHODIMP nsView :: IgnoreSetPosition(PRBool aShouldIgnore)
+NS_IMETHODIMP nsView::IgnoreSetPosition(PRBool aShouldIgnore)
 {
   mShouldIgnoreSetPosition = aShouldIgnore;
   // resync here
@@ -387,7 +383,7 @@ NS_IMETHODIMP nsView :: IgnoreSetPosition(PRBool aShouldIgnore)
 }
 // XXX End Temporary fix for Bug #19416
 
-NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsView::SetPosition(nscoord aX, nscoord aY)
 {
   nscoord x = aX;
   nscoord y = aY;
@@ -397,7 +393,7 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
     // while allowing layout to assume it's coordinate space origin is (0,0)
     nscoord offsetX;
     nscoord offsetY;
-    mViewManager->GetOffset(&offsetX, &offsetY);
+    mViewManager->GetWindowOffset(&offsetX, &offsetY);
     x += offsetX;
     y += offsetY;
   }
@@ -417,7 +413,7 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
     PRBool caching = PR_FALSE;
     mViewManager->IsCachingWidgetChanges(&caching);
     if (caching) {
-      mVFlags |= NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+      mVFlags |= NS_VIEW_FLAG_WIDGET_MOVED;
       return NS_OK;
     }
 
@@ -440,10 +436,10 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
+NS_IMETHODIMP nsView::SynchWidgetSizePosition()
 {
   // if the widget was moved or resized
-  if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED || mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
+  if (mVFlags & NS_VIEW_FLAG_WIDGET_MOVED || mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED)
   {
     nsIDeviceContext  *dx;
     float             t2p;
@@ -474,20 +470,20 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       nsRect bounds;
       mWindow->GetBounds(bounds);
       if (bounds.x == x && bounds.y == y ) 
-         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+         mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
       else if (bounds.width == width && bounds.height == bounds.height)
-         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+         mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
       else {
          printf("%d) SetBounds(%d,%d,%d,%d)\n", this, x, y, width, height);
          mWindow->Resize(x,y,width,height, PR_TRUE);
-         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
-         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+         mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
+         mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
          return NS_OK;
       }
     } 
 #endif
     // if we just resized do it
-    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
+    if (mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED) 
     {
 
       PRInt32 width = NSTwipsToIntPixels(mBounds.width, t2p);
@@ -503,10 +499,10 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
         mWindow->Resize(width,height, PR_TRUE);
       }
 
-      mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+      mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
     } 
     
-    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED) {
+    if (mVFlags & NS_VIEW_FLAG_WIDGET_MOVED) {
       // if we just moved do it.
       nscoord parx = 0, pary = 0;
       nsIWidget         *pwidget = nsnull;
@@ -527,7 +523,7 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
          mWindow->Move(x,y);
       }
 
-      mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+      mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
     }        
   }
   
@@ -535,7 +531,7 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
+NS_IMETHODIMP nsView::GetPosition(nscoord *x, nscoord *y) const
 {
 
   nsView *rootView = mViewManager->GetRootView();
@@ -554,7 +550,7 @@ NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
+NS_IMETHODIMP nsView::SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
   if ((mBounds.width == width) &&
       (mBounds.height == height))
@@ -587,7 +583,7 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
     PRBool caching = PR_FALSE;
     mViewManager->IsCachingWidgetChanges(&caching);
     if (caching) {
-      mVFlags |= NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+      mVFlags |= NS_VIEW_FLAG_WIDGET_RESIZED;
       return NS_OK;
     }
 
@@ -606,28 +602,28 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetDimensions(nscoord *width, nscoord *height) const
+NS_IMETHODIMP nsView::GetDimensions(nscoord *width, nscoord *height) const
 {
   *width = mBounds.width;
   *height = mBounds.height;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetBounds(const nsRect &aBounds, PRBool aPaint)
+NS_IMETHODIMP nsView::SetBounds(const nsRect &aBounds, PRBool aPaint)
 {
   SetPosition(aBounds.x, aBounds.y);
   SetDimensions(aBounds.width, aBounds.height, aPaint);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint)
+NS_IMETHODIMP nsView::SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint)
 {
   SetPosition(aX, aY);
   SetDimensions(aWidth, aHeight, aPaint);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
+NS_IMETHODIMP nsView::GetBounds(nsRect &aBounds) const
 {
   NS_ASSERTION(mViewManager, "mViewManager is null!");
   if (!mViewManager) {
@@ -644,7 +640,7 @@ NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
+NS_IMETHODIMP nsView::SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
 {
   NS_PRECONDITION(aLeft <= aRight && aTop <= aBottom, "bad clip values");
   mChildClip.mLeft = aLeft;
@@ -652,10 +648,12 @@ NS_IMETHODIMP nsView :: SetChildClip(nscoord aLeft, nscoord aTop, nscoord aRight
   mChildClip.mRight = aRight;
   mChildClip.mBottom = aBottom;
 
+  
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const
+NS_IMETHODIMP nsView::GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const
 {
   *aLeft = mChildClip.mLeft;
   *aTop = mChildClip.mTop;
@@ -664,7 +662,7 @@ NS_IMETHODIMP nsView :: GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRi
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
+NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
 {
 
   mVis = aVisibility;
@@ -693,51 +691,25 @@ NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetVisibility(nsViewVisibility &aVisibility) const
+NS_IMETHODIMP nsView::GetVisibility(nsViewVisibility &aVisibility) const
 {
   aVisibility = mVis;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetZIndex(PRInt32 aZIndex)
+NS_IMETHODIMP nsView::GetZIndex(PRBool &aAuto, PRInt32 &aZIndex) const
 {
-	mZindex = aZIndex;
-
-	if (nsnull != mWindow) {
-		mWindow->SetZIndex(aZIndex);
-	}
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetZIndex(PRInt32 &aZIndex) const
-{
-  aZIndex = mZindex;
+	aAuto = (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0;
+  aZIndex = mZIndex;
   return NS_OK;
 }
-
-NS_IMETHODIMP nsView::SetAutoZIndex(PRBool aAutoZIndex)
-{
-	if (aAutoZIndex)
-		mVFlags |= NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX;
-	else
-		mVFlags &= ~NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetAutoZIndex(PRBool &aAutoZIndex) const
-{
-	aAutoZIndex = ((mVFlags & NS_VIEW_PUBLIC_FLAG_AUTO_ZINDEX) != 0);
-	return NS_OK;
-}
-
 
 NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 {
 	if (aFloatingView)
-		mVFlags |= NS_VIEW_PUBLIC_FLAG_FLOATING;
+		mVFlags |= NS_VIEW_FLAG_FLOATING;
 	else
-		mVFlags &= ~NS_VIEW_PUBLIC_FLAG_FLOATING;
+		mVFlags &= ~NS_VIEW_FLAG_FLOATING;
 
 #if 0
 	// recursively make all sub-views "floating" grr.
@@ -753,23 +725,23 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 
 NS_IMETHODIMP nsView::GetFloating(PRBool &aFloatingView) const
 {
-	aFloatingView = ((mVFlags & NS_VIEW_PUBLIC_FLAG_FLOATING) != 0);
+	aFloatingView = ((mVFlags & NS_VIEW_FLAG_FLOATING) != 0);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetParent(nsIView *&aParent) const
+NS_IMETHODIMP nsView::GetParent(nsIView *&aParent) const
 {
   aParent = mParent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetNextSibling(nsIView *&aNextSibling) const
+NS_IMETHODIMP nsView::GetNextSibling(nsIView *&aNextSibling) const
 {
   aNextSibling = mNextSibling;
   return NS_OK;
 }
 
-void nsView :: InsertChild(nsView *aChild, nsView *aSibling)
+void nsView::InsertChild(nsView *aChild, nsView *aSibling)
 {
   NS_PRECONDITION(nsnull != aChild, "null ptr");
 
@@ -796,7 +768,7 @@ void nsView :: InsertChild(nsView *aChild, nsView *aSibling)
   }
 }
 
-void nsView :: RemoveChild(nsView *child)
+void nsView::RemoveChild(nsView *child)
 {
   NS_PRECONDITION(nsnull != child, "null ptr");
 
@@ -825,7 +797,7 @@ void nsView :: RemoveChild(nsView *child)
   }
 }
 
-nsView* nsView :: GetChild(PRInt32 aIndex) const
+nsView* nsView::GetChild(PRInt32 aIndex) const
 { 
   for (nsView* child = GetFirstChild(); child != nsnull; child = child->GetNextSibling()) {
     if (aIndex == 0) {
@@ -836,47 +808,47 @@ nsView* nsView :: GetChild(PRInt32 aIndex) const
   return nsnull;
 }
 
-NS_IMETHODIMP nsView :: SetOpacity(float opacity)
+NS_IMETHODIMP nsView::SetOpacity(float opacity)
 {
   mOpacity = opacity;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetOpacity(float &aOpacity) const
+NS_IMETHODIMP nsView::GetOpacity(float &aOpacity) const
 {
   aOpacity = mOpacity;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: HasTransparency(PRBool &aTransparent) const
+NS_IMETHODIMP nsView::HasTransparency(PRBool &aTransparent) const
 {
-  aTransparent = (mVFlags & NS_VIEW_PUBLIC_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
+  aTransparent = (mVFlags & NS_VIEW_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetContentTransparency(PRBool aTransparent)
+NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
 {
   if (aTransparent == PR_TRUE)
-    mVFlags |= NS_VIEW_PUBLIC_FLAG_TRANSPARENT;
+    mVFlags |= NS_VIEW_FLAG_TRANSPARENT;
   else
-    mVFlags &= ~NS_VIEW_PUBLIC_FLAG_TRANSPARENT;
+    mVFlags &= ~NS_VIEW_FLAG_TRANSPARENT;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetClientData(void *aData)
+NS_IMETHODIMP nsView::SetClientData(void *aData)
 {
   mClientData = aData;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetClientData(void *&aData) const
+NS_IMETHODIMP nsView::GetClientData(void *&aData) const
 {
   aData = mClientData;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
+NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
                                      nsWidgetInitData *aWidgetInitData,
                                      nsNativeWidget aNative,
                                      PRBool aEnableDragDrop,
@@ -915,7 +887,7 @@ NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
       }
       
       // propagate the z-index to the widget.
-      mWindow->SetZIndex(mZindex);
+      mWindow->SetZIndex(mZIndex);
     }
   }
 
@@ -933,7 +905,17 @@ NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetWidget(nsIWidget *aWidget)
+void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex)
+{
+  mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
+  mZIndex = aZIndex;
+
+  if (nsnull != mWindow) {
+    mWindow->SetZIndex(aZIndex);
+  }
+}
+
+NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
 {
   NS_IF_RELEASE(mWindow);
   mWindow = aWidget;
@@ -947,7 +929,7 @@ NS_IMETHODIMP nsView :: SetWidget(nsIWidget *aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget) const
+NS_IMETHODIMP nsView::GetWidget(nsIWidget *&aWidget) const
 {
   NS_IF_ADDREF(mWindow);
   aWidget = mWindow;
@@ -963,7 +945,7 @@ NS_IMETHODIMP nsView::HasWidget(PRBool *aHasWidget) const
 //
 // internal window creation functions
 //
-nsresult nsView :: LoadWidget(const nsCID &aClassIID)
+nsresult nsView::LoadWidget(const nsCID &aClassIID)
 {
   nsresult rv = nsComponentManager::CreateInstance(aClassIID, nsnull, NS_GET_IID(nsIWidget), (void**)&mWindow);
 
@@ -1005,7 +987,7 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
           brect.x, brect.y, brect.width, brect.height);
   PRBool  hasTransparency;
   HasTransparency(hasTransparency);
-  fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZindex, mVis, mOpacity, hasTransparency, mClientData);
+  fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZIndex, mVis, mOpacity, hasTransparency, mClientData);
   nsView* kid = mFirstChild;
   while (nsnull != kid) {
     kid->List(out, aIndent + 1);
@@ -1017,25 +999,25 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetViewFlags(PRUint32 aFlags)
+NS_IMETHODIMP nsView::SetViewFlags(PRUint32 aFlags)
 {
   mVFlags |= aFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: ClearViewFlags(PRUint32 aFlags)
+NS_IMETHODIMP nsView::ClearViewFlags(PRUint32 aFlags)
 {
   mVFlags &= ~aFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetViewFlags(PRUint32 *aFlags) const
+NS_IMETHODIMP nsView::GetViewFlags(PRUint32 *aFlags) const
 {
   *aFlags = mVFlags;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
+NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
 {
   nsView   *ancestor = GetParent();
   aWidget = nsnull;
@@ -1108,7 +1090,7 @@ NS_IMETHODIMP nsView::GetCompositorFlags(PRUint32 *aFlags)
 	return NS_OK;
 }
 
-PRBool nsView :: IsRoot()
+PRBool nsView::IsRoot()
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
   return mViewManager->GetRootView() == this;
@@ -1153,7 +1135,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   while (parentView) {  
      PRUint32 flags;
      parentView->GetViewFlags(&flags);
-     if (flags & NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN) {
+     if (flags & NS_VIEW_FLAG_CLIPCHILDREN) {
       aIsClipped = PR_TRUE;
       // Adjust for clip specified by ancestor
       nscoord clipLeft;

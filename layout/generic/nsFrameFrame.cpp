@@ -978,8 +978,13 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext* aPresContext,
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);
-      if (newVis != oldVis) 
-        view->SetVisibility(newVis);
+      if (newVis != oldVis) {
+        nsCOMPtr<nsIViewManager> vm;
+        view->GetViewManager(*getter_AddRefs(vm));
+        if (vm != nsnull) {
+          vm->SetViewVisibility(view, newVis);
+        }
+      }
     }
   }
   
@@ -1352,7 +1357,8 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   nsCOMPtr<nsIViewManager> viewMan;
   presShell->GetViewManager(getter_AddRefs(viewMan));  
   rv = view->Init(viewMan, viewBounds, parView);
-  viewMan->InsertChild(parView, view, 0);
+  // XXX put it at the end of the document order until we can do better
+  viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
 
   nsWidgetInitData initData;
   initData.clipChildren = PR_TRUE;
@@ -1365,7 +1371,7 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   const nsStyleVisibility* vis;
   GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
   if (!vis->IsVisible()) {
-    view->SetVisibility(nsViewVisibility_kHide);
+    viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
   }
   view->GetWidget(*aWidget);
   return rv;

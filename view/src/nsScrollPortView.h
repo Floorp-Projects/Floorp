@@ -104,6 +104,7 @@ public:
                     PRUint32 aPaintFlags, PRBool &Result);
   NS_IMETHOD  Paint(nsIRenderingContext& aRC, const nsIRegion& aRegion,
                     PRUint32 aPaintFlags, PRBool &Result);
+  nsView*     GetScrolledView() const { return GetFirstChild(); }
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -116,7 +117,6 @@ protected:
   //NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   //private
-  nsView* GetScrolledView() const { return GetFirstChild(); }
   void AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);
   void Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
   PRBool CannotBitBlt(nsView* aScrolledView);

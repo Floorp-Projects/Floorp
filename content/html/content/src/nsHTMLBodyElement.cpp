@@ -70,6 +70,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsRuleWalker.h"
 #include "nsIBodySuper.h"
+#include "nsIViewManager.h"
 
 //----------------------------------------------------------------------
 
@@ -536,11 +537,9 @@ HandleFixedBackground(nsIPresContext* aPresContext,
     canvasFrame->GetView(aPresContext, (nsIView**)&viewportView);
   }
   if (viewportView) {
-    if (aIsFixed) {
-      viewportView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
-    } else {
-      viewportView->ClearViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
-    }
+    nsCOMPtr<nsIViewManager> vm;
+    aPresShell->GetViewManager(getter_AddRefs(vm));
+    vm->SetViewBitBltEnabled(viewportView, !aIsFixed);
   }
 }
 

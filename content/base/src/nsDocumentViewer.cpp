@@ -2892,6 +2892,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
   rv = aPO->mViewManager->Init(mPrt->mPrintDocDC);
   if (NS_FAILED(rv)) {
     return rv;
@@ -3737,8 +3738,9 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
 
           nsRect r;
           poRootView->GetBounds(r);
+          r.x = r.y = 0;
           r.height = srect.height;
-          poRootView->SetBounds(r);
+          aPO->mViewManager->ResizeView(poRootView, r, PR_FALSE);
 
           rootFrame->GetRect(r);
 
@@ -4011,7 +4013,10 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
 
    // Initialize the view manager with an offset. This allows the viewmanager
    // to manage a coordinate space offset from (0,0)
-  rv = mViewManager->Init(dx, tbounds.x, tbounds.y);
+  rv = mViewManager->Init(dx);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = mViewManager->SetWindowOffset(tbounds.x, tbounds.y);
   if (NS_FAILED(rv))
     return rv;
 

@@ -47,7 +47,6 @@
 #include "nsIScrollableView.h"
 #include "nsIFrame.h"
 #include "nsILookAndFeel.h"
-#include "nsIClipView.h"
 #include "nsISupportsArray.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIRegion.h"
@@ -830,7 +829,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     // of 0.0f (completely transparent)
     // XXX The clip widget should be created on demand only...
     rv = mClipView->Init(mViewManager, mBounds, this);
-    rv = mViewManager->InsertChild(this, mClipView, mZindex);
+    rv = mViewManager->InsertChild(this, mClipView, mZIndex);
     rv = mViewManager->SetViewOpacity(mClipView, 0.0f);
     rv = mClipView->CreateWidget(kWidgetCID, &initData,
                                  mWindow ? nsnull : aNative);
@@ -851,7 +850,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     trect.y = mBounds.y + mBounds.YMost() - trect.height;
 
     rv = mCornerView->Init(mViewManager, trect, this, nsViewVisibility_kHide);
-    mViewManager->InsertChild(this, mCornerView, mZindex);
+    mViewManager->InsertChild(this, mCornerView, mZIndex);
     mCornerView->CreateWidget(kWidgetCID, &initData,
                               mWindow ? nsnull : aNative);
   }
@@ -872,7 +871,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
     rv = mVScrollBarView->Init(mViewManager, trect, this);
-    rv = mViewManager->InsertChild(this, mVScrollBarView, mZindex);
+    rv = mViewManager->InsertChild(this, mVScrollBarView, mZIndex);
     rv = mVScrollBarView->CreateWidget(kCScrollbarIID, &initData,
                                        mWindow ? nsnull : aNative,
                                        PR_FALSE);
@@ -932,7 +931,7 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
     static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
     rv = mHScrollBarView->Init(mViewManager, trect, this);
-    rv = mViewManager->InsertChild(this, mHScrollBarView, mZindex);
+    rv = mViewManager->InsertChild(this, mHScrollBarView, mZIndex);
     rv = mHScrollBarView->CreateWidget(kCHScrollbarIID, &initData,
                                        mWindow ? nsnull : aNative,
                                        PR_FALSE);
@@ -952,15 +951,17 @@ NS_IMETHODIMP nsScrollingView::SetWidget(nsIWidget *aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScrollingView::SetZIndex(PRInt32 aZIndex)
+NS_IMETHODIMP nsScrollingView::SetZIndex(PRBool aAuto, PRInt32 aZIndex)
 {
-	nsView::SetZIndex(aZIndex);
+	nsView::SetZIndex(aAuto, aZIndex);
 	
 	// inform all views that the z-index has changed.
-	if (mClipView) mViewManager->SetViewZIndex(mClipView, aZIndex);
-	if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aZIndex);
-	if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aZIndex);
-	if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aZIndex);
+  // XXX why are we doing this? they're all a child of this view, so they
+  // shouldn't need to be re-z-indexed.
+	if (mClipView) mViewManager->SetViewZIndex(mClipView, aAuto, aZIndex);
+	if (mCornerView) mViewManager->SetViewZIndex(mCornerView, aAuto, aZIndex);
+	if (mVScrollBarView) mViewManager->SetViewZIndex(mVScrollBarView, aAuto, aZIndex);
+	if (mHScrollBarView) mViewManager->SetViewZIndex(mHScrollBarView, aAuto, aZIndex);
 
 	return NS_OK;
 }
@@ -1682,7 +1683,7 @@ PRBool nsScrollingView::CannotBitBlt(nsView* aScrolledView)
 
   return ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
          (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
-         (scrolledViewFlags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+         (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT);
 }
 
 void nsScrollingView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy,

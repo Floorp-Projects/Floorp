@@ -46,7 +46,6 @@
 #include "nsIScrollableView.h"
 #include "nsView.h"
 #include "nsIScrollbar.h"
-#include "nsIClipView.h"
 #include "nsISupportsArray.h"
 #include "nsICompositeListener.h"
 #include "nsCOMPtr.h"
@@ -59,6 +58,25 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+/**
+   XXX TODO XXX
+
+   DeCOMify newly private methods
+   Move event handling into nsViewManager
+   Make event handling use CreateDisplayList
+   Reverse storage order of views so that LAST view in document order is the LAST child
+     of its parent view
+   Audit users of nsIView::GetPosition and nsIView::GetBounds, then 
+     fix nsContainerFrame::SyncFrameViewAfterReflow to size views to contain
+     left-or-above content
+   Remove nsIClipView stuff and just use the CLIPCHILDREN flag
+   Put in support for hierarchy of viewmanagers (handle nsViewManager::SetRootView
+     case where aWidget == null and aView has a non-null parent with a different view
+     manager)
+   Fix opacity model to conform to SVG (requires backbuffer stack)
+   Optimize view storage
+*/
 
 /**
    A note about platform assumptions:
@@ -169,7 +187,7 @@ void nsViewManager::DestroyZTreeNode(DisplayZTreeNode* aNode)
   if (aNode) {
     if (mMapPlaceholderViewToZTreeNode.Count() > 0) {
        nsVoidKey key(aNode->mView);
-       DisplayZTreeNode* placeholder = (DisplayZTreeNode *)mMapPlaceholderViewToZTreeNode.Remove(&key);
+       mMapPlaceholderViewToZTreeNode.Remove(&key);
     }
   
     DestroyZTreeNode(aNode->mZChild);
@@ -421,7 +439,7 @@ static nsresult CreateRegion(nsIComponentManager* componentManager, nsIRegion* *
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
 {
   nsresult rv;
 
@@ -457,9 +475,6 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext, nscoord aX, nscoor
     CreateRegion(componentManager, &mTmpRgn);
   }
 
-  mX = aX;
-  mY = aY;
-
   if (nsnull == mEventQueue) {
     // Cache the event queue of the current UI thread
     nsCOMPtr<nsIEventQueueService> eventService = 
@@ -480,7 +495,7 @@ NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: SetRootView(nsIView *aView, nsIWidget* aWidget)
+NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView, nsIWidget* aWidget)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
@@ -514,6 +529,23 @@ NS_IMETHODIMP nsViewManager :: SetRootView(nsIView *aView, nsIWidget* aWidget)
 
   // case c)  aView has a parent view managed by a different view manager
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager::GetWindowOffset(nscoord *aX, nscoord *aY)
+{
+  NS_ASSERTION(aX != nsnull, "aX pointer is null");
+  NS_ASSERTION(aY != nsnull, "aY pointer is null");
+
+  *aX = mX;
+  *aY = mY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager::SetWindowOffset(nscoord aX, nscoord aY)
+{
+  mX = aX;
+  mY = aY;
   return NS_OK;
 }
 
@@ -793,9 +825,9 @@ static void SortByZOrder(DisplayZTreeNode *aNode, nsVoidArray &aBuffer, nsVoidAr
   PRInt32 explicitZIndex = 0;
 
   if (nsnull != aNode->mView) {
-    aNode->mView->GetAutoZIndex(autoZIndex);
+    autoZIndex = aNode->mView->GetZIndexIsAuto();
     if (!autoZIndex) {
-      aNode->mView->GetZIndex(explicitZIndex);
+      explicitZIndex = aNode->mView->GetZIndex();
     }
   }
 
@@ -1159,7 +1191,7 @@ void nsViewManager::RenderView(nsView *aView, nsIRenderingContext &aRC, const ns
 
   // should use blender here if opacity < 1.0
 
-  aView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, aResult);
+  aView->Paint(aRC, drect, 0, aResult);
 
   aRC.PopState(aResult);
 }
@@ -1177,7 +1209,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element, nsIRe
     nsRect drect(element->mBounds.x - x, element->mBounds.y - y,
                  element->mBounds.width, element->mBounds.height);
 
-    element->mView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, clipEmpty);
+    element->mView->Paint(aRC, drect, 0, clipEmpty);
     
     aRC.PopState(clipEmpty);
   }
@@ -1254,7 +1286,7 @@ void nsViewManager::PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x
   aRC.PushState();
   aRC.Translate(x, y);
   PRBool unused;
-  aView->Paint(aRC, aDamageRect, NS_VIEW_FLAG_JUST_PAINT, unused);
+  aView->Paint(aRC, aDamageRect, 0, unused);
   aRC.PopState(unused);
 }
 
@@ -1485,7 +1517,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget,
 
   PRUint32 flags = 0;
   aView->GetViewFlags(&flags);
-  PRBool isBlittable = (flags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT) == 0;
+  PRBool isBlittable = (flags & NS_VIEW_FLAG_DONT_BITBLT) == 0;
     
   nsView* childView = aView->GetFirstChild();
   PRBool childCovers = PR_FALSE;
@@ -1864,12 +1896,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           aEvent->point.y += offset.y;
  
           PRBool handled = PR_FALSE;
-          view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
-                            NS_VIEW_FLAG_CHECK_PARENT |
-                            NS_VIEW_FLAG_CHECK_SIBLINGS,
-                            aStatus,
-                            PR_TRUE,
-                            handled);
+          view->HandleEvent(aEvent, 0, aStatus, PR_TRUE, handled);
 
           aEvent->point.x -= offset.x;
           aEvent->point.y -= offset.y;
@@ -1937,7 +1964,7 @@ NS_IMETHODIMP nsViewManager::GetKeyEventGrabber(nsIView *&aView)
 }
 
 NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIView *aSibling,
-                                         PRBool aAbove)
+                                         PRBool aAfter)
 {
   nsView* parent = NS_STATIC_CAST(nsView*, aParent);
   nsView* child = NS_STATIC_CAST(nsView*, aChild);
@@ -1945,6 +1972,9 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
   
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
+  NS_ASSERTION(sibling == nsnull || sibling->GetParent() == parent,
+               "tried to insert view with invalid sibling");
+  NS_ASSERTION(!IsViewInserted(child), "tried to insert an already-inserted view");
 
   if ((nsnull != parent) && (nsnull != child))
     {
@@ -1953,6 +1983,9 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
 
       //verify that the sibling exists...
 
+#if 0 // This is the correct code, but we can't activate it yet without breaking things.
+      // We will turn this on when event handling and everything else has been
+      // brainfixed to understand z-indexes.
       while (nsnull != kid)
         {
           if (kid == sibling)
@@ -1964,15 +1997,35 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
           kid = kid->GetNextSibling();
         }
 
-      if (nsnull != kid)
-        {
-          //it's there, so do the insertion
+      // either kid == sibling and prev is the child before sibling, or null
+      // if sibling is the first child,
+      // OR kid == null, the sibling was null or not there, and prev == last child view
+      // The following code works in both cases.
 
-          if (PR_TRUE == aAbove)
-            parent->InsertChild(child, prev);
-          else
-            parent->InsertChild(child, sibling);
+      if (PR_TRUE == aAfter)
+        // the child views are ordered in REVERSE document order;
+        // LAST view in document order is the FIRST child
+        // so we insert the new view just in front of sibling, or as the first child
+        // if sibling is null
+        parent->InsertChild(child, prev);
+      else
+        parent->InsertChild(child, kid);
+#else // for now, don't keep consistent document order, but order things by z-index instead
+      // essentially we're emulating the old InsertChild(parent, child, zindex)
+      PRInt32 zIndex = child->GetZIndex();
+      while (nsnull != kid)
+        {
+          PRInt32 idx = kid->GetZIndex();
+
+          if (zIndex >= idx)
+            break;
+
+          prev = kid;
+          kid = kid->GetNextSibling();
         }
+
+      parent->InsertChild(child, prev);
+#endif
 
       UpdateTransCnt(nsnull, child);
 
@@ -1993,7 +2046,8 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, nsIV
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChild, PRInt32 aZIndex)
+NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChild,
+                                                nsIView *aSibling, PRBool aAfter)
 {
   nsView* parent = NS_STATIC_CAST(nsView*, aParent);
   nsView* child = NS_STATIC_CAST(nsView*, aChild);
@@ -2001,33 +2055,14 @@ NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChil
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
 
-  if ((nsnull != parent) && (nsnull != child))
-    {
-      nsView *kid = parent->GetFirstChild();
-      nsView *prev = nsnull;
-      
-      while (nsnull != kid)
-        {
-          PRInt32 idx;
-          kid->GetZIndex(idx);
-        
-          if (aZIndex >= idx)
-            break;
-        
-          prev = kid;
-          kid = kid->GetNextSibling();
-        }
-
-      nsZPlaceholderView* placeholder = new nsZPlaceholderView();
-      nsRect bounds(0, 0, 0, 0);
-      placeholder->Init(this, bounds, parent, nsViewVisibility_kHide);
-      placeholder->SetReparentedView(child);
-      child->SetZParent(placeholder);
-
-      placeholder->SetZIndex(aZIndex);
-      parent->InsertChild(placeholder, prev);
-    }
-  return NS_OK;
+  nsZPlaceholderView* placeholder = new nsZPlaceholderView();
+  nsRect bounds(0, 0, 0, 0);
+  placeholder->Init(this, bounds, parent, nsViewVisibility_kHide);
+  placeholder->SetReparentedView(child);
+  placeholder->SetZIndex(child->GetZIndexIsAuto(), child->GetZIndex());
+  child->SetZParent(placeholder);
+  
+  return InsertChild(parent, placeholder, aSibling, aAfter);
 }
 
 NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRInt32 aZIndex)
@@ -2047,9 +2082,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
 
       while (nsnull != kid)
         {
-          PRInt32 idx;
-
-          kid->GetZIndex(idx);
+          PRInt32 idx = kid->GetZIndex();
 
           if (aZIndex >= idx)
             break;
@@ -2062,7 +2095,7 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
 
       //in case this hasn't been set yet... maybe we should not do this? MMP
 
-      child->SetZIndex(aZIndex);
+      child->SetZIndex(child->GetZIndexIsAuto(), aZIndex);
       parent->InsertChild(child, prev);
 
       UpdateTransCnt(nsnull, child);
@@ -2083,13 +2116,13 @@ NS_IMETHODIMP nsViewManager::InsertChild(nsIView *aParent, nsIView *aChild, PRIn
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aParent, nsIView *aChild)
+NS_IMETHODIMP nsViewManager::RemoveChild(nsIView *aChild)
 {
-  nsView* parent = NS_STATIC_CAST(nsView*, aParent);
   nsView* child = NS_STATIC_CAST(nsView*, aChild);
 
-  NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
+
+  nsView* parent = child->GetParent();
 
   if ((nsnull != parent) && (nsnull != child))
     {
@@ -2136,11 +2169,13 @@ NS_IMETHODIMP nsViewManager::MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord height, PRBool aRepaintExposedAreaOnly)
+NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly)
 {
   nscoord oldWidth, oldHeight;
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  
+  PRInt32 width = aRect.width;
+  PRInt32 height = aRect.height;
+
   view->GetDimensions(&oldWidth, &oldHeight);
   if ((width != oldWidth) || (height != oldHeight)) {
     nscoord x = 0, y = 0;
@@ -2211,16 +2246,65 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord h
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetViewChildClip(nsIView *aView, nsRect *aRect)
+NS_IMETHODIMP nsViewManager::SetViewClipRegion(nsIView *aView, nsIRegion *aRegion)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
 
   NS_ASSERTION(!(nsnull == view), "no view");
-  NS_ASSERTION(!(nsnull == aRect), "no clip");
 
-  view->SetChildClip(aRect->x, aRect->y, aRect->XMost(), aRect->YMost());
+  if (aRegion != nsnull) {
+    nsRect r;
+    aRegion->GetBoundingBox(&r.x, &r.y, &r.width, &r.height);
+    view->SetChildClip(r.x, r.y, r.XMost(), r.YMost());
+    view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_CLIPCHILDREN);
+  } else {
+    view->SetViewFlags(view->GetViewFlags() & ~NS_VIEW_FLAG_CLIPCHILDREN);
+  }
 
-  UpdateView(view, *aRect, NS_VMREFRESH_NO_SYNC);
+  if (IsViewInserted(view)) {
+    UpdateView(view, NS_VMREFRESH_NO_SYNC);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager::SetViewBitBltEnabled(nsIView *aView, PRBool aEnable)
+{
+  nsView* view = NS_STATIC_CAST(nsView*, aView);
+
+  NS_ASSERTION(!(nsnull == view), "no view");
+
+  if (aEnable) {
+    view->SetViewFlags(view->GetViewFlags() & ~NS_VIEW_FLAG_DONT_BITBLT);
+  } else {
+    view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_DONT_BITBLT);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager::SetViewCheckChildEvents(nsIView *aView, PRBool aEnable)
+{
+  nsView* view = NS_STATIC_CAST(nsView*, aView);
+
+  NS_ASSERTION(!(nsnull == view), "no view");
+
+  if (aEnable) {
+    view->SetViewFlags(view->GetViewFlags() & ~NS_VIEW_FLAG_DONT_CHECK_CHILDREN);
+  } else {
+    view->SetViewFlags(view->GetViewFlags() | NS_VIEW_FLAG_DONT_CHECK_CHILDREN);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager::SetViewFloating(nsIView *aView, PRBool aFloating)
+{
+  nsView* view = NS_STATIC_CAST(nsView*, aView);
+
+  NS_ASSERTION(!(nsnull == view), "no view");
+
+  view->SetFloating(aFloating);
 
   return NS_OK;
 }
@@ -2231,7 +2315,7 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
 
   nsViewVisibility  oldVisible;
   view->GetVisibility(oldVisible);
-  if (aVisible != oldVisible) {
+  if (aVisible != oldVisible && IsViewInserted(view)) {
     view->SetVisibility(aVisible);
 
     PRBool hasWidget = PR_FALSE;
@@ -2253,114 +2337,65 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
+PRBool nsViewManager::IsViewInserted(nsView *aView)
+{
+  if (mRootView == aView) {
+    return PR_TRUE;
+  } else if (aView->GetParent() == nsnull) {
+    return PR_FALSE;
+  } else {
+    nsView* view = aView->GetParent()->GetFirstChild();
+    while (view != nsnull) {
+      if (view == aView) {
+        return PR_TRUE;
+      }        
+      view = view->GetNextSibling();
+    }
+    return PR_FALSE;
+  }
+}
+
+NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, PRInt32 aZIndex)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
   nsresult  rv = NS_OK;
 
   NS_ASSERTION((view != nsnull), "no view");
 
-  PRInt32 oldidx;
-  view->GetZIndex(oldidx);
-
-  if (oldidx != aZIndex) {
-    nsView *parent = view->GetParent();
-    if (nsnull != parent) {
-      //we don't just call the view manager's RemoveChild()
-      //so that we can avoid two trips trough the UpdateView()
-      //code (one for removal, one for insertion). MMP
-      parent->RemoveChild(view);
-      UpdateTransCnt(view, nsnull);
-      rv = InsertChild(parent, view, aZIndex);
-    }
-
-    // XXX The following else block is a workaround and should be cleaned up (bug 43410)
-  } else {
-    nsCOMPtr<nsIWidget> widget;
-    view->GetWidget(*getter_AddRefs(widget));
-    if (widget) {
-      widget->SetZIndex(aZIndex);
-    }
+  if (aAutoZIndex) {
+    aZIndex = 0;
   }
 
-  nsZPlaceholderView* zParentView = view->GetZParent();
-  if (nsnull != zParentView) {
-    SetViewZIndex(zParentView, aZIndex);
+  PRInt32 oldidx = view->GetZIndex();
+
+  view->SetZIndex(aAutoZIndex, aZIndex);
+
+  if (IsViewInserted(view)) {
+    if (oldidx != aZIndex) {
+      nsView *parent = view->GetParent();
+      if (nsnull != parent) {
+        //we don't just call the view manager's RemoveChild()
+        //so that we can avoid two trips trough the UpdateView()
+        //code (one for removal, one for insertion). MMP
+        parent->RemoveChild(view);
+        UpdateTransCnt(view, nsnull);
+        rv = InsertChild(parent, view, aZIndex);
+      }
+      
+      // XXX The following else block is a workaround and should be cleaned up (bug 43410)
+    } else {
+      nsCOMPtr<nsIWidget> widget;
+      view->GetWidget(*getter_AddRefs(widget));
+      if (widget) {
+        widget->SetZIndex(aZIndex);
+      }
+    }
+
+    nsZPlaceholderView* zParentView = view->GetZParent();
+    if (nsnull != zParentView) {
+      SetViewZIndex(zParentView, aAutoZIndex, aZIndex);
+    }
   }
-
-  return rv;
-}
-
-NS_IMETHODIMP nsViewManager::SetViewAutoZIndex(nsIView *aView, PRBool aAutoZIndex)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-  return view->SetAutoZIndex(aAutoZIndex);
-}
-
-NS_IMETHODIMP nsViewManager::MoveViewAbove(nsIView *aView, nsIView *aOther)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-  nsView* other = NS_STATIC_CAST(nsView*, aOther);
-  nsresult  rv;
-
-  NS_ASSERTION(!(nsnull == view), "no view");
-  NS_ASSERTION(!(nsnull == other), "no view");
-
-  nsView *nextview = view->GetNextSibling();
-
-  if (nextview != other)
-    {
-      nsView *parent = view->GetParent();
-
-      if (nsnull != parent)
-        {
-          //we don't just call the view manager's RemoveChild()
-          //so that we can avoid two trips trough the UpdateView()
-          //code (one for removal, one for insertion). MMP
-
-          parent->RemoveChild(view);
-          UpdateTransCnt(view, nsnull);
-          rv = InsertChild(parent, view, other, PR_TRUE);
-        }
-      else
-        rv = NS_OK;
-    }
-  else
-    rv = NS_OK;
-
-  return rv;
-}
-
-NS_IMETHODIMP nsViewManager::MoveViewBelow(nsIView *aView, nsIView *aOther)
-{
-  nsresult  rv;
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-  nsView* other = NS_STATIC_CAST(nsView*, aOther);
-
-  NS_ASSERTION(!(nsnull == view), "no view");
-  NS_ASSERTION(!(nsnull == other), "no view");
-
-  nsView *nextview = other->GetNextSibling();
- 
-  if (nextview != view)
-    {
-      nsView *parent = view->GetParent();
-
-      if (nsnull != parent)
-        {
-          //we don't just call the view manager's RemoveChild()
-          //so that we can avoid two trips trough the UpdateView()
-          //code (one for removal, one for insertion). MMP
-
-          parent->RemoveChild(view);
-          UpdateTransCnt(view, nsnull);
-          rv = InsertChild(parent, view, other, PR_FALSE);
-        }
-      else
-        rv = NS_OK;
-    }
-  else
-    rv = NS_OK;
 
   return rv;
 }
@@ -2372,7 +2407,7 @@ NS_IMETHODIMP nsViewManager::SetViewContentTransparency(nsIView *aView, PRBool a
 
   view->HasTransparency(trans);
 
-  if (trans != aTransparent)
+  if (trans != aTransparent && IsViewInserted(view))
     {
       UpdateTransCnt(view, nsnull);
       view->SetContentTransparency(aTransparent);
@@ -2390,7 +2425,7 @@ NS_IMETHODIMP nsViewManager::SetViewOpacity(nsIView *aView, float aOpacity)
 
   view->GetOpacity(opacity);
 
-  if (opacity != aOpacity)
+  if (opacity != aOpacity && IsViewInserted(view))
     {
       UpdateTransCnt(view, nsnull);
       view->SetOpacity(aOpacity);
@@ -2900,15 +2935,6 @@ NS_IMETHODIMP nsViewManager::ForceUpdate()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::GetOffset(nscoord *aX, nscoord *aY)
-{
-  NS_ASSERTION(aX != nsnull, "aX pointer is null");
-  NS_ASSERTION(aY != nsnull, "aY pointer is null");
-  *aX = mX;
-  *aY = mY;
-  return NS_OK;
-}
-
 static nsresult EnsureZTreeNodeCreated(nsView* aView, DisplayZTreeNode* &aNode) {
   if (nsnull == aNode) {
     aNode = new DisplayZTreeNode;
@@ -3024,8 +3050,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
     for (childView = aView->GetFirstChild(); nsnull != childView;
          childView = childView->GetNextSibling()) {
-      PRInt32 zindex;
-      childView->GetZIndex(zindex);
+      PRInt32 zindex = childView->GetZIndex();
       if (zindex < 0)
         break;
 
@@ -3374,8 +3399,7 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     PRUint32             flags = element->mFlags;
 
     nsView* parent = view->GetParent();
-    PRInt32   zindex;
-    view->GetZIndex(zindex);
+    PRInt32 zindex = view->GetZIndex();
 
     nest[nestcnt << 1] = 0;
 
@@ -3489,10 +3513,12 @@ nsresult nsViewManager::GetVisibleRect(nsRect& aVisibleRect)
   if (scrollingView) {     
     // Determine the visible rect in the scrolled view's coordinate space.
     // The size of the visible area is the clip view size
-    const nsIView*  clipView;
+    const nsIView*  clipViewI;
 
     scrollingView->GetScrollPosition(aVisibleRect.x, aVisibleRect.y);
-    scrollingView->GetClipView(&clipView);
+    scrollingView->GetClipView(&clipViewI);
+
+    const nsView* clipView = NS_STATIC_CAST(const nsView*, clipViewI);
     clipView->GetDimensions(&aVisibleRect.width, &aVisibleRect.height);
   } else {
     rv = NS_ERROR_FAILURE;

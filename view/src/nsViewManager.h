@@ -54,10 +54,12 @@
 #include "nsView.h"
 #include "nsIEventProcessor.h"
 
+class nsIRegion;
+class nsIEvent;
+class nsIPresContext;
 class nsISupportsArray;
 struct DisplayListElement2;
 struct DisplayZTreeNode;
-class nsView;
 
 //Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
@@ -125,10 +127,13 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(nsIDeviceContext* aContext, nscoord aX = 0, nscoord aY = 0);
+  NS_IMETHOD  Init(nsIDeviceContext* aContext);
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
   NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget=nsnull);
+
+  NS_IMETHOD  GetWindowOffset(nscoord *aX, nscoord *aY);
+  NS_IMETHOD  SetWindowOffset(nscoord aX, nscoord aY);
 
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
@@ -140,6 +145,13 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
+  /**
+   * Called to inform the view manager that a view has scrolled.
+   * The view manager will invalidate any widgets which may need
+   * to be rerendered.
+   * @param aView view to paint. should be root view
+   * @param aUpdateFlags see bottom of nsIViewManager.h for description
+   */
   NS_IMETHOD  UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY);
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus* aStatus);
@@ -156,27 +168,28 @@ public:
   NS_IMETHOD  InsertChild(nsIView *parent, nsIView *child,
                           PRInt32 zindex);
 
-  NS_IMETHOD  InsertZPlaceholder(nsIView *aParent, nsIView *aZChild,
-                                 PRInt32 aZIndex);
+  NS_IMETHOD  InsertZPlaceholder(nsIView *parent, nsIView *child, nsIView *sibling,
+                                 PRBool above);
 
-  NS_IMETHOD  RemoveChild(nsIView *parent, nsIView *child);
+  NS_IMETHOD  RemoveChild(nsIView *parent);
 
   NS_IMETHOD  MoveViewBy(nsIView *aView, nscoord aX, nscoord aY);
 
   NS_IMETHOD  MoveViewTo(nsIView *aView, nscoord aX, nscoord aY);
 
-  NS_IMETHOD  ResizeView(nsIView *aView, nscoord aWidth, nscoord aHeight, PRBool aRepaintExposedAreaOnly = PR_FALSE);
+  NS_IMETHOD  ResizeView(nsIView *aView, const nsRect &aRect, PRBool aRepaintExposedAreaOnly = PR_FALSE);
 
-  NS_IMETHOD  SetViewChildClip(nsIView *aView, nsRect *aRect);
+  NS_IMETHOD  SetViewClipRegion(nsIView *aView, nsIRegion *aRegion);
+
+  NS_IMETHOD  SetViewBitBltEnabled(nsIView *aView, PRBool aEnable);
+
+  NS_IMETHOD  SetViewCheckChildEvents(nsIView *aView, PRBool aEnable);
+
+  NS_IMETHOD  SetViewFloating(nsIView *aView, PRBool aFloating);
 
   NS_IMETHOD  SetViewVisibility(nsIView *aView, nsViewVisibility aVisible);
 
-  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRInt32 aZIndex);
-
-  NS_IMETHOD  SetViewAutoZIndex(nsIView *aView, PRBool aAutoZIndex);
-
-  NS_IMETHOD  MoveViewAbove(nsIView *aView, nsIView *aOther);
-  NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *aOther);
+  NS_IMETHOD  SetViewZIndex(nsIView *aView, PRBool aAuto, PRInt32 aZIndex);
 
   NS_IMETHOD  SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
   NS_IMETHOD  SetViewOpacity(nsIView *aView, float aOpacity);
@@ -209,7 +222,6 @@ public:
   NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget);
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
-  NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY);
  
   NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
   NS_IMETHOD CacheWidgetChanges(PRBool aCache);
@@ -244,7 +256,6 @@ private:
 
   PRBool UpdateAllCoveringWidgets(nsView *aView, nsView *aTarget, nsRect &aDamagedRect, PRBool aOnlyRepaintIfUnblittable);
 
-  
   void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
 
   void Refresh(nsView *aView, nsIRenderingContext *aContext,
@@ -288,6 +299,8 @@ private:
 #endif
 
   // Utilities
+
+  PRBool IsViewInserted(nsView *aView);
 
   /**
    * Returns the nearest parent view with an attached widget. Can be the
@@ -456,5 +469,8 @@ protected:
   MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document
 #endif
 };
+
+//when the refresh happens, should it be double buffered?
+#define NS_VMREFRESH_DOUBLE_BUFFER      0x0001
 
 #endif /* nsViewManager_h___ */

@@ -2412,9 +2412,9 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
         rootFrame->GetView(aPresContext, &viewportView);
         NS_ASSERTION(viewportView, "no viewport view");
+        viewportView->GetBounds(viewportArea);
         viewportArea.x = 0;
         viewportArea.y = 0;
-        viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
       }
 
       // Get the anchor point

@@ -57,6 +57,11 @@
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
+#include "nsIRegion.h"
+#include "nsGfxCIID.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -447,6 +452,20 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
   }
 }
 
+static nsIRegion* CreateRegion()
+{
+  nsIRegion* region;
+  nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
+  if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(region->Init())) {
+      return region;
+    } else {
+      NS_RELEASE(region);
+    }
+  }
+  return nsnull;
+}
+
 void
 nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
                                            nsIFrame*       aFrame,
@@ -473,11 +492,10 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       // area, then size the view large enough to include those child
       // frames
       if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
-        vm->ResizeView(aView, aCombinedArea->XMost(), aCombinedArea->YMost());
-
+        vm->ResizeView(aView, *aCombinedArea);
       } else {
-        nscoord width, height;
-        aView->GetDimensions(&width, &height);
+        nsRect bounds;
+        aView->GetBounds(bounds);
         // If the width is unchanged and the height is not decreased then repaint only the 
         // newly exposed or contracted area, otherwise repaint the union of the old and new areas
 
@@ -486,8 +504,9 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         // This is because some frames do not invalidate themselves properly. see bug 73825.
         // Once bug 73825 is fixed, we should always pass PR_TRUE instead of 
         // frameSize.width == width && frameSize.height >= height.
-        vm->ResizeView(aView, frameSize.width, frameSize.height, 
-                       (frameSize.width == width && frameSize.height >= height));
+        nsRect newSize(0, 0, frameSize.width, frameSize.height);
+        vm->ResizeView(aView, newSize, 
+                       (frameSize.width == bounds.width && frameSize.height >= bounds.height));
       }
     }
   
@@ -581,8 +600,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       autoZIndex = PR_TRUE;
     }
     
-    vm->SetViewZIndex(aView, zIndex);
-    vm->SetViewAutoZIndex(aView, autoZIndex);
+    vm->SetViewZIndex(aView, autoZIndex, zIndex);
 
     // There are two types of clipping:
     // - 'clip' which only applies to absolutely positioned elements, and is
@@ -647,21 +665,20 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       }
 
       // Set clipping of child views.
-      if (hasClip) {
-        aView->SetChildClip(clipRect.x, clipRect.y, clipRect.XMost(), clipRect.YMost());
-      } else {
-        aView->SetChildClip(overflowClipRect.x, overflowClipRect.y,
-                            overflowClipRect.XMost(), overflowClipRect.YMost());
+      nsIRegion *region = CreateRegion();
+      if (region != nsnull) {
+        if (hasClip) {
+          region->SetTo(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+        } else {
+          region->SetTo(overflowClipRect.x, overflowClipRect.y,
+                        overflowClipRect.width, overflowClipRect.height);
+        }
+        vm->SetViewClipRegion(aView, region);
+        NS_RELEASE(region);
       }
-      PRUint32 vflags;
-      aView->GetViewFlags(&vflags);
-      aView->SetViewFlags(vflags | NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
-
     } else {
       // Remove clipping of child views.
-      PRUint32 vflags;
-      aView->GetViewFlags(&vflags);
-      aView->SetViewFlags(vflags & ~NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
+      vm->SetViewClipRegion(aView, nsnull);
     }
 
     NS_RELEASE(vm);
