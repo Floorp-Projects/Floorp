@@ -1069,8 +1069,8 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mDocument(nsnull),
     mOwningNode(nsnull),
     mDisabled(PR_FALSE),
-    mScriptObject(nsnull),
-    mDirty(PR_FALSE)
+    mDirty(PR_FALSE),
+    mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
   nsCSSAtoms::AddrefAtoms();
@@ -1095,9 +1095,9 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mDocument(aCopy.mDocument),
     mOwningNode(aCopy.mOwningNode),
     mDisabled(aCopy.mDisabled),
+    mDirty(PR_FALSE),
     mScriptObject(nsnull),
-    mInner(aCopy.mInner),
-    mDirty(PR_FALSE)
+    mInner(aCopy.mInner)
 {
   NS_INIT_REFCNT();
   nsCSSAtoms::AddrefAtoms();

@@ -455,8 +455,6 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode)
   if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
     const nsString& content = aNode.GetSkippedContent();
     if (content.Length() > 0) {
-      nsAutoString tmp;
-
       QuoteText(content, tmp);
 			(*mOutput) << " <content value=\"";
 			(*mOutput) << tmp << "\"/>" << endl;

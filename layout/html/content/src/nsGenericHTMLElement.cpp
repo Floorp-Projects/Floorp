@@ -2410,7 +2410,7 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
     IndexOf(content, pos);
     if (pos >= 0) {
       nsIContent* newContent = nsnull;
-      nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+      res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
         // Check if this is a document fragment. If it is, we need
