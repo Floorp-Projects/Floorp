@@ -13,6 +13,7 @@
 <html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
   <box align="horizontal">
+    <html:input name="url" id="url" value="http://www.mozillazine.org/"/>
     <titledbutton onclick="loadUrl();" value="Load"/>
     <titledbutton onclick="refreshTree();" value="Refresh"/>
   </box>
