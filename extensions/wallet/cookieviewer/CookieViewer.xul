@@ -30,7 +30,7 @@
 <!DOCTYPE window SYSTEM "chrome://wallet/locale/CookieViewer.dtd" >
 
 <window id="cookieviewer"
-        width="400" height="420"
+        width="410" height="450"
         title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -98,7 +98,7 @@
         </html:fieldset>
         <spring flex="5%"/>
         <box align="horizontal">
-          <titledbutton value="&button.removecookie.label;" onclick="DeleteCookieSelected();"/>
+          <titledbutton class="dialog push" value="&button.removecookie.label;" onclick="DeleteCookieSelected();"/>
         </box>
       </box>
       
