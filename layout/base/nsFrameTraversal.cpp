@@ -522,14 +522,14 @@ nsFocusIterator::GetRealFrame(nsIFrame* aFrame)
 {
   nsIFrame* result = aFrame;
 
-  // See if it's a placeholder frame for a floater.
+  // See if it's a placeholder frame for a float.
   if (aFrame) {
     nsCOMPtr<nsIAtom> frameType;
     aFrame->GetFrameType(getter_AddRefs(frameType));
     PRBool isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType.get());
     if (isPlaceholder) {
       // Get the out-of-flow frame that the placeholder points to.
-      // This is the real floater that we should examine.
+      // This is the real float that we should examine.
       result = NS_STATIC_CAST(nsPlaceholderFrame*,aFrame)->GetOutOfFlowFrame();
       NS_ASSERTION(result, "No out of flow frame found for placeholder!\n");
     }

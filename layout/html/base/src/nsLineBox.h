@@ -45,60 +45,60 @@
 
 class nsSpaceManager;
 class nsLineBox;
-class nsFloaterCache;
-class nsFloaterCacheList;
-class nsFloaterCacheFreeList;
+class nsFloatCache;
+class nsFloatCacheList;
+class nsFloatCacheFreeList;
 
-// State cached after reflowing a floater. This state is used during
-// incremental reflow when we avoid reflowing a floater.
-class nsFloaterCache {
+// State cached after reflowing a float. This state is used during
+// incremental reflow when we avoid reflowing a float.
+class nsFloatCache {
 public:
-  nsFloaterCache();
+  nsFloatCache();
 #ifdef NS_BUILD_REFCNT_LOGGING
-  ~nsFloaterCache();
+  ~nsFloatCache();
 #else
-  ~nsFloaterCache() { }
+  ~nsFloatCache() { }
 #endif
 
-  nsFloaterCache* Next() const { return mNext; }
+  nsFloatCache* Next() const { return mNext; }
 
   nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
 
-  // This will be true if the floater was placed on the current line
+  // This will be true if the float was placed on the current line
   // instead of below the current line.
-  PRBool mIsCurrentLineFloater;
+  PRBool mIsCurrentLineFloat;
 
   nsMargin mMargins;                    // computed margins
 
   nsMargin mOffsets;                    // computed offsets (relative pos)
 
-  // Region in the spacemanager impacted by this floater; the
+  // Region in the spacemanager impacted by this float; the
   // coordinates are relative to the containing block frame. The
-  // region includes the margins around the floater, but doesn't
+  // region includes the margins around the float, but doesn't
   // include the relative offsets.
   nsRect mRegion;
 
-  // Combined area for the floater. This will not include the margins
-  // for the floater. Like mRegion, the coordinates are relative to
+  // Combined area for the float. This will not include the margins
+  // for the float. Like mRegion, the coordinates are relative to
   // the containing block frame.
   nsRect mCombinedArea;
 
-  // The floater's max-element-width.
+  // The float's max-element-width.
   nscoord mMaxElementWidth;
 
 protected:
-  nsFloaterCache* mNext;
+  nsFloatCache* mNext;
 
-  friend class nsFloaterCacheList;
-  friend class nsFloaterCacheFreeList;
+  friend class nsFloatCacheList;
+  friend class nsFloatCacheFreeList;
 };
 
 //----------------------------------------
 
-class nsFloaterCacheList {
+class nsFloatCacheList {
 public:
-  nsFloaterCacheList() : mHead(nsnull) { }
-  ~nsFloaterCacheList();
+  nsFloatCacheList() : mHead(nsnull) { }
+  ~nsFloatCacheList();
 
   PRBool IsEmpty() const {
     return nsnull == mHead;
@@ -108,44 +108,44 @@ public:
     return nsnull != mHead;
   }
 
-  nsFloaterCache* Head() const {
+  nsFloatCache* Head() const {
     return mHead;
   }
 
-  nsFloaterCache* Tail() const;
+  nsFloatCache* Tail() const;
 
-  nsFloaterCache* Find(nsIFrame* aOutOfFlowFrame);
+  nsFloatCache* Find(nsIFrame* aOutOfFlowFrame);
 
-  void Remove(nsFloaterCache* aElement);
+  void Remove(nsFloatCache* aElement);
 
-  void Append(nsFloaterCacheFreeList& aList);
+  void Append(nsFloatCacheFreeList& aList);
 
 protected:
-  nsFloaterCache* mHead;
+  nsFloatCache* mHead;
 
-  friend class nsFloaterCacheFreeList;
+  friend class nsFloatCacheFreeList;
 };
 
 //---------------------------------------
 
-class nsFloaterCacheFreeList : public nsFloaterCacheList {
+class nsFloatCacheFreeList : public nsFloatCacheList {
 public:
-  nsFloaterCacheFreeList() : mTail(nsnull) { }
-  ~nsFloaterCacheFreeList() { }
+  nsFloatCacheFreeList() : mTail(nsnull) { }
+  ~nsFloatCacheFreeList() { }
 
-  // Steal away aList's nsFloaterCache objects and put them on this
+  // Steal away aList's nsFloatCache objects and put them on this
   // free-list.
-  void Append(nsFloaterCacheList& aList);
+  void Append(nsFloatCacheList& aList);
 
-  void Append(nsFloaterCache* aFloaterCache);
+  void Append(nsFloatCache* aFloatCache);
 
-  // Allocate a new nsFloaterCache object
-  nsFloaterCache* Alloc();
+  // Allocate a new nsFloatCache object
+  nsFloatCache* Alloc();
 
 protected:
-  nsFloaterCache* mTail;
+  nsFloatCache* mTail;
 
-  friend class nsFloaterCacheList;
+  friend class nsFloatCacheList;
 };
 
 //----------------------------------------------------------------------
@@ -246,13 +246,13 @@ public:
     return mFlags.mPreviousMarginDirty;
   }
 
-  // mImpactedByFloater bit
-  void SetLineIsImpactedByFloater(PRBool aValue) {
+  // mImpactedByFloat bit
+  void SetLineIsImpactedByFloat(PRBool aValue) {
     NS_ASSERTION((PR_FALSE==aValue || PR_TRUE==aValue), "somebody is playing fast and loose with bools and bits!");
-    mFlags.mImpactedByFloater = aValue;
+    mFlags.mImpactedByFloat = aValue;
   }
-  PRBool IsImpactedByFloater() const {
-    return mFlags.mImpactedByFloater;
+  PRBool IsImpactedByFloat() const {
+    return mFlags.mImpactedByFloat;
   }
 
   // mHasPercentageChild bit
@@ -324,14 +324,14 @@ public:
   nsCollapsingMargin GetCarriedOutBottomMargin() const;
   void SetCarriedOutBottomMargin(nsCollapsingMargin aValue);
 
-  // mFloaters
-  PRBool HasFloaters() const {
-    return (IsInline() && mInlineData) && mInlineData->mFloaters.NotEmpty();
+  // mFloats
+  PRBool HasFloats() const {
+    return (IsInline() && mInlineData) && mInlineData->mFloats.NotEmpty();
   }
-  nsFloaterCache* GetFirstFloater();
-  void FreeFloaters(nsFloaterCacheFreeList& aFreeList);
-  void AppendFloaters(nsFloaterCacheFreeList& aFreeList);
-  PRBool RemoveFloater(nsIFrame* aFrame);
+  nsFloatCache* GetFirstFloat();
+  void FreeFloats(nsFloatCacheFreeList& aFreeList);
+  void AppendFloats(nsFloatCacheFreeList& aFreeList);
+  PRBool RemoveFloat(nsIFrame* aFrame);
 
   // Combined area is the area of the line that should influence the
   // overflow area of its parent block.  The combined area should be
@@ -416,7 +416,7 @@ public:
     PRUint32 mDirty : 1;
     PRUint32 mPreviousMarginDirty : 1;
     PRUint32 mBlock : 1;
-    PRUint32 mImpactedByFloater : 1;
+    PRUint32 mImpactedByFloat : 1;
     PRUint32 mHasPercentageChild : 1;
     PRUint32 mLineWrapped: 1;
     PRUint32 mForceInvalidate: 1;                   // default 0 = means this line handles it's own invalidation.  1 = always invalidate this entire line
@@ -444,7 +444,7 @@ public:
   struct ExtraInlineData : public ExtraData {
     ExtraInlineData(const nsRect& aBounds) : ExtraData(aBounds) {
     }
-    nsFloaterCacheList mFloaters;
+    nsFloatCacheList mFloats;
   };
 
 protected:

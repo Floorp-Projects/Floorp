@@ -19,7 +19,7 @@ into "lines" and applying all of the css behavior as one might expect,
 including line-height, vertical-align, relative positioning, etc.</li>
 
 <li>
-Floater management. The block is responsible for the reflow and placement
+Float management. The block is responsible for the reflow and placement
 of floating elements.</li>
 
 <li>
@@ -121,22 +121,22 @@ premature breaking.
 <p>Lines also keep track of the type of "break" that occurred on the line.
 This is used, for example, to support html's "&lt;br clear=left>" behavior.
 <h3>
-<u>Floater Management</u></h3>
-Since child block elements are containing blocks for floaters, the only
-place where a block frame will see a floater is as part of an inline line.
-Consequently, the nsLineBox will only keep track of floaters on inline
+<u>Float Management</u></h3>
+Since child block elements are containing blocks for floats, the only
+place where a block frame will see a float is as part of an inline line.
+Consequently, the nsLineBox will only keep track of floats on inline
 lines (saving storage for block lines).
 <p>The nsLineLayout class and the block frame cooperate in the management
-of floaters. Since the frame construction code leaves a "placeholder" frame
-in-flow where the floater was found, when nsLineLayout reflows a placeholder
-frame it knows to inform the block about it. That triggers the blocks "AddFloater"
-logic which then determines where the floater should be placed (on the
+of floats. Since the frame construction code leaves a "placeholder" frame
+in-flow where the float was found, when nsLineLayout reflows a placeholder
+frame it knows to inform the block about it. That triggers the blocks "AddFloat"
+logic which then determines where the float should be placed (on the
 current line or below the current line).
-<p>The block frame uses the space manager to manage the effects of floaters,
+<p>The block frame uses the space manager to manage the effects of floats,
 namely the consumption of available space. For example, for a left aligned
 floating element, the inline elements must be placed to the right of the
-floater. To simplify this process, the spacemanager is used to keep track
-of available and busy space. Floaters when placed mark space as busy and
+float. To simplify this process, the spacemanager is used to keep track
+of available and busy space. Floats when placed mark space as busy and
 the spacemanager will them compute the available space. Most of this logic
 is handled by the nsBlockReflowState which uses a helper class, nsBlockBandData,
 in concert with the space manager, to do the available space computations.

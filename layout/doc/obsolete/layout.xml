@@ -149,7 +149,7 @@ element), a placeholder frame is also created. The placeholder frame is inserted
 into the flow exactly where the out-of-flow frame would have been inserted.
 The out-of-flow frame is then inserted as a child of its containing block in
 one of the additional child lists. Floated frames are inserted into the
-"Floater-list" and absolutely positioned frames are inserted into the
+"Float-list" and absolutely positioned frames are inserted into the
 "Absolute-list".</Body>
 
 <SectionHeading>Frame Manager</SectionHeading>
@@ -250,7 +250,7 @@ in mozilla/layout/html/src:
 </Body>
 
 <Body><RunIn>The core frame classes</RunIn> implement the CSS viewport abstraction, scrolling,
-block and inline display of flowed elements, floaters, and absolute positioning.</Body>
+block and inline display of flowed elements, floats, and absolute positioning.</Body>
 
 <Body>For more information on block layout, click 
 <A xlink:type="simple" xlink:show="replace" xlink:href="block.html">here</A>. For more information about
