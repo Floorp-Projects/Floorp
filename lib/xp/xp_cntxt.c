@@ -47,8 +47,7 @@ XP_InitializeContext(MWContext *context)
 	if (context != NULL)
 	{
 		context->context_id = ++global_context_id;
-		context->INTL_tag = INTL_TAG;
-		context->anonymous = PRVCY_IsAnonymous();
+      context->INTL_tag = INTL_TAG;
 	}
 }
 
