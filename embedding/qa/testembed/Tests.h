@@ -137,6 +137,8 @@ protected:
 	afx_msg void OnInterfacesNsiwebbrowser();
 	afx_msg void OnInterfacesNsiwebprogress();
 	afx_msg void OnInterfacesNsiwebbrowfind();
+	afx_msg void OnInterfacesNsieditingsession();
+	afx_msg void OnInterfacesNsicommandmgr();
 
 	//}}AFX_MSG
 

@@ -221,8 +221,6 @@ void CnsIObserServ::EnumerateObserversTest()
 			RvTestResult(rv, "nsIObserver() test", 1);	
 			
 			// compare 'this' with observer object
-	//		if (this ==(CnsIObserServ *)observer)
-
 			if( this == NS_REINTERPRET_CAST(CnsIObserServ*,NS_REINTERPRET_CAST(void*, observer.get())))
 			{
 				QAOutput("observers match. Test passes.");
