@@ -37,6 +37,7 @@ XPIDLSRCS =					\
 	nsIDOMXULControlElement.idl          \
 	nsIDOMXULLabeledControlEl.idl          \
 	nsIDOMXULCheckboxElement.idl          \
+	nsIDOMXULImageElement.idl               \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

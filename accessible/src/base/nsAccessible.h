@@ -120,6 +120,8 @@ protected:
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
+  NS_IMETHOD AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent);
+
 
   // Data Members
   nsCOMPtr<nsIDOMNode> mDOMNode;

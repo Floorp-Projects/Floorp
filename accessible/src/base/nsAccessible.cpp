@@ -66,6 +66,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLBRElement.h"
+#include "nsIDOMXULElement.h"
 #include "nsIAtom.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
@@ -1330,11 +1331,42 @@ NS_IMETHODIMP nsAccessible::AccTakeFocus()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent)
+{
+  // Insert spaces to insure that words from controls aren't jammed together
+  if (!textEquivalent.IsEmpty()) {
+    aFlatString->Append(NS_LITERAL_STRING(" "));
+    aFlatString->Append(textEquivalent);
+    aFlatString->Append(NS_LITERAL_STRING(" "));
+  }
+  return NS_OK;
+}
+
+/*
+ * AppendFlatStringFromContentNode and AppendFlatStringFromSubtree
+ *
+ * This method will glean useful text, in whatever form it exists, from any content node given to it.
+ * It is used by any decendant of nsAccessible that needs to get text from a single node, as
+ * well as by nsAccessible::AppendFlatStringFromSubtree, which gleans and concatenates text from any node and
+ * that node's decendants.
+ */
 
 NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString)
 {
+  nsAutoString textEquivalent;
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aContent));
+  if (xulElement) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContent));
+    NS_ASSERTION(elt, "No DOM element for content node!");
+    elt->GetAttribute(NS_LITERAL_STRING("value"), textEquivalent); // Prefer value over tooltiptext
+    if (textEquivalent.IsEmpty())
+      elt->GetAttribute(NS_LITERAL_STRING("tooltiptext"), textEquivalent);
+    return AppendStringWithSpaces(aFlatString, textEquivalent);
+  }
+
   nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
-  if (textContent) {
+  if (textContent) {     
+    // If it's a text node, but node a comment node, append the text
     nsCOMPtr<nsIDOMComment> commentNode(do_QueryInterface(aContent));
     if (!commentNode) {
       PRBool isHTMLBlock = PR_FALSE;
@@ -1372,17 +1404,20 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
     }
     return NS_OK;
   }
+
   nsCOMPtr<nsIDOMHTMLBRElement> brElement(do_QueryInterface(aContent));
-  if (brElement) {
+  if (brElement) {   // If it's a line break, insert a space so that words aren't jammed together
     aFlatString->Append(NS_LITERAL_STRING(" "));
     return NS_OK;
   }
 
   nsCOMPtr<nsIDOMHTMLImageElement> imageContent(do_QueryInterface(aContent));
-  nsCOMPtr<nsIDOMHTMLInputElement> inputContent(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMHTMLInputElement> inputContent;
+  if (!imageContent)
+    inputContent = do_QueryInterface(aContent);
   if (imageContent || inputContent) {
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aContent));
-    nsAutoString textEquivalent;
+    NS_ASSERTION(elt, "No DOM element for content node!");
     elt->GetAttribute(NS_LITERAL_STRING("alt"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("title"), textEquivalent);
@@ -1390,13 +1425,9 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
       elt->GetAttribute(NS_LITERAL_STRING("name"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("src"), textEquivalent);
-    if (!textEquivalent.IsEmpty()) {
-      aFlatString->Append(NS_LITERAL_STRING(" "));
-      aFlatString->Append(textEquivalent);
-      aFlatString->Append(NS_LITERAL_STRING(" "));
-      return NS_OK;
-    }
+    return AppendStringWithSpaces(aFlatString, textEquivalent);
   }
+
   return NS_OK;
 }
 
