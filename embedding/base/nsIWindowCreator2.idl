@@ -34,17 +34,19 @@
 
 interface nsIWebBrowserChrome;
 
-[uuid(f673ec81-a4b0-11d6-964b-eb5a2bf216fc)]
+// This interface is not generally scriptable: only the const(s)
+// should be visible.
+[scriptable, uuid(f673ec81-a4b0-11d6-964b-eb5a2bf216fc)]
 
 interface nsIWindowCreator2 : nsIWindowCreator {
 
   /**
    * Definitions for contextFlags
    */
-   
+
   // Likely that the window is an advertising popup. 
   const unsigned long PARENT_IS_LOADING_OR_RUNNING_TIMEOUT = 0x00000001;
-     
+
   /** Create a new window. Gecko will/may call this method, if made
       available to it, to create new windows.
       @param parent parent window, if any. null if not. the newly created
@@ -55,6 +57,7 @@ interface nsIWindowCreator2 : nsIWindowCreator {
       @param contextFlags flags about the context of the window being created.
       @return the new window
   */
+  [noscript]
   nsIWebBrowserChrome createChromeWindow2(in nsIWebBrowserChrome parent,
                                           in PRUint32 chromeFlags,
                                           in PRUint32 contextFlags);
