@@ -103,8 +103,11 @@ public:
     mGlyphArray = aGlyphArray;
     mGlyphCount = aGlyphCount;
     mNextTable = nsnull;
-    mIsSorted = PR_FALSE;
     mCache = mCharArray;
+    // quick sort so that we can speedily lookup the index of a char using binary search
+    if (mCharArray && (mCharCount > 1)) {
+      NS_QuickSort(mCharArray, mCharCount, sizeof(nsCharData), compare, nsnull);
+    }
   }
 
   ~nsGlyphTable() // not a virtual destructor: this class is not intended to be subclassed
@@ -189,13 +192,11 @@ public:
                               nsGlyphCode          aGlyphCode,
                               nsBoundingMetrics&   aBoundingMetrics)
   {
-#ifdef NS_DEBUG
     NS_ASSERTION(Has(aGlyphCode), "bad usage of a glyph table");
-#endif
-    if (mType == NS_TABLE_TYPE_UNICODE)
+    // if (mType == NS_TABLE_TYPE_UNICODE)
       return aRenderingContext.GetBoundingMetrics((PRUnichar*)&aGlyphCode, PRUint32(1), aBoundingMetrics);
     // else mType == NS_TABLE_TYPE_GLYPH_INDEX
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // return NS_ERROR_NOT_IMPLEMENTED;
     // return aRenderingContext.GetBoundingMetricsI((PRUint16*)&aGlyphCode, PRUint32(1), aBoundingMetrics);
   }
 
@@ -224,9 +225,6 @@ private:
 
   nsGlyphTable* mNextTable;  // Pointer to another table --to enable walking/trying several fonts.
 
-  PRBool        mIsSorted;   // mCharArray is kept sorted so that we can speedily lookup
-                             // the index of a char using binary search.
-
   nsCharData*   mCache;      // For speedy re-use, always cache the last char used in IndexOf() ...
 
   // ---------------------------
@@ -252,11 +250,6 @@ nsGlyphTable::IndexOf(nsMathMLCharEnum aEnum)
 {
   // quick return if it is identical with our cache ...
   if (mCache->mEnum == aEnum) return mCache->mIndex;
-  // quick sort if this is the first call ...
-  if (!mIsSorted) {
-    NS_QuickSort(mCharArray, mCharCount, sizeof(nsCharData), compare, nsnull);
-    mIsSorted = PR_TRUE;
-  }
   // binary search ...
   PRInt32 low = 0;
   PRInt32 high = mCharCount-1;
@@ -283,19 +276,17 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
                         nscoord              aY,
                         nsRect*              aClipRect)
 {
-#ifdef NS_DEBUG
   NS_ASSERTION(Has(aGlyphCode), "bad usage of a glyph table");
-#endif
   PRBool clipState;
   if (aClipRect) {
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(*aClipRect, nsClipCombine_kIntersect, clipState);
   }
 
-  if (mType == NS_TABLE_TYPE_UNICODE)
+  //if (mType == NS_TABLE_TYPE_UNICODE)
     aRenderingContext.DrawString((PRUnichar*)&aGlyphCode, PRUint32(1), aX, aY);
-  else
-    NS_ASSERTION(0, "Error *** Not yet implemented");
+  //else
+  //  NS_ASSERTION(0, "Error *** Not yet implemented");
     //aRenderingContext.DrawStringI((PRUint16*)&aGlyphCode, PRUint32(1), aX, aY);
 
   if (aClipRect) {
@@ -569,7 +560,8 @@ void InitGlobals(nsIPresContext* aPresContext)
       // check nsMathMLCharList to ensure that the same Unicode point
       // is not associated to different enums
       PRUnichar ck = gCharInfo[k].mUnicode;
-      NS_ASSERTION(!(cj == ck && j != k), "Duplicate Unicode point found");
+      NS_ASSERTION(!(cj <= ck && j > k), "nsMathMLCharList is not sorted");
+      NS_ASSERTION(!(cj >= ck && j < k), "nsMathMLCharList is not sorted");
     }
   }
 #endif
