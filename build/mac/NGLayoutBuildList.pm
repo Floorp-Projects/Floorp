@@ -434,6 +434,8 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES);
 
+	BuildOneProject(":mozilla:base:macbuild:base.mcp",							"base$D.shlb", "base.toc", 1, $main::ALIAS_SYM_FILES);
+
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvlatin.mcp",				"ucvlatin$D.shlb", "uconvlatin.toc", 1, $main::ALIAS_SYM_FILES);
@@ -442,8 +444,6 @@ sub BuildCommonProjects()
 
 #// removing powerplant - long live powerplant
 #	BuildOneProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",				"PowerPlant$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
-
-	BuildOneProject(":mozilla:base:macbuild:base.mcp",							"base$D.shlb", "base.toc", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:modules:libutil:macbuild:libutil.mcp",			"libutil$D.shlb", "libutil.toc", 1, $main::ALIAS_SYM_FILES);
 
