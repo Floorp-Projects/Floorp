@@ -918,6 +918,7 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
     return rv;
 }
 
+#ifdef notdef
 static SECStatus
 DeleteKey(SECKEYKeyDBHandle *handle, char *nickname)
 {
@@ -929,6 +930,7 @@ DeleteKey(SECKEYKeyDBHandle *handle, char *nickname)
     }
     return rv;
 }
+#endif
 
 
 /*
