@@ -50,15 +50,10 @@
 #define SMIME_PROPERTIES_URL          "chrome://messenger/locale/smime.properties"
 #define SMIME_STR_NOT_SUPPORTED_ID    1000
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #ifndef XP_MAC
 static nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
 #endif
 
-
-//
-// This is the next generation string retrieval call 
-//
 static char *SMimeGetStringByID(PRInt32 aMsgId)
 {
   char          *tempString = nsnull;
@@ -73,7 +68,7 @@ nsCOMPtr<nsIStringBundle> stringBundle = nsnull;
 		static const char propertyURL[] = SMIME_PROPERTIES_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
-		         do_GetService(kStringBundleServiceCID, &res); 
+		         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));

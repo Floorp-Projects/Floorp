@@ -26,8 +26,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIURI.h"
 
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #define EUDORA_MSGS_URL       "chrome://messenger/locale/eudoraImportMsgs.properties"
@@ -45,7 +43,7 @@ nsIStringBundle *nsEudoraStringBundle::GetStringBundle( void)
 
 
 	nsCOMPtr<nsIStringBundleService> sBundleService = 
-	         do_GetService(kStringBundleServiceCID, &rv); 
+	         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
 	if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) {
 		rv = sBundleService->CreateBundle(propertyURL, &sBundle);
 	}

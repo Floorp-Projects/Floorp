@@ -100,9 +100,7 @@ typedef struct
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
-/* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define     VCARD_URL     "chrome://messenger/locale/vcard.properties"
 
@@ -1848,9 +1846,6 @@ static int WriteValue (MimeObject *obj, const char *value)
   return status;
 }
 
-//
-// This is the next generation string retrieval call 
-//
 extern "C" 
 char *
 VCardGetStringByID(PRInt32 aMsgId)
@@ -1869,7 +1864,7 @@ nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
     propertyURL = VCARD_URL;
 
     nsCOMPtr<nsIStringBundleService> sBundleService = 
-             do_GetService(kStringBundleServiceCID, &res); 
+             do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
     if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
     {
       res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));

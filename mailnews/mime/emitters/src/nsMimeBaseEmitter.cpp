@@ -70,7 +70,6 @@ static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 
 #define   MIME_URL      "chrome://messenger/locale/mimeheader.properties"
 static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMimeBaseEmitter)
 NS_IMPL_THREADSAFE_RELEASE(nsMimeBaseEmitter)
@@ -206,9 +205,6 @@ nsMimeBaseEmitter::CleanupHeaderArray(nsVoidArray *aArray)
   delete aArray;
 }
 
-//
-// This is the next generation string retrieval call 
-//
 char *
 nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
 {
@@ -219,7 +215,7 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
 		static const char propertyURL[] = MIME_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
-		         do_GetService(kStringBundleServiceCID, &res); 
+		         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
