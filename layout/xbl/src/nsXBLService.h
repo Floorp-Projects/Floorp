@@ -19,12 +19,15 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s): Brendan Eich (brendan@mozilla.org)
  */
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #include "nsIXBLService.h"
+
+#include "jsapi.h"              // nsXBLJSClass derives from JSClass
+#include "jsclist.h"            // nsXBLJSClass derives from JSCList
 
 class nsIXBLBinding;
 class nsINameSpaceManager;
@@ -36,7 +39,7 @@ class nsIURI;
 class nsSupportsHashtable;
 class nsHashtable;
 
-class nsXBLService: public nsIXBLService
+class nsXBLService : public nsIXBLService
 {
   NS_DECL_ISUPPORTS
 
@@ -52,10 +55,10 @@ class nsXBLService: public nsIXBLService
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement, 
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement,
                             PRBool* aMultipleInsertionPoints);
 
-  // Gets the object's base class type.  
+  // Gets the object's base class type.
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts);
@@ -78,8 +81,8 @@ public:
   NS_IMETHOD StripWhitespaceNodes(nsIContent* aContent);
 
 // MEMBER VARIABLES
-public: 
-  static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files 
+public:
+  static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files
                                              // we have loaded
                                              // during this session.
   static nsSupportsHashtable* mScriptAccessTable;   // Can the doc's bindings access scripts
@@ -89,12 +92,30 @@ public:
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
   static PRBool gDisableChromeCache;
-  
-  static nsHashtable* gClassTable;           // A table of JSClass objects.
+
+  static nsHashtable* gClassTable;           // A table of nsXBLJSClass objects.
+
+  static JSCList  gClassLRUList;             // LRU list of cached classes.
+  static PRUint32 gClassLRUListLength;       // Number of classes on LRU list.
+  static PRUint32 gClassLRUListQuota;        // Quota on class LRU list.
 
   // XBL Atoms
-  static nsIAtom* kExtendsAtom; 
+  static nsIAtom* kExtendsAtom;
   static nsIAtom* kHasChildrenAtom;
   static nsIAtom* kURIAtom;
+};
+
+class nsXBLJSClass : public JSCList, public JSClass
+{
+private:
+  nsrefcnt mRefCnt;
+  nsrefcnt Destroy();
+
+public:
+  nsXBLJSClass(const nsCString& aClassName);
+  ~nsXBLJSClass() { nsMemory::Free(name); }
+
+  nsrefcnt Hold() { return ++mRefCnt; }
+  nsrefcnt Drop() { return --mRefCnt ? mRefCnt : Destroy(); }
 };
 

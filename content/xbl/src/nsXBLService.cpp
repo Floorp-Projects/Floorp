@@ -19,7 +19,7 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s): Brendan Eich (brendan@mozilla.org)
  */
 
 #include "nsCOMPtr.h"
@@ -122,6 +122,10 @@ nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
  
 nsHashtable* nsXBLService::gClassTable = nsnull;
 
+JSCList  nsXBLService::gClassLRUList = JS_INIT_STATIC_CLIST(&nsXBLService::gClassLRUList);
+PRUint32 nsXBLService::gClassLRUListLength = 0;
+PRUint32 nsXBLService::gClassLRUListQuota = 64;
+
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 nsIAtom* nsXBLService::kHasChildrenAtom = nsnull;
 nsIAtom* nsXBLService::kURIAtom = nsnull;
@@ -175,14 +179,6 @@ nsXBLService::nsXBLService(void)
   }
 }
 
-static PRBool PR_CALLBACK DeleteClasses(nsHashKey* aKey, void* aValue, void* closure)
-{
-  JSClass* c = (JSClass*)aValue;
-  nsMemory::Free(c->name);
-  delete c;
-  return PR_TRUE; // return PR_TRUE to continue for nsHashtable enumerator
-}
-
 nsXBLService::~nsXBLService(void)
 {
   gRefCnt--;
@@ -197,10 +193,23 @@ nsXBLService::~nsXBLService(void)
     NS_RELEASE(kHasChildrenAtom);
     NS_RELEASE(kURIAtom);
 
-    // Walk the hashtable and delete the JSClasses
-    if (gClassTable)
-      gClassTable->Enumerate(DeleteClasses);
+    // Walk the LRU list removing and deleting the nsXBLJSClasses.
+    while (!JS_CLIST_IS_EMPTY(&gClassLRUList)) {
+      JSCList* lru = gClassLRUList.next;
+      JS_REMOVE_AND_INIT_LINK(lru);
+      nsXBLJSClass* c = NS_STATIC_CAST(nsXBLJSClass*, lru);
+      delete c;
+    }
+
+    // Any straggling nsXBLJSClass instances held by unfinalized JS objects
+    // created for bindings will be deleted when those objects are finalized
+    // (and not put on gClassLRUList, because length >= quota).
+    gClassLRUListLength = gClassLRUListQuota = 0;
+
+    // At this point, the only hash table entries should be for referenced
+    // XBL class structs held by unfinalized JS binding objects.
     delete gClassTable;
+    gClassTable = nsnull;
   }
 }
 

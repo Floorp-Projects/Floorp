@@ -19,7 +19,7 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s): Brendan Eich (brendan@mozilla.org)
  */
 
 #include "nsCOMPtr.h"
@@ -674,7 +674,7 @@ nsXBLEventHandler::RemoveEventHandlers()
     PRBool mouse = nsXBLBinding::IsMouseHandler(type);
     PRBool key = nsXBLBinding::IsKeyHandler(type);
     PRBool focus = nsXBLBinding::IsFocusHandler(type);
-    PRBool xul = nsXBLBinding::IsXULHandler(type);
+    // XXX not used: PRBool xul = nsXBLBinding::IsXULHandler(type);
     PRBool scroll = nsXBLBinding::IsScrollHandler(type);
 
     // Remove the event listener.
