@@ -48,14 +48,14 @@
   height: 80px;
 }
 
-#themesLink {
+.themesLink {
   margin-left: 5px;
   text-decoration: underline;
   color: blue;
   cursor: pointer;
 }
 
-#themesLink:active {
+.themesLink:active {
   color: red;
 }
 
