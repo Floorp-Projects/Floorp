@@ -19,8 +19,16 @@
 #
 # Contributor(s): 
 
-!if "$(MSSDK)" == ""
-!message Warning this module requires the MS Platform SDK to be installed if you are using VC5.0 or earlier.
+!if "$(_MSC_VER)" == "1100"
+!message Warning:
+!message
+!message Your _MSC_VER environment variable is set to 1100, suggesting you are building
+!message with DevStudio 5.0. The ActiveX control may not build correctly unless you
+!message install the at least the January 1998 Platform SDK and ensure that it is 
+!message correctly referenced from your PATH, LIB and INCLUDE variables.
+!message          
+!message If you do not wish to build the ActiveX control then the set environment
+!message variable MOZ_NO_ACTIVEX_SUPPORT to 1 before invoking a build.
 !endif
 
 DLLNAME = mozctl
