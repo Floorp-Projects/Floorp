@@ -12,6 +12,9 @@ NR_RegGetEntryInfo
 NR_RegGetKey
 NR_RegDeleteKey
 NR_RegAddKey
+NR_RegGetKeyRaw
+NR_RegDeleteKeyRaw
+NR_RegAddKeyRaw
 NR_RegPack
 NR_RegClose
 NR_RegOpen
