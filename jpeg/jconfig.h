@@ -22,7 +22,6 @@
  */
 
 #include "xp_core.h"            /* get XP_ symbols */
-#include "jri.h"                /* get JRI_PUBLIC_API macro */
 
 
 /* We assume an ANSI C or C++ compilation environment */

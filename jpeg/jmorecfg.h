@@ -198,12 +198,12 @@ typedef unsigned int JDIMENSION;
 /* a function used only in its module: */
 #define LOCAL(type)		static type
 /* a function referenced thru EXTERNs: */
-#define GLOBAL(type)		JRI_PUBLIC_API(type)
+#define GLOBAL(type)		PR_PUBLIC_API(type)
 /* a reference to a GLOBAL function: */
 #ifdef __cplusplus
-#define EXTERN(type)		extern "C" JRI_PUBLIC_API(type)
+#define EXTERN(type)		extern "C" PR_PUBLIC_API(type)
 #else
-#define EXTERN(type)		extern JRI_PUBLIC_API(type)
+#define EXTERN(type)		extern PR_PUBLIC_API(type)
 #endif
 
 
