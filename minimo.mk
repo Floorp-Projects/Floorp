@@ -297,14 +297,9 @@ CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
 # CVS defines for standalone modules
 #
 ifeq ($(BUILD_MODULES),all)
-  CHECKOUT_STANDALONE := true
   CHECKOUT_STANDALONE_NOSUBDIRS := true
 else
   STANDALONE_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_CVS))
-  STANDALONE_CO_MODULE += allmakefiles.sh minimo.mk aclocal.m4 configure configure.in
-  STANDALONE_CO_MODULE += Makefile.in
-  STANDALONE_CO_MODULE := $(addprefix mozilla/, $(STANDALONE_CO_MODULE))
-  CHECKOUT_STANDALONE := cvs_co $(CVSCO) $(CVS_CO_DATE_FLAGS) $(STANDALONE_CO_MODULE)
 
   NOSUBDIRS_MODULE := $(addprefix mozilla/, $(BUILD_MODULE_CVS_NS))
 ifneq ($(NOSUBDIRS_MODULE),)
@@ -334,6 +329,13 @@ ifeq (,$(filter calendar other-licenses/libical, $(BUILD_MODULE_CVS)))
   CVSCO_CALENDAR :=
 endif
 endif
+
+# Pull toplevel cvs modules separately to avoid cvs quirks
+STANDALONE_CO_MODULE += allmakefiles.sh minimo.mk aclocal.m4 .cvsignore
+STANDALONE_CO_MODULE += Makefile.in configure configure.in
+STANDALONE_CO_MODULE := $(addprefix mozilla/, $(STANDALONE_CO_MODULE))
+CHECKOUT_STANDALONE := cvs_co $(CVSCO) $(CVS_CO_DATE_FLAGS) $(STANDALONE_CO_MODULE)
+
 
 ####################################
 # CVS defined for libart (pulled and built if MOZ_INTERNAL_LIBART_LGPL is set)
