@@ -74,8 +74,6 @@ public:
     NS_IMETHOD
     UserAgent(const char* *result);
 
-#ifdef NEW_PLUGIN_STREAM_API
-
     NS_IMETHOD
     GetURL(nsISupports* pluginInst, 
            const char* url, 
@@ -99,30 +97,17 @@ public:
             PRUint32 postHeadersLength = 0, 
             const char* postHeaders = NULL);
 
-#else // !NEW_PLUGIN_STREAM_API
+   /**
+     * RegisterService may be called explicitly to register a service
+     * with the service manager. If a service is not registered explicitly,
+     * the component manager will be used to create an instance according
+     * to the class ID specified.
+     */
     NS_IMETHOD
-    GetURL(nsISupports* peer, const char* url, const char* target,
-           void* notifyData = NULL, const char* altHost = NULL,
-           const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE);
-
-    NS_IMETHOD
-    PostURL(nsISupports* peer, const char* url, const char* target,
-            PRUint32 postDataLen, const char* postData,
-            PRBool isFile = PR_FALSE, void* notifyData = NULL,
-            const char* altHost = NULL, const char* referrer = NULL,
-            PRBool forceJSEnabled = PR_FALSE,
-            PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
-
-#endif // !NEW_PLUGIN_STREAM_API
-
-    NS_IMETHOD
-    GetService(const nsCID& aClass, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL);
-
-    NS_IMETHOD
-    ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL);
+    RegisterService(const nsCID& aClass, nsISupports* aService)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
 
     /**
      * Requests a service to be shut down, possibly unloading its DLL.
@@ -135,7 +120,34 @@ public:
      *          a shutdown listener.
      */
     NS_IMETHOD
-    ShutdownService(const nsCID& aClass) { return NS_OK; }
+    UnregisterService(const nsCID& aClass)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    NS_IMETHOD
+    GetService(const nsCID& aClass, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    ReleaseService(const nsCID& aClass, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    GetService(const char* aProgID, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    NS_IMETHOD
+    ReleaseService(const char* aProgID, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
 
     /**
      * Allocates a block of memory of a particular size. 
@@ -316,15 +328,12 @@ protected:
 	char** values_list;
 };
 
-#ifdef NEW_PLUGIN_STREAM_API
-
-
 class CPluginStreamInfo : public nsIPluginStreamInfo {
 public:
     NS_DECL_ISUPPORTS
 
-	CPluginStreamInfo(nsIPluginInputStream* inStr, nsMIMEType type, PRBool seekable)
-		 : mInputStream(inStr), mMimeType(type), mIsSeekable(seekable) {}
+	CPluginStreamInfo(const char* URL, nsIPluginInputStream* inStr, nsMIMEType type, PRBool seekable)
+		 : mURL(URL), mInputStream(inStr), mMimeType(type), mIsSeekable(seekable) {}
 
 	virtual ~CPluginStreamInfo() {}
 
@@ -355,12 +364,20 @@ public:
 	}
 
 	NS_METHOD
+	GetURL(const char** result)
+	{
+		*result = mURL;
+		return NS_OK;
+	}
+
+	NS_METHOD
 	RequestRead(nsByteRange* rangeList)
 	{
 		return mInputStream->RequestRead(rangeList);
 	}
 
 private:
+	const char* mURL;
 	nsIPluginInputStream* mInputStream;
 	nsMIMEType mMimeType;
 	PRBool mIsSeekable;
@@ -445,9 +462,9 @@ public:
     	return result;
     }
 
-	nsIPluginStreamInfo* CreatePluginStreamInfo(nsMIMEType type, PRBool seekable) {
+	nsIPluginStreamInfo* CreatePluginStreamInfo(const char* url, nsMIMEType type, PRBool seekable) {
 		if (mStreamInfo == NULL) {
-			mStreamInfo = new CPluginStreamInfo(this, type, seekable);
+			mStreamInfo = new CPluginStreamInfo(url, this, type, seekable);
 			mStreamInfo->AddRef();
 		}
 		return mStreamInfo;
@@ -468,74 +485,6 @@ protected:
     PRUint32 mAmountRead;
     nsIPluginStreamInfo* mStreamInfo;
 };
-
-#else // !NEW_PLUGIN_STREAM_API
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// CPluginStreamPeer
-//
-// This is the dummy stream peer that interacts with the 5.0 plugin.
-//
-class CPluginStreamPeer : public nsISeekablePluginStreamPeer, public nsIPluginStreamPeer {
-
-public:
-    
-    CPluginStreamPeer(nsMIMEType type, NPStream* npStream,
-		PRBool seekable, PRUint16* stype);
-    virtual ~CPluginStreamPeer();
-
-    NS_DECL_ISUPPORTS
-
-    // (Corresponds to NPStream's url field.)
-    NS_IMETHOD
-    GetURL(const char* *result);
-
-    // (Corresponds to NPStream's end field.)
-    NS_IMETHOD
-    GetEnd(PRUint32 *result);
-
-    // (Corresponds to NPStream's lastmodified field.)
-    NS_IMETHOD
-    GetLastModified(PRUint32 *result);
-
-    // (Corresponds to NPStream's notifyData field.)
-    NS_IMETHOD
-    GetNotifyData(void* *result);
-
-	//////////////////////////////////////////////////////////////////////////
-    //
-    // From nsIPluginStreamPeer
-    //
-
-    // Corresponds to NPP_DestroyStream's reason argument.
-    NS_IMETHOD
-    GetReason(nsPluginReason *result);
-
-    // Corresponds to NPP_NewStream's MIMEType argument.
-    NS_IMETHOD
-    GetMIMEType(nsMIMEType *result);
-
-    //////////////////////////////////////////////////////////////////////////
-    //
-    // From nsISeekablePluginStreamPeer
-    //
-
-    // Corresponds to NPN_RequestRead.
-    NS_IMETHOD
-    RequestRead(nsByteRange* rangeList);
-
-protected:
-
-	nsMIMEType type;
-	NPStream* npStream;
-	PRBool seekable;
-	PRUint16* stype;
-    nsPluginReason reason;
-
-};
-
-#endif // !NEW_PLUGIN_STREAM_API
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -582,15 +531,11 @@ nsIPlugin* thePlugin = NULL;
 // Interface IDs for nsISupports
 //
 NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
-NS_DEFINE_IID(kCAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
-#ifdef NEW_PLUGIN_STREAM_API
 NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 NS_DEFINE_IID(kIPluginInputStreamIID, NS_IPLUGININPUTSTREAM_IID);
-#else // !NEW_PLUGIN_STREAM_API
-NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
-NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
-#endif // !NEW_PLUGIN_STREAM_API
 
 // mapping from NPError to nsresult
 nsresult fromNPError[] = {
@@ -920,43 +865,17 @@ NPP_NewStream(NPP instance,
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
 				
-#ifdef NEW_PLUGIN_STREAM_API
-
     CPluginInputStream* inStr = (CPluginInputStream*)stream->notifyData;
     if (inStr == NULL)
         return NPERR_GENERIC_ERROR;
     
-    nsIPluginStreamInfo* info = inStr->CreatePluginStreamInfo(type, seekable);
-    nsresult err = inStr->GetListener()->OnStartBinding(stream->url, info);
+    nsIPluginStreamInfo* info = inStr->CreatePluginStreamInfo(stream->url, type, seekable);
+    nsresult err = inStr->GetListener()->OnStartBinding(info);
     if (err) return err;
 
     inStr->SetStreamInfo(instance, stream);
     stream->pdata = inStr;
     *stype = inStr->GetStreamType();
-
-#else // !NEW_PLUGIN_STREAM_API
-
-    // Create a new plugin stream peer and plugin stream.
-    CPluginStreamPeer* speer = new CPluginStreamPeer((nsMIMEType)type, stream,
-                                                     (PRBool)seekable, stype); 
-    if (speer == NULL) return NPERR_OUT_OF_MEMORY_ERROR;
-    speer->AddRef();
-
-    nsIPluginStream* pluginStream = NULL; 
-    CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
-    nsIPluginInstance* pluginInstance = peer->GetInstance();
-    nsresult err = pluginInstance->NewStream(speer, &pluginStream);
-    if (err) return NPERR_OUT_OF_MEMORY_ERROR;
-    speer->Release();
-    
-    if (pluginStream == NULL)
-        return NPERR_OUT_OF_MEMORY_ERROR;
-		
-    stream->pdata = (void*) pluginStream;
-    err = pluginStream->GetStreamType((nsPluginStreamType*)stype);
-    assert(err == NS_OK);
-	
-#endif // !NEW_PLUGIN_STREAM_API
 
     return NPERR_NO_ERROR;
 }
@@ -975,22 +894,10 @@ NPP_WriteReady(NPP instance, NPStream *stream)
     if (instance == NULL)
         return -1;
 
-#ifdef NEW_PLUGIN_STREAM_API
-
     CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
     if (inStr == NULL)
         return -1;
     return NP_MAXREADY;
-    
-#else // !NEW_PLUGIN_STREAM_API
-
-    nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;	
-    if( theStream == 0 )
-        return -1;
-	
-    return 8192;
-
-#endif // !NEW_PLUGIN_STREAM_API
 }
 
 
@@ -1007,28 +914,14 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
     if (instance == NULL)
         return -1;
 	
-#ifdef NEW_PLUGIN_STREAM_API
-
     CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
     if (inStr == NULL)
         return -1;
     nsresult err = inStr->SetReadBuffer((PRUint32)len, (const char*)buffer);
     if (err != NS_OK) return -1;
-    err = inStr->GetListener()->OnDataAvailable(stream->url, inStr, offset, len, inStr->GetPluginStreamInfo());
+    err = inStr->GetListener()->OnDataAvailable(inStr->GetPluginStreamInfo(), inStr, len);
     if (err != NS_OK) return -1;
     return len;
-    
-#else // !NEW_PLUGIN_STREAM_API
-
-    nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
-    if( theStream == 0 )
-        return -1;
-		
-    PRUint32 count;
-    nsresult err = theStream->Write((const char* )buffer, offset, len, &count);
-    return (err == NS_OK) ? count : -1;
-
-#endif // !NEW_PLUGIN_STREAM_API
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1047,25 +940,12 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPReason reason)
     if (instance == NULL)
         return NPERR_INVALID_INSTANCE_ERROR;
 		
-#ifdef NEW_PLUGIN_STREAM_API
-
     CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
     if (inStr == NULL)
         return NPERR_GENERIC_ERROR;
-    inStr->GetListener()->OnStopBinding(stream->url, (nsPluginReason)reason, inStr->GetPluginStreamInfo());
+    inStr->GetListener()->OnStopBinding(inStr->GetPluginStreamInfo(), (nsPluginReason)reason);
     // inStr->Release();
     stream->pdata = NULL;
-    
-#else // !NEW_PLUGIN_STREAM_API
-
-    nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
-    if( theStream == 0 )
-        return NPERR_GENERIC_ERROR;
-	
-    theStream->Release();
-    stream->pdata = NULL;
-
-#endif // !NEW_PLUGIN_STREAM_API
 	
     return NPERR_NO_ERROR;
 }
@@ -1083,22 +963,10 @@ NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
     if (instance == NULL)
         return;
 		
-#ifdef NEW_PLUGIN_STREAM_API
-
     CPluginInputStream* inStr = (CPluginInputStream*)stream->pdata;
     if (inStr == NULL)
         return;
-    (void)inStr->GetListener()->OnFileAvailable(stream->url, fname);
-    
-#else // !NEW_PLUGIN_STREAM_API
-
-    nsIPluginStream* theStream = (nsIPluginStream*) stream->pdata;
-    if( theStream == 0 )
-        return;
-
-    theStream->AsFile( fname );
-
-#endif // !NEW_PLUGIN_STREAM_API
+    (void)inStr->GetListener()->OnFileAvailable(inStr->GetPluginStreamInfo(), fname);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1132,19 +1000,9 @@ NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 //    TRACE("NPP_URLNotify\n");
 
     if (instance != NULL) {
-#ifdef NEW_PLUGIN_STREAM_API
-
         CPluginInputStream* inStr = (CPluginInputStream*)notifyData;
-        (void)inStr->GetListener()->OnStopBinding(url, (nsPluginReason)reason, inStr->GetPluginStreamInfo());
+        (void)inStr->GetListener()->OnStopBinding(inStr->GetPluginStreamInfo(), (nsPluginReason)reason);
         inStr->Release();
-    
-#else // !NEW_PLUGIN_STREAM_API
-
-        CPluginInstancePeer* peer = (CPluginInstancePeer*) instance->pdata;
-        nsIPluginInstance* pluginInstance = peer->GetInstance();
-        pluginInstance->URLNotify(url, NULL, (nsPluginReason)reason, notifyData);
-
-#endif // !NEW_PLUGIN_STREAM_API
     }
 }
 
@@ -1222,8 +1080,6 @@ CPluginManager::ReloadPlugins(PRBool reloadPages)
     NPN_ReloadPlugins(reloadPages);
     return NS_OK;
 }
-
-#ifdef NEW_PLUGIN_STREAM_API
 
 NS_METHOD
 CPluginManager::GetURL(nsISupports* pluginInst, 
@@ -1319,92 +1175,13 @@ CPluginManager::PostURL(nsISupports* pluginInst,
     return fromNPError[err];
 }
 
-#else // !NEW_PLUGIN_STREAM_API
-
-// (Corresponds to NPN_GetURL and NPN_GetURLNotify.)
-//   notifyData: When present, URLNotify is called passing the notifyData back
-//          to the client. When NULL, this call behaves like NPN_GetURL.
-// New arguments:
-//   peer:  A plugin instance peer. The peer's window will be used to display
-//          progress information. If NULL, the load happens in the background.
-//   altHost: An IP-address string that will be used instead of the host
-//          specified in the URL. This is used to prevent DNS-spoofing attacks.
-//          Can be defaulted to NULL meaning use the host in the URL.
-//   referrer: 
-//   forceJSEnabled: Forces JavaScript to be enabled for 'javascript:' URLs,
-//          even if the user currently has JavaScript disabled. 
-NS_METHOD
-CPluginManager::GetURL(nsISupports* pinst, const char* url, const char* target,
-                       void* notifyData, const char* altHost,
-                       const char* referrer, PRBool forceJSEnabled)
-{
-    nsIPluginInstance* inst = NULL;
-    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::GetIID(), (void**)&inst);
-    if (rslt != NS_OK) return rslt;
-	CPluginInstancePeer* instancePeer = NULL;
-    rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
-    if (rslt != NS_OK) {
-        inst->Release();
-        return rslt;
-    }
-    NPP npp = instancePeer->GetNPPInstance();
-
-    NPError err;
-    // Call the correct GetURL* function.
-    // This is determinded by checking notifyData.
-    if (notifyData == NULL) {
-        err = NPN_GetURL(npp, url, target);
-    } else {
-        err = NPN_GetURLNotify(npp, url, target, notifyData);
-    }
-    instancePeer->Release();
-    inst->Release();
-    return fromNPError[err];
-}
-
-
-NS_METHOD
-CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
-                        PRUint32 postDataLen, const char* postData,
-                        PRBool isFile, void* notifyData,
-                        const char* altHost, const char* referrer,
-                        PRBool forceJSEnabled,
-                        PRUint32 postHeadersLength, const char* postHeaders)
-{
-    nsIPluginInstance* inst = NULL;
-    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::GetIID(), (void**)&inst);
-    if (rslt != NS_OK) return rslt;
-	CPluginInstancePeer* instancePeer = NULL;
-    rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
-    if (rslt != NS_OK) {
-        inst->Release();
-        return rslt;
-    }
-    NPP npp = instancePeer->GetNPPInstance();
-
-    NPError err;
-    // Call the correct PostURL* function.
-    // This is determinded by checking notifyData.
-    if (notifyData == NULL) {
-        err = NPN_PostURL(npp, url, target, postDataLen, postData, isFile);
-    } else {
-        err = NPN_PostURLNotify(npp, url, target, postDataLen, postData, isFile, notifyData);
-    }
-    instancePeer->Release();
-    inst->Release();
-    return fromNPError[err];
-}
-
-#endif // !NEW_PLUGIN_STREAM_API
-
-
 NS_METHOD
 CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener)
 {
 	// the only service we support currently is nsIAllocator.
-	if (aClass.Equals(kCAllocatorCID)) {
+	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kAllocatorCID)) {
 		return QueryInterface(aIID, (void**) result);
 	}
 	return NS_ERROR_SERVICE_NOT_FOUND;
@@ -1903,8 +1680,6 @@ NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, nsIOutputStream::GetIID());
 
 //////////////////////////////////////////////////////////////////////////////
 
-#ifdef NEW_PLUGIN_STREAM_API
-
 NS_IMPL_ISUPPORTS(CPluginStreamInfo, kIPluginStreamInfoIID);
 
 CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener)
@@ -1973,128 +1748,6 @@ CPluginInputStream::RequestRead(nsByteRange* rangeList)
     return fromNPError[err];
 }
 
-#else // !NEW_PLUGIN_STREAM_API
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// CPluginStreamPeer
-//
-
-CPluginStreamPeer::CPluginStreamPeer(nsMIMEType type, NPStream* npStream,
-                                     PRBool seekable, PRUint16* stype)
-	: type(type), npStream(npStream), seekable(seekable),
-	  stype(stype), reason(nsPluginReason_NoReason)
-{
-    // Set the reference count to 0.
-    NS_INIT_REFCNT();
-}
-
-CPluginStreamPeer::~CPluginStreamPeer(void)
-{
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetURL:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::GetURL(const char* *result)
-{
-    *result = npStream->url;
-    return NS_OK;
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetEnd:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::GetEnd(PRUint32 *result)
-{
-    *result = npStream->end;
-    return NS_OK;
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetLastModified:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::GetLastModified(PRUint32 *result)
-{
-    *result = npStream->lastmodified;
-    return NS_OK;
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetNotifyData:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::GetNotifyData(void* *result)
-{
-    *result = npStream->notifyData;
-    return NS_OK;
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetReason:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::GetReason(nsPluginReason *result)
-{
-    *result = reason;
-    return NS_OK;
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// GetMIMEType:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::GetMIMEType(nsMIMEType *result)
-{
-    *result = type;
-    return NS_OK;
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// RequestRead:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginStreamPeer::RequestRead(nsByteRange* rangeList)
-{
-    return fromNPError[NPN_RequestRead(npStream, (NPByteRange* )rangeList)];
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// nsISupports functions
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_IMPL_ADDREF(CPluginStreamPeer);
-NS_IMPL_RELEASE(CPluginStreamPeer);
-
-nsresult CPluginStreamPeer::QueryInterface(const nsIID& iid, void** ptr) 
-{
-    if (NULL == ptr) {
-        return NS_ERROR_NULL_POINTER; 
-    } 
-    if (iid.Equals(kISeekablePluginStreamPeerIID))  {
-        *ptr = (void*) ((nsISeekablePluginStreamPeer*)this); 
-        AddRef(); 
-        return NS_OK; 
-	} else if (iid.Equals(kIPluginStreamPeerIID) ||
-			   iid.Equals(nsISupports::GetIID())) {
-        *ptr = (void*) ((nsIPluginStreamPeer*)this); 
-        AddRef(); 
-        return NS_OK; 
-    } 
-    return NS_NOINTERFACE; 
-} 
-
-#endif // !NEW_PLUGIN_STREAM_API
 
 //////////////////////////////////////////////////////////////////////////////
 
