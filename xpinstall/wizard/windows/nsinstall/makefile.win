@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#   Sean Su <ssu@netscape.com>
 
 DEPTH=..\..\..\..
 
@@ -26,7 +27,7 @@ USE_NON_MT_LIBS = 1
 
 MODULE          = nsinstall
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
-#RESFILE         = $(MODULE).res
+RESFILE         = $(MODULE).res
 
 OBJS =  \
     .\$(OBJDIR)\nsinstall.obj   \
