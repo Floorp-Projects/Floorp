@@ -64,6 +64,7 @@ comm.jar:
 	content/editor/images/tag-lnk.gif                        (ui/composer/content/images/tag-lnk.gif)
 	content/editor/images/tag-lst.gif                        (ui/composer/content/images/tag-lst.gif)
 	content/editor/images/tag-men.gif                        (ui/composer/content/images/tag-men.gif)
+	content/editor/images/tag-nbr.gif                        (ui/composer/content/images/tag-nbr.gif)
 	content/editor/images/tag-nfr.gif                        (ui/composer/content/images/tag-nfr.gif)
 	content/editor/images/tag-nsc.gif                        (ui/composer/content/images/tag-nsc.gif)
 	content/editor/images/tag-opg.gif                        (ui/composer/content/images/tag-opg.gif)
