@@ -42,7 +42,7 @@
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
@@ -205,7 +205,7 @@ protected:
                          nsMouseScrollEvent* msEvent, PRInt32 numLines,
                          PRBool scrollPage, PRBool aUseTargetFrame);
   void ForceViewUpdate(nsIView* aView);
-  nsresult getPrefService();
+  nsresult getPrefBranch();
   nsresult ChangeTextSize(PRInt32 change);
   // end mousewheel functions
 
@@ -280,7 +280,7 @@ protected:
   static PRInt32 gGeneralAccesskeyModifier;
 
   // For preferences handling
-  nsCOMPtr<nsIPref> mPrefService;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
   PRBool m_haveShutdown;
 
   // So we don't have to keep checking accessibility.browsewithcaret pref
