@@ -678,6 +678,11 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetProgress(PRInt32 *_retval)
 	if (*_retval < 5)
 		*_retval = 5;
 
+	// as long as the thread is alive don't return completely
+	// done.
+	if (*_retval > 99)
+		*_retval = 99;
+
 	return( NS_OK);
 }
 

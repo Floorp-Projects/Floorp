@@ -620,6 +620,10 @@ NS_IMETHODIMP nsImportGenericMail::GetProgress(PRInt32 *_retval)
 	else
 		*_retval = 0;
 	
+	// never return 100% while the thread is still alive
+	if (*_retval > 99)
+		*_retval = 99;
+
 	return( NS_OK);
 }
 

@@ -401,6 +401,8 @@ function attachStrings(aNode, aString)
     if (strings[i]) {
       var currNode = document.createTextNode(strings[i]);
       attachNode.appendChild(currNode);
+      var br = document.createElementNS("http://www.w3.org/1999/xhtml", 'br');
+      attachNode.appendChild( br);
     }
   }
 }

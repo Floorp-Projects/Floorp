@@ -378,7 +378,7 @@ NS_IMETHODIMP ImportMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISupportsArray
 void ImportMailImpl::AddLinebreak( nsString *pStream)
 {
 	if (pStream)
-		pStream->AppendWithConversion(NS_LINEBREAK);
+		pStream->AppendWithConversion( LF);
 }
 
 void ImportMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pStream)
