@@ -361,6 +361,8 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
 /* void onStopFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
 NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
+  NS_ASSERTION(frame, "imgRequest::OnStopFrame called with NULL frame");
+
   LOG_SCOPE(gImgLog, "imgRequest::OnStopFrame");
 
   PRInt32 i = -1;
@@ -379,7 +381,6 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
     frame->GetAlphaDataLength(&alphaSize);
 
     mCacheEntry->SetDataSize(cacheSize + imageSize + alphaSize);
-    printf("%p size is %d\n", this, cacheSize + imageSize + alphaSize);
   }
 #endif
 
@@ -561,10 +562,15 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   PRInt32 count = mObservers.Count();
 
   while (++i < count) {
-    imgIDecoderObserver *iob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
-    if (iob) {
-      nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
-      if (ob) ob->OnStopRequest(aRequest, ctxt, status, statusArg);
+    void *item = NS_STATIC_CAST(void *, mObservers[i]);
+    if (item) {
+      imgIDecoderObserver *iob = NS_STATIC_CAST(imgIDecoderObserver*, item);
+      if (iob) {
+        nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
+        if (ob) ob->OnStopRequest(aRequest, ctxt, status, statusArg);
+      }
+    } else {
+      NS_NOTREACHED("why did we get a null item ?");
     }
   }
 
