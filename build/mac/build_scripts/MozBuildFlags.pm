@@ -23,72 +23,102 @@ use vars qw(@ISA @EXPORT);
 
 my($script_dir) = cwd();
 
+
+
+my(@pull_flags);
+my(@build_flags);
+my(@options_flags);
+my(@filepath_flags);
+
+my(%arrays_list) = (
+  "pull_flags",     \@pull_flags,
+  "build_flags",    \@build_flags,
+  "options_flags",  \@options_flags,
+  "filepath_flags", \@filepath_flags
+);
+
 #-------------------------------------------------------------------------------
-# These 3 arrays are the 'master lists' to control what gets built.
-# We use arrays here, instead of just intializing the hashes directly,
-# so that we can start the build at a given stage using a stored key.
+# appendArrayFlag
 # 
-# Ordering in these arrays is important; it has to reflect the order in
-# which the build occurs.
+# Set a flag in the array
 #-------------------------------------------------------------------------------
-
-my(@pull_flags) =
-(
-  ["all",           1],    # pull everything needed for mozilla
-);
-
-my(@build_flags) =
-(
-  ["all",           1],   # 'all' must come first!
-  ["dist",          0],
-  ["xpidl",         0],
-  ["idl",           0],
-  ["stubs",         0],
-  ["runtime",       0],
-  ["common",        0],
-  ["imglib",        0],
-  ["necko",         0],
-  ["security",      0],
-  ["browserutils",  0],
-  ["intl",          0],
-  ["nglayout",      0],
-  ["editor",        0],
-  ["viewer",        0],
-  ["xpapp",         0],
-  ["extensions",    0],
-  ["plugins",       0],
-  ["mailnews",      0],
-  ["apprunner",     0],
-  ["resources",     0]
-);
-
-my(@options_flags) = 
-(
-  ["chrome_jars",   1],     # build jar files
-  ["chrome_files",  0],     # build chrome files
-  ["use_jars",      1],     # build chrome files
-  ["transformiix",  0],     # obsolete?
-  ["mathml",        0],
-  ["svg",           0],
-  ["mng",           1],
-  ["ldap",          0],
-  ["xmlextras",     0],
-  ["mailextras",    1],     # mail importers
-  ["xptlink",       0]      # link xpt files using the MPW tool
-);
-
-
-# all file paths are relative to the parent of the "mozilla" source directory.
-my(@filepath_flags) = 
-(
-  ["idepath",       ":Build IDE Path.txt"],         # saved location of CodeWarrior IDE
-  ["sessionpath",   ":Build session path.txt"]      # saved location of MacCVS Pro session file
-);
-
+sub appendArrayFlag($$$)
+{
+  my($array_name, $setting, $value) = @_;
+  
+  my(@this_flag) = [$setting, $value];
+  my($flags_array) = $arrays_list{$array_name};
+  if ($flags_array)
+  {
+    push(@{$flags_array}, @this_flag);
+  }
+  else
+  {
+    die "Error: unknown build flags array $array_name\n";
+  }
+}
 
 #-------------------------------------------------------------------------------
-# End of build flags
+# readFlagsFile
+# 
+# Read the file of build flags from disk. File path is relative to the
+# script directory.
 #-------------------------------------------------------------------------------
+sub readFlagsFile($)
+{
+  my($flags_file) = @_;
+
+  my($file_path) = $0;
+  $file_path =~ s/[^:]+$/$flags_file/;
+  
+  print "Reading build flags from '$file_path'\n";
+
+  local(*FLAGS_FILE);
+  open(FLAGS_FILE, "< $file_path") || die "Error: failed to open flags file $file_path\n";
+
+  my($cur_array) = "";
+  
+  while(<FLAGS_FILE>)
+  {
+      my($line) = $_;
+      chomp($line);
+      
+      # ignore comments and empty lines  
+      if ($line =~ /^\#/ || $line =~ /^\s*$/) {
+        next;
+      }
+
+      # 1-word line, probably array name
+      if ($line =~ /^(\w+)\s*$/)
+      {
+        $cur_array = $1;
+        next;  
+      }
+      elsif ($line =~ /^(\w+)\s+\"(.+)\"\s*$/)    # quoted option
+      {
+        my($flag) = $1;
+        my($setting) = $2;
+        
+        appendArrayFlag($cur_array, $flag, $setting);
+      }
+      elsif ($line =~ /^(\w+)\s+([^\s]+)\s*$/)
+      {
+        my($flag) = $1;
+        my($setting) = $2;
+        
+        appendArrayFlag($cur_array, $flag, $setting);
+      }
+      else
+      {
+        die "Error: unknown build flag at '$line'\n";
+      }
+  
+  }
+  
+  close(FLAGS_FILE);
+}
+
+
 
 #-------------------------------------------------------------------------------
 # flagsArrayToHash
@@ -189,7 +219,7 @@ sub PropagateAllFlags($)
   my($build_array) = @_;
   
   # if "all" is set, set all the flags to 1
-  unless ($build_array->[0][0] eq "all") { die "'all' must come first in the build array\n"; }
+  unless ($build_array->[0][0] eq "all") { die "Error: 'all' must come first in the build array\n"; }
   
   if ($build_array->[0][1] == 1)
   {
@@ -302,10 +332,12 @@ sub ReadBuildProgress($)
 #-------------------------------------------------------------------------------
 # SetupBuildParams
 #-------------------------------------------------------------------------------
-sub SetupBuildParams($$$$$$)
+sub SetupBuildParams($$$$$$$)
 {
-  my($pull, $build, $options, $optiondefines, $filepaths, $prefs_file) = @_;
-    
+  my($pull, $build, $options, $optiondefines, $filepaths, $flags_file, $prefs_file) = @_;
+  
+  readFlagsFile($flags_file);
+  
   # read the user pref file, that can change values in the array
   ReadMozUserPrefs($prefs_file, \@pull_flags, \@build_flags, \@options_flags, \@filepath_flags);
 

@@ -176,7 +176,7 @@ sub ReadPrefsFile($$$$$)
     {
       my($line) = $_;
             
-      if ($line =~ /^\#/ || $line =~ /^\s+$/) {    # ignore comments and empty lines
+      if ($line =~ /^\#/ || $line =~ /^\s*$/) {    # ignore comments and empty lines
         next;
       }
       
