@@ -354,6 +354,11 @@ nsXMLHttpRequest::DetectCharset(nsAWritableString& aCharset)
 nsresult
 nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
 {
+  // This code here is basically a copy of a similar thing in
+  // nsScanner::Append(const char* aBuffer, PRUint32 aLen).
+  // If we get illegal characters in the input we replace 
+  // them and don't just fail.
+
   *aOutBuffer = nsnull;
 
   PRInt32 dataLen = mResponseBody.Length();
@@ -390,46 +395,51 @@ nsXMLHttpRequest::ConvertBodyToText(PRUnichar **aOutBuffer)
   if (NS_FAILED(rv))
     return rv;
 
-  // This loop here is basically a copy of a similar thing in nsScanner.
-  // It will exit on first iteration in normal cases, but if we get illegal
-  // characters in the input we replace them and then continue.
   const char * inBuffer = mResponseBody.get();
-  PRUnichar * outBuffer = nsnull;
-  PRInt32 outBufferIndex = 0, inBufferLength = dataLen;
-  PRInt32 outLen;
-  for(;;) {
-    rv = decoder->GetMaxLength(inBuffer,inBufferLength,&outLen);
-    if (NS_FAILED(rv))
-      return rv;
+  PRInt32 outBufferLength;
+  rv = decoder->GetMaxLength(inBuffer, dataLen, &outBufferLength);
+  if (NS_FAILED(rv))
+    return rv;
 
-    PRUnichar * newOutBuffer = NS_STATIC_CAST(PRUnichar*,nsMemory::Realloc(outBuffer,(outLen+outBufferIndex+1) * sizeof(PRUnichar)));
-    if (!newOutBuffer) {
-      nsMemory::Free(outBuffer);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    outBuffer = newOutBuffer;
+  PRUnichar * outBuffer = 
+    NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc((outBufferLength + 1) *
+                                               sizeof(PRUnichar)));
+  if (!outBuffer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    rv = decoder->Convert(inBuffer,&inBufferLength,&outBuffer[outBufferIndex],&outLen);
-    if (rv == NS_OK) {
-      break;
-    } else if (rv == NS_ERROR_ILLEGAL_INPUT) {
+  PRInt32 totalChars = 0,
+          outBufferIndex = 0,
+          outLen = outBufferLength;
+
+  do {
+    PRInt32 inBufferLength = dataLen;
+    rv = decoder->Convert(inBuffer, 
+                          &inBufferLength, 
+                          &outBuffer[outBufferIndex], 
+                          &outLen);
+    totalChars += outLen;
+    if (NS_FAILED(rv)) {
       // We consume one byte, replace it with U+FFFD
       // and try the conversion again.
-      outBuffer[outBufferIndex + outLen] = (PRUnichar)0xFFFD;
-      outLen++;
+      outBuffer[outBufferIndex + outLen++] = (PRUnichar)0xFFFD;
       outBufferIndex += outLen;
-      inBuffer = &inBuffer[outLen];
-      inBufferLength -= outLen;
-    } else if (NS_FAILED(rv)) {
-      nsMemory::Free(outBuffer);
-      return rv; // We bail out on other critical errors
-    } else /*if (rv != NS_OK)*/ {
-      NS_ABORT_IF_FALSE(0,"This should not happen, nsIUnicodeDecoder::Convert() succeeded partially");
-      nsMemory::Free(outBuffer);
-      return NS_ERROR_FAILURE;
+      outLen = outBufferLength - (++totalChars);
+
+      decoder->Reset();
+
+      if((inBufferLength + 1) > dataLen) {
+        inBufferLength = dataLen;
+      } else {
+        inBufferLength++;
+      }
+
+      inBuffer = &inBuffer[inBufferLength];
+      dataLen -= inBufferLength;
     }
-  }
-  outBuffer[outBufferIndex + outLen] = '\0';
+  } while ( NS_FAILED(rv) && (dataLen > 0) );
+
+  outBuffer[totalChars] = '\0';
   *aOutBuffer = outBuffer;
 
   return NS_OK;
