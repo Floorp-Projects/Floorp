@@ -597,23 +597,23 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
   result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
   if (NS_SUCCEEDED(result) && selCon) {
     selCon->GetDisplaySelection(&result);
-		if (result) {
-			// check whether style allows selection
-		  const nsStyleUserInterface* userinterface;
-		  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-		  if (userinterface) {
-				if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
-						// if 'user-select' isn't set for this frame, use the parent's
-						if (mParent) {
-							mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-						}
-				}
-		    if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		      result = nsISelectionController::SELECTION_OFF;
-		      isOkToTurnOn = PR_FALSE;
-		    }
-		  }
-		}
+    if (result) {
+      // check whether style allows selection
+      const nsStyleUserInterface* userinterface;
+      GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+      if (userinterface) {
+        if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+          // if 'user-select' isn't set for this frame, use the parent's
+          if (mParent) {
+            mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+          }
+        }
+        if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+          result = nsISelectionController::SELECTION_OFF;
+          isOkToTurnOn = PR_FALSE;
+        }
+      }
+    }
     if (isOkToTurnOn && !result) {
       selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
       result = nsISelectionController::SELECTION_ON;
@@ -779,58 +779,18 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
   {
   case NS_MOUSE_MOVE:
     {
-    if (NS_SUCCEEDED(rv)){
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      nsCOMPtr<nsISelectionController> selCon;
-      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-      if (NS_SUCCEEDED(rv) && selCon)
-      {
-        frameselection = do_QueryInterface(selCon); //this MAY implement
-      }
-      if (!frameselection)
-        rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
-      if (NS_SUCCEEDED(rv) && frameselection){
-          PRBool mouseDown = PR_FALSE;
-          if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && mouseDown)
-            HandleDrag(aPresContext, aEvent, aEventStatus);            
-        }
-      }
+      if (NS_SUCCEEDED(rv))
+        rv = HandleDrag(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     {
-      nsFrameState  state;
-      GetFrameState(&state);
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      nsCOMPtr<nsISelectionController> selCon;
-      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-      if (NS_SUCCEEDED(rv) && selCon)
-      {
-        if (state & NS_FRAME_INDEPENDENT_SELECTION) 
-          frameselection = do_QueryInterface(selCon); //this MAY implement
-        else 
-          rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
-      }
-      NS_ENSURE_TRUE(frameselection, NS_ERROR_FAILURE);
-      frameselection->SetMouseDownState( PR_TRUE );//redandant in normal cases but we MUST tell this selection by hand here
-      HandlePress(aPresContext, aEvent, aEventStatus);
+      if (NS_SUCCEEDED(rv))
+        HandlePress(aPresContext, aEvent, aEventStatus);
     }break;
   case NS_MOUSE_LEFT_BUTTON_UP:
     {
-      nsFrameState  state;
-      GetFrameState(&state);
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      nsCOMPtr<nsISelectionController> selCon;
-      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-      if (NS_SUCCEEDED(rv) && selCon)
-      {
-        if (state & NS_FRAME_INDEPENDENT_SELECTION) 
-          frameselection = do_QueryInterface(selCon); //this MAY implement
-        else 
-          rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
-      }
-      NS_ENSURE_TRUE(frameselection, NS_ERROR_FAILURE);
-      frameselection->SetMouseDownState( PR_FALSE );//redandant in normal cases but we MUST tell this selection by hand here
-      HandleRelease(aPresContext, aEvent, aEventStatus);
+      if (NS_SUCCEEDED(rv))
+        HandleRelease(aPresContext, aEvent, aEventStatus);
     }
     break;
   default:
@@ -958,19 +918,19 @@ static PRBool IsSelectable(nsIFrame *aFrame) //checks style to see if we can sel
   nsIFrame *parent;
   if (NS_FAILED(aFrame->GetParent(&parent)))
     return PR_FALSE;
-	const nsStyleUserInterface* userinterface;
-	aFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-	if (userinterface) {
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
-				// if 'user-select' isn't set for this frame, use the parent's
-				if (parent) {
-					parent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-				}
-		}
-		if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		  return PR_FALSE;//do not continue no selection for this frame.
-		}
-	}
+  const nsStyleUserInterface* userinterface;
+  aFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+  if (userinterface) {
+    if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+      // if 'user-select' isn't set for this frame, use the parent's
+      if (parent) {
+        parent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+      }
+    }
+    if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+      return PR_FALSE;//do not continue no selection for this frame.
+    }
+  }
   return PR_TRUE;//default to true.
 }
 
@@ -983,7 +943,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
                      nsGUIEvent*     aEvent,
                      nsEventStatus*  aEventStatus)
 {
-	// check whether style allows selection
+  // check whether style allows selection
   // if not dont tell selection the mouse event even occured.
 
   if (!IsMouseCaptured(aPresContext))
@@ -996,7 +956,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   nsresult rv;
   nsCOMPtr<nsISelectionController> selCon;
   rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-//get the selection controller
+  //get the selection controller
   if (NS_SUCCEEDED(rv) && selCon) 
   {
     selCon->GetDisplaySelection(&displayresult);
@@ -1004,45 +964,113 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
       return NS_OK;//nothing to do we cannot affect selection from here
   }
 
+  //get the frame selection from sel controller
 
-  nsMouseEvent *me = (nsMouseEvent *)aEvent;
-  if (me->clickCount >1 )
-    return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
-
-
+  nsCOMPtr<nsIFrameSelection> frameselection;
   nsCOMPtr<nsIPresShell> shell;
   rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
-    PRInt32 startPos = 0;
-//    PRUint32 contentOffset = 0;
-    PRInt32 contentOffsetEnd = 0;
-    nsCOMPtr<nsIContent> newContent;
-    PRBool beginContent;
-    if (NS_SUCCEEDED(GetContentAndOffsetsFromPoint(aPresContext, aEvent->point,
-                                 getter_AddRefs(newContent),
-                                 startPos, contentOffsetEnd, beginContent)))
-    {
-//get the frame selection from sel controller
-      nsCOMPtr<nsIFrameSelection> frameselection;
-      frameselection = do_QueryInterface(selCon); //this MAY implement
-      if (!frameselection)//if we must get it from the pres shell's
-        rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
-      if (NS_SUCCEEDED(rv) && frameselection)
-      {
-        frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
 
-        nsCOMPtr<nsIContent>parentContent;
-        PRInt32  contentOffset;
-        PRUint32 target;
-        nsresult result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
-        if (NS_SUCCEEDED(result) && parentContent)
-          frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-        else
-          frameselection->HandleClick(newContent, startPos , contentOffsetEnd , me->isShift, PR_FALSE, beginContent);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  // nsFrameState  state;
+  // GetFrameState(&state);
+  // if (state & NS_FRAME_INDEPENDENT_SELECTION) 
+  frameselection = do_QueryInterface(selCon); //this MAY implement
+  if (!frameselection)//if we must get it from the pres shell's
+    rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
+
+  if (!frameselection)
+    return NS_ERROR_FAILURE;
+
+  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+
+  if (me->clickCount >1 )
+  {
+    rv = frameselection->SetMouseDownState( PR_TRUE );
+    return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
+  }
+
+  nsCOMPtr<nsIContent> content;
+  PRInt32 startOffset = 0, endOffset = 0;
+  PRBool  beginFrameContent = PR_FALSE;
+
+  rv = GetContentAndOffsetsFromPoint(aPresContext, aEvent->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+#ifdef DRAG_AND_DROP_FRIENDLY_SELECTION
+
+  // Check if any part of this frame is selected, and if the
+  // user clicked inside the selected region. If so, we delay
+  // starting a new selection since the user may be trying to
+  // drag the selected region to some other app.
+
+  SelectionDetails *details = 0;
+  nsFrameState  frameState;
+  GetFrameState(&frameState);
+  PRBool isSelected = ((frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT);
+
+  if (isSelected)
+  {
+    rv = frameselection->LookUpSelection(content, 0, endOffset, &details, PR_FALSE);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    //
+    // If there are any details, check to see if the user clicked
+    // within any selected region of the frame.
+    //
+
+    if (details)
+    {
+      SelectionDetails *curDetail = details;
+
+      while (curDetail)
+      {
+        //
+        // If the user clicked inside a selection, then just
+        // return without doing anything. We will handle placing
+        // the caret later on when the mouse is released.
+        //
+        if (curDetail->mStart <= startOffset && endOffset <= curDetail->mEnd)
+        {
+          delete details;
+          rv = frameselection->SetMouseDownState( PR_FALSE );
+          return NS_OK;
+        }
+
+        curDetail = curDetail->mNext;
       }
+
+      delete details;
     }
   }
-  return NS_OK;
+
+#endif // DRAG_AND_DROP_FRIENDLY_SELECTION
+
+  rv = frameselection->SetMouseDownState( PR_TRUE );
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIContent>parentContent;
+  PRInt32  contentOffset;
+  PRUint32 target;
+
+  rv = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+
+  if (NS_SUCCEEDED(rv) && parentContent)
+    rv = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+  else
+    rv = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+
+  return rv;
 
 }
  
@@ -1168,6 +1196,10 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
 
   if (NS_SUCCEEDED(result) && frameselection)
   {
+    PRBool mouseDown = PR_FALSE;
+    if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && !mouseDown)
+      return NS_OK;            
+
     frameselection->StopAutoScrollTimer();
 
     // Check if we are dragging in a table cell
@@ -1203,20 +1235,74 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext* aPresContext,
 
   result = aPresContext->GetShell(getter_AddRefs(presShell));
 
-  if (NS_SUCCEEDED(result))
-  {
-    nsCOMPtr<nsIFrameSelection> frameselection;
-    nsCOMPtr<nsISelectionController> selCon;
-    result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-    if (NS_SUCCEEDED(result) && selCon)
-    {
-      frameselection = do_QueryInterface(selCon); //this MAY implement
-    }
-    if (!frameselection)
-      result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+  if (NS_FAILED(result))
+    return result;
 
-    if (NS_SUCCEEDED(result) && frameselection)
-      frameselection->StopAutoScrollTimer();
+  if (!presShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIFrameSelection> frameselection;
+  nsCOMPtr<nsISelectionController> selCon;
+  
+  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+    
+  if (NS_SUCCEEDED(result) && selCon)
+    frameselection = do_QueryInterface(selCon); //this MAY implement
+  if (!frameselection)
+    result = presShell->GetFrameSelection(getter_AddRefs(frameselection));
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (!frameselection)
+    return NS_ERROR_FAILURE;
+
+#ifdef DRAG_AND_DROP_FRIENDLY_SELECTION
+
+  // Check if the frameselection recorded the mouse going down.
+  // If not, the user must have clicked in a part of the selection.
+  // Place the caret before continuing!
+
+  PRBool mouseDown = PR_FALSE;
+
+  result = frameselection->GetMouseDownState(&mouseDown);
+
+  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+
+  if (NS_SUCCEEDED(result) && me->clickCount < 2 && !mouseDown)
+  {
+    result = frameselection->SetMouseDownState( PR_TRUE );
+
+    nsCOMPtr<nsIContent>parentContent;
+    PRInt32  contentOffset;
+    PRUint32 target;
+
+    result = GetDataForTableSelection(me, getter_AddRefs(parentContent), &contentOffset, &target);
+
+    if (NS_SUCCEEDED(result) && parentContent)
+      result = frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+    else
+    {
+      nsCOMPtr<nsIContent> content;
+      PRInt32 startOffset = 0, endOffset = 0;
+      PRBool  beginFrameContent = PR_FALSE;
+
+      result = GetContentAndOffsetsFromPoint(aPresContext, aEvent->point, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+
+      if (NS_FAILED(result))
+        return result;
+
+      result = frameselection->HandleClick(content, startOffset , endOffset, me->isShift, PR_FALSE, beginFrameContent);
+    }
+  }
+
+#endif // DRAG_AND_DROP_FRIENDLY_SELECTION
+
+  // Now handle the normal HandleRelase business.
+
+  if (NS_SUCCEEDED(result) && frameselection) {
+    frameselection->SetMouseDownState( PR_FALSE );
+    frameselection->StopAutoScrollTimer();
   }
 
   return NS_OK;
@@ -2151,7 +2237,7 @@ nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aS
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
-	// check whether style allows selection
+  // check whether style allows selection
   if (!IsSelectable(this))
     return NS_OK;
 
@@ -2229,7 +2315,7 @@ NS_IMETHODIMP
 nsFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
 {
   NS_PRECONDITION(outPoint != nsnull, "Null parameter");
-	nsPoint		bottomLeft(0, 0);
+  nsPoint bottomLeft(0, 0);
   if (mContent)
   {
     nsCOMPtr<nsIContent> newContent;
