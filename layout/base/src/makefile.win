@@ -26,6 +26,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 CPPSRCS =				\
 	nsGenericElement.cpp		\
 	nsContentList.cpp		\
+	nsContentIterator.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
 	nsFrameImageLoader.cpp		\
@@ -53,6 +54,7 @@ EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsGenericElement.obj 	\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
+	.\$(OBJDIR)\nsContentIterator.obj 	 	\
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
