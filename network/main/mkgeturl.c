@@ -32,6 +32,9 @@
 #include "mkstream.h"
 #include "mkpadpac.h"
 #include "netcache.h"
+#ifdef NU_CACHE
+#include "CacheStubs.h"
+#endif
 #include "nslocks.h"
 #include "cookies.h"
 #include "httpauth.h"
@@ -710,7 +713,7 @@ NET_FinishInitNetLib()
 	NET_SetupPrefs(NULL);  /* setup initial proxy, socks, dnsExpiration and cache preference info */
 
     PREF_RegisterCallback("network.proxy",NET_PrefChangedFunc,NULL);
-	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL);
+	PREF_RegisterCallback("browser.cache",NET_PrefChangedFunc,NULL); /* todo move to nu_cache */
 	PREF_RegisterCallback("network.hosts.socks_server",NET_PrefChangedFunc,NULL);
 	PREF_RegisterCallback("network.hosts.socks_serverport",NET_PrefChangedFunc,NULL);
 	PREF_RegisterCallback("network.dnsCacheExpiration",NET_DNSExpirationPrefChanged,NULL);
@@ -2574,7 +2577,11 @@ NET_GetURL (URL_Struct *URL_s,
 				FREE(buf);
 			  }
 
+#ifdef NU_CACHE
+            URL_s->cache_object = 0;
+#else
 	    URL_s->memory_copy = 0;
+#endif
 	    cache_method = 0;
 	    TRACEMSG(("Getting the rest of a partial cache file"));
         TIMING_MESSAGE(("cache,%.64s,%08x,partial", URL_s->address, window_id));
@@ -2603,7 +2610,11 @@ NET_GetURL (URL_Struct *URL_s,
 	    else
 	      {
 		FREE_AND_CLEAR(URL_s->cache_file);
+#ifdef NU_CACHE
+                URL_s->cache_object = 0;
+#else
 		URL_s->memory_copy = 0;
+#endif
 		cache_method = 0;
 	      }
 	  }
@@ -2614,7 +2625,11 @@ NET_GetURL (URL_Struct *URL_s,
 	    if(cur_time > URL_s->expires)
 	      {
 		FREE_AND_CLEAR(URL_s->cache_file);
+#ifdef NU_CACHE
+                URL_s->cache_object = 0;
+#else
 		URL_s->memory_copy = 0;
+#endif
 		URL_s->expires = 0;  /* remove cache reference */
 		cache_method = 0;
 
@@ -2678,7 +2693,11 @@ NET_GetURL (URL_Struct *URL_s,
 	     * memory pointer
 	     */
 	    FREE_AND_CLEAR(URL_s->cache_file);
+#ifdef NU_CACHE
+            URL_s->cache_object = 0;
+#else
 	    URL_s->memory_copy = 0;
+#endif
 	    cache_method = 0;
 
 		  }
@@ -2709,7 +2728,11 @@ NET_GetURL (URL_Struct *URL_s,
 	     * memory pointer
 	     */
 	    FREE_AND_CLEAR(URL_s->cache_file);
+#ifdef NU_CACHE
+            URL_s->cache_object = 0;
+#else
 	    URL_s->memory_copy = 0;
+#endif
 		URL_s->expires = 0;  /* remove cache reference */
 	    cache_method = 0;
 		  }
