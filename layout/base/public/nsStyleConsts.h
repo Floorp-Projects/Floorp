@@ -109,12 +109,12 @@
 #define NS_STYLE_VOLUME_X_LOUD            5
 
 // See nsStyleColor
-#define NS_STYLE_BG_ATTACHMENT_FIXED            0x01
-#define NS_STYLE_BG_ATTACHMENT_SCROLL           0x02
+#define NS_STYLE_BG_ATTACHMENT_SCROLL     0
+#define NS_STYLE_BG_ATTACHMENT_FIXED      1
 
 // See nsStyleColor
-#define NS_STYLE_COLOR_TRANSPARENT              0
-#define NS_STYLE_COLOR_INVERT                   1
+#define NS_STYLE_COLOR_TRANSPARENT        0
+#define NS_STYLE_COLOR_INVERT             1
 
 // See nsStyleColor
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
