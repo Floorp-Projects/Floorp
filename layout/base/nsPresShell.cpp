@@ -2479,7 +2479,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
   //Send resize event from here.
   nsEvent event;
-  nsEventStatus status;
+  nsEventStatus status = nsEventStatus_eIgnore;
   event.eventStructType = NS_EVENT;
   event.message = NS_RESIZE_EVENT;
   event.time = 0;
