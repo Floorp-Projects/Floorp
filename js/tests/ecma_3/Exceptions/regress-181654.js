@@ -69,19 +69,19 @@ expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(2);
-var err2 = new Error(err1);
+var err2 = new MyError(err1);
 actual = examineThis(err2);
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(3);
-var err3 = new Error();
+var err3 = new MyError();
 actual = examineThis(err3);
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(4);
-var err4 = new Error(EMPTY_STRING);
+var err4 = new MyError(EMPTY_STRING);
 actual = examineThis(err4);
 expect = EXPECTED_FORMAT;
 addThis();
