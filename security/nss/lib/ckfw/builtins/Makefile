@@ -30,9 +30,10 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:23:59 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.3 $ $Date: 2000/09/09 03:41:11 $ $Name:  $"
 
 include manifest.mn
+include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
@@ -65,7 +66,6 @@ endif
 
 
 
-include $(CORE_DEPTH)/coreconf/config.mk
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 certdata.c: certdata.txt certdata.perl
