@@ -2189,6 +2189,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	}
         return;
  error:
+     ;
         /* XXX free the image */
 }
 
