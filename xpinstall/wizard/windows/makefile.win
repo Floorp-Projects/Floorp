@@ -22,6 +22,6 @@
 
 DEPTH=..\..\..
 
-DIRS=$(DIRS) nsinstall nsztool setup setuprsc ren8dot3 test
+DIRS=$(DIRS) nsinstall nsztool setup setuprsc ren8dot3
 
 include <$(DEPTH)\config\rules.mak>
