@@ -1030,6 +1030,48 @@
 			settings = {
 			};
 		};
+		F50EA34C02BAB1E401000103 = {
+			fileRef = F50EA33E02BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34D02BAB1E401000103 = {
+			fileRef = F50EA33F02BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34E02BAB1E401000103 = {
+			fileRef = F50EA34002BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA34F02BAB1E401000103 = {
+			fileRef = F50EA34102BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA35002BAB1E401000103 = {
+			fileRef = F50EA34202BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA35102BAB1E401000103 = {
+			fileRef = F50EA34302BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50EA35202BAB1E401000103 = {
+			fileRef = F50EA34402BAAAB701000103;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5125A110202064D01FAFD9F = {
 			isa = PBXFileReference;
 			path = CHBrowserWrapper.h;
@@ -4261,6 +4303,13 @@
 				F5BAAB7802AC4A5301A967F3,
 				F5BAAB7902AC4A5301A967F3,
 				F53E013102AEE9BD01A967F3,
+				F50EA34C02BAB1E401000103,
+				F50EA34D02BAB1E401000103,
+				F50EA34E02BAB1E401000103,
+				F50EA34F02BAB1E401000103,
+				F50EA35002BAB1E401000103,
+				F50EA35102BAB1E401000103,
+				F50EA35202BAB1E401000103,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
