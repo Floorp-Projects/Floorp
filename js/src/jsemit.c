@@ -1702,7 +1702,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	 */
 	pn2 = pn->pn_left;
 	JS_ASSERT(pn2->pn_type != TOK_RP);
-	atomIndex = -1;
+	atomIndex = (jsatomid) -1; /* Suppress warning. */
 	switch (pn2->pn_type) {
 	  case TOK_NAME:
 	    if (pn2->pn_slot >= 0) {
