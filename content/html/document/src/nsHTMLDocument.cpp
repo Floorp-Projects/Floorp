@@ -4370,7 +4370,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   if (doShowUI)
     return NS_ERROR_NOT_IMPLEMENTED;
 
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (commandID.Equals(NS_LITERAL_STRING("cut"), nsCaseInsensitiveStringComparator()) ||
       (commandID.Equals(NS_LITERAL_STRING("copy"), nsCaseInsensitiveStringComparator()))) {
