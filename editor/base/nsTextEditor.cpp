@@ -378,8 +378,8 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
                                             const nsString *aAttribute, 
                                             const nsString *aValue)
 {
-  if (!aProperty)
-    return NS_ERROR_NULL_POINTER;
+  if (!aProperty) { return NS_ERROR_NULL_POINTER; }
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   if (gNoisy) 
   { 
@@ -395,103 +395,108 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
   result = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
-    PRBool isCollapsed;
-    selection->GetIsCollapsed(&isCollapsed);
-    if (PR_TRUE==isCollapsed)
+    PRBool cancel;
+    nsTextRulesInfo ruleInfo(nsTextEditRules::kSetTextProperty);
+    result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+    if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
     {
-      // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, aValue);
-    }
-    else
-    {
-      // set the text property for all selected ranges
-      nsEditor::BeginTransaction();
-      nsCOMPtr<nsIEnumerator> enumerator;
-      enumerator = do_QueryInterface(selection);
-      if (enumerator)
+      PRBool isCollapsed;
+      selection->GetIsCollapsed(&isCollapsed);
+      if (PR_TRUE==isCollapsed)
       {
-        enumerator->First(); 
-        nsISupports *currentItem;
-        result = enumerator->CurrentItem(&currentItem);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+        // manipulating text attributes on a collapsed selection only sets state for the next text insertion
+        SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, aValue);
+      }
+      else
+      {
+        // set the text property for all selected ranges
+        nsEditor::BeginTransaction();
+        nsCOMPtr<nsIEnumerator> enumerator;
+        enumerator = do_QueryInterface(selection);
+        if (enumerator)
         {
-          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-          nsCOMPtr<nsIDOMNode>commonParent;
-          result = range->GetCommonParent(getter_AddRefs(commonParent));
-          if ((NS_SUCCEEDED(result)) && commonParent)
+          enumerator->First(); 
+          nsISupports *currentItem;
+          result = enumerator->CurrentItem(&currentItem);
+          if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
           {
-            PRInt32 startOffset, endOffset;
-            range->GetStartOffset(&startOffset);
-            range->GetEndOffset(&endOffset);
-            nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
-            range->GetStartParent(getter_AddRefs(startParent));
-            range->GetEndParent(getter_AddRefs(endParent));
-            if (startParent.get()==endParent.get()) 
-            { // the range is entirely contained within a single text node
-              // commonParent==aStartParent, so get the "real" parent of the selection
-              startParent->GetParentNode(getter_AddRefs(commonParent));
-              result = SetTextPropertiesForNode(startParent, commonParent, 
-                                                startOffset, endOffset,
-                                                aProperty, aAttribute, aValue);
-            }
-            else
+            nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+            nsCOMPtr<nsIDOMNode>commonParent;
+            result = range->GetCommonParent(getter_AddRefs(commonParent));
+            if ((NS_SUCCEEDED(result)) && commonParent)
             {
-              nsCOMPtr<nsIDOMNode> startGrandParent;
-              startParent->GetParentNode(getter_AddRefs(startGrandParent));
-              nsCOMPtr<nsIDOMNode> endGrandParent;
-              endParent->GetParentNode(getter_AddRefs(endGrandParent));
-              if (NS_SUCCEEDED(result))
+              PRInt32 startOffset, endOffset;
+              range->GetStartOffset(&startOffset);
+              range->GetEndOffset(&endOffset);
+              nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
+              range->GetStartParent(getter_AddRefs(startParent));
+              range->GetEndParent(getter_AddRefs(endParent));
+              if (startParent.get()==endParent.get()) 
+              { // the range is entirely contained within a single text node
+                // commonParent==aStartParent, so get the "real" parent of the selection
+                startParent->GetParentNode(getter_AddRefs(commonParent));
+                result = SetTextPropertiesForNode(startParent, commonParent, 
+                                                  startOffset, endOffset,
+                                                  aProperty, aAttribute, aValue);
+              }
+              else
               {
-                PRBool canCollapseStyleNode = PR_FALSE;
-                if (endGrandParent.get()==startGrandParent.get())
+                nsCOMPtr<nsIDOMNode> startGrandParent;
+                startParent->GetParentNode(getter_AddRefs(startGrandParent));
+                nsCOMPtr<nsIDOMNode> endGrandParent;
+                endParent->GetParentNode(getter_AddRefs(endGrandParent));
+                if (NS_SUCCEEDED(result))
                 {
-                  result = IntermediateNodesAreInline(range, startParent, startOffset, 
-                                                      endParent, endOffset, 
-                                                      canCollapseStyleNode);
-                }
-                if (NS_SUCCEEDED(result)) 
-                {
-                  if (PR_TRUE==canCollapseStyleNode)
-                  { // the range is between 2 nodes that have a common (immediate) grandparent,
-                    // and any intermediate nodes are just inline style nodes
-                    result = SetTextPropertiesForNodesWithSameParent(startParent,startOffset,
-                                                                     endParent,  endOffset,
-                                                                     commonParent,
-                                                                     aProperty, aAttribute, aValue);
+                  PRBool canCollapseStyleNode = PR_FALSE;
+                  if (endGrandParent.get()==startGrandParent.get())
+                  {
+                    result = IntermediateNodesAreInline(range, startParent, startOffset, 
+                                                        endParent, endOffset, 
+                                                        canCollapseStyleNode);
                   }
-                  else
-                  { // the range is between 2 nodes that have no simple relationship
-                    result = SetTextPropertiesForNodeWithDifferentParents(range,
-                                                                          startParent,startOffset, 
-                                                                          endParent,  endOffset,
-                                                                          commonParent,
-                                                                          aProperty, aAttribute, aValue);
+                  if (NS_SUCCEEDED(result)) 
+                  {
+                    if (PR_TRUE==canCollapseStyleNode)
+                    { // the range is between 2 nodes that have a common (immediate) grandparent,
+                      // and any intermediate nodes are just inline style nodes
+                      result = SetTextPropertiesForNodesWithSameParent(startParent,startOffset,
+                                                                       endParent,  endOffset,
+                                                                       commonParent,
+                                                                       aProperty, aAttribute, aValue);
+                    }
+                    else
+                    { // the range is between 2 nodes that have no simple relationship
+                      result = SetTextPropertiesForNodeWithDifferentParents(range,
+                                                                            startParent,startOffset, 
+                                                                            endParent,  endOffset,
+                                                                            commonParent,
+                                                                            aProperty, aAttribute, aValue);
+                    }
                   }
                 }
               }
-            }
-            if (NS_SUCCEEDED(result))
-            { // compute a range for the selection
-              // don't want to actually do anything with selection, because
-              // we are still iterating through it.  Just want to create and remember
-              // an nsIDOMRange, and later add the range to the selection after clearing it.
-              // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
-              //      for setting a compound selection yet.
+              if (NS_SUCCEEDED(result))
+              { // compute a range for the selection
+                // don't want to actually do anything with selection, because
+                // we are still iterating through it.  Just want to create and remember
+                // an nsIDOMRange, and later add the range to the selection after clearing it.
+                // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
+                //      for setting a compound selection yet.
+              }
             }
           }
         }
+        nsEditor::EndTransaction();
       }
-      nsEditor::EndTransaction();
-    }
-    if (NS_SUCCEEDED(result))
-    { // set the selection
-      // XXX: can't do anything until I can create ranges
+      if (NS_SUCCEEDED(result))
+      { // set the selection
+        // XXX: can't do anything until I can create ranges
+      }
+      // post-process
+      result = mRules->DidDoAction(selection, &ruleInfo, result);
     }
   }
   if (gNoisy) {DebugDumpContent(); } // DEBUG
-  //HACK TO DRAW CHANGES
-  // HACKForceRedraw();
-  //END HACK
   return result;
 }
 
@@ -693,8 +698,8 @@ void nsTextEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
 
 NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)
 {
-  if (!aProperty)
-    return NS_ERROR_NULL_POINTER;
+  if (!aProperty) { return NS_ERROR_NULL_POINTER; }
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
   if (gNoisy) 
   { 
@@ -710,100 +715,233 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
   result = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
-    PRBool isCollapsed;
-    selection->GetIsCollapsed(&isCollapsed);
-    if (PR_TRUE==isCollapsed)
+    PRBool cancel;
+    nsTextRulesInfo ruleInfo(nsTextEditRules::kRemoveTextProperty);
+    result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
+    if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
     {
-      // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, nsnull);
-    }
-    else
-    {
-      nsEditor::BeginTransaction();
-      nsCOMPtr<nsIDOMNode> startParent, endParent;
-      PRInt32 startOffset, endOffset;
-      nsCOMPtr<nsIEnumerator> enumerator;
-      enumerator = do_QueryInterface(selection);
-      if (enumerator)
+      PRBool isCollapsed;
+      selection->GetIsCollapsed(&isCollapsed);
+      if (PR_TRUE==isCollapsed)
       {
-        enumerator->First(); 
-        nsISupports *currentItem;
-        result = enumerator->CurrentItem(&currentItem);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+        // manipulating text attributes on a collapsed selection only sets state for the next text insertion
+        SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, nsnull);
+      }
+      else
+      {
+        // removing text properties can really shuffle text nodes around
+        // so we need to keep some extra state to restore a reasonable selection
+        // after we're done
+        nsCOMPtr<nsIDOMNode> parentForSelection;  // selection's block parent
+        PRInt32 rangeStartOffset, rangeEndOffset;
+        GetTextSelectionOffsetsForRange(selection, getter_AddRefs(parentForSelection), 
+                                        rangeStartOffset, rangeEndOffset);
+        nsEditor::BeginTransaction();
+        nsCOMPtr<nsIDOMNode> startParent, endParent;
+        PRInt32 startOffset, endOffset;
+        nsCOMPtr<nsIEnumerator> enumerator;
+        enumerator = do_QueryInterface(selection);
+        if (enumerator)
         {
-          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-          nsCOMPtr<nsIDOMNode>commonParent;
-          result = range->GetCommonParent(getter_AddRefs(commonParent));
-          if ((NS_SUCCEEDED(result)) && commonParent)
+          enumerator->First(); 
+          nsISupports *currentItem;
+          result = enumerator->CurrentItem(&currentItem);
+          if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
           {
-            range->GetStartOffset(&startOffset);
-            range->GetEndOffset(&endOffset);
-            range->GetStartParent(getter_AddRefs(startParent));
-            range->GetEndParent(getter_AddRefs(endParent));
-            if (startParent.get()==endParent.get()) 
-            { // the range is entirely contained within a single text node
-              // commonParent==aStartParent, so get the "real" parent of the selection
-              startParent->GetParentNode(getter_AddRefs(commonParent));
-              result = RemoveTextPropertiesForNode(startParent, commonParent, 
-                                                   startOffset, endOffset,
-                                                   aProperty, nsnull);
-            }
-            else
+            nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+            nsCOMPtr<nsIDOMNode>commonParent;
+            result = range->GetCommonParent(getter_AddRefs(commonParent));
+            if ((NS_SUCCEEDED(result)) && commonParent)
             {
-              nsCOMPtr<nsIDOMNode> startGrandParent;
-              startParent->GetParentNode(getter_AddRefs(startGrandParent));
-              nsCOMPtr<nsIDOMNode> endGrandParent;
-              endParent->GetParentNode(getter_AddRefs(endGrandParent));
-              if (NS_SUCCEEDED(result))
+              range->GetStartOffset(&startOffset);
+              range->GetEndOffset(&endOffset);
+              range->GetStartParent(getter_AddRefs(startParent));
+              range->GetEndParent(getter_AddRefs(endParent));
+              if (startParent.get()==endParent.get()) 
+              { // the range is entirely contained within a single text node
+                // commonParent==aStartParent, so get the "real" parent of the selection
+                startParent->GetParentNode(getter_AddRefs(commonParent));
+                result = RemoveTextPropertiesForNode(startParent, commonParent, 
+                                                     startOffset, endOffset,
+                                                     aProperty, nsnull);
+              }
+              else
               {
-                PRBool canCollapseStyleNode = PR_FALSE;
-                if (endGrandParent.get()==startGrandParent.get())
+                nsCOMPtr<nsIDOMNode> startGrandParent;
+                startParent->GetParentNode(getter_AddRefs(startGrandParent));
+                nsCOMPtr<nsIDOMNode> endGrandParent;
+                endParent->GetParentNode(getter_AddRefs(endGrandParent));
+                if (NS_SUCCEEDED(result))
                 {
-                  result = IntermediateNodesAreInline(range, startParent, startOffset, 
-                                                      endParent, endOffset, 
-                                                      canCollapseStyleNode);
-                }
-                if (NS_SUCCEEDED(result)) 
-                {
-                  if (PR_TRUE==canCollapseStyleNode)
-                  { // the range is between 2 nodes that have a common (immediate) grandparent,
-                    // and any intermediate nodes are just inline style nodes
-                    result = RemoveTextPropertiesForNodesWithSameParent(startParent,startOffset,
-                                                                        endParent,  endOffset,
-                                                                        commonParent,
-                                                                        aProperty, nsnull);
+                  PRBool canCollapseStyleNode = PR_FALSE;
+                  if (endGrandParent.get()==startGrandParent.get())
+                  {
+                    result = IntermediateNodesAreInline(range, startParent, startOffset, 
+                                                        endParent, endOffset, 
+                                                        canCollapseStyleNode);
                   }
-                  else
-                  { // the range is between 2 nodes that have no simple relationship
-                    result = RemoveTextPropertiesForNodeWithDifferentParents(startParent,startOffset, 
-                                                                             endParent,  endOffset,
-                                                                             commonParent,
-                                                                             aProperty, nsnull);
+                  if (NS_SUCCEEDED(result)) 
+                  {
+                    if (PR_TRUE==canCollapseStyleNode)
+                    { // the range is between 2 nodes that have a common (immediate) grandparent,
+                      // and any intermediate nodes are just inline style nodes
+                      result = RemoveTextPropertiesForNodesWithSameParent(startParent,startOffset,
+                                                                          endParent,  endOffset,
+                                                                          commonParent,
+                                                                          aProperty, nsnull);
+                    }
+                    else
+                    { // the range is between 2 nodes that have no simple relationship
+                      result = RemoveTextPropertiesForNodeWithDifferentParents(startParent,startOffset, 
+                                                                               endParent,  endOffset,
+                                                                               commonParent,
+                                                                               aProperty, nsnull);
+                    }
                   }
                 }
               }
-            }
-            if (NS_SUCCEEDED(result))
-            { // compute a range for the selection
-              // don't want to actually do anything with selection, because
-              // we are still iterating through it.  Just want to create and remember
-              // an nsIDOMRange, and later add the range to the selection after clearing it.
-              // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
-              //      for setting a compound selection yet.
+              if (NS_SUCCEEDED(result))
+              { // compute a range for the selection
+                // don't want to actually do anything with selection, because
+                // we are still iterating through it.  Just want to create and remember
+                // an nsIDOMRange, and later add the range to the selection after clearing it.
+                // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
+                //      for setting a compound selection yet.
+              }
             }
           }
         }
+        nsEditor::EndTransaction();
+        if (NS_SUCCEEDED(result))
+        { 
+          ResetTextSelectionForRange(parentForSelection, rangeStartOffset, rangeEndOffset, selection);
+        }
       }
-      nsEditor::EndTransaction();
-      if (NS_SUCCEEDED(result))
-      { 
-        selection->Collapse(startParent, startOffset);
-        selection->Extend(endParent, endOffset);
-      }
+      // post-process 
+      result = mRules->DidDoAction(selection, &ruleInfo, result);
     }
   }
   return result;
 }
+
+void nsTextEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
+                                                   nsIDOMNode **aParent,
+                                                   PRInt32     &aStartOffset, 
+                                                   PRInt32     &aEndOffset)
+{
+  nsresult result;
+
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startOffset, endOffset;
+  aSelection->GetAnchorNode(getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(&startOffset);
+  aSelection->GetFocusNode(getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(&endOffset);
+
+  nsCOMPtr<nsIEnumerator> enumerator;
+  enumerator = do_QueryInterface(aSelection);
+  if (enumerator)
+  {
+    enumerator->First(); 
+    nsISupports *currentItem;
+    result = enumerator->CurrentItem(&currentItem);
+    if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+    {
+      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+      range->GetCommonParent(aParent);
+    }
+  }
+
+  nsCOMPtr<nsIContentIterator> iter;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              nsIContentIterator::GetIID(), 
+                                              getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    PRUint32 totalLength=0;
+    nsCOMPtr<nsIDOMCharacterData>textNode;
+    nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(*aParent);
+    iter->Init(blockParentContent);
+    // loop through the content iterator for each content node
+    nsCOMPtr<nsIContent> content;
+    result = iter->CurrentNode(getter_AddRefs(content));
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      textNode = do_QueryInterface(content);
+      if (textNode)
+      {
+        nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
+        if (currentNode.get() == startNode.get())
+        {
+          aStartOffset = totalLength + startOffset;
+        }
+        if (currentNode.get() == endNode.get())
+        {
+          aEndOffset = totalLength + endOffset;
+          break;
+        }
+        PRUint32 length;
+        textNode->GetLength(&length);
+        totalLength += length;
+      }
+      iter->Next();
+      iter->CurrentNode(getter_AddRefs(content));
+    }
+  }
+}
+
+void nsTextEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
+                                              PRInt32     aStartOffset,
+                                              PRInt32     aEndOffset,
+                                              nsIDOMSelection *aSelection)
+{
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startOffset, endOffset;
+
+  nsresult result;
+  nsCOMPtr<nsIContentIterator> iter;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              nsIContentIterator::GetIID(), 
+                                              getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    PRBool setStart = PR_FALSE;
+    PRUint32 totalLength=0;
+    nsCOMPtr<nsIDOMCharacterData>textNode;
+    nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(aParent);
+    iter->Init(blockParentContent);
+    // loop through the content iterator for each content node
+    nsCOMPtr<nsIContent> content;
+    result = iter->CurrentNode(getter_AddRefs(content));
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      textNode = do_QueryInterface(content);
+      if (textNode)
+      {
+        PRUint32 length;
+        textNode->GetLength(&length);
+        if ((PR_FALSE==setStart) && aStartOffset<=(PRInt32)(totalLength+length))
+        {
+          setStart = PR_TRUE;
+          startNode = do_QueryInterface(textNode);
+          startOffset = aStartOffset-totalLength;
+        }
+        if (aEndOffset<=(PRInt32)(totalLength+length))
+        {
+          endNode = do_QueryInterface(textNode);
+          endOffset = aEndOffset-totalLength;
+          break;
+        }        
+        totalLength += length;
+      }
+      iter->Next();
+      iter->CurrentNode(getter_AddRefs(content));
+    }
+    aSelection->Collapse(startNode, startOffset);
+    aSelection->Extend(endNode, endOffset);
+  }
+}
+
 
 NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
@@ -833,7 +971,6 @@ NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction
   return result;
 }
 
-/* XXX InsertText must respect mMaxTextLength */
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -850,6 +987,7 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.typeInState = *mTypeInState;
+  ruleInfo.maxLength = mMaxTextLength;
 
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))

@@ -23,6 +23,7 @@
 #include "nsIEditor.h"
 #include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMSelection.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
 #include "nsCOMPtr.h"
@@ -512,6 +513,28 @@ class nsAutoEditBatch
     nsAutoEditBatch( nsIEditor *aEd) : mEd(do_QueryInterface(aEd)) 
                    { if (mEd) mEd->BeginTransaction(); }
     ~nsAutoEditBatch() { if (mEd) mEd->EndTransaction(); }
+};
+
+class nsAutoSelectionReset
+{
+  private:
+    /** ref-counted reference to the selection that we are supposed to restore */
+    nsCOMPtr<nsIDOMSelection> mSel;
+
+    /** PR_TRUE if this instance initialized itself correctly */
+    PRBool mInitialized;
+
+    nsCOMPtr<nsIDOMNode> mStartNode;
+    nsCOMPtr<nsIDOMNode> mEndNode;
+    PRInt32 mStartOffset;
+    PRInt32 mEndOffset;
+
+  public:
+    /** constructor responsible for remembering all state needed to restore aSel */
+    nsAutoSelectionReset(nsIDOMSelection *aSel);
+    
+    /** destructor restores mSel to its former state */
+    ~nsAutoSelectionReset();
 };
 
 

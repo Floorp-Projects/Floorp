@@ -53,7 +53,8 @@ static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
+static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
 
 #ifdef NS_DEBUG
@@ -283,14 +284,6 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
   } else {
     res = ReplaceBlockParent(tag);
   }
-
-// XXXX: Horrible hack! We are doing this because
-// of an error in Gecko which is not rendering the
-// document after a change via the DOM - gpk 2/13/99
-  // BEGIN HACK!!!
-  // HACKForceRedraw();
-  // END HACK
-
   return res;
 }
 
@@ -657,6 +650,7 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
   if ((NS_SUCCEEDED(res)) && selection)
   {
     // set the block parent for all selected ranges
+    nsAutoSelectionReset selectionResetter(selection);
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = do_QueryInterface(selection);
@@ -700,6 +694,7 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
   res = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(res)) && selection)
   {
+    nsAutoSelectionReset selectionResetter(selection);
     // set the block parent for all selected ranges
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
@@ -1084,6 +1079,7 @@ nsHTMLEditor::RemoveParagraphStyle()
   res = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(res)) && selection)
   {
+    nsAutoSelectionReset selectionResetter(selection);
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = do_QueryInterface(selection);
@@ -1196,6 +1192,7 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
   res = nsEditor::GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(res)) && selection)
   {
+    nsAutoSelectionReset selectionResetter(selection);
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
     enumerator = do_QueryInterface(selection);
@@ -1315,6 +1312,8 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res) || !selection) return res;
 
+  nsAutoSelectionReset selectionResetter(selection);
+
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
@@ -1388,6 +1387,8 @@ nsHTMLEditor::Align(const nsString& aAlignType)
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res) || !selection) return res;
 
+  nsAutoSelectionReset selectionResetter(selection);
+
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
@@ -1429,6 +1430,8 @@ nsHTMLEditor::InsertList(const nsString& aListType)
 
   // Find out if the selection is collapsed:
   if (NS_FAILED(res) || !selection) return res;
+
+  nsAutoSelectionReset selectionResetter(selection);
 
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);

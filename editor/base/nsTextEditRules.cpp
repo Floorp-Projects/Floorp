@@ -35,7 +35,7 @@
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
-  if (mFlags & TEXT_EDITOR_FLAG_READONLY || mFlags & TEXT_EDITOR_FLAG_DISALBED) \
+  if (mFlags & TEXT_EDITOR_FLAG_READONLY || mFlags & TEXT_EDITOR_FLAG_DISABLED) \
   {                     \
     *aCancel = PR_TRUE; \
     return NS_OK;       \
@@ -92,7 +92,9 @@ NS_IMETHODIMP
 nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
                               nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection || !aInfo) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aInfo || !aCancel) { return NS_ERROR_NULL_POINTER; }
+
+  *aCancel = PR_FALSE;
 
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
@@ -107,13 +109,18 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             info->placeTxn, 
                             info->inString,
                             info->outString,
-                            info->typeInState);
+                            info->typeInState,
+                            info->maxLength);
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, aCancel);
     case kUndo:
       return WillUndo(aSelection, aCancel);
     case kRedo:
       return WillRedo(aSelection, aCancel);
+    case kSetTextProperty:
+      return WillSetTextProperty(aSelection, aCancel);
+    case kRemoveTextProperty:
+      return WillRemoveTextProperty(aSelection, aCancel);
   }
   return NS_ERROR_FAILURE;
 }
@@ -140,6 +147,10 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
       return DidUndo(aSelection, aResult);
     case kRedo:
       return DidRedo(aSelection, aResult);
+    case kSetTextProperty:
+      return DidSetTextProperty(aSelection, aResult);
+    case kRemoveTextProperty:
+      return DidRemoveTextProperty(aSelection, aResult);
   }
   return NS_ERROR_FAILURE;
 }
@@ -199,15 +210,25 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 
 
 nsresult
-nsTextEditRules::WillInsertText(nsIDOMSelection  *aSelection, 
+nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
                                 PlaceholderTxn **aTxn,
                                 const nsString *inString,
                                 nsString       *outString,
-                                TypeInState    typeInState)
+                                TypeInState    typeInState,
+                                PRInt32         aMaxLength)
 {
   if (!aSelection || !aCancel || !inString || !outString) {return NS_ERROR_NULL_POINTER;}
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
+  if (-1 != aMaxLength && (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT))
+  {
+    // get the current text length
+    // get the length of inString
+    // if l1 is at or over max, cancel the insert
+    // if l1 + l2 > max, set outString to subset of inString so length = max
+    
+  }
     
   // initialize out params
   *aCancel = PR_FALSE;
@@ -490,6 +511,42 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
     }
   }
   return result;
+}
+
+nsresult
+nsTextEditRules::WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  nsresult result = NS_OK;
+
+  // XXX: should probably return a success value other than NS_OK that means "not allowed"
+  if (TEXT_EDITOR_FLAG_PLAINTEXT & mFlags) {
+    *aCancel = PR_TRUE;
+  }
+  return result;
+}
+
+nsresult
+nsTextEditRules::DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTextEditRules::WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  nsresult result = NS_OK;
+
+  // XXX: should probably return a success value other than NS_OK that means "not allowed"
+  if (TEXT_EDITOR_FLAG_PLAINTEXT & mFlags) {
+    *aCancel = PR_TRUE;
+  }
+  return result;
+}
+
+nsresult
+nsTextEditRules::DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  return NS_OK;
 }
 
 nsresult

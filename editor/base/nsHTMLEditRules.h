@@ -43,11 +43,12 @@ protected:
 
   // nsHTMLEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
-                            PRBool          *aCancel,
+                            PRBool         *aCancel,
                             PlaceholderTxn **aTxn,
                             const nsString *inString,
                             nsString       *outString,
-                            TypeInState    typeInState);
+                            TypeInState     typeInState,
+                            PRInt32         aMaxLength);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECollapsedSelectionAction aAction, PRBool *aCancel);
   nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool *aCancel);

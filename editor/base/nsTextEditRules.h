@@ -62,6 +62,8 @@ public:
     // text actions
     kInsertText      = 2000,
     kDeleteSelection = 2001,
+    kSetTextProperty = 2003,
+    kRemoveTextProperty = 2004,
     // html only action
     kInsertBreak     = 3000,
     kMakeList        = 3001,
@@ -77,11 +79,12 @@ protected:
 
   // nsTextEditRules implementation methods
   nsresult WillInsertText(nsIDOMSelection  *aSelection, 
-                            PRBool          *aCancel,
+                            PRBool         *aCancel,
                             PlaceholderTxn **aTxn,
                             const nsString *inString,
                             nsString       *outString,
-                            TypeInState    typeInState);
+                            TypeInState    typeInState,
+                            PRInt32         aMaxLength);
   nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
   nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
@@ -93,6 +96,12 @@ protected:
 
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
+
+  nsresult WillSetTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidSetTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
+
+  nsresult WillRemoveTextProperty(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aResult);
 
   nsresult WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidUndo(nsIDOMSelection *aSelection, nsresult aResult);
@@ -144,7 +153,7 @@ class nsTextRulesInfo : public nsRulesInfo
 {
  public:
  
-  nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState(),collapsedAction(nsIEditor::eDeleteRight) {}
+  nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState(),maxLength(-1),collapsedAction(nsIEditor::eDeleteRight) {}
   virtual ~nsTextRulesInfo() {}
   
   // used by kInsertText
@@ -152,6 +161,7 @@ class nsTextRulesInfo : public nsRulesInfo
   const nsString *inString;
   nsString *outString;
   TypeInState typeInState;
+  PRInt32 maxLength;
   
   nsIEditor::ECollapsedSelectionAction collapsedAction;
 };
