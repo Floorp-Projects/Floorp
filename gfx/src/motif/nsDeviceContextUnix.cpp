@@ -111,7 +111,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aCon
   return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
+NS_IMETHODIMP nsDeviceContextUnix :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PRUint32 newcolor = 0;
 
@@ -245,7 +245,8 @@ PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
     
   } // switch(mDepth)
   
-  return (newcolor);
+  aColor = newcolor;
+  return NS_OK;
 }
 
 

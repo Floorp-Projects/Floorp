@@ -506,7 +506,7 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
 {
   XGCValues values ;
 
-  mCurrentColor = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  mContext->ConvertPixel(aColor, mCurrentColor);
 
   values.foreground = mCurrentColor;
   values.background = mCurrentColor;

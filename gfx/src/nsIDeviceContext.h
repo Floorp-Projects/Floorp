@@ -151,6 +151,12 @@ public:
    * Returns information about the device's palette capabilities.
    */
   NS_IMETHOD GetPaletteInfo(nsPaletteInfo&) = 0;
+
+  /**
+   * Returns Platform specific pixel value for an RGB value
+   */
+  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel) = 0;
+
 };
 
 #endif /* nsIDeviceContext_h___ */
