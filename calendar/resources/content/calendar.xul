@@ -83,8 +83,8 @@
    persist="screenX screenY width height sizemode"> 
  
 <broadcasterset>
-  <broadcaster id="delete_command" disabled="false"/>
-  <broadcaster id="modify_command" disabled="false"/>
+  <broadcaster id="delete_command" disabled="true"/>
+  <broadcaster id="modify_command" disabled="true"/>
 </broadcasterset>
 
 
@@ -114,18 +114,18 @@
 <popup id="savetip"/>
 
 <popup id="context-menu">
-   <menuitem label="&calendar.newevent.button.label;" oncommand="newEventCommand()"/>
-   <menuitem label="&calendar.tools.modify.tooltip;" observes="modify_command" oncommand="unifinderModifyCommand()"/>
-   <menuitem label="&calendar.tools.delete.tooltip;" observes="delete_command" oncommand="unifinderRemoveCommand()"/>
+   <menuitem label="&calendar.context.newevent;" oncommand="newEventCommand()"/>
+   <menuitem label="&calendar.context.modifyevent;" observes="modify_command" oncommand="unifinderModifyCommand()"/>
+   <menuitem label="&calendar.context.deleteevent;" observes="delete_command" oncommand="unifinderRemoveCommand()"/>
    <menuseparator/>
-   <menuitem label="&calendar.gototoday.button.tooltip;" oncommand="gCalendarWindow.goToToday()"/>
+   <menuitem label="&calendar.context.gototoday;" oncommand="gCalendarWindow.goToToday()"/>
    <menuseparator/>
-   <menuitem label="&calendar.dayview.button.label;" oncommand="gCalendarWindow.switchToDayView()"/>
-   <menuitem label="&calendar.weekview.button.label;" oncommand="gCalendarWindow.switchToWeekView()"/>
-   <menuitem label="&calendar.monthview.button.label;" oncommand="gCalendarWindow.switchToMonthView()"/>
+   <menuitem label="&calendar.context.dayview;" oncommand="gCalendarWindow.switchToDayView()"/>
+   <menuitem label="&calendar.context.weekview;" oncommand="gCalendarWindow.switchToWeekView()"/>
+   <menuitem label="&calendar.context.monthview;" oncommand="gCalendarWindow.switchToMonthView()"/>
    <menuseparator/>
-   <menuitem label="&context.menu.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
-   <menuitem label="&context.menu.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+   <menuitem label="&calendar.context.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
+   <menuitem label="&calendar.context.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
