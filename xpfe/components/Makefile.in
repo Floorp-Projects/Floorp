@@ -104,7 +104,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
-DIRS    += urlwidget winhooks
+DIRS    += urlwidget winhooks extensions
 endif
 endif
 endif
@@ -124,7 +124,6 @@ DIRS    = \
           sidebar/public \
           bookmarks/public \
           alerts \
-          extensions \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT) 
