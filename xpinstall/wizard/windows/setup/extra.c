@@ -699,52 +699,6 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, DWORD dwType)
   }
 }
 
-/***
-HRESULT SmartUpdateJars()
-{
-  DWORD     dwIndex0;
-  siC       *siCObject = NULL;
-  char      szWorkingDir[MAX_BUF];
-  char      szArchiveName[MAX_BUF];
-  char      szBuf[MAX_BUF];
-
-  ZeroMemory(szWorkingDir, MAX_BUF);
-  ZeroMemory(szArchiveName, MAX_BUF);
-  ZeroMemory(szBuf, MAX_BUF);
-  ParsePath(siSDObject.szCoreFilePath, szWorkingDir, MAX_BUF, PP_PATH_ONLY);
-
-  SmartUpdate();
-
-  DecriptString(szBuf, siSDObject.szCoreFilePath);
-  lstrcpy(siSDObject.szCoreFilePath, szBuf);
-  
-  if(!FileExists(siSDObject.szCoreFilePath))
-  {
-    return(0);
-  }
-
-  dwIndex0 = 0;
-  siCObject = SiCNodeGetObject(dwIndex0, TRUE);
-  while(siCObject)
-  {
-    if((siCObject->dwAttributes & SIC_SELECTED) && !(siCObject->dwAttributes & SIC_LAUNCHAPP))
-    {
-      lstrcpy(szArchiveName, szTempDir);
-      AppendBackSlash(szArchiveName, sizeof(szArchiveName));
-      lstrcat(szArchiveName, siCObject->szArchiveName);
-
-      if(FileExists(szArchiveName))
-      {
-        WinSpawn(siSDObject.szCoreFilePath, szArchiveName, szWorkingDir, SW_SHOWNORMAL, TRUE);
-      }
-    }
-    ++dwIndex0;
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
-  }
-  return(0);
-}
-***/
-
 HRESULT LaunchApps()
 {
   DWORD     dwIndex0;
