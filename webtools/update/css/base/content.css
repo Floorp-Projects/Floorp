@@ -17,6 +17,7 @@ a:hover { color: #333; }
 a:active { color: #000; }
 
 #header a:visited { color: #039; }
+#header a:hover { color: #333; }
 
 #mBody li { padding-bottom: 0.5em; }
 

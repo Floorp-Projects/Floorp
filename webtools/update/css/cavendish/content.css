@@ -195,3 +195,8 @@
     font-size: 8pt;
     color: #333;
 }
+
+.tooltip {
+    cursor: help;
+    border-bottom: 1px dotted;
+}

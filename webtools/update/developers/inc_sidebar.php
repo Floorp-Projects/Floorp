@@ -1,5 +1,5 @@
 <?php
-if (($_SESSION["level"] == "admin" or $_SESSION["level"] == "moderator") and $skipqueue != "true") {
+if (($_SESSION["level"] == "admin" or $_SESSION["level"] == "editor") and $skipqueue != "true") {
     $sql ="SELECT TM.ID FROM `main` TM
         INNER JOIN `version` TV ON TM.ID = TV.ID
         WHERE `approved` = '?' GROUP BY `URI` ORDER BY TV.DateUpdated ASC";

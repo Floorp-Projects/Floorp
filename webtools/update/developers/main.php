@@ -14,7 +14,7 @@ include"inc_sidebar.php";
 
 
 <?php
-if ($_SESSION["level"] == "admin" or $_SESSION["level"] == "moderator") {
+if ($_SESSION["level"] == "admin" or $_SESSION["level"] == "editor") {
 
 $sql ="SELECT TM.ID FROM `main` TM
 INNER JOIN `version` TV ON TM.ID = TV.ID
