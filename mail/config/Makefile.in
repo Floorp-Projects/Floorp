@@ -76,7 +76,7 @@ endif
 	-$(RM) -f $(MOZILLA_DIR)/mail/config/mail-tmp.mn
 	-$(RM) -f $(MOZILLA_DIR)/mail/config/qute-tmp.mn
 	-$(RM) -f $(MOZILLA_DIR)/mail/config/en-US-tmp.mn
-#	-$(RM) -rf $(DIST)/$(APP_NAME)/tmpchrome 
+	-$(RM) -rf $(DIST)/$(APP_NAME)/tmpchrome 
 
 mail_copy::
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEMAIL) -o $(_PLATFORM) -v

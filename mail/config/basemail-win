@@ -88,6 +88,14 @@ components\nsHelperAppDlg.js
 components\nsDownloadProgressListener.js
 components\downloadmanager.xpt
 
+; spellchecker (may not be present)
+components\myspell.dll
+components\spellchecker.xpt
+components\spellchk.dll
+;; XXX these two files are bogus, they should not be in components\myspell...
+components\myspell\*
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

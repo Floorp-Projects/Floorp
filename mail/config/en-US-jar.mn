@@ -88,7 +88,7 @@ locale/en-US/editor/editor.properties,                    en-US/locale/en-US/edi
 locale/en-US/editor/EdNamedAnchorProperties.dtd,          en-US/locale/en-US/editor/EdNamedAnchorProperties.dtd
 locale/en-US/editor/EdAdvancedEdit.dtd,                   en-US/locale/en-US/editor/EdAdvancedEdit.dtd
 locale/en-US/editor/EdDialogOverlay.dtd,                  en-US/locale/en-US/editor/EdDialogOverlay.dtd
-
+locale/en-US/editor/EditorSpellCheck.dtd,                 en-US/locale/en-US/editor/EditorSpellCheck.dtd
 
 #################################################################################################
 # US
