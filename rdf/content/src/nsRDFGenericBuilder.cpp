@@ -182,6 +182,9 @@ public:
                              PRBool aNotify);
 
     nsresult
+    AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDFResource* aResource, nsIContent* aRealNode);
+
+    nsresult
     CreateWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aChild,
@@ -189,27 +192,6 @@ public:
                      PRBool aNotify);
 
     enum eUpdateAction { eSet, eClear };
-
-#if 0
-    PRBool
-    IsAttributePersisent(nsIContent *element, PRInt32 aNameSpaceID, nsIAtom* aAtom);
-
-    void
-    GetPersistentAttributes(nsIContent *realKid);
-
-    void
-    PersistAttribute(nsIContent *element,
-    			PRInt32 aNameSpaceID,
-    			nsIAtom* aAtom,
-    			nsString aValue,
-    			eUpdateAction action);
-
-    void
-    PersistProperty(nsIContent *element,
-    			nsIRDFResource *aProperty,
-    			nsIRDFNode *aTarget,
-    			eUpdateAction action);
-#endif
 
     nsresult
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
@@ -261,11 +243,6 @@ public:
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
 
-    nsresult
-    GetResource(PRInt32 aNameSpaceID,
-                nsIAtom* aNameAtom,
-                nsIRDFResource** aResource);
-
     nsresult FindInsertionPoint(nsIContent* aElement, nsIContent** aResult);
     nsresult RemoveGeneratedContent(nsIContent* aElement);
     nsresult FindFirstGeneratedChild(nsIContent* aElement, PRInt32* aIndex);
@@ -294,9 +271,6 @@ protected:
 
     nsCOMPtr<nsITimer> mTimer;
 
-    static nsIRDFDataSource	*mLocalstore;
-    static PRBool		persistLock;
-
     // pseudo-constants
     static nsrefcnt gRefCnt;
     static nsIRDFService*         gRDFService;
@@ -305,33 +279,31 @@ protected:
     static nsIHTMLElementFactory* gHTMLElementFactory;
 
     static nsIAtom* kContainerAtom;
-    static nsIAtom* kLazyContentAtom;
+    static nsIAtom* kContainerContentsGeneratedAtom;
+    static nsIAtom* kContainmentAtom;
+    static nsIAtom* kEmptyAtom;
+    static nsIAtom* kIdAtom;
+    static nsIAtom* kIgnoreAtom;
+    static nsIAtom* kInstanceOfAtom;
     static nsIAtom* kIsContainerAtom;
     static nsIAtom* kIsEmptyAtom;
-    static nsIAtom* kXULContentsGeneratedAtom;
-    static nsIAtom* kTemplateContentsGeneratedAtom;
-    static nsIAtom* kContainerContentsGeneratedAtom;
+    static nsIAtom* kLazyContentAtom;
     static nsIAtom* kNaturalOrderPosAtom;
-    static nsIAtom* kIdAtom;
-    static nsIAtom* kPersistAtom;
     static nsIAtom* kOpenAtom;
-    static nsIAtom* kEmptyAtom;
-    static nsIAtom* kResourceAtom;
-    static nsIAtom* kURIAtom;
-    static nsIAtom* kContainmentAtom;
-    static nsIAtom* kIgnoreAtom;
-    static nsIAtom* kRefAtom;
-    static nsIAtom* kValueAtom;
-
-    static nsIAtom* kTemplateAtom;
-    static nsIAtom* kRuleAtom;
-    static nsIAtom* kTextAtom;
+    static nsIAtom* kPersistAtom;
     static nsIAtom* kPropertyAtom;
-    static nsIAtom* kInstanceOfAtom;
-
+    static nsIAtom* kRefAtom;
+    static nsIAtom* kResourceAtom;
+    static nsIAtom* kRuleAtom;
+    static nsIAtom* kTemplateAtom;
+    static nsIAtom* kTemplateContentsGeneratedAtom;
+    static nsIAtom* kTextAtom;
     static nsIAtom* kTreeAtom;
     static nsIAtom* kTreeChildrenAtom;
     static nsIAtom* kTreeItemAtom;
+    static nsIAtom* kURIAtom;
+    static nsIAtom* kValueAtom;
+    static nsIAtom* kXULContentsGeneratedAtom;
 
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
@@ -353,40 +325,36 @@ nsrefcnt            RDFGenericBuilderImpl::gRefCnt = 0;
 nsIXULSortService*	RDFGenericBuilderImpl::gXULSortService = nsnull;
 
 nsIAtom* RDFGenericBuilderImpl::kContainerAtom;
-nsIAtom* RDFGenericBuilderImpl::kLazyContentAtom;
+nsIAtom* RDFGenericBuilderImpl::kContainerContentsGeneratedAtom;
+nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
+nsIAtom* RDFGenericBuilderImpl::kEmptyAtom;
+nsIAtom* RDFGenericBuilderImpl::kIdAtom;
+nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
+nsIAtom* RDFGenericBuilderImpl::kInstanceOfAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsEmptyAtom;
-nsIAtom* RDFGenericBuilderImpl::kXULContentsGeneratedAtom;
-nsIAtom* RDFGenericBuilderImpl::kTemplateContentsGeneratedAtom;
-nsIAtom* RDFGenericBuilderImpl::kContainerContentsGeneratedAtom;
-nsIAtom* RDFGenericBuilderImpl::kIdAtom;
-nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
-nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
-nsIAtom* RDFGenericBuilderImpl::kEmptyAtom;
-nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
-nsIAtom* RDFGenericBuilderImpl::kURIAtom;
-nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
+nsIAtom* RDFGenericBuilderImpl::kLazyContentAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
-nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
-nsIAtom* RDFGenericBuilderImpl::kRefAtom;
-nsIAtom* RDFGenericBuilderImpl::kValueAtom;
-
-nsIAtom* RDFGenericBuilderImpl::kTemplateAtom;
-nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
-nsIAtom* RDFGenericBuilderImpl::kTextAtom;
+nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
+nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
 nsIAtom* RDFGenericBuilderImpl::kPropertyAtom;
-nsIAtom* RDFGenericBuilderImpl::kInstanceOfAtom;
-
+nsIAtom* RDFGenericBuilderImpl::kRefAtom;
+nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
+nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
+nsIAtom* RDFGenericBuilderImpl::kTemplateAtom;
+nsIAtom* RDFGenericBuilderImpl::kTemplateContentsGeneratedAtom;
+nsIAtom* RDFGenericBuilderImpl::kTextAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeChildrenAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeItemAtom;
+nsIAtom* RDFGenericBuilderImpl::kURIAtom;
+nsIAtom* RDFGenericBuilderImpl::kValueAtom;
+nsIAtom* RDFGenericBuilderImpl::kXULContentsGeneratedAtom;
 
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
 
 nsIRDFService*  RDFGenericBuilderImpl::gRDFService;
-nsIRDFDataSource* RDFGenericBuilderImpl::mLocalstore;
-PRBool		RDFGenericBuilderImpl::persistLock;
 nsIRDFContainerUtils* RDFGenericBuilderImpl::gRDFContainerUtils;
 nsINameSpaceManager* RDFGenericBuilderImpl::gNameSpaceManager;
 nsIHTMLElementFactory* RDFGenericBuilderImpl::gHTMLElementFactory;
@@ -438,59 +406,40 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 
     --gRefCnt;
     if (gRefCnt == 0) {
-        NS_RELEASE(kContainerAtom);
-        NS_RELEASE(kLazyContentAtom);
-        NS_RELEASE(kIsContainerAtom);
-        NS_RELEASE(kIsEmptyAtom);
-        NS_RELEASE(kXULContentsGeneratedAtom);
-        NS_RELEASE(kTemplateContentsGeneratedAtom);
-        NS_RELEASE(kContainerContentsGeneratedAtom);
+        NS_IF_RELEASE(kContainerAtom);
+        NS_IF_RELEASE(kContainerContentsGeneratedAtom);
+        NS_IF_RELEASE(kContainmentAtom);
+        NS_IF_RELEASE(kEmptyAtom);
+        NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kIgnoreAtom);
+        NS_IF_RELEASE(kInstanceOfAtom);
+        NS_IF_RELEASE(kIsContainerAtom);
+        NS_IF_RELEASE(kIsEmptyAtom);
+        NS_IF_RELEASE(kLazyContentAtom);
+        NS_IF_RELEASE(kNaturalOrderPosAtom);
+        NS_IF_RELEASE(kOpenAtom);
+        NS_IF_RELEASE(kPersistAtom);
+        NS_IF_RELEASE(kPropertyAtom);
+        NS_IF_RELEASE(kRefAtom);
+        NS_IF_RELEASE(kResourceAtom);
+        NS_IF_RELEASE(kRuleAtom);
+        NS_IF_RELEASE(kTemplateAtom);
+        NS_IF_RELEASE(kTemplateContentsGeneratedAtom);
+        NS_IF_RELEASE(kTextAtom);
+        NS_IF_RELEASE(kTreeAtom);
+        NS_IF_RELEASE(kTreeChildrenAtom);
+        NS_IF_RELEASE(kTreeItemAtom);
+        NS_IF_RELEASE(kURIAtom);
+        NS_IF_RELEASE(kValueAtom);
+        NS_IF_RELEASE(kXULContentsGeneratedAtom);
 
-        NS_RELEASE(kIdAtom);
-        NS_RELEASE(kPersistAtom);
-        NS_RELEASE(kOpenAtom);
-        NS_RELEASE(kEmptyAtom);
-        NS_RELEASE(kResourceAtom);
-        NS_RELEASE(kURIAtom);
-        NS_RELEASE(kContainmentAtom);
-        NS_RELEASE(kIgnoreAtom);
-        NS_RELEASE(kRefAtom);
-        NS_RELEASE(kValueAtom);
-        NS_RELEASE(kNaturalOrderPosAtom);
-
-        NS_RELEASE(kTemplateAtom);
-        NS_RELEASE(kRuleAtom);
-        NS_RELEASE(kTextAtom);
-        NS_RELEASE(kPropertyAtom);
-        NS_RELEASE(kInstanceOfAtom);
-
-        NS_RELEASE(kTreeAtom);
-        NS_RELEASE(kTreeChildrenAtom);
-        NS_RELEASE(kTreeItemAtom);
-
-        NS_RELEASE(kNC_Title);
-        NS_RELEASE(kNC_child);
-        NS_RELEASE(kNC_Column);
-        NS_RELEASE(kNC_Folder);
-        NS_RELEASE(kRDF_child);
-        NS_RELEASE(kRDF_instanceOf);
-        NS_RELEASE(kXUL_element);
-
-	if (mLocalstore)
-	{
-		// XXX Currently, need to flush localstore as its being leaked
-		// and thus never written out to disk otherwise
-
-		nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
-		if (remoteLocalStore)
-		{
-			remoteLocalStore->Flush();
-		}
-
-		NS_RELEASE(mLocalstore);
-		mLocalstore = nsnull;
-		persistLock = PR_FALSE;
-	}
+        NS_IF_RELEASE(kNC_Title);
+        NS_IF_RELEASE(kNC_child);
+        NS_IF_RELEASE(kNC_Column);
+        NS_IF_RELEASE(kNC_Folder);
+        NS_IF_RELEASE(kRDF_child);
+        NS_IF_RELEASE(kRDF_instanceOf);
+        NS_IF_RELEASE(kXUL_element);
 
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
         nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
@@ -506,35 +455,31 @@ RDFGenericBuilderImpl::Init()
 {
     if (gRefCnt++ == 0) {
         kContainerAtom                  = NS_NewAtom("container");
-        kLazyContentAtom                = NS_NewAtom("lazycontent");
+        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
+        kContainmentAtom                = NS_NewAtom("containment");
+        kEmptyAtom                      = NS_NewAtom("empty");
+        kIdAtom                         = NS_NewAtom("id");
+        kIgnoreAtom                     = NS_NewAtom("ignore");
+        kInstanceOfAtom                 = NS_NewAtom("instanceOf");
         kIsContainerAtom                = NS_NewAtom("iscontainer");
         kIsEmptyAtom                    = NS_NewAtom("isempty");
-        kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
+        kLazyContentAtom                = NS_NewAtom("lazycontent");
+        kNaturalOrderPosAtom            = NS_NewAtom("pos");
+        kOpenAtom                       = NS_NewAtom("open");
+        kPersistAtom                    = NS_NewAtom("persist");
+        kPropertyAtom                   = NS_NewAtom("property");
+        kRefAtom                        = NS_NewAtom("ref");
+        kResourceAtom                   = NS_NewAtom("resource");
+        kRuleAtom                       = NS_NewAtom("rule");
+        kTemplateAtom                   = NS_NewAtom("template");
         kTemplateContentsGeneratedAtom  = NS_NewAtom("templatecontentsgenerated");
-        kContainerContentsGeneratedAtom = NS_NewAtom("containercontentsgenerated");
-
-        kIdAtom              = NS_NewAtom("id");
-        kPersistAtom         = NS_NewAtom("persist");
-        kOpenAtom            = NS_NewAtom("open");
-        kEmptyAtom           = NS_NewAtom("empty");
-        kResourceAtom        = NS_NewAtom("resource");
-        kURIAtom             = NS_NewAtom("uri");
-        kContainmentAtom     = NS_NewAtom("containment");
-        kIgnoreAtom          = NS_NewAtom("ignore");
-        kRefAtom             = NS_NewAtom("ref");
-        kValueAtom           = NS_NewAtom("value");
-        kNaturalOrderPosAtom = NS_NewAtom("pos");
-
-        kTemplateAtom        = NS_NewAtom("template");
-        kRuleAtom            = NS_NewAtom("rule");
-
-        kTextAtom            = NS_NewAtom("text");
-        kPropertyAtom        = NS_NewAtom("property");
-        kInstanceOfAtom      = NS_NewAtom("instanceOf");
-
-        kTreeAtom            = NS_NewAtom("tree");
-        kTreeChildrenAtom    = NS_NewAtom("treechildren");
-        kTreeItemAtom        = NS_NewAtom("treeitem");
+        kTextAtom                       = NS_NewAtom("text");
+        kTreeAtom                       = NS_NewAtom("tree");
+        kTreeChildrenAtom               = NS_NewAtom("treechildren");
+        kTreeItemAtom                   = NS_NewAtom("treeitem");
+        kURIAtom                        = NS_NewAtom("uri");
+        kValueAtom                      = NS_NewAtom("value");
+        kXULContentsGeneratedAtom       = NS_NewAtom("xulcontentsgenerated");
 
         nsresult rv;
 
@@ -577,14 +522,6 @@ RDFGenericBuilderImpl::Init()
         gRDFService->GetResource(RDF_NAMESPACE_URI "child",  &kRDF_child);
         gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
         gRDFService->GetResource(XUL_NAMESPACE_URI "element",    &kXUL_element);
-
-	persistLock = PR_FALSE;
-        rv = gRDFService->GetDataSource("rdf:local-store", &mLocalstore);
-	if (NS_FAILED(rv))
-	{
-		// failure merely means we can't use persistence
-		mLocalstore = nsnull;
-	}
 
         rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
                                           nsIRDFContainerUtils::GetIID(),
@@ -1367,184 +1304,6 @@ RDFGenericBuilderImpl::OnMove(nsIRDFResource* aOldSource,
 }
 
 
-#if 0
-PRBool
-RDFGenericBuilderImpl::IsAttributePersisent(nsIContent *element, PRInt32 aNameSpaceID, nsIAtom *aAtom)
-{
-	PRBool		persistFlag = PR_FALSE;
-	nsresult	rv;
-	nsAutoString	persistValue;
-
-	if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None, kPersistAtom, persistValue))
-		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) )
-	{
-		nsAutoString	tagName;
-		aAtom->ToString(tagName);
-		if (tagName.Length() > 0)
-		{
-			// XXX should really be a bit smarter with matching...
-			// i.e. break up items in-between spaces and then compare
-			if (persistValue.Find(tagName, PR_TRUE) >= 0)
-			{
-				persistFlag = PR_TRUE;
-			}
-		}
-	}
-	return(persistFlag);
-}
-
-
-void
-RDFGenericBuilderImpl::GetPersistentAttributes(nsIContent *element)
-{
-	if ((!mLocalstore) || (!mDocument))	return;
-
-	nsresult			rv;
-	nsCOMPtr<nsIRDFResource>	elementRes;
-	if (NS_FAILED(rv = nsRDFContentUtils::GetElementResource(element, getter_AddRefs(elementRes))))	return;
-
-	nsAutoString			persistValue;
-	if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kPersistAtom, persistValue))
-		|| (rv != NS_CONTENT_ATTR_HAS_VALUE))	return;
-
-	nsAutoString	attribute;
-	while(persistValue.Length() > 0)
-	{
-		attribute.Truncate();
-
-		// space or comma separated list of attributes
-		PRInt32		offset;
-		if ((offset = persistValue.FindCharInSet(" ,")) > 0)
-		{
-			persistValue.Left(attribute, offset);
-			persistValue.Cut(0, offset + 1);
-		}
-		else
-		{
-			attribute = persistValue;
-			persistValue.Truncate();
-		}
-		attribute.Trim(" ");
-
-		if (attribute.Length() > 0)
-		{
-			char	*attributeStr = attribute.ToNewCString();
-			if (!attributeStr)	break;
-			nsCOMPtr<nsIAtom>	attributeAtom;
-			attributeAtom = NS_NewAtom(attributeStr);
-			delete [] attributeStr;
-
-			nsCOMPtr<nsIRDFResource>	propertyRes;
-			if (NS_FAILED(rv = GetResource(kNameSpaceID_None, attributeAtom, getter_AddRefs(propertyRes))))	return;
-			
-			nsCOMPtr<nsIRDFNode>	target;
-			if (NS_SUCCEEDED(rv = mLocalstore->GetTarget(elementRes, propertyRes, PR_TRUE,
-				getter_AddRefs(target))) && (rv != NS_RDF_NO_VALUE))
-			{
-				persistLock = PR_TRUE;
-
-				// XXX Don't OnAssert the persistant attribute;
-				// just set it in the content model instead
-				// OnAssert(elementRes, propertyRes, target);
-
-				PRInt32			nameSpaceID;
-				nsCOMPtr<nsIAtom>	tag;
-				if (NS_SUCCEEDED(rv = mDocument->SplitProperty(propertyRes, &nameSpaceID, getter_AddRefs(tag))))
-				{
-					nsCOMPtr<nsIRDFLiteral>	literal = do_QueryInterface(target);
-					if (literal)
-					{
-						const	PRUnichar	*uniLiteral = nsnull;
-						literal->GetValueConst(&uniLiteral);
-						if (uniLiteral)
-						{
-							rv = element->SetAttribute(nameSpaceID, tag, uniLiteral, PR_FALSE);
-						}
-					}
-				}
-
-				persistLock = PR_FALSE;
-			}
-		}
-	}
-}
-
-
-void
-RDFGenericBuilderImpl::PersistAttribute(nsIContent *element, PRInt32 aNameSpaceID,
-					nsIAtom *aAtom, nsString aValue, eUpdateAction action)
-{
-	nsresult	rv = NS_OK;
-	
-	if ((!mLocalstore) || (!mDocument))	return;
-
-	if (persistLock == PR_TRUE)	return;
-
-	if (IsAttributePersisent(element, aNameSpaceID, aAtom) == PR_FALSE)	return;
-
-	nsCOMPtr<nsIRDFResource>	elementRes;
-	if (NS_FAILED(rv = nsRDFContentUtils::GetElementResource(element, getter_AddRefs(elementRes))))	return;
-
-	nsCOMPtr<nsIRDFResource>	propertyRes;
-	if (NS_FAILED(rv = GetResource(kNameSpaceID_None, aAtom, getter_AddRefs(propertyRes))))	return;
-
-	nsCOMPtr<nsIRDFLiteral>		newLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral(aValue.GetUnicode(), getter_AddRefs(newLiteral))))	return;
-	nsCOMPtr<nsIRDFNode>		newTarget = do_QueryInterface(newLiteral);
-	if (!newTarget)	return;
-
-	if (action == eSet)
-	{
-		nsCOMPtr<nsIRDFNode>	oldTarget;
-		if (NS_SUCCEEDED(rv = mLocalstore->GetTarget(elementRes, propertyRes, PR_TRUE,
-			getter_AddRefs(oldTarget))) && (rv != NS_RDF_NO_VALUE))
-		{
-			rv = mLocalstore->Change(elementRes, propertyRes, oldTarget, newTarget );
-		}
-		else
-		{
-			rv = mLocalstore->Assert(elementRes, propertyRes, newTarget, PR_TRUE );
-		}
-	}
-	else if (action == eClear)
-	{
-		rv = mLocalstore->Unassert(elementRes, propertyRes, newTarget);
-	}
-
-	// XXX Currently, need to flush localstore as its being leaked
-	// and thus never written out to disk otherwise
-
-	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
-	if (remoteLocalStore)
-	{
-		remoteLocalStore->Flush();
-	}
-}
-
-
-void
-RDFGenericBuilderImpl::PersistProperty(nsIContent *element, nsIRDFResource *aProperty,
-					nsIRDFNode *aTarget, eUpdateAction action)
-{
-	nsresult	rv = NS_OK;
-	
-	if ((mLocalstore) && (mDocument))
-	{
-		PRInt32			nameSpaceID;
-		nsCOMPtr<nsIAtom>	tag;
-		if (NS_SUCCEEDED(rv = mDocument->SplitProperty(aProperty, &nameSpaceID, getter_AddRefs(tag))))
-		{
-			nsAutoString	value;
-			if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aTarget, value)))
-			{
-				PersistAttribute(element, nameSpaceID, tag, value, action);
-			}
-		}
-	}
-}
-#endif // 0
-
-
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
@@ -1617,7 +1376,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIContent* aElement,
         }
         else {
             nsCOMPtr<nsIRDFResource> property;
-            rv = GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
+            rv = nsRDFContentUtils::GetResource(attrNameSpaceID, attr, getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIRDFNode> target;
@@ -1788,7 +1547,7 @@ RDFGenericBuilderImpl::GetSubstitutionText(nsIRDFResource* aResource,
             aResult.Truncate();
         }
     }
-    else if (aSubstitution.Equals("...")) {
+    else if (aSubstitution.Equals("...") || aSubstitution.Equals("rdf:*")) {
         const char *uri = nsnull;
         aResource->GetValueConst(&uri);
         aResult = uri;
@@ -1846,7 +1605,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 		rv = tmplKid->GetNameSpaceID(nameSpaceID);
         if (NS_FAILED(rv)) return rv;
 
-		// check whether this item is the resource element 
+		// check whether this item is the "resource" element
 		PRBool isResourceElement = PR_FALSE;
 
         nsAutoString idValue;
@@ -1855,7 +1614,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                    idValue);
         if (NS_FAILED(rv)) return rv;
 
-        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (idValue.Equals("..."))) {
+        if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
+            (idValue.Equals("...") || idValue.Equals("rdf:*"))) {
             isResourceElement = PR_TRUE;
             aIsUnique = PR_FALSE;
 		}
@@ -1868,6 +1628,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
         nsCOMPtr<nsIContent> realKid;
         if (aIsUnique) {
+            // The content is "unique"; that is, we haven't hit the
+            // "resource" element yet.
             rv = EnsureElementHasGenericChild(aRealNode, nameSpaceID, tag, aNotify, getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
 
@@ -1884,6 +1646,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                            PR_FALSE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set contents-generated attribute");
                 if (NS_FAILED(rv)) return rv;
+
+                
             }
 
             // Recurse until we get to the resource element.
@@ -1891,6 +1655,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv)) return rv;
         }
         else if (isResourceElement) {
+            // It's the "resource" element
             rv = CreateElement(nameSpaceID, tag, aChild, getter_AddRefs(realKid));
             if (NS_FAILED(rv)) return rv;
 
@@ -2000,6 +1765,12 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 }
             }
 
+            // Add any persistent attributes
+            if (isResourceElement) {
+                rv = AddPersistentAttributes(tmplKid, aChild, realKid);
+                if (NS_FAILED(rv)) return rv;
+            }
+
             // We'll _already_ have added the unique elements.
             if (! aIsUnique) {
                 // Add into content model, special casing treeitems.
@@ -2029,6 +1800,69 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
 	return NS_OK;
 }
 
+
+nsresult
+RDFGenericBuilderImpl::AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDFResource* aResource, nsIContent* aRealNode)
+{
+    nsresult rv;
+
+    nsAutoString persist;
+    rv = aTemplateNode->GetAttribute(kNameSpaceID_None, kPersistAtom, persist);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+        return NS_OK;
+
+    nsAutoString attribute;
+    while (persist.Length() > 0) {
+        attribute.Truncate();
+
+        PRInt32 offset = persist.FindCharInSet(" ,");
+        if (offset > 0) {
+            persist.Left(attribute, offset);
+            persist.Cut(0, offset + 1);
+        }
+        else {
+            attribute = persist;
+            persist.Truncate();
+        }
+
+        attribute.Trim(" ");
+
+        if (attribute.Length() == 0)
+            break;
+
+        PRInt32 nameSpaceID;
+        nsCOMPtr<nsIAtom> tag;
+        rv = aTemplateNode->ParseAttributeString(attribute, *getter_AddRefs(tag), nameSpaceID);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFResource> property;
+        rv = nsRDFContentUtils::GetResource(nameSpaceID, tag, getter_AddRefs(property));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFNode> target;
+        rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(target));
+        if (NS_FAILED(rv)) return rv;
+
+        if (! target)
+            continue;
+
+        nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(target);
+        NS_ASSERTION(value != nsnull, "unable to stomach that sort of node");
+        if (! value)
+            continue;
+
+        const PRUnichar* valueStr;
+        rv = value->GetValueConst(&valueStr);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = aRealNode->SetAttribute(nameSpaceID, tag, nsAutoString(valueStr), PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return NS_OK;
+}
 
 nsresult
 RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
@@ -2382,8 +2216,7 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
     nsresult rv;
 
     rv = nsRDFContentUtils::FindChildByTag(parent, nameSpaceID, tag, result);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_RDF_NO_VALUE) {
         // we need to construct a new child element.
@@ -2712,39 +2545,6 @@ RDFGenericBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aR
     }
 
     return nsRDFContentUtils::GetElementRefResource(element, aResource);
-}
-
-
-nsresult
-RDFGenericBuilderImpl::GetResource(PRInt32 aNameSpaceID,
-                                   nsIAtom* aNameAtom,
-                                   nsIRDFResource** aResource)
-{
-    NS_PRECONDITION(aNameAtom != nsnull, "null ptr");
-    if (! aNameAtom)
-        return NS_ERROR_NULL_POINTER;
-
-    // XXX should we allow nodes with no namespace???
-    NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
-    if (aNameSpaceID == kNameSpaceID_Unknown)
-        return NS_ERROR_UNEXPECTED;
-
-    // construct a fully-qualified URI from the namespace/tag pair.
-    nsAutoString uri;
-    gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
-
-    // XXX check to see if we need to insert a '/' or a '#'
-    PRUnichar *unicodeString;
-    aNameAtom->GetUnicode(&unicodeString);
-    nsAutoString tag(unicodeString);
-    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
-        uri.Append('#');
-
-    uri.Append(tag);
-
-    nsresult rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-    return rv;
 }
 
 

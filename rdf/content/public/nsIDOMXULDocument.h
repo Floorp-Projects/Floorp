@@ -48,6 +48,8 @@ public:
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
+
+  NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr)=0;
 };
 
 
@@ -59,6 +61,7 @@ public:
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr);  \
 
 
 
@@ -70,6 +73,7 @@ public:
   NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher) { return _to GetCommandDispatcher(aCommandDispatcher); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
+  NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr) { return _to Persist(aId, aAttr); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULDocumentClass(nsIScriptContext *aContext, void **aPrototype);

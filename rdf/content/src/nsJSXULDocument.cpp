@@ -345,6 +345,57 @@ XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsva
 }
 
 
+//
+// Native method Persist
+//
+PR_STATIC_CALLBACK(JSBool)
+XULDocumentPersist(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.persist",PR_FALSE , &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 2) {
+      JS_ReportError(cx, "Function persist requires 2 parameters");
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->Persist(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for XULDocument
@@ -382,6 +433,7 @@ static JSFunctionSpec XULDocumentMethods[] =
 {
   {"getElementById",          XULDocumentGetElementById,     1},
   {"getElementsByAttribute",          XULDocumentGetElementsByAttribute,     2},
+  {"persist",          XULDocumentPersist,     2},
   {0}
 };
 
