@@ -38,7 +38,7 @@ xpidl_process_node(TreeState *state)
     gint type;
     nodeHandler *dispatch, handler;
 
-    assert(state->tree);
+    XPT_ASSERT(state->tree);
     type = IDL_NODE_TYPE(state->tree);
 
     if ((dispatch = state->dispatch) && (handler = dispatch[type]))
@@ -320,7 +320,7 @@ NextIsInclude(input_callback_state *callback_state, char **startp,
     }
     
     filename = data->point + 10; /* skip #include " */
-    assert(filename < data->max);
+    XPT_ASSERT(filename < data->max);
     end = filename;
     while (end < data->max) {
         if (*end == '\"' || *end == '\n' || *end == '\r')
