@@ -48,12 +48,14 @@ CPPSRCS =				\
 	nsCP857ToUnicode.cpp		\
 	nsCP862ToUnicode.cpp		\
 	nsCP864ToUnicode.cpp		\
+	nsCP864iToUnicode.cpp		\
 	nsUnicodeToCP850.cpp		\
 	nsUnicodeToCP852.cpp		\
 	nsUnicodeToCP855.cpp		\
 	nsUnicodeToCP857.cpp		\
 	nsUnicodeToCP862.cpp		\
 	nsUnicodeToCP864.cpp		\
+	nsUnicodeToCP864i.cpp		\
 	nsUCvIBMSupport.cpp		\
 	nsUCvIBMModule.cpp		\
 	$(NULL)
@@ -65,12 +67,14 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP857ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP862ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP864ToUnicode.obj 		\
+	.\$(OBJDIR)\nsCP864iToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToCP850.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP852.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP855.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP857.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP862.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP864.obj		\
+	.\$(OBJDIR)\nsUnicodeToCP864i.obj		\
 	.\$(OBJDIR)\nsUCvIBMSupport.obj		\
 	.\$(OBJDIR)\nsUCvIBMModule.obj 			\
 	$(NULL)
