@@ -87,6 +87,10 @@
 #include "nsIMsgDraft.h"
 #include "nsIUrlListener.h"
 
+// undo
+#include "nsITransaction.h"
+#include "nsMsgTxn.h"
+
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
@@ -936,8 +940,70 @@ nsMessenger::EmptyTrash(nsIRDFCompositeDataSource* db,
   return rv;
 }
 
+NS_IMETHODIMP nsMessenger::GetUndoTransactionType(PRUint32 *txnType)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!txnType || !mTxnMgr)
+        return rv;
+    *txnType = nsMessenger::eUnknown;
+    nsITransaction *txn = nsnull;
+    // ** jt -- too bad PeekUndoStack not AddRef'ing
+    rv = mTxnMgr->PeekUndoStack(&txn);
+    if (NS_SUCCEEDED(rv) && txn)
+    {
+        nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
+        if (NS_SUCCEEDED(rv) && msgTxn)
+            rv = msgTxn->GetTransactionType(txnType);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP nsMessenger::CanUndo(PRBool *bValue)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!bValue || !mTxnMgr)
+        return rv;
+    *bValue = PR_FALSE;
+    PRInt32 count = 0;
+    rv = mTxnMgr->GetNumberOfUndoItems(&count);
+    if (NS_SUCCEEDED(rv) && count > 0)
+        *bValue = PR_TRUE;
+    return rv;
+}
+
+NS_IMETHODIMP nsMessenger::GetRedoTransactionType(PRUint32 *txnType)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!txnType || !mTxnMgr)
+        return rv;
+    *txnType = nsMessenger::eUnknown;
+    nsITransaction *txn = nsnull;
+    // ** jt - too bad PeekRedoStack not AddRef'ing
+    rv = mTxnMgr->PeekRedoStack(&txn);
+    if (NS_SUCCEEDED(rv) && txn)
+    {
+        nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
+        if (NS_SUCCEEDED(rv) && msgTxn)
+            rv = msgTxn->GetTransactionType(txnType);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP nsMessenger::CanRedo(PRBool *bValue)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!bValue || !mTxnMgr)
+        return rv;
+    *bValue = PR_FALSE;
+    PRInt32 count = 0;
+    rv = mTxnMgr->GetNumberOfRedoItems(&count);
+    if (NS_SUCCEEDED(rv) && count > 0)
+        *bValue = PR_TRUE;
+    return rv;
+}
+
 NS_IMETHODIMP
-nsMessenger::Undo()
+nsMessenger::Undo(nsIMsgWindow *msgWindow)
 {
   nsresult rv = NS_OK;
   if (mTxnMgr)
@@ -945,13 +1011,24 @@ nsMessenger::Undo()
     PRInt32 numTxn = 0;
     rv = mTxnMgr->GetNumberOfUndoItems(&numTxn);
     if (NS_SUCCEEDED(rv) && numTxn > 0)
-      mTxnMgr->Undo();
+    {
+        nsITransaction *txn = nsnull;
+        // ** jt -- PeekUndoStack not AddRef'ing
+        rv = mTxnMgr->PeekUndoStack(&txn);
+        if (NS_SUCCEEDED(rv) && txn)
+        {
+            nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
+            if (NS_SUCCEEDED(rv) && msgTxn)
+                msgTxn->SetMsgWindow(msgWindow);
+        }
+        mTxnMgr->Undo();
+    }
   }
   return rv;
 }
 
 NS_IMETHODIMP
-nsMessenger::Redo()
+nsMessenger::Redo(nsIMsgWindow *msgWindow)
 {
   nsresult rv = NS_OK;
   if (mTxnMgr)
@@ -959,7 +1036,18 @@ nsMessenger::Redo()
     PRInt32 numTxn = 0;
     rv = mTxnMgr->GetNumberOfRedoItems(&numTxn);
     if (NS_SUCCEEDED(rv) && numTxn > 0)
-      mTxnMgr->Redo();
+    {
+        nsITransaction *txn = nsnull;
+        // jt -- PeekRedoStack not AddRef'ing
+        rv = mTxnMgr->PeekRedoStack(&txn);
+        if (NS_SUCCEEDED(rv) && txn)
+        {
+            nsCOMPtr<nsMsgTxn> msgTxn = do_QueryInterface(txn, &rv);
+            if (NS_SUCCEEDED(rv) && msgTxn)
+                msgTxn->SetMsgWindow(msgWindow);
+        }
+        mTxnMgr->Redo();
+    }
   }
   return rv;
 }

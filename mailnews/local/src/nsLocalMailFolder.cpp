@@ -61,6 +61,7 @@
 #include "nsLocalUndoTxn.h"
 #include "nsMsgTxn.h"
 #include "nsIFileSpec.h"
+#include "nsIMessenger.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
@@ -1289,6 +1290,17 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
   else
   {
+    if (isMove)
+    {
+      if (mFlags & MSG_FOLDER_FLAG_TRASH)
+        msgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+      else
+        msgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+    }
+    else
+    {
+      msgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+    }
 	  PRUint32 numMsgs = 0;
 	  messages->Count(&numMsgs);
 	if (numMsgs > 1 && protocolType.EqualsIgnoreCase("imap"))

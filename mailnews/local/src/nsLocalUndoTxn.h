@@ -52,12 +52,8 @@ public:
     // overloading nsITransaction methods
 	NS_IMETHOD Undo(void);
     NS_IMETHOD Redo(void);
-    NS_IMETHOD GetUndoString(nsString *aString);
-    NS_IMETHOD GetRedoString(nsString *aString);
 
     // helper
-    nsresult SetUndoString(nsString *aString);
-    nsresult SetRedoString(nsString *aString);
     nsresult AddSrcKey(nsMsgKey aKey);
     nsresult AddDstKey(nsMsgKey aKey);
     nsresult AddDstMsgSize(PRUint32 msgSize);
@@ -75,8 +71,6 @@ private:
     nsMsgKeyArray m_srcKeyArray;
     nsCOMPtr<nsIMsgFolder> m_dstFolder;
     nsMsgKeyArray m_dstKeyArray;
-    nsString m_undoString;
-    nsString m_redoString;
     PRBool m_isMove;
     PRBool m_srcIsImap4;
     nsUInt32Array m_dstSizeArray;

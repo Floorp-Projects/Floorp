@@ -90,7 +90,11 @@ var FolderPaneController =
 	{
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
+        {
 			goSetMenuValue('cmd_delete', 'valueDefault');
+            goSetMenuValue('cmd_undo', 'valueDefault');
+            goSetMenuValue('cmd_redo', 'valueDefault');
+        }
 	}
 };
 
@@ -129,6 +133,54 @@ var ThreadPaneController =
 	}
 };
 
+function SetupUndoRedoCommand(command)
+{
+    // dump ("--- SetupUndoRedoCommand: " + command + "\n");
+    var canUndoOrRedo = false;
+    var txnType = 0;
+
+    if (command == "cmd_undo")
+    {
+        canUndoOrRedo = messenger.CanUndo();
+        txnType = messenger.GetUndoTransactionType();
+    }
+    else
+    {
+        canUndoOrRedo = messenger.CanRedo();
+        txnType = messenger.GetRedoTransactionType();
+    }
+
+    if (canUndoOrRedo)
+    {
+        switch (txnType)
+        {
+        default:
+        case 0:
+            goSetMenuValue(command, 'valueDefault');
+            break;
+        case 1:
+            goSetMenuValue(command, 'valueDeleteMsg');
+            break;
+        case 2:
+            goSetMenuValue(command, 'valueMoveMsg');
+            break;
+        case 3:
+            goSetMenuValue(command, 'valueCopyMsg');
+            break;
+        }
+    }
+    return canUndoOrRedo;
+}
+
+
+function CommandUpdate_UndoRedo()
+{
+    ShowMenuItem("menu_undo", true);
+    EnableMenuItem("menu_undo", SetupUndoRedoCommand("cmd_undo"));
+    ShowMenuItem("menu_redo", true);
+    EnableMenuItem("menu_redo", SetupUndoRedoCommand("cmd_redo"));
+}
+
 // DefaultController object (handles commands when one of the trees does not have focus)
 var DefaultController =
 {
@@ -142,7 +194,7 @@ var DefaultController =
 			case "cmd_undo":
 			case "cmd_redo":
 				return true;
-
+            
 			default:
 				return false;
 		}
@@ -173,9 +225,7 @@ var DefaultController =
 			
 			case "cmd_undo":
 			case "cmd_redo":
-				// FIX ME - these commands should be calling the back-end code to determine if
-				// they should be enabled, this hack of always enabled can then be fixed.
-				return true;
+               return SetupUndoRedoCommand(command);
 
 /*			case "cmd_delete":
 			case "button_delete":
@@ -223,11 +273,11 @@ var DefaultController =
 				break;
 			
 			case "cmd_undo":
-				messenger.Undo();
+				messenger.Undo(msgWindow);
 				break;
 			
 			case "cmd_redo":
-				messenger.Redo();
+				messenger.Redo(msgWindow);
 				break;
 		}
 	},
@@ -236,7 +286,12 @@ var DefaultController =
 	{
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
+        {
+            dump("blur - setup menu value\n");
 			goSetMenuValue('cmd_delete', 'valueDefault');
+			goSetMenuValue('cmd_undo', 'valueDefault');
+			goSetMenuValue('cmd_redo', 'valueDefault');
+        }
 	}
 };
 

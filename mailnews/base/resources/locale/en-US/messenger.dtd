@@ -77,6 +77,14 @@ Rights Reserved.
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY accountManagerCmd.label "Account Setup...">
 <!ENTITY accountWizardCmd.label "New Account Wizard...">
+<!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
+<!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
+<!ENTITY undoMoveMsgCmd.label "Undo Move Message">
+<!ENTITY redoMoveMsgCmd.label "Redo Move Message">
+<!ENTITY undoCopyMsgCmd.label "Undo Copy Message">
+<!ENTITY redoCopyMsgCmd.label "Redo Copy Message">
+<!ENTITY undoDefaultCmd.label "Undo">
+<!ENTITY redoDefaultCmd.label "Redo">
 
 <!-- View Menu -->
 <!-- LOCALIZATION NOTE (showSidebarMenu) : Do not translate below line. -->

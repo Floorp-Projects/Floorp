@@ -60,6 +60,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
 #include "nsIImapFlagAndUidState.h"
+#include "nsIMessenger.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -3470,6 +3471,19 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
         srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
         PR_TRUE, isMove, m_eventQueue, urlListener);
 
+    if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+    if (isMove)
+    {
+        if (mFlags & MSG_FOLDER_FLAG_TRASH)
+            undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+        else
+            undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+    }
+    else
+    {
+        undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+    }
+    
     rv = undoMsgTxn->QueryInterface(
         NS_GET_IID(nsImapMoveCopyMsgTxn), 
         getter_AddRefs(m_copyState->m_undoMsgTxn) );
@@ -3559,6 +3573,18 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
         nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
             srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
             PR_TRUE, isMove, m_eventQueue, urlListener);
+        if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+        if (isMove)
+        {
+            if (mFlags & MSG_FOLDER_FLAG_TRASH)
+                undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+            else
+                undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+        }
+        else
+        {
+            undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+        }
         rv = undoMsgTxn->QueryInterface(
             NS_GET_IID(nsImapMoveCopyMsgTxn), 
             getter_AddRefs(m_copyState->m_undoMsgTxn) );

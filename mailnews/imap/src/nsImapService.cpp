@@ -346,9 +346,13 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
                                     msgKey,
                                     kImapMsgDeletedFlag,
                                     PR_TRUE);
+#if 0
+               // ** jt -- don't think this is needed
                // ** jt -- force to update the folder
                if (NS_SUCCEEDED(rv))
-                  rv = SelectFolder(queue, folder, aUrlListener, nsnull, nsnull);
+                  rv = SelectFolder(queue, folder, aUrlListener, nsnull,
+                                    nsnull);
+#endif
             } // if move message
         } // if we got an imap message sink
     } // if we decomposed the imap message 

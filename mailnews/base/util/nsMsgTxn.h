@@ -25,6 +25,8 @@
 
 #include "nsITransaction.h"
 #include "msgCore.h"
+#include "nsCOMPtr.h"
+#include "nsIMsgWindow.h"
 
 #define NS_MESSAGETRANSACTION_IID \
 { /* da621b30-1efc-11d3-abe4-00805f8ac968 */ \
@@ -53,9 +55,20 @@ class NS_MSG_BASE nsMsgTxn : public nsITransaction
     NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
     NS_IMETHOD GetUndoString(nsString *aString);
-
+    NS_IMETHOD SetUndoString(nsString *aString);
     NS_IMETHOD GetRedoString(nsString *aString);
+    NS_IMETHOD SetRedoString(nsString *aString);
 
+    NS_IMETHOD GetMsgWindow(nsIMsgWindow **msgWindow);
+    NS_IMETHOD SetMsgWindow(nsIMsgWindow *msgWindow);
+    NS_IMETHOD SetTransactionType(PRUint32 txnType);
+    NS_IMETHOD GetTransactionType(PRUint32 *txnType);
+
+protected:
+    nsCOMPtr<nsIMsgWindow> m_msgWindow;
+    nsString m_undoString;
+    nsString m_redoString;
+    PRUint32 m_txnType;
 };
 
 #endif

@@ -70,8 +70,16 @@ Rights Reserved.
 	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
-	<broadcaster id="cmd_undo"/>
-	<broadcaster id="cmd_redo"/>
+	<broadcaster id="cmd_undo"
+	             valueDeleteMsg="&undoDeleteMsgCmd.label;"
+				 valueMoveMsg="&undoMoveMsgCmd.label;"
+				 valueCopyMsg="&undoCopyMsgCmd.label;"
+				 valueDefault="&undoDefaultCmd.label;"/>
+	<broadcaster id="cmd_redo"
+	             valueDeleteMsg="&redoDeleteMsgCmd.label;"
+				 valueMoveMsg="&redoMoveMsgCmd.label;"
+				 valueCopyMsg="&redoCopyMsgCmd.label;"
+				 valueDefault="&redoDefaultCmd.label;"/>
 	<broadcaster id="cmd_cut"/>
 	<broadcaster id="cmd_copy"/>
 	<broadcaster id="cmd_paste"/>
@@ -381,14 +389,10 @@ Rights Reserved.
             </menupopup>
           </menu>
 	
-	<menu id="menu_Edit">
+	<menu id="menu_Edit" onclick="CommandUpdate_UndoRedo();">
 		<menupopup>
-			<menuitem value="Undo" key="key_undo" oncommand="messenger.Undo()"/>
-			<menuitem value="Redo" key="key_redo" oncommand="messenger.Redo()"/>
-			<!-- FIX ME - put these back when focus fix is in...  
-			<menuitem id="menu_undo"/>
-			<menuitem id="menu_redo"/>
-			-->
+			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" key="key_undo" oncommand="Undo()"/>
+			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" key="key_redo" oncommand="Redo()"/>
 			 <menuseparator/>
 			<menuitem id="menu_cut"/>
 			<menuitem id="menu_copy"/>

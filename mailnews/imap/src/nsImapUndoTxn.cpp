@@ -163,13 +163,18 @@ nsImapMoveCopyMsgTxn::Undo(void)
         {
             nsCOMPtr<nsIUrlListener> srcListener =
                 do_QueryInterface(m_srcFolder, &rv);
+            // ** make sure we are in the selected state; use lite select
+            // folder so we won't hit performance hard
+            if (NS_SUCCEEDED(rv))
+                rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
+                                                   srcListener, nsnull);
+
             rv = imapService->SubtractMessageFlags(
                 m_eventQueue, m_srcFolder, srcListener, nsnull,
                 m_srcMsgIdString, kImapMsgDeletedFlag,
                 m_idsAreUids);
-            if (NS_SUCCEEDED(rv))
-                rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
-                                               srcListener, nsnull, nsnull);
+            if (m_msgWindow)
+                m_srcFolder->UpdateFolder(m_msgWindow);
         }
     }
     if (m_dstKeyArray.GetSize() > 0)
@@ -177,14 +182,18 @@ nsImapMoveCopyMsgTxn::Undo(void)
         nsCOMPtr<nsIUrlListener> dstListener;
 
         dstListener = do_QueryInterface(m_dstFolder, &rv);
+        // ** make sire we are in the selected state; use lite select folder
+        // so we won't hit preformace hard
+        if (NS_SUCCEEDED(rv))
+            rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
+                                           dstListener, nsnull);
         rv = imapService->AddMessageFlags(m_eventQueue, m_dstFolder,
                                           dstListener, nsnull,
                                           m_dstMsgIdString.GetBuffer(),
                                           kImapMsgDeletedFlag,
                                           m_idsAreUids);
-        if (NS_SUCCEEDED(rv))
-            rv = imapService->SelectFolder(m_eventQueue, m_dstFolder,
-                                           dstListener, nsnull, nsnull);
+        if (m_msgWindow)
+            m_dstFolder->UpdateFolder(m_msgWindow);
     }
 	return rv;
 }
@@ -205,14 +214,19 @@ nsImapMoveCopyMsgTxn::Redo(void)
         {
             nsCOMPtr<nsIUrlListener> srcListener =
                 do_QueryInterface(m_srcFolder, &rv); 
+            // ** make sire we are in the selected state; use lite select
+            // folder so we won't hit preformace hard
+            if (NS_SUCCEEDED(rv))
+                rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
+                                               srcListener, nsnull);
+
             rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
                                               srcListener, nsnull,
                                               m_srcMsgIdString,
                                               kImapMsgDeletedFlag,
                                               m_idsAreUids);
-            if (NS_SUCCEEDED(rv))
-                rv = imapService->SelectFolder(m_eventQueue, m_srcFolder,
-                                               srcListener, nsnull, nsnull);
+            if (m_msgWindow)
+                m_srcFolder->UpdateFolder(m_msgWindow);
         }
     }
     if (m_dstKeyArray.GetSize() > 0)
@@ -220,52 +234,20 @@ nsImapMoveCopyMsgTxn::Redo(void)
         nsCOMPtr<nsIUrlListener> dstListener;
 
         dstListener = do_QueryInterface(m_dstFolder, &rv); 
-
+        // ** make sire we are in the selected state; use lite select
+        // folder so we won't hit preformace hard
+        if(NS_SUCCEEDED(rv))
+            rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
+                                           dstListener, nsnull);
         rv = imapService->SubtractMessageFlags(m_eventQueue, m_dstFolder,
                                                dstListener, nsnull,
                                                m_dstMsgIdString.GetBuffer(),
                                                kImapMsgDeletedFlag,
                                                m_idsAreUids);
-        if(NS_SUCCEEDED(rv))
-            rv = imapService->SelectFolder(m_eventQueue, m_dstFolder,
-                                           dstListener, nsnull, nsnull);
+        if (m_msgWindow)
+            m_dstFolder->UpdateFolder(m_msgWindow);
     }
 	return rv;
-}
-
-NS_IMETHODIMP
-nsImapMoveCopyMsgTxn::GetUndoString(nsString* aString)
-{
-	if (!aString)
-		return NS_ERROR_NULL_POINTER;
-	*aString = m_undoString;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImapMoveCopyMsgTxn::GetRedoString(nsString* aString)
-{
-	if (!aString)
-		return NS_ERROR_NULL_POINTER;
-	*aString = m_redoString;
-	return NS_OK;
-}
-
-nsresult
-nsImapMoveCopyMsgTxn::SetUndoString(nsString *aString)
-{
-	if (!aString)
-		return NS_ERROR_NULL_POINTER;
-	m_undoString = *aString;
-	return NS_OK;
-}
-
-nsresult
-nsImapMoveCopyMsgTxn::SetRedoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	m_redoString = *aString;
-	return NS_OK;
 }
 
 nsresult
@@ -379,5 +361,3 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
     }
     return rv;
 }
-
-

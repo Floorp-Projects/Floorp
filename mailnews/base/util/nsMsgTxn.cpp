@@ -28,9 +28,12 @@ NS_IMPL_ADDREF(nsMsgTxn)
 NS_IMPL_RELEASE(nsMsgTxn)
 
 // note that aEditor is not refcounted
-nsMsgTxn::nsMsgTxn()
+nsMsgTxn::nsMsgTxn() 
 {
   NS_INIT_REFCNT();
+  m_txnType = 0;
+  m_undoString = "Undo";
+  m_redoString = "Redo";
 }
 
 nsMsgTxn::~nsMsgTxn()
@@ -61,24 +64,6 @@ NS_IMETHODIMP nsMsgTxn::Write(nsIOutputStream *aOutputStream)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgTxn::GetUndoString(nsString *aString)
-{
-  if (nsnull!=aString)
-    *aString="Undo";
-  else
-	  return NS_ERROR_NULL_POINTER;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgTxn::GetRedoString(nsString *aString)
-{
-  if (nsnull!=aString)
-    *aString="Redo";
-  else
-	  return NS_ERROR_NULL_POINTER;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -99,5 +84,67 @@ nsMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
+NS_IMETHODIMP nsMsgTxn::GetMsgWindow(nsIMsgWindow **msgWindow)
+{
+    if (!msgWindow || !m_msgWindow)
+        return NS_ERROR_NULL_POINTER;
+    *msgWindow = m_msgWindow;
+    NS_ADDREF (*msgWindow);
+    return NS_OK;
+}
 
+NS_IMETHODIMP nsMsgTxn::SetMsgWindow(nsIMsgWindow *msgWindow)
+{
+    m_msgWindow = msgWindow;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgTxn::SetUndoString(nsString *aString)
+{
+	if (!aString) return NS_ERROR_NULL_POINTER;
+	m_undoString = *aString;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgTxn::SetRedoString(nsString* aString)
+{
+	if (!aString) return NS_ERROR_NULL_POINTER;
+	m_redoString = *aString;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgTxn::GetUndoString(nsString* aString)
+{
+	if (!aString) return NS_ERROR_NULL_POINTER;
+	*aString = m_undoString;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgTxn::GetRedoString(nsString* aString)
+{
+	if (!aString) return NS_ERROR_NULL_POINTER;
+	*aString = m_redoString;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsMsgTxn::GetTransactionType(PRUint32 *txnType)
+{
+    if (!txnType) 
+        return NS_ERROR_NULL_POINTER;
+    *txnType = m_txnType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgTxn::SetTransactionType(PRUint32 txnType)
+{
+    m_txnType = txnType;
+    return NS_OK;
+}
 

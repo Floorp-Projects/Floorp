@@ -54,12 +54,8 @@ public:
 
     NS_IMETHOD Undo(void);
     NS_IMETHOD Redo(void);
-    NS_IMETHOD GetUndoString(nsString *aString);
-    NS_IMETHOD GetRedoString(nsString *aString);
 
     // helper
-    nsresult SetUndoString(nsString *aString);
-    nsresult SetRedoString(nsString *aString);
     nsresult SetCopyResponseUid(nsMsgKeyArray* keyArray,
                                 const char *msgIdString);
     nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);

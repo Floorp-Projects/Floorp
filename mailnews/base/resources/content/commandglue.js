@@ -731,4 +731,12 @@ function GetSelectTrashUri(folder)
     return null;
 }
 
+function Undo()
+{
+    messenger.Undo(msgWindow);
+}
 
+function Redo()
+{
+    messenger.Redo(msgWindow);
+}

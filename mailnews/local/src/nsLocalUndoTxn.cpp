@@ -138,38 +138,6 @@ nsLocalMoveCopyMsgTxn::AddDstMsgSize(PRUint32 msgSize)
 }
 
 nsresult
-nsLocalMoveCopyMsgTxn::SetUndoString(nsString *aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	m_undoString = *aString;
-	return NS_OK;
-}
-
-nsresult
-nsLocalMoveCopyMsgTxn::SetRedoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	m_redoString = *aString;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalMoveCopyMsgTxn::GetUndoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	*aString = m_undoString;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalMoveCopyMsgTxn::GetRedoString(nsString* aString)
-{
-	if (!aString) return NS_ERROR_NULL_POINTER;
-	*aString = m_redoString;
-	return NS_OK;
-}
-
-nsresult
 nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder, 
                                           nsMsgKeyArray& keyArray,
                                           PRBool addFlag)

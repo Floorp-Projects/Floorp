@@ -37,6 +37,11 @@ interface nsITransactionManager;
 [scriptable, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIMessenger : nsISupports {
 
+%{C++
+    enum { eUnknown=0, eDeleteMsg=1,
+           eMoveMsg=2, eCopyMsg=3 };
+%}
+
     readonly attribute nsITransactionManager transactionManager;
 
     void GetNewMessages(in nsIRDFCompositeDataSource database,
@@ -84,8 +89,12 @@ interface nsIMessenger : nsISupports {
     void EmptyTrash(in nsIRDFCompositeDataSource db,
                     in nsIRDFResource folder);
 
-    void Undo();
-    void Redo();
+    boolean CanUndo();
+    boolean CanRedo();
+    unsigned long GetUndoTransactionType();
+    unsigned long GetRedoTransactionType();
+    void Undo(in nsIMsgWindow msgWindow);
+    void Redo(in nsIMsgWindow msgWindow);
 	void SendUnsentMessages(in nsIMsgIdentity aIdentity);
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity);
