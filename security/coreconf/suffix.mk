@@ -97,19 +97,6 @@ ifndef IMPORT_LIB_SUFFIX
 endif
 
 
-ifndef PURE_LIB_SUFFIX
-	ifeq ($(OS_ARCH), WINNT)
-		PURE_LIB_SUFFIX =
-	else
-		ifdef DSO_BACKEND
-			PURE_LIB_SUFFIX = .$(DLL_SUFFIX)
-		else
-			PURE_LIB_SUFFIX = .$(LIB_SUFFIX)
-		endif
-	endif
-endif
-
-
 ifndef STATIC_LIB_SUFFIX_FOR_LINKING
 	STATIC_LIB_SUFFIX_FOR_LINKING = $(STATIC_LIB_SUFFIX)
 endif

@@ -125,6 +125,5 @@ else
 	DSO_CFLAGS += -KPIC
 endif
 
-HAVE_PURIFY  = 1
 NOSUCHFILE   = /solaris-rm-f-sucks
 

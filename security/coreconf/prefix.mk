@@ -69,15 +69,6 @@ ifndef IMPORT_LIB_PREFIX
 	IMPORT_LIB_PREFIX = 
 endif
 
-
-ifndef PURE_LIB_PREFIX
-	ifeq ($(OS_ARCH), WINNT)
-		PURE_LIB_PREFIX =
-	else
-		PURE_LIB_PREFIX = purelib
-	endif
-endif
-
 #
 # Program prefixes
 #

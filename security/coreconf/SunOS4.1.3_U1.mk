@@ -51,7 +51,6 @@ NOMD_OS_CFLAGS += -Wall -Wno-format -DSUNOS4
 OS_CFLAGS      += $(DSO_CFLAGS) $(NOMD_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
 MKSHLIB         = $(LD)
 MKSHLIB        += $(DSO_LDOPTS)
-HAVE_PURIFY     = 1
 NOSUCHFILE      = /solaris-rm-f-sucks
 DSO_LDOPTS      =
 
