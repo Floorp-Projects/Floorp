@@ -60,7 +60,11 @@ particular environments. */
 #define realloc(x, y) PR_Realloc((x), (y))
 #define calloc(x, y) PR_Calloc((x),(y))
 #define free(x) PR_Free(x)
-#define int int32
+
+#if PR_BYTES_PER_INT != 4
+typedef PRInt32 int;
+#endif
+
 
 /* Enable Unicode string processing in expat */
 #define XML_UNICODE
