@@ -1155,7 +1155,7 @@ XULSortServiceImpl::GetTarget(contentSortInfo *contentSortInfo, sortPtr sortInfo
 
 			if(contentSortInfo->node2)
 			{
-				*target = contentSortInfo->node1;
+				*target = contentSortInfo->node2;
 				NS_IF_ADDREF(*target);
 			}
 			else if (!contentSortInfo->checkedNode2 && NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(resource, sortInfo->sortProperty2,
