@@ -44,17 +44,22 @@ sub getDefaultString {
     my($app, $protocol, $string) = @_;
     # this is protocol agnostic stuff :-)
     if ($string eq 'debug.dumpVars') {
+        # the slashes in regexps below have to be escaped:
+        #   once for the regexp
+        #   both of those for the TemplateToolkit string
+        #   all four of those for Perl's <<here document string.
+        # So a single literal slash in a regexp requires eight backslashes.
         return ('TemplateToolkit', '1', <<eof);
 [%-
 
   MACRO debugDumpVarsEscape(key) BLOCK;
-    IF key.search('[\\\\ \\\.\']');
-      '\'';
-       key.replace('\\\\', '\\\\')
-          .replace(' ',    '\\ ')
-          .replace('\\\.', '\\.')
-          .replace('\'',   '\\\'');
-      '\'';
+    IF key.search('[\\\\\\\\ \\\\\\.\\']');
+      '\\'';
+       key.replace('\\\\\\\\', '\\\\\\\\')
+          .replace(' ',    '\\\\ ')
+          .replace('\\\\\\.', '\\\\.')
+          .replace('\\'',   '\\\\\\'');
+      '\\'';
     ELSE;
       key;
     END;
@@ -63,16 +68,16 @@ sub getDefaultString {
   # prime the stack with the root variables
   SET debugDumpVarsStack = [];
   FOREACH debugDumpVarsKey = keys;
-   NEXT IF debugDumpVarsKey == '_DEBUG' or # TemplateToolkit builtins
-           debugDumpVarsKey == '_PARENT' or
-           debugDumpVarsKey == 'component' or
-           debugDumpVarsKey == 'dec' or
-           debugDumpVarsKey == 'debugDumpVarsEscape' or
-           debugDumpVarsKey == 'inc' or
-           debugDumpVarsKey == 'debugDumpVarsStack' or
-           debugDumpVarsKey == 'template';
-   SET debugDumpVarsKeyEscaped = debugDumpVarsEscape(debugDumpVarsKey);
-   debugDumpVarsStack.push([debugDumpVarsKeyEscaped, \$debugDumpVarsKey]);
+    NEXT IF debugDumpVarsKey == '_DEBUG' or # TemplateToolkit builtins
+            debugDumpVarsKey == '_PARENT' or
+            debugDumpVarsKey == 'component' or
+            debugDumpVarsKey == 'dec' or
+            debugDumpVarsKey == 'debugDumpVarsEscape' or
+            debugDumpVarsKey == 'inc' or
+            debugDumpVarsKey == 'debugDumpVarsStack' or
+            debugDumpVarsKey == 'template';
+    SET debugDumpVarsKeyEscaped = debugDumpVarsEscape(debugDumpVarsKey);
+    debugDumpVarsStack.push([debugDumpVarsKeyEscaped, \$debugDumpVarsKey]);
   END;
 
   # go through the stack putting it into a hash
@@ -111,7 +116,7 @@ sub getDefaultString {
     '  ';
     debugDumpVarsPad(key).replace(' ', '.');
     '...: ';
-    value | indentlines(0, debugDumpVarsMaxLengthIndent); "\n";
+    value | indentlines(0, debugDumpVarsMaxLengthIndent); "\\n";
   END;
 
 -%]
