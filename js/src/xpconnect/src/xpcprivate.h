@@ -1533,7 +1533,10 @@ public:
     void MarkBeforeJSFinalize(JSContext* cx)
         {if(mJSProtoObject)
             JS_MarkGCThing(cx, mJSProtoObject, 
-                           "XPCWrappedNativeProto::mJSProtoObject", nsnull);}
+                           "XPCWrappedNativeProto::mJSProtoObject", nsnull);
+         if(mScriptableInfo) mScriptableInfo->Mark();}
+
+    // Yes, we *do* need to mark the mScriptableInfo in both cases.
     void Mark() const
         {mSet->Mark(); 
          if(mScriptableInfo) mScriptableInfo->Mark();}
@@ -1802,8 +1805,10 @@ public:
          if(mScriptableInfo) mScriptableInfo->Mark();
          if(HasProto()) mMaybeProto->Mark();}
 
-    // NOP. This is just here to make the AutoMarkingPtr code compile.
-    inline void MarkBeforeJSFinalize(JSContext*) {};
+    // Yes, we *do* need to mark the mScriptableInfo in both cases.
+    inline void MarkBeforeJSFinalize(JSContext* cx)
+        {if(mScriptableInfo) mScriptableInfo->Mark();
+         if(HasProto()) mMaybeProto->MarkBeforeJSFinalize(cx);}
 
 #ifdef DEBUG
     void ASSERT_SetsNotMarked() const

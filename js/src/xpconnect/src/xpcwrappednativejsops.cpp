@@ -643,6 +643,18 @@ MarkForValidWrapper(JSContext *cx, XPCWrappedNative* wrapper, void *arg)
     // are used in the DealWithDyingGCThings calls that are part of this JS GC
     // marking phase. By doing these calls later during our GC callback we 
     // avoid that problem. Arguably this could be changed. But it ain't broke.
+
+    // However, we do need to call the wrapper's MarkBeforeJSFinalize so that
+    // it can be sure that its (potentially shared) JSClass gets marked. The
+    // danger is that a live wrapper might not be in a wrapper map and thus
+    // won't be fully marked in the GC callback. This can happen if there is
+    // a security exception during wrapper creation or if during wrapper
+    // creation it is determined that the wrapper is not needed. In those cases
+    // the wrapper can never actually be used from JS code - so resources like
+    // the interface set will never be accessed. But the JS engine will still
+    // need to use the JSClass. So, some marking is required for protection.
+
+    wrapper->MarkBeforeJSFinalize(cx);
      
     if(wrapper->HasProto())
     {
