@@ -159,12 +159,34 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
       trect.x = aBounds.XMost() - trect.width;
+      trect.height -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
 
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
       rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID);
 
       mViewManager->InsertChild(this, mVScrollBarView, 0);
+    }
+
+    // Create a view
+
+    mHScrollBarView = new ScrollBarView();
+
+    if (nsnull != mHScrollBarView)
+    {
+      NS_ADDREF(mHScrollBarView);
+
+      nsRect trect = aBounds;
+
+      trect.height = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+      trect.y = aBounds.YMost() - trect.height;
+      trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+
+      static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
+
+      rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID);
+
+      mViewManager->InsertChild(this, mHScrollBarView, 0);
     }
 
     NS_RELEASE(dx);
@@ -177,38 +199,59 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
 {
   nsRect            trect;
-  nsIPresContext    *cx;
-  nsIDeviceContext  *dx;
+  nsIPresContext    *cx = mViewManager->GetPresContext();
+  nsIDeviceContext  *dx = cx->GetDeviceContext();
 
   nsView :: SetDimensions(width, height);
 
   if (nsnull != mVScrollBarView)
   {
-    cx = mViewManager->GetPresContext();
-    dx = cx->GetDeviceContext();
-
     mVScrollBarView->GetDimensions(&trect.width, &trect.height);
 
     trect.height = height;
+
+    if (mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+      trect.height -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+
     trect.x = width - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
     trect.y = 0;
 
     mVScrollBarView->SetBounds(trect);
-
-    //this will fix the size of the thumb when we resize the root window,
-    //but unfortunately it will also cause scrollbar flashing. so long as
-    //all resize operations happen through the viewmanager, this is not
-    //an issue. we'll see. MMP
-//    ComputeContainerSize();
-
-    NS_RELEASE(dx);
-    NS_RELEASE(cx);
   }
+
+  if (nsnull != mHScrollBarView)
+  {
+    mHScrollBarView->GetDimensions(&trect.width, &trect.height);
+
+    trect.width = width;
+
+    if (mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+      trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+
+    trect.y = height - NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+    trect.x = 0;
+
+    mHScrollBarView->SetBounds(trect);
+  }
+
+  //this will fix the size of the thumb when we resize the root window,
+  //but unfortunately it will also cause scrollbar flashing. so long as
+  //all resize operations happen through the viewmanager, this is not
+  //an issue. we'll see. MMP
+//  ComputeContainerSize();
+
+  NS_RELEASE(dx);
+  NS_RELEASE(cx);
 }
 
 nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
-  nsEventStatus  retval =  nsEventStatus_eIgnore; 
+  nsEventStatus retval =  nsEventStatus_eIgnore; 
+  nsIView       *scview = nsnull;
+
+  static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+
+  aEvent->widget->QueryInterface(kIViewIID, (void**)&scview);
 
   switch (aEvent->message)
   {
@@ -218,46 +261,102 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
     case NS_SCROLLBAR_LINE_NEXT:
     case NS_SCROLLBAR_LINE_PREV:
     {
-      nscoord         oy;
       nsIPresContext  *px = mViewManager->GetPresContext();
-      nscoord         dy;
       float           scale = px->GetTwipsToPixels();
+      nscoord         dx = 0, dy = 0;
 
-      oy = mOffsetY;
-
-      //now, this horrible thing makes sure that as we scroll
-      //the document a pixel at a time, we keep the logical position of
-      //our scroll bar at the top edge of the same pixel that
-      //is displayed.
-
-      mOffsetY = NS_TO_INT_ROUND(NS_TO_INT_ROUND(((nsScrollbarEvent *)aEvent)->position * scale) * px->GetPixelsToTwips());
-
-      dy = NS_TO_INT_ROUND(scale * (oy - mOffsetY));
-
-      if (dy != 0)
+      if ((nsnull != mVScrollBarView) && (scview == mVScrollBarView))
       {
-        nsRect  clip;
-        nscoord sx, sy;
+        nscoord oy;
 
-        mVScrollBarView->GetDimensions(&sx, &sy);
+        oy = mOffsetY;
 
-        clip.x = 0;
-        clip.y = 0;
-        clip.width = NS_TO_INT_ROUND(scale * (mBounds.width - sx));
-        clip.height = NS_TO_INT_ROUND(scale * mBounds.height);
+        //now, this horrible thing makes sure that as we scroll
+        //the document a pixel at a time, we keep the logical position of
+        //our scroll bar at the top edge of the same pixel that
+        //is displayed.
 
-        mViewManager->ClearDirtyRegion();
-        mWindow->Scroll(0, dy, &clip);
+        mOffsetY = NS_TO_INT_ROUND(NS_TO_INT_ROUND(((nsScrollbarEvent *)aEvent)->position * scale) * px->GetPixelsToTwips());
 
-        //and now we make sure that the scrollbar thumb is in sync with the
-        //numbers we came up with here, but only if we actually moved at least
-        //a full pixel. if didn't adjust the thumb only if the delta is non-zero,
-        //very slow scrolling would never actually work.
+        dy = NS_TO_INT_ROUND(scale * (oy - mOffsetY));
 
-        ((nsScrollbarEvent *)aEvent)->position = mOffsetY;
+        if (dy != 0)
+        {
+          nsRect  clip;
+          nscoord sx, sy;
 
-        AdjustChildWidgets(0, dy);
+          mVScrollBarView->GetDimensions(&sx, &sy);
+
+          clip.x = 0;
+          clip.y = 0;
+          clip.width = NS_TO_INT_ROUND(scale * (mBounds.width - sx));
+
+          if ((nsnull != mHScrollBarView) && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+            mHScrollBarView->GetDimensions(&sx, &sy);
+          else
+            sy = 0;
+
+          clip.height = NS_TO_INT_ROUND(scale * (mBounds.height - sy));
+
+          mViewManager->ClearDirtyRegion();
+          mWindow->Scroll(0, dy, &clip);
+
+          //and now we make sure that the scrollbar thumb is in sync with the
+          //numbers we came up with here, but only if we actually moved at least
+          //a full pixel. if didn't adjust the thumb only if the delta is non-zero,
+          //very slow scrolling would never actually work.
+
+          ((nsScrollbarEvent *)aEvent)->position = mOffsetY;
+        }
       }
+      else if ((nsnull != mHScrollBarView) && (scview == mHScrollBarView))
+      {
+        nscoord ox;
+
+        ox = mOffsetX;
+
+        //now, this horrible thing makes sure that as we scroll
+        //the document a pixel at a time, we keep the logical position of
+        //our scroll bar at the top edge of the same pixel that
+        //is displayed.
+
+        mOffsetX = NS_TO_INT_ROUND(NS_TO_INT_ROUND(((nsScrollbarEvent *)aEvent)->position * scale) * px->GetPixelsToTwips());
+
+        dx = NS_TO_INT_ROUND(scale * (ox - mOffsetX));
+
+        if (dx != 0)
+        {
+          nsRect  clip;
+          nscoord sx, sy;
+
+          clip.x = 0;
+          clip.y = 0;
+
+          if ((nsnull != mVScrollBarView) && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow))
+            mVScrollBarView->GetDimensions(&sx, &sy);
+          else
+            sx = 0;
+
+          clip.width = NS_TO_INT_ROUND(scale * (mBounds.width - sx));
+
+          mHScrollBarView->GetDimensions(&sx, &sy);
+
+          clip.height = NS_TO_INT_ROUND(scale * (mBounds.height - sy));
+
+          mViewManager->ClearDirtyRegion();
+          mWindow->Scroll(dx, 0, &clip);
+
+          //and now we make sure that the scrollbar thumb is in sync with the
+          //numbers we came up with here, but only if we actually moved at least
+          //a full pixel. if didn't adjust the thumb only if the delta is non-zero,
+          //very slow scrolling would never actually work.
+
+          ((nsScrollbarEvent *)aEvent)->position = mOffsetX;
+        }
+      }
+
+      if ((dx != 0) || (dy != 0))
+        AdjustChildWidgets(dx, dy);
 
       retval = nsEventStatus_eConsumeNoDefault;
 
@@ -271,6 +370,8 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       break;
   }
 
+  NS_IF_RELEASE(scview);
+
   return retval;
 }
 
@@ -280,21 +381,23 @@ void nsScrollingView :: ComputeContainerSize()
 
   if (nsnull != scrollview)
   {
+    nscoord         dx = 0, dy = 0;
+    nsIPresContext  *px = mViewManager->GetPresContext();
+    nscoord         width, height;
+    nsIScrollbar    *scrollv = nsnull, *scrollh = nsnull;
+    nsIWidget       *win;
+    PRUint32        oldsizey = mSizeY, oldsizex = mSizeX;
+    nsRect          area(0, 0, 0, 0);
+    nscoord         offx, offy;
+    float           scale = px->GetTwipsToPixels();
+
+    ComputeScrollArea(scrollview, area, 0, 0);
+
+    mSizeY = area.YMost();
+    mSizeX = area.XMost();
+
     if (nsnull != mVScrollBarView)
     {
-      nsIPresContext  *px = mViewManager->GetPresContext();
-      nscoord         width, height;
-      nsIScrollbar    *scroll;
-      nsIWidget       *win;
-      PRUint32        oldsize = mSizeY;
-      nsRect          area(0, 0, 0, 0);
-      PRInt32         offy, dy;
-      float           scale = px->GetTwipsToPixels();
-
-      ComputeScrollArea(scrollview, area, 0, 0);
-
-      mSizeY = area.YMost();
-
       mVScrollBarView->GetDimensions(&width, &height);
       offy = mOffsetY;
 
@@ -302,7 +405,7 @@ void nsScrollingView :: ComputeContainerSize()
 
       static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
 
-      if (NS_OK == win->QueryInterface(kscroller, (void **)&scroll))
+      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollv))
       {
         if (mSizeY > mBounds.height)
         {
@@ -312,15 +415,13 @@ void nsScrollingView :: ComputeContainerSize()
 
           //now update the scroller position for the new size
 
-          PRUint32  oldpos = scroll->GetPosition();
+          PRUint32  oldpos = scrollv->GetPosition();
 
-          mOffsetY = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSizeY) / oldsize) * scale) * px->GetPixelsToTwips());
+          mOffsetY = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSizeY) / oldsizey) * scale) * px->GetPixelsToTwips());
 
           dy = NS_TO_INT_ROUND(scale * (offy - mOffsetY));
 
-          scroll->SetParameters(mSizeY, mBounds.height, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
-
-          NS_RELEASE(px);
+          scrollv->SetParameters(mSizeY, mBounds.height, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
         }
         else
         {
@@ -329,15 +430,56 @@ void nsScrollingView :: ComputeContainerSize()
           mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
         }
 
-        if (dy != 0)
-          AdjustChildWidgets(0, dy);
-
-        scroll->Release();
+        NS_RELEASE(scrollv);
       }
 
       NS_RELEASE(win);
     }
 
+    if (nsnull != mHScrollBarView)
+    {
+      mHScrollBarView->GetDimensions(&width, &height);
+      offx = mOffsetX;
+
+      win = mHScrollBarView->GetWidget();
+
+      static NS_DEFINE_IID(kscroller, NS_ISCROLLBAR_IID);
+
+      if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
+      {
+        if (mSizeX > mBounds.width)
+        {
+          //we need to be able to scroll
+
+          mHScrollBarView->SetVisibility(nsViewVisibility_kShow);
+
+          //now update the scroller position for the new size
+
+          PRUint32  oldpos = scrollh->GetPosition();
+
+          mOffsetX = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSizeX) / oldsizex) * scale) * px->GetPixelsToTwips());
+
+          dx = NS_TO_INT_ROUND(scale * (offx - mOffsetX));
+
+          scrollh->SetParameters(mSizeX, mBounds.width, mOffsetX, NS_POINTS_TO_TWIPS_INT(12));
+        }
+        else
+        {
+          mOffsetX = 0;
+          dx = NS_TO_INT_ROUND(scale * offx);
+          mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
+        }
+
+        NS_RELEASE(scrollh);
+      }
+
+      NS_RELEASE(win);
+    }
+
+    if ((dx != 0) || (dy != 0))
+      AdjustChildWidgets(dx, dy);
+
+    NS_RELEASE(px);
     NS_RELEASE(scrollview);
   }
 }
