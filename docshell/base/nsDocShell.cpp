@@ -321,7 +321,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
     aLoadInfo->GetTarget(getter_Copies(target));
   }
 
-  if (!shEntry && loadType != LOAD_NORMAL_REPLACE) {
+  if (!shEntry && loadType != LOAD_NORMAL_REPLACE && mCurrentURI == nsnull) {
     /* Check if we are in the middle of loading a subframe whose parent
      * was originally loaded thro' Session History. ie., you were in a frameset
      * page, went somewhere else and clicked 'back'. The loading of the root page
