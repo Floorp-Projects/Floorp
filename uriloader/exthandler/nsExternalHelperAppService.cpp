@@ -28,7 +28,23 @@
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
+#include "nsIMIMEService.h"
+
+// used to manage our in memory data source of helper applications
+#include "nsRDFCID.h"
+#include "rdf.h"
+#include "nsIRDFService.h"
+#include "nsIRDFRemoteDataSource.h"
+#include "nsIFileLocator.h"
+#include "nsIFileSpec.h"
+#include "nsFileLocations.h"
+#include "nsHelperAppRDF.h"
+#include "nsIMIMEInfo.h"
+
 #include "nsCExternalHandlerService.h" // contains progids for the helper app service
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
 NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
@@ -49,16 +65,111 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
 }
 
+nsresult nsExternalHelperAppService::Init()
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remoteDS = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
+  mOverRideDataSource = do_QueryInterface(remoteDS);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIFileLocator> locator = do_GetService(NS_FILELOCATOR_PROGID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIFileSpec> dataFilesDir;
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50,
+                                getter_AddRefs(dataFilesDir));
+  dataFilesDir->AppendRelativeUnixPath("test.rdf");
+  nsXPIDLCString url;
+  dataFilesDir->GetURLString(getter_Copies(url));
+
+  rv = remoteDS->Init(url);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // for now load synchronously (async seems to be busted)
+  rv = remoteDS->Refresh(PR_TRUE);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed refresh?\n");
+
+#ifdef DEBUG_mscott
+    PRBool loaded;
+    rv = remoteDS->GetLoaded(&loaded);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed getload\n");
+    printf("After refresh: datasource is %s\n", loaded ? "loaded" : "not loaded");
+#endif
+
+  // initialize our resources if we haven't done so already...
+  if (!kNC_Description)
+  {
+    rdf->GetResource(NC_RDF_DESCRIPTION,   getter_AddRefs(kNC_Description));
+    rdf->GetResource(NC_RDF_VALUE,         getter_AddRefs(kNC_Value));
+    rdf->GetResource(NC_RDF_FILEEXTENSIONS,getter_AddRefs(kNC_FileExtensions));
+    rdf->GetResource(NC_RDF_PATH,          getter_AddRefs(kNC_Path));
+    rdf->GetResource(NC_RDF_SAVETODISK,    getter_AddRefs(kNC_SaveToDisk));
+    rdf->GetResource(NC_RDF_HANDLEINTERNAL,getter_AddRefs(kNC_HandleInternal));
+    rdf->GetResource(NC_RDF_ALWAYSASK,     getter_AddRefs(kNC_AlwaysAsk));  
+    rdf->GetResource(NC_RDF_PRETTYNAME,    getter_AddRefs(kNC_PrettyName));  
+  }
+    
+#ifdef DEBUG_mscott
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  GetMIMEInfoForMimeType("application/pdf", getter_AddRefs(mimeInfo));
+#endif
+    return rv;
+}
+
 /* boolean canHandleContent (in string aMimeContentType); */
 NS_IMETHODIMP nsExternalHelperAppService::CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIStreamListener doContent (in string aMimeContentType, in nsIURI aURI, in nsISupports aWindowContext, out boolean aAbortProcess); */
-NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, PRBool *aAbortProcess, nsIStreamListener **_retval)
+// it's ESSENTIAL that this method return an error code if we were unable to determine how this content should be handle
+// this allows derived OS implementations of Docontent to step in and look for OS specific solutions.
+NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
+                                                    PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // (1) try to get a mime info object for the content type....if we don't know anything about the type, then
+  // we certainly can't handle it and we'll just return without creating a stream listener.
+
+  *aStreamListener = nsnull;
+
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  nsresult rv = GetMIMEInfoForMimeType(aMimeContentType, getter_AddRefs(mimeInfo));
+
+  if (NS_SUCCEEDED(rv) && mimeInfo)
+  {
+    // test to see if we should save to disk or use a helper application.
+    // eventually we'll add code to handle the ask me case...
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::useHelperApp;
+    mimeInfo->GetPreferredAction(&action);
+    if (action == nsIMIMEInfo::saveToDisk)
+    {
+      // for the save to disk case, just pretened we don't want to handle it and the uri loader will eventually
+      // bring up the save to disk dialog for us!!
+      return NS_OK;
+    }
+    else
+    {
+      // try to see if we have a user specified application to launch with this content type.
+      nsCOMPtr<nsIFile> application;
+      mimeInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
+      if (application)
+      {
+        // ask the OS specific subclass to create a stream listener for us that binds this suggested application
+        // even if this fails, return NS_OK...
+        nsXPIDLCString fileExtension;
+        mimeInfo->FirstExtension(getter_Copies(fileExtension));
+        CreateStreamListenerWithApp(application, fileExtension, aStreamListener);
+        return NS_OK;
+      }
+    }
+  }
+
+  // if we made it here, then we were unable to handle this ourselves..return an error so the
+  // derived class will know to try OS specific wonders on it.
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie)
@@ -77,6 +188,186 @@ nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIS
 
   handler->Init(aAppCookie, aTempFileExtension);
   return handler;
+}
+
+nsresult nsExternalHelperAppService::FillTopLevelProperties(const char * aContentType, nsIRDFResource * aContentTypeNodeResource, 
+                                                            nsIRDFService * aRDFService, nsIMIMEInfo * aMIMEInfo)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFNode> target;
+  nsCOMPtr<nsIRDFLiteral> literal;
+  const PRUnichar * stringValue;
+  
+  // set the mime type
+  aMIMEInfo->SetMIMEType(aContentType);
+  
+  // set the pretty name description
+  FillLiteralValueFromTarget(aContentTypeNodeResource,kNC_Description, &stringValue);
+  aMIMEInfo->SetDescription(stringValue);
+
+  // now iterate over all the file type extensions...
+  nsCOMPtr<nsISimpleEnumerator> fileExtensions;
+  mOverRideDataSource->GetTargets(aContentTypeNodeResource, kNC_FileExtensions, PR_TRUE, getter_AddRefs(fileExtensions));
+
+  PRBool hasMoreElements = PR_FALSE;
+  nsCAutoString fileExtension; 
+  nsCOMPtr<nsISupports> element;
+
+  if (fileExtensions)
+  {
+    fileExtensions->HasMoreElements(&hasMoreElements);
+    while (hasMoreElements)
+    { 
+      fileExtensions->GetNext(getter_AddRefs(element));
+      if (element)
+      {
+        literal = do_QueryInterface(element);
+        literal->GetValueConst(&stringValue);
+        fileExtension.AssignWithConversion(stringValue);
+        if (!fileExtension.IsEmpty())
+          aMIMEInfo->AppendExtension(fileExtension);
+      }
+  
+      fileExtensions->HasMoreElements(&hasMoreElements);
+    } // while we have more extensions to parse....
+  }
+
+  return rv;
+}
+
+nsresult nsExternalHelperAppService::FillLiteralValueFromTarget(nsIRDFResource * aSource, nsIRDFResource * aProperty, const PRUnichar ** aLiteralValue)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIRDFLiteral> literal;
+  nsCOMPtr<nsIRDFNode> target;
+
+  *aLiteralValue = nsnull;
+
+  mOverRideDataSource->GetTarget(aSource, aProperty, PR_TRUE, getter_AddRefs(target));
+  if (target)
+  {
+    literal = do_QueryInterface(target);    
+    if (!literal)
+      return NS_ERROR_FAILURE;
+    literal->GetValueConst(aLiteralValue);
+  }
+  else
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * aContentType, 
+                                                                  nsIRDFResource * aContentTypeNodeResource, 
+                                                                  nsIRDFService * aRDFService, 
+                                                                  nsIMIMEInfo * aMIMEInfo)
+{
+  nsCOMPtr<nsIRDFNode> target;
+  nsCOMPtr<nsIRDFLiteral> literal;
+  const PRUnichar * stringValue = nsnull;
+  nsresult rv = NS_OK;
+
+  nsCString contentTypeHandlerNodeName (NC_CONTENT_NODE_HANDLER_PREFIX);
+  contentTypeHandlerNodeName.Append(aContentType);
+
+  nsCOMPtr<nsIRDFResource> contentTypeHandlerNodeResource;
+  aRDFService->GetResource(contentTypeHandlerNodeName, getter_AddRefs(contentTypeHandlerNodeResource));
+  NS_ENSURE_TRUE(contentTypeHandlerNodeName, NS_ERROR_FAILURE); // that's not good! we have an error in the rdf file
+
+  // now process the application handler information
+  aMIMEInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+
+  // save to disk
+  FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_SaveToDisk, &stringValue);
+  if (stringValue && nsCRT::strcasecmp(stringValue, "true") == 0)
+       aMIMEInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
+
+  // handle internal
+  FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_HandleInternal, &stringValue);
+  if (stringValue && nsCRT::strcasecmp(stringValue, "true") == 0)
+       aMIMEInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
+  
+  // always ask
+  FillLiteralValueFromTarget(contentTypeHandlerNodeResource,kNC_AlwaysAsk, &stringValue);
+  if (stringValue && nsCRT::strcasecmp(stringValue, "true") == 0)
+       aMIMEInfo->SetPreferredAction(nsIMIMEInfo::alwaysAsk);
+
+  // now digest the external application information
+
+  nsCAutoString externalAppNodeName (NC_CONTENT_NODE_EXTERNALAPP_PREFIX);
+  externalAppNodeName.Append(aContentType);
+  nsCOMPtr<nsIRDFResource> externalAppNodeResource;
+  aRDFService->GetResource(externalAppNodeName, getter_AddRefs(externalAppNodeResource));
+
+  if (externalAppNodeName)
+  {
+    FillLiteralValueFromTarget(externalAppNodeResource, kNC_PrettyName, &stringValue);
+    if (stringValue)
+      aMIMEInfo->SetApplicationDescription(stringValue);
+ 
+    FillLiteralValueFromTarget(externalAppNodeResource, kNC_Path, &stringValue);
+    if (stringValue)
+    {
+      nsCOMPtr<nsIFile> application;
+      GetFileTokenForPath(stringValue, getter_AddRefs(application));
+      if (application)
+        aMIMEInfo->SetPreferredApplicationHandler(application);
+    }
+  }
+
+  return rv;
+}
+
+nsresult nsExternalHelperAppService::GetMIMEInfoForMimeType(const char * aContentType, nsIMIMEInfo ** aMIMEInfo)
+{
+  nsresult rv = NS_OK;
+
+  // if we have a data source then use the information found in that...
+  // if that fails....then try to the old mime service that i'm going to be
+  // obsoleting soon...
+  if (mOverRideDataSource)
+  {
+    nsCOMPtr<nsIRDFNode> target;
+    nsCOMPtr<nsIRDFResource> source;
+    nsCOMPtr<nsIRDFResource> contentTypeNodeResource;
+  
+    nsCString contentTypeNodeName (NC_CONTENT_NODE_PREFIX);
+    contentTypeNodeName.Append(aContentType);
+
+    nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = rdf->GetResource(contentTypeNodeName, getter_AddRefs(contentTypeNodeResource));
+    // we need a way to determine if this content type resource is really in the graph or not...
+    // every mime type should have a value field so test for that target..
+    mOverRideDataSource->GetTarget(contentTypeNodeResource, kNC_Value, PR_TRUE, getter_AddRefs(target));
+
+    if (NS_SUCCEEDED(rv) && target)
+    {
+       // create a mime info object and we'll fill it in based on the values from the data source
+       nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_PROGID));
+       rv = FillTopLevelProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
+       NS_ENSURE_SUCCESS(rv, rv);
+       rv = FillContentHandlerProperties(aContentType, contentTypeNodeResource, rdf, mimeInfo);
+
+       *aMIMEInfo = mimeInfo;
+       NS_IF_ADDREF(*aMIMEInfo);
+    } // if we have a node in the graph for this content type
+    else
+      *aMIMEInfo = nsnull;
+  } // if we have a data source
+
+
+  if (!*aMIMEInfo)
+  {
+    // try the old mime service.
+    nsCOMPtr<nsIMIMEService> mimeService (do_GetService("component:||netscape|mime"));
+    if (mimeService)
+      mimeService->GetFromMIMEType(aContentType, aMIMEInfo);
+    // if it doesn't have an entry then we really know nothing about this type...
+  }
+
+  return rv;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,6 +506,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
 nsresult nsExternalAppHandler::Init(nsISupports * aAppCookie, const char * aTempFileExtension)
 {
   mExternalApplication = aAppCookie;
-  mTempFileExtension = aTempFileExtension;
+  
+  // make sure the extention includes the '.'
+  if (aTempFileExtension && *aTempFileExtension != '.')
+    mTempFileExtension = ".";
+  mTempFileExtension.Append(aTempFileExtension);
   return NS_OK;
 }
