@@ -210,6 +210,11 @@ LAYOUT_ATOM(transform, "transform")
 LAYOUT_ATOM(show, "show")
 LAYOUT_ATOM(actuate, "actuate")
 
+LAYOUT_ATOM(autoAtom, "auto")
+LAYOUT_ATOM(none, "none")
+LAYOUT_ATOM(normal, "normal")
+LAYOUT_ATOM(transparent, "transparent")
+
 LAYOUT_ATOM(directionalFrame, "DirectionalFrame")
 LAYOUT_ATOM(baseLevel, "BaseLevel")                            // PRUint8
 LAYOUT_ATOM(embeddingLevel, "EmbeddingLevel")                  // PRUint8

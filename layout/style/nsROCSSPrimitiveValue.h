@@ -45,6 +45,7 @@
 #include "nsUnitConversion.h"
 #include "nsReadableUtils.h"
 #include "nsIURI.h"
+#include "nsIAtom.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
@@ -108,24 +109,22 @@ public:
     mType = CSS_PX;
   }
 
+  void SetIdent(nsIAtom* aAtom)
+  {
+    NS_PRECONDITION(aAtom, "Don't pass in a null atom");
+    Reset();
+    NS_ADDREF(mValue.mAtom = aAtom);
+    mType = CSS_IDENT;
+  }
+
   void SetIdent(const nsACString& aString)
   {
     Reset();
-    mValue.mString = ToNewUnicode(aString);
-    if (mValue.mString) {
+    mValue.mAtom = NS_NewAtom(aString);
+    if (mValue.mAtom) {
       mType = CSS_IDENT;
     } else {
-      mType = CSS_UNKNOWN;
-    }
-  }
-
-  void SetIdent(const nsAString& aString)
-  {
-    Reset();
-    mValue.mString = ToNewUnicode(aString);
-    if (mValue.mString) {
-      mType = CSS_IDENT;
-    } else {
+      // XXXcaa We should probably let the caller know we are out of memory
       mType = CSS_UNKNOWN;
     }
   }
@@ -137,6 +136,7 @@ public:
     if (mValue.mString) {
       mType = CSS_STRING;
     } else {
+      // XXXcaa We should probably let the caller know we are out of memory
       mType = CSS_UNKNOWN;
     }
   }
@@ -148,6 +148,7 @@ public:
     if (mValue.mString) {
       mType = CSS_STRING;
     } else {
+      // XXXcaa We should probably let the caller know we are out of memory
       mType = CSS_UNKNOWN;
     }
   }
@@ -192,6 +193,9 @@ public:
   {
     switch (mType) {
       case CSS_IDENT:
+        NS_ASSERTION(mValue.mAtom, "Null atom should never happen");
+        NS_RELEASE(mValue.mAtom);
+        break;
       case CSS_STRING:
         NS_ASSERTION(mValue.mString, "Null string should never happen");
         nsMemory::Free(mValue.mString);
@@ -203,12 +207,10 @@ public:
       case CSS_RECT:
         NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
         NS_RELEASE(mValue.mRect);
-        mValue.mRect = nsnull;
         break;
       case CSS_RGBCOLOR:
         NS_ASSERTION(mValue.mColor, "Null RGBColor should never happen");
         NS_RELEASE(mValue.mColor);
-        mValue.mColor = nsnull;
         break;
     }
   }
@@ -225,6 +227,7 @@ private:
     nsIDOMRect*     mRect;
     PRUnichar*      mString;
     nsIURI*         mURI;
+    nsIAtom*        mAtom;
   } mValue;
   
   float mT2P;
