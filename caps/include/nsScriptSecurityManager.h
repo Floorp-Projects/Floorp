@@ -25,6 +25,7 @@
 #include "jsdbgapi.h"
 #include "nsIScriptContext.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsIScriptExternalNameSet.h"
 
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
@@ -47,9 +48,6 @@ public:
     GetScriptSecurityManager();
     
 private:
-    JSContext *
-    GetCurrentContext();
-
     NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
 
@@ -73,5 +71,17 @@ private:
 
     nsIPrincipal *mSystemPrincipal;
 };
+
+class nsSecurityNameSet : public nsIScriptExternalNameSet 
+{
+public:
+    nsSecurityNameSet();
+    virtual ~nsSecurityNameSet();
+    
+    NS_DECL_ISUPPORTS
+    NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
+    NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
+};
+
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/

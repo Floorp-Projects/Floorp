@@ -52,16 +52,20 @@ interface nsIScriptSecurityManager : nsISupports
 
     boolean CanExecuteFunction(in voidStar jsFunction);
 
-    boolean CanEnableCapability(in nsIPrincipal principal, in string capability);
+    boolean CanEnableCapability(in nsIPrincipal principal, 
+								in string capability);
 
-    void SetCanEnableCapability(in nsIPrincipal principal, in string capability,
+    void SetCanEnableCapability(in nsIPrincipal principal, 
+								in string capability,
                                 in boolean canEnable);
 
-    void EnableCapability(in nsIScriptContext cx, in string capability);
+    boolean IsCapabilityEnabled(in string capability);
+	
+	void EnableCapability(in string capability);
 
-    void RevertCapability(in nsIScriptContext cx, in string capability);
+    void RevertCapability(in string capability);
 
-    void DisableCapability(in nsIScriptContext cx, in string capability);
+    void DisableCapability(in string capability);
 };
 
 %{C++
