@@ -215,9 +215,6 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 
       gNextMessageViewIndexAfterDelete = -1;
     }
-    else {
-      ClearMessagePane();
-    }
   }
 }
 
