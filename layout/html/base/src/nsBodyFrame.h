@@ -112,6 +112,8 @@ protected:
 
   void AddFrame(nsIFrame* aFrame);
 
+  nscoord GetConstrainingHeight(const nsReflowState&) const;
+
 private:
   nsSpaceManager* mSpaceManager;
   nsVoidArray     mAbsoluteItems;
