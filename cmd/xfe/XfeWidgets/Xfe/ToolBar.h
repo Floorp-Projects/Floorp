@@ -125,6 +125,9 @@ XfeToolBarXYToIndicatorLocation	(Widget		w,
 								 int		y);
 /*----------------------------------------------------------------------*/
 extern Widget
+XfeToolBarGetFirstItem			(Widget		w);
+/*----------------------------------------------------------------------*/
+extern Widget
 XfeToolBarGetLastItem			(Widget		w);
 /*----------------------------------------------------------------------*/
 extern Widget

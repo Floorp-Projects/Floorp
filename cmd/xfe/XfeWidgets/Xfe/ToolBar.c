@@ -2346,6 +2346,38 @@ XfeToolBarXYToIndicatorLocation(Widget w,Widget item,int x,int y)
 	return result;
 }
 /*----------------------------------------------------------------------*/
+
+/* These two first and last functions should be replaced by a general
+   purpse XmNlayableChildren resource that can be queried by the user.
+   
+   This resource should probably go in XfeManager, since it could be
+   used by other widgets as well.  This will be an issue when we add
+   support for the XmNpositionIndex XfeManager constraint resource
+   (currently not working).
+*/
+
+/* extern */ Widget
+XfeToolBarGetFirstItem(Widget w)
+{
+	Widget * wp;
+	
+	assert( XfeIsToolBar(w) );
+	assert( _XfeIsAlive(w) );
+
+	/* Look forward at children until a layable one is found */
+	for(wp = _XfemChildren(w);
+		*wp != _XfeChildrenIndex(w,_XfemNumChildren(w) - 1);
+		wp++)
+	{
+		if (IsLayableChild(*wp) && !_XfeManagerPrivateComponent(*wp))
+		{
+			return *wp;
+		}
+	}
+	
+	return NULL;
+}
+/*----------------------------------------------------------------------*/
 /* extern */ Widget
 XfeToolBarGetLastItem(Widget w)
 {
