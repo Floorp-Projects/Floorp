@@ -48,7 +48,7 @@ embed_chrome: embed-jar.mn
 	unzip -d $(DIST)\Embed\tmpchrome\modern $(DIST)\bin\chrome\modern.jar
 	nsinstall -D $(DIST)\Embed\tmpchrome\toolkit
 	unzip -d $(DIST)\Embed\tmpchrome\toolkit $(DIST)\bin\chrome\toolkit.jar
-        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) -s $(DIST)\Embed\tmpchrome -d $(DIST)\bin\chrome < embed-jar.mn
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\Embed\tmpchrome -d $(DIST)\bin\chrome < embed-jar.mn
 	$(RM) -rf $(DIST)\Embed\tmpchrome
 !endif
 

@@ -31,8 +31,9 @@ js3250.dll
 ; 
 ; NGLayout Web Widget Control:
 ; 
-gkgfxwin.dll      
-gkwidget.dll   
+gkgfx.dll
+components\gkgfxwin.dll      
+components\gkwidget.dll   
 
 ; 
 ; DOM:
@@ -246,6 +247,20 @@ res\quirk.css
 res\viewsource.css
 res\ua.css
 res\forms.css
-res\builtin\*
-res\fonts\*
-
+res\builtin\buttonBindings.xml
+res\builtin\buttons.css
+res\builtin\checkbox.css
+res\builtin\checkboxBindings.xml
+res\builtin\fieldset.css
+res\builtin\fieldsetBindings.xml
+res\builtin\htmlBindings.xml
+res\builtin\platformButtonBindings.xml
+res\builtin\platformCheckboxBindings.xml
+res\builtin\platformFieldsetBindings.xml
+res\builtin\platformHTMLBindings.xml
+res\builtin\platformSelectBindings.xml
+res\builtin\select.css
+res\builtin\selectBindings.xml
+res\builtin\textfields.css
+res\builtin\xbl-forms.css
+res\fonts\fontEncoding.properties
