@@ -91,7 +91,7 @@ int _readn(PRFileDesc *sock, char *buf, int len)
 	int bytes;
 
 	for (rem=len; rem; rem -= bytes) {
-		bytes = PR_Recv(sock, buf, rem, 0, PR_INTERVAL_NO_TIMEOUT);
+		bytes = PR_Recv(sock, buf+len-rem, rem, 0, PR_INTERVAL_NO_TIMEOUT);
 		if (bytes <= 0)
             return -1;
 	}
@@ -377,7 +377,8 @@ void do_work(void)
 	}
 	
 	PR_EnterMonitor(exit_cv);
-	PR_Wait(exit_cv, 0x7fffffff);
+	while (_thread_exit_count > 0)
+		PR_Wait(exit_cv, PR_INTERVAL_NO_TIMEOUT);
 	PR_ExitMonitor(exit_cv);
 
 	fprintf(stdout, "TEST COMPLETE!\n");
@@ -431,7 +432,7 @@ static void Measure(void (*func)(void), const char *msg)
 }
 
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 #if defined(XP_UNIX) || defined(XP_OS2_EMX)
 	int opt;
@@ -481,9 +482,9 @@ main(int argc, char **argv)
 	memset(timer_data, 0 , 2*_threads*sizeof(timer_slot_t));
 
     Measure(do_workUU, "select loop user/user");
-    Measure(do_workUK, "select loop user/user");
-    Measure(do_workKU, "select loop user/user");
-    Measure(do_workKK, "select loop user/user");
+    Measure(do_workUK, "select loop user/kernel");
+    Measure(do_workKU, "select loop kernel/user");
+    Measure(do_workKK, "select loop kernel/kernel");
 
 
 	return 0;
