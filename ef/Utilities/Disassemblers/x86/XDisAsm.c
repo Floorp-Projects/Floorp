@@ -23,7 +23,7 @@
  * any improvements or extensions that they make and grant Carnegie the
  * rights to redistribute these changes.
  *
- *	$Id: XDisAsm.c,v 1.6 1999/02/28 00:24:21 fur%netscape.com Exp $
+ *	$Id: XDisAsm.c,v 1.7 1999/03/04 19:06:31 fur%netscape.com Exp $
  */
 
 /*
@@ -1379,43 +1379,43 @@ db_disasm(db_addr_t loc)
 		case I:
 		    len = db_lengths[size];
 		    get_value_inc(imm, loc, len, FALSE);
-		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%#r", imm);
+		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "0x%x", imm);
 		    break;
 
 		case Is:
 		    len = db_lengths[size];
 		    get_value_inc(imm, loc, len, FALSE);
-		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%+#r", imm);
+		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "0x%+x", imm);
 		    break;
 
 		case Ib:
 		    get_value_inc(imm, loc, 1, FALSE);
-		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%#r", imm);
+		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "0x%x", imm);
 		    break;
 
 		case Iba:
 		    get_value_inc(imm, loc, 1, FALSE);
 		    if (imm != 0x0a)
-			disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%#r", imm);
+			disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "0x%x", imm);
 		    break;
 
 		case Ibs:
 		    get_value_inc(imm, loc, 1, TRUE);
 		    if (size == WORD)
 			imm &= 0xFFFF;
-		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%+#r", imm);
+		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "0x%+x", imm);
 		    break;
 
 		case Iw:
 		    get_value_inc(imm, loc, 2, FALSE);
-		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%#r", imm);
+		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "0x%x", imm);
 		    break;
 
 		case O:
 		    len = (short_addr ? 2 : 4);
 		    get_value_inc(displ, loc, len, FALSE);
 		    if (seg)
-			disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "%s:%+#r",seg, displ);
+			disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "%s:%+x",seg, displ);
 		    else
 			db_printsym((db_addr_t)displ, DB_STGY_ANY);
 		    break;
@@ -1449,7 +1449,7 @@ db_disasm(db_addr_t loc)
 		    len = db_lengths[size];
 		    get_value_inc(imm, loc, len, FALSE);	/* offset */
 		    get_value_inc(imm2, loc, 2, FALSE);	/* segment */
-		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%#r,%#r", imm2, imm);
+		    disasm_next += PR_snprintf(disasm_next, disasm_end - disasm_next, "$%x,%x", imm2, imm);
 		    break;
 	    }
 	}
