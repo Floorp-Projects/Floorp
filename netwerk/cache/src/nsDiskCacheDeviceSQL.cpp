@@ -115,6 +115,17 @@ DecomposeCacheEntryKey(const nsCString *fullKey,
   return PR_TRUE;
 }
 
+class AutoResetStatement
+{
+  public:
+    AutoResetStatement(mozIStorageStatement *s)
+      : mStatement(s) {}
+    ~AutoResetStatement() { mStatement->Reset(); }
+    mozIStorageStatement *operator->() { return mStatement; }
+  private:
+    mozIStorageStatement *mStatement;
+};
+
 /******************************************************************************
  *  nsDiskCache
  *****************************************************************************/
@@ -521,14 +532,10 @@ nsDiskCacheDevice::~nsDiskCacheDevice()
 PRUint32
 nsDiskCacheDevice::CacheSize()
 {
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT Sum(DataSize) from moz_cache;"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, 0);
- 
+  AutoResetStatement statement(mStatement_CacheSize);
+
   PRBool hasRows;
-  rv = statement->ExecuteStep(&hasRows);
+  nsresult rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasRows, 0);
   
   return (PRUint32) statement->AsInt32(0);
@@ -537,14 +544,10 @@ nsDiskCacheDevice::CacheSize()
 PRUint32
 nsDiskCacheDevice::EntryCount()
 {
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT count(*) from moz_cache;"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, 0);
+  AutoResetStatement statement(mStatement_EntryCount);
 
   PRBool hasRows;
-  rv = statement->ExecuteStep(&hasRows);
+  nsresult rv = statement->ExecuteStep(&hasRows);
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasRows, 0);
 
   return (PRUint32) statement->AsInt32(0);
@@ -575,29 +578,18 @@ nsDiskCacheDevice::UpdateEntry(nsCacheEntry *entry)
   rec.lastModified = PRTimeFromSeconds(entry->LastModified());
   rec.expirationTime = PRTimeFromSeconds(entry->ExpirationTime());
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_cache SET"
-                         " MetaData = ?,"
-                         " Flags = ?,"
-                         " DataSize = ?,"
-                         " FetchCount = ?,"
-                         " LastFetched = ?,"
-                         " LastModified = ?,"
-                         " ExpirationTime = ?"
-                         " WHERE ClientID = ? AND Key = ?;"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  AutoResetStatement statement(mStatement_UpdateEntry);
 
-  rv |= statement->BindDataParameter(1, rec.metaData, rec.metaDataLen);
-  rv |= statement->BindInt32Parameter(2, rec.flags);
-  rv |= statement->BindInt32Parameter(3, rec.dataSize);
-  rv |= statement->BindInt32Parameter(4, rec.fetchCount);
-  rv |= statement->BindInt64Parameter(5, rec.lastFetched);
-  rv |= statement->BindInt64Parameter(6, rec.lastModified);
-  rv |= statement->BindInt64Parameter(7, rec.expirationTime);
-  rv |= statement->BindCStringParameter(8, cid);
-  rv |= statement->BindCStringParameter(9, key);
+  nsresult rv;
+  rv  = statement->BindDataParameter(0, rec.metaData, rec.metaDataLen);
+  rv |= statement->BindInt32Parameter(1, rec.flags);
+  rv |= statement->BindInt32Parameter(2, rec.dataSize);
+  rv |= statement->BindInt32Parameter(3, rec.fetchCount);
+  rv |= statement->BindInt64Parameter(4, rec.lastFetched);
+  rv |= statement->BindInt64Parameter(5, rec.lastModified);
+  rv |= statement->BindInt64Parameter(6, rec.expirationTime);
+  rv |= statement->BindCStringParameter(7, cid);
+  rv |= statement->BindCStringParameter(8, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasRows;
@@ -617,17 +609,12 @@ nsDiskCacheDevice::UpdateEntrySize(nsCacheEntry *entry, PRUint32 newSize)
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("UPDATE moz_cache SET"
-                         " DataSize = ?,"
-                         " WHERE ClientID = ? AND Key = ?;"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  AutoResetStatement statement(mStatement_UpdateEntrySize);
 
-  rv |= statement->BindInt32Parameter(1, newSize);
-  rv |= statement->BindCStringParameter(2, cid);
-  rv |= statement->BindCStringParameter(3, key);
+  nsresult rv;
+  rv  = statement->BindInt32Parameter(0, newSize);
+  rv |= statement->BindCStringParameter(1, cid);
+  rv |= statement->BindCStringParameter(2, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasRows;
@@ -654,14 +641,11 @@ nsDiskCacheDevice::DeleteEntry(nsCacheEntry *entry, PRBool deleteData)
   if (!DecomposeCacheEntryKey(entry->Key(), &cid, &key, keyBuf))
     return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  AutoResetStatement statement(mStatement_DeleteEntry);
 
-  rv |= statement->BindCStringParameter(1, cid);
-  rv |= statement->BindCStringParameter(2, key);
+  nsresult rv;
+  rv  = statement->BindCStringParameter(0, cid);
+  rv |= statement->BindCStringParameter(1, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasRows;
@@ -781,8 +765,6 @@ nsDiskCacheDevice::Init()
 
   // XXX ... other initialization steps
 
-  // XXX maybe create all of our statements up front?
-
   // XXX in the future we may wish to verify the schema for moz_cache
   //     perhaps using "PRAGMA table_info" ?
 
@@ -820,6 +802,26 @@ nsDiskCacheDevice::Init()
   if (res != SQLITE_OK)
     LOG(("sqlite3_create_function failed [res=%d]\n", res));
 #endif
+
+  // create all (most) of our statements up front
+  struct {
+    nsCOMPtr<mozIStorageStatement> &statement;
+    const char *sql;
+  } prepared[] = {
+    { mStatement_CacheSize,       "SELECT Sum(DataSize) from moz_cache;" },
+    { mStatement_EntryCount,      "SELECT count(*) from moz_cache;" },
+    { mStatement_UpdateEntry,     "UPDATE moz_cache SET MetaData = ?, Flags = ?, DataSize = ?, FetchCount = ?, LastFetched = ?, LastModified = ?, ExpirationTime = ? WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_UpdateEntrySize, "UPDATE moz_cache SET DataSize = ? WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_DeleteEntry,     "DELETE FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_FindEntry,       "SELECT MetaData, Generation, Flags, DataSize, FetchCount, LastFetched, LastModified, ExpirationTime FROM moz_cache WHERE ClientID = ? AND Key = ?;" },
+    { mStatement_BindEntry,       "INSERT INTO moz_cache VALUES(?,?,?,?,?,?,?,?,?,?);" }
+  };
+  for (PRUint32 i=0; i<NS_ARRAY_LENGTH(prepared); ++i)
+  {
+    rv |= mDB->CreateStatement(nsDependentCString(prepared[i].sql),
+                               getter_AddRefs(prepared[i].statement));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -867,29 +869,17 @@ nsDiskCacheDevice::FindEntry(nsCString *fullKey)
   if (!DecomposeCacheEntryKey(fullKey, &cid, &key, keyBuf))
     return nsnull;
 
-  // create SELECT statement
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT"
-                         " MetaData,"
-                         " Generation,"
-                         " Flags,"
-                         " DataSize,"
-                         " FetchCount,"
-                         " LastFetched,"
-                         " LastModified,"
-                         " ExpirationTime"
-                         " FROM moz_cache WHERE ClientID = ? AND Key = ?;"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  AutoResetStatement statement(mStatement_FindEntry);
 
-  rv |= statement->BindCStringParameter(1, cid);
-  rv |= statement->BindCStringParameter(2, key);
+  nsresult rv;
+  rv  = statement->BindCStringParameter(0, cid);
+  rv |= statement->BindCStringParameter(1, key);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   PRBool hasRows;
   rv = statement->ExecuteStep(&hasRows);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && hasRows, nsnull);
+  if (NS_FAILED(rv) || !hasRows)
+    return nsnull; // entry not found
 
   nsDiskCacheRecord rec;
   statement->AsSharedBlob(0, (const void **) &rec.metaData, &rec.metaDataLen);
@@ -991,22 +981,19 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry *entry)
   rec.lastModified = PRTimeFromSeconds(entry->LastModified());
   rec.expirationTime = PRTimeFromSeconds(entry->ExpirationTime());
 
-  nsCOMPtr<mozIStorageStatement> statement;
-  nsresult rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("INSERT INTO moz_cache VALUES(?,?,?,?,?,?,?,?,?,?);"),
-      getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
+  AutoResetStatement statement(mStatement_BindEntry);
 
-  rv |= statement->BindCStringParameter(1, rec.clientID);
-  rv |= statement->BindCStringParameter(2, rec.key);
-  rv |= statement->BindDataParameter(3, rec.metaData, rec.metaDataLen);
-  rv |= statement->BindInt32Parameter(4, rec.generation);
-  rv |= statement->BindInt32Parameter(5, rec.flags);
-  rv |= statement->BindInt32Parameter(6, rec.dataSize);
-  rv |= statement->BindInt32Parameter(7, rec.fetchCount);
-  rv |= statement->BindInt64Parameter(8, rec.lastFetched);
-  rv |= statement->BindInt64Parameter(9, rec.lastModified);
-  rv |= statement->BindInt64Parameter(10, rec.expirationTime);
+  nsresult rv;
+  rv  = statement->BindCStringParameter(0, rec.clientID);
+  rv |= statement->BindCStringParameter(1, rec.key);
+  rv |= statement->BindDataParameter(2, rec.metaData, rec.metaDataLen);
+  rv |= statement->BindInt32Parameter(3, rec.generation);
+  rv |= statement->BindInt32Parameter(4, rec.flags);
+  rv |= statement->BindInt32Parameter(5, rec.dataSize);
+  rv |= statement->BindInt32Parameter(6, rec.fetchCount);
+  rv |= statement->BindInt64Parameter(7, rec.lastFetched);
+  rv |= statement->BindInt64Parameter(8, rec.lastModified);
+  rv |= statement->BindInt64Parameter(9, rec.expirationTime);
   NS_ENSURE_SUCCESS(rv, rv);
   
   PRBool hasRows;
@@ -1187,6 +1174,7 @@ nsDiskCacheDevice::Visit(nsICacheVisitor *visitor)
     return NS_ERROR_OUT_OF_MEMORY;
   info->mRec = &rec;
 
+  // XXX may want to list columns explicitly
   nsCOMPtr<mozIStorageStatement> statement;
   rv = mDB->CreateStatement(
       NS_LITERAL_CSTRING("SELECT * FROM moz_cache;"),

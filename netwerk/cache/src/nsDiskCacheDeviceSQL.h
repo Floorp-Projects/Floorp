@@ -113,6 +113,14 @@ private:
 #endif
 
   nsCOMPtr<mozIStorageConnection> mDB;
+  nsCOMPtr<mozIStorageStatement>  mStatement_CacheSize;
+  nsCOMPtr<mozIStorageStatement>  mStatement_EntryCount;
+  nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntry;
+  nsCOMPtr<mozIStorageStatement>  mStatement_UpdateEntrySize;
+  nsCOMPtr<mozIStorageStatement>  mStatement_DeleteEntry;
+  nsCOMPtr<mozIStorageStatement>  mStatement_FindEntry;
+  nsCOMPtr<mozIStorageStatement>  mStatement_BindEntry;
+
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity;     // XXX need soft/hard limits, currentTotal
   PRInt32                         mDeltaCounter;
