@@ -57,7 +57,7 @@ CSRCS +=          \
 EXPORTS=xp_linebuf.h
 
 
-REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf privacy
+REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf privacy parse
 
 ifeq ($(STAND_ALONE_JAVA),1)
 CSRCS		= xp_qsort.c
