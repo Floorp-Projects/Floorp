@@ -969,7 +969,7 @@ void
 nsCOMPtr<T>::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& aIID )
   {
     T* newRawPtr;
-    if ( !NS_SUCCEEDED( helper(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+    if ( NS_FAILED( helper(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
       newRawPtr = 0;
     assign_assuming_AddRef(newRawPtr);
   }
