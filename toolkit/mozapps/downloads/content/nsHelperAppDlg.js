@@ -36,7 +36,7 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 # 
-# ***** END LICENSE BLOCK *****
+# ***** END LICENSE BLOCK ***** 
 */
 
 /* This file implements the nsIHelperAppLauncherDialog interface.
@@ -377,7 +377,13 @@ nsUnknownContentTypeDialog.prototype = {
         var typeString = mimeInfo.Description;
         
         if (typeString == "") {
-          // 2. If there is none, use the extension to identify the file, e.g. "ZIP file"          var primaryExtension = "";          try {            primaryExtension = mimeInfo.primaryExtension;          }          catch (ex) {          }
+          // 2. If there is none, use the extension to identify the file, e.g. "ZIP file"
+          var primaryExtension = "";
+          try {
+            primaryExtension = mimeInfo.primaryExtension;
+          }
+          catch (ex) {
+          }
           if (primaryExtension != "")
             typeString = primaryExtension.toUpperCase() + " file";
           // 3. If we can't even do that, just give up and show the MIME type. 
@@ -402,9 +408,7 @@ nsUnknownContentTypeDialog.prototype = {
             // in that case).
             
             // Need to get temporary file and check for executable-ness.
-            var ignore1 = new Object;
-            var ignore2 = new Object;
-            var tmpFile = this.mLauncher.getDownloadInfo( ignore1, ignore2 );
+            var tmpFile = this.mLauncher.targetFile;
             
             //  Default is Ok if the file isn't executable (and vice-versa).
             result = !tmpFile.isExecutable();
