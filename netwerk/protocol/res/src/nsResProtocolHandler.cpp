@@ -140,28 +140,10 @@ nsResProtocolHandler::Init()
     rv = SetSpecialDir("", NS_XPCOM_CURRENT_PROCESS_DIR);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("currentdrive", NS_OS_DRIVE_DIR);
-    if (NS_FAILED(rv)) return rv;
-
     rv = SetSpecialDir("tempdir", NS_OS_TEMP_DIR);
     if (NS_FAILED(rv)) return rv;
 
     rv = SetSpecialDir("componentsdir", NS_XPCOM_COMPONENT_DIR);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetSpecialDir("systemdir",
-#ifdef XP_MAC
-                       NS_OS_SYSTEM_DIR
-#elif XP_OS2
-                       NS_OS_SYSTEM_DIR
-#elif XP_PC
-                       NS_OS_SYSTEM_DIR
-#elif XP_BEOS
-                       NS_OS_SYSTEM_DIR
-#else
-                       NS_UNIX_LIB_DIR  // XXX ???
-#endif
-                       );
     if (NS_FAILED(rv)) return rv;
 
     // Set up the "Resource" root to point to the old resource location 
