@@ -1,18 +1,15 @@
-//#include "xp_mcom.h"
 #define XP_STRSTR                 strstr
 #define XP_STRTOUL                strtoul
 
 #include "platform.h"
 #include "xp_core.h"
 #include "xp_mem.h"
-//#include "xp_debug.h"
 #include "xp_str.h"
 #include "xp_list.h"
 #include "prprf.h"  
 #include <string.h>
 
 #include "xp_file.h"
-#include "plarenas.h"
 #include "jsotypes.h"
 #include "plstr.h"
 #include "seccomon.h"
