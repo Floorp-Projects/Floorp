@@ -440,6 +440,59 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   return(bRet);
 }
 
+void TruncateString(HWND hWnd, LPSTR szInPath, DWORD dwInPathBufSize, LPSTR szOutPath, DWORD dwOutPathBufSize)
+{
+  HDC           hdcWnd;
+  LOGFONT       logFont;
+  HFONT         hfontTmp;
+  HFONT         hfontOld;
+  RECT          rWndRect;
+  SIZE          sizeString;
+  BOOL          bChopped;
+
+  ZeroMemory(szOutPath, dwOutPathBufSize);
+  if(dwInPathBufSize > dwOutPathBufSize)
+    return;
+
+  if(lstrlen(szInPath) == 0)
+    return;
+
+  lstrcpy(szOutPath, szInPath);
+  hdcWnd = GetWindowDC(hWnd);
+  GetClientRect(hWnd, &rWndRect);
+  SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                       sizeof(logFont),
+                       (PVOID)&logFont,
+                       0);
+
+  hfontTmp = CreateFontIndirect(&logFont);
+
+  if(hfontTmp)
+    hfontOld = SelectObject(hdcWnd, hfontTmp);
+
+  bChopped = FALSE;
+  GetTextExtentPoint32(hdcWnd, szOutPath, lstrlen(szOutPath), &sizeString);
+  while(sizeString.cx > rWndRect.right)
+  {
+    szOutPath[lstrlen(szOutPath) - 1] = '\0';
+    GetTextExtentPoint32(hdcWnd, szOutPath, lstrlen(szOutPath), &sizeString);
+    bChopped = TRUE;
+  }
+
+  if(bChopped)
+  {
+    DWORD dwLen = lstrlen(szOutPath);
+
+    szOutPath[dwLen - 1] = '.';
+    szOutPath[dwLen - 2] = '.';
+    szOutPath[dwLen - 3] = '.';
+  }
+
+  SelectObject(hdcWnd, hfontOld);
+  DeleteObject(hfontTmp);
+  ReleaseDC(hWnd, hdcWnd);
+}
+
 LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   HWND          hRadioSt0;
@@ -451,6 +504,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   HWND          hRadioSt3;
   HWND          hStaticSt3;
   HWND          hReadme;
+  HWND          hDestinationPath;
   RECT          rDlg;
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
@@ -471,7 +525,10 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
     case WM_INITDIALOG:
       SetWindowText(hDlg, diSetupType.szTitle);
 
-      SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath);
+      hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+      TruncateString(hDestinationPath, szTempSetupPath, MAX_BUF, szBuf, sizeof(szBuf));
+
+      SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
       SetDlgItemText(hDlg, IDC_STATIC_MSG0, diSetupType.szMessage0);
 
       if(diSetupType.stSetupType0.bVisible)
@@ -1925,14 +1982,13 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  RECT rDlg;
-  HWND hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
-  HDC  hdcSTMessage;
-  SIZE sizeString;
-  int  iLen;
-//  int  iCount;
-//  int  iCharWidth;
-//  UINT uiTotalWidth;
+  RECT      rDlg;
+  HWND      hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
+  HDC       hdcSTMessage;
+  SIZE      sizeString;
+  LOGFONT   logFont;
+  HFONT     hfontTmp;
+  HFONT     hfontOld;
 
   switch(msg)
   {
@@ -1944,28 +2000,33 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       {
         case IDC_MESSAGE:
           hdcSTMessage = GetWindowDC(hSTMessage);
-          iLen = lstrlen((LPSTR)lParam);
-          GetTextExtentPoint32(hdcSTMessage, (LPSTR)lParam, iLen, &sizeString);
 
-/*          uiTotalWidth = 0;
-          for(iCount = 0; iCount < iLen; iCount ++)
-          {
-            GetCharWidth32(hdcSTMessage, ((LPSTR)lParam)[iCount], ((LPSTR)lParam)[iCount], &iCharWidth);
-            uiTotalWidth += iCharWidth;
-          }
-*/
+          SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                               sizeof(logFont),
+                               (PVOID)&logFont,
+                               0);
+          hfontTmp = CreateFontIndirect(&logFont);
 
+          if(hfontTmp)
+            hfontOld = SelectObject(hdcSTMessage, hfontTmp);
+
+          GetTextExtentPoint32(hdcSTMessage, (LPSTR)lParam, lstrlen((LPSTR)lParam), &sizeString);
+          SelectObject(hdcSTMessage, hfontOld);
+          DeleteObject(hfontTmp);
           ReleaseDC(hSTMessage, hdcSTMessage);
 
           SetWindowPos(hDlg, HWND_TOP,
-                      (dwScreenX/2)-((sizeString.cx - (iLen * 1))/2), (dwScreenY/2)-((sizeString.cy + 50)/2),
-                      (sizeString.cx - (iLen * 1)), sizeString.cy + 50,
-                       SWP_SHOWWINDOW);
+                      (dwScreenX/2)-((sizeString.cx + 40)/2), (dwScreenY/2)-((sizeString.cy + 40)/2),
+                      sizeString.cx + 40, sizeString.cy + 40,
+                      SWP_SHOWWINDOW);
 
           if(GetClientRect(hDlg, &rDlg))
-            SetWindowPos(hSTMessage, HWND_TOP,
-                         rDlg.left, rDlg.top,
-                         (sizeString.cx - (iLen * 1)), rDlg.bottom,
+            SetWindowPos(hSTMessage,
+                         HWND_TOP,
+                         rDlg.left,
+                         rDlg.top,
+                         rDlg.right,
+                         rDlg.bottom,
                          SWP_SHOWWINDOW);
 
           SetDlgItemText(hDlg, IDC_MESSAGE, (LPSTR)lParam);
