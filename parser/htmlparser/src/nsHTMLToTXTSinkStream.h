@@ -224,7 +224,6 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 inline nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsString* aOutString,
-                            const nsString* aCharsetOverride=nsnull,
                             PRUint32 aWrapColumn=0, PRUint32 aFlags=0)
 {
   nsCOMPtr<nsIHTMLToTXTSinkStream> it;
@@ -239,12 +238,8 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
     if (NS_SUCCEEDED(rv)) {
       it->SetWrapColumn(aWrapColumn);
-      if ( aCharsetOverride )
-        it->SetCharsetOverride(aCharsetOverride);
-      else {
-        nsAutoString ucs2("ucs2");
-        it->SetCharsetOverride(&ucs2);
-      }
+      nsAutoString ucs2("ucs2");
+      it->SetCharsetOverride(&ucs2);
       rv = it->QueryInterface(nsIHTMLContentSink::GetIID(),
                               (void**)aInstancePtrResult);
     }
