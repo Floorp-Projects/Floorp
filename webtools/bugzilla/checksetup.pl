@@ -925,9 +925,9 @@ AddField('attachments', 'submitter_id', 'mediumint not null');
 
 # 9/15/99 Apparently, newer alphas of MySQL won't allow you to have "when"
 # as a column name.  So, I have had to rename a column in the bugs_activity
-# table.  You must feed the below to mysql or you won't work at all.
+# table.
 
-RenameField ('bugs', 'when', 'bug_when');
+RenameField ('bugs_activity', 'when', 'bug_when');
 
 
 
