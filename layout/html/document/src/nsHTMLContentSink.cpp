@@ -29,7 +29,7 @@
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
-#include "nsIUnicharStreamLoader.h"
+#include "nsIStreamLoader.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -144,7 +144,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 class SinkContext;
 
 class HTMLContentSink : public nsIHTMLContentSink,
-                        public nsIUnicharStreamLoaderObserver,
+                        public nsIStreamLoaderObserver,
                         public nsITimerCallback,
                         public nsICSSLoaderObserver,
                         public nsIDocumentObserver
@@ -161,7 +161,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -2116,7 +2116,7 @@ HTMLContentSink::~HTMLContentSink()
 NS_IMPL_ISUPPORTS6(HTMLContentSink, 
                    nsIHTMLContentSink,
                    nsIContentSink,
-                   nsIUnicharStreamLoaderObserver,
+                   nsIStreamLoaderObserver,
                    nsITimerCallback,
                    nsICSSLoaderObserver,
                    nsIDocumentObserver)
@@ -4038,10 +4038,11 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
 }
 
 NS_IMETHODIMP
-HTMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
-                                         nsresult aStatus,
-                                         PRUint32 stringLen,
-                                         const PRUnichar* string)
+HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
+                                  nsISupports* aContext,
+                                  nsresult aStatus,
+                                  PRUint32 stringLen,
+                                  const char* string)
 {
   nsresult rv = NS_OK;
   nsString aData(string, stringLen);
@@ -4203,10 +4204,10 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
           return rv;
 
       nsCOMPtr<nsILoadGroup> loadGroup;
-      nsIUnicharStreamLoader* loader;
+      nsIStreamLoader* loader;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewUnicharStreamLoader(&loader, url, this, loadGroup);
+      rv = NS_NewStreamLoader(&loader, url, this, nsnull, loadGroup);
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;

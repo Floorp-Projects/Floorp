@@ -49,7 +49,7 @@ XPIDLSRCS	= \
 		nsISocketTransportService.idl \
 		nsIStatusCodeEventSink.idl \
 		nsIFileSystem.idl \
-		nsIUnicharStreamLoader.idl \
+		nsIStreamLoader.idl \
 		nsINetPrompt.idl \
 		nsISocketTransport.idl \
 		$(NULL)
