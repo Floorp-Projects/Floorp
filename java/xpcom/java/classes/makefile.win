@@ -37,3 +37,4 @@ JAVAC_PROG=$(JDKHOME)\bin\javac
 JAVAC_FLAGS=-classpath "$(CLASSPATH);$(JAVA_DESTPATH)" -d "$(JAVA_DESTPATH)"
 
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\javarules.mak>

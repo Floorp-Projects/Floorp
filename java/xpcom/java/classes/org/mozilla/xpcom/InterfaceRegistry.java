@@ -71,23 +71,21 @@ public class InterfaceRegistry {
                 String[] methodNames = Utilities.getInterfaceMethodNames((String)iidStr);
                 if (methodNames != null) {
                     Method[] rmethods = new Method[methodNames.length];
-                    int i = methodNames.length - 1;
                     Class[] ifaces = new Class[]{cl};
-                    // recursively get all parent interface methods
+                    Hashtable mhash = new Hashtable(methodNames.length);
+                    // recursively get all parent interface methods                    
                     do {
                         Method[] methods = ifaces[0].getDeclaredMethods();
-                        int j = methods.length - 1;
-                        while (i >= 0 && j >=0) {
-                            if (methodNames[i].equals(methods[j].getName())) {
-                                rmethods[i--] = methods[j--];
-                            } else {
-                                // put null for notxpcom & noscript methods
-                                rmethods[i--] = null;
-                            }
-                        } 
+                        for (int i = 0; i < methods.length; i++) {
+                            mhash.put(methods[i].getName(), methods[i]);
+                        }
                         ifaces = ifaces[0].getInterfaces();
                         // check for single inheritance (xpcom)
                     } while (ifaces.length == 1);
+
+                    for (int j = methodNames.length - 1; j >= 0; j--) {
+                        rmethods[j] = (Method)mhash.get(methodNames[j]);
+                    }
 
                     interfaces.put(iid, cl);
                     iMethods.put(iid, new MethodArray(rmethods));
