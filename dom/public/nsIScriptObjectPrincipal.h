@@ -44,8 +44,8 @@ class nsIPrincipal;
 
 
 #define NS_ISCRIPTOBJECTPRINCIPAL_IID \
-{ 0x98485f80, 0x9615, 0x11d2,  \
-{ 0xbd, 0x92, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{ 0x3eedba38, 0x8d22, 0x41e1,  \
+{ 0x81, 0x7a, 0x0e, 0x43, 0xe1, 0x65, 0xb6, 0x64} }
 
 /**
  * JS Object Principal information.
@@ -55,7 +55,7 @@ class nsIScriptObjectPrincipal : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTPRINCIPAL_IID)
 
-  NS_IMETHOD       GetPrincipal(nsIPrincipal **aPrincipal) = 0;
+  virtual nsIPrincipal* GetPrincipal() = 0;
 };
 
 #endif // nsIScriptObjectPrincipal_h__

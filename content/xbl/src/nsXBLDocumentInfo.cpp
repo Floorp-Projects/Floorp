@@ -83,7 +83,7 @@ public:
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   // nsIScriptObjectPrincipal methods
-  NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
+  virtual nsIPrincipal* GetPrincipal();
     
 protected:
   virtual ~nsXBLDocGlobalObject();
@@ -310,28 +310,22 @@ nsXBLDocGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 // nsIScriptObjectPrincipal methods
 //
 
-NS_IMETHODIMP
-nsXBLDocGlobalObject::GetPrincipal(nsIPrincipal** aPrincipal)
+nsIPrincipal*
+nsXBLDocGlobalObject::GetPrincipal()
 {
   nsresult rv = NS_OK;
   if (!mGlobalObjectOwner) {
-    *aPrincipal = nsnull;
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
   nsCOMPtr<nsIXBLDocumentInfo> docInfo = do_QueryInterface(mGlobalObjectOwner, &rv);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   nsCOMPtr<nsIDocument> document;
   rv = docInfo->GetDocument(getter_AddRefs(document));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
-  *aPrincipal = document->GetPrincipal();
-  if (!*aPrincipal)
-    return NS_ERROR_FAILURE;
-
-  NS_ADDREF(*aPrincipal);
-  return NS_OK;
+  return document->GetPrincipal();
 }
 
 static PRBool IsChromeOrResourceURI(nsIURI* aURI)

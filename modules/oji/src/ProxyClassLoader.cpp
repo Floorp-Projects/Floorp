@@ -65,8 +65,7 @@ static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
             do_QueryInterface(scriptContext->GetGlobalObject());
 
         if (scriptObjectPrincipal) {
-            nsCOMPtr<nsIPrincipal> principal;
-            scriptObjectPrincipal->GetPrincipal(getter_AddRefs(principal));
+            nsIPrincipal *principal = scriptObjectPrincipal->GetPrincipal();
             if (principal) {
                 return principal->GetURI(result);
             }

@@ -1738,7 +1738,7 @@ nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
     nsCOMPtr<nsIScriptObjectPrincipal> globalData =
         do_QueryInterface(scriptContext->GetGlobalObject());
     if (globalData)
-        globalData->GetPrincipal(result);
+        NS_IF_ADDREF(*result = globalData->GetPrincipal());
 
     return NS_OK;
 }
@@ -1855,7 +1855,7 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
                 do_QueryInterface(scriptContext->GetGlobalObject());
             NS_ENSURE_TRUE(globalData, NS_ERROR_FAILURE);
 
-            globalData->GetPrincipal(result);
+            NS_IF_ADDREF(*result = globalData->GetPrincipal());
             if (*result)
             {
                 JSStackFrame *inner = nsnull;
@@ -1922,8 +1922,9 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj,
                 objPrin = do_QueryInterface(priv);
             }
 
-            if (objPrin && NS_SUCCEEDED(objPrin->GetPrincipal(result)))
+            if (objPrin && (*result = objPrin->GetPrincipal()))
             {
+                NS_ADDREF(*result);
                 return NS_OK;
             }
         }

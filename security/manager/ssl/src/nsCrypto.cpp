@@ -318,19 +318,22 @@ cryptojs_GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
         nsCOMPtr<nsIXPConnectWrappedNative> xpcNative = 
                                             do_QueryInterface(supports);
 
-        if (xpcNative)
+        if (xpcNative) {
           xpcNative->GetNative(getter_AddRefs(supports));
           objPrin = do_QueryInterface(supports);
         }
+      }
 
-        if (objPrin && NS_SUCCEEDED(objPrin->GetPrincipal(result)))
-          return NS_OK;
-        }
-        parent = JS_GetParent(aCx, parent);
-    } while (parent);
+      if (objPrin && ((*result = objPrin->GetPrincipal()))) {
+        NS_ADDREF(*result);
+        return NS_OK;
+      }
+    }
+    parent = JS_GetParent(aCx, parent);
+  } while (parent);
 
-    // Couldn't find a principal for this object.
-    return NS_ERROR_FAILURE;
+  // Couldn't find a principal for this object.
+  return NS_ERROR_FAILURE;
 }
 
 static nsresult
@@ -386,7 +389,7 @@ nsCrypto::GetScriptPrincipal(JSContext *cx)
     nsCOMPtr<nsIScriptObjectPrincipal> globalData =
       do_QueryInterface(scriptContext->GetGlobalObject());
     NS_ENSURE_TRUE(globalData, nsnull);
-    globalData->GetPrincipal(&principal);
+    principal = globalData->GetPrincipal();
   }
 
   return principal;

@@ -148,7 +148,7 @@ public:
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   // nsIScriptObjectPrincipal
-  NS_IMETHOD GetPrincipal(nsIPrincipal **prin);
+  virtual nsIPrincipal* GetPrincipal();
 
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW

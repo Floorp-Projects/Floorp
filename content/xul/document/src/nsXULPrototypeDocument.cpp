@@ -105,7 +105,7 @@ public:
     virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
     // nsIScriptObjectPrincipal methods
-    NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
+    virtual nsIPrincipal* GetPrincipal();
     
 protected:
     virtual ~nsXULPDGlobalObject();
@@ -969,29 +969,20 @@ nsXULPDGlobalObject::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 // nsIScriptObjectPrincipal methods
 //
 
-NS_IMETHODIMP
-nsXULPDGlobalObject::GetPrincipal(nsIPrincipal** aPrincipal)
+nsIPrincipal*
+nsXULPDGlobalObject::GetPrincipal()
 {
     if (!mGlobalObjectOwner) {
         // See nsXULPrototypeDocument::NewXULPDGlobalObject, the comment
         // about gSystemGlobal implying gSystemPrincipal.
         if (this == nsXULPrototypeDocument::gSystemGlobal) {
-            *aPrincipal = nsXULPrototypeDocument::gSystemPrincipal;
-            NS_ADDREF(*aPrincipal);
-            return NS_OK;
+            return nsXULPrototypeDocument::gSystemPrincipal;
         }
-        *aPrincipal = nsnull;
-        return NS_ERROR_FAILURE;
+        return nsnull;
     }
     nsCOMPtr<nsIXULPrototypeDocument> protoDoc
       = do_QueryInterface(mGlobalObjectOwner);
 
-    *aPrincipal = protoDoc->GetDocumentPrincipal();
-    if (!*aPrincipal) {
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_ADDREF(*aPrincipal);
-    return NS_OK;
+    return protoDoc->GetDocumentPrincipal();
 }
 

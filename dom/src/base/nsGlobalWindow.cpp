@@ -997,29 +997,19 @@ GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 // GlobalWindowImpl::nsIScriptObjectPrincipal
 //*****************************************************************************
 
-NS_IMETHODIMP
-GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
+nsIPrincipal*
+GlobalWindowImpl::GetPrincipal()
 {
-  NS_ENSURE_ARG_POINTER(result);
-
   if (mDocument) {
     // If we have a document, get the principal from the document
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(doc, nsnull);
 
-    *result = doc->GetPrincipal();
-    if (!*result)
-      return NS_ERROR_FAILURE;
-
-    NS_ADDREF(*result);
-    return NS_OK;
+    return doc->GetPrincipal();
   }
 
   if (mDocumentPrincipal) {
-    *result = mDocumentPrincipal;
-    NS_ADDREF(*result);
-
-    return NS_OK;
+    return mDocumentPrincipal;
   }
 
   // If we don't have a principal and we don't have a document we
@@ -1032,10 +1022,10 @@ GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
     do_QueryInterface(GetParentInternal());
 
   if (objPrincipal) {
-    return objPrincipal->GetPrincipal(result);
+    return objPrincipal->GetPrincipal();
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 //*****************************************************************************
