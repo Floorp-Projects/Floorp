@@ -200,7 +200,7 @@ private:
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostAndPort, nsFileSpec &newsrcfile);
 
-  nsresult ProceedWithMigration(PRInt32 oldMailType);
+  nsresult ProceedWithMigration();
   
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
   static char *getUniqueAccountKey(const char* prefix,
@@ -212,5 +212,6 @@ private:
  
   nsresult getPrefService();
   nsIPref *m_prefs;
+  PRInt32 m_oldMailType;
 };
 

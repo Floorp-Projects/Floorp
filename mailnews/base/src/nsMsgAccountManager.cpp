@@ -413,6 +413,7 @@ nsMsgAccountManager::nsMsgAccountManager() :
 
   m_alreadySetImapDefaultLocalPath = PR_FALSE;
   m_alreadySetNntpDefaultLocalPath = PR_FALSE;
+  m_oldMailType = -1;
 }
 
 nsMsgAccountManager::~nsMsgAccountManager()
@@ -452,7 +453,11 @@ nsresult nsMsgAccountManager::Init()
     observerService->AddObserver(this, topic.GetUnicode());
   }
 
-  return NS_OK;
+  rv = getPrefService();
+  if (NS_FAILED(rv)) return rv;
+
+  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &m_oldMailType);
+  return rv;
 }
 
 nsresult nsMsgAccountManager::Shutdown()
@@ -1349,14 +1354,14 @@ nsMsgAccountManager::findAccountByKey(nsISupports* element, void *aData)
 }
 
 nsresult
-nsMsgAccountManager::ProceedWithMigration(PRInt32 oldMailType)
+nsMsgAccountManager::ProceedWithMigration()
 {
   char *prefvalue = nsnull;
   nsresult rv = NS_OK;
   
-  if ((oldMailType == POP_4X_MAIL_TYPE) 
+  if ((m_oldMailType == POP_4X_MAIL_TYPE) 
 #ifdef HAVE_MOVEMAIL
-	|| (oldMailType == MOVEMAIL_4X_MAIL_TYPE) 
+	|| (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) 
 #endif /* HAVE_MOVEMAIL */
 	) {
     // if they were using pop or movemail, "mail.pop_name" must have been set
@@ -1368,7 +1373,7 @@ nsMsgAccountManager::ProceedWithMigration(PRInt32 oldMailType)
 	    }
     }
   }
-  else if (oldMailType == IMAP_4X_MAIL_TYPE) {
+  else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
     // if they were using imap, "network.hosts.imap_servers" must have been set
     // otherwise, they don't really have anything to migrate
     rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &prefvalue);
@@ -1380,7 +1385,7 @@ nsMsgAccountManager::ProceedWithMigration(PRInt32 oldMailType)
   }
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
-    printf("Unrecognized server type %d\n", oldMailType);
+    printf("Unrecognized server type %d\n", m_oldMailType);
 #endif
     rv = NS_ERROR_UNEXPECTED;
   }
@@ -1393,18 +1398,9 @@ NS_IMETHODIMP
 nsMsgAccountManager::UpgradePrefs()
 {
     nsresult rv;
-    PRInt32 oldMailType;
 
     rv = getPrefService();
     if (NS_FAILED(rv)) return rv;
-
-    rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG_ACCOUNTMANAGER
-        printf("Tried to upgrade old prefs, but couldn't find server type!\n");
-#endif
-        return rv;
-    }
 
     // because mail.server_type defaults to 0 (pop) it will look the user
     // has something to migrate, even with an empty prefs.js file
@@ -1412,7 +1408,7 @@ nsMsgAccountManager::UpgradePrefs()
     // if not, NS_FAILED(rv) will be true, and we'll return.
     // this plays nicely with msgMail3PaneWindow.js, which will launch the
     // Account Manager if UpgradePrefs() fails.
-    rv = ProceedWithMigration(oldMailType);
+    rv = ProceedWithMigration();
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_ACCOUNTMANAGER
       printf("FAIL:  don't proceed with migration.\n");
@@ -1443,7 +1439,7 @@ nsMsgAccountManager::UpgradePrefs()
     rv = MigrateSmtpServer(smtpServer);
     if (NS_FAILED(rv)) return rv;    
 
-    if ( oldMailType == POP_4X_MAIL_TYPE) {
+    if ( m_oldMailType == POP_4X_MAIL_TYPE) {
       // in 4.x, you could only have one pop account
       rv = MigratePopAccount(identity);
       if (NS_FAILED(rv)) return rv;
@@ -1452,7 +1448,7 @@ nsMsgAccountManager::UpgradePrefs()
       rv = CreateLocalMailAccount(identity, PR_TRUE);
       if (NS_FAILED(rv)) return rv;
     }
-    else if (oldMailType == IMAP_4X_MAIL_TYPE) {
+    else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
       rv = MigrateImapAccounts(identity);
       if (NS_FAILED(rv)) return rv;
       
@@ -1462,7 +1458,7 @@ nsMsgAccountManager::UpgradePrefs()
       if (NS_FAILED(rv)) return rv;
     }
 #ifdef HAVE_MOVEMAIL
-    else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+    else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
 	// if 4.x, you could only have one movemail account
 	rv = MigrateMovemailAccount(identity);
 	if (NS_FAILED(rv)) return rv;
@@ -1474,7 +1470,7 @@ nsMsgAccountManager::UpgradePrefs()
 #endif /* HAVE_MOVEMAIL */
     else {
 #ifdef DEBUG_ACCOUNTMANAGER
-      printf("Unrecognized server type %d\n", oldMailType);
+      printf("Unrecognized server type %d\n", m_oldMailType);
 #endif
       return NS_ERROR_UNEXPECTED;
     }
@@ -1590,17 +1586,12 @@ nsMsgAccountManager::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
 	  }
   }
 
-  // todo:  cache this
-  PRInt32 oldMailType;
-  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
-  if (NS_FAILED(rv)) return rv;
-	
-  if (oldMailType == IMAP_4X_MAIL_TYPE) {
+  if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationeryFolder,SetStationeryFolder)
 	CONVERT_4X_URI(identity, PR_TRUE /* for news */, LOCAL_MAIL_FAKE_USER_NAME, LOCAL_MAIL_FAKE_HOST_NAME, DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
   }
-  else if (oldMailType == POP_4X_MAIL_TYPE) {
+  else if (m_oldMailType == POP_4X_MAIL_TYPE) {
     char *pop_username = nsnull;
     char *pop_hostname = nsnull;
 
@@ -1618,7 +1609,7 @@ nsMsgAccountManager::SetNewsCopiesAndFolders(nsIMsgIdentity *identity)
     PR_FREEIF(pop_hostname);
   }
 #ifdef HAVE_MOVEMAIL
-  else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+  else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
     char *pop_username = nsnull;
 
 	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
@@ -1683,11 +1674,6 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     return NS_ERROR_NULL_POINTER;
   }
 
-  // todo:  cache this
-  PRInt32 oldMailType;
-  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
-  if (NS_FAILED(rv)) return rv;
- 
   // if the old_uri is "", do some default conversion
   if (PL_strlen(old_uri) == 0) {
 	if (!aUsername || !aHostname) {
@@ -1706,14 +1692,14 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 	for_news = PR_FALSE;
 #endif /* NEWS_FCC_DEFAULT_TO_IMAP_SENT */
 
-	if ((oldMailType == IMAP_4X_MAIL_TYPE) && !for_news) {
+	if ((m_oldMailType == IMAP_4X_MAIL_TYPE) && !for_news) {
 		*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA,aUsername,aHostname,default_folder_name);
 	}
-	else if ((oldMailType == POP_4X_MAIL_TYPE) 
+	else if ((m_oldMailType == POP_4X_MAIL_TYPE) 
 #ifdef HAVE_MOVEMAIL
-		|| (oldMailType == MOVEMAIL_4X_MAIL_TYPE)
+		|| (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE)
 #endif /* HAVE_MOVEMAIL */
-		|| (oldMailType == IMAP_4X_MAIL_TYPE)) {
+		|| (m_oldMailType == IMAP_4X_MAIL_TYPE)) {
 		*new_uri = PR_smprintf("%s/%s@%s/%s",MAILBOX_SCHEMA,aUsername,aHostname,default_folder_name);
 	}
 	else {
@@ -1801,8 +1787,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     }
   }
 
-
-  if (oldMailType == POP_4X_MAIL_TYPE) {
+  if (m_oldMailType == POP_4X_MAIL_TYPE) {
     char *pop_username = nsnull;
     char *pop_hostname = nsnull;
 
@@ -1817,11 +1802,11 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const ch
     PR_FREEIF(pop_username);
     PR_FREEIF(pop_hostname);
   }
-  else if (oldMailType == IMAP_4X_MAIL_TYPE) {
+  else if (m_oldMailType == IMAP_4X_MAIL_TYPE) {
     usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,LOCAL_MAIL_FAKE_HOST_NAME);
   }
 #ifdef HAVE_MOVEMAIL
-  else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+  else if (m_oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
 	char *movemail_username = nsnull; 
 
 	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &movemail_username);
@@ -1834,7 +1819,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 #endif /* HAVE_MOVEMAIL */
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
-    printf("Unrecognized server type %d\n", oldMailType);
+    printf("Unrecognized server type %d\n", m_oldMailType);
 #endif
     return NS_ERROR_UNEXPECTED;
   }
