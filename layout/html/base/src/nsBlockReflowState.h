@@ -214,7 +214,8 @@ public:
   void AddFloater(nsPlaceholderFrame* aPlaceholderFrame,
                   PRBool aInitialReflow);
 
-  void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool* aIsLeftFloater);
+  void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool* aIsLeftFloater,
+                    nsPoint* aNewOrigin);
 
   void PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
                                      PRBool aReflowFloaters);
@@ -1757,17 +1758,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                          nsLineBox* aLine,
                          PRBool* aKeepReflowGoing)
 {
-  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                 ("nsBlockFrame::ReflowLine: line=%p", aLine));
-
   nsresult rv = NS_OK;
-
-  // If the line already has floaters on it from last time, remove
-  // them from the spacemanager now.
-  if (nsnull != aLine->mFloaters) {
-    aLine->mFloaters->Clear();
-  }
-  aState.mFloaterCombinedArea.SetRect(0, 0, 0, 0);
 
   // If the line is empty then first pull a frame into it so that we
   // know what kind of line it is (block or inline).
@@ -1790,12 +1781,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
   // Now that we know what kind of line we have, reflow it
   if (aLine->IsBlock()) {
-    // When reflowing a block frame we always get the available space
-    aState.GetAvailableSpace();
-
-    // Notify observers that we are about to reflow the line
-    WillReflowLine(aState, aLine);
-
+    NS_ASSERTION(nsnull == aLine->mFloaters, "bad line");
     rv = ReflowBlockFrame(aState, aLine, aKeepReflowGoing);
   }
   else {
@@ -1846,9 +1832,9 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 }
 
 /**
- * Try to pull a frame out a line pointed at by aFromList. If a frame
- * is pulled then aPulled will be set to PR_TRUE. In addition, if
- * aUpdateGeometricParent is set then the pulled frames geometric
+ * Try to pull a frame out of a line pointed at by aFromList. If a
+ * frame is pulled then aPulled will be set to PR_TRUE. In addition,
+ * if aUpdateGeometricParent is set then the pulled frames geometric
  * parent will be updated (e.g. when pulling from a next-in-flows line
  * list).
  *
@@ -1893,6 +1879,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
       aLine->mFirstChild = frame;
       aLine->SetIsBlock(fromLine->IsBlock());
       NS_ASSERTION(aLine->CheckIsBlock(), "bad line isBlock");
+      NS_ASSERTION(nsnull == aLine->mFloaters, "bad line floaters");
     }
     if (0 != --fromLine->mChildCount) {
       // Mark line dirty now that we pulled a child
@@ -2215,7 +2202,13 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   nsIFrame* frame = aLine->mFirstChild;
 
-  // Prepare the inline reflow engine
+  // When reflowing a block frame we always get the available space
+  aState.GetAvailableSpace();
+
+  // Notify observers that we are about to reflow the line
+  WillReflowLine(aState, aLine);
+
+  // Prepare the block reflow engine
   nscoord compactMarginWidth = 0;
   PRBool isCompactFrame = PR_FALSE;
   const nsStyleDisplay* display;
@@ -2514,7 +2507,17 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
   nsresult rv = NS_OK;
   *aKeepReflowGoing = PR_TRUE;
 
+#ifdef DEBUG
+  PRInt32 spins = 0;
+#endif
   for (;;) {
+    if (nsnull != aLine->mFloaters) {
+      // Forget all of the floaters on the line
+      aLine->mFloaters->Clear();
+    }
+    aState.mFloaterCombinedArea.SetRect(0, 0, 0, 0);
+    aState.mPendingFloaters.Clear();
+
     // Setup initial coordinate system for reflowing the inline frames
     // into.
     aState.GetAvailableSpace();
@@ -2610,6 +2613,14 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       // push the line and return now instead of later on after we are
       // past the floater.
       lineLayout->EndLineReflow();
+#ifdef DEBUG
+      spins++;
+      if (1000 == spins) {
+        ListTag(stdout);
+        printf(": yikes! spinning on a line over 1000 times!\n");
+        NS_ABORT();
+      }
+#endif
       continue;
     }
 
@@ -4035,6 +4046,14 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
         aMetrics.width = 0;
       }
     }
+    nsFrameState state;
+    floater->GetFrameState(&state);
+    if (0 == (NS_FRAME_OUTSIDE_CHILDREN & state)) {
+      aMetrics.mCombinedArea.x = 0;
+      aMetrics.mCombinedArea.y = 0;
+      aMetrics.mCombinedArea.width = aMetrics.width;
+      aMetrics.mCombinedArea.height = aMetrics.height;
+    }
     floater->SizeTo(aMetrics.width, aMetrics.height);
   }
 }
@@ -4070,7 +4089,7 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
 
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
-  if (mLineLayout->LineIsEmpty()) {
+  if (mLineLayout->CanPlaceFloaterNow()) {
     nsHTMLReflowMetrics metrics(nsnull);
     mBlock->ReflowFloater(*this, aPlaceholder, metrics);
 
@@ -4091,10 +4110,13 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
     nscoord dx = ox - mSpaceManagerX;
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
-    PlaceFloater(aPlaceholder, &isLeftFloater);
+    nsPoint origin;
+    PlaceFloater(aPlaceholder, &isLeftFloater, &origin);
 
     // Update the floater combined-area
     // XXX SlideFrames will muck this up!
+    metrics.mCombinedArea.x += origin.x;
+    metrics.mCombinedArea.y += origin.y;
     CombineRects(metrics.mCombinedArea, mFloaterCombinedArea);
 
     // Pass on updated available space to the current inline reflow engine
@@ -4163,7 +4185,8 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
 
 void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
-                                 PRBool* aIsLeftFloater)
+                                 PRBool* aIsLeftFloater,
+                                 nsPoint* aNewOrigin)
 {
   // Save away the Y coordinate before placing the floater. We will
   // restore mY at the end after placing the floater. This is
@@ -4267,8 +4290,13 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // Set the origin of the floater frame, in frame coordinates. These
   // coordinates are <b>not</b> relative to the spacemanager
   // translation, therefore we have to factor in our border/padding.
-  floater->MoveTo(borderPadding.left + floaterMargin.left + region.x,
-                  borderPadding.top + floaterMargin.top + region.y);
+  nscoord x = borderPadding.left + floaterMargin.left + region.x;
+  nscoord y = borderPadding.top + floaterMargin.top + region.y;
+  floater->MoveTo(x, y);
+  if (aNewOrigin) {
+    aNewOrigin->x = x;
+    aNewOrigin->y = y;
+  }
 
   // Now restore mY
   mY = saveY;
@@ -4305,15 +4333,18 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
         mBlock->ReflowFloater(*this, placeholderFrame, metrics);
 
         PRBool isLeftFloater;
-        PlaceFloater(placeholderFrame, &isLeftFloater);
+        nsPoint origin;
+        PlaceFloater(placeholderFrame, &isLeftFloater, &origin);
 
         // Update the floater combined-area
         // XXX SlideFrames will muck this up!
+        metrics.mCombinedArea.x += origin.x;
+        metrics.mCombinedArea.y += origin.y;
         CombineRects(metrics.mCombinedArea, mFloaterCombinedArea);
       }
       else {
         PRBool isLeftFloater;
-        PlaceFloater(placeholderFrame, &isLeftFloater);
+        PlaceFloater(placeholderFrame, &isLeftFloater, nsnull);
       }
     }
   }
@@ -4333,7 +4364,7 @@ nsBlockReflowState::PlaceCurrentLineFloaters(nsVoidArray* aFloaters)
       aFloaters->ElementAt(i);
     if (IsLeftMostChild(placeholderFrame)) {
       PRBool isLeftFloater;
-      PlaceFloater(placeholderFrame, &isLeftFloater);
+      PlaceFloater(placeholderFrame, &isLeftFloater, nsnull);
     }
   }
 }
