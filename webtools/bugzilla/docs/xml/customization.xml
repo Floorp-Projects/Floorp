@@ -356,7 +356,7 @@
     <para>
       If there is no hook at the appropriate place within the Bugzilla template
       you want to extend,
-      <ulink href="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=User%20Interface">file
+      <ulink url="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=User%20Interface">file
       a bug requesting one</ulink>, specifying:
     </para>
 
