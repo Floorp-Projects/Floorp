@@ -882,10 +882,17 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
     // read some data from our source and put it in the given buf
     rv = mSource->Read(buf, count, bytesWritten);
     LOG(("mSource->Read [rv=%x count=%u countRead=%u]\n", rv, count, *bytesWritten));
-    if (NS_FAILED(rv)) {
+
+    // detect explicit socket RESET
+    if (rv == NS_ERROR_NET_RESET) {
+        LOG(("got NS_ERROR_NET_RESET\n"));
+        *bytesWritten = 0;
+    }
+    else if (NS_FAILED(rv)) {
         LOG(("nsHttpTransaction: mSource->Read() returned [rv=%x]\n", rv));
         return rv;
     }
+
     if (*bytesWritten == 0) {
         LOG(("nsHttpTransaction: reached EOF\n"));
         if (!mHaveStatusLine) {
