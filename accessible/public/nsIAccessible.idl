@@ -54,7 +54,7 @@
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(B26FBE47-9A5F-42a1-822B-082461AE4D6D)]
+[scriptable, uuid(A84FCE8C-B127-4528-84F1-A022F5B040DA)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -86,6 +86,12 @@ interface nsIAccessible : nsISupports
    * Number of accessible children
    */
   readonly attribute long childCount;
+
+  /**
+   * The 0-based index of this accessible in its parent's list of children,
+   * or -1 if this accessible does not have a parent.
+   */
+  readonly attribute long indexInParent;
 
   /**
    * Accessible name -- the main text equivalent for this node

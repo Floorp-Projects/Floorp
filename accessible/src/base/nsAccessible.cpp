@@ -428,6 +428,36 @@ NS_IMETHODIMP nsAccessible::GetChildCount(PRInt32 *aAccChildCount)
   return NS_OK;  
 }
 
+/* readonly attribute long indexInParent; */
+NS_IMETHODIMP nsAccessible::GetIndexInParent(PRInt32 *aIndexInParent)
+{
+  *aIndexInParent = -1;
+  if (!mParent || !mWeakShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIAccessible> sibling;
+  mParent->GetFirstChild(getter_AddRefs(sibling));
+  if (!sibling) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aIndexInParent = 0;
+  while (sibling != this) {
+    NS_ASSERTION(sibling, "Never ran into the same child that we started from");
+
+    if (!sibling)
+      return NS_ERROR_FAILURE;
+
+    ++*aIndexInParent;
+    nsCOMPtr<nsIAccessible> tempAccessible;
+    sibling->GetNextSibling(getter_AddRefs(tempAccessible));
+    sibling = tempAccessible;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
 {
   nsXPIDLString xsValue;
