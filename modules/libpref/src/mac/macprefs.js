@@ -44,10 +44,6 @@ pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 pref("editor.use_html_editor",              false);
 pref("editor.use_image_editor",             false);
 
-// override double-click word selection behavior.
-pref("layout.word_select.eat_space_to_next_word", false);
-pref("layout.word_select.stop_at_punctuation", true);
-
 // should a GURL event open a new window or re-use (4.x compat)
 pref("browser.always_reuse_window", false);
 
