@@ -1727,9 +1727,10 @@ nsIMAPMessagePartIDArray::~nsIMAPMessagePartIDArray()
 
 void nsIMAPMessagePartIDArray::RemoveAndFreeAll()
 {
-	while (Count() > 0)
+    int n = Count();
+	for (int i = 0; i < n; i++)
 	{
-		nsIMAPMessagePartID *part = GetPart(0);
+		nsIMAPMessagePartID *part = GetPart(i);
 		delete part;
 	}
     Clear();
