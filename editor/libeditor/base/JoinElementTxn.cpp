@@ -73,18 +73,20 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
   {
     mParent= do_QueryInterface(leftParent); // set this instance mParent. 
                                             // Other methods will see a non-null mParent and know all is well
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    result = mLeftNode->GetChildNodes(getter_AddRefs(childNodes));
-  	if (NS_FAILED(result)) return result;
-    if (childNodes) {
-      childNodes->GetLength(&mOffset);
+    nsCOMPtr<nsIDOMCharacterData> leftNodeAsText;
+    leftNodeAsText = do_QueryInterface(mLeftNode);
+    if (leftNodeAsText) 
+    {
+      leftNodeAsText->GetLength(&mOffset);
     }
     else 
     {
-      nsCOMPtr<nsIDOMCharacterData> leftNodeAsText;
-      leftNodeAsText = do_QueryInterface(mLeftNode);
-      if (leftNodeAsText) {
-        leftNodeAsText->GetLength(&mOffset);
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      result = mLeftNode->GetChildNodes(getter_AddRefs(childNodes));
+  	  if (NS_FAILED(result)) return result;
+      if (childNodes) 
+      {
+        childNodes->GetLength(&mOffset);
       }
     }
     result = nsEditor::JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
