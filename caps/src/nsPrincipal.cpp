@@ -234,8 +234,10 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
     PRInt16 value = (PRInt16)NS_PTR_TO_INT32(mCapabilities.Get(&key));
-    if (value == 0) {
-      value = nsIPrincipal::ENABLE_UNKNOWN;
+    if (value == 0 || value == nsIPrincipal::ENABLE_UNKNOWN) {
+      // We don't know whether we can enable this capability,
+      // so we should ask the user.
+      value = nsIPrincipal::ENABLE_WITH_USER_PERMISSION;
     }
 
     if (value < *result) {
