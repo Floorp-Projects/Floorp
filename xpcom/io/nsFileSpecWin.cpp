@@ -488,7 +488,7 @@ nsFileSpec::Truncate(PRInt32 aNewFileLength) const
                        FILE_SHARE_READ, 
                        NULL, 
                        OPEN_EXISTING, 
-                       FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, 
+                       FILE_ATTRIBUTE_NORMAL, 
                        NULL); 
     if (hFile == INVALID_HANDLE_VALUE)
         return NS_FILE_FAILURE;
