@@ -32,6 +32,8 @@
  * 04/12/2000       IBM Corp.      DispatchMouseEvent changes.
  * 04/14/2000       IBM Corp.      Ported CaptureRollupEvents changes from Windows.
  * 06/09/2000       IBM Corp.      Added cases for more cursors in SetCursor.
+ * 06/14/2000       IBM Corp.      Removed dead menu code to fix build break.
+ * 06/15/2000       IBM Corp.      Created NS2PM for rectangles.
  *
  */
 
@@ -49,11 +51,11 @@
 #include "nsISupportsArray.h"
 #include "nsITimer.h"
 #include "nsIMenuBar.h"
-#include "nsIMenuItem.h"
+//#include "nsIMenuItem.h"
 #include "nsHashtable.h"
-#include "nsMenu.h"
+//#include "nsMenu.h"
 #include "nsDragService.h"
-#include "nsContextMenu.h"
+//#include "nsContextMenu.h"
 #include "nsIRollupListener.h"
 #include "nsIRegion.h"
 
@@ -146,7 +148,7 @@ nsWindow::nsWindow() : nsBaseWidget()
    mFont            = nsnull;
    mOS2Toolkit      = nsnull;
    mMenuBar         = nsnull;
-   mActiveMenu      = nsnull;
+//   mActiveMenu      = nsnull;
 }
 
 // Do a little work in both create methods & call on to a common DoCreate()
@@ -337,7 +339,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    // Record passed in things
    mAppShell = aAppShell;
-   NS_IF_ADDREF( mAppShell);
+   // OS2TODO - build break 6/16/00 due to nsCOMPtr changes NS_IF_ADDREF( mAppShell);
    mEventCallback = aHandleEventFunction;
 
    if( mParent)
@@ -422,7 +424,7 @@ void nsWindow::OnDestroy()
    delete mFont;
 
    // release menubar
-   NS_IF_RELEASE(mMenuBar);
+//   NS_IF_RELEASE(mMenuBar);
 
    // dispatching of the event may cause the reference count to drop to 0
    // and result in this object being deleted. To avoid that, add a
@@ -560,6 +562,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             
    switch( msg)
    {
+#if 0
       case WM_COMMAND: // fire off menu selections
       {
          USHORT usSrc = SHORT1FROMMP( mp2);
@@ -575,6 +578,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
       case WM_MENUEND:
          result = OnActivateMenu( HWNDFROMMP(mp2), FALSE);
          break;
+#endif
 
 #if 0  // Tooltips appear to be gone
       case WMU_SHOW_TOOLTIP:
@@ -1285,10 +1289,11 @@ PRBool nsWindow::OnControl( MPARAM mp1, MPARAM mp2)
 // XXX should this only be in nsFrameWindow?
 //     Probably worth trying for abstraction reasons.
 //
+#if 0
 PRBool nsWindow::OnMenuClick( USHORT aCmd)
 {
    PRBool result = PR_TRUE;
-
+   
    // find if this is a menuitem being clicked or a submenu
    // (actually I don't think submenu items generate wm_commands...)
    MENUITEM mI = { 0 };
@@ -1399,7 +1404,9 @@ PRBool nsWindow::OnActivateMenu( HWND hwndMenu, BOOL aActivate)
 
    return result;
 }
+#endif
 
+#if 0
 // (there needs to be a distinct nsTopLevelWindow class)
 nsresult nsWindow::SetMenuBar( nsIMenuBar *aMenuBar)
 {
@@ -1431,6 +1438,7 @@ void nsWindow::SetContextMenu( nsContextMenu *aMenu)
 {
    mActiveMenu = aMenu;
 }
+#endif
 
 // --------------------------------------------------------------------------
 // Hierarchy - children & parent --------------------------------------------
@@ -1485,6 +1493,14 @@ void nsWindow::NS2PM( POINTL &ptl)
 #if 0
    printf("+++++++++In NS2PM client height = %ld\n", GetClientHeight());
 #endif
+}
+
+// rcl is in this window's space
+void nsWindow::NS2PM( RECTL &rcl)
+{
+   LONG height = rcl.yTop - rcl.yBottom;
+   rcl.yTop = GetClientHeight() - rcl.yBottom;
+   rcl.yBottom = rcl.yTop - height;
 }
 
 // --------------------------------------------------------------------------
@@ -1981,12 +1997,8 @@ nsresult nsWindow::Invalidate( const nsRect &aRect, PRBool aIsSynchronous)
 {
    if( mWnd)
    {
-      // XXX could do with NS2PM for rectangles here...
-      RECTL rcl;
-      rcl.xLeft = aRect.x;
-      rcl.xRight = aRect.x + aRect.width;
-      rcl.yTop = GetClientHeight() - aRect.y;
-      rcl.yBottom = rcl.yTop - aRect.height + 1;
+      RECTL rcl = { aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height };
+      NS2PM( rcl);
 
       WinInvalidateRect( mWnd, &rcl, FALSE);
 #if 0
@@ -2006,13 +2018,10 @@ nsresult nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchron
       if( nativeRegion) {
          if( NS_SUCCEEDED(rv)) {
             RECTL rcl;
-            LONG height;
             HPS hps = WinGetScreenPS( HWND_DESKTOP);
-            LONG lComplexity = GpiQueryRegionBox( hps, nativeRegion, &rcl);
+            /* LONG lComplexity = */ GpiQueryRegionBox( hps, nativeRegion, &rcl);
             WinReleasePS( hps);
-            height = rcl.yTop - rcl.yBottom;
-            rcl.yTop = GetClientHeight() - rcl.yBottom;
-            rcl.yBottom = rcl.yTop - height;
+            NS2PM( rcl);
 
             WinInvalidateRect( mWnd, &rcl, FALSE);
 
@@ -2089,10 +2098,10 @@ nsresult nsWindow::Scroll( PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
    if( aClipRect)
    {
       rcl.xLeft = aClipRect->x;
-      rcl.yBottom = aClipRect->y + aClipRect->height - 1;
-      NS2PM( (POINTL&) rcl); // hmm
+      rcl.yBottom = aClipRect->y + aClipRect->height;
       rcl.xRight = rcl.xLeft + aClipRect->width;
       rcl.yTop = rcl.yBottom + aClipRect->height;
+      NS2PM( rcl);
       // this rect is inex
    }
 

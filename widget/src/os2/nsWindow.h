@@ -39,7 +39,7 @@
 #include "nsToolkit.h"
 
 class nsIMenuBar;
-class nsContextMenu;
+//class nsContextMenu;
 
 // Base widget class.
 // This is abstract.  Controls (labels, radio buttons, listboxen) derive
@@ -81,9 +81,8 @@ class nsWindow : public nsBaseWidget,
    // Hierarchy: only interested in widget children (it seems)
    virtual nsIWidget *GetParent();
 
-   // Strangely misplaced menubar methods
-   NS_IMETHOD         SetMenuBar( nsIMenuBar *aMenuBar);
-   NS_IMETHOD         ShowMenuBar( PRBool bShow);
+    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar) { return NS_ERROR_FAILURE; } 
+    NS_IMETHOD              ShowMenuBar(PRBool aShow)         { return NS_ERROR_FAILURE; } 
 
    // Physical properties
    NS_IMETHOD Show( PRBool bState);
@@ -150,7 +149,7 @@ class nsWindow : public nsBaseWidget,
    USHORT GetNextCmdID() { return mNextCmdID++; }
    void   NS2PM_PARENT( POINTL &ptl);
    void   NS2PM( POINTL &ptl);
-   void   SetContextMenu( nsContextMenu *aMenu);
+//   void   SetContextMenu( nsContextMenu *aMenu);
 
  protected:
    static  nsWindow*   gCurrentWindow;
@@ -192,8 +191,8 @@ class nsWindow : public nsBaseWidget,
    virtual PRBool OnRealizePalette();
    virtual PRBool OnScroll( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnControl( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnMenuClick( USHORT aCmd);
-   virtual PRBool OnActivateMenu( HWND aMenu, BOOL aActivate);
+//   virtual PRBool OnMenuClick( USHORT aCmd);
+//   virtual PRBool OnActivateMenu( HWND aMenu, BOOL aActivate);
    // called after param has been set...
    virtual PRBool OnPresParamChanged( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr);
@@ -227,7 +226,7 @@ class nsWindow : public nsBaseWidget,
    nsToolkit     *mOS2Toolkit;
    nsFont        *mFont;
    nsIMenuBar    *mMenuBar;
-   nsContextMenu *mActiveMenu; // record this so we can send it events
+//   nsContextMenu *mActiveMenu; // record this so we can send it events
 
    // State of the window, used to emulate windows better...
    enum nsWindowState

@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsCanvas.cpp \
 		nsCheckbutton.cpp \
 		nsCombobox.cpp \
-		nsContextMenu.cpp \
 		nsDirPicker.cpp \
 		nsEntryField.cpp \
 		nsFSTree.cpp \
@@ -53,10 +52,6 @@ CPPSRCS		= \
 		nsLabel.cpp \
 		nsListbox.cpp \
 		nsLookAndFeel.cpp \
-		nsMenu.cpp \
-		nsMenuBase.cpp \
-		nsMenuItem.cpp \
-		nsMenubar.cpp \
 		nsModule.cpp \
 		nsPushbutton.cpp \
 		nsRadiobutton.cpp \
