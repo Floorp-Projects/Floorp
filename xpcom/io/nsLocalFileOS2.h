@@ -48,6 +48,10 @@
 #include <io.h>
 #include <errno.h>
 
+#ifdef XP_OS2_VACPP
+#define ENOTDIR EBADPOS
+#endif
+
 #define NSRESULT_FOR_RETURN(ret) (!(ret) ? NS_OK : NSRESULT_FOR_ERRNO())
 
 inline nsresult

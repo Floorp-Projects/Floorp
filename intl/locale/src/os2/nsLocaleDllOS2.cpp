@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
  */
 
 #include "nscore.h"
@@ -35,7 +35,7 @@
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-static NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
+//static NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
@@ -82,7 +82,7 @@ nsLocaleDllFactory::nsLocaleDllFactory( const nsCID &aClass)
    mClassID = aClass;
 }
 
-NS_IMPL_ISUPPORTS(nsLocaleDllFactory,NS_GET_IID(nsIFactory))
+NS_IMPL_ISUPPORTS(nsLocaleDllFactory,nsIFactory::GetIID())
 
 nsresult nsLocaleDllFactory::CreateInstance( nsISupports *aOuter,
                                              const nsIID &aIID,
@@ -133,13 +133,13 @@ extern "C" NS_EXPORT nsresult NSGetFactory( nsISupports *aServiceMgr,
    {
       fact = new nsLocaleFactoryOS2;
       // XXX this next line looks a bit wrong, but hey...
-      rc = fact->QueryInterface( kILocaleFactoryIID, (void **) aFactory);
+      //      rc = fact->QueryInterface( kILocaleFactoryIID, (void **) aFactory);
    }
    else // something sensible
    {
       fact = new nsLocaleDllFactory( aClass);
 
-      rc = fact->QueryInterface( NS_GET_IID(nsIFactory), (void**)aFactory);
+      rc = fact->QueryInterface( nsIFactory::GetIID(), (void**)aFactory);
    }
 
    if( NS_FAILED(rc))

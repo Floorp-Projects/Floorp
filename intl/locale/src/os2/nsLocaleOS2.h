@@ -22,14 +22,16 @@
 #ifndef _nslocaleos2_h_
 #define _nslocaleos2_h_
 
-#include "nsILocale.h"
-#include "nsILocaleOS2.h"
+#include "nsISupports.h"
+#include "nscore.h"
+#include "nsString.h"
+#include "nsIOS2Locale.h"
 
-class nsLocaleOS2 : public nsILocale, public nsILocaleOS2
+class nsOS2Locale : public nsIOS2Locale
 {
  public:
-   nsLocaleOS2();
-   virtual ~nsLocaleOS2();
+   nsOS2Locale();
+   virtual ~nsOS2Locale();
 
    // nsISupports
    NS_DECL_ISUPPORTS
@@ -37,7 +39,7 @@ class nsLocaleOS2 : public nsILocale, public nsILocaleOS2
    // nsILocale
    NS_IMETHOD GetCategory( const nsString *aCat, nsString *aLocale);
 
-   // nsILocaleOS2
+   // nsIOS2Locale
    // Init a complex locale - categories should be magic nsLocale words
    NS_IMETHOD Init( nsString **aCatList,
                     nsString **aValList,
@@ -49,13 +51,17 @@ class nsLocaleOS2 : public nsILocale, public nsILocaleOS2
    // Get the OS/2 locale object
    NS_IMETHOD GetLocaleObject( LocaleObject *aLocaleObject);
 
+   NS_IMETHOD GetPlatformLocale(const nsString* locale,char* os2Locale,
+				size_t length);
+   NS_IMETHOD GetXPLocale(const char* os2Locale, nsString* locale);
+
  protected:
    LocaleObject mLocaleObject;
 
    NS_IMETHOD Init( char *pszLocale);
 };
 
-class nsSystemLocale : public nsLocaleOS2
+class nsSystemLocale : public nsOS2Locale
 {
  public:
    nsSystemLocale();

@@ -29,6 +29,7 @@
  *
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Fixed InvertRect.
+ * 05/08/2000       IBM Corp.      Fix for trying to us an already freed mGammaTable.
  *
  */
 
@@ -825,7 +826,7 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
 {
    if( bForce || mColor != mCurrDrawingColor)
    {
-      long lColor = mPalette->GetGPIColor( mSurface->mPS, mColor);
+      long lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
       GpiSetAttrs( mSurface->mPS, PRIM_LINE, LBB_COLOR, 0, &lColor);
       GpiSetAttrs( mSurface->mPS, PRIM_AREA, ABB_COLOR, 0, &lColor);
       mCurrDrawingColor = mColor;
@@ -861,7 +862,7 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
 
    if( bForce || mColor != mCurrTextColor)
    {
-      long lColor = mPalette->GetGPIColor( mSurface->mPS, mColor);
+      long lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
       GpiSetAttrs( mSurface->mPS, PRIM_CHAR, CBB_COLOR, 0, &lColor);
       mCurrTextColor = mColor;
    }

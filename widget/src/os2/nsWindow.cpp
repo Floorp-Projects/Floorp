@@ -1932,10 +1932,21 @@ nsresult nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchron
    nsresult rv = NS_OK;
    if( mWnd) {
       HRGN nativeRegion;
-      rv = aRegion->GetNativeRegion((void *&)nativeRegion);
+      rv = aRegion->GetNativeRegion( (void *&)nativeRegion);
       if( nativeRegion) {
          if( NS_SUCCEEDED(rv)) {
-            WinInvalidateRegion(mWnd, nativeRegion, TRUE);
+            RECTL rcl;
+            LONG height;
+            HPS hps = WinGetScreenPS( HWND_DESKTOP);
+            LONG lComplexity = GpiQueryRegionBox( hps, nativeRegion, &rcl);
+            WinReleasePS( hps);
+            height = rcl.yTop - rcl.yBottom;
+            rcl.yTop = GetClientHeight() - rcl.yBottom;
+            rcl.yBottom = rcl.yTop - height;
+
+            WinInvalidateRect( mWnd, &rcl, FALSE);
+
+//            WinInvalidateRegion( mWnd, nativeRegion, TRUE);
 #if 0
             if( PR_TRUE == aIsSynchronous)
                Update();

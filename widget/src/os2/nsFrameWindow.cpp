@@ -28,6 +28,7 @@
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Fix missing title bars on profile wizard windows.
  * 04/11/2000       IBM Corp.      Remove assertion.
+ * 05/10/2000       IBM Corp.      Correct initial position of frame w/titlebar
  */
 
 // Frame window - produced when NS_WINDOW_CID is required.
@@ -96,9 +97,34 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
    NS_ASSERTION( hwndFrame, "Couldn't create frame");
 
+   // Frames have a minimum height based on the pieces they are created with,
+   // such as titlebar, menubar, frame borders, etc.  We need this minimum
+   // height so we can correctly set the frame position (coordinate flipping).
+   nsRect frameRect = aRect;
+   long minheight; 
+
+   if ( fcd.flCreateFlags & FCF_SIZEBORDER) {
+      minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYSIZEBORDER);
+   }
+   else if ( fcd.flCreateFlags & FCF_DLGBORDER) {
+      minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYDLGFRAME);
+   }
+   else {
+      minheight = 2 * WinQuerySysValue( HWND_DESKTOP, SV_CYBORDER);
+   }
+   if ( fcd.flCreateFlags & FCF_TITLEBAR) {
+      minheight += WinQuerySysValue( HWND_DESKTOP, SV_CYTITLEBAR);
+   }
+   if ( fcd.flCreateFlags & FCF_MENU) {
+      minheight += WinQuerySysValue( HWND_DESKTOP, SV_CYMENU);
+   }
+   if ( frameRect.height < minheight) {
+      frameRect.height = minheight;
+   }
+
    // Now create the client as a child of us, triggers resize and sets
    // up the client size (with any luck...)
-   nsCanvas::RealDoCreate( hwndFrame, nsnull, aRect, aHandleEventFunction,
+   nsCanvas::RealDoCreate( hwndFrame, nsnull, frameRect, aHandleEventFunction,
                            aContext, aAppShell, aInitData, hwndO);
 
    // Subclass frame

@@ -23,11 +23,15 @@
 #include <os2.h>
 #include "unidef.h"
 
+#include "nsISupports.h"
 #include "nscore.h"
+#include "nsString.h"
+#include "nsILocale.h"
 #include "nsLocaleOS2.h"
+#include "nsLocaleCID.h"
 
 static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
-static NS_DEFINE_IID(kILocaleOS2IID, NS_ILOCALEOS2_IID);
+static NS_DEFINE_IID(kIOS2LocaleIID, NS_IOS2LOCALE_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // for now
@@ -36,18 +40,18 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 #endif
 
 // nsISupports implementation
-NS_IMPL_ADDREF(nsLocaleOS2)
-NS_IMPL_RELEASE(nsLocaleOS2)
+NS_IMPL_ADDREF(nsOS2Locale)
+NS_IMPL_RELEASE(nsOS2Locale)
 
-nsresult nsLocaleOS2::QueryInterface( const nsIID &aIID, void **aInstancePtr)
+nsresult nsOS2Locale::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 {
    if( !aInstancePtr)
       return NS_ERROR_NULL_POINTER;
 
    *aInstancePtr = nsnull;
 
-   if( aIID.Equals( kILocaleOS2IID))
-      *aInstancePtr = (void*) ((nsILocaleOS2*)this);
+   if( aIID.Equals( kIOS2LocaleIID))
+      *aInstancePtr = (void*) ((nsIOS2Locale*)this);
    else if( aIID.Equals( kILocaleIID))
       *aInstancePtr = (void*) ((nsILocale*)this);
    else if( aIID.Equals( kISupportsIID))
@@ -61,12 +65,12 @@ nsresult nsLocaleOS2::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 }
 
 // ctor-dtor
-nsLocaleOS2::nsLocaleOS2() : mLocaleObject(nsnull)
+nsOS2Locale::nsOS2Locale() : mLocaleObject(nsnull)
 {
    NS_INIT_REFCNT();
 }
 
-nsLocaleOS2::~nsLocaleOS2()
+nsOS2Locale::~nsOS2Locale()
 {
    if( mLocaleObject)
       UniFreeLocaleObject( mLocaleObject);
@@ -89,10 +93,10 @@ static int GetLocaleCategory( const nsString *aCat)
    return category;
 }
 
-// nsILocaleOS2
+// nsIOS2Locale
 
 // Init a complex locale - categories should be magic nsLocale words
-nsresult nsLocaleOS2::Init( nsString **aCatList,
+nsresult nsOS2Locale::Init( nsString **aCatList,
                             nsString **aValList,
                             PRUint8    aLength)
 {
@@ -166,7 +170,7 @@ nsresult nsLocaleOS2::Init( nsString **aCatList,
 }
 
 // Init a locale object from a xx-XX style name
-nsresult nsLocaleOS2::Init( const nsString &aLocaleName)
+nsresult nsOS2Locale::Init( const nsString &aLocaleName)
 {
    char szLocale[7] = { 0 };
 
@@ -194,7 +198,7 @@ nsresult nsLocaleOS2::Init( const nsString &aLocaleName)
    return rc;
 }
 
-nsresult nsLocaleOS2::Init( char *pszLocale)
+nsresult nsOS2Locale::Init( char *pszLocale)
 {
    nsresult nr = NS_ERROR_FAILURE;
 
@@ -208,7 +212,7 @@ nsresult nsLocaleOS2::Init( char *pszLocale)
 }
 
 // Get the OS/2 locale object
-nsresult nsLocaleOS2::GetLocaleObject( LocaleObject *aLocaleObject)
+nsresult nsOS2Locale::GetLocaleObject( LocaleObject *aLocaleObject)
 {
    if( !aLocaleObject)
       return NS_ERROR_NULL_POINTER;
@@ -218,7 +222,7 @@ nsresult nsLocaleOS2::GetLocaleObject( LocaleObject *aLocaleObject)
 }
 
 // nsILocale
-nsresult nsLocaleOS2::GetCategory( const nsString *aCat, nsString *aLocale)
+nsresult nsOS2Locale::GetCategory( const nsString *aCat, nsString *aLocale)
 {
    if( !aCat || !aLocale)
       return NS_ERROR_NULL_POINTER;
@@ -248,4 +252,17 @@ nsresult nsLocaleOS2::GetCategory( const nsString *aCat, nsString *aLocale)
 nsSystemLocale::nsSystemLocale()
 {
    Init( ""); // create locale based on value of LANG and friends
+}
+
+// XXXX STUBS
+NS_IMETHODIMP 
+nsOS2Locale::GetPlatformLocale(const nsString* locale,char* os2Locale, size_t length)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOS2Locale::GetXPLocale(const char* os2Locale, nsString* locale)
+{
+  return NS_OK;
 }
