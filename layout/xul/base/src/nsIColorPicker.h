@@ -47,6 +47,9 @@ class nsIColorPicker : public nsISupports {
   /* void GetColor (in PRInt32 aX, in PRInt32 aY, out string aColor); */
   NS_IMETHOD  GetColor(PRInt32 aX, PRInt32 aY, char **aColor) = 0;
 
+  /* void SetColor (in PRInt32 aWidth, in PRInt32 aHeight); */
+  NS_IMETHOD  SetSize(PRInt32 aWidth, PRInt32 aHeight) = 0;
+
   /* void GetSize (out PRInt32 aWidth, out PRInt32 aHeight); */
   NS_IMETHOD  GetSize(PRInt32 *aWidth, PRInt32 *aHeight) = 0;
 };
@@ -55,12 +58,14 @@ class nsIColorPicker : public nsISupports {
 #define NS_DECL_NSICOLORPICKER \
   NS_IMETHOD  Paint(nsIPresContext * aPresContext, nsIRenderingContext * aRenderingContext); \
   NS_IMETHOD  GetColor(PRInt32 aX, PRInt32 aY, char **aColor); \
+  NS_IMETHOD  SetSize(PRInt32 aWidth, PRInt32 aHeight); \
   NS_IMETHOD  GetSize(PRInt32 *aWidth, PRInt32 *aHeight); 
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
 #define NS_FORWARD_NSICOLORPICKER(_to) \
   NS_IMETHOD  Paint(nsIPresContext * aPresContext, nsIRenderingContext * aRenderingContext) { return _to ##  Paint(aPresContext, aRenderingContext); } \
   NS_IMETHOD  GetColor(PRInt32 aX, PRInt32 aY, char **aColor) { return _to ##  GetColor(aX, aY, aColor); } \
+  NS_IMETHOD  SetSize(PRInt32 aWidth, PRInt32 aHeight) { return _to ##  SetSize(aWidth, aHeight); } \
   NS_IMETHOD  GetSize(PRInt32 *aWidth, PRInt32 *aHeight) { return _to ##  GetSize(aWidth, aHeight); } 
 
 

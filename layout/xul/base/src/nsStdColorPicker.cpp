@@ -50,10 +50,12 @@ NS_IMPL_ISUPPORTS1(nsStdColorPicker, nsIColorPicker)
 
 nsStdColorPicker::nsStdColorPicker()
 {
-  mNumRows = 0;
-  mNumCols = 0;
+  mNumCols = 10; // NSToIntRound(sqrt(nColors));
+  mNumRows = NSToIntRound(nColors/mNumCols);
+
   mFrameWidth = 0;
   mFrameHeight = 0;
+
   mBlockWidth = 20;
   mBlockHeight = 20;
 }
@@ -117,10 +119,22 @@ NS_IMETHODIMP nsStdColorPicker::GetColor(PRInt32 aX, PRInt32 aY, char **aColor)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsStdColorPicker::SetSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  mFrameWidth = aWidth;
+  mFrameHeight = aHeight;
+
+  if (aWidth != -1)
+    mBlockWidth = NSToIntRound(mFrameWidth / mNumCols);
+
+  if (aWidth != -1)
+    mBlockHeight = NSToIntRound(mFrameHeight / mNumRows);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsStdColorPicker::GetSize(PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  mNumCols = 10; // NSToIntRound(sqrt(nColors));
-  mNumRows = NSToIntRound(nColors/mNumCols);
   mFrameWidth = NSToIntRound((mNumCols) * mBlockWidth);
   mFrameHeight = NSToIntRound((mNumRows) * mBlockHeight);
 
