@@ -993,6 +993,7 @@ mime_bridge_create_display_stream(
   //
   // Set the defaults, based on the context, and the output-type.
   //
+  MIME_HeaderType = MimeHeadersAll;
   switch (format_out) 
   {
 		case nsMimeOutput::nsMimeMessageSplitDisplay:   // the wrapper HTML output to produce the split header/body display
@@ -1004,9 +1005,13 @@ mime_bridge_create_display_stream(
       msd->options->fancy_links_p = PR_TRUE;
       break;
 
-		case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted output
+	case nsMimeOutput::nsMimeMessageQuoting:        // all HTML quoted output
       msd->options->fancy_headers_p = PR_TRUE;
       msd->options->fancy_links_p = PR_TRUE;
+      break;
+
+	case nsMimeOutput::nsMimeMessageBodyQuoting:        // only HTML body quoted output
+      MIME_HeaderType = MimeHeadersNone;
       break;
 
     case nsMimeOutput::nsMimeMessageRaw:              // the raw RFC822 data (view source) and attachments
@@ -1018,7 +1023,7 @@ mime_bridge_create_display_stream(
   ////////////////////////////////////////////////////////////
   // Now, get the libmime prefs...
   ////////////////////////////////////////////////////////////
-  msd->options->headers = MimeHeadersAll;
+//  msd->options->headers = MimeHeadersAll;
   
   MIME_NoInlineAttachments = PR_TRUE;   // false - display as links 
                                         // true - display attachment
@@ -1067,7 +1072,7 @@ mime_bridge_create_display_stream(
 
   //
   // For quoting, don't mess with citatation...
-  if (format_out == nsMimeOutput::nsMimeMessageQuoting)
+  if (format_out == nsMimeOutput::nsMimeMessageQuoting || format_out == nsMimeOutput::nsMimeMessageBodyQuoting)
   {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
     msd->options->dont_touch_citations_p = PR_TRUE;

@@ -29,6 +29,6 @@ interface nsIMsgQuote : nsISupports {
 	 * This is the primary interface for quoting a particular message specified
 	 * by a URI
 	 */
-	void		QuoteMessage(in wstring msgURI, in nsIStreamListener aStreamListener);
+	void		QuoteMessage(in wstring msgURI, in boolean quoteHeaders, in nsIStreamListener aStreamListener);
 };
 

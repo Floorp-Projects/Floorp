@@ -34,9 +34,7 @@ public:
   virtual ~nsMsgQuote();
 
   NS_DECL_ISUPPORTS
-
-  /* long QuoteMessage (in wstring msgURI, in nsIOutputStream outStream); */
-  NS_IMETHOD QuoteMessage(const PRUnichar *msgURI, nsIStreamListener * aStreamListener);
+  NS_DECL_NSIMSGQUOTE
 
   // 
   // Implementation data...
@@ -46,6 +44,7 @@ public:
   nsCOMPtr<nsIStreamListener> mStreamListener;
   char            *mURI;
   nsIMsgMessageService    *mMessageService;
+  PRBool			mQuoteHeaders;
 };
 
 // Will be used by factory to generate a nsMsgQuote class...

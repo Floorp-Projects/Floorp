@@ -36,11 +36,12 @@ interface nsMimeOutput
   const long nsMimeMessageHeaderDisplay = 1;
   const long nsMimeMessageBodyDisplay = 2;
 	const long nsMimeMessageQuoting = 3;
-	const long nsMimeMessageRaw = 4;
-	const long nsMimeMessageDraftOrTemplate = 5;
-	const long nsMimeMessageEditorTemplate = 6;
-	const long nsMimeMessageXULDisplay = 7;
-	const long nsMimeUnknown = 8;
+	const long nsMimeMessageBodyQuoting = 4;
+	const long nsMimeMessageRaw = 5;
+	const long nsMimeMessageDraftOrTemplate = 6;
+	const long nsMimeMessageEditorTemplate = 7;
+	const long nsMimeMessageXULDisplay = 8;
+	const long nsMimeUnknown = 9;
 }; 
 
 [scriptable, uuid(E4ED8892-3F9E-11d3-9896-001083010E9B)]

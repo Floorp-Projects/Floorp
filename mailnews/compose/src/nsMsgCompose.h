@@ -162,11 +162,13 @@ public:
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 
 	NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
+	NS_IMETHOD  SetQuoteHeaders(PRBool quoteHeaders);
 	NS_IMETHOD  ConvertToPlainText();
 
 private:
     nsMsgCompose    *mComposeObj;
     nsString        mMsgBody;
+    PRBool			mQuoteHeaders;			
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +214,6 @@ private:
 
   nsMsgCompose    *mComposeObj;
 	MSG_DeliverMode mDeliverMode;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

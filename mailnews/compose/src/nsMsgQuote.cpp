@@ -48,6 +48,7 @@ nsMsgQuote::nsMsgQuote()
   mTmpIFileSpec = nsnull;
   mURI = nsnull;
   mMessageService = nsnull;
+  mQuoteHeaders = PR_FALSE;
 }
 
 nsMsgQuote::~nsMsgQuote()
@@ -238,7 +239,8 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   // Set us as the output stream for HTML data from libmime...
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
-	  mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);
+	  mimeConverter->SetMimeOutputType(ptr->mQuoteHeaders? nsMimeOutput::nsMimeMessageQuoting :
+	  														nsMimeOutput::nsMimeMessageBodyQuoting);
   if (NS_FAILED(mimeParser->Init(aURL, ptr->mStreamListener, nsnull /* the channel */)))
   {
     NS_RELEASE(ptr);
@@ -265,13 +267,14 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
 }
 
 nsresult
-nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, nsIStreamListener * aQuoteMsgStreamListener)
+nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener)
 {
 nsresult  rv;
 
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
 
+  mQuoteHeaders = quoteHeaders;
   mStreamListener = aQuoteMsgStreamListener;
 
   mTmpFileSpec = nsMsgCreateTempFileSpec("nsquot.tmp"); 

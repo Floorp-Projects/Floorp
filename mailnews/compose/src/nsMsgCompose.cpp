@@ -702,8 +702,8 @@ QuotingOutputStreamListener::~QuotingOutputStreamListener()
 QuotingOutputStreamListener::QuotingOutputStreamListener(void) 
 { 
   mComposeObj = nsnull;
-  mMsgBody = "<br><BLOCKQUOTE TYPE=CITE><html><br>--- Original Message ---<br><br>";
-  mMsgBody = "";
+//  mMsgBody = "<br><BLOCKQUOTE TYPE=CITE><html><br>--- Original Message ---<br><br>";
+  mMsgBody = "<br><br>--- Original Message ---<br><BLOCKQUOTE TYPE=CITE><html><br>";
   NS_INIT_REFCNT(); 
 }
 
@@ -850,6 +850,13 @@ QuotingOutputStreamListener::SetComposeObj(nsMsgCompose *obj)
   return NS_OK;
 }
 
+nsresult
+QuotingOutputStreamListener::SetQuoteHeaders(PRBool quoteHeaders)
+{
+  mQuoteHeaders = quoteHeaders;
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, nsCOMTypeInfo<nsIStreamListener>::GetIID());
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF QUOTING LISTENER
@@ -895,8 +902,9 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
   NS_ADDREF(this);
   mQuoteStreamListener->SetComposeObj(this);
+  mQuoteStreamListener->SetQuoteHeaders(what != 1);
 
-  return mQuote->QuoteMessage(originalMsgURI, mQuoteStreamListener);
+  return mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener);
 }
 
 void nsMsgCompose::HackToGetBody(PRInt32 what)

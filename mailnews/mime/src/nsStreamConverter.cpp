@@ -385,7 +385,8 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 			mOutputFormat = PL_strdup("text/html");
 			break;
 
-		case nsMimeOutput::nsMimeMessageQuoting:   // all HTML quoted output
+		case nsMimeOutput::nsMimeMessageQuoting:   		// all HTML quoted output
+		case nsMimeOutput::nsMimeMessageBodyQuoting: 	// only HTML body quoted output
 			PR_FREEIF(mOutputFormat);
 			mOutputFormat = PL_strdup("text/html");
 			break;
