@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = src html xml
+DIRS = src html xml raw
 
 include $(topsrcdir)/config/config.mk
 

@@ -114,15 +114,67 @@ MimePluginInstance::~MimePluginInstance(void)
 
 static NS_DEFINE_IID(kMimeHTMLEmitterCID, NS_HTML_MIME_EMITTER_CID);
 static NS_DEFINE_IID(kMimeXMLEmitterCID, NS_XML_MIME_EMITTER_CID);
+static NS_DEFINE_IID(kMimeRawEmitterCID, NS_RAW_MIME_EMITTER_CID);
 
 NS_METHOD
 MimePluginInstance::DetermineOutputFormat(const char *url)
 {
-  // For now, we need to see what we are outputting...headers, body or all of it. 
-  //
+  // Do sanity checking...
+  if ( (!url) || (!*url) )
+  {
+    mOutputFormat = PL_strdup("text/html");
+    return NS_OK;
+  }
+
+  char *format = PL_strcasestr(url, "?outformat=");
   char *part   = PL_strcasestr(url, "?part=");
   char *header = PL_strcasestr(url, "?header=");
   char *ptr;
+
+  if (!format) format = PL_strcasestr(url, "&outformat=");
+  if (!part) part = PL_strcasestr(url, "&part=");
+  if (!header) header = PL_strcasestr(url, "&header=");
+
+  // First, did someone pass in a desired output format. They will be able to
+  // pass in any content type (i.e. image/gif, text/html, etc...but the "/" will
+  // have to be represented via the "%2F" value
+  if (format)
+  {
+    format += PL_strlen("?outformat=");
+    while (*format == ' ')
+      ++format;
+
+    if ((format) && (*format))
+    {
+      char *ptr;
+      PR_FREEIF(mOutputFormat);
+      mOutputFormat = PL_strdup(format);
+      ptr = mOutputFormat;
+      do
+      {
+        if ( (*ptr == '?') || (*ptr == '&') || 
+             (*ptr == ';') || (*ptr == ' ') )
+        {
+          *ptr = '\0';
+          break;
+        }
+        else if (*ptr == '%')
+        {
+          if ( (*(ptr+1) == '2') &&
+               ( (*(ptr+2) == 'F') || (*(ptr+2) == 'f') )
+              )
+          {
+            *ptr = '/';
+            memmove(ptr+1, ptr+3, PL_strlen(ptr+3));
+            *(ptr + PL_strlen(ptr+3) + 1) = '\0';
+            ptr += 3;
+          }
+        }
+      } while (*ptr++);
+  
+      return NS_OK;
+    }
+  }
 
   if (!part)
   {
@@ -168,11 +220,18 @@ MimePluginInstance::Initialize(nsINetOStream* stream, const char *stream_name)
                                        NULL, nsIMimeEmitter::GetIID(), 
                                        (void **) &mEmitter); 
   }
-  else
+  else if (PL_strcmp(mOutputFormat, "text/html") == 0)
   {
     res = nsRepository::CreateInstance(kMimeHTMLEmitterCID, 
                                        NULL, nsIMimeEmitter::GetIID(), 
                                        (void **) &mEmitter); 
+  }
+  else
+  {
+    // Need to create a raw emitter here!
+    res = nsRepository::CreateInstance(kMimeRawEmitterCID, 
+                                        NULL, nsIMimeEmitter::GetIID(), 
+                                        (void **) &mEmitter); 
   }
 
   if ((NS_OK != res) || (!mEmitter))

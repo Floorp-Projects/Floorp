@@ -1122,7 +1122,8 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   msd->options->headers = MimeHeadersAll;
   
   // Get the libmime prefs...
-  MIME_NoInlineAttachments = PR_TRUE;
+  MIME_NoInlineAttachments = PR_TRUE;  // false - no attachment display
+                                        // true - attachment display
   if (msd->prefs)
     msd->prefs->GetBoolPref("mail.inline_attachments", &MIME_NoInlineAttachments);
   MIME_NoInlineAttachments = !MIME_NoInlineAttachments;

@@ -60,6 +60,8 @@ public:
     NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
     NS_IMETHOD    UtilityWrite(const char *buf);
 
+    NS_IMETHOD    ProcessContentType(const char *ct);
+
 protected:
     // For buffer management on output
     MimeRebuffer  *mBufferMgr;
@@ -71,6 +73,9 @@ protected:
 
     // For header determination...
     PRBool        mDocHeader;
+
+    // For content type...
+    char          *mAttachContentType;
 
 #ifdef DEBUG
     PRBool        mReallyOutput;

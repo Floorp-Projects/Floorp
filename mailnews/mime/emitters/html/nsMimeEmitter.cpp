@@ -65,6 +65,7 @@ nsMimeEmitter::nsMimeEmitter()
   mTotalWritten = 0;
   mTotalRead = 0;
   mDocHeader = PR_FALSE;
+  mAttachContentType = NULL;
 
 #ifdef NS_DEBUG
   mLogFile = NULL;    /* Temp file to put generated HTML into. */
@@ -199,6 +200,40 @@ nsMimeEmitter::EndHeader()
   return NS_OK;
 }
 
+nsresult
+nsMimeEmitter::ProcessContentType(const char *ct)
+{
+  if (mAttachContentType)
+  {
+    PR_FREEIF(mAttachContentType);
+    mAttachContentType = NULL;
+  }
+  
+  if ( (!ct) || (!*ct) )
+    return NS_OK;
+  
+  char *slash = PL_strchr(ct, '/');
+  if (!slash)
+    mAttachContentType = PL_strdup(ct);
+  else
+  {
+    PRInt32 size = (PL_strlen(ct) + 4 + 1);
+    mAttachContentType = (char *)PR_MALLOC( size );
+    if (!mAttachContentType)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    memset(mAttachContentType, 0, size);
+    PL_strcpy(mAttachContentType, ct);
+    
+    char *newSlash = PL_strchr(mAttachContentType, '/');
+    *newSlash = '\0';
+    PL_strcat(mAttachContentType, "%2F");
+    PL_strcat(mAttachContentType, (slash + 1));
+  }
+
+  return NS_OK;
+}
+
 // Attachment handling routines
 nsresult
 nsMimeEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
@@ -207,7 +242,32 @@ nsMimeEmitter::StartAttachment(const char *name, const char *contentType, const 
   mReallyOutput = PR_TRUE;
 #endif
 
-  UtilityWrite("<table BORDER=2>");
+  PR_FREEIF(mAttachContentType);
+  mAttachContentType = NULL;
+  ProcessContentType(contentType);
+  UtilityWrite("<CENTER>");
+  UtilityWrite("<table BORDER CELLSPACING=0>");
+  UtilityWrite("<tr>");
+  UtilityWrite("<td>");
+
+  if (mAttachContentType)
+  {
+    UtilityWrite("<a href=\"");
+    UtilityWrite(url);
+    UtilityWrite("&outformat=");
+    UtilityWrite(mAttachContentType);
+    UtilityWrite("\" target=new>");
+  }
+
+  UtilityWrite("<img SRC=\"resource:/res/network/gopher-unknown.gif\" BORDER=0 ALIGN=ABSCENTER>");
+  UtilityWrite(name);
+
+  if (mAttachContentType)
+    UtilityWrite("</a>");
+
+  UtilityWrite("</td>");
+  UtilityWrite("<td>");
+  UtilityWrite("<table BORDER=0 BGCOLOR=\"#FFFFCC\">");
   return NS_OK;
 }
 
@@ -220,6 +280,13 @@ nsMimeEmitter::AddAttachmentField(const char *field, const char *value)
 
   char  *newValue = nsEscapeHTML(value);
   PRBool  linkIt = (!PL_strcmp(HEADER_X_MOZILLA_PART_URL, field));
+
+  //
+  // For now, let's not output the long URL field, but when prefs are
+  // working this will change.
+  //
+  if (linkIt)
+    return NS_OK;
 
   UtilityWrite("<TR>");
 
@@ -237,7 +304,12 @@ nsMimeEmitter::AddAttachmentField(const char *field, const char *value)
   {
     UtilityWrite("<a href=\"");
     UtilityWrite(value);
-    UtilityWrite("\">");
+    if (mAttachContentType)
+    {
+      UtilityWrite("&outformat=");
+      UtilityWrite(mAttachContentType);
+    }
+    UtilityWrite("\" target=new>");
   }
 
   UtilityWrite(newValue);
@@ -259,7 +331,13 @@ nsMimeEmitter::EndAttachment()
   mReallyOutput = PR_TRUE;
 #endif
 
+  PR_FREEIF(mAttachContentType);
   UtilityWrite("</TABLE>");
+  UtilityWrite("</td>");
+  UtilityWrite("</tr>");
+
+  UtilityWrite("</TABLE>");
+  UtilityWrite("</CENTER>");
   UtilityWrite("<BR>");
   return NS_OK;
 }
@@ -367,7 +445,7 @@ nsMimeEmitter::UtilityWrite(const char *buf)
 
   Write(buf, tmpLen, &written);
 #ifdef DEBUG
-  Write("\r\n", 2, &written);
+//  Write("\r\n", 2, &written);
 #endif
 
   return NS_OK;
