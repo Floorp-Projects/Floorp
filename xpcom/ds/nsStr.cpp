@@ -656,7 +656,7 @@ PRBool nsStr::Alloc(nsStr& aDest,PRUint32 aCount) {
   static int mAllocCount=0;
   mAllocCount++;
 
-#ifdef NS_USE_CHUNKY_STRING_ALLOCATION
+#ifndef NS_DONT_USE_CHUNKY_STRING_ALLOCATION
   //we're given the acount value in charunits; now scale up to next multiple.
   PRUint32	theNewCapacity=kDefaultStringSize;
   while(theNewCapacity<aCount){ 
