@@ -1012,6 +1012,11 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 {
 		nsMsgProtocol::OnStopRequest(aChannel, aContext, aStatus, aMsg);
 
+    // nsMsgProtocol::OnStopRequest() has called m_channelListener. There is
+    // no need to be called again in CloseSocket(). Let's clear it here.
+    if (m_channelListener)
+        m_channelListener = null_nsCOMPtr();
+
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
 
