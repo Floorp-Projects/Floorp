@@ -54,6 +54,7 @@ CSRCS		+= \
 		  xp_file.c \
 		  xp_list.c \
 		  xp_hash.c \
+      xp_regexp.c \
 		  allxpstr.c \
 		  $(NULL)
 
