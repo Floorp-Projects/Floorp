@@ -22,7 +22,7 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=contentxsldoc_s 
-MODULE=raptor 
+MODULE=xsl_doc
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
