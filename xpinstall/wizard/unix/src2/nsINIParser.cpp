@@ -205,7 +205,10 @@ nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
     }
 
     // determine the section end
-    secEnd = strchr(aSecPtr, '['); // search for next sec start
+    secEnd = aSecPtr;
+find_end:
+    if (secEnd)
+        secEnd = strchr(secEnd, '['); // search for next sec start
     if (!secEnd)
     {
         secEnd = strchr(aSecPtr, '\0'); // else search for file end
@@ -214,6 +217,13 @@ nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
             mError = E_SEC_CORRUPT; // else this data is corrupt
             return mError;
         }
+    }
+
+    // handle start section token ('[') in values for i18n
+    if (*secEnd == '[' && !(secEnd == aSecPtr || *(secEnd-1) == NL))
+    {
+        secEnd++;
+        goto find_end;
     }
 
     while (currLine < secEnd)
