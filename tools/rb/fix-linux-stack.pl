@@ -54,12 +54,12 @@ use IPC::Open2;
 my %pipes;
 while (<>) {
     my $line = $_;
-    if ($line =~ /([ \|0-9]*)(.*) \[([^ ]*) \+(0x[0-9A-F]{8})\]$/) {
-        my $before = $1; # preserve minimal stuff before to preserve
-                         # balance trees
+    if ($line =~ /^([ \|0-9]*)(.*) \[([^ ]*) \+(0x[0-9A-F]{8})\](.*)$/) {
+        my $before = $1; # allow preservation of balance trees
         my $badsymbol = $2;
         my $file = $3;
         my $address = $4;
+        my $after = $5; # allow preservation of counts
 
         my $pipe;
         unless (exists $pipes{$file}) {
@@ -77,7 +77,7 @@ while (<>) {
         chomp(my $fileandline = <$in>);
         ($symbol eq "??") && { $symbol = $badsymbol };
         ($fileandline eq "??:0") && { $fileandline = $file };
-        print "$before$symbol ($fileandline)\n";
+        print "$before$symbol ($fileandline)$after\n";
     } else {
         print $line;
     }
