@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.5 2001/01/04 08:21:15 nelsonb%netscape.com Exp $
+ # $Id: nssinit.c,v 1.6 2001/01/06 01:57:48 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -73,10 +73,10 @@ nss_certdb_name_cb(void *arg, int dbVersion)
 	break;
     }
 
-    return PR_smprintf("%s/cert%s.db", configdir, dbver);
+    return PR_smprintf("%scert%s.db", configdir, dbver);
 }
     
-char *
+static char *
 nss_keydb_name_cb(void *arg, int dbVersion)
 {
     const char *configdir = (const char *)arg;
@@ -92,24 +92,28 @@ nss_keydb_name_cb(void *arg, int dbVersion)
 	break;
     }
 
-    return PR_smprintf("%s/key%s.db", configdir, dbver);
+    return PR_smprintf("%skey%s.db", configdir, dbver);
 }
 
-SECStatus 
-nss_OpenCertDB(const char * configdir, PRBool readOnly)
+static SECStatus 
+nss_OpenCertDB(const char * configdir,  const char *prefix, PRBool readOnly)
 {
     CERTCertDBHandle *certdb;
     SECStatus         status;
+    char * name = NULL;
 
     certdb = CERT_GetDefaultCertDB();
     if (certdb)
     	return SECSuccess;	/* idempotency */
 
+    name = PR_smprintf("%s/%s",configdir,prefix);
+    if (name = NULL) goto loser;
+
     certdb = (CERTCertDBHandle*)PORT_ZAlloc(sizeof(CERTCertDBHandle));
     if (certdb == NULL) 
     	goto loser;
 
-    status = CERT_OpenCertDB(certdb, readOnly, nss_certdb_name_cb, (void *)configdir);
+    status = CERT_OpenCertDB(certdb, readOnly, nss_certdb_name_cb, (void *)name);
     if (status == SECSuccess)
 	CERT_SetDefaultCertDB(certdb);
     else {
@@ -117,17 +121,22 @@ nss_OpenCertDB(const char * configdir, PRBool readOnly)
 loser: 
 	status = SECFailure;
     }
+    if (name) PORT_Free(name);
     return status;
 }
 
-SECStatus
-nss_OpenKeyDB(const char * configdir, PRBool readOnly)
+static SECStatus
+nss_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly)
 {
     SECKEYKeyDBHandle *keydb;
+    char * name = NULL;
 
     keydb = SECKEY_GetDefaultKeyDB();
     if (keydb)
     	return SECSuccess;
+    name = PR_smprintf("%s/%s",configdir,prefix);
+    if (name = NULL) 
+	return SECFailure;
     keydb = SECKEY_OpenKeyDB(readOnly, nss_keydb_name_cb, (void *)configdir);
     if (keydb == NULL)
 	return SECFailure;
@@ -135,8 +144,8 @@ nss_OpenKeyDB(const char * configdir, PRBool readOnly)
     return SECSuccess;
 }
 
-SECStatus
-nss_OpenSecModDB(const char * configdir)
+static SECStatus
+nss_OpenSecModDB(const char * configdir,const char *dbname)
 {
     static char *secmodname;
 
@@ -146,15 +155,15 @@ nss_OpenSecModDB(const char * configdir)
      */
     if (secmodname)
     	return SECSuccess;
-    secmodname = PR_smprintf("%s/secmod.db", configdir);
+    secmodname = PR_smprintf("%s/%s", configdir,dbname);
     if (secmodname == NULL)
 	return SECFailure;
     SECMOD_init(secmodname);
     return SECSuccess;
 }
 
-SECStatus
-nss_Init(const char *configdir, PRBool readOnly)
+static SECStatus
+nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readOnly)
 {
     SECStatus status;
     SECStatus rv      = SECFailure;
@@ -162,15 +171,15 @@ nss_Init(const char *configdir, PRBool readOnly)
     RNG_RNGInit();     		/* initialize random number generator */
     RNG_SystemInfoForRNG();
 
-    status = nss_OpenCertDB(configdir, readOnly);
+    status = nss_OpenCertDB(configdir, certPrefix, readOnly);
     if (status != SECSuccess)
 	goto loser;
 
-    status = nss_OpenKeyDB(configdir, readOnly);
+    status = nss_OpenKeyDB(configdir, keyPrefix, readOnly);
     if (status != SECSuccess)
 	goto loser;
 
-    status = nss_OpenSecModDB(configdir);
+    status = nss_OpenSecModDB(configdir, secmodName);
     if (status != SECSuccess)
 	goto loser;
 
@@ -185,13 +194,19 @@ loser:
 SECStatus
 NSS_Init(const char *configdir)
 {
-    return nss_Init(configdir, PR_TRUE);
+    return nss_Init(configdir, "", "", "secmod.db", PR_TRUE);
 }
 
 SECStatus
 NSS_InitReadWrite(const char *configdir)
 {
-    return nss_Init(configdir, PR_FALSE);
+    return nss_Init(configdir, "", "", "secmod.db", PR_FALSE);
+}
+
+SECStatus
+NSS_Initialize(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readonly)
+{
+    return nss_Init(configdir, certPrefix, keyPrefix, secmodName, PR_TRUE);
 }
 
 /*
