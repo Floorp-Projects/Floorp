@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpi_mips.s,v 1.1 2000/08/22 00:55:10 nelsonb%netscape.com Exp $
+ *  $Id: mpi_mips.s,v 1.2 2000/08/31 02:40:32 nelsonb%netscape.com Exp $
  */
 #include <regdef.h>
         .set    noreorder
@@ -431,3 +431,72 @@ s_mpv_mul_d:
  #}
  #
         .end    s_mpv_mul_d
+
+
+        .ent    s_mpv_sqr_add_prop
+        .globl  s_mpv_sqr_add_prop
+ #void   s_mpv_sqr_add_prop(const mp_digit *a, mp_size a_len, mp_digit *sqrs);
+ #	registers
+ #	a0		*a
+ #	a1		a_len
+ #	a2		*sqr
+ #	a3		digit from *a, a_i
+ #	a4		square of digit from a
+ #	a5,a6		next 2 digits in sqr
+ #	a7,t0		carry 
+s_mpv_sqr_add_prop:
+	move	a7,zero
+	move	t0,zero
+	lwu	a3,0(a0)
+	addiu	a1,a1,-1	# --a_len
+	dmultu	a3,a3
+	beq	a1,zero,.P.3	# jump if we've already done the only sqr
+	addiu	a0,a0,4		# ++a
+.P.2:
+        lwu	a5,0(a2)
+        lwu	a6,4(a2)
+	addiu	a2,a2,8		# sqrs += 2;
+	dsll32	a6,a6,0
+	daddu	a5,a5,a6
+	lwu	a3,0(a0)
+	addiu	a0,a0,4		# ++a
+	mflo	a4
+	daddu	a6,a5,a4
+	sltu	a7,a6,a5	# a7 = a6 < a5	detect overflow
+	dmultu	a3,a3
+	daddu	a4,a6,t0
+	sltu	t0,a4,a6
+	add	t0,t0,a7
+	sw	a4,-8(a2)
+	addiu	a1,a1,-1	# --a_len
+	dsrl32	a4,a4,0
+	bne	a1,zero,.P.2	# loop if a_len > 0
+	sw	a4,-4(a2)
+.P.3:
+        lwu	a5,0(a2)
+        lwu	a6,4(a2)
+	addiu	a2,a2,8		# sqrs += 2;
+	dsll32	a6,a6,0
+	daddu	a5,a5,a6
+	mflo	a4
+	daddu	a6,a5,a4
+	sltu	a7,a6,a5	# a7 = a6 < a5	detect overflow
+	daddu	a4,a6,t0
+	sltu	t0,a4,a6
+	add	t0,t0,a7
+	sw	a4,-8(a2)
+	beq	t0,zero,.P.9	# jump if no carry
+	dsrl32	a4,a4,0
+.P.8:
+	sw	a4,-4(a2)
+	/* propagate final carry */
+	lwu	a5,0(a2)
+	daddu	a6,a5,t0
+	sltu	t0,a6,a5
+	bne	t0,zero,.P.8	# loop if carry persists
+	addiu	a2,a2,4		# sqrs++
+.P.9:
+	jr	ra
+	sw	a4,-4(a2)
+
+        .end    s_mpv_sqr_add_prop
