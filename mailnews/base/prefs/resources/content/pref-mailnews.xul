@@ -15,8 +15,12 @@
 		<html:span id="lefttext">&pane.title;</html:span>
 	</html:div>
 
-&textBegin.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&textBegin.label;</html:div>
+</html:legend>
 	<html:table>
 		<html:tr><html:td>&style.label;
 			<html:select id="pref:int:mail.quoted_style">
@@ -44,10 +48,17 @@
                 </menu>  
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
 
-&displayWith.label;
 <html:form>
+<box align="vertical" style="width: 100%;"> 
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&displayWidth.label;</html:div>
+</html:legend>
+
 	<html:table>
 		<html:tr><html:td><html:input name="fontwidth" type="radio"
 			id="pref:1:bool:mail.fixed_width_messages" checked="true"/>
@@ -58,10 +69,13 @@
 			<html:label for="pref:0:bool:mail.fixed_width_messages">&variableWidth.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
  
-<html:br/>
 <html:form>
+<box align="vertical" style="width: 100%;"> 
+<html:fieldset style="width: 100%;">
 	<html:table>
 		<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>
 		<html:label>&playSound.label;</html:label></html:td></html:tr>
@@ -72,6 +86,8 @@
 		<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>
 		<html:label>&useMessenger.label;</html:label></html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
 
 </html:div>

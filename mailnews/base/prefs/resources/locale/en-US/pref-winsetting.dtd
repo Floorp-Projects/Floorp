@@ -23,10 +23,12 @@ Rights Reserved.
 <!ENTITY pane.title "Window Setting">
 <!-- LOCALIZATION NOTE chooseLayout.label Never translate the product name "Messenger" -->
 <!ENTITY chooseLayout.label "Choose which layout you prefer for the Messenger window:">
-<!ENTITY chooseExp.label "If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.">
+<!-- LOCALIZATION NOTE chooseExp.label Never translate the product name "Messenger" -->
+<!ENTITY chooseExp.label "Note:  a change to this setting will only take effect the next time you open a Messenger window.">
 <!ENTITY reuseThread.label "Double-clicking a folder or a newsgroup opens it in a new window">
 <!ENTITY reuseMessage.label "Double-clicking a message opens it in a new window">
 <!ENTITY reuseExp.label "If you prefer fewer windows, unselect these options, and Messenger will open items into existing windows.">
 <!ENTITY newsOpt.label "The Newsgroups menu item or button:">
+<!-- LOCALIZATION NOTE openMessenger.label Never translate the product name "Messenger" -->
 <!ENTITY openMessenger.label "Opens newsgroups in a Messenger window">
 <!ENTITY openCenter.label "Opens the Message Center">

@@ -23,12 +23,16 @@ function DoCustomize()
 
 
 <html:div flex="100%">
-	<html:div id="top">
-		<html:span id="lefttext">&pane.title;</html:span>
-	</html:div>
+        <html:div id="top">
+                <html:span id="lefttext">&pane.title;</html:span>
+        </html:div>
 
-&requestReceipt.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&requestReceipt.label;</html:div>
+</html:legend>
 	<html:table>
 		<html:tr><html:td>
 			<html:input name="msgreceipt" type="radio" id="pref:1:int:mail.request.return_receipt"/>
@@ -43,10 +47,15 @@ function DoCustomize()
 			<html:label>&both.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
- 
-&receiptArrive.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&receiptArrive.label;</html:div>
+</html:legend>
 	<html:table>
 		<html:tr><html:td>
 			<html:input name="getreceipt" type="radio" id="pref:0:int:mail.incorporate.return_receipt" checked="true"/>
@@ -57,10 +66,16 @@ function DoCustomize()
 			<html:label>&moveToSent.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
 
-&requestMDN.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&requestMDN.label;</html:div>
+</html:legend>
 	<html:table>
 		<html:tr><html:td>
 			<html:input name="returnreceipt" type="radio" id="pref:0:int:mail.mdn.report.enabled"/>
@@ -72,6 +87,8 @@ function DoCustomize()
 			<html:input name="custom" type="button" value="&custom.label;"/>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
 
 </html:div>

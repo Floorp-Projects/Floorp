@@ -14,9 +14,12 @@
 		<html:span id="lefttext">&pane.title;</html:span>
 	</html:div>
 
-<html:br/>
-&allMsg.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&allMsg.label;</html:div>
+</html:legend>
 	<html:table>
 		<html:tr><html:td>
 			<html:input type="checkbox" id="pref:0:bool:mail.limit_message_size"/>
@@ -29,10 +32,16 @@
 			<html:input name="purgesize" id="pref:string:mail.purge_threshhold" size="4"/>&kb.label;
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
  
-<html:br/>
-&newgroupMsgOnly.label;
+<html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&newgroupMsgOnly.label;</html:div>
+</html:legend>
 <html:table>
 		<html:tr><html:td><html:label>&whenToClean.label;</html:label></html:td></html:tr>
 		<html:tr><html:td>
@@ -61,6 +70,8 @@
 			<html:input name="removedays" id="pref:string:news.remove_bodies.days" size="4"/>&days.label;
 		</html:td></html:tr>
 </html:table>
-
+</html:fieldset>
+</box>
+</html:form>
 </html:div>
 </window>

@@ -32,7 +32,7 @@ Rights Reserved.
 <!ENTITY bigger.label "Bigger">
 <!ENTITY smaller.label "Smaller">
 <!ENTITY color.label "Color:">
-<!ENTITY displayWith.label "Display plain text messages and articles with">
+<!ENTITY displayWidth.label "Display plain text messages and articles with">
 <!ENTITY fixedWidth.label "Fixed width font">
 <!ENTITY variableWidth.label "Variable width font">
 <!ENTITY playSound.label "Play sound when messages arrive">

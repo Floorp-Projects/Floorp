@@ -15,6 +15,8 @@
 	</html:div>
 
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
 	<html:table>
 		<html:tr><html:td><html:label>&chooseLayout.label;</html:label></html:td></html:tr>
 		<html:tr><html:td>
@@ -23,11 +25,16 @@
 			<html:input name="winlayout" type="radio" id="pref:1:int:mail.pane_arrangement"/>
 			<html:img src="chrome://messenger/skin/winwide.gif"/>
 		</html:td></html:tr>
-	<html:tr><html:td>&chooseExp.label;</html:td></html:tr>
 	</html:table>
+	&chooseExp.label;
+</html:fieldset>
+</box>
 </html:form>
 
+
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
 	<html:table>
 		<html:tr><html:td>
 			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_thread_window2"/>
@@ -37,12 +44,18 @@
 			<html:input type="checkbox" id="pref:1:int:mailnews.reuse_message_window"/>
 			<html:label>&reuseMessage.label;</html:label>
 		</html:td></html:tr>
-		<html:tr><html:td>&reuseExp.label;</html:td></html:tr>
 	</html:table>
+	&reuseExp.label;
+</html:fieldset>
+</box>
 </html:form>
 
-&newsOpt.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&newsOpt.label;</html:div>
+</html:legend>
 	<html:table>
 		<html:tr><html:td>
 			<html:input name="opennews" type="radio" id="pref:0:int:news.use_message_center" checked="true"/>
@@ -53,6 +66,8 @@
 			<html:label>&openCenter.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
  
 </html:div>
