@@ -977,19 +977,25 @@ dependclean::
 endif
 #############################################################################
 # Yet another depend system: -MD
-
 ifdef COMPILER_DEPEND
 ifdef OBJS
-#ifneq ($@,install)
 MDDEPEND_FILES := $(foreach obj, $(OBJS), \
                     $(dir $(obj)).deps/$(basename $(notdir $(obj))).pp)
 MDDEPEND_FILES := $(wildcard $(MDDEPEND_FILES))
 ifdef MDDEPEND_FILES
-# Get the list of objects to force.
-foo := `$(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) \
-        >$(OBJDIR)/.deps/.all.pp`
+ifdef PERL
+# The script mddepend.pl checks the dependencies and writes to stdout
+# one rule to force out-of-date objects. For example,
+#   foo.o boo.o: FORCE
+# The script has an advantage over including the *.pp files directly
+# because it handles missing header files. 'make' would complain that
+# there is no way to build missing headers.
+foo := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) \
+        >$(OBJDIR)/.deps/.all.pp)
 -include $(OBJDIR)/.deps/.all.pp
-#endif
+else
+include $(MDDEPEND_FILES)
+endif
 endif
 endif
 endif
