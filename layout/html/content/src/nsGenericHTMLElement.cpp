@@ -1108,13 +1108,6 @@ nsGenericHTMLElement::SetParent(nsIContent* aParent)
 }
 
 nsresult
-nsGenericHTMLElement::IsSynthetic(PRBool& aResult)
-{
-  return PR_FALSE;
-}
-
-
-nsresult
 nsGenericHTMLElement::GetTag(nsIAtom*& aResult) const
 {
   NS_IF_ADDREF(mTag);

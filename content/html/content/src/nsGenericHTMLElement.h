@@ -113,7 +113,10 @@ public:
   nsresult SetDocument(nsIDocument* aDocument);
   nsresult GetParent(nsIContent*& aResult) const;
   nsresult SetParent(nsIContent* aParent);
-  nsresult IsSynthetic(PRBool& aResult);
+  nsresult IsSynthetic(PRBool& aResult) {
+    aResult = PR_FALSE;
+    return NS_OK;
+  }
   nsresult GetTag(nsIAtom*& aResult) const;
   nsresult SetAttribute(const nsString& aName, const nsString& aValue,
                         PRBool aNotify);
