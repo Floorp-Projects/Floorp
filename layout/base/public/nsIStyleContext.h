@@ -90,6 +90,11 @@ struct nsStyleSpacing: public nsStyleStruct {
 
   void ClearBorderStyleHighBit(PRUint8 aSide);
 
+#if 0
+  PRUint8 GetMargin2(nsMargin& aMargin) const;
+  PRUint8 GetPadding2(nsMargin& aMargin) const;
+#endif
+
 
 // XXX these are deprecated methods
   void CalcMarginFor(const nsIFrame* aFrame, nsMargin& aMargin) const;
@@ -174,6 +179,10 @@ struct nsStyleDisplay : public nsStyleStruct {
   PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
                                       (NS_STYLE_DISPLAY_LIST_ITEM == mDisplay) ||
                                       (NS_STYLE_DISPLAY_TABLE == mDisplay);}
+
+  PRBool IsFloating() const {
+    return NS_STYLE_FLOAT_NONE != mFloats;
+  }
 
 protected:
   nsStyleDisplay(void);
