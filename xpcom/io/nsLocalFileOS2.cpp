@@ -878,7 +878,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
     // target.
     char* inFilePath;
     destParent->GetTarget(&inFilePath);  
-    nsCString destPath = inFilePath;
+    nsCString destPath(inFilePath);
     nsMemory::Free(inFilePath);
 
     destPath.Append("\\");
@@ -1688,7 +1688,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 {
     NS_ENSURE_ARG_POINTER(aParent);
 
-    nsCString parentPath = mWorkingPath;
+    nsCString parentPath(mWorkingPath);
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
     PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.GetBuffer(), '\\')
