@@ -50,6 +50,11 @@
 #include "nsIGlobalHistory.h"
 #include "nsIHTTPChannel.h"
 
+// For reporting errors with the console service.
+// These can go away if error reporting is propagated up past nsDocShell.
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
   PR_BEGIN_MACRO                         \
@@ -1919,7 +1924,54 @@ NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
 NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString, 
    const char* aFileName, PRInt32 aLineNo, const char* aLineBuf)
 {
-   //XXX Needs some international work.
+   nsresult rv;
+
+   // Get the console service, where we're going to register the error.
+   nsCOMPtr<nsIConsoleService> consoleService
+      (do_GetService("mozilla.consoleservice.1"));
+   
+   // Make an nsIScriptError, populate it with information from this
+   // error, then log it with the console service.  The UI can then
+   // poll the service to update the JavaScript console.
+   nsCOMPtr<nsIScriptError>
+      errorObject(do_CreateInstance("mozilla.scripterror.1"));
+
+   if (consoleService != nsnull && errorObject != nsnull)
+      {
+      // Mock up wide strings until we fix the interface.
+      nsAutoString message(aErrorString);
+      PRUnichar *msgUni = message.ToNewUnicode();
+      nsAutoString filename(aFileName);
+      PRUnichar *fileUni = filename.ToNewUnicode();
+      nsAutoString sourceline(aLineBuf);
+      PRUnichar *slUni = sourceline.ToNewUnicode();
+
+      // make category depend on xul/!xul
+      const char *category;
+      category = mItemType == typeContent
+               ? "XUL javascript"
+               : "content javascript";
+
+      rv = errorObject->Init(msgUni, fileUni, slUni, aLineNo, 0, 0, category);
+
+      nsAllocator::Free(msgUni);
+      nsAllocator::Free(fileUni);
+      nsAllocator::Free(slUni);
+
+      if (NS_SUCCEEDED(rv))
+         {
+         rv = consoleService->LogMessage(errorObject);
+         if (NS_SUCCEEDED(rv))
+            {
+#ifndef DEBUG               
+            return NS_OK;
+#endif
+            }
+         }
+      }
+
+   // If reporting via the console service fails for some reason, fall
+   // back to printing to stdout.
    nsAutoString error;
    error.Assign("JavaScript Error: ");
    error.Append(aErrorString);
@@ -1946,66 +1998,11 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
       error += "\n";
       }
 
-   PRBool showAlert;
-   if(mItemType == typeContent)
-      {
-      // Include a message for the beta release suggesting remedy
-      error +=
-         "\n"
-         "If you visit this page with another browser and don't see a similar "
-         "error, it may indicate that the site has not yet been updated to "
-         "support standards implemented by the Mozilla browser such as the "
-         "W3C Document Object Model (DOM).  Please see "
-         "http://developer.netscape.com/mozilla/ for more information.";
-      showAlert = PR_TRUE;
-      }
-   else
-      {
-      // for non-DEBUG builds, tuck xul errors under the rug, and
-      // only show those originating from content.
-#ifdef DEBUG
-      showAlert = PR_TRUE;
-#else
-      showAlert = PR_FALSE;
-#endif
-      }
-
-   // Disable error alerts unless pref is set.
-   PRBool alertPref;
-   if (showAlert == PR_TRUE
-       && mPrefs != nsnull
-       && (NS_SUCCEEDED(mPrefs->GetBoolPref("javascript.error.alerts",
-                                            &alertPref)))
-       && (alertPref == PR_TRUE))
-      {
-      showAlert = PR_TRUE;
-      }
-   else
-      {
-      showAlert = PR_FALSE;
-      }
-
-   if(showAlert)
-      {
-      // Show an alert for the error.  At some point, we may have a JavaScript
-      // console to show errors in.
-      nsCOMPtr<nsIPrompt> prompt = do_GetInterface(mTreeOwner);
-      if(prompt)
-         {
-         prompt->Alert(error.GetUnicode());
-#ifndef DEBUG
-         return NS_OK;
-#endif
-         }
-      }
-
-   // else if not showing alert or failed to get prompt interface or
-   // this is a debug build and we want to printf ALL errors...
    char* errorStr = error.ToNewCString();
    if(errorStr)
       {
-      printf("%s\n", errorStr);
-      nsCRT::free(errorStr);
+      fprintf(stderr, "%s\n", errorStr);
+      nsAllocator::Free(errorStr);
       }
 
    return NS_OK;

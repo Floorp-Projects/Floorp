@@ -35,6 +35,10 @@
 #include "nsXPIDLString.h"
 #include "nsIScriptSecurityManager.h"
 
+// For reporting errors with the console service
+#include "nsIScriptError.h"
+#include "nsIConsoleService.h"
+
 const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
 const char jsComponentTypeName[] = "text/javascript";
 
@@ -187,8 +191,53 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
 static void
 Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
-    fprintf(stderr, "JS Component Loader: ERROR %s:%d\n"
-            "                     %s\n", rep->filename, rep->lineno,
+    nsresult rv;
+
+    /* Use the console service to register the error. */
+    nsCOMPtr<nsIConsoleService> consoleService
+        (do_GetService("mozilla.consoleservice.1"));
+
+    /*
+     * Make an nsIScriptError, populate it with information from this
+     * error, then log it with the console service.  The UI can then
+     * poll the service to update the JavaScript console.
+     */
+    nsCOMPtr<nsIScriptError>
+        errorObject(do_CreateInstance("mozilla.scripterror.1"));
+    
+    if (consoleService != nsnull && errorObject != nsnull) {
+        /*
+         * Got an error object; prepare appropriate-width versions of
+         * various arguments to it.
+         */
+        nsAutoString fileUni(rep->filename);
+        const PRUnichar *newFileUni = fileUni.ToNewUnicode();
+        
+        PRUint32 column = rep->uctokenptr - rep->uclinebuf;
+
+        rv = errorObject->Init(rep->ucmessage, newFileUni, rep->uclinebuf,
+                               rep->lineno, column, rep->flags,
+                               "component javascript");
+        nsAllocator::Free((void *)newFileUni);
+        if (NS_SUCCEEDED(rv)) {
+            rv = consoleService->LogMessage(errorObject);
+            if (NS_SUCCEEDED(rv)) {
+                // We're done!
+#ifndef DEBUG                
+                return;
+#endif
+            }
+        }
+    }
+
+    /*
+     * If any of the above fails for some reason, fall back to
+     * printing to stderr.
+     */
+    fprintf(stderr, "JS Component Loader: %s %s:%d\n"
+            "                     %s\n",
+            JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
+            rep->filename, rep->lineno,
             message ? message : "<no message>");
 }
 
