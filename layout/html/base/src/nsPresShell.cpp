@@ -1928,6 +1928,9 @@ PresShell::Destroy()
   // pres shell to NULL
   if (mPresContext) {
     mPresContext->SetShell(nsnull);
+
+    // Clear the link handler (weak reference) as well
+    mPresContext->SetLinkHandler(nsnull);
   }
 
   if (mViewEventListener) {
