@@ -73,7 +73,7 @@ public:
     virtual ~nsHttpChannel();
 
     nsresult Init(nsIURI *uri,
-                  PRUint32 capabilities,
+                  PRUint8 capabilities,
                   const char *proxyHost=0,
                   PRInt32 proxyPort=-1,
                   const char *proxyType=0);
@@ -133,9 +133,9 @@ private:
     nsXPIDLCString                    mSpec;
 
     PRUint32                          mLoadFlags;
-    PRUint32                          mCapabilities;
     PRUint32                          mStatus;
-    PRUint32                          mReferrerType;
+    PRUint8                           mCapabilities;
+    PRUint8                           mReferrerType;
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;

@@ -47,10 +47,8 @@ nsHttpConnection::nsHttpConnection()
     : mTransaction(0)
     , mConnectionInfo(0)
     , mLock(nsnull)
-    , mReuseCount(0)
-    , mMaxReuseCount(0)
-    , mIdleTimeout(0)
     , mLastActiveTime(0)
+    , mIdleTimeout(0)
     , mKeepAlive(0)
     , mWriteDone(0)
     , mReadDone(0)
@@ -166,30 +164,20 @@ nsHttpConnection::OnHeadersAvailable(nsHttpTransaction *trans, PRBool *reset)
     // if this connection is persistent, then the server may send a "Keep-Alive"
     // header specifying the maximum number of times the connection can be
     // reused as well as the maximum amount of time the connection can be idle
-    // before the server will close it.  If this header is not present, then we
-    // pick a suitably large number. Technically, any number > 0 will do, since
-    // we reset this each time, and with HTTP/1.1 connections continue until we
-    // get a {Proxy-,}Connection: close header. Don't just use 1 though, because
-    // of pipelining
+    // before the server will close it.  we ignore the max reuse count, because
+    // a "keep-alive" connection is by definition capable of being reused, and
+    // we only care about being able to reuse it once.  if a timeout is not 
+    // specified then we use our advertized timeout value.
     if (mKeepAlive) {
         val = trans->ResponseHead()->PeekHeader(nsHttp::Keep_Alive);
 
-        LOG(("val = [%s]\n", val));
-
-        const char *cp = PL_strcasestr(val, "max=");
-        if (cp)
-            mMaxReuseCount = (PRUint32) atoi(cp + 4);
-        else
-            mMaxReuseCount = 100;
-
-        cp = PL_strcasestr(val, "timeout=");
+        const char *cp = PL_strcasestr(val, "timeout=");
         if (cp)
             mIdleTimeout = (PRUint32) atoi(cp + 8);
         else
             mIdleTimeout = nsHttpHandler::get()->IdleTimeout();
         
-        LOG(("Connection can be reused [this=%x max-reuse=%u "
-             "keep-alive-timeout=%u\n", this, mMaxReuseCount, mIdleTimeout));
+        LOG(("Connection can be reused [this=%x idle-timeout=%u\n", this, mIdleTimeout));
     }
 
     // if we're doing an SSL proxy connect, then we need to check whether or not
@@ -302,8 +290,8 @@ nsHttpConnection::ProxyStepUp()
 PRBool
 nsHttpConnection::CanReuse()
 {
-    return mKeepAlive && (mReuseCount < mMaxReuseCount) && 
-           (NowInSeconds() - mLastActiveTime < mIdleTimeout) && IsAlive();
+    return mKeepAlive && (NowInSeconds() - mLastActiveTime < mIdleTimeout)
+                      && IsAlive();
 }
 
 PRBool

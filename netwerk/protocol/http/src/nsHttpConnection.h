@@ -86,13 +86,9 @@ public:
     PRBool   CanReuse(); // can this connection be reused?
     PRBool   IsAlive();
     PRBool   IsKeepAlive()   { return mKeepAlive; }
-    PRUint32 ReuseCount()    { return mReuseCount; }
-    PRUint32 MaxReuseCount() { return mMaxReuseCount; }
-    PRUint32 IdleTimeout()   { return mIdleTimeout; }
+    PRUint16 IdleTimeout()   { return mIdleTimeout; }
 
     void     DontReuse()     { mKeepAlive = PR_FALSE;
-                               mReuseCount = 0;
-                               mMaxReuseCount = 0;
                                mIdleTimeout = 0; }
 
     void DropTransaction();
@@ -126,10 +122,8 @@ private:
 
     PRLock                         *mLock;
 
-    PRUint32                        mReuseCount;
-    PRUint32                        mMaxReuseCount; // value of keep-alive: max=
-    PRUint32                        mIdleTimeout;   // value of keep-alive: timeout=
     PRUint32                        mLastActiveTime;
+    PRUint16                        mIdleTimeout;   // value of keep-alive: timeout=
 
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mWriteDone;

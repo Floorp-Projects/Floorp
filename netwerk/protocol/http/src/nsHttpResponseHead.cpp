@@ -57,7 +57,7 @@ nsHttpResponseHead::Flatten(nsACString &buf, PRBool pruneTransients)
         buf.Append("1.0 ");
 
     char b[32];
-    PR_snprintf(b, sizeof(b), "%d", mStatus);
+    PR_snprintf(b, sizeof(b), "%u", PRUintn(mStatus));
 
     buf.Append(b);
     buf.Append(' ');
@@ -144,28 +144,26 @@ nsHttpResponseHead::ParseStatusLine(char *line)
     if ((mVersion == NS_HTTP_VERSION_0_9) || !(line = PL_strchr(line, ' '))) {
         mStatus = 200;
         mStatusText.Adopt(nsCRT::strdup("OK"));
-        LOG(("Have status line [version=%d status=%d statusText=%s]\n",
-            mVersion, mStatus, mStatusText.get()));
-        return;
     }
-    
-    // Status-Code
-    mStatus = atoi(++line);
-    if (mStatus == 0) {
-        LOG(("mal-formed response status; assuming status = 200\n"));
-        mStatus = 200;
+    else {
+        // Status-Code
+        mStatus = (PRUint16) atoi(++line);
+        if (mStatus == 0) {
+            LOG(("mal-formed response status; assuming status = 200\n"));
+            mStatus = 200;
+        }
+
+        // Reason-Phrase is whatever is remaining of the line
+        if (!(line = PL_strchr(line, ' '))) {
+            LOG(("mal-formed response status line; assuming statusText = 'OK'\n"));
+            mStatusText.Adopt(nsCRT::strdup("OK"));
+        }
+        else
+            mStatusText.Adopt(nsCRT::strdup(++line));
     }
 
-    // Reason-Phrase is whatever is remaining of the line
-    if (!(line = PL_strchr(line, ' '))) {
-        LOG(("mal-formed response status line; assuming statusText = 'OK'\n"));
-        mStatusText.Adopt(nsCRT::strdup("OK"));
-    }
-    else
-        mStatusText.Adopt(nsCRT::strdup(++line));
-
-    LOG(("Have status line [version=%d status=%d statusText=%s]\n",
-        mVersion, mStatus, mStatusText.get()));
+    LOG(("Have status line [version=%u status=%u statusText=%s]\n",
+        PRUintn(mVersion), PRUintn(mStatus), mStatusText.get()));
 }
 
 void

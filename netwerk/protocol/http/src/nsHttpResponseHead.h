@@ -43,7 +43,7 @@ public:
     
     nsHttpHeaderArray &Headers()        { return mHeaders; }
     nsHttpVersion      Version()        { return mVersion; }
-    PRUint32           Status()         { return mStatus; }
+    PRUint16           Status()         { return mStatus; }
     const char        *StatusText()     { return mStatusText; }
     PRInt32            ContentLength()  { return mContentLength; }
     const char        *ContentType()    { return mContentType; }
@@ -98,7 +98,7 @@ private:
 private:
     nsHttpHeaderArray mHeaders;
     nsHttpVersion     mVersion;
-    PRUint32          mStatus;
+    PRUint16          mStatus;
     nsXPIDLCString    mStatusText;
     PRInt32           mContentLength;
     nsXPIDLCString    mContentType;

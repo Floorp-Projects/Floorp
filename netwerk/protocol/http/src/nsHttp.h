@@ -44,21 +44,28 @@
 extern PRLogModuleInfo *gHttpLog;
 #endif
 
+// http logging
 #define LOG1(args) PR_LOG(gHttpLog, 1, args)
 #define LOG2(args) PR_LOG(gHttpLog, 2, args)
 #define LOG3(args) PR_LOG(gHttpLog, 3, args)
 #define LOG4(args) PR_LOG(gHttpLog, 4, args)
 #define LOG(args) LOG4(args)
 
+// http default buffer geometry
 #define NS_HTTP_SEGMENT_SIZE 4096
 #define NS_HTTP_BUFFER_SIZE  4096*4 // 16k maximum
 
-enum nsHttpVersion {
-    NS_HTTP_VERSION_UNKNOWN,
-    NS_HTTP_VERSION_0_9,
-    NS_HTTP_VERSION_1_0,
-    NS_HTTP_VERSION_1_1
-};
+// http version codes
+#define NS_HTTP_VERSION_UNKNOWN  0
+#define NS_HTTP_VERSION_0_9      9
+#define NS_HTTP_VERSION_1_0     10
+#define NS_HTTP_VERSION_1_1     11
+
+typedef PRUint8 nsHttpVersion;
+
+// http connection capabilities
+#define NS_HTTP_ALLOW_KEEPALIVE  (1<<0)
+#define NS_HTTP_ALLOW_PIPELINING (1<<1)
 
 //-----------------------------------------------------------------------------
 // http atoms...
@@ -117,4 +124,8 @@ PRTimeToSeconds(PRTime t_usec)
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
-#endif
+// ripped from glib.h
+#undef  CLAMP
+#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+
+#endif // nsHttp_h__
