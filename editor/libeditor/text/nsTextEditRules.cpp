@@ -933,6 +933,19 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         nextNode = do_QueryInterface(child);
       }
+      // fix for bugzilla #125161: if we are about to forward delete a <BR>,
+      // make sure it is not last node in editfield.  If it is, cancel deletion.
+      if ((aCollapsedAction == nsIEditor::eNext) && nsTextEditUtils::IsBreak(nextNode))
+      {
+        nsCOMPtr<nsIDOMNode> lastChild;
+        if (!mBody) return NS_ERROR_NULL_POINTER;
+        res = mBody->GetLastChild(getter_AddRefs(lastChild));
+        if (lastChild == nextNode)
+        {
+          *aCancel = PR_TRUE;
+          return NS_OK;
+        }
+      }
     }
   }
 
