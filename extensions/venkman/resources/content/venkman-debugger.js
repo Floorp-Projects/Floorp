@@ -443,7 +443,7 @@ function loadSource (url, cb)
         onComplete: function oncomplete (data, url, status) {
             var ary = data.split("\n");
             for (var i = 0; i < ary.length; ++i)
-                ary[i] = new String(ary[i]);
+                ary[i] = new String(ary[i].replace(/\r$/, ""));
             console._sources[url] = ary;
             cb(data, url, status);
         }
