@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#     jim_nance@yahoo.com
 #
 
 #
@@ -30,7 +31,7 @@
 #
 # Usage: print-depth-path.sh
 #
-# Send comments, improvements, bugs to ramiro@netscape.com
+# Send comments, improvements, bugs to jim_nance@yahoo.com
 # 
 
 # Make sure a Makefile exists
@@ -43,21 +44,30 @@ then
 	exit
 fi
 
-# Use DEPTH in the Makefile to determine the depth
-depth=`grep -w DEPTH Makefile  | grep "\.\." | awk -F"=" '{ print $2; }'`
+# awk can be quite primitave.  Try enhanced versions first
+for AWK in gawk nawk awk; do
+    if type $AWK 2>/dev/null 1>/dev/null; then
+        break;
+    fi
+done
 
-# Determine the depth count
-n=`echo $depth | tr '/' ' ' | wc -w`
+$AWK -v PWD=`pwd` '
+{
+    if($1 == "DEPTH") {
+        DEPTH=$0
+    }
+}
 
-# Determine the path (strip anything before the mozilla/ root)
-path=`pwd | awk -v count=$n -F"/" '\
-{ for(i=NF-count+0; i <= NF ; i++) \
-{ \
-if (i!=NF) \
-  { printf "%s/", $i } \
-else \
-  { printf "%s", $i } \
-} \
-}'`
+END {
+    sub("^.*DEPTH.*=[ \t]*", "", DEPTH)
+    dlen = split(DEPTH, darray, "/")
+    plen = split(PWD,   parray, "/")
 
-echo $path
+    fsep=""
+    for(i=plen-dlen; i<=plen; i++) {
+        printf("%s%s", fsep, parray[i])
+        fsep="/"
+    }
+    printf("\n")
+}' Makefile
+
