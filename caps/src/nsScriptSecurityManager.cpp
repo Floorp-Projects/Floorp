@@ -918,6 +918,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
     nsresult rv;
     result->level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
 
+    DomainPolicy* dpolicy = nsnull;
     //-- Initialize policies if necessary
     if (mPolicyPrefsChanged)
     {
@@ -925,9 +926,10 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         if (NS_FAILED(rv))
             return rv;
     }
-
-    DomainPolicy* dpolicy = nsnull;
-    aPrincipal->GetSecurityPolicy((void**)&dpolicy);
+    else
+    {
+        aPrincipal->GetSecurityPolicy((void**)&dpolicy);
+    }
 
     if (!dpolicy && mOriginToPolicyMap)
     {
