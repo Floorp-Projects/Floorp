@@ -23,6 +23,9 @@
 
 extern XtAppContext gAppContext;
 
+NS_IMPL_ADDREF(nsFileWidget)
+NS_IMPL_RELEASE(nsFileWidget)
+
 //-------------------------------------------------------------------------
 //
 // nsFileWidget constructor
@@ -30,7 +33,7 @@ extern XtAppContext gAppContext;
 //-------------------------------------------------------------------------
 nsFileWidget::nsFileWidget() : nsWindow(), nsIFileWidget()
 {
-  NS_INIT_REFCNT();
+  //NS_INIT_REFCNT();
 
   mNumberOfFilters = 0;
 }
@@ -151,7 +154,7 @@ void nsFileWidget::OnCancel()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-void nsFileWidget::Show(PRBool bState)
+PRBool nsFileWidget::Show()
 {
   nsresult result = nsEventStatus_eIgnore;
   XtManageChild(mWidget);

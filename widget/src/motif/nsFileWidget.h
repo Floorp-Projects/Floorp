@@ -67,7 +67,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
                                     void *aInitData = nsnull);
 
     // nsIFileWidget part
-    virtual void            Show(PRBool bState);
+    virtual PRBool          Show();
     virtual void            GetFile(nsString& aFile);
     virtual void            SetDefaultString(nsString& aString);
     virtual void            SetFilterList(PRUint32 aNumberOfFilters,

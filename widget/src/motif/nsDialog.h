@@ -26,15 +26,23 @@
 /**
  * Native Motif Dialog wrapper
  */
-
-class nsDialog :  public nsWindow
+class nsDialog :  public nsWindow,
+                  public nsIDialog
 {
 
 public:
-  nsDialog(nsISupports *aOuter);
+  nsDialog();
   virtual ~nsDialog();
 
-  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+  // nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+    // nsIButton part
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
+
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -52,9 +60,6 @@ public:
               nsWidgetInitData *aInitData = nsnull);
 
 
-    // nsIDialog part
-  virtual void   SetLabel(const nsString& aText);
-  virtual void   GetLabel(nsString& aBuffer);
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
 
@@ -62,31 +67,6 @@ public:
 
 private:
   Widget mShell;
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsDialog,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIDialog interface to nsDialog w/o using multiple
-  // inheritance.
-  class AggDialog : public nsIDialog {
-  public:
-    AggDialog();
-    virtual ~AggDialog();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIDialog
-    virtual void SetLabel(const nsString &aText);
-    virtual void GetLabel(nsString &aBuffer);
-
-  };
-  AggDialog mAggWidget;
-  friend class AggDialog;
-
 
 };
 

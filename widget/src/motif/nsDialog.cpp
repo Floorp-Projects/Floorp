@@ -28,16 +28,20 @@
 
 #include <Xm/DialogS.h>
 
-#define DBG 0
+NS_IMPL_ADDREF(nsDialog)
+NS_IMPL_RELEASE(nsDialog)
+
 //-------------------------------------------------------------------------
 //
 // nsDialog constructor
 //
 //-------------------------------------------------------------------------
-nsDialog::nsDialog(nsISupports *aOuter) : nsWindow(aOuter)
+nsDialog::nsDialog() : nsWindow(), nsIDialog()
 {
+  NS_INIT_REFCNT();
 }
 
+//-------------------------------------------------------------------------
 void nsDialog::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -49,8 +53,6 @@ void nsDialog::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else if (aAppShell) {
@@ -59,9 +61,6 @@ void nsDialog::Create(nsIWidget *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
 
   mShell = ::XtVaCreateManagedWidget("Dialog",
                                     xmDialogShellWidgetClass, 
@@ -88,8 +87,6 @@ void nsDialog::Create(nsIWidget *aParent,
                                     XmNrecomputeSize, False,
                                     XmNuserData, this,
                                     nsnull);
-
-  if (DBG) fprintf(stderr, "Dialog 0x%x  this 0x%x\n", mWidget, this);
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
@@ -122,24 +119,27 @@ nsDialog::~nsDialog()
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsDialog::QueryObject(REFNSIID aIID, void** aInstancePtr)
+nsresult nsDialog::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kIDialogIID,    NS_IDIALOG_IID);
+  nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-  if (aIID.Equals(kIDialogIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
+  static NS_DEFINE_IID(kInsDialogIID, NS_IDIALOG_IID);
+  if (result == NS_NOINTERFACE && aIID.Equals(kInsDialogIID)) {
+      *aInstancePtr = (void*) ((nsIDialog*)this);
+      AddRef();
+      result = NS_OK;
   }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
+
+  return result;
 }
+
 
 //-------------------------------------------------------------------------
 //
 // Set this button label
 //
 //-------------------------------------------------------------------------
-void nsDialog::SetLabel(const nsString& aText)
+NS_METHOD nsDialog::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   XmString str;
@@ -156,7 +156,7 @@ void nsDialog::SetLabel(const nsString& aText)
 // Get this button label
 //
 //-------------------------------------------------------------------------
-void nsDialog::GetLabel(nsString& aBuffer)
+NS_METHOD nsDialog::GetLabel(nsString& aBuffer)
 {
   XmString str;
   XtVaGetValues(mShell, XmNtitle, &str, nsnull);
@@ -178,7 +178,6 @@ void nsDialog::GetLabel(nsString& aBuffer)
 //-------------------------------------------------------------------------
 PRBool nsDialog::OnPaint(nsPaintEvent &aEvent)
 {
-  //printf("** nsDialog::OnPaint **\n");
   return PR_FALSE;
 }
 
@@ -186,22 +185,5 @@ PRBool nsDialog::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
-
-
-#define GET_OUTER() ((nsDialog*) ((char*)this - nsDialog::GetOuterOffset()))
-
-void nsDialog::AggDialog::GetLabel(nsString& aBuffer)
-{
-  GET_OUTER()->GetLabel(aBuffer);
-}
-
-void nsDialog::AggDialog::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
-
-//----------------------------------------------------------------------
-
-BASE_IWIDGET_IMPL(nsDialog, AggDialog);
 
 

@@ -481,10 +481,19 @@ void nsWindow::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    nsresult result = nsObject::QueryInterface(aIID, aInstancePtr);
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    nsresult result = NS_NOINTERFACE;
+    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = (void*) ((nsISupports*)this);
+        AddRef();
+        return NS_OK;
+    }
 
     static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kIWidgetIID)) {
+    if (aIID.Equals(kIWidgetIID)) {
         *aInstancePtr = (void*) ((nsIWidget*)this);
         AddRef();
         result = NS_OK;

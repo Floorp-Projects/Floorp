@@ -29,8 +29,8 @@
 #include "nsScrollbar.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
-#include "nsTextWidget.h"
-#include "nsTextAreaWidget.h"
+//#include "nsTextWidget.h"
+//#include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
 #include "nsListBox.h"
 #include "nsComboBox.h"
@@ -140,58 +140,58 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
-    nsWindow *inst = nsnull;
+    nsISupports *inst = nsnull;
     if (aIID.Equals(kCWindow)) {
-        inst = new nsWindow(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsWindow();
     }
     else if ( mClassID.Equals(kCCheckButtonCID)) {
-        inst = new nsCheckButton(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsCheckButton();
     }
     else if ( mClassID.Equals(kCButtonCID)) {
-        inst = new nsButton(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsButton();
     }
     else if (mClassID.Equals(kCVertScrollbarCID)) {
-        inst = new nsScrollbar(aOuter, PR_TRUE);
+        inst = (nsISupports *)(nsIWidget *)new nsScrollbar(PR_TRUE);
     }
     else if (mClassID.Equals(kCHorzScrollbarCID)) {
-        inst = new nsScrollbar(aOuter, PR_FALSE);
+        inst = (nsISupports *)(nsIWidget *)new nsScrollbar(PR_FALSE);
     }
     else if (aIID.Equals(kIScrollbar)) {
         inst = nsnull;
         fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
     }
-    else if (mClassID.Equals(kCTextWidgetCID)) {
-        inst = new nsTextWidget(aOuter);
-    }
-    else if (mClassID.Equals(kCTextAreaWidgetCID)) {
-        inst = new nsTextAreaWidget(aOuter);
-    }
+    //else if (mClassID.Equals(kCTextWidgetCID)) {
+        //inst = (nsISupports *)(nsIWidget *)new nsTextWidget();
+    //}
+    //else if (mClassID.Equals(kCTextAreaWidgetCID)) {
+        //inst = (nsISupports *)(nsIWidget *)new nsTextAreaWidget();
+    //}
     else if ( mClassID.Equals(kCRadioButtonCID)) {
-        inst = new nsRadioButton(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsRadioButton();
     }
     else if (mClassID.Equals(kCListBoxCID)) {
-        inst = new nsListBox(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsListBox();
     }
     else if (mClassID.Equals(kCComboBoxCID)) {
-        inst = new nsComboBox(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsComboBox();
     }
     else if (mClassID.Equals(kCFileWidgetCID)) {
-        inst = new nsFileWidget(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsFileWidget();
     }
     else if (aIID.Equals(kIWidget)) {
-        inst = new nsWindow(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
-        inst = new ChildWindow(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new ChildWindow();
     }
     else if (mClassID.Equals(kCDialog)) {
-        inst = new nsDialog(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsDialog();
     }
     else if (mClassID.Equals(kCLabel)) {
-        inst = new nsLabel(aOuter);
+        inst = (nsISupports *)(nsIWidget *)new nsLabel();
     }
     else if (mClassID.Equals(kCLookAndFeelCID)) {
-        nsLookAndFeel *laf = new nsLookAndFeel(aOuter);
+        nsLookAndFeel *laf = new nsLookAndFeel();
         if (laf == NULL) {  
             return NS_ERROR_OUT_OF_MEMORY;  
         }  
@@ -217,7 +217,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_OUT_OF_MEMORY;  
     }
         
-    nsresult res = inst->QueryObject(aIID, aResult);
+    nsresult res = inst->QueryInterface(aIID, aResult);
 
     if (res != NS_OK) {
         delete inst;         
