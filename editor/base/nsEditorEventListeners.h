@@ -69,7 +69,6 @@ public:
 
 protected:
   virtual nsresult ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed);
-  virtual nsresult ScrollSelectionIntoView();
 
 protected:
   nsIEditor*     mEditor;		// weak reference

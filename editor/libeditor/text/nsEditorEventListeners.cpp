@@ -72,6 +72,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //#define DEBUG_IME
 
+static nsresult ScrollSelectionIntoView(nsIEditor *aEditor);
 
 /*
  * nsTextEditorKeyListener implementation
@@ -200,13 +201,13 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       if (nsIDOMKeyEvent::DOM_VK_BACK_SPACE==keyCode) 
       {
         mEditor->DeleteSelection(nsIEditor::ePrevious);
-        ScrollSelectionIntoView();
+        ScrollSelectionIntoView(mEditor);
         return NS_ERROR_BASE; // consumed
       }   
       if (nsIDOMKeyEvent::DOM_VK_DELETE==keyCode)
       {
         mEditor->DeleteSelection(nsIEditor::eNext);
-        ScrollSelectionIntoView();
+        ScrollSelectionIntoView(mEditor);
         return NS_ERROR_BASE; // consumed
       }   
       if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode)
@@ -216,7 +217,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
         // else we insert the tab straight through
         htmlEditor->EditorKeyPress(keyEvent);
-        ScrollSelectionIntoView();
+        ScrollSelectionIntoView(mEditor);
         return NS_ERROR_BASE; // "I handled the event, don't do default processing"
       }
       if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
@@ -226,7 +227,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         {
           //htmlEditor->InsertBreak();
           htmlEditor->EditorKeyPress(keyEvent);
-          ScrollSelectionIntoView();
+          ScrollSelectionIntoView(mEditor);
           return NS_ERROR_BASE; // consumed
         }
         else 
@@ -237,10 +238,10 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     }
 
     if (NS_SUCCEEDED(htmlEditor->EditorKeyPress(keyEvent)))
-      ScrollSelectionIntoView();
+      ScrollSelectionIntoView(mEditor);
   }
   else
-    ScrollSelectionIntoView();
+    ScrollSelectionIntoView(mEditor);
 
   return NS_ERROR_BASE; // consumed
   
@@ -337,11 +338,14 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
 }
 
 nsresult
-nsTextEditorKeyListener::ScrollSelectionIntoView()
+ScrollSelectionIntoView(nsIEditor *aEditor)
 {
+  if (! aEditor)
+    return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsISelectionController> selCon;
   
-  nsresult result = mEditor->GetSelectionController(getter_AddRefs(selCon));
+  nsresult result = aEditor->GetSelectionController(getter_AddRefs(selCon));
 
   if (NS_FAILED(result) || ! selCon)
     return result ? result: NS_ERROR_FAILURE;
@@ -654,8 +658,10 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
    textEvent->GetEventReply(&textEventReply);
    textRangeList->AddRef();
    nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(mEditor, &result);
-   if (imeEditor)
+   if (imeEditor) {
     result = imeEditor->SetCompositionString(composedText,textRangeList,textEventReply);
+    ScrollSelectionIntoView(mEditor);
+   }
    return result;
 }
 
