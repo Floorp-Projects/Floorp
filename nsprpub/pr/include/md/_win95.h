@@ -339,7 +339,7 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_NEW_LOCK(lock)            (InitializeCriticalSection(&((lock)->mutex)),(lock)->notified.length=0,(lock)->notified.link=NULL,PR_SUCCESS)
 #define _MD_FREE_LOCK(lock)           DeleteCriticalSection(&((lock)->mutex))
 #define _MD_LOCK(lock)                EnterCriticalSection(&((lock)->mutex))
-#define _MD_TEST_AND_LOCK(lock)       (EnterCriticalSection(&((lock)->mutex)),PR_SUCCESS)
+#define _MD_TEST_AND_LOCK(lock)       (EnterCriticalSection(&((lock)->mutex)),0)
 #define _MD_UNLOCK                    _PR_MD_UNLOCK
 
 /* --- lock and cv waiting --- */

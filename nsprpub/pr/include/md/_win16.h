@@ -377,7 +377,7 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 #define _MD_NEW_LOCK(l)             (PR_SUCCESS)
 #define _MD_FREE_LOCK(l)
 #define _MD_LOCK(l)
-#define _MD_TEST_AND_LOCK(l)        (PR_FAILURE)
+#define _MD_TEST_AND_LOCK(l)        (-1)
 #define _MD_UNLOCK(l)
 
 /* --- lock and cv waiting --- */
