@@ -125,7 +125,6 @@ protected:
     already_AddRefed<nsIPresShell> GetPresShell();
     nsPresContext* GetPresContext();
     already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
-    virtual nsIFrame* GetFrame();
 
     nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIWeakReference> mWeakShell;

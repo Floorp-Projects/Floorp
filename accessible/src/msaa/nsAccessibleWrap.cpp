@@ -42,10 +42,12 @@
 #include "nsIAccessibleWin32Object.h"
 #include "nsArray.h"
 #include "nsIDOMDocument.h"
+#include "nsIFrame.h"
+#include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
-#include "nsINameSpaceManager.h"
+#include "nsIView.h"
 
 // for the COM IEnumVARIANT solution in get_AccSelection()
 #define _ATLBASE_IMPL
@@ -167,15 +169,30 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
   if (!mWeakShell)
     return E_FAIL;  // We've been shut down
 
+  nsIFrame *frame = GetFrame();
   nsCOMPtr<nsIAccessible> xpParentAccessible;
-
   GetParent(getter_AddRefs(xpParentAccessible));
-  if (xpParentAccessible) {
-    *ppdispParent = NativeAccessible(xpParentAccessible);
-    return S_OK;
+  nsCOMPtr<nsPIAccessNode> parentAccessNode(do_QueryInterface(xpParentAccessible));
+  nsIFrame *parentFrame;
+  if (!frame || !parentAccessNode ||
+    ((parentFrame = parentAccessNode->GetFrame()) != nsnull) && (frame->GetWindow() != parentFrame->GetWindow())) {
+    // This code is essentially our implementation of WindowFromAccessibleObject,
+    // because MSAA iterates get_accParent() until it sees an object of ROLE_WINDOW
+    // to know where the window for a given accessible is. We must expose the native 
+    // window accessible that MSAA creates for us. This must be done for the document
+    // object as well as any layout that creates its own window (e.g. via overflow: scroll)
+    HWND hWnd = (HWND)frame->GetWindow()->GetNativeData(NS_NATIVE_WINDOW);
+    NS_ASSERTION(hWnd, "No window handle for window");
+    if (SUCCEEDED(AccessibleObjectFromWindow(hWnd, OBJID_WINDOW, IID_IAccessible,
+                                            (void**)ppdispParent))) {
+      return S_OK;
+    }
   }
 
-  return E_FAIL;
+  NS_ASSERTION(xpParentAccessible, "No parent accessible where we're not direct child of window");
+  *ppdispParent = NativeAccessible(xpParentAccessible);
+
+  return S_OK;
 }
 
 STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)

@@ -247,16 +247,25 @@ already_AddRefed<nsIAccessibleDocument> nsAccessNode::GetDocAccessible()
   return docAccessible;
 }
 
+
 nsIFrame* nsAccessNode::GetFrame()
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (!shell) 
     return nsnull;  
 
-  nsIFrame* frame = nsnull;
+  nsIFrame* frame;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  shell->GetPrimaryFrameFor(content, &frame);
-  return frame;
+  while (content) {
+    shell->GetPrimaryFrameFor(content, &frame);
+    if (frame) {
+      return frame;
+    }
+    nsCOMPtr<nsIContent> tempContent = content->GetParent();
+    content = tempContent;
+  }
+
+  return nsnull;
 }
 
 NS_IMETHODIMP

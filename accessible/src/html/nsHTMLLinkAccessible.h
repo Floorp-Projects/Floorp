@@ -47,10 +47,15 @@ class nsHTMLLinkAccessible : public nsLinkableAccessible
 
 public:
   nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame);
+  
+  // nsIAccessible
   NS_IMETHOD GetName(nsAString& _retval); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetState(PRUint32 *_retval);
-  nsIFrame *GetFrame();
+  
+  // nsPIAccessNode
+  NS_IMETHOD_(nsIFrame *) GetFrame(void);
+  
 private:
   nsIFrame *mFrame;
 };
