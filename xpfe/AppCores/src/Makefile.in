@@ -24,7 +24,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = appcores
-IS_COMPONENT = 1
+# This is no longer a component because the mailnew app links with it.
+# Since appcores are supposed to be going away, we are going to put
+# this back in the bin/ directory
+#IS_COMPONENT = 1
 MODULE=raptor
 
 CPPSRCS= \
