@@ -2308,7 +2308,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 			const char * pwd = (const char *) password;
             if ((m_pop3ConData->only_check_for_new_mail /* ||
                  MSG_Biff_Master_NikiCallingGetNewMail() */) && 
-                (!password || !*password || m_username.IsEmpty())) 
+                (!password || m_username.IsEmpty())) 
             {
                 status = MK_POP3_PASSWORD_UNDEFINED;
                 m_pop3ConData->biffstate = nsMsgBiffState_Unknown;
