@@ -44,14 +44,12 @@ Rights Reserved.
       <text value="&conditions.label;"/>
     </title>
     <text value="&conditionDesc.label;"/>
-    <radiogroup>
-      <radio value="&matchAll.label;" checked="true"/>
-      <radio value="&matchAny.label;"/>
+    <radiogroup oncommand="booleanChanged(event);">
+      <radio data="true" value="&matchAll.label;"/>
+      <radio data="false" value="&matchAny.label;"/>
     </radiogroup>
 
     <spring class="spacer"/>
-    <box orient="horizontal">
-    </box>
     <box style="min-height:200px">
     <searchterms id="searchterms"/>
     <tree class="inset" flex="1" id="searchTermTree">
@@ -95,7 +93,10 @@ Rights Reserved.
       
     </tree>
   </box>
-  <text value="bottom"/>
+  <box>
+    <button value="&more.label;" onclick="onMore(event);"/>
+    <button value="&less.label;" onclick="onLess(event);"/>
+  </box>
   </titledbox>
   <titledbox>
     <title>

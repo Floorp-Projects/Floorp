@@ -23,13 +23,16 @@
 
 // the actual filter that we're editing
 var gFilter;
+var gSearchScope;
 
 // cache the key elements we need
 var gFilterNameElement;
 var gActionElement;
 var gActionTargetElement;
 
+
 // search stuff (move to overlay)
+var gTotalSearchTerms=0;
 var gSearchRowContainer;
 var gSearchTermContainer;
 
@@ -40,15 +43,16 @@ var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
 function filterEditorOnLoad()
 {
+    initializeSearchWidgets();
     if (window.arguments && window.arguments[0]) {
         var args = window.arguments[0];
         if (args.filter) {
             gFilter = window.arguments[0].filter;
-        
+
             initializeDialog(gFilter);
         } else {
             if (args.filterList)
-                setScope(getScopeFromFilterList(args.filterList));
+                setSearchScope(getScopeFromFilterList(args.filterList));
         }
     }
 
@@ -63,13 +67,18 @@ function onOk()
 
 // move to overlay
 // set scope on all visible searhattribute tags
-function setScope(scope) {
+function setSearchScope(scope) {
+    gSearchScope = scope;
     var searchTermElements = gSearchTermContainer.childNodes;
-    for (var i=0; i<searchTerms.length; i++) {
+    if (!searchTermElements) return;
+    for (var i=0; i<searchTermElements.length; i++) {
         searchTermElements[i].searchattribute.searchScope = scope;
     }
 }
 
+function booleanChanged(event) {
+    dump("Boolean is now " + event.target.data + "\n");
+}
 
 function getScopeFromFilterList(filterList)
 {
@@ -104,38 +113,28 @@ function initializeDialog(filter)
         
 
     var scope = getScope(filter);
-    
+    setSearchScope(scope);
     initializeSearchRows(scope, filter.searchTerms)
+}
+
+function initializeSearchWidgets() {
+    gSearchRowContainer = document.getElementById("searchTermList");
+    gSearchTermContainer = document.getElementById("searchterms");
 }
 
 // move to overlay
 function initializeSearchRows(scope, searchTerms)
 {
-    gSearchRowContainer = document.getElementById("searchTermList");
-    gSearchTermContainer = document.getElementById("searchterms");
-    var numTerms = searchTerms.Count();
-    for (var i=0; i<numTerms; i++) {
-        createSearchRow(i);
-
-      // now that it's been added to the document, we can initialize it.
-      var searchTermElement = document.getElementById("searchTerm" + i);
-
-      if (searchTermElement) {
-          searchTermElement.searchScope = scope;
-          var searchTerm =
-              searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
-          if (searchTerm) searchTermElement.searchTerm = searchTerm;
-      }
-      else {
-
-          dump("Ack! Can't find searchTerm" + i + "!\n");
-      }
+    initializeSearchWidgets();
+    gTotalSearchTerms = searchTerms.Count();
+    for (var i=0; i<gTotalSearchTerms; i++) {
+        var searchTerm = searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
+        createSearchRow(i, scope, searchTerm);
     }
-
 }
 
 // move to overlay
-function createSearchRow(index)
+function createSearchRow(index, scope, searchTerm)
 {
     var searchAttr = document.createElement("searchattribute");
     var searchOp = document.createElement("searchoperator");
@@ -158,17 +157,19 @@ function createSearchRow(index)
 
     // should this be done with XBL or just straight JS?
     // probably straight JS but I don't know how that's done.
-    var searchTerm = document.createElement("searchterm");
-    searchTerm.id = "searchTerm" + index;
-    gSearchTermContainer.appendChild(searchTerm);
-    searchTerm = document.getElementById(searchTerm.id);
+    var searchTermElement = document.createElement("searchterm");
+    searchTermElement.id = "searchTerm" + index;
+    gSearchTermContainer.appendChild(searchTermElement);
+    searchTermElement = document.getElementById(searchTermElement.id);
     
-    searchTerm.searchattribute = searchAttr;
-    searchTerm.searchoperator = searchOp;
-    searchTerm.searchvalue = searchVal;
+    searchTermElement.searchattribute = searchAttr;
+    searchTermElement.searchoperator = searchOp;
+    searchTermElement.searchvalue = searchVal;
 
+    // and/or string handling:
     // this is scary - basically we want to take every other
-    // treecell, which will be a text label, and set the searchTerm's
+    // treecell, (note the i+=2) which will be a text label,
+    // and set the searchTermElement's
     // booleanNodes to that
     var stringNodes = new Array;
     var treecells = searchrow.firstChild.childNodes;
@@ -176,9 +177,14 @@ function createSearchRow(index)
     for (var i=0; i<treecells.length; i+=2) {
         stringNodes[j++] = treecells[i];
     }
-    searchTerm.booleanNodes = stringNodes;
+    searchTermElement.booleanNodes = stringNodes;
     
     gSearchRowContainer.appendChild(searchrow);
+
+    searchTermElement.searchScope = scope;
+    if (searchTerm)
+        searchTermElement.searchTerm = searchTerm;
+
 }
 
 // creates a <treerow> using the array treeCellChildren as 
@@ -204,7 +210,11 @@ function constructRow(treeCellChildren)
 
 function saveFilter() {
 
-    gFilter.filterName = gFilterNameElement.value;
+    if (!gFilter) {
+        gFilter = gFilterList.createFilter(gFilterNameElement.value);
+    } else {
+        gFilter.filterName = gFilterNameElement.value;
+    }
 
     var searchTermElements =
         document.getElementById("searchterms").childNodes;
@@ -213,9 +223,20 @@ function saveFilter() {
     
     for (var i = 0; i<searchTermElements.length; i++) {
         try {
-            searchTermElements[i].save();
+            dump("Saving search element " + i + "\n");
+            var searchTerm = searchTermElements[i].searchTerm;
+            if (searchTerm)
+                searchTermElements[i].save();
+            else {
+                // need to create a new searchTerm, and somehow save it to that
+                dump("Need to create searchterm " + i + "\n");
+                searchTerm = gFilter.createTerm();
+                searchTermElements[i].saveTo(searchTerm);
+                gFilter.AppendTerm(searchTerm);
+            }
         } catch (ex) {
-            dump("**** error: " + ex + "\n");
+
+            dump("** Error: " + ex + "\n");
         }
     }
 
@@ -227,4 +248,14 @@ function saveFilter() {
             gActionTargetElement.selectedItem.getAttribute("data");
     else if (action == nsMsgFilterAction.ChangePriority)
         gFilter.actionPriority = 0; // whatever, fix this
+}
+
+function onMore(event)
+{
+    createSearchRow(++gTotalSearchTerms, gSearchScope, null);
+}
+
+function onLess(event)
+{
+    removeSearchRow(--gTotalSearchTerms);
 }
