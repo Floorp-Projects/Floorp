@@ -39,6 +39,7 @@ REQUIRES = security nspr libdbm
 DIRS = lib  \
  zlib \
  atob  \
+ bltest \
  btoa  \
  certcgi \
  certutil  \
