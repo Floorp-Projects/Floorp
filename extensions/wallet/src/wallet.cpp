@@ -780,7 +780,11 @@ Wallet_ConfirmYN(char * szMessage)
 
   const nsString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
+#ifdef YN_DIALOGS_FIXED
   res = dialog->ConfirmYN(message.GetUnicode(), &retval);
+#else
+  res = dialog->Confirm(message.GetUnicode(), &retval);
+#endif
   if (NS_FAILED(res)) {
     return retval;
   }
@@ -849,7 +853,11 @@ Wallet_CheckConfirmYN(char * szMessage, char * szCheckMessage, PRBool* checkValu
   const nsString message = szMessage;
   const nsString checkMessage = szCheckMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
+#ifdef YN_DIALOGS_FIXED
   res = dialog->ConfirmCheckYN(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
+#else
+  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
+#endif
   if (NS_FAILED(res)) {
     *checkValue = 0;
   }
