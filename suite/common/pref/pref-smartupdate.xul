@@ -1,0 +1,83 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?> 
+
+<!DOCTYPE window
+[
+<!ENTITY title.label "SmartUpdate">
+<!ENTITY header "SmartUpdate">
+<!ENTITY enableSU.label "Enable SmartUpdate">
+<!ENTITY requireConfirmation.label "Require manual confirmation of each install">
+<!ENTITY selectUninstall.label "To uninstall, select from the following list and click the uninstall button">
+<!ENTITY uninstallButton.label "Uninstall">
+]
+> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('smartupdate');"
+        title="&title.label;">
+
+  <html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js">
+  </html:script>
+
+ 	<box align="vertical">
+ 	  <box id="header" align="vertical">  
+	    <spring style="width:20px"/>
+		    <html:div>
+		      <html:B>&header;</html:B>
+		    </html:div>
+	  </box>
+
+    <box align="vertical">
+      <spring style="height:20px"/>
+    </box>
+
+	  <box align="vertical">
+      <box align="horizontal">
+			  <html:input type="checkbox" id="pref:0:bool:autoupdate.enabled" />
+			  <html:label for="pref:0:bool:autoupdate.enabled">
+				  &enableSU.label;
+			  </html:label>
+      </box>
+
+      <box align="horizontal">
+			  <html:input type="checkbox" id="pref:0:bool:autoupdate.enabled" />
+			  <html:label for="pref:0:bool:autoupdate.enabled">
+  			  &requireConfirmation.label;
+			  </html:label>
+	    </box>
+
+      <spring style="height:20px"/>
+
+      <box align="vertical">
+        <html:div>
+          &selectUninstall.label;
+        </html:div>
+      </box>
+
+      <spring style="height:10px"/>
+
+      <box align="horizontal">
+        <box>
+        <html:table>
+          <html:tr><html:td>
+            <html:textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
+            </html:textarea>
+          </html:td></html:tr>
+        </html:table>
+        </box>
+        <box align="vertical">
+          <spring flex="15%"/>
+		      <titledbutton id="pref:0:bool:smartupdate" value="&uninstallButton.label;" style="height:20px;" />
+        </box>
+      </box>
+
+
+
+    </box>
+  </box>
+
+</window>
+
