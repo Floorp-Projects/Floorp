@@ -94,8 +94,9 @@ public:
                                          PRInt32 *aY);
     NS_IMETHOD         Move(PRInt32 aX,
                             PRInt32 aY);
-    NS_IMETHOD         PlaceBehind(nsIWidget *aWidget,
-                                   PRBool     aActivate);
+    NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
+                                   nsIWidget                  *aWidget,
+                                   PRBool                      aActivate);
     NS_IMETHOD         SetSizeMode(PRInt32 aMode);
     NS_IMETHOD         Enable(PRBool aState);
     NS_IMETHOD         SetFocus(PRBool aRaise = PR_FALSE);

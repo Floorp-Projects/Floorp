@@ -1217,7 +1217,8 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 // Position the window behind the given window
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
+NS_METHOD nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                nsIWidget *aWidget, PRBool aActivate)
 {
   HWND behind = aWidget ? (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW) : HWND_TOP;
   UINT flags = SWP_ZORDER;

@@ -342,7 +342,7 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
 					if (NS_SUCCEEDED(childWidget->GetZIndex(&childZIndex))) {
 						if (aZIndex < childZIndex) {
 							parent->mChildren->InsertElementAt(this, index);
-							PlaceBehind(childWidget, PR_FALSE);
+							PlaceBehind(eZPlacementBelow, childWidget, PR_FALSE);
 							break;
 						}
 					}
@@ -374,7 +374,8 @@ NS_IMETHODIMP nsBaseWidget::GetZIndex(PRInt32* aZIndex)
 // Places widget behind the given widget (platforms must override)
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
+NS_IMETHODIMP nsBaseWidget::PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
+                                        nsIWidget *aWidget, PRBool aActivate)
 {
   return NS_OK;
 }
