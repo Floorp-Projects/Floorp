@@ -317,6 +317,9 @@ nsresult nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   mIsOffscreen = PR_TRUE;
 
   mPixmap = ::gdk_pixmap_new(nsnull, mWidth, mHeight, mDepth);
+#ifdef MOZ_WIDGET_GTK2
+  gdk_drawable_set_colormap(GDK_DRAWABLE(mPixmap), gdk_rgb_get_colormap());
+#endif
 
   if (mImage)
     gdk_image_destroy(mImage);
