@@ -527,6 +527,7 @@ NS_IMETHODIMP nsPlaintextEditor::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent)
     
     if (character && !altKey && !ctrlKey && !isShift && !metaKey)
     {
+      aKeyEvent->PreventDefault();
       nsAutoString key(character);
       return TypedText(key, eTypedText);
     }
