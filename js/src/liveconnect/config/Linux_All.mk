@@ -49,6 +49,8 @@ OTHER_LIBS += -L$(JDK)/jre/lib/i386/native_threads
 OTHER_LIBS += -L$(JDK)/jre/lib/i386/classic
 OTHER_LIBS += -L$(JDK)/jre/lib/i386 -ljava -ljvm -lhpi
 
+# To run lcshell with the above, built in a Mozilla tree with a local nspr:
+# LD_LIBRARY_PATH=../../../dist/lib:/share/builds/components/jdk/1.2.2/Linux/jre/lib/i386:/share/builds/components/jdk/1.2.2/Linux/jre/lib/i386/classic:/share/builds/components/jdk/1.2.2/Linux/jre/lib/i386/native_threads CLASSPATH=./classes/Linux_All_DBG.OBJ/js15lc30.jar lcshell
 
 # Uncomment below to maybe build against 1.3.
 
