@@ -77,12 +77,26 @@ namespace JavaScript {
         return dest;
     }
 
+    Register ICodeGenerator::newObject()
+    {
+        Register dest = getRegister();
+        NewObject *instr = new NewObject(dest);
+        iCode->push_back(instr);
+        return dest;
+    }
+
     Register ICodeGenerator::loadName(StringAtom &name)
     {
         Register dest = getRegister();
         LoadName *instr = new LoadName(LOAD_NAME, &name, dest);
         iCode->push_back(instr);
         return dest;
+    }
+    
+    void ICodeGenerator::saveName(StringAtom &name, Register value)
+    {
+        SaveName *instr = new SaveName(SAVE_NAME, &name, value);
+        iCode->push_back(instr);
     }
 
     Register ICodeGenerator::getProperty(StringAtom &name, Register base)
@@ -91,6 +105,12 @@ namespace JavaScript {
         GetProp *instr = new GetProp(GET_PROP, &name, base, dest);
         iCode->push_back(instr);
         return dest;
+    }
+
+    void ICodeGenerator::setProperty(StringAtom &name, Register base, Register value)
+    {
+        SetProp *instr = new SetProp(SET_PROP, &name, base, value);
+        iCode->push_back(instr);
     }
 
     void ICodeGenerator::saveVariable(uint32 frameIndex, Register value)
@@ -525,7 +545,7 @@ namespace JavaScript {
 
     void ICodeGenerator::returnStatement(Register result)
     {
-        Return *instr = new Return(RETURN, result);
+        Return *instr = new Return(result);
         iCode->push_back(instr);
     }
     
@@ -540,6 +560,7 @@ namespace JavaScript {
             "load_imm",
             "load_name",
             "save_name",
+            "new_object",
             "get_prop",
             "set_prop", 
             "add",
