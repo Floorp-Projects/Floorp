@@ -237,8 +237,8 @@ public:
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags = 0) {
-    return nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
-                                        aDirtyRect, aFrame, aWhichLayer, aFlags);
+    nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
+                                 aDirtyRect, aFrame, aWhichLayer, aFlags);
   }
 
 protected:
