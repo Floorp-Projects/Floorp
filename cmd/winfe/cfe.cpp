@@ -263,35 +263,21 @@ MWContext *CFE_CreateNewDocWindow(MWContext *pContext, URL_Struct *pURL)	{
 		}
 
 		//	Set the miscellaneous XP context properties.
-
 		pNewContext->fancyFTP = pContext->fancyFTP;	
 		pNewContext->fancyNews = pContext->fancyNews;
-
-		//	Copy the session history over ONLY if called from a Browser
-        if(pContext->type == MWContextBrowser && !EDT_IS_EDITOR(pContext))  {
-		    SHIST_CopySession(pNewContext, pContext);
-        }
 	}
 
-	//	If there was no URL specified to load, load what's in the history.
-	//	Only take URLs from a browser window.
-	if(pURL == NULL)	{
-        //  Make sure we're coming from a context we understand, otherwise get out now.
-        if(pContext == NULL || EDT_IS_EDITOR(pContext) || pContext->type != MWContextBrowser)   {
-            //  In this case, load the home page.
-            pFrame->OnLoadHomePage();
-        }
-        else    {
-		    //	Load the oldest thing in it's history (most likely the home page).
-            //  This current entry was set above, all we have to do is go through
-            //      the motions of a reload.
-            ABSTRACTCX(pNewContext)->Reload();
-        }
-	}
-	else if(pURL != NULL)	{
-		//	Load the URL passed into this function.
-		ABSTRACTCX(pNewContext)->GetUrl(pURL, FO_CACHE_AND_PRESENT);
-	}
+    //  If there was no URL specified to load, load the homepage.
+    //  This is a change in behavior from 4.0 and prior browsers.
+    //  This allows the pref (blank, home, last visited) to have more
+    //      meaning and gives user better customization.
+    if(pURL == NULL)	{
+        pFrame->OnLoadHomePage();
+    }
+    else	{
+        //	Load the URL passed into this function.
+        ABSTRACTCX(pNewContext)->GetUrl(pURL, FO_CACHE_AND_PRESENT);
+    }
 
     //	New frame window up, and filled out appropriately.
 	return(pNewContext);
