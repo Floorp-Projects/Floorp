@@ -171,9 +171,6 @@ ObserverListEnumerator::HasMoreElements(PRBool* aResult)
         return NS_OK;
     }
 
-    PRUint32 cnt;
-    nsresult rv = mValueArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
     *aResult = (mIndex > 0);
     return NS_OK;
 }
@@ -190,9 +187,6 @@ ObserverListEnumerator::GetNext(nsISupports** aResult)
         return NS_OK;
     }
 
-    PRUint32 cnt;
-    nsresult rv = mValueArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
     if (mIndex <= 0 )
         return NS_ERROR_UNEXPECTED;
 
