@@ -422,9 +422,12 @@ motif_check_xpm()
 		fi
 	fi
 
-	if [ -f $_lib ]
+	if [ -n "$_lib" ]
 	then
-		_count=`strings $_lib | grep Xpm | wc -l`
+		if [ -f $_lib ]
+		then
+			_count=`strings $_lib | grep Xpm | wc -l`
+		fi
 	fi
 
 	if [ $_count -gt 0 ]
