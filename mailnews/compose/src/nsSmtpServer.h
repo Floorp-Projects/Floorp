@@ -26,9 +26,10 @@
 
 #include "nsString.h"
 #include "nsISmtpServer.h"
+#include "nsWeakReference.h"
 
-
-class nsSmtpServer : public nsISmtpServer
+class nsSmtpServer : public nsISmtpServer,
+                     public nsSupportsWeakReference
 {
 public:
     nsSmtpServer();

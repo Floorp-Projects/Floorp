@@ -25,6 +25,8 @@
 #include "nsIFileSpec.idl"
 #include "nsIMsgVCard.idl"
 
+interface nsISmtpServer;
+
 /*
  * this interface contains all the personal outgoing mail information
  * for a given person.
@@ -99,6 +101,13 @@ interface nsIMsgIdentity : nsISupports {
    * do not call this unless you know what you're doing!
    */
   void clearAllValues();
+
+  /**
+   * the preferred smtp server for this identity.
+   * if this is set, this the smtp server that should be used
+   * for the message send
+   */
+  attribute nsISmtpServer smtpServer;
   
   wstring toString();
 };

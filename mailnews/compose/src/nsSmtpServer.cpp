@@ -30,7 +30,13 @@
 
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
-NS_IMPL_ISUPPORTS1(nsSmtpServer, nsISmtpServer)
+NS_IMPL_ADDREF(nsSmtpServer)
+NS_IMPL_RELEASE(nsSmtpServer)
+NS_INTERFACE_MAP_BEGIN(nsSmtpServer)
+    NS_INTERFACE_MAP_ENTRY(nsISmtpServer)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISmtpServer)
+NS_INTERFACE_MAP_END
 
 nsSmtpServer::nsSmtpServer()
 {

@@ -85,6 +85,12 @@ interface nsISmtpService : nsISupports {
   nsISmtpServer findServer(in string hostname);
 
   /**
+   * look up the server with the given key
+   * if the server does not exist, create it and add it to our list
+   */
+  nsISmtpServer getServerByKey(in string key);
+  
+  /**
    * delete the given server from the server list.
    * does nothing if the server does not exist
    * @param server the server to delete. Use findServer() if you only know

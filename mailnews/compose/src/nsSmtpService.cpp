@@ -98,7 +98,14 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{
         nsCOMPtr<nsISmtpServer> smtpServer;
-        rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
+
+        // first try the identity's preferred server
+        if (aSenderIdentity)
+            rv = aSenderIdentity->GetSmtpServer(getter_AddRefs(smtpServer));
+
+        // fallback to the default
+        if (NS_FAILED(rv) || !smtpServer)
+            rv = smtpService->GetDefaultServer(getter_AddRefs(smtpServer));
 
 		if (NS_SUCCEEDED(rv) && smtpServer)
 		{
@@ -543,7 +550,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
           nsCRT::strcmp(defaultServerKey, "")==0) {
 
           nsCOMPtr<nsISmtpServer> server;
-          rv = getServerByKey(defaultServerKey,
+          rv = GetServerByKey(defaultServerKey,
                               getter_AddRefs(mDefaultSmtpServer));
       } else {
           // no pref set, so just return the first one, and set the pref
@@ -651,7 +658,7 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
 
 
 nsresult
-nsSmtpService::getServerByKey(const char* aKey, nsISmtpServer **aResult)
+nsSmtpService::GetServerByKey(const char* aKey, nsISmtpServer **aResult)
 {
     findServerByKeyEntry entry;
     entry.key = aKey;

@@ -26,7 +26,8 @@
 #include "nsIMsgIdentity.h"
 #include "nsIPref.h"
 #include "msgCore.h"
-
+#include "nsISmtpServer.h"
+#include "nsWeakPtr.h"
 
 
 class NS_MSG_BASE nsMsgIdentity : public nsIMsgIdentity
@@ -43,6 +44,7 @@ private:
   nsIMsgVCard* m_vCard;
   char *m_identityKey;
   nsIPref *m_prefs;
+  nsWeakPtr m_smtpServer;
 
 protected:
   nsresult getPrefService();
@@ -67,6 +69,8 @@ protected:
 
 private:
   static void clearPrefEnum(const char *aPref, void *aClosure);
+
+  nsresult loadSmtpServer(nsISmtpServer**);
   
 };
 
