@@ -61,6 +61,8 @@
 #include "prmem.h"
 #include "rdfutil.h"
 
+#include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
+
 static const char kNameSpaceSeparator[] = ":";
 static const char kNameSpaceDef[] = "xmlns";
 
@@ -100,6 +102,27 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
+
+// XXX This totally sucks. I wish that mozilla/base had this code.
+static PRUnichar
+rdf_EntityToUnicode(const char* buf)
+{
+    if ((buf[0] == 'g' || buf[0] == 'G') &&
+        (buf[1] == 't' || buf[1] == 'T'))
+        return PRUnichar('>');
+
+    if ((buf[0] == 'l' || buf[0] == 'L') &&
+        (buf[1] == 't' || buf[1] == 'T'))
+        return PRUnichar('<');
+
+    if ((buf[0] == 'a' || buf[0] == 'A') &&
+        (buf[1] == 'm' || buf[1] == 'M') &&
+        (buf[2] == 'p' || buf[2] == 'P'))
+        return PRUnichar('&');
+
+    PR_ASSERT(0); // XXX this is a named entity that I can't handle...
+    return PRUnichar('?');
+}
 
 // XXX Code copied from nsHTMLContentSink. It should be shared.
 static void
@@ -202,9 +225,12 @@ rdf_StripAndConvert(nsString& aResult)
                 }
                 *cp = '\0';
                 PRInt32 ch;
-#if 0
-                ch = NS_EntityToUnicode(cbuf);
-#endif
+
+                // XXX Um, here's where we should be converting a
+                // named entity. I removed this to avoid a link-time
+                // dependency on core raptor.
+                ch = rdf_EntityToUnicode(cbuf);
+
                 if (ch < 0) {
                     continue;
                 }
@@ -495,6 +521,13 @@ nsRDFContentSink::AddCharacterData(const nsIParserNode& aNode)
 {
     nsAutoString text = aNode.GetText();
 
+    if (aNode.GetTokenType() == eToken_entity) {
+        char buf[12];
+        text.ToCString(buf, sizeof(buf));
+        text.Truncate();
+        text.Append(rdf_EntityToUnicode(buf));
+    }
+
     PRInt32 addLen = text.Length();
     if (0 == addLen) {
         return NS_OK;
@@ -639,6 +672,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
             case eRDFContentSinkState_InMemberElement: {
                 nsAutoString value;
                 value.Append(mText, mTextLength);
+                value.Trim(" \t\n\r");
 
                 nsIRDFLiteral* literal;
                 if (NS_SUCCEEDED(rv = mRDFService->GetLiteral(value, &literal))) {
@@ -653,6 +687,7 @@ nsRDFContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
             case eRDFContentSinkState_InPropertyElement: {
                 nsAutoString value;
                 value.Append(mText, mTextLength);
+                value.Trim(" \t\n\r");
 
                 rv = rdf_Assert(mRDFService,
                                 mDataSource,
@@ -1147,13 +1182,12 @@ nsRDFContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
             // Look for "xmlns" at the start of the attribute name
             offset = k.Find(kNameSpaceDef);
             if (0 == offset) {
+                prefix.Truncate();
+
                 PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
                 // If the next character is a :, there is a namespace prefix
                 if (':' == next) {
                     k.Right(prefix, k.Length()-sizeof(kNameSpaceDef));
-                }
-                else {
-                    prefix.Truncate();
                 }
 
                 // Get the attribute value (the URI for the namespace)

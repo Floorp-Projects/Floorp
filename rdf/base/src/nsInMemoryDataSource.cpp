@@ -102,6 +102,24 @@ rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, PRUint32 size)
     return NS_OK;
 }
 
+static nsresult
+rdf_BlockingWrite(nsIOutputStream* stream, const nsString& s)
+{
+    char buf[256];
+    char* p = buf;
+
+    if (s.Length() >= sizeof(buf))
+        p = new char[s.Length() + 1];
+
+    nsresult rv = rdf_BlockingWrite(stream, s.ToCString(p, s.Length() + 1), s.Length());
+
+    if (p != buf)
+        delete[](p);
+
+    return rv;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
 
@@ -1113,26 +1131,87 @@ InMemoryDataSource::Flush()
     return NS_OK;
 }
 
+
+// XXX This is a total kludge that takes a property resource (like
+// "http://www.w3.org/TR/WD-rdf-syntax#Description") and converts it
+// into a property ("Description"), a namespace prefix ("RDF"), and a
+// namespace URI ("http://www.w3.org/TR/WD-rdf-syntax#").
+//
+// It should really do this by looking at some feature of the document
+// or something. The stuff it spits out is valid, but probably pretty
+// damn illegible and verbose.
+
 static void
-rdf_MakeQName(nsIRDFResource* resource, char* buf, PRInt32 size)
+rdf_MakeQName(nsIRDFResource* resource,
+              nsString& property,
+              nsString& nameSpacePrefix,
+              nsString& nameSpaceURI)
 {
     const char* uri;
     resource->GetValue(&uri);
 
-    char* tag;
+    PRInt32 index;
 
-    tag = PL_strrchr(uri, '#');
-    if (tag)
-        goto done;
+    nameSpaceURI = uri;
+    index = nameSpaceURI.RFind('#'); // first try a '#'
+    if (index == -1) {
+        index = nameSpaceURI.RFind('/');
+        if (index == -1) {
+            // Okay, just punt and assume there is _no_ namespace on
+            // this thing...
+            nameSpaceURI.Truncate();
+            nameSpacePrefix.Truncate();
+            property = uri;
+            return;
+        }
+    }
 
-    tag = PL_strrchr(uri, '/');
-    if (tag)
-        goto done;
+    // Take whatever is to the right of the '#' and call it the
+    // property.
+    property.Truncate();
+    nameSpaceURI.Right(property, nameSpaceURI.Length() - (index + 1));
 
-    tag = NS_CONST_CAST(char*, uri);
+    // Truncate the namespace URI down to the string up to and
+    // including the '#'.
+    nameSpaceURI.Truncate(index + 1);
 
-done:
-    PL_strncpyz(buf, tag, size);
+    // XXX hack any common prefixes here
+    if (nameSpaceURI.Equals("http://www.w3.org/TR/WD-rdf-syntax#")) {
+        nameSpacePrefix = "RDF";
+    }
+    else {
+        // Just generate a random prefix
+        static PRInt32 gPrefixID = 0;
+        nameSpacePrefix = "NS";
+        nameSpacePrefix.Append(++gPrefixID, 10);
+    }
+}
+
+// convert '<' and '>' into '&lt;' and '&gt', respectively.
+static void
+rdf_EscapeAngleBrackets(nsString& s)
+{
+    PRInt32 index;
+    while ((index = s.Find('<')) != -1) {
+        s[index] = '&';
+        s.Insert(nsAutoString("lt;"), index + 1);
+    }
+
+    while ((index = s.Find('>')) != -1) {
+        s[index] = '&';
+        s.Insert(nsAutoString("gt;"), index + 1);
+    }
+}
+
+static void
+rdf_EscapeAmpersands(nsString& s)
+{
+    PRInt32 index = 0;
+    while ((index = s.Find('&', index)) != -1) {
+        s[index] = '&';
+        s.Insert(nsAutoString("amp;"), index + 1);
+        index += 4;
+    }
 }
 
 static PRIntn
@@ -1146,19 +1225,38 @@ rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
     const char* s;
     node->GetValue(&s);
 
-    static const char* kRDFDescription1 = "  <RDF:Description about=\"";
-    static const char* kRDFDescription2 = "\">\n";
-    
-    rdf_BlockingWrite(stream, kRDFDescription1, PL_strlen(kRDFDescription1));
-    rdf_BlockingWrite(stream, s, PL_strlen(s));
-    rdf_BlockingWrite(stream, kRDFDescription2, PL_strlen(kRDFDescription2));
+    static const char kRDFDescription1[] = "  <RDF:Description about=\"";
+    static const char kRDFDescription2[] = "\">\n";
+ 
+    nsAutoString escaped(s);
+    rdf_EscapeAmpersands(escaped);
+
+    rdf_BlockingWrite(stream, kRDFDescription1, sizeof(kRDFDescription1) - 1);
+    rdf_BlockingWrite(stream, escaped);
+    rdf_BlockingWrite(stream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
 
     for (Assertion* as = (Assertion*) he->value; as != nsnull; as = as->mNext) {
-        char qname[64];
-        rdf_MakeQName(as->mProperty, qname, sizeof qname);
+        nsAutoString property, nameSpacePrefix, nameSpaceURI;
+        nsAutoString tag;
+        rdf_MakeQName(as->mProperty, property, nameSpacePrefix, nameSpaceURI);
+
+        if (nameSpacePrefix.Length()) {
+            tag.Append(nameSpacePrefix);
+            tag.Append(':');
+        }
+        tag.Append(property);
 
         rdf_BlockingWrite(stream, "    <", 5);
-        rdf_BlockingWrite(stream, qname, PL_strlen(qname));
+        rdf_BlockingWrite(stream, tag);
+
+        if (nameSpacePrefix.Length()) {
+            rdf_BlockingWrite(stream, " xmlns:", 7);
+            rdf_BlockingWrite(stream, nameSpacePrefix);
+            rdf_BlockingWrite(stream, "=\"", 2);
+            rdf_BlockingWrite(stream, nameSpaceURI);
+            rdf_BlockingWrite(stream, "\"");
+        }
+
         rdf_BlockingWrite(stream, ">", 1);
 
         nsIRDFResource* resource;
@@ -1167,7 +1265,11 @@ rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
         if (NS_SUCCEEDED(as->mTarget->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
             const char* uri;
             resource->GetValue(&uri);
-            rdf_BlockingWrite(stream, uri, PL_strlen(uri));
+
+            nsAutoString escaped(uri);
+            rdf_EscapeAmpersands(escaped);
+
+            rdf_BlockingWrite(stream, escaped);
             NS_RELEASE(resource);
         }
         else if (NS_SUCCEEDED(as->mTarget->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
@@ -1175,16 +1277,10 @@ rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
             literal->GetValue(&value);
             nsAutoString s(value);
 
-            char buf[256];
-            char* p = buf;
+            rdf_EscapeAmpersands(s); // do these first!
+            rdf_EscapeAngleBrackets(s);
 
-            if (s.Length() >= sizeof(buf))
-                p = new char[s.Length() + 1];
-
-            rdf_BlockingWrite(stream, s.ToCString(p, s.Length() + 1), s.Length());
-
-            if (p != buf)
-                delete[](p);
+            rdf_BlockingWrite(stream, s);
 
             NS_RELEASE(literal);
         }
@@ -1192,13 +1288,13 @@ rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
             PR_ASSERT(0);
         }
 
-        rdf_BlockingWrite(stream, "    </", 6);
-        rdf_BlockingWrite(stream, qname, PL_strlen(qname));
+        rdf_BlockingWrite(stream, "</", 2);
+        rdf_BlockingWrite(stream, tag);
         rdf_BlockingWrite(stream, ">\n", 2);
     }
 
-    static const char* kRDFDescription3 = "  </RDF:Description>\n";
-    rdf_BlockingWrite(stream, kRDFDescription3, PL_strlen(kRDFDescription3));
+    static const char kRDFDescription3[] = "  </RDF:Description>\n";
+    rdf_BlockingWrite(stream, kRDFDescription3, sizeof(kRDFDescription3) - 1);
 
     return HT_ENUMERATE_NEXT;
 }
@@ -1206,16 +1302,16 @@ rdf_SerializeEnumerator(PLHashEntry* he, PRIntn index, void* closure)
 NS_IMETHODIMP
 InMemoryDataSource::Serialize(nsIOutputStream* aStream)
 {
-    static const char* kOpenRDF  = "<RDF:RDF xmlns:RDF=\"http://www.w3.org/TR/WD-rdf-syntax#\">\n";
-    static const char* kCloseRDF = "</RDF:RDF>\n";
+    static const char kOpenRDF[]  = "<RDF:RDF xmlns:RDF=\"http://www.w3.org/TR/WD-rdf-syntax#\">\n";
+    static const char kCloseRDF[] = "</RDF:RDF>\n";
 
     nsresult rv;
-    if (NS_FAILED(rv = rdf_BlockingWrite(aStream, kOpenRDF, PL_strlen(kOpenRDF))))
+    if (NS_FAILED(rv = rdf_BlockingWrite(aStream, kOpenRDF, sizeof(kOpenRDF) - 1)))
         return rv;
 
     PL_HashTableEnumerateEntries(mForwardArcs, rdf_SerializeEnumerator, aStream);
 
-    if (NS_FAILED(rv = rdf_BlockingWrite(aStream, kCloseRDF, PL_strlen(kCloseRDF))))
+    if (NS_FAILED(rv = rdf_BlockingWrite(aStream, kCloseRDF, sizeof(kCloseRDF) - 1)))
         return rv;
 
     return NS_OK;
