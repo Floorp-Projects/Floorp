@@ -53,6 +53,7 @@ DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML
 
 OBJS=						\
 		.\$(OBJDIR)\mimecal.obj		\
+		.\$(OBJDIR)\mimexpcom.obj		\
 		$(NULL)
 
 #//------------------------------------------------------------------------
@@ -87,16 +88,18 @@ MSGLIBS=				\
 		$(NULL)
 
 # These are the libraries we need to link with to create the dll
-LLIBS=							\
-			$(LLIBS)			\
-			$(LIBNSPR)			\
-			$(DIST)\lib\libplc21.lib	\
+LLIBS=										\
+			$(LLIBS)						\
+			$(LIBNSPR)						\
+			$(DIST)\lib\libplc21.lib		\
 			$(DIST)\lib\xplib.lib       	\
-			$(DIST)\lib\mime.lib       	\
+			$(DIST)\lib\xpcom32.lib       	\
 			$(NULL)
 
-LINCS=$(LINCS)  -I.                         		\
-			   -I..\..\src 			\
+LINCS=$(LINCS)  -I.							\
+			   -I..\..\src 			        \
+			   -I$(PUBLIC)\xpcom		    \
+			   -I$(PUBLIC)\mime				\
 			   $(NULL)
 
 #//------------------------------------------------------------------------
