@@ -4568,6 +4568,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     }
 
   } else if ((nsHTMLAtoms::object == tag.get()) ||
+             (nsHTMLAtoms::embed == tag.get()) ||
              (nsHTMLAtoms::applet == tag.get())) {
     // It's an OBJECT element or APPLET, so we should display the contents instead
     nsCOMPtr<nsIStyleContext> styleContext;
