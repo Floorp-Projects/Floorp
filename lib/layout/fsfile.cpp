@@ -804,7 +804,7 @@ void CTapeFSPublish::Complete(XP_Bool bSuccess,
         // Temporarily remove characters after final slash
         // from m_pRemoteURL, so pRemoteFullURL is a directory.
         char *lastSlash = XP_STRRCHR(m_pRemoteURL,'/');
-        char saved;
+        char saved=0;
         if (lastSlash) {
           saved = *(lastSlash + 1);
           *(lastSlash + 1) = '\0';
