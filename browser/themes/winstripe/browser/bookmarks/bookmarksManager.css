@@ -91,3 +91,11 @@ toolbarbutton#delete[disabled="true"] {
   -moz-image-region: rect(48px 168px 72px 144px) !important;
 }
 
+#bookmark-folders-view > .bookmarksTree {
+  margin: 0px;
+}
+
+#bookmark-views-splitter {
+  border: none; 
+}
+

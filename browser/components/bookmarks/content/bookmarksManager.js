@@ -208,3 +208,25 @@ function onViewMenuColumnItemSelected(aEvent)
 
   aEvent.preventBubble();
 }
+
+function onViewSelected(aEvent)
+{
+  var statusBar = document.getElementById("statusbar-text");
+  var displayValue;
+  var selection = aEvent.target.getTreeSelection();
+  if (statusBar && selection.length == 1) {
+    //protocol broken since we have unique ID...
+    //var protocol = selection.protocol[0];
+    if (selection.isContainer[0]) {// && protocol != "find" && protocol != "file") {
+      RDFC.Init(aEvent.target.db, selection.item[0]);
+      var count = RDFC.GetCount();
+      displayValue = BookmarksUtils.getLocaleString("status_foldercount", String(count));
+    }
+    else if (selection.type[0] == "Bookmark")
+      displayValue = BookmarksUtils.getProperty(selection.item[0], NC_NS+"URL", aEvent.target.db)
+    else
+      displayValue = "";
+    statusBar.label = displayValue;
+  }
+}
+

@@ -737,22 +737,6 @@
           this.mOuter._selection = selection;
           this.mOuter._target    = this.mOuter.getTreeTarget(selection.item[0], selection.parent[0], BookmarksUtils.DROP_BEFORE);
           this.mOuter.onCommandUpdate();
-          const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
-          var displayValue;
-          if (kStatusBar && selection.length == 1) {
-            //protocol broken since we have unique ID...
-            //var protocol = selection.protocol[0];
-            if (selection.isContainer[0]) {// && protocol != "find" && protocol != "file") {
-              RDFC.Init(this.mOuter.db, selection.item[0]);
-              var count = RDFC.GetCount();
-              displayValue = BookmarksUtils.getLocaleString("status_foldercount", String(count));
-            }
-            else if (selection.type[0] == "Bookmark")
-              displayValue = BookmarksUtils.getProperty(selection.item[0], NC_NS+"URL", this.mOuter.db)
-            else
-              displayValue = "";
-            kStatusBar.label = displayValue;
-          }
         },
         
         onCycleCell          : function (aItemIndex, aColumnID)          {},
@@ -840,45 +824,42 @@
           </template>
           <treecols anonid="treecols">
             <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true" 
-                         class="sortDirectionIndicator" 
-                         persist="width hidden ordinal" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                         sortActive="true" sortDirection="none"/>
+                          class="sortDirectionIndicator" 
+                          persist="width hidden ordinal" 
+                          sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                          sortActive="true" sortDirection="none"/>
             <splitter class="tree-splitter" />
             <treecol id="URL" label="&treecol.url.label;" 
-                         flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#URL" 
-                         persist="width hidden ordinal" />
+                          flex="1" class="sortDirectionIndicator" 
+                          sort="rdf:http://home.netscape.com/NC-rdf#URL" 
+                          persist="width hidden ordinal" />
             <splitter class="tree-splitter" />
             <treecol id="ShortcutURL" label="&treecol.shortcut.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         persist="hidden width ordinal" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+                          hidden="true" flex="1" class="sortDirectionIndicator" 
+                          persist="hidden width ordinal" 
+                          sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
             <splitter class="tree-splitter"/>
             <treecol id="Description" label="&treecol.description.label;" 
-                         flex="1" class="sortDirectionIndicator" 
-                         persist="hidden width ordinal" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
+                          flex="1" class="sortDirectionIndicator" 
+                          persist="hidden width ordinal" 
+                          sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
             <splitter class="tree-splitter"/>
             <treecol id="AddDate" label="&treecol.addedon.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" 
-                         persist="width hidden ordinal" />
+                          hidden="true" flex="1" class="sortDirectionIndicator" 
+                          sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" 
+                          persist="width hidden ordinal" />
             <splitter class="tree-splitter" />
             <treecol id="LastModDate" label="&treecol.lastmod.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" 
-                         persist="width hidden ordinal" />
+                          hidden="true" flex="1" class="sortDirectionIndicator" 
+                          sort="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" 
+                          persist="width hidden ordinal" />
             <splitter class="tree-splitter" />
             <treecol id="LastVisitDate" label="&treecol.lastvisit.label;" 
-                         hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" 
-                         persist="width hidden ordinal" />
+                          hidden="true" flex="1" class="sortDirectionIndicator" 
+                          sort="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" 
+                          persist="width hidden ordinal" />
           </treecols>
         </tree>
-        <statusbar class="chromeclass-status" xbl:inherits="hidden=hidestatusbar" hidden="false">
-          <statusbarpanel anonid="statusbar-text" flex="1"/>
-        </statusbar>
       </vbox>
     </xbl:content>
     <implementation>
@@ -942,7 +923,7 @@
   <!-- Tree with folders only -->
   <binding id="bookmarks-tree-folders" extends="chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
-      <tree anonid="bookmarks-tree" flex="1" hidecolumnpicker="true"
+      <tree anonid="bookmarks-tree" flex="1" class="bookmarksTree" hidecolumnpicker="true"
             xbl:inherits="rows,seltype"
             datasources="rdf:bookmarks rdf:files rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
             onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
