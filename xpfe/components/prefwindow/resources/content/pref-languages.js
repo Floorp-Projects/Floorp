@@ -302,7 +302,7 @@ function IsRFC1766LangTag(candidate) {
        or an IANA registered tag from 3 to 8 characters.
     */
     if (tags.length > 1) {
-      if (tags[1].length < 2 || tags[1].length > 3) return false;
+      if (tags[1].length < 2 || tags[1].length > 8) return false;
       if (!isAlphaNum(tags[1])) return false;
 
       /* do not allow user-assigned ISO 3166 country codes */
