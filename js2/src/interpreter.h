@@ -75,7 +75,9 @@ namespace Interpreter {
         Frame* getFrames();
 
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
-        void doCall(JSFunction *target, Instruction *pc);
+        bool invokeFunction(JSFunction *target, JSValues* &registers, TypedRegister resultReg, JSValue thisArg, ArgumentList *args);
+
+
 
         ICodeModule* compileFunction(const String &source);
         ICodeModule* genCode(StmtNode *p, const String &fileName);

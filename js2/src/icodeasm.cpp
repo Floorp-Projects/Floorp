@@ -265,7 +265,7 @@ namespace ICodeASM {
         if (jsv.isType())
             *rval = jsv.type;
         else
-            *rval = &(JSTypes::Any_Type);
+            *rval = &(JSTypes::Object_Type);
 
         return end;
 //        NOT_REACHED ("JSClasses are hard, lets go shopping.");
@@ -314,7 +314,7 @@ namespace ICodeASM {
         if (jsv.isType())
             *rval = jsv.type;
         else
-            *rval = &(JSTypes::Any_Type);
+            *rval = &(JSTypes::Object_Type);
 
         return end;
     }

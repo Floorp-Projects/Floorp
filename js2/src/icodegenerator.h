@@ -128,7 +128,7 @@ namespace ICG {
     };
 
 
-    typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method, ClosureVar } LValueKind;
+    typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method, ClosureVar, Field } LValueKind;
 
     class Reference {
     public:
@@ -138,6 +138,7 @@ namespace ICG {
 
         TypedRegister mBase;
         const StringAtom &mName;
+        TypedRegister mField;
         
         uint32 mSlotIndex;
         JSClass *mClass;
@@ -268,7 +269,7 @@ namespace ICG {
                             ICodeGenerator *containingFunction = NULL, 
                             JSClass *aClass = NULL, 
                             ICodeGeneratorFlags flags = kIsTopLevel,
-                            JSType *resultType = &Any_Type);
+                            JSType *resultType = &Object_Type);
         
         ~ICodeGenerator()
         {
@@ -295,7 +296,7 @@ namespace ICG {
 
         TypedRegister allocateVariable(const StringAtom& name)
         { 
-            return allocateVariable(name, &Any_Type);
+            return allocateVariable(name, &Object_Type);
         }
         
         TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
@@ -315,7 +316,7 @@ namespace ICG {
         
         TypedRegister allocateParameter(const StringAtom& name, bool isOptional)
         { 
-            return allocateParameter(name, isOptional, &Any_Type);
+            return allocateParameter(name, isOptional, &Object_Type);
         }
         
         TypedRegister allocateParameter(const StringAtom& name, bool isOptional, const StringAtom& typeName);
@@ -358,14 +359,22 @@ namespace ICG {
         TypedRegister newArray();
         TypedRegister newFunction(ICodeModule *icm);
         TypedRegister newClass(JSClass *clazz);
+        TypedRegister genericNew(TypedRegister target, ArgumentList *args);
 
         TypedRegister cast(TypedRegister arg, JSType *toType);
+        TypedRegister dotClass(TypedRegister base);
+        TypedRegister instanceOf(TypedRegister base, TypedRegister type);
+        TypedRegister is(TypedRegister base, TypedRegister type);
+
         
         TypedRegister super();
-        TypedRegister loadName(const StringAtom &name, JSType *t = &Any_Type);
+        TypedRegister loadName(const StringAtom &name, JSType *t = &Object_Type);
         void saveName(const StringAtom &name, TypedRegister value);
         TypedRegister nameXcr(const StringAtom &name, ICodeOp op);
-       
+
+        TypedRegister getField(TypedRegister base, TypedRegister field);
+        void setField(TypedRegister base, TypedRegister field, TypedRegister value);        
+
         TypedRegister deleteProperty(TypedRegister base, const StringAtom &name);
         TypedRegister getProperty(TypedRegister base, const StringAtom &name);
         void setProperty(TypedRegister base, const StringAtom &name, TypedRegister value);

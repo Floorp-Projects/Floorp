@@ -260,6 +260,18 @@ namespace JSClasses {
             return slot;
         }
         
+        JSFunction *getDefaultConstructor()
+        {
+            if (hasStatic(mName)) {
+                const JSSlot &s = getStatic(mName);
+                ASSERT(s.isConstructor());
+                JSValue &v = (*this)[s.mIndex];
+                ASSERT(v.isFunction());
+                return v.function;
+            }
+            return NULL;
+        }
+
         const JSSlot& getStatic(const String& name)
         {
             return mStaticSlots[name];

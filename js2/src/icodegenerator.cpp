@@ -234,7 +234,7 @@ TypedRegister ICodeGenerator::loadBoolean(bool value)
 
 TypedRegister ICodeGenerator::loadNull()
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     iCode->push_back(new LoadNull(dest));
     return dest;
 }
@@ -249,7 +249,7 @@ TypedRegister ICodeGenerator::loadType(JSType *type)
 
 TypedRegister ICodeGenerator::newObject(TypedRegister constructor)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     NewObject *instr = new NewObject(dest, constructor);
     iCode->push_back(instr);
     return dest;
@@ -257,8 +257,16 @@ TypedRegister ICodeGenerator::newObject(TypedRegister constructor)
 
 TypedRegister ICodeGenerator::newClass(JSClass *clazz)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     NewClass *instr = new NewClass(dest, clazz);
+    iCode->push_back(instr);
+    return dest;
+}
+
+TypedRegister ICodeGenerator::genericNew(TypedRegister target, ArgumentList *args)
+{
+    TypedRegister dest(getTempRegister(), &Object_Type);
+    NewGeneric *instr = new NewGeneric(dest, target, args);
     iCode->push_back(instr);
     return dest;
 }
@@ -279,6 +287,29 @@ TypedRegister ICodeGenerator::newArray()
     return dest;
 }
 
+TypedRegister ICodeGenerator::dotClass(TypedRegister base)
+{
+    TypedRegister dest(getTempRegister(), &Type_Type);
+    Class *instr = new Class(dest, base);
+    iCode->push_back(instr);
+    return dest;
+}
+
+TypedRegister ICodeGenerator::instanceOf(TypedRegister base, TypedRegister type)
+{
+    TypedRegister dest(getTempRegister(), &Boolean_Type);
+    Instanceof *instr = new Instanceof(dest, base, type);
+    iCode->push_back(instr);
+    return dest;
+}
+
+TypedRegister ICodeGenerator::is(TypedRegister base, TypedRegister type)
+{
+    TypedRegister dest(getTempRegister(), &Boolean_Type);
+    Is *instr = new Is(dest, base, type);
+    iCode->push_back(instr);
+    return dest;
+}
 
 
 TypedRegister ICodeGenerator::loadName(const StringAtom &name, JSType *t)
@@ -314,11 +345,25 @@ TypedRegister ICodeGenerator::varXcr(TypedRegister var, ICodeOp op)
 }
 
 
+TypedRegister ICodeGenerator::getField(TypedRegister base, TypedRegister field)
+{
+    TypedRegister dest(getTempRegister(), &Object_Type);
+    GetField *instr = new GetField(dest, base, field);
+    iCode->push_back(instr);
+    return dest;
+}
+
+void ICodeGenerator::setField(TypedRegister base, TypedRegister field,
+                                 TypedRegister value)
+{
+    SetField *instr = new SetField(base, field, value);
+    iCode->push_back(instr);
+}
 
 
 TypedRegister ICodeGenerator::deleteProperty(TypedRegister base, const StringAtom &name)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     DeleteProp *instr = new DeleteProp(dest, base, &name);
     iCode->push_back(instr);
     return dest;
@@ -326,7 +371,7 @@ TypedRegister ICodeGenerator::deleteProperty(TypedRegister base, const StringAto
 
 TypedRegister ICodeGenerator::getProperty(TypedRegister base, const StringAtom &name)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     GetProp *instr = new GetProp(dest, base, &name);
     iCode->push_back(instr);
     return dest;
@@ -341,7 +386,7 @@ void ICodeGenerator::setProperty(TypedRegister base, const StringAtom &name,
 
 TypedRegister ICodeGenerator::propertyXcr(TypedRegister base, const StringAtom &name, ICodeOp op)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     PropXcr *instr = new PropXcr(dest, base, &name, (op == ADD) ? 1.0 : -1.0);
     iCode->push_back(instr);
     return dest;
@@ -359,7 +404,7 @@ static const JSSlot& getStaticSlot(JSClass *&c, const String &name)
 
 TypedRegister ICodeGenerator::getStatic(JSClass *base, const String &name)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     const JSSlot& slot = getStaticSlot(base, name);
     GetStatic *instr = new GetStatic(dest, base, slot.mIndex);
     iCode->push_back(instr);
@@ -376,7 +421,7 @@ void ICodeGenerator::setStatic(JSClass *base, const StringAtom &name,
 
 TypedRegister ICodeGenerator::staticXcr(JSClass *base, const StringAtom &name, ICodeOp /*op*/)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     const JSSlot& slot = getStaticSlot(base, name);
     StaticXcr *instr = new StaticXcr(dest, base, slot.mIndex, 1.0);
     iCode->push_back(instr);
@@ -387,7 +432,7 @@ TypedRegister ICodeGenerator::staticXcr(JSClass *base, const StringAtom &name, I
 
 TypedRegister ICodeGenerator::getSlot(TypedRegister base, uint32 slot)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     GetSlot *instr = new GetSlot(dest, base, slot);
     iCode->push_back(instr);
     return dest;
@@ -402,7 +447,7 @@ void ICodeGenerator::setSlot(TypedRegister base, uint32 slot,
 
 TypedRegister ICodeGenerator::slotXcr(TypedRegister base, uint32 slot, ICodeOp op)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     SlotXcr *instr = new SlotXcr(dest, base, slot, (op == ADD) ? 1.0 : -1.0);
     iCode->push_back(instr);
     return dest;
@@ -413,7 +458,7 @@ TypedRegister ICodeGenerator::slotXcr(TypedRegister base, uint32 slot, ICodeOp o
 
 TypedRegister ICodeGenerator::getElement(TypedRegister base, TypedRegister index)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     GetElement *instr = new GetElement(dest, base, index);
     iCode->push_back(instr);
     return dest;
@@ -438,7 +483,7 @@ TypedRegister ICodeGenerator::elementXcr(TypedRegister base, TypedRegister index
 
 TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     ASSERT(source.first != NotARegister);    
     Unary *instr = new Unary (op, dest, source);
     iCode->push_back(instr);
@@ -456,7 +501,7 @@ void ICodeGenerator::move(TypedRegister destination, TypedRegister source)
 
 TypedRegister ICodeGenerator::logicalNot(TypedRegister source)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     Not *instr = new Not(dest, source);
     iCode->push_back(instr);
     return dest;
@@ -464,7 +509,7 @@ TypedRegister ICodeGenerator::logicalNot(TypedRegister source)
 
 TypedRegister ICodeGenerator::test(TypedRegister source)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     Test *instr = new Test(dest, source);
     iCode->push_back(instr);
     return dest;
@@ -475,7 +520,7 @@ TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source1,
 {
     ASSERT(source1.first != NotARegister);    
     ASSERT(source2.first != NotARegister);    
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     Arithmetic *instr = new Arithmetic(op, dest, source1, source2);
     iCode->push_back(instr);
     return dest;
@@ -486,7 +531,7 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp dblOp, JSTypes::Operator op, Type
 {
     ASSERT(source1.first != NotARegister);    
     ASSERT(source2.first != NotARegister);
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     
     if ((source1.second == &Number_Type) && (source2.second == &Number_Type)) {
         Arithmetic *instr = new Arithmetic(dblOp, dest, source1, source2);
@@ -501,7 +546,7 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp dblOp, JSTypes::Operator op, Type
 
 TypedRegister ICodeGenerator::unaryOp(JSTypes::Operator op, TypedRegister source)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     GenericUnaryOP *instr = new GenericUnaryOP(dest, op, source);
     iCode->push_back(instr);
     return dest;
@@ -509,7 +554,7 @@ TypedRegister ICodeGenerator::unaryOp(JSTypes::Operator op, TypedRegister source
 
 TypedRegister ICodeGenerator::xcrementOp(JSTypes::Operator op, TypedRegister source)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     GenericXcrementOP *instr = new GenericXcrementOP(dest, op, source);
     iCode->push_back(instr);
     return dest;
@@ -517,7 +562,7 @@ TypedRegister ICodeGenerator::xcrementOp(JSTypes::Operator op, TypedRegister sou
     
 TypedRegister ICodeGenerator::call(TypedRegister target, ArgumentList *args)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     DirectCall *instr = new DirectCall(dest, target, args);
     iCode->push_back(instr);
     return dest;
@@ -525,7 +570,7 @@ TypedRegister ICodeGenerator::call(TypedRegister target, ArgumentList *args)
 
 TypedRegister ICodeGenerator::invokeCallOp(TypedRegister target, ArgumentList *args)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     InvokeCall *instr = new InvokeCall(dest, target, args);
     iCode->push_back(instr);
     return dest;
@@ -533,7 +578,7 @@ TypedRegister ICodeGenerator::invokeCallOp(TypedRegister target, ArgumentList *a
 /*
 TypedRegister ICodeGenerator::directCall(JSFunction *target, ArgumentList *args)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     DirectCall *instr = new DirectCall(dest, target, args);
     iCode->push_back(instr);
     return dest;
@@ -549,7 +594,7 @@ TypedRegister ICodeGenerator::bindThis(TypedRegister thisArg, TypedRegister targ
 
 TypedRegister ICodeGenerator::getClosure(uint32 count)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     iCode->push_back(new GetClosure(dest, count));
     return dest;
 }
@@ -564,7 +609,7 @@ TypedRegister ICodeGenerator::newClosure(ICodeModule *icm)
 
 TypedRegister ICodeGenerator::getMethod(TypedRegister thisArg, uint32 slotIndex)
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     GetMethod *instr = new GetMethod(dest, thisArg, slotIndex);
     iCode->push_back(instr);
     return dest;
@@ -572,7 +617,7 @@ TypedRegister ICodeGenerator::getMethod(TypedRegister thisArg, uint32 slotIndex)
 
 TypedRegister ICodeGenerator::super()
 {
-    TypedRegister dest(getTempRegister(), &Any_Type);
+    TypedRegister dest(getTempRegister(), &Object_Type);
     Super *instr = new Super(dest);
     iCode->push_back(instr);
     return dest;

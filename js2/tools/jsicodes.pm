@@ -211,6 +211,12 @@ $ops{"NEW_OBJECT"} =
    rem    => "dest, constructor",
    params => [ ("TypedRegister", "TypedRegister") ]
   };
+$ops{"NEW_GENERIC"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, target, args",
+   params => [ ("TypedRegister", "TypedRegister", "ArgumentList*") ]
+  };
 $ops{"NEW_CLASS"} =
   {
    super  => "Instruction_2",
@@ -246,6 +252,18 @@ $ops{"SET_PROP"} =
    super  => "Instruction_3",
    rem    => "object, name, source",
    params => [ ("TypedRegister", "const StringAtom*", "TypedRegister") ]
+  };
+$ops{"GET_FIELD"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, object, field",
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
+  };
+$ops{"SET_FIELD"} =
+  {
+   super  => "Instruction_3",
+   rem    => "object, field, source",
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 $ops{"GET_SLOT"} =
   {
@@ -352,6 +370,7 @@ $ops{"COMPARE_IN"} = $binary_op;
 $ops{"STRICT_EQ"}  = $binary_op;
 $ops{"STRICT_NE"}  = $binary_op;
 $ops{"INSTANCEOF"} = $binary_op;
+$ops{"IS"}         = $binary_op;
 $ops{"BITNOT"}     = $unary_op;
 $ops{"NOT"}        = $unary_op;
 $ops{"TEST"}       = $unary_op;

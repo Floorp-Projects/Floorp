@@ -262,7 +262,7 @@ namespace JSTypes {
     extern const JSValue kPositiveInfinity;
 
     // JS2 predefined types:
-    extern JSType           Any_Type;
+    extern JSType           Object_Type;
     extern JSType           Integer_Type;
     extern JSType           Number_Type;
     extern JSType           Character_Type;
@@ -276,7 +276,6 @@ namespace JSTypes {
     extern JSType           None_Type;
 
     // JS1X heritage classes as types:
-    extern JSType Object_Type;
     extern JSType Date_Type;
 
     typedef std::map<String, JSValue, std::less<String>, gc_map_allocator(JSValue) > JSProperties;
@@ -299,7 +298,7 @@ namespace JSTypes {
         static JSString *ObjectString;
         static JSObject *ObjectPrototypeObject;
 
-        void init(JSObject* prototype)  { mGetter = NULL; mSetter = NULL; mPrototype = prototype; mType = &Any_Type; mClass = ObjectString; }
+        void init(JSObject* prototype)  { mGetter = NULL; mSetter = NULL; mPrototype = prototype; mType = &Object_Type; mClass = ObjectString; }
 
     public:
         JSObject()                      { init(ObjectPrototypeObject); }
@@ -668,14 +667,14 @@ namespace JSTypes {
         
         JSValue& defineVariable(const String& name, JSType* type, const JSValue& value)
         {
-            if (type != &Any_Type)
+            if (type != &Object_Type)
                 mTypes[name] = type;
             return (mProperties[name] = value);
         }
 
         JSValue& defineVariable(const String& name, JSType* type)
         {
-            if (type != &Any_Type)
+            if (type != &Object_Type)
                 mTypes[name] = type;
             return (mProperties[name] = kUndefinedValue);
         }
@@ -693,7 +692,7 @@ namespace JSTypes {
 
         JSType* getType(const String& name)
         {
-            JSType* result = &Any_Type;
+            JSType* result = &Object_Type;
             // only consider types for variables defined in this scope.
             JSProperties::const_iterator i = mProperties.find(name);
             if (i != mProperties.end()) {

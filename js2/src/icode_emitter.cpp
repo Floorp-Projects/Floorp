@@ -254,10 +254,9 @@ bool ICodeGenerator::resolveIdentifier(const StringAtom &name, Reference &ref, b
     }
     // all bet's off, generic name & type
     ref.mKind = Name;
-    ref.mType = &Any_Type;
+    ref.mType = &Object_Type;
     return true;
 }
-
 
 Reference ICodeGenerator::genReference(ExprNode *p)
 {
@@ -270,11 +269,14 @@ Reference ICodeGenerator::genReference(ExprNode *p)
             return result;
         }
         break;
+    case ExprNode::dotParen:
     case ExprNode::dot:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             if (b->op2->getKind() != ExprNode::identifier) {
-                NOT_REACHED("implement me");
+                Reference result(mContext->getWorld().identifiers["irritating damn stringatom concept"]);
+                result.mKind = Field;
+                result.mField = genExpr(b->op2);
             }
             else {
                 // we have <lhs>.<fieldname>
@@ -344,6 +346,9 @@ TypedRegister Reference::getValue(ICodeGenerator *icg)
     case Property:
         result = icg->getProperty(mBase, mName);
         break;
+    case Field:
+        result = icg->getField(mBase, mField);
+        break;
     default:
         NOT_REACHED("Bad lvalue kind");
     }
@@ -375,6 +380,9 @@ TypedRegister Reference::getCallTarget(ICodeGenerator *icg)
     case Property:
         result = icg->bindThis(mBase, icg->getProperty(mBase, mName));
         break;
+    case Field:
+        result = icg->bindThis(mBase, icg->getField(mBase, mField));
+        break;
     default:
         NOT_REACHED("Bad lvalue kind");
     }
@@ -399,6 +407,9 @@ void Reference::setValue(ICodeGenerator *icg, TypedRegister value)
         break;
     case Property:
         icg->setProperty(mBase, mName, value);
+        break;
+    case Field:
+        icg->setField(mBase, mField, value);
         break;
     default:
         NOT_REACHED("Bad lvalue kind");
@@ -469,6 +480,12 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
                 p = p->next;
             }
+
+
+            ret = genericNew(genExpr(i->op), args);
+
+
+#if 0
             if (i->op->getKind() == ExprNode::identifier) {
                 const StringAtom &className = static_cast<IdentifierExprNode *>(i->op)->name;
                 const JSValue& value = mContext->getGlobalObject()->getVariable(className);
@@ -502,7 +519,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
             }                
             else
-                ret = newObject(TypedRegister(NotARegister, &Any_Type));  // XXX more ?
+                ret = newObject(TypedRegister(NotARegister, &Object_Type));  // XXX more ?
+#endif
         }
         break;
     case ExprNode::Delete:
@@ -556,6 +574,14 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             ret = getElement(base, index);
         }
         break;
+    case ExprNode::dotClass:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            TypedRegister lhs = genExpr(b->op1);
+            ret = dotClass(lhs);
+        }
+        break;
+    case ExprNode::dotParen:
     case ExprNode::dot :
         {
             Reference ref = genReference(p);
@@ -564,7 +590,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         break;
     case ExprNode::This :
         {
-            ret = TypedRegister(0, mClass ? mClass : &Any_Type);
+            ret = TypedRegister(0, mClass ? mClass : &Object_Type);
         }
         break;
     case ExprNode::identifier :
@@ -751,7 +777,7 @@ GenericConditionalBranch:
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(INSTANCEOF, JSTypes::None, r1, r2);
+            ret = instanceOf(r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);
@@ -791,7 +817,7 @@ GenericReverseBranch:
         dblOp = COMPARE_EQ; op = JSTypes::Equal;
         goto GenericNotBranch;
     case ExprNode::notIdentical:
-        dblOp = STRICT_EQ; op = JSTypes::Equal;
+        dblOp = STRICT_EQ; op = JSTypes::SpittingImage;
         goto GenericNotBranch;
 GenericNotBranch:
         {
@@ -886,7 +912,7 @@ GenericNotBranch:
 
     case ExprNode::objectLiteral:
         {
-            ret = newObject(TypedRegister(NotARegister, &Any_Type));
+            ret = newObject(TypedRegister(NotARegister, &Object_Type));
             PairListExprNode *plen = static_cast<PairListExprNode *>(p);
             ExprPairList *e = plen->pairs;
             while (e) {
@@ -943,7 +969,7 @@ ICodeModule *ICodeGenerator::genFunction(FunctionDefinition &function, bool isSt
     ICodeGeneratorFlags flags = (isStatic) ? kIsStaticMethod : kNoFlags;
     
     ICodeGenerator icg(mContext, this, mClass, flags, mContext->extractType(function.resultType));
-    icg.allocateParameter(mContext->getWorld().identifiers["this"], false, (mClass) ? mClass : &Any_Type);   // always parameter #0
+    icg.allocateParameter(mContext->getWorld().identifiers["this"], false, (mClass) ? mClass : &Object_Type);   // always parameter #0
     VariableBinding *v = function.parameters;
     bool unnamed = true;
     uint32 positionalCount = 0;
@@ -1515,13 +1541,13 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                         if (!isTopLevel() && !isWithinWith()) {
                             TypedRegister r = genExpr(v->name);
                             TypedRegister val = genExpr(v->initializer);
-                            if (type != &Any_Type)
+                            if (type != &Object_Type)
                                 val = cast(val, type);
                             move(r, val);
                         }
                         else {
                             TypedRegister val = genExpr(v->initializer);
-                            if (type != &Any_Type)
+                            if (type != &Object_Type)
                                 val = cast(val, type);
                             saveName((static_cast<IdentifierExprNode *>(v->name))->name, val);
                         }
@@ -1814,7 +1840,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 while (c) {
                     // Bind the incoming exception ...
                     if (mExceptionRegister.first == NotABanana)
-                        mExceptionRegister = allocateRegister(&Any_Type);
+                        mExceptionRegister = allocateRegister(&Object_Type);
                     allocateVariable(c->name, mExceptionRegister);
 
                     genStmt(c->stmt);

@@ -30,12 +30,14 @@
         GENERIC_XCREMENT_OP, /* dest, op, source */
         GET_CLOSURE, /* dest, closure depth */
         GET_ELEMENT, /* dest, base, index */
+        GET_FIELD, /* dest, object, field */
         GET_METHOD, /* result, target base, index */
         GET_PROP, /* dest, object, prop name */
         GET_SLOT, /* dest, object, slot number */
         GET_STATIC, /* dest, class, index */
         INSTANCEOF, /* dest, source1, source2 */
         INVOKE_CALL, /* result, target, args */
+        IS, /* dest, source1, source2 */
         JSR, /* target */
         LOAD_FALSE, /* dest */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
@@ -52,6 +54,7 @@
         NEW_CLASS, /* dest, class */
         NEW_CLOSURE, /* dest, ICodeModule */
         NEW_FUNCTION, /* dest, ICodeModule */
+        NEW_GENERIC, /* dest, target, args */
         NEW_OBJECT, /* dest, constructor */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
@@ -64,6 +67,7 @@
         RTS, /* Return to sender */
         SAVE_NAME, /* name, source */
         SET_ELEMENT, /* base, index, value */
+        SET_FIELD, /* object, field, source */
         SET_PROP, /* object, name, source */
         SET_SLOT, /* object, slot number, source */
         SET_STATIC, /* class, index, source */
@@ -474,6 +478,22 @@
         }
     };
 
+    class GetField : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
+    public:
+        /* dest, object, field */
+        GetField (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
+            (GET_FIELD, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GET_FIELD] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
+    };
+
     class GetMethod : public Instruction_3<TypedRegister, TypedRegister, uint32> {
     public:
         /* result, target base, index */
@@ -566,6 +586,22 @@
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
+            return f;
+        }
+    };
+
+    class Is : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
+    public:
+        /* dest, source1, source2 */
+        Is (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
+            (IS, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[IS] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
             return f;
         }
     };
@@ -818,6 +854,22 @@
         }
     };
 
+    class NewGeneric : public Instruction_3<TypedRegister, TypedRegister, ArgumentList*> {
+    public:
+        /* dest, target, args */
+        NewGeneric (TypedRegister aOp1, TypedRegister aOp2, ArgumentList* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, ArgumentList*>
+            (NEW_GENERIC, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[NEW_GENERIC] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
+            return f;
+        }
+    };
+
     class NewObject : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, constructor */
@@ -985,6 +1037,22 @@
             (SET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[SET_ELEMENT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
+    };
+
+    class SetField : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
+    public:
+        /* object, field, source */
+        SetField (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
+            (SET_FIELD, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[SET_FIELD] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1305,12 +1373,14 @@
         "GENERIC_XCREMENT_OP",
         "GET_CLOSURE        ",
         "GET_ELEMENT        ",
+        "GET_FIELD          ",
         "GET_METHOD         ",
         "GET_PROP           ",
         "GET_SLOT           ",
         "GET_STATIC         ",
         "INSTANCEOF         ",
         "INVOKE_CALL        ",
+        "IS                 ",
         "JSR                ",
         "LOAD_FALSE         ",
         "LOAD_IMMEDIATE     ",
@@ -1327,6 +1397,7 @@
         "NEW_CLASS          ",
         "NEW_CLOSURE        ",
         "NEW_FUNCTION       ",
+        "NEW_GENERIC        ",
         "NEW_OBJECT         ",
         "NOP                ",
         "NOT                ",
@@ -1339,6 +1410,7 @@
         "RTS                ",
         "SAVE_NAME          ",
         "SET_ELEMENT        ",
+        "SET_FIELD          ",
         "SET_PROP           ",
         "SET_SLOT           ",
         "SET_STATIC         ",

@@ -415,7 +415,7 @@ void Context::initContext()
         char *name;
         JSType *type;
     } PDTs[] = {
-        { "any", &Any_Type },
+        { "Object", &Object_Type },
         { "Integer", &Integer_Type },
         { "Number", &Number_Type },
         { "Character", &Character_Type },
@@ -548,6 +548,131 @@ bool Context::hasNamedArguments(ArgumentList &args)
     return false;
 }
 
+// XXX Huge time sink here !!!
+bool Context::invokeFunction(JSFunction *target, JSValues* &registers, TypedRegister resultReg, JSValue thisArg, ArgumentList *args)
+{
+    if (target->isNative()) {
+        JSValues argv(args->size() + 1);
+        argv[0] = thisArg;
+        JSValues::size_type i = 1;
+        for (ArgumentList::const_iterator src = args->begin(), end = args->end();
+                        src != end; ++src, ++i) {
+            argv[i] = (*registers)[src->first.first];
+        }
+        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
+        if (resultReg.first != NotARegister)
+            (*registers)[resultReg.first] = result;
+        return false;
+    }
+    else {
+        ICodeModule *icm = target->getICode();
+        ArgumentList *callArgs = NULL;
+
+        if (icm->itsParameters) {
+
+            // if all the parameters are positional
+//                        if (icm->itsParameters->mPositionalCount == icm->itsParameters->size()) . is this right?
+            // then don't bother with the name search etc.
+
+            // the parameter count includes 'this' and any named rest parameter
+            //
+            uint32 pCount = icm->itsParameters->size() - 1;   // we won't be passing 'this' via the arg list array
+            // callArgs will be the actual args passed to the target, put into correct register order.
+            // It has room for the rest parameter.
+            callArgs = new ArgumentList(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
+
+            // don't want to count the rest parameter while processing the others 
+            if (icm->itsParameters->mRestParameter != ParameterList::NoRestParameter) pCount--;
+        
+        
+            uint32 i;
+            JSArray *restArg = NULL;
+        
+            // first match all named arguments with their intended target locations
+            for (i = 0; i < args->size(); i++) {
+            
+                const StringAtom *argName = (*args)[i].second;
+
+                TypedRegister parameter = icm->itsParameters->findVariable(*argName);
+                if (parameter.first == NotARegister) {  
+                    // arg name doesn't match any parameter name, it's a candidate
+                    // for the rest parameter (if there is one)
+                    if (icm->itsParameters->mRestParameter == ParameterList::NoRestParameter)
+                        throw new JSException("Named argument doesn't match parameter name in call with no rest parameter");
+                    else {
+                        if (icm->itsParameters->mRestParameter != ParameterList::HasUnnamedRestParameter) {
+                            // if the name is a numeric literal >= 0, use it as an array index
+                            // otherwise just set the named property.
+                            const char16 *c = argName->data();
+                            const char16 *end;
+                            double d = stringToDouble(c, c + argName->size(), end);
+                            int index = -1;
+
+                            if ((d != d) || (d < 0) || (d != (int)d)) { // a non-numeric or negative value                                             
+                                if (icm->itsParameters->mRestParameter == ParameterList::HasRestParameterBeforeBar)
+                                    throw new JSException("Non-numeric or negative argument name for positional rest parameter");
+                            }
+                            else {  // shift the index value down by the number of positional parameters
+                                index = (int)d;
+                                index -= icm->itsParameters->mPositionalCount;
+                            }
+                        
+                            TypedRegister argument = (*args)[i].first;   // this is the argument whose name didn't match
+
+                            if (restArg == NULL) {
+                                // allocate the rest argument and then subvert the register being used for the
+                                // argument under consideration to hold the newly created rest argument.
+                                restArg = new JSArray();
+                                if (index == -1)
+                                    restArg->setProperty(*argName, (*registers)[argument.first]);
+                                else
+                                    (*restArg)[uint32(index)] = (*registers)[argument.first];
+                                (*registers)[argument.first] = restArg;
+                                // The callArgs for the rest parameter position gets loaded from that slot 
+                                (*callArgs)[pCount] = Argument(TypedRegister(argument.first, &Array_Type), NULL);
+                            }
+                            else {
+                                if (index == -1)
+                                    restArg->setProperty(*argName, (*registers)[argument.first]);
+                                else
+                                    (*restArg)[uint32(index)] = (*registers)[argument.first];
+                            }
+                        }
+                        // else just throw it away 
+                    }
+                }
+                else {
+                    uint32 targetIndex = parameter.first - 1;           // this is the register number we're targetting
+                    TypedRegister targetParameter = (*callArgs)[targetIndex].first;
+                    if (targetParameter.first != NotARegister)          // uh oh, some other argument wants this parameter
+                        throw new JSException("Two (or more) arguments have the same name");
+                    (*callArgs)[targetIndex] = (*args)[i];
+                }
+            }
+
+
+            // make sure that all non-optional parameters have values
+            for (i = 0; i < pCount; i++) {
+                TypedRegister parameter = (*callArgs)[i].first;
+                if (parameter.first == NotARegister) {  // doesn't have an assigned argument
+                    if (!icm->itsParameters->isOptional(i + 1))     // and parameter (allowing for 'this') doesn't have an optional value
+                        throw new JSException("No argument supplied for non-optional parameter");
+                }
+            }
+        }
+        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, resultReg, mICode, mCurrentClosure);
+        mICode = icm;
+        mActivation = new Activation(mICode->itsMaxRegister, mActivation, thisArg, callArgs);
+        registers = &mActivation->mRegisters;
+        mPC = mICode->its_iCode->begin();
+        JSClosure *cl = dynamic_cast<JSClosure *>(target);
+        if (cl)
+            mCurrentClosure = cl;
+        return true;
+    }
+}
+
+
 JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 {
     assert(mActivation == 0); /* recursion == bad */
@@ -607,7 +732,65 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(su).first] = s;
                 }
                 break;
-
+            case IS:
+                {
+                    Is* is = static_cast<Is*>(instruction);
+                    JSValue a = (*registers)[src1(is).first];
+                    JSValue b = (*registers)[src2(is).first];
+                    ASSERT(b.isNull() || b.isType());           // right ??? (i.e. runtime error)
+                    if (a.isNull()) {
+                        (*registers)[dst(is).first] = ( (b.isNull()) 
+                                                            || (b.isType() && (b.type == &Object_Type)) );
+                    }
+                    else {
+                        if (b.isNull())
+                            (*registers)[dst(is).first] = false;
+                        else {
+                            if (a.isObject()) {
+                                JSInstance* inst = dynamic_cast<JSInstance *>(a.object);
+                                if (inst) {
+                                    bool r = false;
+                                    JSClass *clazz = dynamic_cast<JSClass *>(b.type);
+                                    while (clazz) {
+                                        if (inst->getClass() == clazz) {
+                                            r = true;
+                                            break;
+                                        }
+                                        clazz = clazz->getSuperClass();
+                                    }
+                                    (*registers)[dst(is).first] = r;
+                                }
+                                else
+                                    (*registers)[dst(is).first] = a.isSameType(b);
+                            }
+                            else
+                                (*registers)[dst(is).first] = a.isSameType(b);
+                        }
+                    }
+                }
+                break;
+            case INSTANCEOF:
+                {
+                    Instanceof* io = static_cast<Instanceof*>(instruction);
+                    JSValue lhs = (*registers)[src1(io).first];
+                    JSValue rhs = (*registers)[src2(io).first];
+                    if (lhs.isObject() && rhs.isObject()) {
+                        JSObject *a = lhs.object;
+                        JSObject *b = rhs.object;
+                        bool r = false;
+                        while (a) {
+                            if (a == b) {
+                                r = true;
+                                break;
+                            }
+                            a = a->getPrototype();
+                        }
+                        (*registers)[dst(io).first] = r;
+                    }
+                    else
+                        (*registers)[dst(io).first] = false;
+                }
+                break;
             case GET_METHOD:
                 {
                     GetMethod* gm = static_cast<GetMethod*>(instruction);
@@ -645,129 +828,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         }
                     if (!target)
                         throw new JSException("Call to non callable object");
-                    if (target->isNative()) {
-                        ArgumentList *params = op3(call);
-                        JSValues argv(params->size() + 1);
-                        argv[0] = target->getThis();
-                        JSValues::size_type i = 1;
-                        for (ArgumentList::const_iterator src = params->begin(), end = params->end();
-                                        src != end; ++src, ++i) {
-                            argv[i] = (*registers)[src->first.first];
-                        }
-                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(this, argv);
-                        if (op1(call).first != NotARegister)
-                            (*registers)[op1(call).first] = result;
-                        break;
-                    }
-                    else {
-                        ICodeModule *icm = target->getICode();
-                        ArgumentList *args = op3(call);
-                        ArgumentList *callArgs = NULL;
 
-                        if (icm->itsParameters) {
-
-                            // if all the parameters are positional
-    //                        if (icm->itsParameters->mPositionalCount == icm->itsParameters->size())
-
-                            // the parameter count includes 'this' and any named rest parameter
-                            //
-                            uint32 pCount = icm->itsParameters->size() - 1;   // we won't be passing 'this' via the arg list array
-                            // callArgs will be the actual args passed to the target, put into correct register order.
-                            // It has room for the rest parameter.
-                            callArgs = new ArgumentList(pCount, Argument(TypedRegister(NotARegister, &Null_Type), NULL));
-
-                            // don't want to count the rest parameter while processing the others 
-                            if (icm->itsParameters->mRestParameter != ParameterList::NoRestParameter) pCount--;
-                        
-                        
-                            uint32 i;
-                            JSArray *restArg = NULL;
-                        
-                            // first match all named arguments with their intended target locations
-                            for (i = 0; i < args->size(); i++) {
-                            
-                                const StringAtom *argName = (*args)[i].second;
-
-                                TypedRegister parameter = icm->itsParameters->findVariable(*argName);
-                                if (parameter.first == NotARegister) {  
-                                    // arg name doesn't match any parameter name, it's a candidate
-                                    // for the rest parameter (if there is one)
-                                    if (icm->itsParameters->mRestParameter == ParameterList::NoRestParameter)
-                                        throw new JSException("Named argument doesn't match parameter name in call with no rest parameter");
-                                    else {
-                                        if (icm->itsParameters->mRestParameter != ParameterList::HasUnnamedRestParameter) {
-                                            // if the name is a numeric literal >= 0, use it as an array index
-                                            // otherwise just set the named property.
-                                            const char16 *c = argName->data();
-                                            const char16 *end;
-                                            double d = stringToDouble(c, c + argName->size(), end);
-                                            int index = -1;
-
-                                            if ((d != d) || (d < 0) || (d != (int)d)) { // a non-numeric or negative value                                             
-                                                if (icm->itsParameters->mRestParameter == ParameterList::HasRestParameterBeforeBar)
-                                                    throw new JSException("Non-numeric or negative argument name for positional rest parameter");
-                                            }
-                                            else {  // shift the index value down by the number of positional parameters
-                                                index = (int)d;
-                                                index -= icm->itsParameters->mPositionalCount;
-                                            }
-                                        
-                                            TypedRegister argument = (*args)[i].first;   // this is the argument whose name didn't match
-
-                                            if (restArg == NULL) {
-                                                // allocate the rest argument and then subvert the register being used for the
-                                                // argument under consideration to hold the newly created rest argument.
-                                                restArg = new JSArray();
-                                                if (index == -1)
-                                                    restArg->setProperty(*argName, (*registers)[argument.first]);
-                                                else
-                                                    (*restArg)[uint32(index)] = (*registers)[argument.first];
-                                                (*registers)[argument.first] = restArg;
-                                                // The callArgs for the rest parameter position gets loaded from that slot 
-                                                (*callArgs)[pCount] = Argument(TypedRegister(argument.first, &Array_Type), NULL);
-                                            }
-                                            else {
-                                                if (index == -1)
-                                                    restArg->setProperty(*argName, (*registers)[argument.first]);
-                                                else
-                                                    (*restArg)[uint32(index)] = (*registers)[argument.first];
-                                            }
-                                        }
-                                        // else just throw it away 
-                                    }
-                                }
-                                else {
-                                    uint32 targetIndex = parameter.first - 1;           // this is the register number we're targetting
-                                    TypedRegister targetParameter = (*callArgs)[targetIndex].first;
-                                    if (targetParameter.first != NotARegister)          // uh oh, some other argument wants this parameter
-                                        throw new JSException("Two (or more) arguments have the same name");
-                                    (*callArgs)[targetIndex] = (*args)[i];
-                                }
-                            }
-
-
-                            // make sure that all non-optional parameters have values
-                            for (i = 0; i < pCount; i++) {
-                                TypedRegister parameter = (*callArgs)[i].first;
-                                if (parameter.first == NotARegister) {  // doesn't have an assigned argument
-                                    if (!icm->itsParameters->isOptional(i + 1))     // and parameter (allowing for 'this') doesn't have an optional value
-                                        throw new JSException("No argument supplied for non-optional parameter");
-                                }
-                            }
-                        }
-                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call), mICode, mCurrentClosure);
-                        mICode = icm;
-                        mActivation = new Activation(mICode->itsMaxRegister, mActivation, target->getThis(), callArgs);
-                        registers = &mActivation->mRegisters;
-                        mPC = mICode->its_iCode->begin();
+                    if (invokeFunction(target, registers, op1(call), target->getThis(), op3(call))) {
                         endPC = mICode->its_iCode->end();
-                        JSClosure *cl = dynamic_cast<JSClosure *>(target);
-                        if (cl)
-                            mCurrentClosure = cl;
                         continue;
                     }
-                }
 
+                }
+                break;
 
             case NEW_CLOSURE:
                 {
@@ -908,6 +976,52 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         mGlobal->setVariable(*dst(sn), (*registers)[src1(sn).first]);
                 }
                 break;
+            case NEW_GENERIC:
+                {
+                    NewGeneric* ng = static_cast<NewGeneric*>(instruction);
+                    JSValue &value = (*registers)[src1(ng).first];
+                    if (value.isObject()) {
+                        if (value.isFunction()) {
+                            // make a new object, copy prototype over, invoke the function
+                            JSFunction *f = value.function;
+                            const JSValue &protoVal = f->getProperty(widenCString("prototype"));
+                            ASSERT(protoVal.isObject());
+                            JSObject *proto = protoVal.object;
+                            JSObject *thisObject = new JSObject(proto);
+                            (*registers)[dst(ng).first] = thisObject;
+                            // src2(n) is an argList we need to invoke the function on
+                            // we pass a bogus result register because the actual return
+                            // value from the function is unused.
+                            if (invokeFunction(f, registers, TypedRegister(NotARegister, &Object_Type), JSValue(thisObject), src2(ng))) {
+                                endPC = mICode->its_iCode->end();
+                                continue;
+                            }
+                        }
+                        else {
+                            if (value.isType()) {
+                                JSClass *theClass = dynamic_cast<JSClass*>(value.type);
+                                if (theClass) {
+                                    JSInstance* thisInstance = new(theClass) JSInstance(theClass);
+                                    // call the  constructor on thisInstance...
+                                    // src2(n) is an argList we need to invoke the constructor on
+                                    if (invokeFunction(theClass->getDefaultConstructor(), registers, dst(ng), JSValue(thisInstance), src2(ng))) {
+                                        endPC = mICode->its_iCode->end();
+                                        continue;
+                                    }
+                                }
+                                else {
+                                    // a built-in type...
+                                    // the various types need constructors??
+                                    // what about the argList?
+                                    (*registers)[dst(ng).first] = kNullValue;
+                                }
+                            }
+                        }
+                    }
+                    else
+                        NOT_REACHED("unnewable thing??");
+                }
+                break;
             case NEW_OBJECT:
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
@@ -985,7 +1099,34 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                 (*registers)[dst(gp).first] = value.object->getProperty(*src2(gp));
                         }
                     }
-                    // XXX runtime error
+                    else
+                        NOT_REACHED("Get from non-object");// XXX runtime error
+                }
+                break;
+            case GET_FIELD:
+                {
+                    GetField* gf = static_cast<GetField*>(instruction);
+                    JSValue& value = (*registers)[src1(gf).first];
+                    if (value.isObject()) {
+                        JSValue &field = (*registers)[src2(gf).first];
+                        ASSERT(field.isString());
+                        (*registers)[dst(gf).first] = value.object->getProperty(*field.string);
+                    }
+                    else
+                        NOT_REACHED("Get from non-object");// XXX runtime error
+                }
+                break;
+            case SET_FIELD:
+                {
+                    SetField* sf = static_cast<SetField*>(instruction);
+                    JSValue& value = (*registers)[dst(sf).first];
+                    if (value.isObject()) {
+                        JSValue &field = (*registers)[src1(sf).first];
+                        ASSERT(field.isString());
+                        value.object->setProperty(*field.string, (*registers)[src2(sf).first]);
+                    }
+                    else
+                        NOT_REACHED("Set into non-object");// XXX runtime error
                 }
                 break;
             case SET_PROP:
@@ -1007,6 +1148,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             value.object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                         }
                     }
+                    else
+                        NOT_REACHED("Set into non-object");// XXX runtime error
                 }
                 break;
             case GET_STATIC:
@@ -1702,12 +1845,12 @@ JSType *Context::findType(const StringAtom& typeName)
     const JSValue& type = getGlobalObject()->getVariable(typeName);
     if (type.isType())
         return type.type;
-    return &Any_Type;
+    return &Object_Type;
 }
 
 JSType *Context::extractType(ExprNode *t)
 {
-    JSType* type = &Any_Type;
+    JSType* type = &Object_Type;
     if (t && (t->getKind() == ExprNode::identifier)) {
         IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(t);
         type = findType(typeExpr->name);

@@ -117,7 +117,7 @@ testParse (JavaScript::ICodeASM::ICodeParser &icp,
                                              new ICG::VariableList(),
                                              new ICG::ParameterList(),
                                              icp.mMaxRegister, 0,
-                                             &JSTypes::Any_Type);
+                                             &JSTypes::Object_Type);
 
     stdOut << icm;
 

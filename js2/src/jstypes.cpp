@@ -335,22 +335,21 @@ void JSArray::initArrayObject(JSScope *g)
 
 /**************************************************************************************/
 
-JSType Any_Type = JSType(widenCString("any"), NULL);
-JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
-JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
-JSType Character_Type = JSType(widenCString("Character"), &Any_Type);
-JSType String_Type = JSType(widenCString("String"), &Character_Type);
-JSType Function_Type = JSType(widenCString("Function"), &Any_Type, new JSNativeFunction(function_constructor), new JSNativeFunction(function_constructor));
-JSType Array_Type = JSType(widenCString("Array"), &Any_Type, new JSNativeFunction(array_constructor), new JSNativeFunction(array_constructor));
-JSType Type_Type = JSType(widenCString("Type"), &Any_Type);
-JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type, new JSNativeFunction(boolean_constructor), new JSNativeFunction(boolean_constructor));
-JSType Null_Type = JSType(widenCString("Null"), &Any_Type);
-JSType Void_Type = JSType(widenCString("void"), &Any_Type);
-JSType None_Type = JSType(widenCString("none"), &Any_Type);
-
-
 JSType Object_Type = JSType(widenCString("Object"), NULL, new JSNativeFunction(object_constructor));
-JSType Date_Type = JSType(widenCString("Date"), NULL, new JSNativeFunction(date_constructor), new JSNativeFunction(date_invokor));
+JSType Integer_Type = JSType(widenCString("Integer"), &Object_Type);
+JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
+JSType Character_Type = JSType(widenCString("Character"), &Object_Type);
+JSType String_Type = JSType(widenCString("String"), &Character_Type);
+JSType Function_Type = JSType(widenCString("Function"), &Object_Type, new JSNativeFunction(function_constructor), new JSNativeFunction(function_constructor));
+JSType Array_Type = JSType(widenCString("Array"), &Object_Type, new JSNativeFunction(array_constructor), new JSNativeFunction(array_constructor));
+JSType Type_Type = JSType(widenCString("Type"), &Object_Type);
+JSType Boolean_Type = JSType(widenCString("Boolean"), &Object_Type, new JSNativeFunction(boolean_constructor), new JSNativeFunction(boolean_constructor));
+JSType Null_Type = JSType(widenCString("Null"), &Object_Type);
+JSType Void_Type = JSType(widenCString("void"), &Object_Type);
+JSType None_Type = JSType(widenCString("none"), &Object_Type);
+
+
+JSType Date_Type = JSType(widenCString("Date"), &Object_Type, new JSNativeFunction(date_constructor), new JSNativeFunction(date_invokor));
 
 
 #ifdef IS_LITTLE_ENDIAN
@@ -403,7 +402,7 @@ const JSType *JSValue::getType() const
             if (clazz) 
                 return clazz;
             else
-                return &Any_Type;
+                return &Object_Type;
         }
     case JSValue::array_tag:
         return &Array_Type;
@@ -848,7 +847,7 @@ JSValue JSValue::valueToUInt32(const JSValue& value)
 
 JSValue JSValue::convert(JSType *toType)
 {
-    if (toType == &Any_Type)    // yuck, something wrong with this
+    if (toType == &Object_Type)    // yuck, something wrong with this
                                 // maybe the base types should be 
                                 // a family of classes, not just instances
                                 // of JSType ???

@@ -238,7 +238,7 @@ namespace VM {
     class GenericBranch : public Instruction_2<Label*, TypedRegister> {
     public:
         GenericBranch (ICodeOp aOpcode, Label* aLabel, 
-                       TypedRegister aR = TypedRegister(NotARegister, &Any_Type) ) :
+                       TypedRegister aR = TypedRegister(NotARegister, &Object_Type) ) :
             Instruction_2<Label*, TypedRegister>(aOpcode, aLabel, aR) {}
         virtual Formatter& print (Formatter& f) {
             f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset << ", " << mOp2;
