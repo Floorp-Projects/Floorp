@@ -286,8 +286,10 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
 void Area::ParseCoords(const nsString& aSpec)
 {
   char* cp = aSpec.ToNewCString();
-  mCoords = lo_parse_coord_list(cp, &mNumCoords);
-  delete[] cp;
+  if (cp) {
+    mCoords = lo_parse_coord_list(cp, &mNumCoords);
+    nsCRT::free(cp);
+  }
 }
 
 void Area::ToHTML(nsString& aResult)
