@@ -3122,13 +3122,6 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
 {
-  /*nsIFrame *list = aChildList;
-  while (list)
-  {
-    list->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
-    list = list->GetNextSibling();
-  }
-  */
   nsresult rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (mEditor)
     mEditor->PostCreate();
