@@ -38,7 +38,7 @@ interface nsIBookmarksService : nsISupports
 { 0xe638d760, 0x8687, 0x11d2, { 0xb5, 0x30, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
 #define NS_BOOKMARKS_SERVICE_PROGID \
-    "component://netscape/browser/bookmarks"
+    "component://netscape/browser/bookmarks-service"
 
 #define NS_BOOKMARKS_DATASOURCE_PROGID \
     "component://netscape/rdf/datasource?name=bookmarks"
