@@ -1285,7 +1285,6 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
   if (!mView || !mVisible)
     return NS_OK;
 
-printf(". invalidate full widget\n");
   if (aIsSynchronous)
     [mView display];
   else
@@ -1307,7 +1306,6 @@ NS_IMETHODIMP nsChildView::Invalidate(const nsRect &aRect, PRBool aIsSynchronous
   NSRect r;
   ConvertGeckoToCocoaRect ( aRect, r );
   
-printf(". invalidate rect\n");
   if (aIsSynchronous)
     [mView displayRect:r];
   else
@@ -1324,7 +1322,6 @@ printf(". invalidate rect\n");
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::Validate()
 {
-printf(". validate full widget\n");
   [mView setNeedsDisplay:NO];
   return NS_OK;
 }
@@ -1348,7 +1345,6 @@ NS_IMETHODIMP nsChildView::InvalidateRegion(const nsIRegion *aRegion, PRBool aIs
   region->GetBoundingBox ( &bounds.x, &bounds.y, &bounds.width, &bounds.height );
   ConvertGeckoToCocoaRect(bounds, r);
   
-printf(". invalidate region\n");
   if ( aIsSynchronous )
     [mView displayRect:r];
   else
@@ -2427,7 +2423,6 @@ nsChildView::Idle()
   }
     
    // tell gecko to paint.
-printf("- drawRect in nsChildView\n");
   nsRect r;
   ConvertCocoaToGeckoRect(aRect, r);
   nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
