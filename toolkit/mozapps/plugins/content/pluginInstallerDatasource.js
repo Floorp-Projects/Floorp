@@ -24,7 +24,8 @@ function nsRDFItemUpdater(aClientOS, aChromeLocale){
 nsRDFItemUpdater.prototype = {
   checkForPlugin: function (aPluginRequestItem){
     var dsURI = this.dsURI;
-    dsURI = dsURI.replace(/%PLUGIN_MIMETYPE%/g, aPluginRequestItem.mimetype);
+    // escape the mimetype as mimetypes can contain '+', which will break pfs.
+    dsURI = dsURI.replace(/%PLUGIN_MIMETYPE%/g, encodeURIComponent(aPluginRequestItem.mimetype));
     dsURI = dsURI.replace(/%APP_ID%/g, this.appID);
     dsURI = dsURI.replace(/%APP_VERSION%/g, this.buildID);
     dsURI = dsURI.replace(/%CLIENT_OS%/g, this.clientOS);
