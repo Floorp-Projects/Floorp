@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<!-- 
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+  
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+  
+  The Original Code is Mozilla Communicator client code, released
+  March 31, 1998.
+  
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation. Portions created by Netscape are
+  Copyright (C) 1998-1999 Netscape Communications Corporation. All
+  Rights Reserved.
+  
+  Contributor(s):
+    Ben Goodger
+-->
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<?xml-stylesheet href="chrome://wallet/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!-- CHANGE THIS WHEN MOVING FILES -->
+<!DOCTYPE window SYSTEM "chrome://wallet/locale/SignonViewer.dtd" >
+
+<window id="signonviewer"
+        width="470" height="440"
+        title="&windowtitle.label;"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical"
+        class="dialog"
+        onload="Startup()">
+
+  <html:script src="chrome://wallet/content/SignonViewer.js"/>
+	<html:script src="chrome://global/content/strres.js" />
+
+  <tabcontrol flex="100%" align="vertical">
+    <tabbox>
+      <tab selected="true" value="&tab.signonsstored.label;"/>
+      <tab value="&tab.signonsnotstored.label;"/>
+      <tab id="nopreview" value="&tab.nopreview.label;"/>
+      <tab id="nocapture" value="&tab.nocapture.label;"/>
+      <spring flex="1"/>
+    </tabbox>
+    <tabpanel align="horizontal" style="width: 460px;">
+      <!-- saved signons -->
+      <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
+        <box><html:div>&spiel.signonsstored.label;</html:div></box>
+        <spring style="height: 10px;"/>
+          <tree id="signonstree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,0)">
+            <treecol width="45%"/>
+            <treecol width="55%"/>
+            <treehead>
+              <treerow>
+                <treecell value="&treehead.site.label;"/>
+                <treecell value="&treehead.username.label;"/>
+              </treerow>          
+            </treehead>
+            <treechildren id="savesignonlist"/>
+          </tree>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton id="removeSignon" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteSignon();"/>
+          <titledbutton id="removeAllSignons" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllSignons();"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+      <!-- ignored signon sites -->
+      <box class="tabpanel" id="ignoredsites" flex="100%" align="vertical">
+        <html:div>&spiel.signonsnotstored.label;</html:div>
+        <spring style="height: 10px;"/>
+          <tree id="ignoretree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,1)">
+            <treecol width="100%"/>
+            <treehead>
+              <treerow>
+                <treecell value="&treehead.site.label;"/>
+              </treerow>          
+            </treehead>
+            <treechildren id="ignoredlist"/>
+          </tree>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton id="removeIgnoredSite" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteIgnoredSite();"/>
+          <titledbutton id="removeAllSites" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllSites();"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+      <!-- do not preview panel -->
+      <box class="tabpanel" id="nopreviewforms" flex="100%" align="vertical">
+        <html:div>&spiel.nopreview.label;</html:div>
+        <spring style="height: 10px;"/>
+          <tree id="nopreviewtree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,2)">
+            <treecol width="100%"/>
+            <treehead>
+              <treerow>
+                <treecell value="&treehead.site.label;"/>
+              </treerow>          
+            </treehead>
+            <treechildren id="nopreviewlist"/>
+          </tree>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton id="removeNoPreview" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
+          <titledbutton id="removeAllNopreviews" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllNopreviews();"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+      <!-- do not capture panel -->
+      <box class="tabpanel" id="nocaptureforms" flex="100%" align="vertical">
+        <html:div>&spiel.nocapture.label;</html:div>
+        <spring style="height: 10px;"/>
+          <tree id="nocapturetree" class="inset" style="height: 280px; width: 440px;" align="vertical"
+                onclick="HandleEvent(event);"
+                onkeypress="HandleEvent(event,3)">
+            <treecol width="100%"/>
+            <treehead>
+              <treerow>
+                <treecell value="&treehead.site.label;"/>
+              </treerow>          
+            </treehead>
+            <treechildren id="nocapturelist"/>
+          </tree>
+        <spring style="height: 5px;"/>
+        <box align="horizontal">
+          <titledbutton id="removeNoCapture" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteNoCaptureForm();"/>
+          <titledbutton id="removeAllNocaptures" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllNocaptures();"/>
+        </box>
+        <spring style="height: 5px;"/>
+      </box>
+    </tabpanel>
+  </tabcontrol>
+  
+  <!-- from dialogOverlay.xul -->
+  <box align="horizontal">
+    <spring flex="100%"/>
+    <box id="okCancelButtons"/>
+  </box>
+ 
+</window>
+
