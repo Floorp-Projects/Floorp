@@ -518,6 +518,8 @@ static const char *pref_WalletNotified = "wallet.Notified";
 static const char *pref_WalletKeyFileName = "wallet.KeyFileName";
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 static const char *pref_WalletServer = "wallet.Server";
+static const char *pref_WalletFetchPatches = "wallet.fetchPatches";
+static const char *pref_WalletVersion = "wallet.version";
 
 #ifdef AutoCapture
 PRIVATE PRBool wallet_captureForms = PR_FALSE;
@@ -1611,6 +1613,7 @@ PRInt32
 wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure) {
 
   /* read the line */
+  line = "";
   PRUnichar c;
   for (;;) {
     c = Wallet_UTF8Get(strm)^(obscure ? Wallet_GetKey() : (PRUnichar)0);
@@ -2131,11 +2134,133 @@ wallet_GetPrefills(
   return -1;
 }
 
+PRBool
+IsDigit (PRUnichar c) {
+  return (c >= '0' && c <= '9');
+}
+
+nsresult
+wallet_Patch(nsFileSpec dirSpec, nsAutoString& patch, nsInputFileStream patchFile) {
+  nsAutoString buffer;
+  nsAutoString filename;
+  patch.Right(filename, patch.Length()-1);
+  PRInt32 line;
+  nsresult rv;
+  nsInputFileStream oldFile(dirSpec + filename);
+  nsOutputFileStream newFile(dirSpec + "tempfile");
+  line = 0;
+
+  /* get first patch */
+  if (NS_FAILED(wallet_GetLine(patchFile, patch, PR_FALSE)) || patch.CharAt(0) == '@') {
+    /* end of patch file */
+    return NS_OK;
+  }
+
+  /* apply all patches */
+  PRBool endOfPatchFile = PR_FALSE;
+  for (;;) {
+
+    /* parse the patch command */
+    PRInt32 commandPosition = patch.FindCharInSet("acd");
+    PRUnichar command = patch.CharAt(commandPosition);
+    if (commandPosition == -1) {
+      return NS_ERROR_FAILURE; /* invalid line in patch file */
+    }
+
+    /* parse the startline and endline from the patch */
+    nsAutoString startString, endString;
+    PRInt32 startLine, endLine, error;
+    patch.Truncate(commandPosition);
+    PRInt32 commaPosition = patch.FindChar(',');
+    if (commaPosition == -1) {
+      startLine = patch.ToInteger(&error);
+      if (error != 0) {
+        return NS_ERROR_FAILURE;
+      }
+      endLine = startLine;        
+    } else {
+      patch.Left(startString, commaPosition);
+      startLine = startString.ToInteger(&error);
+      if (error != 0) {
+        return NS_ERROR_FAILURE;
+      }
+      patch.Right(endString, patch.Length()-commaPosition-1);
+      endLine = endString.ToInteger(&error);        
+      if (error != 0) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    /* copy all lines preceding the patch directly to the output file */
+    for (; line < startLine; line++) {
+      if (NS_FAILED(wallet_GetLine(oldFile, buffer, PR_FALSE))) {
+        return NS_ERROR_FAILURE;
+      }
+      wallet_PutLine(newFile, buffer, PR_FALSE);
+    }
+
+    /* skip over changed or deleted lines in the old file */
+    if (('c' == command) || ('d' == command)) { /* change or delete lines */
+      for (; line <= endLine; line++) {
+        rv = wallet_GetLine(oldFile, buffer, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+
+    /*
+     * advance patch file to next patch command,
+     * inserting new lines from patch file to new file as we go
+     */
+    for (;;) {
+      rv = wallet_GetLine(patchFile, patch, PR_FALSE);
+      if (NS_FAILED(rv) || patch.CharAt(0) == '@') {
+        endOfPatchFile = PR_TRUE;
+        break;
+      }
+      if (IsDigit(patch.CharAt(0))) {
+        break; /* current patch command is finished */
+      }
+      if (('c' == command) || ('a' == command)) { /* change or add lines */
+        /* insert new lines from the patch file into the new file */
+        if (patch.CharAt(0) == '>') {
+          nsAutoString newLine;
+          patch.Right(newLine, patch.Length()-2);
+          wallet_PutLine(newFile, newLine, PR_FALSE);
+        }
+      }
+    }
+
+    /* check for end of patch file */
+    if (endOfPatchFile) {
+      break;
+    }
+  }
+
+  /* end of patch file reached */
+  for (;;) {
+    if (NS_FAILED(wallet_GetLine(oldFile, buffer, PR_FALSE))) {
+      break;
+    }
+    wallet_PutLine(newFile, buffer, PR_FALSE);
+  }
+  oldFile.close();
+  newFile.flush();
+  newFile.close();
+  nsFileSpec x(dirSpec + filename);
+  x.Delete(PR_FALSE);
+  nsFileSpec y(dirSpec + "tempfile");
+  y.Rename(filename);
+  return NS_OK;
+}
+
 void
 wallet_FetchFromNetCenter() {
   nsresult rv;
   char * url = nsnull;
 
+  /* obtain the server from which to fetch the patch files */
   SI_GetCharPref(pref_WalletServer, &wallet_Server);
   if (!wallet_Server || (*wallet_Server == '\0')) {
     /* user does not want to download mapping tables */
@@ -2146,6 +2271,67 @@ wallet_FetchFromNetCenter() {
   if (NS_FAILED(rv)) {
     return;
   }
+
+  /* obtain version number */
+  char * version = nsnull;
+  SI_GetCharPref(pref_WalletVersion, &version);
+
+  /* obtain fetch method */
+  PRBool fetchPatches = PR_FALSE;
+  SI_GetBoolPref(pref_WalletFetchPatches, fetchPatches);
+
+  if (fetchPatches) {
+
+    /* obtain composite patch file */
+    url = (nsAutoString(wallet_Server) + "patchfile." + version).ToNewCString();
+    Recycle(version);
+    rv = NS_NewURItoFile(url, dirSpec, "patchfile");
+    Recycle(url);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    /* update the version pref */
+
+    nsInputFileStream patchFile(dirSpec + "patchfile");
+    nsAutoString patch;
+    if (NS_FAILED(wallet_GetLine(patchFile, patch, PR_FALSE))) {
+      return;
+    }
+    patch.StripWhitespace();
+    version = patch.ToNewCString();
+    SI_SetCharPref(pref_WalletVersion, version);
+    Recycle(version);
+
+    /* process the patch file */
+
+    if (NS_FAILED(wallet_GetLine(patchFile, patch, PR_FALSE))) {
+      /* normal case -- there is nothing to update */
+      return;
+    }
+    PRBool error = PR_FALSE;
+    while (patch.Length() > 0) {
+      rv = wallet_Patch(dirSpec, patch, patchFile);
+      if (NS_FAILED(rv)) {
+        error = PR_TRUE;
+        break;
+      }
+    }
+
+    /* make sure all tables exist and no error occured */
+    if (!error) {
+      nsInputFileStream table1(dirSpec + "SchemaConcat.tbl");
+      nsInputFileStream table2(dirSpec + "FieldSchema.tbl");
+      nsInputFileStream table3(dirSpec + "URLFieldSchema.tbl");
+      if (table1.is_open() && table2.is_open() && table3.is_open()) {
+        return;
+      }
+    }
+  }
+
+  /* failed to do the patching, get files manually */
+
+#ifdef fetchingIndividualFiles
   url = (nsAutoString(wallet_Server) + "URLFieldSchema.tbl").ToNewCString();
   rv = NS_NewURItoFile(url, dirSpec, "URLFieldSchema.tbl");
   Recycle(url);
@@ -2164,6 +2350,62 @@ wallet_FetchFromNetCenter() {
   if (NS_FAILED(rv)) {
     return;
   }
+#else
+  /* first fetch the composite of all files and put it into All.tbl */
+  url = (nsAutoString(wallet_Server) + "All.tbl").ToNewCString();
+  rv = NS_NewURItoFile(url, dirSpec, "All.tbl");
+  Recycle(url);
+
+  /* fetch version number from first line of All.tbl */
+  nsInputFileStream allFile(dirSpec + "All.tbl");
+  nsAutoString buffer;
+  if (NS_FAILED(wallet_GetLine(allFile, buffer, PR_FALSE))) {
+    return;
+  }
+  buffer.StripWhitespace();
+  if (buffer == version) {
+    /* This is an optimization but we are skipping it for now.  If the user's tables
+     * become corrupt but his version number indicates that he is up to date, there
+     * would be no obvious way for him to restore the tables.  If we did the optimization
+     * we would save only about 150 milliseconds at wallet startup.
+     */
+//  return; /* version hasn't changed so stop now */
+  }
+  version = buffer.ToNewCString();
+  SI_SetCharPref(pref_WalletVersion, version);
+  Recycle(version);
+
+  /* get next line of All.tbl.  This is name of first subfile in the composite file */
+  if (NS_FAILED(wallet_GetLine(allFile, buffer, PR_FALSE))) {
+    return;
+  }
+
+  /* process each subfile in the composite file */
+  for (;;) {
+
+    /* obtain subfile name and open it as an output stream */
+    if (buffer.CharAt(0) != '@') {
+      return; /* error */
+    }
+    buffer.StripWhitespace();
+    nsAutoString filename;
+    buffer.Right(filename, buffer.Length()-1);
+    nsOutputFileStream thisFile(dirSpec + filename);
+
+    /* copy each line in composite file to the subfile */
+    for (;;) {
+      if (NS_FAILED(wallet_GetLine(allFile, buffer, PR_FALSE))) {
+        /* end of composite file reached */
+        return;
+      }
+      if (buffer.CharAt(0) == '@') {
+        /* start of next subfile reached */
+        break;
+      }
+      wallet_PutLine(thisFile, buffer, PR_FALSE);
+    }
+  }
+#endif
 }
 
 /*
@@ -2184,7 +2426,15 @@ wallet_Initialize(PRBool fetchTables) {
    * wallet editor and PR_TRUE in all other cases
    */
   if (!wallet_tablesInitialized & fetchTables) {
+#ifdef DEBUG
+//wallet_ClearStopwatch();
+//wallet_ResumeStopwatch();
+#endif
     wallet_FetchFromNetCenter();
+#ifdef DEBUG
+//wallet_PauseStopwatch();
+//wallet_DumpStopwatch();
+#endif
     wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
