@@ -445,7 +445,7 @@ nsFileView.prototype = {
       filterStr += filterList[i].substr(shortestPrefix.length) + "|";
     }
 
-    this.mCurrentFilter = new RegExp(filterStr.substr(0, (filterStr.length) - 1) + ")");
+    this.mCurrentFilter = new RegExp(filterStr.substr(0, (filterStr.length) - 1) + ")", "i");
     this.mFilteredFiles = [];
 
     if (this.mOutliner) {
