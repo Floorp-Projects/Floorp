@@ -122,7 +122,7 @@ nsHTMLTokenizer::~nsHTMLTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
-void AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque) {
+void nsHTMLTokenizer::AddToken(CToken*& aToken,nsresult aResult,nsDeque& aDeque) {
   if(aToken) {
     if(NS_SUCCEEDED(aResult)) {
       aDeque.Push(aToken);

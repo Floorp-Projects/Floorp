@@ -190,7 +190,7 @@ nsresult ConsumeConditional(nsScanner& aScanner,const nsString& aMatchString,PRB
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */
-nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,nsScanner& aScanner,CToken*& aToken){
+nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
   nsresult result=NS_OK;
   nsAutoString CDATAString("[CDATA[");
   PRBool isCDATA = PR_FALSE;
@@ -207,6 +207,11 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,nsScanner& aScanner,CTok
     else {
       aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     }
+  }
+
+  if(aToken) {
+    result=aToken->Consume(aChar,aScanner);
+    AddToken(aToken,result,mTokenDeque);
   }
 
   return result;
