@@ -21,21 +21,21 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EX_LIBS	        = -L$(DIST)/bin/ -lxpcom -lraptorbase -luconv
-
 CPPSRCS		= nsTestUConv.cpp 
 
 OBJS		= $(CPPSRCS:.cpp=.o)
 
-PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
-TARGETS		= $(PROGS)
+#TARGETS		= $(SIMPLE_PROGRAMS)
 
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../ucvlatin  \
                    -I$(srcdir)/../ucvja
 
+
+LIBS	        += $(NSPR_LIBS) -L$(DIST)/bin/ -lxpcom -lraptorbase -luconv
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)
@@ -48,10 +48,4 @@ $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $<
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o #$(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(LDFLAGS) $^ $(NSPR_LIBS) $(EX_LIBS) $(OS_LIBS)
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
-
+install:: $(SIMPLE_PROGRAMS)
