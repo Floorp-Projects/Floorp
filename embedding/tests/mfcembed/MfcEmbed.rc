@@ -597,6 +597,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_FILE_PRINTPREVIEW    "Print Preview"
     ID_FILE_PRINTSETUP      "Page Setup Dialog"
+    IDS_VIEW_FRAME_SOURCE   "View Frame Source"
+    IDS_OPEN_FRAME_IN_NEW_WINDOW    "Open Frame in New Window"
 END
 
 #endif    // English (U.S.) resources

@@ -75,7 +75,6 @@
 // Mozilla Includes
 #include "nsIWidget.h"
 
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -120,8 +119,9 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
 	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINTPREVIEW, OnFilePrintPreview)
 	ON_COMMAND(ID_FILE_PRINTSETUP, OnFilePrintSetup)
-	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
 	ON_REGISTERED_MESSAGE(WM_FINDMSG, OnFindMsg)
+	ON_COMMAND(ID_VIEW_FRAME_SOURCE, OnViewFrameSource)
+	ON_COMMAND(ID_OPEN_FRAME_IN_NEW_WINDOW, OnOpenFrameInNewWindow)
 
 	// Menu/Toolbar UI update handlers
 	ON_UPDATE_COMMAND_UI(ID_NAV_BACK, OnUpdateNavBack)
@@ -130,6 +130,7 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, OnUpdateCut)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, OnUpdateCopy)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdatePaste)
+	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -1130,6 +1131,11 @@ void CBrowserView::SetCtxMenuImageSrc(nsAutoString& strImgSrc)
 	mCtxMenuImgSrc = strImgSrc;
 }
 
+void CBrowserView::SetCurrentFrameURL(nsAutoString& strCurrentFrameURL)
+{
+	mCtxMenuCurrentFrameURL = strCurrentFrameURL;
+}
+
 void CBrowserView::Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized) 
 {
 	nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(mWebBrowser));
@@ -1161,4 +1167,53 @@ void CBrowserView::ShowSecurityInfo()
     }
 
     ::MessageBox(hParent, "To Be Done..........", "MfcEmbed", MB_OK);
+}
+
+// Determintes if the currently loaded document
+// contains frames
+//
+BOOL CBrowserView::ViewContentContainsFrames()
+{
+    nsresult rv = NS_OK;
+
+    // Get nsIDOMDocument from nsIWebNavigation
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = mWebNav->GetDocument(getter_AddRefs(domDoc));
+    if(NS_FAILED(rv))
+       return FALSE;
+
+    // QI nsIDOMDocument for nsIDOMHTMLDocument
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(domDoc);
+    if (!htmlDoc)
+        return FALSE;
+   
+    // Get the <body> element of the doc
+    nsCOMPtr<nsIDOMHTMLElement> body;
+    rv = htmlDoc->GetBody(getter_AddRefs(body));
+    if(NS_FAILED(rv))
+       return FALSE;
+
+    // Is it of type nsIDOMHTMLFrameSetElement?
+    nsCOMPtr<nsIDOMHTMLFrameSetElement> frameset = do_QueryInterface(body);
+
+    return (frameset != nsnull);
+}
+
+void CBrowserView::OnViewFrameSource()
+{
+    USES_CONVERSION;
+
+    // Build the view-source: url
+    //
+    nsCAutoString viewSrcUrl;
+    viewSrcUrl.Append("view-source:");
+    viewSrcUrl.Append(W2T(mCtxMenuCurrentFrameURL.get()));
+
+    OpenViewSourceWindow(viewSrcUrl.get());
+}
+
+void CBrowserView::OnOpenFrameInNewWindow()
+{
+	if(mCtxMenuCurrentFrameURL.Length())
+		OpenURLInNewWindow(mCtxMenuCurrentFrameURL.get());
 }
