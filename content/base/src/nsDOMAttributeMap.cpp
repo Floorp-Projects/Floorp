@@ -315,8 +315,6 @@ nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   }
   else {
     *aReturn = nsnull;
-
-    rv = NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   return rv;
