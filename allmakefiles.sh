@@ -742,6 +742,16 @@ if [ "$MOZ_SVG" ]; then
 END_SVG_MAKEFILES
 fi
 
+# directory/xpcom
+if [ "$MOZ_LDAP_XPCOM" ]; then
+  add_makefiles <<END_LDAP_XPCOM_MAKEFILES
+  directory/xpcom/Makefile
+  directory/xpcom/base/Makefile
+  directory/xpcom/base/public/Makefile
+  directory/xpcom/base/src/Makefile
+END_LDAP_XPCOM_MAKEFILES
+fi
+
 if [ `echo "$MOZ_EXTENSIONS" | grep -c cookie` != 0 ]; then
   add_makefiles <<END_EXTENSIONS_COOKIE_MAKEFILES
   extensions/cookie/Makefile

@@ -24,6 +24,8 @@ dnl                 X11 makedepend support
 dnl                 Insure support.
 dnl               Henry Sobotka <sobotka@axess.com>
 dnl                 OS/2 support
+dnl               Dan Mosedale <dmose@mozilla.org>
+dnl                 LDAP support
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
@@ -3123,6 +3125,13 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
   MOZ_UPDATE_XTERM=1)
 
 dnl
+dnl --enable-ldap
+dnl
+MOZ_ARG_ENABLE_BOOL(ldap,
+[  --enable-ldap           Enable LDAP (default=no); will fail w/o prereqs at
+                            http://www.mozilla.org/directory/xpcom.html ],
+  MOZ_LDAP_XPCOM=1)
+
 dnl --enable mathml
 dnl TODO: handle include files here ?
 dnl
