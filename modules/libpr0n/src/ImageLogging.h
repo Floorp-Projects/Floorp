@@ -87,5 +87,6 @@ private:
 #else
 #define LOG_SCOPE(s)
 #define LOG_SCOPE_STRING_PARAM(s, pn, pv)
+#define LOG_SCOPE_PTR_PARAM(s, pn, pv)
 #define gImgLog
 #endif
