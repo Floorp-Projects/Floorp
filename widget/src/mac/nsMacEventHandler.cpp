@@ -1412,7 +1412,7 @@ PRBool nsMacEventHandler::ResizeEvent ( WindowRef inWindow )
 	::GetWindowPortBounds ( inWindow, &macRect );
 	::LocalToGlobal(&topLeft(macRect));
 	::LocalToGlobal(&botRight(macRect));
-	mTopLevelWidget->Resize(macRect.right - macRect.left + 1, macRect.bottom - macRect.top + 1, PR_FALSE);
+	mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
 	if (nsnull != gRollupListener && (nsnull != gRollupWidget) )
 		gRollupListener->Rollup();
 	mTopLevelWidget->UserStateForResize(); // size a zoomed window and it's no longer zoomed
