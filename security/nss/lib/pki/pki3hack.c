@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.59 $ $Date: 2002/06/28 03:00:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.60 $ $Date: 2002/07/10 03:24:14 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -798,6 +798,36 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     return c;
 }
 
+static NSSToken*
+stan_GetTrustToken
+(
+  NSSCertificate *c
+)
+{
+    NSSToken *tok = NULL;
+    nssCryptokiObject **ip;
+    nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
+    if (!instances) {
+	return PR_FALSE;
+    }
+    for (ip = instances; *ip; ip++) {
+	nssCryptokiObject *instance = *ip;
+        nssCryptokiObject *to = 
+		nssToken_FindTrustForCertificate(instance->token, NULL,
+		&c->encoding, &c->issuer, &c->serial, 
+		nssTokenSearchType_TokenOnly);
+	if (to) {
+	    nssCryptokiObject_Destroy(to);
+	    tok = instance->token;
+ 	    if (!PK11_IsReadOnly(tok->pk11slot))  {
+		break;
+	    }
+	}
+    }
+    nssCryptokiObjectArray_Destroy(instances);
+    return tok;
+}
+
 NSS_EXTERN PRStatus
 STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 {
@@ -854,7 +884,9 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	}
     }
     td = STAN_GetDefaultTrustDomain();
-    if (PK11_IsReadOnly(cc->slot)) {
+    tok = stan_GetTrustToken(c);
+    moving_object = PR_FALSE;
+    if (PK11_IsReadOnly(tok->pk11slot))  {
 	tokens = nssList_CreateIterator(td->tokenList);
 	if (!tokens) return PR_FAILURE;
 	for (tok  = (NSSToken *)nssListIterator_Start(tokens);
@@ -866,11 +898,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	nssListIterator_Finish(tokens);
 	nssListIterator_Destroy(tokens);
 	moving_object = PR_TRUE;
-    } else {
-	/* by default, store trust on same token as cert if writeable */
-	tok = PK11Slot_GetNSSToken(cc->slot);
-	moving_object = PR_FALSE;
-    }
+    } 
     if (tok) {
 	if (moving_object) {
 	    /* this is kind of hacky.  the softoken needs the cert
