@@ -29,6 +29,10 @@
   # mailrecipients: hash; BugMail recipient params. Optional.
   #%]
 
+[% UNLESS header_done %]
+  [% PROCESS bug/process/header.html.tmpl %]
+[% END %]
+
 [% DEFAULT type="bug" %]
 
 [% 

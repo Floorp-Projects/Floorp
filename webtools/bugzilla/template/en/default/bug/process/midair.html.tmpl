@@ -34,6 +34,10 @@
   # bug_id: number; the ID of the bug being changed.
   #%]
  
+[% UNLESS header_done %]
+  [% PROCESS bug/process/header.html.tmpl %]
+[% END %]
+
 <h1>Mid-air collision detected!</h1>
 
 <p>

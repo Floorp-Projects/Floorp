@@ -168,12 +168,6 @@ if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
     }
 }
 
-# Start displaying the response page.
-$template->process("bug/process/header.html.tmpl", $vars)
-  || ThrowTemplateError($template->error());
-
-$vars->{'header_done'} = 1;
-
 GetVersionTable();
 
 CheckFormFieldDefined(\%::FORM, 'product');
@@ -1670,6 +1664,7 @@ foreach my $id (@idlist) {
     # receive email about the change.
     $template->process("bug/process/results.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
+    $vars->{'header_done'} = 1;
     
     if ($duplicate) {
         # Check to see if Reporter of this bug is reporter of Dupe 
@@ -1700,6 +1695,7 @@ foreach my $id (@idlist) {
         # Let the user know a duplication notation was added to the original bug.
         $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
+        $vars->{'header_done'} = 1;
     }
 
     if ($check_dep_bugs) {
@@ -1713,6 +1709,7 @@ foreach my $id (@idlist) {
             # bug and who did and didn't receive email about it.
             $template->process("bug/process/results.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
+            $vars->{'header_done'} = 1;
         }
     }
 }
