@@ -43,7 +43,7 @@ class nsHTTPResponse : public nsIHTTPResponse
 
 public:
     // Constructor and destructor
-    nsHTTPResponse(nsIHTTPChannel* i_pConnection, nsIInputStream* i_InputStream);
+    nsHTTPResponse(nsIInputStream* i_InputStream);
     virtual ~nsHTTPResponse();
 
     // Methods from nsISupports
@@ -168,9 +168,7 @@ protected:
     NS_IMETHOD          SetStatus(PRInt32 i_Value) { m_Status = i_Value; return NS_OK;};
     NS_IMETHOD          SetStatusString(const char* i_Value);
 
-    char*                       m_Buffer; /* Used for holding header data */
     nsVoidArray*                m_pArray;
-    nsCOMPtr<nsIHTTPChannel>    m_pConn;
     HTTPVersion                 m_ServerVersion;
     char*                       m_pStatusString;
     PRUint32                    m_Status;

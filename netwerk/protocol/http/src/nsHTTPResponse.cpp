@@ -23,27 +23,40 @@
 #include "nsString.h"
 #include "nsHeaderPair.h"
 #include "nsVoidArray.h"
+#include "nsIInputStream.h"
 #include "kHTTPHeaders.h"
 #include "plstr.h"
 
-nsHTTPResponse::nsHTTPResponse(nsIHTTPChannel* i_pCon, nsIInputStream* i_InputStream):
-    m_pConn(dont_QueryInterface(i_pCon)),
+nsHTTPResponse::nsHTTPResponse(nsIInputStream* i_InputStream):
     m_pArray(new nsVoidArray()),
-    mRefCnt(0),
-    m_pStatusString(0),
-    m_pInputStream(i_InputStream)
+    m_pStatusString(nsnull)
 {
+    NS_INIT_REFCNT();
+
+    m_pInputStream = i_InputStream;
+    NS_IF_ADDREF(m_pInputStream);
 }
 
 nsHTTPResponse::~nsHTTPResponse()
 {
-    // m_pConn is released by nsCOMPtr.
-    if (m_pStatusString)
-        delete[] m_pStatusString;
-    if (m_pArray)
-    {
+    NS_IF_RELEASE(m_pInputStream);
+
+    if (m_pStatusString) {
+        nsCRT::free(m_pStatusString);
+        m_pStatusString = nsnull;
+    }
+
+    if (m_pArray) {
+        PRInt32 cnt = m_pArray->Count();
+        for (PRInt32 i = cnt-1; i >= 0; i--) {
+            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
+            m_pArray->RemoveElementAt(i);
+
+            delete element;
+        }
+
         delete m_pArray;
-        m_pArray = 0;
+        m_pArray = nsnull;
     }
 
 }
@@ -527,14 +540,11 @@ nsHTTPResponse::SetStatusString(const char* i_Status)
     nsresult rv = NS_OK;
 
     NS_ASSERTION(!m_pStatusString, "Overwriting status string!");
-    int len = PL_strlen(i_Status);
-    m_pStatusString = new char[len+1];
-    //move to strncpy TODO
-    if (m_pStatusString) {
-      PL_strcpy(m_pStatusString, i_Status);
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    m_pStatusString = nsCRT::strdup(i_Status);
+    if (!m_pStatusString) {
+      rv = NS_ERROR_FAILURE;
     }
+
     return rv;
 }
 

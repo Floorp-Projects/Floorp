@@ -36,21 +36,31 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, nsIChannel* i_
     m_Method(i_Method),
     m_pArray(new nsVoidArray()),
     m_Version(HTTP_ONE_ZERO),
-    m_Request(nsnull),
-    m_pTransport(i_pTransport),
-    mRefCnt(0)
+    m_Request(nsnull)
 {
-    
+    NS_INIT_REFCNT();
+
+    m_pTransport = i_pTransport;
+    NS_IF_ADDREF(m_pTransport);
+
     //Build();
 }
 
 nsHTTPRequest::~nsHTTPRequest()
 {
-    if (m_pArray)
-    {
+    if (m_pArray) {
+        PRInt32 cnt = m_pArray->Count();
+        for (PRInt32 i = cnt-1; i >= 0; i--) {
+            nsHeaderPair* element = NS_STATIC_CAST(nsHeaderPair*, m_pArray->ElementAt(i));
+            m_pArray->RemoveElementAt(i);
+
+            delete element;
+        }
+
         delete m_pArray;
-        m_pArray = 0;
+        m_pArray = nsnull;
     }
+    
     NS_IF_RELEASE(m_Request);
     NS_IF_RELEASE(m_pTransport);
 /*
@@ -66,14 +76,19 @@ nsHTTPRequest::Build()
 {
     nsresult rv;
 
-    if (m_Request)
+    if (m_Request) {
         NS_ERROR("Request already built!");
+        return NS_ERROR_FAILURE;
+    }
 
     nsIBuffer* buf;
     rv = NS_NewBuffer(&buf, NS_HTTP_REQUEST_SEGMENT_SIZE,
                       NS_HTTP_REQUEST_BUFFER_SIZE, nsnull);
     if (NS_FAILED(rv)) return rv;
+
     rv = NS_NewBufferInputStream(&m_Request, buf);
+    NS_RELEASE(buf);
+
     if (NS_SUCCEEDED(rv))
     {
 
@@ -904,10 +919,12 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
         if (!pListener)
             return NS_ERROR_OUT_OF_MEMORY;
 
+        NS_ADDREF(pListener);
         rv = m_pTransport->AsyncRead(0, -1,
                                      i_pContext, 
                                      m_pConnection->EventQueue(), 
                                      pListener);
+        NS_RELEASE(pListener);
         return rv;
     }
     else
