@@ -506,6 +506,7 @@ else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
 endif # OS2
 ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
 endif
 else # ! IS_COMPONENT
@@ -517,6 +518,7 @@ else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 endif # OS2
 ifeq ($(OS_ARCH),OpenVMS)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin
 endif
 endif
