@@ -73,7 +73,8 @@
 #include "nsIDOMRange.h"
 #include "nsIFrameReflow.h"
 
-#include "nsMultiMixedConv.h" // for
+#include "nsMultiMixedConv.h"
+#include "nsFTPDirListingConv.h"
 #include "nsIRegistry.h"
 static NS_DEFINE_CID(kRegistryCID,               NS_REGISTRY_CID);
 
@@ -1194,6 +1195,24 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   }
 
   // STREAM CONVERTER REGISTRATION
+
+  nsIRegistry *registry;
+  rv = nsServiceManager::GetService(kRegistryCID, NS_GET_IID(nsIRegistry), (nsISupports**) &registry);
+  if (NS_FAILED(rv)) goto done;
+
+
+
+  // open the registry
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) goto done;
+
+  // set the key
+  nsIRegistry::Key key, key1;
+
+  // root key addition
+  rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);
+  if (NS_FAILED(rv)) goto done;
+
   // multipart mixed converter registration
   nsIFactory *multiMixedFactSup;
   rv = nsComponentManager::FindFactory(kMultiMixedConverterCID, &multiMixedFactSup);
@@ -1205,21 +1224,22 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                                              PR_TRUE);
       if (NS_FAILED(rv)) goto done;
 
-      nsIRegistry *registry;
-      rv = nsServiceManager::GetService(kRegistryCID, NS_GET_IID(nsIRegistry), (nsISupports**) &registry);
-      if (NS_FAILED(rv)) goto done;
-
-      // open the registry
-      rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-      if (NS_FAILED(rv)) goto done;
-
-      // set the key
-      nsIRegistry::Key key, key1;
-
-      rv = registry->AddSubtree(nsIRegistry::Common, NS_ISTREAMCONVERTER_KEY, &key);
-      if (NS_FAILED(rv)) goto done;
-
       rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace?to=text/html", &key1);
+      if (NS_FAILED(rv)) goto done;
+  }
+
+  // FTP directory listing converter registration
+  nsIFactory *FTPDirListingFactSup;
+  rv = nsComponentManager::FindFactory(kFTPDirListingConverterCID, &FTPDirListingFactSup);
+  if (NS_SUCCEEDED(rv)) {
+      rv = nsComponentManager::RegisterFactory(kFTPDirListingConverterCID,
+                                               "FTPDirListingConverter",
+                                               NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-unix?to=application/http-index-format",
+                                               FTPDirListingFactSup,
+                                               PR_TRUE);
+      if (NS_FAILED(rv)) goto done;
+
+      rv = registry->AddSubtreeRaw(key, "?from=text/ftp-dir-unix?to=application/http-index-format", &key1);
       if (NS_FAILED(rv)) goto done;
   }
   // END STREAM CONVERTER REGISTRATION
