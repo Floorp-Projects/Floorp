@@ -28,6 +28,10 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
+ * NaN/Infinity code copied from the JS-library with permission from
+ * Netscape Communications Corporation: http://www.mozilla.org/js
+ * http://lxr.mozilla.org/seamonkey/source/js/src/jsnum.h
+ *
  */
 
 
@@ -51,16 +55,6 @@ public:
     static const double NEGATIVE_INFINITY;
 
     /**
-     * Creates a new Double with it's value initialized to 0;
-    **/
-    Double();
-
-    /**
-     * Creates a new Double with it's value initialized to the given double
-    **/
-    Double(double dbl);
-
-    /**
      * Creates a new Double with it's value initialized from the given String.
      * The String will be converted to a double. If the String does not
      * represent an IEEE 754 double, the value will be initialized to NaN
@@ -78,33 +72,20 @@ public:
     int    intValue();
 
     /**
-     * Determins whether the given double represents positive or negative
+     * Determines whether the given double represents positive or negative
      * inifinity
     **/
     static MBool isInfinite(double dbl);
 
     /**
-     * Determins whether this Double's value represents positive or
-     * negative inifinty
-    **/
-    MBool isInfinite();
-
-    /**
-     * Determins whether the given double is NaN
+     * Determines whether the given double is NaN
     **/
     static MBool isNaN(double dbl);
 
     /**
-     * Determins whether this Double's value is NaN
+     * Determines whether the given double is negative
     **/
-    MBool isNaN();
-
-    /**
-     * Converts the value of this Double to a String, and places
-     * The result into the destination String.
-     * @return the given dest string
-    **/
-    String& toString(String& dest);
+    static MBool isNeg(double dbl);
 
     /**
      * Converts the value of the given double to a String, and places

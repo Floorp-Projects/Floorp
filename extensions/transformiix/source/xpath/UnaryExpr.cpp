@@ -16,6 +16,11 @@
  * Contributor(s):
  * Jonas Sicking, sicking@bigfoot.com
  *   -- original author.
+ *
+ * NaN/Infinity code copied from the JS-library with permission from
+ * Netscape Communications Corporation: http://www.mozilla.org/js
+ * http://lxr.mozilla.org/seamonkey/source/js/src/jsinterp.c
+ *
  */
 
 #include "Expr.h"
@@ -42,7 +47,16 @@ ExprResult* UnaryExpr::evaluate(Node* context, ContextState* cs)
     ExprResult* exprRes = expr->evaluate(context, cs);
     double value = exprRes->numberValue();
     delete exprRes;
+#ifdef HPUX
+    /*
+     * Negation of a zero doesn't produce a negative
+     * zero on HPUX. Perform the operation by multiplying with
+     * -1.
+     */
+    return new NumberResult(-1 * value);
+#else
     return new NumberResult(-value);
+#endif
 }
 
 /*
