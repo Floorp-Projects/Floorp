@@ -3226,6 +3226,8 @@ nsBrowserWindow::ToggleBoolPrefAndRefresh(const char * aPrefName)
   }
 }
 
+#endif
+
 void
 nsBrowserWindow::SetBoolPref(const char * aPrefName, PRBool aValue)
 {
@@ -3271,6 +3273,8 @@ nsBrowserWindow::GetStringPref(const char * aPrefName, nsString& aValue)
     }
   }
 }
+
+#ifdef NS_DEBUG
 
 //----------------------------------------------------------------------
 
