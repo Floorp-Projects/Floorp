@@ -952,26 +952,23 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
       if (area->GetHasURL()) {
-        nsresult rv;
         // Set the image loader's source URL and base URL
         nsIURI* baseUri = nsnull;
-        nsIHTMLContent* htmlContent;
         if (mMap) {
-          rv = mMap->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-          if (NS_SUCCEEDED(rv)) {
+          nsIHTMLContent* htmlContent;
+          if (NS_SUCCEEDED( mMap->QueryInterface(kIHTMLContentIID, (void**)&htmlContent) )) {
             htmlContent->GetBaseURL(baseUri);
             NS_RELEASE(htmlContent);
           }
           else {
             nsIDocument* doc;
-            rv = mMap->GetDocument(doc);
-            if (NS_SUCCEEDED(rv)) {
+            if (NS_SUCCEEDED( mMap->GetDocument(doc) ) && doc) {
               doc->GetBaseURL(baseUri); // Could just use mDocument here...
               NS_RELEASE(doc);
             }
           }
         }
-        if (NS_FAILED(rv) || !baseUri) return PR_FALSE;
+        if (!baseUri) return PR_FALSE;
         
         nsAutoString href;
         area->GetHREF(href);

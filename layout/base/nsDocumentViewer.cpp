@@ -647,7 +647,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
 NS_IMETHODIMP
 DocumentViewerImpl::LoadComplete(nsresult aStatus)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIScriptGlobalObject> global;
 
