@@ -215,7 +215,7 @@ toolbarspacer {
 
 toolbarspring {
   -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbardecoration");
-  -moz-box-flex: 1;
+  -moz-box-flex: 1000;
   display: inline;
 }
 

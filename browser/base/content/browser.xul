@@ -814,7 +814,7 @@
                       ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
                       oncommand="BrowserHome();"/>
     
-      <toolbaritem id="urlbar-container" align="center" flex="1"
+      <toolbaritem id="urlbar-container" align="center" flex="1000"
                    title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
                  type="autocomplete"
@@ -880,7 +880,7 @@
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       
-        <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="0.01">
+        <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
           <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
         </toolbaritem>
 
