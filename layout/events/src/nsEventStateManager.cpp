@@ -330,7 +330,32 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           blurevent.message = NS_BLUR_CONTENT;
       
           if(gLastFocusedPresContext) {
+            nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+            nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+            gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+            nsCOMPtr<nsIDOMWindow> rootWindow;
+            nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+            if(ourWindow) {
+              ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+              if(rootWindow) {
+                nsCOMPtr<nsIDOMDocument> rootDocument;
+                rootWindow->GetDocument(getter_AddRefs(rootDocument));
+
+                nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+                if(xulDoc) {
+                  xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+                  if (commandDispatcher) {
+                    commandDispatcher->SetSuppressFocus(PR_TRUE);
+                  }
+                }
+              }
+            }
+            
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
+            
+            if (commandDispatcher) {
+              commandDispatcher->SetSuppressFocus(PR_FALSE);
+            }
           }
         }
         
