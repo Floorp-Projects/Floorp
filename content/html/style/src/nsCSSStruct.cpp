@@ -21,6 +21,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPropIDs.h"
 #include "nsUnitConversion.h"
+#include "nsVoidArray.h"
 
 #include "nsStyleConsts.h"
 
@@ -578,10 +579,12 @@ public:
   nsresult  GetData(const nsID& aSID, nsCSSStruct** aData);
   nsresult  EnsureData(const nsID& aSID, nsCSSStruct** aData);
 
-  nsresult AddValue(const char* aProperty, const nsCSSValue& aValue);
-  nsresult AddValue(PRInt32 aProperty, const nsCSSValue& aValue);
+  nsresult AppendValue(const char* aProperty, const nsCSSValue& aValue);
+  nsresult AppendValue(PRInt32 aProperty, const nsCSSValue& aValue);
   nsresult SetValueImportant(const char* aProperty);
   nsresult SetValueImportant(PRInt32 aProperty);
+  nsresult AppendComment(const nsString& aComment);
+
   nsresult GetValue(const char* aProperty, nsCSSValue& aValue);
   nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue);
 
@@ -604,6 +607,9 @@ protected:
   nsCSSDisplay*   mDisplay;
 
   CSSDeclarationImpl* mImportant;
+
+  nsVoidArray*    mOrder;
+  nsVoidArray*    mComments;
 };
 
 #ifdef DEBUG_REFS
@@ -652,6 +658,17 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
     delete mDisplay;
   }
   NS_IF_RELEASE(mImportant);
+  if (nsnull != mOrder) {
+    delete mOrder;
+  }
+  if (nsnull != mComments) {
+    PRInt32 index = mComments->Count();
+    while (0 < --index) {
+      nsString* comment = (nsString*)mComments->ElementAt(index);
+      delete comment;
+    }
+    delete mComments;
+  }
 
 #ifdef DEBUG_REFS
   --gInstanceCount;
@@ -751,12 +768,12 @@ nsresult CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr
   return NS_OK;
 }
 
-nsresult CSSDeclarationImpl::AddValue(const char* aProperty, const nsCSSValue& aValue)
+nsresult CSSDeclarationImpl::AppendValue(const char* aProperty, const nsCSSValue& aValue)
 {
-  return AddValue(nsCSSProps::LookupName(aProperty), aValue);
+  return AppendValue(nsCSSProps::LookupName(aProperty), aValue);
 }
 
-nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValue)
+nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aValue)
 {
   nsresult result = NS_OK;
 
@@ -1109,6 +1126,21 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
     default:
       result = NS_ERROR_ILLEGAL_VALUE;
       break;
+  }
+
+  if (NS_OK == result) {
+    if (nsnull == mOrder) {
+      mOrder = new nsVoidArray();
+    }
+    if (nsnull != mOrder) {
+      PRInt32 index = mOrder->IndexOf((void*)aProperty);
+      if (-1 != index) {
+        mOrder->RemoveElementAt(index);
+      }
+      if (eCSSUnit_Null != aValue.GetUnit()) {
+        mOrder->AppendElement((void*)aProperty);
+      }
+    }
   }
   return result;
 }
@@ -1663,6 +1695,24 @@ nsresult CSSDeclarationImpl::SetValueImportant(PRInt32 aProperty)
         result = NS_ERROR_ILLEGAL_VALUE;
         break;
     }
+  }
+  return result;
+}
+
+nsresult CSSDeclarationImpl::AppendComment(const nsString& aComment)
+{
+  nsresult result = NS_ERROR_OUT_OF_MEMORY;
+
+  if (nsnull == mOrder) {
+    mOrder = new nsVoidArray();
+  }
+  if (nsnull == mComments) {
+    mComments = new nsVoidArray();
+  }
+  if ((nsnull != mComments) && (nsnull != mOrder)) {
+    mComments->AppendElement(new nsString(aComment));
+    mOrder->AppendElement((void*)-mComments->Count());
+    result = NS_OK;
   }
   return result;
 }
