@@ -347,9 +347,7 @@ EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
       break;
     }
 
-    nsCOMPtr<nsIContent> parent;
-    c->GetParent(getter_AddRefs(parent));
-    c.swap(parent);
+    c = c->GetParent();
   }
   return PR_FALSE;
 }
