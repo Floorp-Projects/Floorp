@@ -65,4 +65,4 @@ static const nsModuleComponentInfo components[] =
     }
 };
 
-NS_IMPL_NSGETMODULE("EmbedLite components", components)
+NS_IMPL_NSGETMODULE(EmbedLiteComponents, components)
