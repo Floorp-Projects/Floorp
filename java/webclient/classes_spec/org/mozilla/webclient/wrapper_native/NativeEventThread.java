@@ -240,6 +240,7 @@ private void doRemoveListeners()
                 listenerString = (String) listenerObj;
                 if (listenerString.equals("all")) {
                     nativeRemoveAllListeners(nativeWebShell);
+                    return;
                 }
                 else {
                     throw new UnimplementedException("Webclient doesn't understand how to remove " + ((String)listenerObj) + ".");
