@@ -92,7 +92,7 @@ typedef struct JSJCallbacks {
        one from a pool of available JSContexts.  The implementation of this
        callback can call JSJ_SetDefaultJSContextForJavaThread() to avoid any
        further callbacks of this type for this Java thread. */
-    JSContext *	        (*map_jsj_thread_to_js_context)(JSJavaThreadState *jsj_env,
+    JSContext *         (*map_jsj_thread_to_js_context)(JSJavaThreadState *jsj_env,
 #ifdef OJI
                                                         void *java_applet_obj,
 #endif
@@ -111,7 +111,7 @@ typedef struct JSJCallbacks {
        returns the JS "Window" object corresponding to the HTML window that an
        applet is embedded within.  More generally, it's a way for Java to get
        hold of a JS object that has not been explicitly passed to it. */
-    JSObject *	        (*map_java_object_to_js_object)(JNIEnv *jEnv, void *pJavaObject,
+    JSObject *          (*map_java_object_to_js_object)(JNIEnv *jEnv, void *pJavaObject,
                                                         char **errp);
         
     /* An interim callback function until the LiveConnect security story is
@@ -125,11 +125,11 @@ typedef struct JSJCallbacks {
        semantics of JavaScript.  It is acceptable for either function pointer
        to be NULL. */
 #ifdef OJI
-    JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp,  void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext,void* applet_obj);
+    JSBool              (*enter_js_from_java)(JNIEnv *jEnv, char **errp,  void **pNSIPrincipaArray, int numPrincipals, void *pNSISecurityContext,void* applet_obj);
 #else
-    JSBool	        (*enter_js_from_java)(JNIEnv *jEnv, char **errp);
+    JSBool              (*enter_js_from_java)(JNIEnv *jEnv, char **errp);
 #endif
-    void	        (*exit_js)(JNIEnv *jEnv);
+    void                (*exit_js)(JNIEnv *jEnv);
 
     /* Most LiveConnect errors are signaled by calling JS_ReportError(), but in
        some circumstances, the target JSContext for such errors is not
@@ -144,7 +144,7 @@ typedef struct JSJCallbacks {
     jobject             (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
 
     /* This allows liveconnect to unwrap a wrapped JSObject that is passed from java to js. 
-	   This happens when Java code is passing back to JS an object that it got from JS. */
+       This happens when Java code is passing back to JS an object that it got from JS. */
     jint                (*unwrap_java_wrapper)(JNIEnv *jEnv, jobject java_wrapper);
 
     /* The following set of methods abstract over the JavaVM object. */
