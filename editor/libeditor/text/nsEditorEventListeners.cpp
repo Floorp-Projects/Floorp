@@ -185,6 +185,10 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // so look for special keys using keyCode
     if (0 != keyCode)
     {
+      if (nsIDOMUIEvent::DOM_VK_SHIFT==keyCode
+          || nsIDOMUIEvent::DOM_VK_CONTROL==keyCode
+          || nsIDOMUIEvent::DOM_VK_ALT==keyCode)
+        return NS_ERROR_BASE; // consumed
       if (nsIDOMUIEvent::DOM_VK_BACK==keyCode) 
       {
         mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
