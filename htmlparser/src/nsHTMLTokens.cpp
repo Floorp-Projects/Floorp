@@ -86,8 +86,6 @@ void CHTMLToken::SetStringValue(const char* name){
  */
 nsString& CHTMLToken::GetStringValueXXX(void) {
 
-  int x=eHTMLTag_userdefined;
-
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
       mTextValue = nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID);

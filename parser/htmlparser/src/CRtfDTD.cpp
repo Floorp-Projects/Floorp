@@ -675,7 +675,6 @@ nsresult CRtfDTD::CloseContainer(eHTMLTags aTag){
 nsresult CRtfDTD::EmitStyleContainer(CToken* aToken,eRTFTags aTag,PRBool aState){
   nsresult result=NS_OK;
 
-  CRTFControlWord* theToken=(CRTFControlWord*)aToken;
   const char* theTag=0;
   eHTMLTags   theID=eHTMLTag_unknown;
 
