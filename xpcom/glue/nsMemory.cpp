@@ -50,7 +50,7 @@ static NS_METHOD FreeGlobalMemory(void)
 }
 
 #define ENSURE_ALLOCATOR \
-  (gMemory ? PR_TRUE : (PRBool) SetupGlobalMemory())
+  (gMemory ? PR_TRUE : (PRBool)(SetupGlobalMemory() != nsnull))
 
 static nsIMemory*
 SetupGlobalMemory()

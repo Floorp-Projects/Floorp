@@ -691,7 +691,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccValue(nsAString& _retval)
 NS_IMETHODIMP nsXULTreeitemAccessible::GetAccId(PRInt32 *aAccId)
 {
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
-  *aAccId = - NS_REINTERPRET_CAST(PRInt32, this);
+  *aAccId = - NS_PTR_TO_INT32(this);
   return NS_OK;
 }
 
