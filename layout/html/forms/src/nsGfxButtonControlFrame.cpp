@@ -209,9 +209,9 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     // Get the text from the "value" attribute 
     // for measuring the height, width of the text
     nsAutoString value;
-    GetValue(&value);
+    res = GetValue(&value);
 
-    if (value.Length() == 0) {
+    if (res != NS_CONTENT_ATTR_HAS_VALUE && value.IsEmpty()) {
       // Generate localized label.
       // We can't make any assumption as to what the default would be
       // because the value is localized for non-english platforms, thus
@@ -226,9 +226,11 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)textStyle);
     if (!textStyle->WhiteSpaceIsSignificant()) {
       value.CompressWhitespace();
-      if (value.Length() == 0) {
-        value.Assign(NS_LITERAL_STRING("  "));
-      }
+    }
+    
+    if (value.IsEmpty()) {
+      // Have to have _something_ or we won't be drawn
+      value.Assign(NS_LITERAL_STRING("  "));
     }
 
     nsInputDimensionSpec btnSpec(NULL, PR_FALSE, nsnull, 
@@ -360,9 +362,9 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Get the text from the "value" attribute.
   // If it is zero length, set it to a default value (localized)
   nsAutoString initvalue, value;
-  GetValue(&initvalue);
+  result = GetValue(&initvalue);
   value = initvalue;
-  if (value.Length() == 0) {
+  if (result != NS_CONTENT_ATTR_HAS_VALUE && value.IsEmpty()) {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus
@@ -378,9 +380,11 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)textStyle);
   if (!textStyle->WhiteSpaceIsSignificant()) {
     value.CompressWhitespace();
-    if (value.Length() == 0) {
-      value.Assign(NS_LITERAL_STRING("  "));
-    }
+  }
+
+  if (value.IsEmpty()) {
+    // Have to have _something_ or we won't be drawn
+    value.Assign(NS_LITERAL_STRING("  "));
   }
 
   // Add a child text content node for the label
@@ -515,7 +519,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsAutoString value;
     if (mTextContent && mContent) {
       if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
-        value.SetLength(0);
+        value.Truncate();
       }
       rv = mTextContent->SetText(value.get(), value.Length(), PR_TRUE);
     } else {
