@@ -579,6 +579,8 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
            nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
            if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
              loadCmd = nsIURILoader::viewUserClick;
+           else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
+             loadCmd = nsIURILoader::viewSource;
 
         // temporary hack for post data...eventually this snippet of code
         // should be moved into the layout call when callers go through the

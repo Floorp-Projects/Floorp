@@ -123,6 +123,10 @@ interface nsIURILoader : nsISupports
 					   in nsIURIContentListener aContentListener,
 					   out string aDesiredContentType,
 					   out nsIURIContentListener aTargetListener);
+  /* this command should become obsolete once we get rid of the old layout "verb" command
+     string and replace it with the enumerated type nsURILoaderCommand
+  */
+  void getStringForCommand (in nsURILoadCommand aCommand, out string aStringVersion);
 };
 
 /* This is a private interface used by layout in order to invoke the uri loader
