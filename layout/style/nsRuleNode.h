@@ -57,9 +57,9 @@ typedef void (*nsPostResolveFunc)(nsStyleStruct* aStyleStruct, nsRuleData* aData
 struct nsInheritedStyleData
 {
 
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
   nsStyle##name * m##name##Data;
-#define STYLE_STRUCT_RESET(name, checkdata_cb)
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -73,10 +73,10 @@ struct nsInheritedStyleData
   };
 
   void ClearInheritedData(PRUint32 aBits) {
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
     if (m##name##Data && (aBits & NS_STYLE_INHERIT_BIT(name))) \
       m##name##Data = nsnull;
-#define STYLE_STRUCT_RESET(name, checkdata_cb)
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -85,10 +85,10 @@ struct nsInheritedStyleData
   };
 
   void Destroy(PRUint32 aBits, nsIPresContext* aContext) {
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
     if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
       m##name##Data->Destroy(aContext);
-#define STYLE_STRUCT_RESET(name, checkdata_cb)
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -99,9 +99,9 @@ struct nsInheritedStyleData
   };
 
   nsInheritedStyleData() {
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
     m##name##Data = nsnull;
-#define STYLE_STRUCT_RESET(name, checkdata_cb)
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -115,9 +115,9 @@ struct nsResetStyleData
 {
   nsResetStyleData()
   {
-#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
     m##name##Data = nsnull;
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -132,10 +132,10 @@ struct nsResetStyleData
   }
 
   void ClearInheritedData(PRUint32 aBits) {
-#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
     if (m##name##Data && (aBits & NS_STYLE_INHERIT_BIT(name))) \
       m##name##Data = nsnull;
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -144,10 +144,10 @@ struct nsResetStyleData
   };
 
   void Destroy(PRUint32 aBits, nsIPresContext* aContext) {
-#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
     if (m##name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
       m##name##Data->Destroy(aContext);
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -157,9 +157,9 @@ struct nsResetStyleData
     aContext->FreeToShell(sizeof(nsResetStyleData), this);
   };
 
-#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
   nsStyle##name * m##name##Data;
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb)
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args)
 
 #include "nsStyleStructList.h"
 
@@ -542,10 +542,11 @@ protected:
   static GetStyleDataFn gGetStyleDataFn[];
 
 public:
-  nsRuleNode(nsIPresContext* aPresContext, nsIStyleRule* aRule=nsnull, nsRuleNode* aParent=nsnull);
+  nsRuleNode(nsIPresContext* aPresContext, nsIStyleRule* aRule,
+             nsRuleNode* aParent);
   virtual ~nsRuleNode();
 
-  static void CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResult);
+  static nsRuleNode* CreateRootNode(nsIPresContext* aPresContext);
 
   nsresult GetBits(PRInt32 aType, PRUint32* aResult);
   nsresult Transition(nsIStyleRule* aRule, nsRuleNode** aResult);

@@ -66,11 +66,11 @@
 nsCachedStyleData::StyleStructInfo
 nsCachedStyleData::gInfo[] = {
 
-#define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
+#define STYLE_STRUCT_INHERITED(name, checkdata_cb, ctor_args) \
   { offsetof(nsCachedStyleData, mInheritedData), \
     offsetof(nsInheritedStyleData, m##name##Data), \
     PR_FALSE },
-#define STYLE_STRUCT_RESET(name, checkdata_cb) \
+#define STYLE_STRUCT_RESET(name, checkdata_cb, ctor_args) \
   { offsetof(nsCachedStyleData, mResetData), \
     offsetof(nsResetStyleData, m##name##Data), \
     PR_TRUE },

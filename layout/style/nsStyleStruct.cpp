@@ -42,6 +42,7 @@
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsIPresContext.h"
+#include "nsIDeviceContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
@@ -230,6 +231,17 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 {
 }
 
+
+nsStyleFont::nsStyleFont(nsIPresContext* aPresContext)
+  : mFlags(NS_STYLE_FONT_DEFAULT)
+{
+  const nsFont* defaultFont;
+  aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
+                               &defaultFont);
+  mFont = *defaultFont;
+  mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
+}
+
 void* 
 nsStyleFont::operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
   void* result = nsnull;
@@ -251,6 +263,28 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
     return CalcFontDifference(mFont, aOther.mFont);
   }
   return NS_STYLE_HINT_REFLOW;
+}
+
+inline float
+TextZoomFor(nsIPresContext* aPresContext)
+{
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+  float textZoom;
+  dc->GetTextZoom(textZoom);
+  return textZoom;
+}
+
+/* static */ nscoord
+nsStyleFont::ZoomText(nsIPresContext *aPresContext, nscoord aSize)
+{
+  return nscoord(float(aSize) * TextZoomFor(aPresContext));
+}
+
+/* static */ nscoord
+nsStyleFont::UnZoomText(nsIPresContext *aPresContext, nscoord aSize)
+{
+  return nscoord(float(aSize) / TextZoomFor(aPresContext));
 }
 
 nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)
@@ -1004,6 +1038,8 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
     && ((NS_STYLE_BG_ATTACHMENT_FIXED == mBackgroundAttachment) ||
         (NS_STYLE_BG_ATTACHMENT_FIXED == aOther.mBackgroundAttachment)))
     // this might require creation of a view
+    // XXX This probably doesn't call ApplyRenderingChangeToTree, which
+    // means we might not invalidate the canvas if this is the body.
     return NS_STYLE_HINT_FRAMECHANGE;
 
   if ((mBackgroundAttachment == aOther.mBackgroundAttachment) &&

@@ -58,6 +58,7 @@ class nsIFrameManager;
 class nsISupportsArray;
 class nsRuleNode;
 struct nsFindFrameHint;
+struct nsCachedStyleData;
 
 #include "nsVoidArray.h"
 
@@ -124,6 +125,10 @@ public:
   // etc.
   virtual nsresult BeginRuleTreeReconstruct()=0;
   virtual nsresult EndRuleTreeReconstruct()=0;
+
+  // For getting the cached default data in case we hit out-of-memory.
+  // To be used only by nsRuleNode.
+  virtual nsCachedStyleData* GetDefaultStyleData() = 0;
 
   virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) = 0;
 

@@ -64,7 +64,7 @@ enum nsStyleStructID {
  * increase by 1.
  */
 
-#define STYLE_STRUCT(name, checkdata_cb) eStyleStruct_##name,
+#define STYLE_STRUCT(name, checkdata_cb, ctor_args) eStyleStruct_##name,
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
@@ -96,12 +96,18 @@ struct nsStyleStruct {
 
 struct nsStyleFont : public nsStyleStruct {
   nsStyleFont(void);
+  nsStyleFont(const nsFont& aFont);
+  nsStyleFont(const nsStyleFont& aStyleFont);
+  nsStyleFont(nsIPresContext *aPresContext);
   ~nsStyleFont(void) {};
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Font)
 
   nsChangeHint CalcDifference(const nsStyleFont& aOther) const;
   static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
+
+  static nscoord ZoomText(nsIPresContext* aPresContext, nscoord aSize);
+  static nscoord UnZoomText(nsIPresContext* aPresContext, nscoord aSize);
   
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsIPresContext* aContext);
@@ -112,10 +118,6 @@ struct nsStyleFont : public nsStyleStruct {
                         // which is our "actual size" and is enforced to be >= the user's
                         // preferred min-size. mFont.size should be used for display purposes
                         // while mSize is the value to return in getComputedStyle() for example.
-
-  nsStyleFont(const nsFont& aFont);
-  nsStyleFont(const nsStyleFont& aStyleFont);
-  nsStyleFont(nsIPresContext* aPresContext);
 };
 
 struct nsStyleColor : public nsStyleStruct {
