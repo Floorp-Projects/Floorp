@@ -48,7 +48,7 @@
 #include "nsDeviceContextSpecFactoryO.h"
 //#include "nsScriptableRegion.h"
 #include "nsIImageManager.h"
-//#include "nsScreenManagerWin.h"
+#include "nsScreenManagerOS2.h"
 #include "nsString.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
@@ -232,9 +232,7 @@ nsresult nsGfxFactoryOS2::CreateInstance(nsISupports *aOuter,
     */
   }
 	else if (mClassID.Equals(kCScreenManager)) {
-    /* OS2TODO
 		NS_NEWXPCOM(inst, nsScreenManagerOS2);
-     */
   } 
 
 
