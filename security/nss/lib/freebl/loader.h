@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.2 2001/01/06 17:07:07 mcgreer%netscape.com Exp $
+ * $Id: loader.h,v 1.3 2001/11/15 02:41:16 nelsonb%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -235,7 +235,7 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_RNG_RNGInit)(void);
 
- SECStatus (* p_RNG_RandomUpdate)(void *data, size_t bytes);
+ SECStatus (* p_RNG_RandomUpdate)(const void *data, size_t bytes);
 
  SECStatus (* p_RNG_GenerateGlobalRandomBytes)(void *dest, size_t len);
 

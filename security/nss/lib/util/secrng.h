@@ -37,7 +37,7 @@
  * secrng.h - public data structures and prototypes for the secure random
  *	      number generator
  *
- * $Id: secrng.h,v 1.1 2000/03/31 19:41:30 relyea%netscape.com Exp $
+ * $Id: secrng.h,v 1.2 2001/11/15 02:41:20 nelsonb%netscape.com Exp $
  */
 
 /******************************************/
@@ -75,7 +75,7 @@ extern void RNG_SystemInfoForRNG(void);
 ** Use the contents (and stat) of a file to help seed the
 ** global random number generator.
 */
-extern void RNG_FileForRNG(char *filename);
+extern void RNG_FileForRNG(const char *filename);
 
 SEC_END_PROTOS
 

@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.11 2001/01/29 14:24:57 mcgreer%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.12 2001/11/15 02:41:17 nelsonb%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -271,7 +271,8 @@ RNG_RNGInit(void)
 ** material
 */
 SECStatus 
-prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
+prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes, 
+	unsigned char *q)
 {
     SECStatus rv = SECSuccess;
     unsigned char inputhash[BSIZE];
@@ -343,7 +344,7 @@ prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
 ** material.  Not DSA, so no q.
 */
 SECStatus 
-RNG_RandomUpdate(void *data, size_t bytes)
+RNG_RandomUpdate(const void *data, size_t bytes)
 {
     return prng_RandomUpdate(globalrng, data, bytes, NULL);
 }

@@ -89,7 +89,6 @@
 #define MAX_RC5_KEY_BYTES 255
 #define MAX_RC5_ROUNDS    255
 #define RC5_VERSION_NUMBER   0x10
-#define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
 
 #define SECITEMFROMITEM(arena, to, from) \
 	tmp.data = from.data; tmp.len = from.len; to.type = siBuffer; \
@@ -2044,7 +2043,7 @@ RNG_RNGInit(void)
 }
 
 SECStatus 
-RNG_RandomUpdate(void *data, size_t bytes)
+RNG_RandomUpdate(const void *data, size_t bytes)
 {
 	int status;
 	if (data == NULL || bytes <= 0) {

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapit.h,v 1.3 2000/12/19 23:43:07 mcgreer%netscape.com Exp $
+ * $Id: blapit.h,v 1.4 2001/11/15 02:41:16 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPIT_H_
@@ -71,6 +71,8 @@
 #define MD5_LENGTH		16	/* Bytes */
 #define SHA1_LENGTH		20	/* Bytes */
 
+#define NSS_FREEBL_DEFAULT_CHUNKSIZE 2048
+
 /*
  * The FIPS 186 algorithm for generating primes P and Q allows only 9
  * distinct values for the length of P, and only one value for the
@@ -94,12 +96,15 @@
  * The FIPS-186 compliant PQG generator takes j as an input parameter.
  */
 
+#define DSA_Q_BITS       160
+#define DSA_MAX_P_BITS	1024
+#define DSA_MIN_P_BITS	 512
 
 /*
  * function takes desired number of bits in P,
  * returns index (0..8) or -1 if number of bits is invalid.
  */
-#define PQG_PBITS_TO_INDEX(bits) ((((bits)-512) % 64) ? -1 : ((bits)-512)/64)
+#define PQG_PBITS_TO_INDEX(bits) ((((bits)-512) % 64) ? -1 : (int)((bits)-512)/64)
 
 /*
  * function takes index (0-8)
