@@ -239,7 +239,7 @@
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                     <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                 </SETTING>
-                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>true</VALUE></SETTING>
+                <SETTING><NAME>SaveEntriesUsingRelativePaths</NAME><VALUE>false</VALUE></SETTING>
 
                 <!-- Settings for "File Mappings" panel -->
                 <SETTING><NAME>FileMappings</NAME>
@@ -1031,271 +1031,211 @@
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Strings.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Strings.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Resource</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJContext.cp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJContext.cp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJSession.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJSession.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:PluginNew.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>PluginNew.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:SupportsMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>SupportsMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPlugin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPlugin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Version.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Version.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Resource</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:TopLevelFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TopLevelFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJConsole.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJConsole.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPage.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPage.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:StringUtils.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>StringUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:LiveConnectNativeMethods.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LiveConnectNativeMethods.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:CSecureEnv.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CSecureEnv.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:NativeMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>NativeMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JSEvaluator.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSEvaluator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFramePluginInstance.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFramePluginInstance.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:RunnableMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>RunnableMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Dialogs.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Dialogs.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Resource</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:InterfaceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>InterfaceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:AppearanceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AppearanceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:JManagerLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JManagerLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TextCommon</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:AltWindowHandling.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AltWindowHandling.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Libraries:Runtime:Libs:MSL_Runtime_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_Runtime_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MSL:</ACCESSPATH>
-                    <PATH>:MSL_C:MSL_MacOS:Lib:PPC:MSL_C_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_C_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:MathLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MathLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:BackwardAdaptor.lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>BackwardAdaptor.lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug, TargetOutputFile</FILEFLAGS>
@@ -1303,213 +1243,153 @@
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Version.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Version.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Strings.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Strings.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Dialogs.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Dialogs.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPlugin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPlugin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJContext.cp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJContext.cp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJSession.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJSession.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:TopLevelFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TopLevelFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJConsole.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJConsole.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:PluginNew.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>PluginNew.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:SupportsMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>SupportsMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPage.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPage.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:StringUtils.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>StringUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:LiveConnectNativeMethods.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LiveConnectNativeMethods.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:CSecureEnv.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CSecureEnv.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:NativeMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>NativeMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JSEvaluator.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSEvaluator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFramePluginInstance.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFramePluginInstance.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:RunnableMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>RunnableMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:InterfaceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>InterfaceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:MathLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MathLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:AppearanceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AppearanceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:JManagerLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JManagerLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TextCommon</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:AltWindowHandling.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AltWindowHandling.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MSL:</ACCESSPATH>
-                    <PATH>:MSL_C:MSL_MacOS:Lib:PPC:MSL_C_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_C_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Libraries:Runtime:Libs:MSL_Runtime_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_Runtime_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:BackwardAdaptor.lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>BackwardAdaptor.lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1518,10 +1398,8 @@
                     <TARGETNAME>BackwardAdaptor</TARGETNAME>
                     <ATTRIBUTES>LinkAgainst</ATTRIBUTES>
                     <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:BackwardAdaptor.lib</PATH>
+                        <PATHTYPE>Name</PATHTYPE>
+                        <PATH>BackwardAdaptor.lib</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                 </SUBTARGET>
@@ -3491,145 +3369,113 @@
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Strings.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Strings.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Resource</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJContext.cp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJContext.cp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJSession.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJSession.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:PluginNew.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>PluginNew.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:SupportsMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>SupportsMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPlugin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPlugin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Version.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Version.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Resource</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:TopLevelFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TopLevelFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJConsole.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJConsole.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPage.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPage.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:StringUtils.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>StringUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:LiveConnectNativeMethods.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LiveConnectNativeMethods.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:CSecureEnv.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CSecureEnv.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:NativeMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>NativeMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -3643,127 +3489,99 @@
                     <FILEFLAGS>Debug, TargetOutputFile</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JSEvaluator.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSEvaluator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFramePluginInstance.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFramePluginInstance.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:RunnableMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>RunnableMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Dialogs.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Dialogs.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Resource</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:JManagerLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JManagerLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:InterfaceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>InterfaceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:AppearanceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AppearanceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TextCommon</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Libraries:Runtime:Libs:MSL_Runtime_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_Runtime_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MSL:</ACCESSPATH>
-                    <PATH>:MSL_C:MSL_MacOS:Lib:PPC:MSL_C_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_C_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:MathLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MathLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJNetworking.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJNetworking.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JMURLConnection</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JMURLConnection</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -3771,24 +3589,18 @@
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Version.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Version.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Strings.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Strings.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Resources:Dialogs.rsrc</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>Dialogs.rsrc</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3798,192 +3610,138 @@
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPlugin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPlugin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJContext.cp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJContext.cp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJSession.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJSession.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:TopLevelFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TopLevelFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJConsole.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJConsole.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:PluginNew.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>PluginNew.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:SupportsMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>SupportsMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPage.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPage.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:StringUtils.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>StringUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:LiveConnectNativeMethods.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>LiveConnectNativeMethods.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:CSecureEnv.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>CSecureEnv.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:NativeMonitor.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>NativeMonitor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JSEvaluator.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSEvaluator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFrame.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFrame.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:EmbeddedFramePluginInstance.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>EmbeddedFramePluginInstance.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:RunnableMixin.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>RunnableMixin.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:JManagerLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JManagerLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:InterfaceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>InterfaceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:AppearanceLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AppearanceLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>TextCommon</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Libraries:Runtime:Libs:MSL_Runtime_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_Runtime_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MSL:</ACCESSPATH>
-                    <PATH>:MSL_C:MSL_MacOS:Lib:PPC:MSL_C_PPC.Lib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MSL_C_PPC.Lib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>CodeWarrior</PATHROOT>
-                    <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                    <PATH>:Universal:Libraries:StubLibraries:MathLib</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MathLib</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJNetworking.cpp</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJNetworking.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JMURLConnection</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JMURLConnection</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -5733,125 +5491,99 @@
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIUtils.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIUtils.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIThread.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIThread.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>System</PATHROOT>
-                    <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                    <PATH>:JDKClasses.zip</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JDKClasses.zip</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Unknown</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>ConsoleApplet.jar</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Unknown</FILEKIND>
                     <FILEFLAGS>MergeLibrary, TargetOutputFile</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:netscape.plugin.jar</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>netscape.plugin.jar</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Unknown</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPlugin.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPlugin.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:AWTUtils.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AWTUtils.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>System</PATHROOT>
-                    <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                    <PATH>:MRJClasses.zip</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJClasses.zip</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Unknown</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:PrintingPort.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>PrintingPort.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSException.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSException.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSObject.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSObject.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSProxy.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSProxy.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSRunnable.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSRunnable.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSUtil.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSUtil.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -5859,99 +5591,73 @@
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIUtils.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIUtils.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIThread.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIThread.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>System</PATHROOT>
-                    <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                    <PATH>:JDKClasses.zip</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JDKClasses.zip</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>System</PATHROOT>
-                    <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                    <PATH>:MRJClasses.zip</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJClasses.zip</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>ConsoleApplet.jar</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:netscape.plugin.jar</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>netscape.plugin.jar</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJPlugin.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJPlugin.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:AWTUtils.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>AWTUtils.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:PrintingPort.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>PrintingPort.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSException.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSException.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSObject.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSObject.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSProxy.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSProxy.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSRunnable.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSRunnable.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSUtil.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSUtil.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -5960,7 +5666,7 @@
                     <TARGETNAME>ConsoleApplet.jar</TARGETNAME>
                     <ATTRIBUTES>LinkAgainst</ATTRIBUTES>
                     <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
+                        <PATHTYPE>Name</PATHTYPE>
                         <PATH>ConsoleApplet.jar</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
@@ -6760,82 +6466,64 @@
             </SETTINGLIST>
             <FILELIST>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIUtils.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIUtils.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIThread.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIThread.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>System</PATHROOT>
-                    <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                    <PATH>:JDKClasses.zip</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JDKClasses.zip</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Unknown</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJConsole.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJConsole.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSException.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSException.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSObject.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSObject.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSProxy.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSProxy.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSRunnable.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSRunnable.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSUtil.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSUtil.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -6843,66 +6531,48 @@
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIUtils.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIUtils.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:JNIThread.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JNIThread.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>System</PATHROOT>
-                    <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                    <PATH>:JDKClasses.zip</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JDKClasses.zip</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:</ACCESSPATH>
-                    <PATH>:Source:MRJConsole.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>MRJConsole.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSException.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSException.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSObject.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSObject.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSProxy.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSProxy.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSRunnable.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSRunnable.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <PATHTYPE>PathRelative</PATHTYPE>
-                    <PATHROOT>Project</PATHROOT>
-                    <ACCESSPATH>:::::js:src:liveconnect:classes:netscape:javascript:</ACCESSPATH>
-                    <PATH>:JSUtil.java</PATH>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>JSUtil.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -6922,190 +6592,144 @@
         <GROUP><NAME>Plugin</NAME>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJPlugin.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJPlugin.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJConsole.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJConsole.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJContext.cp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJContext.cp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJMonitor.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJMonitor.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJPage.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJPage.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJFrame.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJFrame.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin (4.X)</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJNetworking.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJNetworking.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:AltWindowHandling.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>AltWindowHandling.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:TopLevelFrame.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>TopLevelFrame.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:SupportsMixin.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>SupportsMixin.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:RunnableMixin.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>RunnableMixin.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJSession.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJSession.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:PluginNew.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>PluginNew.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:StringUtils.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>StringUtils.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:JSEvaluator.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>JSEvaluator.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:EmbeddedFrame.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>EmbeddedFrame.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:EmbeddedFramePluginInstance.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>EmbeddedFramePluginInstance.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Resources:Strings.rsrc</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>Strings.rsrc</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Resources:Version.rsrc</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>Version.rsrc</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Resources:Dialogs.rsrc</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>Dialogs.rsrc</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
         <GROUP><NAME>LiveConnect</NAME>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:LiveConnectNativeMethods.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>LiveConnectNativeMethods.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
         <GROUP><NAME>SecureJNI</NAME>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:CSecureEnv.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>CSecureEnv.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:NativeMonitor.cpp</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>NativeMonitor.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
@@ -7138,57 +6762,44 @@
         <GROUP><NAME>Libraries</NAME>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>CodeWarrior</PATHROOT>
-                <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                <PATH>:Libraries:Runtime:Libs:MSL_Runtime_PPC.Lib</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MSL_Runtime_PPC.Lib</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>CodeWarrior</PATHROOT>
-                <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                <PATH>:Universal:Libraries:StubLibraries:InterfaceLib</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>InterfaceLib</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>CodeWarrior</PATHROOT>
-                <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                <PATH>:Universal:Libraries:StubLibraries:AppearanceLib</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>AppearanceLib</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>CodeWarrior</PATHROOT>
-                <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                <PATH>:Universal:Libraries:StubLibraries:JManagerLib</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>JManagerLib</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin (4.X)</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:JMURLConnection</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>JMURLConnection</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>CodeWarrior</PATHROOT>
-                <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-                <PATH>:Universal:Libraries:StubLibraries:TextCommon</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>TextCommon</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>MRJPlugin (4.X)</TARGETNAME>
-                <PATHTYPE>RootRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <PATH>:BackwardAdaptor.lib</PATH>
+                <TARGETNAME>MRJPlugin</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>BackwardAdaptor.lib</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
@@ -7239,24 +6850,20 @@
         <GROUP><NAME>MRJPlugin.jar (4.X)</NAME>
             <FILEREF>
                 <TARGETNAME>MRJPlugin.jar (4.X)</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
+                <PATHTYPE>Name</PATHTYPE>
                 <PATH>ConsoleApplet.jar</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin.jar (4.X)</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:netscape.plugin.jar</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>netscape.plugin.jar</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>MRJPlugin.jar (4.X)</TARGETNAME>
-                <PATHTYPE>PathRelative</PATHTYPE>
-                <PATHROOT>Project</PATHROOT>
-                <ACCESSPATH>:</ACCESSPATH>
-                <PATH>:Source:MRJPlugin.java</PATH>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>MRJPlugin.java</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
@@ -7294,18 +6901,14 @@
         </GROUP>
         <FILEREF>
             <TARGETNAME>MRJPlugin</TARGETNAME>
-            <PATHTYPE>PathRelative</PATHTYPE>
-            <PATHROOT>CodeWarrior</PATHROOT>
-            <ACCESSPATH>:MSL:</ACCESSPATH>
-            <PATH>:MSL_C:MSL_MacOS:Lib:PPC:MSL_C_PPC.Lib</PATH>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>MSL_C_PPC.Lib</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
             <TARGETNAME>MRJPlugin</TARGETNAME>
-            <PATHTYPE>PathRelative</PATHTYPE>
-            <PATHROOT>CodeWarrior</PATHROOT>
-            <ACCESSPATH>:MacOS Support:</ACCESSPATH>
-            <PATH>:Universal:Libraries:StubLibraries:MathLib</PATH>
+            <PATHTYPE>Name</PATHTYPE>
+            <PATH>MathLib</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>
