@@ -167,7 +167,7 @@ main(int argc, char* argv[])
 		  return 1;
 	  }
 
-    printf("%s\t%s\n", key.get(), value.get());
+    printf("%s\t%s\n", key.get(), NS_ConvertUTF16toUTF8(value).get());
   }
   return 0;
 }
