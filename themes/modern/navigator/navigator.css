@@ -266,7 +266,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   	margin-left			  : 0px;
   	margin-right		  : 2px;
   	margin-top			  : 0px;
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.png"); 
+    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
 	cursor                : grab;
   } 
 
@@ -349,7 +349,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 #home-button
   {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/home.png");
+    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
   }
   
 .menuitem-iconic
