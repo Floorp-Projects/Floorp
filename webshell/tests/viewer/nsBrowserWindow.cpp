@@ -63,6 +63,10 @@
 #include "nsILayoutDebugger.h"
 #include "nsThrobber.h"
 #include "nsIDocumentLoader.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsIBaseWindow.h"
+#include "nsXPIDLString.h"
 
 #include "nsXIFDTD.h"
 #include "nsIParser.h"
@@ -196,12 +200,12 @@ static void* GetItemsNativeData(nsISupports* aObject);
 
 static
 nsIPresShell*
-GetPresShellFor(nsIWebShell* aWebShell)
+GetPresShellFor(nsIDocShell* aDocShell)
 {
   nsIPresShell* shell = nsnull;
-  if (nsnull != aWebShell) {
+  if (nsnull != aDocShell) {
     nsIContentViewer* cv = nsnull;
-    aWebShell->GetContentViewer(&cv);
+    aDocShell->GetContentViewer(&cv);
     if (nsnull != cv) {
       nsIDocumentViewer* docv = nsnull;
       cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
@@ -527,9 +531,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEW_SOURCE:
     {
       PRInt32 theIndex;
-      mWebShell->GetHistoryIndex(theIndex);
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      webShell->GetHistoryIndex(theIndex);
       const PRUnichar* theURL;
-      mWebShell->GetURL(theIndex,&theURL);
+      webShell->GetURL(theIndex,&theURL);
       nsAutoString theString(theURL);
       mApp->ViewSource(theString);
       //XXX Find out how the string is allocated, and perhaps delete it...
@@ -572,7 +577,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.Append("/test");
       url.Append(ix, 10);
       url.Append(".html");
-      mWebShell->LoadURL(url.GetUnicode());
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      webShell->LoadURL(url.GetUnicode());
     }
     break;
 
@@ -580,14 +586,16 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     {
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/toolbarTest1.xul");
-      mWebShell->LoadURL(url.GetUnicode());
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      webShell->LoadURL(url.GetUnicode());
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
     {
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/treeTest1.xul");
-      mWebShell->LoadURL(url.GetUnicode());
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+      webShell->LoadURL(url.GetUnicode());
       break;
     }
   
@@ -600,7 +608,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     break;
 
   case EDITOR_MODE:
-    DoEditorMode(mWebShell);
+    DoEditorMode(mDocShell);
     break;
 
   case VIEWER_ONE_COLUMN:
@@ -646,7 +654,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_ZOOM_050:
   case VIEWER_ZOOM_030:
   case VIEWER_ZOOM_020:
-    mWebShell->SetZoom((aID - VIEWER_ZOOM_BASE) / 10.0f);
+    mDocShell->SetZoom((aID - VIEWER_ZOOM_BASE) / 10.0f);
     break;
 
 #ifdef ClientWallet
@@ -677,6 +685,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   break;
 
   case PRVCY_DISPLAY_WALLET:
+  {
 
 
   /* set a cookie for the javascript wallet editor */
@@ -701,8 +710,9 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   }
 
   /* invoke the javascript wallet editor */
-  mWebShell->LoadURL(urlString.GetUnicode());
-
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  webShell->LoadURL(urlString.GetUnicode());
+  }
   break;
 #endif
 
@@ -728,7 +738,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   }
 
   // Any menu IDs that the editor uses will be processed here
-  DoEditorTest(mWebShell, aID);
+  DoEditorTest(mDocShell, aID);
 
   return nsEventStatus_eIgnore;
 }
@@ -736,19 +746,22 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 void
 nsBrowserWindow::Back()
 {
-  mWebShell->Back();
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  webShell->Back();
 }
 
 void
 nsBrowserWindow::Forward()
 {
-  mWebShell->Forward();
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  webShell->Forward();
 }
 
 void
 nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
 {
-  mWebShell->LoadURL(aURL, aCommand, nsnull);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  webShell->LoadURL(aURL, aCommand, nsnull);
 }
 
 
@@ -800,7 +813,8 @@ nsBrowserWindow::DoFileOpen()
   if (GetFileFromFileSelector(mWindow, fileSpec, mOpenFileDirectory)) {
     nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
-    mWebShell->LoadURL(nsString(fileURL.GetURLString()).GetUnicode());
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+    webShell->LoadURL(nsString(fileURL.GetURLString()).GetUnicode());
     Show();
   }
 }
@@ -1181,24 +1195,26 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                          kIWebShellIID,
-                                          (void**)&mWebShell);
+                                          NS_GET_IID(nsIDocShell),
+                                          (void**)&mDocShell);
   if (NS_OK != rv) {
     return rv;
   }
   nsCOMPtr<nsIDocumentLoader> docLoader;
   r.x = r.y = 0;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  rv = webShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins, PR_TRUE);
-  mWebShell->SetContainer((nsIWebShellContainer*) this);
+  webShell->SetContainer((nsIWebShellContainer*) this);
 
-  mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+  webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
     docLoader->AddObserver(this);
   }
-  mWebShell->SetPrefs(aPrefs);
-  mWebShell->Show();
+  mDocShell->SetPrefs(aPrefs);
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  docShellWin->SetVisibility(PR_TRUE);
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
     rv = CreateMenuBar(r.width);
@@ -1263,22 +1279,23 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                           kIWebShellIID,
-                                          (void**)&mWebShell);
+                                          (void**)&mDocShell);
   if (NS_OK != rv) {
     return rv;
   }
   nsCOMPtr<nsIDocumentLoader> docLoader;
   r.x = r.y = 0;
   //nsRect ws = r;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  rv = webShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
                        nsScrollPreference_kAuto, aAllowPlugins);
-  mWebShell->SetContainer((nsIWebShellContainer*) this);
-  mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+  webShell->SetContainer((nsIWebShellContainer*) this);
+  webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
     docLoader->AddObserver(this);
   }
-  mWebShell->SetPrefs(aPrefs);
+  mDocShell->SetPrefs(aPrefs);
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
     rv = CreateMenuBar(r.width);
@@ -1312,8 +1329,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   // Create a document viewer and bind it to the webshell
   nsIDocumentViewer* docv;
   aDocumentViewer->CreateDocumentViewerUsing(aPresContext, docv);
-  mWebShell->Embed(docv, "duh", nsnull);
-  mWebShell->Show();
+  webShell->Embed(docv, "duh", nsnull);
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  docShellWin->SetVisibility(PR_TRUE);
   NS_RELEASE(docv);
 
   return NS_OK;
@@ -1323,8 +1341,8 @@ void
 nsBrowserWindow::SetWebCrawler(nsWebCrawler* aCrawler)
 {
   if (mWebCrawler) {
-    if (mWebShell) {
-      mWebShell->SetDocLoaderObserver(nsnull);
+    if (mDocShell) {
+      mDocShell->SetDocLoaderObserver(nsnull);
     }
     NS_RELEASE(mWebCrawler);
   }
@@ -1332,8 +1350,8 @@ nsBrowserWindow::SetWebCrawler(nsWebCrawler* aCrawler)
     mWebCrawler = aCrawler;
     /* Nisheeth: the crawler registers as a document loader observer with
      * the webshell when nsWebCrawler::Start() is called.
-    if (mWebShell) {
-      mWebShell->SetDocLoaderObserver(aCrawler);
+    if (mDocShell) {
+      mDocShell->SetDocLoaderObserver(aCrawler);
     }
     */
     NS_ADDREF(aCrawler);
@@ -1600,8 +1618,9 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   if(rr.height<0)
     rr.height=0;
 
-  if (mWebShell) {
-    mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  if (docShellWin) {
+    docShellWin->SetPositionAndSize(rr.x, rr.y, rr.width, rr.height, PR_FALSE);
   }
 }
 
@@ -1679,14 +1698,16 @@ nsBrowserWindow::Close()
 {
   RemoveBrowser(this);
 
-  if (nsnull != mWebShell) {
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (nsnull != webShell) {
     nsCOMPtr<nsIDocumentLoader> docLoader;
-    mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+    webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
     if (docLoader) {
       docLoader->RemoveObserver(this);
     }
-    mWebShell->Destroy();
-    NS_RELEASE(mWebShell);
+    nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+    docShellWin->Destroy();
+    NS_RELEASE(mDocShell);
   }
 
   DestroyWidget(mBack);         mBack = nsnull;
@@ -1734,16 +1755,18 @@ nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
 NS_IMETHODIMP
 nsBrowserWindow::GetWebShell(nsIWebShell*& aResult)
 {
-  aResult = mWebShell;
-  NS_IF_ADDREF(mWebShell);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  aResult = webShell;
+  NS_IF_ADDREF(aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserWindow::GetContentWebShell(nsIWebShell **aResult)
 {
-  *aResult = mWebShell;
-  NS_IF_ADDREF(mWebShell);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  *aResult = webShell;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -1818,7 +1841,8 @@ NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              nsLoadType aReason)
 {
-  if (aShell == mWebShell) {
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (aShell == webShell.get()) {
     if (mStatus) {
       nsAutoString url("Connecting to ");
       url.Append(aURL);
@@ -1833,7 +1857,8 @@ nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
 NS_IMETHODIMP
 nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
-  if (aShell == mWebShell) {
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (aShell == webShell.get()) {
     if (mThrobber) {
       mThrobber->Start();
       PRUint32 size;
@@ -1858,7 +1883,8 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
                             const PRUnichar* aURL,
                             nsresult aStatus)
 {
-  if (aShell == mWebShell) {
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  if (aShell == webShell.get()) {
     PRTime endLoadTime = PR_Now();
     if (mShowLoadTimes) {
       nsAutoString msg(aURL);
@@ -2295,7 +2321,7 @@ nsBrowserWindow::DestroyThrobberImages()
 nsIPresShell*
 nsBrowserWindow::GetPresShell()
 {
-  return GetPresShellFor(mWebShell);
+  return GetPresShellFor(mDocShell);
 }
 
 
@@ -2329,8 +2355,8 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
   static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
   static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
   nsIContentViewer* cv = nsnull;
-  if (nsnull != mWebShell) {
-    if ((NS_OK == mWebShell->GetContentViewer(&cv)) && (nsnull != cv)) {
+  if (nsnull != mDocShell) {
+    if ((NS_OK == mDocShell->GetContentViewer(&cv)) && (nsnull != cv)) {
       nsIDocumentViewer* docv = nsnull;
       if (NS_OK == cv->QueryInterface(kIDocumentViewerIID, (void**)&docv)) {
         nsIPresContext* printContext;
@@ -2371,7 +2397,7 @@ void nsBrowserWindow::DoPrint(void)
 {
   nsCOMPtr <nsIContentViewer> viewer;
 
-  mWebShell->GetContentViewer(getter_AddRefs(viewer));
+  mDocShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (viewer)
   {
@@ -2439,12 +2465,12 @@ void nsBrowserWindow::DoPrintSetup()
 }
 
 //---------------------------------------------------------------
-nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIWebShell *aWebShell)
+nsIDOMDocument* nsBrowserWindow::GetDOMDocument(nsIDocShell *aDocShell)
 {
   nsIDOMDocument* domDoc = nsnull;
-  if (nsnull != aWebShell) {
+  if (nsnull != aDocShell) {
     nsIContentViewer* mCViewer;
-    aWebShell->GetContentViewer(&mCViewer);
+    aDocShell->GetContentViewer(&mCViewer);
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
@@ -2471,7 +2497,7 @@ void nsBrowserWindow::DoTableInspector()
     mTableInspectorDialog->SetVisible(PR_TRUE);
     return;
   }
-  nsIDOMDocument* domDoc = GetDOMDocument(mWebShell);
+  nsIDOMDocument* domDoc = GetDOMDocument(mDocShell);
 
   if (nsnull != domDoc) {
     nsString printHTML("resource:/res/samples/printsetup.html");
@@ -2504,7 +2530,7 @@ void nsBrowserWindow::DoImageInspector()
     return;
   }
 
-  nsIDOMDocument* domDoc = GetDOMDocument(mWebShell);
+  nsIDOMDocument* domDoc = GetDOMDocument(mDocShell);
 
   if (nsnull != domDoc) {
     nsString printHTML("resource:/res/samples/image_props.html");
@@ -2544,12 +2570,12 @@ nsBrowserWindow::DoPrefs()
 }
 
 void
-nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
+nsBrowserWindow::DoEditorMode(nsIDocShell *aDocShell)
 {
   PRInt32 i, n;
-  if (nsnull != aWebShell) {
+  if (nsnull != aDocShell) {
     nsIContentViewer* mCViewer;
-    aWebShell->GetContentViewer(&mCViewer);
+    aDocShell->GetContentViewer(&mCViewer);
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
@@ -2560,7 +2586,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
           nsIDOMDocument* mDOMDoc;
           if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
           {
-            nsIPresShell* shell = GetPresShellFor(aWebShell);
+            nsIPresShell* shell = GetPresShellFor(aDocShell);
             NS_InitEditorMode(mDOMDoc, shell);
             NS_RELEASE(mDOMDoc);
             NS_IF_RELEASE(shell);
@@ -2572,23 +2598,24 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
       NS_RELEASE(mCViewer);
     }
     
-    aWebShell->GetChildCount(n);
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {
-      nsIWebShell* mChild;
-      aWebShell->ChildAt(i, mChild);
-      DoEditorMode(mChild);
-      NS_RELEASE(mChild);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      DoEditorMode(childAsShell);
     }
   }
 }
 
 // Same as above, but calls NS_DoEditorTest instead of starting an editor
 void
-nsBrowserWindow::DoEditorTest(nsIWebShell *aWebShell, PRInt32 aCommandID)
+nsBrowserWindow::DoEditorTest(nsIDocShell *aDocShell, PRInt32 aCommandID)
 {
-  if (nsnull != aWebShell) {
+  if (nsnull != aDocShell) {
     nsIContentViewer* mCViewer;
-    aWebShell->GetContentViewer(&mCViewer);
+    aDocShell->GetContentViewer(&mCViewer);
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
       if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
@@ -2624,29 +2651,29 @@ nsBrowserWindow::DoEditorTest(nsIWebShell *aWebShell, PRInt32 aCommandID)
 #include "nsIStyleSet.h"
 
 
-static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
+static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aIndent)
 {
-  const PRUnichar *name;
+  nsXPIDLString name;
   nsAutoString str;
-  nsIWebShell* parent;
+  nsCOMPtr<nsIDocShellTreeItem> parent;
   PRInt32 i, n;
 
   for (i = aIndent; --i >= 0; ) fprintf(out, "  ");
 
-  fprintf(out, "%p '", aShell);
-  aShell->GetName(&name);
-  aShell->GetParent(parent);
+  fprintf(out, "%p '", aShellItem);
+  aShellItem->GetName(getter_Copies(name));
+  aShellItem->GetSameTypeParent(getter_AddRefs(parent));
   str = name;
   fputs(str, out);
-  fprintf(out, "' parent=%p <\n", parent);
-  NS_IF_RELEASE(parent);
+  fprintf(out, "' parent=%p <\n", parent.get());
 
   aIndent++;
-  aShell->GetChildCount(n);
+  nsCOMPtr<nsIDocShellTreeNode> shellAsNode(do_QueryInterface(aShellItem));
+  shellAsNode->GetChildCount(&n);
   for (i = 0; i < n; i++) {
-    nsIWebShell* child;
-    aShell->ChildAt(i, child);
-    if (nsnull != child) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    shellAsNode->GetChildAt(i, getter_AddRefs(child));
+    if (child) {
       DumpAWebShell(child, out, aIndent);
     }
   }
@@ -2658,16 +2685,18 @@ static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
 void
 nsBrowserWindow::DumpWebShells(FILE* out)
 {
-  DumpAWebShell(mWebShell, out, 0);
+  nsCOMPtr<nsIDocShellTreeItem> shellAsItem(do_QueryInterface(mDocShell));
+  DumpAWebShell(shellAsItem, out, 0);
 }
 
 static
 void 
-DumpMultipleWebShells(nsBrowserWindow& aBrowserWindow, nsIWebShell* aWebShell, FILE* aOut)
+DumpMultipleWebShells(nsBrowserWindow& aBrowserWindow, nsIDocShell* aDocShell, FILE* aOut)
 { 
   PRInt32 count;
-  if (aWebShell) {
-    aWebShell->GetChildCount(count);
+  nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+  if (docShellAsNode) {
+    docShellAsNode->GetChildCount(&count);
     if (count > 0) {
       fprintf(aOut, "webshells= \n");
       aBrowserWindow.DumpWebShells(aOut);
@@ -2677,11 +2706,11 @@ DumpMultipleWebShells(nsBrowserWindow& aBrowserWindow, nsIWebShell* aWebShell, F
 
 static
 void
-DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
+DumpContentRecurse(nsIDocShell* aDocShell, FILE* out)
 {
-  if (nsnull != aWebShell) {
-    fprintf(out, "webshell=%p \n", aWebShell);
-    nsIPresShell* shell = GetPresShellFor(aWebShell);
+  if (nsnull != aDocShell) {
+    fprintf(out, "docshell=%p \n", aDocShell);
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
@@ -2699,12 +2728,14 @@ DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
     }
     // dump the frames of the sub documents
     PRInt32 i, n;
-    aWebShell->GetChildCount(n);
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {
-      nsIWebShell* child;
-      aWebShell->ChildAt(i, child);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
       if (nsnull != child) {
-        DumpContentRecurse(child, out);
+        DumpContentRecurse(childAsShell, out);
       }
     }
   }
@@ -2713,16 +2744,16 @@ DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
 void
 nsBrowserWindow::DumpContent(FILE* out)
 {
-  DumpContentRecurse(mWebShell, out);
-  DumpMultipleWebShells(*this, mWebShell, out);
+  DumpContentRecurse(mDocShell, out);
+  DumpMultipleWebShells(*this, mDocShell, out);
 }
 
 static void
-DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
+DumpFramesRecurse(nsIDocShell* aDocShell, FILE* out, nsString *aFilterName)
 {
-  if (nsnull != aWebShell) {
-    fprintf(out, "webshell=%p \n", aWebShell);
-    nsIPresShell* shell = GetPresShellFor(aWebShell);
+  if (nsnull != aDocShell) {
+    fprintf(out, "webshell=%p \n", aDocShell);
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
       nsIFrame* root;
       shell->GetRootFrame(&root);
@@ -2744,12 +2775,14 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
 
     // dump the frames of the sub documents
     PRInt32 i, n;
-    aWebShell->GetChildCount(n);
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {
-      nsIWebShell* child;
-      aWebShell->ChildAt(i, child);
-      if (nsnull != child) {
-        DumpFramesRecurse(child, out, aFilterName);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell) {
+        DumpFramesRecurse(childAsShell, out, aFilterName);
       }
     }
   }
@@ -2758,8 +2791,8 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
 void
 nsBrowserWindow::DumpFrames(FILE* out, nsString *aFilterName)
 {
-  DumpFramesRecurse(mWebShell, out, aFilterName);
-  DumpMultipleWebShells(*this, mWebShell, out);
+  DumpFramesRecurse(mDocShell, out, aFilterName);
+  DumpMultipleWebShells(*this, mDocShell, out);
 }
 
 //----------------------------------------------------------------------
@@ -2907,10 +2940,10 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
 }
 
 static void
-GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
+GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIDocShell* aDocShell)
 {
-  if (nsnull != aWebShell) {
-    nsIPresShell* shell = GetPresShellFor(aWebShell);
+  if (nsnull != aDocShell) {
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
       nsIFrame* root;
       shell->GetRootFrame(&root);
@@ -2922,12 +2955,14 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
 
     // dump the frames of the sub documents
     PRInt32 i, n;
-    aWebShell->GetChildCount(n);
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {
-      nsIWebShell* child;
-      aWebShell->ChildAt(i, child);
-      if (nsnull != child) {
-        GatherFrameDataSizes(aHandler, child);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell) {
+        GatherFrameDataSizes(aHandler, childAsShell);
       }
     }
   }
@@ -2939,7 +2974,7 @@ nsBrowserWindow::ShowFrameSize(FILE* out)
   nsCOMPtr<nsISizeOfHandler> handler;
   nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
   if (NS_SUCCEEDED(rv) && handler) {
-    GatherFrameDataSizes(handler, mWebShell);
+    GatherFrameDataSizes(handler, mDocShell);
     ShowReport(out, handler);
   }
 }
@@ -2948,11 +2983,11 @@ nsBrowserWindow::ShowFrameSize(FILE* out)
 
 static
 void
-DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
+DumpViewsRecurse(nsIDocShell* aDocShell, FILE* out)
 {
-  if (nsnull != aWebShell) {
-    fprintf(out, "webshell=%p \n", aWebShell);
-    nsIPresShell* shell = GetPresShellFor(aWebShell);
+  if (nsnull != aDocShell) {
+    fprintf(out, "docshell=%p \n", aDocShell);
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
@@ -2971,13 +3006,14 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
 
     // dump the views of the sub documents
     PRInt32 i, n;
-    aWebShell->GetChildCount(n);
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {
-      nsIWebShell* child;
-      aWebShell->ChildAt(i, child);
-      if (nsnull != child) {
-        DumpViewsRecurse(child, out);
-        NS_RELEASE(child);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell) {
+        DumpViewsRecurse(childAsShell, out);
       }
     }
   }
@@ -2986,8 +3022,8 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
 void
 nsBrowserWindow::DumpViews(FILE* out)
 {
-  DumpViewsRecurse(mWebShell, out);
-  DumpMultipleWebShells(*this, mWebShell, out);
+  DumpViewsRecurse(mDocShell, out);
+  DumpMultipleWebShells(*this, mDocShell, out);
 }
 
 void
@@ -3105,10 +3141,10 @@ GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIContent* aContent)
 }
 
 static void
-GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
+GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIDocShell* aDocShell)
 {
-  if (nsnull != aWebShell) {
-    nsIPresShell* shell = GetPresShellFor(aWebShell);
+  if (nsnull != aDocShell) {
+    nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
       nsIDocument* doc;
       shell->GetDocument(&doc);
@@ -3126,12 +3162,14 @@ GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIWebShell* aWebShell)
 
     // dump the frames of the sub documents
     PRInt32 i, n;
-    aWebShell->GetChildCount(n);
+    nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aDocShell));
+    docShellAsNode->GetChildCount(&n);
     for (i = 0; i < n; i++) {
-      nsIWebShell* child;
-      aWebShell->ChildAt(i, child);
-      if (nsnull != child) {
-        GatherContentDataSizes(aHandler, child);
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
+      if (childAsShell) {
+        GatherContentDataSizes(aHandler, childAsShell);
       }
     }
   }
@@ -3143,7 +3181,7 @@ nsBrowserWindow::ShowContentSize(FILE* out)
   nsCOMPtr<nsISizeOfHandler> handler;
   nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
   if (NS_SUCCEEDED(rv) && handler) {
-    GatherContentDataSizes(handler, mWebShell);
+    GatherContentDataSizes(handler, mDocShell);
     ShowReport(out, handler);
   }
 }
@@ -3272,8 +3310,8 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
       break;
 
     case VIEWER_SHOW_CONTENT_QUALITY:
-      if (nsnull != mWebShell) {
-        nsIPresShell   *ps = GetPresShellFor(mWebShell);
+      if (nsnull != mDocShell) {
+        nsIPresShell   *ps = GetPresShellFor(mDocShell);
         nsIViewManager *vm = nsnull;
         PRBool         qual;
 

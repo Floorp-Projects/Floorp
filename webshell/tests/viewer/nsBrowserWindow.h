@@ -26,6 +26,7 @@
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -176,8 +177,8 @@ public:
   void DoPaste();
   void DoJSConsole();
   void DoPrefs();
-  void DoEditorMode(nsIWebShell* aWebShell);
-  void DoEditorTest(nsIWebShell* aWebShell, PRInt32 aCommandID);
+  void DoEditorMode(nsIDocShell* aDocShell);
+  void DoEditorTest(nsIDocShell* aDocShell, PRInt32 aCommandID);
   nsIPresShell* GetPresShell();
 
   void DoFind();
@@ -244,7 +245,7 @@ public:
   nsString mTitle;
 
   nsIWidget* mWindow;
-  nsIWebShell* mWebShell;
+  nsIDocShell* mDocShell;
 
   nsFileSpec mOpenFileDirectory;
 
@@ -290,7 +291,7 @@ public:
   static nsBrowserWindow* FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich);
 
 protected:
-  nsIDOMDocument* GetDOMDocument(nsIWebShell *aWebShell);
+  nsIDOMDocument* GetDOMDocument(nsIDocShell *aDocShell);
 
   nsBrowserWindow();
   virtual ~nsBrowserWindow();

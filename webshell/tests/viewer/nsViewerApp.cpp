@@ -861,7 +861,7 @@ extern JSConsole *gConsole;
 extern HINSTANCE gInstance, gPrevInstance;
 
 extern "C" NS_EXPORT int DebugRobot(
-  nsVoidArray * workList, nsIWebShell * ww,
+  nsVoidArray * workList, nsIDocShell * ww,
   int imax, char * verify_dir,
   void (*yieldProc)(const char *));
 
@@ -1111,7 +1111,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 #if defined(XP_PC) && defined(NS_DEBUG)
         DebugRobot( 
           gWorkList, 
-          gVisualDebug ? aWindow->mWebShell : nsnull, 
+          gVisualDebug ? aWindow->mDocShell : nsnull, 
           gDebugRobotLoads, 
           PL_strdup(gVerifyDir),
           yieldProc);
@@ -1473,7 +1473,7 @@ static void ShowConsole(nsBrowserWindow* aWindow)
       }
       
       nsIScriptContext *context = nsnull;
-      nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(aWindow->mWebShell));
+      nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_GetInterface(aWindow->mDocShell));
       if (scriptGlobal) {       
         if (NS_OK == scriptGlobal->GetContext(&context)) {
 
