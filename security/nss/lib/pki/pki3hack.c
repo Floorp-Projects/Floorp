@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.73 $ $Date: 2003/01/08 21:48:43 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.74 $ $Date: 2003/02/18 20:53:14 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -806,7 +806,12 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 	* here.  sigh.
 	*/
 	SECItem derSerial;
-	CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+	SECStatus secrv;
+	secrv = CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+	if (secrv == SECFailure) {
+	    nssArena_Destroy(arena);
+	    return NULL;
+	}
 	nssItem_Create(arena, &c->serial, derSerial.len, derSerial.data);
 	PORT_Free(derSerial.data);
     }

@@ -593,33 +593,19 @@ loser:
 void
 CERT_DestroyCertificate(CERTCertificate *cert)
 {
-    int refCount;
-    CERTCertDBHandle *handle;
     if ( cert ) {
-	NSSCertificate *tmp = STAN_GetNSSCertificate(cert);
-	handle = cert->dbhandle;
-#ifdef NSS_CLASSIC
-        CERT_LockCertRefCount(cert);
-	PORT_Assert(cert->referenceCount > 0);
-	refCount = --cert->referenceCount;
-        CERT_UnlockCertRefCount(cert);
-	if ( ( refCount == 0 ) && !cert->keepSession ) {
-	    PRArenaPool *arena  = cert->arena;
-	    /* zero cert before freeing. Any stale references to this cert
-	     * after this point will probably cause an exception.  */
-	    PORT_Memset(cert, 0, sizeof *cert);
-	    cert = NULL;
-	    /* free the arena that contains the cert. */
-	    PORT_FreeArena(arena, PR_FALSE);
-        }
-#else
+	/* don't use STAN_GetNSSCertificate because we don't want to
+	 * go to the trouble of translating the CERTCertificate into
+	 * an NSSCertificate just to destroy it.  If it hasn't been done
+	 * yet, don't do it at all.
+	 */
+	NSSCertificate *tmp = cert->nssCertificate;
 	if (tmp) {
 	    /* delete the NSSCertificate */
 	    NSSCertificate_Destroy(tmp);
 	} else {
 	    PORT_FreeArena(cert->arena, PR_FALSE);
 	}
-#endif
     }
     return;
 }
