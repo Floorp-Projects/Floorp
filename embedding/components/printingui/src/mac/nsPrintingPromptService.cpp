@@ -170,7 +170,6 @@ Handle  itemH;
     
     if (((TPPrDlg)aDialog)->fDone)
     {
-      //nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
       // cleanup and set the print options to what we want
       if (gPrintSettings)
       {

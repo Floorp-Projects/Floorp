@@ -45,21 +45,6 @@ interface nsIWebBrowserPrint : nsISupports
   const short PRINTPREVIEW_END          = 4;
 
   /**
-   * Returns a new, unique PrintSettings object each time.
-   *
-   * For example, if each browser was to have its own unique
-   * PrintSettings, then each browser window would call this to
-   * create its own unique PrintSettings object.
-   *
-   * If each browse window was to use the same PrintSettings object
-   * then it should use "globalPrintSettings"
-   *
-   * Initializes the newPrintSettings from the default printer
-   *
-   */
-  readonly attribute nsIPrintSettings newPrintSettings;
-
-  /**
    * Returns a "global" PrintSettings object 
    * Creates a new the first time, if one doesn't exist.
    *
@@ -87,62 +72,6 @@ interface nsIWebBrowserPrint : nsISupports
    * Returns whether it is in Print Preview mode
    */
   readonly attribute boolean doingPrintPreview;
-
-
-  /**
-   * The name of the default printer 
-   */
-  readonly attribute wstring defaultPrinterName;
-
-  /**
-   * Initializes certain settings from the native printer into the PrintSettings
-   * if aPrinterName is null then it uses the default printer name if it can
-   * These settings include, but are not limited to:
-   *   Page Orientation
-   *   Page Size
-   *   Number of Copies
-   */
-  void initPrintSettingsFromPrinter(in wstring aPrinterName, in nsIPrintSettings aPrintSettings);
-
-  /**
-   * Reads PrintSettings values from Prefs,
-   * the values to be read are indicated by the "flags" arg.
-   *
-   * First it reads in the "generic" set of PrintSetings not associated with any printer
-   * then it uses the PrinterName in the PrinterSettings to read any settings that were saved
-   * just for that printer.
-   *
-   * aPS - PrintSettings to have its settings read
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
-   * aFlags - indicates which prefs to read, see nsIPrintSettings.idl for the const values.
-   *
-   * Items not read:
-   *   startPageRange, endPageRange, scaling, printRange, title
-   *   docURL, howToEnableFrameUI, isCancelled, printFrameTypeUsage
-   *   printFrameType, printSilent, shrinkToFit, numCopies
-   *
-   */
-  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
-
-  /**
-   * Writes PrintSettings values to Prefs, 
-   * the values to be written are indicated by the "flags" arg.
-   *
-   * If there is no PrinterName in the PrinterSettings 
-   * the values are saved as the "generic" values not associated with any printer.
-   * If a PrinterName is there, then it saves the items qualified for that Printer
-   *
-   * aPS - PrintSettings to have its settings saved
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
-   * aFlags - indicates which prefs to save, see nsIPrintSettings.idl for the const values.
-   *
-   * Items not written:
-   *   startPageRange, endPageRange, scaling, printRange, title
-   *   docURL, howToEnableFrameUI, isCancelled, printFrameTypeUsage
-   *   printFrameType, printSilent, shrinkToFit, numCopies
-   *
-   */
-  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
 
   /**
    * This returns whether the current document is a frameset document
@@ -172,7 +101,8 @@ interface nsIWebBrowserPrint : nsISupports
   /**
    * Print the specified DOM window
    *
-   * aThePrintOptions - Printer Settings for the print job
+   * aThePrintOptions - Printer Settings for the print job, if aThePrintSettings is null
+   *                    then the global PS will be used.
    * nsIWebProgressListener - is updated during the print
    * @return void
    */
@@ -182,7 +112,8 @@ interface nsIWebBrowserPrint : nsISupports
   /**
    * Print Preview the specified DOM window
    *
-   * aThePrintOptions - Printer Settings for the print preview
+   * aThePrintOptions - Printer Settings for the print preview, if aThePrintSettings is null
+   *                    then the global PS will be used.
    * nsIWebProgressListener - is updated during the printpreview
    * @return void
    */

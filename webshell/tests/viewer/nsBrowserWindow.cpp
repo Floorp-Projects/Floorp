@@ -2211,7 +2211,7 @@ void nsBrowserWindow::DoPrint(void)
     nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
     if (webBrowserPrint) {
       if (!mPrintSettings) {
-        webBrowserPrint->GetNewPrintSettings(getter_AddRefs(mPrintSettings));
+        webBrowserPrint->GetGlobalPrintSettings(getter_AddRefs(mPrintSettings));
       }
       webBrowserPrint->Print(mPrintSettings, (nsIWebProgressListener*)nsnull);
     }

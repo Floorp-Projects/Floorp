@@ -9,3 +9,4 @@ nsIScreen.idl
 nsIScreenManager.idl
 nsIPrintOptions.idl
 nsIPrintSettings.idl
+nsIPrintSettingsService.idl

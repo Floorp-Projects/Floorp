@@ -66,7 +66,6 @@
 // for profiles
 #include <nsMPFileLocProvider.h>
 #include "nsIWebBrowserPrint.h"
-#include "nsIPrintOptions.h"
 
 // all of our local includes
 #include "EmbedPrivate.h"
@@ -81,7 +80,6 @@
 #include "PtMozilla.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 

@@ -196,8 +196,8 @@ static const nsModuleComponentInfo components[] =
     nsScriptableRegionConstructor },
 
   { "nsPrintOptionsWin",
-    NS_PRINTOPTIONS_CID,
-    "@mozilla.org/gfx/printoptions;1",
+    NS_PRINTSETTINGSSERVICE_CID,
+    "@mozilla.org/gfx/printsettings-service;1",
     nsPrintOptionsWinConstructor },
 
   { "nsFontEnumeratorWin",

@@ -74,30 +74,6 @@ interface nsIPrintOptions : nsISupports
   nsIPrintSettings CreatePrintSettings();
 
   /**
-   * Creates a new PrintSettnigs Object if it doesn't exist
-   * otherwise it always hand back the same one.
-   * This is THE global PrintSettings
-   */
-  readonly attribute nsIPrintSettings globalPrintSettings;
-
-  /**
-   * Initialize the values in the PrintSettings from Prefs
-   * aPS - PrintSettings to have its settings read
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
-   */
-  void initPrintSettingsFromPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
-
-  /**
-   * Save all the PrintSettings to Prefs.
-   * This is on a printer by printer basis
-   * Or saved generically if the printer name is null or empty
-   *
-   * aPS - PrintSettings to have its settings saved
-   * aUsePrinterNamePrefix - indicates whether to use the printer name as a prefix
-   */
-  void savePrintSettingsToPrefs(in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags);
-
-  /**
    * available Printers
    */
   nsISimpleEnumerator availablePrinters ();

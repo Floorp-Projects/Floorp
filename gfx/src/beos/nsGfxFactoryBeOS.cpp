@@ -180,9 +180,9 @@ static const nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/printer_enumerator/beos;1",
     "@mozilla.org/gfx/printerenumerator;1",
     nsPrinterEnumeratorBeOSConstructor },
-  { "BeOS Printer Options",
-  	NS_PRINTOPTIONS_CID,
-  	"@mozilla.org/gfx/printoptions;1",
+  { "BeOS PrintSettings Service",
+  	NS_PRINTSETTINGSSERVICE_CID,
+  	"@mozilla.org/gfx/printsettings-service;1",
   	nsPrintOptionsBeOSConstructor }
 };   
 

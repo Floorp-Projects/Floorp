@@ -38,6 +38,7 @@ XPIDLSRCS	= \
 		nsIScreenManager.idl \
 		nsIPrintOptions.idl \
 		nsIPrintSettings.idl \
+		nsIPrintSettingsService.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))

@@ -76,7 +76,6 @@
 #include "nsIPrintSettings.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // Widget Creation
 #include "nsIWidget.h"
