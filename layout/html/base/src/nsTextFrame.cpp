@@ -2123,7 +2123,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
 #endif
     lineLayout.ForgetWordFrame(this);
   }
-  else {
+
+  if (!lineLayout.InWord()) {
     // There is no currently active word. This frame may contain the
     // start of one.
     if (endsInWhitespace) {
