@@ -58,9 +58,14 @@ public:
   GdkRegion *CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD GetNumRects(PRUint32 *aRects) const;
 
-private:
-  GdkRegion           *mRegion;
+protected:
+  GdkRegion *gdk_region_copy(GdkRegion *region);
+  GdkRegion *gdk_region_from_rect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
+private:
+  inline GdkRegion *GetCopyRegion();
+  GdkRegion *mRegion;
+  static GdkRegion *copyRegion;
   void SetRegionEmpty();
 };
 
