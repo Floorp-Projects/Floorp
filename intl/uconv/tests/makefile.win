@@ -18,38 +18,39 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+
 DEPTH = ..\..\..
 
-
-
-
 MAKE_OBJ_TYPE = EXE
+
 PROG1 = .\$(OBJDIR)\convperf.exe
 PROG2 = .\$(OBJDIR)\nsTestUConv.exe
 PROG3 = .\$(OBJDIR)\nsconv.exe
 PROG4 = .\$(OBJDIR)\plattest.exe 
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)
+PROG5 = .\$(OBJDIR)\TestUConv.exe 
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)  $(PROG5)
 
-LCFLAGS=-DUSE_NSREG
+LCFLAGS = -DUSE_NSREG
 
-REQUIRES=libreg
+REQUIRES = libreg
 
-LINCS=-I$(PUBLIC)\xpcom
+LINCS = -I$(PUBLIC)\xpcom
 
-LLIBS= \
- $(DIST)\lib\xpcom.lib \
- $(LIBNSPR)
+LLIBS =				\
+	$(DIST)\lib\xpcom.lib	\
+	$(LIBNSPR)
 
  
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
-  -for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
-  -for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) convperf.cpp
 $(PROG2): $(OBJDIR) nsTestUConv.cpp
 $(PROG3): $(OBJDIR) nsconv.cpp
 $(PROG4): $(OBJDIR) plattest.cpp
+$(PROG5): $(OBJDIR) TestUConv.cpp
