@@ -74,7 +74,8 @@ NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsScrollBoxFrame::nsScrollBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mVerticalOverflow(PR_FALSE), mHorizontalOverflow(PR_FALSE)
+nsScrollBoxFrame::nsScrollBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mVerticalOverflow(PR_FALSE), mHorizontalOverflow(PR_FALSE),
+     mRestoreRect(-1,-1,-1,-1)
 {
 }
 
@@ -473,6 +474,39 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
        PostScrollPortEvent(shell, mHorizontalOverflow, nsScrollPortEvent::horizontal);
   }
 
+
+  
+  if (mRestoreRect.y != -1) {
+        // if we are supposed to restore
+        nsIPresContext* presContext = aState.GetPresContext();
+        nsIScrollableView* scrollingView;
+        nsIView*           view;
+        GetView(presContext, &view);
+        if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+
+          nsIView* child = nsnull;
+          nsRect childRect(0,0,0,0);
+          if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
+            child->GetBounds(childRect);
+          }
+
+          PRInt32 cx,cy,x,y;
+          scrollingView->GetScrollPosition(cx,cy);
+
+          x = (int)(((float)childRect.width / mRestoreRect.width) * mRestoreRect.x);
+          y = (int)(((float)childRect.height / mRestoreRect.height) * mRestoreRect.y);
+
+          // if our position is greater than the scroll position scroll.
+          // remember we could be incrementally loading so we may enter and
+          // scroll many times.
+          if (y > cy)
+            scrollingView->ScrollTo(x,y,0);
+          else // if we reached the position then stop
+            mRestoreRect.y = -1;
+        }
+      }
+  
+
   return NS_OK;
 }
 
@@ -730,23 +764,11 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(res))
       res = height->GetData(&h);
 
+    // don't do it now store it later and do it in layout.
     if (NS_SUCCEEDED(res)) {
-
-      nsIScrollableView* scrollingView;
-      nsIView*           view;
-      GetView(aPresContext, &view);
-      if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
-
-        nsIView* child = nsnull;
-        nsRect childRect(0,0,0,0);
-        if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
-          child->GetBounds(childRect);
-        }
-        x = (int)(((float)childRect.width / w) * x);
-        y = (int)(((float)childRect.height / h) * y);
-
-        scrollingView->ScrollTo(x,y,0);
-      }
+      mRestoreRect.SetRect(x,y,w,h);
+    } else {
+      mRestoreRect.SetRect(-1,-1,-1,-1);
     }
   }
 
