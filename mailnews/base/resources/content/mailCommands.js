@@ -629,10 +629,7 @@ function analyzeMessageForJunk(aMsgHdr, aMsgIndex, aJunkMsgIndices, aLastMessage
               aJunkMsgIndices.push(aMsgIndex);
             
             if (aLastMessage) 
-            {
-              gJunkmailComponent.endBatch();
               performActionsOnJunkMsgs(aJunkMsgIndices);
-            }
         }
     };
 
@@ -674,9 +671,6 @@ function filterFolderForJunk()
   var whiteListDirectory;
   if (spamSettings.useWhiteList && spamSettings.whiteListAbURI)
     whiteListDirectory = RDF.GetResource(spamSettings.whiteListAbURI).QueryInterface(Components.interfaces.nsIAbMDBDirectory);
-
-  getJunkmailComponent();
-  gJunkmailComponent.startBatch();
 
   for (var i = 0; i < count; i++) {
     var msgIndex = i;
