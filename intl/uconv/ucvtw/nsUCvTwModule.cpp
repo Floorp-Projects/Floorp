@@ -39,6 +39,7 @@
 #include "nsUnicodeToBIG5NoAscii.h"
 #include "nsBIG5HKSCSToUnicode.h"
 #include "nsUnicodeToBIG5HKSCS.h"
+#include "nsUnicodeToHKSCS.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -78,12 +79,14 @@ NS_UCONV_REG_UNREG(nsUnicodeToBIG5NoAscii, "Unicode", "x-x-big5",  NS_UNICODETOB
 NS_UCONV_REG_UNREG(nsUnicodeToBIG5, "Unicode", "Big5" , NS_UNICODETOBIG5_CID);
 NS_UCONV_REG_UNREG(nsBIG5HKSCSToUnicode, "Big5-HKSCS", "Unicode" , NS_BIG5HKSCSTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToBIG5HKSCS, "Unicode", "Big5-HKSCS" , NS_UNICODETOBIG5HKSCS_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToHKSCS, "Unicode", "hkscs-1" , NS_UNICODETOHKSCS_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBIG5ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5NoAscii);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBIG5HKSCSToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToBIG5HKSCS);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToHKSCS);
 
 static nsModuleComponentInfo components[] = 
 {
@@ -110,6 +113,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "Big5-HKSCS",
     nsUnicodeToBIG5HKSCSConstructor,
     nsUnicodeToBIG5HKSCSRegSelf, nsUnicodeToBIG5HKSCSUnRegSelf
+  },
+  {
+    ENCODER_NAME_BASE "hkscs-1" , NS_UNICODETOHKSCS_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "hkscs-1",
+    nsUnicodeToHKSCSConstructor,
+    nsUnicodeToHKSCSRegSelf, nsUnicodeToHKSCSUnRegSelf
   },
   {
     DECODER_NAME_BASE "Big5-HKSCS" , NS_BIG5HKSCSTOUNICODE_CID,
