@@ -95,6 +95,8 @@
 #define EXITCODE_FILE_NOT_FOUND 4
 
 size_t gStackChunkSize = 8192;
+static size_t gMaxStackSize = 0;
+static jsuword gStackBase;
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
@@ -300,6 +302,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     int lineno;
     int startline;
     FILE *file;
+    jsuword stackLimit;
 
     if (!filename || strcmp(filename, "-") == 0) {
         file = stdin;
@@ -312,6 +315,20 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             return;
         }
     }
+
+    if (gMaxStackSize == 0) {
+        /*
+         * Disable checking for stack overflow if limit is zero.
+         */
+        stackLimit = 0;
+    } else {
+#if JS_STACK_GROWTH_DIRECTION > 0
+        stackLimit = gStackBase + gMaxStackSize;
+#else
+        stackLimit = gStackBase - gMaxStackSize;
+#endif
+    }
+    JS_SetThreadStackLimit(cx, stackLimit);
 
     if (!isatty(fileno(file))) {
         /*
@@ -390,7 +407,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-PswW] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswW] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -437,6 +454,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
           case 'c':
           case 'f':
           case 'v':
+          case 'S':
             ++i;
             break;
         }
@@ -530,6 +548,14 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
              * harness. Just execute foo.js for now.
              */
             isInteractive = JS_FALSE;
+            break;
+
+        case 'S':
+            if (++i == argc) {
+                return usage();
+            }
+            /* Set maximum stack size. */
+            gMaxStackSize = atoi(argv[i]);
             break;
 
         default:
@@ -2141,6 +2167,7 @@ static JSClass env_class = {
 int
 main(int argc, char **argv, char **envp)
 {
+    int stackDummy;
     JSVersion version;
     JSRuntime *rt;
     JSContext *cx;
@@ -2152,6 +2179,8 @@ main(int argc, char **argv, char **envp)
 #ifdef JSDEBUGGER_JAVA_UI
     JNIEnv *java_env;
 #endif
+
+    gStackBase = (jsuword)&stackDummy;
 
 #ifdef XP_OS2
    /* these streams are normally line buffered on OS/2 and need a \n, *
