@@ -761,9 +761,23 @@ nsLDAPAutoCompleteSession::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     AutoCompleteStatus status;
     PRInt32 lderrno;
 
-    switch (mEntriesReturned) {
+    if (mEntriesReturned) {
 
-    case 0:
+        status = nsIAutoCompleteStatus::matchFound;
+
+        // there's at least one match, so the default index should
+        // point to the first thing here.  This ensures that if the local
+        // addressbook autocomplete session only found foo@local.domain, 
+        // this will be given preference
+        //
+        rv = mResults->SetDefaultItemIndex(0);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchResult(): "
+                     "mResults->SetDefaultItemIndex(0) failed");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                     BOUND);
+        }
+    } else {
         // note that we only look at the error code if there are no results for
         // this session; if we got results and then an error happened, this
         // is ignored, in part because it seems likely to be confusing to the
@@ -789,38 +803,6 @@ nsLDAPAutoCompleteSession::OnLDAPSearchResult(nsILDAPMessage *aMessage)
         // that this actually buys us anything though.
         //
         status = nsIAutoCompleteStatus::noMatch;
-        break;
-
-    case 1:
-        status = nsIAutoCompleteStatus::matchFound;
-
-        // there's only one match, so the default index should point to it
-        //
-        rv = mResults->SetDefaultItemIndex(0);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchResult(): "
-                     "mResults->SetDefaultItemIndex(0) failed");
-            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
-                                     BOUND);
-        }
-
-        break;
-
-    default:
-        status = nsIAutoCompleteStatus::matchFound;
-
-        // we must have more than one match, so the default index should be
-        // unset (-1)
-        //
-        rv = mResults->SetDefaultItemIndex(-1);
-        if (NS_FAILED(rv)) {
-            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchResult(): "
-                     "mResults->SetDefaultItemIndex(-1) failed");
-            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv,
-                                     BOUND);
-        }
-
-        break;
     }
 
     // call the mListener's OnAutoComplete and clean up
