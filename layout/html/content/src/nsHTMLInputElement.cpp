@@ -139,9 +139,6 @@ protected:
   nsIForm*                 mForm;
   PRInt32                  mType;
 
-   // Return the primary frame associated with this content
-  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);   
-
   PRBool IsImage() const {
     nsAutoString tmp;
     mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
@@ -324,7 +321,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
       formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
       NS_RELEASE(formControlFrame);
       return NS_OK;
@@ -341,7 +338,7 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))     {
       formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
       NS_RELEASE(formControlFrame);
     }
@@ -353,7 +350,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
       if (nsnull != formControlFrame) {
       nsString value("0");
       formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
@@ -373,7 +370,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     if (PR_TRUE == aValue) {
      formControlFrame->SetProperty(nsHTMLAtoms::checked, "1");
     }
@@ -679,26 +676,4 @@ nsHTMLInputElement::GetStyleHintForAttributeChange(
   return NS_OK;
 }
 
-nsresult nsHTMLInputElement::GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame)
-{
-  nsIDocument* doc = nsnull;
-  nsresult res = NS_NOINTERFACE;
-   // Get the document
-  if (NS_OK == GetDocument(doc)) {
-     // Get presentation shell 0
-    nsIPresShell* presShell = doc->GetShellAt(0);
-    if (nsnull != presShell) {
-      nsIFrame *frame = nsnull;
-      presShell->GetPrimaryFrameFor(this, frame);
-      if (nsnull != frame) {
-        res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
-      }
-      NS_RELEASE(presShell);
-    }
-  NS_RELEASE(doc);
-  }
-
-  return res;
-}
-           
 

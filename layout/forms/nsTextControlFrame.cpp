@@ -739,10 +739,16 @@ void nsTextControlFrame::GetTextControlFrameState(nsString& aValue)
 {
   if (nsnull != mWidget) {
     nsITextWidget* text = nsnull;
+    nsITextAreaWidget* textArea = nsnull;   
+    PRUint32 size = 0;
     if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
-      PRUint32 size;
       text->GetText(aValue,0,size);
       NS_RELEASE(text);
+    }
+    else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,
+                                                (void**)&textArea)) {
+      textArea->GetText(aValue,0, size);
+      NS_RELEASE(textArea);
     }
   }
   else {
@@ -754,13 +760,18 @@ void nsTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 {
   if (nsnull != mWidget) {
     nsITextWidget* text = nsnull;
+    nsITextAreaWidget* textArea = nsnull;   
+    PRUint32 size = 0;
     if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
-      PRUint32 size;
       text->SetText(aValue,size);
       NS_RELEASE(text);
+    } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,
+                                                (void**)&textArea)) {
+      textArea->SetText(aValue,size);
+      NS_RELEASE(textArea);
     }
-  }
-}    
+  }    
+}
 
 NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
@@ -769,7 +780,6 @@ NS_IMETHODIMP nsTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aV
   else {
     return nsFormControlFrame::SetProperty(aName, aValue);
   }
-
   return NS_OK;
 }      
 

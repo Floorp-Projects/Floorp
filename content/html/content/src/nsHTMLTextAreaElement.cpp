@@ -32,6 +32,7 @@
 #include "nsIWidget.h"
 #include "nsITextAreaWidget.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIFormControlFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -265,39 +266,32 @@ nsHTMLTextAreaElement::GetType(nsString& aType)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetValue(nsString& aValue)
 {
-  if (nsnull != mWidget) {
-    nsITextAreaWidget* text = nsnull;
-    if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&text)) {
-      PRUint32 size;
-      text->GetText(aValue,0,size); 
-      NS_RELEASE(text);
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+      formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
+      NS_RELEASE(formControlFrame);
       return NS_OK;
-    }
-  } 
-
-  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue);
+  }
+   //XXX: Should this ASSERT instead of getting the default value here?
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue); 
 }
 
 
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::SetValue(const nsString& aValue)
 {
-  if (nsnull != mWidget) {
-    nsITextAreaWidget* text = nsnull;
-    if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&text)) {
-      PRUint32 size;
-      text->SetText(aValue,size); 
-      NS_RELEASE(text);
-    }
-  }
-
-  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE); 
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+    formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
+    NS_RELEASE(formControlFrame);
+  }                         
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
 {
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, aDefaultValue);                 
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);                 
   return NS_OK;                                                    
 }  
 
@@ -308,7 +302,6 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
   static char whitespace[] = " \r\n\t";
   nsString value(aDefaultValue);
   value.Trim(whitespace, PR_TRUE, PR_FALSE);
-  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue, value, PR_TRUE);
   mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, value, PR_TRUE);
   return NS_OK;
 

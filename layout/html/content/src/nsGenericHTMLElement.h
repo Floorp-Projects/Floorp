@@ -46,6 +46,7 @@ class nsChildContentList;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsIURL;
+class nsIFormControlFrame;
 
 class nsGenericHTMLElement : public nsGenericElement {
 public:
@@ -236,6 +237,10 @@ public:
   static PRBool SetStyleHintForCommonAttributes(const nsIContent* aNode,
                                                 const nsIAtom* aAttribute,
                                                 PRInt32* aHint);
+
+  //XXX This creates a dependency between content and frames 
+  static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
+                                  nsIFormControlFrame *&aFormControlFrame);
 
   nsIHTMLAttributes* mAttributes;
 };
