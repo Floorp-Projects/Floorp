@@ -463,7 +463,9 @@ NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
 }
 
 //*****************************************************************************
-// CBrowserImpl::nsIStreamListener (used for nsIRequest & UriContentListener)
+// CBrowserImpl::nsIStreamListener 
+// (used for nsIRequest, nsIChannel, and UriContentListener)
+//*****************************************************************************   
 
 NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 				nsISupports *ctxt, nsIInputStream *input,
@@ -497,12 +499,17 @@ NS_IMETHODIMP CBrowserImpl::OnDataAvailable(nsIRequest *request,
 	return NS_OK;
 }
 
+//*****************************************************************************
+// CBrowserImpl::nsIRequestObserver 
+// (used for nsIRequest, nsIChannel, and UriContentListener)
+//*****************************************************************************   
+
 NS_IMETHODIMP CBrowserImpl::OnStartRequest(nsIRequest *request,
 				nsISupports *ctxt)
 {
 	nsCString stringMsg;
 
-	QAOutput("##### BEGIN: nsIStreamListener::OnStartRequest() #####");
+	QAOutput("##### BEGIN: nsIRequestObserver::OnStartRequest() #####");
 	RequestName(request, stringMsg, 1);
 
 	if (!ctxt)
@@ -518,7 +525,7 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 {
 	nsCString stringMsg;
 
-	RvTestResult(rv, "nsIStreamListener::OnStopRequest rv input", 1);
+	RvTestResult(rv, "nsIRequestObserver::OnStopRequest rv input", 1);
 	RequestName(request, stringMsg, 1);
 
 	if (!ctxt)
@@ -534,7 +541,8 @@ NS_IMETHODIMP CBrowserImpl::OnStopRequest(nsIRequest *request,
 }
 
 //*****************************************************************************   
-//  Tool Tip Listener
+//  CBrowserImpl::Tool Tip Listener
+//*****************************************************************************   
 
 NS_IMETHODIMP CBrowserImpl::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 										  const PRUnichar *aTipText)
@@ -554,7 +562,8 @@ NS_IMETHODIMP CBrowserImpl::OnHideTooltip()
 
 
 //*****************************************************************************   
-//  UriContentListener
+//  CBrowserImpl::UriContentListener
+//*****************************************************************************   
 
 NS_IMETHODIMP CBrowserImpl::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
 {

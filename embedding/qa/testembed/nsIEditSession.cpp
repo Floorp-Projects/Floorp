@@ -85,40 +85,45 @@ void CnsIEditSession::InitTest(PRInt16 displayMode)
 {
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
-	if (domWindow && editingSession) {
+	if (editingSession) {
 		rv = editingSession->Init(domWindow);
 		RvTestResult(rv, "Init() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "Init() test", true);
+		if (!domWindow)
+			QAOutput("Didn't get domWindow object for InitTest() test. Test failed.", displayMode);
 	}
 	else
-		QAOutput("Didn't get object(s) for InitTest() test. Test failed.", 1);
+		QAOutput("Didn't get editingSession object for InitTest() test. Test failed.", displayMode);
 }
 
 void CnsIEditSession::MakeWinEditTest(PRBool afterUriLoad, PRInt16 displayMode)
 {
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
-	if (domWindow && editingSession) {
-		// aEditorType (2nd param) is crashing with null entry. bug 174151
+	if (editingSession) {
 		rv= editingSession->MakeWindowEditable(domWindow, "text", afterUriLoad);
 		RvTestResult(rv, "MakeWindowEditable() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "MakeWindowEditable() test");
+		if (!domWindow)
+			QAOutput("Didn't get domWindow object for MakeWindowEditable() test. Test failed.", displayMode);
 	}
 	else
-		QAOutput("Didn't get object(s) for MakeWindowEditable() test. Test failed.", 1);
+		QAOutput("Didn't get editingSession object for MakeWindowEditable() test. Test failed.", 1);
 }
 
 void CnsIEditSession::WinIsEditTest(PRBool outIsEditable, PRInt16 displayMode)
 {
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
-	if (domWindow && editingSession) {
+	if (editingSession) {
 		rv = editingSession->WindowIsEditable(domWindow, &outIsEditable);
 		RvTestResult(rv, "WindowIsEditable() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "WindowIsEditable() test");
+		if (!domWindow)
+			QAOutput("Didn't get domWindow object for WindowIsEditable() test. Test failed.", displayMode);
 		FormatAndPrintOutput("the outIsEditable boolean = ", outIsEditable, displayMode);
 	}
 	else
@@ -131,11 +136,14 @@ void CnsIEditSession::GetEditorWinTest(PRInt16 displayMode)
 //	nsIEditor *theEditor = nsnull;
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
-	if (domWindow && editingSession) {
+	if (editingSession) {
 		rv = editingSession->GetEditorForWindow(domWindow, getter_AddRefs(theEditor));
 		RvTestResult(rv, "GetEditorForWindow() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "GetEditorForWindow() test");
+		if (!domWindow)
+			QAOutput("Didn't get domWindow object for GetEditorForWindow() test. Test failed.", displayMode);
+
 		if (!theEditor) 
 			QAOutput("Didn't get the Editor object.");
 	}
@@ -147,11 +155,13 @@ void CnsIEditSession::SetEditorWinTest(PRInt16 displayMode)
 {
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
-	if (domWindow && editingSession) {
+	if (editingSession) {
 		rv = editingSession->SetupEditorOnWindow(domWindow);
 		RvTestResult(rv, "SetupEditorOnWindow() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "SetupEditorOnWindow() test");
+		if (!domWindow)
+			QAOutput("Didn't get domWindow object for SetupEditorOnWindow() test. Test failed.", displayMode);
 	}
 	else
 		QAOutput("Didn't get object(s) for SetEditorWinTest() test. Test failed.", 1);
@@ -161,11 +171,13 @@ void CnsIEditSession::TearEditorWinTest(PRInt16 displayMode)
 {
 	editingSession = GetEditSessionObject();
 	domWindow = GetTheDOMWindow(qaWebBrowser);
-	if (domWindow && editingSession) {
+	if (editingSession) {
 		rv = editingSession->TearDownEditorOnWindow(domWindow);
 		RvTestResult(rv, "TearDownEditorOnWindow() test", displayMode);
 		if (displayMode == 1)
 			RvTestResultDlg(rv, "TearDownEditorOnWindow() test");
+		if (!domWindow)
+			QAOutput("Didn't get domWindow object for TearDownEditorOnWindow() test. Test failed.", displayMode);
 	}
 	else
 		QAOutput("Didn't get object(s) for TearEditorWinTest() test. Test failed.", 1);

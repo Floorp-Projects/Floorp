@@ -126,11 +126,11 @@ CommandTest CommandTable[] = {
 	{"cmd_cutOrDelete", "", "state_enabled", PR_FALSE, 50000,    5.798,     "hello",						 "HELLO"},
 };
 
-nsICommandManager * CnsICommandMgr::GetCommandMgrObject(nsIWebBrowser *aWebBrowser)
+nsICommandManager * CnsICommandMgr::GetCommandMgrObject(nsIWebBrowser *aWebBrowser, PRInt16 displayMethod)
 {
 	nsCOMPtr<nsIWebBrowser> wb(aWebBrowser);
 	nsCOMPtr<nsICommandManager> cmdMgrObj = do_GetInterface(wb, &rv);
-	RvTestResult(rv, "GetCommandMgrObject() test", 1); 
+	RvTestResult(rv, "GetCommandMgrObject() test", displayMethod);
     if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object.");
 		return nsnull;
@@ -138,7 +138,7 @@ nsICommandManager * CnsICommandMgr::GetCommandMgrObject(nsIWebBrowser *aWebBrows
 	return cmdMgrObj;
 }
 
-nsICommandManager * CnsICommandMgr::GetCommandMgrWithContractIDObject()
+nsICommandManager * CnsICommandMgr::GetCommandMgrWithContractIDObject(PRInt16 displayMethod)
 {
 	nsCOMPtr<nsICommandManager> cmdMgrObj = do_CreateInstance(NS_COMMAND_MANAGER_CONTRACTID, &rv);
 	RvTestResult(rv, "GetCommandMgrWithContractIDObject() test", 1); 
@@ -149,72 +149,70 @@ nsICommandManager * CnsICommandMgr::GetCommandMgrWithContractIDObject()
 	return cmdMgrObj;
 }
 
-void CnsICommandMgr::IsCommandSupportedTest(const char *aCommandName, int displayMethod)
+void CnsICommandMgr::IsCommandSupportedTest(const char *aCommandName, PRInt16 displayMethod)
 {
 	PRBool isSupported;
 
 	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser, displayMethod);
 	if (!cmdMgrObj) {
-        QAOutput("Didn't get nsICommandManager object.");
+        QAOutput("Didn't get nsICommandManager object. Test failed.");
 		return;
 	}
-	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
 	rv = cmdMgrObj->IsCommandSupported(aCommandName, nsnull, &isSupported);
 	RvTestResult(rv, "IsCommandSupported() test", displayMethod);
+	if (displayMethod == 1)
+		RvTestResultDlg(rv, "IsCommandSupported() test", true);
 	FormatAndPrintOutput("isSupported boolean = ", isSupported, displayMethod);
 }
 
-void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName, int displayMethod)
+void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName, PRInt16 displayMethod)
 {
 	PRBool isEnabled;
 
 	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
-	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser, displayMethod);
 	if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object.");
 		return;
 	}
 	rv = cmdMgrObj->IsCommandEnabled(aCommandName, nsnull, &isEnabled);
 	RvTestResult(rv, "IsCommandEnabled() test", displayMethod);
+	if (displayMethod == 1)
+		RvTestResultDlg(rv, "IsCommandEnabled() test");
 	FormatAndPrintOutput("isEnabled boolean = ", isEnabled, displayMethod);
 }
 
-void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, int displayMethod)
+void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, PRInt16 displayMethod)
 {
 	PRBool enabled = PR_FALSE;
 
 	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
-	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser, displayMethod);
 	cmdParamObj = CnsICmdParams::GetCommandParamObject();
 	if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object.");
 		return;
 	}
-	else if (!cmdParamObj) {
-        QAOutput("Didn't get nsICommandParams object.");
-		return;
-	}
-	else {
-		rv = cmdMgrObj->GetCommandState(aCommandName, nsnull, cmdParamObj);
-		RvTestResult(rv, "GetCommandState() test", displayMethod);
-	}
+	rv = cmdMgrObj->GetCommandState(aCommandName, nsnull, cmdParamObj);
+	RvTestResult(rv, "GetCommandState() test", displayMethod);
+	if (displayMethod == 1)
+		RvTestResultDlg(rv, "GetCommandState() test");
+	if (!cmdParamObj) 
+        QAOutput("Didn't get nsICommandParams object for GetCommandStateTest.");
 }
 
 void CnsICommandMgr::DoCommandTest(const char *aCommandName,
 								   const char *doCommandState,
-								   int displayMethod)
+								   PRInt16 displayMethod)
 {
 	nsCAutoString value;
 
 	FormatAndPrintOutput("the Command input = ", aCommandName, displayMethod);
-	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
+	cmdMgrObj = GetCommandMgrObject(qaWebBrowser, displayMethod);
 	cmdParamObj = CnsICmdParams::GetCommandParamObject();
 	if (!cmdMgrObj) {
         QAOutput("Didn't get nsICommandManager object. Tests fail");
-		return;
-	}
-	if (!cmdMgrObj) {
-        QAOutput("Didn't get nsICommandParam object. Test fail");
 		return;
 	}
 
@@ -227,10 +225,16 @@ void CnsICommandMgr::DoCommandTest(const char *aCommandName,
 			value = "Helvetica, Ariel, san-serif";
 		else
 			value = "left";
-		cmdParamObj->SetCStringValue("state_attribute", value.get());
+
+		if (cmdParamObj)
+			cmdParamObj->SetCStringValue("state_attribute", value.get());
+		else
+			QAOutput("Didn't get nsICommandParam object for nsICommandMgr test.");
 	}
 	rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj, nsnull);
 	RvTestResult(rv, "DoCommand() test", displayMethod);
+	if (displayMethod == 1)
+		RvTestResultDlg(rv, "DoCommand() test");
 }
 
 
@@ -276,7 +280,6 @@ void CnsICommandMgr::RunAllTests()
 		DoCommandTest(CommandTable[i].mCmdName,
 					  CommandTable[i].mDoCmdState, 1);
 	}
-	QAOutput("Tests completed.", 2);
 }
 
 

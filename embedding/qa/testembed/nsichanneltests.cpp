@@ -112,70 +112,61 @@ void CnsIChannelTests::SetOriginalURITest(nsIChannel *theChannel, nsCAutoString 
 										  PRInt16 displayMode)
 {
 	theURI = GetURIObject(theSpec);
-	if (!theURI)
-	{
-	   QAOutput("Didn't get URI object. SetOriginalURITest failed.", displayMode);
-	   return;
-	}
 	rv = theChannel->SetOriginalURI(theURI);
 	RvTestResult(rv, "SetOriginalURITest", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "SetOriginalURITest", true);
+	if (!theURI)
+	   QAOutput("Didn't get URI object. SetOriginalURITest failed.", displayMode);
 }
 
 void CnsIChannelTests::GetOriginalURITest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv = theChannel->GetOriginalURI(getter_AddRefs(theURI));
+	RvTestResult(rv, "GetOriginalURITest", displayMode);
+	if (displayMode == 1)
+		RvTestResultDlg(rv, "GetOriginalURITest");
 	if (!theURI)
 	{
 	   QAOutput("Didn't get URI object. GetOriginalURITest failed.", displayMode);
 	   return;
 	}
-	RvTestResult(rv, "GetOriginalURITest", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "GetOriginalURITest");
 	GetTheUri(theURI);
 }
 
 void CnsIChannelTests::GetURITest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv = theChannel->GetURI(getter_AddRefs(theURI));
+	RvTestResult(rv, "GetURITest", displayMode);
+	if (displayMode == 1)
+		RvTestResultDlg(rv, "GetURITest");
 	if (!theURI)
 	{
 	   QAOutput("Didn't get URI object. GetURITest failed.", displayMode);
 	   return;
 	}
-	RvTestResult(rv, "GetURITest", displayMode);
-	if (displayMode == 1)
-		RvTestResultDlg(rv, "GetURITest");
 	GetTheUri(theURI);
 }
 
 void CnsIChannelTests::SetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	theSupports = do_QueryInterface(theChannel);
-	if (!theSupports)
-	{
-	   QAOutput("Didn't get nsISupports object. SetOwnerTest failed.", displayMode);
-	   return;
-	}
-	theChannel->SetOwner(theSupports);
+	rv = theChannel->SetOwner(theSupports);
 	RvTestResult(rv, "SetOwner", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "SetOwner");
+	if (!theSupports)
+	   QAOutput("Didn't get nsISupports object. SetOwnerTest failed.", displayMode);
 }
 
 void CnsIChannelTests::GetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv = theChannel->GetOwner(getter_AddRefs(theSupports));
-	if (!theSupports)
-	{
-	   QAOutput("Didn't get nsISupports object. GetOwnerTest failed.", displayMode);
-	   return;
-	}
 	RvTestResult(rv, "GetOwner", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "GetOwner");
+	if (!theSupports)
+	   QAOutput("Didn't get nsISupports object. GetOwnerTest failed.", displayMode);
 }
 
 void CnsIChannelTests::SetNotificationsTest(nsIChannel *theChannel, PRInt16 displayMode)
@@ -186,52 +177,44 @@ void CnsIChannelTests::SetNotificationsTest(nsIChannel *theChannel, PRInt16 disp
 	   return;
 	}
 	theIRequestor = do_QueryInterface(qaWebBrowser);
-	if (!theIRequestor)
-	{
-	   QAOutput("Didn't get nsIInterfaceRequestor object. SetNotificationsTest failed.", displayMode);
-	   return;
-	}
 	rv = theChannel->SetNotificationCallbacks(theIRequestor);
 	RvTestResult(rv, "SetNotificationCallbacks", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "SetNotificationCallbacks");
+	if (!theIRequestor)
+	   QAOutput("Didn't get nsIInterfaceRequestor object. SetNotificationsTest failed.", displayMode);
 }
 
 void CnsIChannelTests::GetNotificationsTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv = theChannel->GetNotificationCallbacks(getter_AddRefs(theIRequestor));
 	if (!theIRequestor)
-	{
-	   QAOutput("Didn't get nsIInterfaceRequestor object. GetNotificationsTest failed.", displayMode);
-	   return;
-	}
 	RvTestResult(rv, "GetNotificationCallbacks", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "GetNotificationCallbacks");
+	if(!theIRequestor)
+	   QAOutput("Didn't get nsIInterfaceRequestor object. GetNotificationsTest failed.", displayMode);
 }
 
 void CnsIChannelTests::GetSecurityInfoTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
-//	theSupports = do_QueryInterface(theChannel);
+	theSupports = do_QueryInterface(theChannel);
 	if (!theChannel)
 	{
 	   QAOutput("Didn't get nsIChannel object. GetSecurityInfoTest failed.", displayMode);
 	   return;
 	}
-	rv = theChannel->GetSecurityInfo(getter_AddRefs(theSupports));
-	if (!theSupports)
-	{
-	   QAOutput("Didn't get nsISupports object. GetSecurityInfoTest failed.", displayMode);
-	   return;
-	}	
+	rv = theChannel->GetSecurityInfo(getter_AddRefs(theSupports));	
 	RvTestResult(rv, "GetSecurityInfo", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "GetSecurityInfo");
+	if (!theSupports)
+	   QAOutput("Didn't get nsISupports object for GetSecurityInfoTest.", displayMode);
 }
 
 void CnsIChannelTests::SetContentTypeTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
-	rv = theChannel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+	rv = theChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
 	RvTestResult(rv, "SetContentType", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "SetContentType");	
@@ -273,7 +256,7 @@ void CnsIChannelTests::SetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 {
 	PRInt32 contentLength;
 
-	contentLength = 100;
+	contentLength = 10000;
 	rv = theChannel->SetContentLength(contentLength);
 	RvTestResult(rv, "SetContentLength", displayMode);
 	if (displayMode == 1)
@@ -294,14 +277,11 @@ void CnsIChannelTests::GetContentLengthTest(nsIChannel *theChannel, PRInt16 disp
 void CnsIChannelTests::OpenTest(nsIChannel *theChannel, PRInt16 displayMode)
 {
 	rv =  theChannel->Open(getter_AddRefs(theInputStream));
-	if (!theInputStream)
-	{
-	   QAOutput("Didn't get theInputStream object. OpenTest failed.", displayMode);
-	   return;
-	}
 	RvTestResult(rv, "OpenTest", displayMode);
 	if (displayMode == 1)
 		RvTestResultDlg(rv, "OpenTest");
+	if (!theInputStream)
+	   QAOutput("Didn't get theInputStream object. OpenTest failed.", displayMode);
 }
 
 void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode)
