@@ -27,7 +27,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS= \
-  nsGfxListControlFrame.cpp \
   nsFormControlHelper.cpp \
   nsComboboxControlFrame.cpp \
   nsListControlFrame.cpp \
@@ -48,7 +47,6 @@ CPPSRCS= \
   nsRadioControlGroup.cpp
 
 CPP_OBJS= \
-  .\$(OBJDIR)\nsGfxListControlFrame.obj \
   .\$(OBJDIR)\nsFormControlHelper.obj \
   .\$(OBJDIR)\nsComboboxControlFrame.obj \
   .\$(OBJDIR)\nsListControlFrame.obj \
