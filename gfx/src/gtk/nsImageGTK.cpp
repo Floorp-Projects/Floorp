@@ -353,22 +353,37 @@ nsImageGTK::DrawScaled(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                        PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                        PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  if (aSX < mDecodedX1) {
-    aSWidth -= mDecodedX1 - aSX;
-    aDX += mDecodedX1 - aSX;
-    aSX += mDecodedX1 - aSX;
-  }
+
+  PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
+  PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
+
+  if (aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0)
+    return NS_ERROR_FAILURE;
+
+  if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
+    return NS_OK;
+
+  // limit the size of the blit to the amount of the image read in
   if (aSX + aSWidth > mDecodedX2) {
-    aSWidth -= aSX + aSWidth - mDecodedX2;
+    aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
+    aSWidth = mDecodedX2 - mDecodedX1;
+  }
+  if (aSX < mDecodedX1) {
+    aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
+    aSX = mDecodedX1;
+  }
+
+  if (aSY + aSHeight > mDecodedY2) {
+    aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
+    aSHeight = mDecodedY2 - mDecodedY1;
   }
   if (aSY < mDecodedY1) {
-    aSHeight -= mDecodedY1 - aSY;
-    aDY += mDecodedY1 - aSY;
-    aSY += mDecodedY1 - aSY;
+    aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
+    aSY = mDecodedY1;
   }
-  if (aSY + aSHeight > mDecodedY2) {
-    aSHeight -= (aSY + aSHeight) - mDecodedY2;
-  }
+
+  if ((aDWidth <= 0 || aDHeight <= 0) || (aSWidth <= 0 || aSHeight <= 0))
+    return NS_OK;
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
