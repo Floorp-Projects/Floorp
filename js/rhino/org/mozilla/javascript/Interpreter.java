@@ -45,13 +45,13 @@ public class Interpreter extends LabelTable {
     public static final boolean printICode = false;
     
     public IRFactory createIRFactory(TokenStream ts, 
-                                     ClassNameHelper nameHelper) 
+                                     ClassNameHelper nameHelper, Scriptable scope) 
     {
-        return new IRFactory(ts);
+        return new IRFactory(ts, scope);
     }
     
-    public Node transform(Node tree, TokenStream ts) {
-        return (new NodeTransformer()).transform(tree, null, ts);
+    public Node transform(Node tree, TokenStream ts, Scriptable scope) {
+        return (new NodeTransformer()).transform(tree, null, ts, scope);
     }
     
     public Object compile(Context cx, Scriptable scope, Node tree, 

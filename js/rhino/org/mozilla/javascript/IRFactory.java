@@ -47,8 +47,9 @@ package org.mozilla.javascript;
  */
 public class IRFactory {
     
-    public IRFactory(TokenStream ts) {
+    public IRFactory(TokenStream ts, Scriptable scope) {
         this.ts = ts;
+        this.scope = scope;
     }
 
     /**
@@ -1012,14 +1013,25 @@ public class IRFactory {
     }
     
     private void reportError(String msgResource) {
-        String message = Context.getMessage(msgResource, null);
-        Context.reportError(message, ts.getSourceName(), ts.getLineno(), 
-                            ts.getLine(), ts.getOffset());
+
+        if (scope != null)
+            throw NativeGlobal.constructError(
+                        Context.getContext(), "SyntaxError",
+                        ScriptRuntime.getMessage(msgResource, null),
+                        scope);
+        else {
+            String message = Context.getMessage(msgResource, null);
+            Context.reportError(message, ts.getSourceName(), ts.getLineno(), 
+                                ts.getLine(), ts.getOffset());
+        }
     }
     
     // Only needed to get file/line information. Could create an interface
     // that TokenStream implements if we want to make the connection less
     // direct.
     private TokenStream ts;
+    
+    // Only needed to pass to the Erorr exception constructors
+    private Scriptable scope;
 }
 

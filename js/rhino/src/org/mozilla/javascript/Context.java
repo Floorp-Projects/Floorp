@@ -761,7 +761,7 @@ public final class Context {
 
         boolean errorseen = false;
         try {
-            IRFactory irf = new IRFactory(ts);
+            IRFactory irf = new IRFactory(ts, null);
             Parser p = new Parser(irf);
             p.parse(ts);
         } catch (IOException ioe) {
@@ -773,7 +773,6 @@ public final class Context {
             setErrorReporter(currentReporter);
             setErrorReporterHook(hook);
         }
-
         // Return false only if an error occurred as a result of reading past
         // the end of the file, i.e. if the source could be fixed by
         // appending more source.
@@ -1738,13 +1737,13 @@ public final class Context {
                                : getCompiler();
         
         errorCount = 0;
-        IRFactory irf = compiler.createIRFactory(ts, nameHelper);
+        IRFactory irf = compiler.createIRFactory(ts, nameHelper, scope);
         Parser p = new Parser(irf);
         Node tree = (Node) p.parse(ts);
         if (tree == null) 
             return null;
 
-        tree = compiler.transform(tree, ts);
+        tree = compiler.transform(tree, ts, scope);
 
         if (printTrees)
             System.out.println(tree.toStringTree());

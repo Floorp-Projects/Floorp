@@ -58,18 +58,19 @@ public class NodeTransformer {
         return new NodeTransformer();
     }
     
-    public IRFactory createIRFactory(TokenStream ts) {
-        return new IRFactory(ts);
+    public IRFactory createIRFactory(TokenStream ts, Scriptable scope) {
+        return new IRFactory(ts, scope);
     }
 
-    public Node transform(Node tree, Node enclosing, TokenStream ts) {
+    public Node transform(Node tree, Node enclosing, TokenStream ts,
+                                                    Scriptable scope) {
         loops = new Stack();
         loopEnds = new Stack();
         inFunction = tree.getType() == TokenStream.FUNCTION;
         if (!inFunction) {
             addVariables(tree, getVariableTable(tree));
         }
-        irFactory = createIRFactory(ts);
+        irFactory = createIRFactory(ts, scope);
 
         // to save against upchecks if no finally blocks are used.
         boolean hasFinally = false;
@@ -107,7 +108,8 @@ public class NodeTransformer {
                                           node.getProp(Node.FUNCTION_PROP);
                     addParameters(fnNode);
                     NodeTransformer inner = newInstance();
-                    fnNode = (FunctionNode) inner.transform(fnNode, tree, ts);
+                    fnNode = (FunctionNode) 
+                            inner.transform(fnNode, tree, ts, scope);
                     node.putProp(Node.FUNCTION_PROP, fnNode);
                     Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
                     if (fns == null) {
@@ -134,7 +136,7 @@ public class NodeTransformer {
                             String message = Context.getMessage("msg.dup.label",
                                                                 errArgs);
                             reportMessage(Context.getContext(), message, node, 
-                                          tree, true);
+                                          tree, true, scope);
                             break typeswitch;
                         }
                     }
@@ -366,7 +368,7 @@ public class NodeTransformer {
                             ("msg.undef.label", errArgs);
                     }
                     reportMessage(Context.getContext(), message, node, 
-                                  tree, true);
+                                  tree, true, scope);
                     node.setType(TokenStream.NOP);
                     break;
                 }
@@ -662,7 +664,8 @@ public class NodeTransformer {
     }
     
     protected void reportMessage(Context cx, String msg, Node stmt, 
-                                 Node tree, boolean isError)
+                                 Node tree, boolean isError,
+                                 Scriptable scope)
     {
         Object obj = stmt.getDatum();
         int lineno = 0;
@@ -671,8 +674,15 @@ public class NodeTransformer {
         Object prop = tree == null 
                       ? null
                       : tree.getProp(Node.SOURCENAME_PROP);
-        if (isError)
-            cx.reportError(msg, (String) prop, lineno, null, 0);
+        if (isError) {
+            if (scope != null)
+            throw NativeGlobal.constructError(
+                        cx, "SyntaxError",
+                        msg,
+                        scope, (String) prop, lineno);
+            else
+                cx.reportError(msg, (String) prop, lineno, null, 0);
+        }
         else
             cx.reportWarning(msg, (String) prop, lineno, null, 0);        
     }

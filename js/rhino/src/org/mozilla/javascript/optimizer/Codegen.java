@@ -56,14 +56,14 @@ public class Codegen extends Interpreter {
     }
     
     public IRFactory createIRFactory(TokenStream ts, 
-                                     ClassNameHelper nameHelper) 
+                                     ClassNameHelper nameHelper, Scriptable scope) 
     {
-        return new OptIRFactory(ts, nameHelper);
+        return new OptIRFactory(ts, nameHelper, scope);
     }
     
-    public Node transform(Node tree, TokenStream ts) {
+    public Node transform(Node tree, TokenStream ts, Scriptable scope) {
         OptTransformer opt = new OptTransformer(new Hashtable(11));
-        return opt.transform(tree, null, ts);
+        return opt.transform(tree, null, ts, scope);
     }
     
     public Object compile(Context cx, Scriptable scope, Node tree, 

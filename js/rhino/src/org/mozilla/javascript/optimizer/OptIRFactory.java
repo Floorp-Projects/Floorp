@@ -46,8 +46,8 @@ import org.mozilla.javascript.*;
  */
 public class OptIRFactory extends IRFactory {
     
-    public OptIRFactory(TokenStream ts, ClassNameHelper nameHelper) {
-        super(ts);
+    public OptIRFactory(TokenStream ts, ClassNameHelper nameHelper, Scriptable scope) {
+        super(ts, scope);
         this.nameHelper = nameHelper;
     }
 

@@ -601,7 +601,7 @@ public class Block {
     
     Hashtable localCSE(Hashtable theCSETable, OptFunctionNode theFunction)
     {
-        itsIRFactory = new IRFactory(null);
+        itsIRFactory = new IRFactory(null, null);
         if (theCSETable == null) theCSETable = new Hashtable(5);
         for (int i = itsStartNodeIndex; i <= itsEndNodeIndex; i++) {
             Node n = itsStatementNodes[i];

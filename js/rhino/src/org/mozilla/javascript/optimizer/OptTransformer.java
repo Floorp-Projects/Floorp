@@ -59,18 +59,19 @@ class OptTransformer extends NodeTransformer {
         return new OptTransformer((Hashtable) theFnClassNameList.clone());
     }    
         
-    public IRFactory createIRFactory(TokenStream ts) {
-        return new IRFactory(ts);
+    public IRFactory createIRFactory(TokenStream ts, Scriptable scope) {
+        return new IRFactory(ts, scope);
     }
 
-    public Node transform(Node tree, Node enclosing, TokenStream ts) {
+    public Node transform(Node tree, Node enclosing, TokenStream ts,
+                                                     Scriptable scope) {
     
         // Collect all of the contained functions into a hashtable
         // so that the call optimizer can access the class name & parameter
         // count for any call it encounters
         collectContainedFunctions(tree.getFirstChild());
         
-        return super.transform(tree, enclosing, ts);
+        return super.transform(tree, enclosing, ts, scope);
     }
   
     protected VariableTable createVariableTable() {
