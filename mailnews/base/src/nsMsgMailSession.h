@@ -57,11 +57,5 @@ protected:
 
 };
 
-NS_BEGIN_EXTERN_C
-
-nsresult
-NS_NewMsgMailSession(const nsIID& iid, void **result);
-
-NS_END_EXTERN_C
 
 #endif /* nsMsgMailSession_h__ */

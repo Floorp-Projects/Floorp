@@ -204,5 +204,4 @@ protected:
 
 };
 
-PR_EXTERN(nsresult)
-NS_NewMsgMessageDataSource(const nsIID& iid, void **result);
+

@@ -19,9 +19,31 @@
 #include "nscore.h"
 #include "nsIMsgAccount.h"
 
-NS_BEGIN_EXTERN_C
+class nsMsgAccount : public nsIMsgAccount,
+                     public nsIShutdownListener
+{
+  
+public:
+  nsMsgAccount();
+  virtual ~nsMsgAccount();
+   
+  NS_DECL_ISUPPORTS
+    
+  NS_DECL_NSIMSGACCOUNT
+  // nsIShutdownListener
 
-nsresult
-NS_NewMsgAccount(const nsIID& iid, void **result);
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
+private:
+  char *m_accountKey;
+  nsIPref *m_prefs;
+  nsCOMPtr<nsIMsgIncomingServer> m_incomingServer;
 
-NS_END_EXTERN_C
+  nsCOMPtr<nsIMsgIdentity> m_defaultIdentity;
+  nsCOMPtr<nsISupportsArray> m_identities;
+
+  nsresult getPrefService();
+  nsresult createIncomingServer();
+  nsresult createIdentities();
+};
+

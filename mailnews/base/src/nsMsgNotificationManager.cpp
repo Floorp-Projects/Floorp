@@ -53,24 +53,7 @@ nsIRDFResource* nsMsgNotificationManager::kNC_NewMessages = nsnull;
 
 #define NC_RDF_NEWMESSAGES		"http://home.netscape.com/NC-rdf#MsgNewMessages"
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgNotificationManager(const nsIID& iid, void **result)
-{
-	nsresult rv;
-	nsMsgNotificationManager *notificationManager = new nsMsgNotificationManager();
-	if(!notificationManager)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	rv = notificationManager->Init();
-
-	if(!NS_SUCCEEDED(rv))
-		return rv;
-	return notificationManager->QueryInterface(iid, result);
-}
-
-NS_END_EXTERN_C
 
 nsMsgNotificationManager::nsMsgNotificationManager()
 {

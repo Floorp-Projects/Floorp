@@ -17,22 +17,11 @@
  */
 
 #include "nsMessengerBootstrap.h"
-#include "nsIAppShellComponent.h"
 #include "nsCOMPtr.h"
 
 #include "nsDOMCID.h"
 
-class nsMessengerBootstrap : public nsIAppShellComponent {
-  
-public:
-  nsMessengerBootstrap();
-  virtual ~nsMessengerBootstrap();
-  
-  NS_DECL_ISUPPORTS
-  
-  NS_DECL_NSIAPPSHELLCOMPONENT
-  
-};
+
 
 NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsCOMTypeInfo<nsIAppShellComponent>::GetIID())
 
@@ -74,17 +63,4 @@ nsMessengerBootstrap::Shutdown()
 	return finalrv;
 }
 
-nsresult
-NS_NewMessengerBootstrap(const nsIID &aIID, void ** msgboot)
-{
-  if (!msgboot) return NS_ERROR_NULL_POINTER;
-  
-  nsMessengerBootstrap *bootstrap =
-    new nsMessengerBootstrap();
-
-  if (!bootstrap) return NS_ERROR_OUT_OF_MEMORY;
-
-  
-  return bootstrap->QueryInterface(aIID, msgboot);
-}
 

@@ -182,5 +182,4 @@ protected:
 
 };
 
-PR_EXTERN(nsresult)
-NS_NewMsgFolderDataSource(const nsIID& iid, void **result);
+

@@ -297,20 +297,5 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyFolderLoaded(nsIFolder *folder)
 
 }
 
-nsresult
-NS_NewMsgMailSession(const nsIID& iid, void **result)
-{
-  if (!result) return NS_ERROR_NULL_POINTER;
-  
-  nsMsgMailSession *mailSession = new nsMsgMailSession;
-  if (!mailSession) return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult rv = mailSession->Init();
-  if(NS_FAILED(rv))
-  {
-	  delete mailSession;
-	  return rv;
-  }
-  return mailSession->QueryInterface(iid, result);
-}
+
 

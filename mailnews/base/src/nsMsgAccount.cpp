@@ -39,33 +39,6 @@ static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 
-class nsMsgAccount : public nsIMsgAccount,
-                     public nsIShutdownListener
-{
-  
-public:
-  nsMsgAccount();
-  virtual ~nsMsgAccount();
-   
-  NS_DECL_ISUPPORTS
-    
-  NS_DECL_NSIMSGACCOUNT
-  // nsIShutdownListener
-
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
-  
-private:
-  char *m_accountKey;
-  nsIPref *m_prefs;
-  nsCOMPtr<nsIMsgIncomingServer> m_incomingServer;
-
-  nsCOMPtr<nsIMsgIdentity> m_defaultIdentity;
-  nsCOMPtr<nsISupportsArray> m_identities;
-
-  nsresult getPrefService();
-  nsresult createIncomingServer();
-  nsresult createIdentities();
-};
 
 
 
@@ -424,15 +397,4 @@ nsMsgAccount::OnShutdown(const nsCID& aClass, nsISupports *service)
   return NS_OK;
 }
 
-nsresult
-NS_NewMsgAccount(const nsIID& iid, void **result)
-{
-  if (!result) return NS_ERROR_NULL_POINTER;
-  
-  nsMsgAccount *account = new nsMsgAccount;
-  if (!account) return NS_ERROR_OUT_OF_MEMORY;
-  
-  return account->QueryInterface(iid, result);
-}
 
- 

@@ -25,18 +25,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgStatusFeedback(const nsIID& iid, void **result)
-{
-	nsMsgStatusFeedback *statusFeedback = new nsMsgStatusFeedback();
-	if(!statusFeedback)
-		return NS_ERROR_OUT_OF_MEMORY;
-	return statusFeedback->QueryInterface(iid, result);
-}
-
-NS_END_EXTERN_C
 
 nsMsgStatusFeedback::nsMsgStatusFeedback()
 {

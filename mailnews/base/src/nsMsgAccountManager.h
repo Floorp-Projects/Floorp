@@ -18,6 +18,10 @@
 
 #include "nscore.h"
 #include "nsIMsgAccountManager.h"
+#include "nsCOMPtr.h"
+#include "nsHashtable.h"
+#include "nsISmtpServer.h"
+#include "nsIPref.h"
 
 /*
  * some platforms (like Windows and Mac) use a map file, because of
@@ -47,10 +51,137 @@
 
 #endif /* XP_UNIX || XP_BEOS */
 
+class nsMsgAccountManager : public nsIMsgAccountManager,
+                            public nsIShutdownListener
+{
+public:
 
-NS_BEGIN_EXTERN_C
+  nsMsgAccountManager();
+  virtual ~nsMsgAccountManager();
+  
+  NS_DECL_ISUPPORTS
 
-nsresult
-NS_NewMsgAccountManager(const nsIID& iid, void **result);
+  /* nsIShutdownListener methods */
 
-NS_END_EXTERN_C
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
+  /* nsIMsgAccountManager methods */
+  
+  NS_DECL_NSIMSGACCOUNTMANAGER
+  
+  //Add/remove an account to/from the Biff Manager if it has Biff turned on.
+  nsresult AddServerToBiff(nsIMsgIncomingServer *account);
+  nsresult RemoveServerFromBiff(nsIMsgIncomingServer *account);
+private:
+
+  PRBool m_accountsLoaded;
+  PRBool m_alreadySetNntpDefaultLocalPath;
+  PRBool m_alreadySetImapDefaultLocalPath;
+  
+  nsISupportsArray *m_accounts;
+  nsHashtable m_identities;
+  nsHashtable m_incomingServers;
+  nsCOMPtr<nsIMsgAccount> m_defaultAccount;
+
+  nsCAutoString accountKeyList;
+  
+  /* internal creation routines - updates m_identities and m_incomingServers */
+  nsresult createKeyedAccount(const char* key,
+                              nsIMsgAccount **_retval);
+  nsresult createKeyedServer(const char*key,
+                             const char* type,
+                             nsIMsgIncomingServer **_retval);
+
+  nsresult createKeyedIdentity(const char* key,
+                               nsIMsgIdentity **_retval);
+  
+  // hash table enumerators
+
+
+  //
+  static PRBool hashElementToArray(nsHashKey *aKey, void *aData,
+                                   void *closure);
+
+  // called by EnumerateRemove to release all elements
+  static PRBool hashElementRelease(nsHashKey *aKey, void *aData,
+                                   void *closure);
+
+  // remove all of the servers from the Biff Manager
+  static PRBool removeServerFromBiff(nsHashKey *aKey, void *aData,
+                                     void *closure);
+
+  //
+  // account enumerators
+  // ("element" is always an account)
+  //
+  
+  // append the account keys to the given string
+  static PRBool getAccountList(nsISupports *aKey, void *aData);
+
+  // find the identities that correspond to the given server
+  static PRBool findIdentitiesForServer(nsISupports *element, void *aData);
+
+  // find the servers that correspond to the given identity
+  static PRBool findServersForIdentity (nsISupports *element, void *aData);
+
+  static PRBool findServerIndexByServer(nsISupports *element, void *aData);
+  // find the account with the given key
+  static PRBool findAccountByKey (nsISupports *element, void *aData);
+
+  static PRBool findAccountByServerKey (nsISupports *element, void *aData);
+
+  // load up the servers into the given nsISupportsArray
+  static PRBool getServersToArray(nsISupports *element, void *aData);
+
+  // load up the identities into the given nsISupportsArray
+  static PRBool getIdentitiesToArray(nsISupports *element, void *aData);
+
+  // add identities if they don't alreadby exist in the given nsISupportsArray
+  static PRBool addIdentityIfUnique(nsISupports *element, void *aData);
+
+  //
+  // server enumerators
+  // ("element" is always a server)
+  //
+  
+  // find the server given by {username, hostname, type}
+  static PRBool findServer(nsISupports *aElement, void *data);
+
+  // write out the server's cache through the given folder cache
+  static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
+  static PRBool closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
+
+  // methods for migration / upgrading
+  nsresult MigrateIdentity(nsIMsgIdentity *identity);
+  nsresult MigrateSmtpServer(nsISmtpServer *server);
+  nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
+  nsresult SetNewsCcAndFccValues(nsIMsgIdentity *identity);
+  nsresult SetMailCcAndFccValues(nsIMsgIdentity *identity);
+   
+  nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
+  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname);
+  
+  nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostname);
+  
+  nsresult MigratePopAccount(nsIMsgIdentity *identity);
+  
+  nsresult CreateLocalMailAccount(nsIMsgIdentity *identity);
+  nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
+  nsresult MigrateOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
+  
+  nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
+  nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec &newsrcfile);
+
+  nsresult ProceedWithMigration(PRInt32 oldMailType);
+  
+  static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
+  static char *getUniqueAccountKey(const char* prefix,
+                                   nsISupportsArray *accounts);
+
+  nsresult Convert4XUri(const char *old_uri, const char *default_folder_name, char **new_uri);
+  
+  nsresult getPrefService();
+  nsIPref *m_prefs;
+};
+

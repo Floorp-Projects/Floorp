@@ -57,12 +57,7 @@ protected:
 
 };
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgStatusFeedback(const nsIID& iid, void **result);
-
-NS_END_EXTERN_C
 
 
 #endif // _nsMsgStatusFeedback_h

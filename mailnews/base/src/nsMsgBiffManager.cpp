@@ -19,18 +19,7 @@
 #include "nsMsgBiffManager.h"
 #include "nsCRT.h"
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgBiffManager(const nsIID& iid, void **result)
-{
-	nsMsgBiffManager *biffManager = new nsMsgBiffManager();
-	if(!biffManager)
-		return NS_ERROR_OUT_OF_MEMORY;
-	return biffManager->QueryInterface(iid, result);
-}
-
-NS_END_EXTERN_C
 
 NS_IMPL_ADDREF(nsMsgBiffManager)
 NS_IMPL_RELEASE(nsMsgBiffManager)

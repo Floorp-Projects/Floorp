@@ -21,17 +21,50 @@
 
 #include "nsCom.h"
 #include "nscore.h"
+#include "nsIMessenger.h"
+#include "nsCOMPtr.h"
+#include "nsITransactionManager.h"
+#include "nsIDocumentLoaderObserver.h"
+#include "nsFileSpec.h"
+#include "nsIWebShell.h"
+
+class nsMessenger : public nsIMessenger
+{
+  
+public:
+  nsMessenger();
+  virtual ~nsMessenger();
+
+	NS_DECL_ISUPPORTS
+  
+	NS_DECL_NSIMESSENGER
+
+protected:
+	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
+	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
+					   nsISupportsArray *arguments);
+	nsresult DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markRead);
+	nsresult DoMarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markFlagged);
+private:
+  
+  nsString mId;
+  void *mScriptObject;
+  nsCOMPtr<nsITransactionManager> mTxnMgr;
+
+  /* rhp - need this to drive message display */
+  nsIDOMWindow       *mWindow;
+  nsIWebShell        *mWebShell;
+
+  nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
+  // mscott: temporary variable used to support running urls through the 'Demo' menu....
+  nsFileSpec m_folderPath; 
+  void InitializeFolderRoot();
+};
 
 #define NS_MESSENGER_CID \
 { /* 3f181950-c14d-11d2-b7f2-00805f05ffa5 */      \
   0x3f181950, 0xc14d, 0x11d2,											\
     {0xb7, 0xf2, 0x0, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
 
-NS_BEGIN_EXTERN_C
-
-nsresult
-NS_NewMessenger(const nsIID &aIID, void **);
-
-NS_END_EXTERN_C
 
 #endif

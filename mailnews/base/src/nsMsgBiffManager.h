@@ -57,12 +57,7 @@ protected:
 	nsVoidArray *mBiffArray;
 };
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMsgBiffManager(const nsIID& iid, void **result);
-
-NS_END_EXTERN_C
 
 #endif
 

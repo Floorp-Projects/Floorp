@@ -23,6 +23,7 @@
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"
+#include "nsIAppShellComponent.h"
 
 #define NS_MESSENGERBOOTSTRAP_CID                 \
 { /* 4a85a5d0-cddd-11d2-b7f6-00805f05ffa5 */      \
@@ -30,10 +31,17 @@
   {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
 
 
-NS_BEGIN_EXTERN_C
+class nsMessengerBootstrap : public nsIAppShellComponent {
+  
+public:
+  nsMessengerBootstrap();
+  virtual ~nsMessengerBootstrap();
+  
+  NS_DECL_ISUPPORTS
+  
+  NS_DECL_NSIAPPSHELLCOMPONENT
+  
+};
 
-nsresult NS_NewMessengerBootstrap(const nsIID &aIID, void ** inst);
-
-NS_END_EXTERN_C
 
 #endif

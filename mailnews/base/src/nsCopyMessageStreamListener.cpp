@@ -28,18 +28,6 @@
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-NS_BEGIN_EXTERN_C
-
-nsresult
-NS_NewCopyMessageStreamListener(const nsIID& iid, void **result)
-{
-	nsCopyMessageStreamListener *listener = new nsCopyMessageStreamListener();
-	if(!listener)
-		return NS_ERROR_OUT_OF_MEMORY;
-	return listener->QueryInterface(iid, result);
-}
-
-NS_END_EXTERN_C
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsCopyMessageStreamListener)

@@ -18,25 +18,7 @@
 
 #include "nsMessageView.h"
 
-NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewMessageView(const nsIID& iid, void **result)
-{
-	nsMessageView *messageView = new nsMessageView();
-	if(!messageView)
-		return NS_ERROR_OUT_OF_MEMORY;
-	nsresult rv = messageView->Init();
-	if(NS_FAILED(rv))
-	{
-		delete messageView;
-		return rv;
-	}
-
-	return messageView->QueryInterface(iid, result);
-}
-
-NS_END_EXTERN_C
 
 NS_IMPL_ISUPPORTS(nsMessageView, nsCOMTypeInfo<nsIMessageView>::GetIID())
 

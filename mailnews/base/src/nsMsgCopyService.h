@@ -21,6 +21,91 @@
 
 #include "nscore.h"
 #include "nsIMsgCopyService.h"
+#include "nsCOMPtr.h"
+#include "nsIMsgFolder.h"
+#include "nsIMessage.h"
+
+typedef enum _nsCopyRequestType
+{
+    nsCopyMessagesType = 0x0,
+    nsCopyFileMessageType = 0x1
+} nsCopyRequestType;
+
+class nsCopyRequest;
+
+class nsCopySource
+{
+public:
+    nsCopySource();
+    nsCopySource(nsIMsgFolder* srcFolder);
+    ~nsCopySource();
+    void AddMessage(nsIMessage* aMsg);
+
+    nsCOMPtr<nsIMsgFolder> m_msgFolder;
+    nsCOMPtr<nsISupportsArray> m_messageArray;
+    PRBool m_processed;
+};
+
+class nsCopyRequest 
+{
+public:
+    nsCopyRequest();
+    ~nsCopyRequest();
+
+    nsresult Init(nsCopyRequestType type, nsISupports* aSupport,
+                  nsIMsgFolder* dstFolder,
+                  PRBool bVal, nsIMsgCopyServiceListener* listener,
+                  nsITransactionManager* txnMgr);
+    nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
+
+    nsCOMPtr<nsISupports> m_srcSupport; // ui source folder or file spec
+    nsCOMPtr<nsIMsgFolder> m_dstFolder;
+    nsCOMPtr<nsITransactionManager> m_txnMgr;
+    nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
+    nsCopyRequestType m_requestType;
+    PRBool m_isMoveOrDraftOrTemplate;
+    PRBool m_processed;
+    nsVoidArray m_copySourceArray; // array of nsCopySource
+};
+
+class nsMsgCopyService : public nsIMsgCopyService
+{
+public:
+	nsMsgCopyService();
+	virtual ~nsMsgCopyService();
+	
+	NS_DECL_ISUPPORTS 
+
+	// nsIMsgCopyService interface
+	NS_IMETHOD CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
+							nsISupportsArray* messages,
+							nsIMsgFolder* dstFolder,
+							PRBool isMove,
+                            nsIMsgCopyServiceListener* listener,
+							nsITransactionManager* txnMgr);
+
+	NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
+                               nsIMsgFolder* dstFolder,
+                               nsIMessage* msgToReplace,
+                               PRBool isDraftOrTemplate,
+                               nsIMsgCopyServiceListener* listener,
+                               nsITransactionManager* txnMgr);
+
+	NS_IMETHOD NotifyCompletion(nsISupports* aSupport, /* store src folder */
+								nsIMsgFolder* dstFolder,
+                                nsresult result);
+
+
+private:
+
+    nsresult ClearRequest(nsCopyRequest* aRequest, nsresult rv);
+    nsresult DoCopy(nsCopyRequest* aRequest);
+    nsresult DoNextCopy();
+    nsCopyRequest* FindRequest(nsISupports* aSupport, nsIMsgFolder* dstFolder);
+
+    nsVoidArray m_copyRequests;
+};
+
 
 NS_BEGIN_EXTERN_C
 

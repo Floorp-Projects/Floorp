@@ -22,18 +22,72 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "nsIID.h"
+#include "nsMsgRDFDataSource.h"
+#include "nsCOMPtr.h"
+#include "nsIMsgAccountManager.h"
 
 /* {3f989ca4-f77a-11d2-969d-006008948010} */
 #define NS_MSGACCOUNTMANAGERDATASOURCE_CID \
   {0x3f989ca4, 0xf77a, 0x11d2, \
     {0x96, 0x9d, 0x00, 0x60, 0x08, 0x94, 0x80, 0x10}}
 
-NS_BEGIN_EXTERN_C
+class nsMsgAccountManagerDataSource : public nsMsgRDFDataSource
+{
 
-nsresult
-NS_NewMsgAccountManagerDataSource(const nsIID& iid, void ** result);
+public:
+    
+  nsMsgAccountManagerDataSource();
+  virtual ~nsMsgAccountManagerDataSource();
+  virtual nsresult Init();
+
+  // service manager shutdown method
+
+  // RDF datasource methods
+  
+  /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
+  NS_IMETHOD GetTarget(nsIRDFResource *source,
+                       nsIRDFResource *property,
+                       PRBool aTruthValue,
+                       nsIRDFNode **_retval);
+
+  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
+  NS_IMETHOD GetTargets(nsIRDFResource *source,
+                        nsIRDFResource *property,
+                        PRBool aTruthValue,
+                        nsISimpleEnumerator **_retval);
+  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
+  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsISimpleEnumerator **_retval);
+
+protected:
+
+  static nsIRDFResource* kNC_Name;
+  static nsIRDFResource* kNC_NameSort;
+  static nsIRDFResource* kNC_PageTag;
+  static nsIRDFResource* kNC_Child;
+  static nsIRDFResource* kNC_AccountRoot;
+  
+  static nsIRDFResource* kNC_Account;
+  static nsIRDFResource* kNC_Server;
+  static nsIRDFResource* kNC_Identity;
+  static nsIRDFResource* kNC_Settings;
+
+  static nsIRDFResource* kNC_PageTitleMain;
+  static nsIRDFResource* kNC_PageTitleServer;
+  static nsIRDFResource* kNC_PageTitleCopies;
+  static nsIRDFResource* kNC_PageTitleAdvanced;
+  static nsIRDFResource* kNC_PageTitleSMTP;
+
+  static nsrefcnt gAccountManagerResourceRefCnt;
+
+private:
+  // enumeration function to convert each server (element)
+  // to an nsIRDFResource and append it to the array (in data)
+  static PRBool createServerResources(nsISupports *element, void *data);
+  
+  nsCOMPtr<nsIMsgAccountManager> mAccountManager;
+
+};
 
 
-NS_END_EXTERN_C
 
 #endif

@@ -18,14 +18,11 @@
 
 #include "prsystem.h"
 
-#include "nsIMessenger.h"
 #include "nsMessenger.h"
 
 /* rhp - for access to webshell */
-#include "nsCOMPtr.h"
 #include "nsIDOMWindow.h"
 #include "nsIBrowserWindow.h"
-#include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsAppShellCIDs.h"
@@ -36,7 +33,6 @@
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDocumentLoaderObserver.h"
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
@@ -44,7 +40,6 @@
 #include "nsINoIncomingServer.h"
 #include "nsIMsgMessageService.h"
 #include "nsIFileSpecWithUI.h"
-#include "nsFileSpec.h"
 #include "nsFileStream.h"
 
 #include "nsIMessage.h"
@@ -72,7 +67,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsTransactionManagerCID.h"
-#include "nsITransactionManager.h"
 
 #include "nsIMsgSendLater.h" 
 #include "nsMsgCompCID.h"
@@ -149,38 +143,6 @@ public:
 };
 
 
-class nsMessenger : public nsIMessenger
-{
-  
-public:
-  nsMessenger();
-  virtual ~nsMessenger();
-
-	NS_DECL_ISUPPORTS
-  
-	NS_DECL_NSIMESSENGER
-
-protected:
-	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
-	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
-					   nsISupportsArray *arguments);
-	nsresult DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markRead);
-	nsresult DoMarkMessagesFlagged(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markFlagged);
-private:
-  
-  nsString mId;
-  void *mScriptObject;
-  nsCOMPtr<nsITransactionManager> mTxnMgr;
-
-  /* rhp - need this to drive message display */
-  nsIDOMWindow       *mWindow;
-  nsIWebShell        *mWebShell;
-
-  nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
-  // mscott: temporary variable used to support running urls through the 'Demo' menu....
-  nsFileSpec m_folderPath; 
-  void InitializeFolderRoot();
-};
 
 static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
 {
@@ -303,19 +265,6 @@ nsMessenger::GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *fol
 	DoCommand(db, NC_RDF_GETNEWMESSAGES, folderArray, nsnull);
 
 	return rv;
-}
-
-extern "C"
-nsresult
-NS_NewMessenger(const nsIID &aIID, void **aResult)
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-
-  nsMessenger *appcore = new nsMessenger();
-  if (appcore)
-    return appcore->QueryInterface(aIID, (void **)aResult);
-  else
-	return NS_ERROR_NOT_INITIALIZED;
 }
 
 

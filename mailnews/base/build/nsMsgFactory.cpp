@@ -19,6 +19,8 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "msgCore.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsMsgBaseCID.h"
 #include "pratom.h"
 #include "nsIComponentManager.h"
@@ -78,7 +80,6 @@ static NS_DEFINE_CID(kCMsgGroupRecordCID, NS_MSGGROUPRECORD_CID);
 
 static NS_DEFINE_CID(kMailNewsFolderDataSourceCID, NS_MAILNEWSFOLDERDATASOURCE_CID);
 static NS_DEFINE_CID(kMailNewsMessageDataSourceCID, NS_MAILNEWSMESSAGEDATASOURCE_CID);
-static NS_DEFINE_CID(kCMessageViewDataSourceCID, NS_MESSAGEVIEWDATASOURCE_CID);
 
 // account manager stuff
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
@@ -110,279 +111,325 @@ static NS_DEFINE_CID(kMsgStatusFeedbackCID, NS_MSGSTATUSFEEDBACK_CID);
 
 //MessageView
 static NS_DEFINE_CID(kMessageViewCID, NS_MESSAGEVIEW_CID);
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
 
-class nsMsgFactory : public nsIFactory
-{   
+
+// private factory declarations for each component we know how to produce
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerBootstrap)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlListenerManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMailSession, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessenger)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccountManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccount)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgIdentity)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgFolderDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgMessageDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAccountManagerDataSource)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgBiffManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgNotificationManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCopyMessageStreamListener)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCopyService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFolderCache)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgStatusFeedback)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessageView,Init)
+
+// Module implementation for the sample library
+class nsMsgBaseModule : public nsIModule
+{
 public:
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
+    nsMsgBaseModule();
+    virtual ~nsMsgBaseModule();
 
-  nsMsgFactory(const nsCID &aClass,
-               const char* aClassName,
-               const char* aProgID);
+    NS_DECL_ISUPPORTS
 
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-  NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIMODULE
 
 protected:
-  virtual ~nsMsgFactory();   
+    nsresult Initialize();
 
-  nsCID mClassID;
-  char* mClassName;
-  char* mProgID;
-};   
+    void Shutdown();
 
-nsMsgFactory::nsMsgFactory(const nsCID &aClass,
-                           const char* aClassName,
-                           const char* aProgID)
-  : mClassID(aClass),
-    mClassName(nsCRT::strdup(aClassName)),
-    mProgID(nsCRT::strdup(aProgID))
+    PRBool mInitialized;
+
+    nsCOMPtr<nsIGenericFactory> mMessengerBootstrapFactory;
+    nsCOMPtr<nsIGenericFactory> mUrlListenerManagerFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgMailSessionFactory;
+    nsCOMPtr<nsIGenericFactory> mMessengerFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgAccountManagerFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgAccountFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgIdentityFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgFolderDataSourceFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgMessageDataSourceFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgAccountManagerDataSourceFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgFilterServiceFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgBiffManagerFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgNotificationManagerFactory;
+    nsCOMPtr<nsIGenericFactory> mCopyMessageStreamListenerFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgCopyServiceFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgFolderCacheFactory;
+    nsCOMPtr<nsIGenericFactory> mMsgStatusFeedbackFactory;
+    nsCOMPtr<nsIGenericFactory> mMessageViewFactory;
+};
+
+nsMsgBaseModule::nsMsgBaseModule()
+    : mInitialized(PR_FALSE)
 {
-	NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
+}
 
-}   
-
-nsMsgFactory::~nsMsgFactory()   
+nsMsgBaseModule::~nsMsgBaseModule()
 {
+    Shutdown();
+}
 
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-  
-	PL_strfree(mClassName);
-	PL_strfree(mProgID);
-}   
+NS_IMPL_ISUPPORTS(nsMsgBaseModule, NS_GET_IID(nsIModule))
 
-nsresult
-nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL)  
-    return NS_ERROR_NULL_POINTER;  
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-    *aResult = (void *)NS_STATIC_CAST(nsISupports*,this);
-  else if (aIID.Equals(nsCOMTypeInfo<nsIFactory>::GetIID()))   
-    *aResult = (void *)NS_STATIC_CAST(nsIFactory*,this);
-
-  if (*aResult == NULL)
-    return NS_NOINTERFACE;
-
-  NS_ADDREF_THIS(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsMsgFactory)
-NS_IMPL_RELEASE(nsMsgFactory)
-
-nsresult
-nsMsgFactory::CreateInstance(nsISupports * aOuter,
-                             const nsIID &aIID,
-                             void **aResult)  
+// Perform our one-time intialization for this module
+nsresult nsMsgBaseModule::Initialize()
 {
-  nsresult rv = NS_ERROR_NO_INTERFACE;
-	if (aResult == NULL)  
-		return NS_ERROR_NULL_POINTER;  
+    if (mInitialized)
+        return NS_OK;
 
-	*aResult = NULL;  
-  
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
 
-	// ClassID check happens here
-	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
-  if (mClassID.Equals(kCMsgFolderEventCID)) 
-	{
-		NS_NOTREACHED("hello? what happens here?");
-		rv = NS_OK;
-	}
-	else if (mClassID.Equals(kCMessengerBootstrapCID)) 
-	{
-    rv = NS_NewMessengerBootstrap(aIID, aResult);
-	}
-	else if (mClassID.Equals(kCUrlListenerManagerCID))
-	{
-		nsUrlListenerManager * listener = nsnull;
-		listener = new nsUrlListenerManager();
-		if (listener == nsnull)
-			rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv = listener->QueryInterface(aIID, aResult);
-      if (NS_FAILED(rv))
-        delete listener;
+// Shutdown this module, releasing all of the module resources
+void nsMsgBaseModule::Shutdown()
+{
+    // Release the factory object
+    mMessengerBootstrapFactory = null_nsCOMPtr();
+    mUrlListenerManagerFactory = null_nsCOMPtr();
+    mMsgMailSessionFactory = null_nsCOMPtr();
+    mMessengerFactory = null_nsCOMPtr();
+    mMsgAccountManagerFactory = null_nsCOMPtr();
+    mMsgAccountFactory = null_nsCOMPtr();
+    mMsgIdentityFactory = null_nsCOMPtr();
+    mMsgFolderDataSourceFactory = null_nsCOMPtr();
+    mMsgMessageDataSourceFactory = null_nsCOMPtr();
+    mMsgAccountManagerDataSourceFactory = null_nsCOMPtr();
+    mMsgFilterServiceFactory = null_nsCOMPtr();
+    mMsgBiffManagerFactory = null_nsCOMPtr();
+    mMsgNotificationManagerFactory = null_nsCOMPtr();
+    mCopyMessageStreamListenerFactory = null_nsCOMPtr();
+    mMsgCopyServiceFactory = null_nsCOMPtr();
+    mMsgFolderCacheFactory = null_nsCOMPtr();
+    mMsgStatusFeedbackFactory = null_nsCOMPtr();
+    mMessageViewFactory = null_nsCOMPtr();
+}
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP nsMsgBaseModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj)
+        return NS_ERROR_INVALID_POINTER;
+
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) 
+    {
+        rv = Initialize();
+        if (NS_FAILED(rv)) // Initialization failed! yikes!
+            return rv;
     }
-	}
-	else if (mClassID.Equals(kCMsgMailSessionCID))
-	{
-		rv = NS_NewMsgMailSession(aIID, aResult);
-	}
-	else if (mClassID.Equals(kCMessengerCID)) 
-	{
-		rv = NS_NewMessenger(aIID, aResult);
-	}
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
 
-  else if (mClassID.Equals(kMsgAccountManagerCID))
-  {
-    rv = NS_NewMsgAccountManager(aIID, aResult);
-  }
-  
-  else if (mClassID.Equals(kMsgAccountCID))
-  {
-    rv = NS_NewMsgAccount(aIID, aResult);
-  }
-  
-  else if (mClassID.Equals(kMsgIdentityCID)) {
-    nsMsgIdentity* identity = new nsMsgIdentity();
+    if (aClass.Equals(kCMessengerBootstrapCID))
+    {
+        if (!mMessengerBootstrapFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMessengerBootstrapFactory), &nsMessengerBootstrapConstructor);
+        fact = mMessengerBootstrapFactory;
+    }
+    else if (aClass.Equals(kCUrlListenerManagerCID))
+    {
+        if (!mUrlListenerManagerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mUrlListenerManagerFactory), &nsUrlListenerManagerConstructor);
+        fact = mUrlListenerManagerFactory;
+    }
+    else if (aClass.Equals(kCMsgMailSessionCID))
+    {
+        if (!mMsgMailSessionFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgMailSessionFactory), &nsMsgMailSessionConstructor);
+        fact = mMsgMailSessionFactory;
+    }
+    else if (aClass.Equals(kCMessengerCID))
+    {
+        if (!mMessengerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMessengerFactory), &nsMessengerConstructor);
+        fact = mMessengerFactory;
+    }
+
+    else if (aClass.Equals(kMsgAccountManagerCID))
+    {
+        if (!mMsgAccountManagerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgAccountManagerFactory), &nsMsgAccountManagerConstructor);
+        fact = mMsgAccountManagerFactory;
+    }
+    else if (aClass.Equals(kMsgAccountCID))
+    {
+        if (!mMsgAccountFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgAccountFactory), &nsMsgAccountConstructor);
+        fact = mMsgAccountFactory;
+    }
+    else if (aClass.Equals(kMsgIdentityCID))
+    {
+        if (!mMsgIdentityFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgIdentityFactory), &nsMsgIdentityConstructor);
+        fact = mMsgIdentityFactory;
+    }
+    else if (aClass.Equals(kMailNewsFolderDataSourceCID)) 
+    {
+        if (!mMsgFolderDataSourceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgFolderDataSourceFactory), &nsMsgFolderDataSourceConstructor);
+        fact = mMsgFolderDataSourceFactory;
+    }
+    else if (aClass.Equals(kMailNewsMessageDataSourceCID)) 
+    {
+        if (!mMsgMessageDataSourceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgMessageDataSourceFactory), &nsMsgMessageDataSourceConstructor);
+        fact = mMsgMessageDataSourceFactory;
+    }
+    else if (aClass.Equals(kMsgAccountManagerDataSourceCID)) 
+    {
+        if (!mMsgAccountManagerDataSourceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgAccountManagerDataSourceFactory), &nsMsgAccountManagerDataSourceConstructor);
+        fact = mMsgAccountManagerDataSourceFactory;
+    }
+    else if (aClass.Equals(kMsgFilterServiceCID)) 
+    {
+        if (!mMsgFilterServiceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgFilterServiceFactory), &nsMsgFilterServiceConstructor);
+        fact = mMsgFilterServiceFactory;
+    }
+    else if (aClass.Equals(kMsgBiffManagerCID)) 
+    {
+        if (!mMsgBiffManagerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgBiffManagerFactory), &nsMsgBiffManagerConstructor);
+        fact = mMsgBiffManagerFactory;
+    }
+    else if (aClass.Equals(kMsgNotificationManagerCID)) 
+    {
+        if (!mMsgNotificationManagerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgNotificationManagerFactory), &nsMsgNotificationManagerConstructor);
+        fact = mMsgNotificationManagerFactory;
+    }
+    else if (aClass.Equals(kCopyMessageStreamListenerCID)) 
+    {
+        if (!mCopyMessageStreamListenerFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mCopyMessageStreamListenerFactory), &nsCopyMessageStreamListenerConstructor);
+        fact = mCopyMessageStreamListenerFactory;
+    }
+    else if (aClass.Equals(kMsgCopyServiceCID)) 
+    {
+        if (!mMsgCopyServiceFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgCopyServiceFactory), &nsMsgCopyServiceConstructor);
+        fact = mMsgCopyServiceFactory;
+    }
+    else if (aClass.Equals(kMsgFolderCacheCID)) 
+    {
+        if (!mMsgFolderCacheFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgFolderCacheFactory), &nsMsgFolderCacheConstructor);
+        fact = mMsgFolderCacheFactory;
+    }
+    else if (aClass.Equals(kMsgStatusFeedbackCID)) 
+    {
+        if (!mMsgStatusFeedbackFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMsgStatusFeedbackFactory), &nsMsgStatusFeedbackConstructor);
+        fact = mMsgStatusFeedbackFactory;
+    }
+    else if (aClass.Equals(kMessageViewCID)) 
+    {
+        if (!mMessageViewFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMessageViewFactory), &nsMessageViewConstructor);
+        fact = mMessageViewFactory;
+    }
     
-    if (identity == nsnull)
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv = identity->QueryInterface(aIID, aResult);
-      if (NS_FAILED(rv))
-        delete identity;
-    }
-  }
-#if 0
-  else if (mClassID.Equals(kMsgIncomingServerCID)) {
-    nsMsgIncomingServer *server = new nsMsgIncomingServer();
-    if (!server)
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv = server->QueryInterface(aIID, aResult);
-      if (NS_FAILED(rv))
-        delete server;
-    }
-  }
-#endif
-	else if (mClassID.Equals(kMailNewsFolderDataSourceCID)) 
-	{
-		rv = NS_NewMsgFolderDataSource(aIID, aResult);
-	}
-	else if (mClassID.Equals(kMailNewsMessageDataSourceCID)) 
-	{
-		rv = NS_NewMsgMessageDataSource(aIID, aResult);
-	}
- 	else if (mClassID.Equals(kCMessageViewDataSourceCID))
-	{
-		rv = NS_NewMessageViewDataSource(aIID, aResult);
-	}
+    
+    if (fact)
+        rv = fact->QueryInterface(aIID, r_classObj);
 
-  // account manager RDF datasources
-  else if (mClassID.Equals(kMsgAccountManagerDataSourceCID)) {
-    rv = NS_NewMsgAccountManagerDataSource(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgFilterServiceCID)) {
-    rv = NS_NewMsgFilterService(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgBiffManagerCID)){
-    rv = NS_NewMsgBiffManager(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgNotificationManagerCID)){
-    rv = NS_NewMsgNotificationManager(aIID, aResult);
-  }
-  else if (mClassID.Equals(kCopyMessageStreamListenerCID)){
-    rv = NS_NewCopyMessageStreamListener(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgCopyServiceCID)) {
-      rv = NS_NewMsgCopyService(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMsgFolderCacheCID)) {
-	  nsMsgFolderCache * folderCache = nsnull;
-	  folderCache = new nsMsgFolderCache ();
-	  if (folderCache == nsnull)
-		rv = NS_ERROR_OUT_OF_MEMORY;
-		else 
-		{
-		  rv = folderCache->QueryInterface(aIID, aResult);
-		  if (NS_FAILED(rv))
-			delete folderCache;
-		}
-  }
-  else if (mClassID.Equals(kMsgStatusFeedbackCID)) {
-      rv = NS_NewMsgStatusFeedback(aIID, aResult);
-  }
-  else if (mClassID.Equals(kMessageViewCID)) {
-      rv = NS_NewMessageView(aIID, aResult);
-  }
-
-  if (NS_SUCCEEDED(rv))
-    PR_AtomicIncrement(&g_InstanceCount);
-  return rv;
-}  
-
-nsresult
-nsMsgFactory::LockFactory(PRBool aLock)  
-{  
-	if (aLock)
-		PR_AtomicIncrement(&g_LockCount); 
-	else
-		PR_AtomicDecrement(&g_LockCount);
-
-	return NS_OK;
-}  
-
-////////////////////////////////////////////////////////////////////////////////
-
-// return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /*aServMgr */,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-	if (nsnull == aFactory)
-		return NS_ERROR_NULL_POINTER;
-
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID);
-  if (aFactory)
-    return (*aFactory)->QueryInterface(nsCOMTypeInfo<nsIFactory>::GetIID(),
-                                       (void**)aFactory);
-  else
-    return NS_ERROR_OUT_OF_MEMORY;
+    return rv;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* /* aServMgr */)
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "Netscape Messenger Bootstrapper", &kCMessengerBootstrapCID,
+      NS_MESSENGERBOOTSTRAP_PROGID },
+    { "UrlListenerManager", &kCUrlListenerManagerCID,
+      NS_URLLISTENERMANAGER_PROGID },
+    { "Mail Session", &kCMsgMailSessionCID,
+      NS_MSGMAILSESSION_PROGID },    
+    { "Messenger DOM interaction object", &kCMessengerCID,
+      NS_MESSENGER_PROGID },
+    { "Messenger Account Manager", &kMsgAccountManagerCID,
+      NS_MSGACCOUNTMANAGER_PROGID },
+    { "Messenger User Account", &kMsgAccountCID,
+      NS_MSGACCOUNT_PROGID },
+    { "Messenger User Identity", &kMsgIdentityCID,
+      NS_MSGIDENTITY_PROGID },
+    { "Mail/News Folder Data Source", &kMailNewsFolderDataSourceCID,
+      NS_MAILNEWSFOLDERDATASOURCE_PROGID },
+    { "Mail/News Message Data Source", &kMailNewsMessageDataSourceCID,
+      NS_MAILNEWSMESSAGEDATASOURCE_PROGID},
+    { "Mail/News Account Manager Data Source", &kMsgAccountManagerDataSourceCID,
+      NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccountmanager"},
+    { "Message Filter Service", &kMsgFilterServiceCID,
+      NS_MSGFILTERSERVICE_PROGID},
+    { "Messenger Biff Manager", &kMsgBiffManagerCID,
+      NS_MSGBIFFMANAGER_PROGID},
+    { "Mail/News Notification Manager", &kMsgNotificationManagerCID,
+      NS_MSGNOTIFICATIONMANAGER_PROGID},
+    { "Mail/News CopyMessage Stream Listener", &kCopyMessageStreamListenerCID,
+      NS_COPYMESSAGESTREAMLISTENER_PROGID},
+    { "Mail/News Message Copy Service", &kMsgCopyServiceCID,
+      NS_MSGCOPYSERVICE_PROGID},
+    { "Mail/News Folder Cache", &kMsgFolderCacheCID,
+      NS_MSGFOLDERCACHE_PROGID},
+    { "Mail/News Status Feedback", &kMsgStatusFeedbackCID,
+      NS_MSGSTATUSFEEDBACK_PROGID},
+    { "Mail/News MessageView", &kMessageViewCID,
+      NS_MESSAGEVIEW_PROGID}
+
+};
+
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP nsMsgBaseModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
 {
-	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
-}
+    nsresult rv = NS_OK;
 
-////////////////////////////////////////////////////////////////////////////////
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) 
+            break;
+        cp++;
+    }
 
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
-{
-  nsresult rv;
-  nsresult finalResult = NS_OK;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // register the message folder factory
-  rv = compMgr->RegisterComponent(kCMsgFolderEventCID, 
-                                       "Folder Event",
-                                       nsnull,
-                                       path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->RegisterComponent(kCUrlListenerManagerCID,
-                                       "UrlListenerManager",
-                                       NS_URLLISTENERMANAGER_PROGID,
-                                       path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
-                                  "Netscape Messenger Bootstrapper",
-                                  NS_MESSENGERBOOTSTRAP_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if ( NS_SUCCEEDED( rv ) ) {
-    /* Add to appshell component list. */
+   /* Add to MessengerBootstrap appshell component list. */
     NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
 
     if ( NS_SUCCEEDED( rv ) ) { 
@@ -398,189 +445,61 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
       nsRegistryKey key; 
       rv = registry->AddSubtree( nsIRegistry::Common, 
                                  buffer, 
-                                 &key ); 
-    }
-  }
-  else finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kCMessengerCID,
-                                  "Messenger DOM interaction object",
-                                  NS_MESSENGER_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-
-  rv = compMgr->RegisterComponent(kMsgAccountManagerCID,
-                                  "Messenger Account Manager",
-                                  NS_MSGACCOUNTMANAGER_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-
-	
-
-  rv = compMgr->RegisterComponent(kMsgAccountCID,
-                                  "Messenger User Account",
-                                  NS_MSGACCOUNT_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kMsgIdentityCID,
-                                  "Messenger User Identity",
-                                  NS_MSGIDENTITY_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-#if 0  
-  rv = compMgr->RegisterComponent(kMsgIncomingServerCID,
-                                  "Messenger Incoming Server",
-                                  NS_MSGINCOMINGSERVER_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-#endif
-  rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
-                                  "Mail Session",
-                                  NS_MSGMAILSESSION_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  // register our RDF datasources:
-  rv = compMgr->RegisterComponent(kMailNewsFolderDataSourceCID, 
-                                  "Mail/News Folder Data Source",
-                                  NS_MAILNEWSFOLDERDATASOURCE_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  // register our RDF datasources:
-  rv = compMgr->RegisterComponent(kMailNewsMessageDataSourceCID, 
-                                  "Mail/News Message Data Source",
-                                  NS_MAILNEWSMESSAGEDATASOURCE_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
-                                  "Mail/News Message View Data Source",
-                                  NS_MESSAGEVIEWDATASOURCE_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kMsgAccountManagerDataSourceCID,
-                                  "Mail/News Account Manager Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "msgaccountmanager",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->RegisterComponent(kMsgFilterServiceCID,
-                                  "Message Filter Service",
-                                  NS_MSGFILTERSERVICE_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-  
-  rv = compMgr->RegisterComponent(kMsgBiffManagerCID,
-                                  "Messenger Biff Manager",
-                                  NS_MSGBIFFMANAGER_PROGID,
-                                  path,
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kMsgNotificationManagerCID,
-                                  "Mail/News Notification Manager",
-                                  NS_MSGNOTIFICATIONMANAGER_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kCopyMessageStreamListenerCID,
-                                  "Mail/News CopyMessage Stream Listener",
-                                  NS_COPYMESSAGESTREAMLISTENER_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kMsgCopyServiceCID,
-                                  "Mail/News Message Copy Service",
-                                  NS_MSGCOPYSERVICE_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kMsgFolderCacheCID,
-                                  "Mail/News Folder Cache",
-                                  NS_MSGFOLDERCACHE_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-	rv = compMgr->RegisterComponent(kMsgStatusFeedbackCID,
-                                  "Mail/News Status Feedback",
-                                  NS_MSGSTATUSFEEDBACK_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-	rv = compMgr->RegisterComponent(kMessageViewCID,
-                                  "Mail/News MessageView",
-                                  NS_MESSAGEVIEW_PROGID,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) finalResult = rv;
-  return finalResult;
+                                 &key );
+	}
+	  
+  return rv;
 }
 
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
+NS_IMETHODIMP nsMsgBaseModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
 {
-  nsresult rv = NS_OK;
-  nsresult finalResult = NS_OK;
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        cp++;
+    }
 
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kCUrlListenerManagerCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  
-  rv = compMgr->UnregisterComponent(kCMessengerBootstrapCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  
-  rv = compMgr->UnregisterComponent(kCMsgFolderEventCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  
-  rv = compMgr->UnregisterComponent(kCMsgMailSessionCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMailNewsFolderDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMailNewsMessageDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kCMessageViewDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  // Account Manager RDF stuff
-  rv = compMgr->UnregisterComponent(kMsgAccountManagerDataSourceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  //Biff
-  rv = compMgr->UnregisterComponent(kMsgBiffManagerCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kMsgNotificationManagerCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->UnregisterComponent(kCopyMessageStreamListenerCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->UnregisterComponent(kMsgCopyServiceCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->UnregisterComponent(kMsgFolderCacheCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->UnregisterComponent(kMsgStatusFeedbackCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  rv = compMgr->UnregisterComponent(kMessageViewCID, path);
-  if (NS_FAILED(rv)) finalResult = rv;
-
-  return finalResult;
+    return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP nsMsgBaseModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload)
+        return NS_ERROR_INVALID_POINTER;
 
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsMsgBaseModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsMsgBaseModule: Module already created.");
+
+    // Create an initialize the imap module instance
+    nsMsgBaseModule *module = new nsMsgBaseModule();
+    if (!module)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = module->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) 
+    {
+        delete module;
+        module = nsnull;
+    }
+    gModule = module;                  // WARNING: Weak Reference
+    return rv;
+}

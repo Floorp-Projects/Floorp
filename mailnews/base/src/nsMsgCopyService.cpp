@@ -17,98 +17,21 @@
  */
 
 #include "nsMsgCopyService.h"
-#include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsMsgKeyArray.h"
 #include "nspr.h"
-#include "nsIMessage.h"
-#include "nsIMsgFolder.h"
-
-typedef enum _nsCopyRequestType
-{
-    nsCopyMessagesType = 0x0,
-    nsCopyFileMessageType = 0x1
-} nsCopyRequestType;
-
-class nsCopyRequest;
-
-class nsCopySource
-{
-public:
-    nsCopySource();
-    nsCopySource(nsIMsgFolder* srcFolder);
-    ~nsCopySource();
-    void AddMessage(nsIMessage* aMsg);
-
-    nsCOMPtr<nsIMsgFolder> m_msgFolder;
-    nsCOMPtr<nsISupportsArray> m_messageArray;
-    PRBool m_processed;
-};
-
-class nsCopyRequest 
-{
-public:
-    nsCopyRequest();
-    ~nsCopyRequest();
-
-    nsresult Init(nsCopyRequestType type, nsISupports* aSupport,
-                  nsIMsgFolder* dstFolder,
-                  PRBool bVal, nsIMsgCopyServiceListener* listener,
-                  nsITransactionManager* txnMgr);
-    nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
-
-    nsCOMPtr<nsISupports> m_srcSupport; // ui source folder or file spec
-    nsCOMPtr<nsIMsgFolder> m_dstFolder;
-    nsCOMPtr<nsITransactionManager> m_txnMgr;
-    nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
-    nsCopyRequestType m_requestType;
-    PRBool m_isMoveOrDraftOrTemplate;
-    PRBool m_processed;
-    nsVoidArray m_copySourceArray; // array of nsCopySource
-};
-
-class nsMsgCopyService : public nsIMsgCopyService
-{
-public:
-	nsMsgCopyService();
-	virtual ~nsMsgCopyService();
-	
-	NS_DECL_ISUPPORTS 
-
-	// nsIMsgCopyService interface
-	NS_IMETHOD CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
-							nsISupportsArray* messages,
-							nsIMsgFolder* dstFolder,
-							PRBool isMove,
-                            nsIMsgCopyServiceListener* listener,
-							nsITransactionManager* txnMgr);
-
-	NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec,
-                               nsIMsgFolder* dstFolder,
-                               nsIMessage* msgToReplace,
-                               PRBool isDraftOrTemplate,
-                               nsIMsgCopyServiceListener* listener,
-                               nsITransactionManager* txnMgr);
-
-	NS_IMETHOD NotifyCompletion(nsISupports* aSupport, /* store src folder */
-								nsIMsgFolder* dstFolder,
-                                nsresult result);
 
 
-private:
 
-    nsresult ClearRequest(nsCopyRequest* aRequest, nsresult rv);
-    nsresult DoCopy(nsCopyRequest* aRequest);
-    nsresult DoNextCopy();
-    nsCopyRequest* FindRequest(nsISupports* aSupport, nsIMsgFolder* dstFolder);
-
-    nsVoidArray m_copyRequests;
-};
 
 // ******************** nsCopySource ******************
 // 
+
+MOZ_DECL_CTOR_COUNTER(nsCopySource);
+
 nsCopySource::nsCopySource() : m_processed(PR_FALSE)
 {
+	MOZ_COUNT_CTOR(nsCopySource);
     nsresult rv;
     rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
 }
@@ -116,6 +39,7 @@ nsCopySource::nsCopySource() : m_processed(PR_FALSE)
 nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
     m_processed(PR_FALSE)
 {
+	MOZ_COUNT_CTOR(nsCopySource);
     nsresult rv;
     rv = NS_NewISupportsArray(getter_AddRefs(m_messageArray));
     m_msgFolder = do_QueryInterface(srcFolder, &rv);
@@ -123,6 +47,7 @@ nsCopySource::nsCopySource(nsIMsgFolder* srcFolder) :
 
 nsCopySource::~nsCopySource()
 {
+	MOZ_COUNT_DTOR(nsCopySource);
 }
 
 void nsCopySource::AddMessage(nsIMessage* aMsg)
@@ -134,16 +59,22 @@ void nsCopySource::AddMessage(nsIMessage* aMsg)
 
 // ************ nsCopyRequest *****************
 // 
+
+MOZ_DECL_CTOR_COUNTER(nsCopyRequest);
+
 nsCopyRequest::nsCopyRequest() :
     m_requestType(nsCopyMessagesType),
     m_isMoveOrDraftOrTemplate(PR_FALSE),
     m_processed(PR_FALSE)
 {
+	MOZ_COUNT_CTOR(nsCopyRequest);
 }
 
 nsCopyRequest::~nsCopyRequest()
 {
-    PRInt32 j;
+ 	MOZ_COUNT_DTOR(nsCopyRequest);
+
+	PRInt32 j;
     nsCopySource* ncs;
     
     j = m_copySourceArray.Count();
@@ -187,6 +118,7 @@ nsCopyRequest::AddNewCopySource(nsIMsgFolder* srcFolder)
 // ************* nsMsgCopyService ****************
 // 
 
+
 nsMsgCopyService::nsMsgCopyService()
 {
     NS_INIT_REFCNT();
@@ -194,6 +126,7 @@ nsMsgCopyService::nsMsgCopyService()
 
 nsMsgCopyService::~nsMsgCopyService()
 {
+
     PRInt32 i;
     nsCopyRequest* copyRequest;
     

@@ -21,9 +21,7 @@
  */
 
 #include "nsMsgAccountManagerDS.h"
-#include "nsMsgRDFDataSource.h"
 
-#include "nsIMsgAccountManager.h"
 
 #include "rdf.h"
 #include "nsRDFCID.h"
@@ -32,7 +30,6 @@
 #include "nsIServiceManager.h"
 #include "nsIMsgMailSession.h"
 
-#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
 #include "nsMsgRDFUtils.h"
@@ -53,63 +50,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
 
 #define NC_RDF_ACCOUNTROOT "msgaccounts:/"
-
-class nsMsgAccountManagerDataSource : public nsMsgRDFDataSource
-{
-
-public:
-    
-  nsMsgAccountManagerDataSource();
-  virtual ~nsMsgAccountManagerDataSource();
-  virtual nsresult Init();
-
-  // service manager shutdown method
-
-  // RDF datasource methods
-  
-  /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
-  NS_IMETHOD GetTarget(nsIRDFResource *source,
-                       nsIRDFResource *property,
-                       PRBool aTruthValue,
-                       nsIRDFNode **_retval);
-
-  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
-  NS_IMETHOD GetTargets(nsIRDFResource *source,
-                        nsIRDFResource *property,
-                        PRBool aTruthValue,
-                        nsISimpleEnumerator **_retval);
-  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsISimpleEnumerator **_retval);
-
-protected:
-
-  static nsIRDFResource* kNC_Name;
-  static nsIRDFResource* kNC_NameSort;
-  static nsIRDFResource* kNC_PageTag;
-  static nsIRDFResource* kNC_Child;
-  static nsIRDFResource* kNC_AccountRoot;
-  
-  static nsIRDFResource* kNC_Account;
-  static nsIRDFResource* kNC_Server;
-  static nsIRDFResource* kNC_Identity;
-  static nsIRDFResource* kNC_Settings;
-
-  static nsIRDFResource* kNC_PageTitleMain;
-  static nsIRDFResource* kNC_PageTitleServer;
-  static nsIRDFResource* kNC_PageTitleCopies;
-  static nsIRDFResource* kNC_PageTitleAdvanced;
-  static nsIRDFResource* kNC_PageTitleSMTP;
-
-  static nsrefcnt gAccountManagerResourceRefCnt;
-
-private:
-  // enumeration function to convert each server (element)
-  // to an nsIRDFResource and append it to the array (in data)
-  static PRBool createServerResources(nsISupports *element, void *data);
-  
-  nsCOMPtr<nsIMsgAccountManager> mAccountManager;
-
-};
 
 typedef struct _serverCreationParams {
   nsISupportsArray *serverArray;
@@ -503,10 +443,4 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   return NS_OK;
 }
 
-nsresult
-NS_NewMsgAccountManagerDataSource(const nsIID& iid, void ** result)
-{
-  nsMsgAccountManagerDataSource *amds = new nsMsgAccountManagerDataSource();
-  if (!amds) return NS_ERROR_OUT_OF_MEMORY;
-  return amds->QueryInterface(iid, result);
-}
+
