@@ -142,6 +142,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsPluginDirServiceProvider.h"
+#include "nsInt64.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -5975,7 +5976,7 @@ nsPluginHostImpl::ParsePostBufferToFixHeaders(
     // this function does not make any assumption on correctness 
     // of ContentLenHeader value in this case.
 
-    newBufferLen = dataLen + newBufferLen;
+    newBufferLen = dataLen + headersLen;
     // in case there were single LFs in headers
     // reserve an extra space for CR will be added before each single LF
     int cntSingleLF = singleLF.Count();
@@ -6074,15 +6075,15 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
     NS_ASSERTION(NS_SUCCEEDED(rv), "Post data file couldn't be created!");
     if (NS_FAILED(rv)) return rv;
     
+    PRInt32 contentLen = nsInt64(fileSize);
     char p[128];
-    sprintf(p, "Content-length: %ld\r\n\r\n",fileSize);
+    sprintf(p, "Content-length: %ld\r\n\r\n",contentLen);
     PRUint32 bw = 0,  br= 0;
     rv = outStream->Write(p, bw = PL_strlen(p), &br) ||
       bw != br ? NS_ERROR_FAILURE : NS_OK;
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to write Post data into tmp file!");
     if (NS_FAILED(rv)) return rv;
     
-    PRInt32 size = 1;
     char buf[1024];
     while (1) {
       // Read() mallocs if buffer is null
