@@ -210,6 +210,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 					break;
 				case 2000:		xpID = VIEW_SOURCE;				break;
 				case 2001:		xpID = VIEWER_TREEVIEW;			break;
+				case 2002:		xpID = VIEWER_TOOLBARDEMO;
 				case cmd_Save:		/*n.a.*/						break;
 				case cmd_SaveAs:	/*n.a.*/						break;
 				case cmd_Revert:	/*n.a.*/						break;
