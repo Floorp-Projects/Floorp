@@ -3018,30 +3018,29 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
 
 NS_IMETHODIMP
 HTMLContentSink::OpenNoscript(const nsIParserNode& aNode) {
+  nsresult result=NS_OK;
 
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenNoscript()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenNoscript", aNode, 
-                  mCurrentContext->mStackPos, this);
-  
-  nsresult result=mCurrentContext->OpenContainer(aNode);
+                   mCurrentContext->mStackPos, this);
+
+  nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &result));
   if(NS_SUCCEEDED(result)) {
-    NS_WITH_SERVICE(nsIPref, prefs, "@mozilla.org/preferences;1", &result);
-    if(NS_SUCCEEDED(result)) {
-      PRBool jsEnabled;
-      result=prefs->GetBoolPref("javascript.enabled", &jsEnabled);
-      if(NS_SUCCEEDED(result)){
-        if(!jsEnabled) {
-          nsIHTMLContent* content=mCurrentContext->mStack[mCurrentContext->mStackPos -1].mContent;
-          nsCOMPtr<nsIDOMElement> element=do_QueryInterface(content, &result);
-          if(NS_SUCCEEDED(result)) {
-            result=element->SetAttribute(NS_ConvertASCIItoUCS2("style"),NS_ConvertASCIItoUCS2("display:inline"));
-          }
-        }
-        else {
-          mInsideNoXXXTag++;        // To indicate that no processing should be done to this content
-          result=NS_HTMLPARSER_ALTERNATECONTENT; // Inform DTD that the content is not regular, but an alternate content.
+    PRBool jsEnabled;
+    result=prefs->GetBoolPref("javascript.enabled", &jsEnabled);
+    if(NS_SUCCEEDED(result)){
+      // If JS is disabled then we want to lose the noscript element
+      // ,and therefore don't OpenContainer, so that the noscript contents 
+      // get handled as if noscript  wasn't present.
+      if(jsEnabled) {
+
+        result=mCurrentContext->OpenContainer(aNode);
+
+        if(NS_SUCCEEDED(result)) {
+          mInsideNoXXXTag++;            // To indicate that no processing should be done to this content
+          result=NS_HTMLPARSER_ALTERNATECONTENT; // Inform DTD that the noscript content should be treated as CDATA.
         }
       }
     }
@@ -3049,6 +3048,7 @@ HTMLContentSink::OpenNoscript(const nsIParserNode& aNode) {
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenNoscript()\n"));
   MOZ_TIMER_STOP(mWatch);
+  
   return result;
 }
 
@@ -3062,6 +3062,9 @@ HTMLContentSink::OpenNoscript(const nsIParserNode& aNode) {
  */
 NS_IMETHODIMP
 HTMLContentSink::CloseNoscript(const nsIParserNode& aNode) {
+
+  // When JS is diabled this method wouldn't get called because
+  // noscript element will not be present then.
 
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseNoscript()\n"));
   MOZ_TIMER_START(mWatch);
