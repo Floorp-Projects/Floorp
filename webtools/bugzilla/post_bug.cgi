@@ -147,7 +147,7 @@ if (!exists $::FORM{'target_milestone'}) {
 }
 
 if (!Param('letsubmitterchoosepriority')) {
-    $::FORM{'priority'} = Param{'defaultpriority'};
+    $::FORM{'priority'} = Param('defaultpriority');
 }
 
 GetVersionTable();
