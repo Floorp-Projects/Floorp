@@ -246,7 +246,7 @@ tbody.file pre:empty {
     | <a href="[% PROCESS editurl id=attachid %]">Edit</a>
     | <a href="[% PROCESS diffurl id=attachid %]&amp;context=[% context FILTER html %]&amp;collapsed=[% collapsed FILTER html %]&amp;headers=[% headers FILTER html %]&amp;format=raw">Raw&nbsp;Unified</a>
   [% END %]
-  [% IF other_patches %]
+  [% IF other_patches.size > 0 %]
     [% IF headers %] |[%END%]
     Differences between
     <form style="display: inline" action="">
