@@ -241,6 +241,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurfa
 
 nsresult nsRenderingContextXlib::CommonInit(void)
 {
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContxtXlib::CommonInit()\n"));
   // put common stuff in here.
   int x, y;
   unsigned int width, height, border, depth;
@@ -466,6 +467,7 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
 
 void nsRenderingContextXlib::UpdateGC()
 {
+   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::UpdateGC()\n"));
    XGCValues values;
    unsigned long valuesMask;
  
@@ -475,17 +477,15 @@ void nsRenderingContextXlib::UpdateGC()
    memset(&values, 0, sizeof(XGCValues));
  
    unsigned long color;
- 
    color = xlib_rgb_xpixel_from_rgb (NS_RGB(NS_GET_B(mCurrentColor),
                                             NS_GET_G(mCurrentColor),
                                             NS_GET_R(mCurrentColor)));
-
-   values.foreground  =color;
+   values.foreground = color;
    valuesMask = GCForeground;
- 
-   if (mCurrentFont) {
+
+   if (mCurrentFont && XFontStructPtr(*mCurrentFont)) {
      valuesMask |= GCFont;
-     values.font = mCurrentFont->fid;
+     values.font = XFontStructPtr(*mCurrentFont)->fid;
    }
  
    values.line_style = mLineStyle;
@@ -494,19 +494,19 @@ void nsRenderingContextXlib::UpdateGC()
    values.function = mFunction;
    valuesMask |= GCFunction;
 
-   Region rgn = 0;
+   Region rgn = nsnull;
    if (mClipRegion) { 
      mClipRegion->GetNativeRegion((void*&)rgn);
    }
  
    if (!gcCache) {
      gcCache = new nsGCCacheXlib();
-     if (!gcCache) return;
+     if (!gcCache) 
+       return;
    }
 
    mGC = gcCache->GetGC(mDisplay, NS_XLIB_DRAWTARGET->GetDrawable(),
-                        valuesMask, &values,
-                        rgn);
+                        valuesMask, &values, rgn);
 }
 
 NS_IMETHODIMP
@@ -673,9 +673,12 @@ NS_IMETHODIMP
 nsRenderingContextXlib::SetFont(const nsFont& aFont)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetFont(nsFont)\n"));
-  NS_IF_RELEASE(mFontMetrics);
-  mContext->GetMetricsFor(aFont, mFontMetrics);
-  return SetFont(mFontMetrics);
+  nsCOMPtr<nsIFontMetrics> newMetrics;
+  nsresult rv = mContext->GetMetricsFor(aFont, *getter_AddRefs(newMetrics));
+  if (NS_SUCCEEDED(rv)) {
+    rv = SetFont(newMetrics);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -690,8 +693,9 @@ nsRenderingContextXlib::SetFont(nsIFontMetrics *aFontMetrics)
   {
     nsFontHandle  fontHandle;
     mFontMetrics->GetFontHandle(fontHandle);
-    mCurrentFont = (XFontStruct *)fontHandle;
+    mCurrentFont = (nsFontXlib*) fontHandle;
   }
+
   return NS_OK;
 }
 
@@ -1233,14 +1237,23 @@ nsRenderingContextXlib::GetWidth(const char* aString, PRUint32 aLength, nscoord&
   if (0 == aLength) {
     aWidth = 0;
   }
-  else {   
+  else {
+    if (!aString || !mCurrentFont)
+      return NS_ERROR_FAILURE;
+  
     int rawWidth;
 
-    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
-      rawWidth = XTextWidth(mCurrentFont, (char *)aString, aLength);
+    if (!mCurrentFont->GetXlibFontIs10646()) {
+       // 8 bit data with an 8 bit font
+      rawWidth = XTextWidth(*mCurrentFont, (char *)aString, aLength);
+    }
     else
-      rawWidth = XTextWidth16(mCurrentFont, (XChar2b *)aString, aLength / 2);
-
+    {
+      // we have 8 bit data but a 16 bit font
+      NS_WARNING("not implemented yet");
+      // 1285 rawWidth = Widen8To16AndGetWidth (mCurrentFont->GetGDKFont(), aString, aLength);
+      rawWidth = 0;
+    }   
     aWidth = NSToCoordRound(rawWidth * mP2T);
   }  
   return NS_OK;
@@ -1330,19 +1343,39 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
         nscoord xx = x;
         nscoord yy = y;
         mTranMatrix->TransformCoord(&xx, &yy);
-        ::XDrawString(mDisplay,
-                      NS_XLIB_DRAWTARGET->GetDrawable(),
-                      *mGC,
-                      xx, yy, &ch, 1);
+        if (!mCurrentFont->GetXlibFontIs10646()) {
+          // 8 bit data with an 8 bit font
+          ::XDrawString(mDisplay,
+                        NS_XLIB_DRAWTARGET->GetDrawable(),
+                        *mGC,
+                        xx, yy, &ch, 1);
+        }
+        else
+        {
+          // we have 8 bit data but a 16 bit font
+          NS_WARNING("not implemented yet");
+          // 1388 Widen8To16AndDraw(mSurface->GetDrawable(), mCurrentFont->GetGDKFont(), mGC,
+          // 1389                                       xx, yy, &ch, 1);
+        }                
         x += *aSpacing++;
       }
     }
     else {
       mTranMatrix->TransformCoord(&x, &y);
-      ::XDrawString(mDisplay,
-                    NS_XLIB_DRAWTARGET->GetDrawable(),
-                    *mGC,
-                    x, y, aString, aLength);
+      if (!mCurrentFont->GetXlibFontIs10646()) { // keep 8 bit path fast
+        // 8 bit data with an 8 bit font   
+        ::XDrawString(mDisplay,
+                      NS_XLIB_DRAWTARGET->GetDrawable(),
+                      *mGC,
+                      x, y, aString, aLength);
+      }
+      else
+      {
+        // we have 8 bit data but a 16 bit font
+        NS_WARNING("not implemented yet");
+        // 1404           Widen8To16AndDraw(mSurface->GetDrawable(), mCurrentFont->GetGDKFont(), mGC,
+        // 1405                                                x, y, aString, aLength);
+      }                
     }
   }
 
@@ -1415,58 +1448,58 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
       nsFontXlib** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
         if (IS_REPRESENTABLE((*font)->mMap, c)) {
-	  currFont = *font;
-	  goto FoundFont; // for speed -- avoid "if" statement
-	}
-	font++;
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
       }
       currFont = metrics->FindFont(c);
 FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
-	if (currFont != prevFont) {
-	  if (aSpacing) {
-	    const PRUnichar* str = &aString[start];
-	    const PRUnichar* end = &aString[i];
+        if (currFont != prevFont) {
+          if (aSpacing) {
+            const PRUnichar* str = &aString[start];
+            const PRUnichar* end = &aString[i];
             UpdateGC();
-	    while (str < end) {
-	      x = aX;
-	      y = aY;
+            while (str < end) {
+              x = aX;
+              y = aY;
               mTranMatrix->TransformCoord(&x, &y);
               prevFont->DrawString(this, NS_XLIB_DRAWTARGET, x, y, str, 1);
-	      aX += *aSpacing++;
-	      str++;
-	    }
-	  }
-	  else 
+              aX += *aSpacing++;
+              str++;
+            }
+          }
+          else 
           {
             UpdateGC();
             prevFont->DrawString(this, NS_XLIB_DRAWTARGET, x, y, &aString[start], i - start);
             x += prevFont->GetWidth(&aString[start], i -start);
-	  }
-	  prevFont = currFont;
-	  start = i;
-	}
+          }
+          prevFont = currFont;
+          start = i;
+        }
       }
       else {
         prevFont = currFont;
-	start = i;
+        start = i;
       }
     }
 
     if (prevFont) {
-    UpdateGC();
+      UpdateGC();
       if (aSpacing) {
-	const PRUnichar* str = &aString[start];
-	const PRUnichar* end = &aString[i];
-	while (str < end) {
-	  x = aX;
-	  y = aY;
+        const PRUnichar* str = &aString[start];
+        const PRUnichar* end = &aString[i];
+        while (str < end) {
+          x = aX;
+          y = aY;
           mTranMatrix->TransformCoord(&x, &y);
           prevFont->DrawString(this, NS_XLIB_DRAWTARGET, x, y, str, 1);
-	  aX += *aSpacing++;
-	  str++;
-	}
+          aX += *aSpacing++;
+          str++;
+        }
       }
       else {
         prevFont->DrawString(this, NS_XLIB_DRAWTARGET, x, y, &aString[start], i - start);
@@ -1769,6 +1802,7 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
 
 NS_IMETHODIMP nsRenderingContextXlib::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 {
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::RetrieveCurrentNativeGraphicData()\n"));
   return NS_OK;
 }
 
@@ -1778,21 +1812,36 @@ nsRenderingContextXlib::GetBoundingMetrics(const char*        aString,
                                            PRUint32           aLength,
                                            nsBoundingMetrics& aBoundingMetrics)
 {
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetBoundingMetrics()\n"));
   aBoundingMetrics.Clear();
   if (aString && 0 < aLength) {
 
     XCharStruct overall;
     int direction, font_ascent, font_descent;
 
-    if ((mCurrentFont->min_byte1 == 0) && (mCurrentFont->max_byte1 == 0))
-      ::XTextExtents(mCurrentFont, aString, aLength,
+    if (!mCurrentFont->GetXlibFontIs10646()) 
+    {
+      // 8 bit data with an 8 bit font
+      ::XTextExtents(*mCurrentFont, aString, aLength,
                      &direction, &font_ascent, &font_descent,
                      &overall);
+    }                 
     else
-      ::XTextExtents16(mCurrentFont, (XChar2b *)aString, aLength/2,
+    {
+      // we have 8 bit data but a 16 bit font
+      // 1851 Widen8To16AndGetTextExtents (mCurrentFont->GetGDKFont(), aString, aLength,
+      // 1852                   &aBoundingMetrics.leftBearing, 
+      // 1853                   &aBoundingMetrics.rightBearing, 
+      // 1854                   &aBoundingMetrics.width, 
+      // 1855                   &aBoundingMetrics.ascent, 
+      // 1856                   &aBoundingMetrics.descent);    
+    
+      NS_WARNING("not implemented yet");
+      ::XTextExtents16(*mCurrentFont, (XChar2b *)aString, aLength/2,
                        &direction, &font_ascent, &font_descent,
                        &overall);
-
+    }
+    
     aBoundingMetrics.leftBearing  =  overall.lbearing;
     aBoundingMetrics.rightBearing =  overall.rbearing;
     aBoundingMetrics.width        =  overall.width;
@@ -1815,6 +1864,7 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
                                            nsBoundingMetrics& aBoundingMetrics,
                                            PRInt32*           aFontID)
 {
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetBoundingMetrics()\n"));
   aBoundingMetrics.Clear(); 
   if (aString && 0 < aLength) {
 

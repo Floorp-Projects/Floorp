@@ -22,6 +22,11 @@
  *
  */
 
+/* Note: Sun Workshop 6 may have problems when mixing <string,h> 
+ * and X includes. This was fixed by recent Xsun patches which 
+ * are part of the "recommended patches" for Solaris. 
+ * See bug 88703...
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>

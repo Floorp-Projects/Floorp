@@ -53,6 +53,7 @@
 #include <X11/Xutil.h>
 
 class GraphicsState;
+class nsFontXlib;
 
 class nsRenderingContextXlib : public nsRenderingContextImpl
 {
@@ -220,8 +221,8 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
   void UpdateGC();
   
   /* use UpdateGC() to update GC-cache !! */
-  void SetCurrentFont(XFontStruct *cf){ mCurrentFont = cf; };
-  XFontStruct *GetCurrentFont() { return mCurrentFont; };
+  void SetCurrentFont(nsFontXlib *cf){ mCurrentFont = cf; };
+  nsFontXlib *GetCurrentFont() { return mCurrentFont; };
   
 private: 
 #ifdef _IMPL_NS_XPRINT
@@ -243,7 +244,7 @@ private:
 
   // graphics state stuff
   nsVoidArray             *mStateCache;
-  XFontStruct             *mCurrentFont;
+  nsFontXlib              *mCurrentFont;
   nsLineStyle              mCurrentLineStyle;
   xGC                      *mGC;
   int                      mFunction;
