@@ -393,15 +393,19 @@ nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
       {
         rv = windowEnum->GetNext(getter_AddRefs(windowSupports));
         NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(windowSupports, NS_ERROR_FAILURE);
 
         topMostWindow = do_QueryInterface(windowSupports, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(topMostWindow, NS_ERROR_FAILURE);
 
         rv = topMostWindow->GetDocument(getter_AddRefs(domDocument));
         NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(domDocument, NS_ERROR_FAILURE);
 
         rv = domDocument->GetDocumentElement(getter_AddRefs(domElement));
         NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_TRUE(domElement, NS_ERROR_FAILURE);
 
         rv = domElement->GetAttribute(NS_LITERAL_STRING("windowtype"), windowType);
         NS_ENSURE_SUCCESS(rv, rv);
