@@ -41,15 +41,34 @@
 #include "nsWeakReference.h"
 #include "nsReadableUtils.h"
 
+#ifndef MOZ_ACCESSIBILITY_ATK
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessible, nsBlockAccessible)
+
 nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsBlockAccessible(aDomNode, aShell)
 { 
 }
 
+#else
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableCellAccessible, nsBlockAccessible, nsIAccessibleText)
+
+nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsBlockAccessible(aDomNode, aShell), nsAccessibleHyperText(aDomNode, aShell)
+{ 
+}
+
+#endif //MOZ_ACCESSIBILITY_ATK
+
 /* unsigned long getAccRole (); */
 NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *aResult)
 {
+#ifndef MOZ_ACCESSIBILITY_ATK
   *aResult = ROLE_CELL;
+#else
+  *aResult = ROLE_TEXT; // in ATK, we are a blocktext
+#endif
   return NS_OK;
 }
 
@@ -85,10 +104,11 @@ nsHTMLTableCaptionAccessible::GetAccValue(nsAString& aResult)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTableAccessible,
-                             nsBlockAccessible,
-                             nsIAccessible,
-                             nsIAccessibleTable)
+#ifndef MOZ_ACCESSIBILITY_ATK
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessible, nsBlockAccessible)
+#else
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableAccessible, nsBlockAccessible, nsIAccessibleTable)
+#endif
 
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsBlockAccessible(aDomNode, aShell)
@@ -129,6 +149,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetAccName(nsAString& aResult)
   return NS_OK;
 }
 
+#ifdef MOZ_ACCESSIBILITY_ATK
 /* Implementation of nsIAccessibleTable */
 
 NS_IMETHODIMP
@@ -644,3 +665,4 @@ nsHTMLTableHeadAccessible::GetRows(PRInt32 *aRows)
 }
 
 /* End of Implementation of nsIAccessibleTable */
+#endif // MOZ_ACCESSIBILITY_ATK

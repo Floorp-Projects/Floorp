@@ -317,6 +317,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAString& _retval)
 nsHTMLTextFieldAccessible::nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsFormControlAccessible(aNode, aShell)
 { 
+#ifdef MOZ_ACCESSIBILITY_ATK
   // In nsHTMLTextFieldAccessible, mDOMNode is a nsHTMLInputElement. But we need 
   // a *true* text node(nsTextNode) for the text operation. It's the first child
   // of our editor's root element
@@ -345,9 +346,14 @@ nsFormControlAccessible(aNode, aShell)
     rootNode->GetFirstChild(getter_AddRefs(domNode));
     SetTextNode(domNode);
   }
+#endif
 }
 
+#ifndef MOZ_ACCESSIBILITY_ATK
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextFieldAccessible, nsFormControlAccessible)
+#else
 NS_IMPL_ISUPPORTS_INHERITED2(nsHTMLTextFieldAccessible, nsFormControlAccessible, nsIAccessibleEditableText, nsAccessibleText)
+#endif
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
 {
@@ -438,6 +444,8 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
 
   return NS_OK;
 }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::SetAttributes(PRInt32 aStartPos, PRInt32 aEndPos, nsISupports *aAttributes)
 {
@@ -540,6 +548,8 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::PasteText(PRInt32 aPosition)
 
   return NS_ERROR_FAILURE;
 }
+
+#endif //MOZ_ACCESSIBILITY_ATK
 
 // --- groupbox  -----
 

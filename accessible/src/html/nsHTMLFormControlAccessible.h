@@ -96,13 +96,19 @@ public:
 
 class nsIEditor;
 
+#ifndef MOZ_ACCESSIBILITY_ATK
+class nsHTMLTextFieldAccessible : public nsFormControlAccessible
+#else
 class nsHTMLTextFieldAccessible : public nsFormControlAccessible,
                                   public nsIAccessibleEditableText,
                                   public nsAccessibleText
+#endif
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+#ifdef MOZ_ACCESSIBILITY_ATK
   NS_DECL_NSIACCESSIBLEEDITABLETEXT
+#endif
 
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
@@ -110,7 +116,9 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
 protected:
+#ifdef MOZ_ACCESSIBILITY_ATK
   NS_IMETHOD MakeSelection(PRInt32 aStartPos, PRInt32 aEndPos, nsIEditor **aEditor);
+#endif
 };
 
 class nsHTMLGroupboxAccessible : public nsAccessible
