@@ -945,50 +945,89 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     cx->globalObject = obj;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_InitStandardClasses(JSContext *cx, JSObject *obj)
+static JSObject *
+InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
+    JSDHashTable *table;
+    JSRuntime *rt;
+    JSString *idstr;
+    JSDHashEntryHdr *entry;
     JSObject *fun_proto, *obj_proto;
 
-    CHECK_REQUEST(cx);
     /* If cx has no global object, use obj so prototypes can be found. */
     if (!cx->globalObject)
         cx->globalObject = obj;
 
-#if JS_HAS_UNDEFINED
-    /*
-     * Define a top-level property 'undefined' with the undefined value.
-     * (proposed ECMA v2, now in ECMA ed3?)
-     */
-    if (!OBJ_DEFINE_PROPERTY(cx, obj,
-                             (jsid)cx->runtime->atomState.typeAtoms[JSTYPE_VOID],
-                             JSVAL_VOID, NULL, NULL, JSPROP_PERMANENT, NULL)) {
-        return JS_FALSE;
+    /* Record both Function and Object in resolving, if we are resolving. */
+    table = cx->resolving;
+    if (table) {
+        rt = cx->runtime;
+        idstr = ATOM_TO_STRING(rt->atomState.FunctionAtom);
+        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_LOOKUP);
+        if (JS_DHASH_ENTRY_IS_BUSY(entry))
+            idstr = ATOM_TO_STRING(rt->atomState.ObjectAtom);
+
+        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_ADD);
+        if (!entry) {
+            JS_ReportOutOfMemory(cx);
+            return NULL;
+        }
+        ((JSDHashEntryStub *)entry)->key = idstr;
     }
-#endif
 
     /* Initialize the function class first so constructors can be made. */
     fun_proto = js_InitFunctionClass(cx, obj);
     if (!fun_proto)
-        return JS_FALSE;
+        return NULL;
 
     /* Initialize the object class next so Object.prototype works. */
     obj_proto = js_InitObjectClass(cx, obj);
     if (!obj_proto)
-        return JS_FALSE;
+        return NULL;
 
     /* Function.prototype and the global object delegate to Object.prototype. */
     OBJ_SET_PROTO(cx, fun_proto, obj_proto);
     if (!OBJ_GET_PROTO(cx, obj))
         OBJ_SET_PROTO(cx, obj, obj_proto);
 
+    /* If resolving, remove the other entry (Object or Function) from table. */
+    if (table)
+        JS_DHashTableRawRemove(table, entry);
+    return fun_proto;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_InitStandardClasses(JSContext *cx, JSObject *obj)
+{
+    CHECK_REQUEST(cx);
+
+#if JS_HAS_UNDEFINED
+{
+    /* Define a top-level property 'undefined' with the undefined value. */
+    JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+    if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID, NULL, NULL,
+                             JSPROP_PERMANENT, NULL)) {
+        return JS_FALSE;
+    }
+}
+#endif
+
+    /* Function and Object require cooperative bootstrapping magic. */
+    if (!InitFunctionAndObjectClasses(cx, obj))
+        return JS_FALSE;
+
     /* Initialize the rest of the standard objects and functions. */
-    return js_InitArgsAndCallClasses(cx, obj) &&
-           js_InitArrayClass(cx, obj) &&
+    return js_InitArrayClass(cx, obj) &&
            js_InitBooleanClass(cx, obj) &&
            js_InitMathClass(cx, obj) &&
            js_InitNumberClass(cx, obj) &&
            js_InitStringClass(cx, obj) &&
+#if JS_HAS_ARGS_OBJECT
+           js_InitArgumentsClass(cx, obj) &&
+#endif
+#if JS_HAS_CALL_OBJECT
+           js_InitCallClass(cx, obj) &&
+#endif
 #if JS_HAS_REGEXPS
            js_InitRegExpClass(cx, obj) &&
 #endif
@@ -1003,6 +1042,296 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #endif
            js_InitDateClass(cx, obj);
 }
+
+#define ATOM_OFFSET(name)       offsetof(JSAtomState, name##Atom)
+#define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
+#define TAG_ATOM_OFFSET(name)   ((const char *) ATOM_OFFSET(name))
+#define TAG_CHAR_STRING(name)   name
+#define UNTAG_ATOM_OFFSET(ptr)  ((size_t) (ptr))
+#define UNTAG_CHAR_STRING(ptr)  ptr
+#define IS_ATOM_OFFSET(ptr)     ((size_t)(ptr) < sizeof(JSAtomState))
+
+/*
+ * Table of class initializers and their atom offsets in rt->atomState.
+ * If you add a "standard" class, remember to update this table.
+ */
+static struct {
+    JSObjectOp  init;
+    size_t      atomOffset;
+} standard_class_atoms[] = {
+    {InitFunctionAndObjectClasses,  ATOM_OFFSET(Function)},
+    {InitFunctionAndObjectClasses,  ATOM_OFFSET(Object)},
+    {js_InitArrayClass,             ATOM_OFFSET(Array)},
+    {js_InitBooleanClass,           ATOM_OFFSET(Boolean)},
+    {js_InitDateClass,              ATOM_OFFSET(Date)},
+    {js_InitMathClass,              ATOM_OFFSET(Math)},
+    {js_InitNumberClass,            ATOM_OFFSET(Number)},
+    {js_InitStringClass,            ATOM_OFFSET(String)},
+#if JS_HAS_ARGS_OBJECT
+    {js_InitArgumentsClass,         ATOM_OFFSET(Arguments)},
+#endif
+#if JS_HAS_CALL_OBJECT
+    {js_InitCallClass,              ATOM_OFFSET(Call)},
+#endif
+#if JS_HAS_ERROR_EXCEPTIONS
+    {js_InitExceptionClasses,       ATOM_OFFSET(Error)},
+#endif
+#if JS_HAS_REGEXPS
+    {js_InitRegExpClass,            ATOM_OFFSET(RegExp)},
+#endif
+#if JS_HAS_SCRIPT_OBJECT
+    {js_InitScriptClass,            ATOM_OFFSET(Script)},
+#endif
+    {NULL,                          0}
+};
+
+/*
+ * Table of top-level function and constant names and their init functions.
+ * If you add a "standard" global function or property, remember to update
+ * this table.
+ */
+typedef struct JSStdName {
+    JSObjectOp  init;
+    const char  *name;          /* tagged (const char *) or atom offset */
+} JSStdName;
+
+static JSAtom *
+StdNameToAtom(JSContext *cx, const char *name)
+{
+    if (IS_ATOM_OFFSET(name))
+        return OFFSET_TO_ATOM(cx->runtime, UNTAG_ATOM_OFFSET(name));
+    name = UNTAG_CHAR_STRING(name);
+    return js_Atomize(cx, name, strlen(name), 0);
+}
+
+static JSStdName standard_class_names[] = {
+    /* ECMA requires that eval be a direct property of the global object. */
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(eval)},
+
+    /* Global properties and functions defined by the Number class. */
+    {js_InitNumberClass,        TAG_CHAR_STRING(js_NaN_str)},
+    {js_InitNumberClass,        TAG_CHAR_STRING(js_Infinity_str)},
+    {js_InitNumberClass,        TAG_CHAR_STRING(js_isNaN_str)},
+    {js_InitNumberClass,        TAG_CHAR_STRING(js_isFinite_str)},
+    {js_InitNumberClass,        TAG_CHAR_STRING(js_parseFloat_str)},
+    {js_InitNumberClass,        TAG_CHAR_STRING(js_parseInt_str)},
+
+    /* String global functions. */
+    {js_InitStringClass,        TAG_CHAR_STRING(js_escape_str)},
+    {js_InitStringClass,        TAG_CHAR_STRING(js_unescape_str)},
+    {js_InitStringClass,        TAG_CHAR_STRING(js_decodeURI_str)},
+    {js_InitStringClass,        TAG_CHAR_STRING(js_encodeURI_str)},
+    {js_InitStringClass,        TAG_CHAR_STRING(js_decodeURIComponent_str)},
+    {js_InitStringClass,        TAG_CHAR_STRING(js_encodeURIComponent_str)},
+#if JS_HAS_UNEVAL
+    {js_InitStringClass,        TAG_CHAR_STRING(js_uneval_str)},
+#endif
+
+    /* Exception constructors. */
+#if JS_HAS_ERROR_EXCEPTIONS
+    {js_InitExceptionClasses,   TAG_ATOM_OFFSET(Error)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_InternalError_str)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_EvalError_str)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_RangeError_str)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_ReferenceError_str)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_SyntaxError_str)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_TypeError_str)},
+    {js_InitExceptionClasses,   TAG_CHAR_STRING(js_URIError_str)},
+#endif
+
+    {NULL,                      NULL}
+};
+
+static JSStdName object_prototype_names[] = {
+    /* Object.prototype properties (global delegates to Object.prototype). */
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(proto)},
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(parent)},
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(count)},
+#if JS_HAS_TOSOURCE
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(toSource)},
+#endif
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(toString)},
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(toLocaleString)},
+    {js_InitObjectClass,        TAG_ATOM_OFFSET(valueOf)},
+#if JS_HAS_OBJ_WATCHPOINT
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_watch_str)},
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_unwatch_str)},
+#endif
+#if JS_HAS_NEW_OBJ_METHODS
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_hasOwnProperty_str)},
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_isPrototypeOf_str)},
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_propertyIsEnumerable_str)},
+#endif
+#if JS_HAS_GETTER_SETTER
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_defineGetter_str)},
+    {js_InitObjectClass,        TAG_CHAR_STRING(js_defineSetter_str)},
+#endif
+
+    {NULL,                      NULL}
+};
+
+JS_PUBLIC_API(JSBool)
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
+                        JSBool *resolved)
+{
+    JSString *idstr;
+    JSDHashTable *table;
+    JSDHashEntryHdr *entry;
+    JSRuntime *rt;
+    JSAtom *atom;
+    JSObjectOp init;
+    uintN i;
+    JSBool ok;
+
+    CHECK_REQUEST(cx);
+    *resolved = JS_FALSE;
+
+    if (!JSVAL_IS_STRING(id))
+        return JS_TRUE;
+    idstr = JSVAL_TO_STRING(id);
+    table = cx->resolving;
+    if (table) {
+        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_LOOKUP);
+        if (JS_DHASH_ENTRY_IS_BUSY(entry))
+            return JS_TRUE;
+    }
+    rt = cx->runtime;
+
+#if JS_HAS_UNDEFINED
+    /* See if we're resolving 'undefined', and define it if so. */
+    atom = rt->atomState.typeAtoms[JSTYPE_VOID];
+    if (idstr == ATOM_TO_STRING(atom)) {
+        *resolved = JS_TRUE;
+        return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID, NULL, NULL,
+                                   JSPROP_PERMANENT, NULL);
+    }
+#endif
+
+    /* Try for class constructors/prototypes named by well-known atoms. */
+    init = NULL;
+    for (i = 0; standard_class_atoms[i].init; i++) {
+        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
+        if (idstr == ATOM_TO_STRING(atom)) {
+            init = standard_class_atoms[i].init;
+            break;
+        }
+    }
+
+    if (!init) {
+        /* Try less frequently used top-level functions and constants. */
+        for (i = 0; standard_class_names[i].init; i++) {
+            atom = StdNameToAtom(cx, standard_class_names[i].name);
+            if (idstr == ATOM_TO_STRING(atom)) {
+                init = standard_class_names[i].init;
+                break;
+            }
+        }
+
+        if (!init && !OBJ_GET_PROTO(cx, obj)) {
+            /*
+             * Try even less frequently used names delegated from the global
+             * object to Object.prototype, but only if the Object class hasn't
+             * yet been initialized.
+             */
+            for (i = 0; object_prototype_names[i].init; i++) {
+                atom = StdNameToAtom(cx, object_prototype_names[i].name);
+                if (idstr == ATOM_TO_STRING(atom)) {
+                    init = standard_class_names[i].init;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (init) {
+        if (!table) {
+            table = JS_NewDHashTable(JS_DHashGetStubOps(),
+                                     NULL,
+                                     sizeof(JSDHashEntryStub),
+                                     JS_DHASH_MIN_SIZE);
+            if (!table)
+                goto outofmem;
+            cx->resolving = table;
+        }
+        entry = JS_DHashTableOperate(table, idstr, JS_DHASH_ADD);
+        if (!entry)
+            goto outofmem;
+        ((JSDHashEntryStub *)entry)->key = idstr;
+
+        if (init(cx, obj))
+            ok = *resolved = JS_TRUE;
+        else
+            ok = JS_FALSE;
+
+        JS_DHashTableRawRemove(table, entry);
+        if (table->entryCount == 0) {
+            JS_DHashTableDestroy(table);
+            cx->resolving = NULL;
+        }
+    }
+    return ok;
+
+outofmem:
+    JS_ReportOutOfMemory(cx);
+    return JS_FALSE;
+}
+
+static JSBool
+HasOwnProperty(JSContext *cx, JSObject *obj, JSAtom *atom, JSBool *ownp)
+{
+    JSObject *pobj;
+    JSProperty *prop;
+
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
+        return JS_FALSE;
+    if (prop)
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
+    *ownp = (pobj == obj && prop);
+    return JS_TRUE;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
+{
+    JSRuntime *rt;
+    JSAtom *atom;
+    JSBool found;
+    uintN i;
+
+    CHECK_REQUEST(cx);
+    rt = cx->runtime;
+
+#if JS_HAS_UNDEFINED
+    /* See if we need to bind 'undefined' and define it if so. */
+    atom = rt->atomState.typeAtoms[JSTYPE_VOID];
+    if (!HasOwnProperty(cx, obj, atom, &found))
+        return JS_FALSE;
+    if (!found &&
+        !OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID, NULL, NULL,
+                            JSPROP_PERMANENT, NULL)) {
+        return JS_FALSE;
+    }
+#endif
+
+    /* Initialize any classes that have not been resolved yet. */
+    for (i = 0; standard_class_atoms[i].init; i++) {
+        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
+        if (!HasOwnProperty(cx, obj, atom, &found))
+            return JS_FALSE;
+        if (!found && !standard_class_atoms[i].init(cx, obj))
+            return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+#undef ATOM_OFFSET
+#undef OFFSET_TO_ATOM
+#undef TAG_ATOM_OFFSET
+#undef TAG_CHAR_STRING
+#undef UNTAG_ATOM_OFFSET
+#undef UNTAG_CHAR_STRING
+#undef IS_ATOM_OFFSET
 
 JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx)

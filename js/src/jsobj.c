@@ -775,7 +775,7 @@ js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
     jschar *chars;
     size_t nchars;
-    char *clazz, *prefix;
+    const char *clazz, *prefix;
     JSString *str;
 
 #if JS_HAS_INITIALIZERS
@@ -1094,27 +1094,40 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 #endif /* JS_HAS_GETTER_SETTER */
 
+#if JS_HAS_OBJ_WATCHPOINT
+const char js_watch_str[] = "watch";
+const char js_unwatch_str[] = "unwatch";
+#endif
+#if JS_HAS_NEW_OBJ_METHODS
+const char js_hasOwnProperty_str[] = "hasOwnProperty";
+const char js_isPrototypeOf_str[] = "isPrototypeOf";
+const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
+#endif
+#if JS_HAS_GETTER_SETTER
+const char js_defineGetter_str[] = "__defineGetter__";
+const char js_defineSetter_str[] = "__defineSetter__";
+#endif
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,         js_obj_toSource,        0, 0, OBJ_TOSTRING_EXTRA},
+    {js_toSource_str,             js_obj_toSource,    0, 0, OBJ_TOSTRING_EXTRA},
 #endif
-    {js_toString_str,         js_obj_toString,        0, 0, OBJ_TOSTRING_EXTRA},
-    {js_toLocaleString_str,   js_obj_toString,        0, 0, OBJ_TOSTRING_EXTRA},
-    {js_valueOf_str,          obj_valueOf,            0,0,0},
-    {js_eval_str,             obj_eval,               1,0,0},
+    {js_toString_str,             js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
+    {js_toLocaleString_str,       js_obj_toString,    0, 0, OBJ_TOSTRING_EXTRA},
+    {js_valueOf_str,              obj_valueOf,        0,0,0},
+    {js_eval_str,                 obj_eval,           1,0,0},
 #if JS_HAS_OBJ_WATCHPOINT
-    {"watch",                 obj_watch,              2,0,0},
-    {"unwatch",               obj_unwatch,            1,0,0},
+    {js_watch_str,                obj_watch,          2,0,0},
+    {js_unwatch_str,              obj_unwatch,        1,0,0},
 #endif
 #if JS_HAS_NEW_OBJ_METHODS
-    {"hasOwnProperty",        obj_hasOwnProperty,     1,0,0},
-    {"isPrototypeOf",         obj_isPrototypeOf,      1,0,0},
-    {"propertyIsEnumerable",  obj_propertyIsEnumerable, 1,0,0},
+    {js_hasOwnProperty_str,       obj_hasOwnProperty, 1,0,0},
+    {js_isPrototypeOf_str,        obj_isPrototypeOf,  1,0,0},
+    {js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,0,0},
 #endif
 #if JS_HAS_GETTER_SETTER
-    {"__defineGetter__",      obj_defineGetter,       2,0,0},
-    {"__defineSetter__",      obj_defineSetter,       2,0,0},
+    {js_defineGetter_str,         obj_defineGetter,   2,0,0},
+    {js_defineSetter_str,         obj_defineSetter,   2,0,0},
 #endif
     {0,0,0,0,0}
 };
@@ -1318,7 +1331,7 @@ JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
-    jsval fval;
+    jsval eval;
 
 #if JS_HAS_SHARP_VARS
     JS_ASSERT(sizeof(jsatomid) * JS_BITS_PER_BYTE >= ATOM_INDEX_LIMIT_LOG2 + 1);
@@ -1335,11 +1348,11 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 
     /* ECMA (15.1.2.1) says 'eval' is also a property of the global object. */
     if (!OBJ_GET_PROPERTY(cx, proto, (jsid)cx->runtime->atomState.evalAtom,
-                          &fval)) {
+                          &eval)) {
         return NULL;
     }
     if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)cx->runtime->atomState.evalAtom,
-                             fval, NULL, NULL, 0, NULL)) {
+                             eval, NULL, NULL, 0, NULL)) {
 	return NULL;
     }
 
@@ -2930,7 +2943,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
 {
     JSContext *cx;
     JSClass *clasp;
-    char *className;
+    const char *className;
     uint32 classId, classDef;
     JSBool ok;
     JSObject *proto;
@@ -2952,7 +2965,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     /* XDR a flag word followed (if true) by the class name. */
     if (!JS_XDRUint32(xdr, &classDef))
 	return JS_FALSE;
-    if (classDef && !JS_XDRCString(xdr, &className))
+    if (classDef && !JS_XDRCString(xdr, (char **) &className))
 	return JS_FALSE;
 
     /* From here on, return through out: to free className if it was set. */
@@ -2991,7 +3004,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     }
 out:
     if (xdr->mode != JSXDR_ENCODE && className)
-	JS_free(cx, className);
+	JS_free(cx, (void *)className);
     return ok;
 }
 

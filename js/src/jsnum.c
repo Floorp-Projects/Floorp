@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -40,7 +40,7 @@
  * identified per MPL Section 3.3
  *
  * Date         Modified by     Description of modification
- * 05/15/2000  IBM Corp.       Modified OS/2 floating point init. 
+ * 05/15/2000  IBM Corp.       Modified OS/2 floating point init.
  */
 
 /*
@@ -153,6 +153,12 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, d, rval);
 }
 
+const char js_Infinity_str[]   = "Infinity";
+const char js_NaN_str[]        = "NaN";
+const char js_isNaN_str[]      = "isNaN";
+const char js_isFinite_str[]   = "isFinite";
+const char js_parseFloat_str[] = "parseFloat";
+const char js_parseInt_str[]   = "parseInt";
 
 static JSFunctionSpec number_functions[] = {
     {"isNaN",           num_isNaN,              1,0,0},
@@ -383,7 +389,7 @@ enum nc_slot {
 
 /*
  * Some to most C compilers forbid spelling these at compile time, or barf
- * if you try, so all but MAX_VALUE are set at runtime by js_InitNumberClass
+ * if you try, so all but MAX_VALUE are set up by js_InitRuntimeNumberState
  * using union dpun.
  */
 static JSConstDoubleSpec number_constants[] = {
@@ -397,62 +403,83 @@ static JSConstDoubleSpec number_constants[] = {
 
 static jsdouble NaN;
 
-JSObject *
-js_InitNumberClass(JSContext *cx, JSObject *obj)
+JSBool
+js_InitRuntimeNumberState(JSContext *cx)
 {
     JSRuntime *rt;
     union dpun u;
-    JSObject *proto, *ctor;
 
     rt = cx->runtime;
+    JS_ASSERT(!rt->jsNaN);
 
-    #ifdef XP_OS2
-	/*DSR071597 - I have no idea what this really does other than mucking with the floating     */
-	/*point unit, but it does fix a "floating point underflow" exception I am getting, and there*/
-	/*is similar code in the Hursley java. Making sure we have the same code in Javascript      */
-	/*where Netscape was calling control87 on Windows...                                        */
-	_control87(MCW_EM+PC_53+RC_NEAR,MCW_EM+MCW_PC+MCW_RC);
-    #endif /* XP_OS2 */
+#ifdef XP_OS2
+    /*DSR071597 - I have no idea what this really does other than mucking with the floating     */
+    /*point unit, but it does fix a "floating point underflow" exception I am getting, and there*/
+    /*is similar code in the Hursley java. Making sure we have the same code in Javascript      */
+    /*where Netscape was calling control87 on Windows...                                        */
+    _control87(MCW_EM+PC_53+RC_NEAR,MCW_EM+MCW_PC+MCW_RC);
+#endif /* XP_OS2 */
 
-    if (!rt->jsNaN) {
 #ifndef __MWERKS__
 #if defined (XP_PC) && !defined(XP_OS2)
 #if defined (_M_IX86)
-        /* On Alpha platform this is handled via Compiler option */
-        _control87(MCW_EM, MCW_EM);
+    /* On Alpha platform this is handled via Compiler option */
+    _control87(MCW_EM, MCW_EM);
 #endif
 #endif /* XP_PC && !XP_OS2 */
 #endif /* __MWERKS__ */
 
-	u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
-	u.s.lo = 0xffffffff;
-	number_constants[NC_NaN].dval = NaN = u.d;
-	rt->jsNaN = js_NewDouble(cx, NaN);
-	if (!rt->jsNaN || !js_LockGCThing(cx, rt->jsNaN))
-	    return NULL;
+    u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
+    u.s.lo = 0xffffffff;
+    number_constants[NC_NaN].dval = NaN = u.d;
+    rt->jsNaN = js_NewDouble(cx, NaN);
+    if (!rt->jsNaN || !js_LockGCThing(cx, rt->jsNaN))
+        return JS_FALSE;
 
-	u.s.hi = JSDOUBLE_HI32_EXPMASK;
-	u.s.lo = 0x00000000;
-	number_constants[NC_POSITIVE_INFINITY].dval = u.d;
-	rt->jsPositiveInfinity = js_NewDouble(cx, u.d);
-	if (!rt->jsPositiveInfinity ||
-	    !js_LockGCThing(cx, rt->jsPositiveInfinity)) {
-	    return NULL;
-	}
-
-	u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
-	u.s.lo = 0x00000000;
-	number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
-	rt->jsNegativeInfinity = js_NewDouble(cx, u.d);
-	if (!rt->jsNegativeInfinity ||
-	    !js_LockGCThing(cx, rt->jsNegativeInfinity)) {
-	    return NULL;
-	}
-
-	u.s.hi = 0;
-	u.s.lo = 1;
-	number_constants[NC_MIN_VALUE].dval = u.d;
+    u.s.hi = JSDOUBLE_HI32_EXPMASK;
+    u.s.lo = 0x00000000;
+    number_constants[NC_POSITIVE_INFINITY].dval = u.d;
+    rt->jsPositiveInfinity = js_NewDouble(cx, u.d);
+    if (!rt->jsPositiveInfinity ||
+        !js_LockGCThing(cx, rt->jsPositiveInfinity)) {
+        return JS_FALSE;
     }
+
+    u.s.hi = JSDOUBLE_HI32_SIGNBIT | JSDOUBLE_HI32_EXPMASK;
+    u.s.lo = 0x00000000;
+    number_constants[NC_NEGATIVE_INFINITY].dval = u.d;
+    rt->jsNegativeInfinity = js_NewDouble(cx, u.d);
+    if (!rt->jsNegativeInfinity ||
+        !js_LockGCThing(cx, rt->jsNegativeInfinity)) {
+        return JS_FALSE;
+    }
+
+    u.s.hi = 0;
+    u.s.lo = 1;
+    number_constants[NC_MIN_VALUE].dval = u.d;
+
+    return JS_TRUE;
+}
+
+void
+js_FinishRuntimeNumberState(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+
+    js_UnlockGCThing(cx, rt->jsNaN);
+    js_UnlockGCThing(cx, rt->jsNegativeInfinity);
+    js_UnlockGCThing(cx, rt->jsPositiveInfinity);
+
+    rt->jsNaN = NULL;
+    rt->jsNegativeInfinity = NULL;
+    rt->jsPositiveInfinity = NULL;
+}
+
+JSObject *
+js_InitNumberClass(JSContext *cx, JSObject *obj)
+{
+    JSObject *proto, *ctor;
+    JSRuntime *rt;
 
     if (!JS_DefineFunctions(cx, obj, number_functions))
 	return NULL;
@@ -466,13 +493,14 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 	return NULL;
 
     /* ECMA 15.1.1.1 */
+    rt = cx->runtime;
     if (!JS_DefineProperty(cx, obj, js_NaN_str, DOUBLE_TO_JSVAL(rt->jsNaN),
 			   NULL, NULL, JSPROP_PERMANENT)) {
 	return NULL;
     }
 
     /* ECMA 15.1.1.2 */
-    if (!JS_DefineProperty(cx, obj, "Infinity",
+    if (!JS_DefineProperty(cx, obj, js_Infinity_str,
 			   DOUBLE_TO_JSVAL(rt->jsPositiveInfinity),
 			   NULL, NULL, JSPROP_PERMANENT)) {
 	return NULL;
@@ -768,7 +796,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     istr = cstr;
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
 	istr++;
-    if (!strncmp(istr, "Infinity", 8)) {
+    if (!strncmp(istr, js_Infinity_str, sizeof js_Infinity_str - 1)) {
 	d = *(negative ? cx->runtime->jsNegativeInfinity : cx->runtime->jsPositiveInfinity);
 	estr = istr + 8;
     } else {
@@ -843,22 +871,26 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
     if ((negative = (*s1 == '-')) != 0 || *s1 == '+')
 	s1++;
 
-    if (base == 0)
+    if (base == 0) {
 	/* No base supplied, or some base that evaluated to 0. */
-	if (*s1 == '0')
+	if (*s1 == '0') {
 	    /* It's either hex or octal; only increment char if str isn't '0' */
 	    if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
 		s1 += 2;
 		base = 16;
-	    } else /* Octal */
+	    } else {    /* Octal */
 		base = 8;
-	else
+            }
+	} else {
 	    base = 10; /* Default to decimal. */
-    else if (base == 16 && *s1 == '0' && (s1[1] == 'X' || s1[1] == 'x'))
+        }
+    } else if (base == 16 && *s1 == '0' && (s1[1] == 'X' || s1[1] == 'x')) {
 	/* If base is 16, ignore hex prefix. */
 	s1 += 2;
+    }
 
-    /* Done with the preliminaries; find some prefix of the string that's
+    /*
+     * Done with the preliminaries; find some prefix of the string that's
      * a number in the given base.
      */
     start = s1; /* Mark - if string is empty, we return NaN. */
@@ -876,16 +908,17 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	    break;
 	if (digit >= (uintN)base)
 	    break;
-	value = value*base + digit;
+	value = value * base + digit;
 	s1++;
     }
 
     if (value >= 9007199254740992.0) {
 	if (base == 10) {
-	    /* If we're accumulating a decimal number and the number is >= 2^53, then
-	     * the result from the repeated multiply-add above may be inaccurate.  Call
-	     * JS_strtod to get the correct answer.
-	     */
+            /*
+             * If we're accumulating a decimal number and the number is >=
+             * 2^53, then the result from the repeated multiply-add above may
+             * be inaccurate.  Call JS_strtod to get the correct answer.
+             */
 	    size_t i;
 	    size_t length = s1 - start;
 	    char *cstr = (char *) malloc(length + 1);
@@ -902,17 +935,17 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, j
 	    if (errno == ERANGE && value == HUGE_VAL)
 		value = *cx->runtime->jsPositiveInfinity;
 	    free(cstr);
-
-	} else if (base == 2 || base == 4 || base == 8 || base == 16 || base == 32) {
-	    /* The number may also be inaccurate for one of these bases.  This
-	     * happens if the addition in value*base + digit causes a round-down
-	     * to an even least significant mantissa bit when the first dropped bit
-	     * is a one.  If any of the following digits in the number (which haven't
-	     * been added in yet) are nonzero then the correct action would have
-	     * been to round up instead of down.  An example of this occurs when
-	     * reading the number 0x1000000000000081, which rounds to 0x1000000000000000
-	     * instead of 0x1000000000000100.
-	     */
+	} else if ((base & (base - 1)) == 0) {
+            /*
+             * The number may also be inaccurate for power-of-two bases.  This
+             * happens if the addition in value * base + digit causes a round-
+             * down to an even least significant mantissa bit when the first
+             * dropped bit is a one.  If any of the following digits in the
+             * number (which haven't been added in yet) are nonzero, then the
+             * correct action would have been to round up instead of down.  An
+             * example occurs when reading the number 0x1000000000000081, which
+             * rounds to 0x1000000000000000 instead of 0x1000000000000100.
+             */
 	    struct BinaryDigitReader bdr;
 	    intN bit, bit2;
 	    intN j;

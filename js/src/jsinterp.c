@@ -715,6 +715,8 @@ have_fun:
         frame.scopeChain = fp->scopeChain;
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
     } else if (script) {
+        /* Use parent scope so js_GetCallObject can find the right "Call". */
+        frame.scopeChain = parent;
         if (fun->flags & JSFUN_HEAVYWEIGHT) {
 #if JS_HAS_CALL_OBJECT
             /* Scope with a call object parented by the callee's parent. */
@@ -726,8 +728,6 @@ have_fun:
             /* Bad old code used the function as a proxy for all calls to it. */
             frame.scopeChain = funobj;
 #endif
-        } else {
-            frame.scopeChain = parent;
         }
         ok = js_Interpret(cx, &v);
     } else {

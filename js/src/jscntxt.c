@@ -51,10 +51,12 @@
 #include "jsexn.h"
 #include "jsgc.h"
 #include "jslock.h"
+#include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsscan.h"
 #include "jsscript.h"
+#include "jsstr.h"
 
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
@@ -89,23 +91,13 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_APPEND_LINK(&cx->links, &rt->contextList);
     JS_UNLOCK_RUNTIME(rt);
 
-    if (first) {
-	/* First context on this runtime: initialize atoms and keywords. */
-	ok = js_InitAtomState(cx, &rt->atomState);
-	if (ok)
-	    ok = js_InitScanner(cx);
-
-	JS_LOCK_RUNTIME(rt);
-	rt->state = JSRTS_UP;
-	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-	JS_UNLOCK_RUNTIME(rt);
-
-	if (!ok) {
-	    free(cx);
-	    return NULL;
-	}
-    }
-
+    /*
+     * First we do the infallible, every-time per-context initializations.
+     * Should a later, fallible initialization (js_InitRegExpStatics, e.g.,
+     * or the stuff under 'if (first)' below) fail, at least the version
+     * and arena-pools will be valid and safe to use (say, from the last GC
+     * done by js_DestroyContext).
+     */
     cx->version = JSVERSION_DEFAULT;
     cx->jsop_eq = JSOP_EQ;
     cx->jsop_ne = JSOP_NE;
@@ -116,13 +108,40 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 
 #if JS_HAS_REGEXPS
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
-	js_DestroyContext(cx, JS_FORCE_GC);
+	js_DestroyContext(cx, JS_NO_GC);
 	return NULL;
     }
 #endif
 #if JS_HAS_EXCEPTIONS
     cx->throwing = JS_FALSE;
 #endif
+
+    /*
+     * If cx is the first context on this runtime, initialize well-known atoms,
+     * keywords, numbers, and strings.  If one of these steps should fail, the
+     * runtime will be left in a partially initialized state, with zeroes and
+     * nulls stored in the default-initialized remainder of the struct.  We'll
+     * clean the runtime up under js_DestroyContext, because cx will be "last"
+     * as well as "first".
+     */
+    if (first) {
+	ok = js_InitAtomState(cx, &rt->atomState);
+	if (ok)
+	    ok = js_InitScanner(cx);
+        if (ok)
+            ok = js_InitRuntimeNumberState(cx);
+        if (ok)
+            ok = js_InitRuntimeStringState(cx);
+	if (!ok) {
+            js_DestroyContext(cx, JS_NO_GC);
+	    return NULL;
+	}
+
+	JS_LOCK_RUNTIME(rt);
+	rt->state = JSRTS_UP;
+	JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
+	JS_UNLOCK_RUNTIME(rt);
+    }
 
     return cx;
 }
@@ -138,7 +157,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 
     /* Remove cx from context list first. */
     JS_LOCK_RUNTIME(rt);
-    JS_ASSERT(rt->state == JSRTS_UP);
+    JS_ASSERT(rt->state == JSRTS_UP || rt->state == JSRTS_LAUNCHING);
     JS_REMOVE_LINK(&cx->links);
     last = (rt->contextList.next == (JSCList *)&rt->contextList);
     if (last)
@@ -149,20 +168,9 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 	/* Unpin all pinned atoms before final GC. */
 	js_UnpinPinnedAtoms(&rt->atomState);
 
-	/* Unlock GC things held by runtime pointers. */
-	js_UnlockGCThing(cx, rt->jsNaN);
-	js_UnlockGCThing(cx, rt->jsNegativeInfinity);
-	js_UnlockGCThing(cx, rt->jsPositiveInfinity);
-	js_UnlockGCThing(cx, rt->emptyString);
-
-	/*
-	 * Clear these so they get recreated if the standard classes are
-	 * initialized again.
-	 */
-	rt->jsNaN = NULL;
-	rt->jsNegativeInfinity = NULL;
-	rt->jsPositiveInfinity = NULL;
-	rt->emptyString = NULL;
+	/* Unlock and clear GC things held by runtime pointers. */
+        js_FinishRuntimeNumberState(cx);
+        js_FinishRuntimeStringState(cx);
 
 	/* Clear debugging state to remove GC roots. */
 	JS_ClearAllTraps(cx);

@@ -79,12 +79,30 @@ JS_BEGIN_EXTERN_C
  * safe) leaves i as (jsint)d.  This also avoid anomalous NaN floating point
  * comparisons under MSVC.
  */
-#define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d) && !JSDOUBLE_IS_NEGZERO(d) \
+#define JSDOUBLE_IS_INT(d, i) (JSDOUBLE_IS_FINITE(d)                          \
+                               && !JSDOUBLE_IS_NEGZERO(d)                     \
 			       && ((d) == (i = (jsint)(d))))
+
+/* Initialize number constants and runtime state for the first context. */
+extern JSBool
+js_InitRuntimeNumberState(JSContext *cx);
+
+extern void
+js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
 extern JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj);
+
+/*
+ * String constants for global function names, used in jsapi.c and jsnum.c.
+ */
+extern const char js_Infinity_str[];
+extern const char js_NaN_str[];
+extern const char js_isNaN_str[];
+extern const char js_isFinite_str[];
+extern const char js_parseFloat_str[];
+extern const char js_parseInt_str[];
 
 /* GC-allocate a new JS number. */
 extern jsdouble *

@@ -184,9 +184,24 @@ js_InitStringGlobals(void);
 extern void
 js_FreeStringGlobals(void);
 
+/* Initialize per-runtime string state for the first context in the runtime. */
+extern JSBool
+js_InitRuntimeStringState(JSContext *cx);
+
+extern void
+js_FinishRuntimeStringState(JSContext *cx);
+
 /* Initialize the String class, returning its prototype object. */
 extern JSObject *
 js_InitStringClass(JSContext *cx, JSObject *obj);
+
+extern const char js_escape_str[];
+extern const char js_unescape_str[];
+extern const char js_uneval_str[];
+extern const char js_decodeURI_str[];
+extern const char js_encodeURI_str[];
+extern const char js_decodeURIComponent_str[];
+extern const char js_encodeURIComponent_str[];
 
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
 extern JSString *
@@ -251,8 +266,8 @@ js_CompareStrings(const JSString *str1, const JSString *str2);
 
 extern jsint
 js_BoyerMooreHorspool(const jschar *text, jsint textlen,
-		      const jschar *pat, jsint patlen,
-		      jsint start);
+                      const jschar *pat, jsint patlen,
+                      jsint start);
 
 extern size_t
 js_strlen(const jschar *s);
@@ -303,10 +318,9 @@ js_GetStringBytes(JSString *str);
 
 /*
  * Returns an escaped version of character string str.
- * */
+ */
 char*
 js_escape(JSContext *cx, JSObject *obj, char *str);
-
 
 JSBool
 str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);

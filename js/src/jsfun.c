@@ -254,7 +254,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
 }
 
 JSClass js_ArgumentsClass = {
-    "Arguments",
+    js_Arguments_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     args_getProperty, args_setProperty,
@@ -578,7 +578,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 }
 
 JSClass js_CallClass = {
-    "Call",
+    js_Call_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     call_getProperty, call_setProperty,
@@ -1044,7 +1044,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 #endif /* !JS_HAS_INSTANCEOF */
 
 JSClass js_FunctionClass = {
-    "Function",
+    js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  fun_delProperty,
     fun_getProperty,  JS_PropertyStub,
@@ -1080,7 +1080,7 @@ fun_toString_sub(JSContext *cx, JSObject *obj, uint32 indent,
         if (!JSVAL_IS_FUNCTION(cx, fval)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_INCOMPATIBLE_PROTO,
-                                 "Function", "toString",
+                                 js_Function_str, js_toString_str,
                                  JS_GetTypeName(cx, JS_TypeOfValue(cx, fval)));
             return JS_FALSE;
         }
@@ -1113,7 +1113,7 @@ fun_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 #endif
 
-static char js_call_str[] = "call";
+static const char js_call_str[] = "call";
 
 #if JS_HAS_CALL_FUNCTION
 static JSBool
@@ -1132,7 +1132,7 @@ fun_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JSVAL_IS_FUNCTION(cx, fval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
-                             "Function", js_call_str,
+                             js_Function_str, js_call_str,
                              JS_GetStringBytes(JS_ValueToString(cx, fval)));
         return JS_FALSE;
     }
@@ -1197,7 +1197,7 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JSVAL_IS_FUNCTION(cx, fval)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
-                             "Function", "apply",
+                             js_Function_str, "apply",
                              JS_GetStringBytes(JS_ValueToString(cx, fval)));
         return JS_FALSE;
     }
@@ -1578,25 +1578,23 @@ bad:
     return NULL;
 }
 
-JSBool
-js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj)
-{
 #if JS_HAS_ARGS_OBJECT
-    if (!JS_InitClass(cx, obj, NULL, &js_ArgumentsClass, Arguments, 0,
-                      args_props, NULL, NULL, NULL)) {
-        return JS_FALSE;
-    }
+JSObject *
+js_InitArgumentsClass(JSContext *cx, JSObject *obj)
+{
+    return JS_InitClass(cx, obj, NULL, &js_ArgumentsClass, Arguments, 0,
+                        args_props, NULL, NULL, NULL);
+}
 #endif
 
 #if JS_HAS_CALL_OBJECT
-    if (!JS_InitClass(cx, obj, NULL, &js_CallClass, Call, 0,
-                      call_props, NULL, NULL, NULL)) {
-        return JS_FALSE;
-    }
-#endif
-
-    return JS_TRUE;
+JSObject *
+js_InitCallClass(JSContext *cx, JSObject *obj)
+{
+    return JS_InitClass(cx, obj, NULL, &js_CallClass, Call, 0,
+                        call_props, NULL, NULL, NULL);
 }
+#endif
 
 JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,

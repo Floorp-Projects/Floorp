@@ -428,9 +428,35 @@ JS_GetGlobalObject(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj);
 
-/* NB: This sets cx's global object to obj if it was null. */
+/*
+ * Initialize standard JS class constructors, prototypes, and any top-level
+ * functions and constants associated with the standard classes (e.g. isNaN
+ * for Number).
+ *
+ * NB: This sets cx's global object to obj if it was null.
+ */
 extern JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj);
+
+/*
+ * Resolve id, which must contain either a string or an int, to a standard
+ * class name in obj if possible, defining the class's constructor and/or
+ * prototype and storing true in *resolved.  If id does not name a standard
+ * class or a top-level property induced by initializing a standard class,
+ * store false in *resolved and just return true.  Return false on error,
+ * as usual for JSBool result-typed API entry points.
+ *
+ * This API can be called directly from a global object class's resolve op,
+ * to define standard classes lazily.  The class's enumerate op should call
+ * JS_EnumerateStandardClasses(cx, obj), to define eagerly during for..in
+ * loops any classes not yet resolved lazily.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
+                        JSBool *resolved);
+
+extern JS_PUBLIC_API(JSBool)
+JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx);
@@ -515,7 +541,7 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
  * Classes, objects, and properties.
  */
 struct JSClass {
-    char                *name;
+    const char          *name;
     uint32              flags;
 
     /* Mandatory non-null function pointer members. */

@@ -259,6 +259,7 @@ struct JSExnSpec {
  * standard class sets.  See jsfun.c:fun_hasInstance.
  */
 #define MAKE_EXCEPTION_CTOR(name)                                             \
+const char js_##name##_str[] = #name;                                         \
 static JSBool                                                                 \
 name(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)      \
 {                                                                             \
@@ -277,14 +278,14 @@ MAKE_EXCEPTION_CTOR(URIError)
 #undef MAKE_EXCEPTION_CTOR
 
 static struct JSExnSpec exceptions[] = {
-    { JSEXN_NONE,          "Error",             Error },
-    { JSEXN_ERR,           "InternalError",     InternalError },
-    { JSEXN_ERR,           "EvalError",         EvalError },
-    { JSEXN_ERR,           "RangeError",        RangeError },
-    { JSEXN_ERR,           "ReferenceError",    ReferenceError },
-    { JSEXN_ERR,           "SyntaxError",       SyntaxError },
-    { JSEXN_ERR,           "TypeError",         TypeError },
-    { JSEXN_ERR,           "URIError",          URIError },
+    { JSEXN_NONE,       js_Error_str,           Error },
+    { JSEXN_ERR,        js_InternalError_str,   InternalError },
+    { JSEXN_ERR,        js_EvalError_str,       EvalError },
+    { JSEXN_ERR,        js_RangeError_str,      RangeError },
+    { JSEXN_ERR,        js_ReferenceError_str,  ReferenceError },
+    { JSEXN_ERR,        js_SyntaxError_str,     SyntaxError },
+    { JSEXN_ERR,        js_TypeError_str,       TypeError },
+    { JSEXN_ERR,        js_URIError_str,        URIError },
     {0,0,NULL}
 };
 
