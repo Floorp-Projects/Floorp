@@ -34,9 +34,7 @@
 #include "nsMacMessagePump.h"	// for the windowless menu event handler
 
 
-#if DEBUG
 #include "macstdlibextras.h"
-#endif
 
 enum
 {
