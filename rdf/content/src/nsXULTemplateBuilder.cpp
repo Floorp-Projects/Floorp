@@ -6777,15 +6777,6 @@ nsXULTemplateBuilder::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
 
-    // 
-    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(result);
-    if (formControl) {
-        nsCOMPtr<nsIDOMHTMLFormElement> form;
-        rv = mDocument->GetForm(getter_AddRefs(form));
-        if (NS_SUCCEEDED(rv) && form)
-            formControl->SetForm(form);
-    }
-    
     rv = result->SetDocument(doc, PR_FALSE, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
     if (NS_FAILED(rv)) return rv;

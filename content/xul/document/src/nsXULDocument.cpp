@@ -200,6 +200,7 @@ nsIAtom* nsXULDocument::kPersistAtom;
 nsIAtom* nsXULDocument::kPositionAtom;
 nsIAtom* nsXULDocument::kInsertAfterAtom;
 nsIAtom* nsXULDocument::kInsertBeforeAtom;
+nsIAtom* nsXULDocument::kRemoveElementAtom;
 nsIAtom* nsXULDocument::kPopupAtom;
 nsIAtom* nsXULDocument::kRefAtom;
 nsIAtom* nsXULDocument::kRuleAtom;
@@ -504,6 +505,7 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kPositionAtom);
         NS_IF_RELEASE(kInsertAfterAtom);
         NS_IF_RELEASE(kInsertBeforeAtom);
+        NS_IF_RELEASE(kRemoveElementAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
@@ -2142,31 +2144,6 @@ nsXULDocument::AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder)
     return mBuilders->AppendElement(aBuilder) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-
-NS_IMETHODIMP
-nsXULDocument::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  *aForm = mHiddenForm;
-  NS_IF_ADDREF(*aForm);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-    mHiddenForm = dont_QueryInterface(aForm);
-
-    // Set the document.
-    nsCOMPtr<nsIContent> formContent = do_QueryInterface(aForm);
-    formContent->SetDocument(this, PR_TRUE, PR_TRUE);
-
-    // Forms are containers, and as such take up a bit of space.
-    // Set a style attribute to keep the hidden form from showing up.
-    mHiddenForm->SetAttribute(NS_LITERAL_STRING("style"), NS_LITERAL_STRING("margin:0em"));
-    return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 {
@@ -2962,19 +2939,6 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
   *aTracker = mCommandDispatcher;
   NS_IF_ADDREF(*aTracker);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::GetControls(nsIDOMHTMLCollection ** aResult) {
-    NS_ENSURE_ARG_POINTER(aResult);
-    
-    // for now, just return the elements in the HTML form...
-    // eventually we could return other XUL elements
-    if (mHiddenForm)
-        return mHiddenForm->GetElements(aResult);
-    else
-        *aResult = nsnull;
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3860,6 +3824,7 @@ nsXULDocument::Init()
         kPositionAtom       = NS_NewAtom("position");
         kInsertAfterAtom    = NS_NewAtom("insertafter");
         kInsertBeforeAtom   = NS_NewAtom("insertbefore");
+        kRemoveElementAtom  = NS_NewAtom("removeelement");
         kRefAtom            = NS_NewAtom("ref");
         kRuleAtom           = NS_NewAtom("rule");
         kStyleAtom          = NS_NewAtom("style");
@@ -4914,38 +4879,6 @@ nsXULDocument::PrepareToWalk()
 
         SetRootContent(root);
 
-        nsCOMPtr<nsINodeInfo> nodeInfo;
-        mNodeInfoManager->GetNodeInfo(NS_LITERAL_STRING("form"), nsnull,
-                                      kNameSpaceID_HTML,
-                                      *getter_AddRefs(nodeInfo));
-        // Create the document's "hidden form" element which will wrap all
-        // HTML form elements that turn up.
-        nsCOMPtr<nsIContent> form;
-        rv = gHTMLElementFactory->CreateInstanceByTag(nodeInfo,
-                                                      getter_AddRefs(form));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create form element");
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIDOMHTMLFormElement> htmlFormElement = do_QueryInterface(form);
-        NS_ASSERTION(htmlFormElement != nsnull, "not an nSIDOMHTMLFormElement");
-        if (! htmlFormElement)
-            return NS_ERROR_UNEXPECTED;
-
-        rv = SetForm(htmlFormElement);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set form element");
-        if (NS_FAILED(rv)) return NS_ERROR_UNEXPECTED;
-
-        nsCOMPtr<nsIContent> content = do_QueryInterface(form);
-        NS_ASSERTION(content != nsnull, "not an nsIContent");
-        if (! content)
-            return NS_ERROR_UNEXPECTED;
-
-        // XXX Would like to make this anonymous, but still need the
-        // form's frame to get built. For now make it explicit.
-        rv = root->InsertChildAt(content, 0, PR_FALSE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add anonymous form element");
-        if (NS_FAILED(rv)) return rv;
-
         // Add the root element to the XUL document's ID-to-element map.
         rv = AddElementToMap(root);
         if (NS_FAILED(rv)) return rv;
@@ -5026,7 +4959,6 @@ nsXULDocument::AddChromeOverlays()
 
     return NS_OK;
 }
-
 
 nsresult
 nsXULDocument::ResumeWalk()
@@ -5165,6 +5097,7 @@ nsXULDocument::ResumeWalk()
 
             case nsXULPrototypeNode::eType_Text: {
                 // A simple text node.
+
                 if ((mState == eState_Master) || (mContextStack.Depth() > 1)) {
                     // We're in the master document -or -we're in an
                     // overlay, and far enough down into the overlay's
@@ -5178,10 +5111,8 @@ nsXULDocument::ResumeWalk()
                                                             NS_GET_IID(nsITextContent),
                                                             getter_AddRefs(text));
                     if (NS_FAILED(rv)) return rv;
-
                     nsXULPrototypeText* textproto =
                         NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);
-
                     rv = text->SetText(textproto->mValue.GetUnicode(),
                                        textproto->mValue.Length(),
                                        PR_FALSE);
@@ -5515,19 +5446,6 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIFormControl> htmlformctrl = do_QueryInterface(result);
-        if (htmlformctrl) {
-            nsCOMPtr<nsIDOMHTMLFormElement> docform;
-            rv = GetForm(getter_AddRefs(docform));
-            if (NS_FAILED(rv)) return rv;
-
-            NS_ASSERTION(docform != nsnull, "no document form");
-            if (! docform)
-                return NS_ERROR_UNEXPECTED;
-
-            htmlformctrl->SetForm(docform);
-        }
     }
     else if (!aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         // If it's not a XUL element, it's gonna be heavyweight no matter
@@ -5915,72 +5833,156 @@ nsresult
 nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
                                               nsIContent* aOverlayNode)
 {
+    // This function is given:
+    // aTargetNode:  the node in the document whose 'id' attribute 
+    //               matches a toplevel node in our overlay. 
+    // aOverlayNode: the node in the overlay document that matches
+    //               a node in the actual document.
+    // 
+    // This function merges the tree from the overlay into the tree in
+    // the document, overwriting attributes and appending child content
+    // nodes appropriately. (See XUL overlay reference for details)
+
     nsresult rv;
 
+    // XXX - ??? - waterson says this should be moved elsewhere. 
     // This'll get set to PR_TRUE if a new 'datasources' attribute is
     // set on the element. In which case, we need to add a template
     // builder.
     PRBool datasources = PR_FALSE;
 
-    {
-        // Whack the attributes from aOverlayNode onto aTargetNode
-        PRInt32 count;
-        rv = aOverlayNode->GetAttributeCount(count);
+    // Merge attributes from the overlay content node to that of the
+    // actual document.
+    PRInt32 attrCount, i;
+    rv = aOverlayNode->GetAttributeCount(attrCount);
+    if (NS_FAILED(rv)) return rv;
+
+    for (i = 0; i < attrCount; ++i) {
+        PRInt32 nameSpaceID;
+        nsCOMPtr<nsIAtom> attr, prefix;
+        rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
-        for (PRInt32 i = 0; i < count; ++i) {
-            PRInt32 nameSpaceID;
-            nsCOMPtr<nsIAtom> attr, prefix;
-            rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
+        // We don't want to swap IDs, they should be the same.
+        if (nameSpaceID == kNameSpaceID_None && attr.get() == kIdAtom)
+            continue;
+        
+        nsAutoString value;
+        rv = aOverlayNode->GetAttribute(nameSpaceID, attr, value);
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tempID;
+        rv = aOverlayNode->GetAttribute(kNameSpaceID_None, kIdAtom, tempID);
+
+        // Element in the overlay has the 'removeelement' attribute set
+        // so remove it from the actual document.
+        if (attr.get() == kRemoveElementAtom &&
+            value.EqualsIgnoreCase("true")) {
+            nsCOMPtr<nsIContent> parent;
+            rv = aTargetNode->GetParent(*getter_AddRefs(parent));
+            if (NS_FAILED(rv)) return rv;
+            
+            rv = RemoveElement(parent, aTargetNode);
+            if (NS_FAILED(rv)) return rv;
+            
+            return NS_OK;
+        }
+
+        nsCOMPtr<nsINodeInfo> ni;
+        aTargetNode->GetNodeInfo(*getter_AddRefs(ni));
+
+        if (ni) {
+            nsCOMPtr<nsINodeInfoManager> nimgr;
+            ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
+
+            nimgr->GetNodeInfo(attr, prefix, nameSpaceID,
+                               *getter_AddRefs(ni));
+        }
+
+        rv = aTargetNode->SetAttribute(ni, value, PR_FALSE);
+        if (NS_FAILED(rv)) return rv;
+
+        // XXX - ???
+        if (/* ignore namespace && */ attr.get() == kDataSourcesAtom) {
+            datasources = PR_TRUE;
+        }
+    }
+    
+    
+    // Walk our child nodes, looking for elements that have the 'id'
+    // attribute set. If we find any, we must do a parent check in the
+    // actual document to ensure that the structure matches that of 
+    // the actual document. If it does, we can call ourselves and attempt
+    // to merge inside that subtree. If not, we just append the tree to
+    // the parent like any other.
+    
+    PRInt32 childCount;
+    rv = aOverlayNode->ChildCount(childCount);
+    if (NS_FAILED(rv)) return rv;
+
+    for (i = 0; i < childCount; i++) {
+        nsCOMPtr<nsIContent> currContent;
+        rv = aOverlayNode->ChildAt(0, *getter_AddRefs(currContent));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString id;
+        rv = currContent->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIDOMElement> nodeInDocument;
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+            nsCOMPtr<nsIDocument> document;
+            rv = aTargetNode->GetDocument(*getter_AddRefs(document));
             if (NS_FAILED(rv)) return rv;
 
-            if (nameSpaceID == kNameSpaceID_None && attr.get() == kIdAtom)
+            nsCOMPtr<nsIDOMDocument> domDocument(do_QueryInterface(document));
+            if (!domDocument) return NS_ERROR_FAILURE;
+
+            rv = domDocument->GetElementById(id, getter_AddRefs(nodeInDocument));
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        // The item has an 'id' attribute set, and we need to check with 
+        // the actual document to see if an item with this id exists at 
+        // this locale. If so, we want to merge the subtree under that 
+        // node. Otherwise, we just do an append as if the element had
+        // no id attribute.
+        if (nodeInDocument) {
+            // Given two parents, aTargetNode and aOverlayNode, we want
+            // to call merge on currContent if we find an associated 
+            // node in the document with the same id as currContent that
+            // also has aTargetNode as its parent.
+
+            nsAutoString documentParentID;
+            rv = aTargetNode->GetAttribute(kNameSpaceID_None, kIdAtom,
+                                           documentParentID);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIDOMNode> nodeParent;
+            rv = nodeInDocument->GetParentNode(getter_AddRefs(nodeParent));
+            if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsIDOMElement> elementParent(do_QueryInterface(nodeParent));
+
+            nsAutoString parentID;
+            elementParent->GetAttribute(NS_LITERAL_STRING("id"), parentID);
+            if (parentID.Equals(documentParentID)) {
+                // The element matches. "Go Deep!"
+                nsCOMPtr<nsIContent> childDocumentContent(do_QueryInterface(nodeInDocument));
+                rv = Merge(childDocumentContent, currContent);
+                if (NS_FAILED(rv)) return rv;
+                rv = aOverlayNode->RemoveChildAt(0, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+
                 continue;
-
-            nsAutoString value;
-            rv = aOverlayNode->GetAttribute(nameSpaceID, attr, value);
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsINodeInfo> ni;
-            aTargetNode->GetNodeInfo(*getter_AddRefs(ni));
-
-            if (ni) {
-                nsCOMPtr<nsINodeInfoManager> nimgr;
-                ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
-
-                nimgr->GetNodeInfo(attr, prefix, nameSpaceID,
-                                   *getter_AddRefs(ni));
-            }
-
-            rv = aTargetNode->SetAttribute(ni, value, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
-
-            if (/* ignore namespace && */ attr.get() == kDataSourcesAtom) {
-                datasources = PR_TRUE;
             }
         }
-    }
 
-    {
-        // Now move any kids
-        PRInt32 count;
-        rv = aOverlayNode->ChildCount(count);
+        rv = aOverlayNode->RemoveChildAt(0, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
 
-        for (PRInt32 i = 0; i < count; ++i) {
-            // Remove the child from the temporary "overlay
-            // placeholder" node, and insert into the content model.
-            nsCOMPtr<nsIContent> child;
-            rv = aOverlayNode->ChildAt(0, *getter_AddRefs(child));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = aOverlayNode->RemoveChildAt(0, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = InsertElement(aTargetNode, child);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
+        rv = InsertElement(aTargetNode, currContent);
+        if (NS_FAILED(rv)) return rv;
+    }        
 
     // Add child and any descendants to the element map
     rv = mDocument->AddSubtreeToDocument(aTargetNode);
@@ -6221,7 +6223,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 nsresult
 nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 {
-    // Insert aChild appropriately into aParent, accountinf for a
+    // Insert aChild appropriately into aParent, accounting for a
     // 'pos' attribute set on aChild.
     nsresult rv;
 
@@ -6310,6 +6312,21 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     NS_ASSERTION(doc != nsnull, "merging into null document");
 
     rv = aChild->SetDocument(doc, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+nsresult
+nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
+{
+    nsresult rv;
+
+    PRInt32 nodeOffset;
+    rv = aParent->IndexOf(aChild, nodeOffset);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aParent->RemoveChildAt(nodeOffset, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

@@ -13,5 +13,4 @@ interface XULDocument : Document {
   readonly attribute long width;
   readonly attribute long height;
   void persist(in DOMString id, in DOMString attr);
-  readonly attribute HTMLCollection controls;
 };

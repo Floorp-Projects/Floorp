@@ -37,7 +37,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 
 
@@ -47,7 +46,6 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
-static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 //
@@ -58,8 +56,7 @@ enum XULDocument_slots {
   XULDOCUMENT_TOOLTIPNODE = -2,
   XULDOCUMENT_COMMANDDISPATCHER = -3,
   XULDOCUMENT_WIDTH = -4,
-  XULDOCUMENT_HEIGHT = -5,
-  XULDOCUMENT_CONTROLS = -6
+  XULDOCUMENT_HEIGHT = -5
 };
 
 /***********************************************************************/
@@ -141,19 +138,6 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetHeight(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
-          }
-        }
-        break;
-      }
-      case XULDOCUMENT_CONTROLS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULDOCUMENT_CONTROLS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMHTMLCollection* prop;
-          rv = a->GetControls(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
         }
         break;
@@ -249,7 +233,6 @@ static JSPropertySpec XULDocumentProperties[] =
   {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"width",    XULDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"height",    XULDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"controls",    XULDOCUMENT_CONTROLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

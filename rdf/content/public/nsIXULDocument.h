@@ -92,12 +92,6 @@ public:
   NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 
   /**
-   * Manipulate the XUL document's form element
-   */
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm) = 0;
-
-  /**
    * Add a "forward declaration" of a XUL observer. Such declarations
    * will be resolved when document loading completes.
    */
