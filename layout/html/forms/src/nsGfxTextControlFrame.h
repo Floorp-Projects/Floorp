@@ -251,7 +251,7 @@ public:
   /** nsIDOMSelectionListener interfaces 
     * @see nsIDOMSelectionListener
     */
-  NS_IMETHOD NotifySelectionChanged();
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *);
   /*END interfaces from nsIDOMSelectionListener*/
  
   /** nsITransactionListener interfaces

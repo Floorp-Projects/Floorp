@@ -17,8 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ * Original Author: Michael F. Judge (mjudge@netscape.com)
  */
 
 /*
@@ -63,6 +62,13 @@
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsIServiceManager.h"
+#include "nsIAutoCopy.h"
+
+//nodtifications
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 //#define DEBUG_TABLE 1
@@ -186,6 +192,9 @@ public:
   nsresult     StopAutoScrollTimer();
   nsresult     DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
 
+  SelectionType GetType(){return mType;}
+  void          SetType(SelectionType aType){mType = aType;}
+
 private:
   friend class nsSelectionIterator;
 
@@ -210,7 +219,7 @@ private:
 
   // for nsIScriptObjectOwner
   void*		mScriptObject;
-
+  SelectionType mType;//type of this nsDOMSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
 };
 
@@ -306,7 +315,7 @@ private:
   PRBool       GetNotifyFrames(){return mNotifyFrames;}
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
-  nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
+  nsresult     NotifySelectionListeners(SelectionType aType);			// add parameters to say collapsed etc?
 
   NS_IMETHOD    SetHint(PRBool aHintRight);
   NS_IMETHOD    GetHint(PRBool *aHintRight);
@@ -523,7 +532,7 @@ nsIAtom *nsSelection::sTbodyAtom = 0;
 PRInt32 nsSelection::sInstanceCount = 0;
 nsStyleColor nsSelection::sTableStyleColor;
 
-PRInt8
+static PRInt8
 GetIndexFromSelectionType(SelectionType aType)
 {
     switch (aType)
@@ -536,6 +545,22 @@ GetIndexFromSelectionType(SelectionType aType)
     case SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5; break;
     default:return -1;break;
     }
+}
+
+static SelectionType 
+GetSelectionTypeFromIndex(PRInt8 aIndex)
+{
+  switch (aIndex)
+  {
+    case 0: return SELECTION_NORMAL;break;
+    case 1: return SELECTION_SPELLCHECK;break;
+    case 2: return SELECTION_IME_RAWINPUT;break;
+    case 3: return SELECTION_IME_SELECTEDRAWTEXT;break;
+    case 4: return SELECTION_IME_CONVERTEDTEXT;break;
+    case 5: return SELECTION_IME_SELECTEDCONVERTEDTEXT;break;
+    default:
+      return SELECTION_NORMAL;break;
+  }
 }
 
 
@@ -711,6 +736,7 @@ nsSelection::nsSelection()
     if (!mDomSelections[i])
       return;
     mDomSelections[i]->AddRef();
+    mDomSelections[i]->SetType(GetSelectionTypeFromIndex(i));
   }
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   mBatching = 0;
@@ -738,6 +764,15 @@ nsSelection::nsSelection()
   mSelectingTableCellMode = PR_FALSE;
 
   mSelectedCellIndex = 0;
+//AUTO COPY REGISTRATION
+  nsresult rv;
+  NS_WITH_SERVICE(nsIAutoCopyService, autoCopyService, "component://netscape/autocopy", &rv);
+  if (NS_SUCCEEDED(rv) && autoCopyService)
+  {
+    PRInt8 index = GetIndexFromSelectionType(SELECTION_NORMAL);
+    if (mDomSelections[index])
+      autoCopyService->Listen(mDomSelections[index]);
+  }
 }
 
 
@@ -1611,7 +1646,7 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
     }
   }
     
-  return NotifySelectionListeners();
+  return NotifySelectionListeners(SELECTION_NORMAL);
 }
 
 
@@ -1924,7 +1959,7 @@ nsSelection::EndBatchChanges()
   NS_ASSERTION(mBatching >=0,"Bad mBatching");
   if (mBatching == 0 && mChangesDuringBatching){
     mChangesDuringBatching = PR_FALSE;
-    NotifySelectionListeners();
+    NotifySelectionListeners(SELECTION_NORMAL);
   }
   return result;
 }
@@ -1932,7 +1967,7 @@ nsSelection::EndBatchChanges()
   
   
 nsresult
-nsSelection::NotifySelectionListeners()
+nsSelection::NotifySelectionListeners(SelectionType aType)
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
@@ -1944,12 +1979,27 @@ nsSelection::NotifySelectionListeners()
   PRUint32 cnt;
   nsresult rv = mSelectionListeners->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> shell;
+  PRInt8 idx = GetIndexFromSelectionType(aType);
+  if (idx < 0)
+    return NS_ERROR_FAILURE;
+  rv = mDomSelections[idx]->GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell)
+  {
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(rv))
+      doc = 0;
+    domdoc = do_QueryInterface(doc);
+  }
   for (PRUint32 i = 0; i < cnt;i++)
   {
     nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
     nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
     if (thisListener)
-    	thisListener->NotifySelectionChanged();
+    	thisListener->NotifySelectionChanged(domdoc,mDomSelections[idx]);
   }
 	return NS_OK;
 }
@@ -3580,7 +3630,7 @@ nsDOMSelection::ClearSelection()
   if (NS_FAILED(result))
   	return result;
   	
-  return mFrameSelection->NotifySelectionListeners();
+  return mFrameSelection->NotifySelectionListeners(GetType());
   // Also need to notify the frames!
   // PresShell::ContentChanged should do that on DocumentChanged
 }
@@ -3610,7 +3660,7 @@ nsDOMSelection::AddRange(nsIDOMRange* aRange)
   selectFrames(presContext, aRange, PR_TRUE);        
   //ScrollIntoView(); this should not happen automatically
 
-  return mFrameSelection->NotifySelectionListeners();
+  return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
 NS_IMETHODIMP
@@ -3633,7 +3683,7 @@ nsDOMSelection::RemoveRange(nsIDOMRange* aRange)
       ScrollIntoView();
     }
   }
-  return mFrameSelection->NotifySelectionListeners();
+  return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
 
@@ -3697,7 +3747,7 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (NS_FAILED(result))
     return result;
     
-	return mFrameSelection->NotifySelectionListeners();
+	return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
 /*
@@ -4504,7 +4554,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     printf ("Sel. Extend set to null parent.\n");
   }
 #endif
-  return mFrameSelection->NotifySelectionListeners();
+  return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
 NS_IMETHODIMP

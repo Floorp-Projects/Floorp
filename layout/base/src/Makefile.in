@@ -30,6 +30,7 @@ MODULE		= layout
 LIBRARY_NAME	= raptorlayout_s
 
 CPPSRCS		= \
+		nsAutoCopy.cpp \
 		nsCaret.cpp \
 		nsCommentNode.cpp \
 		nsContentIterator.cpp \
