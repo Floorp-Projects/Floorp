@@ -449,10 +449,17 @@ sub check_webdotbase {
     return "";
 }
 
+sub checkregexp {
+    my ($value) = (@_);
+    eval { qr/$value/ };
+    return $@;
+}
+
 DefParam("emailregexp",
          'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@]+$</tt>, which means "local usernames, no @ allowed."',
          "t",
-         q:^[^@]+@[^@]+\\.[^@]+$:);
+         q:^[^@]+@[^@]+\\.[^@]+$:,
+         \&checkregexp);
 
 DefParam("emailregexpdesc",
          "This describes in english words what kinds of legal addresses are allowed by the <tt>emailregexp</tt> param.",
