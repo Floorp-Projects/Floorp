@@ -79,6 +79,13 @@
 
 #undef _PR_HAVE_ATOMIC_OPS
 
+#ifdef _PR_INET6
+#define _PR_HAVE_INET_NTOP
+#define _PR_HAVE_GETIPNODEBYNAME
+#define _PR_HAVE_GETIPNODEBYADDR
+#define _PR_INET6_PROBE
+#endif
+
 #if !defined(_PR_PTHREADS)
 
 #include <syscall.h>
