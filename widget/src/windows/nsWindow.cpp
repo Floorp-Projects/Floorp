@@ -5068,8 +5068,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
     InitEvent(event, aEventType, aPoint);
   }
 
-  InitEvent(event, aEventType, aPoint);
-
   event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
   event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
   event.isMeta    = PR_FALSE;
