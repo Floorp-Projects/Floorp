@@ -49,6 +49,22 @@ PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
 
 
+PRUint16 g_ASCIIMappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
+PRUint16 g_ufCNS1MappingTable[] = {
+#include "cns_1.uf"
+};
+PRUint16 g_ufCNS2MappingTable[] = {
+#include "cns_2.uf"
+};
+PRUint16 g_CNS1MappingTable[] = {
+#include "cns_1.ut"
+};
+PRUint16 g_CNS2MappingTable[] = {
+#include "cns_2.ut"
+};
+
 typedef nsresult (* fpCreateInstance) (nsISupports **);
 
 struct FactoryData
