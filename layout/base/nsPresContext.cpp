@@ -407,13 +407,20 @@ nsPresContext::GetFontPreferences()
 void
 nsPresContext::GetDocumentColorPreferences()
 {
+  PRInt32 useAccessibilityTheme = 0;
   PRBool usePrefColors = PR_TRUE;
   nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRInt32 docShellType;
     docShell->GetItemType(&docShellType);
-    if (nsIDocShellTreeItem::typeChrome == docShellType)
+    if (nsIDocShellTreeItem::typeChrome == docShellType) {
       usePrefColors = PR_FALSE;
+    }
+    else {
+      mLookAndFeel->GetMetric(nsILookAndFeel::eMetric_UseAccessibilityTheme, useAccessibilityTheme);
+      usePrefColors = !useAccessibilityTheme;
+    }
+
   }
   if (usePrefColors) {
     usePrefColors =
@@ -445,7 +452,7 @@ nsPresContext::GetDocumentColorPreferences()
                            mBackgroundColor);
   }
 
-  mUseDocumentColors =
+  mUseDocumentColors = !useAccessibilityTheme &&
     nsContentUtils::GetBoolPref("browser.display.use_document_colors",
                                 mUseDocumentColors);
 }

@@ -1930,6 +1930,9 @@ nsChromeRegistry::SetProvider(const nsACString& aProvider,
     if (NS_FAILED(rv)) return rv;
   }
 
+  // always reset the flag
+  mRuntimeProvider = PR_FALSE;
+
   return NS_OK;
 }
 
@@ -1943,6 +1946,11 @@ nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
 {
   nsresult rv;
   
+  if (aUseProfile && !mProfileInitialized) {
+    rv = LoadProfileDataSource();
+    NS_ENSURE_TRUE(rv, rv);
+  }
+
   // Figure out which file we're needing to modify, e.g., is it the install
   // dir or the profile dir, and get the right datasource.
   nsCOMPtr<nsIRDFDataSource> dataSource;
@@ -1959,9 +1967,6 @@ nsChromeRegistry::SetProviderForPackage(const nsACString& aProvider,
   //   assert the data source only when we are not setting runtime-only provider
   if (!mBatchInstallFlushes && !mRuntimeProvider)
     rv = remote->Flush();
-
-  // always reset the flag
-  mRuntimeProvider = PR_FALSE;
 
   return rv;
 }
@@ -2054,8 +2059,12 @@ nsChromeRegistry::SelectProviderForPackage(const nsACString& aProviderType,
   if (!acceptable)
     return NS_ERROR_FAILURE;
 
-  return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc,
-                               aUseProfile, nsnull, aIsAdding);
+  rv = SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc,
+                             aUseProfile, nsnull, aIsAdding);
+  // always reset the flag
+  mRuntimeProvider = PR_FALSE;
+
+  return rv;
 }
 
 NS_IMETHODIMP nsChromeRegistry::IsSkinSelected(const nsACString& aSkin,
