@@ -331,7 +331,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
-                       nsScrollPreference_kNeverScroll, 
                        PR_TRUE,                     // Allow Plugins 
                        PR_TRUE);
   mWebShell->SetContainer(this);
