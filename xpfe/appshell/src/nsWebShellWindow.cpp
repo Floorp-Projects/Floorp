@@ -1186,13 +1186,15 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     return NS_OK; // It's ok. Really.
   
   // Fire the CONSTRUCT DOM event to give JS/C++ a chance to build the popup
-  // dynamically.
+  // dynamically. After we fire off the event, make sure we check the result
+  // for |nsEventStatus_eConsumeNoDefault| which translates into an event
+  // handler returning false. If that happens, abort creating the popup.
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_POPUP_CONSTRUCT;
   rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  if ( NS_FAILED(rv) )
+  if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return rv;
 
   // Find out if we're a menu.
