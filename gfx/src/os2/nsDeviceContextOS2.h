@@ -65,13 +65,6 @@ public:
 
   NS_IMETHOD  GetDepth(PRUint32& aDepth);
 
-
-#ifdef COLOR_256
-  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
-
-  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
-#endif
-
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
@@ -109,9 +102,7 @@ protected:
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device
-#ifdef COLOR_256
-  nsPaletteInfo         mPaletteInfo;
-#endif
+  PRBool                mIsPaletteDevice;
   PRInt32               mWidth;
   PRInt32               mHeight;
   nsRect                mClientRect;
@@ -136,6 +127,7 @@ public:
 
   BOOL isPrintDC();
   PRBool SupportsRasterFonts();
+  PRBool IsPaletteDevice() {return mIsPaletteDevice;};
   nsresult nsDeviceContextOS2::CreateFontAliasTable();
 };
 

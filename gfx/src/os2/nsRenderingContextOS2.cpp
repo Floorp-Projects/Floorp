@@ -52,6 +52,7 @@
 #include "nsFont.h"
 #include "prprf.h"
 #include "nsIRenderingContextOS2.h"
+#include "nsPaletteOS2.h"
 
 
 // helper clip region functions - defined at the bottom of this file.
@@ -265,28 +266,15 @@ nsresult nsRenderingContextOS2::SetupPS (void)
 {
    LONG BlackColor, WhiteColor;
 
-#ifdef COLOR_256
-   // If this is a palette device, then select and realize the palette
-   nsPaletteInfo palInfo;
-   mContext->GetPaletteInfo(palInfo);
-
-   if (palInfo.isPaletteDevice && palInfo.palette)
+   // If this is a palette device, then set transparent colors
+   if (((nsDeviceContextOS2*)mContext)->IsPaletteDevice())
    {
-      ULONG cclr;
- 
-      // Select the palette in the background
-      GFX (::GpiSelectPalette (mPS, (HPAL)palInfo.palette), PAL_ERROR);
-
-      if (mDCOwner)
-         GFX (::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mPS, &cclr), PAL_ERROR);
-
       BlackColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR);    // CLR_BLACK;
       WhiteColor = GFX (::GpiQueryColorIndex (mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);    // CLR_WHITE;
 
       mPaletteMode = PR_TRUE;
    }
    else
-#endif
    {
       GFX (::GpiCreateLogColorTable (mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
 

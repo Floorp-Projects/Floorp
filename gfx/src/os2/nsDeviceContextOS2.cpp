@@ -24,9 +24,6 @@
 #include "nsDeviceContextOS2.h"
 #include "nsRenderingContextOS2.h"
 #include "nsDeviceContextSpecOS2.h"
-#ifdef COLOR_256
-#include "il_util.h"
-#endif
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
@@ -38,9 +35,7 @@
 #include "nsIPref.h"
 
 #include "nsOS2Uni.h"
-
-// Size of the color cube
-#define COLOR_CUBE_SIZE       216
+#include "nsPaletteOS2.h"
 
 #define NOT_SETUP 0x33
 static PRBool gIsWarp4 = NOT_SETUP;
@@ -52,12 +47,7 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   : DeviceContextImpl()
 {
   mSurface = NULL;
-#ifdef COLOR_256
-  mPaletteInfo.isPaletteDevice = PR_FALSE;
-  mPaletteInfo.sizePalette = 0;
-  mPaletteInfo.numReserved = 0;
-  mPaletteInfo.palette = NULL;
-#endif
+  mIsPaletteDevice = PR_FALSE;
   mPrintDC = NULL;
   mWidth = -1;
   mHeight = -1;
@@ -209,20 +199,7 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
   GFX (::DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray), FALSE);
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
-#ifdef COLOR_256
-  mPaletteInfo.isPaletteDevice = !!(alArray[CAPS_ADDITIONAL_GRAPHICS] & CAPS_PALETTE_MANAGER);
-
-  /* OS2TODO - pref to turn off palette management should set isPaletteDevice to false */
-
-  if (mPaletteInfo.isPaletteDevice)
-    mPaletteInfo.sizePalette = 256;
-
-  if (alArray[CAPS_COLORS] >= 20) {
-    mPaletteInfo.numReserved = 20;
-  } else {
-    mPaletteInfo.numReserved = alArray[CAPS_COLORS];
-  } /* endif */
-#endif
+  mIsPaletteDevice = ((alArray[CAPS_ADDITIONAL_GRAPHICS] & CAPS_PALETTE_MANAGER) == CAPS_PALETTE_MANAGER);
 
   mWidth = alArray[CAPS_WIDTH];
   mHeight = alArray[CAPS_HEIGHT];
@@ -651,169 +628,6 @@ int prefChanged(const char *aPref, void *aClosure)
   
   return 0;
 }
-
-#ifdef COLOR_256
-NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  if (nsnull == mColorSpace) {
-    // See if we're dealing with an 8-bit palette device
-    if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
-      // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
-      // than DIB_RGB_COLORS, so make sure the indexes match that of the
-      // GDI physical palette
-      //
-      // Note: the image library doesn't use the reserved colors, so it doesn't
-      // matter what they're set to...
-#ifdef XP_OS2
-      IL_ColorMap* colorMap = IL_NewCubeColorMap(0, 0, COLOR_CUBE_SIZE);
-#else /* This code causes traps on 256 color */
-      IL_RGB  reserved[10];
-      memset(reserved, 0, sizeof(reserved));
-      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
-#endif
-      if (nsnull == colorMap) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-  
-      // Create a pseudo color space
-      mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
-  
-    } else {
-      IL_RGBBits colorRGBBits;
-    
-      // Create a 24-bit color space
-      colorRGBBits.red_shift = 16;  
-      colorRGBBits.red_bits = 8;
-      colorRGBBits.green_shift = 8;
-      colorRGBBits.green_bits = 8; 
-      colorRGBBits.blue_shift = 0; 
-      colorRGBBits.blue_bits = 8;  
-    
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-    }
-
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-  return NS_OK;
-}
-
-#define NUM_SYS_COLORS 22
-
-typedef struct _MYRGB
-{
-  BYTE red;
-  BYTE green;
-  BYTE blue;
-} MYRGB;
-
-MYRGB sysColors[NUM_SYS_COLORS] =
-{
-    0x00, 0x00, 0x00,   // CLR_BLACK
-    0x00, 0x00, 0x80,   // CLR_DARKBLUE
-    0x00, 0x80, 0x00,   // CLR_DARKGREEN
-    0x00, 0x80, 0x80,   // CLR_DARKCYAN
-    0x80, 0x00, 0x00,   // CLR_DARKRED
-    0x80, 0x00, 0x80,   // CLR_DARKPINK
-    0x80, 0x80, 0x00,   // CLR_BROWN
-    0x80, 0x80, 0x80,   // CLR_DARKGRAY
-    0xCC, 0xCC, 0xCC,   // CLR_PALEGRAY
-    0x00, 0x00, 0xFF,   // CLR_BLUE
-    0x00, 0xFF, 0x00,   // CLR_GREEN
-    0x00, 0xFF, 0xFF,   // CLR_CYAN
-    0xFF, 0x00, 0x00,   // CLR_RED
-    0xFF, 0x00, 0xFF,   // CLR_PINK
-    0xFF, 0xFF, 0x00,   // CLR_YELLOW
-    0xFE, 0xFE, 0xFE,   // CLR_OFFWHITE - can only use white at index 255
-
-    0xC0, 0xC0, 0xC0,   // Gray (Windows)
-    0xFF, 0xFB, 0xF0,   // Pale Yellow (Windows)
-    0xC0, 0xDC, 0xC0,   // Pale Green (Windows)
-    0xA4, 0xC8, 0xF0,   // Light Blue (Windows)
-    0xA4, 0xA0, 0xA4,   // Medium Gray (Windows)
-
-    0xFF, 0xFF, 0xE4    // Tooltip color - see nsLookAndFeel.cpp
-};
-
-NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
-{
-  static PRBool fPaletteInitialized = PR_FALSE;
-  static ULONG aulTable[256];
-
-  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
-  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
-  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
-
-  if ((mPaletteInfo.isPaletteDevice) && (NULL == mPaletteInfo.palette)) {
-    if (!fPaletteInitialized) {
-      IL_ColorSpace*  colorSpace;
-      GetILColorSpace(colorSpace);
-
-      // Create a logical palette
-      ULONG ulCount;
-  
-      PRInt32 i,j;
-      // system colors
-      for (i = 0; i < NUM_SYS_COLORS; i++) {
-        aulTable[i] = MK_RGB(sysColors[i].red, sysColors[i].green, sysColors[i].blue);
-      }
-  
-      // Now set the color cube entries.
-#ifdef XP_OS2
-      NI_RGB*       map = colorSpace->cmap.map;
-#else /* Combined with changes in GetILColor Space, this traps */
-      NI_RGB*       map = colorSpace->cmap.map + 10;
-#endif
-
-      PRInt32 k = NUM_SYS_COLORS;
-      for (i = 0; i < COLOR_CUBE_SIZE; i++, map++) {
-        aulTable[k] = MK_RGB(map->red, map->green, map->blue);
-        for (j = 0;j < NUM_SYS_COLORS; j++) {
-           if (aulTable[k] == aulTable[j]) {
-              aulTable[k] = 0;
-              break;
-           } /* endif */
-        } /* endfor */
-        if (j == NUM_SYS_COLORS) {
-           k++;
-        } /* endif */
-      } /* endfor */
-  
-      ulCount = (k-1);
-  
-      // This overwrites the last entry in the cube (white)
-      for (i=ulCount;i<256 ;i++ ) {
-         aulTable[i] = MK_RGB(254,254,254);
-      } /* endfor */
-  
-      aulTable[255] = MK_RGB(255, 255, 255); // Entry 255 must be white
-      fPaletteInitialized = PR_TRUE;
-
-      IL_ReleaseColorSpace(colorSpace);
-
-#ifdef DEBUG
-      for (i=0;i<256 ;i++ )
-         printf("Entry[%d] in table is %x\n", i, aulTable[i]);
-#endif
-
-    } /* endif */
-    // Create a GPI palette
-    mPaletteInfo.palette =
-      (void*)GFX (::GpiCreatePalette ((HAB)0, NULL,
-                                      LCOLF_CONSECRGB, 256, aulTable),
-                                      GPI_ERROR);
-  } /* endif */
-
-  aPaletteInfo.palette = mPaletteInfo.palette;
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP nsDeviceContextOS2 :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
