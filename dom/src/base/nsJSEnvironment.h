@@ -40,17 +40,21 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD       EvaluateString(const nsString& aScript, 
+  NS_IMETHOD       EvaluateString(const nsString& aScript,
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
-  NS_IMETHOD       EvaluateString(const nsString& aScript, 
+  NS_IMETHOD       EvaluateString(const nsString& aScript,
+                                  void *aObj,
                                   nsIPrincipal *principal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
+  NS_IMETHOD       CallFunction(void *aObj, void *aFunction, 
+                                PRUint32 argc, void *argv, 
+                                PRBool *aBoolResult);
   NS_IMETHOD_(nsIScriptGlobalObject*)    GetGlobalObject();
   NS_IMETHOD_(void*)                     GetNativeContext();
   NS_IMETHOD     InitClasses();

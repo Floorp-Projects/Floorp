@@ -20,6 +20,7 @@
 #include "nsIScriptEventListener.h"
 #include "nsIServiceManager.h"
 #include "nsIJSContextStack.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -64,12 +65,11 @@ NS_IMPL_RELEASE(nsJSEventListener)
 
 nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  jsval funval, result;
+  jsval funval;
   jsval argv[1];
   JSObject *eventObj;
   char* eventChars;
   nsAutoString eventString;
-  nsresult rv;
 
   if (NS_OK != aEvent->GetType(eventString)) {
     //JS can't handle this event yet or can't handle it at all
@@ -96,30 +96,18 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
   }
 
-  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = stack->Push(mContext);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   argv[0] = OBJECT_TO_JSVAL(eventObj);
-  PRBool ok = JS_CallFunctionValue(mContext, mJSObj, funval, 1, argv, &result);
-
-  mScriptCX->ScriptEvaluated();
-  rv = stack->Pop(nsnull);
-
-  if (PR_TRUE == ok) {
-	  if (JSVAL_IS_BOOLEAN(result) && JSVAL_TO_BOOLEAN(result) == JS_FALSE) {
-      aEvent->PreventDefault();
-    }
-    return NS_OK;
+  JSFunction *jsFun = JS_ValueToFunction(mContext, funval);
+  PRBool jsBoolResult;
+  if (!jsFun || NS_FAILED(mScriptCX->CallFunction(mJSObj, jsFun, 1, argv, 
+                                                  &jsBoolResult))) 
+  {
+    return NS_ERROR_FAILURE;
   }
+  if (!jsBoolResult) 
+    aEvent->PreventDefault();
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 /*

@@ -17,6 +17,8 @@
  */
 #include "nsJSDOMEventListener.h"
 #include "nsString.h"
+#include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -76,16 +78,11 @@ nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
-  if (PR_TRUE == JS_CallFunction(mContext, mJSObj, mJSFun, 1, argv, &result)) {
-    mScriptCX->ScriptEvaluated();
-	  if (JSVAL_IS_BOOLEAN(result) && JSVAL_TO_BOOLEAN(result) == JS_FALSE) {
-      return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
+  PRBool jsBoolResult;
+  if (NS_FAILED(mScriptCX->CallFunction(mJSObj, mJSFun, 1, argv, &jsBoolResult))) {
+    return NS_ERROR_FAILURE;
   }
-  mScriptCX->ScriptEvaluated();
-
-  return NS_ERROR_FAILURE;
+  return jsBoolResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult nsJSDOMEventListener::CheckIfEqual(nsIScriptEventListener *aListener)
