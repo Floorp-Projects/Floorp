@@ -95,6 +95,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "gfxIImageFrame.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -438,6 +439,18 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   if (whichLoad != 0) return NS_OK;
   struct ImageLoad *load= &mLoads[whichLoad];
 
+  // Don't invalidate if the current visible frame isn't the one the data is
+  // from
+  if (load->mRequest) {
+    nsCOMPtr<imgIContainer> container;
+    load->mRequest->GetImage(getter_AddRefs(container));
+    if (container) {
+      nsCOMPtr<gfxIImageFrame> gfxImgFrame;
+      container->GetCurrentFrame(getter_AddRefs(gfxImgFrame));
+      if (gfxImgFrame != aFrame)
+        return NS_OK;
+    }
+  }
 
   nsRect r(aRect->x, aRect->y, aRect->width, aRect->height);
 
