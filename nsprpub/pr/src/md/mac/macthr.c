@@ -196,10 +196,21 @@ void _MD_PauseCPU(PRIntervalTime timeout)
 {
 #pragma unused (timeout)
 
-	unsigned long finalTicks;
+	/* unsigned long finalTicks; */
+	EventRecord theEvent;
 	
 	if (timeout != PR_INTERVAL_NO_WAIT) {
-	    Delay(1,&finalTicks);
+	   /* Delay(1,&finalTicks); */
+	   
+	   /*
+	   ** Rather than calling Delay() which basically just wedges the processor
+	   ** we'll instead call WaitNextEvent() with a mask that ignores all events
+	   ** which gives other apps a chance to get time rather than just locking up
+	   ** the machine when we're waiting for a long time (or in an infinite loop,
+	   ** whichever comes first)
+	   */
+	   (void)WaitNextEvent(nullEvent, &theEvent, 1, NULL);
+	   
 	    (void) _MD_IOInterrupt();
 	}
 }
