@@ -5,6 +5,7 @@
 #include "comp.h"
 #include "ib.h"
 #include <afxtempl.h>
+#include <afxdisp.h>
 #include "resource.h"
 #include "NewDialog.h"
 #define MAX_SIZE 1024
@@ -392,6 +393,108 @@ void AddThirdParty()
 	delete [] cBuffer1;
 	delete [] cBuffer2;
 }
+	HRESULT CreateShortcut(const CString Target, const CString Arguments, const CString
+                     LinkFileName, const CString WorkingDir, bool IsFolder)
+ {
+         // Initialize OLE libraries
+         if (!AfxOleInit())
+                 return FALSE;
+         
+         HRESULT hres;
+         
+         CString Desktop=getenv("USERPROFILE");
+         Desktop += "\\Desktop\\";
+         CString Link = Desktop + LinkFileName;
+         
+         if (!IsFolder)
+         {
+                 IShellLink* psl;
+                 hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink,
+ (LPVOID*) &psl);
+                 if (SUCCEEDED(hres))
+                 {
+                         IPersistFile* ppf;
+                         
+                         psl->SetPath(Target);
+                         psl->SetArguments(Arguments);
+                         psl->SetWorkingDirectory(WorkingDir);
+                         
+                         hres = psl->QueryInterface( IID_IPersistFile, (LPVOID *) &ppf);
+                         
+                         if (SUCCEEDED(hres))
+                         {
+                                 CString Temp = Link;
+                                 Temp.MakeLower();
+                                 if (Temp.Find(".lnk")==-1)
+                                         Link += ".lnk";  // Important !!!
+                                 WORD wsz[MAX_PATH];
+                                 MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, Link, -1, wsz,MAX_PATH);
+                                 
+                                 hres = ppf->Save(wsz, TRUE);
+                                 
+                                 ppf->Release();
+                         }
+                         psl->Release();
+                 }
+         }
+         else
+         {
+                 hres = _mkdir(Link);
+         }
+         return hres;
+ }
+BOOL GetRegistryKey( HKEY key, char *subkey, char *retdata )
+{ 
+	long retval;
+	HKEY hkey;
+
+	retval = RegOpenKeyEx(key, subkey, 0, KEY_QUERY_VALUE, &hkey);
+
+	if(retval == ERROR_SUCCESS)
+	{
+		long datasize = MAX_SIZE;
+		char data[MAX_SIZE];
+
+		RegQueryValue(hkey,NULL,(LPSTR)data,&datasize);
+
+		lstrcpy(retdata,data);
+		RegCloseKey(hkey);
+	}
+	return retval;
+}
+
+CString GetBrowser(void)
+{
+	char key[MAX_SIZE + MAX_SIZE];
+	CString retflag = "";
+
+	/* get the .htm regkey and lookup the program */
+	if(GetRegistryKey(HKEY_CLASSES_ROOT,".htm",key) == ERROR_SUCCESS)
+	{
+		lstrcat(key,"\\shell\\open\\command");
+		if(GetRegistryKey(HKEY_CLASSES_ROOT,key,key) == ERROR_SUCCESS)
+		{
+			char *pos;
+			pos = strstr(key,"\"%1\"");
+			if(pos == NULL)     /* if no quotes */
+			{
+				/* now check for %1, without the quotes */
+				pos = strstr(key,"%1");
+				if(pos == NULL) /* if no parameter */
+				pos = key+lstrlen(key)-1;
+				else
+				*pos = '\0';    /* remove the parameter */
+			}
+			else
+			*pos = '\0';        /* remove the parameter */
+			retflag = key;
+		}
+		
+	}
+
+	return retflag;
+}
+
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -516,7 +619,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		}
 		
 	}
-
+	
 	// Didn't work...
 
 	invisible();
@@ -527,7 +630,10 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	SetCurrentDirectory(olddir);
 	newprog.DestroyWindow();
-
+	CString TargetDir = GetGlobal("Root");
+	CString TargetFile = TargetDir + "wizardmachine.ini";
+	CString MozBrowser = GetBrowser();
+	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
 	return rv;
 
 }
