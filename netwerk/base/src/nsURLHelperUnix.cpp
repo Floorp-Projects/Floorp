@@ -93,7 +93,7 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     nsresult rv;
 
     nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(localFile));
+    rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(localFile));
     if (NS_FAILED(rv))
       return rv;
     

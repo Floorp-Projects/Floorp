@@ -37,10 +37,7 @@
 
 #include "nsStreamLoader.h"
 #include "nsIInputStream.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsIChannel.h"
-//#include "nsIHttpChannel.h"
 #include "nsProxiedService.h"
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -98,13 +95,7 @@ NS_IMPL_ISUPPORTS3(nsStreamLoader, nsIStreamLoader,
 NS_IMETHODIMP 
 nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
 {
-  if (!mData.IsEmpty()) {
-    *aNumBytes = mData.Length();
-  }
-  else {
-    *aNumBytes = 0;
-  }
-
+  *aNumBytes = mData.Length();
   return NS_OK;
 }
 

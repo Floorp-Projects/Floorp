@@ -54,9 +54,25 @@ interface nsIStreamLoaderObserver : nsISupports
                           [size_is(resultLength)] in string result);
 };
 
+/**
+ * Asynchronously loads a channel into a memory buffer.
+ */
 [scriptable, uuid(31d37360-8e5a-11d3-93ad-00104ba0fd40)]
 interface nsIStreamLoader : nsISupports
 {
+    /**
+     * Initialize this stream loader, and start loading the data.
+     *
+     * @param aChannel
+     *        A Channel to load data from. This must not be asyncOpen'd yet!
+     * @param aObserver
+     *        An observer that will be notified when the data is complete.
+     * @param aContext
+     *        May be null. Will be passed to the observer.
+     *
+     * @note Failure to open the channel will be indicated by an async callback
+     *       to the observer.
+     */
     void init(in nsIChannel aChannel,
               in nsIStreamLoaderObserver aObserver,
               in nsISupports aContext);
@@ -67,7 +83,8 @@ interface nsIStreamLoader : nsISupports
     readonly attribute unsigned long numBytesRead;
 
     /**
-     * Gets the request that loaded this file
+     * Gets the request that loaded this file.
+     * null after the request has finished loading.
      */
     readonly attribute nsIRequest request;
 };
