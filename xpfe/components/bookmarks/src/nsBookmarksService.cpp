@@ -4109,7 +4109,8 @@ nsBookmarksService::ReadBookmarks()
 		const char			*constNetPositiveURL = netPositiveURLSpec.GetAsString();
 		if (constNetPositiveURL)
 			netPositiveURL = strdup(constNetPositiveURL);
-		parser.SetIEFavoritesRoot(nsCString(netPositiveURL));
+		nsCString cstringNetPositiveURL=nsCString(netPositiveURL);
+		parser.SetIEFavoritesRoot(cstringNetPositiveURL);
 #endif
 
 		parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
