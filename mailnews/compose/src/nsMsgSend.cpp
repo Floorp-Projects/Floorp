@@ -19,7 +19,6 @@
 #include "msgCore.h"
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
-#include "nsMsgCompose.h"
 #include "nsMsgSendPart.h"
 #include "xp_time.h"
 #include "nsMsgSendFact.h"
