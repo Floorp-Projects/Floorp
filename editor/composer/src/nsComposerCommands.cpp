@@ -429,12 +429,12 @@ nsStyleUpdatingCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aT
     if (tagName.Equals(NS_LITERAL_STRING("sub")))
     {
       removeName.AssignWithConversion("sup");
-      rv = aEditorShell->RemoveTextProperty(tagName.get(), nsnull);
+      rv = aEditorShell->RemoveTextProperty(removeName.get(), nsnull);
     } 
     else if (tagName.Equals(NS_LITERAL_STRING("sup")))
     {
       removeName.AssignWithConversion("sub");
-      rv = aEditorShell->RemoveTextProperty(tagName.get(), nsnull);
+      rv = aEditorShell->RemoveTextProperty(removeName.get(), nsnull);
     }
     if (NS_SUCCEEDED(rv))
       rv = aEditorShell->SetTextProperty(tagName.get(), nsnull, nsnull);
