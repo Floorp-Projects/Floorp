@@ -1128,11 +1128,9 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     // if the cell's desired size didn't changed, our height is unchanged
     aDesiredSize.mNothingChanged = PR_FALSE;
     PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan(*cellFrame);
-    if ((initCellDesSize.width  == oldCellDesSize.width) &&
-        (initCellDesSize.height == oldCellDesSize.height)) {
-        // XXX replace the line above with these two after testing the performance impact
-        //(initCellDesSize.height == oldCellDesSize.height) &&
-        //!maxWidthChanged) {
+    if ((initCellDesSize.width  == oldCellDesSize.width)  &&
+        (initCellDesSize.height == oldCellDesSize.height) &&
+        (oldCellMaximumWidth    == cellMet.mMaximumWidth)) {
       if (!hasVerticalAlignBaseline) { // only the cell's height matters
         aDesiredSize.mNothingChanged = PR_TRUE;
       }
