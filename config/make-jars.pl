@@ -74,6 +74,7 @@ sub JarIt
     if (!($overrides eq "")) {
 	my $err = 0; 
         print "+++ overriding $overrides\n";
+        #print "zip ../$jarfile.jar $overrides\n";
         system("zip ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
 	zipErrorCheck($err);
@@ -146,6 +147,7 @@ sub EnsureFileInDir
         if (!-e $dir) {
             mkpath($dir, 0, 0775) || die "can't mkpath $dir: $!\n";
         }
+        unlink $destPath;       # in case we had a symlink on unix
         copy($file, $destPath) || die "copy($file, $destPath) failed: $!\n";
 
         # fix the mod date so we don't jar everything (is this faster than just jarring everything?)
