@@ -165,7 +165,11 @@ function(event)
     var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
 	  	          QueryInterface(Components.interfaces.nsIScriptSecurityManager);
   	ssm.checkLoadURIStr(window.content.location.href, destURL, 0);
- 	  loadURI(destURL);
+	var referrer =
+	    Components.classes["@mozilla.org/network/standard-url;1"].
+	      createInstance(Components.interfaces.nsIURI);
+	referrer.spec = window.content.location.href;
+	loadURI(destURL, referrer);
   } catch (e) {
     dump("Error: it is not permitted to load this URI from a <link> element: " + e);
   }
