@@ -26,6 +26,7 @@
 #include "nsITransport.h"
 
 #include "nsIOutputStream.h"
+#include "nsImapCore.h"
 
 class nsIMAPMessagePartIDArray;
 
