@@ -276,6 +276,6 @@ nsMovemailIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequir
 NS_IMETHODIMP 
 nsMovemailIncomingServer::GetAccountManagerChrome(nsAString& aResult)
 {
-    aResult.AssignLiteral("am-serverwithnoidentities.xul");
+    aResult.AssignLiteral("am-main.xul");
     return NS_OK;
 }
