@@ -403,6 +403,10 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
   if (!elements)
     return NS_ERROR_INVALID_POINTER;
 
+  nsresult rv;
+  rv = LoadProperties();
+  if (NS_FAILED(rv)) return rv;
+  
   return mProps->SimpleEnumerateProperties(elements);
 }
 
