@@ -98,6 +98,9 @@ SI_SetCharPref(const char * prefname, const char * prefvalue);
 extern void
 SI_GetCharPref(const char * prefname, char** aPrefvalue);
 
+extern void
+SI_GetLocalizedUnicharPref(const char * prefname, PRUnichar** aPrefvalue);
+
 extern void SI_InitSignonFileName();
 
 extern PRBool

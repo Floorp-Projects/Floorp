@@ -2276,7 +2276,13 @@ static void
 wallet_FetchFileForUseInNextBrowserSession() {
 
   /* obtain the server from which to fetch the composite file to be used in next session */
+#if 1
+  nsXPIDLString ustr;
+  SI_GetLocalizedUnicharPref(pref_WalletServer, getter_Copies(ustr));
+  wallet_Server = NS_ConvertUCS2toUTF8(ustr);
+#else
   SI_GetCharPref(pref_WalletServer, &wallet_Server);
+#endif
   if (!wallet_Server || (*wallet_Server == '\0')) {
     /* user does not want to download mapping tables */
     return;

@@ -195,6 +195,20 @@ SI_GetCharPref(const char * prefname, char** aPrefvalue) {
   }
 }
 
+PUBLIC void
+SI_GetLocalizedUnicharPref(const char * prefname, PRUnichar** aPrefvalue) {
+  nsresult ret;
+  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &ret);
+  if (!NS_FAILED(ret)) {
+    ret = pPrefService->GetLocalizedUnicharPref(prefname, aPrefvalue);
+    if (NS_FAILED(ret)) {
+      *aPrefvalue = nsnull;
+    }
+  } else {
+      *aPrefvalue = nsnull;
+  }
+}
+
 
 /*********************************
  * Preferences for Single Signon *
