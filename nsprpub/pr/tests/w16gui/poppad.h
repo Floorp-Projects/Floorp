@@ -10,11 +10,11 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the Netscape security libraries.
+ * The Original Code is the Netscape Portable Runtime (NSPR).
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
@@ -26,7 +26,7 @@
  * version of this file only under the terms of the GPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
- * replace them with the notice and other provisions required by
+ * replace them with the notice and other provisions requiored by
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.

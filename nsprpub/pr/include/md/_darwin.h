@@ -10,7 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is the Netscape security libraries.
+ * The Original Code is the Netscape Portable Runtime (NSPR).
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 

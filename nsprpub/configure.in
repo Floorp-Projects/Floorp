@@ -10,11 +10,11 @@ dnl IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 dnl implied. See the License for the specific language governing
 dnl rights and limitations under the License.
 dnl 
-dnl The Original Code is the Netscape security libraries.
+dnl The Original Code is the Netscape Portable Runtime (NSPR).
 dnl 
 dnl The Initial Developer of the Original Code is Netscape
 dnl Communications Corporation.  Portions created by Netscape are 
-dnl Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+dnl Copyright (C) 1998o-2000 Netscape Communications Corporation.  All
 dnl Rights Reserved.
 dnl 
 dnl Contributor(s):
