@@ -190,22 +190,10 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 
     if (aContentType && mCatMgr)
     {
-        nsXPIDLCString value;
-        rv = mCatMgr->GetCategoryEntry("Gecko-Content-Viewers",
-                                       aContentType, 
-                                       getter_Copies(value));
-
-        // If the category manager can't find what we're looking for
-        // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
-        // that to the caller since it's really not a failure
-
-        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+        rv = IsTypeSupported(aContentType, aCanHandleContent);
+        if (NS_FAILED(rv))
             return rv;
 
-        *aCanHandleContent = value && *value;
-        // XXXbz should we check that this service actually exists?  May be a
-        // good idea...
-        
         if (!*aCanHandleContent) {
             // Try loading plugins to see whether someone neglected to do so
             nsCOMPtr<nsIPluginManager> pluginManager =
@@ -219,10 +207,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
                     // (otherwise NS_ERROR_PLUGINS_PLUGINSNOTCHANGED would have
                     // been returned).  Try checking whether we can handle the
                     // content now.
-                    return CanHandleContent(aContentType,
-                                            aIsContentPreferred,
-                                            aDesiredContentType,
-                                            aCanHandleContent);
+                    return IsTypeSupported(aContentType, aCanHandleContent);
                 }
             }
         }
@@ -291,3 +276,29 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
     return NS_OK;
 }
 
+nsresult
+nsDSURIContentListener::IsTypeSupported(const char* aContentType,
+                                        PRBool* aIsSupported)
+{
+    NS_PRECONDITION(aContentType, "Must have content type");
+    NS_PRECONDITION(mCatMgr, "Must have category manager");
+    NS_PRECONDITION(aIsSupported, "Null out param?");
+
+    nsXPIDLCString value;
+    nsresult rv = mCatMgr->GetCategoryEntry("Gecko-Content-Viewers",
+                                            aContentType, 
+                                            getter_Copies(value));
+
+    // If the category manager can't find what we're looking for
+    // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
+    // that to the caller since it's really not a failure
+
+    if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+        return rv;
+
+    // XXXbz should we check that this service actually exists?  May be a
+    // good idea...
+
+    *aIsSupported = !value.IsEmpty();
+    return NS_OK;
+}
