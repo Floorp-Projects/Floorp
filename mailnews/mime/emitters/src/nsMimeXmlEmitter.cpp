@@ -107,7 +107,7 @@ nsMimeXmlEmitter::WriteXMLTag(const char *tagName, const char *value)
   if (!newValue) 
     return NS_OK;
 
-  nsString  newTagName(tagName);
+  nsString  newTagName; newTagName.AssignWithConversion(tagName);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
 
   newTagName.ToUpperCase();

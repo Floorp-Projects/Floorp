@@ -87,12 +87,12 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
   mEmbeddedHeaderArray = nsnull;
 
   // HTML Header Data...
-  mHTMLHeaders = "";
-  mCharset = "";
+//  mHTMLHeaders = "";
+//  mCharset = "";
 
   // Init the body...
   mBodyStarted = PR_FALSE;
-  mBody = "";
+//  mBody = "";
 
   // This is needed for conversion of I18N Strings...
   nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
@@ -196,9 +196,9 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
 
 	if (m_stringBundle)
 	{
-    nsAutoString  v("");
+    nsAutoString  v;
     PRUnichar     *ptrv = nsnull;
-    nsString      uniStr(aHeaderName);
+    nsString      uniStr; uniStr.AssignWithConversion(aHeaderName);
 
     res = m_stringBundle->GetStringFromName(uniStr.GetUnicode(), &ptrv);
     v = ptrv;
@@ -493,7 +493,7 @@ nsMimeBaseEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const c
   if (mDocHeader)
     UpdateCharacterSet(outCharset);
 
-  mCharset = outCharset;
+  mCharset.AssignWithConversion(outCharset);
   return NS_OK; 
 }
 
@@ -574,7 +574,7 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
          (mFormat != nsMimeOutput::nsMimeMessagePrintOutput) )
       ptr->value = nsCRT::strdup(value);
     else
-      ptr->value = nsAutoString(value).ToNewUTF8String();
+      ptr->value = NS_ConvertASCIItoUCS2(value).ToNewUTF8String();
 
     tPtr->AppendElement(ptr);
   }

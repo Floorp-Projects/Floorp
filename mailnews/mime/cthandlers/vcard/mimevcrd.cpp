@@ -217,24 +217,24 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 
 
   nsAutoString outString;
-  nsAutoString aCharset(from_charset);
+  nsAutoString aCharset; aCharset.AssignWithConversion(from_charset);
   
   res = ConvertToUnicode(aCharset, inBuffer, outString);
 
   // known bug in 4.x, it mixes Shift_JIS (or EUC-JP) and ISO-2022-JP in vCard fields
   if (NS_ERROR_MODULE_UCONV == NS_ERROR_GET_MODULE(res)) {
     if (aCharset.EqualsIgnoreCase("ISO-2022-JP")) {
-      aCharset.Assign("Shift_JIS");
+      aCharset.AssignWithConversion("Shift_JIS");
       res = ConvertToUnicode(aCharset, inBuffer, outString);
       if (NS_ERROR_MODULE_UCONV == NS_ERROR_GET_MODULE(res)) {
-        aCharset.Assign("EUC-JP");
+        aCharset.AssignWithConversion("EUC-JP");
         res = ConvertToUnicode(aCharset, inBuffer, outString);
       }
     }
   }
 
   if (NS_SUCCEEDED(res)) {
-    res = ConvertFromUnicode(nsAutoString(to_charset), outString, outBuffer);
+    res = ConvertFromUnicode(NS_ConvertASCIItoUCS2(to_charset), outString, outBuffer);
     if (NS_SUCCEEDED(res)) {
       *outLength = nsCRT::strlen(*outBuffer);
     }
@@ -1956,7 +1956,7 @@ VCardGetStringByID(PRInt32 aMsgId)
       return nsCRT::strdup("???");
 		else
     {
-      nsAutoString v("");
+      nsAutoString v;
       v.Append(ptrv);
 	    PR_FREEIF(ptrv);
       tempString = v.ToNewUTF8String();

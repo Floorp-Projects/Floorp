@@ -202,7 +202,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
       newInfo->obj = GetStatusObjForProgID(actualProgID);
       if (newInfo->obj)
       {
-        newInfo->progID = actualProgID;
+        newInfo->progID.AssignWithConversion(actualProgID);
         mMiscStatusArray->AppendElement(newInfo);
       }
     }

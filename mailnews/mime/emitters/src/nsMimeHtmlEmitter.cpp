@@ -177,7 +177,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   // convert our UTF-8 header values into unicode before 
   // broadcasting them....
   nsXPIDLString unicodeHeaderValue;
-  nsAutoString charset ("UTF-8");
+  nsAutoString charset; charset.AssignWithConversion("UTF-8");
 
   for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
   {
@@ -191,9 +191,9 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
         // this interface for DecodeMimePartIIStr requires us to pass in nsStrings by reference
         // we should remove the nsString requirements from the interface....
         if (mUnicodeConverter)
-  			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerInfo->value, charset, getter_Copies(unicodeHeaderValue));
+  			  rv = mUnicodeConverter->DecodeMimePartIIStr(NS_ConvertASCIItoUCS2(headerInfo->value), charset, getter_Copies(unicodeHeaderValue));
         else {
-          nsAutoString headerValue(headerInfo->value);
+          nsAutoString headerValue; headerValue.AssignWithConversion(headerInfo->value);
           *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
             nsXPIDLString::Copy(headerValue.GetUnicode());
         }
@@ -235,21 +235,21 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     // we need to convert the attachment name from UTF-8 to unicode before
     // we emit it...
     nsXPIDLString unicodeHeaderValue;
-    nsAutoString charset ("UTF-8");
+    nsAutoString charset; charset.AssignWithConversion("UTF-8");
 
     rv = NS_OK;
     if (mUnicodeConverter)
-  	  rv = mUnicodeConverter->DecodeMimePartIIStr(name, charset,
+  	  rv = mUnicodeConverter->DecodeMimePartIIStr(NS_ConvertASCIItoUCS2(name), charset,
                                                   getter_Copies(unicodeHeaderValue));
     else {
-      nsAutoString attachmentName (name);
+      nsAutoString attachmentName; attachmentName.AssignWithConversion(name);
       *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
         nsXPIDLString::Copy(attachmentName.GetUnicode());
     }
 
     if (NS_FAILED(rv))
     {
-      nsAutoString attachmentName (name);
+      nsAutoString attachmentName; attachmentName.AssignWithConversion(name);
       *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
         nsXPIDLString::Copy(attachmentName.GetUnicode());
     }
