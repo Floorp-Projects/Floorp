@@ -14,13 +14,13 @@ function createComponents() {
     var numClicks = 0;
     var label = new JLabel(labelPrefix + numClicks);
     var button = new JButton("I'm a Swing button!");
-    button.setMnemonic(KeyEvent.VK_I);
-    button.addActionListener(new ActionListener({
-	actionPerformed : function() {
-	    numClicks += 1;
-	    label.setText(labelPrefix + numClicks);
-	}
-    }));
+    button.mnemonic = KeyEvent.VK_I;
+    // Since Rhino 1.5R5 JS functions can be passed to Java method if
+    // corresponding argument type is Java interface with single method.
+    button.addActionListener(function() {
+	numClicks += 1;
+	label.setText(labelPrefix + numClicks);
+    });
     label.setLabelFor(button);
 
     /*
@@ -29,12 +29,10 @@ function createComponents() {
      * that has an "empty" border.
      */
     var pane = new JPanel();
-    pane.setBorder(BorderFactory.createEmptyBorder(
-                                                   30, //top
-                                                   30, //left
-                                                   10, //bottom
-                                                   30) //right
-		   );
+    pane.border = BorderFactory.createEmptyBorder(30, //top
+                                                  30, //left
+                                                  10, //bottom
+                                                  30); //right
     pane.setLayout(new GridLayout(0, 1));
     pane.add(button);
     pane.add(label);

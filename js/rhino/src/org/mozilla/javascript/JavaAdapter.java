@@ -49,9 +49,144 @@ import java.util.*;
 
 public final class JavaAdapter
 {
+    /**
+     * Base class for interface with single method to function glue classes
+     */
+    public static class IFGlue implements Cloneable
+    {
+        final IFGlue ifglue_make(Function function)
+        {
+            // Arguments can not be null
+            if (function == null)
+                Kit.codeBug();
+            // Can only be called on master
+            if (this.function != null) Kit.codeBug();
+            IFGlue copy;
+            try {
+                copy = (IFGlue)clone();
+            } catch (CloneNotSupportedException ex) {
+                // Should not happen
+                copy = null;
+            }
+            copy.function = function;
+            return copy;
+        }
+
+        final void ifglue_initMaster(int[] argsToConvert)
+        {
+            // Can only be called on master
+            if (this.function != null) Kit.codeBug();
+            this.argsToConvert = argsToConvert;
+        }
+
+        protected Object ifglue_call(Object[] args)
+        {
+            Context cx = Context.getCurrentContext();
+            if (cx != null) {
+                   return ifglue_callImpl(cx, args);
+            } else {
+                cx = Context.enter();
+                try {
+                    return ifglue_callImpl(cx, args);
+                } finally {
+                    Context.exit();
+                }
+            }
+        }
+
+        private Object ifglue_callImpl(Context cx, Object[] args)
+        {
+            Scriptable scope = function.getParentScope();
+            if (argsToConvert != null) {
+                WrapFactory wf = cx.getWrapFactory();
+                for (int i = 0, N = argsToConvert.length; i != N; ++i) {
+                    int index = argsToConvert[i];
+                    Object arg = args[index];
+                    if (arg != null && !(arg instanceof Scriptable)) {
+                        args[index] = wf.wrap(cx, scope, arg, null);
+                    }
+                }
+            }
+            try {
+                return function.call(cx, scope, scope, args);
+            } catch (JavaScriptException ex) {
+                throw ScriptRuntime.throwAsUncheckedException(ex);
+            }
+        }
+
+        private Function function;
+        private int[] argsToConvert;
+    }
+
+    private static final String    IFGLUE_BASE = IFGlue.class.getName();
+
+
+    /**
+     * Provides a key with which to distinguish previously generated
+     * adapter classes stored in a hash table.
+     */
+    static class JavaAdapterSignature
+    {
+        Class superClass;
+        Class[] interfaces;
+        ObjToIntMap names;
+
+        JavaAdapterSignature(Class superClass, Class[] interfaces,
+                             ObjToIntMap names)
+        {
+            this.superClass = superClass;
+            this.interfaces = interfaces;
+            this.names = names;;
+        }
+
+        public boolean equals(Object obj)
+        {
+            if (!(obj instanceof JavaAdapterSignature))
+                return false;
+            JavaAdapterSignature sig = (JavaAdapterSignature) obj;
+            if (superClass != sig.superClass)
+                return false;
+            if (interfaces != sig.interfaces) {
+                if (interfaces.length != sig.interfaces.length)
+                    return false;
+                for (int i=0; i < interfaces.length; i++)
+                    if (interfaces[i] != sig.interfaces[i])
+                        return false;
+            }
+            if (names.size() != sig.names.size())
+                return false;
+            ObjToIntMap.Iterator iter = new ObjToIntMap.Iterator(names);
+            for (iter.start(); !iter.done(); iter.next()) {
+                String name = (String)iter.getKey();
+                int arity = iter.getValue();
+                if (arity != names.get(name, arity + 1))
+                    return false;
+            }
+            return true;
+        }
+
+        public int hashCode()
+        {
+            return superClass.hashCode()
+                | (0x9e3779b9 * (names.size() | (interfaces.length << 16)));
+        }
+    }
+
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
-        JavaAdapterConstructor x = new JavaAdapterConstructor();
+        JIFunction x = new JIFunction("JavaAdapter", 1)
+        {
+            public Scriptable createObject(Context cx, Scriptable scope)
+            {
+                return null;
+            }
+
+            public Object call(Context cx, Scriptable scope,
+                               Scriptable thisObj, Object[] args)
+            {
+                return js_createAdpter(cx, scope, args);
+            }
+        };
         x.defineAsProperty(scope);
     }
 
@@ -67,18 +202,13 @@ public final class JavaAdapter
         return NativeJavaObject.coerceType(c, result, true);
     }
 
-    public static Scriptable setAdapterProto(Scriptable obj, Object adapter)
+    public static Scriptable createAdapterWrapper(Scriptable obj,
+                                                  Object adapter)
     {
-        // We could be called from a thread not associated with a Context
-        Context cx = Context.enter();
-        try {
-            Scriptable topLevel = ScriptableObject.getTopLevelScope(obj);
-            Scriptable res = ScriptRuntime.toObject(topLevel, adapter);
-            res.setPrototype(obj);
-            return res;
-        } finally {
-            cx.exit();
-        }
+        Scriptable scope = ScriptableObject.getTopLevelScope(obj);
+        NativeJavaObject res = new NativeJavaObject(scope, adapter, null);
+        res.setPrototype(obj);
+        return res;
     }
 
     public static Object getAdapterSelf(Class adapterClass, Object adapter)
@@ -329,6 +459,86 @@ public final class JavaAdapter
         return cfw.toByteArray();
     }
 
+    static boolean canGenerateIFGlue(Class cl, Scriptable scope)
+    {
+        return cl.isInterface() && cl.getMethods().length == 1;
+    }
+
+    /**
+     * Get glue object implementing single-method interface cl that will
+     * call the supplied JS function when called.
+     */
+    static IFGlue getIFGlueMaster(Class cl, Scriptable scope)
+    {
+        GlobalScope global = GlobalScope.get(scope);
+        Hashtable masters = global.javaAdapterIFGlueMasters;
+
+        IFGlue glue = (IFGlue)masters.get(cl);
+        if (glue == null) {
+            if (!cl.isInterface())
+                return null;
+            Method[] interfaceMethods = cl.getMethods();
+            if (interfaceMethods.length != 1)
+                return null;
+
+            int serial;
+            synchronized (masters) {
+                serial = global.javaAdapterIFGlueSerial++;
+            }
+            String glueName = "ifglue"+serial;
+            Method method = interfaceMethods[0];
+            Class[] argTypes = method.getParameterTypes();
+            byte[] code = createIFGlueCode(cl, method, argTypes, glueName);
+            Class glueClass = loadAdapterClass(glueName, code);
+            try {
+                glue = (IFGlue)glueClass.newInstance();
+            } catch (Exception ex) {
+                throw ScriptRuntime.throwAsUncheckedException(ex);
+            }
+            int[] argsToConvert = getArgsToConvert(argTypes);
+            glue.ifglue_initMaster(argsToConvert);
+            masters.put(cl, glue);
+        }
+        return glue;
+    }
+
+    private static byte[] createIFGlueCode(Class interfaceClass,
+                                           Method method,
+                                           Class[] argTypes,
+                                           String className)
+    {
+        String superName = IFGLUE_BASE;
+        ClassFileWriter cfw = new ClassFileWriter(className,
+                                                  superName,
+                                                  "<ifglue>");
+        cfw.addInterface(interfaceClass.getName());
+
+        // Generate empty constructor
+        cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
+        cfw.add(ByteCode.ALOAD_0);  // this
+        cfw.addInvoke(ByteCode.INVOKESPECIAL,
+                      superName, "<init>", "()V");
+        cfw.add(ByteCode.RETURN);
+        cfw.stopMethod((short)1, null); // 1: single this argument
+
+        Class returnType = method.getReturnType();
+        StringBuffer sb = new StringBuffer();
+        int localsEnd = appendMethodSignature(argTypes, returnType, sb);
+        String methodSignature = sb.toString();
+        cfw.startMethod(method.getName(), methodSignature,
+                        ClassFileWriter.ACC_PUBLIC);
+
+        cfw.addLoadThis();
+        generatePushWrappedArgs(cfw, argTypes);
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, superName, "ifglue_call",
+                      "([Ljava/lang/Object;)Ljava/lang/Object;");
+        generateReturnResult(cfw, returnType);
+
+        cfw.stopMethod((short)localsEnd, null);
+
+        return cfw.toByteArray();
+    }
+
     private static Class loadAdapterClass(String className, byte[] classBytes)
     {
         Context cx = Context.getContext();
@@ -346,39 +556,66 @@ public final class JavaAdapter
         return result;
     }
 
+    public static Function getFunction(Scriptable obj, String functionName)
+    {
+        Object x = ScriptableObject.getProperty(obj, functionName);
+        if (x == Scriptable.NOT_FOUND) {
+            // This method used to swallow the exception from calling
+            // an undefined method. People have come to depend on this
+            // somewhat dubious behavior. It allows people to avoid
+            // implementing listener methods that they don't care about,
+            // for instance.
+            return null;
+        }
+        if (!(x instanceof Function))
+            throw ScriptRuntime.typeError1("msg.isnt.function", functionName);
+
+        return (Function)x;
+    }
+
     /**
      * Utility method which dynamically binds a Context to the current thread,
      * if none already exists.
      */
-    public static Object callMethod(Scriptable object, Object thisObj,
-                                    String methodId, Object[] args)
+    public static Object callMethod(Scriptable scope, Scriptable thisObj,
+                                    Function f, Object[] args, long argsToWrap)
     {
-        Context cx = Context.enter();
-        try {
-            Object fun = ScriptableObject.getProperty(object,methodId);
-            if (fun == Scriptable.NOT_FOUND) {
-                // This method used to swallow the exception from calling
-                // an undefined method. People have come to depend on this
-                // somewhat dubious behavior. It allows people to avoid
-                // implementing listener methods that they don't care about,
-                // for instance.
-                return Undefined.instance;
+        if (f == null) {
+            // See comments in getFunction
+            return Undefined.instance;
+        }
+        scope = ScriptableObject.getTopLevelScope(scope);
+        Context cx = Context.getCurrentContext();
+        if (cx != null) {
+            return doCall(cx, scope, thisObj, f, args, argsToWrap);
+        } else {
+            cx = Context.enter();
+            try {
+                return doCall(cx, scope, thisObj, f, args, argsToWrap);
+            } finally {
+                Context.exit();
             }
-            return ScriptRuntime.call(cx, fun, thisObj, args, object);
-        } catch (JavaScriptException ex) {
-            throw ScriptRuntime.throwAsUncheckedException(ex);
-        } finally {
-            Context.exit();
         }
     }
 
-    public static Scriptable toObject(Object value, Scriptable scope)
+    private static Object doCall(Context cx, Scriptable scope,
+                                 Scriptable thisObj, Function f,
+                                 Object[] args, long argsToWrap)
     {
-        Context cx = Context.enter();
+        // Wrap the rest of objects
+        for (int i = 0; i != args.length; ++i) {
+            if (0 != (argsToWrap & (1 << i))) {
+                Object arg = args[i];
+                if (!(arg instanceof Scriptable)) {
+                    args[i] = cx.getWrapFactory().wrap(cx, scope, arg,
+                                                       null);
+                }
+            }
+        }
         try {
-            return ScriptRuntime.toObject(cx, scope, value);
-        } finally {
-            Context.exit();
+            return f.call(cx, scope, thisObj, args);
+        } catch (JavaScriptException ex) {
+            throw ScriptRuntime.throwAsUncheckedException(ex);
         }
     }
 
@@ -399,25 +636,21 @@ public final class JavaAdapter
         cfw.add(ByteCode.PUTFIELD, adapterName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
 
+        cfw.add(ByteCode.ALOAD_0);  // this for the following PUTFIELD for self
         // create a wrapper object to be used as "this" in method calls
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/JavaAdapter",
-                      "setAdapterProto",
+                      "createAdapterWrapper",
                       "(Lorg/mozilla/javascript/Scriptable;"
                       +"Ljava/lang/Object;"
                       +")Lorg/mozilla/javascript/Scriptable;");
-
-        // save the wrapper
-        cfw.add(ByteCode.ASTORE_1);
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // first arg
         cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)20, null); // TODO: magic number "20"
+        cfw.stopMethod((short)3, null); // 2: this + delegee
     }
 
     private static void generateSerialCtor(ClassFileWriter cfw,
@@ -480,87 +713,102 @@ public final class JavaAdapter
         cfw.add(ByteCode.PUTFIELD, adapterName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
 
+        cfw.add(ByteCode.ALOAD_0);  // this for the following PUTFIELD for self
         // create a wrapper object to be used as "this" in method calls
         cfw.add(ByteCode.ALOAD_1);  // the Scriptable
         cfw.add(ByteCode.ALOAD_0);  // this
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       "org/mozilla/javascript/JavaAdapter",
-                      "setAdapterProto",
+                      "createAdapterWrapper",
                       "(Lorg/mozilla/javascript/Scriptable;"
                       +"Ljava/lang/Object;"
                       +")Lorg/mozilla/javascript/Scriptable;");
-        //save the wrapper
-        cfw.add(ByteCode.ASTORE_1);
-        cfw.add(ByteCode.ALOAD_0);  // this
-        cfw.add(ByteCode.ALOAD_1);  // first arg
         cfw.add(ByteCode.PUTFIELD, adapterName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)20, null); // TODO: magic number "20"
+        cfw.stopMethod((short)2, null); // this + delegee
     }
 
     /**
-     * Generates code to create a java.lang.Boolean, java.lang.Character or a
-     * java.lang.Double to wrap the specified primitive parameter. Leaves the
-     * wrapper object on the top of the stack.
+     * Generates code to wrap Java arguments into Object[].
+     * Non-primitive Java types are left as is pending convertion
+     * in the helper method. Leaves the array object on the top of the stack.
      */
-    private static int generateWrapParam(ClassFileWriter cfw, int paramOffset,
-                                         Class paramType)
+    private static void generatePushWrappedArgs(ClassFileWriter cfw,
+                                                Class[] argTypes)
     {
-        if (paramType.equals(Boolean.TYPE)) {
+        // push arguments
+        cfw.addPush(argTypes.length);
+        cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
+        int paramOffset = 1;
+        for (int i = 0; i != argTypes.length; ++i) {
+            cfw.add(ByteCode.DUP); // duplicate array reference
+            cfw.addPush(i);
+            paramOffset += generateWrapArg(cfw, paramOffset, argTypes[i]);
+            cfw.add(ByteCode.AASTORE);
+        }
+    }
+
+    /**
+     * Generates code to wrap Java argument into Object.
+     * Non-primitive Java types are left unconverted pending convertion
+     * in the helper method. Leaves the wrapper object on the top of the stack.
+     */
+    private static int generateWrapArg(ClassFileWriter cfw, int paramOffset,
+                                       Class argType)
+    {
+        int size = 1;
+        if (!argType.isPrimitive()) {
+            cfw.add(ByteCode.ALOAD, paramOffset);
+
+        } else if (argType == Boolean.TYPE) {
             // wrap boolean values with java.lang.Boolean.
             cfw.add(ByteCode.NEW, "java/lang/Boolean");
             cfw.add(ByteCode.DUP);
-            cfw.add(ByteCode.ILOAD, paramOffset++);
+            cfw.add(ByteCode.ILOAD, paramOffset);
             cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/Boolean",
                           "<init>", "(Z)V");
-        } else
-            if (paramType.equals(Character.TYPE)) {
-                // Create a string of length 1 using the character parameter.
-                cfw.add(ByteCode.NEW, "java/lang/String");
-                cfw.add(ByteCode.DUP);
-                cfw.add(ByteCode.ICONST_1);
-                cfw.add(ByteCode.NEWARRAY, ByteCode.T_CHAR);
-                cfw.add(ByteCode.DUP);
-                cfw.add(ByteCode.ICONST_0);
-                cfw.add(ByteCode.ILOAD, paramOffset++);
-                cfw.add(ByteCode.CASTORE);
-                cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/String",
-                              "<init>", "([C)V");
-            } else {
-                // convert all numeric values to java.lang.Double.
-                cfw.add(ByteCode.NEW, "java/lang/Double");
-                cfw.add(ByteCode.DUP);
-                String typeName = paramType.getName();
-                switch (typeName.charAt(0)) {
-                case 'b':
-                case 's':
-                case 'i':
-                    // load an int value, convert to double.
-                    cfw.add(ByteCode.ILOAD, paramOffset++);
-                    cfw.add(ByteCode.I2D);
-                    break;
-                case 'l':
-                    // load a long, convert to double.
-                    cfw.add(ByteCode.LLOAD, paramOffset);
-                    cfw.add(ByteCode.L2D);
-                    paramOffset += 2;
-                    break;
-                case 'f':
-                    // load a float, convert to double.
-                    cfw.add(ByteCode.FLOAD, paramOffset++);
-                    cfw.add(ByteCode.F2D);
-                    break;
-                case 'd':
-                    cfw.add(ByteCode.DLOAD, paramOffset);
-                    paramOffset += 2;
-                    break;
-                }
-                cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/Double",
-                              "<init>", "(D)V");
+
+        } else if (argType == Character.TYPE) {
+            // Create a string of length 1 using the character parameter.
+            cfw.add(ByteCode.ILOAD, paramOffset);
+            cfw.addInvoke(ByteCode.INVOKESTATIC, "java/lang/String",
+                          "valueOf", "(C)Ljava/lang/String;");
+
+        } else {
+            // convert all numeric values to java.lang.Double.
+            cfw.add(ByteCode.NEW, "java/lang/Double");
+            cfw.add(ByteCode.DUP);
+            String typeName = argType.getName();
+            switch (typeName.charAt(0)) {
+            case 'b':
+            case 's':
+            case 'i':
+                // load an int value, convert to double.
+                cfw.add(ByteCode.ILOAD, paramOffset);
+                cfw.add(ByteCode.I2D);
+                break;
+            case 'l':
+                // load a long, convert to double.
+                cfw.add(ByteCode.LLOAD, paramOffset);
+                cfw.add(ByteCode.L2D);
+                size = 2;
+                break;
+            case 'f':
+                // load a float, convert to double.
+                cfw.add(ByteCode.FLOAD, paramOffset);
+                cfw.add(ByteCode.F2D);
+                break;
+            case 'd':
+                cfw.add(ByteCode.DLOAD, paramOffset);
+                size = 2;
+                break;
             }
-        return paramOffset;
+            cfw.addInvoke(ByteCode.INVOKESPECIAL, "java/lang/Double",
+                          "<init>", "(D)V");
+        }
+        return size;
     }
 
     /**
@@ -574,12 +822,17 @@ public final class JavaAdapter
     {
         // wrap boolean values with java.lang.Boolean, convert all other
         // primitive values to java.lang.Double.
-        if (retType.equals(Boolean.TYPE)) {
+        if (retType == Void.TYPE) {
+            cfw.add(ByteCode.POP);
+            cfw.add(ByteCode.RETURN);
+
+        } else if (retType == Boolean.TYPE) {
             cfw.addInvoke(ByteCode.INVOKESTATIC,
                           "org/mozilla/javascript/Context",
                           "toBoolean", "(Ljava/lang/Object;)Z");
             cfw.add(ByteCode.IRETURN);
-        } else if (retType.equals(Character.TYPE)) {
+
+        } else if (retType == Character.TYPE) {
                 // characters are represented as strings in JavaScript.
                 // return the first character.
                 // first convert the value to a string if possible.
@@ -591,6 +844,8 @@ public final class JavaAdapter
                 cfw.addInvoke(ByteCode.INVOKEVIRTUAL, "java/lang/String",
                               "charAt", "(I)C");
                 cfw.add(ByteCode.IRETURN);
+
+
         } else if (retType.isPrimitive()) {
             cfw.addInvoke(ByteCode.INVOKESTATIC,
                           "org/mozilla/javascript/Context",
@@ -618,6 +873,7 @@ public final class JavaAdapter
                 throw new RuntimeException("Unexpected return type " +
                                            retType.toString());
             }
+
         } else {
             String retTypeStr = retType.getName();
             cfw.addLoadConstant(retTypeStr);
@@ -643,71 +899,58 @@ public final class JavaAdapter
                                        Class returnType)
     {
         StringBuffer sb = new StringBuffer();
-        sb.append('(');
-        short arrayLocal = 1;    // includes this.
-        for (int i = 0; i < parms.length; i++) {
-            Class type = parms[i];
-            appendTypeString(sb, type);
-            if (type.equals(Long.TYPE) || type.equals(Double.TYPE))
-                arrayLocal += 2;
-            else
-                arrayLocal += 1;
-        }
-        sb.append(')');
-        appendTypeString(sb, returnType);
+        int firstLocal = appendMethodSignature(parms, returnType, sb);
         String methodSignature = sb.toString();
-        // System.out.println("generating " + m.getName() + methodSignature);
-        // System.out.flush();
         cfw.startMethod(methodName, methodSignature,
                         ClassFileWriter.ACC_PUBLIC);
-        cfw.addPush(parms.length);
-        cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
-        cfw.add(ByteCode.ASTORE, arrayLocal);
 
-        // allocate a local variable to store the scope used to wrap native
-        // objects.
-        short scopeLocal = (short) (arrayLocal + 1);
-        boolean loadedScope = false;
-
-        int paramOffset = 1;
-        for (int i = 0; i < parms.length; i++) {
-            cfw.add(ByteCode.ALOAD, arrayLocal);
-            cfw.add(ByteCode.BIPUSH, i);
-            if (parms[i].isPrimitive()) {
-                paramOffset = generateWrapParam(cfw, paramOffset, parms[i]);
-            } else {
-                // An arbitary Java object; call Context.toObject to wrap in
-                // a Scriptable object
-                cfw.add(ByteCode.ALOAD, paramOffset++);
-                if (! loadedScope) {
-                    // load this.self into a local the first time it's needed.
-                    // it will provide the scope needed by Context.toObject().
-                    cfw.add(ByteCode.ALOAD_0);
-                    cfw.add(ByteCode.GETFIELD, genName, "delegee",
-                            "Lorg/mozilla/javascript/Scriptable;");
-                    cfw.add(ByteCode.ASTORE, scopeLocal);
-                    loadedScope = true;
-                }
-                cfw.add(ByteCode.ALOAD, scopeLocal);
-
-                cfw.addInvoke(ByteCode.INVOKESTATIC,
-                              "org/mozilla/javascript/JavaAdapter",
-                              "toObject",
-                              "(Ljava/lang/Object;"
-                              +"Lorg/mozilla/javascript/Scriptable;"
-                              +")Lorg/mozilla/javascript/Scriptable;");
-            }
-            cfw.add(ByteCode.AASTORE);
-        }
+        int DELEGEE = firstLocal;
+        int FUNCTION = firstLocal + 1;
+        int LOCALS_END = firstLocal + 2;
 
         cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.GETFIELD, genName, "delegee",
                 "Lorg/mozilla/javascript/Scriptable;");
+        cfw.add(ByteCode.DUP);
+        cfw.addAStore(DELEGEE);
+        cfw.addPush(methodName);
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/JavaAdapter",
+                      "getFunction",
+                      "(Lorg/mozilla/javascript/Scriptable;"
+                      +"Ljava/lang/String;"
+                      +")Lorg/mozilla/javascript/Function;");
+        cfw.add(ByteCode.DUP);
+        cfw.addAStore(FUNCTION);
+
+        // Prepare stack to call calMethod
+        // push scope
+        cfw.addALoad(DELEGEE);
+        // push thisObj
         cfw.add(ByteCode.ALOAD_0);
         cfw.add(ByteCode.GETFIELD, genName, "self",
                 "Lorg/mozilla/javascript/Scriptable;");
-        cfw.addLoadConstant(methodName);
-        cfw.add(ByteCode.ALOAD, arrayLocal);
+        // push function
+        cfw.addALoad(FUNCTION);
+
+        // push arguments
+        generatePushWrappedArgs(cfw, parms);
+
+        // push bits to indicate which parameters should be wrapped
+        if (parms.length > 64) {
+            // If it will be an issue, then passing a static boolean array
+            // can be an option, but for now using simple bitmask
+            throw Context.reportRuntimeError0(
+                "JavaAdapter can not subclass methods with more then"
+                +" 64 arguments.");
+        }
+        long convertionMask = 0;
+        for (int i = 0; i != parms.length; ++i) {
+            if (!parms[i].isPrimitive()) {
+                convertionMask |= (1 << i);
+            }
+        }
+        cfw.addPush(convertionMask);
 
         // go through utility method, which creates a Context to run the
         // method in.
@@ -715,18 +958,15 @@ public final class JavaAdapter
                       "org/mozilla/javascript/JavaAdapter",
                       "callMethod",
                       "(Lorg/mozilla/javascript/Scriptable;"
-                      +"Ljava/lang/Object;"
-                      +"Ljava/lang/String;"
+                      +"Lorg/mozilla/javascript/Scriptable;"
+                      +"Lorg/mozilla/javascript/Function;"
                       +"[Ljava/lang/Object;"
+                      +"J"
                       +")Ljava/lang/Object;");
 
-        if (returnType.equals(Void.TYPE)) {
-            cfw.add(ByteCode.POP);
-            cfw.add(ByteCode.RETURN);
-        } else {
-            generateReturnResult(cfw, returnType);
-        }
-        cfw.stopMethod((short)(scopeLocal + 3), null);
+        generateReturnResult(cfw, returnType);
+
+        cfw.stopMethod((short)LOCALS_END, null);
     }
 
     /**
@@ -736,6 +976,10 @@ public final class JavaAdapter
     private static int generatePushParam(ClassFileWriter cfw, int paramOffset,
                                          Class paramType)
     {
+        if (!paramType.isPrimitive()) {
+            cfw.addALoad(paramOffset);
+            return 1;
+        }
         String typeName = paramType.getName();
         switch (typeName.charAt(0)) {
         case 'z':
@@ -744,23 +988,21 @@ public final class JavaAdapter
         case 's':
         case 'i':
             // load an int value, convert to double.
-            cfw.add(ByteCode.ILOAD, paramOffset++);
-            break;
+            cfw.addILoad(paramOffset);
+            return 1;
         case 'l':
             // load a long, convert to double.
-            cfw.add(ByteCode.LLOAD, paramOffset);
-            paramOffset += 2;
-            break;
+            cfw.addLLoad(paramOffset);
+            return 2;
         case 'f':
             // load a float, convert to double.
-            cfw.add(ByteCode.FLOAD, paramOffset++);
-            break;
+            cfw.addFLoad(paramOffset);
+            return 1;
         case 'd':
-            cfw.add(ByteCode.DLOAD, paramOffset);
-            paramOffset += 2;
-            break;
+            cfw.addDLoad(paramOffset);
+            return 2;
         }
-        return paramOffset;
+        throw Kit.codeBug();
     }
 
     /**
@@ -815,11 +1057,7 @@ public final class JavaAdapter
         // push the rest of the parameters.
         int paramOffset = 1;
         for (int i = 0; i < parms.length; i++) {
-            if (parms[i].isPrimitive()) {
-                paramOffset = generatePushParam(cfw, paramOffset, parms[i]);
-            } else {
-                cfw.add(ByteCode.ALOAD, paramOffset++);
-            }
+            paramOffset += generatePushParam(cfw, paramOffset, parms[i]);
         }
 
         // call the superclass implementation of the method.
@@ -844,13 +1082,27 @@ public final class JavaAdapter
     private static String getMethodSignature(Method method, Class[] argTypes)
     {
         StringBuffer sb = new StringBuffer();
+        appendMethodSignature(argTypes, method.getReturnType(), sb);
+        return sb.toString();
+    }
+
+    private static int appendMethodSignature(Class[] argTypes,
+                                             Class returnType,
+                                             StringBuffer sb)
+    {
         sb.append('(');
+        int firstLocal = 1 + argTypes.length; // includes this.
         for (int i = 0; i < argTypes.length; i++) {
-            appendTypeString(sb, argTypes[i]);
+            Class type = argTypes[i];
+            appendTypeString(sb, type);
+            if (type == Long.TYPE || type == Double.TYPE) {
+                // adjust for duble slot
+                ++firstLocal;
+            }
         }
         sb.append(')');
-        appendTypeString(sb, method.getReturnType());
-        return sb.toString();
+        appendTypeString(sb, returnType);
+        return firstLocal;
     }
 
     private static StringBuffer appendTypeString(StringBuffer sb, Class type)
@@ -878,74 +1130,23 @@ public final class JavaAdapter
         return sb;
     }
 
-}
-
-final class JavaAdapterConstructor extends JIFunction
-{
-    JavaAdapterConstructor()
+    private static int[] getArgsToConvert(Class[] argTypes)
     {
-        super("JavaAdapter", 1);
-    }
-
-    public Scriptable createObject(Context cx, Scriptable scope)
-    {
-        return null;
-    }
-
-    public Object call(Context cx, Scriptable scope,
-                       Scriptable thisObj, Object[] args)
-    {
-        return JavaAdapter.js_createAdpter(cx, scope, args);
-    }
-}
-
-/**
- * Provides a key with which to distinguish previously generated
- * adapter classes stored in a hash table.
- */
-class JavaAdapterSignature
-{
-    Class superClass;
-    Class[] interfaces;
-    ObjToIntMap names;
-
-    JavaAdapterSignature(Class superClass, Class[] interfaces,
-                         ObjToIntMap names)
-    {
-        this.superClass = superClass;
-        this.interfaces = interfaces;
-        this.names = names;;
-    }
-
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof JavaAdapterSignature))
-            return false;
-        JavaAdapterSignature sig = (JavaAdapterSignature) obj;
-        if (superClass != sig.superClass)
-            return false;
-        if (interfaces != sig.interfaces) {
-            if (interfaces.length != sig.interfaces.length)
-                return false;
-            for (int i=0; i < interfaces.length; i++)
-                if (interfaces[i] != sig.interfaces[i])
-                    return false;
+        int count = 0;
+        for (int i = 0; i != argTypes.length; ++i) {
+            if (!argTypes[i].isPrimitive())
+                ++count;
         }
-        if (names.size() != sig.names.size())
-            return false;
-        ObjToIntMap.Iterator iter = new ObjToIntMap.Iterator(names);
-        for (iter.start(); !iter.done(); iter.next()) {
-            String name = (String)iter.getKey();
-            int arity = iter.getValue();
-            if (arity != names.get(name, arity + 1))
-                return false;
+        if (count == 0)
+            return null;
+        int[] array = new int[count];
+        count = 0;
+        for (int i = 0; i != argTypes.length; ++i) {
+            if (!argTypes[i].isPrimitive())
+                array[count++] = i;
         }
-        return true;
+        return array;
     }
 
-    public int hashCode()
-    {
-        return superClass.hashCode()
-            | (0x9e3779b9 * (names.size() | (interfaces.length << 16)));
-    }
+
 }

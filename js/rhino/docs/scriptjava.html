@@ -167,7 +167,27 @@ When we type <tt>buttonListener = java.awt.event.ActionListener(o)</tt>,
 Rhino actually creates a new Java class that implements <tt>ActionListener</tt>
 and forwards calls from that class to the JavaScript object. So when you
 click on the button, the <tt>printDate</tt> method is called.
-<br>&nbsp;
+<p>
+Starting from the release 1.5R5  Rhino allows to pass JavaScript functions directly to Java methods if the corresponding argument is Java interface with single method. It allows to pass <tt>printDate</tt> directly to <tt>addActionListener</tt> and simplifies example:
+<pre>$ java org.mozilla.javascript.tools.shell.Main
+js> importPackage(java.awt);
+js> frame = new Frame("JavaScript")
+java.awt.Frame[frame0,0,0,0x0,invalid,hidden,layout=java.awt.BorderLayout,title=JavaScript,resizable,normal]
+js> button = new Button("OK")
+java.awt.Button[button0,0,0,0x0,invalid,label=OK]
+js> frame.setSize(new Dimension(200,100))
+js> frame.add(button)
+java.awt.Button[button0,0,0,0x0,invalid,label=OK]
+js> frame.show()
+js> function printDate() { print(new Date()) }
+js> printDate()
+Mon Oct 27 2003 10:35:44 GMT+0100 (CET)
+js> button.addActionListener(printDate)
+js> Mon Oct 27 2003 10:36:09 GMT+0100 (CET)
+Mon Oct 27 2003 10:36:10 GMT+0100 (CET)
+quit()
+$</pre>
+
 <h2>
 JavaAdapter constructor</h2>
 Another way to create a JavaAdapter is to call the JavaAdapter constructor

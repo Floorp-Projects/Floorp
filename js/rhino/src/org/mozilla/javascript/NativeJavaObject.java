@@ -260,101 +260,97 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     public static int getConversionWeight(Object fromObj, Class to) {
         int fromCode = getJSTypeCode(fromObj);
 
-        int result = CONVERSION_NONE;
-
         switch (fromCode) {
 
         case JSTYPE_UNDEFINED:
             if (to == ScriptRuntime.StringClass ||
                 to == ScriptRuntime.ObjectClass) {
-                result = 1;
+                return 1;
             }
             break;
 
         case JSTYPE_NULL:
             if (!to.isPrimitive()) {
-                result = 1;
+                return 1;
             }
             break;
 
         case JSTYPE_BOOLEAN:
             // "boolean" is #1
             if (to == Boolean.TYPE) {
-                result = 1;
+                return 1;
             }
             else if (to == ScriptRuntime.BooleanClass) {
-                result = 2;
+                return 2;
             }
             else if (to == ScriptRuntime.ObjectClass) {
-                result = 3;
+                return 3;
             }
             else if (to == ScriptRuntime.StringClass) {
-                result = 4;
+                return 4;
             }
             break;
 
         case JSTYPE_NUMBER:
             if (to.isPrimitive()) {
                 if (to == Double.TYPE) {
-                    result = 1;
+                    return 1;
                 }
                 else if (to != Boolean.TYPE) {
-                    result = 1 + getSizeRank(to);
+                    return 1 + getSizeRank(to);
                 }
             }
             else {
                 if (to == ScriptRuntime.StringClass) {
                     // native numbers are #1-8
-                    result = 9;
+                    return 9;
                 }
                 else if (to == ScriptRuntime.ObjectClass) {
-                    result = 10;
+                    return 10;
                 }
                 else if (ScriptRuntime.NumberClass.isAssignableFrom(to)) {
                     // "double" is #1
-                    result = 2;
+                    return 2;
                 }
             }
             break;
 
         case JSTYPE_STRING:
             if (to == ScriptRuntime.StringClass) {
-                result = 1;
+                return 1;
             }
             else if (to.isInstance(fromObj)) {
-                result = 2;
+                return 2;
             }
             else if (to.isPrimitive()) {
                 if (to == Character.TYPE) {
-                    result = 3;
+                    return 3;
                 } else if (to != Boolean.TYPE) {
-                    result = 4;
+                    return 4;
                 }
             }
             break;
 
         case JSTYPE_JAVA_CLASS:
             if (to == ScriptRuntime.ClassClass) {
-                result = 1;
+                return 1;
             }
             else if (to == ScriptRuntime.ObjectClass) {
-                result = 3;
+                return 3;
             }
             else if (to == ScriptRuntime.StringClass) {
-                result = 4;
+                return 4;
             }
             break;
 
         case JSTYPE_JAVA_OBJECT:
         case JSTYPE_JAVA_ARRAY:
             if (to == ScriptRuntime.StringClass) {
-                result = 2;
+                return 2;
             }
             else if (to.isPrimitive() && to != Boolean.TYPE) {
-                result =
-                    (fromCode == JSTYPE_JAVA_ARRAY) ?
-                    CONVERSION_NONTRIVIAL :
-                    2 + getSizeRank(to);
+                return (fromCode == JSTYPE_JAVA_ARRAY)
+                       ? CONVERSION_NONTRIVIAL : 2 + getSizeRank(to);
             }
             else {
                 Object javaObj = fromObj;
@@ -362,7 +358,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     javaObj = ((Wrapper)javaObj).unwrap();
                 }
                 if (to.isInstance(javaObj)) {
-                    result = CONVERSION_NONTRIVIAL;
+                    return CONVERSION_NONTRIVIAL;
                 }
             }
             break;
@@ -374,28 +370,39 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     // This is a native array conversion to a java array
                     // Array conversions are all equal, and preferable to object
                     // and string conversion, per LC3.
-                    result = 1;
+                    return 1;
                 }
             }
             else if (to == ScriptRuntime.ObjectClass) {
-                result = 2;
+                return 2;
             }
             else if (to == ScriptRuntime.StringClass) {
-                result = 3;
+                return 3;
             }
             else if (to == ScriptRuntime.DateClass) {
                 if (fromObj instanceof NativeDate) {
                     // This is a native date to java date conversion
-                    result = 1;
+                    return 1;
                 }
             }
+            else if (to.isInterface()) {
+                if (fromObj instanceof BaseFunction) {
+                    // See comments in coerceType
+                    BaseFunction f = (BaseFunction)fromObj;
+                    Scriptable scope = f.getParentScope();
+                    if (JavaAdapter.canGenerateIFGlue(to, scope)) {
+                        return 1;
+                    }
+                }
+                return 11;
+            }
             else if (to.isPrimitive() || to != Boolean.TYPE) {
-                result = 3 + getSizeRank(to);
+                return 3 + getSizeRank(to);
             }
             break;
         }
 
-        return result;
+        return CONVERSION_NONE;
 
     }
 
@@ -660,6 +667,29 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 if (type.isInstance(value))
                     return value;
                 reportConversionError(value, type, !useErrorHandler);
+            }
+            else if (value instanceof BaseFunction) {
+                // Try to wrap function into interface with single method.
+                // Can not wrap generic Function since the resulting object
+                // should be reused next time conversion is made
+                // and generic Function has no storage for it.
+                // WeakMap from JDK 1.2 can address it, but for now
+                // restrict the conversion only to BaseFunction
+                BaseFunction f = (BaseFunction)value;
+                Scriptable scope = f.getParentScope();
+                JavaAdapter.IFGlue masterGlue = JavaAdapter.getIFGlueMaster(
+                                                    type, scope);
+                if (masterGlue == null) {
+                    // No master glue: type is not single-method interface
+                       reportConversionError(value, type, !useErrorHandler);
+                }
+                Object glue = f.getAssociatedValue(masterGlue);
+                if (glue == null) {
+                    // create new glue from the master
+                    glue = masterGlue.ifglue_make(f);
+                    glue = f.associateValue(masterGlue, glue);
+                }
+                value = glue;
             }
             else {
                 reportConversionError(value, type, !useErrorHandler);
@@ -960,5 +990,4 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     protected transient Class staticType;
     protected transient JavaMembers members;
     private transient Hashtable fieldAndMethods;
-
 }

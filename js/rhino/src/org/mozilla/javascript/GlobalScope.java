@@ -118,6 +118,7 @@ public class GlobalScope extends ScriptableObject
     {
         classTable.clear();
         javaAdapterGeneratedClasses.clear();
+        javaAdapterIFGlueMasters.clear();
         invokerMaster = null;
     }
 
@@ -139,6 +140,9 @@ public class GlobalScope extends ScriptableObject
 
     transient int javaAdapterSerial;
     transient final Hashtable javaAdapterGeneratedClasses = new Hashtable(7);
+
+    transient int javaAdapterIFGlueSerial;
+    transient final Hashtable javaAdapterIFGlueMasters = new Hashtable(7);
 
 
 }
