@@ -80,7 +80,6 @@ DIRS =                         \
   rdf                          \
   docshell                     \
   webshell                     \
-  embedding                    \
   profile                      \
   editor                       \
 !if defined(GC_LEAK_DETECTOR)
@@ -90,6 +89,8 @@ DIRS =                         \
 !if defined(CLIENT_DIRS)
 # the following are associated with the browser
   xpfe                         \
+# embedding must follow xpfe, needs xpfelocation_s.a.
+  embedding                    \
   xpinstall                    \
   extensions                   \
   themes \
