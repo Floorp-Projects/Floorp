@@ -868,19 +868,28 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
 
 		if (mMsgSend)
     {
+        char    *bodyString = NULL;
+        PRInt32 bodyLength;
+
+        if (!NS_SUCCEEDED(mMsgCompFields->GetBody(&bodyString)))
+          bodyString = aMsg.ToNewCString();
+
+        bodyLength = PL_strlen(bodyString);
+
         mMsgSend->SendMessage(mMsgCompFields, 
         			"",               				// const char *smtp,
 					PR_FALSE,         				// PRBool                            digest_p,
 					PR_FALSE,         				// PRBool                            dont_deliver_p,
 					nsMsgDeliverNow,   				// nsMsgDeliverMode                  mode,
 					mUseHtml?TEXT_HTML:TEXT_PLAIN,  // const char                        *attachment1_type,
-					nsAutoCString(aMsg),            // const char                        *attachment1_body,
-        			PL_strlen(nsAutoCString(aMsg)), // PRUint32                          attachment1_body_length,
+					bodyString,               // const char                        *attachment1_body,
+        	bodyLength,               // PRUint32                          attachment1_body_length,
 					NULL,             				// const struct nsMsgAttachmentData   *attachments,
 					NULL,             				// const struct nsMsgAttachedFile     *preloaded_attachments,
 					NULL,             				// nsMsgSendPart                     *relatedPart,
 					NULL);            				// void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
 								             			//                                         int status, const char *error_message))
+        PR_FREEIF(bodyString);
     }
 	}
 	if (nsnull != mScriptContext) {
