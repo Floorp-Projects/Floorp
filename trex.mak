@@ -261,7 +261,7 @@ depend_dist::
 depend_julian::
     cd $(MOZ_SRC)\ns\modules\libnls
     nmake -f makefile.win depend
-    cd $(MOZ_SRC)\ns\julian
+    cd $(MOZ_SRC)\$(MOZ_TOP)\modules\calendar
     nmake -f makefile.win depend
     cd $(MOZ_SRC)\.
 
@@ -280,7 +280,7 @@ clobber_dist::
 clobber_julian::
     cd $(MOZ_SRC)\ns\modules\libnls
     nmake -f makefile.win clobber_all
-    cd $(MOZ_SRC)\ns\julian
+    cd $(MOZ_SRC)\$(MOZ_TOP)\modules\calendar
     nmake -f makefile.win clobber_all
     cd $(MOZ_SRC)\.
 
