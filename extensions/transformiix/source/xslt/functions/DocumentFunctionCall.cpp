@@ -92,7 +92,6 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
 
             NodeSet* nodeSet2 = (NodeSet*) exprResult2;
             if (!nodeSet2->isEmpty()) {
-                mProcessorState->sortByDocumentOrder(nodeSet2);
                 baseURI = nodeSet2->get(0)->getBaseURI();
             }
             delete exprResult2;

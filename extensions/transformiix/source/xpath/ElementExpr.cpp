@@ -63,18 +63,8 @@ ElementExpr::ElementExpr(String& name)
  * @return the result of the evaluation
 **/
 ExprResult* ElementExpr::evaluate(Node* context, ContextState* cs) {
-
-    NodeSet* nodeSet = new NodeSet();
-
-    if ( !context ) return nodeSet;
-
-    Node* node = context->getFirstChild();
-    while (node) {
-        if (matches(node, context, cs))
-            nodeSet->add(node);
-        node = node->getNextSibling();
-    }
-    return nodeSet;
+    NS_ASSERTION(0, "ElementExpr::evaluate called");
+    return 0;
 } //-- evaluate
 
 /**

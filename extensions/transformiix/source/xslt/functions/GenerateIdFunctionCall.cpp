@@ -81,10 +81,11 @@ ExprResult* GenerateIdFunctionCall::evaluate(Node* aContext,
         }
 
         NodeSet* nodes = (NodeSet*) exprResult;
-        if (nodes->size() > 0) {
-            aCs->sortByDocumentOrder(nodes);
-            node = nodes->get(0);
-        }
+        if (nodes->isEmpty())
+            return new StringResult();
+
+        node = nodes->get(0);
+
         delete exprResult;
     }
     else {
@@ -93,15 +94,10 @@ ExprResult* GenerateIdFunctionCall::evaluate(Node* aContext,
 
     // generate id for selected node
     char buf[22];
-    if (node) {
 #ifdef TX_EXE
-        sprintf(buf, printfFmt, node);
+    sprintf(buf, printfFmt, node);
 #else
-        PR_snprintf(buf, 21, printfFmt, node);
+    PR_snprintf(buf, 21, printfFmt, node);
 #endif
-    }
-    else {
-        buf[0] = 0;
-    }
     return new StringResult(buf);
 }

@@ -813,8 +813,7 @@ Document* XSLTProcessor::process(Document& xmlDocument,
         while (iter.hasNext())
             ps.addErrorObserver(*(ErrorObserver*)iter.next());
     
-        NodeSet nodeSet;
-        nodeSet.add(&aXMLDocument);
+        NodeSet nodeSet(&aXMLDocument);
         ps.pushCurrentNode(&aXMLDocument);
         ps.getNodeSetStack()->push(&nodeSet);
     
@@ -864,8 +863,7 @@ void XSLTProcessor::process(Document& aXMLDocument,
         while (iter.hasNext())
             ps.addErrorObserver(*(ErrorObserver*)iter.next());
 
-        NodeSet nodeSet;
-        nodeSet.add(&aXMLDocument);
+        NodeSet nodeSet(&aXMLDocument);
         ps.pushCurrentNode(&aXMLDocument);
         ps.getNodeSetStack()->push(&nodeSet);
 
@@ -1142,9 +1140,6 @@ void XSLTProcessor::processAction(Node* aNode,
                 if (exprResult->getResultType() == ExprResult::NODESET) {
                     NodeSet* nodeSet = (NodeSet*)exprResult;
 
-                    //-- make sure nodes are in DocumentOrder
-                    aPs->sortByDocumentOrder(nodeSet);
-
                     //-- push nodeSet onto context stack
                     aPs->getNodeSetStack()->push(nodeSet);
 
@@ -1416,9 +1411,6 @@ void XSLTProcessor::processAction(Node* aNode,
 
                 if (exprResult->getResultType() == ExprResult::NODESET) {
                     NodeSet* nodeSet = (NodeSet*)exprResult;
-
-                    //-- make sure nodes are in DocumentOrder
-                    aPs->sortByDocumentOrder(nodeSet);
 
                     //-- push nodeSet onto context stack
                     aPs->getNodeSetStack()->push(nodeSet);
@@ -1917,10 +1909,6 @@ void XSLTProcessor::processDefaultTemplate(Node* node,
 
             NodeSet* nodeSet = (NodeSet*)exprResult;
 
-            //-- make sure nodes are in DocumentOrder
-            //-- this isn't strictly neccecary with the current XPath engine
-            ps->sortByDocumentOrder(nodeSet);
-
             //-- push nodeSet onto context stack
             ps->getNodeSetStack()->push(nodeSet);
             for (int i = 0; i < nodeSet->size(); i++) {
@@ -2157,7 +2145,6 @@ void XSLTProcessor::xslCopyOf(ExprResult* aExprResult, ProcessorState* aPs)
         case ExprResult::NODESET:
         {
             NodeSet* nodes = (NodeSet*)aExprResult;
-            aPs->sortByDocumentOrder(nodes);
             int i;
             for (i = 0; i < nodes->size(); i++) {
                 Node* node = nodes->get(i);
@@ -2348,8 +2335,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
         // XXX Need to add error observers
 
         // Set current node and nodeset.
-        NodeSet nodeSet;
-        nodeSet.add(&sourceDocument);
+        NodeSet nodeSet(&sourceDocument);
         ps.pushCurrentNode(&sourceDocument);
         ps.getNodeSetStack()->push(&nodeSet);
 
