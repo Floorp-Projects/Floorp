@@ -28,6 +28,8 @@
 #include "new_manage.h"
 #include "new_manageP.h"
 
+#include <Xfe/Xfe.h>
+
 /* for XP_GetString() */
 #include <xpgetstr.h>
 
@@ -1204,6 +1206,15 @@ fe_scroller_resize (Widget widget, XtPointer closure)
   Dimension w = 0, h = 0;
   Boolean relayout_p = False;
 
+#ifdef ENABLE_MARINER 
+  /* If we're already resizing (set below...), then DO NOT bother to 
+     do anything in here. Doing so would cause an infinite recursion: 
+     Mariner will resize the widget, which will call this, which will 
+     call Mariner, which will resize the widget...you get the idea. */ 
+  if (CONTEXT_DATA(context)->is_resizing) 
+      return; 
+#endif 
+
   XtVaGetValues (widget, XmNwidth, &w, XmNheight, &h, 0);
 
   relayout_p = ((Dimension) fep->scrolled_width) != w;
@@ -1320,6 +1331,11 @@ fe_scroller_resize (Widget widget, XtPointer closure)
             LO_GetDocumentMargins(context, &margin_w, &margin_h);
 	    
 	    LO_RelayoutOnResize(context, w, h, margin_w, margin_h);
+
+            /* Since we won't ever re-load this page (it's Mariner, 
+               see), we need to clear this flag in anticipation of the 
+               next resize. */ 
+            CONTEXT_DATA(context)->is_resizing = FALSE; 
 	  }
 #else
 	/*  As vidur suggested in Bug 59214: because JS generated content
