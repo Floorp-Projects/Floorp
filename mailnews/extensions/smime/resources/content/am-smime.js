@@ -145,6 +145,7 @@ function onLockPreference()
 // stomping on the disabled state indiscriminately.
 function disableIfLocked( prefstrArray )
 {
+  var i;
   for (i=0; i<prefstrArray.length; i++) {
     var id = prefstrArray[i].id;
     var element = document.getElementById(id);
@@ -216,7 +217,7 @@ function checkOtherCert(nickname, pref, usage, msgNeedCertWantSame, msgWantSame,
 
   var certdb = Components.classes[nsX509CertDBContractID].getService(nsIX509CertDB);
   if (!certdb)
-    return null;
+    return;
   
   if (email_recipient_cert_usage == usage) {
     matchingOtherCert = certdb.getEmailEncryptionCert(nickname);
