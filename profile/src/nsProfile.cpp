@@ -98,7 +98,7 @@
 #define PREG_URL			"http://seaspace.mcom.com/"
 
 
-#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_profile 1
 #endif
 
