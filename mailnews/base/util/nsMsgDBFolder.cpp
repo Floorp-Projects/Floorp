@@ -228,7 +228,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags,
 			{
 				NotifyItemAdded(msgSupports);
 			}
-			UpdateSummaryTotals();
+		//	UpdateSummaryTotals();
 		}
 	}
 	return NS_OK;
