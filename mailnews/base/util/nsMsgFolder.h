@@ -200,6 +200,7 @@ public:
   NS_IMETHOD GetStringWithFolderNameFromBundle(const char* msgName, PRUnichar **aResult);
   NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
   NS_IMETHOD GetSortKey(PRUnichar **aSortKey);
+  NS_IMETHOD GetParentMsgFolder(nsIMsgFolder **aParentMsgFolder);
   // end NS_DECL_NSIMSGFOLDER
   
   // nsRDFResource overrides

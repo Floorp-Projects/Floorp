@@ -739,20 +739,13 @@ function IsSpecialFolder(msgFolder, flags)
         return false;
     }
     else if ((msgFolder.flags & flags) == 0) {
-        var folder = msgFolder.QueryInterface(Components.interfaces.nsIFolder);
+	  var parentMsgFolder = msgFolder.parentMsgFolder;
 
-        if (folder && folder.parent) {
-            var parentMsgFolder = folder.parent.QueryInterface(Components.interfaces.nsIMsgFolder);
+      if(!parentMsgFolder) {
+         return false;
+      }
 
-            if(!parentMsgFolder) {
-                return false;
-            }
-
-            return IsSpecialFolder(parentMsgFolder, flags);
-        }
-        else {
-            return false;
-        }
+      return IsSpecialFolder(parentMsgFolder, flags);
     }
     else {
         // the user can set their INBOX to be their SENT folder.

@@ -1697,14 +1697,8 @@ nsMsgFolderDataSource::NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aP
     return NS_OK;
   }
   
-  nsCOMPtr <nsIFolder> folder = do_QueryInterface(aFolder, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr <nsIFolder> parentFolder;
-  rv = folder->GetParent(getter_AddRefs(parentFolder));
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  nsCOMPtr <nsIMsgFolder> parentMsgFolder = do_QueryInterface(parentFolder, &rv);
+  nsCOMPtr <nsIMsgFolder> parentMsgFolder;
+  rv = aFolder->GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = parentMsgFolder->GetIsServer(&isServer);
@@ -1717,7 +1711,7 @@ nsMsgFolderDataSource::NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aP
     return NS_OK;
   }
 
-  nsCOMPtr<nsIRDFResource> parentFolderResource = do_QueryInterface(parentFolder,&rv);
+  nsCOMPtr<nsIRDFResource> parentFolderResource = do_QueryInterface(parentMsgFolder,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   NotifyPropertyChanged(parentFolderResource, aPropertyResource, aNode);

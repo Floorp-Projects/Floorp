@@ -899,11 +899,9 @@ NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
 NS_IMETHODIMP nsImapMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListener)
 {
 	nsresult status = NS_OK;
-  nsCOMPtr <nsIFolder> parent;
-  GetParent(getter_AddRefs(parent));
   nsCOMPtr <nsIMsgFolder> msgParent;
-  if (parent)
-    msgParent = do_QueryInterface(parent);
+  GetParentMsgFolder(getter_AddRefs(msgParent));
+  
   // parent is probably not set because *this* was probably created by rdf
   // and not by folder discovery. So, we have to compute the parent.
   if (!msgParent)
@@ -1986,7 +1984,6 @@ PRBool
 nsImapMailFolder::TrashOrDescendentOfTrash(nsIMsgFolder* folder)
 {
     nsCOMPtr<nsIMsgFolder> parent;
-    nsCOMPtr<nsIFolder> iFolder;
     nsCOMPtr<nsIMsgFolder> curFolder;
     nsresult rv;
     PRUint32 flags = 0;
@@ -2001,9 +1998,7 @@ nsImapMailFolder::TrashOrDescendentOfTrash(nsIMsgFolder* folder)
         if (NS_FAILED(rv)) return PR_FALSE;
         if (flags & MSG_FOLDER_FLAG_TRASH)
             return PR_TRUE;
-        rv = curFolder->GetParent(getter_AddRefs(iFolder));
-        if (NS_FAILED(rv)) return PR_FALSE;
-        parent = do_QueryInterface(iFolder, &rv);
+        rv = curFolder->GetParentMsgFolder(getter_AddRefs(parent));
         if (NS_FAILED(rv)) return PR_FALSE;
         curFolder = do_QueryInterface(parent, &rv);
     } while (NS_SUCCEEDED(rv) && curFolder);
@@ -5860,13 +5855,12 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
         unusedDB->Close(PR_TRUE);
 
-	    child->RenameSubFolders(msgWindow, msgFolder);
+	      child->RenameSubFolders(msgWindow, msgFolder);
        
-    nsCOMPtr<nsIFolder> parent;
-    msgFolder->GetParent(getter_AddRefs(parent));
-    nsCOMPtr<nsIMsgFolder> msgParent = do_QueryInterface(parent);
-    msgFolder->SetParent(nsnull);
-    msgParent->PropagateDelete(msgFolder,PR_FALSE, nsnull);
+        nsCOMPtr<nsIMsgFolder> msgParent;
+        msgFolder->GetParentMsgFolder(getter_AddRefs(msgParent));
+        msgFolder->SetParent(nsnull);
+        msgParent->PropagateDelete(msgFolder,PR_FALSE, nsnull);
 
         nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
         nsCOMPtr<nsISupports> parentSupports;

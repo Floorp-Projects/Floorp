@@ -721,11 +721,9 @@ nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* urlListener)
 {
 	nsresult status = NS_OK;
-  nsCOMPtr <nsIFolder> parent;
-  GetParent(getter_AddRefs(parent));
   nsCOMPtr <nsIMsgFolder> msgParent;
-  if (parent)
-    msgParent = do_QueryInterface(parent);
+  GetParentMsgFolder(getter_AddRefs(msgParent));
+
   // parent is probably not set because *this* was probably created by rdf
   // and not by folder discovery. So, we have to compute the parent.
   if (!msgParent)
@@ -1006,42 +1004,38 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           rv = aEnumerator->First();    //will fail if no subfolders 
           if (NS_FAILED(rv)) return NS_OK;
         }
-        nsCOMPtr<nsIFolder> parent;
-        rv = trashFolder->GetParent(getter_AddRefs(parent));
-        if (NS_SUCCEEDED(rv) && parent)
+        nsCOMPtr<nsIMsgFolder> parentFolder;
+        rv = trashFolder->GetParentMsgFolder(getter_AddRefs(parentFolder));
+        if (NS_SUCCEEDED(rv) && parentFolder)
         {
-            nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent, &rv);
-            if (NS_SUCCEEDED(rv) && parentFolder)
+          nsXPIDLString idlFolderName;
+          rv = trashFolder->GetName(getter_Copies(idlFolderName));
+          if (NS_SUCCEEDED(rv))
+          {
+            nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+            nsCOMPtr <nsIDBFolderInfo> transferInfo;
+            nsCOMPtr <nsIMsgDatabase> db;
+            trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+            if (dbFolderInfo)
+              dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+            dbFolderInfo = nsnull;
+
+            nsString folderName(idlFolderName);
+            trashFolder->SetParent(nsnull);
+            parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
+            parentFolder->CreateSubfolder(folderName.get(),nsnull);
+            nsCOMPtr<nsIMsgFolder> newTrashFolder;
+            rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
+            if (NS_SUCCEEDED(rv) && newTrashFolder)
+              newTrashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(db));
+            
+            if (transferInfo && db)
             {
-                nsXPIDLString idlFolderName;
-                rv = trashFolder->GetName(getter_Copies(idlFolderName));
-                if (NS_SUCCEEDED(rv))
-                {
-                    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
-                    nsCOMPtr <nsIDBFolderInfo> transferInfo;
-                    nsCOMPtr <nsIMsgDatabase> db;
-                    trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
-                    if (dbFolderInfo)
-                      dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
-                    dbFolderInfo = nsnull;
-
-                    nsString folderName(idlFolderName);
-                    trashFolder->SetParent(nsnull);
-                    parentFolder->PropagateDelete(trashFolder, PR_TRUE, msgWindow);
-                    parentFolder->CreateSubfolder(folderName.get(),nsnull);
-                    nsCOMPtr<nsIMsgFolder> newTrashFolder;
-                    rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
-                    if (NS_SUCCEEDED(rv) && newTrashFolder)
-                      newTrashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(db));
-
-                    if (transferInfo && db)
-                    {
-                      db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-                      if (dbFolderInfo)
-                        dbFolderInfo->InitFromTransferInfo(transferInfo);
-                    }
-                }
+              db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+              if (dbFolderInfo)
+                dbFolderInfo->InitFromTransferInfo(transferInfo);
             }
+          }
         }
     }
     return rv;
@@ -1065,16 +1059,13 @@ nsresult nsMsgLocalMailFolder::IsChildOfTrash(PRBool *result)
       return rv;
   }
 
-  nsCOMPtr<nsIFolder> parent;
   nsCOMPtr<nsIMsgFolder> parentFolder;
   nsCOMPtr<nsIMsgFolder> thisFolder;
   rv = QueryInterface(NS_GET_IID(nsIMsgFolder), (void **)
                       getter_AddRefs(thisFolder));
 
   while (!isServer && thisFolder) {
-    rv = thisFolder->GetParent(getter_AddRefs(parent));
-    if (NS_FAILED(rv)) return rv;
-    parentFolder = do_QueryInterface(parent, &rv);
+    rv = thisFolder->GetParentMsgFolder(getter_AddRefs(parentFolder));
     if (NS_FAILED(rv)) return rv;
     rv = parentFolder->GetIsServer(&isServer);
     if (NS_FAILED(rv) || isServer) return rv;
@@ -1240,13 +1231,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
 NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msgWindow)
 {
     nsCOMPtr<nsIFileSpec> oldPathSpec;
-    nsCOMPtr<nsIFolder> parent;
     nsresult rv = GetPath(getter_AddRefs(oldPathSpec));
     if (NS_FAILED(rv)) return rv;
-    rv = GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIMsgFolder> parentFolder;
+    rv = GetParentMsgFolder(getter_AddRefs(parentFolder));
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
-    nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parent);
+    nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parentFolder);
     
     nsFileSpec fileSpec;
     oldPathSpec->GetFileSpec(&fileSpec);
@@ -2078,15 +2068,12 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
         NotifyItemAdded(parentSupports, supports, "folderView");
     }
 
-    nsCOMPtr <nsIFolder> parent;
     nsCOMPtr<nsIMsgFolder> msgParent;
-    srcFolder->GetParent(getter_AddRefs(parent));
+    srcFolder->GetParentMsgFolder(getter_AddRefs(msgParent));
     srcFolder->SetParent(nsnull);
-    if (parent) 
+    if (msgParent) 
     {
-      msgParent = do_QueryInterface(parent);
-      if (msgParent)
-        msgParent->PropagateDelete(srcFolder, PR_FALSE, msgWindow);  // The files have already been moved, so delete storage PR_FALSE 
+      msgParent->PropagateDelete(srcFolder, PR_FALSE, msgWindow);  // The files have already been moved, so delete storage PR_FALSE 
       oldPath.Delete(PR_TRUE);  //berkeley mailbox
       summarySpec.Delete(PR_TRUE); //msf file
       if (!oldPath.IsDirectory())   

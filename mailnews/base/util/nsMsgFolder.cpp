@@ -502,6 +502,16 @@ NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **aParent)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::GetParentMsgFolder(nsIMsgFolder **aParentMsgFolder)
+{
+  NS_ENSURE_ARG_POINTER(aParentMsgFolder);
+  nsCOMPtr <nsIFolder> parent;
+  nsresult rv = GetParent(getter_AddRefs(parent));
+  if (NS_SUCCEEDED(rv) && parent)
+    rv = parent->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aParentMsgFolder);
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMsgFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
@@ -639,16 +649,11 @@ nsMsgFolder::parseURI(PRBool needServer)
   if (NS_FAILED(rv) || !server) {
     
     // first try asking the parent instead of the URI
-    nsCOMPtr<nsIFolder> parent;
-    rv = GetParent(getter_AddRefs(parent));
-    
-    if (NS_SUCCEEDED(rv) && parent) {
-      nsCOMPtr<nsIMsgFolder> parentMsgFolder =
-        do_QueryInterface(parent, &rv);
+    nsCOMPtr<nsIMsgFolder> parentMsgFolder;
+    rv = GetParentMsgFolder(getter_AddRefs(parentMsgFolder));
 
-      if (NS_SUCCEEDED(rv))
-        rv = parentMsgFolder->GetServer(getter_AddRefs(server));
-    }
+    if (NS_SUCCEEDED(rv) && parentMsgFolder)
+      rv = parentMsgFolder->GetServer(getter_AddRefs(server));
 
     // no parent. do the extra work of asking
     if (!server && needServer) {
