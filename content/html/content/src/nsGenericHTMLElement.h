@@ -243,6 +243,10 @@ public:
   static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
                                   nsIFormControlFrame *&aFormControlFrame);
 
+  static nsresult GetBaseURL(nsIHTMLAttributes* aAttributes,
+                             nsIDocument* aDocument,
+                             nsIURL** aResult);
+
   nsIHTMLAttributes* mAttributes;
 };
 
