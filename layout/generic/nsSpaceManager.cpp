@@ -752,8 +752,13 @@ PRBool nsSpaceManager::OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy)
     return PR_FALSE;
   }
 
+  // Compute new rect for the region; note that we have to translate
+  // from the global coordinate system (frameInfo->rect) to our
+  // current local coordinate system before adding the rect region
+  // again (since AddRectRegion operates relative to the current
+  // translation).
   nsRect  rect(frameInfo->rect);
-  rect.MoveBy(aDx, aDy);
+  rect.MoveBy(-mX + aDx, -mY + aDy);
 
   // Verify that the offset is within the defined coordinate space
   if ((rect.x < 0) || (rect.y < 0)) {
