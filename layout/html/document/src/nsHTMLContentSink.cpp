@@ -66,6 +66,7 @@
 
 #include "nsIScrollableView.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
@@ -1945,8 +1946,10 @@ SinkContext::AddText(const nsAReadableString& aText)
         return rv;
       }
     }
-    CopyUnicodeTo(aText, offset, &mText[mTextLength], amount);
-    mTextLength += amount;
+    mTextLength += nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(aText, 
+                                                                 offset, 
+                                                                 &mText[mTextLength], 
+                                                                 amount);
     offset += amount;
     addLen -= amount;
   }

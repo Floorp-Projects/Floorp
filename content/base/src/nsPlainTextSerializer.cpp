@@ -35,6 +35,7 @@
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsParserCIID.h"
+#include "nsLayoutUtils.h"
 
 static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -363,11 +364,25 @@ nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 {
-  PRInt32 type = aNode.GetNodeType();
+  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   const nsAReadableString& text = aNode.GetText();
 
   mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
-  return DoAddLeaf(type, text);
+  if ((type == eHTMLTag_text) ||
+      (type == eHTMLTag_whitespace) ||
+      (type == eHTMLTag_newline)) {
+    // Copy the text out, stripping out CRs
+    nsAutoString str;
+    PRUint32 length;
+    str.SetCapacity(text.Length());
+    nsReadingIterator<PRUnichar> srcStart, srcEnd;
+    length = nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(text.BeginReading(srcStart), text.EndReading(srcEnd), str);
+    str.SetLength(length);
+    return DoAddLeaf(type, str);
+  }
+  else {
+    return DoAddLeaf(type, text);
+  }
 }
 
 NS_IMETHODIMP

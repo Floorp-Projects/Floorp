@@ -43,6 +43,7 @@
 #include "nsINodeInfo.h"
 #include "prmem.h"
 #include "nsReadableUtils.h"
+#include "nsLayoutUtils.h"
 
 //
 // XXX THIS IS TEMPORARY CODE
@@ -766,8 +767,10 @@ nsHTMLFragmentContentSink::AddText(const nsAReadableString& aString)
         return rv;
       }
     }
-    CopyUnicodeTo(aString, offset, &mText[mTextLength], amount);
-    mTextLength += amount;
+    mTextLength += nsLayoutUtils::CopyNewlineNormalizedUnicodeTo(aString, 
+                                                                 offset, 
+                                                                 &mText[mTextLength], 
+                                                                 amount);
     offset += amount;
     addLen -= amount;
   }
