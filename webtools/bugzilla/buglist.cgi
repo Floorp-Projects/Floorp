@@ -75,7 +75,7 @@ my $dotweak = $::FORM{'tweak'} ? 1 : 0;
 # Log the user in
 if ($dotweak) {
     confirm_login();
-    UserInGroup("editbugs") || ThrowUserError("insufficient_perms_for_multi");
+    UserInGroup("editbugs") || ThrowUserError("insufficient_privs_for_multi");
     GetVersionTable();
 }
 else {
