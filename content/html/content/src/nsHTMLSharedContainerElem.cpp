@@ -95,7 +95,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -317,9 +317,9 @@ nsHTMLSharedContainerElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLSharedContainerElement::HasAttributeDependentStyle(const nsIAtom* aAttr) const
+nsHTMLSharedContainerElement::IsAttributeMapped(const nsIAtom* aAttr) const
 {
-  if (nsGenericHTMLElement::HasAttributeDependentStyle(aAttr)) {
+  if (nsGenericHTMLElement::IsAttributeMapped(aAttr)) {
     return PR_TRUE;
   }
 

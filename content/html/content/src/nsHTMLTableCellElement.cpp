@@ -84,7 +84,7 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
   // This does not return a nsresult since all we care about is if we
@@ -511,9 +511,9 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLTableCellElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLTableCellElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry attributes[] = {
+  static const MappedAttributeEntry attributes[] = {
     { &nsHTMLAtoms::align }, 
     { &nsHTMLAtoms::valign },
     { &nsHTMLAtoms::nowrap },
@@ -530,7 +530,7 @@ nsHTMLTableCellElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) co
     { nsnull }
   };
 
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
     sBackgroundAttributeMap,

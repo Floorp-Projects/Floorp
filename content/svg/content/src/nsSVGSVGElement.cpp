@@ -93,7 +93,7 @@ public:
   NS_IMETHOD GetParentViewportRect(nsISVGViewportRect **parentViewport);
 
   // nsIStyledContent interface
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
@@ -1086,9 +1086,9 @@ nsSVGSVGElement::GetParentViewportRect(nsISVGViewportRect **parentViewport)
 // nsIStyledContent methods
 
 NS_IMETHODIMP_(PRBool)
-nsSVGSVGElement::HasAttributeDependentStyle(const nsIAtom* name) const
+nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sFillStrokeMap,
     sGraphicsMap,
     sTextContentElementsMap,
@@ -1096,7 +1096,7 @@ nsSVGSVGElement::HasAttributeDependentStyle(const nsIAtom* name) const
   };
 
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGElement::HasAttributeDependentStyle(name);
+    nsSVGElement::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------

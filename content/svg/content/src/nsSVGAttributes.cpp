@@ -570,7 +570,7 @@ nsSVGAttributes::AffectsContentStyleRule(const nsIAtom* aAttribute)
   nsCOMPtr<nsIStyledContent> styledContent = do_QueryInterface(mContent);
   NS_ASSERTION(styledContent, "could not get nsIStyledContent interface");
 
-  return styledContent->HasAttributeDependentStyle(aAttribute);
+  return styledContent->IsAttributeMapped(aAttribute);
 }
 
 void

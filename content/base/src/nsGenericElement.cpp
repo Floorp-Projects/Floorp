@@ -2117,7 +2117,7 @@ nsGenericElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsGenericElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsGenericElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
   return PR_FALSE;
 }
@@ -2145,11 +2145,11 @@ nsGenericElement::GetClassAttributeName() const
 
 PRBool
 nsGenericElement::FindAttributeDependence(const nsIAtom* aAttribute,
-                                          const AttributeDependenceEntry* const aMaps[],
+                                          const MappedAttributeEntry* const aMaps[],
                                           PRUint32 aMapCount)
 {
   for (PRUint32 mapindex = 0; mapindex < aMapCount; ++mapindex) {
-    for (const AttributeDependenceEntry* map = aMaps[mapindex];
+    for (const MappedAttributeEntry* map = aMaps[mapindex];
          map->attribute; ++map) {
       if (aAttribute == *map->attribute) {
         return PR_TRUE;

@@ -83,7 +83,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
 nsresult
@@ -305,26 +305,26 @@ void ColMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLTableColElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry attributes[] = {
+  static const MappedAttributeEntry attributes[] = {
     { &nsHTMLAtoms::width },
     { &nsHTMLAtoms::align },
     { &nsHTMLAtoms::valign },
     { nsnull }
   };
 
-  static const AttributeDependenceEntry span_attribute[] = {
+  static const MappedAttributeEntry span_attribute[] = {
     { &nsHTMLAtoms::span },
     { nsnull }
   };
 
-  static const AttributeDependenceEntry* const col_map[] = {
+  static const MappedAttributeEntry* const col_map[] = {
     attributes,
     sCommonAttributeMap,
   };
 
-  static const AttributeDependenceEntry* const colspan_map[] = {
+  static const MappedAttributeEntry* const colspan_map[] = {
     attributes,
     span_attribute,
     sCommonAttributeMap,

@@ -111,10 +111,10 @@ public:
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetInlineStyleRule(nsICSSStyleRule** aStyleRule);
 
-  static const AttributeDependenceEntry sFillStrokeMap[];
-  static const AttributeDependenceEntry sGraphicsMap[];
-  static const AttributeDependenceEntry sTextContentElementsMap[];
-  static const AttributeDependenceEntry sFontSpecificationMap[];
+  static const MappedAttributeEntry sFillStrokeMap[];
+  static const MappedAttributeEntry sGraphicsMap[];
+  static const MappedAttributeEntry sTextContentElementsMap[];
+  static const MappedAttributeEntry sFontSpecificationMap[];
   
   // nsIDOMNode
   NS_DECL_NSIDOMNODE

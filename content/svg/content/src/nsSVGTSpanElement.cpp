@@ -74,7 +74,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTSpanElementBase::)
 
   // nsIStyledContent interface
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
 
@@ -344,9 +344,9 @@ NS_IMETHODIMP nsSVGTSpanElement::SelectSubString(PRUint32 charnum, PRUint32 ncha
 // nsIStyledContent methods
 
 NS_IMETHODIMP_(PRBool)
-nsSVGTSpanElement::HasAttributeDependentStyle(const nsIAtom* name) const
+nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sFillStrokeMap,
     sGraphicsMap,
     sTextContentElementsMap,
@@ -354,7 +354,7 @@ nsSVGTSpanElement::HasAttributeDependentStyle(const nsIAtom* name) const
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGTSpanElementBase::HasAttributeDependentStyle(name);
+    nsSVGTSpanElementBase::IsAttributeMapped(name);
 }
 
 //----------------------------------------------------------------------

@@ -64,7 +64,7 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGGElementBase::)
 
   // nsIStyledContent
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 protected:
 };
 
@@ -175,13 +175,13 @@ nsSVGGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 // nsIStyledContent methods
 
 NS_IMETHODIMP_(PRBool)
-nsSVGGElement::HasAttributeDependentStyle(const nsIAtom* name) const
+nsSVGGElement::IsAttributeMapped(const nsIAtom* name) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sTextContentElementsMap,
     sFontSpecificationMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGGElementBase::HasAttributeDependentStyle(name);
+    nsSVGGElementBase::IsAttributeMapped(name);
 }

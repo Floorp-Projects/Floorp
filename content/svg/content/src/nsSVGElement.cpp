@@ -271,7 +271,7 @@ nsSVGElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 }
 
 // PresentationAttributes-FillStroke
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sFillStrokeMap[] = {
   { &nsSVGAtoms::fill },
   { &nsSVGAtoms::fill_opacity },
@@ -288,7 +288,7 @@ nsSVGElement::sFillStrokeMap[] = {
 };
 
 // PresentationAttributes-Graphics
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sGraphicsMap[] = {
   { &nsSVGAtoms::clip_path },
   { &nsSVGAtoms::clip_rule },
@@ -306,7 +306,7 @@ nsSVGElement::sGraphicsMap[] = {
 };
 
 // PresentationAttributes-TextContentElements
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sTextContentElementsMap[] = {
   { &nsSVGAtoms::alignment_baseline },
   { &nsSVGAtoms::baseline_shift },
@@ -324,7 +324,7 @@ nsSVGElement::sTextContentElementsMap[] = {
 };
 
 // PresentationAttributes-FontSpecification
-/* static */ const nsGenericElement::AttributeDependenceEntry
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsSVGElement::sFontSpecificationMap[] = {
   { &nsSVGAtoms::font_family },
   { &nsSVGAtoms::font_size },

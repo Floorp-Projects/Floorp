@@ -76,7 +76,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -196,9 +196,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLParagraphElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLParagraphElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sDivAlignAttributeMap,
     sCommonAttributeMap,
   };

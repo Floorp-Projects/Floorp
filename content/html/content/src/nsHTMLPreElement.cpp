@@ -78,7 +78,7 @@ public:
   NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
                                     PRInt32 aModType,
                                     nsChangeHint& aHint) const;
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -256,9 +256,9 @@ nsHTMLPreElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLPreElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLPreElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry attributes[] = {
+  static const MappedAttributeEntry attributes[] = {
     { &nsHTMLAtoms::variable },
     { &nsHTMLAtoms::wrap },
     { &nsHTMLAtoms::cols },
@@ -266,7 +266,7 @@ nsHTMLPreElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
     { nsnull },
   };
   
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
   };

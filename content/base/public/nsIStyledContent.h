@@ -70,10 +70,11 @@ public:
   NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify) = 0;
 
   /**
-   * Does the list of style rules walked by |WalkContentStyleRules|
-   * depend on the attribute?
+   * Is the attribute named stored in the mapped attributes?
+   *
+   * This really belongs on nsIHTMLContent instead.
    */
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const = 0;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const = 0;
 
 
   /**

@@ -307,14 +307,14 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsIDOMSVGAnimatedTransformList *
 // nsIStyledContent methods
 
 NS_IMETHODIMP_(PRBool)
-nsSVGGraphicElement::HasAttributeDependentStyle(const nsIAtom* name) const
+nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
 {
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     sFillStrokeMap,
     sGraphicsMap,
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
-    nsSVGGraphicElementBase::HasAttributeDependentStyle(name);
+    nsSVGGraphicElementBase::IsAttributeMapped(name);
 }
 

@@ -80,7 +80,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
   GenericElementCollection *mRows;
@@ -385,16 +385,16 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLTableSectionElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+nsHTMLTableSectionElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const AttributeDependenceEntry attributes[] = {
+  static const MappedAttributeEntry attributes[] = {
     { &nsHTMLAtoms::align }, 
     { &nsHTMLAtoms::valign },
     { &nsHTMLAtoms::height },
     { nsnull }
   };
 
-  static const AttributeDependenceEntry* const map[] = {
+  static const MappedAttributeEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
     sBackgroundAttributeMap,
