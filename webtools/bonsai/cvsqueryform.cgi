@@ -245,7 +245,7 @@ Between <input type=text name=mindate value='$::FORM{mindate}' size=25></td>
 </tr>
 <tr>
 <td VALIGN=TOP ALIGN=RIGHT NOWRAP>
- and <input type=text name=maxdate '$::FORM{maxdate}' size=25></td>
+ and <input type=text name=maxdate value='$::FORM{maxdate}' size=25></td>
 </tr>
 </table>
 </td>
