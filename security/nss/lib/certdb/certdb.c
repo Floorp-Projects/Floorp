@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Aaron Spangler <aaron@spangler.ods.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.70 2004/07/01 00:26:00 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.71 2004/12/02 22:08:14 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -595,6 +596,17 @@ cert_GetCertType(CERTCertificate *cert)
 	}
 	if (findOIDinOIDSeqByTagNum(extKeyUsage, 
 				    SEC_OID_EXT_KEY_USAGE_SERVER_AUTH) ==
+	    SECSuccess){
+	    if (basicConstraintPresent == PR_TRUE &&
+		(basicConstraint.isCA)) {
+		nsCertType |= NS_CERT_TYPE_SSL_CA;
+	    } else {
+		nsCertType |= NS_CERT_TYPE_SSL_SERVER;
+	    }
+	}
+	/* Treat certs with step-up OID as also having SSL server type. */
+	if (findOIDinOIDSeqByTagNum(extKeyUsage, 
+				    SEC_OID_NS_KEY_USAGE_GOVT_APPROVED) ==
 	    SECSuccess){
 	    if (basicConstraintPresent == PR_TRUE &&
 		(basicConstraint.isCA)) {
