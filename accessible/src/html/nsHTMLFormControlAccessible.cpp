@@ -169,11 +169,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 index, nsAString& _r
 NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
-    if (element) {
-      element->Click();
-      return NS_OK;
-    }
+    return DoCommand();
   }
   return NS_ERROR_INVALID_ARG;
 }

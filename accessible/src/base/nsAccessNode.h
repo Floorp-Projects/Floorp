@@ -57,6 +57,7 @@ class nsPresContext;
 class nsIAccessibleDocument;
 class nsIFrame;
 class nsIDOMNodeList;
+class nsITimer;
 
 enum { eChildCountUninitialized = 0xffff };
 
@@ -140,6 +141,7 @@ protected:
     // Static data, we do our own refcounting for our static data
     static nsIStringBundle *gStringBundle;
     static nsIStringBundle *gKeyStringBundle;
+    static nsITimer *gDoCommandTimer;
     static PRBool gIsAccessibilityActive;
     static PRBool gIsCacheDisabled;
 

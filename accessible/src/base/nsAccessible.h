@@ -136,6 +136,10 @@ protected:
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
   virtual void CacheChildren(PRBool aWalkAnonContent);
 
+  // For accessibles that have actions
+  static void DoCommandCallback(nsITimer *aTimer, void *aClosure);
+  nsresult DoCommand();
+
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;
   nsIAccessible *mFirstChild, *mNextSibling;
