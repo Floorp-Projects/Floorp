@@ -3,7 +3,19 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/preftree.css" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+	<!ENTITY numberColumn.label "Number">
+	<!ENTITY nameColumn.label "Name">
+	<!ENTITY activeColumn.label "Active">
+	<!ENTITY newButton.label "New">
+	<!ENTITY editButton.label "Edit">
+	<!ENTITY deleteButton.label "Delete">
+	<!ENTITY logFilterCheckbox.label "Log Filter Use">
+	<!ENTITY viewLogButton.label "View Log">
+	<!ENTITY description.label "Description">
+    <!ENTITY filterHeader.label "Filters will be applied in the following order:">
+]>
 
 
 <window
@@ -14,7 +26,7 @@
 <box align="vertical" style="width: 100%">
   <box align="horizontal" flex="100%">
     <box align="vertical" style="width:100%;" flex="100%" class="cleanborder">
-    <html:div>Filters will be applied in the following order:</html:div>
+    <html:div>&filterHeader.label;</html:div>
     <tree id="filterTree" flex="100%" style="width: 100%;">
       <treecol id="numColumn"/>
       <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
@@ -22,9 +34,9 @@
 
       <treehead>
         <treeitem>
-         <treecell>Number</treecell>
-         <treecell>Name</treecell>
-         <treecell>Active</treecell>
+         <treecell>&numberColumn.label;</treecell>
+         <treecell>&nameColumn.label;</treecell>
+         <treecell>&activeColumn.label;</treecell>
         </treeitem>
       </treehead>
       <treebody>
@@ -63,20 +75,20 @@
     </tree>
     </box>
     <box align="vertical" class="padded">
-      <titledbutton class="push" value="New.."/>
-      <titledbutton class="push" value="Edit.."/>
-      <titledbutton class="push" value="Delete"/>
+      <titledbutton class="push" value="&newButton.label;"/>
+      <titledbutton class="push" value="&editButton.label;"/>
+      <titledbutton class="push" value="&newButton.label;"/>
     </box>
   </box>
   <box align="horizontal" class="padded">
     <checkbox/>
     <spring class="spacer"/>
-    <html:div>Log Filter Use</html:div>
+    <html:div>&logFilterUseCheckbox.label;</html:div>
     <spring flex="100%"/>
-    <titledbutton class="push" value="View Log"/>
+    <titledbutton class="push" value="&viewLog.label;"/>
   </box>
   <box align="vertical" class="cleanborder">
-    <html:div>Description</html:div>
+    <html:div>&description.label;</html:div>
     <html:div>(description goes here..)</html:div>
   </box>
 </box>
