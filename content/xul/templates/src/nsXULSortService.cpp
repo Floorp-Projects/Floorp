@@ -767,7 +767,7 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 				
 				sortOrder = 0;
 				if (LL_CMP(dateVal1, <, dateVal2))	sortOrder = -1;
-				else if (LL_CMP(dateVal1, <, dateVal2))	sortOrder = 1;
+				else if (LL_CMP(dateVal1, >, dateVal2))	sortOrder = 1;
 			}
 		}
 	}
