@@ -1,0 +1,90 @@
+<?xml version="1.0"?> 
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Ian McGreer <mcgreer@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
+
+<!DOCTYPE window [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+  <!ENTITY % prefPass SYSTEM "chrome://pippki/locale/pref-masterpass.dtd">
+  %brandDTD;
+  %prefPass;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical" title="certs.title;"
+        onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();" >
+
+  <script language="JavaScript" src="pref-masterpass.js"/>
+
+  <!-- Fancy panel header -->
+  <box class="box-smallheader" title="&lheader;"/>
+
+  <!-- Change Password -->
+  <titledbox orient="vertical">
+    <label value="&changepassword.label;"/>
+    <html>
+      &changepassword.text;
+    </html>
+    <box halign="left" autostretch="never">
+      <button class="dialog" label="&changepassword.button;" disabled="false"
+        oncommand="ChangePW();" />
+    </box>
+  </titledbox>
+
+  <!-- Password Prefs -->
+  <titledbox orient="vertical">
+    <label value="&managepassword.label;"/>
+    <html>
+      &managepassword.text;
+    </html>
+    <box halign="left" autostretch="never">
+      <radiogroup id="passwordAskTimes" orient="vertical" 
+                  pref="true" preftype="int" 
+                  prefstring="security.ask_for_password" prefattribute="value"
+                  flex="1">
+        <!-- note that these values are different than what NSS uses, which
+             are (0, -1, 1) respectively -->
+        <radio label="&managepassword.askfirsttime;" value="0"
+          id="askFirstTime" group="passwordAskTimes"
+          oncommand="changePasswordSettings();"/>
+        <radio label="&managepassword.askeverytime;" value="1"
+          id="askEveryTime" group="passwordAskTimes"
+          oncommand="changePasswordSettings();"/>
+        <box>
+          <radio label="&managepassword.asktimeout;" value="2"
+            id="askTimeout" group="passwordAskTimes"
+            oncommand="changePasswordSettings();"/>
+          <textbox id="passwordTimeout" size="4"
+                   pref="true" preftype="int"
+                   prefstring="security.password_lifetime"
+                   prefattribute="value"
+                   oninput="changePasswordSettings();"/>
+          <text for="timeoutField" value="&managepassword.timeout.unit;"/>
+        </box>
+      </radiogroup>
+    </box>
+  </titledbox>
+
+</window>

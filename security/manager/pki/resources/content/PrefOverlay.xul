@@ -29,6 +29,12 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <treechildren id="securityChildren">
+    <treeitem id="masterpassItem" >
+      <treerow>
+        <treecell class="treecell-indent" url="chrome://pippki/content/pref-masterpass.xul"
+                  label="&masterpass.label;" />
+      </treerow>
+    </treeitem>
     <treeitem id="sslItem" >
       <treerow>
         <treecell class="treecell-indent" url="chrome://pippki/content/pref-ssl.xul"

@@ -212,6 +212,37 @@ done:
     return rv;
 }
 
+/* long getAskPasswordTimes(); */
+NS_IMETHODIMP 
+nsPK11Token::GetAskPasswordTimes(PRInt32 *rvAskTimes)
+{
+    int askTimes, askTimeout;
+    PK11_GetSlotPWValues(mSlot, &askTimes, &askTimeout);
+    *rvAskTimes = askTimes;
+    return NS_OK;
+}
+
+/* long getAskPasswordTimeout(); */
+NS_IMETHODIMP 
+nsPK11Token::GetAskPasswordTimeout(PRInt32 *rvAskTimeout)
+{
+    int askTimes, askTimeout;
+    PK11_GetSlotPWValues(mSlot, &askTimes, &askTimeout);
+    *rvAskTimeout = askTimeout;
+    return NS_OK;
+}
+
+/* void setAskPasswordDefaults(in unsigned long askTimes,
+ *                             in unsigned long timeout);
+ */
+NS_IMETHODIMP 
+nsPK11Token::SetAskPasswordDefaults(const PRInt32 askTimes,
+                                    const PRInt32 askTimeout)
+{
+    PK11_SetSlotPWValues(mSlot, askTimes, askTimeout);
+    return NS_OK;
+}
+
 /* void changePassword (in wstring oldPassword, in wstring newPassword); */
 NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PRUnichar *newPassword)
 {
