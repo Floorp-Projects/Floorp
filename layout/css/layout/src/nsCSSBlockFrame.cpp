@@ -1127,6 +1127,10 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
       }
     }
     else {
+      // Get next frame in reflow command chain
+      state.reflowCommand->GetNext(state.mInlineLayout.mNextRCFrame);
+
+      // Now do the reflow
       rv = ChildIncrementalReflow(state);
     }
   }
@@ -1802,13 +1806,10 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
-  else
-  if (nsnull != aState.reflowCommand) {
-    nsIFrame* target;
-    aState.reflowCommand->GetTarget(target);
-    if (this != target) {
-      reason = eReflowReason_Incremental;
-    }
+  else if (aState.mInlineLayout.mNextRCFrame == aFrame) {
+    reason = eReflowReason_Incremental;
+    // Make sure we only incrementally reflow once
+    aState.mInlineLayout.mNextRCFrame = nsnull;
   }
 
   // Reflow the block frame. Use the run-around API if possible;

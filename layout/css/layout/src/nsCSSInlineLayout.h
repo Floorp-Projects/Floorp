@@ -103,6 +103,8 @@ struct nsCSSInlineLayout {
   nscoord mMaxAscent;
   nscoord mMaxDescent;
   nsSize mMaxElementSize;
+
+  nsIFrame* mNextRCFrame;
 };
 
 #endif /* nsCSSInlineLayout_h___ */
