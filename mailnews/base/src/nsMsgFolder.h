@@ -302,7 +302,10 @@ public:
 	nsMsgMailFolder();
 	~nsMsgMailFolder();
 
-	NS_DECL_ISUPPORTS
+	NS_IMETHOD QueryInterface(REFNSIID aIID,
+							void** aInstancePtr);
+	NS_IMETHOD_(nsrefcnt) AddRef(void);
+	NS_IMETHOD_(nsrefcnt) Release(void);
 
 	NS_IMETHOD GetType(FolderType *type);
 
