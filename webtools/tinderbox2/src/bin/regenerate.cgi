@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.15 $ 
-# $Date: 2004/07/12 01:02:31 $ 
+# $Revision: 1.16 $ 
+# $Date: 2004/07/17 00:04:19 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -64,8 +64,8 @@ use FileStructure;
     my ($out) = '';
 
     if (defined($tree)) {
-        // called from a tinderbox web page.
-        // send them back to the status page.
+        # called from a tinderbox web page.
+        # send them back to the status page.
 
         my ($url) = (
                      FileStructure::get_filename($tree, 'tree_URL').
@@ -104,8 +104,8 @@ EOF
 ;
 
     } else {
-        // called via HTTPPost
-        // Tell the webserver that everythings fine.
+        # called via HTTPPost
+        # Tell the webserver that everythings fine.
 
         $out = <<EOF;
 Content-type: text/html
