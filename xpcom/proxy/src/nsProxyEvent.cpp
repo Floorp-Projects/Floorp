@@ -72,7 +72,6 @@ nsProxyObjectCallInfo::SetCompleted()
     PR_AtomicSet(&mCompleted, 1);
 }
 
-#define debug_DOUGT
 
 #ifdef debug_DOUGT
 static PRUint32 totalProxyObjects = 0;
