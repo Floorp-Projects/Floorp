@@ -402,6 +402,127 @@ EditorAppCoreGetTextProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 
 //
+// Native method SetBodyAttribute
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSetBodyAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->SetBodyAttribute(b0, b1)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setBodyAttribute requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetBackgroundColor
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSetBackgroundColor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->SetBackgroundColor(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setBackgroundColor requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method GetLocalFileURL
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreGetLocalFileURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+  nsIDOMWindowPtr b0;
+  nsAutoString b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIWindowIID,
+                                           "Window",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->GetLocalFileURL(b0, b1, nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function getLocalFileURL requires 2 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SetParagraphFormat
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1389,6 +1510,90 @@ EditorAppCoreInsertLinkAroundSelection(JSContext *cx, JSObject *obj, uintN argc,
 
 
 //
+// Native method SelectElement
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSelectElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElementPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SelectElement(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function selectElement requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SetCaretAfterElement
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreSetCaretAfterElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElementPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->SetCaretAfterElement(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function setCaretAfterElement requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SetToolbarWindow
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1541,40 +1746,6 @@ EditorAppCoreStartSpellChecking(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
   else {
     JS_ReportError(cx, "Function startSpellChecking requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetFirstMisspelledWord
-//
-PR_STATIC_CALLBACK(JSBool)
-EditorAppCoreGetFirstMisspelledWord(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetFirstMisspelledWord(nativeRet)) {
-      return JS_FALSE;
-    }
-
-    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
-  }
-  else {
-    JS_ReportError(cx, "Function getFirstMisspelledWord requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -1912,7 +2083,7 @@ EditorAppCoreCloseSpellChecking(JSContext *cx, JSObject *obj, uintN argc, jsval 
 //
 JSClass EditorAppCoreClass = {
   "EditorAppCore", 
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
   GetEditorAppCoreProperty,
@@ -1948,6 +2119,9 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"setTextProperty",          EditorAppCoreSetTextProperty,     3},
   {"removeTextProperty",          EditorAppCoreRemoveTextProperty,     2},
   {"getTextProperty",          EditorAppCoreGetTextProperty,     6},
+  {"setBodyAttribute",          EditorAppCoreSetBodyAttribute,     2},
+  {"setBackgroundColor",          EditorAppCoreSetBackgroundColor,     1},
+  {"getLocalFileURL",          EditorAppCoreGetLocalFileURL,     2},
   {"setParagraphFormat",          EditorAppCoreSetParagraphFormat,     1},
   {"loadUrl",          EditorAppCoreLoadUrl,     1},
   {"newWindow",          EditorAppCoreNewWindow,     0},
@@ -1976,11 +2150,12 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"createElementWithDefaults",          EditorAppCoreCreateElementWithDefaults,     1},
   {"insertElement",          EditorAppCoreInsertElement,     2},
   {"insertLinkAroundSelection",          EditorAppCoreInsertLinkAroundSelection,     1},
+  {"selectElement",          EditorAppCoreSelectElement,     1},
+  {"setCaretAfterElement",          EditorAppCoreSetCaretAfterElement,     1},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},
   {"setWebShellWindow",          EditorAppCoreSetWebShellWindow,     1},
   {"startSpellChecking",          EditorAppCoreStartSpellChecking,     0},
-  {"getFirstMisspelledWord",          EditorAppCoreGetFirstMisspelledWord,     0},
   {"getNextMisspelledWord",          EditorAppCoreGetNextMisspelledWord,     0},
   {"getSuggestedWord",          EditorAppCoreGetSuggestedWord,     0},
   {"checkCurrentWord",          EditorAppCoreCheckCurrentWord,     1},

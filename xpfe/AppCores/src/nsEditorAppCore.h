@@ -71,6 +71,9 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
     NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
     NS_IMETHOD    InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
+    NS_IMETHOD    SelectElement(nsIDOMElement* aElement);
+    NS_IMETHOD    SetCaretAfterElement(nsIDOMElement* aElement);
+
 	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
 		NS_IMETHOD    SetTextProperty(const nsString& aProp, 
                                   const nsString& aAttr, 
@@ -84,6 +87,8 @@ class nsEditorAppCore : public nsBaseAppCore,
 	  															nsString& aAnyHas,
 	  															nsString& aAllHas);
 
+    NS_IMETHOD    SetBackgroundColor(const nsString& aColor);
+    NS_IMETHOD    SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
 		NS_IMETHOD    GetParagraphFormat(nsString& aParagraphFormat);
     NS_IMETHOD    SetParagraphFormat(const nsString& aParagraphFormat);
 
@@ -106,6 +111,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    PrintPreview();
 	  NS_IMETHOD    Print();
     NS_IMETHOD    Exit();
+    NS_IMETHOD    GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn);
 
     NS_IMETHOD    Undo();
     NS_IMETHOD    Redo();
@@ -136,7 +142,6 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD		Align(const nsString& aAlign);
 
     NS_IMETHOD    StartSpellChecking(nsString& aFirstMisspelledWord);
-    NS_IMETHOD    GetFirstMisspelledWord(nsString& aFirstMisspelledWord);
     NS_IMETHOD    GetNextMisspelledWord(nsString& aNextMisspelledWord);
     NS_IMETHOD    GetSuggestedWord(nsString& aSuggestedWord);
     NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aIsMisspelled);
@@ -165,7 +170,6 @@ class nsEditorAppCore : public nsBaseAppCore,
                                         const char *aCommand );
   protected:
     nsCOMPtr<nsISpellChecker> mSpellChecker;
-    nsString        mFirstMisspelledWord;
     nsStringArray   mSuggestedWordList;
     PRInt32         mSuggestedWordIndex;
     NS_IMETHOD      DeleteSuggestedWordList();

@@ -575,6 +575,45 @@ nsEditorAppCore::GetTextProperty(const nsString& aProp, const nsString& aAttr, c
   return err;
 }
 
+NS_IMETHODIMP nsEditorAppCore::SetBackgroundColor(const nsString& aColor)
+{
+  nsresult result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+      if (htmlEditor)
+        result = htmlEditor->SetBackgroundColor(aColor);
+      break;
+    }
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP nsEditorAppCore::SetBodyAttribute(const nsString& aAttr, const nsString& aValue)
+{
+  nsresult result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+      if (htmlEditor)
+        result = htmlEditor->SetBodyAttribute(aAttr, aValue);
+      break;
+    }
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
 NS_IMETHODIMP    
 nsEditorAppCore::Back()
 {
@@ -775,51 +814,60 @@ nsEditorAppCore::NewWindow()
 NS_IMETHODIMP    
 nsEditorAppCore::Open()
 {
-  nsresult  rv;
+  nsresult  result;
   
-  nsFileSpec docFileSpec;
-  
+  // GetLocalFileURL will do all the nsFileSpec/nsFileURL conversions,
+  // and return a "file:///" string
+  nsString fileURLString;
+
   nsCOMPtr<nsIFileWidget>  fileWidget;
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 
-  rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
-  if (NS_FAILED(rv) || !fileWidget)
-    return rv;
+  result = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
+  if (NS_FAILED(result) || !fileWidget)
+    return result;
     
-  nsAutoString  promptString("Open document to edit");      // XXX i18n, l10n
-  nsAutoString titles[] = {"HTML Files"};
-  nsAutoString filters[] = {"*.htm; *.html"};
-  fileWidget->SetFilterList(1, titles, filters);
-
-  nsFileDlgResults dialogResult;
-  dialogResult = fileWidget->GetFile(nsnull, promptString, docFileSpec);
-  if (dialogResult == nsFileDlgResults_Cancel)
-    return NS_OK;
- 
-   // stolen from browser app core.
-  nsFileURL fileURL(docFileSpec);
-  //char buffer[1024];
-  //const nsAutoCString cstr(fileURL.GetAsString());
-  //PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
-  //ExecuteScript( mToolbarScriptContext, buffer );
-
-  // all I want to do is call a method on nsToolkitCore that would normally
-  // be static. But I have to go through all this crap. XPCOM sucks so bad.
-static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
-  nsCOMPtr<nsIDOMToolkitCore>  toolkitCore;
-  rv = nsComponentManager::CreateInstance(kToolkitCoreCID,
-                                    nsnull,
-                                    nsIDOMToolkitCore::GetIID(),
-                                    getter_AddRefs(toolkitCore));
-  if (NS_SUCCEEDED(rv) && toolkitCore)
-  {
-    // at some point we need to be passing nsFileSpecs around. When nsIUrl is fileSpec-
-    // savvy, we should use that.
-    rv = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURL.GetAsString());
-  }
+  result = NS_NOINTERFACE;
   
-  return rv;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+
+      if (htmlEditor)
+      {
+        // This was written for all local file getting
+        // TODO: NEED TO GET PROPER PARENT WINDOW
+        result = htmlEditor->GetLocalFileURL(nsnull, "html", fileURLString);
+        if (NS_FAILED(result) || fileURLString == "")
+          return result;
+
+        // all I want to do is call a method on nsToolkitCore that would normally
+        // be static. But I have to go through all this crap. XPCOM sucks so bad.
+        static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
+        nsCOMPtr<nsIDOMToolkitCore>  toolkitCore;
+        result = nsComponentManager::CreateInstance(kToolkitCoreCID,
+                                          nsnull,
+                                          nsIDOMToolkitCore::GetIID(),
+                                          getter_AddRefs(toolkitCore));
+        if (NS_SUCCEEDED(result) && toolkitCore)
+        {
+          // at some point we need to be passing nsFileSpecs around. When nsIUrl is fileSpec-
+          // savvy, we should use that.
+          result = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURLString/*fileURL.GetAsString()*/);
+        }
+  
+      }
+      break;
+    }
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+
 }
 
 NS_IMETHODIMP
@@ -934,6 +982,26 @@ nsEditorAppCore::Exit()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditorAppCore::GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)
+{
+  nsresult result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+    {
+      nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+      if (htmlEditor)
+        result = htmlEditor->GetLocalFileURL(aParent, aFilterType, aReturn);
+      break;
+    }
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
 
 NS_IMETHODIMP    
 nsEditorAppCore::Undo()
@@ -1478,7 +1546,7 @@ nsEditorAppCore::InsertImage()
   nsString alt ("[pen splat]");
   nsString align ("left");
   
-   switch (mEditorType)
+  switch (mEditorType)
   {
     case eHTMLTextEditorType:
       {
@@ -1501,7 +1569,7 @@ nsEditorAppCore::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aR
   if (!aReturn)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult  err = NS_NOINTERFACE;
+  nsresult  result = NS_NOINTERFACE;
    switch (mEditorType)
   {
     case eHTMLTextEditorType:
@@ -1513,10 +1581,10 @@ nsEditorAppCore::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aR
       break;
     case ePlainTextEditorType:
     default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
+      result = NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return err;
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1525,8 +1593,8 @@ nsEditorAppCore::CreateElementWithDefaults(const nsString& aTagName, nsIDOMEleme
   if (!aReturn)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult  err = NS_NOINTERFACE;
-   switch (mEditorType)
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
   {
     case eHTMLTextEditorType:
       {
@@ -1537,10 +1605,10 @@ nsEditorAppCore::CreateElementWithDefaults(const nsString& aTagName, nsIDOMEleme
       break;
     case ePlainTextEditorType:
     default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
+      result = NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return err;
+  return result;
 }
 
 
@@ -1550,29 +1618,28 @@ nsEditorAppCore::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection,
   if (!aElement || !aReturn)
     return NS_ERROR_NULL_POINTER;
 
-  nsresult  err = NS_NOINTERFACE;
+  nsresult  result = NS_NOINTERFACE;
    switch (mEditorType)
   {
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->InsertElement(aElement, aDeleteSelection, aReturn);
+          result = htmlEditor->InsertElement(aElement, aDeleteSelection, aReturn);
       }
       break;
-    case ePlainTextEditorType:
     default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
+      result = NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  return err;
+  return result;
 }
 
 NS_IMETHODIMP
 nsEditorAppCore::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
-  nsresult  err = NS_NOINTERFACE;
-   switch (mEditorType)
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
   {
     case eHTMLTextEditorType:
       {
@@ -1582,9 +1649,55 @@ nsEditorAppCore::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
       }
       break;
     default:
-      err = NS_ERROR_NOT_IMPLEMENTED;
+      result = NS_ERROR_NOT_IMPLEMENTED;
   }
-  return err;
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::SelectElement(nsIDOMElement* aElement)
+{
+  if (!aElement)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->SelectElement(aElement);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::SetCaretAfterElement(nsIDOMElement* aElement)
+{
+  if (!aElement)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          result = htmlEditor->SetCaretAfterElement(aElement);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
@@ -1637,23 +1750,6 @@ nsEditorAppCore::StartSpellChecking(nsString& aFirstMisspelledWord)
     DeleteSuggestedWordList();
     // Return the first misspelled word and initialize the suggested list
     result = mSpellChecker->NextMisspelledWord(&aFirstMisspelledWord, &mSuggestedWordList);
-    // Save the first word for GetFirstMisspelled word
-    // We wouldn't have to do this if we could pass > 1 parameter during dialog creation    
-    mFirstMisspelledWord = aFirstMisspelledWord;
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsEditorAppCore::GetFirstMisspelledWord(nsString& aFirstMisspelledWord)
-{
-  nsresult  result = NS_NOINTERFACE;
-   // We can spell check with any editor type
-  if (mEditor && mSpellChecker)
-  {
-    mSuggestedWordIndex = 0;
-    aFirstMisspelledWord = mFirstMisspelledWord;
-    result = NS_OK;
   }
   return result;
 }
