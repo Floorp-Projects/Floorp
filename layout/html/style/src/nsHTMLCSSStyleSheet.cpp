@@ -41,7 +41,7 @@ class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet {
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr, size_t size);
+  void operator delete(void* ptr);
 
   HTMLCSSStyleSheetImpl();
 
@@ -122,7 +122,7 @@ void* HTMLCSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena)
   return (void*) rv;
 }
 
-void HTMLCSSStyleSheetImpl::operator delete(void* ptr, size_t size)
+void HTMLCSSStyleSheetImpl::operator delete(void* ptr)
 {
   HTMLCSSStyleSheetImpl* sheet = (HTMLCSSStyleSheetImpl*) ptr;
   if (nsnull != sheet) {

@@ -613,7 +613,7 @@ class CSSStyleRuleImpl : public nsICSSStyleRule,
 public:
   void* operator new(size_t size);
   void* operator new(size_t size, nsIArena* aArena);
-  void operator delete(void* ptr, size_t size);
+  void operator delete(void* ptr);
 
   CSSStyleRuleImpl(const nsCSSSelector& aSelector);
 
@@ -713,7 +713,7 @@ void* CSSStyleRuleImpl::operator new(size_t size, nsIArena* aArena)
   return (void*) rv;
 }
 
-void CSSStyleRuleImpl::operator delete(void* ptr, size_t size)
+void CSSStyleRuleImpl::operator delete(void* ptr)
 {
   CSSStyleRuleImpl* rule = (CSSStyleRuleImpl*) ptr;
   if (nsnull != rule) {

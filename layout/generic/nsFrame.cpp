@@ -168,7 +168,7 @@ void* nsFrame::operator new(size_t size)
   return result;
 }
 
-void nsFrame::operator delete(void* ptr, size_t size)
+void nsFrame::operator delete(void* ptr)
 {
   ::operator delete(ptr);
 }

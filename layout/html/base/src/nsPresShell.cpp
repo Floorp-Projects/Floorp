@@ -190,14 +190,16 @@ class PresShell : public nsIPresShell, public nsIViewObserver,
 public:
   PresShell();
 
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
+  void* operator new(size_t size) {
+    void* result = ::operator new(size);
+    if (result) {
+      nsCRT::zero(result, size);
+    }
+    return result;
   }
 
-  void operator delete(void* ptr, size_t size) {
-    delete [] ptr;
+  void operator delete(void* ptr) {
+    ::operator delete(ptr);
   }
 
   // nsISupports
