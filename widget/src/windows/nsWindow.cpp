@@ -2006,10 +2006,10 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
 //-------------------------------------------------------------------------
 UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 {
-  if (aNativeKeyCode == 0xBB) { // equals
-    return 0x3D;
-  } else if (aNativeKeyCode == 0xBA) { // semicolon
-    return 0x3B;
+  switch (aNativeKeyCode) {
+    case 0xBA: return NS_VK_SEMICOLON;
+    case 0xBB: return NS_VK_EQUALS;
+    case 0xBD: return NS_VK_SUBTRACT;
   }
 
   return aNativeKeyCode;
@@ -2072,11 +2072,12 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 //
 //-------------------------------------------------------------------------
 #define WM_CHAR_LATER(vk) ( ((vk)<= VK_SPACE) || \
-                                 (('0'<=(vk))&&((vk)<='9')) || \
-                                 (('A'<=(vk))&&((vk)<='Z')) || \
-                                 ((VK_NUMPAD0 <=(vk))&&((vk)<=VK_DIVIDE)) || \
-								 ((0xBA <=(vk))&&((vk)<=NS_VK_BACK_QUOTE)) || \
-								 ((NS_VK_OPEN_BRACKET <=(vk))&&((vk)<=NS_VK_QUOTE)) \
+                            (('0'<=(vk))&&((vk)<='9')) || \
+                            (('A'<=(vk))&&((vk)<='Z')) || \
+                            ((VK_NUMPAD0 <=(vk))&&((vk)<=VK_DIVIDE)) || \
+                            ((((vk)>=0xBA) && ((vk)<=0xBF)) && (!mIsControlDown)) || \
+                            (((vk)==NS_VK_BACK_QUOTE)) || \
+                            ((NS_VK_OPEN_BRACKET <=(vk))&&((vk)<=NS_VK_QUOTE)) \
                             )
 #define NO_WM_CHAR_LATER(vk) (! WM_CHAR_LATER(vk))
 
