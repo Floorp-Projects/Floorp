@@ -52,6 +52,7 @@ EXTRA_DSO_LDOPTS += \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(PNG_LIBS) \
+	$(ZLIB_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
