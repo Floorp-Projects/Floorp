@@ -31,10 +31,18 @@
 #include "nsXMLEncodingObserver.h"
 #include "nsDetectionAdaptor.h"
 #include "nsICharsetDetector.h"
+#include "nsIStringCharsetDetector.h"
 
 #include "nsMetaCharsetCID.h"
 #include "nsXMLEncodingCID.h"
 #include "nsCharsetDetectionAdaptorCID.h"
+
+
+#include "nsPSMDetectors.h"
+
+NS_DEFINE_CID(kJAPSMDetectorCID,  NS_JA_PSMDETECTOR_CID);
+NS_DEFINE_CID(kJAStringPSMDetectorCID,  NS_JA_STRING_PSMDETECTOR_CID);
+
 
 
 #define INCLUDE_DBGDETECTOR
@@ -74,6 +82,8 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
     factory = NEW_XML_ENCODING_OBSERVER_FACTORY();
   } else if (aClass.Equals(kCharsetDetectionAdaptorCID)) {
     factory = NEW_DETECTION_ADAPTOR_FACTORY();
+  } else if (aClass.Equals(kJAPSMDetectorCID)) {
+    factory = NEW_JA_PSMDETECTOR_FACTORY();
 #ifdef INCLUDE_DBGDETECTOR
   } else if (aClass.Equals(k1stBlkDbgDetectorCID)) {
     factory = NEW_1STBLKDBG_DETECTOR_FACTORY();
@@ -126,6 +136,16 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_CHARSET_DETECTION_ADAPTOR_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kJAPSMDetectorCID, 
+                                  "PSM based Japanese Charset Detector", 
+                                  NS_CHARSET_DETECTOR_PROGID_BASE "japsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kJAStringPSMDetectorCID, 
+                                  "PSM based Japanese String Charset Detector", 
+                                  NS_STRCDETECTOR_PROGID_BASE "japsm", 
+                                  path,
+                                  PR_TRUE, PR_TRUE);
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->RegisterComponent(k1stBlkDbgDetectorCID,
                                   "Debuging Detector 1st block", 
@@ -164,6 +184,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kMetaCharsetCID, path);
   rv = compMgr->UnregisterComponent(kXMLEncodingCID, path);
   rv = compMgr->UnregisterComponent(kCharsetDetectionAdaptorCID, path);
+  rv = compMgr->UnregisterComponent(kJAPSMDetectorCID, path);
+  rv = compMgr->UnregisterComponent(kJAStringPSMDetectorCID, path);
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->UnregisterComponent(k1stBlkDbgDetectorCID, path);
   rv = compMgr->UnregisterComponent(k2ndBlkDbgDetectorCID, path);
@@ -173,3 +195,4 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
+
