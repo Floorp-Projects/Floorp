@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Davide Bresolin <davide@teamos2.it>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -255,6 +256,19 @@ PRProcess * _PR_CreateOS2Process(
     char      pszObjectBuffer[CCHMAXPATH];
     char     *pszFormatResult = NULL;
 
+    /*
+     * Variables for DosExecPgm
+     */
+    char szFailed[CCHMAXPATH];
+    char *pszCmdLine = NULL;
+    RESULTCODES procInfo;
+    HFILE hStdIn  = 0,
+          hStdOut = 0,
+          hStdErr = 0;
+    HFILE hStdInSave  = -1,
+          hStdOutSave = -1,
+          hStdErrSave = -1;
+
     proc = PR_NEW(PRProcess);
     if (!proc) {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -285,10 +299,6 @@ PRProcess * _PR_CreateOS2Process(
         goto errorExit;
     }
   
-    if (attr) {
-       PR_ASSERT(!"Not implemented");
-    }
-
     rc = DosQueryAppType(path, &ulAppType);
     if (rc != NO_ERROR) {
        char *pszDot = strrchr(path, '.');
@@ -344,18 +354,88 @@ PRProcess * _PR_CreateOS2Process(
     startData.ObjectBuffLen = CCHMAXPATH;
     startData.Environment = envBlock;
  
-    rc = DosStartSession(&startData, &ulAppType, &pid);
+    if (attr) {
+        /* On OS/2, there is really no way to pass file handles for stdin,
+         * stdout, and stderr to a new process.  Instead, we can make it
+         * a child process and make the given file handles a copy of our
+         * stdin, stdout, and stderr.  The child process then inherits
+         * ours, and we set ours back.  Twisted and gross I know. If you
+         * know a better way, please use it.
+         */
+        if (attr->stdinFd) {
+            hStdIn = 0;
+            DosDupHandle(hStdIn, &hStdInSave);
+            DosDupHandle((HFILE) attr->stdinFd->secret->md.osfd, &hStdIn);
+        }
 
-    if ((rc != NO_ERROR) && (rc != ERROR_SMG_START_IN_BACKGROUND)) {
-        PR_SetError(PR_UNKNOWN_ERROR, 0);
-    }
+        if (attr->stdoutFd) {
+            hStdOut = 1;
+            DosDupHandle(hStdOut, &hStdOutSave);
+            DosDupHandle((HFILE) attr->stdoutFd->secret->md.osfd, &hStdOut);
+        }
+
+        if (attr->stderrFd) {
+            hStdErr = 2;
+            DosDupHandle(hStdErr, &hStdErrSave);
+            DosDupHandle((HFILE) attr->stderrFd->secret->md.osfd, &hStdErr);
+        }
+        /*
+         * Build up the Command Line for DosExecPgm
+         */
+        pszCmdLine = PR_MALLOC(strlen(pszEXEName) +
+                               strlen(startData.PgmInputs) + 3);
+        sprintf(pszCmdLine, "%s%c%s%c", pszEXEName, '\0',
+                startData.PgmInputs, '\0');
+        rc = DosExecPgm(szFailed,
+                        CCHMAXPATH,
+                        EXEC_ASYNCRESULT,
+                        pszCmdLine,
+                        envBlock,
+                        &procInfo,
+                        pszEXEName);
+        PR_DELETE(pszCmdLine);
+
+        /* Restore our old values.  Hope this works */
+        if (hStdInSave != -1) {
+            DosDupHandle(hStdInSave, &hStdIn);
+            DosClose(hStdInSave);
+        }
+
+        if (hStdOutSave != -1) {
+            DosDupHandle(hStdOutSave, &hStdOut);
+            DosClose(hStdOutSave);
+        }
+
+        if (hStdErrSave != -1) {
+            DosDupHandle(hStdErrSave, &hStdErr);
+            DosClose(hStdErrSave);
+        }
+
+        if (rc != NO_ERROR) {
+            /* XXX what error code? */
+            PR_SetError(PR_UNKNOWN_ERROR, rc);
+            goto errorExit;
+        }
+
+        proc->md.pid = procInfo.codeTerminate;
+    } else {	
+        /*
+         * If no STDIN/STDOUT redirection is not needed, use DosStartSession
+         * to create a new, independent session
+         */
+        rc = DosStartSession(&startData, &ulAppType, &pid);
+
+        if ((rc != NO_ERROR) && (rc != ERROR_SMG_START_IN_BACKGROUND)) {
+            PR_SetError(PR_UNKNOWN_ERROR, 0);
+        }
  
-    proc->md.pid = pid;
+        proc->md.pid = pid;
+    }
 
     if (pszFormatResult) {
         PR_DELETE(pszFormatResult);
     }
- 
+
     PR_DELETE(cmdLine);
     if (newEnvp) {
         PR_DELETE(newEnvp);
