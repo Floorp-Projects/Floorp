@@ -1141,10 +1141,12 @@ void nsWindow::EndDraw()
 		return;
 	mDrawing = PR_FALSE;
 
-		PRBool clipEmpty;
-		mTempRenderingContext->PopState(clipEmpty);
+	PRBool clipEmpty;
+	mTempRenderingContext->PopState(clipEmpty);
 
 	NS_RELEASE(mTempRenderingContext);
+	
+	// note that we may leave the window origin in an unspecified state here
 }
 
 
@@ -1194,52 +1196,55 @@ nsWindow::OnPaint(nsPaintEvent &event)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP	nsWindow::Update()
 {
-	if (! mVisible || !mWindowPtr || !ContainerHierarchyIsVisible())
-		return NS_OK;
+  if (! mVisible || !mWindowPtr || !ContainerHierarchyIsVisible())
+    return NS_OK;
 
-	static PRBool  reentrant = PR_FALSE;
+  static PRBool  reentrant = PR_FALSE;
 
-	if (reentrant)
-		HandleUpdateEvent(nil);
-	else
-	{
-		reentrant = PR_TRUE;
+  if (reentrant)
+    HandleUpdateEvent(nil);
+  else
+  {
+    reentrant = PR_TRUE;
+    
+    StRegionFromPool regionToValidate;
+    if (!regionToValidate)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-		StRegionFromPool regionToValidate;
-		if (!regionToValidate)
-			return NS_ERROR_OUT_OF_MEMORY;
+    // make a copy of the window update rgn (which is in global coords)
+    StRegionFromPool saveUpdateRgn;
+    if (!saveUpdateRgn)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-		// make a copy of the window update rgn
-		StRegionFromPool saveUpdateRgn;
-		if (!saveUpdateRgn)
-			return NS_ERROR_OUT_OF_MEMORY;
-		if(mWindowPtr)
-			::GetWindowUpdateRegion ( mWindowPtr, saveUpdateRgn );
+    if (mWindowPtr)
+      ::GetWindowUpdateRegion(mWindowPtr, saveUpdateRgn);
 
-		// draw the widget
-		StPortSetter portSetter(mWindowPtr);
+    // draw the widget
+    StPortSetter portSetter(mWindowPtr);
+    ::SetOrigin(0, 0);
 
-		::BeginUpdate(mWindowPtr);
-		HandleUpdateEvent(regionToValidate);
-		::EndUpdate(mWindowPtr);
+    // BeginUpate replaces the visRgn with the intersection of the
+    // visRgn and the updateRgn.
+    ::BeginUpdate(mWindowPtr);
 
-		// restore the window update rgn
-#if TARGET_CARBON
-		// saveUpdateRgn is in global coords, so we need to shift it to local coords
-		Point origin = {0, 0};
-		::GlobalToLocal(&origin);
-		::OffsetRgn(saveUpdateRgn, origin.h, origin.v);
-		::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
-#else
-	  ::CopyRgn(saveUpdateRgn, ((WindowRecord*)mWindowPtr)->updateRgn);
-#endif
+    HandleUpdateEvent(regionToValidate);
+
+    // EndUpdate replaces the normal visRgn
+    ::EndUpdate(mWindowPtr);
+
+    // restore the window update rgn
+    // saveUpdateRgn is in global coords, so we need to shift it to local coords
+    Point origin = {0, 0};
+    ::GlobalToLocal(&origin);
+    ::OffsetRgn(saveUpdateRgn, origin.h, origin.v);
+    ::InvalWindowRgn(mWindowPtr, saveUpdateRgn);
 
     ::ValidWindowRgn(mWindowPtr, regionToValidate);
     
-		reentrant = PR_FALSE;
-	}
+    reentrant = PR_FALSE;
+  }
 
-	return NS_OK;
+  return NS_OK;
 }
 
 
@@ -1407,8 +1412,9 @@ else
 		return NS_OK;
 
 	// make sure the port is set and origin is (0, 0).
-	StPortSetter portSetter(mWindowPtr);
-	::SetOrigin(0, 0);
+	StPortSetter    portSetter(mWindowPtr);
+	// zero the origin, and set it back after drawing widgets
+	StOriginSetter  originSetter(mWindowPtr);
 	
 	// get the damaged region from the OS
 	StRegionFromPool damagedRgn;
@@ -1739,94 +1745,104 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
   ::ScrollWindowRect ( mWindowPtr, &inRectToScroll, inLeftDelta, inTopDelta, 
                         kScrollWindowInvalidate, NULL );
 #else
-	// Get Frame in local coords from clip rect (there might be a border around view)
-	StRegionFromPool clipRgn;
-	if ( !clipRgn ) return;
-	::GetClip(clipRgn);
-	::SectRgn(clipRgn, mVisRegion, clipRgn);
+  // Get Frame in local coords from clip rect (there might be a border around view)
+  StRegionFromPool clipRgn;
+  if ( !clipRgn ) return;
+  ::GetClip(clipRgn);
+  ::SectRgn(clipRgn, mVisRegion, clipRgn);
 
-	Rect frame;
-	::GetRegionBounds(clipRgn, &frame);
+  StRegionFromPool localVisRgn;
+  if ( !localVisRgn ) return;
 
-	StRegionFromPool totalVisRgn;
-	if ( !totalVisRgn ) return;
-	::RectRgn(totalVisRgn, &frame);
-	
-		// compute the source and destination of copybits
-	Rect source = inRectToScroll;
-	SectRect(&source, &frame, &source);
+  nsRect bounds = mBounds;
+  LocalToWindowCoordinate(bounds);    // used below
 
-	Rect dest = source;
-	::OffsetRect(&dest, inLeftDelta, inTopDelta);
+  Rect frame;
+  ::GetRegionBounds(clipRgn, &frame);
 
-	// compute the area that is to be updated by subtracting the dest from the visible area
-	StRegionFromPool destRgn;
-	if ( !destRgn ) return;
-	::RectRgn(destRgn, &dest);		
+  StRegionFromPool totalVisRgn;
+  if ( !totalVisRgn ) return;
+  ::RectRgn(totalVisRgn, &frame);
+  
+    // compute the source and destination of copybits
+  Rect source = inRectToScroll;
+  SectRect(&source, &frame, &source);
 
-	StRegionFromPool updateRgn;
-	if ( !updateRgn ) return;
-	::RectRgn(updateRgn, &frame);
-	::DiffRgn (updateRgn, destRgn, updateRgn);
+  Rect dest = source;
+  ::OffsetRect(&dest, inLeftDelta, inTopDelta);
 
-	if(::EmptyRgn(mWindowPtr->visRgn))		
-	{
-		::CopyBits ( 
-			&mWindowPtr->portBits, 
-			&mWindowPtr->portBits, 
-			&source, 
-			&dest, 
-			srcCopy, 
-			nil);
-	}
-	else
-	{
-		// compute the non-visible region
-		StRegionFromPool nonVisibleRgn;
-		if ( !nonVisibleRgn ) return;
+  // compute the area that is to be updated by subtracting the dest from the visible area
+  StRegionFromPool destRgn;
+  if ( !destRgn ) return;
+  ::RectRgn(destRgn, &dest);    
 
-    ::DiffRgn ( totalVisRgn, mWindowPtr->visRgn, nonVisibleRgn );
-		
-		// compute the extra area that may need to be updated
-		// scoll the non-visible region to determine what needs updating
-		::OffsetRgn ( nonVisibleRgn, inLeftDelta, inTopDelta );
-		
-		// calculate a mask region to not copy the non-visble portions of the window from the port
-		StRegionFromPool copyMaskRgn;
-		if ( !copyMaskRgn ) return;
-		::DiffRgn(totalVisRgn, nonVisibleRgn, copyMaskRgn);
-		
-		// use copybits to simulate a ScrollRect()
-		RGBColor black = { 0, 0, 0 };
-		RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF } ;
-		::RGBForeColor(&black);
-		::RGBBackColor(&white);
-		::PenNormal();	
-		::CopyBits ( 
-			&mWindowPtr->portBits, 
-			&mWindowPtr->portBits, 
-			&source, 
-			&dest, 
-			srcCopy, 
-			copyMaskRgn);
+  StRegionFromPool updateRgn;
+  if ( !updateRgn ) return;
+  ::RectRgn(updateRgn, &frame);
+  ::DiffRgn (updateRgn, destRgn, updateRgn);
 
-		// union the update regions together and invalidate them
-		::UnionRgn(nonVisibleRgn, updateRgn, updateRgn);
-	}
-	
+  if(::EmptyRgn(mWindowPtr->visRgn))    
+  {
+    ::CopyBits ( 
+      &mWindowPtr->portBits, 
+      &mWindowPtr->portBits, 
+      &source, 
+      &dest, 
+      srcCopy, 
+      nil);
+  }
+  else
+  {
+    // compute the non-visible region
+    StRegionFromPool nonVisibleRgn;
+    if ( !nonVisibleRgn ) return;
+
+    // have to translate the window's visRgn from window to local coords
+    ::CopyRgn(mWindowPtr->visRgn, localVisRgn);
+    ::OffsetRgn(localVisRgn, bounds.x, bounds.y);
+
+    ::DiffRgn ( totalVisRgn, localVisRgn, nonVisibleRgn );
+    
+    // compute the extra area that may need to be updated
+    // scoll the non-visible region to determine what needs updating
+    ::OffsetRgn ( nonVisibleRgn, inLeftDelta, inTopDelta );
+    
+    // calculate a mask region to not copy the non-visble portions of the window from the port
+    StRegionFromPool copyMaskRgn;
+    if ( !copyMaskRgn ) return;
+    ::DiffRgn(totalVisRgn, nonVisibleRgn, copyMaskRgn);
+    
+    // use copybits to simulate a ScrollRect()
+    RGBColor black = { 0, 0, 0 };
+    RGBColor white = { 0xFFFF, 0xFFFF, 0xFFFF } ;
+    ::RGBForeColor(&black);
+    ::RGBBackColor(&white);
+    ::PenNormal();  
+    ::CopyBits ( 
+      &mWindowPtr->portBits, 
+      &mWindowPtr->portBits, 
+      &source, 
+      &dest, 
+      srcCopy, 
+      copyMaskRgn);
+
+    // union the update regions together and invalidate them
+    ::UnionRgn(nonVisibleRgn, updateRgn, updateRgn);
+  }
+  
   // If the region to be scrolled contains regions which are currently dirty,
   // we must scroll those too, and union them with the updateRgn.
   // get a copy of the dirty region
-  StRegionFromPool  winUpdateRgn;
-  if (!winUpdateRgn) return;
   ::BeginUpdate(mWindowPtr);
-  ::CopyRgn(mWindowPtr->visRgn, winUpdateRgn);
+  ::CopyRgn(mWindowPtr->visRgn, localVisRgn);   // re-use localVisRgn
   ::EndUpdate(mWindowPtr);
+
+  ::OffsetRgn(localVisRgn, bounds.x, bounds.y);
   
   StRegionFromPool  dirtyRgn;
   if (!dirtyRgn) return;
   // get only the part of the dirtyRgn that intersects the frame
-  ::SectRgn(winUpdateRgn, totalVisRgn, dirtyRgn);
+  ::SectRgn(localVisRgn, totalVisRgn, dirtyRgn);
   // offset by the amount scrolled
   ::OffsetRgn(dirtyRgn, inLeftDelta, inTopDelta);
   // now intersect with the frame again
@@ -1836,12 +1852,12 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
   
   // we also need to re-dirty the dirty rgn outside out frame,
   // since BeginUpdate/EndUpdate cleared it.
-  ::DiffRgn(winUpdateRgn, totalVisRgn, winUpdateRgn);
+  ::DiffRgn(localVisRgn, totalVisRgn, localVisRgn);
   // and add it to the dirty region
-  ::UnionRgn(updateRgn, winUpdateRgn, updateRgn);
+  ::UnionRgn(updateRgn, localVisRgn, updateRgn);
   
-	::InvalWindowRgn(mWindowPtr, updateRgn);
-	
+  ::InvalWindowRgn(mWindowPtr, updateRgn);
+  
 #endif // !TARGET_CARBON
 }
 
