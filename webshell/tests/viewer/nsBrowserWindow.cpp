@@ -46,6 +46,7 @@
 #include "prprf.h"
 #include "nsRepository.h"
 #include "nsParserCIID.h"
+#include "nsIEnumerator.h"
 
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -64,6 +65,8 @@
 #include "nsIRadioButton.h"
 #include "nsILabel.h"
 #include "nsWidgetSupport.h"
+
+#include "nsITreeView.h"
 
 #include "resources.h"
 
@@ -138,6 +141,8 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
+static NS_DEFINE_IID(kITreeViewIID, NS_ITREEVIEW_IID);
+static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -457,6 +462,12 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_PRINT:
     DoPrint();
     break;
+#ifdef XP_WIN
+  case VIEWER_TREEVIEW:
+	// Instantiate a tree widget
+	DoTreeView();
+	break;
+#endif
   }
 
   return nsEventStatus_eIgnore;
@@ -578,8 +589,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
   return result;
 }
-
-
 
 static void* GetItemsNativeData(nsISupports* aObject)
 {
@@ -727,6 +736,73 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
     return result;
 }
 
+static nsEventStatus PR_CALLBACK
+HandleTreeWindowEvent(nsGUIEvent *aEvent)
+{ 
+  nsEventStatus result = nsEventStatus_eIgnore;
+  if (NS_SIZE == aEvent->message)
+  {
+	  nsIEnumerator* pEnumerator = aEvent->widget->GetChildren();
+	  pEnumerator->First();
+
+	  // HACK! Resize the tree view window.
+	  nsISupports* pTree;
+	  pEnumerator->CurrentItem(&pTree);
+	  nsIWidget* widget;
+	
+	  if (NS_OK == pTree->QueryInterface(kIWidgetIID, (void**)&widget))
+	  {
+	      nsRect r;
+		  aEvent->widget->GetBounds(r);
+		  widget->Resize(0, 0, r.width, r.height, PR_TRUE);
+		  NS_IF_RELEASE(widget);
+	  }
+	  NS_IF_RELEASE(pEnumerator);
+	  NS_IF_RELEASE(pTree);
+  }
+  return result;
+}
+
+void
+nsBrowserWindow::DoTreeView()
+{
+	// Create top level window
+	nsIWidget* pTreeWindow;
+
+    nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
+					     (void**)&pTreeWindow);
+    if (NS_OK != rv) {
+      return;
+	}
+    nsWidgetInitData initData;
+    initData.mBorderStyle = eBorderStyle_dialog;
+	nsRect r;
+	
+	mWindow->GetClientBounds(r);
+
+    pTreeWindow->Create((nsIWidget*)NULL, r, HandleTreeWindowEvent,
+		                 nsnull, mAppShell, nsnull, &initData);
+  
+
+	// Create and place a tree view.
+	r = nsRect(0,0,300,300);
+
+	rv = nsRepository::CreateInstance(kCTreeViewCID, nsnull, kITreeViewIID,
+									(void**)&mTreeView);
+	if (NS_OK != rv) {
+	  return;
+	}
+	nsIWidget* widget;
+	
+	if (NS_OK == mTreeView->QueryInterface(kIWidgetIID, (void**)&widget))
+	{
+		  widget->Create(pTreeWindow, r, nsnull, nsnull);
+		  widget->Show(PR_TRUE);
+		  NS_IF_RELEASE(widget);
+	}
+
+	pTreeWindow->Show(PR_TRUE);
+}
 
 void
 nsBrowserWindow::DoFind()
@@ -1175,7 +1251,6 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nsString throbberURL(THROBBER_AT);
   mThrobber->Init(mWindow, r, throbberURL, THROB_NUM);
   mThrobber->Show();
-
   return NS_OK;
 }
 
@@ -1243,8 +1318,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 			  BUTTON_HEIGHT,
 			  PR_TRUE);
       }
-      rr.y += BUTTON_HEIGHT;
-      rr.height -= BUTTON_HEIGHT;
+
       locationWidget->Show(PR_TRUE);
     }
     else {
@@ -1269,6 +1343,10 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   }
 
   // inset the web widget
+
+  rr.height -= BUTTON_HEIGHT;
+  rr.y += BUTTON_HEIGHT;
+
   rr.x += WEBSHELL_LEFT_INSET;
   rr.y += WEBSHELL_TOP_INSET;
   rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;

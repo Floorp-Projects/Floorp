@@ -42,6 +42,10 @@ VIEWER MENU DISCARDABLE
       MENUITEM "demo #10", VIEWER_DEMO10
    }
     MENUITEM "&Test Sites", VIEWER_TOP100
+	POPUP "Test &Widgets"
+	{
+		MENUITEM "&Tree View", VIEWER_TREEVIEW
+	}
     POPUP "Print &Preview"
     {
       MENUITEM "One Column", VIEWER_ONE_COLUMN

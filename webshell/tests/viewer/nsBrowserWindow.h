@@ -41,6 +41,7 @@ class nsIDocumentViewer;
 class nsIPresContext;
 class nsIPresShell;
 class nsIPref;
+class nsITreeView;
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 
@@ -137,6 +138,8 @@ public:
   NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
   NS_IMETHOD ForceRefresh();
 
+  void DoTreeView();
+
   void ShowPrintPreview(PRInt32 aID);
   void DoPrint(void);
 
@@ -190,7 +193,8 @@ public:
   nsIButton* mBack;
   nsIButton* mForward;
   nsIThrobber* mThrobber;
-
+  nsITreeView* mTreeView;
+  
   // "Status bar"
   nsITextWidget* mStatus;
 
