@@ -699,6 +699,7 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   if ((srcWidth != dstWidth) || (srcHeight != dstHeight)) {
     GdkPixmap *pixmap = 0;
     GdkGC *gc = 0;
+    nsRegionGTK clipRgn;
 
     switch (mAlphaDepth) {
     case 8:
@@ -725,7 +726,75 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
           gdk_gc_set_clip_mask(gc, pixmap);
         }
       }
-      /* fall through */
+
+      if (gdk_rgb_get_visual()->depth <= 8) {
+        PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*dstWidth*dstHeight);
+
+        if (!scaledRGB)
+          return NS_ERROR_FAILURE;
+
+        RectStretch(0, 0, mWidth-1, mHeight-1,
+                    0, 0, dstWidth-1, dstHeight-1,
+                    mImageBits, mRowBytes, scaledRGB, 3*dstWidth, 24);
+
+        if (NS_SUCCEEDED(((nsRenderingContextGTK&)aContext).CopyClipRegion(clipRgn))) {
+          // we have both a set of rectangles and a bitmap defining the clip
+          // let X11 clip to the bitmap, do the rectangles by hand
+          nsRegionRectSet *rectSet = nsnull;
+          clipRgn.Intersect(aDX, aDY, aDWidth, aDHeight);
+          clipRgn.GetRects(&rectSet);
+          for (PRUint32 i=0; i<rectSet->mRectsLen; i++) {
+            nsRegionRect *rect = &(rectSet->mRects[i]);
+
+            gdk_draw_rgb_image_dithalign(drawing->GetDrawable(), gc,
+                                         rect->x, rect->y, rect->width, rect->height,
+                                         GDK_RGB_DITHER_MAX, 
+                                         scaledRGB + 3*((rect->y-dstOrigY)*dstWidth+(rect->x-dstOrigX)),
+                                         3*dstWidth,
+                                         (rect->x-dstOrigX), (rect->y-dstOrigY));
+          }
+          clipRgn.FreeRects(rectSet);
+        } else {
+          gdk_draw_rgb_image_dithalign(drawing->GetDrawable(), gc,
+                                       aDX, aDY, aDWidth, aDHeight,
+                                       GDK_RGB_DITHER_MAX, 
+                                       scaledRGB + 3*((aDY-dstOrigY)*dstWidth+(aDX-dstOrigX)),
+                                       3*dstWidth,
+                                       (aDX-dstOrigX), (aDY-dstOrigY));
+        }
+        nsMemory::Free(scaledRGB);
+      } else {
+        if (NS_SUCCEEDED(((nsRenderingContextGTK&)aContext).CopyClipRegion(clipRgn))) {
+          // we have both a set of rectangles and a bitmap defining the clip
+          // let X11 clip to the bitmap, do the rectangles by hand
+          nsRegionRectSet *rectSet = nsnull;
+          clipRgn.Intersect(aDX, aDY, aDWidth, aDHeight);
+          clipRgn.GetRects(&rectSet);
+          for (PRUint32 i=0; i<rectSet->mRectsLen; i++) {
+            nsRegionRect *rect = &(rectSet->mRects[i]);
+            
+            XlibRectStretch(srcWidth, srcHeight,
+                            dstWidth, dstHeight,
+                            dstOrigX, dstOrigY,
+                            rect->x, rect->y,
+                            rect->width, rect->height,
+                            mImagePixmap, drawing->GetDrawable(),
+                            gc, sXbitGC, gdk_rgb_get_visual()->depth);
+          }
+          clipRgn.FreeRects(rectSet);
+        } else {
+          // only a mask
+          XlibRectStretch(srcWidth, srcHeight,
+                          dstWidth, dstHeight,
+                          dstOrigX, dstOrigY,
+                          aDX, aDY,
+                          aDWidth, aDHeight,
+                          mImagePixmap, drawing->GetDrawable(),
+                          gc, sXbitGC, gdk_rgb_get_visual()->depth);
+        }
+      }
+
+      break;
     case 0:
       if (!gc)
         gc = ((nsRenderingContextGTK&)aContext).GetGC();
@@ -796,21 +865,20 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
     // let X11 clip to the bitmap, do the rectangles by hand
     nsRegionRectSet *rectSet = nsnull;
     clipRgn.Intersect(aDX, aDY, aSWidth, aSHeight);
-    if (NS_SUCCEEDED(clipRgn.GetRects(&rectSet))) {
-      for (PRUint32 i=0; i<rectSet->mRectsLen; i++) {
-        nsRegionRect *rect = &(rectSet->mRects[i]);
-        gdk_window_copy_area(drawing->GetDrawable(),      // dest window
-                             copyGC,                      // gc
-                             rect->x,                     // xdest
-                             rect->y,                     // ydest
-                             mImagePixmap,                // source window
-                             aSX+(rect->x-aDX),           // xsrc
-                             aSY+(rect->y-aDY),           // ysrc
-                             rect->width,                 // width
-                             rect->height);               // height
-      }
-      clipRgn.FreeRects(rectSet);
+    clipRgn.GetRects(&rectSet);
+    for (PRUint32 i=0; i<rectSet->mRectsLen; i++) {
+      nsRegionRect *rect = &(rectSet->mRects[i]);
+      gdk_window_copy_area(drawing->GetDrawable(),      // dest window
+                           copyGC,                      // gc
+                           rect->x,                     // xdest
+                           rect->y,                     // ydest
+                           mImagePixmap,                // source window
+                           aSX+(rect->x-aDX),           // xsrc
+                           aSY+(rect->y-aDY),           // ysrc
+                           rect->width,                 // width
+                           rect->height);               // height
     }
+    clipRgn.FreeRects(rectSet);
   } else {
     // normal case - let X11 take care of all the clipping
     gdk_window_copy_area(drawing->GetDrawable(),      // dest window
