@@ -62,11 +62,15 @@ nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURL* aURL,
   mRef = aRef;
   mData = new nsString();
 
+  // XXX This is vile vile vile!!!
   nsresult rv;
   if (aURL) {
     rv = NS_OpenURL(aURL, this);
     if ((NS_OK != rv) && (nsnull != mFunc)) {
+      // Thou shalt not call out of scope whilst ones refcnt is zero
+      mRefCnt = 999;
       (*mFunc)(this, *mData, mRef, rv);
+      mRefCnt = 0;
     }
   }
 }
@@ -88,17 +92,21 @@ nsUnicharStreamLoader::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIStreamListenerIID)) {
-    *aInstancePtr = (void*) ((nsIStreamListener*)this);
+    nsIStreamListener* tmp = this;
+    *aInstancePtr = (void*) tmp;
     AddRef();
     return NS_OK;
   }
   if (aIID.Equals(kIUnicharStreamLoaderIID)) {
-    *aInstancePtr = (void*) ((nsIUnicharStreamLoader*)this);
+    nsIUnicharStreamLoader* tmp = this;
+    *aInstancePtr = (void*) tmp;
     AddRef();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = ((nsISupports *)(nsIUnicharStreamLoader *)this);
+    nsIUnicharStreamLoader* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtr = (void*) tmp2;
     AddRef();
     return NS_OK;
   }
