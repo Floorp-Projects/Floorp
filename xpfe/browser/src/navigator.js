@@ -222,8 +222,7 @@
 
   function OpenBookmarkURL(node)
   {
-    if (node.getAttribute('type') !=
-        "http://home.netscape.com/NC-rdf#Bookmark") {
+    if (node.getAttribute('container') == "true") {
       return false;
     }
     url = node.getAttribute('id');
@@ -234,7 +233,7 @@
     }
 
     window.frames[0].frames[1].location.href = url;
-	RefreshUrlbar();
+    RefreshUrlbar();
   }
 
   function BrowserNewWindow()
