@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetCID.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -40,7 +41,24 @@ nsAbout::NewChannel(nsIURI *aURI, nsIChannel **result)
     NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
     if ( NS_FAILED(rv) )
         return rv;
-   	rv = ioService->NewChannel(kURI, nsnull, result);
+
+    nsCOMPtr<nsIChannel> tempChannel;
+   	rv = ioService->NewChannel(kURI, nsnull, getter_AddRefs(tempChannel));
+
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = securityManager->GetCodebasePrincipal(aURI, getter_AddRefs(principal));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+    rv = tempChannel->SetOwner(owner);
+    *result = tempChannel.get();
+    NS_ADDREF(*result);
     return rv;
 }
 
