@@ -803,10 +803,14 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
               // Newly inserted frame
               reason = eReflowReason_Initial;
 
-              // Use an unconstrained width so we can get the child's maximum
-              // width
+              // Use an unconstrained width so we can get the child's maximum width
               // XXX What about fixed layout tables?
               kidAvailSize.SizeTo(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+              // request to get the max element size if not already so
+              if (!kidMaxElementSize) {
+                kidMaxElementSize = &localKidMaxElementSize;
+                desiredSize.maxElementSize = kidMaxElementSize;
+              }
             }
           }
   

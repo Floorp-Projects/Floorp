@@ -58,6 +58,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsISizeOfHandler.h"
 #include "nsIScrollableFrame.h"
+#include "nsHTMLReflowCommand.h"
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -84,6 +85,8 @@ PRBool nsDebugTable::gRflRow        = PR_TRUE;
 PRBool nsDebugTable::gRflCell       = PR_TRUE;
 PRBool nsDebugTable::gRflArea       = PR_TRUE;
 #endif
+static PRInt32 gRflCount = 0;
+
 /* ----------- InnerTableReflowState ---------- */
 
 struct InnerTableReflowState {
@@ -4678,7 +4681,11 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
     printf("rea=%d av=(%s,%s) ", aState->reason, width, height); 
     PrettyUC(aState->mComputedWidth, width);
     PrettyUC(aState->mComputedHeight, height);
-    printf("comp=(%s,%s) \n", width, height);
+    printf("comp=(%s,%s) count=%d \n", width, height, gRflCount);
+    gRflCount++;
+    //if (32 == gRflCount) {
+    //  NS_ASSERTION(PR_FALSE, "stop");
+    //}
   }
   if (aMetrics) {
     if (aState) {

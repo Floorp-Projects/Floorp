@@ -24,10 +24,20 @@
 
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsBlockFrame.h"
 #include "nsITableLayout.h"
 
 struct OuterTableReflowState;
 struct nsStyleTable;
+
+class nsTableCaptionFrame : public nsBlockFrame
+{
+  public:
+  // nsISupports
+  nsTableCaptionFrame();
+  NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
+};
+
 
 /* TODO
 1. decide if we'll allow subclassing.  If so, decide which methods really need to be virtual.
@@ -53,10 +63,23 @@ public:
   friend nsresult 
   NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
   /**  @see nsIFrame::SetInitialChildList */    
   NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
+
+  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
+                        nsIAtom*        aListName,
+                        nsIFrame**      aFirstChild) const;
+
+  NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
+                                         nsIAtom** aListName) const;
 
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -237,7 +260,7 @@ protected:
 
 private:
   /** used to keep track of this frame's children */
-  nsIFrame *mInnerTableFrame;
+  nsIFrame *mInnerTableFrame; // XXX this is redundant, mFrames holds the same
   nsIFrame *mCaptionFrame;
 
   /** used to track caption max element size */

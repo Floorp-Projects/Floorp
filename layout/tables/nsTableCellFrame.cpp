@@ -691,22 +691,20 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   DebugCheckChildSize(firstKid, kidSize, availSize, (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth));
 #endif
 
-  PRBool useInsets = PR_TRUE;
   // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
   // see testcase "emptyCells.html"
-  if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
-    if ((0 == kidSize.width) || (0 == kidSize.height)) {
-    //if ((0 == kidSize.width) && (0 == kidSize.height)) { // XXX why was this &&
-      SetContentEmpty(PR_TRUE);
-      useInsets = PR_FALSE;
+  if ((0 == kidSize.width) || (0 == kidSize.height)) { // XXX why was this &&
+    SetContentEmpty(PR_TRUE);
+    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
       // need to reduce the insets by border if the cell is empty
       leftInset   -= border.left;
       rightInset  -= border.right;
       topInset    -= border.top;
       bottomInset -= border.bottom;
     }
-    else 
-      SetContentEmpty(PR_FALSE);
+  }
+  else {
+    SetContentEmpty(PR_FALSE);
   }
 
   const nsStylePosition* pos;

@@ -280,9 +280,6 @@ extern nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
 inline nsresult NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
   return NS_NewBlockFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
 }
-inline nsresult NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewBlockFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
-}
 
 // This type of AreaFrame is the document root, a margin root, and the
 // initial containing block for absolutely positioned elements
@@ -359,6 +356,8 @@ extern nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** 
 // Table frame factories
 extern nsresult NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewTableFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+extern nsresult NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
 extern nsresult NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 extern nsresult NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
