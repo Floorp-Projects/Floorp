@@ -193,7 +193,7 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents or proportions */
 
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_TRUE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -234,11 +234,6 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::width) {
-    if (aValue.ToString(aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
 
   return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
@@ -250,15 +245,15 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
       aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
     // width
     nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() != eHTMLUnit_Null) {
+    if (aAttributes->GetAttribute(nsHTMLAtoms::width, value) !=
+        NS_CONTENT_ATTR_NOT_THERE) {
       switch (value.GetUnit()) {
       case eHTMLUnit_Percent: {
         aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
         break;
       }
-      case eHTMLUnit_Pixel: {
-        aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+      case eHTMLUnit_Integer: {
+        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         break;
       }
       case eHTMLUnit_Proportional: {

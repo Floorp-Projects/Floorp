@@ -208,13 +208,13 @@ NS_IMPL_STRING_ATTR(nsHTMLObjectElement, CodeType, codetype)
 NS_IMPL_URI_ATTR(nsHTMLObjectElement, Data, data)
 NS_IMPL_BOOL_ATTR(nsHTMLObjectElement, Declare, declare)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Height, height)
-NS_IMPL_PIXEL_ATTR(nsHTMLObjectElement, Hspace, hspace)
+NS_IMPL_INT_ATTR(nsHTMLObjectElement, Hspace, hspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Standby, standby)
 NS_IMPL_INT_ATTR(nsHTMLObjectElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
-NS_IMPL_PIXEL_ATTR(nsHTMLObjectElement, Vspace, vspace)
+NS_IMPL_INT_ATTR(nsHTMLObjectElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Width, width)
 
 
@@ -270,9 +270,6 @@ nsHTMLObjectElement::AttributeToString(nsIAtom* aAttribute,
       VAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  }
-  else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,

@@ -558,25 +558,6 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         ImageURIChanged(src);
       }
     }
-
-    // If the type of the input has changed we might need to change the type
-    // of the size attribute.
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        GetHTMLAttribute(nsHTMLAtoms::size, value)) {
-      if (value.GetUnit() == eHTMLUnit_Pixel &&
-          (mType == NS_FORM_INPUT_TEXT ||
-           mType == NS_FORM_INPUT_PASSWORD)) {
-        nsHTMLValue newValue(value.GetPixelValue(), eHTMLUnit_Integer);
-        SetHTMLAttribute(nsHTMLAtoms::size, newValue, PR_FALSE);
-      }
-      else if (value.GetUnit() == eHTMLUnit_Integer &&
-               mType != NS_FORM_INPUT_TEXT &&
-               mType != NS_FORM_INPUT_PASSWORD) {
-        nsHTMLValue newValue(value.GetIntValue(), eHTMLUnit_Pixel);
-        SetHTMLAttribute(nsHTMLAtoms::size, newValue, PR_FALSE);
-      }
-    }
   }
 }
 
@@ -659,8 +640,7 @@ nsHTMLInputElement::SetDisabled(PRBool aDisabled)
   SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
 
   if (aDisabled) {
-    nsHTMLValue empty(eHTMLUnit_Empty);
-    return SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE);
+    return SetHTMLAttribute(nsHTMLAtoms::disabled, nsHTMLValue(), PR_TRUE);
   }
 
   UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
@@ -674,13 +654,9 @@ nsHTMLInputElement::GetSize(PRUint32* aValue)
 
   nsHTMLValue value;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      GetHTMLAttribute(nsHTMLAtoms::size, value)) {
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      *aValue = value.GetIntValue();
-    }
-    else if (value.GetUnit() == eHTMLUnit_Pixel) {
-      *aValue = value.GetPixelValue();
-    }
+      GetHTMLAttribute(nsHTMLAtoms::size, value) &&
+      value.GetUnit() == eHTMLUnit_Integer) {
+    *aValue = value.GetIntValue();
   }
 
   return NS_OK;
@@ -689,14 +665,7 @@ nsHTMLInputElement::GetSize(PRUint32* aValue)
 NS_IMETHODIMP
 nsHTMLInputElement::SetSize(PRUint32 aValue)
 {
-  nsHTMLUnit unit = eHTMLUnit_Pixel;
-
-  if (mType == NS_FORM_INPUT_TEXT ||
-      mType == NS_FORM_INPUT_PASSWORD) {
-    unit = eHTMLUnit_Integer;
-  }
-
-  nsHTMLValue value(aValue, unit);
+  nsHTMLValue value(aValue, eHTMLUnit_Integer);
   return SetHTMLAttribute(nsHTMLAtoms::size, value, PR_TRUE);
 }
 
@@ -1806,6 +1775,8 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
+    // XXX ARG!! This is major evilness. StringToAttribute
+    // shouldn't set members. Override SetAttr instead
     const nsHTMLValue::EnumTable *table = kInputTypeTable;
     nsAutoString valueStr(aValue);
     while (nsnull != table->tag) { 
@@ -1825,25 +1796,13 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     // as an HTMLValue.
     mType = NS_FORM_INPUT_TEXT;
   }
-  else if (aAttribute == nsHTMLAtoms::checked) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if (aAttribute == nsHTMLAtoms::disabled) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if (aAttribute == nsHTMLAtoms::readonly) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::height) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1853,16 +1812,8 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (mType == NS_FORM_INPUT_TEXT ||
-        mType == NS_FORM_INPUT_PASSWORD) {
-      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
-    }
-    else {
-      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
-        return NS_CONTENT_ATTR_HAS_VALUE;
-      }
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
@@ -1871,7 +1822,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::border) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1919,13 +1870,6 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  }
-  else if (aAttribute == nsHTMLAtoms::checked) {
-    aResult.Assign(NS_LITERAL_STRING("checked"));
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,

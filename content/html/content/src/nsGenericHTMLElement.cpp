@@ -1685,11 +1685,6 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
       rv = ParseClassAttribute(aValue, attrValue);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    else if (aValue.IsEmpty()) {
-      // This is a bit evil but there's code out there that only looks for
-      // this datatype and not for empty-string.
-      attrValue.SetTo(nsHTMLValue(eHTMLUnit_Empty));
-    }
     else {
       attrValue.SetTo(aValue);
     }
@@ -1922,42 +1917,21 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     return NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  if (attrValue->GetType() != nsAttrValue::eHTMLValue) {
-    attrValue->ToString(aResult);
+  // Use subclass to convert enums to string.
+  if (attrValue->GetType() == nsAttrValue::eHTMLValue &&
+      attrValue->GetHTMLValue()->GetUnit() == eHTMLUnit_Enumerated) {
 
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
+    if (aNameSpaceID != kNameSpaceID_None ||
+        AttributeToString(aAttribute, *attrValue->GetHTMLValue(), aResult) !=
+        NS_CONTENT_ATTR_HAS_VALUE) {
+      NS_NOTREACHED("no enum to string conversion found");
 
-  const nsHTMLValue* value = attrValue->GetHTMLValue();
-
-  // Try subclass conversion routine first
-  if (aNameSpaceID == kNameSpaceID_None && 
-      AttributeToString(aAttribute, *value, aResult) ==
-      NS_CONTENT_ATTR_HAS_VALUE) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-
-  // Otherwise use default conversions
-  switch (value->GetUnit()) {
-    case eHTMLUnit_Null:
-    case eHTMLUnit_Empty:
-      break;
-
-    case eHTMLUnit_String:
-    case eHTMLUnit_ColorName:
-    case eHTMLUnit_Integer:
-    case eHTMLUnit_Pixel:
-    case eHTMLUnit_Color:
-    case eHTMLUnit_Percent:
-    case eHTMLUnit_CSSStyleRule:
-    case eHTMLUnit_AtomArray:
-      value->ToString(aResult);
-      break;
-
-    default:
-      NS_NOTREACHED("no value to string conversion found");
       return NS_CONTENT_ATTR_NOT_THERE;
+    }
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
+
+  attrValue->ToString(aResult);
 
   return NS_CONTENT_ATTR_HAS_VALUE;
 }
@@ -2303,11 +2277,8 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
                                         nsAString& aResult) const
 {
   if (nsHTMLAtoms::dir == aAttribute) {
-    nsHTMLValue value;
-    nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
-
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      value.EnumValueToString(kDirTable, aResult);
+    if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
+      aValue.EnumValueToString(kDirTable, aResult);
 
       return NS_OK;
     }
@@ -2765,27 +2736,12 @@ nsGenericHTMLElement::ParseImageAttribute(nsIAtom* aAttribute,
 {
   if ((aAttribute == nsHTMLAtoms::width) ||
       (aAttribute == nsHTMLAtoms::height)) {
-    return aResult.ParseSpecialIntValue(aString, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE);
+    return aResult.ParseSpecialIntValue(aString, eHTMLUnit_Integer, PR_TRUE, PR_FALSE);
   }
   else if ((aAttribute == nsHTMLAtoms::hspace) ||
            (aAttribute == nsHTMLAtoms::vspace) ||
            (aAttribute == nsHTMLAtoms::border)) {
-    return aResult.ParseIntWithBounds(aString, eHTMLUnit_Pixel, 0);
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsGenericHTMLElement::ImageAttributeToString(nsIAtom* aAttribute,
-                                             const nsHTMLValue& aValue,
-                                             nsAString& aResult)
-{
-  if ((aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height) ||
-      (aAttribute == nsHTMLAtoms::border) ||
-      (aAttribute == nsHTMLAtoms::hspace) ||
-      (aAttribute == nsHTMLAtoms::vspace)) {
-    return aValue.ToString(aResult);
+    return aResult.ParseIntWithBounds(aString, eHTMLUnit_Integer, 0);
   }
   return PR_FALSE;
 }
@@ -2956,8 +2912,9 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
                                                     eCSSUnit_Enumerated);
     }
     nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
-    if (value.GetUnit() == eHTMLUnit_String) {
+    if (aAttributes->GetAttribute(nsHTMLAtoms::lang, value) !=
+        NS_CONTENT_ATTR_NOT_THERE &&
+        value.GetUnit() == eHTMLUnit_String) {
       nsAutoString lang;
       value.GetStringValue(lang);
       aData->mDisplayData->mLang.SetStringValue(lang,
@@ -3072,8 +3029,8 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
   // hspace: value
   aAttributes->GetAttribute(nsHTMLAtoms::hspace, value);
   nsCSSValue hval;
-  if (value.GetUnit() == eHTMLUnit_Pixel)
-    hval.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+  if (value.GetUnit() == eHTMLUnit_Integer)
+    hval.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
   else if (value.GetUnit() == eHTMLUnit_Percent)
     hval.SetPercentValue(value.GetPercentValue());
 
@@ -3088,8 +3045,8 @@ nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAtt
   // vspace: value
   aAttributes->GetAttribute(nsHTMLAtoms::vspace, value);
   nsCSSValue vval;
-  if (value.GetUnit() == eHTMLUnit_Pixel)
-    vval.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+  if (value.GetUnit() == eHTMLUnit_Integer)
+    vval.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
   else if (value.GetUnit() == eHTMLUnit_Percent)
     vval.SetPercentValue(value.GetPercentValue());
 
@@ -3114,8 +3071,8 @@ nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttr
   // width: value
   if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel)
-      aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+    if (value.GetUnit() == eHTMLUnit_Integer)
+      aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
     else if (value.GetUnit() == eHTMLUnit_Percent)
       aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
   }
@@ -3123,8 +3080,8 @@ nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttr
   // height: value
   if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
     aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel)
-      aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel); 
+    if (value.GetUnit() == eHTMLUnit_Integer)
+      aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
     else if (value.GetUnit() == eHTMLUnit_Percent)
       aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue());    
   }
@@ -3140,14 +3097,15 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
   nsHTMLValue value;
 
   // border: pixels
-  aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-  if (value.GetUnit() == eHTMLUnit_Null)
+  if (aAttributes->GetAttribute(nsHTMLAtoms::border, value) ==
+      NS_CONTENT_ATTR_NOT_THERE) {
     return;
+  }
   
-  if (value.GetUnit() != eHTMLUnit_Pixel)  // something other than pixels
-    value.SetPixelValue(0);
+  if (value.GetUnit() != eHTMLUnit_Integer)  // something other than Integer
+    value.SetIntValue(0, eHTMLUnit_Integer);
 
-  nscoord val = value.GetPixelValue();
+  nscoord val = value.GetIntValue();
 
   nsCSSRect& borderWidth = aData->mMarginData->mBorderWidth;
   if (borderWidth.mLeft.GetUnit() == eCSSUnit_Null)
@@ -3191,43 +3149,42 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
     // background
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE ==
-        aAttributes->GetAttribute(nsHTMLAtoms::background, value)) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        nsAutoString spec;
-        value.GetStringValue(spec);
-        if (!spec.IsEmpty()) {
-          // Resolve url to an absolute url
-          // XXX this breaks if the HTML element has an xml:base
-          // attribute (the xml:base will not be taken into account)
-          // as well as elements with _baseHref set. We need to be able
-          // to get to the element somehow, or store the base URI in the
-          // attributes.
-          nsIPresShell *shell = aData->mPresContext->GetPresShell();
-          if (shell) {
-            nsCOMPtr<nsIDocument> doc;
-            nsresult rv = shell->GetDocument(getter_AddRefs(doc));
-            if (NS_SUCCEEDED(rv) && doc) {
-              nsCOMPtr<nsIURI> uri;
-              rv = nsContentUtils::NewURIWithDocumentCharset(
-                getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
-              if (NS_SUCCEEDED(rv)) {
-                nsCSSValue::URL *url = new nsCSSValue::URL(uri, spec.get());
-                if (url) {
-                  if (url->mString)
-                    aData->mColorData->mBackImage.SetURLValue(url);
-                  else
-                    delete url;
-                }
+        aAttributes->GetAttribute(nsHTMLAtoms::background, value) &&
+        value.GetUnit() == eHTMLUnit_String) {
+      nsAutoString spec;
+      value.GetStringValue(spec);
+      if (!spec.IsEmpty()) {
+        // Resolve url to an absolute url
+        // XXX this breaks if the HTML element has an xml:base
+        // attribute (the xml:base will not be taken into account)
+        // as well as elements with _baseHref set. We need to be able
+        // to get to the element somehow, or store the base URI in the
+        // attributes.
+        nsIPresShell *shell = aData->mPresContext->GetPresShell();
+        if (shell) {
+          nsCOMPtr<nsIDocument> doc;
+          nsresult rv = shell->GetDocument(getter_AddRefs(doc));
+          if (NS_SUCCEEDED(rv) && doc) {
+            nsCOMPtr<nsIURI> uri;
+            rv = nsContentUtils::NewURIWithDocumentCharset(
+              getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
+            if (NS_SUCCEEDED(rv)) {
+              nsCSSValue::URL *url = new nsCSSValue::URL(uri, spec.get());
+              if (url) {
+                if (url->mString)
+                  aData->mColorData->mBackImage.SetURLValue(url);
+                else
+                  delete url;
               }
             }
           }
         }
-      } else if (aData->mPresContext) {
+      }
+      else if (aData->mPresContext->CompatibilityMode() ==
+               eCompatibility_NavQuirks) {
         // in NavQuirks mode, allow the empty string to set the
         // background to empty
-        if (eCompatibility_NavQuirks == aData->mPresContext->CompatibilityMode() &&
-            eHTMLUnit_Empty == value.GetUnit())
-          aData->mColorData->mBackImage.SetNoneValue();
+        aData->mColorData->mBackImage.SetNoneValue();
       }
     }
   }
@@ -3235,10 +3192,12 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
   // bgcolor
   if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
     nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::bgcolor, value);
-    if ((eHTMLUnit_Color == value.GetUnit()) ||
-        (eHTMLUnit_ColorName == value.GetUnit()))
-      aData->mColorData->mBackColor.SetColorValue(value.GetColorValue());
+    nscolor color;
+    if (aAttributes->GetAttribute(nsHTMLAtoms::bgcolor, value) !=
+        NS_CONTENT_ATTR_NOT_THERE &&
+        value.GetColorValue(color)) {
+      aData->mColorData->mBackColor.SetColorValue(color);
+    }
   }
 }
 

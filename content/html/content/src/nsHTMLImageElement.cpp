@@ -261,13 +261,13 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border)
-NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Hspace, hspace)
+NS_IMPL_INT_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_URI_ATTR(nsHTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
 NS_IMPL_URI_ATTR_GETTER(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
-NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Vspace, vspace)
+NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
 void
 nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
@@ -423,14 +423,14 @@ nsHTMLImageElement::GetWidthHeight()
 
     if (GetHTMLAttribute(nsHTMLAtoms::width,
                          value) == NS_CONTENT_ATTR_HAS_VALUE) {
-      size.width = value.GetPixelValue();
+      size.width = value.GetIntValue();
     } else if (image) {
       image->GetWidth(&size.width);
     }
 
     if (GetHTMLAttribute(nsHTMLAtoms::height,
                          value) == NS_CONTENT_ATTR_HAS_VALUE) {
-      size.height = value.GetPixelValue();
+      size.height = value.GetIntValue();
     } else if (image) {
       image->GetHeight(&size.height);
     }
@@ -485,10 +485,6 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::ismap) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
   else if (aAttribute == nsHTMLAtoms::src) {
     static const char* kWhitespace = " \n\r\t\b";
     aResult.SetStringValue(nsContentUtils::TrimCharsInSet(kWhitespace, aValue));
@@ -511,9 +507,6 @@ nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
       VAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  }
-  else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
   return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
@@ -655,7 +648,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
   JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
   NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-  nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Pixel);
+  nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
 
   nsresult rv = SetHTMLAttribute(nsHTMLAtoms::width, widthVal, PR_FALSE);
 
@@ -665,7 +658,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
     ret = JS_ValueToInt32(aContext, argv[1], &height);
     NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-    nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Pixel);
+    nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
 
     rv = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
   }

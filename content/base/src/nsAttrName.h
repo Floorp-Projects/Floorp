@@ -184,7 +184,6 @@ public:
 
   PRUint32 HashValue() const
   {
-    // 
     // mBits and PRUint32 might have different size. This should silence
     // any warnings or compile-errors. This is what the implementation of
     // NS_PTR_TO_INT32 does to take care of the same problem.

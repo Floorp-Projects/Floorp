@@ -584,18 +584,10 @@ nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
                                          const nsAString& aValue,
                                          nsHTMLValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::disabled) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if (aAttribute == nsHTMLAtoms::cols) {
+  if (aAttribute == nsHTMLAtoms::cols) {
     if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  }
-  else if (aAttribute == nsHTMLAtoms::readonly) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::rows) {
     if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {

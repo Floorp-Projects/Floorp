@@ -2644,7 +2644,9 @@ nsHTMLDocument::SetAlinkColor(const nsAString& aAlinkColor)
   } else if (mAttrStyleSheet) {
     nsHTMLValue value;
     if (value.ParseColor(aAlinkColor, this)) {
-      mAttrStyleSheet->SetActiveLinkColor(value.GetColorValue());
+      nscolor color;
+      value.GetColorValue(color);
+      mAttrStyleSheet->SetActiveLinkColor(color);
     }
   }
 
@@ -2684,7 +2686,9 @@ nsHTMLDocument::SetLinkColor(const nsAString& aLinkColor)
   } else if (mAttrStyleSheet) {
     nsHTMLValue value;
     if (value.ParseColor(aLinkColor, this)) {
-      mAttrStyleSheet->SetLinkColor(value.GetColorValue());
+      nscolor color;
+      value.GetColorValue(color);
+      mAttrStyleSheet->SetLinkColor(color);
     }
   }
 
@@ -2724,7 +2728,9 @@ nsHTMLDocument::SetVlinkColor(const nsAString& aVlinkColor)
   } else if (mAttrStyleSheet) {
     nsHTMLValue value;
     if (value.ParseColor(aVlinkColor, this)) {
-      mAttrStyleSheet->SetVisitedLinkColor(value.GetColorValue());
+      nscolor color;
+      value.GetColorValue(color);
+      mAttrStyleSheet->SetVisitedLinkColor(color);
     }
   }
 

@@ -197,11 +197,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
   if (aData->mSID == eStyleStruct_Font) {
-    nsHTMLValue value;
-
-    // variable: empty
-    aAttributes->GetAttribute(nsHTMLAtoms::variable, value);
-    if (value.GetUnit() == eHTMLUnit_Empty)
+    // variable
+    if (aAttributes->GetAttr(nsHTMLAtoms::variable))
       aData->mFontData->mFamily.SetStringValue(NS_LITERAL_STRING("serif"),
                                                eCSSUnit_String);
   }
@@ -221,13 +218,12 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
   else if (aData->mSID == eStyleStruct_Text) {
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
-      nsHTMLValue value;
       // wrap: empty
-      aAttributes->GetAttribute(nsHTMLAtoms::wrap, value);
-      if (value.GetUnit() != eHTMLUnit_Null)
+      if (aAttributes->GetAttr(nsHTMLAtoms::wrap))
         aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_MOZ_PRE_WRAP, eCSSUnit_Enumerated);
       
       // cols: int (nav4 attribute)
+      nsHTMLValue value;
       aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
       if (value.GetUnit() == eHTMLUnit_Integer)
         // Force wrap property on since we want to wrap at a width

@@ -356,10 +356,6 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
       table++;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::disabled) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
 
   return NS_CONTENT_ATTR_NOT_THERE;
 }
