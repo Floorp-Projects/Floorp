@@ -46,6 +46,8 @@
 
 .toolbarbutton-1 {
   min-width: 50px;
+  color: #323642;
+  font-size: smaller;
 }
 
 .toolbarbutton-1,
@@ -56,8 +58,6 @@
   -moz-box-pack: start;
   border: none !important;
   padding: 0px !important;
-  color: #323642;
-  font-size: smaller;
 }
 
 .toolbarbutton-1 > .toolbarbutton-text {
