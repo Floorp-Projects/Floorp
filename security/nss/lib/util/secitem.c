@@ -34,7 +34,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.6 2002/02/21 22:41:44 ian.mcgreer%sun.com Exp $
+ * $Id: secitem.c,v 1.7 2002/06/24 21:57:27 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -188,6 +188,7 @@ SECITEM_DupItem(const SECItem *from)
     }
 
     to->len = from->len;
+    to->type = from->type;
     PORT_Memcpy(to->data, from->data, to->len);
     
     return(to);
