@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.61 (Macintosh; I; PPC) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.61 (Macintosh; U; PPC) [Netscape]">
    <title>MRJ Plugin Build Instructions</title>
 </head>
 <body bgcolor="#C0C0C0" link="#333333" vlink="#FF0000">
@@ -30,6 +30,12 @@ SDK (MRJ_SDK_2.2 or later)</a>. Run the installer, which should create
 a folder at the root of your system volume, called "MRJ SDK 2.2" Copy the
 CIncludes and Libraries folders to the "MRJSDK" folder in mozilla/plugin/oji/MRJ.</li>
 
+<ol>
+<li>
+Copy JManager.h from .../Metrowerks CodeWarrior/Java Support/VM_Support/MRJ_Support/CIncludes
+into the above copied CIncludes directory in MRJSDK.</li>
+</ol>
+
 <li>
 Open the project mozilla/plugin/oji/MRJ/plugin/MRJInABox.mcp.</li>
 
@@ -44,7 +50,9 @@ To build for 5.X, build the "MRJInABox" target.</li>
 
 <li>
 Build the project mozilla/js/macbuild/LiveConnectClasses.mcp, and make
-an alias to the file liveconnect.jar in mozilla/plugin/oji/MRJ/plugin.</li>
+an alias to the file liveconnect.jar in mozilla/plugin/oji/MRJ/plugin;
+if liveconnect.jar cannot be found in .../js/macbuild/ after the build
+is successful, it can be found in .../dist/liveconnect/</li>
 
 <li>
 Build the project mozilla/plugin/oji/MRJ/testing/ConsoleApplet.mcp, and
