@@ -69,7 +69,6 @@ protected:
 #endif
 
     nsIThread *     mThread;
-    PRBool          mThreadRunning;
     nsresult        mState;
 
     // nsDNSLookup cache? - list of nsDNSLookups, hash table (nsHashTable, nsStringKey)
@@ -77,8 +76,9 @@ protected:
 
 #if defined(XP_MAC)
 
+    PRBool          mThreadRunning;
     InetSvcRef  mServiceRef;
-	QHdr		mCompletionQueue;
+    QHdr		mCompletionQueue;
 
 #if TARGET_CARBON
     OTClientContextPtr  mClientContext;
@@ -89,6 +89,7 @@ protected:
     HWND                mDNSWindow;
     UINT                mMsgFoundDNS;
     nsVoidArray         mCompletionQueue;
+    HANDLE              mThreadHandle;
 #elif defined(XP_UNIX)
     //XXX - to be defined
 #endif

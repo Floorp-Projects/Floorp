@@ -29,7 +29,6 @@
 #include "nsIFileTransportService.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
-#include "nsCOMPtr.h"
 #include "prprf.h"
 #include "prmem.h"      // for PR_Malloc
 #include "prsystem.h"   // for PR_GetSystemInfo
@@ -38,8 +37,6 @@
 #include "nsIFileChannel.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
-#include "nsISocketTransportService.h" 
-#include "nsIDNSService.h" 
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -62,6 +59,8 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
+    nsresult rv;
+
     // initialize the version and app components
     mAppName = new nsCString("Netscape");
     if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
@@ -80,12 +79,31 @@ nsIOService::Init()
     mAppPlatform = new nsCString(platformBuf);
     if (!mAppPlatform) return NS_ERROR_OUT_OF_MEMORY;
 
-    return NS_OK;
+    // We need to get references to these services so that we can shut them
+    // down later. If we wait until the nsIOService is being shut down,
+    // GetService will fail at that point.
+    rv = nsServiceManager::GetService(kSocketTransportServiceCID,
+                                      NS_GET_IID(nsISocketTransportService),
+                                      getter_AddRefs(mSocketTransportService));
+    if (NS_FAILED(rv)) return rv;
+    rv = nsServiceManager::GetService(kFileTransportService,
+                                      NS_GET_IID(nsIFileTransportService),
+                                      getter_AddRefs(mFileTransportService));
+    if (NS_FAILED(rv)) return rv;
+    rv = nsServiceManager::GetService(kDNSServiceCID,
+                                      NS_GET_IID(nsIDNSService),
+                                      getter_AddRefs(mDNSService));
+    return rv;
 }
 
 nsIOService::~nsIOService()
 {
-    (void)SetOffline(PR_TRUE);
+    nsresult rv;
+    rv = SetOffline(PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetOffline failed");
+    // shut down the file transport service too:
+    rv = mFileTransportService->Shutdown();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "file transport shutdown failed");
     if (mAppName) delete mAppName;
     if (mAppCodeName) delete mAppCodeName;
     if (mAppVersion) delete mAppVersion;
@@ -396,15 +414,8 @@ nsIOService::SetOffline(PRBool offline)
     mOffline = offline;
     if (offline) {
         // be sure to try and shutdown both (even if the first fails)
-        nsresult rv, rv1 = NS_OK, rv2 = NS_OK;
-        NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            rv1 = sts->Shutdown();
-        }
-        NS_WITH_SERVICE(nsIDNSService, dns, kDNSServiceCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            rv2 = dns->Shutdown();
-        }
+        nsresult rv1 = mSocketTransportService->Shutdown();
+        nsresult rv2 = mDNSService->Shutdown();
         if (NS_FAILED(rv1)) return rv1;
         if (NS_FAILED(rv2)) return rv2;
     }

@@ -47,6 +47,9 @@
 #define NS_ERROR_IN_PROGRESS \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
 
+#define NS_ERROR_OFFLINE \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 16)
+
 // internal unknown content-type
 //
 // XXX: These definitions are duplicated in 

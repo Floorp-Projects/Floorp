@@ -25,6 +25,10 @@
 
 #include "nsIIOService.h"
 #include "nsString2.h"
+#include "nsISocketTransportService.h" 
+#include "nsIFileTransportService.h" 
+#include "nsIDNSService.h" 
+#include "nsCOMPtr.h"
 
 class nsIOService : public nsIIOService
 {
@@ -54,6 +58,9 @@ protected:
     nsCString   *mAppLanguage;
     nsCString   *mAppPlatform;
     PRBool      mOffline;
+    nsCOMPtr<nsISocketTransportService> mSocketTransportService;
+    nsCOMPtr<nsIFileTransportService>   mFileTransportService;
+    nsCOMPtr<nsIDNSService>             mDNSService;
 };
 
 #endif // nsIOService_h__

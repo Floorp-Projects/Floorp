@@ -27,10 +27,14 @@
 #include "nsISupportsArray.h"
 #include "nsError.h"
 #include "prnetdb.h"
-
 #include "nsString2.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "netCore.h"
+
+#if defined(XP_PC)
+#define WM_DNS_SHUTDOWN         (WM_USER + 1)
+#endif
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -365,7 +369,6 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     int     error = nsnull;
 
     nsDNSService *  dnsService = (nsDNSService *)GetWindowLong(hWnd, GWL_USERDATA);
-	
 
     if ((dnsService != nsnull) && (uMsg == dnsService->mMsgFoundDNS)) {
         // dns lookup complete - get error code
@@ -391,11 +394,18 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 delete lookup;  // for now, until we implement a dns cache
                 break;
             }
-			index--;
+            index--;
         }
 
         result = 0;
-    } else {
+    }
+    else if (uMsg == WM_DNS_SHUTDOWN) {
+        // dispose DNS EventHandler Window
+        (void) DestroyWindow(dnsService->mDNSWindow);
+        PostQuitMessage(0);
+        result = 0;
+    }
+    else {
         result = DefWindowProc(hWnd, uMsg, wParam, lParam);
     }
 
@@ -408,10 +418,10 @@ nsDNSService::nsDNSService()
 {
     NS_INIT_REFCNT();
     
-    mThreadRunning = PR_FALSE;
     mThread = nsnull;
 
 #if defined(XP_MAC)
+    mThreadRunning = PR_FALSE;
     mServiceRef = nsnull;
 
     mCompletionQueue.qFlags = 0;
@@ -490,18 +500,7 @@ nsDNSService::Init()
 
 nsDNSService::~nsDNSService()
 {
-//    deallocate cache
-
-#if defined(XP_MAC)
-//    deallocate Open Transport Service Provider
-	OSStatus status = OTCloseProvider((ProviderRef)mServiceRef);
-    CloseOpenTransport();           // should be moved to terminate routine
-#elif defined(XP_PC)
-//    dispose DNS EventHandler Window
-	(void) DestroyWindow(mDNSWindow);
-#elif defined(XP_UNIX)
-//    XXXX - ?
-#endif
+    Shutdown();
 }
 
 
@@ -516,13 +515,6 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
     if (aOuter != nsnull)
     	return NS_ERROR_NO_AGGREGATION;
     
-    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    PRBool offline;
-    rv = ios->GetOffline(&offline);
-    if (NS_FAILED(rv)) return rv;
-    if (offline) return NS_ERROR_FAILURE;
-
     nsDNSService* dnsService = new nsDNSService();
     if (dnsService == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -562,11 +554,13 @@ nsDNSService::InitDNSThread(void)
     mDNSWindow = CreateWindow(windowClass, "Mozilla:DNSWindow",
                               0, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
 
-	(void) SetWindowLong(mDNSWindow, GWL_USERDATA, (long)this);
+    (void) SetWindowLong(mDNSWindow, GWL_USERDATA, (long)this);
 
     // sync with Create thread
     PRMonitor * monitor;
     PRStatus    status;
+
+    mThreadHandle = GetCurrentThread();
     
     monitor = PR_CEnterMonitor(this);
     mState = NS_OK;
@@ -651,6 +645,14 @@ nsDNSService::Lookup(nsISupports*    clientContext,
                      nsIRequest*     *DNSRequest)
 {
     nsresult	rv = NS_OK;
+
+    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRBool offline;
+    rv = ios->GetOffline(&offline);
+    if (NS_FAILED(rv)) return rv;
+    if (offline) return NS_ERROR_OFFLINE;
+
     PRStatus    status = PR_SUCCESS;
     nsHostEnt*  hostentry = new nsHostEnt;
     if (!hostentry) return NS_ERROR_OUT_OF_MEMORY;
@@ -783,5 +785,32 @@ nsDNSService::Lookup(nsISupports*    clientContext,
 NS_IMETHODIMP
 nsDNSService::Shutdown()
 {
-    return NS_OK;
+    nsresult rv = NS_OK;
+
+    // XXX clean up outstanding requests
+
+    // XXX deallocate cache
+
+#if defined(XP_MAC)
+
+    mThreadRunning = PR_FALSE;
+
+    // deallocate Open Transport Service Provider
+    OSStatus status = OTCloseProvider((ProviderRef)mServiceRef);
+    CloseOpenTransport();           // should be moved to terminate routine
+    PRThread* dnsServiceThread;
+    rv = mThread->GetPRThread(&dnsServiceThread);
+    if (dnsServiceThread)
+        PR_Mac_PostAsyncNotify(dnsServiceThread);
+
+#elif defined(XP_PC)
+
+    SendMessage(mDNSWindow, WM_DNS_SHUTDOWN, 0, 0);
+
+#elif defined(XP_UNIX)
+    // XXXX - ?
+#endif
+
+    rv = mThread->Join();
+    return rv;
 }
