@@ -751,50 +751,44 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
-  nsAutoString args;
 
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (!prefs) return NS_ERROR_FAILURE;
-
-  if (NeedHomepageOverride(prefs)) {
-    nsXPIDLString url;
-    rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
-    if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
-      args = url;
+  if (prefs) {
+    if (NeedHomepageOverride(prefs)) {
+      rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, aDefaultArgs);
+      if (NS_SUCCEEDED(rv) && *aDefaultArgs)
+        return NS_OK;
     }
-  }
 
-  if (args.IsEmpty()) {
     PRInt32 choice = 0;
     rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
     if (NS_SUCCEEDED(rv)) {
       switch (choice) {
         case 1: {
           // skip the code below
-          return GetHomePageGroup(prefs, aDefaultArgs);
+          rv = GetHomePageGroup(prefs, aDefaultArgs);
+          if (NS_SUCCEEDED(rv) && *aDefaultArgs)
+            return NS_OK;
         }
         case 2: {
           nsCOMPtr<nsIBrowserHistory> history(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
           if (history) {
             nsXPIDLCString curl;
             rv = history->GetLastPageVisited(getter_Copies(curl));
-            args.AssignWithConversion(curl);
+            if (NS_SUCCEEDED(rv)) {
+              *aDefaultArgs = UTF8ToNewUnicode(curl);
+              if (*aDefaultArgs) return NS_OK;
+            }
           }
-          break;
         }
-        case 0:
-        default:
-          // fall through to about:blank below
-          break;
       }
     }
-
-    // the default, in case we fail somewhere
-    if (args.IsEmpty())
-      args.Assign(NS_LITERAL_STRING("about:blank"));
   }
+    
+  // the default, in case we fail somewhere
+  *aDefaultArgs = ToNewUnicode(NS_LITERAL_STRING("about:blank"));
+  if (!*aDefaultArgs) return NS_ERROR_OUT_OF_MEMORY;
 
-  *aDefaultArgs = ToNewUnicode(args);
   return NS_OK;
 }
 
