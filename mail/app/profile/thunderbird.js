@@ -41,6 +41,8 @@ pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search
 
 pref("general.useragent.vendor", "Thunderbird");
 pref("general.useragent.vendorSub", "0.5a");
+pref("signon.rememberSignons",              true);
+pref("signon.expireMasterPassword",         false);
 
 pref("general.startup.browser",             false);
 pref("general.startup.mail",                false);
