@@ -358,6 +358,19 @@ _PR_MD_BIND(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen)
 
 
 PRInt32
+_PR_MD_LISTEN(PRFileDesc *fd, PRIntn backlog)
+{
+    PRInt32 rv, err;
+    rv = listen(fd->secret->md.osfd, backlog);
+    if (rv < 0)  {
+        err = sock_errno();
+        _PR_MD_MAP_DEFAULT_ERROR(err);
+    }
+    return(rv);
+}
+
+
+PRInt32
 _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, 
             PRIntervalTime timeout)
 {

@@ -40,6 +40,9 @@
   #include <assert.h>
 #endif  
 
+NSPR_API(void) _MD_os2_map_default_error(PRInt32 err);
+#define	_PR_MD_MAP_DEFAULT_ERROR	_MD_os2_map_default_error
+
 NSPR_API(void) _MD_os2_map_opendir_error(PRInt32 err);
 #define	_PR_MD_MAP_OPENDIR_ERROR	_MD_os2_map_opendir_error
 
