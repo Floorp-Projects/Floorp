@@ -21,7 +21,6 @@
  * Contributor(s):
  *     Troy Chevalier <troy@netscape.com>
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.
  */
 
 #include "resource.h"
@@ -31,17 +30,16 @@
 // Dialog
 //
 
-DLGTEMPLATE IDD_EXTRACTING DISCARDABLE  
+DLGTEMPLATE IDD_EXTRACTING DISCARDABLE
 BEGIN
-  DIALOG "Extracting...", IDD_EXTRACTING,   0, 202, 182,  50,
-  WS_VISIBLE | FS_DLGBORDER | FS_SCREENALIGN,
-  FCF_TITLEBAR | FCF_SYSMENU | FCF_NOMOVEWITHOWNER
+  DIALOG "Extracting...", IDD_EXTRACTING,   0, 247, 200,  58,
+  FS_DLGBORDER | FS_SCREENALIGN,
+  FCF_TITLEBAR | FCF_SYSMENU
+  PRESPARAMS PP_FONTNAMESIZE, "8.Helv"
   BEGIN
-    WINDOW "", FID_CLIENT, 0, 0, 0, 0, "NSExtracting", WS_VISIBLE
-    BEGIN
-    LTEXT         "",             IDC_STATUS,   9,  33, 149,   7, SS_TEXT | DT_WORDBREAK | DT_MNEMONIC
-    CONTROL       "",              IDC_GAUGE,   9,  16, 164,   9, "NSGauge", 0x0 | WS_VISIBLE
-    END
+    LTEXT         "", IDC_STATUS,   6,  39, 188, 7,  SS_TEXT | WS_VISIBLE
+    SLIDER        IDC_GAUGE, 6, 0, 200, 20, WS_VISIBLE | SLS_RIBBONSTRIP | SLS_READONLY
+                  CTLDATA 12, 0, 100, 0, 0, 0
   END
 END
 
@@ -52,7 +50,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-ICON                       1    DISCARDABLE     "nsinstall.ico"
+ICON 1 DISCARDABLE "nsinstall.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -67,4 +65,6 @@ BEGIN
     IDS_TITLE               "Installation"
     IDS_ERROR_OUT_OF_MEMORY "Out of memory!"
 END
+
+/////////////////////////////////////////////////////////////////////////////
 
