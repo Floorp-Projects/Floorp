@@ -27,7 +27,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["defaultDir", "prompt", "useProgressDialogs", "openDownloadsSidebar"];
+    var _elementIDs = ["defaultDir", "useProgressDialogs", "openDownloadsSidebar"];
     function selectFolder()
     { 
       const nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -69,7 +69,6 @@
   </groupbox>
   <groupbox>
     <caption label="&whenStarting.label;"/>
-    <checkbox id="prompt" label="&prompt.label;" prefstring="browser.download.promptWithFilepicker"/>
     <checkbox id="useProgressDialogs" label="&useProgressDialogs.label;" accesskey="&useProgressDialogs.accesskey;"
               prefstring="browser.download.useProgressDialogs"/>
     <checkbox id="openDownloadsSidebar" label="&openSidebar.label;"

@@ -72,7 +72,7 @@ var downloadDNDObserver =
     var split = aXferData.data.split("\n");
     var url = split[0];
     var name = split[1];
-    saveURL(url, name, null, true);
+    saveURL(url, name, null, true, true);
   },
   _flavourSet: null,  
   getSupportedFlavours: function ()
