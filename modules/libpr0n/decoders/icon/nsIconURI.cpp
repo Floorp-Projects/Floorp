@@ -278,7 +278,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
         // and remember the rest in mDummyFilePath
         mDummyFilePath.Cut(0, 2); // cut the first 2 bytes....
       }
-      else if (!strncmp("file://", mDummyFilePath.get(), 7))
+      if (!strncmp("file://", mDummyFilePath.get(), 7))
       { 
         // we have a file url.....so store it...
         rv = ioService->NewURI(mDummyFilePath, nsnull, nsnull, getter_AddRefs(mFileIcon));
