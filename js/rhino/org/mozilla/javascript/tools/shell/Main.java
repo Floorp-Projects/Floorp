@@ -22,7 +22,6 @@ import java.io.*;
 import java.util.*;
 import java.lang.reflect.*;
 import org.mozilla.javascript.*;
-import java.text.MessageFormat;
 import org.mozilla.javascript.tools.ToolErrorReporter;
 
 /*
@@ -41,9 +40,7 @@ import org.mozilla.javascript.debug.SourceTextManagerImpl;
  *
  * @author Norris Boyd
  */
- 
- 
-public class Main extends ImporterTopLevel {
+public class Main extends ScriptableObject {
 
     /**
      * Main entry point.
@@ -63,23 +60,7 @@ public class Main extends ImporterTopLevel {
         // we can make it the global object.
         // We create a shared global with sealed properties that
         // we can share with other threads (see spawn).
-        sharedGlobal = new Main();
-
-        // Initialize the standard objects (Object, Function, etc.)
-        // This must be done before scripts can be executed.
-        cx.initStandardObjects(sharedGlobal, false);
-        
-		
-        // Define some global functions particular to the shell. Note
-        // that these functions are not part of ECMA.
-        String[] names = { "print", "quit", "version", "load", "help",
-                           "loadClass", "defineClass", "spawn" };
-        try {
-            sharedGlobal.defineFunctionProperties(names, Main.class,
-                                                  ScriptableObject.DONTENUM);
-        } catch (PropertyException e) {
-            throw new Error(e.getMessage());
-        }
+        sharedGlobal = new SharedGlobal();
         
         // Create the "global" object where top-level variables will live.
         // Set its prototype to the sharedGlobal where all the standard
@@ -237,6 +218,14 @@ public class Main extends ImporterTopLevel {
     }
 
     /**
+     * Print a usage message.
+     */
+    public static void usage(String s) {
+        p(ToolErrorReporter.getMessage("msg.shell.usage", s));
+        System.exit(1);
+    }
+
+    /**
      * Return name of this class, the global object.
      *
      * This method must be implemented in all concrete classes
@@ -248,191 +237,6 @@ public class Main extends ImporterTopLevel {
         return "global";
     }
 
-    /**
-     * Print a usage message.
-     */
-    public static void usage(String s) {
-        p(ToolErrorReporter.getMessage("msg.shell.usage", s));
-        System.exit(1);
-    }
-
-    /**
-     * Print a help message.
-     *
-     * This method is defined as a JavaScript function.
-     */
-    public static void help(String s) {
-        p(ToolErrorReporter.getMessage("msg.help"));
-    }
-
-    /**
-     * Print the string values of its arguments.
-     *
-     * This method is defined as a JavaScript function.
-     * Note that its arguments are of the "varargs" form, which
-     * allows it to handle an arbitrary number of arguments
-     * supplied to the JavaScript function.
-     *
-     */
-    public static Object print(Context cx, Scriptable thisObj,
-                               Object[] args, Function funObj)
-    {
-        for (int i=0; i < args.length; i++) {
-            if (i > 0)
-                System.out.print(" ");
-
-            // Convert the
-            // arbitrary JavaScript value into a string form.
-
-            String s = Context.toString(args[i]);
-
-            System.out.print(s);
-        }
-        System.out.println();
-        return Context.getUndefinedValue();
-    }
-
-    /**
-     * Quit the shell.
-     *
-     * This only affects the interactive mode.
-     *
-     * This method is defined as a JavaScript function.
-     */
-    public static void quit() {
-        global.quitting = true;
-    }
-
-    /**
-     * Get and set the language version.
-     *
-     * This method is defined as a JavaScript function.
-     */
-    public static double version(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
-    {
-        double result = (double) cx.getLanguageVersion();
-        if (args.length > 0) {
-            double d = cx.toNumber(args[0]);
-            cx.setLanguageVersion((int) d);
-        }
-        return result;
-    }
-
-    /**
-     * Load and execute a set of JavaScript source files.
-     *
-     * This method is defined as a JavaScript function.
-     *
-     */
-    public static void load(Context cx, Scriptable thisObj,
-                            Object[] args, Function funObj)
-    {
-        for (int i=0; i < args.length; i++) {
-            processSource(cx, cx.toString(args[i]));
-        }
-    }
-
-    /**
-     * Load a Java class that defines a JavaScript object using the
-     * conventions outlined in ScriptableObject.defineClass.
-     * <p>
-     * This method is defined as a JavaScript function.
-     * @exception IllegalAccessException if access is not available
-     *            to a reflected class member
-     * @exception InstantiationException if unable to instantiate
-     *            the named class
-     * @exception InvocationTargetException if an exception is thrown
-     *            during execution of methods of the named class
-     * @exception ClassDefinitionException if the format of the
-     *            class causes this exception in ScriptableObject.defineClass
-     * @exception PropertyException if the format of the
-     *            class causes this exception in ScriptableObject.defineClass
-     * @see org.mozilla.javascript.ScriptableObject#defineClass
-     */
-    public static void defineClass(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
-        throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException,
-               PropertyException
-    {
-        Class clazz = getClass(args);
-        ScriptableObject.defineClass(global, clazz);
-    }
-
-    /**
-     * Load and execute a script compiled to a class file.
-     * <p>
-     * This method is defined as a JavaScript function.
-     * When called as a JavaScript function, a single argument is
-     * expected. This argument should be the name of a class that
-     * implements the Script interface, as will any script
-     * compiled by jsc.
-     *
-     * @exception IllegalAccessException if access is not available
-     *            to the class
-     * @exception InstantiationException if unable to instantiate
-     *            the named class
-     * @exception InvocationTargetException if an exception is thrown
-     *            during execution of methods of the named class
-     * @exception JavaScriptException if a JavaScript exception is thrown
-     *            during execution of the compiled script
-     * @see org.mozilla.javascript.ScriptableObject#defineClass
-     */
-    public static void loadClass(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
-        throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, JavaScriptException
-    {
-        Class clazz = getClass(args);
-        if (!Script.class.isAssignableFrom(clazz)) {
-            throw Context.reportRuntimeError(ToolErrorReporter.getMessage(
-                "msg.must.implement.Script"));
-        }
-        Script script = (Script) clazz.newInstance();
-        script.exec(cx, global);
-    }
-
-    private static Class getClass(Object[] args)
-        throws IllegalAccessException, InstantiationException,
-               InvocationTargetException
-    {
-        if (args.length == 0) {
-            throw Context.reportRuntimeError(ToolErrorReporter.getMessage(
-                "msg.expected.string.arg"));
-        }
-        String className = Context.toString(args[0]);
-        try {
-            return Class.forName(className);
-        }
-        catch (ClassNotFoundException cnfe) {
-            throw Context.reportRuntimeError(ToolErrorReporter.getMessage(
-                "msg.class.not.found",
-                className));
-        }
-    }
-
-    public static Object spawn(Context cx, Scriptable thisObj, Object[] args, 
-                               Function funObj)
-    {
-        Runner runner;
-        if (args.length != 0 && args[0] instanceof Function) {
-            Object[] newArgs = null;
-            if (args.length > 1 && args[1] instanceof Scriptable) {
-                newArgs = cx.getElements((Scriptable) args[1]);
-            }
-            runner = new Runner((Function) args[0], newArgs);
-        } else if (args.length != 0 && args[0] instanceof Script) {
-            runner = new Runner((Script) args[0]);
-        } else {
-            throw Context.reportRuntimeError(ToolErrorReporter.getMessage(
-                "msg.spawn.args"));
-        }
-        Thread thread = new Thread(runner);
-        thread.start();
-        return thread;
-    }
-    
     /**
      * Evaluate JavaScript source.
      *
@@ -577,7 +381,7 @@ public class Main extends ImporterTopLevel {
 
     static ToolErrorReporter errorReporter;
     static Main global;
-    static Main sharedGlobal;
+    static SharedGlobal sharedGlobal;
     
     boolean quitting;
     SourceTextManager debug_stm;
@@ -586,43 +390,4 @@ public class Main extends ImporterTopLevel {
     boolean processStdin = true;
     boolean showDebuggerUI = false;
     NativeArray history;
-}
-
-
-class Runner implements Runnable {
-
-    Runner(Function func, Object[] args) {
-        f = func;
-        this.args = args;
-    }
-
-    Runner(Script script) {
-        s = script;
-    }
-
-    public void run() {
-        Context cx = Context.enter();
-
-        // Create a local scope for this thread to execute in, and use
-        // the shared global properties.
-        Main scope = new Main();
-        scope.setPrototype(Main.sharedGlobal);
-        
-        try {
-            if (f != null)
-                f.call(cx, scope, scope, args);
-            else
-                s.exec(cx, scope);
-        } catch (JavaScriptException e) {
-            Context.reportError(ToolErrorReporter.getMessage(
-                "msg.uncaughtJSException",
-                e.getMessage()));
-        } 
-        
-        cx.exit();
-    }
-
-    private Function f;
-    private Script s;
-    private Object[] args;
 }

@@ -76,7 +76,7 @@ public class ImporterTopLevel extends ScriptableObject {
                 Object o = importedPackages.elementAt(i);
                 NativeJavaPackage p = (NativeJavaPackage) o;
                 Object v = p.get(name, start);
-                if (v != NOT_FOUND) {
+                if (!(v instanceof NativeJavaPackage)) {
                     if (result == NOT_FOUND)
                         result = v;
                     else 

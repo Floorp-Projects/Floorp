@@ -377,11 +377,19 @@ public class FunctionObject extends NativeFunction {
             // OPT: cache "clazz"?
             Class clazz = method != null ? method.getDeclaringClass()
                                          : ctor.getDeclaringClass();
-            if (thisObj == null || !clazz.isInstance(thisObj)) {
+            Scriptable p = thisObj;
+            while (p != null && !clazz.isInstance(p)) {
+                // Walk up the prototype chain to find an object to call the 
+                // method on
+                p = p.getPrototype();
+            }
+            if (p == null) {
+                // Couldn't find an object to call this on.
                 Object[] errArgs = { names[0] };
                 throw Context.reportRuntimeError(
                     Context.getMessage("msg.incompat.call", errArgs));
             }
+            thisObj = p;
         }
         Object[] invokeArgs;
         int i;
