@@ -277,7 +277,7 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 
 treerow[mode="inline-edit"] 
   {
-    background-color      : none;
+    background            : transparent;
   }
 
   
