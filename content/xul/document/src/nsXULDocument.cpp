@@ -152,7 +152,7 @@ static NS_DEFINE_CID(kLWBrkCID,                  NS_LWBRK_CID);
 static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
 static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kParserCID,                 NS_PARSER_IID); // XXX
+static NS_DEFINE_CID(kParserCID,                 NS_PARSER_CID);
 static NS_DEFINE_CID(kPresShellCID,              NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);

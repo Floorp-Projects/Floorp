@@ -933,7 +933,7 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
     return NS_OK;
   }
 
-  static NS_DEFINE_CID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
   // Create the XML parser
   nsCOMPtr<nsIParser> parser(do_CreateInstance(kCParserCID, &rv));

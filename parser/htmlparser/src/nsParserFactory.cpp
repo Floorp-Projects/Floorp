@@ -37,7 +37,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
-static NS_DEFINE_IID(kCParser,          NS_PARSER_IID);
+static NS_DEFINE_CID(kCParserCID        NS_PARSER_CID);
 static NS_DEFINE_IID(kCParserNode,      NS_PARSER_NODE_IID);
 static NS_DEFINE_IID(kLoggingSinkCID,   NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);

@@ -38,7 +38,7 @@
 #endif
 
 // Class IID's
-static NS_DEFINE_IID(kParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 
 // Interface IID's

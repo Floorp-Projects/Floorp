@@ -46,7 +46,7 @@
 #include "nsHTMLParts.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 PRMonitor*   nsRange::mMonitor = nsnull;
 nsVoidArray* nsRange::mStartAncestors = nsnull;      

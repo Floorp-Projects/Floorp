@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     }
   }
 
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+  static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
   nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   return DebugRobot(gWorkList, nsnull);

@@ -50,7 +50,7 @@
 //#define rickgdebug 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
@@ -317,7 +317,7 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   else if(aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aInstancePtr = (nsIStreamListener*)(this);                                        
   }
-  else if(aIID.Equals(kClassIID)) {  //do this class...
+  else if(aIID.Equals(kCParserCID)) {  //do this class...
     *aInstancePtr = (nsParser*)(this);                                        
   }   
   else if(aIID.Equals(NS_GET_IID(nsISupportsParserBundle))) {
