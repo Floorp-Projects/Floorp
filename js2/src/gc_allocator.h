@@ -139,10 +139,15 @@ namespace JavaScript {
 #endif
 
 		template<class U> struct rebind { typedef gc_allocator<U> other; };
-		
+
+#ifdef _WIN32
 		// raw byte allocator used on some platforms (grrr).
 		typedef char _Char[1];
-		static char* _Charalloc(size_type n) { return rebind<_Char>::other::allocate(n); }
+		static char* _Charalloc(size_type n) { return (char*) rebind<_Char>::other::allocate(n); }
+
+		// void* deallocate used on some platforms (grrr).
+		static void deallocate(void*, size_type) {}
+#endif
 
 		static void collect() { GC_gcollect(); }
 	};
