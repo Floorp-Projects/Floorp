@@ -3583,24 +3583,6 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindowInternal* win, PRUint32* 
   WALLET_FREE(message);
 }
 
-MOZ_DECL_CTOR_COUNTER(si_SignonDataStruct)
-
-/* should move this to an include file */
-class si_SignonDataStruct {
-public:
-  si_SignonDataStruct() : isPassword(PR_FALSE)
-  {
-    MOZ_COUNT_CTOR(si_SignonDataStruct);
-  }
-  ~si_SignonDataStruct()
-  {
-    MOZ_COUNT_DTOR(si_SignonDataStruct);
-  }
-  nsAutoString name;
-  nsAutoString value;
-  PRBool isPassword;
-};
-
 static PRBool
 wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
   if (valueOnForm.Equals(EmptyString())) {

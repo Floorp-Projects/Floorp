@@ -166,4 +166,14 @@ SINGSIGN_RememberSignonData
 
 PR_END_EXTERN_C
 
+class si_SignonDataStruct {
+public:
+  si_SignonDataStruct();
+  ~si_SignonDataStruct();
+
+  nsString name;
+  nsString value;
+  PRBool isPassword;
+};
+
 #endif /* !_SINGSIGN_H */
