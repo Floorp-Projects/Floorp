@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * disttsc@bart.nl
+ * jarrod.k.gray@rose-hulman.edu
  */
 
 var ctrlKeydown = false;
@@ -51,7 +53,7 @@ function DragOverTree(event)
   if (event.target.localName != "treecell" &&
        event.target.localName != "treeitem") {        
     event.preventBubble();
-    return;
+    return false;
   }
 
 	var validFlavor = false;
@@ -74,8 +76,9 @@ function DragOverTree(event)
 		event.target.parentNode.parentNode.setAttribute ( "dd-triggerrepaint", 0 );
 		dragSession.canDrop = true;
 		event.preventBubble();  // do not propagate message
+        return true;
 	}
-
+    return false;
 }
 
 function BeginDragFolderTree(event)
@@ -228,9 +231,9 @@ function DropOnFolderTree(event)
 	for ( var i = 0; i < dragSession.numDropItems; ++i )
 	{
 		dragSession.getData ( trans, i );
-		dataObj = new Object();
-		bestFlavor = new Object();
-		len = new Object();
+		var dataObj = new Object();
+		var bestFlavor = new Object();
+		var len = new Object();
 		trans.getAnyTransferData ( bestFlavor, dataObj, len );
 		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
 		if ( !dataObj )	continue;
@@ -242,7 +245,7 @@ function DropOnFolderTree(event)
 		debugDump("    Node #" + i + ": drop '" + sourceID + "' " + dropAction + " '" + targetID + "'");
 		debugDump("\n");
 
-		sourceNode = RDF.GetResource(sourceID, true);
+		var sourceNode = RDF.GetResource(sourceID, true);
 		if (!sourceNode)
 			continue;
 		
@@ -264,6 +267,8 @@ function DropOnFolderTree(event)
 	var sourceRescource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
   	var sourcefolder = sourceRescource.QueryInterface(Components.interfaces.nsIMsgFolder);
 	var sourceServer = sourcefolder.server;
+	var nextMessage;
+    var messageTree;
 
 	if (targetServer == sourceServer)
 	{
@@ -286,7 +291,7 @@ function DropOnFolderTree(event)
 			if (!ctrlKeydown)
 			{
 				messageTree = GetThreadTree();
-				var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
+				nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
 				if(nextMessage)
 					gNextMessageAfterDelete = nextMessage.getAttribute('id');
 				else
@@ -309,7 +314,7 @@ function DropOnFolderTree(event)
 		if (!ctrlKeydown)
 		{
 			messageTree = GetThreadTree();
-			var nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
+			nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
 			if(nextMessage)
 				gNextMessageAfterDelete = nextMessage.getAttribute('id');
 			else
