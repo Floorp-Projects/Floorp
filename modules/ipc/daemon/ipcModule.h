@@ -73,6 +73,11 @@ struct ipcModuleMethods
     PRUint32 version;
 
     //
+    // called after this module is registered.
+    //
+    void (* init) (void);
+
+    //
     // called when this module will no longer be accessed.
     //
     void (* shutdown) (void);

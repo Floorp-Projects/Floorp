@@ -148,6 +148,10 @@ struct ipcCommandModule
     // ipcModule interface impl
     //
 
+    static void Init()
+    {
+    }
+
     static void Shutdown()
     {
     }
@@ -187,6 +191,7 @@ ipcModuleMethods *IPC_GetCommandModuleMethods()
     static ipcModuleMethods methods =
     {
         IPC_MODULE_METHODS_VERSION,
+        ipcCommandModule::Init,
         ipcCommandModule::Shutdown,
         ipcCommandModule::HandleMsg
     };
