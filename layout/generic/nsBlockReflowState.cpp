@@ -4454,14 +4454,14 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       if (NS_FAILED(rv)) {
         return rv;
       }
-#if 0
+
       // Mark next line dirty in case SplitLine didn't end up
       // pushing any frames.
       nsLineBox* next = aLine->mNext;
       if ((nsnull != next) && !next->IsBlock()) {
         next->MarkDirty();
       }
-#endif
+
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
