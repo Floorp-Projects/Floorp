@@ -360,7 +360,7 @@ ComponentsScriptable::GetProperty(JSContext *cx, JSObject *obj,
     *retval = JS_TRUE; 
 
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
-    if(xpcc && xpcc->GetLastResultStrID() == id)
+    if(xpcc && xpcc->GetStringID(XPCContext::IDX_LAST_RESULT) == id)
     {
         if(JS_NewDoubleValue(cx, (jsdouble) (PRInt32)xpcc->GetLastResult(), vp))
             return NS_OK;

@@ -186,12 +186,68 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_FALSE;
 }
 
+static JSBool
+Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    int32 depth = 2;
+        
+    if (argc > 0) {
+        if (!JS_ValueToInt32(cx, argv[0], &depth))
+            return JS_FALSE;
+    }
+    XPC_DUMP(XPC_GetXPConnect(), depth);
+    return JS_TRUE;
+}
+
+static JSBool
+GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSRuntime *rt;
+    uint32 preBytes;
+
+    rt = cx->runtime;
+    preBytes = rt->gcBytes;
+#ifdef GC_MARK_DEBUG
+    if (argc && JSVAL_IS_STRING(argv[0])) {
+	char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
+	FILE *file = fopen(name, "w");
+	if (!file) {
+	    fprintf(gErrFile, "gc: can't open %s: %s\n", strerror(errno));
+	    return JS_FALSE;
+	}
+	js_DumpGCHeap = file;
+    } else {
+	js_DumpGCHeap = stdout;
+    }
+#endif
+    js_ForceGC(cx);
+#ifdef GC_MARK_DEBUG
+    if (js_DumpGCHeap != stdout)
+	fclose(js_DumpGCHeap);
+    js_DumpGCHeap = NULL;
+#endif
+    fprintf(gOutFile, "before %lu, after %lu, break %08lx\n",
+	   (unsigned long)preBytes, (unsigned long)rt->gcBytes,
+#ifdef XP_UNIX
+	   (unsigned long)sbrk(0)
+#else
+	   0
+#endif
+	   );
+#ifdef JS_GCMETER
+    js_DumpGCStats(rt, stdout);
+#endif
+    return JS_TRUE;
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0},
     {"load",            Load,           1},
     {"quit",            Quit,           0},
     {"version",         Version,        1},
     {"build",           BuildDate,      0},
+    {"dump",            Dump,           1},
+    {"gc",              GC,             0},
     {0}
 };
 

@@ -29,18 +29,10 @@ hash_root(const void *key)
     return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */
 }
 
-// XXX this is just the hacked String hash function, should do better...
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
 hash_IID(const void *key)
 {
-    JSHashNumber h;
-    const PRUint8 *s;
-    int i;
-
-    h = 0;
-    for (s = (const PRUint8 *)key, i = 0; i < 16; s++, i++)
-        h = (h >> 28) ^ (h << 4) ^ *s;
-    return h;
+    return (JSHashNumber) *((PRUint32*)key);
 }
 
 JS_STATIC_DLL_CALLBACK(intN)

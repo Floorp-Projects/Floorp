@@ -20,6 +20,12 @@
 
 #include "xpcprivate.h"
 
+const char* XPCContext::mStrings[] = { 
+    "constructor",    // IDX_CONSTRUCTOR     
+    "toString",       // IDX_TO_STRING       
+    "lastResult"      // IDX_LAST_RESULT     
+};
+
 // static
 XPCContext*
 XPCContext::newXPCContext(JSContext* aJSContext,
@@ -50,8 +56,7 @@ XPCContext::newXPCContext(JSContext* aJSContext,
        xpcc->GetWrappedNativeMap()      &&
        xpcc->GetWrappedJSClassMap()     &&
        xpcc->GetWrappedNativeClassMap() &&
-       xpcc->mConstuctorStrID           &&
-       xpcc->mToStringStrID)
+       xpcc->mStrIDs[0])
     {
         return xpcc;
     }
@@ -73,15 +78,17 @@ XPCContext::XPCContext(JSContext* aJSContext,
     mWrappedNativeMap = Native2WrappedNativeMap::newMap(WrappedNativeMapSize);
     mWrappedJSClassMap = IID2WrappedJSClassMap::newMap(WrappedJSClassMapSize);
     mWrappedNativeClassMap = IID2WrappedNativeClassMap::newMap(WrappedNativeClassMapSize);
-    JS_ValueToId(aJSContext, 
-                 STRING_TO_JSVAL(JS_InternString(aJSContext, "constructor")), 
-                 &mConstuctorStrID);
-    JS_ValueToId(aJSContext, 
-                 STRING_TO_JSVAL(JS_InternString(aJSContext, "toString")), 
-                 &mToStringStrID);
-    JS_ValueToId(aJSContext, 
-                 STRING_TO_JSVAL(JS_InternString(aJSContext, "lastResult")), 
-                 &mLastResultStrID);
+    for(uintN i = 0; i < IDX_TOTAL_COUNT; i++)
+    {
+        JS_ValueToId(aJSContext, 
+                     STRING_TO_JSVAL(JS_InternString(aJSContext, mStrings[i])), 
+                     &mStrIDs[i]);
+        if(!mStrIDs[i])
+        {
+            mStrIDs[0] = 0;
+            break;
+        }
+    }
     mLastResult = NS_OK;
 }
 

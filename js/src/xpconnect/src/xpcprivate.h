@@ -138,9 +138,25 @@ public:
     IID2WrappedNativeClassMap* GetWrappedNativeClassMap() const
         {return mWrappedNativeClassMap;}
 
-    jsid GetConstructorStrID() const {return mConstuctorStrID;}
-    jsid GetToStringStrID() const    {return mToStringStrID;}
-    jsid GetLastResultStrID() const    {return mLastResultStrID;}
+    // To add a new string: add to this list and to XPCContext::mStrings
+    // at the top of xpccontext.cpp
+    enum {
+        IDX_CONSTRUCTOR     = 0 ,
+        IDX_TO_STRING       ,
+        IDX_LAST_RESULT     ,
+        IDX_TOTAL_COUNT // just a count of the above
+    };
+
+    jsid GetStringID(uintN index) const 
+    {
+        NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
+        return mStrIDs[index];
+    }
+    const char* GetStringName(uintN index) const 
+    {
+        NS_ASSERTION(index < IDX_TOTAL_COUNT, "index out of range");
+        return mStrings[index];
+    }
 
     nsresult GetLastResult() {return mLastResult;}
     void SetLastResult(nsresult rc) {mLastResult = rc;}
@@ -158,6 +174,7 @@ private:
               int WrappedJSClassMapSize,
               int WrappedNativeClassMapSize);
 private:
+    static const char* mStrings[IDX_TOTAL_COUNT];
     nsXPConnect* mXPConnect;
     JSContext*  mJSContext;
     JSObject*   mGlobalObj;
@@ -165,9 +182,7 @@ private:
     Native2WrappedNativeMap* mWrappedNativeMap;
     IID2WrappedJSClassMap* mWrappedJSClassMap;
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
-    jsid mConstuctorStrID;
-    jsid mToStringStrID;
-    jsid mLastResultStrID;
+    jsid mStrIDs[IDX_TOTAL_COUNT];
     nsresult mLastResult;
 };
 
@@ -678,11 +693,11 @@ public:
     /* boolean init (in string idString); */
     NS_IMETHOD init(const char *idString, PRBool *_retval);
 
-    /* nsISupports createInstance (); */
-    NS_IMETHOD createInstance(nsISupports **_retval);
+    /* readonly attribute nsISupports createInstance; */
+    NS_IMETHOD GetCreateInstance(nsISupports * *aCreateInstance);
 
-    /* nsISupports getService (); */
-    NS_IMETHOD getService(nsISupports **_retval);
+    /* readonly attribute nsISupports getService; */
+    NS_IMETHOD GetGetService(nsISupports * *aGetService);
 
     /* string toString (); */
     NS_IMETHOD toString(char **_retval);

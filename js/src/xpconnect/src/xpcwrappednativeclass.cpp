@@ -237,6 +237,11 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
 
     case JSTYPE_FUNCTION:
+        if(wrapper->GetDynamicScriptable())
+        {
+            *vp = OBJECT_TO_JSVAL(obj);
+            return JS_TRUE;
+        }
         JS_ReportError(cx, "can't convert WrappedNative to function");
         return JS_FALSE;
 
@@ -246,7 +251,8 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
         const XPCNativeMemberDescriptor* desc = 
-            clazz->LookupMemberByID(clazz->GetXPCContext()->GetToStringStrID());
+            clazz->LookupMemberByID(clazz->GetXPCContext()->
+                                        GetStringID(XPCContext::IDX_TO_STRING));
         if(desc && desc->IsMethod())
         {
             if(!clazz->CallWrappedMethod(cx, wrapper, desc, 
@@ -636,7 +642,6 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     jsval idval;
 
     nsXPCWrappedNative* wrapper;
-
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
         return JS_FALSE;
@@ -690,7 +695,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if(!wrapper)
     {
         XPCContext* xpcc = nsXPConnect::GetContext(cx);
-        if(xpcc && id == xpcc->GetConstructorStrID())
+        if(xpcc && id == xpcc->GetStringID(XPCContext::IDX_CONSTRUCTOR))
         {
             // silently fail when looking for constructor property
             *vp = JSVAL_VOID;
@@ -1102,6 +1107,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Call(JSContext *cx, JSObject *obj,
                    uintN argc, jsval *argv, jsval *rval)
 {
+    // this is a hack to get the obj of the actual object not the object
+    // that JS thinks is the 'this' (which it passes as 'obj').
+    if(!(obj = (JSObject*)argv[-2]))
+        return JS_FALSE;
+
     nsIXPCScriptable* ds;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
@@ -1121,6 +1131,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Construct(JSContext *cx, JSObject *obj,
                         uintN argc, jsval *argv, jsval *rval)
 {
+    // this is a hack to get the obj of the actual object not the object
+    // that JS thinks is the 'this' (which it passes as 'obj').
+    if(!(obj = (JSObject*)argv[-2]))
+        return JS_FALSE;
+
     nsIXPCScriptable* ds;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
