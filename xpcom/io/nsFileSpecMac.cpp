@@ -21,6 +21,7 @@
 
 #include "FullPath.h"
 #include "FileCopy.h"
+#include "MoreFilesExtras.h"
 #include "nsEscape.h"
 
 #include <Aliases.h>
@@ -39,14 +40,16 @@ namespace MacFileHelpers
 										memcpy(dst, src, 1 + src[0]);
 									}
 
-	void			                PLstrcpy(Str255 dst, const char* src, int inMaxLen);
+	void			                PLstrcpy(Str255 dst, const char* src, int inMaxLen=255);
+	void			                PLstrncpy(Str255 dst, const char* src, int inMaxLen);
 
 	void							SwapSlashColon(char * s);
 	OSErr							FSSpecFromFullUnixPath(
 										const char * unixPath,
 										FSSpec& outSpec,
 										Boolean resolveAlias,
-										Boolean allowPartial = false);
+										Boolean allowPartial = false,
+										Boolean createDirs = false);
 	char*							MacPathFromUnixPath(const char* unixPath);
 	char*							EncodeMacPath(
 										char* inPath, // NOT const - gets clobbered
@@ -54,7 +57,8 @@ namespace MacFileHelpers
 										Boolean doEscape );
 	OSErr							FSSpecFromPathname(
 										const char* inPathNamePtr,
-										FSSpec& outSpec);
+										FSSpec& outSpec,
+										Boolean inCreateDirs);
 	char*							PathNameFromFSSpec(
 										const FSSpec& inSpec,
 										Boolean wantLeafName );
@@ -81,10 +85,21 @@ namespace MacFileHelpers
 
 //----------------------------------------------------------------------------------------
 void MacFileHelpers::PLstrcpy(Str255 dst, const char* src, int inMax)
-//========================================================================================
+//----------------------------------------------------------------------------------------
 {
 	int srcLength = strlen(src);
 	NS_ASSERTION(srcLength <= inMax, "Oops, string is too long!");
+	if (srcLength > inMax)
+		srcLength = inMax;
+	dst[0] = srcLength;
+	memcpy(&dst[1], src, srcLength);
+}
+
+//----------------------------------------------------------------------------------------
+void MacFileHelpers::PLstrncpy(Str255 dst, const char* src, int inMax)
+//----------------------------------------------------------------------------------------
+{
+	int srcLength = strlen(src);
 	if (srcLength > inMax)
 		srcLength = inMax;
 	dst[0] = srcLength;
@@ -218,7 +233,10 @@ char* MacFileHelpers::MacPathFromUnixPath(const char* unixPath)
 } // MacFileHelpers::MacPathFromUnixPath
 
 //----------------------------------------------------------------------------------------
-OSErr MacFileHelpers::FSSpecFromPathname(const char* inPathNamePtr, FSSpec& outSpec)
+OSErr MacFileHelpers::FSSpecFromPathname(
+	const char* inPathNamePtr,
+	FSSpec& outSpec,
+	Boolean inCreateDirs)
 // FSSpecFromPathname reverses PathNameFromFSSpec.
 // It returns a FSSpec given a c string which is a mac pathname.
 //----------------------------------------------------------------------------------------
@@ -226,22 +244,55 @@ OSErr MacFileHelpers::FSSpecFromPathname(const char* inPathNamePtr, FSSpec& outS
 	OSErr err;
 	// Simplify this routine to use FSMakeFSSpec if length < 255. Otherwise use the MoreFiles
 	// routine FSpLocationFromFullPath, which allocates memory, to handle longer pathnames. 
-	if (strlen(inPathNamePtr) < 255)
+	
+	size_t inLength = strlen(inPathNamePtr);
+	if (inLength < 255)
 	{
-		Str255 path;
-		
-		int pos = 0;
-		while ( (path[++pos] = *inPathNamePtr++) != 0 )
-			;
-		path[0] = pos-1;	// save the length of the string (pos is the next open spot)
-			
-		err = ::FSMakeFSSpec(0, 0, path, &outSpec);
+		Str255 ppath;
+		MacFileHelpers::PLstrcpy(ppath, inPathNamePtr);
+		err = ::FSMakeFSSpec(0, 0, ppath, &outSpec);
 	}
 	else
-		err = FSpLocationFromFullPath(strlen(inPathNamePtr), inPathNamePtr, &outSpec);
+		err = FSpLocationFromFullPath(inLength, inPathNamePtr, &outSpec);
 
+	if (err == dirNFErr && inCreateDirs)
+	{
+		const char* path = inPathNamePtr;
+		outSpec.vRefNum = 0;
+		outSpec.parID = 0;
+		do {
+			// Locate the colon that terminates the node.
+			// But if we've a partial path (starting with a colon), find the second one.
+			const char* nextColon = strchr(path + (*path == ':'), ':');
+			// Well, if there are no more colons, point to the end of the string.
+			if (!nextColon)
+				nextColon = path + strlen(path);
+
+			// Make a pascal string out of this node.  Include initial
+			// and final colon, if any!
+			Str255 ppath;
+			MacFileHelpers::PLstrncpy(ppath, path, nextColon - path + 1);
+			
+			// Use this string as a relative path using the directory created
+			// on the previous round (or directory 0,0 on the first round).
+			err = ::FSMakeFSSpec(outSpec.vRefNum, outSpec.parID, ppath, &outSpec);
+
+			// If this was the leaf node, then we are done.
+			if (!*nextColon)
+				break;
+
+			// If we got "file not found", then
+			// we need to create a directory.
+			if (err == fnfErr && *nextColon)
+				err = FSpDirCreate(&outSpec, smCurrentScript, &outSpec.parID);
+			// For some reason, this usually returns fnfErr, even though it works.
+			if (err != noErr && err != fnfErr)
+				return err;
+			path = nextColon; // next round
+		} while (1);
+	}
 	return err;
-}
+} // MacFileHelpers::FSSpecFromPathname
 
 //----------------------------------------------------------------------------------------
 OSErr MacFileHelpers::CreateFolderInFolder(
@@ -320,7 +371,8 @@ OSErr MacFileHelpers::FSSpecFromFullUnixPath(
 	const char * unixPath,
 	FSSpec& outSpec,
 	Boolean resolveAlias,
-	Boolean allowPartial)
+	Boolean allowPartial,
+	Boolean createDirs)
 // File spec from URL. Reverses GetURLFromFileSpec 
 // Its input is only the <path> part of the URL
 // JRM 97/01/08 changed this so that if it's a partial path (doesn't start with '/'),
@@ -338,7 +390,7 @@ OSErr MacFileHelpers::FSSpecFromFullUnixPath(
 	{
 		NS_ASSERTION(*unixPath == '/' /*full path*/, "Not a full Unix path!");
 	}
-	err = FSSpecFromPathname(macPath, outSpec);
+	err = FSSpecFromPathname(macPath, outSpec, createDirs);
 	if (err == fnfErr)
 		err = noErr;
 	Boolean dummy;	
@@ -468,11 +520,12 @@ nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 }
 
 //----------------------------------------------------------------------------------------
-nsNativeFileSpec::nsNativeFileSpec(const char* inString)
+nsNativeFileSpec::nsNativeFileSpec(const char* inString, bool inCreateDirs)
 //----------------------------------------------------------------------------------------
 {
-	mError = MacFileHelpers::FSSpecFromFullUnixPath(inString, mSpec, true, true);
-		// allow a partial path
+	mError = MacFileHelpers::FSSpecFromFullUnixPath(
+								inString, mSpec, true, true, inCreateDirs);
+		// allow a partial path, create as necessary
 	if (mError == fnfErr)
 		mError = noErr;
 } // nsNativeFileSpec::nsNativeFileSpec
@@ -537,9 +590,13 @@ bool nsNativeFileSpec::Exists() const
 
 //----------------------------------------------------------------------------------------
 void nsNativeFileSpec::SetLeafName(const char* inLeafName)
+// In leaf name can actually be a partial path...
 //----------------------------------------------------------------------------------------
 {
-	MacFileHelpers::PLstrcpy(mSpec.name, inLeafName, nsFileSpecHelpers::kMaxFilenameLength);
+	// what about long relative paths?  Hmm?
+	Str255 partialPath;
+	MacFileHelpers::PLstrcpy(partialPath, inLeafName);
+	mError = FSMakeFSSpec(mSpec.vRefNum, mSpec.parID, partialPath, &mSpec);
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
@@ -579,10 +636,86 @@ void nsNativeFileSpec::ResolveAlias(bool& wasAliased)
 	wasAliased = (wasAliased2 != false);
 } // nsNativeFileSpec::ResolveAlias
 
+//----------------------------------------------------------------------------------------
+bool nsNativeFileSpec::IsFile() const
+//----------------------------------------------------------------------------------------
+{
+	long dirID;
+	Boolean isDirectory;
+	return (noErr == FSpGetDirectoryID(&mSpec, &dirID, &isDirectory) && !isDirectory);
+} // nsNativeFileSpec::IsFile
+
+//----------------------------------------------------------------------------------------
+bool nsNativeFileSpec::IsDirectory() const
+//----------------------------------------------------------------------------------------
+{
+	long dirID;
+	Boolean isDirectory;
+	return (noErr == FSpGetDirectoryID(&mSpec, &dirID, &isDirectory) && isDirectory);
+} // nsNativeFileSpec::IsDirectory
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::GetParent(nsNativeFileSpec& outSpec) const
+//----------------------------------------------------------------------------------------
+{
+	if (mError == noErr)
+		outSpec.mError = FSMakeFSSpec(mSpec.vRefNum, mSpec.parID, NULL, outSpec);
+} // nsNativeFileSpec::GetParent
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::operator += (const char* inRelativePath)
+//----------------------------------------------------------------------------------------
+{
+	long dirID;
+	Boolean isDirectory;
+	mError = FSpGetDirectoryID(&mSpec, &dirID, &isDirectory);
+	if (mError == noErr && isDirectory)
+	{
+		mError = FSMakeFSSpec(mSpec.vRefNum, dirID, "\pG'day", *this);
+		if (mError == noErr)
+			SetLeafName(inRelativePath);
+	}
+} // nsNativeFileSpec::operator +=
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::CreateDirectory(int /* unix mode */)
+//----------------------------------------------------------------------------------------
+{
+	long ignoredDirID;
+	FSpDirCreate(&mSpec, smCurrentScript, &ignoredDirID);
+} // nsNativeFileSpec::CreateDirectory
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::Delete(bool inRecursive)
+//----------------------------------------------------------------------------------------
+{
+	if (inRecursive)
+	{
+		// MoreFilesExtras
+		mError = DeleteDirectory(
+					mSpec.vRefNum,
+					mSpec.parID,
+					const_cast<unsigned char*>(mSpec.name));
+	}
+	else
+		mError = FSpDelete(&mSpec);
+} // nsNativeFileSpec::Delete
+
+
 //========================================================================================
 //					Macintosh nsFilePath implementation
 //========================================================================================
 
+//----------------------------------------------------------------------------------------
+nsFilePath::nsFilePath(const char* inString, bool inCreateDirs)
+//----------------------------------------------------------------------------------------
+:    mPath(nsnull)
+,    mNativeFileSpec(inString, inCreateDirs)
+{
+    // Make canonical and absolute.
+	char * path = MacFileHelpers::PathNameFromFSSpec( mNativeFileSpec, TRUE );
+	mPath = MacFileHelpers::EncodeMacPath(path, true, true);
+}
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -601,3 +734,118 @@ void nsFilePath::operator = (const nsNativeFileSpec& inSpec)
 	mPath = MacFileHelpers::EncodeMacPath(path, true, true);
 	mNativeFileSpec = inSpec;
 } // nsFilePath::operator =
+
+//========================================================================================
+//                                nsFileURL implementation
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsFileURL::nsFileURL(const char* inString, bool inCreateDirs)
+//----------------------------------------------------------------------------------------
+:    mURL(nsnull)
+,    mNativeFileSpec(inString + kFileURLPrefixLength, inCreateDirs)
+{
+    NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
+    // Make canonical and absolute.
+	char* path = MacFileHelpers::PathNameFromFSSpec( mNativeFileSpec, TRUE );
+	char* escapedPath = MacFileHelpers::EncodeMacPath(path, true, true);
+	mURL = nsFileSpecHelpers::StringDup(kFileURLPrefix, kFileURLPrefixLength + strlen(escapedPath));
+	strcat(mURL, escapedPath);
+	delete [] escapedPath;
+} // nsFileURL::nsFileURL
+
+//========================================================================================
+//								nsDirectoryIterator
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator::nsDirectoryIterator(
+	const nsNativeFileSpec& inDirectory
+,	int inIterateDirection)
+//----------------------------------------------------------------------------------------
+	: mCurrent(inDirectory)
+	, mExists(false)
+	, mIndex(-1)
+{
+	CInfoPBRec pb;
+	DirInfo* dipb = (DirInfo*)&pb;
+	// Sorry about this, there seems to be a bug in CWPro 4:
+	const FSSpec& inSpec = inDirectory.nsNativeFileSpec::operator const FSSpec&();
+    Str255 outName;
+    MacFileHelpers::PLstrcpy(outName, inSpec.name);
+	pb.hFileInfo.ioNamePtr = outName;
+	pb.hFileInfo.ioVRefNum = inSpec.vRefNum;
+	pb.hFileInfo.ioDirID = inSpec.parID;
+	pb.hFileInfo.ioFDirIndex = 0;	// use ioNamePtr and ioDirID
+
+	OSErr err = PBGetCatInfoSync( &pb );
+
+	// test that we have got a directory back, not a file
+	if ( (err != noErr ) || !( dipb->ioFlAttrib & 0x0010 ) )
+		return;
+	// Sorry about this, there seems to be a bug in CWPro 4:
+	FSSpec& currentSpec = mCurrent.nsNativeFileSpec::operator FSSpec&();
+	currentSpec.vRefNum = inSpec.vRefNum;
+	currentSpec.parID = dipb->ioDrDirID;
+	mMaxIndex = pb.dirInfo.ioDrNmFls;
+	if (inIterateDirection > 0)
+	{
+		mIndex = 0; // ready to increment
+		++(*this); // the pre-increment operator
+	}
+	else
+	{
+		mIndex = mMaxIndex + 1; // ready to decrement
+		--(*this); // the pre-decrement operator
+	}
+} // nsDirectoryIterator::nsDirectoryIterator
+
+//----------------------------------------------------------------------------------------
+OSErr nsDirectoryIterator::SetToIndex()
+//----------------------------------------------------------------------------------------
+{
+	CInfoPBRec cipb;
+	DirInfo	*dipb=(DirInfo *)&cipb;
+	Str255 objectName;
+	dipb->ioCompletion = NULL;
+	dipb->ioFDirIndex = mIndex;
+	// Sorry about this, there seems to be a bug in CWPro 4:
+	FSSpec& currentSpec = mCurrent.nsNativeFileSpec::operator FSSpec&();
+	dipb->ioVRefNum = currentSpec.vRefNum; /* Might need to use vRefNum, not sure*/
+	dipb->ioDrDirID = currentSpec.parID;
+	dipb->ioNamePtr = objectName;
+	OSErr err = PBGetCatInfoSync(&cipb);
+	if (err == noErr)
+		err = FSMakeFSSpec(currentSpec.vRefNum, currentSpec.parID, objectName, &currentSpec);
+	mExists = err == noErr;
+	return err;
+} // nsDirectoryIterator::SetToIndex()
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator& nsDirectoryIterator::operator -- ()
+//----------------------------------------------------------------------------------------
+{
+	mExists = false;
+	while (--mIndex > 0)
+	{
+		OSErr err = SetToIndex();
+		if (err == noErr)
+			break;
+	}
+	return *this;
+} // nsDirectoryIterator::operator --
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
+//----------------------------------------------------------------------------------------
+{
+	mExists = false;
+	if (mIndex >= 0) // probably trying to use a file as a directory!
+		while (++mIndex <= mMaxIndex)
+		{
+			OSErr err = SetToIndex();
+			if (err == noErr)
+				break;
+		}
+	return *this;
+} // nsDirectoryIterator::operator ++

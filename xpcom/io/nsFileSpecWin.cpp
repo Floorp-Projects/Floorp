@@ -19,6 +19,17 @@
 //	This file is included by nsFileSpec.cp, and includes the Windows-specific
 //	implementations.
 
+#include <stat.h>
+
+//----------------------------------------------------------------------------------------
+void nsFileSpecHelpers::Canonify(char*& ioPath, bool inMakeDirs)
+// Canonify, make absolute, and check whether directories exist
+//----------------------------------------------------------------------------------------
+{
+	NS_NOTYETIMPLEMENTED("Please, some Winhead please write this!");
+    return ioPath;
+}
+
 //----------------------------------------------------------------------------------------
 nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
@@ -31,9 +42,17 @@ nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
-	// Convert '/' to '\'
-	nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath);
-	for (char* cp = mPath; *cp; cp++)
+	// Strip the leading slash, which should 
+	// leave us pointing to a drive letter.
+	nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath + 1);
+
+	// Convert the vertical slash to a colon
+	char* cp = mPath + 1;
+	if (strstr(cp, "|/") == cp)
+		*cp = ':';
+	
+	// Convert '/' to '\'.
+	while (*++cp)
 	{
 		if (*cp == '/')
 			*cp = '\\';
@@ -79,6 +98,138 @@ char* nsNativeFileSpec::GetLeafName() const
 bool nsNativeFileSpec::Exists() const
 //----------------------------------------------------------------------------------------
 {
-	return false; // fixme
+	struct stat st;
+	return 0 == stat(mPath, &st); 
 } // nsNativeFileSpec::Exists
+
+//----------------------------------------------------------------------------------------
+bool nsNativeFileSpec::IsFile() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+	return 0 == stat(mPath, &st) && S_ISREG(st.st_mode); 
+} // nsNativeFileSpec::IsFile
+
+//----------------------------------------------------------------------------------------
+bool nsNativeFileSpec::IsDirectory() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+	return 0 == stat(mPath, &st) && S_ISDIR(st.st_mode); 
+} // nsNativeFileSpec::IsDirectory
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::GetParent(nsNativeFileSpec& outSpec) const
+//----------------------------------------------------------------------------------------
+{
+	nsFileSpecHelpers::StringAssign(outSpec.mPath, mPath);
+	char* cp = strrchr(outSpec.mPath, '\\');
+	if (cp)
+		*cp = '\0';
+} // nsNativeFileSpec::GetParent
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::operator += (const char* inRelativePath)
+//----------------------------------------------------------------------------------------
+{
+	if (!inRelativePath || !mPath)
+		return;
+	
+	if (mPath[strlen(mPath) - 1] != '\\')
+		char* newPath = nsFileSpecHelpers::ReallocCat(mPath, "\\");
+	SetLeafName(inRelativePath);
+} // nsNativeFileSpec::operator +=
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::CreateDirectory()
+//----------------------------------------------------------------------------------------
+{
+	// Note that mPath is canonical!
+	NS_NOTYETIMPLEMENTED("Please, some Winhead please fix this!");
+	mkdir(mPath, mode);
+} // nsNativeFileSpec::CreateDirectory
+
+//----------------------------------------------------------------------------------------
+void nsNativeFileSpec::Delete(bool inRecursive)
+//----------------------------------------------------------------------------------------
+{
+    if (IsDirectory())
+    {
+	    if (inRecursive)
+	    {
+			for (nsDirectoryIterator i(*this); i; i++)
+			{
+				const nsNativeFileSpec& child = (nsNativeFileSpec&)i;
+				child.Delete(inRecursive);
+			}		
+	    }
+		NS_NOTYETIMPLEMENTED("Please, some Winhead please fix this!");
+	    rmdir(mPath);
+	}
+	else
+	{
+		NS_NOTYETIMPLEMENTED("Please, some Winhead please write this!");
+		remove(mPath);
+	}
+} // nsNativeFileSpec::Delete
+
+//========================================================================================
+//								nsDirectoryIterator
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator::nsDirectoryIterator(
+	const nsNativeFileSpec& inDirectory
+,	int inIterateDirection)
+//----------------------------------------------------------------------------------------
+	: mCurrent(inDirectory)
+#if 0 // Some kind winhead please build, test, and remove when ready.
+	, mDir(nsnull)
+#endif // XP_PC -- ifdef to be removed.
+	, mExists(false)
+{
+NS_NOTYETIMPLEMENTED("Please, some kind Winhead please check this!");
+    mCurrent += "foo";
+#if 0 // Some kind winhead please build, test, and remove when ready.
+    mDir = opendir(mPath);
+#endif // XP_PC -- ifdef to be removed.
+    ++(*this);
+} // nsDirectoryIterator::nsDirectoryIterator
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator::~nsDirectoryIterator()
+//----------------------------------------------------------------------------------------
+{
+NS_NOTYETIMPLEMENTED("Please, some kind Winhead please check this!");
+#if 0 // Some kind winhead please build, test, and remove when ready.
+    if (mDir)
+	    closedir(mDir);
+#endif // XP_PC -- ifdef to be removed.
+} // nsDirectoryIterator::nsDirectoryIterator
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
+//----------------------------------------------------------------------------------------
+{
+	mExists = false;
+NS_NOTYETIMPLEMENTED("Please, some kind Winhead please check this!");
+#if 0 // Some kind winhead please build, test, and remove when ready.
+	if (!mDir)
+		return *this;
+    struct dirent* entry = readdir(mDir);
+	if (entry)
+	{
+		mExists = true;
+		mCurrent.SetLeafName(entry->d_name);
+	}
+#endif // XP_PC -- ifdef to be removed.
+	return *this;
+} // nsDirectoryIterator::operator ++
+
+//----------------------------------------------------------------------------------------
+nsDirectoryIterator& nsDirectoryIterator::operator -- ()
+//----------------------------------------------------------------------------------------
+{
+	return ++(*this); // can't do it backwards.
+} // nsDirectoryIterator::operator --
 

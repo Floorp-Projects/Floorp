@@ -127,6 +127,10 @@
 
 #ifdef XP_MAC
 #include <Files.h>
+#elif defined(XP_UNIX) || defined (XP_OS2)
+#include <dirent.h>
+#elif 0 // defined(XP_PC)
+#include "winfile.h"
 #endif
 
 //========================================================================================
@@ -150,7 +154,7 @@ class NS_BASE nsNativeFileSpec
 {
     public:
                                 nsNativeFileSpec();
-        explicit                nsNativeFileSpec(const char* inString);
+        explicit                nsNativeFileSpec(const char* inString, bool inCreateDirs = false);
         explicit                nsNativeFileSpec(const nsFilePath& inPath);
         explicit                nsNativeFileSpec(const nsFileURL& inURL);
                                 nsNativeFileSpec(const nsNativeFileSpec& inPath);
@@ -177,12 +181,12 @@ class NS_BASE nsNativeFileSpec
                                 operator const FSSpec& () const { return mSpec; }
         OSErr                   Error() const { return mError; }
         void                    MakeAliasSafe();
-        							// Called for the spec of an alias.  Copies the alias to
-        							// a secret temp directory and modifies the spec to point
-        							// to it.  Sets mError.
+                                    // Called for the spec of an alias.  Copies the alias to
+                                    // a secret temp directory and modifies the spec to point
+                                    // to it.  Sets mError.
         void                    ResolveAlias(bool& wasAliased);
-        							// Called for the spec of an alias.  Modifies the spec to
-        							// point to the original.  Sets mError.
+                                    // Called for the spec of an alias.  Modifies the spec to
+                                    // point to the original.  Sets mError.
         void                    MakeUnique(ConstStr255Param inSuggestedLeafName);
         StringPtr               GetLeafPName() { return mSpec.name; }
         ConstStr255Param        GetLeafPName() const { return mSpec.name; }
@@ -194,14 +198,58 @@ class NS_BASE nsNativeFileSpec
         bool                    Valid() const { return true; } // Fixme.
 #endif // XP_MAC
 
-        friend                  NS_BASE nsOutputFileStream& operator << (nsOutputFileStream& s, const nsNativeFileSpec& spec);
+        friend                  NS_BASE nsOutputFileStream& operator << (
+                                    nsOutputFileStream& s,
+                                    const nsNativeFileSpec& spec);
+
+        //--------------------------------------------------
+        // Queries and path algebra.  These do not modify the disk.
+        //--------------------------------------------------
 
         char*                   GetLeafName() const; // Allocated.  Use delete [].
         void                    SetLeafName(const char* inLeafName);
-        bool                    Exists() const;
+                                    // inLeafName can be a relative path, so this allows
+                                    // one kind of concatenation of "paths".
+
+        void                    GetParent(nsNativeFileSpec& outSpec) const;
+                                    // Return the filespec of the parent directory. Used
+                                    // in conjunction with GetLeafName(), this lets you
+                                    // parse a path into a list of node names.  Beware,
+                                    // however, that the top node is still not a name,
+                                    // but a spec.  Volumes on Macintosh can have identical
+                                    // names.  Perhaps could be used for an operator --() ?
+
+        nsNativeFileSpec        operator + (const char* inRelativePath) const;
+        void			        operator += (const char* inRelativePath);
+                                    // Concatenate the relative path to this directory.
+                                    // Used for constructing the filespec of a descendant.
+                                    // This must be a directory for this to work.  This differs
+                                    // from SetLeafName(), since the latter will work
+                                    // starting with a sibling of the directory and throws
+                                    // away its leaf information, whereas this one assumes
+                                    // this is a directory, and the relative path starts
+                                    // "below" this.
+
         void                    MakeUnique();
         void                    MakeUnique(const char* inSuggestedLeafName);
     
+        bool                    IsDirectory() const;
+                                    // More stringent than Exists()
+        bool                    IsFile() const;
+                                    // More stringent than Exists()
+        bool                    Exists() const;
+
+        //--------------------------------------------------
+        // Creation and deletion of objects.  These can modify the disk.
+        //--------------------------------------------------
+
+        void                    CreateDirectory(int mode = 0700 /* for unix */);
+        void                    Delete(bool inRecursive);
+        
+        //--------------------------------------------------
+        // Data
+        //--------------------------------------------------
+
     private:
                                 friend class nsFilePath;
 #ifdef XP_MAC
@@ -221,7 +269,7 @@ class NS_BASE nsFileURL
 {
     public:
                                 nsFileURL(const nsFileURL& inURL);
-        explicit                nsFileURL(const char* inString);
+        explicit                nsFileURL(const char* inString, bool inCreateDirs = false);
         explicit                nsFileURL(const nsFilePath& inPath);
         explicit                nsFileURL(const nsNativeFileSpec& inPath);
         virtual                 ~nsFileURL();
@@ -247,7 +295,7 @@ class NS_BASE nsFileURL
                                 operator char* ();
                                 operator const char* const ();
     private:
-    							friend class nsFilePath; // to allow construction of nsFilePath
+                                friend class nsFilePath; // to allow construction of nsFilePath
         char*                   mURL;
 #ifdef XP_MAC
         // Since the path on the macintosh does not uniquely specify a file (volumes
@@ -264,7 +312,7 @@ class NS_BASE nsFilePath
 {
     public:
                                 nsFilePath(const nsFilePath& inPath);
-        explicit                nsFilePath(const char* inString);
+        explicit                nsFilePath(const char* inString, bool inCreateDirs = false);
         explicit                nsFilePath(const nsFileURL& inURL);
         explicit                nsFilePath(const nsNativeFileSpec& inPath);
         virtual                 ~nsFilePath();
@@ -292,12 +340,60 @@ class NS_BASE nsFilePath
 
     private:
 
-        char*	                mPath;
+        char*                    mPath;
 #ifdef XP_MAC
         // Since the path on the macintosh does not uniquely specify a file (volumes
         // can have the same name), stash the secret nsNativeFileSpec, too.
         nsNativeFileSpec        mNativeFileSpec;
 #endif
 }; // class nsFilePath
+
+//========================================================================================
+class nsDirectoryIterator
+//  Example:
+//
+//       nsNativeFileSpec parentDir(...); // directory over whose children we shall iterate
+//       for (nsDirectoryIterator i(parentDir); i; i++)
+//       {
+//              // do something with (const nsNativeFileSpec&)i
+//       }
+//
+//  or:
+//
+//       for (nsDirectoryIterator i(parentDir, false); i; i--)
+//       {
+//              // do something with (const nsNativeFileSpec&)i
+//       }
+//
+//  Currently, the only platform on which backwards iteration actually goes backwards
+//  is Macintosh.  On other platforms, both styles will work, but will go forwards.
+//========================================================================================
+{
+	public:
+	                            nsDirectoryIterator(
+	                            	const nsNativeFileSpec& parent,
+	                            	int iterateDirection = +1);
+#ifndef XP_MAC
+	// Macintosh currently doesn't allocate, so needn't clean up.
+	    virtual                 ~nsDirectoryIterator();
+#endif
+	                            operator bool() const { return mExists; }
+	    nsDirectoryIterator&    operator ++(); // moves to the next item, if any.
+	    nsDirectoryIterator&    operator ++(int) { return ++(*this); } // post-increment.
+	    nsDirectoryIterator&    operator --(); // moves to the previous item, if any.
+	    nsDirectoryIterator&    operator --(int) { return --(*this); } // post-decrement.
+	                            operator nsNativeFileSpec&() { return mCurrent; }
+	private:
+	    nsNativeFileSpec        mCurrent;
+	    bool                    mExists;
+	      
+#if defined(XP_UNIX) // || defined(XP_PC) add when ready
+        DIR*                    mDir;
+#elif defined(XP_MAC)
+        OSErr                   SetToIndex();
+	    short                   mIndex;
+	    short                   mMaxIndex;
+#endif
+}; // class nsDirectoryIterator
 
 #endif //  _FILESPEC_H_
