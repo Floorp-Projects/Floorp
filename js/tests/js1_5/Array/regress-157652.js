@@ -46,6 +46,26 @@ var summary = "Testing that we don't crash on Array.sort()";
 printBugNumber(bug);
 printStatus(summary);
 
+/*
+ * As of 2002-08-13, the JS shell runs out of memory
+ * when trying to sort such large arrays.
+ *
+ * We only want to test that we don't CRASH on the sorts.
+ * We'll be happy if we get the JS "out of memory" error,
+ * which in SpiderMonkey terminates the test with exit code 3.
+ *
+ * Therefore we include |expectExitCode(3)| below.
+ *
+ * The only problem will arise when the JS shell ever DOES
+ * have enough memory to to the sorts. Then this test will
+ * terminate with the normal exit code 0 and fail.
+ *
+ * Right now, I can't see any other way to do this, because
+ * "out of memory" is not a catchable error, i.e. it cannot
+ * be caught with try...catch.
+ */
+expectExitCode(3);
+
 
 /*
  * ECMA-262 Ed.3 Final, Section 15.4.2.2 : new Array(len)
@@ -63,6 +83,7 @@ printStatus(summary);
  */
 var a1 = Array(0x40000000);
 a1.sort();
+a1=null;
 
 
 /*
@@ -71,3 +92,13 @@ a1.sort();
 printBugNumber(bug);
 var a2=Array(0x10000000/4);
 a2.sort();
+a2=null;
+
+
+/*
+ * Let's try the biggest possible one (see above)
+ */
+printBugNumber(bug);
+var a3=Array(0xFFFFFFFF);
+a3.sort();
+a3 = null;
