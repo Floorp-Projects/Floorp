@@ -641,7 +641,7 @@ void JSConsole::OnEditDelete()
 //
 void JSConsole::OnEditSelectAll()
 {
-    SendMessage(mEditWindow, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
+    //SendMessage(mEditWindow, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
 }
 
 //

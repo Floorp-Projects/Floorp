@@ -48,10 +48,10 @@ class nsIParser;
 class nsIDOMNode;
 class nsXIFConverter;
 class nsINameSpaceManager;
-class nsIDOMSelection;
 class nsIDOMDocumentFragment;
 class nsILineBreaker;
 class nsIWordBreaker;
+class nsIDOMSelection;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -259,15 +259,6 @@ public:
                             nsIStyleRule* aStyleRule) = 0;
   NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule) = 0;
-
-  /**
-    * Returns the Selection Object
-   */
-  NS_IMETHOD GetSelection(nsIDOMSelection ** aSelection) = 0;
-  /**
-    * Selects all the Content
-   */
-  NS_IMETHOD SelectAll() = 0;
 
   /**
     * Finds text in content
