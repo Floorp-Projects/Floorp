@@ -99,15 +99,16 @@ function showMailIntegrationDialog() {
     // and we are not the default mail client
     var prefLocked = false;
     if (mapiRegistry && mapiRegistry.showDialog) {
-        const prefbase = "mailnews.";
+        const prefbase = "system.windows.lock_ui.";
         try {
             var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService()
                           .QueryInterface(Components.interfaces.nsIPrefService);
             var prefBranch = prefService.getBranch(prefbase);
         
-            if (prefBranch && prefBranch.prefIsLocked("default_mail_client")) {
+            if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
                 prefLocked = true;
+                mapiRegistry.isDefaultMailClient = prefBranch.getBoolPref("defaultMailClient") ;
             }
         }
         catch (ex) {}
