@@ -33,3 +33,4 @@ include $(topsrcdir)/config/rules.mk
 install::
 	@$(REGCHROME) content wallet comm.jar
 	@$(REGCHROME) locale en-US/wallet en-US.jar
+       @$(REGCHROME) locale US/wallet US.jar
