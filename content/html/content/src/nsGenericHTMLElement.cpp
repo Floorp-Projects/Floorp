@@ -56,6 +56,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
+#include "nsDOMError.h"
 
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
@@ -2380,7 +2381,7 @@ nsGenericHTMLContainerElement::InsertBefore(nsIDOMNode* aNewChild,
 
   *aReturn = nsnull;
   if (nsnull == aNewChild) {
-    return NS_OK;/* XXX wrong error value */
+    return NS_ERROR_NULL_POINTER;
   }
 
   // Check if this is a document fragment. If it is, we need
@@ -2450,6 +2451,9 @@ nsGenericHTMLContainerElement::InsertBefore(nsIDOMNode* aNewChild,
       }
       NS_IF_RELEASE(refContent);
     }
+    else {
+      res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
     NS_RELEASE(docFrag);
   }
   else {
@@ -2488,7 +2492,13 @@ nsGenericHTMLContainerElement::InsertBefore(nsIDOMNode* aNewChild,
               SetDocumentInChildrenOf(newContent, mDocument);
               res = InsertChildAt(newContent, pos, PR_TRUE);
             }
+            else {
+              res = NS_ERROR_DOM_NOT_FOUND_ERR;
+            }
             NS_RELEASE(refContent);
+          }
+          else {
+            res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
           }
         }
       }
@@ -2496,6 +2506,9 @@ nsGenericHTMLContainerElement::InsertBefore(nsIDOMNode* aNewChild,
 
       *aReturn = aNewChild;
       NS_ADDREF(aNewChild);
+    }
+    else {
+      res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
 
@@ -2509,7 +2522,7 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
 {
   *aReturn = nsnull;
   if (nsnull == aOldChild) {
-    return NS_OK;
+    return NS_ERROR_NULL_POINTER;
   }
   if (nsnull == aNewChild) {
     return NS_ERROR_NULL_POINTER;
@@ -2522,7 +2535,7 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
     IndexOf(content, pos);
     if (pos >= 0) {
       nsIContent* newContent = nsnull;
-      res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
+      nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
         // Check if this is a document fragment. If it is, we need
@@ -2572,6 +2585,9 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
             }
             NS_RELEASE(docFragContent);
           }
+          else {
+            res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+          }
           NS_RELEASE(docFrag);
         }
         else {
@@ -2587,19 +2603,28 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
               }
               NS_RELEASE(oldParent);
             }
-
+           
             SetDocumentInChildrenOf(newContent, mDocument);
             res = ReplaceChildAt(newContent, pos, PR_TRUE);
           }
         }
         NS_RELEASE(newContent);
       }
+      else {
+        res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
       *aReturn = aOldChild;
       NS_ADDREF(aOldChild);
     }
+    else {
+      res = NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
     NS_RELEASE(content);
   }
-  
+  else {
+    res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
   return res;
 }
 
@@ -2607,15 +2632,15 @@ nsresult
 nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild, 
                                            nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-  if (nsnull == aOldChild) {
-    return NS_OK;
-  }
-
   nsIContent* content = nsnull;
+  *aReturn = nsnull;
+
+  if (nsnull == aOldChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
-  if (NS_SUCCEEDED(res)) {
+  if (NS_OK == res) {
     PRInt32 pos;
     IndexOf(content, pos);
     if (pos >= 0) {
@@ -2623,8 +2648,15 @@ nsGenericHTMLContainerElement::RemoveChild(nsIDOMNode* aOldChild,
       *aReturn = aOldChild;
       NS_ADDREF(aOldChild);
     }
+    else {
+      res = NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
     NS_RELEASE(content);
   }
+  else {
+    res = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
   return res;
 }
 

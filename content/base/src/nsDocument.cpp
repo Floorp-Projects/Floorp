@@ -76,6 +76,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMRange.h"
 #include "nsIEnumerator.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
@@ -1919,7 +1920,8 @@ nsDocument::CreateElementWithNameSpace(const nsString& aTagName,
                                        const nsString& aNameSpace, 
                                        nsIDOMElement** aReturn)
 {
-  return NS_OK;
+  *aReturn = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
@@ -1948,7 +1950,7 @@ nsDocument::GetNodeValue(nsString& aNodeValue)
 NS_IMETHODIMP    
 nsDocument::SetNodeValue(const nsString& aNodeValue)
 {
-  return NS_OK;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP    
@@ -2066,17 +2068,17 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
   nsIContent *content, *refContent = nsnull;
 
   if (nsnull == aNewChild) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_NULL_POINTER;
   }
 
   aNewChild->GetNodeType(&nodeType);
   if ((COMMENT_NODE != nodeType) && (PROCESSING_INSTRUCTION_NODE != nodeType)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   result = aNewChild->QueryInterface(kIContentIID, (void**)&content);
   if (NS_OK != result) {
-    return result;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   if (nsnull == aRefChild) {
@@ -2086,7 +2088,7 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
     result = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
     if (NS_OK != result) {
       NS_RELEASE(content);
-      return result;
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
     if ((nsnull != mProlog) && (0 != mProlog->Count())) {
@@ -2134,23 +2136,23 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   nsIContent *content, *refContent;
   
   if ((nsnull == aNewChild) || (nsnull == aOldChild)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_NULL_POINTER;
   }
 
   aNewChild->GetNodeType(&nodeType);
   if ((COMMENT_NODE != nodeType) && (PROCESSING_INSTRUCTION_NODE != nodeType)) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   result = aNewChild->QueryInterface(kIContentIID, (void**)&content);
   if (NS_OK != result) {
-    return result;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   result = aOldChild->QueryInterface(kIContentIID, (void**)&refContent);
   if (NS_OK != result) {
     NS_RELEASE(content);
-    return result;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   if ((nsnull != mProlog) && (0 != mProlog->Count())) {
@@ -2165,7 +2167,7 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   }
 
   if (refContent == mRootContent) {
-    result = NS_ERROR_INVALID_ARG;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
     index = mEpilog->IndexOf(refContent);
@@ -2203,12 +2205,12 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   nsIContent *content;
   
   if (nsnull == aOldChild) {
-    return NS_ERROR_INVALID_ARG;
+    return NS_ERROR_NULL_POINTER;
   }
 
   result = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   if (NS_OK != result) {
-    return result;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   if ((nsnull != mProlog) && (0 != mProlog->Count())) {
@@ -2221,7 +2223,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   }
 
   if (content == mRootContent) {
-    result = NS_ERROR_INVALID_ARG;
+    result = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   else if ((nsnull != mEpilog) && (0 != mEpilog->Count())) {
     index = mEpilog->IndexOf(content);

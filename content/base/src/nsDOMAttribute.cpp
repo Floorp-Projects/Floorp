@@ -94,22 +94,37 @@ nsDOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsDOMAttribute)
 NS_IMPL_RELEASE(nsDOMAttribute)
 
-void 
+NS_IMETHODIMP
 nsDOMAttribute::DropReference()
 {
   mContent = nsnull;
+
+  return NS_OK;
 }
 
-void 
+NS_IMETHODIMP
 nsDOMAttribute::SetContent(nsIContent* aContent)
 {
   mContent = aContent;
+
+  return NS_OK;
 }
 
-void 
+NS_IMETHODIMP
+nsDOMAttribute::GetContent(nsIContent** aContent)
+{
+  *aContent = mContent;
+  NS_IF_ADDREF(mContent);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMAttribute::SetName(const nsString& aName)
 {
   mName=aName;
+
+  return NS_OK;
 }
 
 nsresult
