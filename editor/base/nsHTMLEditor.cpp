@@ -895,11 +895,11 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                   nsString tmpText;
                   if( aTagName == "HREF")
                   {
-                    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText && tmpText != "")
+                    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
                   } else if (aTagName == "ANCHOR")
                   {
-                    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText && tmpText != "")
+                    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
                   }
                 }
