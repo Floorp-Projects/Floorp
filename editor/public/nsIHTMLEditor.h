@@ -91,9 +91,9 @@ public:
   NS_IMETHOD Copy()=0;
   NS_IMETHOD Paste()=0;
   NS_IMETHOD PasteAsQuotation()=0;
-  NS_IMETHOD PasteAsCitedQuotation(nsString& aCitation)=0;
+  NS_IMETHOD PasteAsCitedQuotation(const nsString& aCitation)=0;
   NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
-  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, nsString& aCitation)=0;
+  NS_IMETHOD InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCitation)=0;
 
 
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;

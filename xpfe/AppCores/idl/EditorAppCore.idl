@@ -42,6 +42,11 @@ interface EditorAppCore : BaseAppCore
   void cut();
   void copy();
   void paste();
+  void pasteAsQuotation();
+  void pasteAsCitedQuotation(in DOMString cite);
+  
+  void insertAsQuotation(in DOMString quotedText);
+  void insertAsCitedQuotation(in DOMString quotedText, in DOMString cite);
   
   void selectAll();
   

@@ -191,7 +191,6 @@ function EditorRedo()
 function EditorCut()
 {
   if (appCore) {
-    dump("Cutting\n");
     appCore.cut();
   }
 }
@@ -199,7 +198,6 @@ function EditorCut()
 function EditorCopy()
 {
   if (appCore) {
-    dump("Copying\n");
     appCore.copy();
   }
 }
@@ -207,8 +205,21 @@ function EditorCopy()
 function EditorPaste()
 {
   if (appCore) {
-    dump("Pasting\n");
     appCore.paste();
+  }
+}
+
+function EditorPasteAsQuotation()
+{
+  if (appCore) {
+    appCore.pasteAsQuotation();
+  }
+}
+
+function EditorPasteAsQuotationCited(citeString)
+{
+  if (appCore) {
+    appCore.pasteAsQuotationCited(CiteString);
   }
 }
 

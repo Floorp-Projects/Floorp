@@ -129,7 +129,13 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    Cut();
     NS_IMETHOD    Copy();
     NS_IMETHOD    Paste();
+    NS_IMETHOD    PasteAsQuotation();
+    NS_IMETHOD    PasteAsCitedQuotation(const nsString& aCiteString);
     NS_IMETHOD    SelectAll();
+
+    NS_IMETHOD    InsertAsQuotation(const nsString& aquotedText);
+    NS_IMETHOD    InsertAsCitedQuotation(const nsString& aquotedText,
+                                         const nsString& aCiteString);
 
     NS_IMETHOD		InsertText(const nsString& textToInsert);
 		NS_IMETHOD    Find();

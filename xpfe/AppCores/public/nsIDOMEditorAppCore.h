@@ -93,6 +93,14 @@ public:
 
   NS_IMETHOD    Paste()=0;
 
+  NS_IMETHOD    PasteAsQuotation()=0;
+
+  NS_IMETHOD    PasteAsCitedQuotation(const nsString& aCite)=0;
+
+  NS_IMETHOD    InsertAsQuotation(const nsString& aQuotedText)=0;
+
+  NS_IMETHOD    InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCite)=0;
+
   NS_IMETHOD    SelectAll()=0;
 
   NS_IMETHOD    Find()=0;
@@ -186,6 +194,10 @@ public:
   NS_IMETHOD    Cut();  \
   NS_IMETHOD    Copy();  \
   NS_IMETHOD    Paste();  \
+  NS_IMETHOD    PasteAsQuotation();  \
+  NS_IMETHOD    PasteAsCitedQuotation(const nsString& aCite);  \
+  NS_IMETHOD    InsertAsQuotation(const nsString& aQuotedText);  \
+  NS_IMETHOD    InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCite);  \
   NS_IMETHOD    SelectAll();  \
   NS_IMETHOD    Find();  \
   NS_IMETHOD    FindNext();  \
@@ -249,6 +261,10 @@ public:
   NS_IMETHOD    Cut() { return _to Cut(); }  \
   NS_IMETHOD    Copy() { return _to Copy(); }  \
   NS_IMETHOD    Paste() { return _to Paste(); }  \
+  NS_IMETHOD    PasteAsQuotation() { return _to PasteAsQuotation(); }  \
+  NS_IMETHOD    PasteAsCitedQuotation(const nsString& aCite) { return _to PasteAsCitedQuotation(aCite); }  \
+  NS_IMETHOD    InsertAsQuotation(const nsString& aQuotedText) { return _to InsertAsQuotation(aQuotedText); }  \
+  NS_IMETHOD    InsertAsCitedQuotation(const nsString& aQuotedText, const nsString& aCite) { return _to InsertAsCitedQuotation(aQuotedText, aCite); }  \
   NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \
   NS_IMETHOD    Find() { return _to Find(); }  \
   NS_IMETHOD    FindNext() { return _to FindNext(); }  \
