@@ -84,6 +84,58 @@ xpcstringtest::GetStringC(const char **s)
     return NS_OK;
 }
 
+// quick and dirty!!!
+static PRUnichar* GetTestWString(int* size)
+{
+    static PRUnichar* sWStr;            
+    static char str[] = "This is part of a long string... ";
+    static const int slen = (sizeof(str)-1)/sizeof(char);
+    static const int rep = 1;
+    static const int space = (slen*rep*sizeof(PRUnichar))+sizeof(PRUnichar);
+
+    if(!sWStr)
+    {
+        sWStr = (PRUnichar*) nsAllocator::Alloc(space);
+        if(sWStr)
+        {
+            PRUnichar* p = sWStr;
+            for(int k = 0; k < rep; k++)
+                for (int i = 0; i < slen; i++)
+                    *(p++) = (PRUnichar) str[i];
+        *p = 0;        
+        }
+    }
+    if(size)
+        *size = space;
+    return sWStr;
+}        
+
+/* void GetWStringCopied ([retval] out wstring s); */
+NS_IMETHODIMP xpcstringtest::GetWStringCopied(PRUnichar **s)
+{
+    const char myResult[] = "result of xpcstringtest::GetStringB";
+
+    if(!s)
+        return NS_ERROR_NULL_POINTER;
+
+    int size;
+    PRUnichar* str = GetTestWString(&size);
+    if(!str)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *s = (PRUnichar*) nsAllocator::Clone(str, size);
+    return *s ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}        
+
+/* void GetWStringShared ([shared, retval] out wstring s); */
+NS_IMETHODIMP xpcstringtest::GetWStringShared(const PRUnichar **s)
+{
+    if(!s)
+        return NS_ERROR_NULL_POINTER;
+    *s = GetTestWString(nsnull);
+    return NS_OK;
+}        
+
 /***************************************************************************/
 
 // static

@@ -131,6 +131,9 @@ interface nsIXPCTestString : nsISupports {
     string GetStringA();
     void GetStringB(out string s);
     void GetStringC([shared,retval] out string s);
+
+    void GetWStringCopied([retval] out wstring s);
+    void GetWStringShared([shared,retval] out wstring s);
 };
 
 [scriptable, uuid(0ff4faf0-439a-11d3-988c-006008962422)]

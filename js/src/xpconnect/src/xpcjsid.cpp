@@ -224,9 +224,31 @@ nsJSID::NewID(const char* str)
 /***************************************************************************/
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS2(nsJSIID, nsIJSID, nsIJSIID)
+NS_IMPL_ISUPPORTS3(nsJSIID, nsIJSID, nsIJSIID, nsIXPCScriptable)
 
-nsJSIID::nsJSIID()  {NS_INIT_ISUPPORTS();}
+XPC_IMPLEMENT_FORWARD_CREATE(nsJSIID)
+// XPC_IMPLEMENT_IGNORE_GETFLAGS(nsJSIID)
+// XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(nsJSIID)
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(nsJSIID)
+// XPC_IMPLEMENT_IGNORE_GETPROPERTY(nsJSIID)
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(nsJSIID)
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(nsJSIID)
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(nsJSIID)
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(nsJSIID)
+XPC_IMPLEMENT_IGNORE_DEFAULTVALUE(nsJSIID)
+// XPC_IMPLEMENT_IGNORE_ENUMERATE(nsJSIID)
+XPC_IMPLEMENT_IGNORE_CHECKACCESS(nsJSIID)
+XPC_IMPLEMENT_IGNORE_CALL(nsJSIID)
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(nsJSIID)
+// XPC_IMPLEMENT_FORWARD_HASINSTANCE(nsJSIID)
+XPC_IMPLEMENT_FORWARD_FINALIZE(nsJSIID)
+
+nsJSIID::nsJSIID() 
+    :   mCacheFilled(JS_FALSE) 
+{
+    NS_INIT_ISUPPORTS();
+}
+
 nsJSIID::~nsJSIID() {}
 
 NS_IMETHODIMP nsJSIID::GetName(char * *aName)
@@ -297,8 +319,12 @@ nsJSIID::NewID(const char* str)
             nsIInterfaceInfoManager* iim;
             if(nsnull != (iim = nsXPConnect::GetInterfaceInfoManager()))
             {
+                nsIInterfaceInfo* iinfo;
+                PRBool canScript;
                 nsID* pid;
-                if(NS_SUCCEEDED(iim->GetIIDForName(str, &pid)) && pid)
+                if(NS_SUCCEEDED(iim->GetInfoForName(str, &iinfo)) &&
+                   NS_SUCCEEDED(iinfo->IsScriptable(&canScript)) && canScript &&
+                   NS_SUCCEEDED(iinfo->GetIID(&pid)) && pid)
                 {
                     success = idObj->mDetails.InitWithName(*pid, str);
                     nsAllocator::Free(pid);
@@ -310,6 +336,173 @@ nsJSIID::NewID(const char* str)
             NS_RELEASE(idObj);
     }
     return idObj;
+}
+
+NS_IMETHODIMP 
+nsJSIID::HasInstance(JSContext *cx, JSObject *obj,
+                     jsval v, JSBool *bp,
+                     nsIXPConnectWrappedNative* wrapper,
+                     nsIXPCScriptable* arbitrary,
+                     JSBool* retval)
+{
+    *bp = JS_FALSE; 
+    *retval = JS_TRUE;
+    nsresult rv = NS_OK;
+
+    if(!JSVAL_IS_PRIMITIVE(v))
+    {
+        // we have a JSObject
+        JSObject* obj = JSVAL_TO_OBJECT(v);
+
+        NS_ASSERTION(obj, "when is an object not an object?");
+
+        // is this really a native xpcom object with a wrapper?
+        nsXPCWrappedNative* other_wrapper =
+           nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(cx,obj);
+
+        if(!other_wrapper)
+            return NS_OK;
+
+        if(mDetails.GetID()->Equals(other_wrapper->GetIID()))
+            *bp = JS_TRUE;
+        else
+        {
+            // This would be so easy except for the case...
+            // other_wrapper might inherit from our type
+            nsXPCWrappedNativeClass* clazz;
+            nsIInterfaceInfo* prev;
+            if(!(clazz = other_wrapper->GetClass()) ||
+               !(prev = clazz->GetInterfaceInfo()))
+                return NS_ERROR_UNEXPECTED;
+
+            nsIInterfaceInfo* cur;
+            NS_ADDREF(prev);
+            while(NS_SUCCEEDED(prev->GetParent(&cur)))
+            {
+                NS_RELEASE(prev);
+                prev = cur;
+
+                nsID* iid;
+                if(NS_SUCCEEDED(cur->GetIID(&iid)))
+                {
+                    JSBool found = mDetails.GetID()->Equals(*iid);
+                    nsAllocator::Free(iid);
+                    if(found)
+                    {
+                        *bp = JS_TRUE;
+                        break;            
+                    }
+                }
+                else
+                {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                    break;
+                }
+            }
+            NS_RELEASE(prev);
+        }
+    }
+    return rv;
+}
+
+void
+nsJSIID::FillCache(JSContext *cx, JSObject *obj,
+                   nsIXPConnectWrappedNative *wrapper,
+                   nsIXPCScriptable *arbitrary)
+{
+    nsIInterfaceInfoManager* iim = nsnull;
+    nsIInterfaceInfo* iinfo;
+    PRUint16 count;
+
+    if(!(iim = XPTI_GetInterfaceInfoManager()) ||
+       NS_FAILED(iim->GetInfoForIID(mDetails.GetID(), &iinfo)) ||
+       !iinfo ||
+       NS_FAILED(iinfo->GetConstantCount(&count)))
+
+    {
+        NS_ASSERTION(0,"access to interface info is truly horked");
+        NS_IF_RELEASE(iim);
+        ThrowException(NS_ERROR_XPC_UNEXPECTED, cx);
+        return;
+    }
+    NS_RELEASE(iim);
+
+
+    for(PRUint16 i = 0; i < count; i++)
+    {
+        const nsXPTConstant* constant;
+        jsid id;
+        JSString *jstrid;
+        jsval val;
+        JSBool retval;
+
+        if(NS_FAILED(iinfo->GetConstant(i, &constant)) ||
+           !(jstrid = JS_InternString(cx, constant->GetName())) ||
+           !JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id) ||
+           !nsXPCWrappedNativeClass::GetConstantAsJSVal(cx, iinfo, i, &val) ||
+           NS_FAILED(arbitrary->SetProperty(cx, obj, id, &val, wrapper, nsnull, &retval)) ||
+           !retval)
+        {
+            ThrowException(NS_ERROR_XPC_UNEXPECTED, cx);
+            return;
+        }
+    }
+
+    mCacheFilled = JS_TRUE;
+    return;
+}
+
+NS_IMETHODIMP
+nsJSIID::GetFlags(JSContext *cx, JSObject *obj,
+                  nsIXPConnectWrappedNative* wrapper,
+                  JSUint32* flagsp,
+                  nsIXPCScriptable* arbitrary)
+{
+    NS_PRECONDITION(flagsp, "bad param");
+    *flagsp = XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSIID::LookupProperty(JSContext *cx, JSObject *obj,
+                        jsid id,
+                        JSObject **objp, JSProperty **propp,
+                        nsIXPConnectWrappedNative* wrapper,
+                        nsIXPCScriptable* arbitrary,
+                        JSBool* retval)
+{
+    if(!mCacheFilled)
+        FillCache(cx, obj, wrapper, arbitrary);
+    return arbitrary->LookupProperty(cx, obj, id, objp, propp, wrapper,
+                                     nsnull, retval);
+}
+
+NS_IMETHODIMP
+nsJSIID::GetProperty(JSContext *cx, JSObject *obj,
+                     jsid id, jsval *vp,
+                     nsIXPConnectWrappedNative* wrapper,
+                     nsIXPCScriptable* arbitrary,
+                     JSBool* retval)
+{
+    if(!mCacheFilled)
+        FillCache(cx, obj, wrapper, arbitrary);
+    return arbitrary->GetProperty(cx, obj, id, vp, wrapper, nsnull, retval);
+}
+
+
+NS_IMETHODIMP
+nsJSIID::Enumerate(JSContext *cx, JSObject *obj,
+                   JSIterateOp enum_op,
+                   jsval *statep, jsid *idp,
+                   nsIXPConnectWrappedNative *wrapper,
+                   nsIXPCScriptable *arbitrary,
+                   JSBool *retval)
+{
+    if(enum_op == JSENUMERATE_INIT && !mCacheFilled)
+        FillCache(cx, obj, wrapper, arbitrary);
+
+    return arbitrary->Enumerate(cx, obj, enum_op, statep, idp, wrapper,
+                                arbitrary, retval);
 }
 
 /***************************************************************************/

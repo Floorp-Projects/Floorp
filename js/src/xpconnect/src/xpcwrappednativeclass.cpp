@@ -265,21 +265,18 @@ nsXPCWrappedNativeClass::GetInterfaceName()
     return mName;
 }
 
+// static 
 JSBool
 nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
-                                            nsXPCWrappedNative* wrapper,
-                                            const XPCNativeMemberDescriptor* desc,
+                                            nsIInterfaceInfo* iinfo,
+                                            PRUint16 index,
                                             jsval* vp)
 {
     const nsXPTConstant* constant;
 
-    NS_ASSERTION(desc->IsConstant(),"bad type");
-    if(NS_FAILED(mInfo->GetConstant(desc->index, &constant)))
-    {
-        // XXX fail silently?
-        *vp = JSVAL_NULL;
-        return JS_TRUE;
-    }
+    if(NS_FAILED(iinfo->GetConstant(index, &constant)))
+        return JS_FALSE;
+
     const nsXPTCMiniVariant& mv = *constant->GetValue();
 
     // XXX Big Hack!
@@ -288,7 +285,6 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
     v.type = constant->GetType();
     memcpy(&v.val, &mv.val, sizeof(mv.val));
 
-    // XXX if iid consts are supported, then conditionally fill it in here
     return XPCConvert::NativeData2JS(cx, vp, &v.val, v.type, nsnull, nsnull);
 }
 

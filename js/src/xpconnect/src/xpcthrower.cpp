@@ -80,7 +80,6 @@ XPCJSThrower::ThrowBadResultException(nsresult rv,
     char* sz;
     const char* format;
     const char* name;
-    JSString* str = nsnull;
 
     /*
     *  If there is a pending exception when the native call returns and
@@ -136,7 +135,6 @@ XPCJSThrower::ThrowBadParamException(nsresult rv,
 {
     char* sz;
     const char* format;
-    JSString* str = nsnull;
 
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";
@@ -160,7 +158,6 @@ XPCJSThrower::ThrowException(nsresult rv,
 {
     char* sz;
     const char* format;
-    JSString* str = nsnull;
 
     if(!nsXPCException::NameAndFormatForNSResult(rv, nsnull, &format))
         format = "";

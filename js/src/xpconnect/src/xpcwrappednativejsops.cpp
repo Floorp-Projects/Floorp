@@ -196,7 +196,11 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if(desc)
     {
         if(desc->IsConstant())
-            return clazz->GetConstantAsJSVal(cx, wrapper, desc, vp);
+        {
+            if(!clazz->GetConstantAsJSVal(cx, wrapper, desc, vp))
+                *vp = JSVAL_NULL; //XXX silent failure?
+            return JS_TRUE;
+        }
         else if(desc->IsMethod())
         {
             // allow for lazy creation of 'prototypical' function invoke object
