@@ -169,10 +169,9 @@ NS_IMPL_ISUPPORTS1(nsOverlayEnumerator, nsISimpleEnumerator)
 
 nsOverlayEnumerator::nsOverlayEnumerator(nsISimpleEnumerator *aInstallArcs,
                                          nsISimpleEnumerator *aProfileArcs)
+  : mInstallArcs(aInstallArcs),
+    mProfileArcs(aProfileArcs)
 {
-  mInstallArcs = aInstallArcs;
-  mProfileArcs = aProfileArcs;
-  mCurrentArcs = mInstallArcs;
 }
 
 nsOverlayEnumerator::~nsOverlayEnumerator()
@@ -201,23 +200,34 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
   *aResult = nsnull;
 
   if (!mCurrentArcs) {
-    mCurrentArcs = mInstallArcs;
-    if (!mCurrentArcs)
-      return NS_ERROR_FAILURE;
+    // Start with the profile arcs.
+    mCurrentArcs = mProfileArcs;
+    if (!mCurrentArcs) {
+      // No profile arcs, try the install arcs.
+      mCurrentArcs = mInstallArcs;
+      if (!mCurrentArcs)
+        return NS_ERROR_FAILURE;
+    }
   }
   else if (mCurrentArcs == mProfileArcs) {
+    // Check if we have more profile arcs.
     PRBool hasMore;
     rv = mCurrentArcs->HasMoreElements(&hasMore);
-    if (NS_FAILED(rv)) return rv;
-    if (!hasMore)
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!hasMore) {
+      // No more profile arcs, try the install arcs.
+      if (!mInstallArcs)
+        return NS_ERROR_FAILURE;
       mCurrentArcs = mInstallArcs;
-    if (!mInstallArcs)
-      return NS_ERROR_FAILURE;
+    }
   }
 
   nsCOMPtr<nsISupports> supports;
   rv = mCurrentArcs->GetNext(getter_AddRefs(supports));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
   if (NS_FAILED(rv))
@@ -234,15 +244,7 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsCOMPtr<nsISupports> sup;
-  sup = do_QueryInterface(url, &rv);
-  if (NS_FAILED(rv))
-    return NS_OK;
-
-  *aResult = sup;
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
+  return CallQueryInterface(url, aResult);
 }
 
 
