@@ -51,6 +51,9 @@ IMAPGetStringByID(PRInt32 stringID)
 		{
 			PRUnichar *ptrv = nsnull;
 			res = sBundle->GetStringFromID(stringID, &ptrv);
+
+			NS_RELEASE(sBundle);
+
 			if (NS_FAILED(res)) 
 			{
 				resultString = "[StringID";

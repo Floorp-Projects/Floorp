@@ -270,7 +270,7 @@ nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	char *tail = tailURI.ToNewCString();
 
 	*uri = PR_smprintf("%s%s#%d", kImapMessageRootURI, tail, key);
-	delete[] tail;
+	nsAllocator::Free(tail);
 
 	return NS_OK;
 }

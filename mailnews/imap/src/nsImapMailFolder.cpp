@@ -258,7 +258,7 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	if (NS_FAILED(rv))
 		return rv;        
 
-	delete[] uriStr;
+	nsAllocator::Free(uriStr);
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
 	PRBool isServer;
@@ -809,7 +809,7 @@ NS_IMETHODIMP nsImapMailFolder::GetUsername(char** userName)
     {
         *userName = PL_strdup(tmpCString);
         rv = NS_OK;
-        delete []tmpCString;
+		nsAllocator::Free(tmpCString);
     }
     return rv;
 }
@@ -850,7 +850,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHostname(char** hostName)
     {
         *hostName = PL_strdup(tmpCString);
         rv = NS_OK;
-        delete [] tmpCString;
+		nsAllocator::Free(tmpCString);
     }
     return rv;
 }
