@@ -3334,14 +3334,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     return rv;
   }
 
-  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
-
-  if (nsevent) {
-    // We are handling this so don't let it bubble up
-
-    nsevent->PreventBubble();
-  }
-
+  // Whether we need PreventDefault or not
+  PRBool needPreventDefault = PR_TRUE;
+  
   // Whether we did an incremental search or another action
   PRBool didIncrementalSearch = PR_FALSE;
   
@@ -3467,6 +3462,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         }
         return NS_OK;
       }
+      
+      needPreventDefault = PR_FALSE;
 
       PRUnichar uniChar = ToLowerCase(NS_STATIC_CAST(PRUnichar, charCode));
 
@@ -3516,13 +3513,21 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
               if (wasChanged) {
                 UpdateSelection(); // dispatch event, update combobox, etc.
               }
+              needPreventDefault = PR_TRUE;
               break;
             }
           }
         }
-      } // while
+      } // for
     } break;//case
   } // switch
+
+  //if current key has been processed then we need to call PreventDefault()
+  if (needPreventDefault){
+	  
+      aKeyEvent->PreventDefault();
+      
+  }
 
   // If we didn't do an incremental search, clear the string
   if (!didIncrementalSearch) {
