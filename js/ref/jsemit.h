@@ -99,8 +99,8 @@ struct JSCodeGenerator {
     JSTryNote       *tryNext;       /* next available note */
 };
 
-#define CG_CODE(cg,offset)      ((cg)->base + (offset))
-#define CG_OFFSET(cg)           PTRDIFF((cg)->next, (cg)->base, jsbytecode)
+#define CG_CODE(cg,offset)  ((cg)->base + (offset))
+#define CG_OFFSET(cg)       PTRDIFF((cg)->next, (cg)->base, jsbytecode)
 
 /*
  * Initialize cg to allocate bytecode space from cx->codePool, and srcnote
@@ -335,12 +335,12 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
  * stable store allocated via JS_malloc.  Return null on malloc failure,
  * which means this function reported an error.
  */
-extern JS_FRIEND_API(jssrcnote *)
+extern jssrcnote *
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg);
 
 /*
  * Allocate cg->treeContext.tryCount notes (plus one for the end sentinel)
- * from cx->tempPool and set cg->tryBase/tryNext for exactly tryCount
+ * from cx->tempPool and set up cg->tryBase/tryNext for exactly tryCount
  * js_NewTryNote calls.  The storage is freed by js_ResetCodeGenerator.
  */
 extern JSBool
@@ -349,7 +349,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
 /*
  * Grab the next trynote slot in cg, filling it in appropriately.
  */
-extern JS_FRIEND_API(JSTryNote *)
+extern JSTryNote *
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
 	      ptrdiff_t end, ptrdiff_t catchStart);
 
@@ -357,7 +357,7 @@ js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
  * Finish generating exception information, and copy it to JS_malloc
  * storage.
  */
-extern JS_FRIEND_API(JSBool)
+extern JSBool
 js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp);
 
 PR_END_EXTERN_C

@@ -2412,7 +2412,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
     return JS_TRUE;
 }
 
-JS_FRIEND_API(jssrcnote *)
+jssrcnote *
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg)
 {
     uintN count;
@@ -2444,7 +2444,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
     return JS_TRUE;
 }
 
-JS_FRIEND_API(JSTryNote *)
+JSTryNote *
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
 	      ptrdiff_t end, ptrdiff_t catchStart)
 {
@@ -2458,7 +2458,7 @@ js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
     return tn;
 }
 
-JS_FRIEND_API(JSBool)
+JSBool
 js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp)
 {
     uintN count;
