@@ -136,6 +136,8 @@
 #include "nsBidiUtils.h"
 #endif
 
+#include "nsIEditingSession.h"
+
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
@@ -292,7 +294,8 @@ nsHTMLDocument::nsHTMLDocument()
     mReferrer(nsnull),
     mNumForms(0),
     mIsWriting(0),
-    mDomainWasSet(PR_FALSE)
+    mDomainWasSet(PR_FALSE),
+    mEditingIsOn(PR_FALSE)
 {
   mImages = nsnull;
   mApplets = nsnull;
@@ -4022,6 +4025,470 @@ nsHTMLDocument::RemoveWyciwygChannel(void)
     if (NS_FAILED(rv)) return rv;
   }
   mWyciwygChannel = nsnull;
+
+  return rv;
+}
+
+/* attribute DOMString designMode; */
+NS_IMETHODIMP
+nsHTMLDocument::GetDesignMode(nsAString & aDesignMode)
+{
+  if (mEditingIsOn) {
+    aDesignMode.Assign(NS_LITERAL_STRING("on"));
+  }
+  else {
+    aDesignMode.Assign(NS_LITERAL_STRING("off"));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
+{
+  // get editing session
+  if (!mScriptGlobalObject)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docshell;
+  mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
+  if (!docshell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
+  if (!editSession) 
+    return NS_ERROR_FAILURE;
+
+  if (aDesignMode.Equals(NS_LITERAL_STRING("on"), 
+                         nsCaseInsensitiveStringComparator())) {
+    // go through hoops to get dom window (see nsHTMLDocument::GetSelection)
+    nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
+    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIPresContext> cx;
+    shell->GetPresContext(getter_AddRefs(cx));
+    NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsISupports> container;
+    cx->GetContainer(getter_AddRefs(container));
+    NS_ENSURE_TRUE(container, NS_OK);
+
+    nsCOMPtr<nsIDOMWindow> domwindow(do_GetInterface(container));
+    NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
+
+    nsresult rv = editSession->Init(domwindow);  // content root frame
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = editSession->MakeWindowEditable(domwindow, "html", false);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // now that we've successfully created the editor, we can reset our flag
+    mEditingIsOn = PR_TRUE;
+  }
+  else { // turn editing off
+    // right now we don't have a way to turn off editing  :-(
+    mEditingIsOn = PR_FALSE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLDocument::GetMidasCommandManager(nsICommandManager** aCmdMgr)
+{
+  // initialize return value
+  NS_ENSURE_ARG_POINTER(aCmdMgr);
+
+  // check if we have it cached
+  if (mMidasCommandManager) {
+    NS_ADDREF(*aCmdMgr = mMidasCommandManager);
+    return NS_OK;
+  }
+
+  *aCmdMgr = nsnull;
+  if (!mScriptGlobalObject)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docshell;
+  mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
+  if (!docshell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsICommandManager> mMidasCommandManager = do_GetInterface(docshell);
+  if (!mMidasCommandManager)
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*aCmdMgr = mMidasCommandManager);
+  return NS_OK;
+}
+
+
+struct MidasCommand {
+  const char*  incomingCommandString;
+  const char*  internalCommandString;
+  const char*  internalParamString;
+  PRBool       useNewParam;
+};
+
+static struct MidasCommand gMidasCommandTable[] = {
+  { "bold",          "cmd_bold",            "", PR_TRUE },
+  { "italic",        "cmd_italic",          "", PR_TRUE },
+  { "underline",     "cmd_underline",       "", PR_TRUE },
+  { "strikethrough", "cmd_strikethrough",   "", PR_TRUE },
+  { "subscript",     "cmd_subscript",       "", PR_TRUE },
+  { "superscript",   "cmd_superscript",     "", PR_TRUE },
+  { "cut",           "cmd_cut",             "", PR_TRUE },
+  { "copy",          "cmd_copy",            "", PR_TRUE },
+  { "paste",         "cmd_paste",           "", PR_TRUE },
+  { "delete",        "cmd_delete",          "", PR_TRUE },
+  { "selectall",     "cmd_selectall",       "", PR_TRUE },
+  { "undo",          "cmd_undo",            "", PR_TRUE },
+  { "redo",          "cmd_redo",            "", PR_TRUE },
+  { "indent",        "cmd_indent",          "", PR_TRUE },
+  { "outdent",       "cmd_outdent",         "", PR_TRUE },
+  { "backcolor",     "cmd_backgroundColor", "", PR_FALSE },
+  { "forecolor",     "cmd_fontColor",       "", PR_FALSE },
+  { "fontname",      "cmd_fontFace",        "", PR_FALSE },
+  { "horizontalline", "cmd_hline",          "", PR_TRUE },
+  { "hr",            "cmd_hline",           "", PR_TRUE },
+  { "createlink",    "cmd_link",            "", PR_TRUE },
+  { "justifyleft",   "cmd_align",       "left", PR_TRUE },
+  { "justifyright",  "cmd_align",      "right", PR_TRUE },
+  { "justifycenter", "cmd_align",     "center", PR_TRUE },
+  { "justifyfull",   "cmd_align",    "justify", PR_TRUE },
+  { "removeformat",  "cmd_removeStyles",    "", PR_TRUE },
+  { "unlink",        "cmd_removeLinks",     "", PR_TRUE },
+  { "orderlist",     "cmd_ol",              "", PR_TRUE },
+  { "unorderlist",   "cmd_ul",              "", PR_TRUE },
+  { "paragraph",     "cmd_paragraphState", "p", PR_TRUE },
+  { "formatblock",   "cmd_paragraphState",  "", PR_FALSE },
+  { "heading",       "cmd_paragraphState",  "", PR_FALSE },
+#if 0
+  { "fontsize",      "cmd_fontSize",        "", PR_FALSE },
+  { "justifynone",   "cmd_align",           "", PR_TRUE },
+  { "saveas",        "cmd_saveAs",          "", PR_TRUE },
+  { "print",         "cmd_print",           "", PR_TRUE },
+#endif
+  { NULL, NULL, NULL, PR_FALSE }
+};
+
+#define MidasCommandCount ((sizeof(gMidasCommandTable) / sizeof(struct MidasCommand)) - 1)
+
+
+// this function will return false if the command is not recognized
+// inCommandID will be converted as necessary for internal operations
+// inParam will be converted as necessary for internal operations
+// outParam will be Empty if no parameter is needed
+PRBool
+nsHTMLDocument::ConvertToMidasInternalCommand(const nsAString & inCommandID, 
+                                              const nsAString & inParam,
+                                              nsACString& outCommandID,
+                                              nsACString& outParam)
+{
+  nsCAutoString convertedCommandID = NS_ConvertUCS2toUTF8(inCommandID);
+  PRUint32 i;
+  for (i = 0; i < MidasCommandCount; ++i) {
+    if (convertedCommandID.Equals(gMidasCommandTable[i].incomingCommandString,
+                                  nsCaseInsensitiveCStringComparator())) {
+      // set outCommandID (what we use internally)
+      outCommandID.Assign(gMidasCommandTable[i].internalCommandString);
+
+      // set outParam based on the flag from the table
+      if (gMidasCommandTable[i].useNewParam) {
+        outParam.Assign(gMidasCommandTable[i].internalParamString);
+      }
+      else {
+        // pass through the parameter that was passed to us
+        outParam.Assign(NS_ConvertUCS2toUTF8(inParam));
+      }
+
+      return PR_TRUE;
+    }
+  }
+
+  // reset results if the command is not found in our table
+  outCommandID.SetLength(0);
+  outParam.SetLength(0);
+  return PR_FALSE;  
+}
+
+/* TODO: don't let this call do anything if the page is not done loading */
+/* boolean execCommand(in DOMString commandID, in boolean doShowUI, 
+                                               in DOMString value); */
+NS_IMETHODIMP
+nsHTMLDocument::ExecCommand(const nsAString & commandID, 
+                            PRBool doShowUI, 
+                            const nsAString & value, 
+                            PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  //  for optional parameters see dom/src/base/nsHistory.cpp: HistoryImpl::Go()
+  //  this might add some ugly JS dependencies?
+
+  *_retval = PR_FALSE;
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  // if they are requesting UI from us, let's fail since we have no UI
+  if (doShowUI)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  // TEMPORARY HACK: (this block will go away very soon)
+  // always set focus to this widget so the command can be executed only in
+  // this scope (we wouldn't want to be able to execute commands outside of 
+  // our own editor scope
+  nsCOMPtr<nsIDOMWindowInternal> wintmp = do_QueryInterface(mScriptGlobalObject);
+  if (!wintmp)
+    return NS_ERROR_FAILURE;
+  nsresult rv2 = wintmp->Focus();
+  if (NS_FAILED(rv2))
+    return rv2;
+
+  // get command manager and dispatch command to our window if it's acceptable
+  nsCOMPtr<nsICommandManager> cmdMgr;
+  nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!cmdMgr)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString cmdToDispatch, paramStr;
+  if (!ConvertToMidasInternalCommand(commandID, value, cmdToDispatch, paramStr))
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  if (paramStr.IsEmpty()) {
+    rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull);
+  } else {
+    // we have a command that requires a parameter, create params
+    nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
+                                            NS_COMMAND_PARAMS_CONTRACTID, &rv);
+    if (!cmdParams)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
+    if (NS_FAILED(rv))
+      return rv;
+    rv = cmdMgr->DoCommand(cmdToDispatch.get(), cmdParams);
+  }
+
+  *_retval = NS_SUCCEEDED(rv);
+
+  return rv;
+}
+
+/* TODO: don't let this call do anything if the page is not done loading */
+/* boolean execCommandShowHelp(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::ExecCommandShowHelp(const nsAString & commandID,
+                                    PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean queryCommandEnabled(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
+                                    PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean queryCommandIndeterm (in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::QueryCommandIndeterm(const nsAString & commandID,
+                                     PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean queryCommandState(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  // TEMPORARY HACK: (this block will go away very soon)
+  // always set focus to this widget so the command can be executed only in
+  // this scope (we wouldn't want to be able to execute commands outside of 
+  // our own editor scope
+  nsCOMPtr<nsIDOMWindowInternal> wintmp = do_QueryInterface(mScriptGlobalObject);
+  if (!wintmp)
+    return NS_ERROR_FAILURE;
+  nsresult rv2 = wintmp->Focus();
+  if (NS_FAILED(rv2))
+    return rv2;
+
+  // get command manager and dispatch command to our window if it's acceptable
+  nsCOMPtr<nsICommandManager> cmdMgr;
+  nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!cmdMgr)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString cmdToDispatch, paramToCheck;
+  if (!ConvertToMidasInternalCommand(commandID, commandID, 
+                                     cmdToDispatch, paramToCheck))
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
+                                           NS_COMMAND_PARAMS_CONTRACTID, &rv);
+  if (!cmdParams)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), cmdParams);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // handle alignment as a special case (possibly other commands too?)
+  // Alignment is special because the external api is individual commands
+  // but internally we use cmd_align with different parameters.  When getting
+  // the state of this command, we need to return the boolean for this 
+  // particular alignment rather than the string of 'which alignment is this?'
+  if (cmdToDispatch.Equals("cmd_align")) {
+    char * actualAlignmentType = nsnull;
+    rv = cmdParams->GetCStringValue("state_attribute", &actualAlignmentType);
+    if (NS_SUCCEEDED(rv) && actualAlignmentType && actualAlignmentType[0]) {
+      *_retval = paramToCheck.Equals(actualAlignmentType);
+    }
+    if (actualAlignmentType)
+      nsMemory::Free(actualAlignmentType);
+  }
+  else {
+    rv = cmdParams->GetBooleanValue("state_all", _retval);
+    if (NS_FAILED(rv))
+      *_retval = PR_FALSE;
+  }
+
+  return rv;
+}
+
+/* boolean queryCommandSupported(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::QueryCommandSupported(const nsAString & commandID,
+                                      PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* DOMString queryCommandText(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::QueryCommandText(const nsAString & commandID,
+                                 nsAString & _retval)
+{
+  _retval.SetLength(0);
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* DOMString queryCommandValue(in DOMString commandID); */
+NS_IMETHODIMP
+nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
+                                  nsAString &_retval)
+{
+  _retval.SetLength(0);
+
+  // if editing is not on, bail
+  if (!mEditingIsOn)
+    return NS_ERROR_FAILURE;
+
+  // TEMPORARY HACK: (this block will go away very soon)
+  // always set focus to this widget so the command can be executed only in
+  // this scope (we wouldn't want to be able to execute commands outside of 
+  // our own editor scope
+  nsCOMPtr<nsIDOMWindowInternal> wintmp = do_QueryInterface(mScriptGlobalObject);
+  if (!wintmp)
+    return NS_ERROR_FAILURE;
+  nsresult rv2 = wintmp->Focus();
+  if (NS_FAILED(rv2))
+    return rv2;
+
+  // get command manager and dispatch command to our window if it's acceptable
+  nsCOMPtr<nsICommandManager> cmdMgr;
+  nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!cmdMgr)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString cmdToDispatch, paramStr;
+  if (!ConvertToMidasInternalCommand(commandID, commandID,
+                                     cmdToDispatch, paramStr))
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  // create params
+  nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
+                                           NS_COMMAND_PARAMS_CONTRACTID, &rv);
+  if (!cmdParams)
+    return NS_ERROR_OUT_OF_MEMORY;
+  rv = cmdParams->SetCStringValue("state_attribute", paramStr.get());
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = cmdMgr->GetCommandState(cmdToDispatch.get(), cmdParams);
+  if (NS_FAILED(rv))
+    return rv;
+
+  char *cStringResult = nsnull;
+  rv = cmdParams->GetCStringValue("state_attribute", &cStringResult);
+  if (NS_SUCCEEDED(rv) && cStringResult && cStringResult[0]) {
+    _retval.Assign(NS_ConvertUTF8toUCS2(cStringResult));
+  }
+  if (cStringResult) {
+    nsMemory::Free(cStringResult);
+  }
 
   return rv;
 }
