@@ -139,6 +139,10 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
             return PK11PrivKey.fromPrivateKeyInfo( ASN1Util.encode(pki),
                 TokenSupplierManager.getTokenSupplier().getThreadToken() );
         } else if( keySpec instanceof DSAPrivateKeySpec ) {
+            throw new InvalidKeySpecException(
+              "DSAPrivateKeySpec not supported: " +
+              "http://bugzilla.mozilla.org/show_bug.cgi?id=150720");
+            /*
             DSAPrivateKeySpec spec = (DSAPrivateKeySpec) keySpec;
             SEQUENCE pqgParams = new SEQUENCE();
             pqgParams.addElement(new INTEGER(spec.getP()));
@@ -158,6 +162,7 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
 
             return PK11PrivKey.fromPrivateKeyInfo( ASN1Util.encode(pki),
                 TokenSupplierManager.getTokenSupplier().getThreadToken() );
+            */
         } else if( keySpec instanceof PKCS8EncodedKeySpec ) {
             return PK11PrivKey.fromPrivateKeyInfo(
                 (PKCS8EncodedKeySpec)keySpec,

@@ -65,21 +65,4 @@ public class KeyFactorySpi1_4 extends KeyFactorySpi1_2
         }
     }
 
-    protected java.security.PrivateKey engineGeneratePrivate(KeySpec keySpec)
-        throws InvalidKeySpecException
-    {
-        return null;
-    }
-
-    protected KeySpec engineGetKeySpec(Key key, Class keySpec)
-        throws InvalidKeySpecException
-    {
-        return null;
-    }
-
-    protected Key engineTranslateKey(Key key)
-        throws InvalidKeyException
-    {
-        return null;
-    }
 }
