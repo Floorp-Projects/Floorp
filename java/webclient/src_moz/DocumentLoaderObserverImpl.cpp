@@ -33,7 +33,6 @@
 #include "nsActions.h"
 
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventTarget.h"
 
 #include "prlog.h" // for PR_ASSERT
 
@@ -59,7 +58,7 @@ NS_IMPL_ADDREF(DocumentLoaderObserverImpl);
 NS_IMPL_RELEASE(DocumentLoaderObserverImpl);  
 
 DocumentLoaderObserverImpl::DocumentLoaderObserverImpl() : mRefCnt(1),
-mTarget(nsnull), mMouseListener(nsnull) {
+mTarget(nsnull), mMouseListener(nsnull), mDomEventTarget(nsnull) {
 }
 
 DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
@@ -79,6 +78,11 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
                                                 maskNames, maskValues);
     }
     mRefCnt = 1; // PENDING(edburns): not sure about how right this is to do.
+}
+
+DocumentLoaderObserverImpl::~DocumentLoaderObserverImpl()
+{
+    RemoveMouseListener();
 }
 
 NS_IMETHODIMP DocumentLoaderObserverImpl::QueryInterface(REFNSIID aIID, 
@@ -173,16 +177,15 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndDocumentLoad(nsIDocumentLoader* l
             // NOT really ok, but we can't do anything.
             return NS_OK;
         }
-        nsCOMPtr<nsIDOMEventTarget> domEventTarget;
         nsresult rv;
         
         rv = doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget),
-                                 getter_AddRefs(domEventTarget));
-        if (NS_FAILED(rv) || !domEventTarget) {
+                                 getter_AddRefs(mDomEventTarget));
+        if (NS_FAILED(rv) || !mDomEventTarget) {
             return NS_OK;
         }
         nsAutoString eType("mouseover");
-        domEventTarget->AddEventListener(eType, mMouseListener, PR_FALSE);
+        mDomEventTarget->AddEventListener(eType, mMouseListener, PR_FALSE);
         
     } // end of "install mouse listener"
     
@@ -334,9 +337,16 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::AddMouseListener(nsCOMPtr<nsIDOMMouseL
     return NS_OK;
 }
 
-NS_IMETHODIMP DocumentLoaderObserverImpl::RemoveMouseListener(nsCOMPtr<nsIDOMMouseListener> toRemove)
+NS_IMETHODIMP DocumentLoaderObserverImpl::RemoveMouseListener()
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_OK;
+
+    if (mDomEventTarget && mMouseListener) {
+        nsAutoString eType("mouseover");
+        mDomEventTarget->RemoveEventListener(eType, mMouseListener, PR_FALSE);
+        mDomEventTarget = nsnull;
+        mMouseListener = nsnull;
+    }
 
     return rv;
 }

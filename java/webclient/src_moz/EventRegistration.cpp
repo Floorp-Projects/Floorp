@@ -37,11 +37,6 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverImplIID, NS_IDOCLOADEROBSERVERIMPL_
 void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
                              jobject listener)
 {
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed toaddDocumentLoadListener");
-        return;
-    }
-
     if (initContext->initComplete) {
 
 
@@ -91,11 +86,6 @@ void addDocumentLoadListener(JNIEnv *env, WebShellInitContext *initContext,
 void addMouseListener(JNIEnv *env, WebShellInitContext *initContext,
                       jobject listener)
 {
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed toaddDocumentLoadListener");
-        return;
-    }
-
     if (initContext->initComplete) {
         nsresult rv;
         nsCOMPtr<nsIDocumentLoaderObserver> curObserver;
@@ -140,4 +130,32 @@ void addMouseListener(JNIEnv *env, WebShellInitContext *initContext,
 
         myListener->AddMouseListener(mouseListener);
     }
+}
+
+void removeAllListeners(JNIEnv *env, WebShellInitContext *initContext)
+{
+    if (initContext->initComplete) {
+        nsresult rv;
+        nsCOMPtr<nsIDocumentLoaderObserver> curObserver;
+        nsCOMPtr<DocumentLoaderObserverImpl> myListener = nsnull;
+        
+        PR_ASSERT(nsnull != initContext->docShell);
+        
+        // See if there already is a DocListener
+        rv = initContext->docShell->GetDocLoaderObserver(getter_AddRefs(curObserver));
+        if (NS_SUCCEEDED(rv) && curObserver) {
+            
+            // if so, see if it's something we added
+            rv = curObserver->QueryInterface(kIDocumentLoaderObserverImplIID,
+                                             getter_AddRefs(myListener));
+        }
+        if (myListener) {
+            // remove the doc listener from the docShell
+            rv = initContext->docShell->SetDocLoaderObserver(nsnull);
+            // remove the mouse listener from the doc listener
+            myListener->RemoveMouseListener();
+            myListener = nsnull;
+        } 
+    }
+
 }

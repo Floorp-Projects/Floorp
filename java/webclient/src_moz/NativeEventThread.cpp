@@ -253,6 +253,20 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     }
 }
 
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllListeners(JNIEnv *env, jobject obj, jint webShellPtr)
+{
+    WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeRemoveAllListeners");
+        return;
+    }
+
+    removeAllListeners(env, initContext);
+}
+
+
 /**
 
  * This function processes methods inserted into WebShellInitContext's
