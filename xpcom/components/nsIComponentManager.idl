@@ -327,6 +327,17 @@ interface nsIComponentManager : nsISupports
      */
     nsIEnumerator enumerateContractIDs();
 
+   /**
+     * refreshComponents
+     *
+     * Enumerates directory looking for modules of all types and registers
+     * modules who have changed (modtime or size) since the last time
+     * autoRegister() was invoked.  Same as autoRegister, except that it
+     * always uses the default components directory.  Web scripts may
+     * call this function but may not call autoRegister.
+     */
+    void refreshComponents();
+
 };
 
 %{ C++

@@ -287,7 +287,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
       }
 #endif
 
-   Break(aFile, aLine);
+   //Break(aFile, aLine);
 }
 
 NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)

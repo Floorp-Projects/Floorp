@@ -52,7 +52,6 @@
 #include "nsIComponentLoader.h"
 #include "nsNativeComponentLoader.h"
 #include "nsXPIDLString.h"
-#include "nsIScriptSecurityManager.h"
 
 #include "nsIObserverService.h"
 
@@ -1976,6 +1975,12 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
 }
 
 nsresult
+nsComponentManagerImpl::RefreshComponents(void)
+{
+    return AutoRegister(NS_Script, nsnull);
+}
+
+nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
     nsresult rv;
@@ -1997,34 +2002,6 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when, nsIFile *inDirSpec)
     if (getenv("XPCOM_NO_AUTOREG"))
         return NS_OK;
 #endif
-
-    // Unprivileged scripts are only allowed to call autoRegister with no
-    // path specified, and with when being NS_Script or NS_Startup.
-    if ((when != NS_Script && when != NS_Startup) || inDirSpec)
-    {
-      PRBool maySpecifyParams = PR_FALSE;
-
-      nsCOMPtr<nsIScriptSecurityManager>
-        securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-
-      if (NS_SUCCEEDED(rv))
-      {
-        rv = securityManager->IsCapabilityEnabled
-          ("InstallComponents", &maySpecifyParams);
-        if (NS_FAILED(rv)) return rv;
-      }
-      else
-      {
-        NS_ASSERTION(0, "autoRegisterImpl can't get nsScriptSecurityManager");
-      }
-
-      if (!maySpecifyParams)
-      {
-        inDirSpec = nsnull;
-        when = NS_Script;
-      }
-    }
-
     if (inDirSpec) 
     {
         // Use supplied components' directory   
@@ -2394,10 +2371,10 @@ nsComponentManagerImpl::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP
 nsComponentManagerImpl::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    // Allow unprivileged scripts to call Components.manager.autoRegister
-    static const NS_NAMED_LITERAL_STRING(s_autoRegister, "autoRegister");
+    // Allow unprivileged scripts to call Components.manager.refreshComponents
+    static const NS_NAMED_LITERAL_STRING(s_refreshComponents, "refreshComponents");
 
-    if(! nsCRT::strcmp(methodName, s_autoRegister.get()))
+    if(! nsCRT::strcmp(methodName, s_refreshComponents.get()))
         *_retval = CloneAllAccess();
     else
         *_retval = nsnull;
