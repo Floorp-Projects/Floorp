@@ -58,69 +58,23 @@ public class Codegen extends Interpreter {
     {
     }
 
-    public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
-    {
-        nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
-
-        initOptFunctions_r(tree);
-
-        int optLevel = cx.getOptimizationLevel();
-
-        Hashtable possibleDirectCalls = null;
-        if (optLevel > 0) {
-           /*
-            * Collect all of the contained functions into a hashtable
-            * so that the call optimizer can access the class name & parameter
-            * count for any call it encounters
-            */
-            if (tree.getType() == Token.SCRIPT) {
-                int functionCount = tree.getFunctionCount();
-                for (int i = 0; i != functionCount; ++i) {
-                    OptFunctionNode ofn = OptFunctionNode.get(tree, i);
-                    if (ofn.fnode.getFunctionType()
-                        == FunctionNode.FUNCTION_STATEMENT)
-                    {
-                        String name = ofn.fnode.getFunctionName();
-                        if (name.length() != 0) {
-                            if (possibleDirectCalls == null) {
-                                possibleDirectCalls = new Hashtable();
-                            }
-                            possibleDirectCalls.put(name, ofn);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (possibleDirectCalls != null) {
-            directCallTargets = new ObjArray();
-        }
-
-        OptTransformer ot = new OptTransformer(this, possibleDirectCalls,
-                                               directCallTargets);
-        ot.transform(tree);
-
-        if (optLevel > 0) {
-            (new Optimizer()).optimize(tree, optLevel);
-        }
-
-        return tree;
-    }
-
-    private static void initOptFunctions_r(ScriptOrFnNode scriptOrFn)
-    {
-        for (int i = 0, N = scriptOrFn.getFunctionCount(); i != N; ++i) {
-            FunctionNode fn = scriptOrFn.getFunctionNode(i);
-            new OptFunctionNode(fn);
-            initOptFunctions_r(fn);
-        }
-    }
-
     public Object compile(Context cx, Scriptable scope,
                           ScriptOrFnNode scriptOrFn,
                           SecurityController securityController,
-                          Object securityDomain, String encodedSource)
+                          Object securityDomain, String encodedSource,
+                          boolean returnFunction)
     {
+        nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
+        transform(scriptOrFn);
+
+        if (Token.printTrees) {
+            System.out.println(scriptOrFn.toStringTree(scriptOrFn));
+        }
+
+        if (returnFunction) {
+            scriptOrFn = scriptOrFn.getFunctionNode(0);
+        }
+
         initScriptOrFnNodesData(scriptOrFn);
 
         Class[] interfaces = nameHelper.getTargetImplements();
@@ -229,6 +183,60 @@ public class Codegen extends Interpreter {
                                               String debugSource)
     {
         // Not supported
+    }
+
+    private void transform(ScriptOrFnNode tree)
+    {
+        initOptFunctions_r(tree);
+
+        int optLevel = compilerEnv.getOptimizationLevel();
+
+        Hashtable possibleDirectCalls = null;
+        if (optLevel > 0) {
+           /*
+            * Collect all of the contained functions into a hashtable
+            * so that the call optimizer can access the class name & parameter
+            * count for any call it encounters
+            */
+            if (tree.getType() == Token.SCRIPT) {
+                int functionCount = tree.getFunctionCount();
+                for (int i = 0; i != functionCount; ++i) {
+                    OptFunctionNode ofn = OptFunctionNode.get(tree, i);
+                    if (ofn.fnode.getFunctionType()
+                        == FunctionNode.FUNCTION_STATEMENT)
+                    {
+                        String name = ofn.fnode.getFunctionName();
+                        if (name.length() != 0) {
+                            if (possibleDirectCalls == null) {
+                                possibleDirectCalls = new Hashtable();
+                            }
+                            possibleDirectCalls.put(name, ofn);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (possibleDirectCalls != null) {
+            directCallTargets = new ObjArray();
+        }
+
+        OptTransformer ot = new OptTransformer(this, possibleDirectCalls,
+                                               directCallTargets);
+        ot.transform(tree);
+
+        if (optLevel > 0) {
+            (new Optimizer()).optimize(tree, optLevel);
+        }
+    }
+
+    private static void initOptFunctions_r(ScriptOrFnNode scriptOrFn)
+    {
+        for (int i = 0, N = scriptOrFn.getFunctionCount(); i != N; ++i) {
+            FunctionNode fn = scriptOrFn.getFunctionNode(i);
+            new OptFunctionNode(fn);
+            initOptFunctions_r(fn);
+        }
     }
 
     private void initScriptOrFnNodesData(ScriptOrFnNode scriptOrFn)

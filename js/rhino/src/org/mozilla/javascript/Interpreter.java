@@ -110,16 +110,21 @@ public class Interpreter
     // Last icode
         END_ICODE                       = BASE_ICODE + 30;
 
-    public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
-    {
-        (new NodeTransformer(this)).transform(tree);
-        return tree;
-    }
-
     public Object compile(Context cx, Scriptable scope, ScriptOrFnNode tree,
                           SecurityController securityController,
-                          Object securityDomain, String encodedSource)
+                          Object securityDomain, String encodedSource,
+                          boolean returnFunction)
     {
+        (new NodeTransformer(this)).transform(tree);
+
+        if (Token.printTrees) {
+            System.out.println(tree.toStringTree(tree));
+        }
+
+        if (returnFunction) {
+            tree = tree.getFunctionNode(0);
+        }
+
         scriptOrFn = tree;
         itsData = new InterpreterData(securityDomain,
                                       compilerEnv.getLanguageVersion());

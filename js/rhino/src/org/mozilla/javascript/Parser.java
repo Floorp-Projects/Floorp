@@ -53,11 +53,6 @@ import java.io.IOException;
 
 class Parser {
 
-    public Parser(CompilerEnvirons compilerEnv)
-    {
-        this.compilerEnv = compilerEnv;
-    }
-
     private void mustMatchToken(TokenStream ts, int toMatch, String messageId)
         throws IOException, ParserException
     {
@@ -93,6 +88,7 @@ class Parser {
     public ScriptOrFnNode parse(TokenStream ts, Decompiler decompiler)
         throws IOException
     {
+        this.compilerEnv = ts.compilerEnv;
         this.nf = new IRFactory(ts);
         currentScriptOrFn = nf.createScript();
         this.decompiler = decompiler;

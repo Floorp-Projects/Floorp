@@ -984,7 +984,7 @@ public class Context
         TokenStream ts = new TokenStream(compilerEnv,
                                          null, source, null, 1);
 
-        Parser p = new Parser(compilerEnv);
+        Parser p = new Parser();
         Decompiler decompiler = new Decompiler();
         try {
             p.parse(ts, decompiler);
@@ -2029,7 +2029,7 @@ public class Context
         TokenStream ts = new TokenStream(compilerEnv,
                                          sourceReader, sourceString,
                                          sourceName, lineno);
-        Parser p = new Parser(compilerEnv);
+        Parser p = new Parser();
         Decompiler decompiler = new Decompiler();
         ScriptOrFnNode tree = p.parse(ts, decompiler);
         int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
@@ -2049,22 +2049,9 @@ public class Context
             }
             decompiler = null; // It helps GC
 
-            tree = compiler.transform(this, tree);
-
-            if (Token.printTrees) {
-                System.out.println(tree.toStringTree(tree));
-            }
-
-            if (returnFunction) {
-                int functionCount = tree.getFunctionCount();
-                if (functionCount == 0)
-                    return null;
-                tree = tree.getFunctionNode(0);
-            }
-
             Object result = compiler.compile(this, scope, tree,
                                              securityController, securityDomain,
-                                             encodedSource);
+                                             encodedSource, returnFunction);
             syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
             if (syntaxErrorCount == 0) {
                 if (debugger != null) {

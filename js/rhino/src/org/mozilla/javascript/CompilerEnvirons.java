@@ -38,7 +38,7 @@
 
 package org.mozilla.javascript;
 
-public class CompilerEnvirons
+public final class CompilerEnvirons
 {
     public void initFromContext(Context cx, ErrorReporter syntaxErrorReporter)
     {
@@ -51,6 +51,8 @@ public class CompilerEnvirons
             = cx.hasFeature(Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER);
         this.allowMemberExprAsFunctionName
             = cx.hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME);
+
+        this.optimizationLevel = cx.getOptimizationLevel();
     }
 
     public final int getSyntaxErrorCount()
@@ -112,6 +114,11 @@ public class CompilerEnvirons
         return useDynamicScope;
     }
 
+    public final int getOptimizationLevel()
+    {
+        return optimizationLevel;
+    }
+
     private ErrorReporter syntaxErrorReporter;
     private int syntaxErrorCount;
 
@@ -122,7 +129,6 @@ public class CompilerEnvirons
     boolean useDynamicScope;
     boolean reservedKeywordAsIdentifier;
     boolean allowMemberExprAsFunctionName;
-
-
+    private int optimizationLevel;
 }
 
