@@ -39,6 +39,7 @@
 #include "nsHTMLContentSinkStream.h"
 #include "prmem.h"
 #include "nsXMLTokenizer.h"
+#include "nsDTDUtils.h"
 
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -237,22 +238,24 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   NS_INIT_REFCNT();
   mParser=0;
   mTokenizer=0;
-  nsCRT::zero(mContextStack,sizeof(mContextStack));
-  
-  mHTMLStackPos = 0;
-  memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
-  memset(mHTMLNameStack,0,sizeof(mHTMLNameStack));
-
-  mHasOpenForm=PR_FALSE;
-  mHasOpenMap=PR_FALSE;
-  mContextStackPos=0;
-  mContextStack[mContextStackPos++]=eXIFTag_unknown;
   mDTDDebug=nsnull;
   mInContent=PR_FALSE;
   mLowerCaseAttributes=PR_TRUE;
-  mLowerCaseTags=PR_TRUE;
   mCharset.SetLength(0);
   mSink=0;
+
+  mXIFContext=new nsDTDContext();
+  mNodeRecycler=0;
+  
+  mContainerKey.AssignWithConversion("isa");
+  mEncodeKey.AssignWithConversion("selection");
+  mCSSStyleSheetKey.AssignWithConversion("max_css_selector_width");
+  mCSSSelectorKey.AssignWithConversion("selectors");
+  mCSSDeclarationKey.AssignWithConversion("property");
+  mGenericKey.AssignWithConversion("value");
+
+  mLineNumber=1;
+
 }
 
 /**
@@ -265,6 +268,8 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
 nsXIFDTD::~nsXIFDTD(){
   NS_IF_RELEASE(mSink);
   NS_IF_RELEASE(mTokenizer);
+
+  delete mXIFContext;
 }
 
 
@@ -381,30 +386,40 @@ nsresult nsXIFDTD::WillBuildModel(  const CParserContext& aParserContext,nsICont
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
+nsresult nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
+  NS_PRECONDITION(mXIFContext!=nsnull,"Create a context before calling build model");
+
   nsresult result=NS_OK;
 
   if(aTokenizer) {
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
-    nsITokenRecycler* theRecycler=aTokenizer->GetTokenRecycler();
+    mParser=(nsParser*)aParser;
 
-    while (NS_SUCCEEDED(result))
-    {
-      CToken* theToken=mTokenizer->PopToken();
-      if(theToken) {
-        result=HandleToken(theToken,aParser);
-        if (NS_SUCCEEDED(result)) {
-          theRecycler->RecycleToken(theToken);
-        }
-        else if(NS_ERROR_HTMLPARSER_BLOCK!=result){
-          mTokenizer->PushTokenFront(theToken);
-        }
-        // theRootDTD->Verify(kEmptyString,aParser);
+    if(mTokenizer) {
+
+      mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+      result=mXIFContext->GetNodeRecycler(mNodeRecycler);
+
+      if(NS_FAILED(result)) return result;
+
+      if(mSink) {
+        while(NS_SUCCEEDED(result)){
+          if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+            CToken* theToken=mTokenizer->PopToken();
+            if(theToken) { 
+              result=HandleToken(theToken,aParser);
+            }
+            else break;
+          }
+          else {
+            result=mDTDState;
+            break;
+          }
+        }//while
+        mTokenizer=oldTokenizer;
       }
-      else break;
-    }//while
-    mTokenizer=oldTokenizer;
+    }
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   return result;
@@ -428,143 +443,165 @@ nsresult nsXIFDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPars
 
   return result;
 }
+/**
+ *  Do preprocessing on the token
+ *  
+ *  @update  harishd 04/06/00
+ *  @param   aType  - Set the appropriate type.
+ *  @param   aToken - The type of the token..
+ *  @return  
+ */
 
+nsresult nsXIFDTD::WillHandleToken(CToken* aToken,eHTMLTokenTypes& aType) {
+  NS_ASSERTION(aToken!=nsnull,"invalid token");
+
+  nsresult result=NS_OK;
+  if(aToken) {
+    aType=eHTMLTokenTypes(aToken->GetTokenType());
+    eXIFTags theNewType = eXIFTag_userdefined;
+
+    if((eToken_start==aType) || (eToken_end==aType)) {
+      nsString& name = aToken->GetStringValueXXX();
+      theNewType=DetermineXIFTagType(name);
+      if (theNewType != eXIFTag_userdefined) {
+        aToken->SetTypeID(theNewType);
+      }
+    }
+  }
+  return NS_OK;
+}
 
 /**
  *  This big dispatch method is used to route token handler calls to the right place.
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 
  *  moved over to the delegate. Ah, so much to do...
  *  
- *  @update  gpk 06/18/98
+ *  @update  harishd 04/06/00
  *  @param   aType
  *  @param   aToken
  *  @param   aParser
  *  @return  
  */
-nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
-  nsresult result=NS_OK;
-
-  mParser=(nsParser*)aParser;
-  mSink=(nsIHTMLContentSink*)aParser->GetContentSink();  //this can change in the parser between calls.
+nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser){
+  nsresult  result=NS_OK;
 
   if(aToken) {
-    CHTMLToken*     theToken= (CHTMLToken*)(aToken);
-    eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
- 
-    eXIFTags type = eXIFTag_userdefined;
 
-    if((eToken_start==theType) || (eToken_end==theType)) {
-      nsString& name = aToken->GetStringValueXXX();
-      type=DetermineXIFTagType(name);
-      if (type != eXIFTag_userdefined)
-        aToken->SetTypeID(type);
+    eHTMLTokenTypes theType=eToken_unknown;
+    result=WillHandleToken(aToken,theType);
+    
+    if(result==NS_OK) {
+      
+      aToken->mUseCount=0;  //assume every token coming into this system needs recycling.
+
+      switch(theType) {
+        case eToken_text:
+        case eToken_start:
+        case eToken_newline:
+        case eToken_whitespace:
+          result=HandleStartToken(aToken); break;
+        case eToken_end:
+          result=HandleEndToken(aToken); break;
+        default:
+          result=NS_OK;
+      }//switch
+      result=DidHandleToken(aToken);
     }
-
-    switch(theType) {
-      case eToken_start:
-        result=HandleStartToken(aToken); break;
-      case eToken_end:
-        result=HandleEndToken(aToken); break;
-      case eToken_comment:
-        result=HandleCommentToken(aToken); break;
-      case eToken_whitespace:
-        result=HandleWhiteSpaceToken(aToken); break;
-      case eToken_newline:
-        result=HandleWhiteSpaceToken(aToken); break;
-      case eToken_text:
-        result=HandleTextToken(aToken); break;
-      case eToken_attribute:
-        result=HandleAttributeToken(aToken); break;
-      default:
-        result=NS_OK;
-    }//switch
-
   }//if
   return result;
 }
 
-
 /**
- *  This method gets called when a start token has been 
- *  encountered in the parse process. 
+ *  Do postprocessing on the token. 
  *  
- *  @update  gpk 06/18/98
- *  @param   aToken -- next (start) token to be handled
- *  @param   aNode -- CParserNode representing this start token
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @update  harishd 04/06/00
+ *  @param   aToken  - 
+ *  @param   aResult -
+ *  @return  
  */
-nsresult nsXIFDTD::HandleWhiteSpaceToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
 
-  //CStartToken*  st    = (CStartToken*)(aToken);
+nsresult nsXIFDTD::DidHandleToken(CToken* aToken, nsresult aResult) {
+  NS_ASSERTION(mTokenRecycler!=nsnull,"We need a recycler");
+  nsresult result=aResult;
+  if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
+    if(aToken) {
+      if(0>=aToken->mUseCount)
+        if(mTokenRecycler) mTokenRecycler->RecycleToken(aToken);
+    }
+  }
+  else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
+    mDTDState=result;
+  else result=NS_OK;
 
-  //Begin by gathering up attributes...
-  nsCParserNode node((CHTMLToken*)aToken);
-  PRInt16       attrCount=aToken->GetAttributeCount();
-  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(node,attrCount);
-
-  if (NS_SUCCEEDED(result))
-  {
-    if (mInContent == PR_TRUE)
-      mSink->AddLeaf(node);
-  } 
   return result;
 }
 
 
 /**
- *  This method gets called when a start token has been 
- *  encountered in the parse process. 
- *  
- *  @update  gpk 06/18/98
- *  @param   aToken -- next (start) token to be handled
- *  @param   aNode -- CParserNode representing this start token
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  Call this method to open the top most node in the stack
+ *  It also prevents the node from opening up twice
+ *
+ *  harishd 04/10/00
+ *  @param - nil
  */
-nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  CStartToken*    st    = (CStartToken*)(aToken);
-  eXIFTags        type  =(eXIFTags)st->GetTypeID();
-  nsCParserNode   node((CHTMLToken*)aToken);
-
-  nsresult result = NS_OK;
-
-  if (type == eXIFTag_text)
-  {
-    nsString& temp = aToken->GetStringValueXXX();
-
-    if (!temp.EqualsWithConversion("<xml version=\"1.0\"?>"))
-    {
-      result= AddLeaf(node);
+nsresult nsXIFDTD::PreprocessStack(void) {
+  nsresult        result=NS_OK;
+  nsCParserNode*  theNode=(nsCParserNode*)mXIFContext->PeekNode();
+  
+  if(theNode){
+    // mUseCount = 0 ---> Node is not on the internal stack
+    // mUseCount = 1 ---> Node is on the internal stack and can be passed to the sink.
+    // mUseCount = 2 ---> Node passed to the sink already so don't open once again.
+    if(theNode->mUseCount==1) {
+      eHTMLTags theTag=(theNode->mToken)? (eHTMLTags)theNode->mToken->GetTypeID():eHTMLTag_unknown;
+      if(theTag!=eHTMLTag_unknown) {
+        if(IsHTMLContainer(theTag)) {
+          result=mSink->OpenContainer(*theNode);
+        }
+        else {
+          result=mSink->AddLeaf(*theNode);
+        }
+      }
+      theNode->mUseCount++; // This will make sure that the node is not opened twice.
     }
   }
 
+
   return result;
 }
 
+/**
+ *  Closes the top most contaier node on the internal stack..
+ *
+ *  @update  harishd 04/12/00
+ *  @param   aToken - 
+ *  @param   aTag   - The tag that might require preprocessing.
+ *  @param   aNode  - The node to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
 
-void nsXIFDTD::AddAttribute(nsIParserNode& aNode) {
-  nsIParserNode* top = PeekNode();
-  if (top != nsnull)
-  {
-    nsString key;
-    nsString value;
-    PRBool   hasValue;
+nsresult nsXIFDTD::WillHandleStartToken(CToken* aToken, eXIFTags aTag, nsIParserNode& aNode) {
+  nsresult result=NS_OK;
 
-    hasValue = GetAttributePair(aNode,key,value);
-    // XXX should we still be calling AddAttribute if hasValue is false?
-    CAttributeToken* attribute = new CAttributeToken(key,value);
-    ((nsCParserNode*)top)->AddAttribute(attribute);
+  switch(aTag) {
+    case eXIFTag_leaf:
+    case eXIFTag_comment:
+    case eXIFTag_entity:
+    case eXIFTag_container:
+      result=PreprocessStack(); // Pass the topmost node to the sink ( if it hasn't been yet ).
+      break;
+    default:
+      break; 
   }
-}
 
+  return result;
+}
 
 /**
  *  This method gets called when a start token has been 
  *  encountered in the parse process. 
  *  
- *  @update  gess 12/28/98
+ *  @update  harishd 04/12/00
  *  @param   aToken -- next (start) token to be handled
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
@@ -576,166 +613,265 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
   eXIFTags      type  =(eXIFTags)st->GetTypeID();
 
   //Begin by gathering up attributes...
-  nsCParserNode   node = ((CHTMLToken*)aToken);
+  nsCParserNode* node=mNodeRecycler->CreateNode();
+  node->Init(aToken,mLineNumber,mTokenRecycler);
+  
   PRInt16         attrCount=aToken->GetAttributeCount();
-  nsresult        result=(0==attrCount) ? NS_OK : CollectAttributes(node,attrCount);
+  nsresult        result=(0==attrCount) ? NS_OK : CollectAttributes(*node,attrCount);
 
   if (NS_SUCCEEDED(result))
   {
-    switch (type)
-    {
-      case eXIFTag_container:
-      case eXIFTag_leaf: 
-        StartTopOfStack();
-        result = OpenContainer(node);        
-      break;
-      case eXIFTag_comment:
-        result=CollectContentComment(aToken,node);
-        break;
-      case eXIFTag_entity: 
-        StartTopOfStack();
-        ProcessEntityTag(node);
-      break;
-
-      case eXIFTag_content:
-        StartTopOfStack();
-        mInContent = PR_TRUE;
-      break;
-
-      case eXIFTag_encode:
-        ProcessEncodeTag(node);
-      break;
-
-      case eXIFTag_attr:
-        AddAttribute(node);
-      break;
-
-      case eXIFTag_css_stylesheet:
-        StartTopOfStack();
-        BeginCSSStyleSheet(node);
-      break;
-
-      case eXIFTag_css_rule:
-        BeginCSSStyleRule(node);
-      break;
-
-      case eXIFTag_css_selector:
-        AddCSSSelector(node);
-      break;
-
-      case eXIFTag_css_declaration_list:
-        BeginCSSDeclarationList(node);
-      break;
-
-      case eXIFTag_css_declaration:
-        AddCSSDeclaration(node);
-      break;
-
-      case eXIFTag_document_info:
-        // This is XIF only tag. For HTML it's userdefined.
-        node.mToken->SetTypeID(eHTMLTag_userdefined);
-        // fall through to call OpenContainer:
-
-      case eXIFTag_markupDecl:
-        mSink->OpenContainer(node);
-        break;
-
-      default:
-      break;
+    result=WillHandleStartToken(aToken,type,*node);
+    if(NS_SUCCEEDED(result)) {
+      switch (type)
+      {
+        case eXIFTag_attr:
+          result=HandleAttributeToken(aToken,*node);
+          break;
+        case eXIFTag_comment:
+          result=HandleCommentToken(aToken,*node);
+          break;
+        case eXIFTag_content:
+          mInContent=PR_TRUE;
+          break;
+        case eXIFTag_encode:
+          ProcessEncodeTag(*node);
+          break;
+        case eXIFTag_entity:
+          ProcessEntityTag(*node);
+          break;
+        case eXIFTag_markupDecl:
+          mXIFContext->Push(node);
+          break;
+        case eXIFTag_document_info:
+          // This is XIF only tag. For HTML it's userdefined.
+          node->mToken->SetTypeID(eHTMLTag_userdefined);
+          result=mSink->OpenContainer(*node);
+          break;
+        default:
+          result=HandleDefaultToken(aToken,*node);
+          break;
+      }
     }
-  } 
+  }
+
+  mNodeRecycler->RecycleNode(node,mTokenRecycler);
   return result;
 }
 
-
 /**
- *  This method gets called when an end token has been 
- *  encountered in the parse process. If the end tag matches
- *  the start tag on the stack, then simply close it. Otherwise,
- *  we have a erroneous state condition. This can be because we
- *  have a close tag with no prior open tag (user error) or because
- *  we screwed something up in the parse process. I'm not sure
- *  yet how to tell the difference.
- *  
- *  @update  gpk 06/18/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  This method determines if the token should be processed as
+ *  a contianer or as a leaf.  Also determines if the token can
+ *  can be handled or not.
+ *
+ *  @update  harishd 04/12/00
+ *  @param   aToken - The start token.
+ *  @param   aNode  - The container node
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
  */
-nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
 
-  nsresult        result        = NS_OK;
-  CEndToken*      et            = (CEndToken*)(aToken);
-  eXIFTags        tokenTagType  = (eXIFTags)et->GetTypeID();
-  nsCParserNode   node          = ((CHTMLToken*)aToken);
+nsresult nsXIFDTD::HandleDefaultToken(CToken* aToken,nsIParserNode& aNode) {
+  nsresult result=NS_OK;
 
-  switch (tokenTagType)
-  {
-    case eXIFTag_container:
-    case eXIFTag_leaf:
-      StartTopOfStack();
-      result=CloseContainer(node); 
-    break;
-
-    case eXIFTag_content:
-      mInContent = PR_FALSE;
-    break;
-
-    case eXIFTag_css_stylesheet:
-      mInContent = PR_FALSE;
-      EndCSSStyleSheet(node);
-    break;
-
-    case  eXIFTag_css_rule:
-      mInContent = PR_FALSE;
-      EndCSSStyleRule(node);
-    break;
-
-    case eXIFTag_css_declaration_list:
-      mInContent = PR_FALSE;
-      EndCSSDeclarationList(node);
-    break;
-
-    case eXIFTag_markupDecl:
-      mSink->CloseContainer(node);
-
-    default:
-    break;
+  PRBool isConainer;
+  eXIFTags theTag=(eXIFTags)aToken->GetTypeID();
+      
+  // First find out if the tag can be handled or not....
+  // because there are a few tags that do not belong to HTML
+  if(CanHandleDefaultTag(theTag,isConainer)) {
+    if(isConainer) {
+      result=HandleContainer(aNode);
+    }
+    else {
+      result=AddLeaf(aNode);
+    }
   }
   return result;
 }
 
 /**
- *  This method gets called when a comment token has been 
- *  encountered in the parse process. After making sure
- *  we're somewhere in the body, we handle the comment
- *  in the same code that we use for text.
+ *  This method gets called when container needs to be processed.
+ *  It collects the actual name ( html equivalent ), which resides as an
+ *  attribute on the node, of the container and reinitializes the node 
+ *  with the new name
  *  
- *  @update  gpk 06/18/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @update  harishd 04/12/00
+ *  @param   aNode -- The container node
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
  */
-nsresult nsXIFDTD::HandleCommentToken(CToken* aToken) {
+
+nsresult nsXIFDTD::HandleContainer(nsIParserNode& aNode) {
+
+  nsCParserNode* theNode=(nsCParserNode*)&aNode;
+  
+  NS_ASSERTION(theNode!=nsnull,"need a node to process");
+
+  nsresult result=NS_OK;
+
+  if(theNode) {
+    nsAutoString   theTagName;
+    eHTMLTags      theTagID;
+
+    if(theNode->mToken) {
+      // The attribute key is "isa" ( mContainerKey )
+      // The attribute value is the TAG name.
+      GetAttribute(aNode,mContainerKey,theTagName);
+
+      theTagID=nsHTMLTags::LookupTag(theTagName);
+
+      theNode->mToken->Reinitialize(theTagID,theTagName);
+      theNode->Init(theNode->mToken,0,mTokenRecycler);
+    }
+    mXIFContext->Push(&aNode);
+  }
+  return result;
+}
+
+/**
+ *  This method does a couple of jobs. 
+ *   a) Determines if the tag could be handled or not
+ *   b) Determins  if the tag is a container
+ *  
+ *  @update  harishd 04/12/00
+ *  @param   aTag        - The tag in question
+ *  @param   aIsConainer - 0 if non-container, 1 if conainer, -1 if unknown
+ *  @return  - TRUE if the tag can be handled
+ */
+
+PRBool nsXIFDTD::CanHandleDefaultTag(eXIFTags aTag,PRInt32& aIsContainer) {
+  PRBool result=PR_TRUE;
+
+  switch(aTag) {
+    case eXIFTag_newline:
+    case eXIFTag_whitespace:
+    case eXIFTag_text:
+      aIsContainer=0; // it's a leaf
+      break;
+    case eXIFTag_leaf:
+    case eXIFTag_container:
+      aIsContainer=1; // it's a conainer
+      break;
+    default:
+      aIsContainer=-1; // unknown state
+      result=PR_FALSE; // don't know how to handle this tag...
+      break;
+  }
+  return result;
+}
+
+/**
+ *  This method gets called when an end token has been 
+ *  encountered in the parse process. If the end tag matches
+ *  the start tag on the stack, then simply close it.
+ *  
+ *  @update  harishd 04/12/00
+ *  @param   aToken -- next (end) token to be handled
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
+ */
+nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  return NS_OK;
+
+  nsresult       result   =NS_OK;
+  eXIFTags       theTag   =(eXIFTags)aToken->GetTypeID();
+  nsCParserNode* theNode  =(nsCParserNode*)mXIFContext->PeekNode();
+  
+  if(NS_SUCCEEDED(result)) {
+    switch (theTag)
+    {
+      case eXIFTag_leaf:
+      case eXIFTag_container:
+      case eXIFTag_markupDecl:
+        result=CloseContainer(*theNode);
+        break;
+      case eXIFTag_content:
+        mInContent=PR_FALSE;
+        break;
+      default:
+        break;
+    }
+  }
+  return result;
+}
+
+/**
+ * Consumes contents of a comment in one gulp. 
+ *
+ * @update	harishd 10/05/99
+ * @param   aNode  - node to consume comment
+ * @param   aToken - a comment token
+ * @return  Error condition.
+ */
+
+nsresult nsXIFDTD::HandleCommentToken(CToken* aToken, nsIParserNode& aNode) {
+  NS_PRECONDITION(aToken!=nsnull,"empty token");
+
+  nsresult          result=NS_OK;
+  CToken*           token=nsnull;
+  eHTMLTokenTypes   type=(eHTMLTokenTypes)aToken->GetTokenType();
+
+  if(type==eToken_start) {
+    nsITokenRecycler* recycler=(mTokenizer)? mTokenizer->GetTokenRecycler():nsnull;
+    if(recycler) {
+      nsAutoString fragment;
+      PRBool       done=PR_FALSE;
+      PRBool       inContent=PR_FALSE;
+      nsString&    comment=aToken->GetStringValueXXX(); 
+      comment.AssignWithConversion("<!--"); // overwrite comment with "<!--"
+      while (!done && NS_SUCCEEDED(result))
+      {
+        token=mTokenizer->PopToken();
+      
+        if(!token) return result;
+
+        type=(eHTMLTokenTypes)token->GetTokenType();
+        fragment.Assign(token->GetStringValueXXX());
+        if(fragment.EqualsWithConversion("content")) {
+          if(type==eToken_start) 
+            inContent=PR_TRUE;
+          else inContent=PR_FALSE;
+        }
+        else if(fragment.EqualsWithConversion("comment")) {
+          comment.AppendWithConversion("-->");
+          result=(mSink)? mSink->AddComment(aNode):NS_OK;
+          done=PR_TRUE;
+        }
+        else {
+          if(inContent) comment.Append(fragment);
+        }
+        recycler->RecycleToken(token);
+      }
+    }
+  }
+  return result;
 }
 
 /**
  *  This method gets called when an attribute token has been 
- *  encountered in the parse process. This is an error, since
- *  all attributes should have been accounted for in the prior
- *  start or end tokens
+ *  encountered in the parse process. 
  *  
- *  @update  gpk 06/18/98
- *  @param   aToken -- next (start) token to be handled
+ *  @update  harishd 04/10/00
+ *  @param   aToken -- the attribute token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken) {
-  //CAttributeToken*  at = (CAttributeToken*)(aToken);
+nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken,nsIParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  NS_ERROR("attribute encountered -- this shouldn't happen!");
 
   nsresult result=NS_OK;
+  nsCParserNode*  thePeekNode=(nsCParserNode*)mXIFContext->PeekNode();
+
+  if(thePeekNode) {
+    nsAutoString theKey;
+    nsAutoString theValue;
+
+    PRBool hasValue=GetAttributePair(aNode,theKey,theValue);
+
+    if(hasValue) {
+      CToken* attribute = mTokenRecycler->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,theValue);
+      nsString& key=((CAttributeToken*)attribute)->GetKey();
+      key=theKey; // set the new key on the attribute..
+      thePeekNode->AddAttribute(attribute);
+    }
+  }
   return result;
 }
 
@@ -752,8 +888,7 @@ nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken) {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 PRBool nsXIFDTD::IsContainer(PRInt32 aTag) const{
-  PRBool result=PR_FALSE;
-  return result;
+  return PR_TRUE;
 }
  
 
@@ -804,8 +939,9 @@ NS_IMETHODIMP nsXIFDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32*
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
+
 PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
-  PRBool result=PR_TRUE; // by default everything is a 
+  PRBool result=PR_TRUE; // by default everything is a container
 
   switch(aTag) {
     case eHTMLTag_meta:
@@ -815,7 +951,6 @@ PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
       break;
     default:
       break;
-
   }
   return result;
 }
@@ -883,309 +1018,79 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
   return hasValue;
 }
 
-
-
-
 /**
- * 
- * @update	gess12/28/98 
- * @param 
- * @return
+ *  Closes the top most contaier node on the internal stack..
+ *
+ *  @update  harishd 04/12/00
+ *  @param   aNode  - The leaf node
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
  */
-eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName) 
-{
-  eXIFTags  type = (eXIFTags)aNode.GetNodeType();  
-  eHTMLTags tag = eHTMLTag_unknown;
 
-  switch (type)
-  {
-    case eXIFTag_container:
-    case eXIFTag_leaf:
-      if (GetAttribute(aNode,NS_ConvertToString("isa"),aName))
-        tag = tag = nsHTMLTags::LookupTag(aName);
-    break;
-
-    case eXIFTag_css_stylesheet:
-      aName.AssignWithConversion("style");
-      tag = nsHTMLTags::LookupTag(aName);
-    break;  
-
-    default:
-    break;  
-  }
-  return tag;
-}
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-void nsXIFDTD::PushHTMLTag(const eHTMLTags aTag, const nsString& aName)
-{
-
-  mHTMLTagStack[mHTMLStackPos]=aTag;
-  mHTMLNameStack[mHTMLStackPos]=new nsAutoString(aName);
-  mHTMLTagStack[++mHTMLStackPos]=eHTMLTag_unknown;
-}
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-void nsXIFDTD::PopHTMLTag(eHTMLTags& aTag, nsString*& aName)
-{
-  NS_ASSERTION(mHTMLStackPos > 0,"The stack must not be empty");
-
-  aTag = eHTMLTag_unknown;
-  if (mHTMLStackPos > 0)
-  {
-    aTag = mHTMLTagStack[mHTMLStackPos-1];
-    aName = mHTMLNameStack[mHTMLStackPos-1];
-    mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
-  }
-}
-
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-void nsXIFDTD::PushNodeAndToken(nsString& aName)
-{
-  CToken*         token = new CStartToken(aName);
-  nsCParserNode*  node = new nsCParserNode(token);
-
-  mTokenStack.AppendElement((void*)token);
-  mNodeStack.AppendElement((void*)node);  
-}
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-nsIParserNode* nsXIFDTD::PeekNode()
-{
-  PRInt32 count = mNodeStack.Count()-1;
-  
-  if (count >= 0)
-    return (nsIParserNode*)mNodeStack.ElementAt(mNodeStack.Count()-1);
-  return nsnull;
-}
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-CToken* nsXIFDTD::PeekToken()
-{
-  PRInt32 count = mTokenStack.Count()-1; 
-  if (count >= 0)
-    return (CToken*)mTokenStack.ElementAt(mTokenStack.Count()-1);
-  return nsnull;
-}
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-void nsXIFDTD::PopAndDelete()
-{
-  nsIParserNode* node = PeekNode();
-  CToken* token = PeekToken();
-
-  if (node != nsnull && token != nsnull)
-  {
-    mNodeStack.RemoveElement(node);
-    mTokenStack.RemoveElement(token);
-    
-    delete (nsCParserNode*)node;
-    delete token;
-  }
-}
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-PRBool nsXIFDTD::StartTopOfStack()
-{
-  // If something is already on the stack, then
-  // emit it and pop it off the stack
-  nsIParserNode* top = PeekNode();
-  if (top != nsnull)
-  {
-    eHTMLTags  tag = (eHTMLTags)top->GetNodeType();
-    
-    if (IsHTMLContainer(tag))
-    {
-      mInContent = PR_TRUE;
-      mSink->OpenContainer(*top);
-    }
-    else
-      mSink->AddLeaf(*top);
-    
-    PopAndDelete();
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-
-/**
- * 
- * @update	gess12/28/98
- * @param 
- * @return
- */
-void nsXIFDTD::BeginStartTag(const nsIParserNode& aNode)
-{
-  eXIFTags  type = (eXIFTags)aNode.GetNodeType();
-  eHTMLTags tag;
-  nsString  tagName;
-
-  switch (type)
-  {
-    case eXIFTag_container:
-    case eXIFTag_leaf:
-        tag = GetStartTag(aNode,tagName);
-        if (type == eXIFTag_container)
-          PushHTMLTag(tag,tagName);  
- 
-//        CToken*         token = new CStartToken(tagName);
-//        nsCParserNode*  node = new nsCParserNode(token);
-        PushNodeAndToken(tagName);
-      break;
-    default:
-      break;
-  }
-}
-
-// Translate aNode (which has a typeID corresponding to its XIF tag)
-// to the correct node for the sink.
-void nsXIFDTD::AddEndTag(const nsIParserNode& aNode)
-{
-  // Get the top the HTML stack
-  eHTMLTags   tag;
-  nsString*   name = nsnull;
-  PopHTMLTag(tag,name);
-   
-  // Create a parse node for form this token
-  CEndToken     token(*name);
-  nsCParserNode node(&token);
-
-  // close the container 
-  mSink->CloseContainer(node); 
-
-  // delete the name
-  if (name != nsnull)
-    delete name;
-}
-
-// Translate aNode (which has a typeID corresponding to its XIF tag)
-// to the correct node for the sink.
-void nsXIFDTD::AddEndCommentTag(const nsIParserNode& aNode)
-{
-  // Make a comment token
-  eHTMLTags tag = eHTMLTag_comment;
-   
-  // Create a parse node for this token
-  CEndToken token(tag);
-  nsCParserNode node(&token);
-
-  // close the container 
-  mSink->CloseContainer(node); 
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gpk 06/18/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult nsXIFDTD::OpenContainer(const nsIParserNode& aNode)
-{
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
-  
-  nsresult  result=NS_OK; 
-  eXIFTags  type =(eXIFTags)aNode.GetNodeType();
-
-  switch (type)
-  {
-    case eXIFTag_container:
-    case eXIFTag_leaf:
-      BeginStartTag(aNode);
-      break;
-    default:
-      break;
-  }
-  mContextStack[mContextStackPos++]=type;
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gpk 06/18/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
 nsresult nsXIFDTD::CloseContainer(const nsIParserNode& aNode)
 {
-  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  nsresult result=NS_OK;
 
-  nsresult   result=NS_OK; //was false
-  eXIFTags type=(eXIFTags)aNode.GetNodeType();
+  PreprocessStack();
   
-  if (type == eXIFTag_container)
-    AddEndTag(aNode);
-  else if (type == eXIFTag_comment)
-    AddEndCommentTag(aNode);
-
-  mContextStack[--mContextStackPos]=eXIFTag_unknown;
-
- 
+  nsCParserNode* theNode=(nsCParserNode*)mXIFContext->Pop();
+  if(theNode) {
+    eHTMLTags theTag=(theNode->mToken)? (eHTMLTags)theNode->mToken->GetTypeID():eHTMLTag_unknown;
+    
+    // theNode->mUseCount is decremented by one when it's popped out of the
+    // context, i.e. theNode->mUseCount will be 1 after pop. But inorder to
+    // recycle the node, mUseCount should be set to zero...so let's decrement 
+    // by one more..
+    theNode->mUseCount--; // Do this to recycle the node...
+    if(IsHTMLContainer(theTag) && theTag!=eHTMLTag_unknown) {
+      result=mSink->CloseContainer(aNode); 
+    }
+    mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
+  }
   return result;
 }
 
-
 /**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gpk 06/18/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
+ *  process leaf nodes
+ *
+ *  @update  harishd 04/12/00
+ *  @param   aNode  - The leaf node
+ *  @return  NS_OK if all went well; NS_ERROR_XXX if error occured
  */
+
 nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
 {
-  //eXIFTags  type = (eXIFTags)aNode.GetNodeType();    
-  nsresult result=mSink->AddLeaf(aNode); 
+  nsresult result=NS_OK;
+
+  nsCParserNode* theNode=(nsCParserNode*)&aNode;
+
+  if(theNode) {
+    CToken*  theToken=((nsCParserNode&)aNode).mToken;
+    eXIFTags theTag=(theToken)? (eXIFTags)theToken->GetTypeID():eXIFTag_unknown;
+    PRBool   handled=PR_FALSE;
+ 
+    switch(theTag) {
+      case eXIFTag_newline:
+         if(mInContent) mLineNumber++;
+      case eXIFTag_whitespace:
+         if(!mInContent) handled=PR_TRUE;
+         break;
+      case eXIFTag_text:
+        if(theToken) {
+          nsString& temp =theToken->GetStringValueXXX();
+          if (temp.Equals("<xml version=\"1.0\"?>")) handled=PR_TRUE;
+        }
+        break;
+      default:
+        break;
+    }
+    if(!handled) {
+       // Handle top node that has not been passed 
+       // on to the sink yet.
+       PreprocessStack();
+       result=mSink->AddLeaf(aNode);
+    }
+  }
+  
   return result;
 }
 
@@ -1278,57 +1183,6 @@ nsresult nsXIFDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
 }
 
 /**
- * Consumes contents of a comment in one gulp. 
- *
- * @update	harishd 10/05/99
- * @param   aNode  - node to consume comment
- * @param   aToken - a comment token
- * @return  Error condition.
- */
-nsresult nsXIFDTD::CollectContentComment(CToken* aToken, nsCParserNode& aNode) {
-  NS_PRECONDITION(aToken!=nsnull,"empty token");
-
-  nsresult          result=NS_OK;
-  CToken*           token=nsnull;
-  eHTMLTokenTypes   type=(eHTMLTokenTypes)aToken->GetTokenType();
-
-  if(type==eToken_start) {
-    nsITokenRecycler* recycler=(mTokenizer)? mTokenizer->GetTokenRecycler():nsnull;
-    if(recycler) {
-      nsAutoString fragment;
-      PRBool       done=PR_FALSE;
-      PRBool       inContent=PR_FALSE;
-      nsString&    comment=aToken->GetStringValueXXX(); 
-      comment.AssignWithConversion("<!--"); // overwrite comment with "<!--"
-      while (!done && NS_SUCCEEDED(result))
-      {
-        token=mTokenizer->PopToken();
-      
-        if(!token) return result;
-
-        type=(eHTMLTokenTypes)token->GetTokenType();
-        fragment.Assign(token->GetStringValueXXX());
-        if(fragment.EqualsWithConversion("content")) {
-          if(type==eToken_start) 
-            inContent=PR_TRUE;
-          else inContent=PR_FALSE;
-        }
-        else if(fragment.EqualsWithConversion("comment")) {
-          comment.AppendWithConversion("-->");
-          result=(mSink)? mSink->AddComment(aNode):NS_OK;
-          done=PR_TRUE;
-        }
-        else {
-          if(inContent) comment.Append(fragment);
-        }
-        recycler->RecycleToken(token);
-      }
-    }
-  }
-  return result;
-}
-
-/**
  * 
  * @update	gpk 06/18/98
  * @param 
@@ -1409,8 +1263,16 @@ void nsXIFDTD::SetURLRef(char * aURLRef)
 {
 }
 
-void nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
+/**
+ * 
+ * @update	harishd 04/12/00
+ * @param  aNode - 
+ * @return NS_OK if success.
+ */
+
+nsresult nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
 {
+  nsresult result=NS_OK;
   nsString value;
   PRInt32  error;
 
@@ -1419,82 +1281,122 @@ void nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
     PRInt32 temp = value.ToInteger(&error);
     if (temp == 1)
     {
-      mSink->DoFragment(PR_TRUE);
-      return;
+      result=mSink->DoFragment(PR_TRUE);
     }
   }
-  mSink->DoFragment(PR_FALSE);
+  result=mSink->DoFragment(PR_FALSE);
+
+  return result;
 }
 
+/**
+ * 
+ * 
+ * @update	harishd 04/12/00
+ * @param  aNode - The entity node
+ * @return NS_OK if success.
+ */
 
-void nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
+nsresult nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
 {
+  nsresult result=NS_OK;
   nsAutoString value;
 
+  // Get the entity from the node. This resides as an
+  // attribute on the node. 
+  //
+  // XXX - Entities within STYLE and SCRIPT should probably be translated. 
+  // Why were we given entities in the first place. Could be a problem in
+  // the XIF converter. 
+  // Ex. <SCRIPT> document.write("a<b"); </SCRIPT> is being given to us, by the
+  // converter as <SCRIPT> document.write("a &lt; b"); </SCRIPT>.
+  // That's totally worng. 
   if (GetAttribute(aNode,NS_ConvertToString("value"),value)) {
     value.AppendWithConversion(';');
-    CEntityToken* entity = new CEntityToken(value);
-    nsCParserNode node((CToken*)entity);
-    mSink->AddLeaf(node);
+    CToken* entity=((nsCParserNode&)aNode).mToken;
+    if(entity) {
+      entity->Reinitialize(eHTMLTag_entity,value);
+      nsCParserNode*  thePeekNode=(nsCParserNode*)mXIFContext->PeekNode();
+      if(thePeekNode) {
+        eHTMLTags theTag=(eHTMLTags)thePeekNode->mToken->GetTypeID();
+        if(theTag==eHTMLTag_script || theTag==eHTMLTag_style) {
+          nsAutoString scratch;
+          ((CEntityToken*)entity)->TranslateToUnicodeStr(scratch);  // Ex. &gt would become '<'
+          entity->Reinitialize(eHTMLTag_text,scratch); // Covert type to text and set the translated value.
+        }
+      }
+      ((nsCParserNode&)aNode).Init(entity,mLineNumber,mTokenRecycler);
+    }
+    result=mSink->AddLeaf(aNode);
   }
+  return result;
 }
 
-/*** CSS Methods ****/
+/*******************************
+ * ----- CSS Methods Begin-----*
+ *                             *
+ * XXX - CURRENTLY NOT IN USE  *
+ *                             *
+ *******************************/
 
-void nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
+nsresult nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
 {
-  nsString value;
+  nsresult result=NS_OK;
+
   PRInt32  error;
+  nsAutoString value;
+  CToken* theToken=((nsCParserNode&)aNode).mToken;
+  
+  if(theToken) {
+    theToken->Reinitialize(eHTMLTag_style,"style");
+    mXIFContext->Push(&aNode);
+  }
 
   mBuffer.Truncate(0);
   mMaxCSSSelectorWidth = 10;
-  if (GetAttribute(aNode,NS_ConvertToString("max_css_selector_width"),value))
+  if (GetAttribute(aNode,mCSSStyleSheetKey,value))
   {
     PRInt32 temp = value.ToInteger(&error);
     if (error == NS_OK)
       mMaxCSSSelectorWidth = temp;
   }
-  
-  //const char* name = nsHTMLTags::GetStringValue(eHTMLTag_html);
+  return result;
 }
 
-void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
+nsresult nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
 {
-  nsString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
+  nsresult result=NS_OK;
+  nsAutoString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
 
-  if (mLowerCaseTags == PR_TRUE)
-    tagName.ToLowerCase();
-  else
-    tagName.ToUpperCase();
-
-  CStartToken   startToken(tagName);
-  nsCParserNode startNode((CToken*)&startToken);
-
-  mBuffer.AppendWithConversion("</");
+  mBuffer.Append("</");
   mBuffer.Append(tagName);
-  mBuffer.AppendWithConversion(">");
-  startNode.SetSkippedContent(mBuffer);
-  mSink->AddLeaf(startNode);
-
+  mBuffer.Append(">");
+  ((nsCParserNode&)aNode).SetSkippedContent(mBuffer);
+  
+  result=mSink->AddLeaf(aNode);
+  mNodeRecycler->RecycleNode((nsCParserNode*)mXIFContext->Pop());
+  return result;
 }
 
-void nsXIFDTD::BeginCSSStyleRule(const nsIParserNode& aNode)
+nsresult nsXIFDTD::BeginCSSStyleRule(const nsIParserNode& aNode)
 {
   mCSSDeclarationCount = 0;
-  mCSSSelectorCount = 0;  
+  mCSSSelectorCount = 0; 
+  return NS_OK;
 }
 
 
-void nsXIFDTD::EndCSSStyleRule(const nsIParserNode& aNode)
+nsresult nsXIFDTD::EndCSSStyleRule(const nsIParserNode& aNode)
 {
+  return NS_OK;
 }
 
 
-void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
+nsresult nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
 {
-  nsString value;
+  nsAutoString value;
 
-  if (GetAttribute(aNode, NS_ConvertToString("selectors"), value))
+  if (GetAttribute(aNode,mCSSSelectorKey, value))
   {
     if (mLowerCaseAttributes == PR_TRUE)
       value.ToLowerCase();
@@ -1502,11 +1404,13 @@ void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
       value.ToUpperCase();
     value.CompressWhitespace();
     mBuffer.Append(value);
-  }  
+  }
+  return NS_OK;
 }
 
-void nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
+nsresult nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
 {
+  nsresult result=NS_OK;
   PRInt32 indx = mBuffer.RFindChar('\n');
   if (indx == kNotFound)
     indx = 0;
@@ -1517,34 +1421,41 @@ void nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
     count = 0;
 
   for (PRInt32 i = 0; i < count; i++)
-    mBuffer.AppendWithConversion(" ");
+    mBuffer.Append(" ");
 
-  mBuffer.AppendWithConversion("   {");
+  mBuffer.Append("   {");
   mCSSDeclarationCount = 0;
-
+  return result;
 }
 
-void nsXIFDTD::EndCSSDeclarationList(const nsIParserNode& aNode)
+nsresult nsXIFDTD::EndCSSDeclarationList(const nsIParserNode& aNode)
 {
-  mBuffer.AppendWithConversion("}\n");
+  mBuffer.Append("}\n");
+  return NS_OK;
 }
 
 
-void nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
+nsresult nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
 {
-  nsString property;
-  nsString value;
+  nsAutoString property;
+  nsAutoString value;
 
 
-  if (PR_TRUE == GetAttribute(aNode, NS_ConvertToString("property"), property))
-    if (PR_TRUE == GetAttribute(aNode, NS_ConvertToString("value"), value))
+  if (PR_TRUE == GetAttribute(aNode, mCSSDeclarationKey, property)) {
+    if (PR_TRUE == GetAttribute(aNode, mGenericKey, value))
     {
       if (mCSSDeclarationCount != 0)
-        mBuffer.AppendWithConversion(";");
-      mBuffer.AppendWithConversion(" ");
+        mBuffer.Append(";");
+      mBuffer.Append(" ");
       mBuffer.Append(property);
-      mBuffer.AppendWithConversion(": ");
+      mBuffer.Append(": ");
       mBuffer.Append(value);
       mCSSDeclarationCount++;
     }
+  }
+  return NS_OK;
 }
+
+/*******************************
+ * ----- CSS Methods Ends------*
+ *******************************/

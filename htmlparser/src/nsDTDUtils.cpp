@@ -33,8 +33,10 @@
 MOZ_DECL_CTOR_COUNTER(nsEntryStack);
 MOZ_DECL_CTOR_COUNTER(nsDTDContext);
 MOZ_DECL_CTOR_COUNTER(CTokenRecycler);
+MOZ_DECL_CTOR_COUNTER(CNodeRecycler);
 MOZ_DECL_CTOR_COUNTER(CObserverService); 
  
+
 /**************************************************************************************
   A few notes about how residual style handling is performed:
    
@@ -373,7 +375,7 @@ PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
 /***************************************************************
   Now define the dtdcontext class
  ***************************************************************/
-
+CNodeRecycler* nsDTDContext::mNodeRecycler=0;
 
 /**
  * 
@@ -454,6 +456,15 @@ nsIParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
   return result;
 }
 
+/**
+ * 
+ * @update  harishd 04/07/00
+ */
+
+nsIParserNode* nsDTDContext::Pop() {
+  nsEntryStack   *theTempStyleStack=0; // This has no use here...
+  return Pop(theTempStyleStack);
+}
 
 /**
  * 
@@ -640,6 +651,30 @@ nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
   return result;
 }
 
+/**
+ * 
+ * @update  harishd 04/10/00
+ */
+nsresult nsDTDContext::GetNodeRecycler(CNodeRecycler*& aNodeRecycler){
+  nsresult result=NS_OK;
+  if(!mNodeRecycler) {
+    mNodeRecycler=new CNodeRecycler();
+    if(mNodeRecycler==0) result=NS_ERROR_OUT_OF_MEMORY;
+  }
+  aNodeRecycler=mNodeRecycler;
+  return result;
+}
+
+/**
+ * 
+ * @update  hairshd 04/10/00
+ */
+void nsDTDContext::FreeNodeRecycler(){
+  if(mNodeRecycler) {
+    delete mNodeRecycler;
+  }
+}
+
 /**************************************************************
   Now define the tokenrecycler class...
  **************************************************************/
@@ -797,6 +832,75 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
         default:
           break;
     }
+  }
+  return result;
+}
+
+CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
+
+  MOZ_COUNT_CTOR(CTokenRecycler);
+
+#ifdef NS_DEBUG
+  gNodeCount=0;
+#endif
+}
+
+CNodeRecycler::~CNodeRecycler() {
+
+  MOZ_COUNT_DTOR(CTokenRecycler);
+
+  nsCParserNode* theNode=0;
+
+#ifdef NS_DEBUG
+#if 0
+  PRInt32 count=gNodeCount-mSharedNodes.GetSize();
+  if(count) {
+    printf("%i of %i nodes leaked!\n",count,gNodeCount);
+  }
+#endif
+#endif
+
+  while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
+    delete theNode;
+  }
+}
+
+void CNodeRecycler::RecycleNode(nsCParserNode* aNode,nsITokenRecycler* aTokenRecycler) {
+  
+  if(aNode && (!aNode->mUseCount)) {
+
+    // If the node contains tokens there better me a token recycler..
+    if(aTokenRecycler) {
+      if(aNode->mToken) { 
+        if(!aNode->mToken->mUseCount) { 
+          aTokenRecycler->RecycleToken(aNode->mToken); 
+        }
+      } 
+
+      CToken* theToken=0;
+      while((theToken=(CToken*)aNode->PopAttributeToken())){
+        if(!theToken->mUseCount) { 
+          aTokenRecycler->RecycleToken(theToken); 
+        }
+      }
+    }
+    mSharedNodes.Push(aNode);
+  }
+}
+
+nsCParserNode* CNodeRecycler::CreateNode(void) {
+
+  nsCParserNode* result=0;
+  if(0<mSharedNodes.GetSize()) {
+    result=(nsCParserNode*)mSharedNodes.Pop();
+  }
+  else{
+    result=new nsCParserNode();
+#ifdef NS_DEBUG
+#if 1
+    gNodeCount++;
+#endif
+#endif
   }
   return result;
 }

@@ -41,8 +41,11 @@
 #include "nsITokenizer.h"
 #include "nsString.h"
 #include "nsIElementObserver.h"
+#include "nsIParserNode.h"
 
 class nsIParserNode;
+class nsCParserNode;
+class CNodeRecycler;
 
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
@@ -138,6 +141,8 @@ public:
 
   void            Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
   nsIParserNode*  Pop(nsEntryStack*& aChildStack);
+  nsIParserNode*  Pop();
+  nsIParserNode*  PeekNode() { return mStack.NodeAt(mStack.mCount-1); }
   eHTMLTags       First(void) const;
   eHTMLTags       Last(void) const;
   nsTagEntry*     LastEntry(void) const;
@@ -157,16 +162,20 @@ public:
   nsIParserNode*  PopStyle(eHTMLTags aTag);
   nsIParserNode*  RemoveStyle(eHTMLTags aTag);
 
+  nsresult        GetNodeRecycler(CNodeRecycler*& aNodeRecycler);
+  static  void    FreeNodeRecycler(void);
+
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
   PRInt32         mContextTopIndex;
+
+  static   CNodeRecycler* mNodeRecycler;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
   eHTMLTags       mXTags[eMaxTags];
 #endif
 };
-
 
 /**************************************************************
   Now define the token deallocator class...
@@ -204,6 +213,29 @@ protected:
 
 #ifdef  NS_DEBUG
     int       mTotals[eToken_last-1];
+#endif
+};
+
+/************************************************************************
+  CNodeRecycler class implementation.
+  This class is used to recycle nodes. 
+  By using this simple class, we cut down on the number of nodes
+  that get created during the run of the system.
+ ************************************************************************/
+
+class CNodeRecycler {
+public:
+  
+                         CNodeRecycler();
+  virtual                ~CNodeRecycler();
+  virtual nsCParserNode* CreateNode(void);
+  virtual void           RecycleNode(nsCParserNode* aNode,nsITokenRecycler* aTokenRecycler=0);
+
+protected:
+    nsDeque  mSharedNodes;
+
+#ifdef NS_DEBUG
+    PRInt32 gNodeCount;
 #endif
 };
 

@@ -48,6 +48,11 @@ class CTokenHandler;
 class nsIDTDDebug;
 class nsIHTMLContentSink;
 class nsITokenizer;
+class nsDTDContext;
+class nsEntryStack;
+class nsCParserNode;
+class CTokenRecycler;
+class CNodeRecycler;
 
 //*** This enum is used to define the known universe of XIF tags.
 //*** The use of this table doesn't preclude of from using non-standard
@@ -244,10 +249,6 @@ class nsXIFDTD : public nsIDTD {
      * --------------[ Sets DTD to STOP mode ]----------------
      * It's recommended to use this method in accordance with
      * the parser's terminate() method.
-     *
-     * @update	harishd 07/22/99
-     * @param 
-     * @return
      */
     virtual nsresult  Terminate(void);
 
@@ -275,9 +276,6 @@ class nsXIFDTD : public nsIDTD {
      *  This method gets called to determine whether a given 
      *  tag is itself a container
      *  
-     *  @update  gess 12/1/99
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
      */
     virtual PRBool IsHTMLContainer(eHTMLTags aTag) const;
 
@@ -296,52 +294,37 @@ class nsXIFDTD : public nsIDTD {
     /**
      * This method gets called when a start token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
-     * @update	gpk 06/18/98
-     * @param   aToken is the start token to be handled
-     * @return  TRUE if the token was handled.
      */
     nsresult HandleStartToken(CToken* aToken);
 
     /**
      * This method gets called when an end token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
-     * @update	gpk 06/18/98
-     * @param   aToken is the end token to be handled
-     * @return  TRUE if the token was handled.
      */
     nsresult HandleEndToken(CToken* aToken);
 
     /**
      * This method gets called when an entity token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
-     * @update	gpk 06/18/98
-     * @param   aToken is the entity token to be handled
-     * @return  TRUE if the token was handled.
      */
     nsresult HandleEntityToken(CToken* aToken);
 
     /**
      * This method gets called when a comment token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
-     * @update	gpk 06/18/98
-     * @param   aToken is the comment token to be handled
-     * @return  TRUE if the token was handled.
      */
-    nsresult HandleCommentToken(CToken* aToken);
+    nsresult HandleCommentToken(CToken* aToken,nsIParserNode& aNode);
 
     /**
      * This method gets called when an attribute token has been consumed and needs 
      * to be handled (possibly added to content model via sink).
-     * @update	gpk 06/18/98
-     * @param   aToken is the attribute token to be handled
-     * @return  TRUE if the token was handled.
      */
-    nsresult HandleAttributeToken(CToken* aToken);
 
+    nsresult HandleAttributeToken(CToken* aToken,nsIParserNode& aNode);
 
-    nsresult HandleWhiteSpaceToken(CToken* aToken);
-    nsresult HandleTextToken(CToken* aToken);
-
+    nsresult HandleContainer(nsIParserNode& aNode);
+    nsresult HandleDefaultToken(CToken* aToken,nsIParserNode& aNode);
+    PRBool   CanHandleDefaultTag(eXIFTags aTag, PRInt32& aIsContainer);
 
 private:
 
@@ -410,78 +393,65 @@ private:
      * @return  ptr to recycler (or null)
      */
     virtual nsITokenRecycler* GetTokenRecycler(void);
-    eHTMLTags GetStartTag(const nsIParserNode& aNode, nsString& aName);
 
 private:
 
-    void ProcessEncodeTag(const nsIParserNode& aNode);
-    void ProcessEntityTag(const nsIParserNode& aNode);
-    void ProcessDocumentInfoTag(const nsIParserNode& aNode);
+    nsresult ProcessEncodeTag(const nsIParserNode& aNode);
+    nsresult ProcessEntityTag(const nsIParserNode& aNode);
+    nsresult ProcessDocumentInfoTag(const nsIParserNode& aNode);
 
-    void BeginCSSStyleSheet(const nsIParserNode& aNode);
-    void EndCSSStyleSheet(const nsIParserNode& aNode);
+    nsresult BeginCSSStyleSheet(const nsIParserNode& aNode);
+    nsresult EndCSSStyleSheet(const nsIParserNode& aNode);
 
-    void BeginCSSStyleRule(const nsIParserNode& aNode);
-    void EndCSSStyleRule(const nsIParserNode& aNode);
+    nsresult BeginCSSStyleRule(const nsIParserNode& aNode);
+    nsresult EndCSSStyleRule(const nsIParserNode& aNode);
 
-    void AddCSSSelector(const nsIParserNode& aNode);
-    void AddCSSDeclaration(const nsIParserNode& aNode);
-    void BeginCSSDeclarationList(const nsIParserNode& aNode);
-    void EndCSSDeclarationList(const nsIParserNode& aNode);
-
-    
-    void      AddAttribute(nsIParserNode& aNode);
-    void      PushHTMLTag(const eHTMLTags aTag, const nsString& aName);
-    void      PopHTMLTag(eHTMLTags& aTag, nsString*& aName);
+    nsresult AddCSSSelector(const nsIParserNode& aNode);
+    nsresult AddCSSDeclaration(const nsIParserNode& aNode);
+    nsresult BeginCSSDeclarationList(const nsIParserNode& aNode);
+    nsresult EndCSSDeclarationList(const nsIParserNode& aNode);
 
     PRBool    GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString& aValue);
     PRBool    GetAttribute(const nsIParserNode& aNode, const nsString& aKey, nsString& aValue);
-    void      BeginStartTag(const nsIParserNode& aNode);
-    void      AddEndTag(const nsIParserNode& aNode);
-    void      AddEndCommentTag(const nsIParserNode& aNode);
-
-    PRBool          StartTopOfStack();
-    nsIParserNode*  PeekNode();
-    CToken*         PeekToken();
-    void            PushNodeAndToken(nsString& aName);
-    void            PopAndDelete();
-
 
 protected:
 
+    nsresult    WillHandleToken(CToken* aToken,eHTMLTokenTypes& aType);
+    nsresult    DidHandleToken(CToken* aToken, nsresult aResult=NS_OK);
+    nsresult    WillHandleStartToken(CToken* aToken,eXIFTags aTag, nsIParserNode& aNode);
+    nsresult    DidHandleStartToken(CToken* aToken,eXIFTags aTag, nsIParserNode& aNode);
+    nsresult    PreprocessStack();
     PRBool			CanContainFormElement(eXIFTags aParent,eXIFTags aChild) const;
 		nsresult		CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		nsresult		CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
-    nsresult    CollectContentComment(CToken* aToken,nsCParserNode& aNode);
 
     nsParser*             mParser;
     nsIHTMLContentSink*   mSink;
 
-    PRBool                mLeafBits[100];
-    eXIFTags              mContextStack[100];
-    PRInt32               mContextStackPos;
-
-    PRBool                mHasOpenForm;
-    PRBool                mHasOpenMap;
-
     nsIDTDDebug*		      mDTDDebug;
-
-    nsVoidArray           mNodeStack;
-    nsVoidArray           mTokenStack;
-
-    PRInt32               mHTMLStackPos;
-    eHTMLTags             mHTMLTagStack[512];
-    nsAutoString*         mHTMLNameStack[512];
     PRBool                mInContent;
 
     nsString              mBuffer;
     PRInt32               mMaxCSSSelectorWidth;
     PRInt32               mCSSDeclarationCount;
     PRInt32               mCSSSelectorCount;
-    PRBool                mLowerCaseTags;
     PRBool                mLowerCaseAttributes;
     nsITokenizer*         mTokenizer;
     nsString              mCharset;
+
+    nsDTDContext*         mXIFContext;
+    CTokenRecycler*       mTokenRecycler;
+    CNodeRecycler*        mNodeRecycler;
+    nsresult              mDTDState;
+    
+    nsString              mContainerKey;
+    nsString              mEncodeKey;
+    nsString              mCSSStyleSheetKey;
+    nsString              mCSSSelectorKey;
+    nsString              mCSSDeclarationKey;
+    nsString              mGenericKey;
+
+    PRInt32               mLineNumber;
 };
 
 

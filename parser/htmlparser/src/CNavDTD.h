@@ -106,6 +106,7 @@ class nsEntryStack;
 class nsITokenizer;
 class nsCParserNode;
 class CTokenRecycler;
+class CNodeRecycler;
 
 /***************************************************************
   Now the main event: CNavDTD.
@@ -483,8 +484,6 @@ protected:
     nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
     nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
     nsresult        HandleSavedTokens(PRInt32 anIndex);
-    nsCParserNode*  CreateNode(void);
-    void            RecycleNode(nsCParserNode* aNode);
     void            RecycleNodes(nsEntryStack *aNodeStack);
 
     nsIHTMLContentSink* mSink;
@@ -507,6 +506,7 @@ protected:
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
     CTokenRecycler*     mTokenRecycler;
+    CNodeRecycler*      mNodeRecycler;
     nsDeque             mMisplacedContent;
     nsDeque             mSkippedContent;
     PRBool              mHasOpenScript;
@@ -525,10 +525,6 @@ protected:
     PRBool              mRequestedHead;
     PRBool              mIsFormContainer;
     nsAutoString        mMimeType;  
-
-#ifdef NS_DEBUG
-    PRInt32 gNodeCount;
-#endif
 
 };
 

@@ -165,68 +165,14 @@ CNavDTD::CNavDTD() : nsIDTD(),
     InitializeElementTable();
   }
 
+  mNodeRecycler=0;
+
 #ifdef  RICKG_DEBUG
   //DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
   nsHTMLElement::DebugDumpContainment("c:/temp/contain.new","ElementTable Rules");
   nsHTMLElement::DebugDumpMembership("c:/temp/membership.out");
   nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
 #endif
-
-#ifdef NS_DEBUG
-  gNodeCount=0;
-#endif
-}
-
-
-/**
- * This method creates a new parser node. It tries to get one from
- * the recycle list before allocating a new one.
- * @update  gess1/8/99
- * @param 
- * @return valid node*
- */
-
-nsCParserNode* CNavDTD::CreateNode(void) {
-
-  nsCParserNode* result=0;
-  if(0<mSharedNodes.GetSize()) {
-    result=(nsCParserNode*)mSharedNodes.Pop();
-  }
-  else{
-    result=new nsCParserNode();
-#ifdef NS_DEBUG
-#if 1
-    gNodeCount++;
-#endif
-#endif
-  }
-  return result;
-}
-
-/**
- * This method recycles a given node
- * @update  gess1/8/99
- * @param 
- * @return  
- */
-void CNavDTD::RecycleNode(nsCParserNode* aNode) {
-  if(aNode && (!aNode->mUseCount)) {
-
-    if(aNode->mToken) { 
-      if(!aNode->mToken->mUseCount) { 
-        mTokenRecycler->RecycleToken(aNode->mToken); 
-      }
-    } 
-
-    CToken* theToken=0;
-    while((theToken=(CToken*)aNode->PopAttributeToken())){
-      if(!theToken->mUseCount) { 
-        mTokenRecycler->RecycleToken(theToken); 
-      }
-    }
-
-    mSharedNodes.Push(aNode);
-  }
 }
 
 /**
@@ -290,26 +236,7 @@ CNavDTD::~CNavDTD(){
   if(mTempContext)
     delete mTempContext;
 
-  nsCParserNode* theNode=0;
-
-#ifdef NS_DEBUG
-#if 0
-  PRInt32 count=gNodeCount-mSharedNodes.GetSize();
-  if(count) {
-    printf("%i of %i nodes leaked!\n",count,gNodeCount);
-  }
-#endif
-#endif
-
-#if 1
-  while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
-    delete theNode;
-  }
-#endif
-
-#ifdef  NS_DEBUG
-  gNodeCount=0;
-#endif
+ // delete mNodeRecycler;
 
   NS_IF_RELEASE(mSink);
   NS_IF_RELEASE(mDTDDebug);
@@ -470,6 +397,8 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
   * @return error code (almost always NS_OK)
   */
 nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
+  NS_PRECONDITION(mBodyContext!=nsnull,"Create a context before calling build model");
+
   nsresult result=NS_OK;
 
   if(aTokenizer) {
@@ -480,6 +409,11 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
     if(mTokenizer) {
 
       mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+      
+      result=mBodyContext->GetNodeRecycler(mNodeRecycler); // Get a copy...
+
+      if(NS_FAILED(result)) return result;
+
       if(mSink) {
 
         if(!mBodyContext->GetCount()) {
@@ -579,7 +513,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             nsEntryStack *theChildStyles=0;
             nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);
             theNode->mUseCount=0;
-            RecycleNode(theNode);
+            mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
             if(theChildStyles) {
               delete theChildStyles;
             }
@@ -1319,7 +1253,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
   //Begin by gathering up attributes...
 
-  nsCParserNode* theNode=CreateNode();
+  nsCParserNode* theNode=mNodeRecycler->CreateNode();
   theNode->Init(aToken,mLineNumber,mTokenRecycler);
   
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
@@ -1431,7 +1365,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
     }//if
   } //if
 
-  RecycleNode(theNode);
+  mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
   return result;
 }
 
@@ -1790,7 +1724,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
   nsresult  result=NS_OK;
   eHTMLTags theParentTag=mBodyContext->Last();
 
-  nsCParserNode* theNode=CreateNode();
+  nsCParserNode* theNode=mNodeRecycler->CreateNode();
   if(theNode) {
     theNode->Init(aToken,mLineNumber,0);
     PRBool theParentContains=-1; //set to -1 to force CanOmit to recompute...
@@ -1805,7 +1739,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
     #endif
 
     result=AddLeaf(theNode);
-    RecycleNode(theNode);
+    mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
   }  
   return result;
 }
@@ -1828,7 +1762,7 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   nsString& theComment=aToken->GetStringValueXXX();
   mLineNumber += (theComment).CountChar(kNewLine);
 
-  nsCParserNode* theNode=CreateNode();
+  nsCParserNode* theNode=mNodeRecycler->CreateNode();
   if(theNode) {
     theNode->Init(aToken,mLineNumber,0);
 
@@ -1841,7 +1775,7 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
 
     result=(mSink) ? mSink->AddComment(*theNode) : NS_OK;  
 
-    RecycleNode(theNode);
+    mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
     START_TIMER();
@@ -1905,7 +1839,7 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
 
   nsresult  result=NS_OK;
 
-  nsCParserNode* theNode=CreateNode();
+  nsCParserNode* theNode=mNodeRecycler->CreateNode();
   if(theNode) {
     theNode->Init(aToken,mLineNumber,0);
 
@@ -1918,7 +1852,7 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
 
     result=(mSink) ? mSink->AddProcessingInstruction(*theNode) : NS_OK; 
 
-    RecycleNode(theNode);
+    mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
     START_TIMER();
@@ -1954,7 +1888,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   }
   docTypeStr.Cut(0,2); // Now remove "<!" from the begining
 
-  nsCParserNode* theNode=CreateNode();
+  nsCParserNode* theNode=mNodeRecycler->CreateNode();
   if(theNode) {
     theNode->Init(aToken,mLineNumber,0);
 
@@ -1962,7 +1896,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   
     result = (mSink)? mSink->AddDocTypeDecl(*theNode,mParseMode):NS_OK;
-    RecycleNode(theNode);
+    mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
   
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   START_TIMER();
@@ -2459,7 +2393,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
                 //if the node tag can't contain the child tag, then remove the child tag from the style stack
                 nsCParserNode* theRemovedNode=(nsCParserNode*)theStack->Remove(sindex,theNodeTag);
                 if(theRemovedNode) {
-                  RecycleNode(theRemovedNode);
+                  mNodeRecycler->RecycleNode(theRemovedNode,mTokenRecycler);
                 }
                 theEntry--; //back up by one
               }
@@ -2529,7 +2463,7 @@ nsresult CNavDTD::PopStyle(eHTMLTags aTag){
     if(nsHTMLElement::IsResidualStyleTag(aTag)) {
       nsCParserNode* theNode=(nsCParserNode*)mBodyContext->PopStyle(aTag);
       if(theNode) {
-        RecycleNode(theNode);
+        mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
       }
     }
 #endif
@@ -3197,7 +3131,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
         }
 #endif
       }//if anode
-      RecycleNode(theNode);
+      mNodeRecycler->RecycleNode(theNode,mTokenRecycler);
     }
 
 
