@@ -649,6 +649,13 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
             if (res == 0)
               currentFilterAction->SetLabel((nsMsgLabelValue) labelInt);
           }
+          else if (type == nsMsgFilterAction::JunkScore)
+          {
+            PRInt32 res;
+            PRInt32 junkScore = value.ToInteger(&res, 10);
+            if (!res)
+              currentFilterAction->SetJunkScore(junkScore);
+          }
         }
         break;
 		case nsIMsgFilterList::attribCondition:
