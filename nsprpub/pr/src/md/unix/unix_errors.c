@@ -77,6 +77,9 @@ void _MD_unix_map_default_error(int err)
         case EBUSY:
             prError = PR_FILESYSTEM_MOUNTED_ERROR;
             break;
+        case ECONNABORTED:
+            prError = PR_CONNECT_ABORTED_ERROR;
+            break;
         case ECONNREFUSED:
             prError = PR_CONNECT_REFUSED_ERROR;
             break;
