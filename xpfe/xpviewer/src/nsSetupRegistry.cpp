@@ -143,6 +143,7 @@ static NS_DEFINE_IID(kCMenuBarCID, NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID, NS_MENU_CID);
 static NS_DEFINE_IID(kCMenuItemCID, NS_MENUITEM_CID);
 static NS_DEFINE_IID(kCEditorCID, NS_EDITOR_CID);
+static NS_DEFINE_IID(kCXULCommandCID, NS_XULCOMMAND_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -201,6 +202,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCMenuBarCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCMenuItemCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXULCommandCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifndef XP_MAC		// temporary
   nsRepository::RegisterFactory(kCEditorCID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 #endif // XP_MAC

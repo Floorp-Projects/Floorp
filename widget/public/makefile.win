@@ -30,7 +30,8 @@ EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
     nsIDialog.h nsILabel.h nsWidgetSupport.h \
     nsIMenuBar.h nsIMenu.h nsIMenuItem.h nsIToolbar.h nsIImageButton.h nsIToolbar.h \
     nsIToolbarManager.h nsIToolbarManagerListener.h nsIToolbarItem.h nsIToolbarItemHolder.h \
-    nsIPopUpMenu.h nsIMenuButton.h nsIImageButtonListener.h nsIContentConnector.h
+    nsIPopUpMenu.h nsIMenuButton.h nsIImageButtonListener.h nsIContentConnector.h \
+    nsIXULCommand.h 
 
 include <$(DEPTH)\config\rules.mak>
 
