@@ -492,7 +492,6 @@ done:
     else
     {
         rv = DoCopy(copyRequest);
-        if (NS_FAILED(rv)) delete copyRequest;
     }
 
     return rv;
