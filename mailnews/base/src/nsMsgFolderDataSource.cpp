@@ -88,6 +88,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_CanRename = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCompact = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FolderSize = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_BiffState = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_HasUnreadMessages = nsnull;
@@ -120,9 +121,13 @@ nsIAtom * nsMsgFolderDataSource::kBiffStateAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNewMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kFolderSizeAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kSynchronizeAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kOpenAtom = nsnull;
+
+static const PRUint32 kDisplayBlankCount = 0xFFFFFFFE;
+static const PRUint32 kDisplayQuestionCount = 0xFFFFFFFF;
 
 nsMsgFolderDataSource::nsMsgFolderDataSource()
 {
@@ -153,6 +158,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_CANCOMPACT, &kNC_CanCompact);
     rdf->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
     rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
+    rdf->GetResource(NC_RDF_FOLDERSIZE, &kNC_FolderSize);
     rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
     rdf->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
     rdf->GetResource(NC_RDF_HASUNREADMESSAGES, &kNC_HasUnreadMessages);
@@ -182,6 +188,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
 
     kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
     kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
+    kFolderSizeAtom              = NS_NewAtom("FolderSize");
     kBiffStateAtom               = NS_NewAtom("BiffState");
     kNewMessagesAtom             = NS_NewAtom("NewMessages");
     kNameAtom                    = NS_NewAtom("Name");
@@ -222,6 +229,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE2(kNC_CanCompact, refcnt);
 		NS_RELEASE2(kNC_TotalMessages, refcnt);
 		NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
+		NS_RELEASE2(kNC_FolderSize, refcnt);
 		NS_RELEASE2(kNC_Charset, refcnt);
 		NS_RELEASE2(kNC_BiffState, refcnt);
 		NS_RELEASE2(kNC_HasUnreadMessages, refcnt);
@@ -250,6 +258,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 
     NS_RELEASE(kTotalMessagesAtom);
     NS_RELEASE(kTotalUnreadMessagesAtom);
+    NS_RELEASE(kFolderSizeAtom);
     NS_RELEASE(kBiffStateAtom);
     NS_RELEASE(kNewMessagesAtom);
     NS_RELEASE(kNameAtom);
@@ -558,6 +567,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
                aArc == kNC_CanCompact ||
                aArc == kNC_TotalMessages ||
                aArc == kNC_TotalUnreadMessages ||
+               aArc == kNC_FolderSize ||
                aArc == kNC_Charset ||
                aArc == kNC_BiffState ||
                aArc == kNC_Child ||
@@ -625,6 +635,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_CanCompact);
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
+  (*arcs)->AppendElement(kNC_FolderSize);
   (*arcs)->AppendElement(kNC_Charset);
   (*arcs)->AppendElement(kNC_BiffState);
   (*arcs)->AppendElement(kNC_Child);
@@ -882,13 +893,11 @@ nsMsgFolderDataSource::OnItemIntPropertyChanged(nsISupports *item,
 	{
 
 		if (kTotalMessagesAtom == property)
-		{
 			OnTotalMessagePropertyChanged(folder, oldValue, newValue);
-		}
 		else if (kTotalUnreadMessagesAtom == property)
-		{
 			OnUnreadMessagePropertyChanged(folder, oldValue, newValue);
-		}
+                else if (kFolderSizeAtom == property)
+			OnFolderSizePropertyChanged(folder, oldValue, newValue);
 
 	}
 	return NS_OK;
@@ -1040,6 +1049,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createTotalMessagesNode(folder, target);
 	else if ((kNC_TotalUnreadMessages == property))
 		rv = createUnreadMessagesNode(folder, target);
+	else if ((kNC_FolderSize == property))
+		rv = createFolderSizeNode(folder, target);
 	else if ((kNC_Charset == property))
 		rv = createCharsetNode(folder, target);
 	else if ((kNC_BiffState == property))
@@ -1560,7 +1571,7 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 
 	PRInt32 totalMessages;
 	if(isServer)
-		totalMessages = -2;
+		totalMessages = kDisplayBlankCount;
 	else
 	{
 		rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
@@ -1569,6 +1580,26 @@ nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 	GetNumMessagesNode(totalMessages, target);
 
 	return rv;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderSizeNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+  PRBool isServer;
+  nsresult rv = folder->GetIsServer(&isServer);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  PRInt32 folderSize;
+  if(isServer)
+    folderSize = kDisplayBlankCount;
+  else
+  {
+    rv = folder->GetSizeOnDisk((PRUint32 *) &folderSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  GetFolderSizeNode(folderSize, target);
+  
+  return rv;
 }
 
 nsresult
@@ -1630,7 +1661,7 @@ nsMsgFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
 
 	PRInt32 totalUnreadMessages;
 	if(isServer)
-		totalUnreadMessages = -2;
+		totalUnreadMessages = kDisplayBlankCount;
 	else
 	{
 		rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
@@ -1858,6 +1889,20 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 **/
 
 nsresult
+nsMsgFolderDataSource::OnFolderSizePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+{
+  nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
+  if(folderResource)
+  {
+    nsCOMPtr<nsIRDFNode> newNode;
+    
+    GetFolderSizeNode(newValue, getter_AddRefs(newNode));
+    NotifyPropertyChanged(folderResource, kNC_FolderSize, newNode);
+  }
+  return NS_OK;
+}
+
+nsresult
 nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
 {
 	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
@@ -1873,14 +1918,37 @@ nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt
 }
 
 nsresult 
-nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node)
+nsMsgFolderDataSource::GetNumMessagesNode(PRInt32 aNumMessages, nsIRDFNode **node)
 {
-  if(numMessages > 0)
-    createIntNode(numMessages, node, getRDFService());
-  else if(numMessages == -1)
+  PRUint32 numMessages = aNumMessages;
+  if(numMessages == kDisplayQuestionCount)
     createNode(NS_LITERAL_STRING("???").get(), node, getRDFService());
-  else
+  else if (numMessages == kDisplayBlankCount || numMessages == 0)
     createNode(NS_LITERAL_STRING("").get(), node, getRDFService());
+  else
+    createIntNode(numMessages, node, getRDFService());
+  return NS_OK;
+}
+
+nsresult 
+nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode)
+{
+  PRUint32 folderSize = aFolderSize;
+  if (folderSize == kDisplayBlankCount || folderSize == 0)
+    createNode(NS_LITERAL_STRING("").get(), aNode, getRDFService());
+  else if(folderSize == kDisplayQuestionCount)
+    createNode(NS_LITERAL_STRING("???").get(), aNode, getRDFService());
+  else
+  {
+    nsAutoString sizeString;
+    if (folderSize < 1024)
+      folderSize = 1024; // make at least 1 k;
+    folderSize /= 1024;  // normalize into k;
+    PRBool sizeInMB = (folderSize > 1024);
+    sizeString.AppendInt((sizeInMB) ? folderSize / 1024 : folderSize);
+    sizeString.Append((sizeInMB) ? NS_LITERAL_STRING(" MB") : NS_LITERAL_STRING(" kb"));
+    createNode(sizeString.get(), aNode, getRDFService());
+  }
   return NS_OK;
 }
 
@@ -2145,6 +2213,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_CanCompact == property) ||
            (kNC_TotalMessages == property) ||
            (kNC_TotalUnreadMessages == property) ||
+           (kNC_FolderSize == property) ||
            (kNC_Charset == property) ||
            (kNC_BiffState == property) ||
            (kNC_HasUnreadMessages == property) ||

@@ -904,7 +904,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 {
-  NS_ASSERTION(0, "GetSizeOnDisk not implemented");
+//  NS_ASSERTION(0, "GetSizeOnDisk not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

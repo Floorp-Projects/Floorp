@@ -268,9 +268,10 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 	readonly attribute string relativePathName;
 
   /**
-   * size of this folder (including headers??) on disk
+   * size of this folder on disk (not including .msf file)
+   * for imap, it's the sum of the size of the messages
    */
-	readonly attribute unsigned long sizeOnDisk;
+	attribute unsigned long sizeOnDisk;
 
   /**
    * set the password for this folder (what is this used for?)

@@ -143,6 +143,7 @@ public:
   NS_IMETHOD GetDisplayRecipients(PRBool *aDisplayRecipients);
   NS_IMETHOD GetRelativePathName(char * *aRelativePathName);
   NS_IMETHOD GetSizeOnDisk(PRUint32 *aSizeOnDisk);
+  NS_IMETHOD SetSizeOnDisk(PRUint32 aSizeOnDisk);
   NS_IMETHOD RememberPassword(const char *password);
   NS_IMETHOD GetRememberedPassword(char * *aRememberedPassword);
   NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *_retval);
@@ -294,8 +295,9 @@ protected:
   // we don't want to do an expensive select until the user actually opens that folder
   PRInt32 mNumPendingUnreadMessages;
   PRInt32 mNumPendingTotalMessages;
+  PRUint32 mFolderSize;
 
-  PRInt32	mNumNewBiffMessages;
+  PRInt32 mNumNewBiffMessages;
   PRBool mIsCachable;
   //
   // stuff from the uri
@@ -327,6 +329,7 @@ protected:
   static nsIAtom* kNewMessagesAtom;
   static nsIAtom* kNumNewBiffMessagesAtom;
   static nsIAtom* kTotalMessagesAtom;
+  static nsIAtom* kFolderSizeAtom;
   static nsIAtom* kStatusAtom;
   static nsIAtom* kFlaggedAtom;
   static nsIAtom* kNameAtom;

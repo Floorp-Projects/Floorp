@@ -157,6 +157,7 @@ protected:
                                      nsIRDFNode **target);
   nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderSizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createBiffStateNodeFromFolder(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createBiffStateNodeFromFlag(PRUint32 flag, nsIRDFNode **target);
@@ -202,11 +203,13 @@ protected:
 
 	nsresult OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
 	nsresult OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
+        nsresult OnFolderSizePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue);
   nsresult NotifyFolderTreeNameChanged(nsIMsgFolder *folder, PRInt32 aUnreadMessages);
   nsresult NotifyFolderTreeSimpleNameChanged(nsIMsgFolder *folder);
   nsresult NotifyFolderNameChanged(nsIMsgFolder *folder);
   nsresult NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aPropertyResource, nsIRDFNode *aNode);
   nsresult GetNumMessagesNode(PRInt32 numMessages, nsIRDFNode **node);
+  nsresult GetFolderSizeNode(PRInt32 folderSize, nsIRDFNode **node);
   nsresult CreateLiterals(nsIRDFService *rdf);
 
   static nsIRDFResource* kNC_Child;
@@ -234,6 +237,7 @@ protected:
   static nsIRDFResource* kNC_CanCompact;
   static nsIRDFResource* kNC_TotalMessages;
   static nsIRDFResource* kNC_TotalUnreadMessages;
+  static nsIRDFResource* kNC_FolderSize;
   static nsIRDFResource* kNC_Charset;
   static nsIRDFResource* kNC_BiffState;
   static nsIRDFResource* kNC_HasUnreadMessages;
@@ -267,6 +271,7 @@ protected:
   // property atoms
   static nsIAtom* kTotalMessagesAtom;
   static nsIAtom* kTotalUnreadMessagesAtom;
+  static nsIAtom* kFolderSizeAtom;
   static nsIAtom* kBiffStateAtom;
   static nsIAtom* kNewMessagesAtom;
   static nsIAtom* kNameAtom;

@@ -94,6 +94,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_CANCOMPACT			NC_NAMESPACE_URI "CanCompact"
 #define NC_RDF_TOTALMESSAGES		NC_NAMESPACE_URI "TotalMessages"
 #define NC_RDF_TOTALUNREADMESSAGES	NC_NAMESPACE_URI "TotalUnreadMessages"
+#define NC_RDF_FOLDERSIZE               NC_NAMESPACE_URI "FolderSize"
 #define NC_RDF_CHARSET				NC_NAMESPACE_URI "Charset"
 #define NC_RDF_BIFFSTATE			NC_NAMESPACE_URI "BiffState"
 #define NC_RDF_HASUNREADMESSAGES	NC_NAMESPACE_URI "HasUnreadMessages"

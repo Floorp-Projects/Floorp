@@ -97,6 +97,7 @@ PRUnichar *nsMsgFolder::kLocalizedUnsentName;
 PRUnichar *nsMsgFolder::kLocalizedJunkName;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom = nsnull;
+nsIAtom * nsMsgFolder::kFolderSizeAtom = nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom = nsnull;
 nsIAtom * nsMsgFolder::kNewMessagesAtom = nsnull;
 nsIAtom * nsMsgFolder::kNumNewBiffMessagesAtom  = nsnull;
@@ -134,6 +135,7 @@ nsMsgFolder::nsMsgFolder(void)
 
   mNumPendingUnreadMessages = 0;
   mNumPendingTotalMessages  = 0;
+  mFolderSize = 0;
   NS_NewISupportsArray(getter_AddRefs(mSubFolders));
 
   mIsCachable = PR_TRUE;
@@ -147,6 +149,7 @@ nsMsgFolder::nsMsgFolder(void)
     kNameAtom          = NS_NewAtom("Name");
     kTotalUnreadMessagesAtom = NS_NewAtom("TotalUnreadMessages");
     kTotalMessagesAtom       = NS_NewAtom("TotalMessages");
+    kFolderSizeAtom          = NS_NewAtom("FolderSize");
     kStatusAtom              = NS_NewAtom("Status");
     kFlaggedAtom             = NS_NewAtom("Flagged");
     kSynchronizeAtom         = NS_NewAtom("Synchronize");
@@ -1903,6 +1906,13 @@ NS_IMETHODIMP nsMsgFolder::GetSizeOnDisk(PRUint32 *size)
     return NS_ERROR_NULL_POINTER;
 
   *size = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::SetSizeOnDisk(PRUint32 aSizeOnDisk)
+{
+  NotifyIntPropertyChanged(kFolderSizeAtom, mFolderSize, aSizeOnDisk);
+  mFolderSize = aSizeOnDisk;
   return NS_OK;
 }
 

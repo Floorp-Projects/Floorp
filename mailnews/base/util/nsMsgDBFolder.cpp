@@ -560,6 +560,8 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
       if (NS_SUCCEEDED(rv))
       {
 
+        nsresult rv = GetDatabase(nsnull);
+        NS_ENSURE_SUCCESS(rv, NS_OK);
 	      nsCOMPtr<nsIMsgDBHdr> hdr;
 	      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
         if (hdr && NS_SUCCEEDED(rv))
@@ -964,6 +966,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
   element->GetInt32Property("pendingUnreadMsgs", &mNumPendingUnreadMessages);
   element->GetInt32Property("pendingMsgs", &mNumPendingTotalMessages);
   element->GetInt32Property("expungedBytes", (PRInt32 *) &mExpungedBytes);
+  element->GetInt32Property("folderSize", (PRInt32 *) &mFolderSize);
 
 	element->GetStringProperty("charset", &charset);
 
@@ -1099,6 +1102,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
   element->SetInt32Property("pendingUnreadMsgs", mNumPendingUnreadMessages);
   element->SetInt32Property("pendingMsgs", mNumPendingTotalMessages);
   element->SetInt32Property("expungedBytes", mExpungedBytes);
+  element->SetInt32Property("folderSize", mFolderSize);
 
   nsCAutoString mcharsetC;
   mcharsetC.AssignWithConversion(mCharset);
