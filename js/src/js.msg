@@ -234,3 +234,4 @@ MSG_DEF(JSMSG_DEPRECATED_USAGE,       158, 1, JSEXN_REFERENCEERR, "deprecated {0
 MSG_DEF(JSMSG_BAD_URI,                159, 0, JSEXN_URIERR, "malformed URI sequence")
 MSG_DEF(JSMSG_GETTER_ONLY,            160, 0, JSEXN_TYPEERR, "setting a property that has only a getter")
 MSG_DEF(JSMSG_TRAILING_COMMA,         161, 0, JSEXN_SYNTAXERR, "trailing comma is not legal in ECMA-262 object initializers")
+MSG_DEF(JSMSG_UNDEFINED_PROP,         162, 1, JSEXN_TYPEERR, "reference to undefined property {0}")

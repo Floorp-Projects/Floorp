@@ -2018,6 +2018,8 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
         return JS_FALSE;
     if (!sprop) {
+        jsval default_val;
+
         /*
          * Handle old bug that took empty string as zero index.  Also convert
          * string indices to integers if appropriate.
@@ -2026,15 +2028,55 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
 #if JS_BUG_NULL_INDEX_PROPS
         /* Indexed properties defaulted to null in old versions. */
-        *vp = (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) >= 0)
-              ? JSVAL_NULL
-              : JSVAL_VOID;
+        default_val = (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) >= 0)
+                      ? JSVAL_NULL
+                      : JSVAL_VOID;
 #else
-        *vp = JSVAL_VOID;
+        default_val = JSVAL_VOID;
 #endif
+        *vp = default_val;
 
-        return OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, js_IdToValue(id),
-                             vp);
+        if (!OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, js_IdToValue(id), vp))
+            return JS_FALSE;
+
+        /*
+         * Give a strict warning if foo.bar is evaluated by a script for an
+         * object foo with no property named 'bar'.
+         */
+        if (JS_HAS_STRICT_OPTION(cx) &&
+            *vp == default_val &&
+            cx->fp && cx->fp->pc &&
+            (*cx->fp->pc == JSOP_GETPROP || *cx->fp->pc == JSOP_GETELEM))
+        {
+            jsbytecode *pc, *endpc;
+            JSString *str;
+
+            /* Kludge to allow (typeof foo == "undefined") tests. */
+            JS_ASSERT(cx->fp->script);
+            pc = cx->fp->pc;
+            pc += js_CodeSpec[*pc].length;
+            endpc = cx->fp->script->code + cx->fp->script->length;
+            while (pc < endpc) {
+                if (*pc == JSOP_TYPEOF)
+                    return JS_TRUE;
+                if (*pc != JSOP_GROUP)
+                    break;
+                pc++;
+            }
+
+            /* Ok, bad undefined property reference: whine about it. */
+            str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id),
+                                             NULL);
+            if (!str ||
+                !JS_ReportErrorFlagsAndNumber(cx,
+                                              JSREPORT_WARNING|JSREPORT_STRICT,
+                                              js_GetErrorMessage, NULL,
+                                              JSMSG_UNDEFINED_PROP,
+                                              JS_GetStringBytes(str))) {
+                return JS_FALSE;
+            }
+        }
+        return JS_TRUE;
     }
 
     if (!OBJ_IS_NATIVE(obj2)) {
