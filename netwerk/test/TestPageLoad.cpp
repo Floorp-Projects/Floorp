@@ -195,7 +195,7 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
                             PRUint32 offset, PRUint32 count)
 {
     //printf(">>> OnDataAvailable [count=%u]\n", count);
-    nsresult rv;
+    nsresult rv = NS_ERROR_FAILURE;
     PRUint32 bytesRead=0;
     int i=0;
     char buf[1024];
