@@ -211,10 +211,10 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     	return JS_TRUE;
 
     scopeobj = NULL;
-    if (argc >= 2) {
-    	if (!js_ValueToObject(cx, argv[1], &scopeobj))
+    if (argc) {
+    	if (!js_ValueToObject(cx, argv[0], &scopeobj))
 	    return JS_FALSE;
-    	argv[1] = OBJECT_TO_JSVAL(scopeobj);
+    	argv[0] = OBJECT_TO_JSVAL(scopeobj);
     }
 
     /* Emulate eval() by using caller's this, scope chain, and sharp array. */
