@@ -9,7 +9,7 @@ function Close() {}
 function Exit()
 {
   dump("\nExit from XUL\n");
-  var appCore = FindMsgAppCore();
+  var appCore = FindMessenger();
   if (appCore != null) {
     dump("\nAppcore isn't null in Exit\n");
     appCore.SetWindow(window);
@@ -20,7 +20,7 @@ function Exit()
 function CharacterSet(){}
 function MessengerSetDefaultCharacterSet(aCharset)
 {
-  var appCore = FindMsgAppCore(); 
+  var appCore = FindMessenger(); 
   if (appCore != null) {
     dump(aCharset);dump("\n");
     appCore.SetDocumentCharset(aCharset);
@@ -28,7 +28,7 @@ function MessengerSetDefaultCharacterSet(aCharset)
 	SetFolderCharset(folderResource, aCharset);
     MsgReload();
   } else {
-    dump("MsgAppCore has not been created!\n");
+    dump("Messenger has not been created!\n");
   }
 }
 

@@ -1,8 +1,8 @@
 
 function MsgStartUp()
 {
-  dump("StartUp: MsgAppCore\n");
-  var appCore = FindMsgAppCore();
+  dump("StartUp: Messenger\n");
+  var appCore = FindMessenger();
   if (appCore != null) {
 	dump("In MsgStartUp()");
     dump("Initializing AppCore and setting Window\n");
@@ -51,7 +51,7 @@ function MsgDeleteMessage()
   var tree = frames[0].frames[1].document.getElementById('threadTree');
   if(tree)
     dump("tree is valid\n");
-  var appCore = FindMsgAppCore();
+  var appCore = FindMessenger();
   if (appCore != null) {
     dump("\nAppcore isn't null in MsgDeleteMessage\n");
     appCore.SetWindow(window);
@@ -65,7 +65,7 @@ function MsgDeleteMessage()
 
 function MsgDeleteFolder()
 {
-	var appCore = FindMsgAppCore();
+	var appCore = FindMessenger();
 	if (appCore != null) {
 		appCore.SetWindow(window);
 		//get the selected elements
@@ -136,7 +136,7 @@ function MsgCopyMessage(destFolder)
 	{
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
-		var appCore = FindMsgAppCore();
+		var appCore = FindMessenger();
 		if (appCore != null) {
 		    appCore.SetWindow(window);
 			//get the current folder
@@ -157,7 +157,7 @@ function MsgMoveMessage(destFolder)
 	{
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
-		var appCore = FindMsgAppCore();
+		var appCore = FindMessenger();
 		if (appCore != null) {
 		    appCore.SetWindow(window);
 			//get the current folder
@@ -173,7 +173,7 @@ function MsgViewAllMsgs()
 
     var tree = frames[0].frames[1].document.getElementById('threadTree'); 
 
-	var appCore = FindMsgAppCore();
+	var appCore = FindMessenger();
 	if (appCore != null) {
 	    appCore.SetWindow(window);
 		appCore.ViewAllMessages(tree.database);
@@ -191,7 +191,7 @@ function MsgViewUnreadMsg()
 
     var tree = frames[0].frames[1].document.getElementById('threadTree'); 
 
-	var appCore = FindMsgAppCore();
+	var appCore = FindMessenger();
 	if (appCore != null) {
 	    appCore.SetWindow(window);
 		appCore.ViewUnreadMessages(tree.database);
@@ -210,7 +210,7 @@ function MsgViewAllThreadMsgs()
 
     var tree = frames[0].frames[1].document.getElementById('threadTree'); 
 
-	var appCore = FindMsgAppCore();
+	var appCore = FindMessenger();
 	if (appCore != null) {
 	    appCore.SetWindow(window);
 		appCore.ViewAllThreadMessages(tree.database);
@@ -247,7 +247,7 @@ function MsgNewFolder()
 	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
 	var selectedFolder = selectedFolderList[0];
 
-	var appCore = FindMsgAppCore();
+	var appCore = FindMessenger();
 	if (appCore != null) {
 	    appCore.SetWindow(window);
 		//Note this is temporary hardcoding until I can get this from a dialog
@@ -343,7 +343,7 @@ function MsgMarkMsgAsRead(markRead)
 {
   dump("\MsgMarkMsgAsRead from XUL\n");
   var tree = frames[0].frames[1].document.getElementById('threadTree');
-  var appCore = FindMsgAppCore();
+  var appCore = FindMessenger();
   if (appCore != null) {
     appCore.SetWindow(window);
 	//get the selected elements
