@@ -64,6 +64,7 @@
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
+        {CLASS = CHBookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
         {CLASS = CHExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 
         {CLASS = CHExtendedTabView; LANGUAGE = ObjC; SUPERCLASS = NSTabView; }, 
         {CLASS = ExtendedOutlineView; LANGUAGE = ObjC; SUPERCLASS = NSOutlineView; }, 

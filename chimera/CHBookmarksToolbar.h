@@ -14,21 +14,33 @@
 *
 * The Initial Developer of the Original Code is Netscape
 * Communications Corporation. Portions created by Netscape are
-* Copyright (C) 1999 Netscape Communications Corporation. All
+* Copyright (C) 2002 Netscape Communications Corporation. All
 * Rights Reserved.
 *
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
-#import "CHGetURLCommand.h"
 #import <AppKit/AppKit.h>
 
-@implementation CHGetURLCommand
+class nsIDOMElement;
 
-- (id)performDefaultImplementation {
-  id controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
-  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
-  return nil;
+class BookmarksService;
+
+@interface CHBookmarksToolbar : NSView {
+  BookmarksService* mBookmarks;
+  NSMutableArray* mButtons;
 }
+
+-(void)initializeToolbar;
+
+// Called to construct the initial set of personal toolbar buttons.
+-(void)buildButtonList;
+-(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex;
+-(void)removeButton: (nsIDOMElement*)aElt;
+
+// Called to lay out the buttons on the toolbar.
+-(void)reflowButtons;
+-(void)reflowButtonsStartingAtIndex: (int)aIndex;
+
 @end

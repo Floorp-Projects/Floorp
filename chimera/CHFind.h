@@ -14,21 +14,24 @@
 *
 * The Initial Developer of the Original Code is Netscape
 * Communications Corporation. Portions created by Netscape are
-* Copyright (C) 1999 Netscape Communications Corporation. All
+* Copyright (C) 2002 Netscape Communications Corporation. All
 * Rights Reserved.
 *
 * Contributor(s):
-*   David Hyatt <hyatt@netscape.com> (Original Author)
+*   Mike Pinkerton <pinkerton@netscape.com> (Original Author)
 */
 
-#import "CHGetURLCommand.h"
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 
-@implementation CHGetURLCommand
+//
+// protocol CHFind
+//
+// Any window who wants to be able to work with the Find dialog should implement
+// this protocol.
+//
 
-- (id)performDefaultImplementation {
-  id controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
-  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
-  return nil;
-}
+@protocol CHFind
+
+- (BOOL)findInPage:(NSString*)text;
+
 @end

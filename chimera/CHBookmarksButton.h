@@ -14,21 +14,27 @@
 *
 * The Initial Developer of the Original Code is Netscape
 * Communications Corporation. Portions created by Netscape are
-* Copyright (C) 1999 Netscape Communications Corporation. All
+* Copyright (C) 2002 Netscape Communications Corporation. All
 * Rights Reserved.
 *
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 */
 
-#import "CHGetURLCommand.h"
-#import <AppKit/AppKit.h>
+#import <Foundation/Foundation.h>
+#import <Appkit/Appkit.h>
 
-@implementation CHGetURLCommand
+class nsIDOMElement;
 
-- (id)performDefaultImplementation {
-  id controller = [[NSApp delegate] openBrowserWindowWithURLString: [self directParameter]];
-  [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
-  return nil;
+@interface CHBookmarksButton : NSButton {
+
+  nsIDOMElement* mElement;
+  BOOL mIsFolder;
 }
+
+-(void)setElement: (nsIDOMElement*)aElt;
+-(nsIDOMElement*)element;
+
+-(IBAction)openBookmark:(id)aSender;
+
 @end
