@@ -30,7 +30,6 @@
 #include "nsIReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
-#include "nsIDOMHTMLParagraphElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsLayoutAtoms.h"
@@ -63,58 +62,6 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
     mMetrics.mFlags |= NS_REFLOW_CALC_MAX_WIDTH;
 }
 
-PRBool
-nsBlockReflowContext::IsHTMLParagraph(nsIFrame* aFrame)
-{
-  PRBool result = PR_FALSE;
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = aFrame->GetContent(getter_AddRefs(content));
-  if (NS_SUCCEEDED(rv) && content) {
-    nsCOMPtr<nsIDOMHTMLParagraphElement> p(do_QueryInterface(content));
-    if (p) {
-      result = PR_TRUE;
-    }
-  }
-  return result;
-}
-
-
-PRBool
-nsBlockReflowContext::IsFirstSignificantChild(const nsIFrame* aParentFrame, const nsIFrame* aChildFrame) const
-{
-  NS_ASSERTION(aParentFrame && aChildFrame, "bad args");
-  if (!aParentFrame || !aChildFrame) return PR_FALSE;
-  nsIFrame *child;
-  aParentFrame->FirstChild((nsIPresContext *)(&mPresContext), nsnull, &child);
-  while (child)
-  {
-    if (aChildFrame == child) {
-      return PR_TRUE; // we found aChildFrame, and we haven't yet encountered a geometrically significant frame
-    }
-    nsSize size;
-    child->GetSize(size);
-    if (size.width || size.height) {
-      return PR_FALSE; // we found a geometrically significant frame and it wasn't aChildFrame
-    }
-    child->GetNextSibling(&child);
-  }
-  return PR_FALSE;  //aChildFrame is not in the default child list of aParentFrame  
-}
-
-PRBool IsCollapsingBlockParentFrame(const nsIFrame* aFrame)
-{
-  if (!aFrame) return PR_FALSE;
-  nsCOMPtr<nsIAtom> frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType.get()==nsLayoutAtoms::blockFrame ||
-      frameType.get()==nsLayoutAtoms::areaFrame  ||
-      frameType.get()==nsLayoutAtoms::tableCellFrame ||
-      frameType.get()==nsLayoutAtoms::tableCaptionFrame) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
 nscoord
 nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                                 nsHTMLReflowState& aRS)
@@ -125,26 +72,35 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
   // Calculate aFrame's generational top-margin from its child
   // blocks. Note that if aFrame has a non-zero top-border or
   // top-padding then this step is skipped because it will be a margin
-  // root.
+  // root.  It is also skipped if the frame is a margin root for other
+  // reasons.
   nscoord generationalTopMargin = 0;
   if (0 == aRS.mComputedBorderPadding.top) {
-    nsBlockFrame* bf;
-    if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID, (void**)&bf))) {
-      // Ask the block frame for the top block child that we should
-      // try to collapse the top margin with.
-      nsIFrame* childFrame = bf->GetTopBlockChild();
-      if (nsnull != childFrame) {
+    nsFrameState state;
+    aRS.frame->GetFrameState(&state);
+    if (!(state & NS_BLOCK_MARGIN_ROOT)) {
+      nsBlockFrame* bf;
+      if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID, (void**)&bf))) {
+        // Ask the block frame for the top block child that we should
+        // try to collapse the top margin with.
 
-        // Here is where we recurse. Now that we have determined that a
-        // generational collapse is required we need to compute the
-        // child blocks margin and so in so that we can look into
-        // it. For its margins to be computed we need to have a reflow
-        // state for it.
-        nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
-        nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
-                                      availSpace);
-        generationalTopMargin =
-          ComputeCollapsedTopMargin(aPresContext, reflowState);
+        // XXX If the block is empty, we need to check its bottom margin
+        // and its sibling's top margin (etc.) too!
+
+        nsIFrame* childFrame = bf->GetTopBlockChild();
+        if (nsnull != childFrame) {
+
+          // Here is where we recurse. Now that we have determined that a
+          // generational collapse is required we need to compute the
+          // child blocks margin and so in so that we can look into
+          // it. For its margins to be computed we need to have a reflow
+          // state for it.
+          nsSize availSpace(aRS.mComputedWidth, aRS.mComputedHeight);
+          nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
+                                        availSpace);
+          generationalTopMargin =
+            ComputeCollapsedTopMargin(aPresContext, reflowState);
+        }
       }
     }
   }
@@ -736,53 +692,22 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   PRBool fits = PR_TRUE;
   nscoord x = mX;
   nscoord y = mY;
-  // When deciding whether it's an empty paragraph we also need to take into
+  // When deciding whether it's empty we also need to take into
   // account the overflow area
   if ((0 == mMetrics.height) && (0 == mMetrics.mOverflowArea.height)) 
   {
-    PRBool handled = PR_FALSE;
-    if (IsHTMLParagraph(mFrame)) {
-      // Special "feature" for HTML compatability - empty paragraphs
-      // collapse into nothingness, including their margins. Signal
-      // the special nature here by returning -1.
-      // In general, we turn off this behavior due to re-interpretation of the vague HTML 4 spec.
-      // See bug 35772.  However, we do need this behavior for <P> inside of table cells, 
-      // floaters, and positioned elements
-      nsIFrame *parent;
-      mFrame->GetParent(&parent);
-      if (parent)
-      {
-        if (IsCollapsingBlockParentFrame(mFrame) && 
-            IsFirstSignificantChild(parent, mFrame))
-        {
-          handled = PR_TRUE;
-          *aBottomMarginResult = -1;
+    // Collapse the bottom margin with the top margin that was already
+    // applied.
+    nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
+    *aBottomMarginResult = newBottomMargin;
 #ifdef NOISY_VERTICAL_MARGINS
-          printf("  ");
-          nsFrame::ListTag(stdout, mOuterReflowState.frame);
-          printf(": ");
-          nsFrame::ListTag(stdout, mFrame);
-          printf(" -- zapping top & bottom margin; y=%d spaceY=%d\n",
-                 y, mSpace.y);
+    printf("  ");
+    nsFrame::ListTag(stdout, mOuterReflowState.frame);
+    printf(": ");
+    nsFrame::ListTag(stdout, mFrame);
+    printf(" -- collapsing top & bottom margin together; y=%d spaceY=%d\n",
+           y, mSpace.y);
 #endif
-        }
-      }
-    }
-    if (!handled) 
-    {
-      // Collapse the bottom margin with the top margin that was already
-      // applied.
-      nscoord newBottomMargin = MaxMargin(collapsedBottomMargin, mTopMargin);
-      *aBottomMarginResult = newBottomMargin;
-#ifdef NOISY_VERTICAL_MARGINS
-      printf("  ");
-      nsFrame::ListTag(stdout, mOuterReflowState.frame);
-      printf(": ");
-      nsFrame::ListTag(stdout, mFrame);
-      printf(" -- collapsing top & bottom margin together; y=%d spaceY=%d\n",
-             y, mSpace.y);
-#endif
-    }
 
     y = mSpace.y;
 
@@ -805,22 +730,6 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     // fits.
     if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) 
     {
-      // if it's a <P> and it's parent is special, then collapse the <P>'s top margin
-      if (IsHTMLParagraph(mFrame)) {
-        // Special "feature" for HTML compatability - a paragraph's
-        // top margin collapses into nothingness, inside of certain containers.
-        nsIFrame *parent;
-        mFrame->GetParent(&parent);
-        if (parent)
-        {
-          if (IsCollapsingBlockParentFrame(mFrame) && 
-              IsFirstSignificantChild(parent, mFrame))
-          {
-            y=0;
-          }
-        }
-      }
-
       // Calculate the actual x-offset and left and right margin
       nsBlockHorizontalAlign  align;
       

@@ -57,9 +57,6 @@
 #include "prenv.h"
 #include "plstr.h"
 
-// XXX HTML:P's that are empty yet have style indicating they should
-// clear floaters - we need to ignore the clear behavior.
-
 #ifdef DEBUG
 
 static PRBool gLamePaintMetrics;
@@ -1045,22 +1042,16 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   aLine->GetCombinedArea(&lineCombinedArea);
   if (aLine->IsBlock()) {
     if ((0 == aLine->mBounds.height) && (0 == lineCombinedArea.height)) {
-      if (nsBlockReflowContext::IsHTMLParagraph(aLine->mFirstChild)) {
-        // Empty HTML paragraphs disappear entirely - their margins go
-        // to zero. Therefore we leave mPrevBottomMargin alone.
-      }
-      else {
-        // The line's top and bottom margin values need to be collapsed
-        // with the mPrevBottomMargin to determine a new
-        // mPrevBottomMargin value.
-        nscoord topMargin, bottomMargin;
-        RecoverVerticalMargins(aLine, aApplyTopMargin,
-                               &topMargin, &bottomMargin);
-        nscoord m = nsBlockReflowContext::MaxMargin(bottomMargin,
-                                                    mPrevBottomMargin);
-        m = nsBlockReflowContext::MaxMargin(m, topMargin);
-        mPrevBottomMargin = m;
-      }
+      // The line's top and bottom margin values need to be collapsed
+      // with the mPrevBottomMargin to determine a new
+      // mPrevBottomMargin value.
+      nscoord topMargin, bottomMargin;
+      RecoverVerticalMargins(aLine, aApplyTopMargin,
+                             &topMargin, &bottomMargin);
+      nscoord m = nsBlockReflowContext::MaxMargin(bottomMargin,
+                                                  mPrevBottomMargin);
+      m = nsBlockReflowContext::MaxMargin(m, topMargin);
+      mPrevBottomMargin = m;
     }
     else {
       // Recover the top and bottom margins for this line
@@ -2097,293 +2088,254 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
          borderPadding.top, borderPadding.bottom);
 #endif
 
-  // Special check for zero sized content: If our content is zero
-  // sized then we collapse into nothingness.
-  //
-  // Consensus after discussion with a few CSS folks is that html's
-  // notion of collapsing <P>'s should take precedence over non
-  // auto-sided block elements. Therefore we don't honor the width,
-  // height, border or padding attributes (the parent has to not apply
-  // a margin for us also).
-  //
-  // Note that this is <b>only</b> done for html paragraphs. Its not
-  // appropriate to apply it to other containers, especially XML
-  // content!
-  PRBool isHTMLParagraph = 0 != (mState & NS_BLOCK_IS_HTML_PARAGRAPH);
-  if (isHTMLParagraph &&
-      (aReflowState.mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_BLOCK) &&
-      (((0 == aState.mKidXMost) ||
-        (0 == aState.mKidXMost - borderPadding.left)) &&
-       (0 == aState.mY - borderPadding.top))) {
-    // Zero out most everything
-    aMetrics.width = 0;
-    aMetrics.height = 0;
-    aMetrics.ascent = 0;
-    aMetrics.descent = 0;
-    aMetrics.mCarriedOutBottomMargin = 0;
-
-    // Note: Don't zero out the max-element-sizes: they will be zero
-    // if this is truly empty, otherwise they won't because of a
-    // floater.
-    if (nsnull != aMetrics.maxElementSize) {
-      aMetrics.maxElementSize->width = aState.mMaxElementSize.width;
-      aMetrics.maxElementSize->height = aState.mMaxElementSize.height;
-#ifdef NOISY_MAX_ELEMENT_SIZE
-      printf ("nsBlockFrame::CFS: %p initially setting MES %d\n", 
-               this, aState.mMaxElementSize.width);
+  // Compute final width
+  nscoord maxWidth = 0, maxHeight = 0;
+#ifdef NOISY_KIDXMOST
+  printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
+  nscoord minWidth = aState.mKidXMost + borderPadding.right;
+  if (!HaveAutoWidth(aReflowState)) {
+    // Use style defined width
+    aMetrics.width = borderPadding.left + aReflowState.mComputedWidth +
+      borderPadding.right;
+    // XXX quote css1 section here
+    if ((0 == aReflowState.mComputedWidth) && (aMetrics.width < minWidth)) {
+      aMetrics.width = minWidth;
     }
+
+    // When style defines the width use it for the max-element-size
+    // because we can't shrink any smaller.
+    maxWidth = aMetrics.width;
   }
   else {
-    // Compute final width
-    nscoord maxWidth = 0, maxHeight = 0;
-#ifdef NOISY_KIDXMOST
-    printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
-#endif
-    nscoord minWidth = aState.mKidXMost + borderPadding.right;
-    if (!HaveAutoWidth(aReflowState)) {
-      // Use style defined width
-      aMetrics.width = borderPadding.left + aReflowState.mComputedWidth +
-        borderPadding.right;
-      // XXX quote css1 section here
-      if ((0 == aReflowState.mComputedWidth) && (aMetrics.width < minWidth)) {
-        aMetrics.width = minWidth;
-      }
-
-      // When style defines the width use it for the max-element-size
-      // because we can't shrink any smaller.
-      maxWidth = aMetrics.width;
-    }
-    else {
-      nscoord computedWidth = minWidth;
-      PRBool compact = PR_FALSE;
+    nscoord computedWidth = minWidth;
+    PRBool compact = PR_FALSE;
 #if 0
-      if (NS_STYLE_DISPLAY_COMPACT == aReflowState.mStyleDisplay->mDisplay) {
-        // If we are display: compact AND we have no lines or we have
-        // exactly one line and that line is not a block line AND that
-        // line doesn't end in a BR of any sort THEN we remain a compact
-        // frame.
-        if ((nsnull == mLines) ||
-            ((nsnull == mLines->mNext) && !mLines->IsBlock() &&
-             (NS_STYLE_CLEAR_NONE == mLines->GetBreakType())
-             /*XXX && (computedWidth <= aState.mCompactMarginWidth) */
-              )) {
-          compact = PR_TRUE;
-        }
+    if (NS_STYLE_DISPLAY_COMPACT == aReflowState.mStyleDisplay->mDisplay) {
+      // If we are display: compact AND we have no lines or we have
+      // exactly one line and that line is not a block line AND that
+      // line doesn't end in a BR of any sort THEN we remain a compact
+      // frame.
+      if ((nsnull == mLines) ||
+          ((nsnull == mLines->mNext) && !mLines->IsBlock() &&
+           (NS_STYLE_CLEAR_NONE == mLines->GetBreakType())
+           /*XXX && (computedWidth <= aState.mCompactMarginWidth) */
+            )) {
+        compact = PR_TRUE;
       }
+    }
 #endif
 
-      // There are two options here. We either shrink wrap around our
-      // contents or we fluff out to the maximum block width. Note:
-      // We always shrink wrap when given an unconstrained width.
-      if ((0 == (NS_BLOCK_SHRINK_WRAP & mState)) &&
-          !aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) && !aState.GetFlag(BRS_SHRINKWRAPWIDTH) &&
-          !compact) {
-        // Set our width to the max width if we aren't already that
-        // wide. Note that the max-width has nothing to do with our
-        // contents (CSS2 section XXX)
-        computedWidth = borderPadding.left + aState.mContentArea.width +
-          borderPadding.right;
-      }
+    // There are two options here. We either shrink wrap around our
+    // contents or we fluff out to the maximum block width. Note:
+    // We always shrink wrap when given an unconstrained width.
+    if ((0 == (NS_BLOCK_SHRINK_WRAP & mState)) &&
+        !aState.GetFlag(BRS_UNCONSTRAINEDWIDTH) && !aState.GetFlag(BRS_SHRINKWRAPWIDTH) &&
+        !compact) {
+      // Set our width to the max width if we aren't already that
+      // wide. Note that the max-width has nothing to do with our
+      // contents (CSS2 section XXX)
+      computedWidth = borderPadding.left + aState.mContentArea.width +
+        borderPadding.right;
+    }
 
-      // See if we should compute our max element size
-      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-        // Adjust the computedWidth
-        if (aState.GetFlag(BRS_NOWRAP)) {
-          // When no-wrap is true the max-element-size.width is the
-          // width of the widest line plus the right border. Note that
-          // aState.mKidXMost already has the left border factored in
-          //maxWidth = aState.mKidXMost + borderPadding.right;
-          maxWidth = aState.mMaxElementSize.width +
-            borderPadding.left + borderPadding.right;
-        }
-        else {
-          // Add in border and padding dimensions to already computed
-          // max-element-size values.
-          maxWidth = aState.mMaxElementSize.width +
-            borderPadding.left + borderPadding.right;
-        }
-        if (computedWidth < maxWidth) {
-          computedWidth = maxWidth;
-        }
-      }
-
-      // Apply min/max values
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
-        nscoord computedMaxWidth = aReflowState.mComputedMaxWidth +
+    // See if we should compute our max element size
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+      // Adjust the computedWidth
+      if (aState.GetFlag(BRS_NOWRAP)) {
+        // When no-wrap is true the max-element-size.width is the
+        // width of the widest line plus the right border. Note that
+        // aState.mKidXMost already has the left border factored in
+        //maxWidth = aState.mKidXMost + borderPadding.right;
+        maxWidth = aState.mMaxElementSize.width +
           borderPadding.left + borderPadding.right;
-        if (computedWidth > computedMaxWidth) {
-          computedWidth = computedMaxWidth;
-        }
       }
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinWidth) {
-        nscoord computedMinWidth = aReflowState.mComputedMinWidth +
+      else {
+        // Add in border and padding dimensions to already computed
+        // max-element-size values.
+        maxWidth = aState.mMaxElementSize.width +
           borderPadding.left + borderPadding.right;
-        if (computedWidth < computedMinWidth) {
-          computedWidth = computedMinWidth;
-        }
       }
-      aMetrics.width = computedWidth;
-
-      // If we're shrink wrapping, then now that we know our final width we
-      // need to do horizontal alignment of the inline lines and make sure
-      // blocks are correctly sized and positioned. Any lines that need
-      // final adjustment will have been marked as dirty
-      if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aState.GetFlag(BRS_NEEDRESIZEREFLOW)) {
-        // If the parent reflow state is also shrink wrap width, then
-        // we don't need to do this, because it will reflow us after it
-        // calculates the final width
-        PRBool  parentIsShrinkWrapWidth = PR_FALSE;
-        if (aReflowState.parentReflowState) {
-          if (NS_SHRINKWRAPWIDTH == aReflowState.parentReflowState->mComputedWidth) {
-            parentIsShrinkWrapWidth = PR_TRUE;
-          }
-        }
-
-        if (!parentIsShrinkWrapWidth) {
-          nsHTMLReflowState reflowState(aReflowState);
-  
-          reflowState.mComputedWidth = aMetrics.width - borderPadding.left -
-                                       borderPadding.right;
-          reflowState.reason = eReflowReason_Resize;
-          reflowState.mSpaceManager->ClearRegions();
-  
-          nscoord oldDesiredWidth = aMetrics.width;
-          nsBlockReflowState state(reflowState, aState.mPresContext, this, aMetrics,
-                                   NS_BLOCK_MARGIN_ROOT & mState);
-          ReflowDirtyLines(state);
-          aState.mY = state.mY;
-          NS_ASSERTION(oldDesiredWidth == aMetrics.width, "bad desired width");
-        }
+      if (computedWidth < maxWidth) {
+        computedWidth = maxWidth;
       }
     }
 
-    if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
+    // Apply min/max values
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
+      nscoord computedMaxWidth = aReflowState.mComputedMaxWidth +
+        borderPadding.left + borderPadding.right;
+      if (computedWidth > computedMaxWidth) {
+        computedWidth = computedMaxWidth;
+      }
+    }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinWidth) {
+      nscoord computedMinWidth = aReflowState.mComputedMinWidth +
+        borderPadding.left + borderPadding.right;
+      if (computedWidth < computedMinWidth) {
+        computedWidth = computedMinWidth;
+      }
+    }
+    aMetrics.width = computedWidth;
+
+    // If we're shrink wrapping, then now that we know our final width we
+    // need to do horizontal alignment of the inline lines and make sure
+    // blocks are correctly sized and positioned. Any lines that need
+    // final adjustment will have been marked as dirty
+    if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aState.GetFlag(BRS_NEEDRESIZEREFLOW)) {
+      // If the parent reflow state is also shrink wrap width, then
+      // we don't need to do this, because it will reflow us after it
+      // calculates the final width
       PRBool  parentIsShrinkWrapWidth = PR_FALSE;
       if (aReflowState.parentReflowState) {
         if (NS_SHRINKWRAPWIDTH == aReflowState.parentReflowState->mComputedWidth) {
           parentIsShrinkWrapWidth = PR_TRUE;
         }
       }
-    }
 
-    // Compute final height
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
-      // Use style defined height
-      aMetrics.height = borderPadding.top + aReflowState.mComputedHeight +
-        borderPadding.bottom;
+      if (!parentIsShrinkWrapWidth) {
+        nsHTMLReflowState reflowState(aReflowState);
 
-      // When style defines the height use it for the max-element-size
-      // because we can't shrink any smaller.
-      maxHeight = aMetrics.height;
+        reflowState.mComputedWidth = aMetrics.width - borderPadding.left -
+                                     borderPadding.right;
+        reflowState.reason = eReflowReason_Resize;
+        reflowState.mSpaceManager->ClearRegions();
 
-      // Don't carry out a bottom margin when our height is fixed
-      // unless the bottom of the last line adjoins the bottom of our
-      // content area.
-      if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
-        if (aState.mY + aState.mPrevBottomMargin != aMetrics.height) {
-          aState.mPrevBottomMargin = 0;
-        }
+        nscoord oldDesiredWidth = aMetrics.width;
+        nsBlockReflowState state(reflowState, aState.mPresContext, this, aMetrics,
+                                 NS_BLOCK_MARGIN_ROOT & mState);
+        ReflowDirtyLines(state);
+        aState.mY = state.mY;
+        NS_ASSERTION(oldDesiredWidth == aMetrics.width, "bad desired width");
       }
     }
-    else {
-      nscoord autoHeight = aState.mY;
+  }
 
-      // Shrink wrap our height around our contents.
-      if (aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
-        // When we are a bottom-margin root make sure that our last
-        // childs bottom margin is fully applied.
-        // XXX check for a fit
-        autoHeight += aState.mPrevBottomMargin;
+  if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
+    PRBool  parentIsShrinkWrapWidth = PR_FALSE;
+    if (aReflowState.parentReflowState) {
+      if (NS_SHRINKWRAPWIDTH == aReflowState.parentReflowState->mComputedWidth) {
+        parentIsShrinkWrapWidth = PR_TRUE;
       }
-      autoHeight += borderPadding.bottom;
+    }
+  }
 
-      // Apply min/max values
+  // Compute final height
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+    // Use style defined height
+    aMetrics.height = borderPadding.top + aReflowState.mComputedHeight +
+      borderPadding.bottom;
+
+    // When style defines the height use it for the max-element-size
+    // because we can't shrink any smaller.
+    maxHeight = aMetrics.height;
+
+    // Don't carry out a bottom margin when our height is fixed
+    // unless the bottom of the last line adjoins the bottom of our
+    // content area.
+    if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
+      if (aState.mY + aState.mPrevBottomMargin != aMetrics.height) {
+        aState.mPrevBottomMargin = 0;
+      }
+    }
+  }
+  else {
+    nscoord autoHeight = aState.mY;
+
+    // Shrink wrap our height around our contents.
+    if (aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
+      // When we are a bottom-margin root make sure that our last
+      // childs bottom margin is fully applied.
+      // XXX check for a fit
+      autoHeight += aState.mPrevBottomMargin;
+    }
+    autoHeight += borderPadding.bottom;
+
+    // Apply min/max values
 #ifdef MOZ_MATHML
-      // XXX Here in ComputeFinalSize()
-      // XXX What to do when min/max values are applied to the height?
-      // How do all this impact on the first line of the block? 
+    // XXX Here in ComputeFinalSize()
+    // XXX What to do when min/max values are applied to the height?
+    // How do all this impact on the first line of the block? 
 #endif
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
-        nscoord computedMaxHeight = aReflowState.mComputedMaxHeight +
-          borderPadding.top + borderPadding.bottom;
-        if (autoHeight > computedMaxHeight) {
-          autoHeight = computedMaxHeight;
-        }
-      }
-      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinHeight) {
-        nscoord computedMinHeight = aReflowState.mComputedMinHeight +
-          borderPadding.top + borderPadding.bottom;
-        if (autoHeight < computedMinHeight) {
-          autoHeight = computedMinHeight;
-        }
-      }
-      aMetrics.height = autoHeight;
-
-      if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-        maxHeight = aState.mMaxElementSize.height +
-          borderPadding.top + borderPadding.bottom;
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
+      nscoord computedMaxHeight = aReflowState.mComputedMaxHeight +
+        borderPadding.top + borderPadding.bottom;
+      if (autoHeight > computedMaxHeight) {
+        autoHeight = computedMaxHeight;
       }
     }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMinHeight) {
+      nscoord computedMinHeight = aReflowState.mComputedMinHeight +
+        borderPadding.top + borderPadding.bottom;
+      if (autoHeight < computedMinHeight) {
+        autoHeight = computedMinHeight;
+      }
+    }
+    aMetrics.height = autoHeight;
+
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+      maxHeight = aState.mMaxElementSize.height +
+        borderPadding.top + borderPadding.bottom;
+    }
+  }
 
 #ifndef MOZ_MATHML
-    aMetrics.ascent = aMetrics.height;
-    aMetrics.descent = 0;
+  aMetrics.ascent = aMetrics.height;
+  aMetrics.descent = 0;
 #else
-    if (mLines && mLines->mFirstChild && mLines->IsBlock()) {
-      // mAscent is not yet set because we didn't call VerticalAlignFrames()
-      // on mLines. So we need to fetch the ascent of the first child of mLines
-      nsBlockFrame* bf;
-      nsresult res = mLines->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&bf);
-      if (NS_SUCCEEDED(res) && bf) {
-        mAscent = bf->GetAscent();
-      }
+  if (mLines && mLines->mFirstChild && mLines->IsBlock()) {
+    // mAscent is not yet set because we didn't call VerticalAlignFrames()
+    // on mLines. So we need to fetch the ascent of the first child of mLines
+    nsBlockFrame* bf;
+    nsresult res = mLines->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&bf);
+    if (NS_SUCCEEDED(res) && bf) {
+      mAscent = bf->GetAscent();
     }
-    aMetrics.ascent = mAscent;
-    aMetrics.descent = aMetrics.height - aMetrics.ascent;
+  }
+  aMetrics.ascent = mAscent;
+  aMetrics.descent = aMetrics.height - aMetrics.ascent;
 #endif
-    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-      // Store away the final value
-      aMetrics.maxElementSize->width = maxWidth;
-      aMetrics.maxElementSize->height = maxHeight;
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+    // Store away the final value
+    aMetrics.maxElementSize->width = maxWidth;
+    aMetrics.maxElementSize->height = maxHeight;
 #ifdef NOISY_MAX_ELEMENT_SIZE
-      printf ("nsBlockFrame::CFS: %p returning MES %d\n", 
-               this, aMetrics.maxElementSize->width);
-#endif
-    }
-
-    // Return bottom margin information
-    aMetrics.mCarriedOutBottomMargin =
-      aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? 0 : aState.mPrevBottomMargin;
-
-#ifdef DEBUG_blocks
-    if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
-      ListTag(stdout);
-      printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
-    }
-    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE) &&
-        ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height))) {
-      ListTag(stdout);
-      printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-             aState.mReflowState.availableWidth,
-             aState.mReflowState.availableHeight);
-    }
-#endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-      IndentBy(stdout, GetDepth());
-      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-        printf("PASS1 ");
-      }
-      ListTag(stdout);
-      printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-             aState.mReflowState.availableWidth,
-             aState.mReflowState.availableHeight);
-    }
+    printf ("nsBlockFrame::CFS: %p returning MES %d\n", 
+             this, aMetrics.maxElementSize->width);
 #endif
   }
+
+  // Return bottom margin information
+  aMetrics.mCarriedOutBottomMargin =
+    aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? 0 : aState.mPrevBottomMargin;
+
+#ifdef DEBUG_blocks
+  if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
+    ListTag(stdout);
+    printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
+  }
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE) &&
+      ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height))) {
+    ListTag(stdout);
+    printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+           aState.mReflowState.availableWidth,
+           aState.mReflowState.availableHeight);
+  }
+#endif
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+    IndentBy(stdout, GetDepth());
+    if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+      printf("PASS1 ");
+    }
+    ListTag(stdout);
+    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+           aState.mReflowState.availableWidth,
+           aState.mReflowState.availableHeight);
+  }
+#endif
 
   // If we're requested to update our maximum width, then compute it
   if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
@@ -4038,15 +3990,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         printf(" prevBottomMargin=%d collapsedBottomMargin=%d\n",
                aState.mPrevBottomMargin, collapsedBottomMargin);
 #endif
-        if (collapsedBottomMargin >= 0) {
-          aState.mPrevBottomMargin = collapsedBottomMargin;
-        }
-        else {
-          // Leave margin alone: it was a collapsed paragraph that
-          // must not interfere with the running margin calculations
-          // (in other words it should act like an empty line of
-          // whitespace).
-        }
+        aState.mPrevBottomMargin = collapsedBottomMargin;
       }
 #ifdef NOISY_VERTICAL_MARGINS
       ListTag(stdout);
@@ -6889,9 +6833,6 @@ nsBlockFrame::Init(nsIPresContext*  aPresContext,
 
   nsresult rv = nsBlockFrameSuper::Init(aPresContext, aContent, aParent,
                                         aContext, aPrevInFlow);
-  if (nsBlockReflowContext::IsHTMLParagraph(this)) {
-    mState |= NS_BLOCK_IS_HTML_PARAGRAPH;
-  }
   return rv;
 }
 
