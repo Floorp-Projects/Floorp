@@ -115,7 +115,9 @@
 static nsProfileAccess*	gProfileDataAccess = nsnull;
 static PRInt32			gDataAccessInstCount = 0;
 static PRBool           mCurrentProfileAvailable = PR_FALSE;
-static nsFileSpec       mRedundantDirectory;
+
+static PRBool           sHaveRedundantDirectory = PR_FALSE;
+static nsFileSpec       sRedundantDirectory;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
@@ -1339,8 +1341,9 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 		}
 
 		// After cloning we have a new filespec. Remove the old one.
-        mRedundantDirectory = dirSpec;
-
+		sRedundantDirectory = dirSpec;
+		sHaveRedundantDirectory = PR_TRUE;
+		
 		ProfileStruct*	aProfile;
 
 		gProfileDataAccess->GetValue(userProfileName.ToNewCString(), &aProfile);
@@ -1601,7 +1604,8 @@ nsProfile::CleanUp()
 {
 	nsresult rv = NS_OK;
 
-	DeleteUserDirectories(mRedundantDirectory);
+	if (sHaveRedundantDirectory)
+		DeleteUserDirectories(sRedundantDirectory);
 
 	return rv;
 }
