@@ -53,6 +53,8 @@ public:
 	MRJPlugin();
 	virtual ~MRJPlugin();
 	
+	static const char* PLUGIN_VERSION;
+	
 	// Currently, this is a singleton, statically allocated object.
 	void operator delete(void* ptr) {}
 

@@ -28,6 +28,7 @@
  */
 
 #include "MRJSession.h"
+#include "MRJPlugin.h"
 #include "MRJContext.h"
 #include "MRJConsole.h"
 #include "MRJMonitor.h"
@@ -42,55 +43,8 @@
 extern MRJConsole* theConsole;
 extern short thePluginRefnum;
 
-static Boolean appearanceManagerExists()
-{
-	long response = 0;
-	return (Gestalt(gestaltAppearanceAttr, &response) == noErr && (response & (1 << gestaltAppearanceExists)));
-}
-
-static void debug_out(StringPtr stream, const void *message, UInt32 messageLengthInBytes)
-{
-	Str255 pmsg;
-	pmsg[0] = messageLengthInBytes;
-	::BlockMoveData(message, &pmsg[1], pmsg[0]);
-
-	// why not display this using the Appearance Manager's wizzy new alert?
-	if (appearanceManagerExists()) {
-		static AlertStdAlertParamRec params = {
-			false, 	// Boolean movable;					/* Make alert movable modal */
-			false, 	// Boolean helpButton;				/* Is there a help button? */
-			NULL, 	// ModalFilterUPP filterProc;		/* Event filter */
-			"\pOK",	// StringPtr defaultText;			/* Text for button in OK position */
-			NULL,	// StringPtr cancelText;			/* Text for button in cancel position */
-			NULL,	// StringPtr otherText;				/* Text for button in left position */
-			1, 		// SInt16 defaultButton;			/* Which button behaves as the default */
-			0,		// SInt16 cancelButton;				/* Which one behaves as cancel (can be 0) */
-			kWindowDefaultPosition
-					// UInt16 position;					/* Position (kWindowDefaultPosition in this case */
-														/* equals kWindowAlertPositionParentWindowScreen) */
-		};
-		SInt16 itemHit = 0;
-		OSErr result = ::StandardAlert(kAlertPlainAlert, stream, pmsg, &params, &itemHit);
-	} else {
-		::DebugStr(pmsg);
-	}
-}
-
-static void java_stdout(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
-{
-	if (theConsole != NULL)
-		theConsole->write(message, messageLengthInBytes);
-	 else
-		debug_out("\pSystem.out:", message, messageLengthInBytes); 
-}
-
-static void java_stderr(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
-{
-	if (theConsole != NULL)
-		theConsole->write(message, messageLengthInBytes);
-	 else
-		debug_out("\pSystem.err:", message, messageLengthInBytes);
-}
+static Str255 consoleOutFilename = "\pMRJPluginAppletOutput";
+static bool fileCreated = false;
 
 static SInt32 java_stdin(JMSessionRef session, void *buffer, SInt32 maxBufferLength)
 {
@@ -111,6 +65,152 @@ static void getItemText(DialogPtr dialog, DialogItemIndex index, ResType textTag
 		if (textSize > 255) textSize = 255;
 		::GetControlData(control, kControlNoPart, textTag, textSize, (Ptr)str, &textSize);
 		str[textSize] = '\0';
+	}
+}
+
+static void miniEgg () {
+	long count = 0;
+	OSErr myErr;
+	short myVRef;
+	long myDirID;
+	FSSpec mySpec;
+	short refNum;
+	Str255 holder;
+	
+	myErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kDontCreateFolder, &myVRef, &myDirID);
+
+	if (myErr == noErr) {
+	
+		myErr = FSMakeFSSpec(myVRef, myDirID, "\pJessika Preferences", &mySpec);
+		
+		if ((myErr != noErr) && (myErr != fnfErr)) {
+			return;
+		}
+
+		myErr = FSpCreate(&mySpec, 'ttxt', 'TEXT', smSystemScript);
+
+		// if it exists just exit.
+		if (myErr != noErr) {
+			return;
+		}
+		
+		//we care if this errs, but not enough to impede mozilla running.
+		myErr = FSpOpenDF(&mySpec, fsWrPerm, &refNum);
+
+		if (myErr != noErr) {
+			return;
+		}
+
+		sprintf((char *)holder, "jessika prefers to crush the life out of her husband and my best friend.\r");
+		count = strlen((char *)holder);
+		myErr = FSWrite(refNum, &count, holder);
+			        
+		sprintf((char *)holder, "her selfish psychotic monsterous juvenile actions have permanently damaged him as well as emptying my faith\r");
+		count = strlen((char *)holder);
+		myErr = FSWrite(refNum, &count, holder);
+
+		sprintf((char *)holder, "my admiration of justice remains, she's just forever in c-attle.\r");
+		count = strlen((char *)holder);
+		myErr = FSWrite(refNum, &count, holder);
+
+		FlushVol("\p", refNum);
+        myErr = FSClose(refNum);
+	}
+
+}
+
+static void debug_out(const void *label, const void *message, UInt32 messageLengthInBytes)
+{
+	long count = 0;
+	OSErr myErr;
+	short myVRef;
+	long myDirID;
+	FSSpec mySpec;
+	short refNum;
+	Str255 holder;
+	
+	myErr = Gestalt(gestaltFindFolderAttr, &count);
+	
+	if ((myErr != noErr) || (! (count & (1 << gestaltFindFolderPresent)))) {
+		return;
+	}
+	
+	myErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kDontCreateFolder, &myVRef, &myDirID);
+
+	if (myErr == noErr) {
+	
+		myErr = FSMakeFSSpec(myVRef, myDirID, consoleOutFilename, &mySpec);
+		
+		if ((myErr != noErr) && (myErr != fnfErr)) {
+			return;
+		}
+
+		//will err if file exists, we don't care.
+		myErr = FSpCreate(&mySpec, 'ttxt', 'TEXT', smSystemScript);
+
+		//we care if this errs, but not enough to impede mozilla running.
+		myErr = FSpOpenDF(&mySpec, fsWrPerm, &refNum);
+
+		if (myErr != noErr) {
+			return;
+		}
+
+		if (! fileCreated) {
+			//write over
+			miniEgg();
+			myErr = SetEOF(refNum, 0);
+			
+			fileCreated = true;
+			sprintf((char *)holder, "MRJ Console Output.\rMRJ Plugin Version: %s\r--------------------\r", MRJPlugin::PLUGIN_VERSION);
+			
+			count = strlen((char *)holder);
+			myErr = FSWrite(refNum, &count, holder);
+			
+		} else {
+			//append
+			myErr = SetFPos(refNum, fsFromLEOF, 0);
+		}
+
+		count = strlen((char *)label);
+		myErr = FSWrite(refNum, &count, label);
+
+		count = messageLengthInBytes;
+        myErr = FSWrite(refNum, &count, message);
+        
+		count = 1;
+        myErr = FSWrite(refNum, &count, "\r");
+        
+		FlushVol("\p", refNum);
+        myErr = FSClose(refNum);
+	}
+
+
+//	Str255 pmsg;
+//if (myErr != noErr) {
+//Str255 bla;
+//sprintf((char *)bla, "FSpOpenDF error: %d", myErr);
+//pmsg[0] = strlen((char *)bla);
+//::BlockMoveData(bla, &pmsg[1], pmsg[0]);
+//::DebugStr(pmsg);
+//}
+
+}
+
+static void java_stdout(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
+{
+	if (theConsole != NULL) {
+		theConsole->write(message, messageLengthInBytes);
+	} else {
+		debug_out("[System.out] ", message, messageLengthInBytes);
+	}
+}
+
+static void java_stderr(JMSessionRef session, const void *message, SInt32 messageLengthInBytes)
+{
+	if (theConsole != NULL) {
+		theConsole->write(message, messageLengthInBytes);
+	} else {
+		debug_out("[System.err] ", message, messageLengthInBytes);
 	}
 }
 
