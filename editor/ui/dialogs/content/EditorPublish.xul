@@ -88,44 +88,38 @@
           </rows>
         </grid>
         <spacer class="spacer"/>
-        <hbox>
-          <button id="MoreFewerButton" oncommand="onMoreFewerPublish()" 
-                  persist="more" style="min-width:6em !important"/>
-          <spacer flex="1"/>
+        <label value="&docDirList.label;"/>
+        <hbox align="center">
+          <!-- Contents filled in at runtime -->
+          <menulist id="DocDirList" class="minWidth20" editable="true"  flex="1"
+                    oninput="onInputSettings();"/>
+<!-- 
+          <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.DocDirList);" disabled="true"/>
+-->
         </hbox>
-
-        <vbox id="MoreSection" align="stretch">
-          <label value="&docDirList.label;"/>
-          <hbox align="center">
-            <!-- Contents filled in at runtime -->
-            <menulist id="DocDirList" class="minWidth20" editable="true"  flex="1"
-                      oninput="onInputSettings();"/>
-<!-- 
-            <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.DocDirList);" disabled="true"/>
--->
+        <spacer class="spacer"/>
+        <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;" oncommand="doEnabling();"/>
+        <radiogroup id="OtherDirRadiogroup">
+          <hbox>
+            <spacer class="checkbox-spacer"/>
+            <radio id="SameLocationRadio" label="&sameLocationRadio.label;" oncommand="doEnabling();"/>
           </hbox>
-          <spacer class="spacer"/>
-          <checkbox id="OtherDirCheckbox" label="&otherDirList.label;" oncommand="doEnabling();"/>
-          <hbox align="center">
-            <!-- Contents filled in at runtime -->
-            <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
-                      oninput="onInputSettings();"/>
-<!-- 
-            <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
--->
+          <hbox>
+            <spacer class="checkbox-spacer"/>
+            <radio id="UseSubdirRadio" label="&useSubdirRadio.label;" oncommand="doEnabling();"/>
           </hbox>
-          <spacer flex="1"/>
-<!-- FOR FUTURE USE: Tree of associated files for more control over destination, whether to upload, etc.
-          <groupbox>
-            <caption label="&relatedDocs.label;"/>
-            <tree rows="6" class="list" id="RelatedDocsList" flex="1">
-              <treecolgroup>
-                <treecol flex="1"/>
-              </treecolgroup>
-            </tree>
-          </groupbox>
+        </radiogroup>
+        <hbox>
+          <spacer class="checkbox-spacer"/>
+          <spacer class="radio-spacer"/>
+          <!-- Contents filled in at runtime -->
+          <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
+                    oninput="onInputSettings();"/>
+<!-- 
+          <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
 -->
-        </vbox>
+        </hbox>
+        <spacer flex="1"/>
       </vbox><!-- Publish Panel -->
 
       <!-- SETTINGS PANEL -->

@@ -50,10 +50,8 @@
 
 <!ENTITY publishCmd.label "Publish">
 <!ENTITY publishcmd.accesskey "u">
-<!ENTITY publishMenu.label "Publish to">
-<!ENTITY publishmenu.accesskey "b">
 <!ENTITY publishAsCmd.label "Publish As...">
-<!ENTITY publishas.accesskey "P">
+<!ENTITY publishas.accesskey "b">
 <!ENTITY exportToTextCmd.label "Export to Text...">
 <!ENTITY fileexporttotext.accesskey "T">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">

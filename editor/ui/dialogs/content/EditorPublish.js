@@ -61,14 +61,13 @@ function Startup()
   gDialog.SiteList            = document.getElementById("SiteList");
   gDialog.DocDirList          = document.getElementById("DocDirList");
   gDialog.OtherDirCheckbox    = document.getElementById("OtherDirCheckbox");
+  gDialog.OtherDirRadiogroup  = document.getElementById("OtherDirRadiogroup");
+  gDialog.SameLocationRadio   = document.getElementById("SameLocationRadio");
+  gDialog.UseSubdirRadio      = document.getElementById("UseSubdirRadio");
   gDialog.OtherDirList        = document.getElementById("OtherDirList");
-
-  gDialog.MoreSection         = document.getElementById("MoreSection");
-  gDialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
 
   // Settings Panel
   gDialog.SettingsPanel       = document.getElementById("SettingsPanel");
-  gDialog.ServerSettingsBox   = document.getElementById("ServerSettingsBox");
   gDialog.SiteNameInput       = document.getElementById("SiteNameInput");
   gDialog.PublishUrlInput     = document.getElementById("PublishUrlInput");
   gDialog.BrowseUrlInput      = document.getElementById("BrowseUrlInput");
@@ -85,31 +84,22 @@ function Startup()
   gDefaultSiteName = GetDefaultPublishSiteName();
   gPreviousDefaultSite = gDefaultSiteName;
 
-  InitDialog();
-
-  SeeMore = (gDialog.MoreFewerButton.getAttribute("more") != "1");
-  onMoreFewerPublish();
-
-  // If there's no current site data, start a new item in the Settings panel
-  if (!gPublishSiteData)
-    AddNewSite();
-  else
-    SetTextboxFocus(gDialog.PageTitleInput);
-  
-  // This sets enable states on buttons
-  doEnabling();
-
-  SetWindowLocation();
-}
-
-function InitDialog()
-{
+  var addNewSite = false;
   if (gPublishSiteData)
+  {
     FillSiteList();
+  }
+  else
+  {
+    // No current site data, start a new item in the Settings panel
+    AddNewSite();
+    addNewSite = true;
+  }
 
   var docUrl = GetDocumentUrl();
   var scheme = GetScheme(docUrl);
   var filename = "";
+
   if (scheme)
   {
     filename = GetFilename(docUrl);
@@ -123,7 +113,7 @@ function InitDialog()
         var dirObj = {};
         var siteIndex = FindSiteIndexAndDocDir(gPublishSiteData, docUrl, dirObj);
         
-        // Select this site only if the same as user's intended site, or there wasnt' one
+        // Select this site only if the same as user's intended site, or there wasn't one
         if (siteIndex != -1 && (gInitialSiteIndex == -1 || siteIndex == gInitialSiteIndex))
         {
           // Select the site we found
@@ -139,17 +129,30 @@ function InitDialog()
           //XXX HOW DO WE DECIDE WHAT "OTHER" DIR TO USE?
           //gPublishSiteData[siteIndex].otherDir = docDir;
         }
+        else
+        {
+          // Not found in site database 
+          // Setup for a new site and use data from a remote URL
+          if (!addNewSite)
+            AddNewSite();
+
+          addNewSite = true;
+
+          var publishData = CreatePublishDataFromUrl(docUrl);
+          if (publishData)
+          {
+            filename = publishData.filename;
+            gDialog.SiteNameInput.value    = publishData.siteName;
+            gDialog.PublishUrlInput.value  = publishData.publishUrl;
+            gDialog.BrowseUrlInput.value   = publishData.browseUrl;
+            gDialog.UsernameInput.value    = publishData.username;
+            gDialog.PasswordInput.value    = publishData.password;
+            gDialog.SavePassword.checked   = false;
+          }
+        }
       }
     }
   }
-
-  // We haven't selected a site -- use initial or default site
-  if (gDialog.SiteList.selectedIndex == -1)
-    gDialog.SiteList.selectedIndex = (gInitialSiteIndex != -1) ? gInitialSiteIndex : gDefaultSiteIndex;
-
-  // Fill in  all the site data for currently-selected site
-  SelectSiteList();
-
   try {
     gPreviousTitle = editorShell.GetDocumentTitle();
   } catch (e) {}
@@ -157,8 +160,43 @@ function InitDialog()
   gDialog.PageTitleInput.value = gPreviousTitle;
   gDialog.FilenameInput.value = filename;
   
+  if (!addNewSite)
+  {
+    // If not adding a site and we haven't selected a site -- use initial or default site
+    if (gDialog.SiteList.selectedIndex == -1)
+      gDialog.SiteList.selectedIndex = (gInitialSiteIndex != -1) ? gInitialSiteIndex : gDefaultSiteIndex;
+
+    // Fill in  all the site data for currently-selected site
+    SelectSiteList();
+    SetTextboxFocus(gDialog.PageTitleInput);
+  }
+
   //XXX TODO: How do we decide whether or not to save associated files?
+  //          And whether to save in same location as page if yes?
   gDialog.OtherDirCheckbox.checked = true;
+
+  if (gDialog.SiteList.selectedIndex == -1)
+  {
+    // No selected site -- assume same directory
+    gDialog.OtherDirRadiogroup.selectedItem = gDialog.selectedItem = gDialog.SameLocationRadio;
+  }
+  else
+  {
+    // For now, check "same location" if dirs are already set to same directory
+    if (gPublishSiteData[gDialog.SiteList.selectedIndex].docDir == 
+        gPublishSiteData[gDialog.SiteList.selectedIndex].otherDir)
+    {
+      gDialog.OtherDirRadiogroup.selectedItem = gDialog.selectedItem = gDialog.SameLocationRadio;
+    }
+    else
+    {
+      gDialog.OtherDirRadiogroup.selectedItem = gDialog.selectedItem = gDialog.OtherDirRadiogroup;
+    }
+  }
+
+  doEnabling();
+
+  SetWindowLocation();
 }
 
 function FillSiteList()
@@ -192,7 +230,10 @@ function FillSiteList()
 
 function doEnabling()
 {
-  gDialog.OtherDirList.disabled = !gDialog.OtherDirCheckbox.checked;
+  var disableOther = !gDialog.OtherDirCheckbox.checked;
+  gDialog.SameLocationRadio.disabled = disableOther;
+  gDialog.UseSubdirRadio.disabled = disableOther;
+  gDialog.OtherDirList.disabled = (disableOther || gDialog.SameLocationRadio.selected);
 }
 
 function SelectSiteList()
@@ -236,8 +277,8 @@ function SelectSiteList()
   }
   else
   {
-    gDialog.DocDirList.value = "/";
-    gDialog.OtherDirList.value = "/";
+    gDialog.DocDirList.value = "";
+    gDialog.OtherDirList.value = "";
   }
 
   gDialog.SiteNameInput.value    = siteName;
@@ -246,30 +287,6 @@ function SelectSiteList()
   gDialog.UsernameInput.value    = username;
   gDialog.PasswordInput.value    = password;
   gDialog.SavePassword.checked   = savePassword;
-}
-
-function onMoreFewerPublish()
-{
-  if (SeeMore)
-  {
-    gDialog.MoreSection.setAttribute("collapsed","true");
-    gDialog.ServerSettingsBox.setAttribute("collapsed","true");
-    window.sizeToContent();
-
-    gDialog.MoreFewerButton.setAttribute("more","0");
-    gDialog.MoreFewerButton.setAttribute("label",GetString("More"));
-    SeeMore = false;
-  }
-  else
-  {
-    gDialog.MoreSection.removeAttribute("collapsed");
-    gDialog.ServerSettingsBox.removeAttribute("collapsed");
-    window.sizeToContent();
-
-    gDialog.MoreFewerButton.setAttribute("more","1");
-    gDialog.MoreFewerButton.setAttribute("label",GetString("Less"));
-    SeeMore = true;
-  }
 }
 
 function AddNewSite()
@@ -320,22 +337,9 @@ function SwitchPanel(panel)
       // Trigger setting of style for the tab widgets
       gDialog.SettingsTab.selected = "true";
       gDialog.PublishTab.selected = null;
-
-      // We collapse part of the Settings panel so the Publish Panel can be more compact
-      if (gDialog.ServerSettingsBox.getAttribute("collapsed"))
-      {
-        gDialog.ServerSettingsBox.removeAttribute("collapsed");
-        window.sizeToContent();
-      }
     } else {
       gDialog.PublishTab.selected = "true";
       gDialog.SettingsTab.selected = null;
-      
-      if (!SeeMore)
-      {
-        gDialog.ServerSettingsBox.setAttribute("collapsed","true");
-        window.sizeToContent();
-      }
     }
     gCurrentPanel = panel;
   }
@@ -410,8 +414,16 @@ function ValidateSettings()
     return false;
   }
 
-  var publishUrl = GetPublishUrlInput();
-  if (!publishUrl)
+  // Extract username and password while removing them from publishingUrl
+  var urlUserObj = {};
+  var urlPassObj = {};
+  var publishUrl = StripUsernamePassword(gDialog.PublishUrlInput.value, urlUserObj, urlPassObj);
+  if (publishUrl)
+  {
+    publishUrl = FormatUrlForPublishing(publishUrl);
+    gDialog.PublishUrlInput.value = publishUrl;
+  }
+  else
   {
     ShowErrorInPanel(gSettingsPanel, "MissingPublishUrlError", gDialog.PublishUrlInput);
     return false;
@@ -420,11 +432,25 @@ function ValidateSettings()
   //TODO: If publish scheme = "ftp" we should encourage user to supply the http BrowseUrl
   var browseUrl = GetBrowseUrlInput();
 
-  //XXXX We don't get a prompt dialog if username is missing (bug ?????)
-  //     If not, we must force user to supply one here
   var username = TrimString(gDialog.UsernameInput.value);
   var savePassword = gDialog.SavePassword.checked;
   var password = gDialog.PasswordInput.value;
+  
+  //XXX If there was a username and/or password in the publishUrl 
+  //    AND in the input field, which do we use?
+  //    Let's use those in url only if input is empty 
+  if (!username)
+  {
+    username = urlUserObj.value;
+    gDialog.UsernameInput.value = username;
+    gSettingsChanged = true;
+  }
+  if (!password)
+  {
+    password = urlPassObj.value;
+    gDialog.PasswordInput.value = password;
+    gSettingsChanged = true;
+  }
 
   // Update or add data for a site 
   var siteIndex = gDialog.SiteList.selectedIndex;
@@ -445,9 +471,9 @@ function ValidateSettings()
       gDefaultSiteName = siteName;
     }    
     gPublishSiteData[siteIndex] = {};
-    gPublishSiteData[siteIndex].docDir = "/";
-    gPublishSiteData[siteIndex].otherDir = "/";
-    gPublishSiteData[siteIndex].dirList = ["/"];
+    gPublishSiteData[siteIndex].docDir = "";
+    gPublishSiteData[siteIndex].otherDir = "";
+    gPublishSiteData[siteIndex].dirList = [""];
     newSite = true;
   }
   gPublishSiteData[siteIndex].siteName = siteName;
@@ -499,6 +525,11 @@ function ValidateSettings()
 
   // And directory for images and other files
   var otherDir = GetOtherDirInput();
+  if (gDialog.SameLocationRadio.selected)
+    otherDir = docDir;
+  else
+    otherDir = GetOtherDirInput();
+    
   if (gDialog.OtherDirList.selectedIndex == -1)
     AppendDirToSelectedSite(otherDir);
 
@@ -569,7 +600,11 @@ function onAccept()
 
     var title = TrimString(gDialog.PageTitleInput.value);
     if (title != gPreviousTitle)
-      editorShell.SetDocumentTitle(title);
+    {
+      try {
+        editorShell.SetDocumentTitle(title);
+      } catch (e) {}
+    }
 
     SaveWindowLocation();
     window.opener.ok = true;

@@ -32,8 +32,10 @@
 <!ENTITY siteList.label           "Site Name:">
 <!ENTITY newSiteButton.label      "New Site">
 <!ENTITY siteDirList.label        "Select or type a directory name in your publishing site:">
-<!ENTITY docDirList.label         "Directory for web page:">
-<!ENTITY otherDirList.label       "Save images and other files to this directory:">
+<!ENTITY docDirList.label         "Subdirectory for this page:">
+<!ENTITY publishImgCheckbox.label "Include images and other files">
+<!ENTITY sameLocationRadio.label  "Use same location as page">
+<!ENTITY useSubdirRadio.label     "Use this subdirectory:">
 <!ENTITY chooseDirButton.label    "Choose...">
 <!ENTITY pageTitle.label          "Page Title:">
 <!ENTITY pageTitleExample.label   "e.g.: &quot;My Web Page&quot;">
@@ -49,8 +51,8 @@
 <!ENTITY serverInfo.label     "Server Information">
 <!ENTITY loginInfo.label      "Login Information">
 <!ENTITY siteName.label       "Site Name:">
-<!ENTITY siteUrl.label        "Publishing Location (provided by your ISP or Sys Admin.):">
-<!ENTITY browseUrl.label      "Home Page Location (if different from above):">
-<!ENTITY username.label       "Username:">
+<!ENTITY siteUrl.label        "Publishing URL (provided by your ISP or Sys Admin.):">
+<!ENTITY browseUrl.label      "HTTP address to browse to:">
+<!ENTITY username.label       "User name:">
 <!ENTITY password.label       "Password:">
 <!ENTITY savePassword.label   "Save Password">

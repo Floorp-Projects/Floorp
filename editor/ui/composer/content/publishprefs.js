@@ -108,7 +108,7 @@ function GetDefaultPublishSiteName()
 
 // Return object with all info needed to publish
 //   from database of sites previously published to.
-function GetPublishDataFromUrl(docUrl)
+function CreatePublishDataFromUrl(docUrl)
 {
   if (!docUrl || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file")
     return null;
@@ -137,21 +137,27 @@ function GetPublishDataFromUrl(docUrl)
   // Document wasn't found in publish site database
   // Create data just from URL
 
+  // Extract username and password from docUrl
+  var userObj = {};
+  var passObj = {};
+  var pubUrl = StripUsernamePassword(docUrl, userObj, passObj);
+
   // Strip off filename
-  var lastSlash = docUrl.lastIndexOf("\/");
-  var pubUrl = docUrl.slice(0, lastSlash);
+  var lastSlash = pubUrl.lastIndexOf("\/");
+  //XXX Look for "?", "=", and "&" ?
+  pubUrl = pubUrl.slice(0, lastSlash+1);
 
   publishData = { 
     siteName : pubUrl,
     filename : GetFilename(docUrl),
-    username : "",
-    password : "",
+    username : userObj.value,
+    password : passObj.value,
     savePassword : false,
     publishUrl : pubUrl,
     browseUrl  : pubUrl,
-    docDir     : "/",
-    otherDir   : "/",
-    dirList    : ["/"],
+    docDir     : "",
+    otherDir   : "",
+    dirList    : [""],
     notInSiteData : true
   }
 
@@ -242,11 +248,11 @@ function GetPublishData_internal(publishBranch, siteName)
     otherDir   : FormatDirForPublishing(GetPublishStringPref(publishBranch, prefPrefix+"other_dir"))
   }
   // Get password from PasswordManager
-  publishData.password = GetPassword(publishData);
+  publishData.password = GetSavedPassword(publishData);
 
   // Build history list of directories 
   // Always supply the root dir 
-  publishData.dirList = ["/"];
+  publishData.dirList = [""];
 
   // Get the rest from prefs
   var dirCount = {value:0};
@@ -297,7 +303,7 @@ function SavePublishSiteDataToPrefs(siteArray, defaultName)
       }
       // Assure that we have a default name
       if (siteArray.length && !defaultFound)
-        defaultName == siteArray[0].siteName;
+        defaultName = siteArray[0].siteName;
     }
 
     // Save default site name
@@ -367,6 +373,8 @@ function SavePublishData_Internal(publishPrefsBranch, publishData, siteIndex)
 
   SetPublishStringPref(publishPrefsBranch, "site_name."+siteIndex, publishData.siteName);
 
+  FixupUsernamePasswordInPublishData(publishData);
+
   var prefPrefix = "site_data." + publishData.siteName + "."
   SetPublishStringPref(publishPrefsBranch, prefPrefix+"url", publishData.publishUrl);
   SetPublishStringPref(publishPrefsBranch, prefPrefix+"browse_url", publishData.browseUrl);
@@ -394,7 +402,7 @@ function SavePublishData_Internal(publishPrefsBranch, publishData, siteIndex)
       var dir = publishData.dirList[j];
 
       // Don't store the root dir
-      if (dir != "/")
+      if (dir && dir != "/")
       {
         SetPublishStringPref(publishPrefsBranch, prefPrefix + "dir." + dirIndex, dir);
         dirIndex++;
@@ -579,28 +587,69 @@ function SetPublishStringPref(prefBranch, name, value)
   }
 }
 
-// Assure that a publishing URL does not end in "/"
+// Assure that a publishing URL ends in "/", "=", "&" or "?"
+// Username and password should always be extracted as separate fields
+//  and are not allowed to remain embeded in publishing URL
 function FormatUrlForPublishing(url)
 {
-  url = TrimString(url);
-  if (url && url.charAt(url.length-1) == "/")
-    url = url.slice(0,url.length-1);
-
+  url = TrimString(StripUsernamePassword(url));
+  if (url)
+  {
+    var lastChar = url.charAt(url.length-1);
+    if (lastChar != "/" && lastChar != "=" && lastChar != "&" && lastChar  != "?")
+      return (url + "/");
+  }
   return url;
 }
 
-// Assure that a publishing directory begins and ends with "/"
+// Username and password present in publish url are
+//  extracted into the separate "username" and "password" fields 
+//  of the publishData object
+// Returns true if we did change the publishData
+function FixupUsernamePasswordInPublishData(publishData)
+{
+  var ret = false;
+  if (publishData && publishData.publishUrl)
+  {
+    var userObj = {value:""};
+    var passObj = {value:""};
+    publishData.publishUrl = FormatUrlForPublishing(StripUsernamePassword(publishData.publishUrl, userObj, passObj));
+    if (userObj.value)
+    {
+      publishData.username = userObj.value;
+      ret = true;
+    }
+    if (passObj.value)
+    {
+      publishData.password = passObj.value;
+      ret = true;
+    }
+    // While we're at it, be sure browse URL is proper format
+    publishData.browseUrl = FormatUrlForPublishing(publishData.browseUrl);
+  }
+  return ret;
+}
+
+// Assure that a publishing directory ends with "/" and does not begin with "/"
 // Input dir is assumed to be a subdirectory string, not a full URL or pathname
 function FormatDirForPublishing(dir)
 {
   dir = TrimString(dir);
 
-  if (!dir || dir.charAt(0) != "/")
-    dir = "/" + dir;
+  // The "//" case is an expected "typo" filter
+  //  that simplifies code below!
+  if (!dir || dir == "/" || dir == "//")
+    return "";
 
+  // Remove leading "/"
+  if (dir.charAt(0) == "/")
+    dir = dir.slice(1);
+
+  // Append "/" at the end if necessary
   var dirLen = dir.length;
-  if (dirLen > 1 && dir.charAt(dirLen-1) != "/")
-    dir = dir + "/";
+  var lastChar = dir.charAt(dirLen-1);
+  if (dirLen > 1 && lastChar != "/" && lastChar != "=" && lastChar != "&" && lastChar  != "?")
+    return (dir + "/");
 
   return dir;
 }
@@ -618,7 +667,7 @@ function GetPasswordManager()
   return gPasswordManager
 }
 
-function GetPassword(publishData)
+function GetSavedPassword(publishData)
 {
   if (!publishData || !publishData.savePassword)
     return "";
