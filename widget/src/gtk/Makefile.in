@@ -35,7 +35,6 @@ CPPSRCS		= \
 		nsCheckButton.cpp \
 		nsClipboard.cpp \
 		nsComboBox.cpp \
-		nsContextMenu.cpp \
 		nsDragService.cpp \
 		nsFilePicker.cpp \
 		nsFileWidget.cpp \
@@ -46,9 +45,6 @@ CPPSRCS		= \
 		nsLabel.cpp \
 		nsListBox.cpp \
 		nsLookAndFeel.cpp \
-		nsMenu.cpp \
-		nsMenuBar.cpp \
-		nsPopUpMenu.cpp \
 		nsRadioButton.cpp \
 		nsScrollbar.cpp \
 		nsSound.cpp \
