@@ -413,3 +413,4 @@ NS_IMETHODIMP nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 
 	return err;
 }
+
