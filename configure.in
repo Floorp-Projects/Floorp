@@ -255,11 +255,11 @@ dnl ========================================================
 case "$target" in
 *-aix*)
     if test ! "$GNU_CC"; then
-	DSO_LDOPTS='-ldl -bM:SRE -brtl -berok -bexpall -bnoentry -L$(DIST)/lib'
-	DSO_CFLAGS='-DPIC -brtl -qflag=w:w'
+	DSO_LDOPTS='-ldl -bM:SRE -brtl -bso -berok -bexpall -bnoentry -L$(DIST)/lib'
+	DSO_CFLAGS='-DPIC -qflag=w:w'
     fi
-    MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
-    MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -berok --'
+    MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok --'
+    MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok --'
     AS='$(CC)'
     ;;
 
