@@ -1675,11 +1675,18 @@ nsHTMLEditRules::IsEmptyNode( nsIDOMNode *aNode,
         // is it the node we are iterating over?
         if (node.get() == aNode) break;
         // is it a moz-BR and did the caller ask us not to consider those relevant?
-        if (!(aMozBRDoesntCount && nsHTMLEditUtils::IsMozBR(node)))
+        if (!(aMozBRDoesntCount && nsHTMLEditUtils::IsMozBR(node))) 
         {
-          // otherwise it ain't empty
-          *outIsEmptyNode = PR_FALSE;
-          break;
+          // is it an empty node of some sort?
+          PRBool isEmptyNode;
+          res = IsEmptyNode(node, &isEmptyNode, aMozBRDoesntCount, aListItemsNotEmpty);
+          if (NS_FAILED(res)) return res;
+          if (!isEmptyNode) 
+          {
+            // otherwise it ain't empty
+            *outIsEmptyNode = PR_FALSE;
+            break;
+          }
         }
       }
     }
