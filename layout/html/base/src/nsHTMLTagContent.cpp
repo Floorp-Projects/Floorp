@@ -603,6 +603,8 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
       // XXX Bring up a contextual menu provided by the application
       break;
 
+// XXX kipp: I disabled this to make cursors over links work again.
+#if 0
     case NS_MOUSE_MOVE:
       if (mTag == nsHTMLAtoms::a) {
         nsAutoString base, href, target;
@@ -612,6 +614,7 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
         aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
+#endif
 
       // XXX this doesn't seem to do anything yet
     case NS_MOUSE_EXIT:
