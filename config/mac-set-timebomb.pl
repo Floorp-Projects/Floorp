@@ -94,6 +94,14 @@ sub set_indirected_bomb {
     set_pref($secret, $bomb);
 }
 
+sub time_diff {
+    use Time::Local;
+    my($time, $result) = @_;
+    my $diff = 2082830400 - (timegm(localtime) - time);
+    return $result =~ /mac/ ?
+        $time + $diff : $time - $diff;
+}
+
 sub set_bomb {
     my ($warning_days, $bomb_days) = @_;
 
@@ -105,15 +113,22 @@ sub set_bomb {
 	"bomb_days ($bomb_days)\n")
 	unless ($warning_days < $bomb_days);
 
-    my $now = time;
+    my $mactime = time;
+
+    print $mactime . "\n";
 
 #   MacPerl stores date and times from 1904 instead of 1970
-#   Let's do the timewarp again!
+#   Conversion routine thanks to Chris Nandor (pudge@pobox.com)
 
-    $now = $now + (66 * 365 * 24 * 60 * 60);
+    $now = time_diff($mactime, 'unix');
+
+				print $now . "\n";
 
     my $bomb = $now + ($bomb_days * 24 * 60 * 60);
     my $warn = $now + ($warning_days * 24 * 60 * 60);
+
+    print $bomb . "\n";
+    print $warn . "\n";
 
     set_pref("timebomb.expiration_time", $bomb);
     set_pref("timebomb.warning_time", $warn);
