@@ -96,9 +96,20 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 		    ...)
 {
     va_list ap;
+    JSBool ok;
+
+    va_start(ap, format);
+    ok = JS_ConvertArgumentsVA(cx, argc, argv, format, ap);
+    va_end(ap);
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
+		      const char *format, va_list ap)
+{
     uintN i;
     JSBool required;
-    const char *cp;
     char c;
     JSFunction *fun;
     jsdouble d;
@@ -106,13 +117,12 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
     JSObject *obj;
 
     CHECK_REQUEST(cx);
-    va_start(ap, format);
     i = 0;
     required = JS_TRUE;
-    for (cp = format; *cp != '\0'; cp++) {
-	if (isspace(*cp))
+    while ((c = *format++) != '\0') {
+	if (isspace(c))
 	    continue;
-	if (*cp == '/') {
+	if (c == '/') {
 	    required = JS_FALSE;
 	    continue;
 	}
@@ -131,7 +141,7 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    }
 	    break;
 	}
-	switch ((c = *cp)) {
+	switch (c) {
 	  case 'b':
 	    if (!js_ValueToBoolean(cx, argv[i], va_arg(ap, JSBool *)))
 		return JS_FALSE;
@@ -195,16 +205,123 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    break;
 	  default: {
 	    char charBuf[2] = " ";
-	    charBuf[0] = *cp;
+	    charBuf[0] = c;
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR,
 				 charBuf);
 	    return JS_FALSE;
-	    }
+	  }
 	}
 	i++;
     }
-    va_end(ap);
     return JS_TRUE;
+}
+
+JS_PUBLIC_API(jsval *)
+JS_PushArguments(JSContext *cx, void **markp, const char *format, ...)
+{
+    va_list ap;
+    jsval *argv;
+
+    va_start(ap, format);
+    argv = JS_PushArgumentsVA(cx, markp, format, ap);
+    va_end(ap);
+    return argv;
+}
+
+JS_PUBLIC_API(jsval *)
+JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
+{
+    uintN argc;
+    jsval *argv, *sp;
+    char c;
+    const char *cp;
+    JSString *str;
+    JSFunction *fun;
+
+    CHECK_REQUEST(cx);
+    *markp = NULL;
+    argc = 0;
+    for (cp = format; (c = *cp) != '\0'; cp++) {
+	if (isspace(c) || c == '*')
+	    continue;
+	argc++;
+    }
+    sp = js_AllocStack(cx, argc, markp);
+    if (!sp)
+	return NULL;
+    argv = sp;
+    while ((c = *format++) != '\0') {
+	if (isspace(c) || c == '*')
+	    continue;
+	switch (c) {
+	  case 'b':
+	    *sp = BOOLEAN_TO_JSVAL(va_arg(ap, JSBool));
+	    break;
+	  case 'c':
+	    *sp = INT_TO_JSVAL(va_arg(ap, uint16));
+	    break;
+	  case 'i':
+	  case 'j':
+	    if (!js_NewNumberValue(cx, (jsdouble) va_arg(ap, int32), sp))
+		goto bad;
+	    break;
+	  case 'u':
+	    if (!js_NewNumberValue(cx, (jsdouble) va_arg(ap, uint32), sp))
+		goto bad;
+	    break;
+	  case 'd':
+	  case 'I':
+	    if (!js_NewDoubleValue(cx, va_arg(ap, jsdouble), sp))
+		goto bad;
+	    break;
+	  case 's':
+	    str = JS_NewStringCopyZ(cx, va_arg(ap, char *));
+	    if (!str)
+		goto bad;
+	    *sp = STRING_TO_JSVAL(str);
+	    break;
+	  case 'W':
+	    str = JS_NewUCStringCopyZ(cx, va_arg(ap, jschar *));
+	    if (!str)
+		goto bad;
+	    *sp = STRING_TO_JSVAL(str);
+	    break;
+	  case 'S':
+	    str = va_arg(ap, JSString *);
+	    *sp = STRING_TO_JSVAL(str);
+	    break;
+	  case 'o':
+	    *sp = OBJECT_TO_JSVAL(va_arg(ap, JSObject *));
+	    break;
+	  case 'f':
+	    fun = va_arg(ap, JSFunction *);
+	    *sp = fun ? OBJECT_TO_JSVAL(fun->object) : JSVAL_NULL;
+	    break;
+	  case 'v':
+	    *sp = va_arg(ap, jsval);
+	    break;
+	  default: {
+	    char charBuf[2] = " ";
+	    charBuf[0] = c;
+	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CHAR,
+				 charBuf);
+	    goto bad;
+	  }
+	}
+	sp++;
+    }
+    return argv;
+
+bad:
+    js_FreeStack(cx, *markp);
+    return NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_PopArguments(JSContext *cx, void *mark)
+{
+    CHECK_REQUEST(cx);
+    js_FreeStack(cx, mark);
 }
 
 JS_PUBLIC_API(JSBool)

@@ -158,7 +158,7 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
         if (fgets(line, 256, fh) == NULL)
             return JS_FALSE;
         strcpy(bufp, line);
-    }        
+    }
     return JS_TRUE;
 }
 
@@ -186,7 +186,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
     } else {
         fh = stdin;
     }
-    
+
     if (!isatty(fileno(fh))) {
 	/*
          * It's not interactive - just execute it.
@@ -244,19 +244,19 @@ Process(JSContext *cx, JSObject *obj, char *filename)
                                   startline);
         if (script) {
             JSErrorReporter older;
-            
+
             ok = JS_ExecuteScript(cx, obj, script, &result);
             if (ok && result != JSVAL_VOID) {
                 /* Suppress error reports from JS_ValueToString(). */
                 older = JS_SetErrorReporter(cx, NULL);
                 str = JS_ValueToString(cx, result);
                 JS_SetErrorReporter(cx, older);
-                
+
                 if (str)
                     fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
                 else
                     ok = JS_FALSE;
-            }     
+            }
 #if 0
 #if JS_HAS_ERROR_EXCEPTIONS
             /*
@@ -264,7 +264,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
              * been set.
              */
             JS_ASSERT(ok || JS_IsExceptionPending(cx));
-            
+
             /*
              * Also that any time an exception has been set, we've
              * returned failure.
@@ -324,7 +324,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 filename = NULL;
                 /* XXX: js -f foo.js should interpret foo.js and then
                  * drop into interactive mode, but that breaks test
-                 * harness. Just execute foo.js for now. 
+                 * harness. Just execute foo.js for now.
                  */
                 isInteractive = JS_FALSE;
 		i++;
@@ -1000,6 +1000,8 @@ EscapeWideString(jschar *w)
     unsigned char b, c;
     int i, j;
 
+    if (!w)
+	return "";
     for (i = j = 0; i < sizeof enuf - 1; i++, j++) {
 	u = w[j];
 	if (u == 0)
@@ -1033,17 +1035,17 @@ EscapeWideString(jschar *w)
 static JSBool
 ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSBool b;
-    jschar c;
-    int32 i, j;
-    uint32 u;
-    jsdouble d, I;
-    char *s;
-    JSString *str;
-    jschar *w;
-    JSObject *obj;
-    JSFunction *fun;
-    jsval v;
+    JSBool b = JS_FALSE;
+    jschar c = 0;
+    int32 i = 0, j = 0;
+    uint32 u = 0;
+    jsdouble d = 0, I = 0;
+    char *s = NULL;
+    JSString *str = NULL;
+    jschar *w = NULL;
+    JSObject *obj = NULL;
+    JSFunction *fun = NULL;
+    jsval v = JSVAL_VOID;
 
     if (!JS_ConvertArguments(cx, argc, argv, "b/ciujdIsSWofv*",
 			     &b, &c, &i, &u, &j, &d, &I, &s, &str, &w, &obj,
@@ -1055,9 +1057,9 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    b, c, (char)c, i, u, j);
     fprintf(gOutFile,
 	    "d %g, I %g, s %s, S %s, W %s, obj %s, fun %s, v %s\n",
-	    d, I, s, JS_GetStringBytes(str), EscapeWideString(w),
+	    d, I, s, str ? JS_GetStringBytes(str) : "", EscapeWideString(w),
 	    JS_GetStringBytes(JS_ValueToString(cx, OBJECT_TO_JSVAL(obj))),
-	    JS_GetStringBytes(JS_DecompileFunction(cx, fun, 4)),
+	    fun ? JS_GetStringBytes(JS_DecompileFunction(cx, fun, 4)) : "",
 	    JS_GetStringBytes(JS_ValueToString(cx, v)));
     return JS_TRUE;
 }
@@ -1214,16 +1216,16 @@ static JSPropertySpec its_props[] = {
 };
 
 #ifdef JSD_LOWLEVEL_SOURCE
-/* 
- * This facilitates sending source to JSD (the debugger system) in the shell 
- * where the source is loaded using the JSFILE hack in jsscan. The function 
- * below is used as a callback for the jsdbgapi JS_SetSourceHandler hook. 
- * A more normal embedding (e.g. mozilla) loads source itself and can send 
+/*
+ * This facilitates sending source to JSD (the debugger system) in the shell
+ * where the source is loaded using the JSFILE hack in jsscan. The function
+ * below is used as a callback for the jsdbgapi JS_SetSourceHandler hook.
+ * A more normal embedding (e.g. mozilla) loads source itself and can send
  * source directly to JSD without using this hook scheme.
  */
 static void
 SendSourceToJSDebugger(const char *filename, uintN lineno,
-                       jschar *str, size_t length, 
+                       jschar *str, size_t length,
                        void **listenerTSData, JSDContext* jsdc)
 {
     JSDSourceText *jsdsrc = (JSDSourceText *) *listenerTSData;
@@ -1242,7 +1244,7 @@ SendSourceToJSDebugger(const char *filename, uintN lineno,
 	}
     }
     if (jsdsrc) {
-        jsdsrc = JSD_AppendUCSourceText(jsdc,jsdsrc, str, length, 
+        jsdsrc = JSD_AppendUCSourceText(jsdc,jsdsrc, str, length,
                                         JSD_SOURCE_PARTIAL);
     }
     *listenerTSData = jsdsrc;
@@ -1587,7 +1589,7 @@ main(int argc, char **argv)
                 if (f != NULL) {
                         int maxArgs = 32; /* arbitrary max !!! */
                         argc = 1;
-                        argv = malloc(sizeof(char *) * maxArgs); 
+                        argv = malloc(sizeof(char *) * maxArgs);
                         argv[0] = NULL;
                         while (fgets(argText, 255, f) != NULL) {
                                  /* argText includes '\n' */
@@ -1599,7 +1601,7 @@ main(int argc, char **argv)
                                 if (argc >= maxArgs) break;
                         }
                         fclose(f);
-                }       
+                }
                 gTestResultFile = fopen("results.txt", "w");
         }
 
