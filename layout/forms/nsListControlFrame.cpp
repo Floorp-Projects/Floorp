@@ -828,6 +828,7 @@ nsListControlFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
         mIsCapturingMouseEvents = PR_FALSE;
       }
       // XXX this is temp code
+#if 0
       if (!mIsScrollbarVisible) {
         nsIWidget * widget;
         view->GetWidget(widget);
@@ -836,6 +837,7 @@ nsListControlFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
           NS_RELEASE(widget);
         }
       }
+#endif
     }
   }
 
