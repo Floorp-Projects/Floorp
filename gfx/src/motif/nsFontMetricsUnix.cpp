@@ -24,7 +24,7 @@
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
-#define NOISY_FONTS
+//#define NOISY_FONTS
 
 nsFontMetricsUnix :: nsFontMetricsUnix()
 {
