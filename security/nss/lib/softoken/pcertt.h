@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.10 2002/11/04 19:31:59 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.11 2002/11/26 00:13:54 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -306,9 +306,10 @@ typedef struct _certDBEntrySubject {
     SECItem derSubject;
     unsigned int ncerts;
     char *nickname;
-    char *emailAddr;
     SECItem *certKeys;
     SECItem *keyIDs;
+    char **emailAddrs;
+    int nemailAddrs;
 } certDBEntrySubject;
 
 #define DB_SUBJECT_ENTRY_HEADER_LEN 6
