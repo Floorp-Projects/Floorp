@@ -931,10 +931,10 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
   }
 
   if (!mDroppedDown && aDoDropDown) {
-    nsRect absoluteTwips;
-    nsRect absolutePixels;
-    nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
-    nsRect displayRect;
+    //nsRect absoluteTwips;
+    //nsRect absolutePixels;
+    //nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
+    //nsRect displayRect;
      // Get the current sizes of the combo box child frames
     //displayFrame->GetRect(displayRect);
     //GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
