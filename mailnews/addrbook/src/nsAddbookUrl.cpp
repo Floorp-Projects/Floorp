@@ -375,7 +375,7 @@ NS_IMETHODIMP nsAddbookUrl::SetPath(const char * aPath)
 	return m_baseURL->SetPath(aPath);
 }
 
-NS_IMETHODIMP nsAddbookUrl::SchemeIs(PRUint32 aScheme, PRBool *_retval)
+NS_IMETHODIMP nsAddbookUrl::SchemeIs(const char *aScheme, PRBool *_retval)
 {
 	return m_baseURL->SchemeIs(aScheme, _retval);
 }

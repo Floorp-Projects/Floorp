@@ -378,7 +378,7 @@ NS_IMETHODIMP nsMailtoUrl::SetPath(const char * aPath)
 	return m_baseURL->SetPath(aPath);
 }
 
-NS_IMETHODIMP nsMailtoUrl::SchemeIs(PRUint32 aScheme, PRBool *_retval)
+NS_IMETHODIMP nsMailtoUrl::SchemeIs(const char *aScheme, PRBool *_retval)
 {
 	return m_baseURL->SchemeIs(aScheme, _retval);
 }

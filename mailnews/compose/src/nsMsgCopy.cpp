@@ -573,7 +573,7 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
   if (NS_FAILED(rv)) return rv;
  
   /* mailbox:/ means its local (on disk) */
-  rv = url->SchemeIs(nsIURI::MAILBOX, aResult);
+  rv = url->SchemeIs("mailbox", aResult);
   if (NS_FAILED(rv)) return rv;
   return NS_OK;
 }

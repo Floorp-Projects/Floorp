@@ -1809,7 +1809,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
       hostStr = cp2;
 
     PRBool isHTTP = PR_FALSE;
-    if (NS_SUCCEEDED(aURL->SchemeIs(nsIURI::HTTP, &isHTTP)) && isHTTP)
+    if (NS_SUCCEEDED(aURL->SchemeIs("http", &isHTTP)) && isHTTP)
     {
         returnString = PR_smprintf("%s.html", hostStr);
         PR_FREEIF(hostStr);
