@@ -412,7 +412,11 @@ init_hash(HTAB *hashp, const char *file, HASHINFO *info)
 			return (NULL);
 
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
+#ifdef QNX
+		hashp->BSIZE = statbuf.st_size;
+#else
 		hashp->BSIZE = statbuf.st_blksize;
+#endif
 
        	/* new code added by Lou to reduce block
        	 * size down below MAX_BSIZE
