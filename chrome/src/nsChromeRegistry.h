@@ -117,7 +117,7 @@ private:
   NS_HIDDEN_(nsresult) ProcessNewChromeFile(nsILocalFile *aListFile, nsIURI* aManifest);
   NS_HIDDEN_(nsresult) ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength, nsIURI* aManifest);
 
-protected:
+public:
   struct ProviderEntry
   {
     ProviderEntry(const nsACString& aProvider, nsIURI* aBase) :
@@ -173,6 +173,7 @@ protected:
     nsProviderArray  skins;
   };
 
+private:
   static const void*   GetKey(PLDHashTable *table, PLDHashEntryHdr *entry);
   static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
   static PRBool        MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
@@ -183,6 +184,7 @@ protected:
 
   static const PLDHashTableOps kTableOps;
 
+public:
   class OverlayListEntry : public nsURIHashKey
   {
   public:
@@ -214,6 +216,7 @@ protected:
     nsTHashtable<OverlayListEntry> mTable;
   };
 
+private:
   // Hash of package names ("global") to PackageEntry objects
   PLDHashTable mPackagesHash;
 
