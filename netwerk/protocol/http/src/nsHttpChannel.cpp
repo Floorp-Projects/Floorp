@@ -395,10 +395,10 @@ nsHttpChannel::ProcessResponse()
         break;
     case 401:
     case 407:
-        CloseCacheEntry(NS_ERROR_ABORT);
         rv = ProcessAuthentication(httpStatus);
         if (NS_FAILED(rv)) {
             LOG(("ProcessAuthentication failed [rv=%x]\n", rv));
+            CloseCacheEntry(NS_ERROR_ABORT);
             rv = ProcessNormal();
         }
         break;
@@ -1246,6 +1246,8 @@ nsHttpChannel::GetCredentials(const char *challenges,
                                    getter_Copies(result));
     if (NS_FAILED(rv)) return rv;
 
+    LOG(("generated creds: %s\n", result.get()));
+
     creds.Assign(result);
 
     // store these credentials in the cache.  we do this even though we don't
@@ -1310,6 +1312,8 @@ nsresult
 nsHttpChannel::GetUserPassFromURI(nsAString &user,
                                   nsAString &pass)
 {
+    LOG(("nsHttpChannel::GetUserPassFromURI [this=%x]\n", this));
+
     // XXX should be a necko utility function 
     nsXPIDLCString prehost;
     mURI->GetPreHost(getter_Copies(prehost));
