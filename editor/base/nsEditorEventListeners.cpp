@@ -31,7 +31,32 @@
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
- 
+//#define NEW_CLIPBOARD_SUPPORT
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+
+// Drag & Drop, Clipboard
+#include "nsIServiceManager.h"
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+#include "nsIDataFlavor.h"
+#include "nsIFormatConverter.h"
+
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
+
+static NS_DEFINE_IID(kITransferableIID,  NS_ITRANSFERABLE_IID);
+static NS_DEFINE_CID(kCTransferableCID,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
+static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
+
+static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
+#endif
+
+
 /*
  * nsTextEditorKeyListener implementation
  */
@@ -665,7 +690,21 @@ nsTextEditorDragListener::HandleEvent(nsIDOMEvent* aEvent)
 
 
 nsresult
-nsTextEditorDragListener::DragStart(nsIDOMEvent* aDragEvent)
+nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+
+
+nsresult
+nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+
+
+nsresult
+nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 {
   return NS_OK;
 }
@@ -675,7 +714,47 @@ nsTextEditorDragListener::DragStart(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  mEditor->InsertText(nsAutoString("hello"));
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+  nsString stuffToPaste;
+  nsIClipboard* clipboard;
+  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                             kIClipboardIID,
+                                             (nsISupports **)&clipboard);
+  nsITransferable *trans = 0;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+
+  //nsIFormatConverter * xifConverter;
+  //rv = nsComponentManager::CreateInstance(kCXIFFormatConverterCID, nsnull, kIFormatConverterIID, (void**) &xifConverter);
+
+  //trans->SetConverter(xifConverter);
+
+  nsIDataFlavor *flavor = 0;
+  rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+  flavor->Init(kTextMime, "Text");
+  trans->AddDataFlavor(flavor);
+
+  clipboard->GetData(trans);
+
+  char *str = 0;
+  PRUint32 len;
+  trans->GetTransferData(flavor, (void **)&str, &len);
+
+  if (str) {
+    if (str[len-1] == 0) {
+      len--;
+    }
+    stuffToPaste.SetString(str, len);
+    mEditor->InsertText(stuffToPaste);
+  }
+
+  NS_IF_RELEASE(flavor);
+  NS_IF_RELEASE(trans);
+  NS_IF_RELEASE(clipboard);
+
+#endif  
+  
+  //mEditor->InsertText(nsAutoString("hello"));
   return NS_OK;
 }
 

@@ -159,7 +159,9 @@ public:
 /*BEGIN implementations of mouseevent handler interface*/
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 public:
-  virtual nsresult DragStart(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragEnter(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragOver(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragExit(nsIDOMEvent* aDragEvent);
   virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
 /*END implementations of mouseevent handler interface*/
 
