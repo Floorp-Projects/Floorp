@@ -174,19 +174,25 @@ nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFra
 }
   
 PRInt32
-nsFormControlHelper::CalculateSize (nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
-                             const nsSize& aCSSSize, nsInputDimensionSpec& aSpec, 
-                             nsSize& aBounds, PRBool& aWidthExplicit, 
-                             PRBool& aHeightExplicit, nscoord& aRowHeight,
-                             nsIRenderingContext *aRendContext) 
+nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext, 
+                                    nsIRenderingContext*  aRendContext,
+                                    nsIFormControlFrame*  aFrame,
+                                    const nsSize&         aCSSSize, 
+                                    nsInputDimensionSpec& aSpec, 
+                                    nsSize&               aDesiredSize, 
+                                    nsSize&               aMinSize, 
+                                    PRBool&               aWidthExplicit, 
+                                    PRBool&               aHeightExplicit, 
+                                    nscoord&              aRowHeight) 
 {
-  nscoord charWidth   = 0;
+  nscoord charWidth   = 0; 
+  nscoord charHeight  = 0;
   PRInt32 numRows     = ATTR_NOTSET;
   aWidthExplicit      = PR_FALSE;
   aHeightExplicit     = PR_FALSE;
 
-  aBounds.width  = CSS_NOTSET;
-  aBounds.height = CSS_NOTSET;
+  aDesiredSize.width  = CSS_NOTSET;
+  aDesiredSize.height = CSS_NOTSET;
   nsSize textSize(0,0);
 
   nsIContent* iContent = nsnull;
@@ -213,45 +219,63 @@ nsFormControlHelper::CalculateSize (nsIPresContext* aPresContext, nsIFormControl
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
-  // determine the width
-  nscoord adjSize;
+#if 0
+  // determine if it is percentage based width, height
+  PRBool percentageWidth  = PR_FALSE;
+  PRBool percentageHeight = PR_FALSE;
+
+  const nsStylePosition* pos;
+  nsIFrame* iFrame = nsnull;
+  nsresult rv = aFrame->QueryInterface(kIFrameIID, (void**)&iFrame);
+  if ((NS_OK == rv) && (nsnull != iFrame)) { 
+    iFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+    if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
+      percentageWidth = PR_TRUE;
+    }
+    if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
+      percentageHeight = PR_TRUE;
+    }
+  }
+#endif
+  // determine the width, char height, row height
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
     PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
     if (aSpec.mColSizeAttrInPixels) {
-      col = (col <= 0) ? 15 : col; 
-      aBounds.width = NSIntPixelsToTwips(col, p2t);
-    }
-    else {
-      col = (col <= 0) ? 1 : col;
-      charWidth = GetTextSize(*aPresContext, aFrame, col, aBounds, aRendContext);
-      aRowHeight = aBounds.height;  // XXX aBounds.height has CSS_NOTSET
+      // need to set charWidth and aDesiredSize.height
+      charWidth = GetTextSize(*aPresContext, aFrame, 1, aDesiredSize, aRendContext);
+      col = (col <= 0) ? 15 : col; // XXX why a default of 15 pixels, why hide it
+      aDesiredSize.width = NSIntPixelsToTwips(col, p2t);
+    } else {
+      col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
+      charWidth = GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
     }
     if (aSpec.mColSizeAttrInPixels) {
       aWidthExplicit = PR_TRUE;
     }
-  }
-  else {
+    aMinSize.width = aDesiredSize.width;
+  } else {
+    // set aDesiredSize for height calculation below. CSS may override width
+    if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
+      charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aDesiredSize, aRendContext);
+    } else if (aSpec.mColDefaultValue) {          // use default value
+      charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aDesiredSize, aRendContext);
+    } else if (aSpec.mColDefaultSizeInPixels) {   // use default width in pixels
+      charWidth = GetTextSize(*aPresContext, aFrame, 1, aDesiredSize, aRendContext);
+      aDesiredSize.width = aSpec.mColDefaultSize;
+    } else  {                                     // use default width in num characters
+      charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+    }
+    aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
-      aBounds.width = (aCSSSize.width > 0) ? aCSSSize.width : 1;
-      aWidthExplicit = PR_TRUE;
-    } 
-    else {                       
-      if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
-        charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds, aRendContext);
+      NS_ASSERTION(aCSSSize.width > 0, "form control's computed width is <= 0"); 
+      if (NS_INTRINSICSIZE != aCSSSize.width) {
+        aDesiredSize.width = PR_MAX(aDesiredSize.width,aCSSSize.width);
+        aWidthExplicit = PR_TRUE;
       }
-      else if (aSpec.mColDefaultValue) { // use default value
-        charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aBounds, aRendContext);
-      }
-      else if (aSpec.mColDefaultSizeInPixels) {    // use default width in pixels
-        charWidth = GetTextSize(*aPresContext, aFrame, 1, aBounds, aRendContext);
-        aBounds.width = aSpec.mColDefaultSize;
-      }
-      else  {                                    // use default width in num characters
-        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aBounds, aRendContext); 
-      }
-      aRowHeight = aBounds.height; // XXX aBounds.height has CSS_NOTSET
     }
   }
+  aRowHeight      = aDesiredSize.height;
+  aMinSize.height = aDesiredSize.height;
 
   // determine the height
   nsHTMLValue rowAttr;
@@ -260,52 +284,40 @@ nsFormControlHelper::CalculateSize (nsIPresContext* aPresContext, nsIFormControl
     rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
   }
   if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-    adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
-    if (0 == charWidth) {
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-      aBounds.height = textSize.height * adjSize;
-      aRowHeight = textSize.height;
-      numRows = adjSize;
+    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
+                            ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+    numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
+    aDesiredSize.height = aDesiredSize.height * numRows;
+  } else {
+    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
+    if (CSS_NOTSET != aCSSSize.height) {  // css provides height
+      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+      if (NS_INTRINSICSIZE != aCSSSize.height) {
+        aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
+        aHeightExplicit = PR_TRUE;
+      }
     }
-    else {
-      aBounds.height = aBounds.height * adjSize;
-    }
-  }
-  else if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-    aBounds.height = (aCSSSize.height > 0) ? aCSSSize.height : 1;
-    aHeightExplicit = PR_TRUE;
-  } 
-  else {         // use default height in num lines
-    if (0 == charWidth) {  
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-      aBounds.height = textSize.height * aSpec.mRowDefaultSize;
-      aRowHeight = textSize.height;
-    } 
-    else {
-      aBounds.height = aBounds.height * aSpec.mRowDefaultSize;
-    }
-  }
-
-  if ((0 == charWidth) || (0 == textSize.width)) {
-    charWidth = GetTextSize(*aPresContext, aFrame, 1, textSize, aRendContext);
-    aRowHeight = textSize.height;
   }
 
   // add inside padding if necessary
   if (!aWidthExplicit) {
-    aBounds.width += (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aBounds.width, charWidth));
+    PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
+    aDesiredSize.width += hPadding;
+    aMinSize.width += hPadding;
   }
   if (!aHeightExplicit) {
-    aBounds.height += (2 * aFrame->GetVerticalInsidePadding(p2t, textSize.height)); 
+    PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(p2t, aRowHeight));
+    aDesiredSize.height += vPadding;
+    aMinSize.height += vPadding;
   }
 
   NS_RELEASE(hContent);
   if (ATTR_NOTSET == numRows) {
-    numRows = aBounds.height / aRowHeight;
+    numRows = aDesiredSize.height / aRowHeight;
   }
 
   NS_RELEASE(iContent);
+
   return numRows;
 }
 

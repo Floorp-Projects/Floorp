@@ -360,14 +360,16 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   }
 
   PRInt32 rowHeight = 0;
-  nsSize calcSize;
+  nsSize desiredSize;
+  nsSize minSize;
   PRBool widthExplicit, heightExplicit;
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   // XXX fix CalculateSize to return PRUint32
-  PRUint32 numRows = (PRUint32)nsFormControlHelper::CalculateSize(&aPresContext, this, styleSize, textSpec, 
-                                                           calcSize, widthExplicit, heightExplicit, rowHeight,
-                                                           aReflowState.rendContext);
+  PRUint32 numRows = 
+    (PRUint32)nsFormControlHelper::CalculateSize(&aPresContext, aReflowState.rendContext, this, 
+                                                 styleSize, textSpec, desiredSize, minSize,
+                                                 widthExplicit, heightExplicit, rowHeight);
 
   float sp2t;
   float p2t;
@@ -380,22 +382,11 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   nscoord scrollbarHeight = 0;
   nsListControlFrame::GetScrollBarDimensions(aPresContext, scrollbarWidth, scrollbarHeight);
 
-  nscoord extra = calcSize.height - (rowHeight * numRows);
+  nscoord extra = desiredSize.height - (rowHeight * numRows);
 
   numRows = (numOptions > 20 ? 20 : numOptions);
-  calcSize.height = (numRows * rowHeight) + extra;
-  if (numRows < 21) {
-    //calcSize.width += scrollbarWidth;
-  }
-
-  /*aDesiredSize.width = calcSize.width;
-  // account for vertical scrollbar, if present  
-  if (!widthExplicit && (numRows < (PRInt32)numOptions)) {
-    aDesiredSize.width += scrollbarWidth;
-  }
-*/
+  desiredSize.height = (numRows * rowHeight) + extra;
   aDesiredSize.descent = 0;
-
 
   nsMargin  border;
   const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -416,21 +407,22 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   sis.mFont = &font;
   context->GetSystemAttribute(eSystemAttr_Font_Tooltips, &sis);
 
-  nscoord adjustment = NSIntPixelsToTwips(14, p2t);
+  nscoord horKludgeAdjustment = NSIntPixelsToTwips(14, p2t);
+  nscoord horAdjustment = scrollbarScaledWidth + border.left + border.right + horKludgeAdjustment;
 
-  aDesiredSize.width  = calcSize.width + scrollbarScaledWidth + border.left + border.right + adjustment;
-  aDesiredSize.height = rowHeight + onePixel;
-  aDesiredSize.height = rowHeight + onePixel;
+  aDesiredSize.width  = desiredSize.width + horAdjustment;
+
+  nscoord verKludgeAdjustment = onePixel;
+  nscoord verAdjustment = border.top + border.bottom + verKludgeAdjustment;
+
+  aDesiredSize.height = rowHeight + verAdjustment;
 
   mButtonRect.SetRect(aDesiredSize.width-scrollbarScaledWidth-border.right, border.top, 
                       scrollbarScaledWidth, aDesiredSize.height);
 
-  desiredSize = aDesiredSize;
-  aDesiredSize.height += border.top + border.bottom;
-
   if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    aDesiredSize.maxElementSize->width  = minSize.width  + verAdjustment;
+	  aDesiredSize.maxElementSize->height = minSize.height + horAdjustment;
   }
 
 

@@ -449,7 +449,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
       aReflowState.reflowCommand->GetNext(nextFrame, PR_FALSE);
 
       // See if it's one of our absolutely positioned child frames
-      if (mAbsoluteFrames.ContainsFrame(nextFrame)) {
+      if (nextFrame && mAbsoluteFrames.ContainsFrame(nextFrame)) {
         // Remove the next frame from the reflow path
         aReflowState.reflowCommand->GetNext(nextFrame, PR_TRUE);
 

@@ -292,10 +292,10 @@ nsSelectControlFrame::GetCID()
 }
 
 void 
-nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState,
-                                     nsHTMLReflowMetrics& aDesiredLayoutSize,
-                                     nsSize& aDesiredWidgetSize)
+                                     nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                     nsSize&                  aDesiredWidgetSize)
 {
   nsIDOMHTMLSelectElement* select = GetSelect();
   if (!select) {
@@ -334,14 +334,16 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   PRInt32 rowHeight = 0;
-  nsSize calcSize;
+  nsSize desiredSize;
+  nsSize minSize;
   PRBool widthExplicit, heightExplicit;
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   // XXX fix CalculateSize to return PRUint32
-  mNumRows = (PRUint32)nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, textSpec, 
-                                                           calcSize, widthExplicit, heightExplicit, rowHeight,
-                                                           aReflowState.rendContext);
+  mNumRows = 
+    (PRUint32)nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
+                                                 textSpec, desiredSize, minSize, widthExplicit, 
+                                                 heightExplicit, rowHeight);
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr;
@@ -374,16 +376,28 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     scrollbarHeight = scrollbarWidth;
   }
 
-  aDesiredLayoutSize.width = calcSize.width;
+  aDesiredLayoutSize.width = desiredSize.width;
   // account for vertical scrollbar, if present  
   if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
     aDesiredLayoutSize.width += scrollbarWidth;
+  }
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width = minSize.width;
+    if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
+      aDesiredLayoutSize.maxElementSize->width += scrollbarWidth;
+    }
   }
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
   aDesiredLayoutSize.height = (mIsComboBox)
     ? rowHeight + (2 * GetVerticalInsidePadding(p2t, rowHeight))
-    : calcSize.height; 
+    : desiredSize.height; 
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->height = (mIsComboBox)
+      ? rowHeight + (2 * GetVerticalInsidePadding(p2t, rowHeight))
+      : minSize.height; 
+  }
+
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
 
@@ -399,6 +413,9 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     nscoord ignore;
     GetWidgetSize(*aPresContext, ignore, aDesiredLayoutSize.height);
     aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+    if (aDesiredLayoutSize.maxElementSize) {
+      aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
+    }
   }
 
   NS_RELEASE(select);
