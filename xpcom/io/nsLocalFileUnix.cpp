@@ -1065,7 +1065,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
     parentPath.Truncate(offset);
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
+    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
     
     if(NS_SUCCEEDED(rv) && localFile)
     {
@@ -1286,6 +1286,20 @@ nsLocalFile::Spawn(const char **args, PRUint32 count)
         return NS_ERROR_FILE_EXECUTION_FAILED;
 }
 
+
+/* attribute PRBool followLinks; */
+NS_IMETHODIMP 
+nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
+{
+    *aFollowLinks = PR_TRUE;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
+{
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
 {
@@ -1315,7 +1329,7 @@ nsLocalFile::Load(PRLibrary **_retval)
 }
 
 nsresult 
-NS_NewLocalFile(const char* path, nsILocalFile* *result)
+NS_NewLocalFile(const char* path, PRBool followSymlinks, nsILocalFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();
     if (file == nsnull)

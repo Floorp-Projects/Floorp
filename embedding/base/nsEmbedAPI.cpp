@@ -75,7 +75,7 @@ nsresult NS_InitEmbedding(const char *aPath)
     nsILocalFile *localFile = nsnull;
     if (aPath && strlen(aPath) > 0)
     {
-        NS_NewLocalFile(aPath, &localFile);
+        NS_NewLocalFile(aPath, PR_FALSE, &localFile);
     }
 
     nsresult rv = NS_InitEmbedding(localFile);
@@ -169,7 +169,6 @@ nsresult NS_InitEmbedding(nsILocalFile *aPath)
     return NS_OK;
 
 }
-
 
 nsresult NS_TermEmbedding()
 {

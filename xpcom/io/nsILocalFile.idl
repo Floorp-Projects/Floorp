@@ -57,7 +57,24 @@ interface nsILocalFile : nsIFile
      */
     void initWithPath([const] in string filePath);
     void initWithUnicodePath([const] in wstring filePath);
-       
+    
+    /**
+     * followLinks
+     *
+     *    This attribute will determine if the nsLocalFile will auto
+     *    resolve symbolic links.  By default, this value will be false
+     *    on all non unix systems.  On unix, this attribute is effectively
+     *    a noop.  
+     *
+     *    Be aware that changing this attribute from true to false after
+     *    the nsILocalFile has been initialized may lead to errors.  This
+     *    could happen if there were resolved symlink in the initialized
+     *    path.  For example if you had /a/b/c where |b| was a symlink, 
+     *    and you change this attribute to false, the next usage would 
+     *    mostlikely fail.
+     */
+    attribute PRBool followLinks;  
+
     [noscript] PRFileDescStar openNSPRFileDesc(in long flags, in long mode);
     [noscript] FILE           openANSIFileDesc(in string mode);
 
@@ -84,9 +101,9 @@ interface nsILocalFile : nsIFile
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
 extern "C" NS_EXPORT nsresult
-NS_NewLocalFile(const char* path, nsILocalFile* *result);
+NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result);
 
 extern "C" NS_EXPORT nsresult
-NS_NewUnicodeLocalFile(const PRUnichar* path, nsILocalFile* *result);
+NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result);
 
 %}

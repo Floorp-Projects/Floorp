@@ -414,7 +414,7 @@ void DeleteScheduledFiles( HREG reg )
                     // no need to check return value of 
                     // SetPersistentDescriptorString, it's always NS_OK
                     //spec->SetPersistentDescriptorString(valbuf); //nsIFileXXX: Do we still need this instead of InitWithPath?
-                    NS_NewLocalFile((char*)valbuf, getter_AddRefs(spec));
+                    NS_NewLocalFile((char*)valbuf, PR_TRUE, getter_AddRefs(spec));
                     spec->Clone(getter_AddRefs(doomedFile));
                     if (NS_SUCCEEDED(rv)) 
                     {
@@ -478,10 +478,10 @@ void ReplaceScheduledFiles( HREG reg )
 
             if ( err1 == REGERR_OK && err2 == REGERR_OK )
             {
-                rv1 = NS_NewLocalFile((char*)srcFile, getter_AddRefs(src));
+                rv1 = NS_NewLocalFile((char*)srcFile, PR_TRUE, getter_AddRefs(src));
                 rv1 = src->Clone(getter_AddRefs(srcSpec));
 
-                rv2 = NS_NewLocalFile((char*)doomedFile, getter_AddRefs(dest));
+                rv2 = NS_NewLocalFile((char*)doomedFile, PR_TRUE, getter_AddRefs(dest));
                 rv2 = dest->Clone(getter_AddRefs(doomedSpec));
 
                 if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))

@@ -211,7 +211,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     rv = reader->OnStartRequest(nsnull, nsnull);
     if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
 
-    rv = NS_NewLocalFile(path, getter_AddRefs(file));
+    rv = NS_NewLocalFile(path, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) goto done;
 
     rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStr), file);
@@ -326,7 +326,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
     PRDirEntry* entry;
     while ((entry = PR_ReadDir(dir, PR_SKIP_BOTH)) != nsnull) {
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(dirName, getter_AddRefs(file));
+        rv = NS_NewLocalFile(dirName, PR_FALSE, getter_AddRefs(file));
         NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewLocalFile failed");
 
         rv = file->Append(entry->name);

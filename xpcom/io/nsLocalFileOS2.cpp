@@ -263,6 +263,7 @@ nsLocalFile::nsLocalFile()
     mPersistFile = nsnull;
     mShellLink   = nsnull;
 #endif
+    mFollowSymlinks = PR_FALSE;
     mLastResolution = PR_FALSE;
     MakeDirty();
 }
@@ -566,6 +567,8 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         return(NS_ERROR_FILE_NOT_FOUND);
     } 
 #else
+    if (!mFollowSymlinks)
+        return NS_ERROR_FILE_NOT_FOUND;  // if we are not resolving, we just give up here.
 
     nsresult result;
 
@@ -610,7 +613,7 @@ nsLocalFile::Clone(nsIFile **file)
 
     nsCOMPtr<nsILocalFile> localFile;
 
-    rv = NS_NewLocalFile(aFilePath, getter_AddRefs(localFile));
+    rv = NS_NewLocalFile(aFilePath, mFollowSymlinks, getter_AddRefs(localFile));
     nsMemory::Free(aFilePath);
     
     if (NS_SUCCEEDED(rv) && localFile)
@@ -1683,7 +1686,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     parentPath.Truncate(offset);
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
+    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
     
     if(NS_SUCCEEDED(rv) && localFile)
     {
@@ -2027,6 +2030,21 @@ nsLocalFile::GetTarget(char **_retval)
 }
 
 
+/* attribute PRBool followLinks; */
+NS_IMETHODIMP 
+nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
+{
+    *aFollowLinks = mFollowSymlinks;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
+{
+    MakeDirty();
+    mFollowSymlinks = aFollowLinks;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 {
@@ -2056,14 +2074,28 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     return NS_OK;
 }
 
+/* attribute PRBool followLinks; */
+NS_IMETHODIMP 
+nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
+{
+    *aFollowLinks = PR_TRUE;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
+{
+    return NS_OK;
+}
 
 nsresult 
-NS_NewLocalFile(const char* path, nsILocalFile* *result)
+NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();
     if (file == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(file);
+
+    file->SetFollowLinks(followLinks);
 
     nsresult rv = file->InitWithPath(path);
     if (NS_FAILED(rv)) {

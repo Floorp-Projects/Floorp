@@ -449,11 +449,11 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> inDirFile;
-    rv = NS_NewLocalFile(inDir, getter_AddRefs(inDirFile));
+    rv = NS_NewLocalFile(inDir, PR_FALSE, getter_AddRefs(inDirFile));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> outDirFile;
-    rv = NS_NewLocalFile(outDir, getter_AddRefs(outDirFile));
+    rv = NS_NewLocalFile(outDir, PR_FALSE, getter_AddRefs(outDirFile));
     if (NS_FAILED(rv)) return rv;
 
     CreateFun create = FileChannelWorker::Create;

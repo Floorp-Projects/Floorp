@@ -167,7 +167,7 @@ nsStreamXferOp::Start( void ) {
                 nsFileSpec target;      // XXX eliminate
                 mOutputSpec->GetFileSpec( &target );
                 nsCOMPtr<nsILocalFile> file;
-                rv = NS_NewLocalFile(target, getter_AddRefs(file));
+                rv = NS_NewLocalFile(target, PR_FALSE, getter_AddRefs(file));
                 if (NS_SUCCEEDED(rv)) {
                     rv = fts->CreateTransport(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                               0664, getter_AddRefs( mOutputChannel));

@@ -624,7 +624,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 	      // we have a file path in |data|. Create an nsLocalFile object.
 	      char* filepath = NS_REINTERPRET_CAST(char*, data);
 	      nsCOMPtr<nsILocalFile> file;
-	      if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, getter_AddRefs(file))) )
+	      if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
 	        genericDataWrapper = do_QueryInterface(file);
 	    }
 	    else {

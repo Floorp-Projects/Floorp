@@ -96,7 +96,7 @@ static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 	if ( NS_FAILED ( rv ) )
 		return rv;
 		
-	rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
+	rv = NS_NewLocalFile( path, PR_FALSE, getter_AddRefs(cacheFolder));
 	nsMemory::Free( path );
 	
 	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	

@@ -1312,7 +1312,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               // on the Mac as it expects a Unix style path.  Instead we'll use our
               // spiffy new nsILocalFile
               nsILocalFile* tempFile = nsnull;
-              rv = NS_NewLocalFile(value, &tempFile);
+              rv = NS_NewLocalFile(value, PR_TRUE, &tempFile);
               NS_ASSERTION(tempFile, "Couldn't create nsIFileSpec to get file size!");
               if (NS_FAILED(rv) || !tempFile)
                 break; // NS_ERROR_OUT_OF_MEMORY

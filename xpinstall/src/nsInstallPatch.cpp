@@ -93,7 +93,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     nsString folderSpec; folderSpec.AssignWithConversion(tempTargetFile);
 	
     nsCOMPtr<nsILocalFile> tmp;
-    NS_NewLocalFile((char*)tempTargetFile, getter_AddRefs(tmp));
+    NS_NewLocalFile((char*)tempTargetFile, PR_TRUE, getter_AddRefs(tmp));
 
     mPatchFile      =   nsnull;
     mTargetFile     =   nsnull;
