@@ -242,6 +242,12 @@ GetCertRequest(PRFileDesc *inFile, PRBool ascii)
 		SEC_ASN1_GET(CERT_CertificateRequestTemplate), &signedData.data);
    } while (0);
 
+   if (!rv) {
+   	rv = CERT_VerifySignedDataWithPubKeyInfo(&signedData, 
+					         &certReq->subjectPublicKeyInfo,
+					         NULL /* wincx */);
+   }
+
    if (rv) {
        PRErrorCode  perr = PR_GetError();
        fprintf(stderr, "%s: unable to decode DER cert request (%s)\n", progName,

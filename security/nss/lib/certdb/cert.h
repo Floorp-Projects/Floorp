@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.25 2002/10/05 02:24:23 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.26 2002/10/18 21:58:18 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -265,6 +265,8 @@ extern KeyType CERT_GetCertKeyType (CERTSubjectPublicKeyInfo *spki);
 **  the initial list of certificates in the database.
 */
 extern SECStatus CERT_InitCertDB(CERTCertDBHandle *handle);
+
+extern int CERT_GetDBContentVersion(CERTCertDBHandle *handle);
 
 /*
 ** Default certificate database routines
@@ -559,6 +561,13 @@ extern SECStatus CERT_VerifySignedData(CERTSignedData *sd,
 				       CERTCertificate *cert,
 				       int64 t,
 				       void *wincx);
+/*
+** verify the signature of a signed data object with the given DER publickey
+*/
+extern SECStatus
+CERT_VerifySignedDataWithPubKeyInfo(CERTSignedData *sd,
+                                    CERTSubjectPublicKeyInfo *pubKeyInfo,
+                                    void *wincx);
 
 /*
 ** NEW FUNCTIONS with new bit-field-FIELD SECCertificateUsage - please use
