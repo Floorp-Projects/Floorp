@@ -247,3 +247,8 @@
     {
       border-top          : none;
     }
+
+#navprintplus
+    {
+      display:none !important; 
+    }

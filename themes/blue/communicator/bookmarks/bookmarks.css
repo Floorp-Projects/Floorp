@@ -144,3 +144,8 @@ treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > .t
 treeitem > treerow > .treecell-bookmark {
  list-style-image:url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
+
+#navprintplus
+{
+ display:none !important; 
+} 
