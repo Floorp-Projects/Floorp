@@ -66,7 +66,6 @@ private:
     char rightbyte;
 
   } DByte;
-    void GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
 
 };
 

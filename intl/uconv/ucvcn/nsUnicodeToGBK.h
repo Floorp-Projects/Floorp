@@ -39,7 +39,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToGBK(){};
+  nsUnicodeToGBK();
   virtual ~nsUnicodeToGBK(){};
 
   /**
@@ -76,9 +76,6 @@ protected:
     char rightbyte;
 
   } DByte;
-
-  void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode);
-
 
 };
 

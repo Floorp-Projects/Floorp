@@ -25,12 +25,10 @@
 
 #include "nsGBKToUnicode.h"
 #include "nsUCvCnDll.h"
-
 #include "gbku.h"
 
 //----------------------------------------------------------------------
-// Class nsGB2312ToUnicode [implementation]
-
+// Class nsGBKToUnicode [implementation]
 
 nsresult nsGBKToUnicode::CreateInstance(nsISupports ** aResult) 
 {
@@ -49,70 +47,58 @@ NS_IMETHODIMP nsGBKToUnicode::GetMaxLength(const char * aSrc,
   return NS_OK;
 }
 
-
-
-//Overwriting the ConvertNoBuff() in nsUCvCnSupport.cpp.
-//side effects: all the helper functions called by UCvCnSupport are deprecated
-
-void nsGBKToUnicode::GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
-{
-	short int iGBKToUnicodeIndex;
-
-    if(pGBCode)	
-	iGBKToUnicodeIndex = ( (short int)(pGBCode->leftbyte) - 0x81)*0xbf +( (short int)(pGBCode->rightbyte) - 0x40);
-
-	if( (iGBKToUnicodeIndex >= 0 ) && ( iGBKToUnicodeIndex < MAX_GBK_LENGTH) )
-	*pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
-
-}
-
-
-
 NS_IMETHODIMP nsGBKToUnicode::ConvertNoBuff(const char* aSrc,
-											   PRInt32 * aSrcLength,
-											   PRUnichar *aDest,
-											   PRInt32 * aDestLength)
+                                            PRInt32 * aSrcLength,
+                                            PRUnichar *aDest,
+                                            PRInt32 * aDestLength)
 {
-
-	short int i=0;
-	short int iSrcLength = (short int)(*aSrcLength);
-	DByte *pSrcDBCode = (DByte *)aSrc;
-    PRUnichar *pDestDBCode = (PRUnichar *)aDest;
-	int iDestlen = 0;
-
-
-    for (i=0;i<iSrcLength;i++)
+  PRInt32 i=0;
+  PRInt32 iSrcLength = (*aSrcLength);
+  DByte *pSrcDBCode = (DByte *)aSrc;
+  PRUnichar *pDestDBCode = (PRUnichar *)aDest;
+  PRInt32 iDestlen = 0;
+  PRUint8 left, right;
+  PRUint16 iGBKToUnicodeIndex = 0;
+  
+  for (i=0;i<iSrcLength;i++)
 	{
-		pSrcDBCode = (DByte *)aSrc;
-		pDestDBCode = aDest;
+      pSrcDBCode = (DByte *)aSrc;
+      pDestDBCode = aDest;
 
-		if ( iDestlen >= (*aDestLength) )
+      if ( iDestlen >= (*aDestLength) )
 		{
-			break;
+          break;
 		}
+      
+      if ( *aSrc & 0x80 )
+		{
+          
+		  // The source is a GBCode
 
-		if ( *aSrc & 0x80 )
-		{
-			// The source is a GBCode
-			GBKToUnicode(pSrcDBCode, pDestDBCode);
-			aSrc += 2;
-			i++;
+          left = pSrcDBCode->leftbyte;  
+          right = pSrcDBCode->rightbyte;
+          
+          iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);  
+          *pDestDBCode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+          
+          aSrc += 2;
+          i++;
 		}
-		else
+      else
 		{
-			// The source is an ASCII
-		    *pDestDBCode = (PRUnichar) ( ((char)(*aSrc) )& 0x00ff);
-			aSrc++;
+          // The source is an ASCII
+          *pDestDBCode = (PRUnichar) ( ((char )(*aSrc)) & 0x00ff);
+          aSrc++;
 		}
-
-   	    iDestlen++;
-	    aDest++;
-		*aSrcLength = i+1;
+      
+      iDestlen++;
+      aDest++;
+      *aSrcLength = i+1;
 	}
-
-    *aDestLength = iDestlen;
-	
-	return NS_OK;
+  
+  *aDestLength = iDestlen;
+  
+  return NS_OK;
 }
 
 
