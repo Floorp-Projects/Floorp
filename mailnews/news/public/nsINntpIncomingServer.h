@@ -6,11 +6,7 @@
 #define __gen_nsINntpIncomingServer_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
+#include "nsrootidl.h" /* interface nsrootidl */
 
 /* starting interface:    nsINntpIncomingServer */
 
@@ -27,11 +23,6 @@ class nsINntpIncomingServer : public nsISupports {
   /* attribute string rootFolderPath; */
   NS_IMETHOD GetRootFolderPath(char * *aRootFolderPath) = 0;
   NS_IMETHOD SetRootFolderPath(char * aRootFolderPath) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINntpIncomingServer *priv);
-#endif
 };
 
 #endif /* __gen_nsINntpIncomingServer_h__ */

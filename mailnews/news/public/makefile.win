@@ -18,6 +18,15 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+XPIDLSRCS= \
+	.\nsIMsgOfflineNewsState.idl \
+	.\nsINNTPArticleList.idl \
+	.\nsINNTPCategory.idl \
+	.\nsINNTPCategoryContainer.idl \
+	.\nsINNTPNewsgroup.idl \
+	.\nsINntpIncomingServer.idl \
+	$(NULL)
+
 EXPORTS =							\
 		nsINNTPNewsgroupList.h		\
 		nsINNTPCategory.h			\

@@ -22,18 +22,29 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE=news
+
+XPIDLSRCS= \
+		nsIMsgOfflineNewsState.idl \
+		nsINNTPArticleList.idl \
+		nsINNTPCategory.idl \
+		nsINNTPCategoryContainer.idl \
+		nsINNTPNewsgroup.idl \
+		nsINntpIncomingServer.idl \
+		$(NULL)
+
 EXPORTS= \
-		nsINNTPCategory.h \
-		nsINNTPNewsgroupList.h \
-		nsINNTPHost.h \
-		nsINNTPNewsgroup.h \
-		nsIMsgOfflineNewsState.h \
-		nsINNTPArticleList.h \
-		nsINNTPCategoryContainer.h \
-		nsINntpUrl.h \
-		nsINNTPNewsgroupPost.h \
-		nsINntpService.h \
-		nsINntpIncomingServer.h \
+		nsIMsgOfflineNewsState.h	\
+		nsINNTPArticleList.h	\
+		nsINNTPCategory.h	\
+		nsINNTPCategoryContainer.h	\
+		nsINNTPHost.h	\
+		nsINNTPNewsgroup.h	\
+		nsINNTPNewsgroupList.h	\
+		nsINNTPNewsgroupPost.h	\
+		nsINntpIncomingServer.h	\
+		nsINntpService.h	\
+		nsINntpUrl.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

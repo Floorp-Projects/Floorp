@@ -6,12 +6,8 @@
 #define __gen_nsINNTPNewsgroup_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 
 /* starting interface:    nsINNTPNewsgroup */
 
@@ -66,11 +62,6 @@ class nsINNTPNewsgroup : public nsISupports {
 
   /* void UpdateSummaryFromNNTPInfo (in long oldest, in long youngest, in long total_messages); */
   NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPNewsgroup *priv);
-#endif
 };
 
 #endif /* __gen_nsINNTPNewsgroup_h__ */

@@ -24,7 +24,7 @@
 #include "nsFileSpec.h"
 #include "nsINntpIncomingServer.h"
 
-/* 4C9F90E0-E19B-11d2-806E-006008128C4E} */
+/* 4C9F90E0-E19B-11d2-806E-006008128C4E */
 #define NS_INNTPSERVICE_IID                         \
 { 0x4c9f90e0, 0xe19b, 0x11d2,						\
     { 0x80, 0x63, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }

@@ -7,12 +7,8 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 
 /* starting interface:    nsINNTPCategoryContainer */
 
@@ -29,11 +25,6 @@ class nsINNTPCategoryContainer : public nsISupports {
   /* attribute nsINNTPNewsgroup rootCategory; */
   NS_IMETHOD GetRootCategory(nsINNTPNewsgroup * *aRootCategory) = 0;
   NS_IMETHOD SetRootCategory(nsINNTPNewsgroup * aRootCategory) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPCategoryContainer *priv);
-#endif
 };
 
 #endif /* __gen_nsINNTPCategoryContainer_h__ */

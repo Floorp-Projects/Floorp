@@ -7,12 +7,8 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
-#include "nsID.h" /* interface nsID */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 
 /* starting interface:    nsIMsgOfflineNewsState */
 
@@ -35,11 +31,6 @@ class nsIMsgOfflineNewsState : public nsISupports {
 
   /* long Interrupt (); */
   NS_IMETHOD Interrupt(PRInt32 *_retval) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgOfflineNewsState *priv);
-#endif
 };
 
 #endif /* __gen_nsIMsgOfflineNewsState_h__ */
