@@ -373,41 +373,37 @@ static BOOL gMadePrefManager;
 
     [self configureProxies];
 
-    // Now work out the user's preferred accept-language headers
-    // Read the set of languages the user understands from System preferences
-    // Read the user's current locale to determine the variant of the main
-    // language that the user would prefer
-    NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
-    NSArray *languages = [defs objectForKey:@"AppleLanguages"];
-    NSString* primaryLocale = [defs objectForKey:@"AppleLocale"];
-		
-    // Set up the user's primary language using the locale (so we get dialect info)
-    NSMutableArray* acceptableLanguages = [NSMutableArray array];
-    NSString* primaryLanguage = [PreferenceManager convertLocaleToHTTPLanguage:primaryLocale];
-    if ( primaryLanguage )
-        [acceptableLanguages addObject:primaryLanguage];
+    // Determine if the user specified their own language override. If so
+    // use it. If not work out the languages from the system preferences.
+    BOOL userProvidedLangOverride = NO;
+    NSString* userLanguageOverride = [self getStringPref:"camino.accept_languages" withSuccess:&userProvidedLangOverride];
+    
+    if (userProvidedLangOverride && [userLanguageOverride length] > 0)
+      [self setPref:"intl.accept_languages" toString:userLanguageOverride];
+    else {
+      NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
+      NSArray *languages = [defs objectForKey:@"AppleLanguages"];
+      NSMutableArray* acceptableLanguages = [NSMutableArray array];
 
-    // Now set up all the other languages the user understands
-    // (from System Preferences | International). Strip duplicates because the
-    // user may have their primary locale set up as a language too (e.g. British English)
-    for ( unsigned i = 0; i < [languages count]; ++i ) {
-      NSString* language = [PreferenceManager convertLocaleToHTTPLanguage:[languages objectAtIndex:i]];
-      if ( language && ![acceptableLanguages containsObject:language] )
-        [acceptableLanguages addObject:language];
+      // Build the list of languages the user understands (from System Preferences | International).
+      for (unsigned long i = 0; i < [languages count]; ++i) {
+        NSString* language = [PreferenceManager convertLocaleToHTTPLanguage:[languages objectAtIndex:i]];
+        if (language)
+          [acceptableLanguages addObject:language];
+      }
+
+      // Create the accept-language header itself from the language list. Note that
+      // necko will determine quality factors itself.
+      NSMutableString* acceptLangHeader = [NSMutableString string];
+      for (unsigned long i = 0; i < [acceptableLanguages count]; ++i) {
+        if (i > 0)
+          [acceptLangHeader appendString:@","];
+        [acceptLangHeader appendString:[acceptableLanguages objectAtIndex:i]];
+      }
+
+      if ([acceptLangHeader length] > 0)
+        [self setPref:"intl.accept_languages" toString:acceptLangHeader];
     }
-
-    // Now set up the accept-language header itself
-    // Note that necko will determine quality factors itself
-    NSMutableString* acceptLangHeader = [NSMutableString string];
-    for ( unsigned i = 0; i < [acceptableLanguages count]; ++i ) {
-      if ( i > 0 )
-        [acceptLangHeader appendString:@","];
-
-      [acceptLangHeader appendString:[acceptableLanguages objectAtIndex:i]];
-    }
-
-    if ( [acceptLangHeader length] > 0 )
-      [self setPref:"intl.accept_languages" toString:acceptLangHeader];
 }
 
 #pragma mark -
