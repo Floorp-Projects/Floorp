@@ -1533,8 +1533,10 @@ nsViewManager::CreateBlendingBuffers(nsIRenderingContext *aRC,
     if (NS_FAILED(rv))
       return nsnull;
     rv = mBlender->Init(mContext);
-    if (NS_FAILED(rv))
+    if (NS_FAILED(rv)) {
+      mBlender = nsnull;
       return nsnull;
+    }
   }
 
   BlendingBuffers* buffers = new BlendingBuffers(aRC);
