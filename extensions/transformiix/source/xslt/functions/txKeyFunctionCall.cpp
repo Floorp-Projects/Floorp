@@ -26,6 +26,7 @@
 #include "nsReadableUtils.h"
 #include "txKey.h"
 #include "txXSLTPatterns.h"
+#include "txNamespaceMap.h"
 
 /*
  * txKeyFunctionCall

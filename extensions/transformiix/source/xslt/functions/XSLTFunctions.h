@@ -32,7 +32,6 @@
 #define TRANSFRMX_XSLT_FUNCTIONS_H
 
 #include "Expr.h"
-#include "txNamespaceMap.h"
 #include "XMLUtils.h"
 #include "nsAutoPtr.h"
 
@@ -40,6 +39,7 @@ class txPattern;
 class txStylesheet;
 class txKeyValueHashKey;
 class txExecutionState;
+class txNamespaceMap;
 
 /**
  * The definition for the XSLT document() function

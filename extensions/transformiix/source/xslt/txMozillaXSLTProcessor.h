@@ -47,18 +47,16 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "txExpandedNameMap.h"
-#include "nsIDOMNode.h"
 #include "txXMLEventHandler.h"
-#include "nsIDOMDocument.h"
 #include "nsIXSLTProcessorObsolete.h"
 #include "txXSLTProcessor.h"
 #include "nsVoidArray.h"
-#include "txStylesheet.h"
 #include "nsAutoPtr.h"
 #include "nsIDocumentObserver.h"
 
 class nsIURI;
 class nsIXMLContentSink;
+class nsIDOMNode;
 
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
 #define TRANSFORMIIX_XSLT_PROCESSOR_CID   \
