@@ -37,9 +37,7 @@
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
 #include "nsCSSLayout.h"
-#include "nsViewsCID.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
+#include "nsHTMLFrame.h"
 
 #define BROKEN_IMAGE_URL "resource:/html/broken-image.gif"
 
@@ -302,45 +300,6 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
 ImageFrame::ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
 {
-#if 0
-  //lifted from nsRootPart.cpp. if we do this very much, factor it somehow. MMP
-  // Create a view
-  nsIFrame* parent;
-  nsIView*  view;
-
-  GetParentWithView(parent);
-  NS_ASSERTION(parent, "GetParentWithView failed");
-  nsIView* parView;
-   
-  parent->GetView(parView);
-  NS_ASSERTION(parView, "no parent with view");
-
-  // Create a view
-  static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-  static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-
-  nsresult result = NSRepository::CreateInstance(kViewCID, 
-                                                 nsnull, 
-                                                 kIViewIID, 
-                                                 (void **)&view);
-  if (NS_OK == result) {
-    nsIView*        rootView = parView;
-    nsIViewManager* viewManager = rootView->GetViewManager();
-
-    // Initialize the view
-    NS_ASSERTION(nsnull != viewManager, "null view manager");
-
-    view->Init(viewManager, mRect, rootView);
-    viewManager->InsertChild(rootView, view, 0);
-
-    NS_RELEASE(viewManager);
-
-    // Remember our view
-    SetView(view);
-    NS_RELEASE(view);
-  }
-  NS_RELEASE(parView);
-#endif
 }
 
 ImageFrame::~ImageFrame()
@@ -363,6 +322,8 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
                            nsReflowMetrics& aDesiredSize)
 {
+  nsHTMLFrame::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
+
   // Setup url before starting the image load
   nsAutoString src;
   if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
@@ -426,7 +387,8 @@ ImageFrame::GetImageMap()
       return nsnull;
     }
 
-    nsIDocument* doc = mContent->GetDocument();
+    nsIDocument* doc = nsnull;
+    mContent->GetDocument(doc);
     if (nsnull == doc) {
       return nsnull;
     }
@@ -483,7 +445,8 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
     map = GetImageMap();
     if (nsnull != map) {
       nsIURL* docURL = nsnull;
-      nsIDocument* doc = mContent->GetDocument();
+      nsIDocument* doc = nsnull;
+      mContent->GetDocument(doc);
       if (nsnull != doc) {
         docURL = doc->GetDocumentURL();
         NS_RELEASE(doc);
