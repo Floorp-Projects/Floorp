@@ -2284,12 +2284,56 @@ nsFontMetricsOS2FT::ResolveBackwards(HPS                  aPS,
   count = mLoadedFonts.Count();
 
   // see if one of our loaded fonts can represent the current character
-  currFont = LocateFont(aPS, *currChar, count);
+  if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+    currFont = LocateFont(aPS, SURROGATE_TO_UCS4(*(currChar-1), *currChar), count);
+    currChar -= 2;
+  }
+  else {
+    currFont = LocateFont(aPS, *currChar, count);
+    --currChar;
+  }
+
+  //This if block is meant to speedup the process in normal situation, when
+  //most characters can be found in first font
+  if (currFont == mLoadedFonts[0]) {
+    while (currChar > lastChar && (currFont->HasGlyph(aPS, *currChar)))
+      --currChar;
+    fontSwitch.mFont = currFont;
+    if (!(*aFunc)(&fontSwitch, currChar+1, firstChar - currChar, aData))
+      return NS_OK;
+    if (currChar == lastChar)
+      return NS_OK;
+    // continue with the next substring, re-using the available loaded fonts
+    firstChar = currChar;
+    if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+      currFont = LocateFont(aPS, SURROGATE_TO_UCS4(*(currChar-1), *currChar), count);
+      currChar -= 2;
+    }
+    else {
+      currFont = LocateFont(aPS, *currChar, count);
+      --currChar;
+    }
+  }
 
   // see if we can keep the same font for adjacent characters
-  while (--currChar > lastChar) {
-    nextFont = LocateFont(aPS, *currChar, count);
-    if (nextFont != currFont) {
+  PRInt32 lastCharLen;
+  PRUint32 codepoint;
+
+  while (currChar > lastChar) {
+    if (IS_LOW_SURROGATE(*currChar) && (currChar-1) > lastChar && IS_HIGH_SURROGATE(*(currChar-1))) {
+      codepoint =  SURROGATE_TO_UCS4(*(currChar-1), *currChar);
+      nextFont = LocateFont(aPS, codepoint, count);
+      lastCharLen = 2;
+    }
+    else {
+      codepoint = *currChar;
+      nextFont = LocateFont(aPS, codepoint, count);
+      lastCharLen = 1;
+    }
+    if (nextFont != currFont ||
+        /* render right-to-left characters outside the BMP one by one, because
+           OS/2 doesn't reorder them. */
+        codepoint > 0xFFFF) {
       // We have a substring that can be represented with the same font, and
       // we are about to switch fonts, it is time to notify our caller.
       fontSwitch.mFont = currFont;
@@ -2299,6 +2343,7 @@ nsFontMetricsOS2FT::ResolveBackwards(HPS                  aPS,
       firstChar = currChar;
       currFont = nextFont; // use the font found earlier for the char
     }
+    currChar -= lastCharLen;
   }
 
   //do it for last part of the string
