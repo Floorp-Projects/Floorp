@@ -446,8 +446,8 @@ static nsresult openPrefFileSpec(nsIFileSpec* aFilespec, PRBool aIsErrorFatal, P
 
   long fileLength = PL_strlen(readBuf);
   if (aVerifyHash) {
-    const int obscure_value = 7;
-    // Unobscure file by subtracting some value from every char. 
+    const int obscure_value = 13;
+    // Unobscure file by subtracting some value from every char - old value was 7
     long i;
     for (i = 0; i < fileLength; i++)
       readBuf[i] -= obscure_value;
