@@ -573,6 +573,16 @@ nsPermissionManager::Read()
       if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
         continue;
       }
+
+      // Older versions of mozilla can't parse the permission sting lines.
+      // They will put them back like '%0 0F' instead of '%0 cookie'
+      // Ignore those lines, and revert to the defaults later.
+      // XXX This means that when the user has additional types besides the
+      // default, those will be lost after using and old version with the
+      // new profile, and then going back to a new version.
+      if (!PL_strcmp(buffer.get() + stringIndex, "0F"))
+        continue;
+
       NS_ASSERTION(GetTypeIndex(buffer.get() + stringIndex, PR_FALSE) == -1, "Corrupt cookperm.txt file");
       mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
 
