@@ -22,6 +22,7 @@
 #include "nsIInlineReflow.h"
 
 // Implementation of a frame that's used as a placeholder for an anchored item
+
 class nsPlaceholderFrame : public nsFrame, public nsIInlineReflow {
 public:
   /**
@@ -34,6 +35,7 @@ public:
 
   // Returns the associated anchored item
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
+  void        SetAnchoredItem(nsIFrame* aAnchoredItem) {mAnchoredItem = aAnchoredItem;}
 
   // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);

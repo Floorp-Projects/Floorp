@@ -37,7 +37,6 @@ nsCSSContainerFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
   nsIContent* content;
   aFloatedFrame->GetContent(content);
 
-  // XXX We should wrap the floated element in a BODY frame...
   nsPlaceholderFrame* placeholder;
   nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
   NS_IF_RELEASE(content);

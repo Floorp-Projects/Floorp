@@ -1717,6 +1717,39 @@ nsCSSBlockFrame::AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFra
       placeholder->SetNextSibling(nextSibling);
       frame->SetNextSibling(nsnull);
 
+      // If the floated element can contain children then wrap it in a
+      // BODY frame before floating it
+      nsIContent* content;
+      PRBool      isContainer;
+
+      frame->GetContent(content);
+      content->CanContainChildren(isContainer);
+      if (isContainer) {
+        // Wrap the floated element in a BODY frame.
+        nsIFrame* wrapperFrame;
+        NS_NewBodyFrame(content, this, wrapperFrame);
+    
+        // The body wrapper frame gets the original style context, and the floated
+        // frame gets a pseudo style context
+        nsIStyleContext*  kidStyle;
+        frame->GetStyleContext(aPresContext, kidStyle);
+        wrapperFrame->SetStyleContext(aPresContext, kidStyle);
+        NS_RELEASE(kidStyle);
+
+        nsIStyleContext*  pseudoStyle;
+        pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo,
+                                                                 wrapperFrame);
+        frame->SetStyleContext(aPresContext, pseudoStyle);
+        NS_RELEASE(pseudoStyle);
+    
+        // Init the body frame
+        wrapperFrame->Init(*aPresContext, frame);
+
+        // Bind the wrapper frame to the placeholder
+        placeholder->SetAnchoredItem(wrapperFrame);
+      }
+      NS_RELEASE(content);
+
       // The placeholder frame is always inline
       frame = placeholder;
       isBlock = PR_FALSE;
