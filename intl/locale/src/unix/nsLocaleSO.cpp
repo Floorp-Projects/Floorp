@@ -29,6 +29,7 @@
 #include "nsPosixLocale.h"
 #include "nsPosixLocaleFactory.h"
 #include "nsCollationUnix.h"
+#include "nsIScriptableDateFormat.h"
 #include "nsDateTimeFormatUnix.h"
 #include "nsLocaleFactoryUnix.h"
 #include "nsDateTimeFormatCID.h"
@@ -58,6 +59,7 @@ NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
+NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
 
 
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
@@ -205,6 +207,14 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   NS_ASSERTION(rv==NS_OK,"nsLocale: Register DateTimeFormat failed.");
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
+	//
+	// register the scriptable date time formatter
+	//
+	rv = compMgr->RegisterComponent(kScriptableDateFormatCID, "Scriptable Date Format", 
+    NS_SCRIPTABLEDATEFORMAT_PROGID, path, PR_TRUE, PR_TRUE);
+	NS_ASSERTION(rv==NS_OK,"nsLocale: Register ScriptableDateFormat failed.");
+  if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
@@ -241,6 +251,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
 
   rv = compMgr->UnregisterComponent(kDateTimeFormatCID, path);
   if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kScriptableDateFormatCID, path);
+	if (NS_FAILED(rv)) goto done;
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
