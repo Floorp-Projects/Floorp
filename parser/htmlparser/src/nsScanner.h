@@ -36,7 +36,7 @@
 #include "nsIParser.h"
 #include "prtypes.h"
 #include "nsIUnicodeDecoder.h"
-#include <fstream.h>
+#include "nsFileStream.h"
 
 
 typedef enum {
@@ -86,7 +86,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(nsString& aFilename,fstream& aStream, const nsString& aCharset, nsCharsetSource aSource,PRBool assumeOwnership=PR_TRUE);
+      nsScanner(nsString& aFilename, nsInputStream& aStream, const nsString& aCharset, nsCharsetSource aSource,PRBool assumeOwnership=PR_TRUE);
 
 
       ~nsScanner();
@@ -304,7 +304,7 @@ class nsScanner {
        */
       nsresult FillBuffer(void);
 
-      fstream*        mFileStream;
+      nsInputStream*  mInputStream;
       nsString        mBuffer;
       nsString        mFilename;
       PRUint32        mOffset;
