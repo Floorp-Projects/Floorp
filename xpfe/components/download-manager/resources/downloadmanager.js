@@ -272,7 +272,8 @@ var downloadViewController = {
       gDownloadManager.startBatchUpdate();
       
       // Notify the datasource that we're about to begin a batch operation
-      var ds = window.arguments[0];
+      var ds = window.arguments[0]
+                     .QueryInterface(Components.interfaces.nsIRDFDataSource);
       ds.beginUpdateBatch();
       for (i = 0; i <= selectedItems.length - 1; ++i) {
         gDownloadManager.removeDownload(selectedItems[i].id);
