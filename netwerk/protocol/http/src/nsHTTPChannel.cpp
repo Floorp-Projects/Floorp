@@ -219,7 +219,7 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         mResponseDataListener = listener;
         NS_ADDREF(mResponseDataListener);
 
-        mResponseContext = aContext;
+        mResponseContext = do_QueryInterface(aContext);
 
         rv = Open();
     }
