@@ -92,14 +92,10 @@ nsresult nsImapUrl::Initialize()
 {
 	nsresult rv = NS_OK;
     rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(m_mockChannel));   
-	return rv;
-}
-
-NS_IMETHODIMP nsImapUrl::InitializeURIforMockChannel()
-{
-  if (m_mockChannel)
+    if (NS_SUCCEEDED(rv) && m_mockChannel)
     m_mockChannel->SetURI(this);
-  return NS_OK;
+   
+	return rv;
 }
  
 NS_IMETHODIMP nsImapUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)

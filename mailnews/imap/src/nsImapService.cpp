@@ -1299,7 +1299,6 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
                                           imapUrl);
 	if (NS_SUCCEEDED(rv) && imapUrl)
   {
-      (*imapUrl)->InitializeURIforMockChannel();
       nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(*imapUrl, &rv);
       if (NS_SUCCEEDED(rv) && mailnewsUrl && aUrlListener)
           mailnewsUrl->RegisterListener(aUrlListener);
@@ -1943,7 +1942,6 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
         if (NS_SUCCEEDED (rv1) && hierarchySeparator != kOnlineHierarchySeparatorUnknown &&
             uriDelimiter != hierarchySeparator)
           aImapUrl->SetOnlineSubDirSeparator((char)hierarchySeparator);
-
 
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
