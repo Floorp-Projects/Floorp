@@ -1121,20 +1121,18 @@ PRUint32*
 nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset)
 {
   if (!gInitializedFontMaps) {
-    gInitializedFontMaps = 1;
     gFontMaps = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, &fontmap_HashAllocOps,
       nsnull);
     if (!gFontMaps) { // error checking
-      gInitializedFontMaps = 0;
       return nsnull;
     }
     gEmptyMap = (PRUint32*) PR_Calloc(2048, 4);
     if (!nsFontMetricsWin::gEmptyMap) {
       PL_HashTableDestroy(gFontMaps);
       gFontMaps = nsnull;
-      gInitializedFontMaps = 0;
       return nsnull;
     }
+    gInitializedFontMaps = 1;
   }
   nsString* name = new nsString();
   if (!name) {
@@ -1142,10 +1140,12 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   }
   PRUint32* map;
   nsFontInfo* info;
+  PLHashEntry *he, **hep = NULL; // shouldn't be NULL, using it as a flag to catch bad changes
+  PLHashNumber hash;
   nsGetNameError ret = GetNAME(aDC, name);
   if (ret == eGetName_OK) {
-    PLHashEntry **hep, *he;
-    PLHashNumber hash = HashKey(name);
+    // lookup the hashtable (if we miss, the computed hash and hep are fed back in HT-RawAdd)
+    hash = HashKey(name);
     hep = PL_HashTableRawLookup(gFontMaps, hash, name);
     he = *hep;
     if (he) {
@@ -1243,23 +1243,6 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         // a non-unicode font.
         nsAutoString encoding;
         if (NS_SUCCEEDED(GetEncoding(aShortName, encoding))) {
-          PLHashEntry **hep, *he;
-          PLHashNumber hash = HashKey(name);
-          hep = PL_HashTableRawLookup(gFontMaps, hash, name);
-          he = *hep;
-          if (he) {
-            // an identical map has already been added
-            info = NS_STATIC_CAST(nsFontInfo *, he);
-            if (aCharset) {
-              *aCharset = info->mCharset;
-            }
-            if (aFontType) {
-              *aFontType = info->mType;
-            }
-            return info->mMap;
-          } 
-
-          // map didn't exist in the HashTable, let's add 
           if (aCharset) {
             *aCharset = DEFAULT_CHARSET;
           }
@@ -1272,6 +1255,9 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
           }
           PR_Free(buf);
 
+          // XXX Need to check if an identical map has already been added
+          // XXX See Bug 75260 "Investigate the sharing of font maps"
+          NS_ASSERTION(hep, "bad code");
           he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
           if (he) {   
             info = NS_STATIC_CAST(nsFontInfo*, he);
@@ -1288,23 +1274,6 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         break;  // break out from for(;;) loop
       } //if (encodingID == 1)
       else if (encodingID == 0) { // symbol
-        PLHashEntry **hep, *he;
-        PLHashNumber hash = HashKey(name);
-        hep = PL_HashTableRawLookup(gFontMaps, hash, name);
-        he = *hep;
-        if (he) {
-          // an identical map has already been added
-          info = NS_STATIC_CAST(nsFontInfo *, he);
-          if (aCharset) {
-            *aCharset = info->mCharset;
-          }
-          if (aFontType) {
-            *aFontType = info->mType;
-          }
-          return info->mMap;
-        }
-
-        // map didn't exist in the HashTable, let's add 
         if (aCharset) {
           *aCharset = SYMBOL_CHARSET;
         }
@@ -1317,6 +1286,9 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         }
         PR_Free(buf);
 
+        // XXX Need to check if an identical map has already been added
+        // XXX See Bug 75260 "Investigate the sharing of font maps"
+        NS_ASSERTION(hep, "bad code");
         he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
         if (he) {
           info = NS_STATIC_CAST(nsFontInfo*, he);
@@ -1444,22 +1416,9 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     *aFontType = NS_FONT_TYPE_UNICODE;
   }
 
-  PLHashEntry **hep, *he;
-  PLHashNumber hash = HashKey(name);
-  hep = PL_HashTableRawLookup(gFontMaps, hash, name);
-  he = *hep;
-  if (he) {
-    // an identical map has already been added
-    info = NS_STATIC_CAST(nsFontInfo *, he);
-    if (aCharset) {
-      *aCharset = info->mCharset;
-    }
-    if (aFontType) {
-      *aFontType = info->mType;
-    }
-    return info->mMap;
-  } 
-
+  // XXX Need to check if an identical map has already been added
+  // XXX See Bug 75260 "Investigate the sharing of font maps"
+  NS_ASSERTION(hep, "bad code");
   he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
   if (he) {
     info = NS_STATIC_CAST(nsFontInfo*, he);
@@ -1536,9 +1495,7 @@ GetGlyphIndices(HDC              aDC,
         break;
     }
     if (i == n) {
-#ifdef NS_DEBUG
-      printf("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
-#endif
+      NS_WARNING("nsFontMetricsWin::GetGlyphIndices() called for a non-unicode font!");
       PR_Free(buf);
       return nsnull;
     }
