@@ -16,432 +16,373 @@
  * Reserved.
  */
 
-#include "nsDeviceContextWin.h"
-#include "nsRenderingContextWin.h"
-#include "nsDeviceContextSpecWin.h"
-#include "il_util.h"
+#include "nsDeviceContextPS.h"
+#include "nsRenderingContextPS.h"
+#include "nsDeviceContextSpecPS.h"
+#include "nsString.h"
 
-// Size of the color cube
-#define COLOR_CUBE_SIZE       216
+#include "prprf.h"
+#include "nsPSUtil.h"
+#include "nsPrintManager.h"
+#include "xlate.h"
 
-nsDeviceContextWin :: nsDeviceContextWin()
-  : DeviceContextImpl()
+static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+nsDeviceContextPS :: nsDeviceContextPS()
 {
-  mSurface = NULL;
-  mPaletteInfo.isPaletteDevice = PR_FALSE;
-  mPaletteInfo.sizePalette = 0;
-  mPaletteInfo.numReserved = 0;
-  mPaletteInfo.palette = NULL;
-  mDC = NULL;
-  mPixelScale = 1.0f;
-  mWidthFloat = 0.0f;
-  mHeightFloat = 0.0f;
-  mWidth = -1;
-  mHeight = -1;
+
+  NS_INIT_REFCNT();
   mSpec = nsnull;
-}
-
-nsDeviceContextWin :: ~nsDeviceContextWin()
-{
-  nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)mSurface;
-
-  NS_IF_RELEASE(surf);    //this clears the surf pointer...
-  mSurface = nsnull;
-
-  if (NULL != mPaletteInfo.palette)
-    ::DeleteObject((HPALETTE)mPaletteInfo.palette);
-
-  if (NULL != mDC)
-  {
-    ::DeleteDC(mDC);
-    mDC = NULL;
-  }
-
-  NS_IF_RELEASE(mSpec);
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: Init(nsNativeWidget aWidget)
-{
-  HWND  hwnd = (HWND)aWidget;
-  HDC   hdc = ::GetDC(hwnd);
-
-  CommonInit(hdc);
-
-  ::ReleaseDC(hwnd, hdc);
-
-  return DeviceContextImpl::Init(aWidget);
-}
-
-//local method...
-
-nsresult nsDeviceContextWin :: Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext)
-{
-  float origscale, newscale;
-  float t2d, a2d;
-
-  mDC = (HDC)aContext;
-
-  CommonInit(mDC);
-
-  GetTwipsToDevUnits(newscale);
-  aOrigContext->GetTwipsToDevUnits(origscale);
-
-  mPixelScale = newscale / origscale;
-
-  aOrigContext->GetTwipsToDevUnits(t2d);
-  aOrigContext->GetAppUnitsToDevUnits(a2d);
-
-  mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
-  mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
   
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+nsDeviceContextPS :: ~nsDeviceContextPS()
+{
+}
+
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextPS, kDeviceContextIID)
+NS_IMPL_ADDREF(nsDeviceContextPS)
+NS_IMPL_RELEASE(nsDeviceContextPS)
+
+/** ---------------------------------------------------
+ *  See documentation in nsDeviceContextPS.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: Init(nsNativeWidget aNativeWidget)
+{
   return NS_OK;
 }
 
-void nsDeviceContextWin :: CommonInit(HDC aDC)
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
-  int   rasterCaps = ::GetDeviceCaps(aDC, RASTERCAPS);
+nsIRenderingContext   *pContext;
+nsresult              rv;
+//GrafPtr								thePort;
 
-  mTwipsToPixels = ((float)::GetDeviceCaps(aDC, LOGPIXELSY)) / (float)NSIntPointsToTwips(72);
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-  mDepth = (PRUint32)::GetDeviceCaps(aDC, BITSPIXEL);
-  mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
-  mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(aDC, SIZEPALETTE);
-  mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(aDC, NUMRESERVED);
-
-  mWidthFloat = (float)::GetDeviceCaps(aDC, HORZRES);
-  mHeightFloat = (float)::GetDeviceCaps(aDC, VERTRES);
-
-  DeviceContextImpl::CommonInit();
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *&aContext)
-{
-  nsIRenderingContext *pContext;
-  nsresult             rv;
-  nsDrawingSurfaceWin  *surf;
-
-  pContext = new nsRenderingContextWin();
-
-  if (nsnull != pContext)
-  {
+	pContext = new nsRenderingContextPS();
+  if (nsnull != pContext){
     NS_ADDREF(pContext);
 
-    surf = new nsDrawingSurfaceWin();
+   	//::GetPort(&thePort);
 
-    if (nsnull != surf)
-    {
-      rv = surf->Init(mDC);
-
-      if (NS_OK == rv)
-        rv = pContext->Init(this, surf);
-    }
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    //if (nsnull != thePort){
+      rv = pContext->Init(this,(nsDrawingSurface)nsnull);
+    //}
+    //else
+      //rv = NS_ERROR_OUT_OF_MEMORY;
   }
   else
     rv = NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_OK != rv)
-  {
+  if (NS_OK != rv){
     NS_IF_RELEASE(pContext);
   }
-
   aContext = pContext;
-
   return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-  if (nsnull == mDC)
-    aSupportsWidgets = PR_TRUE;
-  else
-    aSupportsWidgets = PR_FALSE;
-
+  aSupportsWidgets = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: GetCanonicalPixelScale(float &aScale) const
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  aScale = mPixelScale;
+  // XXX Should we push this to widget library
+  aWidth = 320.0;
+  aHeight = 320.0;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
-  aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
-  return NS_OK;
+  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
+  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
-{
-  if (NULL == mSurface) {
-    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
-  }
-
-  aSurface = mSurface;
-  return NS_OK;
-}
-
-int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
-                          int FontType, LPARAM lParam)  
-{
-  if (NULL != lpelf)
-    *((PRBool *)lParam) = PR_TRUE;
-
-  return 0;
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName)
-{
-  HWND    hwnd = (HWND)mWidget;
-  HDC     hdc = ::GetDC(hwnd);
-  PRBool  isthere = PR_FALSE;
-
-  char    fontName[LF_FACESIZE];
-  aFontName.ToCString(fontName, LF_FACESIZE);
-  ::EnumFontFamilies(hdc, fontName, (FONTENUMPROC)fontcallback, (LPARAM)&isthere);
-
-  ::ReleaseDC(hwnd, hdc);
-
-  if (PR_TRUE == isthere)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDeviceContextWin::GetDepth(PRUint32& aDepth)
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
   aDepth = mDepth;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
-  if (nsnull == mColorSpace) {
-    // See if we're dealing with an 8-bit palette device
-    if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
-      // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
-      // than DIB_RGB_COLORS, so make sure the indexes match that of the
-      // GDI physical palette
-      //
-      // Note: the image library doesn't use the reserved colors, so it doesn't
-      // matter what they're set to...
-      IL_RGB  reserved[10];
-      memset(reserved, 0, sizeof(reserved));
-      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
-      if (nsnull == colorMap) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-  
-      // Create a pseudo color space
-      mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
-  
-    } else {
-      IL_RGBBits colorRGBBits;
-    
-      // Create a 24-bit color space
-      colorRGBBits.red_shift = 16;  
-      colorRGBBits.red_bits = 8;
-      colorRGBBits.green_shift = 8;
-      colorRGBBits.green_bits = 8; 
-      colorRGBBits.blue_shift = 0; 
-      colorRGBBits.blue_bits = 8;  
-    
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-    }
+  nsresult result = NS_OK;
+  return result;
+}
 
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+
+  if (nsnull == mColorSpace) {
+    IL_RGBBits colorRGBBits;
+  
+    // Default is to create a 32-bit color space
+    colorRGBBits.red_shift = 16;  
+    colorRGBBits.red_bits = 8;
+    colorRGBBits.green_shift = 8;
+    colorRGBBits.green_bits = 8; 
+    colorRGBBits.blue_shift = 0; 
+    colorRGBBits.blue_bits = 8;  
+  
+    //mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 32);
     if (nsnull == mColorSpace) {
       aColorSpace = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
+  //NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
+  //aColorSpace = mColorSpace;
+  //IL_AddRefToColorSpace(aColorSpace);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
 {
-  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
-  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
-  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
+#ifdef NEVER
+  	short fontNum;
+	if (GetMacFontNumber(aFontName, fontNum))
+		return NS_OK;
+	else
+		return NS_ERROR_FAILURE;
+#endif
 
-  if (NULL == mPaletteInfo.palette) {
-    IL_ColorSpace*  colorSpace;
-    GetILColorSpace(colorSpace);
+  return NS_OK;
+}
 
-    if (NI_PseudoColor == colorSpace->type) {
-      // Create a logical palette
-      BYTE         tmp[sizeof(LOGPALETTE) + ((COLOR_CUBE_SIZE + 20) * sizeof(PALETTEENTRY))];
-      LPLOGPALETTE logPal = (LPLOGPALETTE)tmp;
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  aWidth = 1;
+  aHeight = 1;
 
-      logPal->palVersion = 0x300;
-      logPal->palNumEntries = COLOR_CUBE_SIZE + 20;
-  
-      // Initialize it from the default Windows palette
-      HPALETTE  hDefaultPalette = (HPALETTE)::GetStockObject(DEFAULT_PALETTE);
-  
-      // First ten system colors
-      ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);
+  return NS_ERROR_FAILURE;
+}
 
-      // Last ten system colors
-      ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
-  
-      // Now set the color cube entries.
-      PALETTEENTRY* entry = &logPal->palPalEntry[10];
-      NI_RGB*       map = colorSpace->cmap.map + 10;
-      for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++) {
-        entry->peRed = map->red;
-        entry->peGreen = map->green;
-        entry->peBlue = map->blue; 
-        entry->peFlags = 0;
-  
-        entry++;
-        map++;
-      }
-  
-      // Create a GDI palette
-      mPaletteInfo.palette = ::CreatePalette(logPal);
-    }
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
+{
 
-    IL_ReleaseColorSpace(colorSpace);
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::BeginDocument(void)
+{
+PrintInfo* pi = new PrintInfo();
+PrintSetup* ps = new PrintSetup();
+
+   //XXX:PS Get rid of the need for a MWContext
+  mPrintContext = new MWContext();
+  memset(mPrintContext, 0, sizeof(struct MWContext_));
+  memset(ps, 0, sizeof(struct PrintSetup_));
+  memset(pi, 0, sizeof(struct PrintInfo_));
+ 
+  ps->top = 0;                        /* Margins  (PostScript Only) */
+  ps->bottom = 0;
+  ps->left = 0;
+  ps->right = 0;
+  ps->width = PAGE_WIDTH;            /* Paper size, # of cols for text xlate */
+  ps->height = PAGE_HEIGHT;
+  ps->header = "header";
+  ps->footer = "footer";
+  ps->sizes = NULL;
+  ps->reverse = 1;                 /* Output order */
+  ps->color = TRUE;                /* Image output */
+  ps->deep_color = TRUE;		      /* 24 bit color output */
+  ps->landscape = FALSE;           /* Rotated output */
+  ps->underline = TRUE;            /* underline links */
+  ps->scale_images = TRUE;           /* Scale unsized images which are too big */
+  ps->scale_pre = FALSE;		      /* do the pre-scaling thing */
+  ps->dpi = 72.0f;                 /* dpi for externally sized items */
+  ps->rules = 1.0f;			          /* Scale factor for rulers */
+  ps->n_up = 0;                        /* cool page combining */
+  ps->bigger = 1;                      /* Used to init sizes if sizesin NULL */
+  ps->paper_size = NS_LEGAL_SIZE;     /* Paper Size(letter,legal,exec,a4) */
+  ps->prefix = "";                    /* For text xlate, prepended to each line */
+  ps->eol = "";			   /* For text translation, line terminator */
+  ps->bullet = "+";                    /* What char to use for bullets */
+
+  URL_Struct_* url = new URL_Struct_;
+  memset(url, 0, sizeof(URL_Struct_));
+  ps->url = url;         /* url of doc being translated */
+  char filename[30];
+  static char g_nsPostscriptFileCount = 0; //('a');
+  char ext[30];
+  sprintf(ext,"%d",g_nsPostscriptFileCount);
+  sprintf(filename,"file%s.ps", ext); 
+  g_nsPostscriptFileCount++;
+  ps->out = fopen(filename , "w");                     /* Where to send the output */
+  ps->filename = filename;                  /* output file name, if any */
+  ps->completion = NULL; /* Called when translation finished */
+  ps->carg = NULL;                      /* Data saved for completion routine */
+  ps->status = 0;                      /* Status of URL on completion */
+		/* "other" font is for encodings other than iso-8859-1 */
+  ps->otherFontName[0] = NULL;		   
+  				/* name of "other" PostScript font */
+  ps->otherFontInfo[0] = NULL;	   
+  				/* font info parsed from "other" afm file */
+  ps->otherFontCharSetID = 0;	   /* charset ID of "other" font */
+  ps->cx = NULL;                   /* original context, if available */
+
+  pi->page_height = PAGE_HEIGHT * 10;	/* Size of printable area on page */
+  pi->page_width = PAGE_WIDTH * 10;	/* Size of printable area on page */
+  pi->page_break = 0;	/* Current page bottom */
+  pi->page_topy = 0;	/* Current page top */
+  pi->phase = 0;
+	/*
+	** CONTINUE SPECIAL
+	**	The table print code maintains these
+	*/
+ 
+  pi->pages=NULL;		/* Contains extents of each page */
+
+  pi->pt_size = 0;		/* Size of above table */
+  pi->n_pages = 0;		/* # of valid entries in above table */
+	/*
+	** END SPECIAL
+	*/
+
+  pi->doc_title="Test Title";	/* best guess at title */
+  pi->doc_width = 0;	/* Total document width */
+  pi->doc_height = 0;	/* Total document height */
+
+  mPrintContext->prInfo = pi;
+
+  // begin the document
+  xl_initialize_translation(mPrintContext, ps);
+  xl_begin_document(mPrintContext);	
+  mPrintSetup = ps;
+  
+  // begin the page
+  xl_begin_page(mPrintContext, 1); 
+
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
+{
+   // end the page
+  xl_end_page(mPrintContext, 1);
+
+  // end the document
+  xl_end_document(mPrintContext);
+  xl_finalize_translation(mPrintContext);
+
+  // Cleanup things allocated along the way
+  if (nsnull != mPrintContext){
+	 if (nsnull != mPrintContext->prInfo)
+		 delete mPrintContext->prInfo;
+
+     if (nsnull != mPrintContext->prSetup)
+		 delete mPrintContext->prSetup;
+
+     delete mPrintContext;
   }
 
-  aPaletteInfo.palette = mPaletteInfo.palette;
+  if (nsnull != mPrintSetup)
+	  delete mPrintSetup;
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
+{
+#ifdef NEVER
+ 	if(((nsDeviceContextSpecPS*)(this->mSpec))->mPrintManagerOpen) 
+		::PrOpenPage(((nsDeviceContextSpecPS*)(this->mSpec))->mPrinterPort,nsnull);
+#endif
+  return NS_OK;
+}
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
+{
+#ifdef NEVER
+ 	if(((nsDeviceContextSpecPS*)(this->mSpec))->mPrintManagerOpen) {
+ 		::SetPort((GrafPtr)(((nsDeviceContextSpecPS*)(this->mSpec))->mPrinterPort));
+		::PrClosePage(((nsDeviceContextSpecPS*)(this->mSpec))->mPrinterPort);
+	}
+#endif
+  return NS_OK;
+}
+
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsIDeviceContext.h
+ *	@update 12/21/98 dwc
+ */
+NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   aPixel = aColor;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
-{
-  if (mWidth == -1)
-    mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
-
-  if (mHeight == -1)
-    mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
-
-  aWidth = mWidth;
-  aHeight = mHeight;
-
-  return NS_OK;
-}
-
-BOOL CALLBACK abortproc( HDC hdc, int iError )
-{
-  return TRUE;
-} 
- 
-
-
-NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
-                                                        nsIDeviceContext *&aContext)
-{
-  char *devicename;
-  char *drivername;
-  HGLOBAL hdevmode;
-  DEVMODE *devmode;
-
-  //XXX this API should take an CID, use the repository and
-  //then QI for the real object rather than casting... MMP
-
-  aContext = new nsDeviceContextWin();
-
-  ((nsDeviceContextWin *)aContext)->mSpec = aDevice;
-  NS_ADDREF(aDevice);
- 
-  ((nsDeviceContextSpecWin *)aDevice)->GetDeviceName(devicename);
-  ((nsDeviceContextSpecWin *)aDevice)->GetDriverName(drivername);
-  ((nsDeviceContextSpecWin *)aDevice)->GetDEVMODE(hdevmode);
-
-  devmode = (DEVMODE *)::GlobalLock(hdevmode);
-  HDC dc = ::CreateDC(drivername, devicename, NULL, devmode);
-
-//  ::SetAbortProc(dc, (ABORTPROC)abortproc);
-
-  ::GlobalUnlock(hdevmode);
-
-  return ((nsDeviceContextWin *)aContext)->Init(dc, this);
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(void)
-{
-  if (NULL != mDC)
-  {
-    DOCINFO docinfo;
-
-    docinfo.cbSize = sizeof(docinfo);
-    docinfo.lpszDocName = "New Layout Document";
-    docinfo.lpszOutput = NULL;
-    docinfo.lpszDatatype = NULL;
-    docinfo.fwType = 0;
-
-    HGLOBAL hdevmode;
-    DEVMODE *devmode;
-
-    //XXX need to QI rather than cast... MMP
-
-    ((nsDeviceContextSpecWin *)mSpec)->GetDEVMODE(hdevmode);
-
-    devmode = (DEVMODE *)::GlobalLock(hdevmode);
-
-//  ::ResetDC(mDC, devmode);
-
-    ::GlobalUnlock(hdevmode);
-
-    if (::StartDoc(mDC, &docinfo) > 0)
-      return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: EndDocument(void)
-{
-  if (NULL != mDC)
-  {
-    if (::EndDoc(mDC) > 0)
-      return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: BeginPage(void)
-{
-  if (NULL != mDC)
-  {
-    if (::StartPage(mDC) > 0)
-      return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: EndPage(void)
-{
-  if (NULL != mDC)
-  {
-    if (::EndPage(mDC) > 0)
-      return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}

@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsRenderingContextWin_h___
-#define nsRenderingContextWin_h___
+#ifndef nsRenderingContextPS_h___
+#define nsRenderingContextPS_h___
 
 #include "nsIRenderingContext.h"
 #include "nsUnitConversion.h"
@@ -30,28 +30,18 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-#include "nsImageWin.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMRenderingContext.h"
-
 #include "nsPrintManager.h"
 
-class GraphicsState;
-class nsDrawingSurfaceWin;
+class GraphicState;
+typedef void* nsDrawingSurfacePS;
 
-#ifdef NGLAYOUT_DDRAW
-#include "ddraw.h"
-#endif
-
-class nsRenderingContextWin : public nsIRenderingContext,
-                              nsIDOMRenderingContext,
-                              nsIScriptObjectOwner
+class nsRenderingContextPS : public nsIRenderingContext
 {
 public:
-  nsRenderingContextWin();
-  ~nsRenderingContextWin();
+  nsRenderingContextPS();
+  ~nsRenderingContextPS();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -63,14 +53,6 @@ public:
 
   // nsIPrinterRenderingContext methods
 
-  NS_IMETHODIMP BeginDocument(PrintSetup *aPrintInfo);
-
-  NS_IMETHODIMP EndDocument();
-
-  NS_IMETHODIMP BeginPage();
-
-  NS_IMETHODIMP EndPage();
-
    // Postscript utilities
   void PostscriptColor(nscolor aColor);
   void PostscriptFillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -81,20 +63,11 @@ public:
                                     nscoord aX, nscoord aY, nscoord aWidth,
                                     const nscoord* aSpacing, PRBool aIsUnicode);
 
-  //XXX:PS Test methods, remove when fully implemented
-  virtual void TestInitialize();
-  virtual void TestFinalize();
 
 protected:
-  MWContext *mPrintContext; //XXX: Remove need for MWContext
-  PrintSetup *mPrintSetup;
 
 public:
-
-
   // nsIRenderingContext
-
-
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
 
@@ -187,105 +160,55 @@ public:
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
-  // nsIDOMRenderingContext
-  NS_DECL_IDOMRENDERINGCONTEXT
-
-  // locals
-#ifdef NGLAYOUT_DDRAW
-  nsresult GetDDraw(IDirectDraw2 **aDDraw);
-#endif
 
 private:
   nsresult CommonInit(void);
-  nsresult SetupDC(HDC aOldDC, HDC aNewDC);
-  HBRUSH SetupSolidBrush(void);
-  HPEN SetupPen(void);
-  HPEN SetupSolidPen(void);
-  HPEN SetupDashedPen(void);
-  HPEN SetupDottedPen(void);
   void SetupFontAndColor(void);
   void PushClipState(void);
-#ifdef NGLAYOUT_DDRAW
-  nsresult CreateDDraw(void);
-#endif
 
 protected:
-  nscolor			mCurrentColor;
-  nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
-  nsIFontMetrics	  *mFontMetrics;
-  HDC               mDC;
-  HDC               mMainDC;
-  nsDrawingSurfaceWin *mSurface;
-  nsDrawingSurfaceWin *mMainSurface;
-  COLORREF          mColor;
-  nsIWidget         *mDCOwner;
-//  int               mOldMapMode;
-  nsIDeviceContext  *mContext;
-  float             mP2T;
-  HRGN              mClipRegion;
+  nscolor					    mCurrentColor;
+  nsTransform2D		    *mTMatrix;		// transform that all the graphics drawn here will obey
+  nsIFontMetrics	    *mFontMetrics;
+  //HDC                 mDC;
+  //HDC                 mMainDC;
+  nsDrawingSurfacePS *mSurface;
+  //nsDrawingSurfaceWin *mMainSurface;
+  COLORREF            mColor;
+  //nsIWidget           *mDCOwner;
+  nsIDeviceContext    *mContext;
+  float               mP2T;
+  HRGN                mClipRegion;
   //default objects
-  HBRUSH            mOrigSolidBrush;
-  HBRUSH            mBlackBrush;
-  HFONT             mOrigFont;
-  HFONT             mDefFont;
-  HPEN              mOrigSolidPen;
-  HPEN              mBlackPen;
-  HPALETTE          mOrigPalette;
+  HBRUSH              mOrigSolidBrush;
+  HBRUSH              mBlackBrush;
+  HFONT               mOrigFont;
+  HFONT               mDefFont;
+  HPEN                mOrigSolidPen;
+  HPEN                mBlackPen;
+  HPALETTE            mOrigPalette;
+
   //state management
-  GraphicsState     *mStates;
-  nsVoidArray       *mStateCache;
-  nscolor           mCurrBrushColor;
-  HBRUSH            mCurrBrush;
-  nsIFontMetrics    *mCurrFontMetrics;
-  HFONT             mCurrFont;
-  nscolor           mCurrPenColor;
-  HPEN              mCurrPen;
-  HPEN              mNullPen;
-  PRUint8           *mGammaTable;
-  COLORREF          mCurrTextColor;
-  nsLineStyle       mCurrLineStyle;
+  nsVoidArray         *mStateCache;
+  nscolor             mCurrBrushColor;
+  HBRUSH              mCurrBrush;
+  nsIFontMetrics      *mCurrFontMetrics;
+  HFONT               mCurrFont;
+  nscolor             mCurrPenColor;
+  HPEN                mCurrPen;
+  HPEN                mNullPen;
+  PRUint8             *mGammaTable;
+  COLORREF            mCurrTextColor;
+  nsLineStyle         mCurrLineStyle;
+  PRBool              mGetNearestColor;
+  MWContext           *mPrintContext; //XXX: Remove need for MWContext
+	nsDrawingSurfacePS  mFrontBuffer;		// screen port
 
-#ifdef NS_DEBUG
-  PRBool            mInitialized;
-#endif
+	// graphic state management
+	GraphicState *			  mStates;				// Pointer to the current graphic state, top of stack
+	nsVoidArray *			    mGSArray;
 
-#ifdef NGLAYOUT_DDRAW
-  static IDirectDraw  *mDDraw;
-  static IDirectDraw2 *mDDraw2;
-  static nsresult     mDDrawResult;
-#endif
-
-  void* mScriptObject;
 };
 
-class nsDrawingSurfaceWin : public nsISupports
-{
-public:
-  nsDrawingSurfaceWin();
-  ~nsDrawingSurfaceWin();
 
-  NS_DECL_ISUPPORTS
-
-  nsresult Init(HDC aDC);
-  nsresult Init(nsIWidget *aOwner);
-#ifdef NGLAYOUT_DDRAW
-  nsresult Init(LPDIRECTDRAWSURFACE aSurface);
-  nsresult GetDC();
-  nsresult ReleaseDC();
-#endif
-
-  nsIWidget           *mDCOwner;
-  HDC                 mDC;
-  HBITMAP             mOrigBitmap;
-  HBITMAP             mSelectedBitmap;
-
-#ifdef NGLAYOUT_DDRAW
-  IDirectDrawSurface  *mSurface;
-#endif
-};
-
-#endif /* nsRenderingContextWin_h___ */
+#endif /* nsRenderingContextPS_h___ */

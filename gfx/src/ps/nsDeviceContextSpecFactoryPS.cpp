@@ -16,18 +16,18 @@
  * Reserved.
  */
 
-#include "nsDeviceContextSpecFactoryWin.h"
-#include "nsDeviceContextSpecWin.h"
+#include "nsDeviceContextSpecFactoryPS.h"
+#include "nsDeviceContextSpecPS.h"
 #include <windows.h>
 #include <commdlg.h>
 #include "nsGfxCIID.h"
 #include "plstr.h"
 
-nsDeviceContextSpecFactoryWin :: nsDeviceContextSpecFactoryWin()
+nsDeviceContextSpecFactoryPS :: nsDeviceContextSpecFactoryPS()
 {
 }
 
-nsDeviceContextSpecFactoryWin :: ~nsDeviceContextSpecFactoryWin()
+nsDeviceContextSpecFactoryPS :: ~nsDeviceContextSpecFactoryPS()
 {
 }
 
@@ -35,21 +35,22 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTO
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryWin, kDeviceContextSpecFactoryIID)
-NS_IMPL_ADDREF(nsDeviceContextSpecFactoryWin)
-NS_IMPL_RELEASE(nsDeviceContextSpecFactoryWin)
+NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryPS, kDeviceContextSpecFactoryIID)
+NS_IMPL_ADDREF(nsDeviceContextSpecFactoryPS)
+NS_IMPL_RELEASE(nsDeviceContextSpecFactoryPS)
 
-NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: Init(void)
+NS_IMETHODIMP nsDeviceContextSpecFactoryPS :: Init(void)
 {
   return NS_OK;
 }
 
 //XXX this method needs to do what the API says...
 
-NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryPS :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {
+#ifdef DC
   PRINTDLG  prntdlg;
   nsresult  rv = NS_ERROR_FAILURE;
 
@@ -108,6 +109,6 @@ printf("printer: driver %s, device %s\n", driver, device);
     ::GlobalUnlock(prntdlg.hDevNames);
     ::GlobalFree(prntdlg.hDevNames);
   }
-
-  return rv;
+#endif
+  return NS_OK;
 }

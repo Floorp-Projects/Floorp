@@ -16,71 +16,72 @@
  * Reserved.
  */
 
-#ifndef nsDeviceContextWin_h___
-#define nsDeviceContextWin_h___
+#ifndef nsDeviceContextPS_h___
+#define nsDeviceContextPS_h___
 
 #include "nsDeviceContext.h"
-#include <windows.h>
+#include "nsUnitConversion.h"
+#include "nsIWidget.h"
+#include "nsIView.h"
+#include "nsIRenderingContext.h"
+#include "nsPrintManager.h"
 
-class nsDeviceContextWin : public DeviceContextImpl
+
+class nsDeviceContextPS : public DeviceContextImpl
 {
 public:
-  nsDeviceContextWin();
+  nsDeviceContextPS();
 
-  NS_IMETHOD  Init(nsNativeWidget aWidget);
+	NS_DECL_ISUPPORTS
+
+  /**
+   * This method does nothing since a postscript devicecontext will never be created
+   * with a NativeWidget.
+   * @update 12/21/98 dwc
+   */
+  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);  
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
-
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
-
-  NS_IMETHOD  GetCanonicalPixelScale(float &aScale) const;
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-  //get a low level drawing surface for rendering. the rendering context
-  //that is passed in is used to create the drawing surface if there isn't
-  //already one in the device context. the drawing surface is then cached
-  //in the device context for re-use.
+	void 				SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
-  NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
-  NS_IMETHOD  GetDepth(PRUint32& aDepth);
+  NS_IMETHOD 	CheckFontExistence(const nsString& aFontName);
+  NS_IMETHOD 	CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD 	GetDepth(PRUint32& aDepth);
+  NS_IMETHOD 	ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
 
-  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
-
-  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
-
-  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
-
-  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+  NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
 
-  NS_IMETHOD BeginDocument(void);
-  NS_IMETHOD EndDocument(void);
+  NS_IMETHOD 	BeginDocument(void);
+  NS_IMETHOD 	EndDocument(void);
 
-  NS_IMETHOD BeginPage(void);
-  NS_IMETHOD EndPage(void);
+  NS_IMETHOD 	BeginPage(void);
+  NS_IMETHOD 	EndPage(void);
+
 
 protected:
-  virtual ~nsDeviceContextWin();
-  void CommonInit(HDC aDC);
-  nsresult Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
-
-  nsDrawingSurface      mSurface;
-  PRUint32              mDepth;  // bit depth of device
-  nsPaletteInfo         mPaletteInfo;
-  float                 mPixelScale;
-  float                 mWidthFloat;
-  float                 mHeightFloat;
-  PRInt32               mWidth;
-  PRInt32               mHeight;
+  virtual 	~nsDeviceContextPS();
+  
+  nsDrawingSurface 			mSurface;
+  PRUint32 							mDepth;
+  MWContext             *mPrintContext; //XXX: Remove need for MWContext
   nsIDeviceContextSpec  *mSpec;
+  PrintSetup            *mPrintSetup;
+
+
 
 public:
-  HDC                   mDC;
+  static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
+  MWContext*    GetPrintContext() { return mPrintContext; }
 };
 
-#endif /* nsDeviceContextWin_h___ */
+#endif /* nsDeviceContextMac_h___ */

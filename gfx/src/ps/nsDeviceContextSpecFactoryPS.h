@@ -16,16 +16,16 @@
  * Reserved.
  */
 
-#ifndef nsDeviceContextSpecFactoryWin_h___
-#define nsDeviceContextSpecFactoryWin_h___
+#ifndef nsDeviceContextSpecFactoryPS_h___
+#define nsDeviceContextSpecFactoryPS_h___
 
 #include "nsIDeviceContextSpecFactory.h"
 #include "nsIDeviceContextSpec.h"
 
-class nsDeviceContextSpecFactoryWin : public nsIDeviceContextSpecFactory
+class nsDeviceContextSpecFactoryPS : public nsIDeviceContextSpecFactory
 {
 public:
-  nsDeviceContextSpecFactoryWin();
+  nsDeviceContextSpecFactoryPS();
 
   NS_DECL_ISUPPORTS
 
@@ -35,7 +35,7 @@ public:
                                      PRBool aQuiet);
 
 protected:
-  ~nsDeviceContextSpecFactoryWin();
+  ~nsDeviceContextSpecFactoryPS();
 };
 
 #endif
