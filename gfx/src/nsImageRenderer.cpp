@@ -117,6 +117,7 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
     NS_ADDREF(img);
     aMask->header.width = aWidth;
     aMask->header.height = aHeight;
+    aMask->header.widthBytes = img->GetAlphaLineStride();
   }
 
   // Replace the existing color space with the color space associated
