@@ -114,11 +114,11 @@ helpmessage : FORCE
 	@echo
 	@echo 'Define OS_TARGET to "WINNT" to build on Windows NT with GNU make.'
 	@echo
-	@echo 'NOTE: The make-based build system does not include graphical'
-	@echo '  debugger or Bean Scripting Framework support.  To build with'
-	@echo '  these, use the Ant build tool.'
+	@echo 'The make-based build system does not include graphical'
+	@echo 'debugger or Bean Scripting Framework support.  To build with'
+	@echo 'these, use the Ant build tool.'
 	@echo
-	@echo '  Ant is available at http://jakarta.apache.org/ant/'
+	@echo 'Ant is available at http://jakarta.apache.org/ant/'
 
 all : jars examples
 
