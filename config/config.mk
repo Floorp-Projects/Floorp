@@ -223,7 +223,9 @@ else
 PATH_SEPARATOR	:= :
 XP_DEFINE	= -DXP_UNIX
 AR		= ar cr $@
+ifndef USE_AUTOCONF
 DLL_SUFFIX	= so
+endif
 LIB_SUFFIX	= a
 ifeq ($(AWT_11),1)
 JAVA_PROG	= $(NS_BIN)java
