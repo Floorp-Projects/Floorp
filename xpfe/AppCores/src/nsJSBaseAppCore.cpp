@@ -179,6 +179,39 @@ BaseAppCoreInit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 }
 
 
+PR_STATIC_CALLBACK(JSBool)
+BaseAppCoreSetDocumentCharset(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBaseAppCore *nativeThis = (nsIDOMBaseAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->SetDocumentCharset(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function close requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for BaseAppCore
@@ -213,6 +246,7 @@ static JSPropertySpec BaseAppCoreProperties[] =
 static JSFunctionSpec BaseAppCoreMethods[] = 
 {
   {"Init",          BaseAppCoreInit,     1},
+  {"SetDocumentCharset", BaseAppCoreSetDocumentCharset,     1},
   {0}
 };
 
