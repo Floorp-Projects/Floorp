@@ -96,7 +96,7 @@ sub getUserByID {
 sub getNewUser {
     my $self = shift;
     my($app, $password) = @_;
-    return $self->objectCreate($app, undef, 0, $password, '', '', '', '', {}, [], []);
+    return $self->objectCreate($app, undef, 0, $password, '', {}, [], []);
 }
 
 sub objectProvides {
