@@ -502,7 +502,10 @@ function SetColor(ColorWellID, color)
   {
     if (color)
     {
-      globalCellElement.setAttribute(bgcolor, color);
+      try {
+        gActiveEditor.setAttributeOrEquivalent(globalCellElement, bgcolor,
+                                               color, true);
+      } catch(e) {}
       gDialog.CellInheritColor.collapsed = true;
     }
     else
@@ -518,7 +521,10 @@ function SetColor(ColorWellID, color)
   {
     if (color)
     {
-      globalTableElement.setAttribute(bgcolor, color);
+      try {
+        gActiveEditor.setAttributeOrEquivalent(globalTableElement, bgcolor,
+                                               color, true);
+      } catch(e) {}
       gDialog.TableInheritColor.collapsed = true;
     }
     else
@@ -801,10 +807,14 @@ function SetAlign(listID, defaultValue, element, attName)
   {
     try {
       gActiveEditor.removeAttributeOrEquivalent(element, attName, true);
-      } catch(e) {}
+    } catch(e) {}
   }
   else
-    element.setAttribute(attName, value);
+  {
+    try {
+      gActiveEditor.setAttributeOrEquivalent(element, attName, value, true);
+    } catch(e) {}
+  }
 }
 
 function ValidateTableData()
@@ -908,7 +918,10 @@ function ValidateCellData()
   if (gDialog.TextWrapCheckbox.checked)
   {
     if (gDialog.TextWrapList.value == "nowrap")
-      globalCellElement.setAttribute("nowrap","nowrap");
+      try {
+        gActiveEditor.setAttributeOrEquivalent(globalCellElement, "nowrap",
+                                               "nowrap", true);
+      } catch(e) {}
     else
       try {
         gActiveEditor.removeAttributeOrEquivalent(globalCellElement, "nowrap", true);
