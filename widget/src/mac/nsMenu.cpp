@@ -408,7 +408,9 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 		{
 			Str255		itemStr;
 			::GetMenuItemText(GetMenuHandle(menuID), menuItemID, itemStr);
+#if !TARGET_CARBON
 			::OpenDeskAcc(itemStr);
+#endif
 			eventStatus = nsEventStatus_eConsumeNoDefault;
 		}
 	}
