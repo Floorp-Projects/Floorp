@@ -295,7 +295,7 @@ var toDoTreeView =
    getCellProperties : function( row,column, props )
    { 
       calendarToDo = gTaskArray[row];
-      var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
+      var aserv=Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
 
       // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
       if( (typeof(column)=="object" ? column.id : column) == "unifinder-todo-tree-col-priority" )
@@ -316,7 +316,7 @@ var toDoTreeView =
    getRowProperties : function( row,props ){
       calendarToDo = gTaskArray[row];
       
-      var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
+      var aserv=Components.classes["@mozilla.org/atom-service;1"].getService(Components.interfaces.nsIAtomService);
       props.AppendElement(aserv.getAtom(ToDoProgressAtom( calendarToDo )));
    },
    isSorted : function(){return false;},
