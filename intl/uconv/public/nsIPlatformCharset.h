@@ -67,7 +67,7 @@ public:
  
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLATFORMCHARSET_IID)
 
-  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult) = 0;
+  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsAString& oResult) = 0;
 
   NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue) = 0;
 

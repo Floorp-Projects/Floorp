@@ -337,7 +337,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
                      const nsStringArray* keys, 
                      const nsStringArray* values, 
-                     nsAWritableString& aCharset)
+                     nsAString& aCharset)
 {
     if (!mAlias)
         return NS_ERROR_ABORT;

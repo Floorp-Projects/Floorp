@@ -49,7 +49,7 @@ public:
   virtual ~nsURLProperties();
 
   NS_IMETHOD DidLoad(PRBool&);
-  NS_IMETHOD Get( const nsAReadableString& aKey, nsAWritableString& value);
+  NS_IMETHOD Get( const nsAString& aKey, nsAString& value);
 
 private:
   static nsIIOService*  gIOService;    // to speed up creating URLs

@@ -51,11 +51,11 @@ public:
   nsCharsetAlias2();
   virtual ~nsCharsetAlias2();
 
-  NS_IMETHOD GetPreferred(const nsAReadableString& aAlias, nsAWritableString& oResult);
+  NS_IMETHOD GetPreferred(const nsAString& aAlias, nsAString& oResult);
   NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** oResult) ;
   NS_IMETHOD GetPreferred(const char* aAlias, char* oResult, PRInt32 aBufLength) ;
 
-  NS_IMETHOD Equals(const nsAReadableString& aCharset1, const nsAReadableString& aCharset2, PRBool* oResult) ;
+  NS_IMETHOD Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult) ;
   NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) ;
   NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* oResult) ;
 

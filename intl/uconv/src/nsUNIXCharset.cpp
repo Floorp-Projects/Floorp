@@ -90,7 +90,7 @@ nsPlatformCharset::nsPlatformCharset()
 }
 
 nsresult
-nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult)
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAString& oResult)
 {
 
   // locked for thread safety 
@@ -146,7 +146,7 @@ nsPlatformCharset::~nsPlatformCharset()
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
 {
   oResult = mCharset; 
   return NS_OK;
@@ -201,7 +201,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
 }
 
 nsresult
-nsPlatformCharset::InitGetCharset(nsAWritableString &oString)
+nsPlatformCharset::InitGetCharset(nsAString &oString)
 {
   char* nl_langinfo_codeset = nsnull;
   nsString aCharset;
@@ -392,13 +392,13 @@ nsPlatformCharset::VerifyCharset(nsString &aCharset)
 }
 
 nsresult 
-nsPlatformCharset::MapToCharset(short script, short region, nsAWritableString& outCharset)
+nsPlatformCharset::MapToCharset(short script, short region, nsAString& outCharset)
 {
   return NS_OK;
 }
 
 nsresult 
-nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAWritableString& outCharset)
+nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAString& outCharset)
 {
   return NS_OK;
 }

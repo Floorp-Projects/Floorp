@@ -101,7 +101,7 @@ private:
 
   NS_IMETHOD GetCharsetFromCompatibilityTag(const nsStringArray* keys, 
                                             const nsStringArray* values, 
-                                            nsAWritableString& aCharset);
+                                            nsAString& aCharset);
 
   nsCOMPtr<nsICharsetAlias> mAlias;
 
