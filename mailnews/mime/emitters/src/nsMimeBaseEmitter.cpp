@@ -163,6 +163,8 @@ nsMimeBaseEmitter::CleanupHeaderArray(nsVoidArray *aArray)
     PR_FREEIF(headerInfo->value);
     PR_FREEIF(headerInfo);
   }
+
+  delete aArray;
 }
 
 //

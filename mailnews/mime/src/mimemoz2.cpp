@@ -164,19 +164,6 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
       rv = nsMimeNewURI(&(tmp->url), tmpURL, nsnull);
 
       tmp->notDownloaded = PR_TRUE;
-
-      // RICHIE RICHIE 
-      // If we get here, we should really add some type of string
-      // onto the name to show its not downloaded
-      /********************
-      nsString  tName(tmp->real_name);
-      
-      char *msgString = MimeGetStringByID(MIME_MSG_NOT_DOWNLOADED);
-      tName.Append(" ");
-      tName.Append(msgString);
-      PR_FREEIF(tmp->real_name);
-      tmp->real_name = tName.ToNewCString();
-      *********************/
     }
     else
     {
@@ -193,6 +180,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
     }
   }
 
+  PR_FREEIF(tmpURL);
   tmp->description = MimeHeaders_get(child->headers, HEADER_CONTENT_DESCRIPTION, PR_FALSE, PR_FALSE);
   return NS_OK;
 }
@@ -388,19 +376,6 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
       // If we get here, we should mark this attachment as not being
       // downloaded. 
       tmp->notDownloaded = PR_TRUE;
-
-      // RICHIE RICHIE RICHIE
-      //
-      // If we get here, we should really add some type of string
-      // onto the name to show its not downloaded
-      /**
-      nsString  tName(tmp->real_name);
-      char *msgString = MimeGetStringByID(MIME_MSG_NOT_DOWNLOADED);
-      tName.Append(" ");
-      tName.Append(msgString);
-      PR_FREEIF(tmp->real_name);
-      tmp->real_name = tName.ToNewCString();
-      ***/
     }
   }
 
