@@ -79,7 +79,13 @@ public:
 
     // Output as though the content is preformatted
     // (e.g. maybe it's wrapped in a MOZ_PRE or MOZ_PRE_WRAP style tag)
-    OutputWrap          = 32
+    OutputWrap          = 32,
+
+    // Output for format flowed (RFC 2646). This is used when converting
+    // to text for mail sending. This differs just slightly
+    // but in an important way from normal formatted, and that is that
+    // lines are space stuffed. This can't (correctly) be done later.
+    OutputFormatFlowed  = 64
   };
   
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
