@@ -119,7 +119,7 @@ nsImageLoader::Load(const nsAReadableString &aURI)
   if (NS_FAILED(rv)) return rv;
 
   return il->LoadImage(uri, loadGroup, NS_STATIC_CAST(imgIDecoderObserver *, this), 
-                       nsnull, nsIRequest::LOAD_BACKGROUND, getter_AddRefs(mRequest));
+                       nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, getter_AddRefs(mRequest));
 }
 
                     

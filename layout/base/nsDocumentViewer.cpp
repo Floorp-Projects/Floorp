@@ -345,10 +345,6 @@ public:
   void OnStartPrinting();
 
   nsCOMPtr<nsIDeviceContext>   mPrintDC;
-  nsCOMPtr<nsIPresContext>     mPrintPC;
-  nsCOMPtr<nsIStyleSet>        mPrintSS;
-  nsCOMPtr<nsIPresShell>       mPrintPS;
-  nsCOMPtr<nsIViewManager>     mPrintVM;
   nsIView                     *mPrintView;
   FILE                        *mFilePointer;    // a file where information can go to when printing
 
@@ -719,19 +715,13 @@ PrintData::~PrintData()
 
   // printing is complete, clean up now
 
-  if (mPrintPS) {
-    // XXX we never call BeginObservingDocument on this pres shell.
-    mPrintPS->EndObservingDocument();
-    mPrintPS->Destroy();
-  }
-
   OnEndPrinting(NS_OK); // removes listener
 
-  if (mPrintPS) {
-    mPrintDC->EndDocument();
+  if (mPrintDC) {
 #ifdef DEBUG_PRINTING
     fprintf(mDebugFD, "****************** End Document ************************\n");
 #endif
+    mPrintDC->EndDocument();
   }
 
   delete mPrintObject;
@@ -2839,6 +2829,9 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
   presShell->CaptureHistoryState(getter_AddRefs(layoutState),PR_TRUE);
 
+  // set it on the new pres shell
+  aPO->mPresShell->SetHistoryState(layoutState);
+
   aPO->mPresShell->BeginObservingDocument();
 
   nsMargin margin(0,0,0,0);
@@ -2877,12 +2870,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   }
 
   aPO->mPresContext->SetPageDim(&adjRect);
-  // XXX replace this line with the commented one below when bug 101264 is fixed
-  // By doing an intitial reflow with an unconstrained height, we avoid doing a 
-  // resize reflow where frames have already been split and avoid buggy pull up code.
-  // See also bug 101264 in nsSimplePageSequencer::Reflow.
-  rv = aPO->mPresShell->InitialReflow(width, NS_MAXSIZE);
-  //rv = aPO->mPresShell->InitialReflow(width, height);
+  rv = aPO->mPresShell->InitialReflow(width, height);
 
   if (NS_SUCCEEDED(rv)) {
     // Transfer Selection Ranges to the new Print PresShell
@@ -2918,22 +2906,9 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
     fclose(fd);
     }
 #endif
-
-    // update the history from the old presentation shell
-    nsCOMPtr<nsIFrameManager> fm;
-    rv = aPO->mPresShell->GetFrameManager(getter_AddRefs(fm));
-    if(NS_SUCCEEDED(rv) && fm) {
-      nsIFrame* root;
-      aPO->mPresShell->GetRootFrame(&root);
-      fm->RestoreFrameState(aPO->mPresContext, root, layoutState);
-    }
   }
 
   aPO->mPresShell->EndObservingDocument();
-  // EndObserving document no longer does a reflow.. which history needs.. or we 
-  // get a blank page for text fields.  this will reflow.. fixes bug 84017.
-  // XXX remove this line when bug 101264 is fixed
-  aPO->mPresShell->ResizeReflow(width, height);
 
   return rv;
 }
@@ -4407,85 +4382,6 @@ nsresult rv;
         NS_RELEASE(devspec);
 
         if(webContainer) {
-          // load the document and do the initial reflow on the entire document
-          nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID, &rv));
-          if (NS_FAILED(rv)) {
-            gCurrentlyPrinting = PR_FALSE;
-            ShowPrintErrorDialog(rv);
-            return rv;
-          } else {
-            mPrt->mPrintPC = do_QueryInterface(printcon, &rv);
-            if (NS_FAILED(rv)) {
-              gCurrentlyPrinting = PR_FALSE;
-              ShowPrintErrorDialog(rv);
-              return rv;
-            }
-          }
-          
-
-          PRInt32 width, height;
-          mPrt->mPrintDC->GetDeviceSurfaceDimensions(width,height);
-          // XXX - Hack Alert
-          // OK,  so ther eis a selection, we will print the entire selection 
-          // on one page and then crop the page.
-          // This means you can never print any selection that is longer than one page
-          // put it keeps it from page breaking in the middle of your print of the selection
-          if (isSelection) {
-            //height = 0x0FFFFFFF;
-          }
-
-          mPrt->mPrintPC->Init(mPrt->mPrintDC);
-          mPrt->mPrintPC->SetContainer(webContainer);
-          CreateStyleSet(mDocument, getter_AddRefs(mPrt->mPrintSS));
-
-          mPrt->mPrintPS = do_CreateInstance(kPresShellCID, &rv);
-          if(NS_FAILED(rv)){
-            gCurrentlyPrinting = PR_FALSE;
-            ShowPrintErrorDialog(rv);
-            return rv;
-          }
-
-          mPrt->mPrintVM = do_CreateInstance(kViewManagerCID, &rv);
-          if(NS_FAILED(rv)) {
-            gCurrentlyPrinting = PR_FALSE;
-            ShowPrintErrorDialog(rv);
-            return rv;
-          }
-
-          rv = mPrt->mPrintVM->Init(mPrt->mPrintDC);
-          if(NS_FAILED(rv)) {
-            gCurrentlyPrinting = PR_FALSE;
-            ShowPrintErrorDialog(rv);
-            return rv;
-          }
-
-          rv = CallCreateInstance(kViewCID, &mPrt->mPrintView);
-          if(NS_FAILED(rv)) {
-            gCurrentlyPrinting = PR_FALSE;
-            ShowPrintErrorDialog(rv);
-            return rv;
-          }
-
-          nsRect  tbounds = nsRect(0,0,width,height);
-          rv = mPrt->mPrintView->Init(mPrt->mPrintVM,tbounds,nsnull);
-          if(NS_FAILED(rv)) {
-            gCurrentlyPrinting = PR_FALSE;
-            ShowPrintErrorDialog(rv);
-            return rv;
-          }
-
-          // setup hierarchical relationship in view manager
-          mPrt->mPrintVM->SetRootView(mPrt->mPrintView);
-          mPrt->mPrintPS->Init(mDocument,mPrt->mPrintPC,mPrt->mPrintVM,mPrt->mPrintSS);
-
-          // Compatability mode must be set in the mPrintPC or the document
-          // will be printed in "Standard" mode even if it was a "Quirks" doc
-          nsCompatibility mode;
-          mPresContext->GetCompatibilityMode(&mode);
-          mPrt->mPrintPC->SetCompatibilityMode(mode);
-
-          mPrt->mPrintPS->InitialReflow(width,height);
-
 #ifdef DEBUG_dcone
           float   a1,a2;
           PRInt32 i1,i2;

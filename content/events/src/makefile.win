@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  layout_xul \
+		  necko \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

@@ -941,7 +941,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
           doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
         }
 
-        il->LoadImage(uri, loadGroup, this, sup, nsIRequest::LOAD_NORMAL, getter_AddRefs(mRequest));
+        il->LoadImage(uri, loadGroup, this, sup, nsIRequest::LOAD_NORMAL, nsnull, getter_AddRefs(mRequest));
       }
     }
 

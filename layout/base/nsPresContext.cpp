@@ -1333,6 +1333,13 @@ nsPresContext::GetDeviceContext(nsIDeviceContext** aResult) const
 }
 
 NS_IMETHODIMP
+nsPresContext::GetImageLoadFlags(nsLoadFlags& aLoadFlags)
+{
+  aLoadFlags = nsIRequest::LOAD_NORMAL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPresContext::LoadImage(const nsString& aURL,
                          nsIFrame* aTargetFrame,
                          imgIRequest **aRequest)

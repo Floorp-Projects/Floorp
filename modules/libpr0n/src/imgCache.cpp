@@ -108,8 +108,10 @@ void GetCacheSession(nsIURI *aURI, nsICacheSession **_retval)
 
   if (isChrome)
     gChromeSession = newSession;
-  else
+  else {
     gSession = newSession;
+    gSession->SetDoomEntriesIfExpired(PR_FALSE);
+  }
 
   *_retval = newSession;
   NS_ADDREF(*_retval);
@@ -172,7 +174,20 @@ PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor 
   return PR_TRUE;
 }
 
-PRBool imgCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
+static PRUint32
+SecondsFromPRTime(PRTime prTime)
+{
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  PRUint32 seconds;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2UI(seconds, intermediateResult);
+  return seconds;
+}
+
+
+PRBool imgCache::Get(nsIURI *aKey, PRBool aDoomIfExpired, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
 {
   LOG_STATIC_FUNC(gImgLog, "imgCache::Get");
 
@@ -191,6 +206,15 @@ PRBool imgCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescripto
 
   if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
+
+  if (aDoomIfExpired) {
+    PRUint32 expirationTime;
+    entry->GetExpirationTime(&expirationTime);
+    if (expirationTime && (expirationTime <= SecondsFromPRTime(PR_Now()))) {
+      entry->Doom();
+      return PR_FALSE;
+    }
+  }
 
   nsCOMPtr<nsISupports> sup;
   entry->GetCacheElement(getter_AddRefs(sup));

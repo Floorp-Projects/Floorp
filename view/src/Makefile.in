@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  timer \
 		  pref \
+		  necko \
 		  $(NULL)
 
 EXTRA_DSO_LIBS = gkgfx
