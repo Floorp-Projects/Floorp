@@ -279,7 +279,7 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
     rv = GetCount(&count);
     if (NS_FAILED(rv)) return rv;
 
-    for (PRInt32 index = 0; index < count; ++index) {
+    for (PRInt32 index = 1; index <= count; ++index) {
         nsCOMPtr<nsIRDFResource> ordinal;
         rv = gRDFContainerUtils->IndexToOrdinalResource(index, getter_AddRefs(ordinal));
         if (NS_FAILED(rv)) return rv;
@@ -449,6 +449,8 @@ RDFContainerImpl::Renumber(PRInt32 aStartIndex)
             rv = mDataSource->Assert(mContainer, newOrdinal, element, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
         }
+
+        ++oldIndex;
     }
 
     // Update the container's nextVal to reflect the renumbering
