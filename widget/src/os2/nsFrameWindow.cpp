@@ -292,7 +292,7 @@ MRESULT EXPENTRY fnwpFrame( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    // check to see if we have a rollup listener registered
    if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-      if (msg == WM_ACTIVATE || msg == WM_TRACKFRAME || msg == WM_MINMAXFRAME ||
+      if (msg == WM_TRACKFRAME || msg == WM_MINMAXFRAME ||
           msg == WM_BUTTON1DOWN || msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
          // Rollup if the event is outside the popup
          if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
