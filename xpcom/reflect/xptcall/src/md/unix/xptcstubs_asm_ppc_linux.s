@@ -1,25 +1,27 @@
- #
- # -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- #
- # The contents of this file are subject to the Netscape Public
- # License Version 1.1 (the "License"); you may not use this file
- # except in compliance with the License. You may obtain a copy of
- # the License at http://www.mozilla.org/NPL/
- #
- # Software distributed under the License is distributed on an "AS
- # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- # implied. See the License for the specific language governing
- # rights and limitations under the License.
- #
- # The Original Code is mozilla.org code.
- #
- # The Initial Developer of the Original Code is Netscape
- # Communications Corporation.  Portions created by Netscape are
- # Copyright (C) 1999 Netscape Communications Corporation. All
- # Rights Reserved.
- #
- # Contributor(s): 
- #
+# -*- Mode: Asm -*-
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1999 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
+#   beard@netscape.com (Patrick Beard)
+#   waterson@netscape.com (Chris Waterson)
+#
 
 .set r0,0; .set sp,1; .set RTOC,2; .set r3,3; .set r4,4
 .set r5,5; .set r6,6; .set r7,7; .set r8,8; .set r9,9
@@ -36,32 +38,29 @@
 .set f25,25; .set f26,26; .set f27,27; .set f28,28; .set f29,29
 .set f30,30; .set f31,31
 
-        
-# .text section
-
         .section ".text"
         .align 2
 	.globl SharedStub
 	.type  SharedStub,@function
 
 SharedStub:
+        stwu	sp,-112(sp)			# room for 
+						# linkage (8),
+						# gprData (32),
+						# fprData (64), 
+						# stack alignment(8)
         mflr	r0
-	stw	r0,4(sp)
-        stwu	sp,-112(sp)	# room for 
-				# linkage (8),
-				# gprData (32),
-				# fprData (64), 
-				# stack alignment(8)
+	stw	r0,116(sp)			# save LR backchain
 
-	stw	r4,12(sp)       # save GP registers
-	stw	r5,16(sp)
-	stw	r6,20(sp)
+	stw	r4,12(sp)			# save GP registers
+	stw	r5,16(sp)			# (n.b. that we don't save r3
+	stw	r6,20(sp)			# because PrepareAndDispatch() is savvy)
 	stw	r7,24(sp)
 	stw	r8,28(sp)
 	stw	r9,32(sp)
 	stw	r10,36(sp)
 
-	stfd	f1,40(sp)       # save FP registers
+	stfd	f1,40(sp)			# save FP registers
 	stfd	f2,48(sp)
 	stfd	f3,56(sp)
 	stfd	f4,64(sp)
@@ -70,17 +69,21 @@ SharedStub:
 	stfd	f7,88(sp)
 	stfd	f8,96(sp)
 
-				# r3 has the 'self' pointer already
-	mr      r4,r12		# r4 is expected to have the 'methodIndex' selector
-	addi	r5,sp,120	# pointer to callers args area, beyond r3-r10/f1-f8 mapped range
-	addi	r6,sp,12	# gprData+1
-	addi	r7,sp,40	# fprData
+						# r3 has the 'self' pointer already
+	
+	mr      r4,r11				# r4 <= methodIndex selector, passed
+						# via r11 in the nsXPTCStubBase::StubXX() call
+	
+	addi	r5,sp,120			# r5 <= pointer to callers args area,
+						# beyond r3-r10/f1-f8 mapped range
+	
+	addi	r6,sp,8				# r6 <= gprData
+	addi	r7,sp,40			# r7 <= fprData
       
-	bl	PrepareAndDispatch
+	bl	PrepareAndDispatch@local	# Go!
     
-	lwz	r0,116(sp)
+	lwz	r0,116(sp)			# restore LR
 	mtlr	r0
-#	la	sp,112(sp)
-        lwz     sp,0(sp)
+	la	sp,112(sp)			# clean up the stack
 	blr
 

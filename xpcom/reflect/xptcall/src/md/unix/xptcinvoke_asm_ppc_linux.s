@@ -1,5 +1,4 @@
-#
-# -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# -*- Mode: Asm -*-
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -19,6 +18,9 @@
 # Rights Reserved.
 #
 # Contributor(s):
+#   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
+#   beard@netscape.com (Patrick Beard)
+#   waterson@netscape.com (Chris Waterson)
 #
 .set r0,0; .set sp,1; .set RTOC,2; .set r3,3; .set r4,4
 .set r5,5; .set r6,6; .set r7,7; .set r8,8; .set r9,9
@@ -46,31 +48,32 @@
 #
 
 XPTC_InvokeByIndex:
-	stwu    sp,-32(sp)
-	mflr    r0
-	stw     r3,8(sp)        # that
-	stw     r4,12(sp)       # methodIndex
+	stwu    sp,-32(sp)			# setup standard stack frame
+	mflr    r0				# save LR
+	stw     r3,8(sp)			# r3 <= that
+	stw     r4,12(sp)			# r4 <= methodIndex
 	stw     r30,16(sp)
 	stw     r31,20(sp)
 
-	stw     r0,36(sp)
+	stw     r0,36(sp)			# store LR backchain
 	mr      r31,sp
 
-	slwi    r10,r5,3        # reserve stack for ParamCount *2 *4
-	addi    r0,r10,128      # reserve stack for GPR and FPR
-	lwz     r9,0(sp)
+	rlwinm  r10,r5,3,0,27			# r10 = (ParamCount * 2 * 4) & ~0x0f
+	addi    r0,r10,96			# reserve stack for GPR and FPR register save area r0 = r10 + 96
+	lwz     r9,0(sp)			# r9 = backchain
 	neg     r0,r0
-	stwux   r9,sp,r0
-	addi    r3,sp,8         # args
-	mr      r4,r5           # paramCount
-	mr      r5,r6           # params
-	add     r6,r3,r10       # gpregs
-	mr      r30,r6
-	addi    r7,r6,32        # fpregs
+	stwux   r9,sp,r0			# reserve stack sapce and save SP backchain
+	
+	addi    r3,sp,8				# r3 <= args
+	mr      r4,r5				# r4 <= paramCount
+	mr      r5,r6				# r5 <= params
+	add     r6,r3,r10			# r6 <= gpregs ( == args + r10 )
+	mr      r30,r6				# store in r30 for use later...
+	addi    r7,r6,32			# r7 <= fpregs ( == gpregs + 32 )
 
-	bl      invoke_copy_to_stack # (args, paramCount, params, gpregs, fpregs)
+	bl      invoke_copy_to_stack@local	# (args, paramCount, params, gpregs, fpregs)
 
-	lfd     f1,32(r30)      # load FP registers
+	lfd     f1,32(r30)			# load FP registers with method parameters
 	lfd     f2,40(r30)   
 	lfd     f3,48(r30)  
 	lfd     f4,56(r30)  
@@ -79,28 +82,28 @@ XPTC_InvokeByIndex:
 	lfd     f7,80(r30)  
 	lfd     f8,88(r30)
 
-	lwz     r3,8(r31)       # that
-	lwz     r4,12(r31)      # methodIndex
+	lwz     r3,8(r31)			# r3 <= that
+	lwz     r4,12(r31)			# r4 <= methodIndex
+	lwz     r5,0(r3)			# r5 <= vtable ( == *that )
+	addi	r4,r4,2				# skip first two vtable entries
+	slwi    r4,r4,2				# convert to offset ( *= 4 )
+	lwzx    r0,r5,r4			# r0 <= methodpointer ( == vtable + offset )
 
-	lwz     r5,0(r3)        # vtable
-	slwi    r4,r4,2         # temp = methodIndex * 4
-	addi    r4,r4,8         # temp += 8
-	lwzx    r0,r4,r5        # dest = vtable+temp
+        lwz     r4,4(r30)			# load GP regs with method parameters
+	lwz     r5,8(r30)   
+	lwz     r6,12(r30)  
+	lwz     r7,16(r30)  
+	lwz     r8,20(r30)  
+	lwz     r9,24(r30)  
+	lwz     r10,28(r30)
 
-        lwz     r4,0(r30)       # load GP regs
-	lwz     r5,4(r30)   
-	lwz     r6,8(r30)  
-	lwz     r7,12(r30)  
-	lwz     r8,16(r30)  
-	lwz     r9,20(r30)  
-	lwz     r10,24(r30)
-
-	mtlr    0         
-	blrl                    # call
+	mtlr    r0				# copy methodpointer to LR    
+	blrl					# call method
 	
-	lwz     r30,16(r31)     # clean up stack
+	lwz     r30,16(r31)			# restore r30 & r31
 	lwz     r31,20(r31)
-	lwz     r11,0(sp)
+	
+	lwz     r11,0(sp)			# clean up the stack
 	lwz     r0,4(r11)
 	mtlr    r0
 	mr      sp,r11

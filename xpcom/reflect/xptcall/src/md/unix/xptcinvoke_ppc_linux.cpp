@@ -18,198 +18,109 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
+ *   beard@netscape.com (Patrick Beard)
+ *   waterson@netscape.com (Chris Waterson)
  */
 
-/* Platform specific code to invoke XPCOM methods on native objects */
+// Platform specific code to invoke XPCOM methods on native objects
+
+// The purpose of XPTC_InvokeByIndex() is to map a platform
+// indepenpent call to the platform ABI. To do that,
+// XPTC_InvokeByIndex() has to determine the method to call via vtable
+// access. The parameters for the method are read from the
+// nsXPTCVariant* and prepared for th native ABI.  For the Linux/PPC
+// ABI this means that the first 8 integral and floating point
+// parameters are passed in registers.
 
 #include "xptcprivate.h"
 
-typedef unsigned nsXPCVariant;
+// 8 integral parameters are passed in registers
+#define GPR_COUNT     8
 
-#define FIRST_GP_REG  3
-#define MAX_GP_REG   10
-#define FIRST_FP_REG  1
-#define MAX_FP_REG    8
+// 8 floating point parameters are passed in registers, floats are
+// promoted to doubles when passed in registers
+#define FPR_COUNT     8
 
 extern "C" PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 {
-  return (PRUint32)(((paramCount * 2) + 3) & ~3);
+  return PRUint32(((paramCount * 2) + 3) & ~3);
 }
 
 extern "C" void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, 
-		     PRUint32* gpregs, double* fpregs)
+invoke_copy_to_stack(PRUint32* d,
+                     PRUint32 paramCount,
+                     nsXPTCVariant* s, 
+                     PRUint32* gpregs,
+                     double* fpregs)
 {
-  uint32 gpr = FIRST_GP_REG + 1; // skip one GP reg for 'this'
-  uint32 fpr = FIRST_FP_REG;
+    PRUint32 gpr = 1; // skip one GP reg for 'that'
+    PRUint32 fpr = 0;
+    PRUint32 tempu32;
+    PRUint64 tempu64;
+    
+    for(uint32 i = 0; i < paramCount; i++, s++) {
+        if(s->IsPtrData())
+            tempu32 = (PRUint32) s->ptr;
+        else {
+            switch(s->type) {
+            case nsXPTType::T_FLOAT:                                  break;
+            case nsXPTType::T_DOUBLE:                                 break;
+            case nsXPTType::T_I8:     tempu32 = s->val.i8;            break;
+            case nsXPTType::T_I16:    tempu32 = s->val.i16;           break;
+            case nsXPTType::T_I32:    tempu32 = s->val.i32;           break;
+            case nsXPTType::T_I64:    tempu64 = s->val.i64;           break;
+            case nsXPTType::T_U8:     tempu32 = s->val.u8;            break;
+            case nsXPTType::T_U16:    tempu32 = s->val.u16;           break;
+            case nsXPTType::T_U32:    tempu32 = s->val.u32;           break;
+            case nsXPTType::T_U64:    tempu64 = s->val.u64;           break;
+            case nsXPTType::T_BOOL:   tempu32 = s->val.b;             break;
+            case nsXPTType::T_CHAR:   tempu32 = s->val.c;             break;
+            case nsXPTType::T_WCHAR:  tempu32 = s->val.wc;            break;
+            default:                  tempu32 = (PRUint32) s->val.p;  break;
+            }
+        }
 
-  for(uint32 i = 0; i < paramCount; i++, s++)
-    {
-      if(s->IsPtrData())
-        {
-	  if (gpr > MAX_GP_REG)
-	    *((void**) d++)        = s->ptr;
-	  else
-	    {
-	      *((void**) gpregs++) = s->ptr;
-	      gpr++;
-	    }
-	  continue;
+        if (!s->IsPtrData() && s->type == nsXPTType::T_DOUBLE) {
+            if (fpr < FPR_COUNT)
+                fpregs[fpr++]    = s->val.d;
+            else {
+                if ((PRUint32) d & 4) d++; // doubles are 8-byte aligned on stack
+                *((double*) d) = s->val.d;
+                d += 2;
+            }
         }
-      switch(s->type)
-        {
-	case nsXPTType::T_I8:
-	  if (gpr > MAX_GP_REG)
-	    *((PRInt32*) d++)        = s->val.i8;
-	  else
-	    {
-	      *((PRInt32*) gpregs++) = s->val.i8;
-	      gpr++;
-	    }
-          break;
-	case nsXPTType::T_I16:
-	  if (gpr > MAX_GP_REG)
-	    *((PRInt32*) d++)        = s->val.i16;
-	  else
-	    {
-	      *((PRInt32*) gpregs++) = s->val.i16;
-	      gpr++;
-	    }
-	  break;
-        case nsXPTType::T_I32:
-	  if (gpr > MAX_GP_REG)
-	    *((PRInt32*) d++)        = s->val.i32;
-	  else
-	    {
-	      *((PRInt32*) gpregs++) = s->val.i32;
-	      gpr++;
-	    }
-	  break;
-        case nsXPTType::T_I64:
-	  if ((gpr + 1) > MAX_GP_REG)
-	    {
-	      if (PRUint32(d) & 4) d++;
-	      *(((PRInt64*&) d)++)      = s->val.i64;
-	    }
-	  else
-	    {
-	      if ((gpr & 1) == 0)
-		{
-		  gpr++;
-		  gpregs++;
-		}
-	      *(((PRInt64*&) gpregs)++) = s->val.i64;
-	      gpr += 2;
-	    }
-	  break;
-	case nsXPTType::T_U8:
-	  if (gpr > MAX_GP_REG)
-	    *d++        = s->val.u8;
-	  else
-	    {
-	      *gpregs++ = s->val.u8;
-	      gpr++;
-	    }
-          break;
-	case nsXPTType::T_U16:
-	  if (gpr > MAX_GP_REG)
-	    *d++        = s->val.u16;
-	  else
-	    {
-	      *gpregs++ = s->val.u16;
-	      gpr++;
-	    }
-	  break;
-        case nsXPTType::T_U32:
-	  if (gpr > MAX_GP_REG)
-	    *d++        = s->val.u32;
-	  else
-	    {
-	      *gpregs++ = s->val.u32;
-	      gpr++;
-	    }
-	  break;
-        case nsXPTType::T_U64:
-	  if ((gpr + 1) > MAX_GP_REG)
-	    {
-	      if (PRUint32(d) & 4) d++;
-	      *(((PRUint64*&) d)++)      = s->val.u64;
-	    }
-	  else
-	    {
-	      if ((gpr & 1) == 0)
-		{
-		  gpr++;
-		  gpregs++;
-		}
-	      *(((PRUint64*&) gpregs)++) = s->val.u64;
-	      gpr    += 2;
-	    }
-	  break;
-        case nsXPTType::T_FLOAT:
-	  if (fpr > MAX_FP_REG)
-	      *((float*) d++) = s->val.f;
-	  else
-	    {
-	      *fpregs++       = s->val.f;
-	      fpr++;
-	    }
-	  break;
-        case nsXPTType::T_DOUBLE:
-	  if (fpr > MAX_FP_REG)
-	    {
-	      if (PRUint32(d) & 4) d++;
-	      *(((double*&) d)++) = s->val.d;
-	    }
-	  else
-	    {
-	      *fpregs++          = s->val.d;
-	      fpr++;
-	    }
-	  break;
-        case nsXPTType::T_BOOL:
-	  if (gpr > MAX_GP_REG)
-	    *((PRBool*) d++)        = s->val.b;
-	  else
-	    {
-	      *((PRBool*) gpregs++) = s->val.b;
-	      gpr++;
-	    }
-          break;
-        case nsXPTType::T_CHAR:
-	  if (gpr > MAX_GP_REG)
-	    *d++        = s->val.c;
-	  else
-	    {
-	      *gpregs++ = s->val.c;
-	      gpr++;
-	    }
-          break;
-        case nsXPTType::T_WCHAR:
-	  if (gpr > MAX_GP_REG)
-	    *((PRInt32*) d++)        = s->val.wc;
-	  else
-	    {
-	      *((PRInt32*) gpregs++) = s->val.wc;
-	      gpr++;
-	    }
-          break;
-        default:
-	  // all the others are plain pointer types
-	  if (gpr > MAX_GP_REG)
-	    *((void**) d++)        = s->val.p;
-	  else
-	    {
-	      *((void**) gpregs++) = s->val.p;
-	      gpr++;
-	    }
-          break;
+        else if (!s->IsPtrData() && s->type == nsXPTType::T_FLOAT) {
+            if (fpr < FPR_COUNT)
+                fpregs[fpr++]   = s->val.f; // if passed in registers, floats are promoted to doubles
+            else
+                *((float*) d++) = s->val.f;
         }
+        else if (!s->IsPtrData() && (s->type == nsXPTType::T_I64
+                                     || s->type == nsXPTType::T_U64)) {
+            if ((gpr + 1) < GPR_COUNT) {
+                if (gpr & 1) gpr++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
+                *((PRUint64*) &gpregs[gpr]) = tempu64;
+                gpr += 2;
+            }
+            else {
+                if ((PRUint32) d & 4) d++; // longlongs are 8-byte aligned on stack
+                *((PRUint64*) d)            = tempu64;
+                d += 2;
+            }
+        }
+        else {
+            if (gpr < GPR_COUNT)
+                gpregs[gpr++] = tempu32;
+            else
+                *d++          = tempu32;
+        }
+        
     }
 }
 
 extern "C"
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-		   PRUint32 paramCount, nsXPTCVariant* params);
+                   PRUint32 paramCount, nsXPTCVariant* params);
