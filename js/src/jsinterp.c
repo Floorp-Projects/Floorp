@@ -107,7 +107,7 @@ js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
 /*
  * Class for for/in loop property iterator objects.
  */
-#define JSSLOT_ITR_STATE    (JSSLOT_START)
+#define JSSLOT_ITER_STATE    (JSSLOT_START)
 
 static void
 prop_iterator_finalize(JSContext *cx, JSObject *obj)
@@ -116,7 +116,7 @@ prop_iterator_finalize(JSContext *cx, JSObject *obj)
     jsval iteratee;
 
     /* Protect against stillborn iterators. */
-    iter_state = obj->slots[JSSLOT_ITR_STATE];
+    iter_state = obj->slots[JSSLOT_ITER_STATE];
     iteratee = obj->slots[JSSLOT_PARENT];
     if (iter_state != JSVAL_NULL && !JSVAL_IS_PRIMITIVE(iteratee)) {
         OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY,
@@ -1136,9 +1136,8 @@ js_Interpret(JSContext *cx, jsval *result)
         }
 #endif
 
-        if (rt->interruptHandler) {
+        {
             JSTrapHandler handler = rt->interruptHandler;
-            /* check copy of pointer for safety in multithreaded situation */
             if (handler) {
                 switch (handler(cx, script, pc, &rval,
                                 rt->interruptHandlerData)) {
@@ -1400,7 +1399,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 *vp = OBJECT_TO_JSVAL(propobj);
 
                 ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, 0);
-                propobj->slots[JSSLOT_ITR_STATE] = iter_state;
+                propobj->slots[JSSLOT_ITER_STATE] = iter_state;
                 if (!ok)
                     goto out;
 
@@ -1416,13 +1415,13 @@ js_Interpret(JSContext *cx, jsval *result)
                 /* This is not the first iteration. Recover iterator state. */
                 propobj = JSVAL_TO_OBJECT(rval);
                 obj = JSVAL_TO_OBJECT(propobj->slots[JSSLOT_PARENT]);
-                iter_state = propobj->slots[JSSLOT_ITR_STATE];
+                iter_state = propobj->slots[JSSLOT_ITER_STATE];
             }
 
           enum_next_property:
             /* Get the next jsid to be enumerated and store it in rval */
             OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &rval);
-            propobj->slots[JSSLOT_ITR_STATE] = iter_state;
+            propobj->slots[JSSLOT_ITER_STATE] = iter_state;
 
             /* No more jsids to iterate in obj ? */
             if (iter_state == JSVAL_NULL) {
@@ -1435,7 +1434,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 }
 
                 ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, 0);
-                propobj->slots[JSSLOT_ITR_STATE] = iter_state;
+                propobj->slots[JSSLOT_ITER_STATE] = iter_state;
                 if (!ok)
                     goto out;
 
@@ -1540,15 +1539,25 @@ js_Interpret(JSContext *cx, jsval *result)
 }
 
 #define CACHED_GET(call) {                                                    \
+    JS_LOCK_OBJ(cx, obj);                                                     \
     PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
     if (PROP_FOUND(prop)) {                                                   \
+        JSScope *_scope = OBJ_SCOPE(obj);                                     \
         sprop = (JSScopeProperty *)prop;                                      \
+        JS_ATOMIC_ADDREF(&sprop->nrefs, 1);                                   \
         slot = (uintN)sprop->slot;                                            \
-        rval = OBJ_GET_SLOT(cx, obj, slot);                                   \
+        rval = LOCKED_OBJ_GET_SLOT(obj, slot);                                \
+        JS_UNLOCK_SCOPE(cx, _scope);                                          \
         ok = SPROP_GET(cx, sprop, obj, obj, &rval);                           \
-        if (ok)                                                               \
-            OBJ_SET_SLOT(cx, obj, slot, rval);                                \
+        if (ok) {                                                             \
+            JS_LOCK_SCOPE(cx, _scope);                                        \
+            sprop = js_DropScopeProperty(cx, _scope, sprop);                  \
+            if (sprop)                                                        \
+                LOCKED_OBJ_SET_SLOT(obj, slot, rval);                         \
+            JS_UNLOCK_SCOPE(cx, _scope);                                      \
+        }                                                                     \
     } else {                                                                  \
+        JS_UNLOCK_OBJ(cx, obj);                                               \
         SAVE_SP(fp);                                                          \
         ok = call;                                                            \
         /* No fill here: js_GetProperty fills the cache. */                   \
@@ -1562,17 +1571,27 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 
 #define CACHED_SET(call) {                                                    \
+    JS_LOCK_OBJ(cx, obj);                                                     \
     PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);                   \
     if (PROP_FOUND(prop) &&                                                   \
         !(sprop = (JSScopeProperty *)prop,                                    \
           sprop->attrs & JSPROP_READONLY)) {                                  \
+        JSScope *_scope = OBJ_SCOPE(obj);                                     \
+        JS_ATOMIC_ADDREF(&sprop->nrefs, 1);                                   \
+        JS_UNLOCK_SCOPE(cx, _scope);                                          \
         ok = SPROP_SET(cx, sprop, obj, obj, &rval);                           \
         if (ok) {                                                             \
-            SET_ENUMERATE_ATTR(sprop);                                        \
-            GC_POKE(cx, NULL);  /* second arg ignored! */                     \
-            OBJ_SET_SLOT(cx, obj, sprop->slot, rval);                         \
+            JS_LOCK_SCOPE(cx, _scope);                                        \
+            sprop = js_DropScopeProperty(cx, _scope, sprop);                  \
+            if (sprop) {                                                      \
+                LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);                  \
+                SET_ENUMERATE_ATTR(sprop);                                    \
+                GC_POKE(cx, NULL);  /* second arg ignored! */                 \
+            }                                                                 \
+            JS_UNLOCK_SCOPE(cx, _scope);                                      \
         }                                                                     \
     } else {                                                                  \
+        JS_UNLOCK_OBJ(cx, obj);                                               \
         SAVE_SP(fp);                                                          \
         ok = call;                                                            \
         /* No fill here: js_SetProperty writes through the cache. */          \
@@ -2786,7 +2805,9 @@ js_Interpret(JSContext *cx, jsval *result)
              * or in a function body).
              *
              * Name the closure in the object at the head of the scope chain,
-             * referenced by parent.  Even if it's a With object!
+             * referenced by parent.  Even if it's a With object?  Not for the
+             * current version (1.5), which uses the object named by the with
+             * statement's head.
              */
             parent = fp->varobj;
             if (fp->scopeChain != parent) {
@@ -3082,32 +3103,31 @@ js_Interpret(JSContext *cx, jsval *result)
 
 #if JS_HAS_DEBUGGER_KEYWORD
           case JSOP_DEBUGGER:
-            if (rt->debuggerHandler) {
-                JSTrapHandler handler = rt->debuggerHandler;
-                /* check copy of pointer for safety in multithread situation */
-                if (handler) {
-                    switch (handler(cx, script, pc, &rval,
-                                    rt->debuggerHandlerData)) {
-                      case JSTRAP_ERROR:
-                        ok = JS_FALSE;
-                        goto out;
-                      case JSTRAP_CONTINUE:
-                        break;
-                      case JSTRAP_RETURN:
-                        fp->rval = rval;
-                        goto out;
+          {
+            JSTrapHandler handler = rt->debuggerHandler;
+            if (handler) {
+                switch (handler(cx, script, pc, &rval,
+                                rt->debuggerHandlerData)) {
+                  case JSTRAP_ERROR:
+                    ok = JS_FALSE;
+                    goto out;
+                  case JSTRAP_CONTINUE:
+                    break;
+                  case JSTRAP_RETURN:
+                    fp->rval = rval;
+                    goto out;
 #if JS_HAS_EXCEPTIONS
-                      case JSTRAP_THROW:
-                        cx->throwing = JS_TRUE;
-                        cx->exception = rval;
-                        ok = JS_FALSE;
-                        goto out;
+                  case JSTRAP_THROW:
+                    cx->throwing = JS_TRUE;
+                    cx->exception = rval;
+                    ok = JS_FALSE;
+                    goto out;
 #endif /* JS_HAS_EXCEPTIONS */
-                      default:;
-                    }
+                  default:;
                 }
             }
             break;
+          }
 #endif /* JS_HAS_DEBUGGER_KEYWORD */
 
           default: {
@@ -3153,30 +3173,26 @@ out:
      */
     if (!ok && cx->throwing) {
         /*
-         * call hook if set
+         * Call debugger throw hook if set (XXX thread safety?).
          */
-        if (rt->throwHook) {
-            JSTrapHandler handler = rt->throwHook;
-            /* check copy of pointer for safety in multithreaded situation */
-            if (handler) {
-                switch (handler(cx, script, pc, &rval,
-                                rt->throwHookData)) {
-                  case JSTRAP_ERROR:
-                    cx->throwing = JS_FALSE;
-                    goto no_catch;
-                  case JSTRAP_CONTINUE:
-                    cx->throwing = JS_FALSE;
-                    ok = JS_TRUE;
-                    goto advance_pc;
-                  case JSTRAP_RETURN:
-                    ok = JS_TRUE;
-                    cx->throwing = JS_FALSE;
-                    fp->rval = rval;
-                    goto no_catch;
-                  case JSTRAP_THROW:
-                    cx->exception = rval;
-                  default:;
-                }
+        JSTrapHandler handler = rt->throwHook;
+        if (handler) {
+            switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
+              case JSTRAP_ERROR:
+                cx->throwing = JS_FALSE;
+                goto no_catch;
+              case JSTRAP_CONTINUE:
+                cx->throwing = JS_FALSE;
+                ok = JS_TRUE;
+                goto advance_pc;
+              case JSTRAP_RETURN:
+                ok = JS_TRUE;
+                cx->throwing = JS_FALSE;
+                fp->rval = rval;
+                goto no_catch;
+              case JSTRAP_THROW:
+                cx->exception = rval;
+              default:;
             }
         }
 
