@@ -24,5 +24,3 @@ DEPTH=..\..\..
 DIRS=public src resources\content resources\locale resources\locale\win
 
 include <$(DEPTH)\config\rules.mak>
-
-

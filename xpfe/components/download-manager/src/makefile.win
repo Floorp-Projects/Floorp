@@ -26,8 +26,11 @@ REQUIRES	= xpcom \
 		  rdf \
 		  uriloader \
 		  necko \
+      progressDlg \
 		  intl \
+      windowwatcher \
 		  webbrowserpersist \
+		  dom \
 		  $(NULL)
 
 CPP_OBJS=                               \
@@ -43,8 +46,11 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+libs:: 
+     $(MAKE_INSTALL) nsDownloadProgressListener.js $(DIST)\bin\components
+
+clobber_all::
+        !rm -f $(DIST)\bin\components\nsDownloadProgressListener.js
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
