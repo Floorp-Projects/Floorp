@@ -142,87 +142,86 @@ public class Token
         DEL_REF        = 67, // delete reference
         REF_CALL       = 68, // f(args)    = something or f(args)++
         SPECIAL_REF    = 69, // reference for special properties like __proto
-        GENERIC_REF    = 70, // generic reference to generate runtime ref errors
 
         // For XML support:
-        DEFAULTNAMESPACE = 71, // default xml namespace =
-        COLONCOLON     = 72, // ::
-        ESCXMLATTR     = 73,
-        ESCXMLTEXT     = 74,
-        TOATTRNAME     = 75,
-        DESCENDANTS    = 76,
-        XML_REF        = 77,
+        DEFAULTNAMESPACE = 70, // default xml namespace =
+        COLONCOLON     = 71, // ::
+        ESCXMLATTR     = 72,
+        ESCXMLTEXT     = 73,
+        TOATTRNAME     = 74,
+        DESCENDANTS    = 75,
+        XML_REF        = 76,
 
-        LAST_BYTECODE_TOKEN    = 77,
+        LAST_BYTECODE_TOKEN    = 76,
         // End of interpreter bytecodes
 
-        TRY            = 78,
-        SEMI           = 79,  // semicolon
-        LB             = 80,  // left and right brackets
-        RB             = 81,
-        LC             = 82,  // left and right curlies (braces)
-        RC             = 83,
-        LP             = 84,  // left and right parentheses
-        RP             = 85,
-        COMMA          = 86,  // comma operator
-        ASSIGN         = 87, // simple assignment  (=)
-        ASSIGNOP       = 88, // assignment with operation (+= -= etc.)
-        HOOK           = 89, // conditional (?:)
-        COLON          = 90,
-        OR             = 91, // logical or (||)
-        AND            = 92, // logical and (&&)
-        INC            = 93, // increment/decrement (++ --)
-        DEC            = 94,
-        DOT            = 95, // member operator (.)
-        FUNCTION       = 96, // function keyword
-        EXPORT         = 97, // export keyword
-        IMPORT         = 98, // import keyword
-        IF             = 99, // if keyword
-        ELSE           = 100, // else keyword
-        SWITCH         = 101, // switch keyword
-        CASE           = 102, // case keyword
-        DEFAULT        = 103, // default keyword
-        WHILE          = 104, // while keyword
-        DO             = 105, // do keyword
-        FOR            = 106, // for keyword
-        BREAK          = 107, // break keyword
-        CONTINUE       = 108, // continue keyword
-        VAR            = 109, // var keyword
-        WITH           = 110, // with keyword
-        CATCH          = 111, // catch keyword
-        FINALLY        = 112, // finally keyword
-        VOID           = 113, // void keyword
-        RESERVED       = 114, // reserved keywords
+        TRY            = 77,
+        SEMI           = 78,  // semicolon
+        LB             = 79,  // left and right brackets
+        RB             = 80,
+        LC             = 81,  // left and right curlies (braces)
+        RC             = 82,
+        LP             = 83,  // left and right parentheses
+        RP             = 84,
+        COMMA          = 85,  // comma operator
+        ASSIGN         = 86, // simple assignment  (=)
+        ASSIGNOP       = 87, // assignment with operation (+= -= etc.)
+        HOOK           = 88, // conditional (?:)
+        COLON          = 89,
+        OR             = 90, // logical or (||)
+        AND            = 91, // logical and (&&)
+        INC            = 92, // increment/decrement (++ --)
+        DEC            = 93,
+        DOT            = 94, // member operator (.)
+        FUNCTION       = 95, // function keyword
+        EXPORT         = 96, // export keyword
+        IMPORT         = 97, // import keyword
+        IF             = 98, // if keyword
+        ELSE           = 99, // else keyword
+        SWITCH         = 100, // switch keyword
+        CASE           = 101, // case keyword
+        DEFAULT        = 102, // default keyword
+        WHILE          = 103, // while keyword
+        DO             = 104, // do keyword
+        FOR            = 105, // for keyword
+        BREAK          = 106, // break keyword
+        CONTINUE       = 107, // continue keyword
+        VAR            = 108, // var keyword
+        WITH           = 109, // with keyword
+        CATCH          = 110, // catch keyword
+        FINALLY        = 111, // finally keyword
+        VOID           = 112, // void keyword
+        RESERVED       = 113, // reserved keywords
 
-        EMPTY          = 115,
+        EMPTY          = 114,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK          = 116, // statement block
-        LABEL          = 117, // label
-        TARGET         = 118,
-        LOOP           = 119,
-        EXPR_VOID      = 120, // expression statement in functions
-        EXPR_RESULT    = 121, // expression statement in scripts
-        JSR            = 122,
-        SCRIPT         = 123, // top-level node for entire script
-        TYPEOFNAME     = 124, // for typeof(simple-name)
-        USE_STACK      = 125,
-        SETPROP_OP     = 126, // x.y op= something
-        SETELEM_OP     = 127, // x[y] op= something
-        LOCAL_BLOCK    = 128,
-        SET_REF_OP     = 129, // *reference op= something
+        BLOCK          = 115, // statement block
+        LABEL          = 116, // label
+        TARGET         = 117,
+        LOOP           = 118,
+        EXPR_VOID      = 119, // expression statement in functions
+        EXPR_RESULT    = 120, // expression statement in scripts
+        JSR            = 121,
+        SCRIPT         = 122, // top-level node for entire script
+        TYPEOFNAME     = 123, // for typeof(simple-name)
+        USE_STACK      = 124,
+        SETPROP_OP     = 125, // x.y op= something
+        SETELEM_OP     = 126, // x[y] op= something
+        LOCAL_BLOCK    = 127,
+        SET_REF_OP     = 128, // *reference op= something
 
         // For XML support:
-        DOTDOT         = 130,  // member operator (..)
-        XML            = 131,  // XML type
-        DOTQUERY       = 132,  // .() -- e.g., x.emps.emp.(name == "terry")
-        XMLATTR        = 133,  // @
-        XMLEND         = 134,
+        DOTDOT         = 129,  // member operator (..)
+        XML            = 130,  // XML type
+        DOTQUERY       = 131,  // .() -- e.g., x.emps.emp.(name == "terry")
+        XMLATTR        = 132,  // @
+        XMLEND         = 133,
 
-        LAST_TOKEN     = 134;
+        LAST_TOKEN     = 133;
 
     public static String name(int token)
     {
@@ -306,7 +305,6 @@ public class Token
           case DEL_REF:         return "DEL_REF";
           case REF_CALL:        return "REF_CALL";
           case SPECIAL_REF:     return "SPECIAL_REF";
-          case GENERIC_REF:     return "GENERIC_REF";
           case DEFAULTNAMESPACE:return "DEFAULTNAMESPACE";
           case COLONCOLON:      return "COLONCOLON";
           case ESCXMLTEXT:      return "ESCXMLTEXT";

@@ -1616,13 +1616,6 @@ public class ScriptRuntime {
         };
     }
 
-    public static Object genericReference(Object obj,
-                                          Context cx, Scriptable scope)
-    {
-        String msg = getMessage1("msg.not.ref", toString(obj));
-        throw constructError("ReferenceError", msg);
-    }
-
     /**
      * The delete operator
      *

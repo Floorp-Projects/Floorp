@@ -972,7 +972,6 @@ public class Interpreter
           }
 
           case Token.XML_REF:
-          case Token.GENERIC_REF:
             visitExpression(child);
             addToken(type);
             break;
@@ -2837,12 +2836,6 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, scope);
-        continue Loop;
-    }
-    case Token.GENERIC_REF : {
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.genericReference(lhs, cx, scope);
         continue Loop;
     }
     case Icode_SCOPE :

@@ -1016,6 +1016,18 @@ final class IRFactory
 
     Node createIncDec(int nodeType, boolean post, Node child)
     {
+        child = makeReference(child);
+        if (child == null) {
+            String msg;
+            if (nodeType == Token.DEC) {
+                msg = "msg.bad.decr";
+            } else {
+                msg = "msg.bad.incr";
+            }
+            parser.reportError(msg);
+            return null;
+        }
+
         int childType = child.getType();
 
         switch (childType) {
@@ -1035,19 +1047,7 @@ final class IRFactory
             return n;
           }
         }
-        return createIncDec(nodeType, post, makeReferenceGet(child));
-    }
-
-    private Node makeReferenceGet(Node node)
-    {
-        Node ref;
-        if (node.getType() == Token.CALL) {
-            node.setType(Token.REF_CALL);
-            ref = node;
-        } else {
-            ref = new Node(Token.GENERIC_REF, node);
-        }
-        return new Node(Token.GET_REF, ref);
+        throw Kit.codeBug();
     }
 
     /**
@@ -1227,6 +1227,12 @@ final class IRFactory
 
     Node createAssignment(Node left, Node right)
     {
+        left = makeReference(left);
+        if (left == null) {
+            parser.reportError("msg.bad.assign.left");
+            return null;
+        }
+
         int nodeType = left.getType();
         switch (nodeType) {
           case Token.NAME:
@@ -1250,11 +1256,18 @@ final class IRFactory
             return new Node(Token.SET_REF, ref, right);
           }
         }
-        return createAssignment(makeReferenceGet(left), right);
+
+        throw Kit.codeBug();
     }
 
     Node createAssignmentOp(int assignOp, Node left, Node right)
     {
+        left = makeReference(left);
+        if (left == null) {
+            parser.reportError("msg.bad.assign.left");
+            return null;
+        }
+
         int nodeType = left.getType();
         switch (nodeType) {
           case Token.NAME: {
@@ -1285,7 +1298,8 @@ final class IRFactory
             return new Node(Token.SET_REF_OP, ref, op);
           }
         }
-        return createAssignmentOp(assignOp, makeReferenceGet(left), right);
+
+        throw Kit.codeBug();
     }
 
     Node createUseLocal(Node localBlock)
@@ -1294,6 +1308,23 @@ final class IRFactory
         Node result = new Node(Token.LOCAL_LOAD);
         result.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
         return result;
+    }
+
+    private Node makeReference(Node node)
+    {
+        int type = node.getType();
+        switch (type) {
+          case Token.NAME:
+          case Token.GETPROP:
+          case Token.GETELEM:
+          case Token.GET_REF:
+            return node;
+          case Token.CALL:
+            node.setType(Token.REF_CALL);
+            return new Node(Token.GET_REF, node);
+        }
+        // Signal caller to report error
+        return null;
     }
 
     // Check if Node always mean true or false in boolean context

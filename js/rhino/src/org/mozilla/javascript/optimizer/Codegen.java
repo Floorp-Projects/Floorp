@@ -1952,10 +1952,6 @@ class BodyCodegen
                 visitXMLRef(node, child);
                 break;
 
-              case Token.GENERIC_REF:
-                visitGenericRef(node, child);
-                break;
-
               case Token.DOTQUERY:
                 visitDotQuery(node, child);
                 break;
@@ -3809,18 +3805,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.addALoad(contextLocal);
         cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke("xmlReference",
-            "(Ljava/lang/Object;"
-            +"Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +")Ljava/lang/Object;");
-    }
-
-    private void visitGenericRef(Node node, Node child)
-    {
-        generateExpression(child, node);
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke("genericReference",
             "(Ljava/lang/Object;"
             +"Lorg/mozilla/javascript/Context;"
             +"Lorg/mozilla/javascript/Scriptable;"
