@@ -2118,6 +2118,10 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
         // Add the placeholder frame to the flow
         aNewFrame = placeholderFrame;
       }
+	  else {
+        // Add the table frame to the flow
+        aFrameItems.AddChild(aNewFrame);
+      }
       return rv;
   }
   else if (aTag == nsXULAtoms::treeitem)
