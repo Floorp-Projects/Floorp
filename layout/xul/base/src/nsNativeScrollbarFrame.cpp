@@ -118,14 +118,18 @@ nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
       nsWidgetInitData widgetData;
       if ( NS_SUCCEEDED(myView->CreateWidget(kScrollbarCID, &widgetData, nsnull)) ) {
         myView->GetWidget(*getter_AddRefs(mScrollbar));
-        NS_ASSERTION(mScrollbar, "Couldn't create native scrollbar!");
-        mScrollbar->Show(PR_TRUE);
-        mScrollbar->Enable(PR_TRUE);
+        if (mScrollbar) {
+          mScrollbar->Show(PR_TRUE);
+          mScrollbar->Enable(PR_TRUE);
 
-        // defer telling the scrollbar about the mediator and the content
-        // node until its first reflow since not everything has been set
-        // by this point.
-        mScrollbarNeedsContent = PR_TRUE;
+          // defer telling the scrollbar about the mediator and the content
+          // node until its first reflow since not everything has been set
+          // by this point.
+          mScrollbarNeedsContent = PR_TRUE;
+        } else {
+          NS_WARNING("Couldn't create native scrollbar!");
+          return NS_ERROR_FAILURE;
+        }
       }
     }
   }
