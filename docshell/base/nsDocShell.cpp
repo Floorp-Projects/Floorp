@@ -28,6 +28,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
+#include "nsIPluginHost.h"
 #include "nsCURILoader.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
@@ -80,6 +81,7 @@ static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
+static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -2558,27 +2560,41 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
    nsIChannel* aOpenedChannel, nsILoadGroup* aLoadGroup, 
    nsIStreamListener** aContentHandler, nsIContentViewer** aViewer)
 {
-   //XXX This should probably be some category thing....
-   char id[256];
-   PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
-      (const char*)((viewSource == mViewMode) ? "view-source" : "view"),
-      aContentType);
+  //XXX This should probably be some category thing....
+  char id[256];
+  PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+             (const char*)((viewSource == mViewMode) ? "view-source" : "view"),
+             aContentType);
 
-   // Create an instance of the document-loader-factory
-   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
-   if(!docLoaderFactory)
+  // Create an instance of the document-loader-factory
+  nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
+  if(!docLoaderFactory)
+  {
+    // try again after loading plugins
+    nsresult err;
+    NS_WITH_SERVICE(nsIPluginHost, pluginHost, kPluginManagerCID, &err);
+
+    if(NS_FAILED(err))
       return NS_ERROR_FAILURE;
 
-   // Now create an instance of the content viewer
-   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(
-      (viewSource == mViewMode) ? "view-source" : "view",
-      aOpenedChannel, aLoadGroup, aContentType,
-      NS_STATIC_CAST(nsIContentViewerContainer*, this), nsnull, 
-      aContentHandler, aViewer), NS_ERROR_FAILURE);
+    pluginHost->LoadPlugins();
 
-   (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer*, this));
+    docLoaderFactory = do_CreateInstance(id);
 
-   return NS_OK;
+    if(!docLoaderFactory)
+      return NS_ERROR_FAILURE;
+  }
+
+  // Now create an instance of the content viewer
+  NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(
+                    (viewSource == mViewMode) ? "view-source" : "view",
+                    aOpenedChannel, aLoadGroup, aContentType,
+                    NS_STATIC_CAST(nsIContentViewerContainer*, this), nsnull, 
+                    aContentHandler, aViewer), NS_ERROR_FAILURE);
+
+  (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer*, this));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
