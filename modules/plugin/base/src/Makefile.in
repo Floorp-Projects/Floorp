@@ -33,6 +33,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
 MODULE_NAME	= nsPluginModule
 REQUIRES	= xpcom \
+		  xpconnect \
 		  string \
 		  java \
 		  pref \
