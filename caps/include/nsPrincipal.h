@@ -76,11 +76,6 @@ public:
 
 	PRBool isSecurePrincipal(void);
 
-    /* The following method is used by Javasoft JVM to verify their 
-     * code signing certificates against our security DB files
-     */
-	PRBool isTrustedCertChainPrincipal(void);
-
 	PRBool isFileCodeBase(void);
 
 	PRBool isCert(void);
@@ -101,22 +96,21 @@ private:
 	/* Private Field Accessors */
 	nsPrincipalType itsType;
 
-	void* itsZig;
+	void * itsZig;
 
-	char* itsKey;
+	char * itsKey;
+
 	PRUint32 itsKeyLen;
-
-    nsVector* itsCertArray;
 
 	PRInt32 itsHashCode;
 
-	char* itsCompanyName;
-	char* itsCertAuth;
-	char* itsSerialNo;
-	char* itsExpDate;
-	char* itsAsciiFingerPrint;
-	char* itsNickname;
-	char* itsString;
+	char * itsCompanyName;
+	char * itsCertAuth;
+	char * itsSerialNo;
+	char * itsExpDate;
+	char * itsAsciiFingerPrint;
+	char * itsNickname;
+	char * itsString;
 
 	/* Private Methods */
 	void init(nsPrincipalType type, void * key, PRUint32 key_len);
