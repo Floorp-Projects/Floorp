@@ -3219,14 +3219,15 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     nsFrameConstructorSaveState floaterSaveState;
     nsFrameItems                childItems;
 
-    // XXX these next lines are wrong for BoxFrame
-    PRBool haveFirstLetterStyle, haveFirstLineStyle;
-    HaveSpecialBlockStyle(aPresContext, aDocElement, styleContext,
-                          &haveFirstLetterStyle, &haveFirstLineStyle);
-    aState.PushAbsoluteContainingBlock(contentFrame, absoluteSaveState);
-    aState.PushFloaterContainingBlock(contentFrame, floaterSaveState,
-                                      haveFirstLetterStyle,
-                                      haveFirstLineStyle);
+    if (isBlockFrame) {
+      PRBool haveFirstLetterStyle, haveFirstLineStyle;
+      HaveSpecialBlockStyle(aPresContext, aDocElement, styleContext,
+                            &haveFirstLetterStyle, &haveFirstLineStyle);
+      aState.PushAbsoluteContainingBlock(contentFrame, absoluteSaveState);
+      aState.PushFloaterContainingBlock(contentFrame, floaterSaveState,
+                                        haveFirstLetterStyle,
+                                        haveFirstLineStyle);
+    }
 
     // Create any anonymous frames the doc element frame requires
     // This must happen before ProcessChildren to ensure that popups are
@@ -13153,6 +13154,21 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell* aPresShell,
   // See if we need to create a view, e.g. the frame is absolutely positioned
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
                                            aStyleContext, nsnull, PR_FALSE);
+
+  // If we're the first block to be created (e.g., because we're
+  // contained inside a XUL document), then make sure that we've got a
+  // space manager so we can handle floaters...
+  if (! aState.mFloatedItems.containingBlock) {
+    nsFrameState state;
+    aNewFrame->GetFrameState(&state);
+    state |= NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT;
+    aNewFrame->SetFrameState(state);
+  }
+
+  // ...and that we're the absolute containing block.
+  nsFrameConstructorSaveState absoluteSaveState;
+  if (! aState.mAbsoluteItems.containingBlock)
+    aState.PushAbsoluteContainingBlock(aNewFrame, absoluteSaveState);
 
   // See if the block has first-letter style applied to it...
   PRBool haveFirstLetterStyle, haveFirstLineStyle;
