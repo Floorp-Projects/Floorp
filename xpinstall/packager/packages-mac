@@ -35,6 +35,11 @@ viewer:defaults:profile:localstore.rdf
 viewer:defaults:profile:search.rdf
 viewer:defaults:profile:mimeTypes.rdf
 viewer:defaults:messenger:mailViews.dat
+viewer:defaults:messenger:Habeas.sfd
+viewer:defaults:messenger:SpamAssassin.sfd
+viewer:defaults:messenger:SpamCatcher.sfd
+viewer:defaults:messenger:SpamPal.sfd
+
 
 [xpcom]
 viewer:Components:libjar.shlb 
