@@ -38,6 +38,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMWindowInternal;
+
 [scriptable, uuid(37648f86-0f77-4007-929e-673a75d5438f)]
 interface nsIUpdateItem : nsISupports
 {
@@ -50,9 +52,11 @@ interface nsIUpdateItem : nsISupports
 
   const unsigned short TYPE_ANY         = 0x01;
   const unsigned short TYPE_APP         = 0x02;
-  const unsigned short TYPE_EXTENSION   = 0x04;
-  const unsigned short TYPE_THEME       = 0x08;
-  const unsigned short TYPE_LOCALE      = 0x10;
+  const unsigned short TYPE_ADDON       = 0x04;
+
+  const unsigned short TYPE_EXTENSION   = 0x08;
+  const unsigned short TYPE_THEME       = 0x10;
+  const unsigned short TYPE_LOCALE      = 0x20;
 
   readonly attribute long     type;
 
@@ -74,10 +78,12 @@ interface nsIUpdateService : nsISupports
   void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                        in unsigned long aItemCount,
                        in unsigned short aUpdateTypes, 
-                       in unsigned short aSourceEvent);
+                       in unsigned short aSourceEvent,
+                       in nsIDOMWindowInternal aParentWindow);
   void checkForUpdatesInternal([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                                in unsigned long aItemCount,
-                               in unsigned short aUpdateTypes);
+                               in unsigned short aUpdateTypes, 
+                               in unsigned short aSourceEvent);
 
   readonly attribute long updateCount;
   readonly attribute unsigned short updateSeverity;

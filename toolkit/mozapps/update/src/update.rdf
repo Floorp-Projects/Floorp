@@ -10,7 +10,7 @@
     <!-- 0 = low (extension/theme updates), 
          1 = medium (app minor version), 
          2 = high (major version) -->
-    <NC:severity>0</NC:severity>
+    <NC:severity>2</NC:severity>
 
     <!-- URL to send users to to download this update -->
     <NC:URL>http://www.mozilla.org/products/firefox/</NC:URL>

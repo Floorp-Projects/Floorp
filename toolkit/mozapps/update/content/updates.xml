@@ -48,7 +48,8 @@
             this.updateCount  = updates.updateCount;
             
 #ifdef XP_WIN
-            this._showUpdateInfo();
+            if (parseInt(aData) == Components.interfaces.nsIUpdateService.SOURCE_EVENT_BACKGROUND)
+              this._showUpdateInfo();
 #endif
           }
         ]]>
@@ -99,7 +100,8 @@
           var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                                   .getService(Components.interfaces.nsIUpdateService);
           updates.checkForUpdates([], 0, Components.interfaces.nsIUpdateItem.TYPE_ANY, 
-                                  Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER);
+                                  Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
+                                  window);
         ]]>
         </body>
       </method>
