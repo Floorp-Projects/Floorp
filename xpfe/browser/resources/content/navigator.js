@@ -206,24 +206,6 @@ function Shutdown()
     appCore.close();
 }
 
-  function onLoadWithArgs() {
-    // See if Startup has been run.
-    if ( appCore ) {
-        // See if load in progress (loading default page).
-        if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
-            dump( "Stopping load of default initial page\n" );
-            appCore.stop();
-        }
-        dump( "Loading page specified on ShowWindowWithArgs\n" );
-        appCore.loadInitialPage();
-    } else {
-        // onLoad handler timing is not correct yet.
-        dump( "onLoadWithArgs not needed yet\n" );
-        // Remember that we want this url.
-        explicitURL = true;
-    }
-  }
-
   function onLoadViaOpenDialog() {
     // See if load in progress (loading default page).
     if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
