@@ -595,7 +595,6 @@ MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom -lxpcom_core'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
-MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
 MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
 
 USE_DEPENDENT_LIBS=1
@@ -1200,7 +1199,6 @@ case "$target" in
         MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
     fi
     AC_DEFINE(HAVE_SNPRINTF)
@@ -1485,7 +1483,6 @@ case "$target" in
         MKSHLIB='$(LD) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
-        MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcomct.lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
@@ -5931,7 +5928,6 @@ AC_SUBST(USE_PREBINDING)
 AC_SUBST(INCREMENTAL_LINKER)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
-AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
 AC_SUBST(MOZ_XPCOM_OBSOLETE_LIBS)
 AC_SUBST(XPCOM_LIBS)
 AC_SUBST(USE_DEPENDENT_LIBS)
