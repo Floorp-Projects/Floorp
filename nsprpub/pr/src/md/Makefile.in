@@ -42,31 +42,7 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifdef USE_AUTOCONF
 DIRS = $(PR_MD_ARCH_DIR)
-else
-
-ifeq ($(OS_ARCH),WINNT)
-    DIRS = windows
-else
-  ifeq ($(OS_ARCH),OS2)
-    DIRS = os2
-  else
-  ifeq ($(OS_ARCH),BeOS)
-    DIRS = beos
-  else
-    DIRS = unix
-    endif
-  endif
-endif
-
-# Disable optimization of the nspr on SunOS4.1.3
-ifeq ($(OS_ARCH),SunOS)
-ifeq ($(OS_RELEASE),4.1.3_U1)
-OPTIMIZER =
-endif
-endif
-endif # USE_AUTOCONF
 
 CSRCS =          \
 	prosdep.c \
@@ -74,7 +50,7 @@ CSRCS =          \
 
 TARGETS	= $(OBJS)
 
-INCLUDES = -I$(includedir) -I$(topsrcdir)/pr/include
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include
 
 DEFINES	+= -D_NSPR_BUILD_
 
