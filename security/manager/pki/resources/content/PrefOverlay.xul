@@ -31,14 +31,14 @@
   <treechildren id="panelChildren">
     <treeitem id="securityItem" open="true" position="3" container="true" >
       <treerow>
-        <treecell class="treecell-indent" url="chrome://pippki/content/SecurityPrefs.xul"
+        <treecell class="treecell-indent" url="chrome://pippki/content/pref-security.xul"
            value="&security.label;" />
       </treerow>
       <!-- Subitems go here -->
       <treechildren id="securityChildren">
         <treeitem id="sslItem" open="true" >
           <treerow>
-             <treecell class="treecell-indent" url="chrome://pippki/content/SSLPrefs.xul"
+             <treecell class="treecell-indent" url="chrome://pippki/content/pref-ssl.xul"
                value="&ssl.label;" />
           </treerow>
         </treeitem>
