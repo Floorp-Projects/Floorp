@@ -585,7 +585,6 @@ NS_IMPL_RELEASE(nsBrowserInstance)
 
 NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
    NS_INTERFACE_MAP_ENTRY(nsIBrowserInstance)
-   NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -770,10 +769,11 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
   if (webShell) {
     mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
-    docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 
+    // Add a WebProgressListener to receive start/stop document notifications
     nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
     webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+
     nsCOMPtr<nsISHistory> sessionHistory;
     if (mSessionHistory) {
   	  /* There is already a Session History for this browser 
@@ -1053,7 +1053,6 @@ nsBrowserInstance::Close()
   GetContentAreaDocShell(getter_AddRefs(docShell));
   if (docShell)
   {
-    docShell->SetDocLoaderObserver(0);
     nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
     webProgress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
   }
@@ -1145,208 +1144,172 @@ nsBrowserInstance::FindNext()
 }
 
 //*****************************************************************************
-//    nsBrowserInstance: nsIDocumentLoaderObserver
+//  Helper functions for notifying observers when documents start and finish
+//  loading.
 //*****************************************************************************
 
-NS_IMETHODIMP
-nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+nsresult nsBrowserInstance::StartDocumentLoad(nsIDOMWindow *aDOMWindow,
+                                              nsIChannel *aChannel)
 {
-   NS_ENSURE_ARG(aLoader);
-   NS_ENSURE_ARG(aURL);
-
   nsresult rv;
+
+  nsCOMPtr<nsIURI> uri;
+  nsXPIDLCString uriCString;
+  nsAutoString urlStr;
+
+  // Get the URI strign and convert it to unicode...
+  rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = uri->GetSpec(getter_Copies(uriCString));
+  if (NS_FAILED(rv)) return rv;
+
+  urlStr.AssignWithConversion(uriCString);
+
+#ifdef DEBUG_warren
+  if (gTimerLog == nsnull)
+    gTimerLog = PR_NewLogModule("Timer");
+  mLoadStartTime = PR_IntervalNow();
+  PR_LOG(gTimerLog, PR_LOG_DEBUG, 
+         (">>>>> Starting timer for %s\n", (const char *)uriCString));
+  printf(">>>>> Starting timer for %s\n", (const char *)uriCString);
+#endif
+
+  //
+  // If this document notification is for a frame then ignore it...
+  //
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  nsCOMPtr<nsIDOMWindow> thisDOMWindow;
+
+  rv = GetContentWindow(getter_AddRefs(contentWindow));
+  if (NS_FAILED(rv)) return rv;
+
+  thisDOMWindow = do_QueryInterface(contentWindow);
+  if (aDOMWindow != thisDOMWindow.get()) {
+    // Since the notification is from a different DOM window, just ignore it.
+    return NS_OK;
+  }
 
   // Notify observers that a document load has started in the
   // content window.
   NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  char* url;
-  rv = aURL->GetSpec(&url);
-  if (NS_FAILED(rv)) return rv;
+  nsAutoString kStartDocumentLoad;
+  kStartDocumentLoad.AssignWithConversion("StartDocumentLoad");
 
-  nsAutoString urlStr; urlStr.AssignWithConversion(url);
-
-#ifdef DEBUG_warren
-  char* urls;
-  aURL->GetSpec(&urls);
-  if (gTimerLog == nsnull)
-    gTimerLog = PR_NewLogModule("Timer");
-  mLoadStartTime = PR_IntervalNow();
-  PR_LOG(gTimerLog, PR_LOG_DEBUG, 
-         (">>>>> Starting timer for %s\n", urls));
-  printf(">>>>> Starting timer for %s\n", urls);
-  nsCRT::free(urls);
-#endif
-
-  // Check if this notification is for a frame
-  PRBool isFrame=PR_FALSE;
-  nsCOMPtr<nsISupports> container;
-  aLoader->GetContainer(getter_AddRefs(container));
-  if (container) {
-     nsCOMPtr<nsIDocShellTreeItem>   docShellAsItem(do_QueryInterface(container));
-   if (docShellAsItem) {
-       nsCOMPtr<nsIDocShellTreeItem> parent;
-     docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
-     if (parent) 
-       isFrame = PR_TRUE;
-     }
-  }
-
-  if (!isFrame)
-  {
-    nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-    GetContentWindow(getter_AddRefs(contentWindow));
-    
-    nsAutoString kStartDocumentLoad; kStartDocumentLoad.AssignWithConversion("StartDocumentLoad");
-    rv = observer->Notify(contentWindow,
+  rv = observer->Notify(contentWindow,
                         kStartDocumentLoad.GetUnicode(),
                         urlStr.GetUnicode());
 
     // XXX Ignore rv for now. They are using nsIEnumerator instead of
     // nsISimpleEnumerator.
-  }
-
-  nsCRT::free(url);
 
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus)
+nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
+                                            nsIChannel *aChannel,
+                                            nsresult aStatus)
 {
-   NS_ENSURE_ARG(aLoader);
-   NS_ENSURE_ARG(channel);
-
   nsresult rv;
 
-  nsCOMPtr<nsIURI> aUrl;
-  rv = channel->GetOriginalURI(getter_AddRefs(aUrl));
+  nsCOMPtr<nsIURI> uri;
+  rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLCString url;
-  rv = aUrl->GetSpec(getter_Copies(url));
+  nsXPIDLCString urlCString;
+  rv = uri->GetSpec(getter_Copies(urlCString));
   if (NS_FAILED(rv)) return rv;
-
-  PRBool  isFrame=PR_FALSE;
-  nsCOMPtr<nsISupports> container;
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem, parent;
-
-  aLoader->GetContainer(getter_AddRefs(container));
-  // Is this a frame ?
-  docShellAsItem = do_QueryInterface(container);
-  if (docShellAsItem) {
-    docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
-  }
-  if (parent)
-  isFrame = PR_TRUE;
-
-
-  
-  nsCOMPtr<nsIDocumentLoader> docLoader;
-  GetContentAreaDocLoader(getter_AddRefs(docLoader));
-  
-  if (docLoader) {
-    PRBool isBusy = PR_FALSE;
-
-    docLoader->IsBusy(&isBusy);
-    if (isBusy) {
-      return NS_OK;
-    }
-  }
-
-  /* If this is a frame, don't do any of the Global History
-   * & observer thingy 
-   */
-  if (!isFrame) {
-      nsAutoString urlStr; urlStr.AssignWithConversion(url);
-      nsAutoString kEndDocumentLoad; kEndDocumentLoad.AssignWithConversion("EndDocumentLoad");
-      nsAutoString kFailDocumentLoad; kFailDocumentLoad.AssignWithConversion("FailDocumentLoad");
-
-      // Notify observers that a document load has started in the
-      // content window.
-      NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-      GetContentWindow(getter_AddRefs(contentWindow));
-
-      rv = observer->Notify(contentWindow,
-                            NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
-                            urlStr.GetUnicode());
-
-      // XXX Ignore rv for now. They are using nsIEnumerator instead of
-      // nsISimpleEnumerator.
-
-      /* To satisfy a request from the QA group */
-      nsCOMPtr<nsIInputStream> postData;
-      if (aStatus == NS_OK) {
-        // Remember post data for http channels.
-        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( channel );
-        if ( httpChannel ) {
-            httpChannel->GetUploadStream( getter_AddRefs( postData ) );
-        }
-        fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
-        fflush(stdout);
-      } else {
-        fprintf(stdout, "Error loading URL %s: %0x \n", 
-                (const char*)url, aStatus);
-        fflush(stdout);
-      }
-      this->SetPostData( postData );
-  } //if (!isFrame)
 
 #ifdef DEBUG_warren
-  char* urls;
-  aUrl->GetSpec(&urls);
   if (gTimerLog == nsnull)
     gTimerLog = PR_NewLogModule("Timer");
   PRIntervalTime end = PR_IntervalNow();
   PRIntervalTime diff = end - mLoadStartTime;
   PR_LOG(gTimerLog, PR_LOG_DEBUG, 
          (">>>>> Stopping timer for %s. Elapsed: %.3f\n", 
-          urls, PR_IntervalToMilliseconds(diff) / 1000.0));
+          (const char *)urlCString, PR_IntervalToMilliseconds(diff) / 1000.0));
   printf(">>>>> Stopping timer for %s. Elapsed: %.3f\n", 
-         urls, PR_IntervalToMilliseconds(diff) / 1000.0);
-  nsCRT::free(urls);
+         (const char *)urlCString, PR_IntervalToMilliseconds(diff) / 1000.0);
 #endif
 
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsBrowserInstance::OnStartURLLoad(nsIDocumentLoader* loader, 
-                                 nsIChannel* channel)
-{
-  return NS_OK;
-}
+  //
+  // If this document notification is for a frame then ignore it...
+  //
+  if (aDOMWindow) {
+    nsCOMPtr<nsIDOMWindow> topDOMWindow;
 
-NS_IMETHODIMP
-nsBrowserInstance::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                                    nsIChannel* channel, PRUint32 aProgress, 
-                                    PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
+    aDOMWindow->GetTop(getter_AddRefs(topDOMWindow));
 
-NS_IMETHODIMP
-nsBrowserInstance::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                                  nsIChannel* channel, nsString& aMsg)
-{
-   EnsureXULBrowserWindow();
-   if(!mXULBrowserWindow)
+    if (aDOMWindow != topDOMWindow) {
+      // Since the notification is from a child DOM window, just ignore it.
       return NS_OK;
+    }
+  }
 
-   mXULBrowserWindow->SetDefaultStatus(aMsg.GetUnicode());
+  //
+  // XXX: The DocLoader should never be busy at this point!!  
+  //
+#if 1
+  nsCOMPtr<nsIDocumentLoader> docLoader;
+  GetContentAreaDocLoader(getter_AddRefs(docLoader));
+ 
+  if (docLoader) {
+    PRBool isBusy = PR_FALSE;
 
-   return NS_OK;
-}
+    docLoader->IsBusy(&isBusy);
+    if (isBusy) {
+      NS_ASSERTION(0, "The DocLoader is still busy... There is a bug in End Document notifications\n");
+      return NS_OK;
+    }
+  }
+#endif 
 
-NS_IMETHODIMP
-nsBrowserInstance::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, nsresult aStatus)
-{
+  /* If this is a frame, don't do any of the Global History
+   * & observer thingy 
+   */
+  nsAutoString urlStr;
+  nsAutoString notifyString;
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+
+  urlStr.AssignWithConversion(urlCString);
+  notifyString.AssignWithConversion( NS_SUCCEEDED(aStatus) ? "EndDocumentLoad"
+                                                           : "FailDocumentLoad" );
+  // Notify observers that a document load has started in the
+  // content window.
+  rv = GetContentWindow(getter_AddRefs(contentWindow));
+  if (NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = observer->Notify(contentWindow,
+                        notifyString.GetUnicode(),
+                        urlStr.GetUnicode());
+
+  // XXX Ignore rv for now. They are using nsIEnumerator instead of
+  // nsISimpleEnumerator.
+
+  /* To satisfy a request from the QA group */
+  nsCOMPtr<nsIInputStream> postData;
+  if (NS_SUCCEEDED(aStatus)) {
+    // Remember post data for http channels.
+    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+    if (httpChannel) {
+      httpChannel->GetUploadStream(getter_AddRefs(postData));
+    }
+    fprintf(stdout, "Document %s loaded successfully\n",
+            (const char*)urlCString);
+    fflush(stdout);
+  } else {
+    fprintf(stdout, "Error loading URL %s: %0x \n", 
+            (const char*)urlCString, aStatus);
+    fflush(stdout);
+  }
+  SetPostData(postData);
+
   return NS_OK;
 }
 
@@ -1506,18 +1469,35 @@ nsBrowserInstance::OnProgressChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsBrowserInstance::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest,
-                                 PRInt32 aProgressStateFlags,
+                                 PRInt32 aStateFlags,
                                  nsresult aStatus)
 {
-  EnsureXULBrowserWindow();
-  if(mXULBrowserWindow) {
-    nsresult rv;
-    nsCOMPtr<nsIChannel> channel;
+  nsresult rv;
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
 
-    channel = do_QueryInterface(aRequest, &rv);
+  EnsureXULBrowserWindow();
+
+  // Ignore this notification if it did not originate from a channel...
+  if (!channel) {
+    return NS_OK;
+  }
+
+  if (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+
+    rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
     if (NS_SUCCEEDED(rv)) {
-      mXULBrowserWindow->OnStateChange(channel, aProgressStateFlags);
+      if (aStateFlags & nsIWebProgressListener::STATE_START) {
+        rv = StartDocumentLoad(domWindow, channel);
+      }
+      else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
+        rv = EndDocumentLoad(domWindow, channel, aStatus);
+      }
     }
+  }
+
+  if(mXULBrowserWindow) {
+    mXULBrowserWindow->OnStateChange(channel, aStateFlags);
   }
   return NS_OK;
 }

@@ -29,7 +29,6 @@
 // Interfaces Needed
 #include "nsIBrowserInstance.h"
 #include "nsIURIContentListener.h"
-#include "nsIDocumentLoaderObserver.h"
 
  
 
@@ -63,7 +62,6 @@ class nsIFindComponent;
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBrowserInstance : public nsIBrowserInstance,
-                          public nsIDocumentLoaderObserver,
                           public nsIURIContentListener,
                           public nsIWebProgressListener,
                           public nsSupportsWeakReference 
@@ -79,12 +77,10 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_BROWSERINSTANCE_CID )
 
-    // nsIDocumentLoaderObserver
-    NS_DECL_NSIDOCUMENTLOADEROBSERVER
-
     // URI Content listener
     NS_DECL_NSIURICONTENTLISTENER
 
+    // WebProgress listener
     NS_DECL_NSIWEBPROGRESSLISTENER
 
     static PRUint32 gRefCnt;
@@ -102,6 +98,14 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsresult InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder );
     
     NS_IMETHOD EnsureXULBrowserWindow();
+
+    // helper methods for dealing with document loading...
+    nsresult StartDocumentLoad(nsIDOMWindow *aDOMWindow,
+                               nsIChannel *aChannel);
+
+    nsresult EndDocumentLoad(nsIDOMWindow *aDOMWindow,
+                             nsIChannel *aChannel,
+                             nsresult aResult);
 
     PRBool              mIsClosed;
 
