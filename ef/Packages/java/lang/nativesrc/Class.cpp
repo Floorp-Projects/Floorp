@@ -140,11 +140,11 @@ Netscape_Java_java_lang_Class_forName0(Java_java_lang_String *nameString,
 
 /*
  * Class : java/lang/Class
- * Method : newInstance
+ * Method : newInstance0
  * Signature : ()Ljava/lang/Object;
  */
 NS_EXPORT NS_NATIVECALL(Java_java_lang_Object *)
-Netscape_Java_java_lang_Class_newInstance(Java_java_lang_Class *inClass)
+Netscape_Java_java_lang_Class_newInstance0(Java_java_lang_Class *inClass)
 {
     Type &type = toType(*inClass);
     
@@ -157,9 +157,9 @@ Netscape_Java_java_lang_Class_newInstance(Java_java_lang_Class *inClass)
     // Check to see if the caller of the class has package access to this class
     Frame thisFrame;
     
-    Method &callerMethod = thisFrame.getCallingJavaMethod();
-    ClassOrInterface *callingClass;
-    
+    // Skip over our caller's frame, that of java.lang.Class.newInstance()
+    Method &callerMethod = thisFrame.getCallingJavaMethod(2);
+    ClassOrInterface *callingClass; 
     callingClass = callerMethod.getDeclaringClass();
     
     bool hasPackageAccess = false;
@@ -177,31 +177,44 @@ Netscape_Java_java_lang_Class_newInstance(Java_java_lang_Class *inClass)
     if ((clazz.getModifiers() & CR_ACC_ABSTRACT) || clazz.isInterface())
       sysThrowNamedException("java/lang/InstantiationException");
     
-    const Constructor **constructors;
+    Constructor *constructor = NULL;
     const Constructor **declaredConstructors;
     Int32 nDeclaredConstructors;
     
     // Check that there is at least one constructor that the calling class can call
-    if (const_cast<Class *>(&clazz)->getConstructors(constructors) == 0 &&
-	(nDeclaredConstructors = 
-	 const_cast<Class *>(&clazz)->getDeclaredConstructors(declaredConstructors)) > 0) {
-      
-	/* Now go through each of these declared constructors and see if we have
-	 * package access to any of them
-	 * FIXME This is horrendous, too much work. Think about not doing this much
-	 * work everytime
-	 */
-	for (Int32 i = 0; i < nDeclaredConstructors; i++)
-	    if (!(declaredConstructors[i]->getModifiers() & CR_METHOD_PRIVATE)) 
-		if (hasPackageAccess)
-		    break;
-	
-	if (i == nDeclaredConstructors)
-	    sysThrowNamedException("java/lang/IllegalAccessException");
+    nDeclaredConstructors = 
+        const_cast<Class *>(&clazz)->getDeclaredConstructors(declaredConstructors);
+    
+        /* Now go through each of these declared constructors and see if we have
+        * package access to any of them
+        * FIXME This is horrendous, too much work. Think about not doing this much
+        * work everytime
+    */
+    for (int i = 0; i < nDeclaredConstructors; i++) {
+        constructor = const_cast<Constructor*>(declaredConstructors[i]);
+        
+        // Find a constructor that takes no arguments other than 'this'
+        if (constructor->getSignature().nArguments > 1)
+            continue;
+        
+        int32 modifiers = constructor->getModifiers();
+        if (modifiers & CR_METHOD_PUBLIC)
+            break;
+        
+        // Can't invoke private constructors
+        if (modifiers & CR_METHOD_PRIVATE)
+            continue;
+        
+        // See if we can invoke a constructor with package scope
+        if (hasPackageAccess)
+            break;
     }
+    
+    if (i == nDeclaredConstructors)
+        sysThrowNamedException("java/lang/IllegalAccessException");
 
     try {
-	return (Java_java_lang_Object *) (&const_cast<Class *>(&clazz)->newInstance());
+	return (Java_java_lang_Object *)&constructor->newInstance(NULL, 0);
     } catch (RuntimeError err) {
 	throwClassRuntimeException(err);
     }
@@ -730,7 +743,6 @@ Netscape_Java_java_lang_Class_getConstructor0(Java_java_lang_Class *inClass,
 
   return (Java_java_lang_reflect_Constructor *) constructor;
 }
-
 
 } /* extern "C" */
 
