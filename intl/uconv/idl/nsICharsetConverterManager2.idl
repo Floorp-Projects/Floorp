@@ -93,6 +93,11 @@ interface nsICharsetConverterManager2 : nsISupports
   nsIAtom GetCharsetAtom([const] in wstring charset);
 
   /**
+   * Friendlier version.
+   */
+  nsIAtom GetCharsetAtom2([const] in string charset);
+
+  /**
    * Get the human-readable name for the given charset.
    */
   wstring GetCharsetTitle([const] in nsIAtom charset);
