@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -389,4 +390,12 @@ String Node::getBaseURI()
         nsDOM3Node->GetBaseURI(url.getNSString());
 
     return url;
+}
+
+/*
+ * Returns the parent node according to the XPath datamodel
+ */
+Node* Node::getXPathParent()
+{
+    return getParentNode();
 }

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -359,48 +360,53 @@ MBool NodeDefinition::hasChildNodes() const
     return MB_FALSE;
 }
 
-/**
+Node* NodeDefinition::getXPathParent()
+{
+  return parentNode;
+}
+
+/*
  * Returns the base URI of the node. Acccounts for xml:base
  * attributes.
  *
  * @return base URI for the node
-**/
+ */
 String NodeDefinition::getBaseURI()
 {
-    Node* node=this;
-    ArrayList baseUrls;
-    String url;
-    Node* xbAttr;
+  Node* node = this;
+  ArrayList baseUrls;
+  String url;
+  Node* xbAttr;
+
+  while (node) {
+    switch (node->getNodeType()) {
+      case Node::ELEMENT_NODE :
+        xbAttr = ((Element*)node)->getAttributeNode(XMLBASE_ATTR);
+        if (xbAttr)
+          baseUrls.add(new String(xbAttr->getNodeValue()));
+        break;
+
+      case Node::DOCUMENT_NODE :
+        baseUrls.add(new String(((Document*)node)->getBaseURI()));
+        break;
     
-    while(node) {
-        switch(node->getNodeType()) {
-         case Node::ELEMENT_NODE :
-            xbAttr = ((Element*)node)->getAttributeNode(XMLBASE_ATTR);
-            if(xbAttr)
-                baseUrls.add(new String(xbAttr->getNodeValue()));
-            break;
-
-         case Node::DOCUMENT_NODE :
-            baseUrls.add(new String(((Document*)node)->getBaseURI()));
-            break;
-            
-         default:
-            break;
-        }
-        node = node->getParentNode();
+      default:
+        break;
     }
+    node = node->getParentNode();
+  }
 
-    if(baseUrls.size()) {
-        url = *((String*)baseUrls.get(baseUrls.size()-1));
+  if (baseUrls.size()) {
+    url = *((String*)baseUrls.get(baseUrls.size()-1));
 
-        for(int i=baseUrls.size()-2;i>=0;i--) {
-            String dest;
-            URIUtils::resolveHref(*(String*)baseUrls.get(i), url, dest);
-            url = dest;
-        }
+    for (int i=baseUrls.size()-2;i>=0;i--) {
+      String dest;
+      URIUtils::resolveHref(*(String*)baseUrls.get(i), url, dest);
+      url = dest;
     }
+  }
 
-    baseUrls.clear(MB_TRUE);
-    
-    return url;
-} //-- getBaseURI
+  baseUrls.clear(MB_TRUE);
+  
+  return url;
+} // getBaseURI

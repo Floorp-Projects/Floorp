@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -22,12 +23,6 @@
 //
 //  Implementation of the Document Object Model Level 1 Core
 //    Implementation of the Attr class
-//
-// Modification History:
-// Who  When        What
-// TK   03/29/99    Created
-// LF   08/06/1999  fixed typo: defalut to default
-
 //
 
 #include "dom.h"
@@ -138,4 +133,12 @@ Node* Attr::insertBefore(Node* newChild, Node* refChild)
     }
 
   return returnVal;
+}
+
+//
+//Return the attributes owning element
+//
+Node* Attr::getXPathParent()
+{
+  return ownerElement;
 }

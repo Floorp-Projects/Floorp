@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -37,14 +38,7 @@ DOMHelper::DOMHelper() {};
 /**
  * Delets this DOMHelper
 **/
-DOMHelper::~DOMHelper() {
-  ListIterator* iter = indexes.iterator();
-  while (iter->hasNext()) {
-    IndexState* idxState = (IndexState*)iter->next();
-    delete idxState;
-  }
-  delete iter;
-} //-- ~DOMHelper
+DOMHelper::~DOMHelper() {}
 
 
 /**
@@ -108,126 +102,14 @@ void DOMHelper::generateId(Node* node, String& dest) {
  * @param node the Node to return the parent of
 **/
 Node* DOMHelper::getParentNode(Node* node) {
-
     if (!node) return 0;
-    //XXX Namespace: the parent of a namespace node is the element
-    if (node->getNodeType() != Node::ATTRIBUTE_NODE)
-        return node->getParentNode();
-
-#ifndef TX_EXE
-    // XXX temporary fix for 70979
-    nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(node->getNSObj()));
-    nsCOMPtr<nsIDOMElement> tmpParent;
-
-    if (attr && NS_SUCCEEDED(attr->GetOwnerElement(getter_AddRefs(tmpParent))))
-        return node->getOwnerDocument()->createWrapper(tmpParent);
-    return NULL;
-#else
-    TxObjectWrapper* wrapper = 0;
-
-    wrapper = (TxObjectWrapper*) parents.get(node);
-    if (!wrapper) {
-        continueIndexing(node);
-        wrapper = (TxObjectWrapper*) parents.get(node);
-    }
-
-    if (wrapper) return (Node*)wrapper->object;
-    return 0;    
-#endif
+    return node->getXPathParent();
 } //-- getParentNode
 
 
 //-------------------/
 //- Private Methods -/
 //-------------------/
-
-/**
- * Adds the given child/parent mapping
-**/
-void DOMHelper::addParentReference(Node* child, Node* parent) {
-    TxObjectWrapper* wrapper = (TxObjectWrapper*) parents.get(child);
-    if (!wrapper) {
-        wrapper = new TxObjectWrapper();
-        parents.put(wrapper, child);
-    } 
-    wrapper->object = parent;
-
-} //-- addParentReference
-
-/**
- * Continues indexing until the given node has been indexed
- * @param node the target Node
-**/
-void DOMHelper::continueIndexing(Node* node) {
-    if (!node) return;
-
-    //-- get indexing information
-    Document* doc = 0;
-    if (node->getNodeType() == Node::DOCUMENT_NODE)
-        doc = (Document*)node;
-    else
-        doc = node->getOwnerDocument();
-
-    ListIterator* iter = indexes.iterator();
-    IndexState* idxState = 0;
-    while (iter->hasNext()) {
-        idxState = (IndexState*)iter->next();
-        if (idxState->document == doc) break;
-            idxState = 0;
-    }
-
-    if (!idxState) {
-        idxState = new IndexState();
-        indexes.add(idxState);
-        idxState->document = doc;
-        idxState->next = doc->getDocumentElement();
-        if (!idxState->next) idxState->done = MB_TRUE;
-    }
-
-    if (idxState->done) return;
-
-    MBool found = MB_FALSE;
-    MBool alreadyProcessed = MB_FALSE;
-
-    while (!found) {
-
-        if (!idxState->next) {
-            idxState->done = MB_TRUE;
-            break;
-        }
-
-        if (!alreadyProcessed) {
-            //-- index attributes
-            if (idxState->next->getNodeType() == Node::ELEMENT_NODE) {
-                Element* element = (Element*)idxState->next;
-                NamedNodeMap* atts = element->getAttributes();
-                if (atts) {
-                    for (PRUint32 i = 0; i < atts->getLength(); i++) {
-                        Node* tmpNode = atts->item(i);
-                        addParentReference(tmpNode, element);
-                        if (node == tmpNode) found = MB_TRUE;
-                    }
-                }
-            } 
-        }
-        
-        //-- set next node to check
-        if ((!alreadyProcessed) && (idxState->next->hasChildNodes())) {
-            Node* child = idxState->next->getFirstChild();
-            idxState->next = child;
-        }
-        else if (idxState->next->getNextSibling()) {
-            idxState->next = idxState->next->getNextSibling();
-            alreadyProcessed = MB_FALSE;
-        }
-        else {
-            idxState->next = getParentNode(idxState->next);
-            alreadyProcessed = MB_TRUE;
-        }     
-    }
-
-} //-- continueIndexing
-
 
 /**
  * Returns the child number of the given node. Numbering
@@ -303,24 +185,6 @@ OrderInfo* DOMHelper::getDocumentOrder(Node* node) {
     return orderInfo;
   
 } //-- getDocumentOrder
-
-//--------------------------------/
-//- implementation of IndexState -/
-//--------------------------------/
-
-/**
- * Creates a new IndexState
-**/
-IndexState::IndexState() {
-    document = 0;
-    done     = MB_FALSE;
-    next     = 0;
-} //-- IndexState
-
-/**
- * Deletes this IndexState
-**/
-IndexState::~IndexState() {};
 
 //-------------------------------/
 //- Implementation of OrderInfo -/
