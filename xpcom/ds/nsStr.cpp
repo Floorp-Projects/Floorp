@@ -491,8 +491,8 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
 
 /**
  *  This searches aDest (in reverse) for a given substring
- *  
- *  @update  gess 2/04/00
+ *
+ *  @update  gess 2/18/00
  *  @param   aDest string to search
  *  @param   aTarget is the substring you're trying to find.
  *  @param   aIgnorecase indicates case sensitivity of search
@@ -500,7 +500,7 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
  *  @param   aCount tell us how many iterations to perform from offset
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   if(anOffset<0)
     anOffset=(PRInt32)aDest.mLength-1;
 
@@ -508,12 +508,12 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
     aCount = aDest.mLength;
 
   if((0<aDest.mLength) && ((PRUint32)anOffset<aDest.mLength) && (aTarget.mLength)) {
- 
+
     if(0<aCount) {
-  
+
       PRInt32     aDelta    = (aDest.mCharSize == eOneByte) ? 1 : 2;
       const char* root      = aDest.mStr;
-      const char* destLast  = root+((aDest.mLength-1)*aDelta); //pts to last char in aDest (likely null)
+      const char* destLast  = root+(aDest.mLength*aDelta); //pts to last char in aDest (likely null)
 
       const char* rightmost = root+(anOffset*aDelta);
       const char* min       = rightmost-((aCount-1)*aDelta);
@@ -521,8 +521,10 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
       const char* leftmost  = (min<root) ? root: min;
 
       while(leftmost<=rightmost) {
-        if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
+          //don't forget to divide by delta in next text (bug found by rhp)...
+        if(aTarget.mLength<=PRUint32((destLast-rightmost)/aDelta)) {
           PRInt32 result=(*gCompare[aDest.mCharSize][aTarget.mCharSize])(rightmost,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+
           if(0==result) {
             return (rightmost-root)/aDelta;
           }
@@ -534,7 +536,8 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
 
   return kNotFound;
 }
- 
+
+
 
 /**
  *  This searches aDest (in reverse) for a given character 
