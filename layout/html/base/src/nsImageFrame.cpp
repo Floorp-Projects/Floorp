@@ -671,11 +671,17 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     fixedContentHeight = PR_TRUE;
   }
 
-  float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
-
   PRBool haveComputedSize = PR_FALSE;
   PRBool needIntrinsicImageSize = PR_FALSE;
+
+  float t2p, sp2t;
+  aPresContext->GetTwipsToPixels(&t2p);
+  aPresContext->GetScaledPixelsToTwips(&sp2t);
+
+  // convert from normal twips to scaled twips (printing...)
+  float t2st = t2p*sp2t; // twips to scaled twips
+  nscoord intrinsicScaledWidth = NSToCoordRound(float(mIntrinsicSize.width) * t2st);
+  nscoord intrinsicScaledHeight = NSToCoordRound(float(mIntrinsicSize.height) * t2st);
 
   nscoord newWidth=0, newHeight=0;
   if (fixedContentWidth) {
@@ -686,8 +692,8 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     } else {
       // We have a width, and an auto height. Compute height from
       // width once we have the intrinsic image size.
-      if (mIntrinsicSize.height != 0) {
-        newHeight = (mIntrinsicSize.height * newWidth) / mIntrinsicSize.width;
+      if (intrinsicScaledWidth != 0) {
+        newHeight = (intrinsicScaledHeight * newWidth) / intrinsicScaledWidth;
         haveComputedSize = PR_TRUE;
       } else {
         newHeight = 0;
@@ -698,8 +704,8 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     // We have a height, and an auto width. Compute width from height
     // once we have the intrinsic image size.
     newHeight = MINMAX(heightConstraint, minHeight, maxHeight);
-    if (mIntrinsicSize.width != 0) {
-      newWidth = (mIntrinsicSize.width * newHeight) / mIntrinsicSize.height;
+    if (intrinsicScaledHeight != 0) {
+      newWidth = (intrinsicScaledWidth * newHeight) / intrinsicScaledHeight;
       haveComputedSize = PR_TRUE;
     } else {
       newWidth = 0;
@@ -712,8 +718,8 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     else
       haveComputedSize = PR_TRUE;
 
-    newWidth = mIntrinsicSize.width;
-    newHeight = mIntrinsicSize.height;
+    newWidth = intrinsicScaledWidth;
+    newHeight = intrinsicScaledHeight;
   }
 
   mComputedSize.width = newWidth;
@@ -1048,26 +1054,23 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
                        aWhichLayer);
 
 #ifdef USE_IMG2
-
     nsCOMPtr<imgIContainer> imgCon;
     nsCOMPtr<imgIContainer> lowImgCon;
 
     if (mImageRequest) {
       mImageRequest->GetImage(getter_AddRefs(imgCon));
     }
-#else
-    // first get to see if lowsrc image is here
-    PRInt32 lowSrcLinesLoaded = -1;
-    PRInt32 imgSrcLinesLoaded = -1;
-    nsIImage * lowImage = nsnull;
-    nsIImage * image    = nsnull;
-#endif
-
-#ifdef USE_IMG2
     if (mLowImageRequest) {
       mLowImageRequest->GetImage(getter_AddRefs(lowImgCon));
     }
 #else
+    // first get to see if lowsrc image is here
+    PRInt32 lowSrcLinesLoaded = -1;
+    PRInt32 imgSrcLinesLoaded = -1;
+
+    nsIImage * lowImage = nsnull;
+    nsIImage * image    = nsnull;
+
     // if lowsrc is here 
     if (mLowSrcImageLoader) {
       lowImage = mLowSrcImageLoader->GetImage();
@@ -1080,7 +1083,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
     if (mImageRequest) {
       mImageRequest->GetImageStatus(&loadStatus);
     }
-    if (!(loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (!imgCon && !lowImgCon)) {
+    if (loadStatus & imgIRequest::STATUS_ERROR || !(imgCon || lowImgCon)) {
 #else
     image = mImageLoader.GetImage();
     imgSrcLinesLoaded = image != nsnull?image->GetDecodedY2():-1;
@@ -1114,6 +1117,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
           if (imgCon) {
             inner.SizeTo(mComputedSize);
           } else if (lowImgCon) {
+            // XXX need to handle low image...
           }
         }
 
@@ -1560,7 +1564,11 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       nsCOMPtr<nsILoadGroup> loadGroup;
       GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-      mImageRequest->GetImageStatus(&loadStatus);
+      loadStatus = imgIRequest::STATUS_NONE;
+
+      if (mImageRequest)
+        mImageRequest->GetImageStatus(&loadStatus);
+
       if (loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) {
         nsCOMPtr<nsIURI> uri;
         GetURI(newSRC, getter_AddRefs(uri));
@@ -1570,7 +1578,9 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
 
         il->LoadImage(uri, loadGroup, mListener, aPresContext, getter_AddRefs(mImageRequest));
 
-        mImageRequest->GetImageStatus(&loadStatus);
+        loadStatus = imgIRequest::STATUS_ERROR;
+        if (mImageRequest)
+          mImageRequest->GetImageStatus(&loadStatus);
         if (loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) {
 
 #else
@@ -1587,7 +1597,8 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
       else {        
         // Stop the earlier image load
 #ifdef USE_IMG2
-        mImageRequest->Cancel(NS_ERROR_FAILURE); // NS_BINDING_ABORT ?
+        if (mImageRequest)
+          mImageRequest->Cancel(NS_ERROR_FAILURE);
 
         mCanSendLoadEvent = PR_TRUE;
 
@@ -1673,6 +1684,11 @@ nsImageFrame::IsImageComplete(PRBool* aComplete)
 {
   NS_ENSURE_ARG_POINTER(aComplete);
 #ifdef USE_IMG2
+  if (!mImageRequest) {
+    *aComplete = PR_FALSE;
+    return NS_OK;
+  }
+
   PRUint32 status;
   mImageRequest->GetImageStatus(&status);
   *aComplete = ((status & imgIRequest::STATUS_LOAD_COMPLETE) != 0);
@@ -1739,9 +1755,11 @@ nsImageFrame::GetBaseURI(nsIURI **aURI)
   }
   else {
     nsCOMPtr<nsIDocument> doc;
-    rv = mContent->GetDocument(*getter_AddRefs(doc));
-    if (NS_SUCCEEDED(rv)) {
-      doc->GetBaseURL(*getter_AddRefs(baseURI));
+    if (mContent) {
+      rv = mContent->GetDocument(*getter_AddRefs(doc));
+      if (NS_SUCCEEDED(rv)) {
+        doc->GetBaseURL(*getter_AddRefs(baseURI));
+      }
     }
   }
   *aURI = baseURI;
