@@ -66,9 +66,8 @@ JAVA_OR_NSJVM = 1
 
 !ifdef NSJVM
 JAVA_OR_NSJVM = 1
+AWT_11 = 1              # always build awt 1.1 with nsjvm now
 !endif
-
-
 
 !ifdef MOZ_OJI
 LCFLAGS=$(LCFLAGS) -DOJI
