@@ -124,6 +124,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMECompClauseString = NULL;
 	mIMECompClauseStringSize = 0;
 	mIMECompClauseStringLength = 0;
+	mCurrentKeyboardCP = CP_ACP;
 
 #if 1
 	mHaveDBCSLeadByte = false;
@@ -2143,7 +2144,7 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
 	//	return FALSE;
 	//}
   //printf("OnChar (KeyDown) %d\n", aVirtualKeyCode);
-  ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,charToConvert,length,
+  ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length,
 	  &uniChar,sizeof(uniChar));
 
   return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
@@ -2629,6 +2630,30 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = PR_TRUE;
             break;
 
+		case WM_INPUTLANGCHANGEREQUEST:
+			*aRetValue = TRUE;
+			result = PR_FALSE;
+			break;
+
+		case WM_INPUTLANGCHANGE: {
+#ifdef DEBUG_tague
+			printf("input language changed\n");
+#endif
+
+			int langid =(int)(lParam&0xFFFF);
+			int localeid=MAKELCID(langid,SORT_DEFAULT);
+			int numchar=GetLocaleInfo(localeid,LOCALE_IDEFAULTANSICODEPAGE,NULL,0);
+			char* cp_name = new char[numchar];
+			if (cp_name) {
+				GetLocaleInfo(localeid,LOCALE_IDEFAULTANSICODEPAGE,cp_name,numchar);
+				mCurrentKeyboardCP = atoi(cp_name);
+				delete [] cp_name;
+				*aRetValue=TRUE;
+				result = PR_TRUE;
+			}
+
+			break;
+		}
 		case WM_IME_STARTCOMPOSITION: {
 			COMPOSITIONFORM compForm;
 			HIMC hIMEContext;
@@ -3456,7 +3481,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
   //
   // convert the composition string text into unicode before it is sent to xp-land
   //
-  unicharSize = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
+  unicharSize = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
 	  mIMECompositionUniString,0);
 
   if (mIMECompositionUniStringSize < (PRInt32)unicharSize) {
@@ -3464,7 +3489,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext)
 		mIMECompositionUniString = new PRUnichar[unicharSize+32];
 		mIMECompositionUniStringSize = unicharSize+32;
   }
-  ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
+  ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
 	  mIMECompositionUniString,unicharSize);
   mIMECompositionUniString[unicharSize] = (PRUnichar)0;
 
@@ -3545,11 +3570,11 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		*textRangeListLengthResult = 2;
 		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
-		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,
 								mIMECompositionStringLength,NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
-		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,
 								mIMECursorPosition,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
 		(*textRangeListResult)[0].mEndOffset = substringLength;
@@ -3573,7 +3598,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		// figure out the cursor position
 		//
 		
-		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECursorPosition,NULL,0);
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString,mIMECursorPosition,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
@@ -3588,7 +3613,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		for(i=0;i<mIMECompClauseStringLength;i++) {
 			if (mIMECompClauseString[i]!=0) {
 				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
-				substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
+				substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
 										mIMECompClauseString[i]-lastMBCSOffset,NULL,0);
 				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength;
 				(*textRangeListResult)[rangePointer].mRangeType = mIMEAttributeString[mIMECompClauseString[i]-1];
