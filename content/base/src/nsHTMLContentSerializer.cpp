@@ -325,7 +325,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     const char* sharedName;
     attrName->GetUTF8String(&sharedName);
     if ((('_' == *sharedName) || ('-' == *sharedName)) &&
-        !nsCRT::strncmp(sharedName+1, kMozStr, sizeof(kMozStr)-1)) {
+        !nsCRT::strncmp(sharedName+1, kMozStr, PRUint32(sizeof(kMozStr)-1))) {
       continue;
     }
     aContent->GetAttr(namespaceID, attrName, valueStr);
