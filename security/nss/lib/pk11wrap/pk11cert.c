@@ -2230,7 +2230,6 @@ PK11_FindCertFromDERCertItem(PK11SlotInfo *slot, SECItem *inDerCert,
 								 void *wincx)
 
 {
-    CERTCertificate *rvCert = NULL;
     NSSCertificate *c;
     NSSDER derCert;
     NSSToken *tok;
