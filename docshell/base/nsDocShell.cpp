@@ -53,6 +53,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsDocumentCharsetInfoCID.h"
 #include "nsICanvasFrame.h"
+#include "nsIPluginViewer.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -3814,6 +3815,10 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
                       NS_ERROR_FAILURE);
 
     (*aViewer)->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer *, this));
+
+    nsCOMPtr<nsIPluginViewer> pv(do_QueryInterface(*aViewer));
+    if (pv)
+      SetTitle(nsnull);  // clear title bar for full-page plugins
 
     return NS_OK;
 }
