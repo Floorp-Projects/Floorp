@@ -226,7 +226,6 @@ JS_CFILES =		\
 	prmjtime.c	\
 	$(NULL)
 
-PREDIRS   += fdlibm
 ifdef USE_MSVC
 FDLIBM_LIBRARY = fdlibm/$(OBJDIR)/fdlibm.lib
 else
@@ -308,7 +307,8 @@ $(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
 INCLUDES   += -I$(OBJDIR)
 
 # Add to TARGETS for clobber rule
-TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg $(OBJDIR)/jscpucfg.o
+TARGETS += $(OBJDIR)/jsautocfg.h $(OBJDIR)/jscpucfg \
+	$(OBJDIR)/jscpucfg.o $(OBJDIR)/jsmathtemp.o
 endif
 
 
@@ -335,6 +335,11 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
+
+# Note: generated headers must be built before descending
+#       into fdlibm directory
+$(FDLIBM_LIBRARY) :
+	$(MAKE) -C fdlibm -f Makefile.ref $(@F)
 
 #
 # Hardwire dependencies on jsopcode.tbl
