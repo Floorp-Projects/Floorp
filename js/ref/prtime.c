@@ -373,7 +373,7 @@ PR_DSTOffset(int64 time)
 
     if (LL_CMP(time,>,maxtimet)) {
 	LL_UI2L(time,PR_MAX_UNIX_TIMET);
-    } else if (!LL_GE_ZERO(time)) {
+    } else if (!LL_GE_ZERO(time) || LL_IS_ZERO(time)) {
 	/* go ahead a day to make localtime work (does not work with 0) */
 	LL_UI2L(time,PR_DAY_SECONDS);
     }
