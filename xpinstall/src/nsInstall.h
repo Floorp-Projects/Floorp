@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
  */
@@ -67,19 +67,19 @@
 #define MAX_FILENAME 31
 #elif defined (XP_PC)
 #define MAX_FILENAME 128
-#else 
+#else
 #define MAX_FILENAME 1024
 #endif
 
 class nsInstallInfo
 {
   public:
-    
+
     nsInstallInfo( PRUint32         aInstallType,
-                   nsIFile*         aFile, 
-                   const PRUnichar* aURL, 
-                   const PRUnichar* aArgs, 
-                   PRUint32         aFlags, 
+                   nsIFile*         aFile,
+                   const PRUnichar* aURL,
+                   const PRUnichar* aArgs,
+                   PRUint32         aFlags,
                    nsIXPIListener*  aListener,
                    nsIDOMWindowInternal* aParentWindow,
                    nsIChromeRegistry*   aChromeReg);
@@ -183,13 +183,9 @@ class nsInstall
 
             GESTALT_UNKNOWN_ERR         = -5550,
             GESTALT_INVALID_ARGUMENT    = -5551,
-            
+
             SUCCESS                     = 0,
             REBOOT_NEEDED               = 999,
-            
-            INSTALL_FILE_UNEXPECTED_MSG_ID = 0,
-            DETAILS_REPLACE_FILE_MSG_ID = 1,
-            DETAILS_INSTALL_FILE_MSG_ID = 2,
 
             DO_NOT_UNINSTALL            = 2,
             WIN_SHARED_FILE             = 4
@@ -274,7 +270,7 @@ class nsInstall
         char*      GetResourcedString(const nsAString& aResName);
         void       AddPatch(nsHashKey *aKey, nsIFile* fileName);
         void       GetPatch(nsHashKey *aKey, nsIFile** fileName);
-        
+
         nsIFile*   GetJarFileLocation() { return mJarFileLocation; }
         void       SetJarFileLocation(nsIFile* aFile);
 
@@ -286,7 +282,7 @@ class nsInstall
 
         PRUint32   GetInstallFlags()  { return mInstallFlags; }
         void       SetInstallFlags(PRUint32 aFlags) { mInstallFlags = aFlags; }
-        
+
         PRInt32    GetInstallPlatform(nsCString& aPlatform);
 
         nsIChromeRegistry*  GetChromeRegistry() { return mChromeRegistry; }
@@ -314,7 +310,7 @@ class nsInstall
         JSObject*           mWinRegObject;
         JSObject*           mWinProfileObject;
 
-        
+
         nsCOMPtr<nsIFile>   mJarFileLocation;
         nsIZipReader*       mJarFileData;
 
@@ -336,8 +332,8 @@ class nsInstall
         nsString            mRegistryPackageName;   /* Name of the package we are installing */
         nsString            mUIName;                /* User-readable package name */
         nsInstallVersion*   mVersionInfo;           /* Component version info */
-        
-        nsVoidArray*        mInstalledFiles;        
+
+        nsVoidArray*        mInstalledFiles;
         //nsCOMPtr<nsISupportsArray>   mInstalledFiles;
         nsHashtable*        mPatchList;
 
