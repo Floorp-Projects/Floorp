@@ -626,8 +626,10 @@ xpfe/components/history/resources/Makefile
 xpfe/components/prefwindow/Makefile
 xpfe/components/prefwindow/resources/Makefile
 xpfe/components/prefwindow/resources/content/Makefile
+xpfe/components/prefwindow/resources/content/unix/Makefile
 xpfe/components/prefwindow/resources/locale/Makefile
 xpfe/components/prefwindow/resources/locale/en-US/Makefile
+xpfe/components/prefwindow/resources/locale/en-US/unix/Makefile
 xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
