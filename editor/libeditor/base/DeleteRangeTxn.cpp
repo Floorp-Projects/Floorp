@@ -50,10 +50,6 @@
 #include "nsLayoutCID.h"
 
 #ifdef NS_DEBUG
-#include "nsIDOMElement.h"
-#endif
-
-#ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
 #endif
 
@@ -96,8 +92,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
 #ifdef NS_DEBUG
   {
     PRUint32 count;
-    nsCOMPtr<nsIDOMCharacterData> textNode;
-    textNode = do_QueryInterface(mStartParent);
+    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(mStartParent);
     if (textNode)
       textNode->GetLength(&count);
     else
@@ -205,8 +200,7 @@ NS_IMETHODIMP DeleteRangeTxn::UndoTransaction(void)
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result = EditAggregateTxn::UndoTransaction();
-  return result;
+  return EditAggregateTxn::UndoTransaction();
 }
 
 NS_IMETHODIMP DeleteRangeTxn::RedoTransaction(void)
@@ -218,14 +212,13 @@ NS_IMETHODIMP DeleteRangeTxn::RedoTransaction(void)
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result = EditAggregateTxn::RedoTransaction();
-  return result;
+  return EditAggregateTxn::RedoTransaction();
 }
 
 NS_IMETHODIMP DeleteRangeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   return NS_OK;
 }
 
@@ -242,8 +235,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
 {
   nsresult result;
   // see what kind of node we have
-  nsCOMPtr<nsIDOMCharacterData> textNode;
-  textNode =  do_QueryInterface(aStartParent);
+  nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aStartParent);
   if (textNode)
   { // if the node is a text node, then delete text content
     DeleteTextTxn *txn;
@@ -262,12 +254,12 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
   }
   else
   {
-    PRUint32 childCount;
     nsCOMPtr<nsIDOMNodeList> children;
     result = aStartParent->GetChildNodes(getter_AddRefs(children));
     if (NS_FAILED(result)) return result;
     if (!children) return NS_ERROR_NULL_POINTER;
 
+    PRUint32 childCount;
     children->GetLength(&childCount);
     NS_ASSERTION(aEndOffset<=childCount, "bad aEndOffset");
     PRUint32 i;
@@ -297,8 +289,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
 {
   nsresult result = NS_OK;
   // see what kind of node we have
-  nsCOMPtr<nsIDOMCharacterData> textNode;
-  textNode = do_QueryInterface(aParent);
+  nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aParent);
   if (textNode)
   { // if the node is a text node, then delete text content
     PRUint32 start, numToDelete;
@@ -334,27 +325,18 @@ static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 
 NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 {
-  nsresult result;
-
-  nsCOMPtr<nsIContentIterator> iter;
-  
-  result = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(result)) return result;
+  nsCOMPtr<nsIContentIterator> iter = do_CreateInstance(kSubtreeIteratorCID);
   if (!iter) return NS_ERROR_NULL_POINTER;
 
-  result = iter->Init(mRange);
+  nsresult result = iter->Init(mRange);
   if (NS_FAILED(result)) return result;
     
   while (NS_ENUMERATOR_FALSE == iter->IsDone())
   {
-    nsCOMPtr<nsIDOMNode> node;
     nsCOMPtr<nsIContent> content;
     result = iter->CurrentNode(getter_AddRefs(content));
-    node = do_QueryInterface(content);
     if (NS_FAILED(result)) return result;
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
     if (!node) return NS_ERROR_NULL_POINTER;
 
     DeleteElementTxn *txn;
