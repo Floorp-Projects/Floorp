@@ -262,6 +262,24 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
   return rc;
 }
 
+//  Testing for a simple value
+static nsresult HasSimpleValue(nsISchemaType * aSchemaType, PRBool * aResult) {
+  PRUint16 typevalue;
+  nsresult rc = aSchemaType->GetSchemaType(&typevalue);
+  if (NS_FAILED(rc))
+    return rc;
+  if (typevalue == nsISchemaComplexType::SCHEMA_TYPE_COMPLEX) {
+    nsCOMPtr<nsISchemaComplexType> ct = do_QueryInterface(aSchemaType);
+    rc = ct->GetContentModel(&typevalue);
+    if (NS_FAILED(rc))
+      return rc;
+    *aResult = typevalue == nsISchemaComplexType::CONTENT_MODEL_SIMPLE;
+  } else {
+    *aResult = PR_TRUE;
+  }
+  return NS_OK;
+}
+
 //  Default
 
 NS_IMETHODIMP
@@ -301,6 +319,16 @@ NS_IMETHODIMP
         nsCOMPtr < nsISchemaComplexType > oldtype =
             do_QueryInterface(lookupType);
         oldtype->GetBaseType(getter_AddRefs(lookupType));
+      } else if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
+        nsCOMPtr < nsISchemaRestrictionType > oldtype =  //  We should check another type code, but it is too cumbersome
+            do_QueryInterface(lookupType);
+	if (oldtype) {
+	  nsCOMPtr < nsISchemaSimpleType > newtype;
+          oldtype->GetBaseType(getter_AddRefs(newtype));
+	  lookupType = newtype;
+	}
+	else
+	  break;
       } else {
         break;
       }
@@ -339,15 +367,10 @@ NS_IMETHODIMP
   PRBool mustBeSimple = PR_FALSE;
   PRBool mustBeComplex = PR_FALSE;
   if (aSchemaType) {
-    PRUint16 typevalue;
-    nsresult rc = aSchemaType->GetSchemaType(&typevalue);
+    nsresult rc = HasSimpleValue(aSchemaType, &mustBeSimple);
     if (NS_FAILED(rc))
       return rc;
-    if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-      mustBeComplex = PR_TRUE;
-    } else {
-      mustBeSimple = PR_TRUE;
-    }
+    mustBeComplex = !mustBeSimple;
   }
   PRUint16 typevalue;
   nativeSchemaURI.Assign(nsSOAPUtils::kXSURI);
@@ -1362,6 +1385,17 @@ NS_IMETHODIMP
           nsCOMPtr < nsISchemaComplexType > oldType =
               do_QueryInterface(lookupType);
           oldType->GetBaseType(getter_AddRefs(lookupType));
+	}
+	else if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
+          nsCOMPtr < nsISchemaRestrictionType > oldtype =  //  We should check another type code, but it is too cumbersome
+              do_QueryInterface(lookupType);
+	  if (oldtype) {
+	    nsCOMPtr < nsISchemaSimpleType > newtype;
+            oldtype->GetBaseType(getter_AddRefs(newtype));
+	    lookupType = newtype;
+	  }
+	  else
+	    break;
         } else {
           break;
         }
@@ -1374,11 +1408,9 @@ NS_IMETHODIMP
   if (!decoder) {
     PRBool simple;
     if (type) {
-      PRUint16 typevalue;
-      nsresult rc = type->GetSchemaType(&typevalue);
+      nsresult rc = HasSimpleValue(type, &simple);
       if (NS_FAILED(rc))
         return rc;
-      simple = typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX;
     } else {
       nsCOMPtr<nsIDOMElement> child;
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
@@ -1413,11 +1445,9 @@ NS_IMETHODIMP
 {
   PRBool simple;
   if (aSchemaType) {
-    PRUint16 typevalue;
-    nsresult rc = aSchemaType->GetSchemaType(&typevalue);
+    nsresult rc = HasSimpleValue(aSchemaType, &simple);
     if (NS_FAILED(rc))
       return rc;
-    simple = typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX;
   } else {
     nsCOMPtr<nsIDOMElement> child;
     nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
@@ -2166,11 +2196,11 @@ NS_IMETHODIMP
   }
   if (unhandled) {  //  Handle all the other cases
     if (subtype) {
-      PRUint16 typevalue;
-      nsresult rc = subtype->GetSchemaType(&typevalue);
+      PRBool simple;
+      nsresult rc = HasSimpleValue(subtype, &simple);
       if (NS_FAILED(rc))
         return rc;
-      if (typevalue != nsISchemaType::SCHEMA_TYPE_COMPLEX) {//  Simple == string
+      if (simple) {
         DECODE_ARRAY(PRUnichar*,WCHAR_STR,nsnull,rc = v->GetAsWString(a + p);if(NS_FAILED(rc))break;,
                       for (i = 0; i < size; i++) nsMemory::Free(a[i]););
         unhandled = PR_FALSE;
