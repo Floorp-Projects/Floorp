@@ -303,6 +303,10 @@ nsXPCWrappedNative::nsXPCWrappedNative(XPCContext* xpcc,
     NS_ADDREF(mObj);
     NS_ADDREF(mScope);
 
+#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+    mScope->GetRuntime()->DEBUG_AddWrappedNative(this);
+#endif
+
 #ifdef DEBUG_stats_jband
     static int count = 0;
     static const int interval = 10;
@@ -347,6 +351,10 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
     NS_ASSERTION(mRoot, "wrapper without root deleted");
+
+#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
+    mScope->GetRuntime()->DEBUG_RemoveWrappedNative(this);
+#endif
 
     if(mRoot != this)
     {
@@ -420,6 +428,10 @@ nsXPCWrappedNative::SystemIsBeingShutDown()
     // and that calls from JS should fail without trying to use any of the 
     // xpconnect mechanisms. 'IsValid' is implemented by checking this pointer.
     mObj = nsnull;
+    
+    // Notify other wrappers in the chain.
+    if(mNext)
+        mNext->SystemIsBeingShutDown();
 }
 
 /***************************************************************************/

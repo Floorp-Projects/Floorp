@@ -395,7 +395,7 @@ IndexOfFileWithName(const char* aName, const xptiWorkingSet* aWorkingSet)
 
     for(PRUint32 i = 0; i < aWorkingSet->GetFileCount(); ++i)
     {
-        if(!PL_strcmp(aName, aWorkingSet->GetFileAt(i).GetName()))
+        if(0 == PL_strcmp(aName, aWorkingSet->GetFileAt(i).GetName()))
             return i;     
     }
     return -1;        
@@ -586,10 +586,11 @@ xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
                         same = PR_FALSE;
                     break;        
                 }
-                // failed to find our file in the workingset?
-                if(k == countOfFilesInWorkingSet)
-                    same = PR_FALSE;
             }
+            // failed to find our file in the workingset?
+            if(k == countOfFilesInWorkingSet)
+                same = PR_FALSE;
+            
             nsMemory::Free(name);
         }
         if(same)
@@ -1024,56 +1025,88 @@ xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet* aWorkingSet
     return PR_TRUE;
 }
 
+// local struct used to pass two pointers as one pointer
+struct TwoWorkingSets
+{
+    TwoWorkingSets(xptiWorkingSet* src, xptiWorkingSet* dest)
+        : aSrcWorkingSet(src), aDestWorkingSet(dest) {}
+
+    xptiWorkingSet* aSrcWorkingSet;
+    xptiWorkingSet* aDestWorkingSet;
+};        
+
 PR_STATIC_CALLBACK(PRIntn)
 xpti_Merger(PLHashEntry *he, PRIntn i, void *arg)
 {
     xptiInterfaceInfo* srcInfo = (xptiInterfaceInfo*) he->value;
-    xptiWorkingSet* aWorkingSet = (xptiWorkingSet*) arg;
+    xptiWorkingSet* aSrcWorkingSet = ((TwoWorkingSets*)arg)->aSrcWorkingSet;
+    xptiWorkingSet* aDestWorkingSet = ((TwoWorkingSets*)arg)->aDestWorkingSet;
 
     xptiInterfaceInfo* destInfo = (xptiInterfaceInfo*)
-            PL_HashTableLookup(aWorkingSet->mIIDTable, srcInfo->GetTheIID());
+            PL_HashTableLookup(aDestWorkingSet->mIIDTable, srcInfo->GetTheIID());
     
     if(destInfo)
     {
-        // XXX we could do some serious validation here!
+        // Let's see if this is referring to the same exact typelib
+         
+        const char* destFilename = 
+            aDestWorkingSet->GetTypelibFileName(destInfo->GetTypelibRecord());
+        
+        const char* srcFilename = 
+            aSrcWorkingSet->GetTypelibFileName(srcInfo->GetTypelibRecord());
+    
+        if(0 == PL_strcmp(destFilename, srcFilename) && 
+           (destInfo->GetTypelibRecord().GetZipItemIndex() ==
+            srcInfo->GetTypelibRecord().GetZipItemIndex()))
+        {
+            // This is the exact same item.
+            return HT_ENUMERATE_NEXT;
+        }
+        // else...
+        
+        // We need to remove the old item before adding the new one below.
+                   
+        PL_HashTableRemove(aDestWorkingSet->mNameTable, destInfo->GetTheName());
+        PL_HashTableRemove(aDestWorkingSet->mIIDTable, destInfo->GetTheIID());
+        
+        // Release the one reference that was held by the name table. 
+        NS_RELEASE(destInfo);
     }
-    else
+    
+    // Clone the xptiInterfaceInfo into our destination WorkingSet.
+
+    xptiTypelib typelibRecord;
+
+    uint16 fileIndex = srcInfo->GetTypelibRecord().GetFileIndex();
+    uint16 zipItemIndex = srcInfo->GetTypelibRecord().GetZipItemIndex();
+    
+    fileIndex += aDestWorkingSet->mFileMergeOffsetMap[fileIndex];
+    
+    // If it is not a zipItem, then the original index is fine.
+    if(srcInfo->GetTypelibRecord().IsZip())
+        zipItemIndex += aDestWorkingSet->mZipItemMergeOffsetMap[zipItemIndex];
+
+    typelibRecord.Init(fileIndex, zipItemIndex);
+                
+    destInfo = new xptiInterfaceInfo(*srcInfo, typelibRecord, aDestWorkingSet);
+
+    if(!destInfo)
     {
-        // Clone the xptiInterfaceInfo into our WorkingSet.
-
-        xptiTypelib typelibRecord;
-
-        uint16 fileIndex = srcInfo->GetTypelibRecord().GetFileIndex();
-        uint16 zipItemIndex = srcInfo->GetTypelibRecord().GetZipItemIndex();
-        
-        fileIndex += aWorkingSet->mFileMergeOffsetMap[fileIndex];
-        
-        // If it is not a zipItem, then the original index is fine.
-        if(srcInfo->GetTypelibRecord().IsZip())
-            zipItemIndex += aWorkingSet->mZipItemMergeOffsetMap[zipItemIndex];
-
-        typelibRecord.Init(fileIndex, zipItemIndex);
-                    
-        destInfo = new xptiInterfaceInfo(*srcInfo, typelibRecord, aWorkingSet);
-
-        if(!destInfo)
-        {
-            // XXX bad! should log
-            return HT_ENUMERATE_NEXT;    
-        }
-
-        NS_ADDREF(destInfo);
-        if(!destInfo->IsValid())
-        {
-            // XXX bad! should log
-            NS_RELEASE(destInfo);
-            return HT_ENUMERATE_NEXT;    
-        }
-
-        // The name table now owns the reference we AddRef'd above
-        PL_HashTableAdd(aWorkingSet->mNameTable, destInfo->GetTheName(), destInfo);
-        PL_HashTableAdd(aWorkingSet->mIIDTable, destInfo->GetTheIID(), destInfo);
+        // XXX bad! should log
+        return HT_ENUMERATE_NEXT;    
     }
+
+    NS_ADDREF(destInfo);
+    if(!destInfo->IsValid())
+    {
+        // XXX bad! should log
+        NS_RELEASE(destInfo);
+        return HT_ENUMERATE_NEXT;    
+    }
+
+    // The name table now owns the reference we AddRef'd above
+    PL_HashTableAdd(aDestWorkingSet->mNameTable, destInfo->GetTheName(), destInfo);
+    PL_HashTableAdd(aDestWorkingSet->mIIDTable, destInfo->GetTheIID(), destInfo);
 
     return HT_ENUMERATE_NEXT;
 }       
@@ -1194,8 +1227,9 @@ xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
 
     // Migrate xptiInterfaceInfos
 
-    PL_HashTableEnumerateEntries(aSrcWorkingSet->mNameTable, xpti_Merger, 
-                                 aDestWorkingSet);
+    TwoWorkingSets sets(aSrcWorkingSet, aDestWorkingSet);
+
+    PL_HashTableEnumerateEntries(aSrcWorkingSet->mNameTable, xpti_Merger, &sets);
 
     return PR_TRUE;
 }        

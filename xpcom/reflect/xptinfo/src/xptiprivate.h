@@ -282,6 +282,11 @@ public:
     
     PRUint32 FindFileWithName(const char* name);
 
+    const char* GetTypelibFileName(const xptiTypelib& typelib)
+    {
+        return GetFileAt(typelib.GetFileIndex()).GetName();
+    }
+
     xptiFile& GetFileAt(PRUint32 i) const 
     {
         NS_ASSERTION(mFileArray, "bad state!");

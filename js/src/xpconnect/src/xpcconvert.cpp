@@ -1069,8 +1069,22 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
     if(report)
     {
         static const char defaultMsg[] = "JavaScript Error";
-        data = xpcJSErrorReport::NewReport(message ? message : defaultMsg,
-                                           report);
+        const char* bestMessage = nsnull;
+
+        if(message)
+            bestMessage = message;
+        else if(report && report->ucmessage)
+        {
+            // We'll let JS make this an 8bit ASCII string for us.
+            JSString* jsstr = JS_NewUCStringCopyZ(cx, report->ucmessage);
+            if(jsstr)
+                bestMessage = JS_GetStringBytes(jsstr);
+        }
+
+        if(!bestMessage)
+            bestMessage = defaultMsg;
+        
+        data = xpcJSErrorReport::NewReport(bestMessage, report);
     }
     else
         data = nsnull;
