@@ -1900,7 +1900,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
         IndentBy(stdout, gNoiseIndent + 1);
         printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
            NS_STATIC_CAST(void*, line.get()),
-           NS_STATIC_CAST(void*, line.next().get()),
+           NS_STATIC_CAST(void*, (line.next() != end_lines() ? line.next().get() : nsnull)),
            line->IsBlock() ? "block" : "inline",
            "wrapping",
            line->HasBreak() ? "has-break " : "",
