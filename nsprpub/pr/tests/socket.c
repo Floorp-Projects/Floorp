@@ -91,6 +91,8 @@ char *LARGE_FILE_NAME = "/tmp/prsocket_test_dir/large_file";
 #define LARGE_FILE_LEN_2			(1 * 1024 * 1024 + 75)
 #define LARGE_FILE_OFFSET_3			(2 * 1024 * 1024 - 128)
 #define LARGE_FILE_LEN_3			(LARGE_FILE_SIZE - LARGE_FILE_OFFSET_3)
+#define LARGE_FILE_OFFSET_4			PR_GetPageSize()
+#define LARGE_FILE_LEN_4			769
 #define LARGE_FILE_HEADER_SIZE    	(512)
 #define LARGE_FILE_TRAILER_SIZE   	(64)
 
@@ -1330,7 +1332,7 @@ TransmitFile_Client(void *arg)
     }
 #endif
 	/*
-	 * case 7: partial large file at non-zero offset, with trailer
+	 * case 7: partial large file at non-zero offset, with header
 	 */
     rlen = LARGE_FILE_LEN_3 + LARGE_FILE_HEADER_SIZE;
     if (readn(sockfd, large_buf, rlen) != rlen) {
@@ -1351,6 +1353,42 @@ TransmitFile_Client(void *arg)
         								LARGE_FILE_LEN_3) != 0) {
         fprintf(stderr,
             "SendFile 7. ERROR - large file data corruption\n");
+        failed_already=1;
+        return;
+    }
+#endif
+	/*
+	 * case 8: partial large file at non-zero, page-aligned offset, with
+	 * header and trailer
+	 */
+    rlen = LARGE_FILE_LEN_4 + LARGE_FILE_HEADER_SIZE +
+									LARGE_FILE_TRAILER_SIZE;
+    if (readn(sockfd, large_buf, rlen) != rlen) {
+        fprintf(stderr,
+            "prsocket_test: SendFile_Client failed to receive file\n");
+        failed_already=1;
+        return;
+    }
+#ifdef XP_UNIX
+    if (memcmp(large_file_header, large_buf, LARGE_FILE_HEADER_SIZE) != 0){
+        fprintf(stderr,
+            "SendFile 2. ERROR - large file header corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp((char *)large_file_addr + LARGE_FILE_OFFSET_4,
+				large_buf + LARGE_FILE_HEADER_SIZE,
+        								LARGE_FILE_LEN_4) != 0) {
+        fprintf(stderr,
+            "SendFile 2. ERROR - large file data corruption\n");
+        failed_already=1;
+        return;
+    }
+    if (memcmp(large_file_trailer,
+				large_buf + LARGE_FILE_HEADER_SIZE + LARGE_FILE_LEN_4,
+        				LARGE_FILE_TRAILER_SIZE) != 0) {
+        fprintf(stderr,
+            "SendFile 2. ERROR - large file trailer corruption\n");
         failed_already=1;
         return;
     }
@@ -1572,12 +1610,36 @@ Serve_TransmitFile_Client(void *arg)
 	sfd.hlen = LARGE_FILE_HEADER_SIZE;
 	sfd.trailer = NULL;
 	sfd.tlen = 0;
-    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_CLOSE_SOCKET,
-        				PR_INTERVAL_NO_TIMEOUT);
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
+        									PR_INTERVAL_NO_TIMEOUT);
     slen = LARGE_FILE_LEN_3 + LARGE_FILE_HEADER_SIZE;
     if (bytes != slen) {
         fprintf(stderr,
 			"socket: Error - 7. PR_SendFile send_size = %d, bytes sent = %d\n",
+									slen, bytes);
+        fprintf(stderr,
+            "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
+            PR_GetError(), PR_GetOSError());
+        failed_already=1;
+    }
+	/*
+	 * case 8: partial large file at non-zero page-aligned offset,
+	 * with header and trailer
+	 */
+	sfd.fd = local_large_file_fd;
+	sfd.file_offset = LARGE_FILE_OFFSET_4;
+	sfd.file_nbytes = LARGE_FILE_LEN_4;
+	sfd.header = large_file_header;
+	sfd.hlen = LARGE_FILE_HEADER_SIZE;
+	sfd.trailer = large_file_trailer;
+	sfd.tlen = LARGE_FILE_TRAILER_SIZE;
+    bytes = PR_SendFile(sockfd, &sfd, PR_TRANSMITFILE_CLOSE_SOCKET,
+        				PR_INTERVAL_NO_TIMEOUT);
+    slen = LARGE_FILE_LEN_4 + LARGE_FILE_HEADER_SIZE +
+						LARGE_FILE_TRAILER_SIZE;
+    if (bytes != slen) {
+        fprintf(stderr,
+			"socket: Error - 2. PR_SendFile send_size = %d, bytes sent = %d\n",
 									slen, bytes);
         fprintf(stderr,
             "prsocket_test: PR_SendFile failed: (%ld, %ld)\n",
