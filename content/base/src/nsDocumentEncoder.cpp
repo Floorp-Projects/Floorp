@@ -83,7 +83,7 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
   mDocument = 0;
   mSelection = 0;
   mFlags = 0;
-  mWrapColumn = 0;
+  mWrapColumn = 72;
 }
 
 nsTextEncoder::~nsTextEncoder()
