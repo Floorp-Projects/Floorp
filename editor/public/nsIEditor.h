@@ -50,6 +50,8 @@ class nsString;
 class nsIEditor  : public nsISupports{
 public:
 
+  static const nsIID& IID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
+
   /**
    * Init tells is to tell the implementation of nsIEditor to begin its services
    * @param aDomInterface The dom interface being observed
