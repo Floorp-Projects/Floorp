@@ -413,6 +413,7 @@
 <!ENTITY forwardButton.label "Forward">
 <!ENTITY fileButton.label "File">
 <!ENTITY nextButton.label "Next">
+<!ENTITY previousButton.label "Previous">
 <!ENTITY deleteButton.label "Delete">
 <!ENTITY markButton.label "Mark">
 <!ENTITY printButton.label "Print">
@@ -433,6 +434,7 @@
 <!ENTITY forwardButton.tooltip "Forward selected message">
 <!ENTITY fileButton.tooltip "File selected message">
 <!ENTITY nextButton.tooltip "Move to the next unread message">
+<!ENTITY previousButton.tooltip "Move to the previous unread message">
 <!ENTITY deleteButton.tooltip "Delete selected message or folder">
 <!ENTITY markButton.tooltip "Mark messages">
 <!ENTITY printButton.tooltip "Print this message">

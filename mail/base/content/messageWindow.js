@@ -732,6 +732,7 @@ var MessageWindowController =
       case "cmd_deleteJunk":
 			case "cmd_nextMsg":
       case "button_next":
+      case "button_previous":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextFlaggedMsg":
 			case "cmd_nextUnreadThread":
@@ -841,6 +842,7 @@ var MessageWindowController =
       case "button_next":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextUnreadThread":
+      case "button_previous":
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 				return true;
@@ -1031,6 +1033,7 @@ var MessageWindowController =
 			case "cmd_previousMsg":
         performNavigation(nsMsgNavigationType.previousMessage);
 				break;
+      case "button_previous":
 			case "cmd_previousUnreadMsg":
         performNavigation(nsMsgNavigationType.previousUnreadMessage);
 				break;

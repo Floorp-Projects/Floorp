@@ -152,6 +152,7 @@ var DefaultController =
 			case "cmd_shiftDelete":
 			case "cmd_nextMsg":
       case "button_next":
+      case "button_previous":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextFlaggedMsg":
 			case "cmd_nextUnreadThread":
@@ -338,6 +339,7 @@ var DefaultController =
       case "cmd_label4":
       case "cmd_label5":
         return(MailAreaHasFocus() && GetNumSelectedMessages() > 0);
+      case "button_previous":
       case "button_next":
         return IsViewNavigationItemEnabled();
       case "cmd_nextMsg":
@@ -496,6 +498,7 @@ var DefaultController =
 			case "cmd_previousMsg":
 				MsgPreviousMessage();
 				break;
+      case "button_previous":
 			case "cmd_previousUnreadMsg":
 				MsgPreviousUnreadMessage();
 				break;

@@ -202,6 +202,18 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(64px 384px 96px 352px) !important;
 } 
 
+#button-previous {
+  -moz-image-region: rect(0px 416px 32px 384px);
+}
+
+#button-previous:hover {
+  -moz-image-region: rect(32px 416px 64px 384px);
+} 
+
+#button-previous[disabled] {
+  -moz-image-region: rect(64px 416px 96px 384px) !important;
+} 
+
 /* No mark button in thunderbird
 #button-mark {
   -moz-image-region: rect(336px 23px 357px 0);
@@ -379,6 +391,18 @@ toolbar[iconsize="small"] #button-next:hover {
 
 toolbar[iconsize="small"] #button-next[disabled] {
   -moz-image-region: rect(40px 240px 60px 220px) !important;
+} 
+
+toolbar[iconsize="small"] #button-previous {
+  -moz-image-region: rect(0px 260px 20px 240px);
+}
+
+toolbar[iconsize="small"] #button-previous:hover {
+  -moz-image-region: rect(20px 260px 40px 240px);
+} 
+
+toolbar[iconsize="small"] #button-previous[disabled] {
+  -moz-image-region: rect(40px 260px 60px 240px) !important;
 } 
 
 /* ::::: end small primary toolbar buttons ::::: */
