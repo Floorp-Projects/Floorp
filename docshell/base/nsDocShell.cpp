@@ -103,10 +103,6 @@
 
 #include "nsIEventStateManager.h"
 
-#ifdef IBMBIDI
-#include "nsIUBidiUtils.h"
-#endif
-
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
 
