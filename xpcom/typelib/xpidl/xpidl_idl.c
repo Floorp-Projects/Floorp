@@ -120,10 +120,11 @@ msg_callback(int level, int num, int line, const char *file,
 struct input_callback_data {
     FILE *input;                /* stream for getting data */
     char *filename;             /* where did I come from? */
-    int lineno;                 /* last lineno processed */
+    unsigned int lineno;       /* last lineno processed */
     char *buf;                  /* buffer for data */
     char *point;                /* next char to feed to libIDL */
-    int len;                    /* amount of data read into the buffer */
+    int start;                  /* are we at the start of the file? */
+    unsigned int len;           /* amount of data read into the buffer */
     unsigned int max;           /* size of the buffer */
     struct input_callback_data *next; /* file from which we were included */
     int  f_raw : 2,             /* in a raw block when starting next block */
@@ -220,14 +221,186 @@ new_input_callback_data(const char *filename, IncludePathEntry *include_path)
 }
 
 static int
+NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
+{
+    char *end, *start;
+
+#ifdef DEBUG_shaver_input
+    fputs("[R]", stderr);
+#endif
+
+    /* process pending raw section, or rest of current one */
+    if (!(data->f_raw || 
+          (data->point[0] == '%' && data->point[1] == '{')))
+        return 0;
+        
+    start = *startp = data->point;
+    
+    while ((end = strstr(start, "%}"))) {
+        if (end[-1] == '\r' ||
+            end[-1] == '\n')
+            break;
+        start = end;
+    }
+    
+    if (end) {
+        *lenp = end - data->point + 2;
+        data->f_raw = 0;
+    } else {
+        *lenp = data->len;
+        data->f_raw = 1;
+    }
+    return 1;
+    
+}
+
+static int
+NextIsComment(struct input_callback_data *data, char **startp, int *lenp)
+{
+    char *end;
+    /* process pending comment, or rest of current one */
+    
+    /*
+     * XXX someday, my prince will come.  Also, we'll upgrade to a
+     * libIDL that handles comments for us.
+     */
+
+#ifdef DEBUG_shaver_input
+    fputs("[C]", stderr);
+#endif
+
+    /*
+     * I tried to do the right thing by handing doc comments to libIDL, but
+     * it barfed.  Go figger.
+     */
+    if (!(data->f_comment ||
+          (data->point[0] == '/' && data->point[1] == '*')))
+        return 0;
+
+    end = strstr(data->point, "*/");
+    *lenp = 0;
+    if (end) {
+        *startp = end + 2;
+        data->f_comment = 0;
+    } else {
+        *startp = data->buf + data->len;
+        data->f_comment = 1;
+    }
+    data->point = *startp;
+    return 1;
+}
+
+static int
+NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
+{
+    struct input_callback_data *data = stack->top, *new_data;
+    char *filename, *start, *end;
+    const char *scratch;
+
+#ifdef DEBUG_shaver_input
+    fputs("[I", stderr);
+#endif
+    /* process the #include that we're in now */
+    if (strncmp(data->point, "#include \"", 10)) {
+#ifdef DEBUG_shaver_input
+        fputs("0]", stderr);
+#endif
+        return 0;
+    }
+    
+    start = filename = data->point + 10; /* skip #include " */
+    assert(start < data->buf + data->len);
+    end = strchr(filename, '\"');
+    if (!end) {
+        fprintf(stderr, "didn't find end of quoted include name %s\n",
+                filename - 1);
+        return -1;
+    }
+    *end = '\0';
+    *startp = end + 1;
+    end = strrchr(filename, '.');
+
+#ifdef DEBUG_shaver_inc
+    fprintf(stderr, "found #include %s\n", filename);
+#endif
+
+    /* store offset for when we pop, or if we skip this one */
+    data->point = *startp;
+
+    assert(stack->includes);
+    if (!g_hash_table_lookup(stack->includes, filename)) {
+        char *file_basename = filename;
+        filename = xpidl_strdup(filename);
+        if (end)
+            *end = '\0';
+        file_basename = xpidl_strdup(file_basename);
+        g_hash_table_insert(stack->includes, filename, file_basename);
+        new_data = new_input_callback_data(filename, stack->include_path);
+        if (!new_data) {
+            return -1;
+        }
+
+        new_data->next = data;
+        IDL_inhibit_push();
+        IDL_file_get(&scratch, &data->lineno);
+        data = stack->top = new_data;
+        IDL_file_set(data->filename, (int)data->lineno);
+    }
+    *lenp = 0;               /* this is magic, see the comment below */
+#ifdef DEBUG_shaver_input
+    fputs("1]", stderr);
+#endif
+    return 1;
+}    
+
+static void
+FindSpecial(struct input_callback_data *data, char **startp, int *lenp) {
+    char *point = data->point, *end = data->buf + data->len;
+
+    /* magic sequences are:
+     * "%{"               raw block
+     * "/*"               comment
+     * "#include \""      include
+     * The first and last want a newline [\r\n] before, or the start of the
+     * file.
+     */
+
+#define LINE_START(data, point) (data->start ||                              \
+                                 (point > data->point &&                     \
+                                  (point[-1] == '\r' || point[-1] == '\n')))
+                                                 
+    while (point < end) {
+        /* XXX unroll? */
+        if (point[0] == '%' && LINE_START(data, point) && point[1] == '{')
+            break;
+        if (point[0] == '/' && point[1] == '*') /* && point[2] != '*') */
+            break;
+        if (!strncmp(point, "#include \"", 10) && LINE_START(data, point))
+            break;
+        point++;
+    }
+
+#undef LINE_START
+
+    *startp = data->point;
+    *lenp = point - data->point;
+#ifdef DEBUG_shaver_input
+    fprintf(stderr, "*startp = offset %d, *lenp = %d\n", *startp - data->buf,
+            *lenp);
+#endif
+}
+
+/* set this with a debugger to see exactly what libIDL sees */
+static FILE *tracefile;
+
+static int
 input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                gpointer user_data)
 {
-    struct input_callback_stack *stack = user_data;
+ struct input_callback_stack *stack = user_data;
     struct input_callback_data *data = stack->top, *new_data = NULL;
-    int avail, copy;
-    char *check_point, *ptr, *end_copy, *raw_start, *comment_start,
-         *include_start;
+    unsigned int len, copy, avail;
+    char *start;
 
     switch(reason) {
       case IDL_INPUT_REASON_INIT:
@@ -252,230 +425,130 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         if (!new_data)
             return -1;
 
-        IDL_file_set(new_data->filename, new_data->lineno);
+        IDL_file_set(new_data->filename, (int)new_data->lineno);
         stack->top = new_data;
         return 0;
 
       case IDL_INPUT_REASON_FILL:
-    fill_start:
-        avail = data->buf + data->len - data->point;
-        assert(avail >= 0);
+        /* get data into the buffer */
+        data->start = 0;
+        start = NULL;
+        len = 0;
 
-        if (!avail) {
+        while (!(avail = data->buf + data->len - data->point)) {
             data->point = data->buf;
 
             /* fill the buffer */
             data->len = fread(data->buf, 1, data->max, data->input);
-            if (!data->len) {
-                if (ferror(data->input))
-                    return -1;
-                /* pop include */
-                if (data->next) {
-#ifdef DEBUG_shaver_includes
-                    fprintf(stderr, "leaving %s, returning to %s\n",
-                            data->filename, data->next->filename);
-#endif
-                    /* beard: what about closing the file? */
-                    fclose(data->input);
-                    data->input = NULL;
-                    data = data->next;
-                    stack->top = data;
-                    IDL_file_set(data->filename, ++data->lineno);
-                    IDL_inhibit_pop();
-                    data->f_include = INPUT_IN_NONE;
-                    goto fill_start;
-                }
-                return 0;
+            /* if we've got data in the buffer, no need for the tricks below */
+            if (data->len) {
+                data->start = 1;
+                break;
             }
-            data->buf[data->len] = 0;
+            if (ferror(data->input))
+                return -1;
+
+            /* pop include */
+            /* beard: what about closing the file? */
+            fclose(data->input);
+            data->input = NULL; /* prevent double close */
+            if (!data->next)
+                return 0;
+            data->input = NULL;
+#ifdef DEBUG_shaver_includes
+            fprintf(stderr, "leaving %s, returning to %s\n",
+                    data->filename, data->next->filename);
+#endif
+            stack->top = data->next;
+            /* shaver: what about freeing the input structure? */
+            free(data);
+            data = stack->top;
+            IDL_file_set(data->filename, (int)++data->lineno);
+            IDL_inhibit_pop();
+            data->f_include = INPUT_IN_NONE;
         }
 
-    scan_for_special:
-        check_point = data->point;
-        end_copy = data->buf + data->len;
+        /* force NUL-termination on the buffer */
+        data->buf[data->len] = 0;
+        
         /*
-         * When we're stripping comments and processing #includes,
-         * we need to be sure that we don't process anything inside
-         * \n%{ and \n%}.  In order to simplify things, we process only
-         * comment, include or raw-block stuff when they're at the
-         * beginning of the block we're about to send (data->point).
-         * This makes the processing much simpler, since we can skip
-         * data->point ahead for comments and #include, and skip
-         * check_point ahead for raw blocks.
+         * Now we scan for sequences which require special attention:
+         *   \n#include                   begins an include statement
+         *   \n%{                         begins a raw-source block
+         *   /*                           begins a comment
+         * 
+         * We used to be fancier here, so make sure that we sent the most
+         * data possible at any given time.  To that end, we skipped over
+         * \n%{ raw \n%} blocks and then _continued_ the search for special
+         * sequences like \n#include or /* comments .
+         * 
+         * It was really ugly, though -- liberal use of goto!  lots of implicit
+         * state!  what fun! -- so now we just do this:
+         *
+         * if (special at start) {
+         *     process that special;
+         *     send next chunk of data to libIDL;
+         * } else {
+         *     scan for next special;
+         *     send data up to that special to libIDL;
+         * }
+         *
+         * Easy as pie.  Except that libIDL takes a return of zero to mean
+         * ``all done'', so whenever we would want to do that, we send a single
+         * space in the buffer.  Nobody'll notice, promise.  (For the curious,
+         * we would want to send zero bytes but be called again when we start
+         * include processing or when a comment/raw follows another
+         * immediately, etc.)
+         *
+         * XXX we don't handle the case where the \n#include or /* or \n%{
+         * sequence straddles a block boundary.  We should really fix that.
+         *
+         * XXX we don't handle doc-comments correctly (correct would be sending
+         * them to through to libIDL where they will get tokenized and made
+         * available to backends that want to generate docs).  When we next
+         * upgrade libIDL versions, it'll handle comments for us, which will
+         * help a lot.
+         *
+         * XXX our line counts are pretty much always wrong (bugzilla #5872)
+         *
+         * XXX const string foo = "/*" will just screw us horribly.
          */
 
-        if (!(data->f_raw || data->f_comment || data->f_include)) {
-            /* look for first raw/comment/include */
-#ifdef DEBUG_shaver_bufmgmt
-            fprintf(stderr, "looking for specials\n");
-#endif
-            /* raw block */
-            if ((raw_start = strstr(check_point, "\n%{"))) {
-#ifdef DEBUG_shaver_bufmgmt
-                fprintf(stderr, "found raw at %x\n", raw_start);
-#endif
-                end_copy = raw_start;
-            }
+        /*
+         * Order is important, so that you can have /* comments and
+         * #includes within raw sections, and so that you can comment out
+         * #includes.
+         */
 
-            /* comment */
-            if ((comment_start = strstr(check_point, "/*")) &&
-                (!raw_start || comment_start < raw_start)) {
-#ifdef DEBUG_shaver_bufmgmt
-                fprintf(stderr, "comment starts with %.7s\n", comment_start);
-#endif
-                end_copy = comment_start;
-            }
+        /* XXX should check for errors here, too */
+        if (!NextIsRaw(data, &start, &len) &&
+            !NextIsComment(data, &start, &len) &&
+            /* includes might need to push a new file */
+            !NextIsInclude(stack, &start, &len))
+            FindSpecial(data, &start, &len);
 
-            /* include */
-            if ((include_start = strstr(check_point, "#include")) &&
-                (!raw_start || include_start < raw_start) &&
-                (!comment_start || include_start < comment_start)) {
-                end_copy = include_start;
-            }
+        assert(start);
+        copy = MIN(len, (int) cb_data->fill.max_size);
 
-            if (end_copy == raw_start)
-                data->f_raw = INPUT_IN_START;
-            else if (end_copy == comment_start)
-                data->f_comment = INPUT_IN_START;
-            else if (end_copy == include_start)
-                data->f_include = INPUT_IN_START;
-#ifdef DEBUG_shaver_bufmgmt
-            fprintf(stderr,
-                    "specials: %d/%d/%d, end = %x, buf = %x, b+l = %x\n",
-                    data->f_raw, data->f_comment, data->f_include,
-                    end_copy, data->buf, data->buf + data->len);
-#endif
+        if (copy) {
+            memcpy(cb_data->fill.buffer, start, copy);
+            data->point = start + copy;
         } else {
-#ifdef DEBUG_shaver_bufmgmt
-            fprintf(stderr, "already have special %d/%d/%d\n",
-                    data->f_raw, data->f_comment, data->f_include);
-#endif
+            cb_data->fill.buffer[0] = ' ';
+            copy = 1;
         }
-
-        if ((end_copy == data->point || /* just found one at the start */
-             end_copy == data->buf + data->len /* left over */) &&
-            (data->f_raw || data->f_comment || data->f_include)) {
-
-            if (data->f_raw) {
-                ptr = strstr(check_point, "\n%}\n");
-                if (ptr) {
-                    data->f_raw = INPUT_IN_NONE;
-                    end_copy = ptr + 4;
-#ifdef DEBUG_shaver_bufmgmt
-                    fprintf(stderr, "RAW->%.*s<-RAW\n", end_copy - data->point,
-                            data->point);
+#ifdef DEBUG_shaver_input
+        fprintf(stderr, "COPYING %d->%.*s<-COPYING\n", copy, (int)copy,
+                cb_data->fill.buffer);
 #endif
-                }
-                assert(!data->f_comment && !data->f_include);
-            } else if (data->f_comment) {
-                /* XXX process doc comment */
-                ptr = strstr(check_point, "*/");
-                if (ptr) {
-                    data->f_comment = INPUT_IN_NONE;
-                    data->point = ptr + 2; /* star-slash */
-#ifdef DEBUG_shaver_bufmgmt
-                    fprintf(stderr, "COMMENT->%.*s<-COMMENT\n",
-                            data->point - check_point, check_point);
-#endif
-                }
-                else {
-                    data->point = data->buf + data->len;
-                    goto fill_start;
-                }
+        if (tracefile)
+            fwrite(cb_data->fill.buffer, copy, 1, tracefile);
 
-                assert(!data->f_raw && !data->f_include);
-                /*
-                 * Now that we've advanced data->point to skip the comment,
-                 * we want to check for specials that were ``shadowed'' by
-                 * the comment.
-                 */
-                goto scan_for_special;
-            } else if (data->f_include) {
-                /* process include */
-                const char *scratch;
-                char *filename;
-                include_start = data->point;
-
-                assert(!strncmp(include_start, "#include \"", 10));
-                filename = include_start + 10; /* skip #include " */
-
-                assert(filename < data->buf + data->len);
-                ptr = strchr(filename, '\"');
-                if (!ptr) {
-                    /* XXX report error */
-                    return -1;
-                }
-                data->point = ptr+1;
-
-                *ptr = 0;
-                ptr = strrchr(filename, '.');
-
-#ifdef DEBUG_shaver_bufmgmt
-                fprintf(stderr, "found #include %s\n", filename);
-#endif
-                assert(stack->includes);
-                if (!g_hash_table_lookup(stack->includes, filename)) {
-                    char *file_basename = filename;
-                    filename = xpidl_strdup(filename);
-                    ptr = strrchr(file_basename, '.');
-                    if (ptr)
-                        *ptr = 0;
-                    file_basename = xpidl_strdup(file_basename);
-                    g_hash_table_insert(stack->includes,
-                                        filename, file_basename);
-                    new_data = new_input_callback_data(filename,
-                                                       stack->include_path);
-                    if (!new_data) {
-                        free(filename);
-                        return -1;
-                    }
-                    new_data->next = stack->top;
-                    IDL_inhibit_push();
-                    IDL_file_get(&scratch, &data->lineno);
-                    data = stack->top = new_data;
-                    IDL_file_set(data->filename, data->lineno);
-#ifdef DEBUG_shaver_bufmgmt
-                    fprintf(stderr, "processing #include %s\n", filename);
-#endif
-                    /* now continue getting data from new file */
-                    goto fill_start;
-                }
-                /*
-                 * if we started with a #include, but we've already
-                 * processed that file, we need to continue scanning
-                 * for special sequences.
-                 */
-                data->f_include = INPUT_IN_NONE;
-                goto scan_for_special;
-            }
-        } else {
-#ifdef DEBUG_shaver_bufmgmt
-            fprintf(stderr, "no specials\n");
-#endif
-        }
-
-        avail = MIN(data->buf + data->len, end_copy) - data->point;
-        assert(avail >= 0);
-#ifdef DEBUG_shaver_bufmgmt
-        fprintf(stderr,
-                "avail[%d] = MIN((data->buf[%x] + data->len[%d])[%x], "
-                "end_copy[%x])[%x] - data->point[%x]\n",
-                avail, data->buf, data->len, data->buf + data->len,
-                end_copy, MIN(data->buf + data->len, end_copy),
-                data->point);
-#endif
-        copy = MIN(avail, (int) cb_data->fill.max_size);
-#ifdef DEBUG_shaver_bufmgmt
-        fprintf(stderr, "COPYING->%.*s<-COPYING\n", copy, data->point);
-#endif
-        /* Supress signed->unsigned conversion warning from memcpy prototype. */
-        memcpy(cb_data->fill.buffer, data->point, (unsigned int)copy);
-        data->point += copy;
         return copy;
 
       case IDL_INPUT_REASON_ABORT:
       case IDL_INPUT_REASON_FINISH:
-        if (data->input != stdin)
+        if (data->input && data->input != stdin)
             fclose(data->input);
         data->input = NULL;
         free(data->buf);
