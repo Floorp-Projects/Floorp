@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <!DOCTYPE window [
-<!ENTITY % themesDTD SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
+<!ENTITY % themesDTD SYSTEM "chrome://browser/locale/pref/pref-themes.dtd" >
 %themesDTD;
 <!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
 %regionDTD;
@@ -45,50 +45,63 @@
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-themes.js"/>
 
-  <description>&skinIntro.label;</description>
+  <tabbox flex="1">
+  <tabs>
+    <tab label="Themes"/>
+    <tab label="Extensions"/>
+  </tabs>
+  <tabpanels flex="1">
+  <vbox flex="1">
+    <description>&skinIntro.label;</description>
   
-  <description>&installedThemes.label;</description>
+    <description>&installedThemes.label;</description>
   
-  <listbox id="skinsList" datasources="rdf:chrome" 
-        onselect="themeSelect();"
-        ref="urn:mozilla:skin:root" rows="5">
-    <template>
-      <rule>
-        <listitem uri="..." skin="true"
-                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                  author="rdf:http://www.mozilla.org/rdf/chrome#author"
-                  displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                  name="rdf:http://www.mozilla.org/rdf/chrome#name"
-                  description="rdf:http://www.mozilla.org/rdf/chrome#description"
-                  image="rdf:http://www.mozilla.org/rdf/chrome#image"
-                  loctype="rdf:http://www.mozilla.org/rdf/chrome#locType"/>
-      </rule>
-    </template>
-  </listbox>
+    <listbox id="skinsList" datasources="rdf:chrome" 
+          onselect="themeSelect();"
+          ref="urn:mozilla:skin:root" rows="3">
+      <template>
+        <rule>
+          <listitem uri="..." skin="true"
+                    label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                    author="rdf:http://www.mozilla.org/rdf/chrome#author"
+                    displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                    name="rdf:http://www.mozilla.org/rdf/chrome#name"
+                    description="rdf:http://www.mozilla.org/rdf/chrome#description"
+                    image="rdf:http://www.mozilla.org/rdf/chrome#image"
+                    loctype="rdf:http://www.mozilla.org/rdf/chrome#locType"/>
+        </rule>
+      </template>
+    </listbox>
 
-  <separator class="thin"/>
+    <separator class="thin"/>
   
-  <hbox id="previewImageContainer" class="inset" align="center" pack="center">
-    <image id="previewImage"/>
-  </hbox>
+    <hbox id="previewImageContainer" class="inset" align="center" pack="center">
+      <image id="previewImage"/>
+    </hbox>
 
-  <separator class="thin"/>
-  <hbox>
-    <vbox flex="1">
-      <label class="header" id="displayName" value=""/>
-      <hbox align="center">
-        <label value="&author.label;"/>
-        <label id="author"/>
-      </hbox>
-      <label id="description" flex="1"/>
-    </vbox>
-    <vbox>
-      <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
-    </vbox>
-  </hbox>
-  <separator/>
-  <hbox align="start">
-    <html:a id="themesLink" href="&getNewThemesURL;"
-            style="display: block;" target="_new">&getNewThemes.label;</html:a>
-  </hbox>
+    <separator class="thin"/>
+    <hbox>
+      <vbox flex="1">
+        <label class="header" id="displayName" value=""/>
+        <hbox align="center">
+          <label value="&author.label;"/>
+          <label id="author"/>
+        </hbox>
+        <label id="description" flex="1"/>
+      </vbox>
+      <vbox>
+        <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+        <vbox flex="1">
+          <spacer flex="1"/>
+          <hbox align="start">
+          <html:a id="themesLink" href="&getNewThemesURL;"
+              style="padding-left:4px; display: block;" target="_new">&getNewThemes.label;</html:a>
+          </hbox>
+        </vbox>
+      </vbox>
+    </hbox>
+    <separator/>
+  </vbox>
+  </tabpanels>
+</tabbox>
 </page>

@@ -4,7 +4,7 @@
 
 <!--LOCALIZATION NOTE : FILE Lists preferences categories that appear on the left of the preferences dialog -->
 <!ENTITY fonts.label "Fonts &amp; Colors">
-<!ENTITY themes.label "Themes">
+<!ENTITY themes.label "Themes and Extensions">
 <!--LOCALIZATION NOTE (navigator.label): DONT_TRANSLATE -->
 <!ENTITY navigator.label "General">
 <!ENTITY bidi.label "Bidi Options">
