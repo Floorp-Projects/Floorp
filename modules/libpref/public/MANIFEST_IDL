@@ -3,4 +3,4 @@
 #
 
 nsIPref.idl
-nsISecurityPref.idl
+nsIPrefBranch.idl

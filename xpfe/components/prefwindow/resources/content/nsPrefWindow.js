@@ -244,7 +244,7 @@ nsPrefWindow.prototype =
                       }
                   }
               }
-              this.pref.SavePrefFile();
+              this.pref.savePrefFile(null);
           },                        
 
       switchPage:

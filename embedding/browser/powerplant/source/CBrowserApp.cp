@@ -213,7 +213,7 @@ CBrowserApp::~CBrowserApp()
    nsresult rv;
    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
    if (NS_SUCCEEDED(rv) && prefs)
-      prefs->SavePrefFile();
+      prefs->SavePrefFile(nsnull);
 
    NS_TermEmbedding();
 }
@@ -515,7 +515,7 @@ nsresult CBrowserApp::InitializePrefs()
             prefs->SetIntPref("font.size.fixed.x-western", 12);
             rv = prefs->SetBoolPref("ppbrowser.prefs_inited", PR_TRUE);
             if (NS_SUCCEEDED(rv))
-                rv = prefs->SavePrefFile();
+                rv = prefs->SavePrefFile(nsnull);
         }
         
 	}

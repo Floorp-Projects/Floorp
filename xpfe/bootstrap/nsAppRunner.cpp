@@ -593,7 +593,7 @@ static nsresult DoOnShutdown()
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
     if (NS_SUCCEEDED(rv))
-      prefs->SavePrefFile();
+      prefs->SavePrefFile(nsnull);
   }
 
   // at this point, all that is on the clipboard is a proxy object, but that object
@@ -766,7 +766,7 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
 
         rv = prefs->ResetPrefs(); 
         if (NS_FAILED(rv)) return rv; 
-        rv = prefs->ReadUserPrefs(); 
+        rv = prefs->ReadUserPrefs(nsnull); 
         if (NS_FAILED(rv)) return rv; 
     } 
     else 

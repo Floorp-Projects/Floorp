@@ -635,7 +635,7 @@ EmbedPrivate::StartupProfile(void)
     sPrefs = pref.get();
     NS_ADDREF(sPrefs);
     sPrefs->ResetPrefs();
-    sPrefs->ReadUserPrefs();
+    sPrefs->ReadUserPrefs(nsnull);
   }
   return NS_OK;
 }
@@ -645,7 +645,6 @@ void
 EmbedPrivate::ShutdownProfile(void)
 {
   if (sPrefs) {
-    sPrefs->ShutDown();
     NS_RELEASE(sPrefs);
     sPrefs = 0;
   }
