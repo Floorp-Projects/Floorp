@@ -41,6 +41,8 @@
 
 class nsIRunnable;
 
+typedef struct _nsPluginThread nsPluginThread;
+
 class nsIThreadManager : public nsISupports {
 public:
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREADMANAGER_IID)
@@ -49,7 +51,7 @@ public:
 	 * Returns a unique identifier for the "current" system thread.
 	 */
 	NS_IMETHOD
-	GetCurrentThread(PRUint32* threadID) = 0;
+	GetCurrentThread(nsPluginThread* *threadID) = 0;
 
 	/**
 	 * Pauses the current thread for the specified number of milliseconds.

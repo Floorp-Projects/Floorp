@@ -237,7 +237,7 @@ private:
 	nsIThreadManager* mThreadManager;
 	MRJSession* mSession;
     MRJConsole* mConsole;
-    PRUint32 mPluginThreadID;
+    nsPluginThread *mPluginThreadID;
 	Boolean mIsEnabled;
 	
 	// support for SupportsMixin.
