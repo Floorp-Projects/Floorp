@@ -111,6 +111,7 @@ public:
   //locals
   NS_IMETHOD CommonInit(void);
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
+	NS_IMETHOD SetPortTextState();
 
 protected:
 	GrafPtr		mOldPort;

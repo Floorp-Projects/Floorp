@@ -514,6 +514,27 @@ void	nsRenderingContextMac::SetQuickDrawEnvironment(GraphicState* aGraphicState,
 		SetFont(mGS->mFontMetrics);
 }
 
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::SetPortTextState()
+{
+	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
+	
+	if (nsnull == mGS->mFontMetrics)
+		return NS_ERROR_NULL_POINTER;
+
+	TextStyle		theStyle;
+	nsFontMetricsMac::GetNativeTextStyle(*mGS->mFontMetrics, *mContext, theStyle);
+
+	::TextFont(theStyle.tsFont);
+	::TextSize(theStyle.tsSize);
+	::TextFace(theStyle.tsFace);
+	
+	return NS_OK;
+}
+
+
 #pragma mark -
 
 //------------------------------------------------------------------------
@@ -1288,14 +1309,13 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 	StartDraw();
 
 	// set native font and attributes
-  nsFont *font;
-  mGS->mFontMetrics->GetFont(font);
-	nsFontMetricsMac::SetFont(*font, mContext);
+	SetPortTextState();
 
 	// measure text
 	short textWidth = ::TextWidth(aString, 0, aLength);
 	aWidth = NSToCoordRound(float(textWidth) * mP2T);
 
+#if 0
 	// add a bit for italic
 	switch (font->style)
 	{
@@ -1306,6 +1326,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 			aWidth += aAdvance;
 			break;
 	}
+#endif
 
 	EndDraw();
 	return NS_OK;
@@ -1338,9 +1359,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
   if (mGS->mFontMetrics)
   {
 		// set native font and attributes
-    nsFont *font;
-    mGS->mFontMetrics->GetFont(font);
-		nsFontMetricsMac::SetFont(*font, mContext);
+		SetPortTextState();
 
 		// substract ascent since drawing specifies baseline
 		nscoord ascent = 0;
@@ -1397,7 +1416,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 
 #define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
 
-OSErr atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
+static OSErr atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1411,7 +1430,7 @@ OSErr atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 }
 
 
-OSErr atsuSetSize(ATSUStyle theStyle, Fixed size)
+static OSErr atsuSetSize(ATSUStyle theStyle, Fixed size)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1425,7 +1444,7 @@ OSErr atsuSetSize(ATSUStyle theStyle, Fixed size)
 }
 
 
-OSErr atsuSetColor(ATSUStyle theStyle, RGBColor color)
+static OSErr atsuSetColor(ATSUStyle theStyle, RGBColor color)
 {
 	ATSUAttributeTag 		theTag;
 	ByteCount				theValueSize;
@@ -1439,7 +1458,7 @@ OSErr atsuSetColor(ATSUStyle theStyle, RGBColor color)
 }
 
 
-OSErr setStyleSize (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
+static OSErr setStyleSize (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	float  dev2app;
 	aContext->GetDevUnitsToAppUnits(dev2app);
@@ -1447,7 +1466,7 @@ OSErr setStyleSize (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle t
 }
 
 
-OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
+static OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
 {
     RGBColor	thecolor;
 	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
@@ -1457,7 +1476,7 @@ OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
 }
 
 
-OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
+static OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	short fontNum;
 	OSErr					err = 0;
@@ -1490,7 +1509,7 @@ OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle t
 }
 
 
-OSErr setATSUIFont(const nsFont& aFont, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
+static OSErr setATSUIFont(const nsFont& aFont, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
 	OSErr					err = 0;
 	err = setStyleSize(aFont, aContext, theStyle);
@@ -1545,15 +1564,15 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
 				// set native font and attributes
 		    nsFont *font;
 		    mGS->mFontMetrics->GetFont(font);
-				nsFontMetricsMac::SetFont(*font, mContext);
+				//nsFontMetricsMac::SetFont(*font, mContext);	// this is unnecessary
 
 				// substract ascent since drawing specifies baseline
 				nscoord ascent = 0;
 				mGS->mFontMetrics->GetMaxAscent(ascent);
 				y += ascent;
 
-			    err = setATSUIFont( *font, mGS->mColor, mContext, theStyle);
-		  		NS_ASSERTION((noErr == err), "setATSUIFont failed");
+		    err = setATSUIFont( *font, mGS->mColor, mContext, theStyle);
+	  		NS_ASSERTION((noErr == err), "setATSUIFont failed");
 				
 			}
 
